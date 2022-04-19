@@ -1,14 +1,17 @@
 package chain
 
 func Init(id string) (*Chain, error) {
-	chain, err := New(id)
+	chain, err := new(id)
 	if err != nil {
 		return nil, err
 	}
-	if err := InitNodes(chain); err != nil {
+	if err := initNodes(chain); err != nil {
 		return nil, err
 	}
-	if err := InitGenesis(chain); err != nil {
+	if err := initGenesis(chain); err != nil {
+		return nil, err
+	}
+	if err := initValidatorConfigs(chain); err != nil {
 		return nil, err
 	}
 	return chain, nil

@@ -50,11 +50,6 @@ func (v *Validator) ConfigDir() string {
 	return fmt.Sprintf("%s/%s", v.chain.configDir(), v.InstanceName())
 }
 
-func (v *Validator) createConfig() error {
-	p := path.Join(v.ConfigDir(), "config")
-	return os.MkdirAll(p, 0o755)
-}
-
 func (v *Validator) GetKeyInfo() keyring.Info {
 	return v.keyInfo
 }
@@ -67,69 +62,39 @@ func (v *Validator) GetMnemonic() string {
 	return v.mnemonic
 }
 
-func (v *Validator) GetNodeKey() *p2p.NodeKey {
-	return &v.nodeKey
-}
-
 func (v *Validator) GetIndex() int {
 	return v.index
 }
 
-func (v *Validator) init() error {
-	if err := v.createConfig(); err != nil {
-		return err
+func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
+	description := stakingtypes.NewDescription(v.moniker, "", "", "", "")
+	commissionRates := stakingtypes.CommissionRates{
+		Rate:          sdk.MustNewDecFromStr("0.1"),
+		MaxRate:       sdk.MustNewDecFromStr("0.2"),
+		MaxChangeRate: sdk.MustNewDecFromStr("0.01"),
 	}
 
-	serverCtx := server.NewDefaultContext()
-	config := serverCtx.Config
+	// get the initial validator min self delegation
+	minSelfDelegation, _ := sdk.NewIntFromString("1")
 
-	config.SetRoot(v.ConfigDir())
-	config.Moniker = v.moniker
-
-	genDoc, err := v.getGenesisDoc()
+	valPubKey, err := cryptocodec.FromTmPubKeyInterface(v.consensusKey.PubKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	appState, err := json.MarshalIndent(osmosisApp.ModuleBasics.DefaultGenesis(util.Cdc), "", " ")
-	if err != nil {
-		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
-	}
-
-	genDoc.ChainID = v.chain.Id
-	genDoc.Validators = nil
-	genDoc.AppState = appState
-
-	if err = genutil.ExportGenesisFile(genDoc, config.GenesisFile()); err != nil {
-		return fmt.Errorf("failed to export app genesis state: %w", err)
-	}
-
-	tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
-	return nil
+	return stakingtypes.NewMsgCreateValidator(
+		sdk.ValAddress(v.keyInfo.GetAddress()),
+		valPubKey,
+		amount,
+		description,
+		commissionRates,
+		minSelfDelegation,
+	)
 }
 
-func (v *Validator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
-	serverCtx := server.NewDefaultContext()
-	config := serverCtx.Config
-	config.SetRoot(v.ConfigDir())
-
-	genFile := config.GenesisFile()
-	doc := &tmtypes.GenesisDoc{}
-
-	if _, err := os.Stat(genFile); err != nil {
-		if !os.IsNotExist(err) {
-			return nil, err
-		}
-	} else {
-		var err error
-
-		doc, err = tmtypes.GenesisDocFromFile(genFile)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read genesis doc from file: %w", err)
-		}
-	}
-
-	return doc, nil
+func (v *Validator) createConfig() error {
+	p := path.Join(v.ConfigDir(), "config")
+	return os.MkdirAll(p, 0o755)
 }
 
 func (v *Validator) createNodeKey() error {
@@ -214,6 +179,67 @@ func (v *Validator) createKey(name string) error {
 	return v.createKeyFromMnemonic(name, mnemonic)
 }
 
+func (v *Validator) getNodeKey() *p2p.NodeKey {
+	return &v.nodeKey
+}
+
+func (v *Validator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
+	serverCtx := server.NewDefaultContext()
+	config := serverCtx.Config
+	config.SetRoot(v.ConfigDir())
+
+	genFile := config.GenesisFile()
+	doc := &tmtypes.GenesisDoc{}
+
+	if _, err := os.Stat(genFile); err != nil {
+		if !os.IsNotExist(err) {
+			return nil, err
+		}
+	} else {
+		var err error
+
+		doc, err = tmtypes.GenesisDocFromFile(genFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read genesis doc from file: %w", err)
+		}
+	}
+
+	return doc, nil
+}
+
+func (v *Validator) init() error {
+	if err := v.createConfig(); err != nil {
+		return err
+	}
+
+	serverCtx := server.NewDefaultContext()
+	config := serverCtx.Config
+
+	config.SetRoot(v.ConfigDir())
+	config.Moniker = v.moniker
+
+	genDoc, err := v.getGenesisDoc()
+	if err != nil {
+		return err
+	}
+
+	appState, err := json.MarshalIndent(osmosisApp.ModuleBasics.DefaultGenesis(util.Cdc), "", " ")
+	if err != nil {
+		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
+	}
+
+	genDoc.ChainID = v.chain.Id
+	genDoc.Validators = nil
+	genDoc.AppState = appState
+
+	if err = genutil.ExportGenesisFile(genDoc, config.GenesisFile()); err != nil {
+		return fmt.Errorf("failed to export app genesis state: %w", err)
+	}
+
+	tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+	return nil
+}
+
 func createMnemonic() (string, error) {
 	entropySeed, err := bip39.NewEntropy(256)
 	if err != nil {
@@ -228,33 +254,7 @@ func createMnemonic() (string, error) {
 	return mnemonic, nil
 }
 
-func (v *Validator) BuildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
-	description := stakingtypes.NewDescription(v.moniker, "", "", "", "")
-	commissionRates := stakingtypes.CommissionRates{
-		Rate:          sdk.MustNewDecFromStr("0.1"),
-		MaxRate:       sdk.MustNewDecFromStr("0.2"),
-		MaxChangeRate: sdk.MustNewDecFromStr("0.01"),
-	}
-
-	// get the initial validator min self delegation
-	minSelfDelegation, _ := sdk.NewIntFromString("1")
-
-	valPubKey, err := cryptocodec.FromTmPubKeyInterface(v.consensusKey.PubKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(v.keyInfo.GetAddress()),
-		valPubKey,
-		amount,
-		description,
-		commissionRates,
-		minSelfDelegation,
-	)
-}
-
-func (v *Validator) SignMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
+func (v *Validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	txBuilder := util.EncodingConfig.TxConfig.NewTxBuilder()
 
 	if err := txBuilder.SetMsgs(msgs...); err != nil {

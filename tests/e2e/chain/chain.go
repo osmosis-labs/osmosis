@@ -16,7 +16,7 @@ type Chain struct {
 	Validators []*Validator
 }
 
-func New(id string) (*Chain, error) {
+func new(id string) (*Chain, error) {
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func (c *Chain) configDir() string {
 	return fmt.Sprintf("%s/%s", c.DataDir, c.Id)
 }
 
-func (c *Chain) CreateAndInitValidators(count int) error {
+func (c *Chain) createAndInitValidators(count int) error {
 	for i := 0; i < count; i++ {
 		node := c.createValidator(i)
 

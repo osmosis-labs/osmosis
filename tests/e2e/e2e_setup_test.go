@@ -11,16 +11,13 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
-	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
-	tmconfig "github.com/tendermint/tendermint/config"
+
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
@@ -55,13 +52,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chain.ChainAID)
 	s.chainA, err = chain.Init(chain.ChainAID)
 	s.Require().NoError(err)
-	s.initValidatorConfigs(s.chainA)
 	s.T().Logf("chain-id: %s is now configured on path: %s", chain.ChainAID, s.chainA.DataDir)
 
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chain.ChainBID)
 	s.chainB, err = chain.Init(chain.ChainBID)
 	s.Require().NoError(err)
-	s.initValidatorConfigs(s.chainB)
 	s.T().Logf("chain-id: %s is now configured on path: %s", chain.ChainBID, s.chainB.DataDir)
 
 	s.dkrPool, err = dockertest.NewPool("")
@@ -104,51 +99,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	for _, td := range s.tmpDirs {
 		os.RemoveAll(td)
-	}
-}
-
-func (s *IntegrationTestSuite) initValidatorConfigs(c *chain.Chain) {
-	for i, val := range c.Validators {
-		tmCfgPath := filepath.Join(val.ConfigDir(), "config", "config.toml")
-
-		vpr := viper.New()
-		vpr.SetConfigFile(tmCfgPath)
-		s.Require().NoError(vpr.ReadInConfig())
-
-		valConfig := &tmconfig.Config{}
-		s.Require().NoError(vpr.Unmarshal(valConfig))
-
-		valConfig.P2P.ListenAddress = "tcp://0.0.0.0:26656"
-		valConfig.P2P.AddrBookStrict = false
-		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.InstanceName(), 26656)
-		valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
-		valConfig.StateSync.Enable = false
-		valConfig.LogLevel = "info"
-
-		var peers []string
-
-		for j := 0; j < len(c.Validators); j++ {
-			if i == j {
-				continue
-			}
-
-			peer := c.Validators[j]
-			peerID := fmt.Sprintf("%s@%s%d:26656", peer.GetNodeKey().ID(), peer.GetMoniker(), j)
-			peers = append(peers, peerID)
-		}
-
-		valConfig.P2P.PersistentPeers = strings.Join(peers, ",")
-
-		tmconfig.WriteConfigFile(tmCfgPath, valConfig)
-
-		// set application configuration
-		appCfgPath := filepath.Join(val.ConfigDir(), "config", "app.toml")
-
-		appConfig := srvconfig.DefaultConfig()
-		appConfig.API.Enable = true
-		appConfig.MinGasPrices = fmt.Sprintf("%s%s", chain.MinGasPrice, chain.OsmoDenom)
-
-		srvconfig.WriteConfigFile(appCfgPath, appConfig)
 	}
 }
 
