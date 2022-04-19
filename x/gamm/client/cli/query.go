@@ -1,3 +1,4 @@
+//nolint:goconst //goconst picks up on repeated strings here but it doesn't make sense to make a constant for the word text.
 package cli
 
 import (
