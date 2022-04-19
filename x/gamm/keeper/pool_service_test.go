@@ -40,7 +40,7 @@ var (
 )
 
 func (suite *KeeperTestSuite) TestCreateBalancerPool() {
-	params := suite.App.GAMMKeeper.GetParams(suite.ctx)
+	params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
 
 	poolCreationFeeDecCoins := sdk.DecCoins{}
 	for _, coin := range params.PoolCreationFee {
@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 
 		// Try to create pool without balances.
 		msg := balancer.NewMsgCreateBalancerPool(acc1, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
-		_, err := keeper.CreatePool(suite.ctx, msg)
+		_, err := keeper.CreatePool(suite.Ctx, msg)
 		suite.Require().Error(err)
 	}()
 
@@ -66,24 +66,24 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}{{
 		fn: func() {
 			keeper := suite.App.GAMMKeeper
-			prevFeePool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.ctx)
-			prevAcc1Bal := suite.App.BankKeeper.GetAllBalances(suite.ctx, acc1)
+			prevFeePool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
+			prevAcc1Bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, acc1)
 			msg := balancer.NewMsgCreateBalancerPool(acc1, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
-			poolId, err := keeper.CreatePool(suite.ctx, msg)
+			poolId, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().NoError(err)
 
-			pool, err := keeper.GetPoolAndPoke(suite.ctx, poolId)
+			pool, err := keeper.GetPoolAndPoke(suite.Ctx, poolId)
 			suite.Require().NoError(err)
 			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
 				fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
 			)
 
 			// check fee is correctly sent to community pool
-			feePool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.ctx)
+			feePool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
 			suite.Require().Equal(feePool, prevFeePool.Add(poolCreationFeeDecCoins...))
 
 			// check account's balance is correctly reduced
-			acc1Bal := suite.App.BankKeeper.GetAllBalances(suite.ctx, acc1)
+			acc1Bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, acc1)
 			suite.Require().Equal(acc1Bal.String(),
 				prevAcc1Bal.Sub(params.PoolCreationFee).
 					Sub(sdk.Coins{
@@ -92,7 +92,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 					}).Add(sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)).String(),
 			)
 
-			liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.ctx)
+			liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.Ctx)
 			suite.Require().Equal("10000bar,10000foo", liquidity.String())
 		},
 	}, {
@@ -102,7 +102,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				SwapFee: sdk.NewDecWithPrec(-1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor)
-			_, err := keeper.CreatePool(suite.ctx, msg)
+			_, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().Error(err, "can't create a pool with negative swap fee")
 		},
 	}, {
@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(-1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor)
-			_, err := keeper.CreatePool(suite.ctx, msg)
+			_, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().Error(err, "can't create a pool with negative exit fee")
 		},
 	}, {
@@ -122,7 +122,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{}, defaultFutureGovernor)
-			_, err := keeper.CreatePool(suite.ctx, msg)
+			_, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().Error(err, "can't create the pool with empty PoolAssets")
 		},
 	}, {
@@ -138,7 +138,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor)
-			_, err := keeper.CreatePool(suite.ctx, msg)
+			_, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().Error(err, "can't create the pool with 0 weighted PoolAsset")
 		},
 	}, {
@@ -154,7 +154,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor)
-			_, err := keeper.CreatePool(suite.ctx, msg)
+			_, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().Error(err, "can't create the pool with negative weighted PoolAsset")
 		},
 	}, {
@@ -170,7 +170,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor)
-			_, err := keeper.CreatePool(suite.ctx, msg)
+			_, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().Error(err, "can't create the pool with 0 balance PoolAsset")
 		},
 	}, {
@@ -189,7 +189,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor)
-			_, err := keeper.CreatePool(suite.ctx, msg)
+			_, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().Error(err, "can't create the pool with negative balance PoolAsset")
 		},
 	}, {
@@ -205,38 +205,38 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor)
-			_, err := keeper.CreatePool(suite.ctx, msg)
+			_, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().Error(err, "can't create the pool with duplicated PoolAssets")
 		},
 	}, {
 		fn: func() {
 			keeper := suite.App.GAMMKeeper
-			keeper.SetParams(suite.ctx, types.Params{
+			keeper.SetParams(suite.Ctx, types.Params{
 				PoolCreationFee: sdk.Coins{},
 			})
 			msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor)
-			_, err := keeper.CreatePool(suite.ctx, msg)
+			_, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().NoError(err)
-			pools, err := keeper.GetPoolsAndPoke(suite.ctx)
+			pools, err := keeper.GetPoolsAndPoke(suite.Ctx)
 			suite.Require().Len(pools, 1)
 			suite.Require().NoError(err)
 		},
 	}, {
 		fn: func() {
 			keeper := suite.App.GAMMKeeper
-			keeper.SetParams(suite.ctx, types.Params{
+			keeper.SetParams(suite.Ctx, types.Params{
 				PoolCreationFee: nil,
 			})
 			msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor)
-			_, err := keeper.CreatePool(suite.ctx, msg)
+			_, err := keeper.CreatePool(suite.Ctx, msg)
 			suite.Require().NoError(err)
-			pools, err := keeper.GetPoolsAndPoke(suite.ctx)
+			pools, err := keeper.GetPoolsAndPoke(suite.Ctx)
 			suite.Require().Len(pools, 1)
 			suite.Require().NoError(err)
 		},
@@ -247,7 +247,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.ctx, acc, defaultAcctFunds)
+			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc, defaultAcctFunds)
 			if err != nil {
 				panic(err)
 			}
@@ -265,11 +265,11 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		{
 			fn: func(poolId uint64) {
 				keeper := suite.App.GAMMKeeper
-				balancesBefore := suite.App.BankKeeper.GetAllBalances(suite.ctx, acc2)
-				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
+				balancesBefore := suite.App.BankKeeper.GetAllBalances(suite.Ctx, acc2)
+				err := keeper.JoinPoolNoSwap(suite.Ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
 				suite.Require().NoError(err)
-				suite.Require().Equal(types.OneShare.MulRaw(50).String(), suite.App.BankKeeper.GetBalance(suite.ctx, acc2, "gamm/pool/1").Amount.String())
-				balancesAfter := suite.App.BankKeeper.GetAllBalances(suite.ctx, acc2)
+				suite.Require().Equal(types.OneShare.MulRaw(50).String(), suite.App.BankKeeper.GetBalance(suite.Ctx, acc2, "gamm/pool/1").Amount.String())
+				balancesAfter := suite.App.BankKeeper.GetAllBalances(suite.Ctx, acc2)
 
 				deltaBalances, _ := balancesBefore.SafeSub(balancesAfter)
 				// The pool was created with the 10000foo, 10000bar, and the pool share was minted as 100000000gamm/pool/1.
@@ -277,21 +277,21 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 				suite.Require().Equal("5000", deltaBalances.AmountOf("foo").String())
 				suite.Require().Equal("5000", deltaBalances.AmountOf("bar").String())
 
-				liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.ctx)
+				liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.Ctx)
 				suite.Require().Equal("15000bar,15000foo", liquidity.String())
 			},
 		},
 		{
 			fn: func(poolId uint64) {
 				keeper := suite.App.GAMMKeeper
-				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, sdk.NewInt(0), sdk.Coins{})
+				err := keeper.JoinPoolNoSwap(suite.Ctx, acc2, poolId, sdk.NewInt(0), sdk.Coins{})
 				suite.Require().Error(err, "can't join the pool with requesting 0 share amount")
 			},
 		},
 		{
 			fn: func(poolId uint64) {
 				keeper := suite.App.GAMMKeeper
-				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, sdk.NewInt(-1), sdk.Coins{})
+				err := keeper.JoinPoolNoSwap(suite.Ctx, acc2, poolId, sdk.NewInt(-1), sdk.Coins{})
 				suite.Require().Error(err, "can't join the pool with requesting negative share amount")
 			},
 		},
@@ -300,7 +300,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 				keeper := suite.App.GAMMKeeper
 				// Test the "tokenInMaxs"
 				// In this case, to get the 50 * OneShare amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
-				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{
+				err := keeper.JoinPoolNoSwap(suite.Ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{
 					sdk.NewCoin("bar", sdk.NewInt(4999)), sdk.NewCoin("foo", sdk.NewInt(4999)),
 				})
 				suite.Require().Error(err)
@@ -311,12 +311,12 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 				keeper := suite.App.GAMMKeeper
 				// Test the "tokenInMaxs"
 				// In this case, to get the 50 * OneShare amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
-				err := keeper.JoinPoolNoSwap(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{
+				err := keeper.JoinPoolNoSwap(suite.Ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{
 					sdk.NewCoin("bar", sdk.NewInt(5000)), sdk.NewCoin("foo", sdk.NewInt(5000)),
 				})
 				suite.Require().NoError(err)
 
-				liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.ctx)
+				liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.Ctx)
 				suite.Require().Equal("15000bar,15000foo", liquidity.String())
 			},
 		},
@@ -327,7 +327,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.ctx, acc, defaultAcctFunds)
+			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc, defaultAcctFunds)
 			if err != nil {
 				panic(err)
 			}
@@ -338,7 +338,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, defaultPoolAssets, defaultFutureGovernor)
-		poolId, err := suite.App.GAMMKeeper.CreatePool(suite.ctx, msg)
+		poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
 		suite.Require().NoError(err)
 
 		test.fn(poolId)
@@ -353,7 +353,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			fn: func(poolId uint64) {
 				keeper := suite.App.GAMMKeeper
 				// Acc2 has no share token.
-				_, err := keeper.ExitPool(suite.ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
+				_, err := keeper.ExitPool(suite.Ctx, acc2, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
 				suite.Require().Error(err)
 			},
 		},
@@ -361,12 +361,12 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			fn: func(poolId uint64) {
 				keeper := suite.App.GAMMKeeper
 
-				balancesBefore := suite.App.BankKeeper.GetAllBalances(suite.ctx, acc1)
-				_, err := keeper.ExitPool(suite.ctx, acc1, poolId, types.InitPoolSharesSupply.QuoRaw(2), sdk.Coins{})
+				balancesBefore := suite.App.BankKeeper.GetAllBalances(suite.Ctx, acc1)
+				_, err := keeper.ExitPool(suite.Ctx, acc1, poolId, types.InitPoolSharesSupply.QuoRaw(2), sdk.Coins{})
 				suite.Require().NoError(err)
 				// (100 - 50) * OneShare should remain.
-				suite.Require().Equal(types.InitPoolSharesSupply.QuoRaw(2).String(), suite.App.BankKeeper.GetBalance(suite.ctx, acc1, "gamm/pool/1").Amount.String())
-				balancesAfter := suite.App.BankKeeper.GetAllBalances(suite.ctx, acc1)
+				suite.Require().Equal(types.InitPoolSharesSupply.QuoRaw(2).String(), suite.App.BankKeeper.GetBalance(suite.Ctx, acc1, "gamm/pool/1").Amount.String())
+				balancesAfter := suite.App.BankKeeper.GetAllBalances(suite.Ctx, acc1)
 
 				deltaBalances, _ := balancesBefore.SafeSub(balancesAfter)
 				// The pool was created with the 10000foo, 10000bar, and the pool share was minted as 100*OneShare gamm/pool/1.
@@ -379,7 +379,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			fn: func(poolId uint64) {
 				keeper := suite.App.GAMMKeeper
 
-				_, err := keeper.ExitPool(suite.ctx, acc1, poolId, sdk.NewInt(0), sdk.Coins{})
+				_, err := keeper.ExitPool(suite.Ctx, acc1, poolId, sdk.NewInt(0), sdk.Coins{})
 				suite.Require().Error(err, "can't join the pool with requesting 0 share amount")
 			},
 		},
@@ -387,7 +387,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			fn: func(poolId uint64) {
 				keeper := suite.App.GAMMKeeper
 
-				_, err := keeper.ExitPool(suite.ctx, acc1, poolId, sdk.NewInt(-1), sdk.Coins{})
+				_, err := keeper.ExitPool(suite.Ctx, acc1, poolId, sdk.NewInt(-1), sdk.Coins{})
 				suite.Require().Error(err, "can't join the pool with requesting negative share amount")
 			},
 		},
@@ -397,7 +397,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 				// Test the "tokenOutMins"
 				// In this case, to refund the 50000000 amount of share token, the foo, bar token are expected to be refunded as 5000 amounts.
-				_, err := keeper.ExitPool(suite.ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{
+				_, err := keeper.ExitPool(suite.Ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{
 					sdk.NewCoin("foo", sdk.NewInt(5001)),
 				})
 				suite.Require().Error(err)
@@ -409,7 +409,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 				// Test the "tokenOutMins"
 				// In this case, to refund the 50000000 amount of share token, the foo, bar token are expected to be refunded as 5000 amounts.
-				_, err := keeper.ExitPool(suite.ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{
+				_, err := keeper.ExitPool(suite.Ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{
 					sdk.NewCoin("foo", sdk.NewInt(5000)),
 				})
 				suite.Require().NoError(err)
@@ -422,7 +422,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.ctx, acc, defaultAcctFunds)
+			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc, defaultAcctFunds)
 			if err != nil {
 				panic(err)
 			}
@@ -432,7 +432,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
-			poolId, err := suite.App.GAMMKeeper.CreatePool(suite.ctx, msg)
+			poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
 			suite.Require().NoError(err)
 
 			test.fn(poolId)
@@ -456,7 +456,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.ctx, acc, defaultAcctFunds)
+			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc, defaultAcctFunds)
 			suite.Require().NoError(err)
 
 			// Create the pool at first
@@ -464,33 +464,33 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 				SwapFee: sdk.NewDec(0),
 				ExitFee: sdk.NewDec(0),
 			})
-			suite.ctx = suite.ctx.WithBlockTime(tc.blockTime)
+			suite.Ctx = suite.Ctx.WithBlockTime(tc.blockTime)
 
 			// uneffected by start time
-			err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
+			err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
 			suite.Require().NoError(err)
-			_, err = suite.App.GAMMKeeper.ExitPool(suite.ctx, acc1, poolId, types.InitPoolSharesSupply.QuoRaw(2), sdk.Coins{})
+			_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, acc1, poolId, types.InitPoolSharesSupply.QuoRaw(2), sdk.Coins{})
 			suite.Require().NoError(err)
 
 			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
 			foocoins := sdk.Coins{foocoin}
 
 			if tc.expectPass {
-				_, err = suite.App.GAMMKeeper.JoinSwapExactAmountIn(suite.ctx, acc1, poolId, foocoins, sdk.ZeroInt())
+				_, err = suite.App.GAMMKeeper.JoinSwapExactAmountIn(suite.Ctx, acc1, poolId, foocoins, sdk.ZeroInt())
 				suite.Require().NoError(err)
-				// _, err = suite.App.GAMMKeeper.JoinSwapShareAmountOut(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
+				// _, err = suite.App.GAMMKeeper.JoinSwapShareAmountOut(suite.Ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
 				// suite.Require().NoError(err)
-				_, err = suite.App.GAMMKeeper.ExitSwapShareAmountIn(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
+				_, err = suite.App.GAMMKeeper.ExitSwapShareAmountIn(suite.Ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
 				suite.Require().NoError(err)
-				_, err = suite.App.GAMMKeeper.ExitSwapExactAmountOut(suite.ctx, acc1, poolId, foocoin, sdk.NewInt(1000000000000000000))
+				_, err = suite.App.GAMMKeeper.ExitSwapExactAmountOut(suite.Ctx, acc1, poolId, foocoin, sdk.NewInt(1000000000000000000))
 				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
-				_, err = suite.App.GAMMKeeper.JoinSwapShareAmountOut(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
+				_, err = suite.App.GAMMKeeper.JoinSwapShareAmountOut(suite.Ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
 				suite.Require().Error(err)
-				_, err = suite.App.GAMMKeeper.ExitSwapShareAmountIn(suite.ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
+				_, err = suite.App.GAMMKeeper.ExitSwapShareAmountIn(suite.Ctx, acc1, poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
 				suite.Require().Error(err)
-				_, err = suite.App.GAMMKeeper.ExitSwapExactAmountOut(suite.ctx, acc1, poolId, foocoin, sdk.NewInt(1000000000000000000))
+				_, err = suite.App.GAMMKeeper.ExitSwapExactAmountOut(suite.Ctx, acc1, poolId, foocoin, sdk.NewInt(1000000000000000000))
 				suite.Require().Error(err)
 			}
 		}
@@ -536,7 +536,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			ctx := suite.ctx
+			ctx := suite.Ctx
 
 			poolID := suite.prepareCustomBalancerPool(
 				sdk.NewCoins(

@@ -134,11 +134,11 @@ func (suite *KeeperTestSuite) TestQueryTotalShares() {
 
 	// Mint more share token.
 	// TODO: Change this test structure. perhaps JoinPoolExactShareAmountOut can be used once written
-	// pool, err := suite.App.GAMMKeeper.GetPool(suite.ctx, poolId)
+	// pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 	// suite.Require().NoError(err)
-	// err = suite.App.GAMMKeeper.MintPoolShareToAccount(suite.ctx, pool, acc1, types.OneShare.MulRaw(10))
+	// err = suite.App.GAMMKeeper.MintPoolShareToAccount(suite.Ctx, pool, acc1, types.OneShare.MulRaw(10))
 	// suite.Require().NoError(err)
-	// suite.Require().NoError(suite.App.GAMMKeeper.SetPool(suite.ctx, pool))
+	// suite.Require().NoError(suite.App.GAMMKeeper.SetPool(suite.Ctx, pool))
 
 	// res, err = queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolId})
 	// suite.Require().NoError(err)

@@ -23,10 +23,10 @@ func (suite *KeeperTestSuite) measureJoinPoolGas(
 	poolID uint64,
 	shareOutAmountMax sdk.Int, maxCoins sdk.Coins,
 ) uint64 {
-	alreadySpent := suite.ctx.GasMeter().GasConsumed()
-	err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.ctx, addr, poolID, shareOutAmountMax, maxCoins)
+	alreadySpent := suite.Ctx.GasMeter().GasConsumed()
+	err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, addr, poolID, shareOutAmountMax, maxCoins)
 	suite.Require().NoError(err)
-	newSpent := suite.ctx.GasMeter().GasConsumed()
+	newSpent := suite.Ctx.GasMeter().GasConsumed()
 	spentNow := newSpent - alreadySpent
 	return spentNow
 }
@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	totalNumJoins := 10000
 
 	// mint some assets to the accounts
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.ctx, defaultAddr, sdk.NewCoins(
+	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, defaultAddr, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000000)),
 		sdk.NewCoin("foo", sdk.NewInt(10000000000000000)),
 		sdk.NewCoin("bar", sdk.NewInt(10000000000000000)),
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	suite.Assert().LessOrEqual(int(firstJoinGas), 100000)
 
 	for i := 1; i < startAveragingAt; i++ {
-		err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
+		err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
 		suite.Require().NoError(err)
 	}
 
@@ -92,7 +92,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	suite.SetupTest()
 
 	// mint some usomo to account
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.ctx, defaultAddr, sdk.NewCoins(
+	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, defaultAddr, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)),
 	))
 	suite.Require().NoError(err)
@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	coins := sdk.NewCoins(
 		sdk.NewCoin("randToken1", sdk.NewInt(100)),
 	)
-	err = simapp.FundAccount(suite.App.BankKeeper, suite.ctx, defaultAddr, coins)
+	err = simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, defaultAddr, coins)
 	suite.Require().NoError(err)
 
 	defaultPoolParams := balancertypes.PoolParams{
@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 		prevRandToken := "randToken" + strconv.Itoa(i)
 		coins := sdk.NewCoins(sdk.NewCoin(randToken, sdk.NewInt(100)))
 
-		err = simapp.FundAccount(suite.App.BankKeeper, suite.ctx, defaultAddr, coins)
+		err = simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, defaultAddr, coins)
 		suite.Require().NoError(err)
 
 		poolAssets := []balancertypes.PoolAsset{
@@ -130,7 +130,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 			},
 		}
 		msg := balancer.NewMsgCreateBalancerPool(defaultAddr, defaultPoolParams, poolAssets, "")
-		_, err = suite.App.GAMMKeeper.CreatePool(suite.ctx, msg)
+		_, err = suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
 		suite.Require().NoError(err)
 	}
 
@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	firstJoinGas := suite.measureJoinPoolGas(defaultAddr, initialPoolId, minShareOutAmount, defaultCoins)
 
 	for i := 2; i < denomNumber; i++ {
-		err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.ctx, defaultAddr, uint64(i), minShareOutAmount, sdk.Coins{})
+		err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, defaultAddr, uint64(i), minShareOutAmount, sdk.Coins{})
 		suite.Require().NoError(err)
 	}
 
