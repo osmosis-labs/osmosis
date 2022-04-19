@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/common"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 )
 
@@ -38,7 +38,7 @@ func AddAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 	}
 
-	authGenState := authtypes.GetGenesisStateFromAppState(common.Cdc, appState)
+	authGenState := authtypes.GetGenesisStateFromAppState(util.Cdc, appState)
 
 	accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
 	if err != nil {
@@ -61,18 +61,18 @@ func AddAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 
 	authGenState.Accounts = genAccs
 
-	authGenStateBz, err := common.Cdc.MarshalJSON(&authGenState)
+	authGenStateBz, err := util.Cdc.MarshalJSON(&authGenState)
 	if err != nil {
 		return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 	}
 
 	appState[authtypes.ModuleName] = authGenStateBz
 
-	bankGenState := banktypes.GetGenesisStateFromAppState(common.Cdc, appState)
+	bankGenState := banktypes.GetGenesisStateFromAppState(util.Cdc, appState)
 	bankGenState.Balances = append(bankGenState.Balances, balances)
 	bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 
-	bankGenStateBz, err := common.Cdc.MarshalJSON(bankGenState)
+	bankGenStateBz, err := util.Cdc.MarshalJSON(bankGenState)
 	if err != nil {
 		return fmt.Errorf("failed to marshal bank genesis state: %w", err)
 	}
@@ -89,7 +89,7 @@ func AddAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 }
 
 func Init(c *chain.Chain) error {
-	_, cdc := common.InitEncodingConfigAndCdc()
+	_, cdc := util.InitEncodingConfigAndCdc()
 
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
@@ -110,13 +110,13 @@ func Init(c *chain.Chain) error {
 
 	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
 		Description: "An example stable token",
-		Display:     common.OsmoDenom,
-		Base:        common.OsmoDenom,
-		Symbol:      common.OsmoDenom,
-		Name:        common.OsmoDenom,
+		Display:     chain.OsmoDenom,
+		Base:        chain.OsmoDenom,
+		Symbol:      chain.OsmoDenom,
+		Name:        chain.OsmoDenom,
 		DenomUnits: []*banktypes.DenomUnit{
 			{
-				Denom:    common.OsmoDenom,
+				Denom:    chain.OsmoDenom,
 				Exponent: 0,
 			},
 		},
@@ -136,9 +136,9 @@ func Init(c *chain.Chain) error {
 	// generate genesis txs
 	genTxs := make([]json.RawMessage, len(c.Validators))
 	for i, val := range c.Validators {
-		stakeAmountCoin := common.StakeAmountCoinA
-		if c.Id != common.ChainAID {
-			stakeAmountCoin = common.StakeAmountCoinB
+		stakeAmountCoin := chain.StakeAmountCoinA
+		if c.Id != chain.ChainAID {
+			stakeAmountCoin = chain.StakeAmountCoinB
 		}
 		createValmsg, err := val.BuildCreateValidatorMsg(stakeAmountCoin)
 		if err != nil {
@@ -180,7 +180,7 @@ func Init(c *chain.Chain) error {
 
 	// write the updated genesis file to each validator
 	for _, val := range c.Validators {
-		common.WriteFile(filepath.Join(val.ConfigDir(), "config", "genesis.json"), bz)
+		util.WriteFile(filepath.Join(val.ConfigDir(), "config", "genesis.json"), bz)
 	}
 	return nil
 }
