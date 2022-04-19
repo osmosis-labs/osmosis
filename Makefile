@@ -105,7 +105,7 @@ build-reproducible: go.sum
 	--env COMMIT=$(COMMIT) \
 	--env LEDGER_ENABLED=$(LEDGER_ENABLED) \
 	--name latest-build osmolabs/rbuilder:latest
-	$(DOCKER) cp -a latest-build:/root/artifacts/ $(CURDIR)/
+	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
