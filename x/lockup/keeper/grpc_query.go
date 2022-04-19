@@ -191,6 +191,26 @@ func (q Querier) AccountLockedLongerDuration(goCtx context.Context, req *types.A
 	return &types.AccountLockedLongerDurationResponse{Locks: locks}, nil
 }
 
+// AccountLockedLongerDurationDenom Returns account locked with duration longer than specified with specific denom.
+func (q Querier) AccountLockedLongerDurationDenom(goCtx context.Context, req *types.AccountLockedLongerDurationDenomRequest) (*types.AccountLockedLongerDurationDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if len(req.Owner) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	owner, err := sdk.AccAddressFromBech32(req.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	locks := q.Keeper.GetAccountLockedLongerDurationDenom(ctx, owner, req.Denom, req.Duration)
+	return &types.AccountLockedLongerDurationDenomResponse{Locks: locks}, nil
+}
+
 // AccountLockedDuration Returns account locked with the duration specified
 func (k Keeper) AccountLockedDuration(goCtx context.Context, req *types.AccountLockedDurationRequest) (*types.AccountLockedDurationResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -202,19 +222,6 @@ func (k Keeper) AccountLockedDuration(goCtx context.Context, req *types.AccountL
 	}
 	locks := k.GetAccountLockedDuration(ctx, owner, req.Duration)
 	return &types.AccountLockedDurationResponse{Locks: locks}, nil
-}
-
-// AccountLockedLongerDurationDenom Returns account locked with duration longer than specified with specific denom
-func (k Keeper) AccountLockedLongerDurationDenom(goCtx context.Context, req *types.AccountLockedLongerDurationDenomRequest) (*types.AccountLockedLongerDurationDenomResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	owner, err := sdk.AccAddressFromBech32(req.Owner)
-	if err != nil {
-		return nil, err
-	}
-
-	locks := q.Keeper.GetAccountLockedLongerDurationDenom(ctx, owner, req.Denom, req.Duration)
-	return &types.AccountLockedLongerDurationDenomResponse{Locks: locks}, nil
 }
 
 // AccountLockedPastTimeNotUnlockingOnly Returns locked records of an account with unlock time beyond timestamp excluding tokens started unlocking.
