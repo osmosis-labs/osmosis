@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
@@ -25,10 +26,10 @@ var (
 )
 
 type KeeperTestSuite struct {
-	suite.Suite
+	apptesting.KeeperTestHelper
 
-	app         *app.OsmosisApp
-	ctx         sdk.Context
+	ctx sdk.Context
+
 	queryClient types.QueryClient
 }
 
@@ -37,17 +38,17 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.app = app.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.App = app.Setup(false)
+	suite.ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*suite.app.GAMMKeeper))
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.App.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*suite.App.GAMMKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, sdk.NewCoins(
+		err := simapp.FundAccount(suite.App.BankKeeper, suite.ctx, acc, sdk.NewCoins(
 			sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 			sdk.NewCoin("foo", sdk.NewInt(10000000)),
 			sdk.NewCoin("bar", sdk.NewInt(10000000)),
@@ -71,7 +72,7 @@ func (suite *KeeperTestSuite) prepareBalancerPoolWithPoolParams(poolParams balan
 		},
 	}
 
-	poolID, err := suite.app.GAMMKeeper.CreatePool(
+	poolID, err := suite.App.GAMMKeeper.CreatePool(
 		suite.ctx,
 		balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, ""),
 	)
@@ -86,11 +87,11 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 	poolParams balancer.PoolParams,
 ) uint64 {
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, balances)
+		err := simapp.FundAccount(suite.App.BankKeeper, suite.ctx, acc, balances)
 		suite.Require().NoError(err)
 	}
 
-	poolID, err := suite.app.GAMMKeeper.CreatePool(
+	poolID, err := suite.App.GAMMKeeper.CreatePool(
 		suite.ctx,
 		balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, ""),
 	)
@@ -105,15 +106,15 @@ func (suite *KeeperTestSuite) prepareBalancerPool() uint64 {
 		ExitFee: sdk.NewDec(0),
 	})
 
-	spotPrice, err := suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "foo", "bar")
+	spotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "foo", "bar")
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewDec(2).String(), spotPrice.String())
 
-	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "bar", "baz")
+	spotPrice, err = suite.App.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "bar", "baz")
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
 
-	spotPrice, err = suite.app.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "baz", "foo")
+	spotPrice, err = suite.App.GAMMKeeper.CalculateSpotPrice(suite.ctx, poolId, "baz", "foo")
 	suite.Require().NoError(err)
 
 	s := sdk.NewDec(1).Quo(sdk.NewDec(3))

@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 		suite.prepareBalancerPool()
 		suite.prepareBalancerPool()
 
-		keeper := suite.app.GAMMKeeper
+		keeper := suite.App.GAMMKeeper
 
 		if test.expectPass {
 			// Calculate the chained spot price.
@@ -141,7 +141,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 		suite.prepareBalancerPool()
 		suite.prepareBalancerPool()
 
-		keeper := suite.app.GAMMKeeper
+		keeper := suite.App.GAMMKeeper
 
 		if test.expectPass {
 			// Calculate the chained spot price.

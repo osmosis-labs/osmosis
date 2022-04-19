@@ -29,7 +29,7 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 		})
 		suite.Require().NoError(err)
 		var pool types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
+		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
 		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
@@ -46,7 +46,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 		})
 		suite.Require().NoError(err)
 		var pool types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
+		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
 		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().Equal(1, len(res.Pools))
 	for _, r := range res.Pools {
 		var pool types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
+		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(types.NewPoolAddress(uint64(1)).String(), pool.GetAddress().String())
 		suite.Require().Equal(uint64(1), pool.GetId())
@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().Equal(5, len(res.Pools))
 	for i, r := range res.Pools {
 		var pool types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
+		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
 		suite.Require().Equal(uint64(i+1), pool.GetId())
@@ -134,11 +134,11 @@ func (suite *KeeperTestSuite) TestQueryTotalShares() {
 
 	// Mint more share token.
 	// TODO: Change this test structure. perhaps JoinPoolExactShareAmountOut can be used once written
-	// pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+	// pool, err := suite.App.GAMMKeeper.GetPool(suite.ctx, poolId)
 	// suite.Require().NoError(err)
-	// err = suite.app.GAMMKeeper.MintPoolShareToAccount(suite.ctx, pool, acc1, types.OneShare.MulRaw(10))
+	// err = suite.App.GAMMKeeper.MintPoolShareToAccount(suite.ctx, pool, acc1, types.OneShare.MulRaw(10))
 	// suite.Require().NoError(err)
-	// suite.Require().NoError(suite.app.GAMMKeeper.SetPool(suite.ctx, pool))
+	// suite.Require().NoError(suite.App.GAMMKeeper.SetPool(suite.ctx, pool))
 
 	// res, err = queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolId})
 	// suite.Require().NoError(err)

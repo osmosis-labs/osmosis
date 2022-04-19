@@ -84,7 +84,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 		// Init suite for each test.
 		suite.SetupTest()
 		poolId := suite.prepareBalancerPool()
-		keeper := suite.app.GAMMKeeper
+		keeper := suite.App.GAMMKeeper
 
 		if test.expectPass {
 			spotPriceBefore, err := keeper.CalculateSpotPrice(suite.ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 		suite.SetupTest()
 		poolId := suite.prepareBalancerPool()
 
-		keeper := suite.app.GAMMKeeper
+		keeper := suite.App.GAMMKeeper
 
 		if test.expectPass {
 			spotPriceBefore, err := keeper.CalculateSpotPrice(suite.ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, acc, sdk.NewCoins(
+			err := simapp.FundAccount(suite.App.BankKeeper, suite.ctx, acc, sdk.NewCoins(
 				sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 				sdk.NewCoin("foo", sdk.NewInt(10000000)),
 				sdk.NewCoin("bar", sdk.NewInt(10000000)),
@@ -244,14 +244,14 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
 
 			if tc.expectPass {
-				_, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
+				_, err = suite.App.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
 				suite.Require().NoError(err)
-				_, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
+				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
 				suite.Require().NoError(err)
 			} else {
-				_, err = suite.app.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
+				_, err = suite.App.GAMMKeeper.SwapExactAmountIn(suite.ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
 				suite.Require().Error(err)
-				_, err = suite.app.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
+				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
 				suite.Require().Error(err)
 			}
 		}
