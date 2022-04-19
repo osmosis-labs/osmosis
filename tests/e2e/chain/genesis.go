@@ -1,23 +1,22 @@
-package genesis
+package chain
 
 import (
 	"encoding/json"
-	"path/filepath"
 	"fmt"
+	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/server"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 )
 
-func Init(c *chain.Chain) error {
+func InitGenesis(c *Chain) error {
 	_, cdc := util.InitEncodingConfigAndCdc()
 
 	serverCtx := server.NewDefaultContext()
@@ -28,7 +27,7 @@ func Init(c *chain.Chain) error {
 
 	genFilePath := config.GenesisFile()
 	appGenState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFilePath)
-	if err != nil { 
+	if err != nil {
 		return err
 	}
 
@@ -39,13 +38,13 @@ func Init(c *chain.Chain) error {
 
 	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
 		Description: "An example stable token",
-		Display:     chain.OsmoDenom,
-		Base:        chain.OsmoDenom,
-		Symbol:      chain.OsmoDenom,
-		Name:        chain.OsmoDenom,
+		Display:     OsmoDenom,
+		Base:        OsmoDenom,
+		Symbol:      OsmoDenom,
+		Name:        OsmoDenom,
 		DenomUnits: []*banktypes.DenomUnit{
 			{
-				Denom:    chain.OsmoDenom,
+				Denom:    OsmoDenom,
 				Exponent: 0,
 			},
 		},
@@ -65,9 +64,9 @@ func Init(c *chain.Chain) error {
 	// generate genesis txs
 	genTxs := make([]json.RawMessage, len(c.Validators))
 	for i, val := range c.Validators {
-		stakeAmountCoin := chain.StakeAmountCoinA
-		if c.Id != chain.ChainAID {
-			stakeAmountCoin = chain.StakeAmountCoinB
+		stakeAmountCoin := StakeAmountCoinA
+		if c.Id != ChainAID {
+			stakeAmountCoin = StakeAmountCoinB
 		}
 		createValmsg, err := val.BuildCreateValidatorMsg(stakeAmountCoin)
 		if err != nil {
@@ -116,7 +115,7 @@ func Init(c *chain.Chain) error {
 	return nil
 }
 
-func InitNodes(c *chain.Chain) error {
+func InitNodes(c *Chain) error {
 	if err := c.CreateAndInitValidators(2); err != nil {
 		return err
 	}
@@ -124,12 +123,12 @@ func InitNodes(c *chain.Chain) error {
 	// initialize a genesis file for the first validator
 	val0ConfigDir := c.Validators[0].ConfigDir()
 	for _, val := range c.Validators {
-		if c.Id == chain.ChainAID {
-			if err := addAccount(val0ConfigDir, "", chain.InitBalanceStrA, val.GetKeyInfo().GetAddress()); err != nil {
+		if c.Id == ChainAID {
+			if err := addAccount(val0ConfigDir, "", InitBalanceStrA, val.GetKeyInfo().GetAddress()); err != nil {
 				return err
 			}
-		} else if c.Id == chain.ChainBID {
-			if err := addAccount(val0ConfigDir, "", chain.InitBalanceStrB, val.GetKeyInfo().GetAddress()); err != nil {
+		} else if c.Id == ChainBID {
+			if err := addAccount(val0ConfigDir, "", InitBalanceStrB, val.GetKeyInfo().GetAddress()); err != nil {
 				return err
 			}
 		}

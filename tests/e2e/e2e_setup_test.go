@@ -23,9 +23,8 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/genesis"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
 type IntegrationTestSuite struct {
@@ -47,12 +46,23 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
+	// The boostrapping phase is as follows:
+	//
+	// 1. Initialize Osmosis validator nodes.
+	// 2. Create and initialize Osmosis validator genesis files (both chains)
+	// 3. Start both networks.
 	var err error
-	s.chainA, err = chain.New(chain.ChainAID)
+	s.T().Logf("starting e2e infrastructure for chain-id: %s", chain.ChainAID)
+	s.chainA, err = chain.Init(chain.ChainAID)
 	s.Require().NoError(err)
+	s.initValidatorConfigs(s.chainA)
+	s.T().Logf("chain-id: %s is now configured on path: %s", chain.ChainAID, s.chainA.DataDir)
 
-	s.chainB, err = chain.New(chain.ChainBID)
+	s.T().Logf("starting e2e infrastructure for chain-id: %s", chain.ChainBID)
+	s.chainB, err = chain.Init(chain.ChainBID)
 	s.Require().NoError(err)
+	s.initValidatorConfigs(s.chainB)
+	s.T().Logf("chain-id: %s is now configured on path: %s", chain.ChainBID, s.chainB.DataDir)
 
 	s.dkrPool, err = dockertest.NewPool("")
 	s.Require().NoError(err)
@@ -62,32 +72,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.valResources = make(map[string][]*dockertest.Resource)
 
-	// The boostrapping phase is as follows:
-	//
-	// 1. Initialize Osmosis validator nodes.
-	// 2. Create and initialize Osmosis validator genesis files (both chains)
-	// 3. Start both networks.
-
-	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chainA.Id, s.chainA.DataDir)
-	if err := genesis.InitNodes(s.chainA); err != nil {
-		s.Require().NoError(err)
-	}
-	if err := genesis.Init(s.chainA); err != nil {
-		s.Require().NoError(err)
-	}
-	s.initValidatorConfigs(s.chainA)
 	s.runValidators(s.chainA, 0)
-
-	s.T().Logf("starting e2e infrastructure for chain B; chain-id: %s; datadir: %s", s.chainB.Id, s.chainB.DataDir)
-	if err := genesis.InitNodes(s.chainB); err != nil {
-		s.Require().NoError(err)
-	}
-	if err := genesis.Init(s.chainB); err != nil {
-		s.Require().NoError(err)
-	}
-	s.initValidatorConfigs(s.chainB)
 	s.runValidators(s.chainB, 10)
-
 	s.runIBCRelayer()
 }
 
