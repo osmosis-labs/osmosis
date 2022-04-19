@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	for _, test := range tests {
 		// Init suite for each test.
 		suite.SetupTest()
-		poolId := suite.prepareBalancerPool()
+		poolId := suite.PrepareBalancerPool()
 		keeper := suite.App.GAMMKeeper
 
 		if test.expectPass {
@@ -181,7 +181,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	for _, test := range tests {
 		// Init suite for each test.
 		suite.SetupTest()
-		poolId := suite.prepareBalancerPool()
+		poolId := suite.PrepareBalancerPool()
 
 		keeper := suite.App.GAMMKeeper
 
@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 				panic(err)
 			}
 
-			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: sdk.NewDec(0),
 				ExitFee: sdk.NewDec(0),
 			})

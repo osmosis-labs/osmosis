@@ -45,8 +45,8 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 		suite.SetupTest()
 
 		// Prepare 2 pools
-		suite.prepareBalancerPool()
-		suite.prepareBalancerPool()
+		suite.PrepareBalancerPool()
+		suite.PrepareBalancerPool()
 
 		keeper := suite.App.GAMMKeeper
 
@@ -138,8 +138,8 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 		suite.SetupTest()
 
 		// Prepare 2 pools
-		suite.prepareBalancerPool()
-		suite.prepareBalancerPool()
+		suite.PrepareBalancerPool()
+		suite.PrepareBalancerPool()
 
 		keeper := suite.App.GAMMKeeper
 

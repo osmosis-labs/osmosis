@@ -460,7 +460,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 			suite.Require().NoError(err)
 
 			// Create the pool at first
-			poolId := suite.prepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: sdk.NewDec(0),
 				ExitFee: sdk.NewDec(0),
 			})

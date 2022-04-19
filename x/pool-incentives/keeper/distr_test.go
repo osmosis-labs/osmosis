@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	}
 	suite.App.MintKeeper.SetParams(suite.Ctx, params)
 
-	poolId := suite.prepareBalancerPool()
+	poolId := suite.PrepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 	lockableDurations := keeper.GetLockableDurations(suite.Ctx)
@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() uint64 {
 	})
 	suite.Error(err)
 
-	poolId := suite.prepareBalancerPool()
+	poolId := suite.PrepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state for testing
 	lockableDurations := keeper.GetLockableDurations(suite.Ctx)
@@ -290,7 +290,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
 	})
 	suite.Error(err)
 
-	poolId := suite.prepareBalancerPool()
+	poolId := suite.PrepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state for testing
 	lockableDurations := keeper.GetLockableDurations(suite.Ctx)
