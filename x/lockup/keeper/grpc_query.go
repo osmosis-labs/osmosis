@@ -212,15 +212,22 @@ func (q Querier) AccountLockedLongerDurationDenom(goCtx context.Context, req *ty
 }
 
 // AccountLockedDuration Returns account locked with the duration specified
-func (k Keeper) AccountLockedDuration(goCtx context.Context, req *types.AccountLockedDurationRequest) (*types.AccountLockedDurationResponse, error) {
+func (q Querier) AccountLockedDuration(goCtx context.Context, req *types.AccountLockedDurationRequest) (*types.AccountLockedDurationResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if len(req.Owner) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	owner, err := sdk.AccAddressFromBech32(req.Owner)
-	if req.Owner == "" {
-		return nil, errors.New("empty address")
-	} else if err != nil {
+	if err != nil {
 		return nil, err
 	}
-	locks := k.GetAccountLockedDuration(ctx, owner, req.Duration)
+
+	locks := q.Keeper.GetAccountLockedDuration(ctx, owner, req.Duration)
 	return &types.AccountLockedDurationResponse{Locks: locks}, nil
 }
 
