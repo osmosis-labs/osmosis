@@ -15,7 +15,6 @@ func TestMsgCreatePool(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address())
 
 	createMsg := func(after func(msg MsgCreateGauge) MsgCreateGauge) MsgCreateGauge {
-
 		distributeTo := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",

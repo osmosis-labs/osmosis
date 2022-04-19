@@ -51,7 +51,7 @@ func (t Tree) Remove(key []byte) {
 type node struct {
 	tree  Tree
 	level uint16
-	key []byte
+	key   []byte
 	// XXX: cache stored value?
 }
 

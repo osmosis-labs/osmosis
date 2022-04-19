@@ -263,7 +263,6 @@ Example:
 				if _, ok := nonAirdropAccs[acc.Address]; !ok {
 					nonAirdropAccs[acc.Address] = sdk.NewCoins()
 				}
-
 			}
 
 			for addr, amt := range ionAmts {

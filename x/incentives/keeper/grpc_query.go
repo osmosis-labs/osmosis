@@ -54,7 +54,6 @@ func (k Keeper) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -78,7 +77,6 @@ func (k Keeper) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesReque
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -102,7 +100,6 @@ func (k Keeper) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesR
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

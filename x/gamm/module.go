@@ -93,7 +93,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper) AppModule {
+	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -170,7 +171,6 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for supply module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	return
 }
 
 // WeightedOperations returns all the simulation operations with their respective weights.

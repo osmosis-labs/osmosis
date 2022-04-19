@@ -99,7 +99,6 @@ func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper) AppModule {
 
 // RegisterInvariants registers the pool-incentives module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
-	return
 }
 
 // Route returns the message routing key for the pool-incentives module.
@@ -164,7 +163,6 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for supply module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
