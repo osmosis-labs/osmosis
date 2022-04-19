@@ -19,9 +19,12 @@ import (
 	"github.com/tendermint/tendermint/config"
 )
 
-var fheight = "full_height"
-var mheight = "min_height"
 const batchMaxSize = 1000
+
+var (
+    fheight = "full_height"
+    mheight = "min_height"
+)
 
 // get cmd to convert any bech32 address to an osmo prefix.
 func forceprune() *cobra.Command {
