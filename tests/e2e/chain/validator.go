@@ -27,7 +27,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	osmosisApp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/common"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
 type Validator struct {
@@ -91,7 +91,7 @@ func (v *Validator) init() error {
 		return err
 	}
 
-	appState, err := json.MarshalIndent(osmosisApp.ModuleBasics.DefaultGenesis(common.Cdc), "", " ")
+	appState, err := json.MarshalIndent(osmosisApp.ModuleBasics.DefaultGenesis(util.Cdc), "", " ")
 	if err != nil {
 		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
 	}
@@ -255,7 +255,7 @@ func (v *Validator) BuildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 }
 
 func (v *Validator) SignMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
-	txBuilder := common.EncodingConfig.TxConfig.NewTxBuilder()
+	txBuilder := util.EncodingConfig.TxConfig.NewTxBuilder()
 
 	if err := txBuilder.SetMsgs(msgs...); err != nil {
 		return nil, err
@@ -292,7 +292,7 @@ func (v *Validator) SignMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 		return nil, err
 	}
 
-	bytesToSign, err := common.EncodingConfig.TxConfig.SignModeHandler().GetSignBytes(
+	bytesToSign, err := util.EncodingConfig.TxConfig.SignModeHandler().GetSignBytes(
 		txsigning.SignMode_SIGN_MODE_DIRECT,
 		signerData,
 		txBuilder.GetTx(),
@@ -319,7 +319,7 @@ func (v *Validator) SignMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	}
 
 	signedTx := txBuilder.GetTx()
-	bz, err := common.EncodingConfig.TxConfig.TxEncoder()(signedTx)
+	bz, err := util.EncodingConfig.TxConfig.TxEncoder()(signedTx)
 	if err != nil {
 		return nil, err
 	}

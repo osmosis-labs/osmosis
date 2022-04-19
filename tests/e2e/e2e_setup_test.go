@@ -23,14 +23,14 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/common"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/genesis"
 )
 
 var (
-	initBalanceStrA  = fmt.Sprintf("%d%s,%d%s", common.OsmoBalanceA, common.OsmoDenom, common.StakeBalanceA, common.StakeDenom)
-	initBalanceStrB  = fmt.Sprintf("%d%s,%d%s", common.OsmoBalanceB, common.OsmoDenom, common.StakeBalanceB, common.StakeDenom)
+	initBalanceStrA  = fmt.Sprintf("%d%s,%d%s", util.OsmoBalanceA, util.OsmoDenom, util.StakeBalanceA, util.StakeDenom)
+	initBalanceStrB  = fmt.Sprintf("%d%s,%d%s", util.OsmoBalanceB, util.OsmoDenom, util.StakeBalanceB, util.StakeDenom)
 )
 
 type IntegrationTestSuite struct {
@@ -53,10 +53,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
 	var err error
-	s.chainA, err = chain.New(common.ChainAID)
+	s.chainA, err = chain.New(util.ChainAID)
 	s.Require().NoError(err)
 
-	s.chainB, err = chain.New(common.ChainBID)
+	s.chainB, err = chain.New(util.ChainBID)
 	s.Require().NoError(err)
 
 	s.dkrPool, err = dockertest.NewPool("")
@@ -124,11 +124,11 @@ func (s *IntegrationTestSuite) initNodes(c *chain.Chain) {
 	// initialize a genesis file for the first validator
 	val0ConfigDir := c.Validators[0].ConfigDir()
 	for _, val := range c.Validators {
-		if c.Id == common.ChainAID {
+		if c.Id == util.ChainAID {
 			s.Require().NoError(
 				genesis.AddAccount(val0ConfigDir, "", initBalanceStrA, val.GetKeyInfo().GetAddress()),
 			)
-		} else if c.Id == common.ChainBID {
+		} else if c.Id == util.ChainBID {
 			s.Require().NoError(
 				genesis.AddAccount(val0ConfigDir, "", initBalanceStrB, val.GetKeyInfo().GetAddress()),
 			)
@@ -137,7 +137,7 @@ func (s *IntegrationTestSuite) initNodes(c *chain.Chain) {
 
 	// copy the genesis file to the remaining validators
 	for _, val := range c.Validators[1:] {
-		_, err := common.CopyFile(
+		_, err := util.CopyFile(
 			filepath.Join(val0ConfigDir, "config", "genesis.json"),
 			filepath.Join(val.ConfigDir(), "config", "genesis.json"),
 		)
@@ -184,7 +184,7 @@ func (s *IntegrationTestSuite) initValidatorConfigs(c *chain.Chain) {
 
 		appConfig := srvconfig.DefaultConfig()
 		appConfig.API.Enable = true
-		appConfig.MinGasPrices = fmt.Sprintf("%s%s", common.MinGasPrice, common.OsmoDenom)
+		appConfig.MinGasPrices = fmt.Sprintf("%s%s", util.MinGasPrice, util.OsmoDenom)
 
 		srvconfig.WriteConfigFile(appCfgPath, appConfig)
 	}
@@ -266,7 +266,7 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	hermesCfgPath := path.Join(tmpDir, "hermes")
 
 	s.Require().NoError(os.MkdirAll(hermesCfgPath, 0o755))
-	_, err = common.CopyFile(
+	_, err = util.CopyFile(
 		filepath.Join("./scripts/", "hermes_bootstrap.sh"),
 		filepath.Join(hermesCfgPath, "hermes_bootstrap.sh"),
 	)
