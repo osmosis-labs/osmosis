@@ -211,7 +211,7 @@ func (q Querier) AccountLockedLongerDurationDenom(goCtx context.Context, req *ty
 	return &types.AccountLockedLongerDurationDenomResponse{Locks: locks}, nil
 }
 
-// AccountLockedDuration Returns account locked with the duration specified
+// AccountLockedDuration returns the account locked with the specified duration.
 func (q Querier) AccountLockedDuration(goCtx context.Context, req *types.AccountLockedDurationRequest) (*types.AccountLockedDurationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
