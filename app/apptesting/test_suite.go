@@ -30,15 +30,17 @@ type KeeperTestHelper struct {
 	App         *app.OsmosisApp
 	Ctx         sdk.Context
 	QueryHelper *baseapp.QueryServiceTestHelper
+	TestAccs    []sdk.AccAddress
 }
 
-func (keeperTestHelper *KeeperTestHelper) SetupTestApp() {
+func (keeperTestHelper *KeeperTestHelper) Setup() {
 	keeperTestHelper.App = app.Setup(false)
 	keeperTestHelper.Ctx = keeperTestHelper.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 	keeperTestHelper.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: keeperTestHelper.App.GRPCQueryRouter(),
 		Ctx:             keeperTestHelper.Ctx,
 	}
+	keeperTestHelper.TestAccs = CreateRandomAccounts(3)
 }
 
 func (keeperTestHelper *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
@@ -224,4 +226,15 @@ func (keeperTestHelper *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins 
 	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(keeperTestHelper.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
 	keeperTestHelper.Require().NoError(err)
 	return msgResponse.ID
+}
+
+// CreateRandomAccounts is a function return a list of randomly generated AccAddresses
+func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
+	testAddrs := make([]sdk.AccAddress, numAccts)
+	for i := 0; i < numAccts; i++ {
+		pk := ed25519.GenPrivKey().PubKey()
+		testAddrs[i] = sdk.AccAddress(pk.Address())
+	}
+
+	return testAddrs
 }

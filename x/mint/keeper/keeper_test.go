@@ -23,7 +23,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.SetupTestApp()
+	suite.Setup()
 }
 
 func TestKeeperTestSuite(t *testing.T) {

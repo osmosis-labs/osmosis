@@ -20,7 +20,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.SetupTestApp()
+	suite.Setup()
 	suite.querier = keeper.NewQuerier(*suite.App.LockupKeeper)
 }
 

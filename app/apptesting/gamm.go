@@ -1,21 +1,17 @@
 package apptesting
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-var (
-	gammPoolMakerAcc           = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address().Bytes())
-	DefaultAcctFunds sdk.Coins = sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-		sdk.NewCoin("foo", sdk.NewInt(10000000)),
-		sdk.NewCoin("bar", sdk.NewInt(10000000)),
-		sdk.NewCoin("baz", sdk.NewInt(10000000)),
-	)
+var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
+	sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+	sdk.NewCoin("foo", sdk.NewInt(10000000)),
+	sdk.NewCoin("bar", sdk.NewInt(10000000)),
+	sdk.NewCoin("baz", sdk.NewInt(10000000)),
 )
 
 // Returns a Univ2 pool with the initial liquidity being the provided balances
@@ -57,7 +53,7 @@ func (suite *KeeperTestHelper) PrepareBalancerPool() uint64 {
 
 func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
 	// Mint some assets to the account.
-	suite.FundAcc(gammPoolMakerAcc, DefaultAcctFunds)
+	suite.FundAcc(suite.TestAccs[0], DefaultAcctFunds)
 
 	poolAssets := []balancer.PoolAsset{
 		{
@@ -73,7 +69,7 @@ func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams bala
 			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
 		},
 	}
-	msg := balancer.NewMsgCreateBalancerPool(gammPoolMakerAcc, poolParams, poolAssets, "")
+	msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], poolParams, poolAssets, "")
 	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
 	suite.NoError(err)
 	return poolId
@@ -87,9 +83,9 @@ func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balance
 	for _, a := range assets {
 		fundCoins = fundCoins.Add(a.Token)
 	}
-	suite.FundAcc(gammPoolMakerAcc, fundCoins)
+	suite.FundAcc(suite.TestAccs[0], fundCoins)
 
-	msg := balancer.NewMsgCreateBalancerPool(gammPoolMakerAcc, balancer.PoolParams{
+	msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 		SwapFee: sdk.ZeroDec(),
 		ExitFee: sdk.ZeroDec(),
 	}, assets, "")

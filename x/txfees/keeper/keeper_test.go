@@ -25,7 +25,7 @@ var (
 )
 
 func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
-	suite.SetupTestApp()
+	suite.Setup()
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 
 	// Mint some assets to the accounts.

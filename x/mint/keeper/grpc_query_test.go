@@ -16,7 +16,7 @@ type MintTestSuite struct {
 }
 
 func (suite *MintTestSuite) SetupTest() {
-	suite.SetupTestApp()
+	suite.Setup()
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 }
 

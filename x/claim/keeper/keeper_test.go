@@ -16,7 +16,7 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.SetupTestApp()
+	suite.Setup()
 	airdropStartTime := suite.Ctx.BlockHeader().Time
 	suite.App.ClaimKeeper.CreateModuleAccount(suite.Ctx, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
 
