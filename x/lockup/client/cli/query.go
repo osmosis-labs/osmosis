@@ -577,7 +577,7 @@ $ %s query lockup account-locked-duration <address> <duration>
 	return cmd
 }
 
-// GetCmdAccountLockedLongerDurationNotUnlockingOnly returns account locked records with longer duration from unlocking only queue
+// GetCmdAccountLockedLongerDurationNotUnlockingOnly returns account locked records with longer duration from unlocking only queue.
 func GetCmdAccountLockedLongerDurationNotUnlockingOnly() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-longer-duration-not-unlocking <address> <duration>",
