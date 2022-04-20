@@ -74,11 +74,11 @@ func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 // denominations in the pool.
 // The function sanity checks this, and panics if not the case.
 func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) {
-	l := p.PoolLiquidity.Len()
+	numTokens := p.PoolLiquidity.Len()
 	// update liquidity
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut)
 	// sanity check that no new denoms were added
-	if len(p.PoolLiquidity) != l {
+	if len(p.PoolLiquidity) != numTokens {
 		panic("updatePoolLiquidityForSwap changed number of tokens in pool")
 	}
 }
