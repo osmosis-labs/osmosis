@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#1292](https://github.com/osmosis-labs/osmosis/pull/1292) Feat: CLI account-locked-duration
+
 ### Features
 
 * [#1244](https://github.com/osmosis-labs/osmosis/pull/1244) Refactor `x/gamm`'s `ExitSwapExternAmountOut`.
