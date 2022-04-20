@@ -32,13 +32,18 @@ type KeeperTestHelper struct {
 	QueryHelper *baseapp.QueryServiceTestHelper
 }
 
-func (suite *KeeperTestHelper) SetupTestApp() {
-	suite.App = app.Setup(false)
-	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{})
-	suite.QueryHelper = &baseapp.QueryServiceTestHelper{
-		GRPCQueryRouter: suite.App.GRPCQueryRouter(),
-		Ctx:             suite.Ctx,
+func (keeperTestHelper *KeeperTestHelper) SetupTestApp() {
+	keeperTestHelper.App = app.Setup(false)
+	keeperTestHelper.Ctx = keeperTestHelper.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	keeperTestHelper.QueryHelper = &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: keeperTestHelper.App.GRPCQueryRouter(),
+		Ctx:             keeperTestHelper.Ctx,
 	}
+}
+
+func (keeperTestHelper *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
+	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc, amounts)
+	keeperTestHelper.Require().NoError(err)
 }
 
 func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
@@ -47,8 +52,7 @@ func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes
 	bondDenom := keeperTestHelper.App.StakingKeeper.GetParams(keeperTestHelper.Ctx).BondDenom
 	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
 
-	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, sdk.AccAddress(valAddr), selfBond)
-	keeperTestHelper.Require().NoError(err)
+	keeperTestHelper.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
 	sh := teststaking.NewHelper(keeperTestHelper.Suite.T(), keeperTestHelper.Ctx, *keeperTestHelper.App.StakingKeeper)
 	msg := sh.CreateValidatorMsg(valAddr, valPub, selfBond[0].Amount)
@@ -149,8 +153,7 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 	poolCreationFee := keeperTestHelper.App.GAMMKeeper.GetParams(keeperTestHelper.Ctx)
-	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, poolCreationFee.PoolCreationFee)
-	keeperTestHelper.Require().NoError(err)
+	keeperTestHelper.FundAcc(acc1, poolCreationFee.PoolCreationFee)
 
 	pools := []gammtypes.PoolI{}
 
@@ -159,11 +162,10 @@ func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(
 
 		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
 
-		err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, sdk.NewCoins(
+		keeperTestHelper.FundAcc(acc1, sdk.NewCoins(
 			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
 			sdk.NewInt64Coin(token, 100000),
 		))
-		keeperTestHelper.NoError(err)
 
 		var (
 			defaultFutureGovernor = ""
@@ -203,10 +205,9 @@ func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fro
 
 	// fund dummy account with tokens to swap
 	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
-	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc1, coins)
-	keeperTestHelper.Require().NoError(err)
+	keeperTestHelper.FundAcc(acc1, coins)
 
-	_, err = keeperTestHelper.App.GAMMKeeper.SwapExactAmountOut(
+	_, err := keeperTestHelper.App.GAMMKeeper.SwapExactAmountOut(
 		keeperTestHelper.Ctx, acc1,
 		poolId, fromAsset.Denom, fromAsset.Amount,
 		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))))
@@ -219,8 +220,7 @@ func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fro
 
 func (keeperTestHelper *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
 	msgServer := lockupkeeper.NewMsgServerImpl(keeperTestHelper.App.LockupKeeper)
-	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, addr, coins)
-	keeperTestHelper.Require().NoError(err)
+	keeperTestHelper.FundAcc(addr, coins)
 	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(keeperTestHelper.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
 	keeperTestHelper.Require().NoError(err)
 	return msgResponse.ID
