@@ -536,7 +536,7 @@ $ %s query lockup account-locked-longer-duration <address> <duration>
 	return cmd
 }
 
-// GetCmdAccountLockedDuration returns account locked records with a specific duration
+// GetCmdAccountLockedDuration returns account locked records with a specific duration.
 func GetCmdAccountLockedDuration() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-duration <address> <duration>",
