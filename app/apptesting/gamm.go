@@ -2,14 +2,21 @@ package apptesting
 
 import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-var gammPoolMakerAcc = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address().Bytes())
+var (
+	gammPoolMakerAcc           = sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address().Bytes())
+	DefaultAcctFunds sdk.Coins = sdk.NewCoins(
+		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+		sdk.NewCoin("foo", sdk.NewInt(10000000)),
+		sdk.NewCoin("bar", sdk.NewInt(10000000)),
+		sdk.NewCoin("baz", sdk.NewInt(10000000)),
+	)
+)
 
 // Returns a Univ2 pool with the initial liquidity being the provided balances
 func (suite *KeeperTestHelper) PrepareUni2PoolWithAssets(asset1, asset2 sdk.Coin) uint64 {
@@ -50,15 +57,7 @@ func (suite *KeeperTestHelper) PrepareBalancerPool() uint64 {
 
 func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
 	// Mint some assets to the account.
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, gammPoolMakerAcc, sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-		sdk.NewCoin("foo", sdk.NewInt(10000000)),
-		sdk.NewCoin("bar", sdk.NewInt(10000000)),
-		sdk.NewCoin("baz", sdk.NewInt(10000000)),
-	))
-	if err != nil {
-		panic(err)
-	}
+	suite.FundAcc(gammPoolMakerAcc, DefaultAcctFunds)
 
 	poolAssets := []balancer.PoolAsset{
 		{
@@ -88,8 +87,7 @@ func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balance
 	for _, a := range assets {
 		fundCoins = fundCoins.Add(a.Token)
 	}
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, gammPoolMakerAcc, fundCoins)
-	suite.Require().NoError(err)
+	suite.FundAcc(gammPoolMakerAcc, fundCoins)
 
 	msg := balancer.NewMsgCreateBalancerPool(gammPoolMakerAcc, balancer.PoolParams{
 		SwapFee: sdk.ZeroDec(),

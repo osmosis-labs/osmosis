@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
@@ -224,15 +223,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc, sdk.NewCoins(
-				sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-				sdk.NewCoin("foo", sdk.NewInt(10000000)),
-				sdk.NewCoin("bar", sdk.NewInt(10000000)),
-				sdk.NewCoin("baz", sdk.NewInt(10000000)),
-			))
-			if err != nil {
-				panic(err)
-			}
+			suite.FundAcc(acc, defaultAcctFunds)
 
 			poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: sdk.NewDec(0),
@@ -244,12 +235,12 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			foocoin := sdk.NewCoin("foo", sdk.NewInt(10))
 
 			if tc.expectPass {
-				_, err = suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
+				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
 				suite.Require().NoError(err)
 				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
 				suite.Require().NoError(err)
 			} else {
-				_, err = suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
+				_, err := suite.App.GAMMKeeper.SwapExactAmountIn(suite.Ctx, acc1, poolId, foocoin, "bar", sdk.ZeroInt())
 				suite.Require().Error(err)
 				_, err = suite.App.GAMMKeeper.SwapExactAmountOut(suite.Ctx, acc1, poolId, "bar", sdk.NewInt(1000000000000000000), foocoin)
 				suite.Require().Error(err)

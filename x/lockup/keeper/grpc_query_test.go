@@ -3,16 +3,14 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, coins)
-	suite.Require().NoError(err)
-	_, err = suite.querier.LockTokens(suite.Ctx, addr, coins, duration)
+	suite.FundAcc(addr, coins)
+	_, err := suite.querier.LockTokens(suite.Ctx, addr, coins, duration)
 	suite.Require().NoError(err)
 }
 

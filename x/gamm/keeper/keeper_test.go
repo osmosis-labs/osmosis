@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
@@ -43,8 +42,7 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 	poolParams balancer.PoolParams,
 ) uint64 {
 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc, balances)
-		suite.Require().NoError(err)
+		suite.FundAcc(acc, balances)
 	}
 
 	poolID, err := suite.App.GAMMKeeper.CreatePool(

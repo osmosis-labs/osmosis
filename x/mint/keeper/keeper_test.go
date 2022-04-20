@@ -71,8 +71,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 
 	// Create record
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, gaugeCreator, coins)
-	suite.NoError(err)
+	suite.FundAcc(gaugeCreator, coins)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
@@ -81,8 +80,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 
 	// mints coins so supply exists on chain
 	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
-	err = simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, gaugeCreator, mintLPtokens)
-	suite.Require().NoError(err)
+	suite.FundAcc(gaugeCreator, mintLPtokens)
 
 	gaugeId, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, true, gaugeCreator, coins, distrTo, time.Now(), 1)
 	suite.NoError(err)

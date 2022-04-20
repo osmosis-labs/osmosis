@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,11 +14,10 @@ var (
 
 func (suite *KeeperTestSuite) measureLockGas(addr sdk.AccAddress, coins sdk.Coins, dur time.Duration) uint64 {
 	// fundAccount outside of gas measurement
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, coins)
-	suite.Require().NoError(err)
+	suite.FundAcc(addr, coins)
 	// start measuring gas
 	alreadySpent := suite.Ctx.GasMeter().GasConsumed()
-	_, err = suite.App.LockupKeeper.LockTokens(suite.Ctx, addr, coins, dur)
+	_, err := suite.App.LockupKeeper.LockTokens(suite.Ctx, addr, coins, dur)
 	suite.Require().NoError(err)
 	newSpent := suite.Ctx.GasMeter().GasConsumed()
 	spentNow := newSpent - alreadySpent

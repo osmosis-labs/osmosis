@@ -13,7 +13,7 @@ package keeper_test
 // func (suite *KeeperTestSuite) TestCleanupPool() {
 // 	// Mint some assets to the accounts.
 // 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-// 		err := simapp.FundAccount(
+// 		suite.FundAcc(
 // 			suite.App.BankKeeper,
 // 			suite.Ctx,
 // 			acc,
@@ -95,7 +95,7 @@ package keeper_test
 // 		coinOf[acc.String()] = coins
 // 		coins = append(coins, sdk.NewCoin("uosmo", sdk.NewInt(1000000000)))
 
-// 		err := simapp.FundAccount(
+// 		suite.FundAcc(
 // 			suite.App.BankKeeper,
 // 			suite.Ctx,
 // 			acc,
@@ -132,7 +132,7 @@ package keeper_test
 
 // func (suite *KeeperTestSuite) TestCleanupPoolErrorOnSwap() {
 // 	suite.Ctx = suite.Ctx.WithBlockTime(time.Unix(1000, 1000))
-// 	err := simapp.FundAccount(
+// 	suite.FundAcc(
 // 		suite.App.BankKeeper,
 // 		suite.Ctx,
 // 		acc1,
@@ -172,7 +172,7 @@ package keeper_test
 
 // func (suite *KeeperTestSuite) TestCleanupPoolWithLockup() {
 // 	suite.Ctx = suite.Ctx.WithBlockTime(time.Unix(1000, 1000))
-// 	err := simapp.FundAccount(
+// 	suite.FundAcc(
 // 		suite.App.BankKeeper,
 // 		suite.Ctx,
 // 		acc1,

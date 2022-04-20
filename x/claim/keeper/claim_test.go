@@ -185,9 +185,8 @@ func (suite *KeeperTestSuite) TestDelegationAutoWithdrawAndDelegateMore() {
 
 	validator, _ = validator.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
 	delAmount := sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)
-	err = simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addrs[1],
+	suite.FundAcc(addrs[1],
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, delAmount)))
-	suite.Require().NoError(err)
 	_, err = suite.App.StakingKeeper.Delegate(suite.Ctx, addrs[1], delAmount, stakingtypes.Unbonded, validator, true)
 	suite.Require().NoError(err)
 

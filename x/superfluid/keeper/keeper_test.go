@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -103,8 +102,7 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	}
 
 	acc1 := CreateRandomAccounts(1)[0]
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, coins)
-	suite.Require().NoError(err)
+	suite.FundAcc(acc1, coins)
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),

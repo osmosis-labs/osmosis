@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
@@ -247,10 +246,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc, defaultAcctFunds)
-			if err != nil {
-				panic(err)
-			}
+			suite.FundAcc(acc, defaultAcctFunds)
 		}
 
 		test.fn()
@@ -327,10 +323,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc, defaultAcctFunds)
-			if err != nil {
-				panic(err)
-			}
+			suite.FundAcc(acc, defaultAcctFunds)
 		}
 
 		// Create the pool at first
@@ -422,10 +415,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc, defaultAcctFunds)
-			if err != nil {
-				panic(err)
-			}
+			suite.FundAcc(acc, defaultAcctFunds)
 
 			// Create the pool at first
 			msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
@@ -456,8 +446,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 
 		// Mint some assets to the accounts.
 		for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
-			err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc, defaultAcctFunds)
-			suite.Require().NoError(err)
+			suite.FundAcc(acc, defaultAcctFunds)
 
 			// Create the pool at first
 			poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
@@ -467,7 +456,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 			suite.Ctx = suite.Ctx.WithBlockTime(tc.blockTime)
 
 			// uneffected by start time
-			err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
+			err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, acc1, poolId, types.OneShare.MulRaw(50), sdk.Coins{})
 			suite.Require().NoError(err)
 			_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, acc1, poolId, types.InitPoolSharesSupply.QuoRaw(2), sdk.Coins{})
 			suite.Require().NoError(err)
@@ -539,12 +528,7 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			ctx := suite.Ctx
 
 			poolID := suite.prepareCustomBalancerPool(
-				sdk.NewCoins(
-					sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-					sdk.NewCoin("foo", sdk.NewInt(10000000)),
-					sdk.NewCoin("bar", sdk.NewInt(10000000)),
-					sdk.NewCoin("baz", sdk.NewInt(10000000)),
-				),
+				defaultAcctFunds,
 				[]balancertypes.PoolAsset{
 					{
 						Weight: sdk.NewInt(100),

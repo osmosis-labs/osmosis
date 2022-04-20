@@ -6,7 +6,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -58,12 +57,11 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-		suite.Require().NoError(err)
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
 		c := sdk.WrapSDKContext(suite.Ctx)
-		_, err = msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		_, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
 		if test.expectPass {
 			// creation of lock via LockTokens
@@ -85,8 +83,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 			suite.Require().Equal(accum.String(), "10")
 
 			// add more tokens to lock via LockTokens
-			err = simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-			suite.Require().NoError(err)
+			suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 			_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), types.NewMsgLockTokens(test.param.lockOwner, locks[0].Duration, test.param.coinsToLock))
 			suite.Require().NoError(err)
@@ -180,8 +177,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-		suite.Require().NoError(err)
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
 		c := sdk.WrapSDKContext(suite.Ctx)
@@ -244,8 +240,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-		suite.Require().NoError(err)
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
 		c := sdk.WrapSDKContext(suite.Ctx)

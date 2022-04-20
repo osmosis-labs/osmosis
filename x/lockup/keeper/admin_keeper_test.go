@@ -6,7 +6,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,15 +17,13 @@ func (suite *KeeperTestSuite) TestRelock() {
 	lock := types.NewPeriodLock(1, addr1, time.Second, suite.Ctx.BlockTime().Add(time.Second), coins)
 
 	// lock with balance
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr1, coins)
-	suite.Require().NoError(err)
-	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
+	suite.FundAcc(addr1, coins)
+	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock)
 	suite.Require().NoError(err)
 
 	// lock with balance with same id
 	coins2 := sdk.Coins{sdk.NewInt64Coin("stake2", 10)}
-	err = simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr1, coins2)
-	suite.Require().NoError(err)
+	suite.FundAcc(addr1, coins2)
 	err = keeper.AdminKeeper{*suite.App.LockupKeeper}.Relock(suite.Ctx, lock.ID, coins2)
 	suite.Require().NoError(err)
 
@@ -44,10 +41,9 @@ func (suite *KeeperTestSuite) BreakLock() {
 	lock := types.NewPeriodLock(1, addr1, time.Second, suite.Ctx.BlockTime().Add(time.Second), coins)
 
 	// lock with balance
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr1, coins)
-	suite.Require().NoError(err)
+	suite.FundAcc(addr1, coins)
 
-	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
+	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock)
 	suite.Require().NoError(err)
 
 	// break lock

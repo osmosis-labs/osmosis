@@ -8,7 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -47,8 +46,7 @@ func (suite *KeeperTestSuite) setupAddr(addrNum int, prefix string, balance sdk.
 	}
 
 	addr := sdk.AccAddress([]byte(fmt.Sprintf("addr%s%8d", prefix, addrNum)))
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, balance)
-	suite.Require().NoError(err)
+	suite.FundAcc(addr, balance)
 	return addr
 }
 
@@ -81,8 +79,7 @@ func (suite *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc) []ty
 }
 
 func (suite *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, coins)
-	suite.Require().NoError(err)
+	suite.FundAcc(addr, coins)
 	gaugeID, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch)
 	suite.Require().NoError(err)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
@@ -92,17 +89,15 @@ func (suite *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress,
 
 func (suite *KeeperTestSuite) AddToGauge(coins sdk.Coins, gaugeID uint64) uint64 {
 	addr := sdk.AccAddress([]byte("addrx---------------"))
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, coins)
-	suite.Require().NoError(err)
-	err = suite.App.IncentivesKeeper.AddToGaugeRewards(suite.Ctx, addr, coins, gaugeID)
+	suite.FundAcc(addr, coins)
+	err := suite.App.IncentivesKeeper.AddToGaugeRewards(suite.Ctx, addr, coins, gaugeID)
 	suite.Require().NoError(err)
 	return gaugeID
 }
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, coins)
-	suite.Require().NoError(err)
-	_, err = suite.App.LockupKeeper.LockTokens(suite.Ctx, addr, coins, duration)
+	suite.FundAcc(addr, coins)
+	_, err := suite.App.LockupKeeper.LockTokens(suite.Ctx, addr, coins, duration)
 	suite.Require().NoError(err)
 }
 
@@ -119,8 +114,7 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins 
 
 	// mints coins so supply exists on chain
 	mintCoins := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr, mintCoins)
-	suite.Require().NoError(err)
+	suite.FundAcc(addr, mintCoins)
 
 	numEpochsPaidOver := uint64(2)
 	if isPerpetual {
