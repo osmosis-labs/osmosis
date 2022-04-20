@@ -36,7 +36,6 @@ func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, maxTime time.
 	return store.Iterator(prefix, storetypes.PrefixEndBytes(key))
 }
 
-// @TODO: confirm this existing iterator is accurate
 func (k Keeper) iteratorDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
@@ -48,7 +47,6 @@ func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration 
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
-	// @TODO: ask for elaboration on how this works
 	// inclusive on longer side, means >= (longer or equal)
 	return store.Iterator(key, storetypes.PrefixEndBytes(prefix))
 }
