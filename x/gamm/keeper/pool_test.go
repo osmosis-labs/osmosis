@@ -12,7 +12,7 @@ package keeper_test
 
 // func (suite *KeeperTestSuite) TestCleanupPool() {
 // 	// Mint some assets to the accounts.
-// 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
+// 	for _, acc := range suite.TestAccs {
 // 		suite.FundAcc(
 // 			suite.App.BankKeeper,
 // 			suite.Ctx,
@@ -58,7 +58,7 @@ package keeper_test
 // 	suite.NoError(err)
 // 	denom := pool.GetTotalShares().Denom
 // 	totalAmount := sdk.ZeroInt()
-// 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
+// 	for _, acc := range suite.TestAccs {
 // 		coin := suite.App.BankKeeper.GetBalance(suite.Ctx, acc, denom)
 // 		suite.True(coin.Amount.Equal(types.OneShare.MulRaw(100)))
 // 		totalAmount = totalAmount.Add(coin.Amount)
@@ -67,7 +67,7 @@ package keeper_test
 
 // 	err = suite.App.GAMMKeeper.CleanupBalancerPool(suite.Ctx, []uint64{poolId}, []string{})
 // 	suite.NoError(err)
-// 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
+// 	for _, acc := range suite.TestAccs {
 // 		for _, denom := range []string{"foo", "bar", "baz"} {
 // 			amt := suite.App.BankKeeper.GetBalance(suite.Ctx, acc, denom)
 // 			suite.True(amt.Amount.Equal(sdk.NewInt(1000)),
@@ -82,7 +82,7 @@ package keeper_test
 // 	denoms := []string{"foo", "bar", "baz"}
 
 // 	// Mint some assets to the accounts.
-// 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
+// 	for _, acc := range suite.TestAccs {
 // 		coins := make(sdk.Coins, 3)
 // 		for i := range coins {
 // 			amount := sdk.NewInt(rand.Int63n(1000))
@@ -120,7 +120,7 @@ package keeper_test
 
 // 	err = suite.App.GAMMKeeper.CleanupBalancerPool(suite.Ctx, []uint64{poolId}, []string{})
 // 	suite.NoError(err)
-// 	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
+// 	for _, acc := range suite.TestAccs {
 // 		for _, coin := range coinOf[acc.String()] {
 // 			amt := suite.App.BankKeeper.GetBalance(suite.Ctx, acc, coin.Denom)
 // 			// the refund could have rounding error

@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 				return dec
 			}()
 
-			tokenOutAmount, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, acc1, test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
+			tokenOutAmount, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
 			suite.NoError(err, "test: %v", test.name)
 
 			// Calculate the chained spot price.
@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 			sp := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
 			suite.True(sp.GT(spotPriceBefore) && sp.LT(spotPriceAfter), "test: %v", test.name)
 		} else {
-			_, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, acc1, test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
+			_, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
 			suite.Error(err, "test: %v", test.name)
 		}
 	}
@@ -163,7 +163,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 				return dec
 			}()
 
-			tokenInAmount, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, acc1, test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
+			tokenInAmount, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
 			suite.NoError(err, "test: %v", test.name)
 
 			// Calculate the chained spot price.
@@ -191,7 +191,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 			fmt.Printf("spBefore %s, spAfter %s, sp actual %s\n", spotPriceBefore, spotPriceAfter, sp)
 			suite.True(sp.GT(spotPriceBefore) && sp.LT(spotPriceAfter), "multi-hop spot price wrong, test: %v", test.name)
 		} else {
-			_, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, acc1, test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
+			_, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
 			suite.Error(err, "test: %v", test.name)
 		}
 	}

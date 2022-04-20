@@ -4,9 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
@@ -28,12 +25,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
-
-var (
-	acc1 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	acc2 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-)
 
 func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 	suite.SetupTest()

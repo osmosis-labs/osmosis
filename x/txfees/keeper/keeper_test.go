@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -18,18 +17,12 @@ type KeeperTestSuite struct {
 	queryClient types.QueryClient
 }
 
-var (
-	acc1 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	acc2 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	acc3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-)
-
 func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	suite.Setup()
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 
 	// Mint some assets to the accounts.
-	for _, acc := range []sdk.AccAddress{acc1, acc2, acc3} {
+	for _, acc := range suite.TestAccs {
 		suite.FundAcc(acc,
 			sdk.NewCoins(
 				sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000000)),
