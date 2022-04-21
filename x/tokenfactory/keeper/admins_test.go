@@ -12,6 +12,8 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
+	addr1bal := int64(0)
+	addr2bal := int64(0)
 
 	msgServer := keeper.NewMsgServerImpl(*suite.app.TokenFactoryKeeper)
 
@@ -29,24 +31,31 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 
 	// Test minting to admins own account
 	_, err = msgServer.Mint(sdk.WrapSDKContext(suite.ctx), types.NewMsgMint(addr1.String(), sdk.NewInt64Coin(denom, 10), addr1.String()))
+	addr1bal += 10
 	suite.Require().NoError(err)
-	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr1, denom).IsEqual(sdk.NewInt64Coin(denom, 10)), suite.app.BankKeeper.GetBalance(suite.ctx, addr1, denom))
+	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr1, denom).Amount.Int64() == addr1bal, suite.app.BankKeeper.GetBalance(suite.ctx, addr1, denom))
 
-	// Test minting to a separate account
+	// Test minting to a separate account.  Should not work.
 	_, err = msgServer.Mint(sdk.WrapSDKContext(suite.ctx), types.NewMsgMint(addr1.String(), sdk.NewInt64Coin(denom, 10), addr2.String()))
-	suite.Require().NoError(err)
-	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).IsEqual(sdk.NewInt64Coin(denom, 10)))
+	suite.Require().Error(err)
+	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).Amount.Int64() == addr2bal)
 
-	// Test force transferring
-	_, err = msgServer.ForceTransfer(sdk.WrapSDKContext(suite.ctx), types.NewMsgForceTransfer(addr1.String(), sdk.NewInt64Coin(denom, 5), addr2.String(), addr1.String()))
-	suite.Require().NoError(err)
-	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr1, denom).IsEqual(sdk.NewInt64Coin(denom, 15)))
-	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).IsEqual(sdk.NewInt64Coin(denom, 5)))
+	// // Test force transferring
+	// _, err = msgServer.ForceTransfer(sdk.WrapSDKContext(suite.ctx), types.NewMsgForceTransfer(addr1.String(), sdk.NewInt64Coin(denom, 5), addr2.String(), addr1.String()))
+	// suite.Require().NoError(err)
+	// suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr1, denom).IsEqual(sdk.NewInt64Coin(denom, 15)))
+	// suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).IsEqual(sdk.NewInt64Coin(denom, 5)))
 
-	// Test burning
+	// Test burning from own account
+	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.ctx), types.NewMsgBurn(addr1.String(), sdk.NewInt64Coin(denom, 5), addr1.String()))
+	addr1bal -= 5
+	suite.Require().NoError(err)
+	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).Amount.Int64() == addr2bal)
+
+	// Test burning from a separate account.  Should not work.
 	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.ctx), types.NewMsgBurn(addr1.String(), sdk.NewInt64Coin(denom, 5), addr2.String()))
-	suite.Require().NoError(err)
-	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).IsEqual(sdk.NewInt64Coin(denom, 0)))
+	suite.Require().Error(err)
+	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).Amount.Int64() == addr2bal)
 
 	// Test Change Admin
 	_, err = msgServer.ChangeAdmin(sdk.WrapSDKContext(suite.ctx), types.NewMsgChangeAdmin(addr1.String(), denom, addr2.String()))
@@ -56,14 +65,15 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(addr2.String(), queryRes.AuthorityMetadata.Admin)
 
-	// Make sure can no longer do actions
-	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.ctx), types.NewMsgBurn(addr1.String(), sdk.NewInt64Coin(denom, 15), addr1.String()))
+	// Make sure old admin can no longer do actions
+	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.ctx), types.NewMsgBurn(addr1.String(), sdk.NewInt64Coin(denom, 5), addr1.String()))
 	suite.Require().Error(err)
 
 	// Make sure the new admin works
-	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.ctx), types.NewMsgBurn(addr2.String(), sdk.NewInt64Coin(denom, 15), addr1.String()))
+	_, err = msgServer.Mint(sdk.WrapSDKContext(suite.ctx), types.NewMsgMint(addr2.String(), sdk.NewInt64Coin(denom, 5), addr2.String()))
+	addr2bal += 5
 	suite.Require().NoError(err)
-	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr1, denom).IsEqual(sdk.NewInt64Coin(denom, 0)))
+	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).Amount.Int64() == addr2bal)
 
 	// Try setting admin to empty
 	_, err = msgServer.ChangeAdmin(sdk.WrapSDKContext(suite.ctx), types.NewMsgChangeAdmin(addr2.String(), denom, ""))
