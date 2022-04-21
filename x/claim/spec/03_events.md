@@ -12,4 +12,3 @@ order: 3
 | ----- | ------------- | --------------- |
 | claim | sender        | {receiver}      |
 | claim | amount        | {claim_amount}  |
-

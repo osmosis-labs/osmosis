@@ -7,7 +7,7 @@ It was created by referencing Tendermint's [implementation](https://github.com/t
 
 # Requirements And Usage
 
-The Osmosis repository must include a`.build.sh` executable file 
+The Osmosis repository must include a`.build.sh` executable file
 in the root folder meant to drive the build process.
 
 The build's outputs are produced in the top-level `artifacts` directory.
@@ -21,6 +21,7 @@ make rbuilder
 ```
 
 This creates the `rbuilder` image. To run a container of this image locally and build the binaries:
+
 ```
 cd <osmosis root>
 
@@ -37,8 +38,8 @@ Currently, only `linux/amd64` is supported. Adding more support is blocked by ou
 
 The support of some platforms is already added in new versions of wasmvm.
 Follow the release log for more detaisl when updating our builder:
-https://github.com/CosmWasm/wasmvm/releases
+<https://github.com/CosmWasm/wasmvm/releases>
 
 Once wasmvm is upgraded, more platforms may be built by changing
 `TARGET_PLATFORMS` environment variable in `build-reproducible`
-Makefile step. 
+Makefile step.

@@ -5,6 +5,7 @@ order: 4
 # Events
 
 The lockup module emits the following events:
+
 ## Handlers
 
 ### MsgLockTokens

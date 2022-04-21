@@ -1,342 +1,339 @@
 <!-- This file is auto-generated. Please do not modify it yourself. -->
 # Protobuf Documentation
+
 <a name="top"></a>
 
 ## Table of Contents
 
 - [osmosis/claim/v1beta1/claim.proto](#osmosis/claim/v1beta1/claim.proto)
-    - [ClaimRecord](#osmosis.claim.v1beta1.ClaimRecord)
+  - [ClaimRecord](#osmosis.claim.v1beta1.ClaimRecord)
   
-    - [Action](#osmosis.claim.v1beta1.Action)
+  - [Action](#osmosis.claim.v1beta1.Action)
   
 - [osmosis/claim/v1beta1/params.proto](#osmosis/claim/v1beta1/params.proto)
-    - [Params](#osmosis.claim.v1beta1.Params)
+  - [Params](#osmosis.claim.v1beta1.Params)
   
 - [osmosis/claim/v1beta1/genesis.proto](#osmosis/claim/v1beta1/genesis.proto)
-    - [GenesisState](#osmosis.claim.v1beta1.GenesisState)
+  - [GenesisState](#osmosis.claim.v1beta1.GenesisState)
   
 - [osmosis/claim/v1beta1/query.proto](#osmosis/claim/v1beta1/query.proto)
-    - [QueryClaimRecordRequest](#osmosis.claim.v1beta1.QueryClaimRecordRequest)
-    - [QueryClaimRecordResponse](#osmosis.claim.v1beta1.QueryClaimRecordResponse)
-    - [QueryClaimableForActionRequest](#osmosis.claim.v1beta1.QueryClaimableForActionRequest)
-    - [QueryClaimableForActionResponse](#osmosis.claim.v1beta1.QueryClaimableForActionResponse)
-    - [QueryModuleAccountBalanceRequest](#osmosis.claim.v1beta1.QueryModuleAccountBalanceRequest)
-    - [QueryModuleAccountBalanceResponse](#osmosis.claim.v1beta1.QueryModuleAccountBalanceResponse)
-    - [QueryParamsRequest](#osmosis.claim.v1beta1.QueryParamsRequest)
-    - [QueryParamsResponse](#osmosis.claim.v1beta1.QueryParamsResponse)
-    - [QueryTotalClaimableRequest](#osmosis.claim.v1beta1.QueryTotalClaimableRequest)
-    - [QueryTotalClaimableResponse](#osmosis.claim.v1beta1.QueryTotalClaimableResponse)
+  - [QueryClaimRecordRequest](#osmosis.claim.v1beta1.QueryClaimRecordRequest)
+  - [QueryClaimRecordResponse](#osmosis.claim.v1beta1.QueryClaimRecordResponse)
+  - [QueryClaimableForActionRequest](#osmosis.claim.v1beta1.QueryClaimableForActionRequest)
+  - [QueryClaimableForActionResponse](#osmosis.claim.v1beta1.QueryClaimableForActionResponse)
+  - [QueryModuleAccountBalanceRequest](#osmosis.claim.v1beta1.QueryModuleAccountBalanceRequest)
+  - [QueryModuleAccountBalanceResponse](#osmosis.claim.v1beta1.QueryModuleAccountBalanceResponse)
+  - [QueryParamsRequest](#osmosis.claim.v1beta1.QueryParamsRequest)
+  - [QueryParamsResponse](#osmosis.claim.v1beta1.QueryParamsResponse)
+  - [QueryTotalClaimableRequest](#osmosis.claim.v1beta1.QueryTotalClaimableRequest)
+  - [QueryTotalClaimableResponse](#osmosis.claim.v1beta1.QueryTotalClaimableResponse)
   
-    - [Query](#osmosis.claim.v1beta1.Query)
+  - [Query](#osmosis.claim.v1beta1.Query)
   
 - [osmosis/epochs/genesis.proto](#osmosis/epochs/genesis.proto)
-    - [EpochInfo](#osmosis.epochs.v1beta1.EpochInfo)
-    - [GenesisState](#osmosis.epochs.v1beta1.GenesisState)
+  - [EpochInfo](#osmosis.epochs.v1beta1.EpochInfo)
+  - [GenesisState](#osmosis.epochs.v1beta1.GenesisState)
   
 - [osmosis/epochs/query.proto](#osmosis/epochs/query.proto)
-    - [QueryCurrentEpochRequest](#osmosis.epochs.v1beta1.QueryCurrentEpochRequest)
-    - [QueryCurrentEpochResponse](#osmosis.epochs.v1beta1.QueryCurrentEpochResponse)
-    - [QueryEpochsInfoRequest](#osmosis.epochs.v1beta1.QueryEpochsInfoRequest)
-    - [QueryEpochsInfoResponse](#osmosis.epochs.v1beta1.QueryEpochsInfoResponse)
+  - [QueryCurrentEpochRequest](#osmosis.epochs.v1beta1.QueryCurrentEpochRequest)
+  - [QueryCurrentEpochResponse](#osmosis.epochs.v1beta1.QueryCurrentEpochResponse)
+  - [QueryEpochsInfoRequest](#osmosis.epochs.v1beta1.QueryEpochsInfoRequest)
+  - [QueryEpochsInfoResponse](#osmosis.epochs.v1beta1.QueryEpochsInfoResponse)
   
-    - [Query](#osmosis.epochs.v1beta1.Query)
+  - [Query](#osmosis.epochs.v1beta1.Query)
   
 - [osmosis/gamm/v1beta1/genesis.proto](#osmosis/gamm/v1beta1/genesis.proto)
-    - [GenesisState](#osmosis.gamm.v1beta1.GenesisState)
-    - [Params](#osmosis.gamm.v1beta1.Params)
+  - [GenesisState](#osmosis.gamm.v1beta1.GenesisState)
+  - [Params](#osmosis.gamm.v1beta1.Params)
   
 - [osmosis/gamm/v1beta1/tx.proto](#osmosis/gamm/v1beta1/tx.proto)
-    - [MsgExitPool](#osmosis.gamm.v1beta1.MsgExitPool)
-    - [MsgExitPoolResponse](#osmosis.gamm.v1beta1.MsgExitPoolResponse)
-    - [MsgExitSwapExternAmountOut](#osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut)
-    - [MsgExitSwapExternAmountOutResponse](#osmosis.gamm.v1beta1.MsgExitSwapExternAmountOutResponse)
-    - [MsgExitSwapShareAmountIn](#osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn)
-    - [MsgExitSwapShareAmountInResponse](#osmosis.gamm.v1beta1.MsgExitSwapShareAmountInResponse)
-    - [MsgJoinPool](#osmosis.gamm.v1beta1.MsgJoinPool)
-    - [MsgJoinPoolResponse](#osmosis.gamm.v1beta1.MsgJoinPoolResponse)
-    - [MsgJoinSwapExternAmountIn](#osmosis.gamm.v1beta1.MsgJoinSwapExternAmountIn)
-    - [MsgJoinSwapExternAmountInResponse](#osmosis.gamm.v1beta1.MsgJoinSwapExternAmountInResponse)
-    - [MsgJoinSwapShareAmountOut](#osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOut)
-    - [MsgJoinSwapShareAmountOutResponse](#osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOutResponse)
-    - [MsgSwapExactAmountIn](#osmosis.gamm.v1beta1.MsgSwapExactAmountIn)
-    - [MsgSwapExactAmountInResponse](#osmosis.gamm.v1beta1.MsgSwapExactAmountInResponse)
-    - [MsgSwapExactAmountOut](#osmosis.gamm.v1beta1.MsgSwapExactAmountOut)
-    - [MsgSwapExactAmountOutResponse](#osmosis.gamm.v1beta1.MsgSwapExactAmountOutResponse)
-    - [SwapAmountInRoute](#osmosis.gamm.v1beta1.SwapAmountInRoute)
-    - [SwapAmountOutRoute](#osmosis.gamm.v1beta1.SwapAmountOutRoute)
+  - [MsgExitPool](#osmosis.gamm.v1beta1.MsgExitPool)
+  - [MsgExitPoolResponse](#osmosis.gamm.v1beta1.MsgExitPoolResponse)
+  - [MsgExitSwapExternAmountOut](#osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut)
+  - [MsgExitSwapExternAmountOutResponse](#osmosis.gamm.v1beta1.MsgExitSwapExternAmountOutResponse)
+  - [MsgExitSwapShareAmountIn](#osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn)
+  - [MsgExitSwapShareAmountInResponse](#osmosis.gamm.v1beta1.MsgExitSwapShareAmountInResponse)
+  - [MsgJoinPool](#osmosis.gamm.v1beta1.MsgJoinPool)
+  - [MsgJoinPoolResponse](#osmosis.gamm.v1beta1.MsgJoinPoolResponse)
+  - [MsgJoinSwapExternAmountIn](#osmosis.gamm.v1beta1.MsgJoinSwapExternAmountIn)
+  - [MsgJoinSwapExternAmountInResponse](#osmosis.gamm.v1beta1.MsgJoinSwapExternAmountInResponse)
+  - [MsgJoinSwapShareAmountOut](#osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOut)
+  - [MsgJoinSwapShareAmountOutResponse](#osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOutResponse)
+  - [MsgSwapExactAmountIn](#osmosis.gamm.v1beta1.MsgSwapExactAmountIn)
+  - [MsgSwapExactAmountInResponse](#osmosis.gamm.v1beta1.MsgSwapExactAmountInResponse)
+  - [MsgSwapExactAmountOut](#osmosis.gamm.v1beta1.MsgSwapExactAmountOut)
+  - [MsgSwapExactAmountOutResponse](#osmosis.gamm.v1beta1.MsgSwapExactAmountOutResponse)
+  - [SwapAmountInRoute](#osmosis.gamm.v1beta1.SwapAmountInRoute)
+  - [SwapAmountOutRoute](#osmosis.gamm.v1beta1.SwapAmountOutRoute)
   
-    - [Msg](#osmosis.gamm.v1beta1.Msg)
+  - [Msg](#osmosis.gamm.v1beta1.Msg)
   
 - [osmosis/gamm/v1beta1/query.proto](#osmosis/gamm/v1beta1/query.proto)
-    - [QueryNumPoolsRequest](#osmosis.gamm.v1beta1.QueryNumPoolsRequest)
-    - [QueryNumPoolsResponse](#osmosis.gamm.v1beta1.QueryNumPoolsResponse)
-    - [QueryPoolParamsRequest](#osmosis.gamm.v1beta1.QueryPoolParamsRequest)
-    - [QueryPoolParamsResponse](#osmosis.gamm.v1beta1.QueryPoolParamsResponse)
-    - [QueryPoolRequest](#osmosis.gamm.v1beta1.QueryPoolRequest)
-    - [QueryPoolResponse](#osmosis.gamm.v1beta1.QueryPoolResponse)
-    - [QueryPoolsRequest](#osmosis.gamm.v1beta1.QueryPoolsRequest)
-    - [QueryPoolsResponse](#osmosis.gamm.v1beta1.QueryPoolsResponse)
-    - [QuerySpotPriceRequest](#osmosis.gamm.v1beta1.QuerySpotPriceRequest)
-    - [QuerySpotPriceResponse](#osmosis.gamm.v1beta1.QuerySpotPriceResponse)
-    - [QuerySwapExactAmountInRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest)
-    - [QuerySwapExactAmountInResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse)
-    - [QuerySwapExactAmountOutRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutRequest)
-    - [QuerySwapExactAmountOutResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse)
-    - [QueryTotalLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalLiquidityRequest)
-    - [QueryTotalLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalLiquidityResponse)
-    - [QueryTotalPoolLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityRequest)
-    - [QueryTotalPoolLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityResponse)
-    - [QueryTotalSharesRequest](#osmosis.gamm.v1beta1.QueryTotalSharesRequest)
-    - [QueryTotalSharesResponse](#osmosis.gamm.v1beta1.QueryTotalSharesResponse)
+  - [QueryNumPoolsRequest](#osmosis.gamm.v1beta1.QueryNumPoolsRequest)
+  - [QueryNumPoolsResponse](#osmosis.gamm.v1beta1.QueryNumPoolsResponse)
+  - [QueryPoolParamsRequest](#osmosis.gamm.v1beta1.QueryPoolParamsRequest)
+  - [QueryPoolParamsResponse](#osmosis.gamm.v1beta1.QueryPoolParamsResponse)
+  - [QueryPoolRequest](#osmosis.gamm.v1beta1.QueryPoolRequest)
+  - [QueryPoolResponse](#osmosis.gamm.v1beta1.QueryPoolResponse)
+  - [QueryPoolsRequest](#osmosis.gamm.v1beta1.QueryPoolsRequest)
+  - [QueryPoolsResponse](#osmosis.gamm.v1beta1.QueryPoolsResponse)
+  - [QuerySpotPriceRequest](#osmosis.gamm.v1beta1.QuerySpotPriceRequest)
+  - [QuerySpotPriceResponse](#osmosis.gamm.v1beta1.QuerySpotPriceResponse)
+  - [QuerySwapExactAmountInRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest)
+  - [QuerySwapExactAmountInResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse)
+  - [QuerySwapExactAmountOutRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutRequest)
+  - [QuerySwapExactAmountOutResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse)
+  - [QueryTotalLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalLiquidityRequest)
+  - [QueryTotalLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalLiquidityResponse)
+  - [QueryTotalPoolLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityRequest)
+  - [QueryTotalPoolLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityResponse)
+  - [QueryTotalSharesRequest](#osmosis.gamm.v1beta1.QueryTotalSharesRequest)
+  - [QueryTotalSharesResponse](#osmosis.gamm.v1beta1.QueryTotalSharesResponse)
   
-    - [Query](#osmosis.gamm.v1beta1.Query)
+  - [Query](#osmosis.gamm.v1beta1.Query)
   
 - [osmosis/lockup/lock.proto](#osmosis/lockup/lock.proto)
-    - [PeriodLock](#osmosis.lockup.PeriodLock)
-    - [QueryCondition](#osmosis.lockup.QueryCondition)
-    - [SyntheticLock](#osmosis.lockup.SyntheticLock)
+  - [PeriodLock](#osmosis.lockup.PeriodLock)
+  - [QueryCondition](#osmosis.lockup.QueryCondition)
+  - [SyntheticLock](#osmosis.lockup.SyntheticLock)
   
-    - [LockQueryType](#osmosis.lockup.LockQueryType)
+  - [LockQueryType](#osmosis.lockup.LockQueryType)
   
 - [osmosis/incentives/gauge.proto](#osmosis/incentives/gauge.proto)
-    - [Gauge](#osmosis.incentives.Gauge)
-    - [LockableDurationsInfo](#osmosis.incentives.LockableDurationsInfo)
+  - [Gauge](#osmosis.incentives.Gauge)
+  - [LockableDurationsInfo](#osmosis.incentives.LockableDurationsInfo)
   
 - [osmosis/incentives/params.proto](#osmosis/incentives/params.proto)
-    - [Params](#osmosis.incentives.Params)
+  - [Params](#osmosis.incentives.Params)
   
 - [osmosis/incentives/genesis.proto](#osmosis/incentives/genesis.proto)
-    - [GenesisState](#osmosis.incentives.GenesisState)
+  - [GenesisState](#osmosis.incentives.GenesisState)
   
 - [osmosis/incentives/query.proto](#osmosis/incentives/query.proto)
-    - [ActiveGaugesPerDenomRequest](#osmosis.incentives.ActiveGaugesPerDenomRequest)
-    - [ActiveGaugesPerDenomResponse](#osmosis.incentives.ActiveGaugesPerDenomResponse)
-    - [ActiveGaugesRequest](#osmosis.incentives.ActiveGaugesRequest)
-    - [ActiveGaugesResponse](#osmosis.incentives.ActiveGaugesResponse)
-    - [GaugeByIDRequest](#osmosis.incentives.GaugeByIDRequest)
-    - [GaugeByIDResponse](#osmosis.incentives.GaugeByIDResponse)
-    - [GaugesRequest](#osmosis.incentives.GaugesRequest)
-    - [GaugesResponse](#osmosis.incentives.GaugesResponse)
-    - [ModuleDistributedCoinsRequest](#osmosis.incentives.ModuleDistributedCoinsRequest)
-    - [ModuleDistributedCoinsResponse](#osmosis.incentives.ModuleDistributedCoinsResponse)
-    - [ModuleToDistributeCoinsRequest](#osmosis.incentives.ModuleToDistributeCoinsRequest)
-    - [ModuleToDistributeCoinsResponse](#osmosis.incentives.ModuleToDistributeCoinsResponse)
-    - [QueryLockableDurationsRequest](#osmosis.incentives.QueryLockableDurationsRequest)
-    - [QueryLockableDurationsResponse](#osmosis.incentives.QueryLockableDurationsResponse)
-    - [RewardsEstRequest](#osmosis.incentives.RewardsEstRequest)
-    - [RewardsEstResponse](#osmosis.incentives.RewardsEstResponse)
-    - [UpcomingGaugesPerDenomRequest](#osmosis.incentives.UpcomingGaugesPerDenomRequest)
-    - [UpcomingGaugesPerDenomResponse](#osmosis.incentives.UpcomingGaugesPerDenomResponse)
-    - [UpcomingGaugesRequest](#osmosis.incentives.UpcomingGaugesRequest)
-    - [UpcomingGaugesResponse](#osmosis.incentives.UpcomingGaugesResponse)
+  - [ActiveGaugesPerDenomRequest](#osmosis.incentives.ActiveGaugesPerDenomRequest)
+  - [ActiveGaugesPerDenomResponse](#osmosis.incentives.ActiveGaugesPerDenomResponse)
+  - [ActiveGaugesRequest](#osmosis.incentives.ActiveGaugesRequest)
+  - [ActiveGaugesResponse](#osmosis.incentives.ActiveGaugesResponse)
+  - [GaugeByIDRequest](#osmosis.incentives.GaugeByIDRequest)
+  - [GaugeByIDResponse](#osmosis.incentives.GaugeByIDResponse)
+  - [GaugesRequest](#osmosis.incentives.GaugesRequest)
+  - [GaugesResponse](#osmosis.incentives.GaugesResponse)
+  - [ModuleDistributedCoinsRequest](#osmosis.incentives.ModuleDistributedCoinsRequest)
+  - [ModuleDistributedCoinsResponse](#osmosis.incentives.ModuleDistributedCoinsResponse)
+  - [ModuleToDistributeCoinsRequest](#osmosis.incentives.ModuleToDistributeCoinsRequest)
+  - [ModuleToDistributeCoinsResponse](#osmosis.incentives.ModuleToDistributeCoinsResponse)
+  - [QueryLockableDurationsRequest](#osmosis.incentives.QueryLockableDurationsRequest)
+  - [QueryLockableDurationsResponse](#osmosis.incentives.QueryLockableDurationsResponse)
+  - [RewardsEstRequest](#osmosis.incentives.RewardsEstRequest)
+  - [RewardsEstResponse](#osmosis.incentives.RewardsEstResponse)
+  - [UpcomingGaugesPerDenomRequest](#osmosis.incentives.UpcomingGaugesPerDenomRequest)
+  - [UpcomingGaugesPerDenomResponse](#osmosis.incentives.UpcomingGaugesPerDenomResponse)
+  - [UpcomingGaugesRequest](#osmosis.incentives.UpcomingGaugesRequest)
+  - [UpcomingGaugesResponse](#osmosis.incentives.UpcomingGaugesResponse)
   
-    - [Query](#osmosis.incentives.Query)
+  - [Query](#osmosis.incentives.Query)
   
 - [osmosis/incentives/tx.proto](#osmosis/incentives/tx.proto)
-    - [MsgAddToGauge](#osmosis.incentives.MsgAddToGauge)
-    - [MsgAddToGaugeResponse](#osmosis.incentives.MsgAddToGaugeResponse)
-    - [MsgCreateGauge](#osmosis.incentives.MsgCreateGauge)
-    - [MsgCreateGaugeResponse](#osmosis.incentives.MsgCreateGaugeResponse)
+  - [MsgAddToGauge](#osmosis.incentives.MsgAddToGauge)
+  - [MsgAddToGaugeResponse](#osmosis.incentives.MsgAddToGaugeResponse)
+  - [MsgCreateGauge](#osmosis.incentives.MsgCreateGauge)
+  - [MsgCreateGaugeResponse](#osmosis.incentives.MsgCreateGaugeResponse)
   
-    - [Msg](#osmosis.incentives.Msg)
+  - [Msg](#osmosis.incentives.Msg)
   
 - [osmosis/lockup/genesis.proto](#osmosis/lockup/genesis.proto)
-    - [GenesisState](#osmosis.lockup.GenesisState)
+  - [GenesisState](#osmosis.lockup.GenesisState)
   
 - [osmosis/lockup/query.proto](#osmosis/lockup/query.proto)
-    - [AccountLockedCoinsRequest](#osmosis.lockup.AccountLockedCoinsRequest)
-    - [AccountLockedCoinsResponse](#osmosis.lockup.AccountLockedCoinsResponse)
-    - [AccountLockedLongerDurationDenomRequest](#osmosis.lockup.AccountLockedLongerDurationDenomRequest)
-    - [AccountLockedLongerDurationDenomResponse](#osmosis.lockup.AccountLockedLongerDurationDenomResponse)
-    - [AccountLockedLongerDurationNotUnlockingOnlyRequest](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyRequest)
-    - [AccountLockedLongerDurationNotUnlockingOnlyResponse](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyResponse)
-    - [AccountLockedLongerDurationRequest](#osmosis.lockup.AccountLockedLongerDurationRequest)
-    - [AccountLockedLongerDurationResponse](#osmosis.lockup.AccountLockedLongerDurationResponse)
-    - [AccountLockedPastTimeDenomRequest](#osmosis.lockup.AccountLockedPastTimeDenomRequest)
-    - [AccountLockedPastTimeDenomResponse](#osmosis.lockup.AccountLockedPastTimeDenomResponse)
-    - [AccountLockedPastTimeNotUnlockingOnlyRequest](#osmosis.lockup.AccountLockedPastTimeNotUnlockingOnlyRequest)
-    - [AccountLockedPastTimeNotUnlockingOnlyResponse](#osmosis.lockup.AccountLockedPastTimeNotUnlockingOnlyResponse)
-    - [AccountLockedPastTimeRequest](#osmosis.lockup.AccountLockedPastTimeRequest)
-    - [AccountLockedPastTimeResponse](#osmosis.lockup.AccountLockedPastTimeResponse)
-    - [AccountUnlockableCoinsRequest](#osmosis.lockup.AccountUnlockableCoinsRequest)
-    - [AccountUnlockableCoinsResponse](#osmosis.lockup.AccountUnlockableCoinsResponse)
-    - [AccountUnlockedBeforeTimeRequest](#osmosis.lockup.AccountUnlockedBeforeTimeRequest)
-    - [AccountUnlockedBeforeTimeResponse](#osmosis.lockup.AccountUnlockedBeforeTimeResponse)
-    - [AccountUnlockingCoinsRequest](#osmosis.lockup.AccountUnlockingCoinsRequest)
-    - [AccountUnlockingCoinsResponse](#osmosis.lockup.AccountUnlockingCoinsResponse)
-    - [LockedDenomRequest](#osmosis.lockup.LockedDenomRequest)
-    - [LockedDenomResponse](#osmosis.lockup.LockedDenomResponse)
-    - [LockedRequest](#osmosis.lockup.LockedRequest)
-    - [LockedResponse](#osmosis.lockup.LockedResponse)
-    - [ModuleBalanceRequest](#osmosis.lockup.ModuleBalanceRequest)
-    - [ModuleBalanceResponse](#osmosis.lockup.ModuleBalanceResponse)
-    - [ModuleLockedAmountRequest](#osmosis.lockup.ModuleLockedAmountRequest)
-    - [ModuleLockedAmountResponse](#osmosis.lockup.ModuleLockedAmountResponse)
-    - [SyntheticLockupsByLockupIDRequest](#osmosis.lockup.SyntheticLockupsByLockupIDRequest)
-    - [SyntheticLockupsByLockupIDResponse](#osmosis.lockup.SyntheticLockupsByLockupIDResponse)
+  - [AccountLockedCoinsRequest](#osmosis.lockup.AccountLockedCoinsRequest)
+  - [AccountLockedCoinsResponse](#osmosis.lockup.AccountLockedCoinsResponse)
+  - [AccountLockedLongerDurationDenomRequest](#osmosis.lockup.AccountLockedLongerDurationDenomRequest)
+  - [AccountLockedLongerDurationDenomResponse](#osmosis.lockup.AccountLockedLongerDurationDenomResponse)
+  - [AccountLockedLongerDurationNotUnlockingOnlyRequest](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyRequest)
+  - [AccountLockedLongerDurationNotUnlockingOnlyResponse](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyResponse)
+  - [AccountLockedLongerDurationRequest](#osmosis.lockup.AccountLockedLongerDurationRequest)
+  - [AccountLockedLongerDurationResponse](#osmosis.lockup.AccountLockedLongerDurationResponse)
+  - [AccountLockedPastTimeDenomRequest](#osmosis.lockup.AccountLockedPastTimeDenomRequest)
+  - [AccountLockedPastTimeDenomResponse](#osmosis.lockup.AccountLockedPastTimeDenomResponse)
+  - [AccountLockedPastTimeNotUnlockingOnlyRequest](#osmosis.lockup.AccountLockedPastTimeNotUnlockingOnlyRequest)
+  - [AccountLockedPastTimeNotUnlockingOnlyResponse](#osmosis.lockup.AccountLockedPastTimeNotUnlockingOnlyResponse)
+  - [AccountLockedPastTimeRequest](#osmosis.lockup.AccountLockedPastTimeRequest)
+  - [AccountLockedPastTimeResponse](#osmosis.lockup.AccountLockedPastTimeResponse)
+  - [AccountUnlockableCoinsRequest](#osmosis.lockup.AccountUnlockableCoinsRequest)
+  - [AccountUnlockableCoinsResponse](#osmosis.lockup.AccountUnlockableCoinsResponse)
+  - [AccountUnlockedBeforeTimeRequest](#osmosis.lockup.AccountUnlockedBeforeTimeRequest)
+  - [AccountUnlockedBeforeTimeResponse](#osmosis.lockup.AccountUnlockedBeforeTimeResponse)
+  - [AccountUnlockingCoinsRequest](#osmosis.lockup.AccountUnlockingCoinsRequest)
+  - [AccountUnlockingCoinsResponse](#osmosis.lockup.AccountUnlockingCoinsResponse)
+  - [LockedDenomRequest](#osmosis.lockup.LockedDenomRequest)
+  - [LockedDenomResponse](#osmosis.lockup.LockedDenomResponse)
+  - [LockedRequest](#osmosis.lockup.LockedRequest)
+  - [LockedResponse](#osmosis.lockup.LockedResponse)
+  - [ModuleBalanceRequest](#osmosis.lockup.ModuleBalanceRequest)
+  - [ModuleBalanceResponse](#osmosis.lockup.ModuleBalanceResponse)
+  - [ModuleLockedAmountRequest](#osmosis.lockup.ModuleLockedAmountRequest)
+  - [ModuleLockedAmountResponse](#osmosis.lockup.ModuleLockedAmountResponse)
+  - [SyntheticLockupsByLockupIDRequest](#osmosis.lockup.SyntheticLockupsByLockupIDRequest)
+  - [SyntheticLockupsByLockupIDResponse](#osmosis.lockup.SyntheticLockupsByLockupIDResponse)
   
-    - [Query](#osmosis.lockup.Query)
+  - [Query](#osmosis.lockup.Query)
   
 - [osmosis/lockup/tx.proto](#osmosis/lockup/tx.proto)
-    - [MsgBeginUnlocking](#osmosis.lockup.MsgBeginUnlocking)
-    - [MsgBeginUnlockingAll](#osmosis.lockup.MsgBeginUnlockingAll)
-    - [MsgBeginUnlockingAllResponse](#osmosis.lockup.MsgBeginUnlockingAllResponse)
-    - [MsgBeginUnlockingResponse](#osmosis.lockup.MsgBeginUnlockingResponse)
-    - [MsgLockTokens](#osmosis.lockup.MsgLockTokens)
-    - [MsgLockTokensResponse](#osmosis.lockup.MsgLockTokensResponse)
+  - [MsgBeginUnlocking](#osmosis.lockup.MsgBeginUnlocking)
+  - [MsgBeginUnlockingAll](#osmosis.lockup.MsgBeginUnlockingAll)
+  - [MsgBeginUnlockingAllResponse](#osmosis.lockup.MsgBeginUnlockingAllResponse)
+  - [MsgBeginUnlockingResponse](#osmosis.lockup.MsgBeginUnlockingResponse)
+  - [MsgLockTokens](#osmosis.lockup.MsgLockTokens)
+  - [MsgLockTokensResponse](#osmosis.lockup.MsgLockTokensResponse)
   
-    - [Msg](#osmosis.lockup.Msg)
+  - [Msg](#osmosis.lockup.Msg)
   
 - [osmosis/mint/v1beta1/mint.proto](#osmosis/mint/v1beta1/mint.proto)
-    - [DistributionProportions](#osmosis.mint.v1beta1.DistributionProportions)
-    - [Minter](#osmosis.mint.v1beta1.Minter)
-    - [Params](#osmosis.mint.v1beta1.Params)
-    - [WeightedAddress](#osmosis.mint.v1beta1.WeightedAddress)
+  - [DistributionProportions](#osmosis.mint.v1beta1.DistributionProportions)
+  - [Minter](#osmosis.mint.v1beta1.Minter)
+  - [Params](#osmosis.mint.v1beta1.Params)
+  - [WeightedAddress](#osmosis.mint.v1beta1.WeightedAddress)
   
 - [osmosis/mint/v1beta1/genesis.proto](#osmosis/mint/v1beta1/genesis.proto)
-    - [GenesisState](#osmosis.mint.v1beta1.GenesisState)
+  - [GenesisState](#osmosis.mint.v1beta1.GenesisState)
   
 - [osmosis/mint/v1beta1/query.proto](#osmosis/mint/v1beta1/query.proto)
-    - [QueryEpochProvisionsRequest](#osmosis.mint.v1beta1.QueryEpochProvisionsRequest)
-    - [QueryEpochProvisionsResponse](#osmosis.mint.v1beta1.QueryEpochProvisionsResponse)
-    - [QueryParamsRequest](#osmosis.mint.v1beta1.QueryParamsRequest)
-    - [QueryParamsResponse](#osmosis.mint.v1beta1.QueryParamsResponse)
+  - [QueryEpochProvisionsRequest](#osmosis.mint.v1beta1.QueryEpochProvisionsRequest)
+  - [QueryEpochProvisionsResponse](#osmosis.mint.v1beta1.QueryEpochProvisionsResponse)
+  - [QueryParamsRequest](#osmosis.mint.v1beta1.QueryParamsRequest)
+  - [QueryParamsResponse](#osmosis.mint.v1beta1.QueryParamsResponse)
   
-    - [Query](#osmosis.mint.v1beta1.Query)
+  - [Query](#osmosis.mint.v1beta1.Query)
   
 - [osmosis/pool-incentives/v1beta1/incentives.proto](#osmosis/pool-incentives/v1beta1/incentives.proto)
-    - [DistrInfo](#osmosis.poolincentives.v1beta1.DistrInfo)
-    - [DistrRecord](#osmosis.poolincentives.v1beta1.DistrRecord)
-    - [LockableDurationsInfo](#osmosis.poolincentives.v1beta1.LockableDurationsInfo)
-    - [Params](#osmosis.poolincentives.v1beta1.Params)
+  - [DistrInfo](#osmosis.poolincentives.v1beta1.DistrInfo)
+  - [DistrRecord](#osmosis.poolincentives.v1beta1.DistrRecord)
+  - [LockableDurationsInfo](#osmosis.poolincentives.v1beta1.LockableDurationsInfo)
+  - [Params](#osmosis.poolincentives.v1beta1.Params)
   
 - [osmosis/pool-incentives/v1beta1/genesis.proto](#osmosis/pool-incentives/v1beta1/genesis.proto)
-    - [GenesisState](#osmosis.poolincentives.v1beta1.GenesisState)
+  - [GenesisState](#osmosis.poolincentives.v1beta1.GenesisState)
   
 - [osmosis/pool-incentives/v1beta1/gov.proto](#osmosis/pool-incentives/v1beta1/gov.proto)
-    - [ReplacePoolIncentivesProposal](#osmosis.poolincentives.v1beta1.ReplacePoolIncentivesProposal)
-    - [UpdatePoolIncentivesProposal](#osmosis.poolincentives.v1beta1.UpdatePoolIncentivesProposal)
+  - [ReplacePoolIncentivesProposal](#osmosis.poolincentives.v1beta1.ReplacePoolIncentivesProposal)
+  - [UpdatePoolIncentivesProposal](#osmosis.poolincentives.v1beta1.UpdatePoolIncentivesProposal)
   
 - [osmosis/pool-incentives/v1beta1/query.proto](#osmosis/pool-incentives/v1beta1/query.proto)
-    - [IncentivizedPool](#osmosis.poolincentives.v1beta1.IncentivizedPool)
-    - [QueryDistrInfoRequest](#osmosis.poolincentives.v1beta1.QueryDistrInfoRequest)
-    - [QueryDistrInfoResponse](#osmosis.poolincentives.v1beta1.QueryDistrInfoResponse)
-    - [QueryExternalIncentiveGaugesRequest](#osmosis.poolincentives.v1beta1.QueryExternalIncentiveGaugesRequest)
-    - [QueryExternalIncentiveGaugesResponse](#osmosis.poolincentives.v1beta1.QueryExternalIncentiveGaugesResponse)
-    - [QueryGaugeIdsRequest](#osmosis.poolincentives.v1beta1.QueryGaugeIdsRequest)
-    - [QueryGaugeIdsResponse](#osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse)
-    - [QueryGaugeIdsResponse.GaugeIdWithDuration](#osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse.GaugeIdWithDuration)
-    - [QueryIncentivizedPoolsRequest](#osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsRequest)
-    - [QueryIncentivizedPoolsResponse](#osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsResponse)
-    - [QueryLockableDurationsRequest](#osmosis.poolincentives.v1beta1.QueryLockableDurationsRequest)
-    - [QueryLockableDurationsResponse](#osmosis.poolincentives.v1beta1.QueryLockableDurationsResponse)
-    - [QueryParamsRequest](#osmosis.poolincentives.v1beta1.QueryParamsRequest)
-    - [QueryParamsResponse](#osmosis.poolincentives.v1beta1.QueryParamsResponse)
+  - [IncentivizedPool](#osmosis.poolincentives.v1beta1.IncentivizedPool)
+  - [QueryDistrInfoRequest](#osmosis.poolincentives.v1beta1.QueryDistrInfoRequest)
+  - [QueryDistrInfoResponse](#osmosis.poolincentives.v1beta1.QueryDistrInfoResponse)
+  - [QueryExternalIncentiveGaugesRequest](#osmosis.poolincentives.v1beta1.QueryExternalIncentiveGaugesRequest)
+  - [QueryExternalIncentiveGaugesResponse](#osmosis.poolincentives.v1beta1.QueryExternalIncentiveGaugesResponse)
+  - [QueryGaugeIdsRequest](#osmosis.poolincentives.v1beta1.QueryGaugeIdsRequest)
+  - [QueryGaugeIdsResponse](#osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse)
+  - [QueryGaugeIdsResponse.GaugeIdWithDuration](#osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse.GaugeIdWithDuration)
+  - [QueryIncentivizedPoolsRequest](#osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsRequest)
+  - [QueryIncentivizedPoolsResponse](#osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsResponse)
+  - [QueryLockableDurationsRequest](#osmosis.poolincentives.v1beta1.QueryLockableDurationsRequest)
+  - [QueryLockableDurationsResponse](#osmosis.poolincentives.v1beta1.QueryLockableDurationsResponse)
+  - [QueryParamsRequest](#osmosis.poolincentives.v1beta1.QueryParamsRequest)
+  - [QueryParamsResponse](#osmosis.poolincentives.v1beta1.QueryParamsResponse)
   
-    - [Query](#osmosis.poolincentives.v1beta1.Query)
+  - [Query](#osmosis.poolincentives.v1beta1.Query)
   
 - [osmosis/store/v1beta1/tree.proto](#osmosis/store/v1beta1/tree.proto)
-    - [Child](#osmosis.store.v1beta1.Child)
-    - [Leaf](#osmosis.store.v1beta1.Leaf)
-    - [Node](#osmosis.store.v1beta1.Node)
+  - [Child](#osmosis.store.v1beta1.Child)
+  - [Leaf](#osmosis.store.v1beta1.Leaf)
+  - [Node](#osmosis.store.v1beta1.Node)
   
 - [osmosis/superfluid/superfluid.proto](#osmosis/superfluid/superfluid.proto)
-    - [LockIdIntermediaryAccountConnection](#osmosis.superfluid.LockIdIntermediaryAccountConnection)
-    - [OsmoEquivalentMultiplierRecord](#osmosis.superfluid.OsmoEquivalentMultiplierRecord)
-    - [SuperfluidAsset](#osmosis.superfluid.SuperfluidAsset)
-    - [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord)
-    - [SuperfluidIntermediaryAccount](#osmosis.superfluid.SuperfluidIntermediaryAccount)
+  - [LockIdIntermediaryAccountConnection](#osmosis.superfluid.LockIdIntermediaryAccountConnection)
+  - [OsmoEquivalentMultiplierRecord](#osmosis.superfluid.OsmoEquivalentMultiplierRecord)
+  - [SuperfluidAsset](#osmosis.superfluid.SuperfluidAsset)
+  - [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord)
+  - [SuperfluidIntermediaryAccount](#osmosis.superfluid.SuperfluidIntermediaryAccount)
   
-    - [SuperfluidAssetType](#osmosis.superfluid.SuperfluidAssetType)
+  - [SuperfluidAssetType](#osmosis.superfluid.SuperfluidAssetType)
   
 - [osmosis/superfluid/params.proto](#osmosis/superfluid/params.proto)
-    - [Params](#osmosis.superfluid.Params)
+  - [Params](#osmosis.superfluid.Params)
   
 - [osmosis/superfluid/genesis.proto](#osmosis/superfluid/genesis.proto)
-    - [GenesisState](#osmosis.superfluid.GenesisState)
+  - [GenesisState](#osmosis.superfluid.GenesisState)
   
 - [osmosis/superfluid/gov.proto](#osmosis/superfluid/gov.proto)
-    - [RemoveSuperfluidAssetsProposal](#osmosis.superfluid.v1beta1.RemoveSuperfluidAssetsProposal)
-    - [SetSuperfluidAssetsProposal](#osmosis.superfluid.v1beta1.SetSuperfluidAssetsProposal)
+  - [RemoveSuperfluidAssetsProposal](#osmosis.superfluid.v1beta1.RemoveSuperfluidAssetsProposal)
+  - [SetSuperfluidAssetsProposal](#osmosis.superfluid.v1beta1.SetSuperfluidAssetsProposal)
   
 - [osmosis/superfluid/query.proto](#osmosis/superfluid/query.proto)
-    - [AllAssetsRequest](#osmosis.superfluid.AllAssetsRequest)
-    - [AllAssetsResponse](#osmosis.superfluid.AllAssetsResponse)
-    - [AllIntermediaryAccountsRequest](#osmosis.superfluid.AllIntermediaryAccountsRequest)
-    - [AllIntermediaryAccountsResponse](#osmosis.superfluid.AllIntermediaryAccountsResponse)
-    - [AssetMultiplierRequest](#osmosis.superfluid.AssetMultiplierRequest)
-    - [AssetMultiplierResponse](#osmosis.superfluid.AssetMultiplierResponse)
-    - [AssetTypeRequest](#osmosis.superfluid.AssetTypeRequest)
-    - [AssetTypeResponse](#osmosis.superfluid.AssetTypeResponse)
-    - [ConnectedIntermediaryAccountRequest](#osmosis.superfluid.ConnectedIntermediaryAccountRequest)
-    - [ConnectedIntermediaryAccountResponse](#osmosis.superfluid.ConnectedIntermediaryAccountResponse)
-    - [EstimateSuperfluidDelegatedAmountByValidatorDenomRequest](#osmosis.superfluid.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest)
-    - [EstimateSuperfluidDelegatedAmountByValidatorDenomResponse](#osmosis.superfluid.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse)
-    - [QueryParamsRequest](#osmosis.superfluid.QueryParamsRequest)
-    - [QueryParamsResponse](#osmosis.superfluid.QueryParamsResponse)
-    - [SuperfluidDelegationAmountRequest](#osmosis.superfluid.SuperfluidDelegationAmountRequest)
-    - [SuperfluidDelegationAmountResponse](#osmosis.superfluid.SuperfluidDelegationAmountResponse)
-    - [SuperfluidDelegationsByDelegatorRequest](#osmosis.superfluid.SuperfluidDelegationsByDelegatorRequest)
-    - [SuperfluidDelegationsByDelegatorResponse](#osmosis.superfluid.SuperfluidDelegationsByDelegatorResponse)
-    - [SuperfluidDelegationsByValidatorDenomRequest](#osmosis.superfluid.SuperfluidDelegationsByValidatorDenomRequest)
-    - [SuperfluidDelegationsByValidatorDenomResponse](#osmosis.superfluid.SuperfluidDelegationsByValidatorDenomResponse)
-    - [SuperfluidIntermediaryAccountInfo](#osmosis.superfluid.SuperfluidIntermediaryAccountInfo)
-    - [SuperfluidUndelegationsByDelegatorRequest](#osmosis.superfluid.SuperfluidUndelegationsByDelegatorRequest)
-    - [SuperfluidUndelegationsByDelegatorResponse](#osmosis.superfluid.SuperfluidUndelegationsByDelegatorResponse)
-    - [TotalSuperfluidDelegationsRequest](#osmosis.superfluid.TotalSuperfluidDelegationsRequest)
-    - [TotalSuperfluidDelegationsResponse](#osmosis.superfluid.TotalSuperfluidDelegationsResponse)
+  - [AllAssetsRequest](#osmosis.superfluid.AllAssetsRequest)
+  - [AllAssetsResponse](#osmosis.superfluid.AllAssetsResponse)
+  - [AllIntermediaryAccountsRequest](#osmosis.superfluid.AllIntermediaryAccountsRequest)
+  - [AllIntermediaryAccountsResponse](#osmosis.superfluid.AllIntermediaryAccountsResponse)
+  - [AssetMultiplierRequest](#osmosis.superfluid.AssetMultiplierRequest)
+  - [AssetMultiplierResponse](#osmosis.superfluid.AssetMultiplierResponse)
+  - [AssetTypeRequest](#osmosis.superfluid.AssetTypeRequest)
+  - [AssetTypeResponse](#osmosis.superfluid.AssetTypeResponse)
+  - [ConnectedIntermediaryAccountRequest](#osmosis.superfluid.ConnectedIntermediaryAccountRequest)
+  - [ConnectedIntermediaryAccountResponse](#osmosis.superfluid.ConnectedIntermediaryAccountResponse)
+  - [EstimateSuperfluidDelegatedAmountByValidatorDenomRequest](#osmosis.superfluid.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest)
+  - [EstimateSuperfluidDelegatedAmountByValidatorDenomResponse](#osmosis.superfluid.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse)
+  - [QueryParamsRequest](#osmosis.superfluid.QueryParamsRequest)
+  - [QueryParamsResponse](#osmosis.superfluid.QueryParamsResponse)
+  - [SuperfluidDelegationAmountRequest](#osmosis.superfluid.SuperfluidDelegationAmountRequest)
+  - [SuperfluidDelegationAmountResponse](#osmosis.superfluid.SuperfluidDelegationAmountResponse)
+  - [SuperfluidDelegationsByDelegatorRequest](#osmosis.superfluid.SuperfluidDelegationsByDelegatorRequest)
+  - [SuperfluidDelegationsByDelegatorResponse](#osmosis.superfluid.SuperfluidDelegationsByDelegatorResponse)
+  - [SuperfluidDelegationsByValidatorDenomRequest](#osmosis.superfluid.SuperfluidDelegationsByValidatorDenomRequest)
+  - [SuperfluidDelegationsByValidatorDenomResponse](#osmosis.superfluid.SuperfluidDelegationsByValidatorDenomResponse)
+  - [SuperfluidIntermediaryAccountInfo](#osmosis.superfluid.SuperfluidIntermediaryAccountInfo)
+  - [SuperfluidUndelegationsByDelegatorRequest](#osmosis.superfluid.SuperfluidUndelegationsByDelegatorRequest)
+  - [SuperfluidUndelegationsByDelegatorResponse](#osmosis.superfluid.SuperfluidUndelegationsByDelegatorResponse)
+  - [TotalSuperfluidDelegationsRequest](#osmosis.superfluid.TotalSuperfluidDelegationsRequest)
+  - [TotalSuperfluidDelegationsResponse](#osmosis.superfluid.TotalSuperfluidDelegationsResponse)
   
-    - [Query](#osmosis.superfluid.Query)
+  - [Query](#osmosis.superfluid.Query)
   
 - [osmosis/superfluid/tx.proto](#osmosis/superfluid/tx.proto)
-    - [MsgLockAndSuperfluidDelegate](#osmosis.superfluid.MsgLockAndSuperfluidDelegate)
-    - [MsgLockAndSuperfluidDelegateResponse](#osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse)
-    - [MsgSuperfluidDelegate](#osmosis.superfluid.MsgSuperfluidDelegate)
-    - [MsgSuperfluidDelegateResponse](#osmosis.superfluid.MsgSuperfluidDelegateResponse)
-    - [MsgSuperfluidUnbondLock](#osmosis.superfluid.MsgSuperfluidUnbondLock)
-    - [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse)
-    - [MsgSuperfluidUndelegate](#osmosis.superfluid.MsgSuperfluidUndelegate)
-    - [MsgSuperfluidUndelegateResponse](#osmosis.superfluid.MsgSuperfluidUndelegateResponse)
+  - [MsgLockAndSuperfluidDelegate](#osmosis.superfluid.MsgLockAndSuperfluidDelegate)
+  - [MsgLockAndSuperfluidDelegateResponse](#osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse)
+  - [MsgSuperfluidDelegate](#osmosis.superfluid.MsgSuperfluidDelegate)
+  - [MsgSuperfluidDelegateResponse](#osmosis.superfluid.MsgSuperfluidDelegateResponse)
+  - [MsgSuperfluidUnbondLock](#osmosis.superfluid.MsgSuperfluidUnbondLock)
+  - [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse)
+  - [MsgSuperfluidUndelegate](#osmosis.superfluid.MsgSuperfluidUndelegate)
+  - [MsgSuperfluidUndelegateResponse](#osmosis.superfluid.MsgSuperfluidUndelegateResponse)
   
-    - [Msg](#osmosis.superfluid.Msg)
+  - [Msg](#osmosis.superfluid.Msg)
   
 - [osmosis/txfees/v1beta1/feetoken.proto](#osmosis/txfees/v1beta1/feetoken.proto)
-    - [FeeToken](#osmosis.txfees.v1beta1.FeeToken)
+  - [FeeToken](#osmosis.txfees.v1beta1.FeeToken)
   
 - [osmosis/txfees/v1beta1/genesis.proto](#osmosis/txfees/v1beta1/genesis.proto)
-    - [GenesisState](#osmosis.txfees.v1beta1.GenesisState)
+  - [GenesisState](#osmosis.txfees.v1beta1.GenesisState)
   
 - [osmosis/txfees/v1beta1/gov.proto](#osmosis/txfees/v1beta1/gov.proto)
-    - [UpdateFeeTokenProposal](#osmosis.txfees.v1beta1.UpdateFeeTokenProposal)
+  - [UpdateFeeTokenProposal](#osmosis.txfees.v1beta1.UpdateFeeTokenProposal)
   
 - [osmosis/txfees/v1beta1/query.proto](#osmosis/txfees/v1beta1/query.proto)
-    - [QueryBaseDenomRequest](#osmosis.txfees.v1beta1.QueryBaseDenomRequest)
-    - [QueryBaseDenomResponse](#osmosis.txfees.v1beta1.QueryBaseDenomResponse)
-    - [QueryDenomPoolIdRequest](#osmosis.txfees.v1beta1.QueryDenomPoolIdRequest)
-    - [QueryDenomPoolIdResponse](#osmosis.txfees.v1beta1.QueryDenomPoolIdResponse)
-    - [QueryDenomSpotPriceRequest](#osmosis.txfees.v1beta1.QueryDenomSpotPriceRequest)
-    - [QueryDenomSpotPriceResponse](#osmosis.txfees.v1beta1.QueryDenomSpotPriceResponse)
-    - [QueryFeeTokensRequest](#osmosis.txfees.v1beta1.QueryFeeTokensRequest)
-    - [QueryFeeTokensResponse](#osmosis.txfees.v1beta1.QueryFeeTokensResponse)
+  - [QueryBaseDenomRequest](#osmosis.txfees.v1beta1.QueryBaseDenomRequest)
+  - [QueryBaseDenomResponse](#osmosis.txfees.v1beta1.QueryBaseDenomResponse)
+  - [QueryDenomPoolIdRequest](#osmosis.txfees.v1beta1.QueryDenomPoolIdRequest)
+  - [QueryDenomPoolIdResponse](#osmosis.txfees.v1beta1.QueryDenomPoolIdResponse)
+  - [QueryDenomSpotPriceRequest](#osmosis.txfees.v1beta1.QueryDenomSpotPriceRequest)
+  - [QueryDenomSpotPriceResponse](#osmosis.txfees.v1beta1.QueryDenomSpotPriceResponse)
+  - [QueryFeeTokensRequest](#osmosis.txfees.v1beta1.QueryFeeTokensRequest)
+  - [QueryFeeTokensResponse](#osmosis.txfees.v1beta1.QueryFeeTokensResponse)
   
-    - [Query](#osmosis.txfees.v1beta1.Query)
+  - [Query](#osmosis.txfees.v1beta1.Query)
   
 - [Scalar Value Types](#scalar-value-types)
-
-
 
 <a name="osmosis/claim/v1beta1/claim.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/claim/v1beta1/claim.proto
 
-
-
 <a name="osmosis.claim.v1beta1.ClaimRecord"></a>
 
 ### ClaimRecord
-A Claim Records is the metadata of claim data per address
 
+A Claim Records is the metadata of claim data per address
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -344,17 +341,11 @@ A Claim Records is the metadata of claim data per address
 | `initial_claimable_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total initial claimable amount for the user |
 | `action_completed` | [bool](#bool) | repeated | true if action is completed index of bool in array refers to action enum # |
 
-
-
-
-
  <!-- end messages -->
-
 
 <a name="osmosis.claim.v1beta1.Action"></a>
 
 ### Action
-
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -363,27 +354,22 @@ A Claim Records is the metadata of claim data per address
 | ActionVote | 2 |  |
 | ActionDelegateStake | 3 |  |
 
-
  <!-- end enums -->
 
  <!-- end HasExtensions -->
 
  <!-- end services -->
 
-
-
 <a name="osmosis/claim/v1beta1/params.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/claim/v1beta1/params.proto
 
-
-
 <a name="osmosis.claim.v1beta1.Params"></a>
 
 ### Params
-Params defines the claim module's parameters.
 
+Params defines the claim module's parameters.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -392,10 +378,6 @@ Params defines the claim module's parameters.
 | `duration_of_decay` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 | `claim_denom` | [string](#string) |  | denom of claimable asset |
 
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -404,20 +386,16 @@ Params defines the claim module's parameters.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/claim/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/claim/v1beta1/genesis.proto
 
-
-
 <a name="osmosis.claim.v1beta1.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the claim module's genesis state.
 
+GenesisState defines the claim module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -425,10 +403,6 @@ GenesisState defines the claim module's genesis state.
 | `params` | [Params](#osmosis.claim.v1beta1.Params) |  | params defines all the parameters of the module. |
 | `claim_records` | [ClaimRecord](#osmosis.claim.v1beta1.ClaimRecord) | repeated | list of claim records, one for every airdrop recipient |
 
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -437,154 +411,91 @@ GenesisState defines the claim module's genesis state.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/claim/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/claim/v1beta1/query.proto
 
-
-
 <a name="osmosis.claim.v1beta1.QueryClaimRecordRequest"></a>
 
 ### QueryClaimRecordRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.claim.v1beta1.QueryClaimRecordResponse"></a>
 
 ### QueryClaimRecordResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `claim_record` | [ClaimRecord](#osmosis.claim.v1beta1.ClaimRecord) |  |  |
 
-
-
-
-
-
 <a name="osmosis.claim.v1beta1.QueryClaimableForActionRequest"></a>
 
 ### QueryClaimableForActionRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `action` | [Action](#osmosis.claim.v1beta1.Action) |  |  |
 
-
-
-
-
-
 <a name="osmosis.claim.v1beta1.QueryClaimableForActionResponse"></a>
 
 ### QueryClaimableForActionResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.claim.v1beta1.QueryModuleAccountBalanceRequest"></a>
 
 ### QueryModuleAccountBalanceRequest
+
 QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
 
 <a name="osmosis.claim.v1beta1.QueryModuleAccountBalanceResponse"></a>
 
 ### QueryModuleAccountBalanceResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
 
+QueryParamsResponse is the response type for the Query/Params RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `moduleAccountBalance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | params defines the parameters of the module. |
 
-
-
-
-
-
 <a name="osmosis.claim.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
+
 QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
 
 <a name="osmosis.claim.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
 
+QueryParamsResponse is the response type for the Query/Params RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#osmosis.claim.v1beta1.Params) |  | params defines the parameters of the module. |
 
-
-
-
-
-
 <a name="osmosis.claim.v1beta1.QueryTotalClaimableRequest"></a>
 
 ### QueryTotalClaimableRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.claim.v1beta1.QueryTotalClaimableResponse"></a>
 
 ### QueryTotalClaimableResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -592,10 +503,10 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.claim.v1beta1.Query"></a>
 
 ### Query
+
 Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
@@ -608,20 +519,14 @@ Query defines the gRPC querier service.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/epochs/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/epochs/genesis.proto
 
-
-
 <a name="osmosis.epochs.v1beta1.EpochInfo"></a>
 
 ### EpochInfo
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -633,24 +538,15 @@ Query defines the gRPC querier service.
 | `epoch_counting_started` | [bool](#bool) |  |  |
 | `current_epoch_start_height` | [int64](#int64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.epochs.v1beta1.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the epochs module's genesis state.
 
+GenesisState defines the epochs module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `epochs` | [EpochInfo](#osmosis.epochs.v1beta1.EpochInfo) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -660,68 +556,38 @@ GenesisState defines the epochs module's genesis state.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/epochs/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/epochs/query.proto
 
-
-
 <a name="osmosis.epochs.v1beta1.QueryCurrentEpochRequest"></a>
 
 ### QueryCurrentEpochRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `identifier` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.epochs.v1beta1.QueryCurrentEpochResponse"></a>
 
 ### QueryCurrentEpochResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `current_epoch` | [int64](#int64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.epochs.v1beta1.QueryEpochsInfoRequest"></a>
 
 ### QueryEpochsInfoRequest
-
-
-
-
-
-
 
 <a name="osmosis.epochs.v1beta1.QueryEpochsInfoResponse"></a>
 
 ### QueryEpochsInfoResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `epochs` | [EpochInfo](#osmosis.epochs.v1beta1.EpochInfo) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -729,10 +595,10 @@ GenesisState defines the epochs module's genesis state.
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.epochs.v1beta1.Query"></a>
 
 ### Query
+
 Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
@@ -742,20 +608,16 @@ Query defines the gRPC querier service.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/gamm/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/gamm/v1beta1/genesis.proto
 
-
-
 <a name="osmosis.gamm.v1beta1.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the gamm module's genesis state.
 
+GenesisState defines the gamm module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -763,24 +625,15 @@ GenesisState defines the gamm module's genesis state.
 | `next_pool_number` | [uint64](#uint64) |  |  |
 | `params` | [Params](#osmosis.gamm.v1beta1.Params) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.Params"></a>
 
 ### Params
-Params holds parameters for the incentives module
 
+Params holds parameters for the incentives module
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pool_creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -790,20 +643,16 @@ Params holds parameters for the incentives module
 
  <!-- end services -->
 
-
-
 <a name="osmosis/gamm/v1beta1/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/gamm/v1beta1/tx.proto
 
-
-
 <a name="osmosis.gamm.v1beta1.MsgExitPool"></a>
 
 ### MsgExitPool
-===================== MsgExitPool
 
+===================== MsgExitPool
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -812,26 +661,15 @@ Params holds parameters for the incentives module
 | `shareInAmount` | [string](#string) |  |  |
 | `tokenOutMins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgExitPoolResponse"></a>
 
 ### MsgExitPoolResponse
 
-
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut"></a>
 
 ### MsgExitSwapExternAmountOut
-===================== MsgExitSwapExternAmountOut
 
+===================== MsgExitSwapExternAmountOut
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -840,31 +678,19 @@ Params holds parameters for the incentives module
 | `tokenOut` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `shareInMaxAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgExitSwapExternAmountOutResponse"></a>
 
 ### MsgExitSwapExternAmountOutResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `shareInAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn"></a>
 
 ### MsgExitSwapShareAmountIn
-===================== MsgExitSwapShareAmountIn
 
+===================== MsgExitSwapShareAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -874,32 +700,20 @@ Params holds parameters for the incentives module
 | `shareInAmount` | [string](#string) |  |  |
 | `tokenOutMinAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgExitSwapShareAmountInResponse"></a>
 
 ### MsgExitSwapShareAmountInResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tokenOutAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgJoinPool"></a>
 
 ### MsgJoinPool
+
 ===================== MsgJoinPool
 This is really MsgJoinPoolNoSwap
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -908,27 +722,16 @@ This is really MsgJoinPoolNoSwap
 | `shareOutAmount` | [string](#string) |  |  |
 | `tokenInMaxs` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgJoinPoolResponse"></a>
 
 ### MsgJoinPoolResponse
 
-
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgJoinSwapExternAmountIn"></a>
 
 ### MsgJoinSwapExternAmountIn
+
 ===================== MsgJoinSwapExternAmountIn
 TODO: Rename to MsgJoinSwapExactAmountIn
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -937,31 +740,19 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | `tokenIn` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `shareOutMinAmount` | [string](#string) |  | repeated cosmos.base.v1beta1.Coin tokensIn = 5 [ (gogoproto.moretags) = "yaml:\"tokens_in\"", (gogoproto.nullable) = false ]; |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgJoinSwapExternAmountInResponse"></a>
 
 ### MsgJoinSwapExternAmountInResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `shareOutAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOut"></a>
 
 ### MsgJoinSwapShareAmountOut
-===================== MsgJoinSwapShareAmountOut
 
+===================== MsgJoinSwapShareAmountOut
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -971,31 +762,17 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | `shareOutAmount` | [string](#string) |  |  |
 | `tokenInMaxAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOutResponse"></a>
 
 ### MsgJoinSwapShareAmountOutResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tokenInAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgSwapExactAmountIn"></a>
 
 ### MsgSwapExactAmountIn
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1004,31 +781,17 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | `tokenIn` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `tokenOutMinAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgSwapExactAmountInResponse"></a>
 
 ### MsgSwapExactAmountInResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tokenOutAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgSwapExactAmountOut"></a>
 
 ### MsgSwapExactAmountOut
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1037,56 +800,35 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | `tokenInMaxAmount` | [string](#string) |  |  |
 | `tokenOut` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.MsgSwapExactAmountOutResponse"></a>
 
 ### MsgSwapExactAmountOutResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tokenInAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.SwapAmountInRoute"></a>
 
 ### SwapAmountInRoute
-===================== MsgSwapExactAmountIn
 
+===================== MsgSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `poolId` | [uint64](#uint64) |  |  |
 | `tokenOutDenom` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.SwapAmountOutRoute"></a>
 
 ### SwapAmountOutRoute
-===================== MsgSwapExactAmountOut
 
+===================== MsgSwapExactAmountOut
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `poolId` | [uint64](#uint64) |  |  |
 | `tokenInDenom` | [string](#string) |  |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -1094,11 +836,9 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.gamm.v1beta1.Msg"></a>
 
 ### Msg
-
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
@@ -1113,137 +853,86 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
  <!-- end services -->
 
-
-
 <a name="osmosis/gamm/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/gamm/v1beta1/query.proto
 
-
-
 <a name="osmosis.gamm.v1beta1.QueryNumPoolsRequest"></a>
 
 ### QueryNumPoolsRequest
+
 =============================== NumPools
-
-
-
-
-
 
 <a name="osmosis.gamm.v1beta1.QueryNumPoolsResponse"></a>
 
 ### QueryNumPoolsResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `numPools` | [uint64](#uint64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QueryPoolParamsRequest"></a>
 
 ### QueryPoolParamsRequest
-=============================== PoolParams
 
+=============================== PoolParams
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `poolId` | [uint64](#uint64) |  |  |
-
-
-
-
-
 
 <a name="osmosis.gamm.v1beta1.QueryPoolParamsResponse"></a>
 
 ### QueryPoolParamsResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QueryPoolRequest"></a>
 
 ### QueryPoolRequest
-=============================== Pool
 
+=============================== Pool
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `poolId` | [uint64](#uint64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QueryPoolResponse"></a>
 
 ### QueryPoolResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pool` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QueryPoolsRequest"></a>
 
 ### QueryPoolsRequest
-=============================== Pools
 
+=============================== Pools
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an optional pagination for the request. |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QueryPoolsResponse"></a>
 
 ### QueryPoolsResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pools` | [google.protobuf.Any](#google.protobuf.Any) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines the pagination in the response. |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QuerySpotPriceRequest"></a>
 
 ### QuerySpotPriceRequest
+
 QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice
 query.
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1251,32 +940,22 @@ query.
 | `base_asset_denom` | [string](#string) |  |  |
 | `quote_asset_denom` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QuerySpotPriceResponse"></a>
 
 ### QuerySpotPriceResponse
+
 QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
 query.
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `spotPrice` | [string](#string) |  | String of the Dec. Ex) 10.203uatom |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest"></a>
 
 ### QuerySwapExactAmountInRequest
-=============================== EstimateSwapExactAmountIn
 
+=============================== EstimateSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1285,31 +964,19 @@ query.
 | `tokenIn` | [string](#string) |  |  |
 | `routes` | [SwapAmountInRoute](#osmosis.gamm.v1beta1.SwapAmountInRoute) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse"></a>
 
 ### QuerySwapExactAmountInResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tokenOutAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QuerySwapExactAmountOutRequest"></a>
 
 ### QuerySwapExactAmountOutRequest
-=============================== EstimateSwapExactAmountOut
 
+=============================== EstimateSwapExactAmountOut
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1318,109 +985,61 @@ query.
 | `routes` | [SwapAmountOutRoute](#osmosis.gamm.v1beta1.SwapAmountOutRoute) | repeated |  |
 | `tokenOut` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse"></a>
 
 ### QuerySwapExactAmountOutResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `tokenInAmount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QueryTotalLiquidityRequest"></a>
 
 ### QueryTotalLiquidityRequest
-
-
-
-
-
-
 
 <a name="osmosis.gamm.v1beta1.QueryTotalLiquidityResponse"></a>
 
 ### QueryTotalLiquidityResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `liquidity` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QueryTotalPoolLiquidityRequest"></a>
 
 ### QueryTotalPoolLiquidityRequest
-=============================== PoolLiquidity
 
+=============================== PoolLiquidity
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `poolId` | [uint64](#uint64) |  |  |
-
-
-
-
-
 
 <a name="osmosis.gamm.v1beta1.QueryTotalPoolLiquidityResponse"></a>
 
 ### QueryTotalPoolLiquidityResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `liquidity` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QueryTotalSharesRequest"></a>
 
 ### QueryTotalSharesRequest
-=============================== TotalShares
 
+=============================== TotalShares
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `poolId` | [uint64](#uint64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.QueryTotalSharesResponse"></a>
 
 ### QueryTotalSharesResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `totalShares` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -1428,11 +1047,9 @@ query.
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.gamm.v1beta1.Query"></a>
 
 ### Query
-
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
@@ -1449,22 +1066,18 @@ query.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/lockup/lock.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/lockup/lock.proto
 
-
-
 <a name="osmosis.lockup.PeriodLock"></a>
 
 ### PeriodLock
+
 PeriodLock is a single unit of lock by period. It's a record of locked coin
 at a specific time. It stores owner, duration, unlock time and the amount of
 coins locked.
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1474,16 +1087,9 @@ coins locked.
 | `end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.QueryCondition"></a>
 
 ### QueryCondition
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1492,21 +1098,17 @@ coins locked.
 | `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  | valid when query condition is ByDuration |
 | `timestamp` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | valid when query condition is ByTime |
 
-
-
-
-
-
 <a name="osmosis.lockup.SyntheticLock"></a>
 
 ### SyntheticLock
+
 SyntheticLock is a single unit of synthetic lockup
 TODO: Change this to have
-* underlying_lock_id
-* synthetic_coin
-* end_time
-* duration
-* owner
+- underlying_lock_id
+- synthetic_coin
+- end_time
+- duration
+- owner
 We then index synthetic locks by the denom, just like we do with normal
 locks. Ideally we even get an interface, so we can re-use that same logic.
 I currently have no idea how reward distribution is supposed to be working...
@@ -1515,7 +1117,6 @@ we make a "constrained_coin" field, which is what the current "coins" field
 is. Constrained coin field can be a #post-v7 feature, since we aren't
 allowing partial unlocks of synthetic lockups.
 
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `underlying_lock_id` | [uint64](#uint64) |  | underlying native lockup id for this synthetic lockup |
@@ -1523,23 +1124,16 @@ allowing partial unlocks of synthetic lockups.
 | `end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | used for unbonding synthetic lockups, for active synthetic lockups, this value is set to uninitialized value |
 | `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 
-
-
-
-
  <!-- end messages -->
-
 
 <a name="osmosis.lockup.LockQueryType"></a>
 
 ### LockQueryType
 
-
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | ByDuration | 0 | Queries for locks that are longer than a certain duration |
 | ByTime | 1 | Queries for lockups that started before a specific time |
-
 
  <!-- end enums -->
 
@@ -1547,20 +1141,14 @@ allowing partial unlocks of synthetic lockups.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/incentives/gauge.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/incentives/gauge.proto
 
-
-
 <a name="osmosis.incentives.Gauge"></a>
 
 ### Gauge
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1573,24 +1161,13 @@ allowing partial unlocks of synthetic lockups.
 | `filled_epochs` | [uint64](#uint64) |  | number of epochs distributed already |
 | `distributed_coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | already distributed coins |
 
-
-
-
-
-
 <a name="osmosis.incentives.LockableDurationsInfo"></a>
 
 ### LockableDurationsInfo
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `lockable_durations` | [google.protobuf.Duration](#google.protobuf.Duration) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -1599,29 +1176,21 @@ allowing partial unlocks of synthetic lockups.
  <!-- end HasExtensions -->
 
  <!-- end services -->
-
-
 
 <a name="osmosis/incentives/params.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/incentives/params.proto
 
-
-
 <a name="osmosis.incentives.Params"></a>
 
 ### Params
-Params holds parameters for the incentives module
 
+Params holds parameters for the incentives module
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `distr_epoch_identifier` | [string](#string) |  | distribution epoch identifier |
-
-
-
-
 
  <!-- end messages -->
 
@@ -1631,20 +1200,16 @@ Params holds parameters for the incentives module
 
  <!-- end services -->
 
-
-
 <a name="osmosis/incentives/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/incentives/genesis.proto
 
-
-
 <a name="osmosis.incentives.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the incentives module's genesis state.
 
+GenesisState defines the incentives module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1653,10 +1218,6 @@ GenesisState defines the incentives module's genesis state.
 | `lockable_durations` | [google.protobuf.Duration](#google.protobuf.Duration) | repeated |  |
 | `last_gauge_id` | [uint64](#uint64) |  |  |
 
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -1665,219 +1226,118 @@ GenesisState defines the incentives module's genesis state.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/incentives/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/incentives/query.proto
 
-
-
 <a name="osmosis.incentives.ActiveGaugesPerDenomRequest"></a>
 
 ### ActiveGaugesPerDenomRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
 
-
-
-
-
-
 <a name="osmosis.incentives.ActiveGaugesPerDenomResponse"></a>
 
 ### ActiveGaugesPerDenomResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `data` | [Gauge](#osmosis.incentives.Gauge) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
-
-
-
-
-
 
 <a name="osmosis.incentives.ActiveGaugesRequest"></a>
 
 ### ActiveGaugesRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
-
-
-
-
-
 
 <a name="osmosis.incentives.ActiveGaugesResponse"></a>
 
 ### ActiveGaugesResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `data` | [Gauge](#osmosis.incentives.Gauge) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
-
-
-
-
-
 
 <a name="osmosis.incentives.GaugeByIDRequest"></a>
 
 ### GaugeByIDRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [uint64](#uint64) |  |  |
-
-
-
-
-
 
 <a name="osmosis.incentives.GaugeByIDResponse"></a>
 
 ### GaugeByIDResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gauge` | [Gauge](#osmosis.incentives.Gauge) |  |  |
-
-
-
-
-
 
 <a name="osmosis.incentives.GaugesRequest"></a>
 
 ### GaugesRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
 
-
-
-
-
-
 <a name="osmosis.incentives.GaugesResponse"></a>
 
 ### GaugesResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `data` | [Gauge](#osmosis.incentives.Gauge) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
 
-
-
-
-
-
 <a name="osmosis.incentives.ModuleDistributedCoinsRequest"></a>
 
 ### ModuleDistributedCoinsRequest
-
-
-
-
-
-
 
 <a name="osmosis.incentives.ModuleDistributedCoinsResponse"></a>
 
 ### ModuleDistributedCoinsResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.incentives.ModuleToDistributeCoinsRequest"></a>
 
 ### ModuleToDistributeCoinsRequest
 
-
-
-
-
-
-
 <a name="osmosis.incentives.ModuleToDistributeCoinsResponse"></a>
 
 ### ModuleToDistributeCoinsResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.incentives.QueryLockableDurationsRequest"></a>
 
 ### QueryLockableDurationsRequest
-
-
-
-
-
-
 
 <a name="osmosis.incentives.QueryLockableDurationsResponse"></a>
 
 ### QueryLockableDurationsResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `lockable_durations` | [google.protobuf.Duration](#google.protobuf.Duration) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.incentives.RewardsEstRequest"></a>
 
 ### RewardsEstRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -1885,87 +1345,48 @@ GenesisState defines the incentives module's genesis state.
 | `lock_ids` | [uint64](#uint64) | repeated |  |
 | `end_epoch` | [int64](#int64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.incentives.RewardsEstResponse"></a>
 
 ### RewardsEstResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.incentives.UpcomingGaugesPerDenomRequest"></a>
 
 ### UpcomingGaugesPerDenomRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
-
-
-
-
-
 <a name="osmosis.incentives.UpcomingGaugesPerDenomResponse"></a>
 
 ### UpcomingGaugesPerDenomResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `upcoming_gauges` | [Gauge](#osmosis.incentives.Gauge) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
 
-
-
-
-
-
 <a name="osmosis.incentives.UpcomingGaugesRequest"></a>
 
 ### UpcomingGaugesRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
 
-
-
-
-
-
 <a name="osmosis.incentives.UpcomingGaugesResponse"></a>
 
 ### UpcomingGaugesResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `data` | [Gauge](#osmosis.incentives.Gauge) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  | pagination defines an pagination for the response. |
-
-
-
-
 
  <!-- end messages -->
 
@@ -1973,10 +1394,10 @@ GenesisState defines the incentives module's genesis state.
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.incentives.Query"></a>
 
 ### Query
+
 Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
@@ -1994,20 +1415,14 @@ Query defines the gRPC querier service.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/incentives/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/incentives/tx.proto
 
-
-
 <a name="osmosis.incentives.MsgAddToGauge"></a>
 
 ### MsgAddToGauge
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -2015,26 +1430,13 @@ Query defines the gRPC querier service.
 | `gauge_id` | [uint64](#uint64) |  |  |
 | `rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.incentives.MsgAddToGaugeResponse"></a>
 
 ### MsgAddToGaugeResponse
 
-
-
-
-
-
-
 <a name="osmosis.incentives.MsgCreateGauge"></a>
 
 ### MsgCreateGauge
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -2045,19 +1447,9 @@ Query defines the gRPC querier service.
 | `start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | distribution start time |
 | `num_epochs_paid_over` | [uint64](#uint64) |  | number of epochs distribution will be done |
 
-
-
-
-
-
 <a name="osmosis.incentives.MsgCreateGaugeResponse"></a>
 
 ### MsgCreateGaugeResponse
-
-
-
-
-
 
  <!-- end messages -->
 
@@ -2065,11 +1457,9 @@ Query defines the gRPC querier service.
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.incentives.Msg"></a>
 
 ### Msg
-
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
@@ -2078,30 +1468,22 @@ Query defines the gRPC querier service.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/lockup/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/lockup/genesis.proto
 
-
-
 <a name="osmosis.lockup.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the lockup module's genesis state.
 
+GenesisState defines the lockup module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `last_lock_id` | [uint64](#uint64) |  |  |
 | `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
 | `synthetic_locks` | [SyntheticLock](#osmosis.lockup.SyntheticLock) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -2111,144 +1493,82 @@ GenesisState defines the lockup module's genesis state.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/lockup/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/lockup/query.proto
 
-
-
 <a name="osmosis.lockup.AccountLockedCoinsRequest"></a>
 
 ### AccountLockedCoinsRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedCoinsResponse"></a>
 
 ### AccountLockedCoinsResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedLongerDurationDenomRequest"></a>
 
 ### AccountLockedLongerDurationDenomRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
 | `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 | `denom` | [string](#string) |  |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedLongerDurationDenomResponse"></a>
 
 ### AccountLockedLongerDurationDenomResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyRequest"></a>
 
 ### AccountLockedLongerDurationNotUnlockingOnlyRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
 | `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyResponse"></a>
 
 ### AccountLockedLongerDurationNotUnlockingOnlyResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedLongerDurationRequest"></a>
 
 ### AccountLockedLongerDurationRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
 | `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedLongerDurationResponse"></a>
 
 ### AccountLockedLongerDurationResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.AccountLockedPastTimeDenomRequest"></a>
 
 ### AccountLockedPastTimeDenomRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -2256,318 +1576,169 @@ GenesisState defines the lockup module's genesis state.
 | `timestamp` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 | `denom` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.AccountLockedPastTimeDenomResponse"></a>
 
 ### AccountLockedPastTimeDenomResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedPastTimeNotUnlockingOnlyRequest"></a>
 
 ### AccountLockedPastTimeNotUnlockingOnlyRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
 | `timestamp` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedPastTimeNotUnlockingOnlyResponse"></a>
 
 ### AccountLockedPastTimeNotUnlockingOnlyResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedPastTimeRequest"></a>
 
 ### AccountLockedPastTimeRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
 | `timestamp` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountLockedPastTimeResponse"></a>
 
 ### AccountLockedPastTimeResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountUnlockableCoinsRequest"></a>
 
 ### AccountUnlockableCoinsRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.AccountUnlockableCoinsResponse"></a>
 
 ### AccountUnlockableCoinsResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.AccountUnlockedBeforeTimeRequest"></a>
 
 ### AccountUnlockedBeforeTimeRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
 | `timestamp` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.AccountUnlockedBeforeTimeResponse"></a>
 
 ### AccountUnlockedBeforeTimeResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.AccountUnlockingCoinsRequest"></a>
 
 ### AccountUnlockingCoinsRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.AccountUnlockingCoinsResponse"></a>
 
 ### AccountUnlockingCoinsResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.LockedDenomRequest"></a>
 
 ### LockedDenomRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.LockedDenomResponse"></a>
 
 ### LockedDenomResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `amount` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.LockedRequest"></a>
 
 ### LockedRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `lock_id` | [uint64](#uint64) |  |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.LockedResponse"></a>
 
 ### LockedResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `lock` | [PeriodLock](#osmosis.lockup.PeriodLock) |  |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.ModuleBalanceRequest"></a>
 
 ### ModuleBalanceRequest
 
-
-
-
-
-
-
 <a name="osmosis.lockup.ModuleBalanceResponse"></a>
 
 ### ModuleBalanceResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.lockup.ModuleLockedAmountRequest"></a>
 
 ### ModuleLockedAmountRequest
 
-
-
-
-
-
-
 <a name="osmosis.lockup.ModuleLockedAmountResponse"></a>
 
 ### ModuleLockedAmountResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.SyntheticLockupsByLockupIDRequest"></a>
 
 ### SyntheticLockupsByLockupIDRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `lock_id` | [uint64](#uint64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.SyntheticLockupsByLockupIDResponse"></a>
 
 ### SyntheticLockupsByLockupIDResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `synthetic_locks` | [SyntheticLock](#osmosis.lockup.SyntheticLock) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -2575,10 +1746,10 @@ GenesisState defines the lockup module's genesis state.
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.lockup.Query"></a>
 
 ### Query
+
 Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
@@ -2601,20 +1772,14 @@ Query defines the gRPC querier service.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/lockup/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/lockup/tx.proto
 
-
-
 <a name="osmosis.lockup.MsgBeginUnlocking"></a>
 
 ### MsgBeginUnlocking
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -2622,61 +1787,33 @@ Query defines the gRPC querier service.
 | `ID` | [uint64](#uint64) |  |  |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | Amount of unlocking coins. Unlock all if not set. |
 
-
-
-
-
-
 <a name="osmosis.lockup.MsgBeginUnlockingAll"></a>
 
 ### MsgBeginUnlockingAll
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `owner` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.MsgBeginUnlockingAllResponse"></a>
 
 ### MsgBeginUnlockingAllResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `unlocks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.MsgBeginUnlockingResponse"></a>
 
 ### MsgBeginUnlockingResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `success` | [bool](#bool) |  |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.MsgLockTokens"></a>
 
 ### MsgLockTokens
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -2684,24 +1821,13 @@ Query defines the gRPC querier service.
 | `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.lockup.MsgLockTokensResponse"></a>
 
 ### MsgLockTokensResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ID` | [uint64](#uint64) |  |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -2709,10 +1835,10 @@ Query defines the gRPC querier service.
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.lockup.Msg"></a>
 
 ### Msg
+
 Msg defines the Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
@@ -2723,20 +1849,14 @@ Msg defines the Msg service.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/mint/v1beta1/mint.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/mint/v1beta1/mint.proto
 
-
-
 <a name="osmosis.mint.v1beta1.DistributionProportions"></a>
 
 ### DistributionProportions
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -2745,31 +1865,21 @@ Msg defines the Msg service.
 | `developer_rewards` | [string](#string) |  | developer_rewards defines the proportion of the minted minted_denom that is to be allocated to developer rewards address. |
 | `community_pool` | [string](#string) |  | community_pool defines the proportion of the minted minted_denom that is to be allocated to the community pool. |
 
-
-
-
-
-
 <a name="osmosis.mint.v1beta1.Minter"></a>
 
 ### Minter
-Minter represents the minting state.
 
+Minter represents the minting state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `epoch_provisions` | [string](#string) |  | current epoch provisions |
 
-
-
-
-
-
 <a name="osmosis.mint.v1beta1.Params"></a>
 
 ### Params
-Params holds parameters for the mint module.
 
+Params holds parameters for the mint module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -2782,25 +1892,14 @@ Params holds parameters for the mint module.
 | `weighted_developer_rewards_receivers` | [WeightedAddress](#osmosis.mint.v1beta1.WeightedAddress) | repeated | address to receive developer rewards |
 | `minting_rewards_distribution_start_epoch` | [int64](#int64) |  | start epoch to distribute minting rewards |
 
-
-
-
-
-
 <a name="osmosis.mint.v1beta1.WeightedAddress"></a>
 
 ### WeightedAddress
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `address` | [string](#string) |  |  |
 | `weight` | [string](#string) |  |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -2810,20 +1909,16 @@ Params holds parameters for the mint module.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/mint/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/mint/v1beta1/genesis.proto
 
-
-
 <a name="osmosis.mint.v1beta1.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the mint module's genesis state.
 
+GenesisState defines the mint module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -2831,10 +1926,6 @@ GenesisState defines the mint module's genesis state.
 | `params` | [Params](#osmosis.mint.v1beta1.Params) |  | params defines all the paramaters of the module. |
 | `halven_started_epoch` | [int64](#int64) |  | current halven period start epoch |
 
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -2843,65 +1934,44 @@ GenesisState defines the mint module's genesis state.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/mint/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/mint/v1beta1/query.proto
 
-
-
 <a name="osmosis.mint.v1beta1.QueryEpochProvisionsRequest"></a>
 
 ### QueryEpochProvisionsRequest
+
 QueryEpochProvisionsRequest is the request type for the
 Query/EpochProvisions RPC method.
-
-
-
-
-
 
 <a name="osmosis.mint.v1beta1.QueryEpochProvisionsResponse"></a>
 
 ### QueryEpochProvisionsResponse
+
 QueryEpochProvisionsResponse is the response type for the
 Query/EpochProvisions RPC method.
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `epoch_provisions` | [bytes](#bytes) |  | epoch_provisions is the current minting per epoch provisions value. |
 
-
-
-
-
-
 <a name="osmosis.mint.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
+
 QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
 
 <a name="osmosis.mint.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
 
+QueryParamsResponse is the response type for the Query/Params RPC method.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#osmosis.mint.v1beta1.Params) |  | params defines the parameters of the module. |
-
-
-
-
 
  <!-- end messages -->
 
@@ -2909,10 +1979,10 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.mint.v1beta1.Query"></a>
 
 ### Query
+
 Query provides defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
@@ -2922,75 +1992,44 @@ Query provides defines the gRPC querier service.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/pool-incentives/v1beta1/incentives.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/pool-incentives/v1beta1/incentives.proto
 
-
-
 <a name="osmosis.poolincentives.v1beta1.DistrInfo"></a>
 
 ### DistrInfo
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `total_weight` | [string](#string) |  |  |
 | `records` | [DistrRecord](#osmosis.poolincentives.v1beta1.DistrRecord) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.DistrRecord"></a>
 
 ### DistrRecord
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gauge_id` | [uint64](#uint64) |  |  |
 | `weight` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.LockableDurationsInfo"></a>
 
 ### LockableDurationsInfo
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `lockable_durations` | [google.protobuf.Duration](#google.protobuf.Duration) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.Params"></a>
 
 ### Params
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `minted_denom` | [string](#string) |  | minted_denom is the denomination of the coin expected to be minted by the minting module. Pool-incentives module doesn’t actually mint the coin itself, but rather manages the distribution of coins that matches the defined minted_denom. |
-
-
-
-
 
  <!-- end messages -->
 
@@ -3000,20 +2039,16 @@ Query provides defines the gRPC querier service.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/pool-incentives/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/pool-incentives/v1beta1/genesis.proto
 
-
-
 <a name="osmosis.poolincentives.v1beta1.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the pool incentives module's genesis state.
 
+GenesisState defines the pool incentives module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -3021,10 +2056,6 @@ GenesisState defines the pool incentives module's genesis state.
 | `lockable_durations` | [google.protobuf.Duration](#google.protobuf.Duration) | repeated |  |
 | `distr_info` | [DistrInfo](#osmosis.poolincentives.v1beta1.DistrInfo) |  |  |
 
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -3033,18 +2064,15 @@ GenesisState defines the pool incentives module's genesis state.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/pool-incentives/v1beta1/gov.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/pool-incentives/v1beta1/gov.proto
 
-
-
 <a name="osmosis.poolincentives.v1beta1.ReplacePoolIncentivesProposal"></a>
 
 ### ReplacePoolIncentivesProposal
+
 ReplacePoolIncentivesProposal is a gov Content type for updating the pool
 incentives. If a ReplacePoolIncentivesProposal passes, the proposal’s records
 override the existing DistrRecords set in the module. Each record has a
@@ -3053,21 +2081,16 @@ gauge according to weight/total_weight. The incentives are put in the fee
 pool and it is allocated to gauges and community pool by the DistrRecords
 configuration. Note that gaugeId=0 represents the community pool.
 
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
 | `records` | [DistrRecord](#osmosis.poolincentives.v1beta1.DistrRecord) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.UpdatePoolIncentivesProposal"></a>
 
 ### UpdatePoolIncentivesProposal
+
 For example: if the existing DistrRecords were:
 [(Gauge 0, 5), (Gauge 1, 6), (Gauge 2, 6)]
 An UpdatePoolIncentivesProposal includes
@@ -3076,16 +2099,11 @@ This would delete Gauge 1, Edit Gauge 2, and Add Gauge 3
 The result DistrRecords in state would be:
 [(Gauge 0, 5), (Gauge 2, 4), (Gauge 3, 10)]
 
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
 | `records` | [DistrRecord](#osmosis.poolincentives.v1beta1.DistrRecord) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -3095,20 +2113,14 @@ The result DistrRecords in state would be:
 
  <!-- end services -->
 
-
-
 <a name="osmosis/pool-incentives/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/pool-incentives/v1beta1/query.proto
 
-
-
 <a name="osmosis.poolincentives.v1beta1.IncentivizedPool"></a>
 
 ### IncentivizedPool
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -3116,180 +2128,90 @@ The result DistrRecords in state would be:
 | `lockable_duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 | `gauge_id` | [uint64](#uint64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.QueryDistrInfoRequest"></a>
 
 ### QueryDistrInfoRequest
-
-
-
-
-
-
 
 <a name="osmosis.poolincentives.v1beta1.QueryDistrInfoResponse"></a>
 
 ### QueryDistrInfoResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `distr_info` | [DistrInfo](#osmosis.poolincentives.v1beta1.DistrInfo) |  |  |
-
-
-
-
-
 
 <a name="osmosis.poolincentives.v1beta1.QueryExternalIncentiveGaugesRequest"></a>
 
 ### QueryExternalIncentiveGaugesRequest
 
-
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.QueryExternalIncentiveGaugesResponse"></a>
 
 ### QueryExternalIncentiveGaugesResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `data` | [osmosis.incentives.Gauge](#osmosis.incentives.Gauge) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.QueryGaugeIdsRequest"></a>
 
 ### QueryGaugeIdsRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pool_id` | [uint64](#uint64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse"></a>
 
 ### QueryGaugeIdsResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gauge_ids_with_duration` | [QueryGaugeIdsResponse.GaugeIdWithDuration](#osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse.GaugeIdWithDuration) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.QueryGaugeIdsResponse.GaugeIdWithDuration"></a>
 
 ### QueryGaugeIdsResponse.GaugeIdWithDuration
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `gauge_id` | [uint64](#uint64) |  |  |
 | `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
 
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsRequest"></a>
 
 ### QueryIncentivizedPoolsRequest
-
-
-
-
-
-
 
 <a name="osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsResponse"></a>
 
 ### QueryIncentivizedPoolsResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `incentivized_pools` | [IncentivizedPool](#osmosis.poolincentives.v1beta1.IncentivizedPool) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.poolincentives.v1beta1.QueryLockableDurationsRequest"></a>
 
 ### QueryLockableDurationsRequest
 
-
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.QueryLockableDurationsResponse"></a>
 
 ### QueryLockableDurationsResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `lockable_durations` | [google.protobuf.Duration](#google.protobuf.Duration) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.poolincentives.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
-
-
-
-
-
-
 
 <a name="osmosis.poolincentives.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#osmosis.poolincentives.v1beta1.Params) |  |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -3297,11 +2219,9 @@ The result DistrRecords in state would be:
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.poolincentives.v1beta1.Query"></a>
 
 ### Query
-
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
@@ -3314,59 +2234,35 @@ The result DistrRecords in state would be:
 
  <!-- end services -->
 
-
-
 <a name="osmosis/store/v1beta1/tree.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/store/v1beta1/tree.proto
 
-
-
 <a name="osmosis.store.v1beta1.Child"></a>
 
 ### Child
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `index` | [bytes](#bytes) |  |  |
 | `accumulation` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.store.v1beta1.Leaf"></a>
 
 ### Leaf
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `leaf` | [Child](#osmosis.store.v1beta1.Child) |  |  |
 
-
-
-
-
-
 <a name="osmosis.store.v1beta1.Node"></a>
 
 ### Node
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `children` | [Child](#osmosis.store.v1beta1.Child) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -3376,34 +2272,24 @@ The result DistrRecords in state would be:
 
  <!-- end services -->
 
-
-
 <a name="osmosis/superfluid/superfluid.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/superfluid/superfluid.proto
 
-
-
 <a name="osmosis.superfluid.LockIdIntermediaryAccountConnection"></a>
 
 ### LockIdIntermediaryAccountConnection
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `lock_id` | [uint64](#uint64) |  |  |
 | `intermediary_account` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.OsmoEquivalentMultiplierRecord"></a>
 
 ### OsmoEquivalentMultiplierRecord
+
 The Osmo-Equivalent-Multiplier Record for epoch N refers to the osmo worth we
 treat an LP share as having, for all of epoch N. Eventually this is intended
 to be set as the Time-weighted-average-osmo-backing for the entire duration
@@ -3412,40 +2298,29 @@ epochs rewards) However for now, this is not the TWAP but instead the spot
 price at the boundary.  For different types of assets in the future, it could
 change.
 
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `epoch_number` | [int64](#int64) |  |  |
 | `denom` | [string](#string) |  | superfluid asset denom, can be LP token or native token |
 | `multiplier` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidAsset"></a>
 
 ### SuperfluidAsset
-SuperfluidAsset stores the pair of superfluid asset type and denom pair
 
+SuperfluidAsset stores the pair of superfluid asset type and denom pair
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `asset_type` | [SuperfluidAssetType](#osmosis.superfluid.SuperfluidAssetType) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidDelegationRecord"></a>
 
 ### SuperfluidDelegationRecord
+
 SuperfluidDelegationRecord takes the role of intermediary between LP token
 and OSMO tokens for superfluid staking
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -3453,17 +2328,12 @@ and OSMO tokens for superfluid staking
 | `validator_address` | [string](#string) |  |  |
 | `delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidIntermediaryAccount"></a>
 
 ### SuperfluidIntermediaryAccount
+
 SuperfluidIntermediaryAccount takes the role of intermediary between LP token
 and OSMO tokens for superfluid staking
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -3471,52 +2341,37 @@ and OSMO tokens for superfluid staking
 | `val_addr` | [string](#string) |  |  |
 | `gauge_id` | [uint64](#uint64) |  | perpetual gauge for rewards distribution |
 
-
-
-
-
  <!-- end messages -->
-
 
 <a name="osmosis.superfluid.SuperfluidAssetType"></a>
 
 ### SuperfluidAssetType
-
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | SuperfluidAssetTypeNative | 0 |  |
 | SuperfluidAssetTypeLPShare | 1 | SuperfluidAssetTypeLendingShare = 2; // for now not exist |
 
-
  <!-- end enums -->
 
  <!-- end HasExtensions -->
 
  <!-- end services -->
 
-
-
 <a name="osmosis/superfluid/params.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/superfluid/params.proto
 
-
-
 <a name="osmosis.superfluid.Params"></a>
 
 ### Params
-Params holds parameters for the superfluid module
 
+Params holds parameters for the superfluid module
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `minimum_risk_factor` | [string](#string) |  | the risk_factor is to be cut on OSMO equivalent value of lp tokens for superfluid staking, default: 5% |
-
-
-
-
 
  <!-- end messages -->
 
@@ -3526,20 +2381,16 @@ Params holds parameters for the superfluid module
 
  <!-- end services -->
 
-
-
 <a name="osmosis/superfluid/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/superfluid/genesis.proto
 
-
-
 <a name="osmosis.superfluid.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the module's genesis state.
 
+GenesisState defines the module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -3549,10 +2400,6 @@ GenesisState defines the module's genesis state.
 | `intermediary_accounts` | [SuperfluidIntermediaryAccount](#osmosis.superfluid.SuperfluidIntermediaryAccount) | repeated |  |
 | `intemediary_account_connections` | [LockIdIntermediaryAccountConnection](#osmosis.superfluid.LockIdIntermediaryAccountConnection) | repeated |  |
 
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -3561,21 +2408,17 @@ GenesisState defines the module's genesis state.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/superfluid/gov.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/superfluid/gov.proto
 
-
-
 <a name="osmosis.superfluid.v1beta1.RemoveSuperfluidAssetsProposal"></a>
 
 ### RemoveSuperfluidAssetsProposal
+
 RemoveSuperfluidAssetsProposal is a gov Content type to remove the superfluid
 assets by denom
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -3583,27 +2426,18 @@ assets by denom
 | `description` | [string](#string) |  |  |
 | `superfluid_asset_denoms` | [string](#string) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.v1beta1.SetSuperfluidAssetsProposal"></a>
 
 ### SetSuperfluidAssetsProposal
+
 SetSuperfluidAssetsProposal is a gov Content type to update the superfluid
 assets
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `title` | [string](#string) |  |  |
 | `description` | [string](#string) |  |  |
 | `assets` | [osmosis.superfluid.SuperfluidAsset](#osmosis.superfluid.SuperfluidAsset) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -3613,222 +2447,120 @@ assets
 
  <!-- end services -->
 
-
-
 <a name="osmosis/superfluid/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/superfluid/query.proto
 
-
-
 <a name="osmosis.superfluid.AllAssetsRequest"></a>
 
 ### AllAssetsRequest
-
-
-
-
-
-
 
 <a name="osmosis.superfluid.AllAssetsResponse"></a>
 
 ### AllAssetsResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `assets` | [SuperfluidAsset](#osmosis.superfluid.SuperfluidAsset) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.superfluid.AllIntermediaryAccountsRequest"></a>
 
 ### AllIntermediaryAccountsRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.AllIntermediaryAccountsResponse"></a>
 
 ### AllIntermediaryAccountsResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `accounts` | [SuperfluidIntermediaryAccountInfo](#osmosis.superfluid.SuperfluidIntermediaryAccountInfo) | repeated |  |
 | `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.AssetMultiplierRequest"></a>
 
 ### AssetMultiplierRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
-
-
-
-
-
 
 <a name="osmosis.superfluid.AssetMultiplierResponse"></a>
 
 ### AssetMultiplierResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `osmo_equivalent_multiplier` | [OsmoEquivalentMultiplierRecord](#osmosis.superfluid.OsmoEquivalentMultiplierRecord) |  |  |
-
-
-
-
-
 
 <a name="osmosis.superfluid.AssetTypeRequest"></a>
 
 ### AssetTypeRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
-
-
-
-
-
 
 <a name="osmosis.superfluid.AssetTypeResponse"></a>
 
 ### AssetTypeResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `asset_type` | [SuperfluidAssetType](#osmosis.superfluid.SuperfluidAssetType) |  |  |
-
-
-
-
-
 
 <a name="osmosis.superfluid.ConnectedIntermediaryAccountRequest"></a>
 
 ### ConnectedIntermediaryAccountRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `lock_id` | [uint64](#uint64) |  |  |
-
-
-
-
-
 
 <a name="osmosis.superfluid.ConnectedIntermediaryAccountResponse"></a>
 
 ### ConnectedIntermediaryAccountResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `account` | [SuperfluidIntermediaryAccountInfo](#osmosis.superfluid.SuperfluidIntermediaryAccountInfo) |  |  |
-
-
-
-
-
 
 <a name="osmosis.superfluid.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest"></a>
 
 ### EstimateSuperfluidDelegatedAmountByValidatorDenomRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `validator_address` | [string](#string) |  |  |
 | `denom` | [string](#string) |  |  |
-
-
-
-
-
 
 <a name="osmosis.superfluid.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse"></a>
 
 ### EstimateSuperfluidDelegatedAmountByValidatorDenomResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `total_delegated_coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
 
 <a name="osmosis.superfluid.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
 
-
-
-
-
-
-
 <a name="osmosis.superfluid.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#osmosis.superfluid.Params) |  | params defines the parameters of the module. |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidDelegationAmountRequest"></a>
 
 ### SuperfluidDelegationAmountRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -3836,93 +2568,51 @@ assets
 | `validator_address` | [string](#string) |  |  |
 | `denom` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidDelegationAmountResponse"></a>
 
 ### SuperfluidDelegationAmountResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidDelegationsByDelegatorRequest"></a>
 
 ### SuperfluidDelegationsByDelegatorRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `delegator_address` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidDelegationsByDelegatorResponse"></a>
 
 ### SuperfluidDelegationsByDelegatorResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `superfluid_delegation_records` | [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord) | repeated |  |
 | `total_delegated_coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidDelegationsByValidatorDenomRequest"></a>
 
 ### SuperfluidDelegationsByValidatorDenomRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `validator_address` | [string](#string) |  |  |
 | `denom` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidDelegationsByValidatorDenomResponse"></a>
 
 ### SuperfluidDelegationsByValidatorDenomResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `superfluid_delegation_records` | [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidIntermediaryAccountInfo"></a>
 
 ### SuperfluidIntermediaryAccountInfo
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -3931,32 +2621,18 @@ assets
 | `gauge_id` | [uint64](#uint64) |  |  |
 | `address` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidUndelegationsByDelegatorRequest"></a>
 
 ### SuperfluidUndelegationsByDelegatorRequest
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `delegator_address` | [string](#string) |  |  |
 | `denom` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.SuperfluidUndelegationsByDelegatorResponse"></a>
 
 ### SuperfluidUndelegationsByDelegatorResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -3964,34 +2640,17 @@ assets
 | `total_undelegated_coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `synthetic_locks` | [osmosis.lockup.SyntheticLock](#osmosis.lockup.SyntheticLock) | repeated |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.TotalSuperfluidDelegationsRequest"></a>
 
 ### TotalSuperfluidDelegationsRequest
-
-
-
-
-
-
 
 <a name="osmosis.superfluid.TotalSuperfluidDelegationsResponse"></a>
 
 ### TotalSuperfluidDelegationsResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `totalDelegations` | [string](#string) |  |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -3999,10 +2658,10 @@ assets
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.superfluid.Query"></a>
 
 ### Query
+
 Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
@@ -4022,22 +2681,18 @@ Query defines the gRPC querier service.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/superfluid/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/superfluid/tx.proto
 
-
-
 <a name="osmosis.superfluid.MsgLockAndSuperfluidDelegate"></a>
 
 ### MsgLockAndSuperfluidDelegate
+
 MsgLockAndSuperfluidDelegate locks coins with the unbonding period duration,
 and then does a superfluid lock from the newly created lockup, to the
 specified validator addr.
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -4045,31 +2700,17 @@ specified validator addr.
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `val_addr` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse"></a>
 
 ### MsgLockAndSuperfluidDelegateResponse
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `ID` | [uint64](#uint64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.MsgSuperfluidDelegate"></a>
 
 ### MsgSuperfluidDelegate
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -4077,71 +2718,35 @@ specified validator addr.
 | `lock_id` | [uint64](#uint64) |  |  |
 | `val_addr` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.MsgSuperfluidDelegateResponse"></a>
 
 ### MsgSuperfluidDelegateResponse
-
-
-
-
-
-
 
 <a name="osmosis.superfluid.MsgSuperfluidUnbondLock"></a>
 
 ### MsgSuperfluidUnbondLock
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `lock_id` | [uint64](#uint64) |  |  |
-
-
-
-
-
 
 <a name="osmosis.superfluid.MsgSuperfluidUnbondLockResponse"></a>
 
 ### MsgSuperfluidUnbondLockResponse
 
-
-
-
-
-
-
 <a name="osmosis.superfluid.MsgSuperfluidUndelegate"></a>
 
 ### MsgSuperfluidUndelegate
-
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `lock_id` | [uint64](#uint64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.superfluid.MsgSuperfluidUndelegateResponse"></a>
 
 ### MsgSuperfluidUndelegateResponse
-
-
-
-
-
 
  <!-- end messages -->
 
@@ -4149,10 +2754,10 @@ specified validator addr.
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.superfluid.Msg"></a>
 
 ### Msg
+
 Msg defines the Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
@@ -4166,33 +2771,25 @@ Execute superfluid redelegation for a lockup rpc SuperfluidRedelegate(MsgSuperfl
 
  <!-- end services -->
 
-
-
 <a name="osmosis/txfees/v1beta1/feetoken.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/txfees/v1beta1/feetoken.proto
 
-
-
 <a name="osmosis.txfees.v1beta1.FeeToken"></a>
 
 ### FeeToken
+
 FeeToken is a struct that specifies a coin denom, and pool ID pair.
 This marks the token as eligible for use as a tx fee asset in Osmosis.
 Its price in osmo is derived through looking at the provided pool ID.
 The pool ID must have osmo as one of its assets.
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 | `poolID` | [uint64](#uint64) |  |  |
 
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -4200,30 +2797,22 @@ The pool ID must have osmo as one of its assets.
  <!-- end HasExtensions -->
 
  <!-- end services -->
-
-
 
 <a name="osmosis/txfees/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/txfees/v1beta1/genesis.proto
 
-
-
 <a name="osmosis.txfees.v1beta1.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the txfees module's genesis state.
 
+GenesisState defines the txfees module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `basedenom` | [string](#string) |  |  |
 | `feetokens` | [FeeToken](#osmosis.txfees.v1beta1.FeeToken) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -4233,24 +2822,20 @@ GenesisState defines the txfees module's genesis state.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/txfees/v1beta1/gov.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/txfees/v1beta1/gov.proto
 
-
-
 <a name="osmosis.txfees.v1beta1.UpdateFeeTokenProposal"></a>
 
 ### UpdateFeeTokenProposal
+
 UpdateFeeTokenProposal is a gov Content type for adding a new whitelisted fee
 token. It must specify a denom along with gamm pool ID to use as a spot price
 calculator. It can be used to add a new denom to the whitelist It can also be
 used to update the Pool to associate with the denom. If Pool ID is set to 0,
 it will remove the denom from the whitelisted set.
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
@@ -4258,10 +2843,6 @@ it will remove the denom from the whitelisted set.
 | `description` | [string](#string) |  |  |
 | `feetoken` | [FeeToken](#osmosis.txfees.v1beta1.FeeToken) |  |  |
 
-
-
-
-
  <!-- end messages -->
 
  <!-- end enums -->
@@ -4270,126 +2851,73 @@ it will remove the denom from the whitelisted set.
 
  <!-- end services -->
 
-
-
 <a name="osmosis/txfees/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
 ## osmosis/txfees/v1beta1/query.proto
 
-
-
 <a name="osmosis.txfees.v1beta1.QueryBaseDenomRequest"></a>
 
 ### QueryBaseDenomRequest
-
-
-
-
-
-
 
 <a name="osmosis.txfees.v1beta1.QueryBaseDenomResponse"></a>
 
 ### QueryBaseDenomResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `base_denom` | [string](#string) |  |  |
-
-
-
-
-
 
 <a name="osmosis.txfees.v1beta1.QueryDenomPoolIdRequest"></a>
 
 ### QueryDenomPoolIdRequest
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
-
-
-
-
-
 
 <a name="osmosis.txfees.v1beta1.QueryDenomPoolIdResponse"></a>
 
 ### QueryDenomPoolIdResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `poolID` | [uint64](#uint64) |  |  |
 
-
-
-
-
-
 <a name="osmosis.txfees.v1beta1.QueryDenomSpotPriceRequest"></a>
 
 ### QueryDenomSpotPriceRequest
+
 QueryDenomSpotPriceRequest defines grpc request structure for querying spot
 price for the specified tx fee denom
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `denom` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.txfees.v1beta1.QueryDenomSpotPriceResponse"></a>
 
 ### QueryDenomSpotPriceResponse
+
 QueryDenomSpotPriceRequest defines grpc response structure for querying spot
 price for the specified tx fee denom
-
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `poolID` | [uint64](#uint64) |  |  |
 | `spot_price` | [string](#string) |  |  |
 
-
-
-
-
-
 <a name="osmosis.txfees.v1beta1.QueryFeeTokensRequest"></a>
 
 ### QueryFeeTokensRequest
-
-
-
-
-
-
 
 <a name="osmosis.txfees.v1beta1.QueryFeeTokensResponse"></a>
 
 ### QueryFeeTokensResponse
 
-
-
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `fee_tokens` | [FeeToken](#osmosis.txfees.v1beta1.FeeToken) | repeated |  |
-
-
-
-
 
  <!-- end messages -->
 
@@ -4397,11 +2925,9 @@ price for the specified tx fee denom
 
  <!-- end HasExtensions -->
 
-
 <a name="osmosis.txfees.v1beta1.Query"></a>
 
 ### Query
-
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
@@ -4411,8 +2937,6 @@ price for the specified tx fee denom
 | `BaseDenom` | [QueryBaseDenomRequest](#osmosis.txfees.v1beta1.QueryBaseDenomRequest) | [QueryBaseDenomResponse](#osmosis.txfees.v1beta1.QueryBaseDenomResponse) |  | GET|/osmosis/txfees/v1beta1/base_denom|
 
  <!-- end services -->
-
-
 
 ## Scalar Value Types
 
@@ -4433,4 +2957,3 @@ price for the specified tx fee denom
 | <a name="bool" /> bool |  | bool | boolean | boolean | bool | bool | boolean | TrueClass/FalseClass |
 | <a name="string" /> string | A string must always contain UTF-8 encoded or 7-bit ASCII text. | string | String | str/unicode | string | string | string | String (UTF-8) |
 | <a name="bytes" /> bytes | May contain any arbitrary sequence of bytes. | string | ByteString | str | []byte | ByteString | string | String (ASCII-8BIT) |
-

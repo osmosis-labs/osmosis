@@ -10,7 +10,7 @@ order: 3
 
 ```go
 type MsgCreateGauge struct {
-	Owner             sdk.AccAddress
+ Owner             sdk.AccAddress
   DistributeTo      QueryCondition
   Rewards           sdk.Coins
   StartTime         time.Time // start time to start distribution
@@ -31,7 +31,7 @@ type MsgCreateGauge struct {
 
 ```go
 type MsgAddToGauge struct {
-	GaugeID uint64
+ GaugeID uint64
   Rewards sdk.Coins
 }
 ```

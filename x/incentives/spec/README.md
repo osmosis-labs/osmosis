@@ -30,4 +30,3 @@ There are two kinds of `gauges`, perpetual and non-perpetual ones.
 5. **[Hooks](05_hooks.md)**  
 6. **[Queries](06_queries.md)**  
 7. **[Params](07_params.md)**  
-

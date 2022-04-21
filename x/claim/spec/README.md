@@ -49,7 +49,7 @@ Every action must be performed to claim the full amount.
 
 A claim record is a struct that contains data about the claims process of each airdrop recipient.
 
-It contains an address, the initial claimable airdrop amount, and an array of bools representing 
+It contains an address, the initial claimable airdrop amount, and an array of bools representing
 whether each action has been completed. The position in the array refers to enum number of the action.
 
 So for example, `[false, true, true, false]` means that `ActionSwap` and `ActionVote` are completed.
@@ -68,7 +68,6 @@ type ClaimRecord struct {
 }
 
 ```
-
 
 ## Params
 

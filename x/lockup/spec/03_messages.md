@@ -10,9 +10,9 @@ order: 3
 
 ```go
 type MsgLockTokens struct {
-	Owner    sdk.AccAddress
-	Duration time.Duration
-	Coins    sdk.Coins
+ Owner    sdk.AccAddress
+ Duration time.Duration
+ Coins    sdk.Coins
 }
 ```
 
@@ -29,7 +29,7 @@ Once time is over, users can withdraw unlocked coins from lockup `ModuleAccount`
 
 ```go
 type MsgBeginUnlockingAll struct {
-	Owner string
+ Owner string
 }
 ```
 
@@ -46,8 +46,8 @@ Once time is over, users can withdraw unlocked coins from lockup `ModuleAccount`
 
 ```go
 type MsgBeginUnlocking struct {
-	Owner string
-	ID    uint64
+ Owner string
+ ID    uint64
 }
 ```
 

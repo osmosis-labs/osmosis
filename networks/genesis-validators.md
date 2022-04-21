@@ -13,7 +13,7 @@ Some important notes on joining as a genesis validator:
 1. **Gentxs must be submitted by End of Day UTC on June 11.**
 2. We highly recommend only experienced validators who have run on past Cosmos SDK chains and have participated in a genesis ceremony before become genesis validators on Osmosis.
 3. All Osmosis validators should be expected to be ready to participate active operators of the network. As explained in the [Osmosis: A Hub AMM](https://medium.com/osmosis/osmosis-a-hub-amm-c4c12788f94c) post, Osmosis is intended to be a fast iterating platform that regularly add new features and modules through software upgrades.  A precise timeline for upgrade schedules does not exist, but validators are expected to be ready to upgrade the network potentially as frequently as a monthly basis early on. Furthermore, Osmosis intends to adopt many new custom low-level features such as threshold decryption, custom bridges, and price oracles. Some of these future upgrades may require validators to run additional software beyond the normal node software, and validators should be prepared to learn and run these.
-4. To be a genesis validator, you must have OSMO at genesis via the fairdrop.  Every address that had ATOMs during the Stargate upgrade of the Cosmos Hub from `cosmoshub-3` to `cosmoshub-4` will have recieve fairdrop OSMO.  You can verify that a Cosmos address has received coins in the fairdrop by inputting an address here: https://airdrop.osmosis.zone/.
+4. To be a genesis validator, you must have OSMO at genesis via the fairdrop.  Every address that had ATOMs during the Stargate upgrade of the Cosmos Hub from `cosmoshub-3` to `cosmoshub-4` will have recieve fairdrop OSMO.  You can verify that a Cosmos address has received coins in the fairdrop by inputting an address here: <https://airdrop.osmosis.zone/>.
 
 ## Hardware
 
@@ -141,6 +141,7 @@ To import via mnemonic, you can do so using the following command and then input
 ```sh
 osmosisd keys add <key_name> --recover
 ```
+
 #### Import From Another CLI
 
 If you have the private key saved in the keystore of another CLI (such as gaiad), you can easily import it
@@ -158,6 +159,7 @@ gaiad keys export <original_key_name>
 ```sh
 osmosisd keys import <new_key_name> ./path/to/key.txt 
 ```
+
 4. Delete the keyfile from your machine.
 
 #### Import via Ledger
@@ -184,7 +186,6 @@ osmosisd tendermint show-validator
 The pubkey should be formatted with the bech32 prefix `osmovalconspub1`.
 
 If you are using a custom signing mechanism such as `tmkms`, please refer to their relevant docs to retrieve your validator pubkey.
-
 
 ### Create GenTx
 
@@ -228,7 +229,7 @@ It will show an output something similar to:
 Genesis transaction written to "/Users/ubuntu/.osmosisd/config/gentx/gentx-eb3b1768d00e66ef83acb1eee59e1d3a35cf76fc.json"
 ```
 
-The result should look something like this [sample gentx file]("/Users/sunnya97/.osmosisd/config/gentx/gentx-eb3b1768d00e66ef83acb1eee59e1d3a35cf76fc.json). 
+The result should look something like this [sample gentx file]("/Users/sunnya97/.osmosisd/config/gentx/gentx-eb3b1768d00e66ef83acb1eee59e1d3a35cf76fc.json).
 
 ### Submit Your GenTx
 
@@ -237,11 +238,13 @@ To submit your GenTx for inclusion in the chain, please upload it to the [github
 To upload the your genesis file, please follow these steps:
 
 1. Rename the gentx file just generated to gentx-{your-moniker}.json (please do not have any spaces or special characters in the file name)
-2. Fork this repo by going to https://github.com/osmosis-labs/networks, clicking on fork, and choose your account (if multiple).
+2. Fork this repo by going to <https://github.com/osmosis-labs/networks>, clicking on fork, and choose your account (if multiple).
 3. Clone your copy of the fork to your local machine
+
 ```sh
 git clone https://github.com/<your_github_username>/networks
 ```
+
 4. Copy the gentx to the networks repo (ensure that it is in the correct folder)
 
 ```sh
@@ -249,7 +252,7 @@ cp ~/.osmosisd/config/gentx/gentx-<your-moniker>.json networks/osmosis-1/gentxs/
 ```
 
 5. Commit and push to your repo.
- 
+
 ```sh
 cd networks
 git add osmosis-1/gentxs/*
@@ -268,7 +271,6 @@ git push origin master
 Thank you for submitting a gentx!  We had 40 gentxs submitted!  This guide will provide instructions
 on the next stage of getting ready for the Osmosis launch.  
 
-
 **The Chain Genesis Time is 17:00 UTC on June 18, 2021.**
 
 Please have your validator up and ready by this time, and be available for further instructions if necessary
@@ -280,7 +282,6 @@ and your team join the Discord during launch, as it will be the coordination poi
 or issues during the launch process.  The channel is private by default in order to keep it free of spam
 and unnecessary noise.  To join the channel, please send a message to Meow#6669 to add yourself and any
 team members.
-
 
 ## Instructions
 
@@ -341,7 +342,7 @@ We highly recommend validators use cosmovisor to run their nodes. This will make
 as validators don't have to manually upgrade binaries during the upgrade, and instead can preinstall new binaries, and
 cosmovisor will automatically update them based on on-chain SoftwareUpgrade proposals.
 
-You should review the docs for cosmovisor located here: https://docs.cosmos.network/master/run-node/cosmovisor.html
+You should review the docs for cosmovisor located here: <https://docs.cosmos.network/master/run-node/cosmovisor.html>
 
 If you choose to use cosmovisor, please continue with these instructions:
 
@@ -379,6 +380,7 @@ source ~/.profile
 ```
 
 Finally, you should move the osmosisd binary into the cosmovisor/genesis folder.
+
 ```
 mv $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/genesis/bin
 ```
@@ -425,7 +427,7 @@ Now that everything is setup and ready to go, you can start your node.
 cosmovisor start
 ```
 
-You will need some way to keep the process always running.  If you're on linux, you can do this by creating a 
+You will need some way to keep the process always running.  If you're on linux, you can do this by creating a
 service.
 
 ```sh
@@ -451,7 +453,6 @@ WantedBy=multi-user.target
 EOF
 ```
 
-
 Then update and start the node
 
 ```sh
@@ -461,6 +462,7 @@ sudo -S systemctl start osmosisd
 ```
 
 You can check the status with:
+
 ```sh
 systemctl status osmosisd
 ```

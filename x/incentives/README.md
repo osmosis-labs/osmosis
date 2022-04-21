@@ -3,11 +3,12 @@
 The incentives module provides users the functionality to create gauges, which
 distributes reward tokens to the qualified lockups. Each lockup has designated
 lockup duration that indicates how much time that the user have to wait until
-the token release after they request to unlock the tokens. 
+the token release after they request to unlock the tokens.
 
 ## Creating Gauges
 
 To initialize a gauge, the creator should decide the following parameters:
+
 - Distribution condition: denom to incentivize and minimum lockup duration.
 - Rewards: tokens to be distributed to the lockup owners.
 - Start time: time when the distribution will begin.
@@ -33,6 +34,7 @@ I want to reward 1000 Mytoken to this pool over 2 days (2 epochs). (500 rewarded
 I want the rewards to start disbursing at 2022 Jan 01.
 
 MsgCreateGauge:
+
 - Distribution condition: denom "LPToken", 1 day.
 - Rewards: 1000 MyToken
 - Start time: 1624000706 (in unix time format)
@@ -52,6 +54,7 @@ I want to reward 1000 MyToken to atom holders perpetually. (Meaning I add more t
 I want the reward to start disbursing immedietly.
 
 MsgCreateGauge:
+
 - Distribution condition: denom "atom", 720 hours.
 - Rewards: 1000 MyTokens
 - Start time: empty(immedietly)
@@ -66,6 +69,7 @@ osmosisd tx incentives create-gauge atom 1000MyToken
 I want to refill the gauge with 500 MyToken after the distribution.
 
 MsgAddToGauge:
+
 - Gauge ID: (id of the created gauge)
 - Rewards: 500 MyTokens
 

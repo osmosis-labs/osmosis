@@ -21,6 +21,7 @@ The minting module contains the following parameters:
 | minting_rewards_distribution_start_epoch   | int64        | 10                                     |
 
 **Notes**
+
 1. `mint_denom` defines denom for minting token - uosmo
 2. `genesis_epoch_provisions` provides minting tokens per epoch at genesis.
 3. `epoch_identifier` defines the epoch identifier to be used for mint module e.g. "weekly"

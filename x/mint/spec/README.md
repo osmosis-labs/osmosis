@@ -19,4 +19,3 @@ Module uses time basis epochs supported by `epochs` module.
 3. **[End Epoch](03_end_epoch.md)**
 4. **[Parameters](04_params.md)**
 5. **[Events](05_events.md)**
-    

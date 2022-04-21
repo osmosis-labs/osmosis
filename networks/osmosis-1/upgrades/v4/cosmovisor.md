@@ -4,7 +4,7 @@ We highly recommend validators use cosmovisor to run their nodes. This will make
 as validators don't have to manually upgrade binaries during the upgrade, and instead can preinstall new binaries, and
 cosmovisor will automatically update them based on on-chain SoftwareUpgrade proposals.
 
-You should review the docs for cosmovisor located here: https://docs.cosmos.network/master/run-node/cosmovisor.html
+You should review the docs for cosmovisor located here: <https://docs.cosmos.network/master/run-node/cosmovisor.html>
 
 If you choose to use cosmovisor, please continue with these instructions:
 
@@ -33,6 +33,7 @@ Cosmovisor requires some ENVIRONMENT VARIABLES be set in order to function prope
 your `.profile` so it is automatically set in every session.
 
 For validators we recommmend setting
+
 - `DAEMON_ALLOW_DOWNLOAD_BINARIES=false` for security reasons
 - `DAEMON_LOG_BUFFER_SIZE=512` to avoid a bug with extra long log lines crashing the server.
 - `DAEMON_RESTART_AFTER_UPGRADE=true` for unattended upgrades
@@ -48,10 +49,10 @@ source ~/.profile
 ```
 
 Finally, you should copy the current osmosisd binary into the cosmovisor/genesis folder.
+
 ```
 cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/genesis/bin
 ```
-
 
 ## Prepare for upgrade (v4)
 
@@ -67,6 +68,7 @@ cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v4/bin
 ```
 
 Now cosmovisor will run with the current binary, and will automatically upgrade to this new binary at the appropriate height if run with:
+
 ```
 cosmovisor start
 ```

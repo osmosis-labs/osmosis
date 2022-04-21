@@ -27,6 +27,7 @@ message ClaimRecord {
   ];
 }
 ```
+
 When a user get airdrop for his/her action, claim record is created to prevent duplicated actions on future actions.
 
 ### State

@@ -5,8 +5,8 @@ order: 1
 # Concepts
 
 Osmosis' initial supply was given as a quadratic fairdrop to ATOM users.
-Details of the fairdrop are in the 'fairdrop' section of the following blog post: 
-https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db
+Details of the fairdrop are in the 'fairdrop' section of the following blog post:
+<https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db>
 
 To briefly summarize, a quadratic fairdrop is an airdrop that rewards you an amount proportional to the square root of the amount of tokens you had at the snapshot date.
 The particular quadratic fairdrop Osmosis used had a bonus going towards stakers, as detailed in the blog post.

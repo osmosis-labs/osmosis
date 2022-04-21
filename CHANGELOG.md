@@ -110,7 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Minor improvements & Bug Fixes
 
 * [#1022](https://github.com/osmosis-labs/osmosis/pull/1022) upgrade iavl to v0.17.3-osmo-v4 - fix state export at an old height
-* [#988](https://github.com/osmosis-labs/osmosis/pull/988) Make `SuperfluidUndelegationsByDelegator` query also return synthetic locks 
+* [#988](https://github.com/osmosis-labs/osmosis/pull/988) Make `SuperfluidUndelegationsByDelegator` query also return synthetic locks
 * [#984](https://github.com/osmosis-labs/osmosis/pull/984) Add wasm support to Dockerfile
 
 ## [v7.0.2 - Carbon](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.2)

@@ -8,7 +8,6 @@ Typically, weights begin at an unbalanced ratio with more weight given to the to
 
 The pool creator can designate when the weight change begins by setting the `start-time`. While the pool will be live and available for trade at the initial `weights`, pool weight shift will not begin until `start-time` is reached.
 
-
 ## Example Pool Files
 
 The following is an example of a liquidity bootstrapping pool.

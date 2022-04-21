@@ -8,18 +8,18 @@ order: 2
 
 ```go
 type GenesisState struct {
-	// params defines all the paramaters of the module.
-	Params            Params          
-	LockableDurations []time.Duration 
-	DistrInfo         *DistrInfo      
+ // params defines all the paramaters of the module.
+ Params            Params          
+ LockableDurations []time.Duration 
+ DistrInfo         *DistrInfo      
 }
 
 type Params struct {
-	// minted_denom is the denomination of the coin expected to be minted by the minting module.
-	// Pool-incentives module doesn’t actually mint the coin itself, but rather manages the distribution of coins that matches the defined minted_denom.
-	MintedDenom string 
-	// allocation_ratio defines the proportion of the minted minted_denom that is to be allocated as pool incentives.
-	AllocationRatio github_com_cosmos_cosmos_sdk_types.Dec 
+ // minted_denom is the denomination of the coin expected to be minted by the minting module.
+ // Pool-incentives module doesn’t actually mint the coin itself, but rather manages the distribution of coins that matches the defined minted_denom.
+ MintedDenom string 
+ // allocation_ratio defines the proportion of the minted minted_denom that is to be allocated as pool incentives.
+ AllocationRatio github_com_cosmos_cosmos_sdk_types.Dec 
 }
 ```
 
