@@ -83,6 +83,16 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 	return msg.InitialPoolLiquidity
 }
 
-func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolID uint64) (types.PoolI, error) {
-	return &Pool{}, types.ErrNotImplemented
+func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+	// We assume that FuturePoolGovernor is valid.
+	pool := &Pool{
+		Address:            types.NewPoolAddress(poolId).String(),
+		Id:                 poolId,
+		PoolParams:         *msg.PoolParams,
+		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
+		PoolLiquidity:      nil,
+		FuturePoolGovernor: msg.FuturePoolGovernor,
+	}
+	
+	return pool, nil
 }
