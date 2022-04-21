@@ -160,7 +160,7 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.T().Log("starting Hermes relayer container...")
 
-	tmpDir, err := ioutil.TempDir("", "gaia-e2e-testnet-hermes-")
+	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-hermes-")
 	s.Require().NoError(err)
 	s.tmpDirs = append(s.tmpDirs, tmpDir)
 
@@ -248,7 +248,7 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	// transport errors.
 	time.Sleep(10 * time.Second)
 
-	// create the client, connection and channel between the two Gaia chains
+	// create the client, connection and channel between the two Osmosis chains
 	s.connectIBCChains()
 }
 
