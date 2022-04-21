@@ -1,11 +1,9 @@
 package types
 
 import (
-	fmt "fmt"
-	"runtime"
-	"runtime/debug"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 )
 
 type EpochHooks interface {
@@ -27,14 +25,14 @@ func NewMultiEpochHooks(hooks ...EpochHooks) MultiEpochHooks {
 // AfterEpochEnd is called when epoch is going to be ended, epochNumber is the number of epoch that is ending.
 func (h MultiEpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	for i := range h {
-		h[i].AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+		panicCatchingEpochHook(ctx, h[i].AfterEpochEnd, epochIdentifier, epochNumber)
 	}
 }
 
 // BeforeEpochStart is called when epoch is going to be started, epochNumber is the number of epoch that is starting.
 func (h MultiEpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	for i := range h {
-		h[i].BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+		panicCatchingEpochHook(ctx, h[i].BeforeEpochStart, epochIdentifier, epochNumber)
 	}
 }
 
@@ -42,25 +40,14 @@ func panicCatchingEpochHook(
 	ctx sdk.Context,
 	hookFn func(ctx sdk.Context, epochIdentifier string, epochNumber int64),
 	epochIdentifier string,
-	epochNumber int64) {
-
+	epochNumber int64,
+) {
 	defer func() {
 		if recovErr := recover(); recovErr != nil {
-			fmt.Println("Recovering from panic:", recovErr)
-			fmt.Println("Stack Trace:")
-			debug.PrintStack()
-			switch e := recovErr.(type) {
-			case string:
-				ctx.Logger().Error("Recovering from panicrecovered (string) panic:", e)
-			case runtime.Error:
-				fmt.Println("recovered (runtime.Error) panic:", e.Error())
-			case error:
-				fmt.Println("recovered (error) panic:", e.Error())
-			default:
-				fmt.Println("recovered (default) panic:", e)
-			}
-			fmt.Println(string(debug.Stack()))
-			return
+			osmoutils.PrintPanicRecoveryError(ctx, recovErr)
 		}
 	}()
+	cacheCtx, write := ctx.CacheContext()
+	hookFn(cacheCtx, epochIdentifier, epochNumber)
+	write()
 }
