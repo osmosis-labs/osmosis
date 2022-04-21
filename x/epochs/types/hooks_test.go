@@ -26,7 +26,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 }
 
-// dummy Epoch hook is a struct satisfying the epoch hook interface,
+// dummyEpochHook is a struct satisfying the epoch hook interface,
 // that maintains a counter for how many times its been succesfully called,
 // and a boolean for whether it should panic during its execution.
 type dummyEpochHook struct {
