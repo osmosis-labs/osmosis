@@ -1,0 +1,14 @@
+syntax = "proto3";
+package osmosis.routing;
+
+import "gogoproto/gogo.proto";
+import "osmosis/routing/params.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/routing/types";
+
+// GenesisState defines the routing module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  // this line is used by starport scaffolding # genesis/proto/state
+}

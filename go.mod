@@ -33,6 +33,10 @@ require (
 
 require (
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-alpha7 // indirect
+	github.com/cosmos/cosmos-sdk/api v0.1.0 // indirect
+	github.com/cosmos/cosmos-sdk/errors v1.0.0-beta.4 // indirect
+	github.com/cosmos/cosmos-sdk/orm v1.0.0-alpha.11.0.20220415103545-53a6f199fe41 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.0 // indirect

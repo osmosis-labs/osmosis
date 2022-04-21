@@ -173,7 +173,7 @@ containerProtoFmt=osmosis-proto-fmt-$(protoVer)
 proto-gen:
 	@echo "Generating Protobuf files"
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		sh ./scripts/protocgen.sh; fi
+		sh ./scripts/protocgen2.sh; fi
 
 proto-format:
 	@echo "Formatting Protobuf files"

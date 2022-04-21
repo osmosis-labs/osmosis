@@ -1,0 +1,7 @@
+version: v1
+name: buf.build/osmosis-labs/osmosis
+deps:
+  - buf.build/cosmos/cosmos-proto
+  - buf.build/cosmos/gogo-proto
+  - buf.build/googleapis/googleapis
+  - buf.build/cosmos/cosmos-sdk:53a6f199fe41ba4ec4bbf47c350a860cbd267b88

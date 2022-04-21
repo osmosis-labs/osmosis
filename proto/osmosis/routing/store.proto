@@ -1,0 +1,35 @@
+syntax = "proto3";
+package osmosis.routing;
+
+// this line is used by starport scaffolding # proto/tx/import
+
+import "cosmos/orm/v1/orm.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/routing/types";
+
+message Route {
+    option (cosmos.orm.v1.table) = {
+        id: 1;
+        primary_key: {
+            fields:
+                "name"
+        }
+        index: {
+            id: 1;
+            fields:
+                "channel" unique: true
+        
+        }
+        index: {
+            id: 2;
+            fields: 
+                "denom" unique: true
+        }
+      };
+
+    string name = 1;
+    string channel = 2;
+    string denom = 3;
+    repeated uint64 incentivizedPools = 4;
+    repeated uint64 osmoIncentivizedPools = 5;
+}

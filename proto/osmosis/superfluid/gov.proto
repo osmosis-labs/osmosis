@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.superfluid.v1beta1;
+package osmosis.superfluid;
 
 import "gogoproto/gogo.proto";
 import "osmosis/superfluid/superfluid.proto";

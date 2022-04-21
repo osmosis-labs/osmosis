@@ -235,6 +235,24 @@
   
     - [Query](#osmosis.poolincentives.v1beta1.Query)
   
+- [osmosis/routing/params.proto](#osmosis/routing/params.proto)
+    - [Params](#osmosis.routing.Params)
+  
+- [osmosis/routing/genesis.proto](#osmosis/routing/genesis.proto)
+    - [GenesisState](#osmosis.routing.GenesisState)
+  
+- [osmosis/routing/query.proto](#osmosis/routing/query.proto)
+    - [QueryParamsRequest](#osmosis.routing.QueryParamsRequest)
+    - [QueryParamsResponse](#osmosis.routing.QueryParamsResponse)
+  
+    - [Query](#osmosis.routing.Query)
+  
+- [osmosis/routing/store.proto](#osmosis/routing/store.proto)
+    - [Route](#osmosis.routing.Route)
+  
+- [osmosis/routing/tx.proto](#osmosis/routing/tx.proto)
+    - [Msg](#osmosis.routing.Msg)
+  
 - [osmosis/store/v1beta1/tree.proto](#osmosis/store/v1beta1/tree.proto)
     - [Child](#osmosis.store.v1beta1.Child)
     - [Leaf](#osmosis.store.v1beta1.Leaf)
@@ -3311,6 +3329,173 @@ The result DistrRecords in state would be:
 | `LockableDurations` | [QueryLockableDurationsRequest](#osmosis.poolincentives.v1beta1.QueryLockableDurationsRequest) | [QueryLockableDurationsResponse](#osmosis.poolincentives.v1beta1.QueryLockableDurationsResponse) |  | GET|/osmosis/pool-incentives/v1beta1/lockable_durations|
 | `IncentivizedPools` | [QueryIncentivizedPoolsRequest](#osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsRequest) | [QueryIncentivizedPoolsResponse](#osmosis.poolincentives.v1beta1.QueryIncentivizedPoolsResponse) |  | GET|/osmosis/pool-incentives/v1beta1/incentivized_pools|
 | `ExternalIncentiveGauges` | [QueryExternalIncentiveGaugesRequest](#osmosis.poolincentives.v1beta1.QueryExternalIncentiveGaugesRequest) | [QueryExternalIncentiveGaugesResponse](#osmosis.poolincentives.v1beta1.QueryExternalIncentiveGaugesResponse) |  | GET|/osmosis/pool-incentives/v1beta1/external_incentive_gauges|
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/routing/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/routing/params.proto
+
+
+
+<a name="osmosis.routing.Params"></a>
+
+### Params
+Params defines the parameters for the module.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/routing/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/routing/genesis.proto
+
+
+
+<a name="osmosis.routing.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the routing module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#osmosis.routing.Params) |  | this line is used by starport scaffolding # genesis/proto/state |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/routing/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/routing/query.proto
+
+
+
+<a name="osmosis.routing.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="osmosis.routing.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#osmosis.routing.Params) |  | params holds all the parameters of this module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.routing.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#osmosis.routing.QueryParamsRequest) | [QueryParamsResponse](#osmosis.routing.QueryParamsResponse) | Parameters queries the parameters of the module.
+
+this line is used by starport scaffolding # 2 | GET|/osmosislabs/osmosis/routing/params|
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/routing/store.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/routing/store.proto
+
+
+
+<a name="osmosis.routing.Route"></a>
+
+### Route
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `channel` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/routing/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/routing/tx.proto
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.routing.Msg"></a>
+
+### Msg
+Msg defines the Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
 
  <!-- end services -->
 
