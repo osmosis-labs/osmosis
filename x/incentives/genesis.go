@@ -12,8 +12,8 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 	k.SetLockableDurations(ctx, genState.LockableDurations)
-	for _, gauge := range genState.Gauges {
-		err := k.SetGaugeWithRefKey(ctx, &gauge)
+	for i := range genState.Gauges {
+		err := k.SetGaugeWithRefKey(ctx, &genState.Gauges[i])
 		if err != nil {
 			panic(err)
 		}

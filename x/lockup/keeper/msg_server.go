@@ -138,8 +138,8 @@ func (server msgServer) BeginUnlockingAll(goCtx context.Context, msg *types.MsgB
 			sdk.NewAttribute(types.AttributeUnlockedCoins, unlockedCoins.String()),
 		),
 	}
-	for _, lock := range unlocks {
-		events = events.AppendEvent(createBeginUnlockEvent(&lock))
+	for i := range unlocks {
+		events = events.AppendEvent(createBeginUnlockEvent(&unlocks[i]))
 	}
 	ctx.EventManager().EmitEvents(events)
 
