@@ -282,7 +282,6 @@ func (k Keeper) JoinSwapExactAmountIn(
 	return sharesOut, nil
 }
 
-//nolint:deadcode,govet // looks like we have known dead code beneath "panic"
 func (k Keeper) JoinSwapShareAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -296,25 +295,14 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, err
 	}
 
-	panic("implement") // I moved this past return, it caused everything beneath it to be dead code
-
-	tokenInAmount = sdk.ZeroInt()
-
-	// normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
-	// tokenInAmount = calcSingleInGivenPoolOut(
-	// 	PoolAsset.Token.Amount.ToDec(),
-	// 	normalizedWeight,
-	// 	pool.GetTotalShares().Amount.ToDec(),
-	// 	shareOutAmount.ToDec(),
-	// 	pool.GetPoolSwapFee(ctx),
-	// ).TruncateInt()
-
-	if tokenInAmount.LTE(sdk.ZeroInt()) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+	extendedPool, ok := pool.(types.PoolAmountOutExtension)
+	if !ok {
+		return sdk.Int{}, fmt.Errorf("pool with id %d does not support this kind of join", poolId)
 	}
 
-	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", tokenInDenom)
+	tokenInAmount, err = extendedPool.JoinSwapShareAmountOut(ctx, tokenInDenom, shareOutAmount, tokenInMaxAmount)
+	if err != nil {
+		return sdk.Int{}, err
 	}
 
 	tokenIn := sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}
@@ -407,7 +395,7 @@ func (k Keeper) ExitSwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
-	extendedPool, ok := pool.(types.PoolExitSwapExactAmountOutExtension)
+	extendedPool, ok := pool.(types.PoolAmountOutExtension)
 	if !ok {
 		return sdk.Int{}, fmt.Errorf("pool with id %d does not support this kind of exit", poolId)
 	}

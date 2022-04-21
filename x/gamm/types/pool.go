@@ -75,15 +75,26 @@ type PoolI interface {
 	PokePool(blockTime time.Time)
 }
 
-// PoolExitSwapExactAmountOutExtension is an extension of the PoolI
+// PoolAmountOutExtension is an extension of the PoolI
 // interface definiting an abstraction for pools that hold tokens.
-// In addition, it supports ExitSwapExactAmountOut method.
+// In addition, it supports JoinSwapShareAmountOut and ExitSwapExactAmountOut methods
+// that allow joining with exact amoun of shares to get out, and exiting with exact
+// amount of coins to get out.
 // See definition below.
-type PoolExitSwapExactAmountOutExtension interface {
+type PoolAmountOutExtension interface {
 	PoolI
 
+	// JoinSwapShareAmountOut add liquidity to a specified pool with a maximum amount of tokens in (tokenInMaxAmount)
+	// and swaps to an exact number of shares (shareOutAmount).
+	JoinSwapShareAmountOut(
+		ctx sdk.Context,
+		tokenInDenom string,
+		shareOutAmount sdk.Int,
+		tokenInMaxAmount sdk.Int,
+	) (tokenInAmount sdk.Int, err error)
+
 	// ExitSwapExactAmountOut removes liquidity from a specified pool with a maximum amount of LP shares (shareInMaxAmount)
-	// and swaps to an exact amount of one of the token pairs (tokenOut)
+	// and swaps to an exact amount of one of the token pairs (tokenOut).
 	ExitSwapExactAmountOut(
 		ctx sdk.Context,
 		tokenOut sdk.Coin,

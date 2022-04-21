@@ -467,8 +467,8 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 			if tc.expectPass {
 				_, err = suite.App.GAMMKeeper.JoinSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], poolId, foocoins, sdk.ZeroInt())
 				suite.Require().NoError(err)
-				// _, err = suite.App.GAMMKeeper.JoinSwapShareAmountOut(suite.Ctx, suite.TestAccs[0], poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
-				// suite.Require().NoError(err)
+				_, err = suite.App.GAMMKeeper.JoinSwapShareAmountOut(suite.Ctx, suite.TestAccs[0], poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
+				suite.Require().NoError(err)
 				_, err = suite.App.GAMMKeeper.ExitSwapShareAmountIn(suite.Ctx, suite.TestAccs[0], poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
 				suite.Require().NoError(err)
 				_, err = suite.App.GAMMKeeper.ExitSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, foocoin, sdk.NewInt(1000000000000000000))
