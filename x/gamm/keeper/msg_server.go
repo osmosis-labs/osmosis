@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -27,13 +28,19 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 }
 
 var (
-	_ types.MsgServer    = msgServer{}
-	_ balancer.MsgServer = msgServer{}
+	_ types.MsgServer      = msgServer{}
+	_ balancer.MsgServer   = msgServer{}
+	_ stableswap.MsgServer = msgServer{}
 )
 
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
+}
+
+func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
+	poolId, err := server.CreatePool(goCtx, msg)
+	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, err
 }
 
 func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMsg) (poolId uint64, err error) {
