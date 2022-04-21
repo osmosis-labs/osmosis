@@ -35,8 +35,8 @@ func TestGenesis(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tokenfactory.InitGenesis(ctx, app.TokenFactoryKeeper, genesisState)
-	exportedGenesis := tokenfactory.ExportGenesis(ctx, app.TokenFactoryKeeper)
+	tokenfactory.InitGenesis(ctx, *app.TokenFactoryKeeper, genesisState)
+	exportedGenesis := tokenfactory.ExportGenesis(ctx, *app.TokenFactoryKeeper)
 	require.NotNil(t, exportedGenesis)
 	require.Equal(t, genesisState, *exportedGenesis)
 }
