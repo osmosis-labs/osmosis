@@ -78,9 +78,9 @@ type PoolI interface {
 // PoolAmountOutExtension is an extension of the PoolI
 // interface definiting an abstraction for pools that hold tokens.
 // In addition, it supports JoinSwapShareAmountOut and ExitSwapExactAmountOut methods
-// that allow joining with exact amoun of shares to get out, and exiting with exact
+// that allow joining with the exact amount of shares to get out, and exiting with exact
 // amount of coins to get out.
-// See definition below.
+// See definitions below.
 type PoolAmountOutExtension interface {
 	PoolI
 
