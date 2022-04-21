@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	errMessageFormatSharesAmountNotPositive = "shares amount must be positive, was %d"
-	errMessageFormatTokenAmountNotPositive  = "token amount must be positive, was %d"
-	errMessageFormatTokensLargerThanMax     = "%d resulted tokens is larger than the max amount of %d"
-	errMessageFormatSharesLargerThanMax     = "%d resulted shares is larger than the max amount of %d"
+	errMsgFormatSharesAmountNotPositive = "shares amount must be positive, was %d"
+	errMsgFormatTokenAmountNotPositive  = "token amount must be positive, was %d"
+	errMsgFormatTokensLargerThanMax     = "%d resulted tokens is larger than the max amount of %d"
+	errMsgFormatSharesLargerThanMax     = "%d resulted shares is larger than the max amount of %d"
 )
 
 // solveConstantFunctionInvariant solves the constant function of an AMM
@@ -92,7 +92,7 @@ func (p *Pool) SwapOutAmtGivenIn(
 	}
 	tokenOutCoin, _ := tokenOutDecCoin.TruncateDecimal()
 	if !tokenOutCoin.Amount.IsPositive() {
-		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMessageFormatTokenAmountNotPositive, tokenOutCoin.Amount.Int64())
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMsgFormatTokenAmountNotPositive, tokenOutCoin.Amount.Int64())
 	}
 
 	err = p.applySwap(ctx, tokensIn, sdk.Coins{tokenOutCoin})
@@ -140,7 +140,7 @@ func (p *Pool) SwapInAmtGivenOut(
 	}
 	tokenInCoin, _ := tokenInDecCoin.TruncateDecimal()
 	if !tokenInCoin.Amount.IsPositive() {
-		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMessageFormatTokenAmountNotPositive, tokenInCoin.Amount.Int64())
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMsgFormatTokenAmountNotPositive, tokenInCoin.Amount.Int64())
 	}
 
 	err = p.applySwap(ctx, sdk.Coins{tokenInCoin}, tokensOut)
@@ -367,7 +367,7 @@ func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares s
 func (p *Pool) CalcExitPoolShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
 	totalShares := p.GetTotalShares()
 	if exitingShares.GTE(totalShares) {
-		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMessageFormatSharesLargerThanMax, exitingShares.Int64(), totalShares.Uint64())
+		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares.Int64(), totalShares.Uint64())
 	}
 
 	refundedShares := exitingShares
@@ -437,11 +437,11 @@ func (p *Pool) JoinSwapShareAmountOut(
 	).TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMessageFormatTokenAmountNotPositive, tokenInAmount.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMsgFormatTokenAmountNotPositive, tokenInAmount.Int64())
 	}
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMessageFormatTokensLargerThanMax, tokenInAmount.Int64(), tokenInMaxAmount.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMsgFormatTokensLargerThanMax, tokenInAmount.Int64(), tokenInMaxAmount.Int64())
 	}
 
 	poolAssetIn.Token.Amount = poolAssetIn.Token.Amount.Add(tokenInAmount)
@@ -496,11 +496,11 @@ func (p *Pool) ExitSwapExactAmountOut(
 	).TruncateInt()
 
 	if !sharesIn.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMessageFormatSharesAmountNotPositive, sharesIn.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMsgFormatSharesAmountNotPositive, sharesIn.Int64())
 	}
 
 	if sharesIn.GT(shareInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMessageFormatSharesLargerThanMax, sharesIn.Int64(), shareInMaxAmount.Uint64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, sharesIn.Int64(), shareInMaxAmount.Uint64())
 	}
 
 	if err := p.exitPool(ctx, sdk.NewCoins(tokenOut), sharesIn); err != nil {
