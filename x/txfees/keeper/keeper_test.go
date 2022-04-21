@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	osmosisapp "github.com/osmosis-labs/osmosis/v7/app"
-  
+
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
@@ -28,7 +28,6 @@ var (
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
-
 
 func (suite *KeeperTestSuite) SetupTest(isCheckTx bool) {
 	suite.Setup()
