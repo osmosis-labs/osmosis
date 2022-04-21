@@ -27,6 +27,12 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
+func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
+	return &msgServer{
+		keeper: keeper,
+	}
+}
+
 var (
 	_ types.MsgServer      = msgServer{}
 	_ balancer.MsgServer   = msgServer{}
