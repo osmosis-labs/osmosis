@@ -128,7 +128,7 @@ replace (
 	// enforce tendermint 0.34.16
 	github.com/tendermint/tendermint => github.com/tendermint/tendermint v0.34.16
 	// use pebbledb
-	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220421163700-61811dede9e5
+	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220421174252-38e808a9bdee
 	// use grpc version compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
