@@ -93,6 +93,6 @@ func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (t
 		PoolLiquidity:      nil,
 		FuturePoolGovernor: msg.FuturePoolGovernor,
 	}
-	
+
 	return pool, nil
 }
