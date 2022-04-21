@@ -47,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1107](https://github.com/osmosis-labs/osmosis/pull/1107) Update to wasmvm v0.24.0, re-enabling building on M1 macs!
 
 ### Minor improvements & Bug Fixes
+
+* [#1308](https://github.com/osmosis-labs/osmosis/pull/1308) Make panics inside of epochs no longer chain halt by default.
 * [#1286](https://github.com/osmosis-labs/osmosis/pull/1286) Fix release build scripts.
 * [#1203](https://github.com/osmosis-labs/osmosis/pull/1203) cleanup Makefile and ci workflows
 * [#1177](https://github.com/osmosis-labs/osmosis/pull/1177) upgrade to go 1.18
