@@ -34,16 +34,10 @@ jobs:
           # Full git history is needed to get a proper list of changed files
           # within `super-linter`.
           fetch-depth: 0
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - name: Run super-linter
         uses: github/super-linter@v4
         env:
+          VALIDATE_ALL_CODEBASE: false
           VALIDATE_MARKDOWN: true
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: env.GIT_DIFF
