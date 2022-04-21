@@ -31,11 +31,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-require github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
-
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
+	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/Antonboom/errname v0.1.5 // indirect
 	github.com/Antonboom/nilnil v0.1.0 // indirect
