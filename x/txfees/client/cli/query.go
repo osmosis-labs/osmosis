@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/x/txfees/types"
-	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	// Group queries under a subcommand
 	cmd := &cobra.Command{
@@ -31,7 +32,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	return cmd
 }
 
-// GetCmdFeeTokens takes the pool id and returns the matching gauge ids and durations
+// GetCmdFeeTokens takes the pool id and returns the matching gauge ids and durations.
 func GetCmdFeeTokens() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fee-tokens",
@@ -67,7 +68,7 @@ $ %s query txfees fee-tokens
 	return cmd
 }
 
-// GetCmdDenomPoolID takes the pool id and returns the matching gauge ids and durations
+// GetCmdDenomPoolID takes the pool id and returns the matching gauge ids and durations.
 func GetCmdDenomPoolID() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "denom-pool-id",
@@ -105,7 +106,7 @@ $ %s query txfees denom-pool-id [denom]
 	return cmd
 }
 
-// GetCmdBaseDenom takes the pool id and returns the matching gauge ids and weights
+// GetCmdBaseDenom takes the pool id and returns the matching gauge ids and weights.
 func GetCmdBaseDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "base-denom",

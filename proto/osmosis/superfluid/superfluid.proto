@@ -1,0 +1,69 @@
+syntax = "proto3";
+package osmosis.superfluid;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
+
+enum SuperfluidAssetType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  SuperfluidAssetTypeNative = 0;
+  SuperfluidAssetTypeLPShare = 1;
+  // SuperfluidAssetTypeLendingShare = 2; // for now not exist
+}
+
+// SuperfluidAsset stores the pair of superfluid asset type and denom pair
+message SuperfluidAsset {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+
+  string denom = 1;
+  SuperfluidAssetType asset_type = 2;
+}
+
+// SuperfluidIntermediaryAccount takes the role of intermediary between LP token
+// and OSMO tokens for superfluid staking
+message SuperfluidIntermediaryAccount {
+  string denom = 1;
+  string val_addr = 2;
+  // perpetual gauge for rewards distribution
+  uint64 gauge_id = 3;
+}
+
+// The Osmo-Equivalent-Multiplier Record for epoch N refers to the osmo worth we
+// treat an LP share as having, for all of epoch N. Eventually this is intended
+// to be set as the Time-weighted-average-osmo-backing for the entire duration
+// of epoch N-1. (Thereby locking whats in use for epoch N as based on the prior
+// epochs rewards) However for now, this is not the TWAP but instead the spot
+// price at the boundary.  For different types of assets in the future, it could
+// change.
+message OsmoEquivalentMultiplierRecord {
+  int64 epoch_number = 1;
+  // superfluid asset denom, can be LP token or native token
+  string denom = 2;
+  string multiplier = 3 [
+    (gogoproto.moretags) = "yaml:\"multiplier\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// SuperfluidDelegationRecord takes the role of intermediary between LP token
+// and OSMO tokens for superfluid staking
+message SuperfluidDelegationRecord {
+  string delegator_address = 1;
+  string validator_address = 2;
+  cosmos.base.v1beta1.Coin delegation_amount = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
+
+message LockIdIntermediaryAccountConnection {
+  uint64 lock_id = 1;
+  string intermediary_account = 2;
+}

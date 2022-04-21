@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appParams "github.com/osmosis-labs/osmosis/app/params"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	appParams "github.com/osmosis-labs/osmosis/v7/app/params"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 func TestMsgCreateBalancerPool(t *testing.T) {
@@ -19,7 +19,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 	invalidAddr := sdk.AccAddress("invalid")
 
 	createMsg := func(after func(msg MsgCreateBalancerPool) MsgCreateBalancerPool) MsgCreateBalancerPool {
-		testPoolAsset := []types.PoolAsset{
+		testPoolAsset := []PoolAsset{
 			{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("test", sdk.NewInt(100)),
@@ -30,7 +30,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			},
 		}
 
-		poolParams := &BalancerPoolParams{
+		poolParams := &PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}
@@ -88,7 +88,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "has no PoolAsset2",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolAssets = []types.PoolAsset{}
+				msg.PoolAssets = []PoolAsset{}
 				return msg
 			}),
 			expectPass: false,
@@ -96,7 +96,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "has one Pool Asset",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolAssets = []types.PoolAsset{
+				msg.PoolAssets = []PoolAsset{
 					msg.PoolAssets[0],
 				}
 				return msg
@@ -149,7 +149,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "negative swap fee with zero exit fee",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolParams = &BalancerPoolParams{
+				msg.PoolParams = &PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
 					ExitFee: sdk.NewDecWithPrec(0, 0),
 				}
@@ -192,7 +192,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		{
 			name: "zero swap fee, zero exit fee",
 			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolParams = &BalancerPoolParams{
+				msg.PoolParams = &PoolParams{
 					ExitFee: sdk.NewDecWithPrec(0, 0),
 					SwapFee: sdk.NewDecWithPrec(0, 0),
 				}

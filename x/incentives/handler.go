@@ -3,14 +3,15 @@ package incentives
 import (
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
 )
 
-// NewHandler returns msg handler for this module
-func NewHandler(k keeper.Keeper) sdk.Handler {
+// NewHandler returns msg handler for this module.
+func NewHandler(k *keeper.Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		msgServer := keeper.NewMsgServerImpl(k)

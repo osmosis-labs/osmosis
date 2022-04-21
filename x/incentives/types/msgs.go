@@ -4,11 +4,12 @@ import (
 	"errors"
 	"time"
 
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
-// constants
+// constants.
 const (
 	TypeMsgCreateGauge = "create_gauge"
 	TypeMsgAddToGauge  = "add_to_gauge"
@@ -16,7 +17,7 @@ const (
 
 var _ sdk.Msg = &MsgCreateGauge{}
 
-// NewMsgCreateGauge creates a message to create a gauge
+// NewMsgCreateGauge creates a message to create a gauge.
 func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64) *MsgCreateGauge {
 	return &MsgCreateGauge{
 		IsPerpetual:       isPerpetual,
@@ -56,9 +57,11 @@ func (m MsgCreateGauge) ValidateBasic() error {
 
 	return nil
 }
+
 func (m MsgCreateGauge) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
+
 func (m MsgCreateGauge) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
@@ -66,7 +69,7 @@ func (m MsgCreateGauge) GetSigners() []sdk.AccAddress {
 
 var _ sdk.Msg = &MsgAddToGauge{}
 
-// NewMsgCreateGauge creates a message to create a gauge
+// NewMsgCreateGauge creates a message to create a gauge.
 func NewMsgAddToGauge(owner sdk.AccAddress, gaugeId uint64, rewards sdk.Coins) *MsgAddToGauge {
 	return &MsgAddToGauge{
 		Owner:   owner.String(),
@@ -87,9 +90,11 @@ func (m MsgAddToGauge) ValidateBasic() error {
 
 	return nil
 }
+
 func (m MsgAddToGauge) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
+
 func (m MsgAddToGauge) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}

@@ -10,7 +10,7 @@ type MintHooks interface {
 
 var _ MintHooks = MultiMintHooks{}
 
-// combine multiple mint hooks, all hook functions are run in array sequence
+// combine multiple mint hooks, all hook functions are run in array sequence.
 type MultiMintHooks []MintHooks
 
 func NewMultiMintHooks(hooks ...MintHooks) MultiMintHooks {

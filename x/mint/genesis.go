@@ -1,19 +1,25 @@
 package mint
 
 import (
+	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/x/mint/types"
 )
 
-// InitGenesis new mint genesis
-func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, data *types.GenesisState) {
+// InitGenesis new mint genesis.
+func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, data *types.GenesisState) {
 	data.Minter.EpochProvisions = data.Params.GenesisEpochProvisions
 	keeper.SetMinter(ctx, data.Minter)
 	keeper.SetParams(ctx, data.Params)
-	ak.GetModuleAccount(ctx, types.ModuleName)
-	totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, sdk.NewInt(225_000_000_000_000))
-	keeper.CreateDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins)
+
+	if !ak.HasAccount(ctx, ak.GetModuleAddress(types.ModuleName)) {
+		ak.GetModuleAccount(ctx, types.ModuleName)
+		totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, sdk.NewInt(225_000_000_000_000))
+		keeper.CreateDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins)
+		bk.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(225_000_000_000_000).Neg())
+	}
+
 	keeper.SetLastHalvenEpochNum(ctx, data.HalvenStartedEpoch)
 }
 

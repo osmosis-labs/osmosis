@@ -7,7 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/incentives/types";
 
 service Msg {
   rpc CreateGauge(MsgCreateGauge) returns (MsgCreateGaugeResponse);
@@ -15,23 +15,27 @@ service Msg {
 }
 
 message MsgCreateGauge {
-  bool is_perpetual = 1; // flag to show if it's perpetual or multi-epoch
-                         // distribution incentives by third party
+  // flag to show if it's perpetual or multi-epoch
+  // distribution incentives by third party
+  bool is_perpetual = 1;
+
   string owner = 2 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  osmosis.lockup.QueryCondition distribute_to = 3 [
-    (gogoproto.nullable) = false
-  ]; // distribute condition of a lock which meet one of these conditions
+  // distribute condition of a lock which meet one of these conditions
+  osmosis.lockup.QueryCondition distribute_to = 3
+      [ (gogoproto.nullable) = false ];
+  // can distribute multiple coins
   repeated cosmos.base.v1beta1.Coin coins = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ]; // can distribute multiple coins
+  ];
   // distribution start time
   google.protobuf.Timestamp start_time = 5 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"timestamp\""
   ];
-  uint64 num_epochs_paid_over = 6; // number of epochs distribution will be done
+  // number of epochs distribution will be done
+  uint64 num_epochs_paid_over = 6;
 }
 message MsgCreateGaugeResponse {}
 

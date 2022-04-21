@@ -14,7 +14,7 @@ type BankKeeper interface {
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 }
 
-// AccountKeeper defines the expected account keeper used for simulations (noalias)
+// AccountKeeper defines the expected account keeper used for simulations (noalias).
 type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 	SetModuleAccount(ctx sdk.Context, macc authtypes.ModuleAccountI)
@@ -23,12 +23,12 @@ type AccountKeeper interface {
 	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
 }
 
-// DistrKeeper is the keeper of the distribution store
+// DistrKeeper is the keeper of the distribution store.
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
-// StakingKeeper expected staking keeper (noalias)
+// StakingKeeper expected staking keeper (noalias).
 type StakingKeeper interface {
 	// BondDenom - Bondable coin denomination
 	BondDenom(sdk.Context) string

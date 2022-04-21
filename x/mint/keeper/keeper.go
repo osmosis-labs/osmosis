@@ -1,16 +1,17 @@
 package keeper
 
 import (
+	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/osmosis-labs/osmosis/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
-// Keeper of the mint store
+// Keeper of the mint store.
 type Keeper struct {
 	cdc              codec.BinaryCodec
 	storeKey         sdk.StoreKey
@@ -23,7 +24,7 @@ type Keeper struct {
 	feeCollectorName string
 }
 
-// NewKeeper creates a new mint Keeper instance
+// NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
 	ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper, epochKeeper types.EpochKeeper,
@@ -51,7 +52,16 @@ func NewKeeper(
 	}
 }
 
+// SetInitialSupplyOffsetDuringMigration sets the supply offset based on the balance of the
+// Develop rVesting Module Account.  It should only be called one time during the initial
+// migration to v7.
+func SetInitialSupplyOffsetDuringMigration(ctx sdk.Context, k Keeper) {
+	moduleAccBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), k.GetParams(ctx).MintDenom)
+	k.bankKeeper.AddSupplyOffset(ctx, moduleAccBalance.Denom, moduleAccBalance.Amount.Neg())
+}
+
 // CreateDeveloperVestingModuleAccount creates the module account for developer vesting.
+// Should only be called in initial genesis creation, never again.
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
@@ -71,7 +81,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// Set the mint hooks
+// Set the mint hooks.
 func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set mint hooks twice")
@@ -82,7 +92,7 @@ func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
 	return k
 }
 
-// GetLastHalvenEpochNum returns last halven epoch number
+// GetLastHalvenEpochNum returns last halven epoch number.
 func (k Keeper) GetLastHalvenEpochNum(ctx sdk.Context) int64 {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.LastHalvenEpochKey)
@@ -93,13 +103,13 @@ func (k Keeper) GetLastHalvenEpochNum(ctx sdk.Context) int64 {
 	return int64(sdk.BigEndianToUint64(b))
 }
 
-// SetLastHalvenEpochNum set last halven epoch number
+// SetLastHalvenEpochNum set last halven epoch number.
 func (k Keeper) SetLastHalvenEpochNum(ctx sdk.Context, epochNum int64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.LastHalvenEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
 }
 
-// get the minter
+// get the minter.
 func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.MinterKey)
@@ -111,7 +121,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 	return
 }
 
-// set the minter
+// set the minter.
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&minter)
@@ -144,7 +154,7 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
-// GetProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the `AllocationRatio`
+// GetProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the `AllocationRatio`.
 func (k Keeper) GetProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
 	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt())
 }
@@ -176,6 +186,12 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	if err != nil {
 		return err
 	}
+
+	// Take the current balance of the developer rewards pool and remove it from the supply offset
+	// We re-introduce the new supply at the end, in order to avoid any rounding discrepancies.
+	developerAccountBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintedCoin.Denom)
+	k.bankKeeper.AddSupplyOffset(ctx, mintedCoin.Denom, developerAccountBalance.Amount)
+
 	if len(params.WeightedDeveloperRewardsReceivers) == 0 {
 		// fund community pool when rewards address is empty
 		err = k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
@@ -206,6 +222,10 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 			}
 		}
 	}
+
+	// Take the new balance of the developer rewards pool and add it back to the supply offset deduction
+	developerAccountBalance = k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintedCoin.Denom)
+	k.bankKeeper.AddSupplyOffset(ctx, mintedCoin.Denom, developerAccountBalance.Amount.Neg())
 
 	// subtract from original provision to ensure no coins left over after the allocations
 	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins).Sub(poolIncentivesCoins).Sub(devRewardCoins)

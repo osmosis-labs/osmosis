@@ -2,8 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
@@ -14,7 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
+	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -46,30 +45,18 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 			}
 
 			// TODO: Make a parse uint64 slice function
-			var gaugeIds []uint64
-			for _, gaugeIdStr := range strings.Split(args[0], ",") {
-				gaugeIdStr = strings.TrimSpace(gaugeIdStr)
-
-				parsed, err := strconv.ParseUint(gaugeIdStr, 10, 64)
-				if err != nil {
-					return err
-				}
-				gaugeIds = append(gaugeIds, parsed)
+			gaugeIds, err := osmoutils.ParseUint64SliceFromString(args[0], ",")
+			if err != nil {
+				return err
 			}
 
-			var weights []sdk.Int
-			for _, weightStr := range strings.Split(args[1], ",") {
-				weightStr = strings.TrimSpace(weightStr)
-
-				parsed, err := strconv.ParseUint(weightStr, 10, 64)
-				if err != nil {
-					return err
-				}
-				weights = append(weights, sdk.NewIntFromUint64(parsed))
+			weights, err := osmoutils.ParseSdkIntFromString(args[1], ",")
+			if err != nil {
+				return err
 			}
 
 			if len(gaugeIds) != len(weights) {
-				return fmt.Errorf("the length of gauge ids and wieghts not matched")
+				return fmt.Errorf("the length of gauge ids and weights not matched")
 			}
 
 			if len(gaugeIds) == 0 {
@@ -140,30 +127,18 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			var gaugeIds []uint64
-			for _, gaugeIdStr := range strings.Split(args[0], ",") {
-				gaugeIdStr = strings.TrimSpace(gaugeIdStr)
-
-				parsed, err := strconv.ParseUint(gaugeIdStr, 10, 64)
-				if err != nil {
-					return err
-				}
-				gaugeIds = append(gaugeIds, parsed)
+			gaugeIds, err := osmoutils.ParseUint64SliceFromString(args[0], ",")
+			if err != nil {
+				return err
 			}
 
-			var weights []sdk.Int
-			for _, weightStr := range strings.Split(args[1], ",") {
-				weightStr = strings.TrimSpace(weightStr)
-
-				parsed, err := strconv.ParseUint(weightStr, 10, 64)
-				if err != nil {
-					return err
-				}
-				weights = append(weights, sdk.NewIntFromUint64(parsed))
+			weights, err := osmoutils.ParseSdkIntFromString(args[1], ",")
+			if err != nil {
+				return err
 			}
 
 			if len(gaugeIds) != len(weights) {
-				return fmt.Errorf("the length of gauge ids and wieghts not matched")
+				return fmt.Errorf("the length of gauge ids and weights not matched")
 			}
 
 			if len(gaugeIds) == 0 {

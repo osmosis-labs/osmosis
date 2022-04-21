@@ -1,15 +1,16 @@
 package gamm
 
 import (
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 // NewHandler returns a handler for "gamm" type messages.
-func NewHandler(k keeper.Keeper) sdk.Handler {
+func NewHandler(k *keeper.Keeper) sdk.Handler {
 	msgServer := keeper.NewMsgServerImpl(k)
 	msgBalancerServer := keeper.NewBalancerMsgServerImpl(k)
 

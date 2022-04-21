@@ -3,7 +3,7 @@ package testnetify
 import (
 	"bytes"
 
-	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/v7/app"
 )
 
 func replaceConsAddrHex(genesis app.GenesisState, fromAddr string, replaceAddr string) {
@@ -12,7 +12,7 @@ func replaceConsAddrHex(genesis app.GenesisState, fromAddr string, replaceAddr s
 }
 
 // TODO: Make it possible to only replace all in certain genesis keys
-// no reason to pay for iterating over bank every time :)
+// no reason to pay for iterating over bank every time :).
 func replaceAllInGenesis(genesis app.GenesisState, find string, replace string) {
 	// To help in debugging
 	findBz := []byte(find)

@@ -1,0 +1,31 @@
+syntax = "proto3";
+package osmosis.superfluid.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/superfluid/superfluid.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
+
+// SetSuperfluidAssetsProposal is a gov Content type to update the superfluid
+// assets
+message SetSuperfluidAssetsProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  repeated SuperfluidAsset assets = 3 [ (gogoproto.nullable) = false ];
+}
+
+// RemoveSuperfluidAssetsProposal is a gov Content type to remove the superfluid
+// assets by denom
+message RemoveSuperfluidAssetsProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  repeated string superfluid_asset_denoms = 3;
+}

@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/spf13/cobra"
 )
 
-// get cmd to convert any bech32 address to an osmo prefix
+// get cmd to convert any bech32 address to an osmo prefix.
 func StateExportToTestnetGenesis() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnetify [state_export_path] -p [testnet_params]",
@@ -30,7 +30,7 @@ func StateExportToTestnetGenesis() *cobra.Command {
 				return err
 			}
 			var genesis app.GenesisState
-			err = json.Unmarshal([]byte(file), &genesis)
+			err = json.Unmarshal(file, &genesis)
 			if err != nil {
 				return err
 			}

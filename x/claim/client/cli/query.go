@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/x/claim/types"
-	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	claimQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -49,7 +50,6 @@ func GetCmdQueryModuleAccountBalance() *cobra.Command {
 
 			req := &types.QueryModuleAccountBalanceRequest{}
 			res, err := queryClient.ModuleAccountBalance(context.Background(), req)
-
 			if err != nil {
 				return err
 			}
@@ -79,7 +79,6 @@ func GetCmdQueryParams() *cobra.Command {
 
 			params := &types.QueryParamsRequest{}
 			res, err := queryClient.Params(context.Background(), params)
-
 			if err != nil {
 				return err
 			}

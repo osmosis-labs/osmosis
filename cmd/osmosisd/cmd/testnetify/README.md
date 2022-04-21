@@ -1,6 +1,6 @@
 # Testnetify.py
 
-This script takes a state export JSON file (under the name testnet_genesis.json) and edits multiple values to give the operator address 1M spendable OSMO, makes your validator file possess over 1M OSMO, and makes the epoch duration 3600s.
+This script takes a state export JSON file (under the name testnet_genesis.json) and edits multiple values to give the operator address 1M spendable OSMO, makes your validator file possess over 1M OSMO, makes the epoch duration 21600s, and sets the voting period to 180s.
 
 ## Instructions
 
@@ -22,6 +22,9 @@ cp $HOME/testnet_genesis.json $HOME/testnet_genesis_bk.json
 NOTE: There are three values in the python script you can change.
 1. The operator address (op_address) and its corresponding public key (op_pubkey). I provided the mnemonic for the provided address (osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj), but you may change the address and corresponding pubkey if desired
 2. The chain-id (new_chain_id)
+3. The epoch duration (new_duration)
+4. The voting period (new_voting_period)
+5. The distribution module account currently must be subtracted by 3 due to a bug. If the account gets offset further, you must change dist_offset_amt
 
 Mnemonic for provided address:
 **bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort**
@@ -50,7 +53,7 @@ After initializing, you will get a "couldn't connect to any seeds" error. Leave 
 
 
 Set up a second node with the same genesis.json file that was created using the first node.
- 
+
 
 On the first node, retrieve its public IP and also run this command to get your node ID
 ```sh
@@ -66,14 +69,14 @@ node-id@IP:26656
 
 Example: 665ebb897edc41d691c70b15916086a9c7761dc4@199.43.113.117:26656
 
-On the second node, start the osmosis daemon
+On the second node, ensure the genesis file is replaced with the genesis created on the first node and start the osmosis daemon
 ```sh
 osmosisd start --x-crisis-skip-assert-invariants
 ```
 
-Once the second peer initializes, the chain will no longer be halted 
+Once the second peer initializes, the chain will no longer be halted
 (this is necessary due to a tendermint bug). The second peer can then be shut off if desired. If the first peer ever shuts down, the second peer must be started in order to kickstart the chain again.
 
-As a last note, sometimes getting testnet nodes spun up for the first time can be finicky. If you are stuck getting the second node to connect to the first node, sometimes doing a `unsafe-reset-all` on both nodes fixes the issue. Also, try adding the second node as a persistent peer to the first node. These two methods have fixed nodes that do not want to cooperate. Lastly, if your node keeps killing the daemon, please ensure you have a swap file set up. 
+As a last note, sometimes getting testnet nodes spun up for the first time can be finicky. If you are stuck getting the second node to connect to the first node, sometimes doing a `unsafe-reset-all` on both nodes fixes the issue. Also, try adding the second node as a persistent peer to the first node. These two methods have fixed nodes that do not want to cooperate. Lastly, if your node keeps killing the daemon, please ensure you have a swap file set up.
 
 Enjoy your state exported testnet!

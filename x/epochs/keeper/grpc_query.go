@@ -5,25 +5,42 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Querier{}
 
-// EpochInfos provide running epochInfos
-func (k Keeper) EpochInfos(c context.Context, _ *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
+// Querier defines a wrapper around the x/epochs keeper providing gRPC method
+// handlers.
+type Querier struct {
+	Keeper
+}
+
+func NewQuerier(k Keeper) Querier {
+	return Querier{Keeper: k}
+}
+
+// EpochInfos provide running epochInfos.
+func (q Querier) EpochInfos(c context.Context, _ *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	return &types.QueryEpochsInfoResponse{
-		Epochs: k.AllEpochInfos(ctx),
+		Epochs: q.Keeper.AllEpochInfos(ctx),
 	}, nil
 }
 
-// CurrentEpoch provides current epoch of specified identifier
-func (k Keeper) CurrentEpoch(c context.Context, req *types.QueryCurrentEpochRequest) (*types.QueryCurrentEpochResponse, error) {
+// CurrentEpoch provides current epoch of specified identifier.
+func (q Querier) CurrentEpoch(c context.Context, req *types.QueryCurrentEpochRequest) (*types.QueryCurrentEpochResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
-	info := k.GetEpochInfo(ctx, req.Identifier)
+	info := q.Keeper.GetEpochInfo(ctx, req.Identifier)
 	if info.Identifier != req.Identifier {
 		return nil, errors.New("not available identifier")
 	}

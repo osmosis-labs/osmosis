@@ -5,8 +5,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strconv"
-	"strings"
+
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
+	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/spf13/cobra"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -14,13 +21,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/app/params"
-	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	"github.com/spf13/cobra"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const FlagSelectPoolIds = "breakdown-by-pool-ids"
@@ -61,10 +61,10 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 	for _, coin := range originCoins {
 		if pools[coin.Denom] != nil {
 			pool := pools[coin.Denom]
-			assets := pool.GetAllPoolAssets()
+			assets := pool.GetTotalPoolLiquidity(sdk.Context{})
 			for _, asset := range assets {
-				balances = balances.Add(sdk.NewCoin(asset.Token.Denom, asset.Token.Amount.Mul(coin.Amount).Quo(pool.GetTotalShares().Amount)))
-				if pools[asset.Token.Denom] != nil { // this happens when there's a pool for LP token swap
+				balances = balances.Add(sdk.NewCoin(asset.Denom, asset.Amount.Mul(coin.Amount).Quo(pool.GetTotalShares())))
+				if pools[asset.Denom] != nil { // this happens when there's a pool for LP token swap
 					convertAgain = true
 				}
 			}
@@ -80,12 +80,12 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 }
 
 // pools is a map from LP share string -> pool.
-// TODO: Make a separate type for this
+// TODO: Make a separate type for this.
 func underlyingCoinsForSelectPools(
 	originCoins sdk.Coins,
 	pools map[string]gammtypes.PoolI,
-	selectPoolIDs []uint64) map[uint64]sdk.Coins {
-
+	selectPoolIDs []uint64,
+) map[uint64]sdk.Coins {
 	balancesByPool := make(map[uint64]sdk.Coins)
 
 	for _, coin := range originCoins {
@@ -141,7 +141,8 @@ func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, er
 	return genState, nil
 }
 
-// ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json
+// ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json.
+//nolint:ineffassign // because of  accounts = authtypes.SanitizeGenesisAccounts(accounts)
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-derive-balances [input-genesis-file] [output-snapshot-json]",
@@ -171,14 +172,14 @@ Example:
 			}
 			selectBondedPoolIDs := []uint64{}
 			if selectPoolIdsStr != "" {
-				selectBondedPoolIDs, err = parseUint64SliceFromString(selectPoolIdsStr, ",")
+				selectBondedPoolIDs, err = osmoutils.ParseUint64SliceFromString(selectPoolIdsStr, ",")
 				if err != nil {
 					return err
 				}
 			}
 
 			authGenesis := authtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["auth"], &authGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["auth"], &authGenesis)
 			accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
 			if err != nil {
 				panic(err)
@@ -189,7 +190,7 @@ Example:
 			snapshotAccs := make(map[string]DerivedAccount)
 
 			bankGenesis := banktypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
 			for _, balance := range bankGenesis.Balances {
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
@@ -202,7 +203,7 @@ Example:
 			}
 
 			stakingGenesis := stakingtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
 			for _, unbonding := range stakingGenesis.UnbondingDelegations {
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
@@ -243,7 +244,7 @@ Example:
 			}
 
 			lockupGenesis := lockuptypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
 			for _, lock := range lockupGenesis.Locks {
 				address := lock.Owner
 
@@ -257,7 +258,7 @@ Example:
 			}
 
 			claimGenesis := claimtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["claim"], &claimGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["claim"], &claimGenesis)
 			for _, record := range claimGenesis.ClaimRecords {
 				address := record.Address
 
@@ -285,7 +286,7 @@ Example:
 			}
 
 			gammGenesis := gammtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
 
 			// collect gamm pools
 			pools := make(map[string]gammtypes.PoolI)
@@ -295,7 +296,7 @@ Example:
 				if err != nil {
 					panic(err)
 				}
-				pools[pool.GetTotalShares().Denom] = pool
+				pools[gammtypes.GetPoolShareDenom(pool.GetId())] = pool
 			}
 
 			// convert balances to underlying coins and sum up balances to total balance
@@ -329,7 +330,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}
@@ -338,21 +339,4 @@ Example:
 		"Output a special breakdown for amount LP'd to the provided pools. Usage --breakdown-by-pool-ids=1,2,605")
 
 	return cmd
-}
-
-// TODO: move somewhere common, make more commands use it
-func parseUint64SliceFromString(s string, seperator string) ([]uint64, error) {
-	var ids []uint64
-	for _, s := range strings.Split(s, seperator) {
-		s = strings.TrimSpace(s)
-		base := 10
-		bitlen := 64
-
-		parsed, err := strconv.ParseUint(s, base, bitlen)
-		if err != nil {
-			return []uint64{}, err
-		}
-		ids = append(ids, parsed)
-	}
-	return ids, nil
 }

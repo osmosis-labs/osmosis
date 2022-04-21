@@ -27,7 +27,7 @@ type Keeper interface {
     GetAccountUnlockedBeforeTime(sdk.Context, addr sdk.AccAddress, timestamp time.Time) []types.PeriodLock
     // GetAccountLockedPastTimeDenom is equal to GetAccountLockedPastTime but denom specific
     GetAccountLockedPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []types.PeriodLock
-    
+
     // GetAccountLockedLongerDuration Returns account locked with duration longer than specified
     GetAccountLockedLongerDuration(sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock
     // GetAccountLockedLongerDurationDenom Returns account locked with duration longer than specified with specific denom
@@ -42,8 +42,6 @@ type Keeper interface {
     GetPeriodLocks(sdk.Context) ([]types.PeriodLock, error)
     // UnlockAllUnlockableCoins Unlock all unlockable coins
     UnlockAllUnlockableCoins(sdk.Context, account sdk.AccAddress) (sdk.Coins, error)
-    // UnlockPeriodLockByID unlock by period lock ID
-    UnlockPeriodLockByID(sdk.Context, LockID uint64) (*types.PeriodLock, error)
     // LockTokens lock tokens from an account for specified duration
     LockTokens(sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error)
     // AddTokensToLock locks more tokens into a lockup
@@ -52,7 +50,14 @@ type Keeper interface {
     Lock(sdk.Context, lock types.PeriodLock) error
     // Unlock is a utility to unlock coins from module account
     Unlock(sdk.Context, lock types.PeriodLock) error
-}
+    GetSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) (*types.SyntheticLock, error)
+    GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []types.SyntheticLock
+    GetAllSyntheticLockups(ctx sdk.Context) []types.SyntheticLock
+    // CreateSyntheticLockup create synthetic lockup with lock id and denom suffix
+    CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration) error
+    // DeleteSyntheticLockup delete synthetic lockup with lock id and suffix
+    DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
+    DeleteAllMaturedSyntheticLocks(ctx sdk.Context)
 ```
 
 # Lock Admin Keeper

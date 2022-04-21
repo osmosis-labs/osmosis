@@ -1,0 +1,255 @@
+syntax = "proto3";
+package osmosis.superfluid;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "osmosis/superfluid/superfluid.proto";
+import "osmosis/superfluid/params.proto";
+import "osmosis/lockup/lock.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params returns the total set of minting parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/params";
+  }
+
+  // Returns superfluid asset type
+  rpc AssetType(AssetTypeRequest) returns (AssetTypeResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_type";
+  }
+  // Returns all superfluid asset types
+  rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/all_assets";
+  }
+  // Returns superfluid asset Multiplier
+  rpc AssetMultiplier(AssetMultiplierRequest)
+      returns (AssetMultiplierResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/asset_multiplier";
+  }
+  // Returns all superfluid intermediary account
+  rpc AllIntermediaryAccounts(AllIntermediaryAccountsRequest)
+      returns (AllIntermediaryAccountsResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/all_intermediary_accounts";
+  }
+  // Returns intermediary account connected to a superfluid staked lock by id
+  rpc ConnectedIntermediaryAccount(ConnectedIntermediaryAccountRequest)
+      returns (ConnectedIntermediaryAccountResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
+  }
+
+  // Returns the total amount of osmo superfluidly staked
+  // response denominated in uosmo
+  rpc TotalSuperfluidDelegations(TotalSuperfluidDelegationsRequest)
+      returns (TotalSuperfluidDelegationsResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/all_superfluid_delegations";
+  }
+
+  // Returns the coins superfluid delegated for a delegator, validator, denom
+  // triplet
+  rpc SuperfluidDelegationAmount(SuperfluidDelegationAmountRequest)
+      returns (SuperfluidDelegationAmountResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/superfluid_delegation_amount";
+  }
+
+  // Returns all the superfluid poistions for a specific delegator
+  rpc SuperfluidDelegationsByDelegator(SuperfluidDelegationsByDelegatorRequest)
+      returns (SuperfluidDelegationsByDelegatorResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
+                                   "superfluid_delegations/{delegator_address}";
+  }
+
+  rpc SuperfluidUndelegationsByDelegator(
+      SuperfluidUndelegationsByDelegatorRequest)
+      returns (SuperfluidUndelegationsByDelegatorResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/"
+        "superfluid_undelegations_by_delegator/{delegator_address}";
+  }
+
+  // Returns all the superfluid positions of a specific denom delegated to one
+  // validator
+  rpc SuperfluidDelegationsByValidatorDenom(
+      SuperfluidDelegationsByValidatorDenomRequest)
+      returns (SuperfluidDelegationsByValidatorDenomResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/superfluid_delegations_by_validator_denom";
+  }
+
+  // Returns the amount of a specific denom delegated to a specific validator
+  // This is labeled an estimate, because the way it calculates the amount can
+  // lead rounding errors from the true delegated amount
+  rpc EstimateSuperfluidDelegatedAmountByValidatorDenom(
+      EstimateSuperfluidDelegatedAmountByValidatorDenomRequest)
+      returns (EstimateSuperfluidDelegatedAmountByValidatorDenomResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/"
+        "estimate_superfluid_delegation_amount_by_validator_denom";
+  }
+
+  // // Returns all the unbonding superfluid positions of a delegator
+  // rpc SuperfluidUnbondingsByDelegator(SuperfluidUnbondingsByDelegatorRequest)
+  //   returns (SuperfluidUnbondingsByDelegatorResponse) {
+  // option (google.api.http).get =
+  //     "/osmosis/superfluid/v1beta1/superfluid_unbondings/{delegator_address}";
+  // }
+
+  // // Returns all the unbonding superfluid positions of a specific denom
+  // unbonding from one validator rpc
+  // SuperfluidUnbondingsByValidatorDenom(SuperfluidUnbondingsByValidatorDenomRequest)
+  //     returns (SuperfluidUnbondingsByValidatorDenomResponse) {
+  //   option (google.api.http).get =
+  //       "/osmosis/superfluid/v1beta1/superfluid_unbondings_by_validator_denom";
+  // }
+}
+
+message QueryParamsRequest {}
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+message AssetTypeRequest { string denom = 1; };
+message AssetTypeResponse { SuperfluidAssetType asset_type = 1; };
+
+message AllAssetsRequest {};
+message AllAssetsResponse {
+  repeated SuperfluidAsset assets = 1 [ (gogoproto.nullable) = false ];
+};
+
+message AssetMultiplierRequest { string denom = 1; };
+message AssetMultiplierResponse {
+  OsmoEquivalentMultiplierRecord osmo_equivalent_multiplier = 1;
+};
+
+message SuperfluidIntermediaryAccountInfo {
+  string denom = 1;
+  string val_addr = 2;
+  uint64 gauge_id = 3;
+  string address = 4;
+}
+message AllIntermediaryAccountsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+};
+message AllIntermediaryAccountsResponse {
+  repeated SuperfluidIntermediaryAccountInfo accounts = 1
+      [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+};
+
+message ConnectedIntermediaryAccountRequest { uint64 lock_id = 1; }
+message ConnectedIntermediaryAccountResponse {
+  SuperfluidIntermediaryAccountInfo account = 1;
+}
+
+message TotalSuperfluidDelegationsRequest {}
+
+message TotalSuperfluidDelegationsResponse {
+  string totalDelegations = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"total_superfluid_delegations\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message SuperfluidDelegationAmountRequest {
+  string delegator_address = 1;
+  string validator_address = 2;
+  string denom = 3;
+}
+
+message SuperfluidDelegationAmountResponse {
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message SuperfluidDelegationsByDelegatorRequest {
+  string delegator_address = 1;
+}
+
+message SuperfluidDelegationsByDelegatorResponse {
+  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
+      [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin total_delegated_coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message SuperfluidUndelegationsByDelegatorRequest {
+  string delegator_address = 1;
+  string denom = 2;
+}
+
+message SuperfluidUndelegationsByDelegatorResponse {
+  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
+      [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin total_undelegated_coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  repeated osmosis.lockup.SyntheticLock synthetic_locks = 3
+      [ (gogoproto.nullable) = false ];
+}
+
+message SuperfluidDelegationsByValidatorDenomRequest {
+  string validator_address = 1;
+  string denom = 2;
+}
+
+message SuperfluidDelegationsByValidatorDenomResponse {
+  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+message EstimateSuperfluidDelegatedAmountByValidatorDenomRequest {
+  string validator_address = 1;
+  string denom = 2;
+}
+
+message EstimateSuperfluidDelegatedAmountByValidatorDenomResponse {
+  repeated cosmos.base.v1beta1.Coin total_delegated_coins = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// message SuperfluidUnbondingsByDelegatorRequest {
+//   string delegator_address = 1;
+// }
+
+// message SuperfluidUnbondingsByDelegatorResponse {
+//   repeated SuperfluidDelegationRecord superfluid_unbonding_records = 1
+//   [ (gogoproto.nullable) = false ];
+//   repeated cosmos.base.v1beta1.Coin total_unbonding_coins = 2 [
+//     (gogoproto.nullable) = false,
+//     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+//   ];
+// }
+
+// message SuperfluidUnbondingsByValidatorDenomRequest {
+//   string validator_address = 1;
+//   string denom = 2;
+// }
+
+// message SuperfluidUnbondingsByValidatorDenomResponse {
+//   repeated SuperfluidDelegationRecord superfluid_unbonding_records = 1
+//   [ (gogoproto.nullable) = false ];
+//   repeated cosmos.base.v1beta1.Coin total_unbonding_coins = 2 [
+//     (gogoproto.nullable) = false,
+//     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+//   ];
+// }

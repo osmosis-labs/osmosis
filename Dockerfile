@@ -1,32 +1,30 @@
-FROM faddat/archlinux AS build
+# syntax=docker/dockerfile:1
 
-ENV GOPATH=/go
-ENV PATH=$PATH:/go/bin
+ARG BASE_IMG_TAG=nonroot 
 
-# Set up dependencies
-RUN pacman -Syyu --noconfirm curl make git go gcc linux-headers python base-devel protobuf wget && \
-    wget -O /genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
+## Build Image
+FROM golang:1.18-bullseye as build
 
-
-# Add source files
+WORKDIR /osmosis
 COPY . /osmosis
 
-# Install minimum necessary dependencies, build Cosmos SDK, remove packages
-RUN cd /osmosis && \
-    make install
+# From https://github.com/CosmWasm/wasmd/blob/master/Dockerfile
+# For more details see https://github.com/CosmWasm/wasmvm#builds-of-libwasmvm 
+ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0-beta7/libwasmvm_muslc.a /lib/libwasmvm_muslc.a
+RUN sha256sum /lib/libwasmvm_muslc.a | grep d0152067a5609bfdfb3f0d5d6c0f2760f79d5f2cd7fd8513cafa9932d22eb350
+RUN BUILD_TAGS=muslc make build
 
-# Final image
-FROM faddat/archlinux
+## Deploy image
+FROM gcr.io/distroless/base-debian11:${BASE_IMG_TAG} 
 
-RUN pacman -Syyu --noconfirm 
+COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 
-# Copy over binaries from the build-env
-COPY --from=build /go/bin/osmosisd /usr/bin/osmosisd
-COPY --from=build /genesis.json /genesis.json
+ENV HOME /osmosis
+WORKDIR $HOME
 
-# Run osmosisd by default, omit entrypoint to ease using container with osmosiscli
-EXPOSE 26656
+EXPOSE 26656 
 EXPOSE 26657
 EXPOSE 1317
-EXPOSE 9090
 
+ENTRYPOINT ["osmosisd"]
+CMD [ "start" ]

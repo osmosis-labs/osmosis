@@ -9,26 +9,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	incentivetypes "github.com/osmosis-labs/osmosis/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Querier{}
 
-func (k Keeper) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) (*types.QueryGaugeIdsResponse, error) {
+// Querier defines a wrapper around the x/pool-incentives keeper providing gRPC
+// method handlers.
+type Querier struct {
+	Keeper
+}
+
+func NewQuerier(k Keeper) Querier {
+	return Querier{Keeper: k}
+}
+
+func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) (*types.QueryGaugeIdsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	lockableDurations := k.GetLockableDurations(sdkCtx)
-
+	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
 	gaugeIdsWithDuration := make([]*types.QueryGaugeIdsResponse_GaugeIdWithDuration, len(lockableDurations))
 
 	for i, duration := range lockableDurations {
-		gaugeId, err := k.GetPoolGaugeId(sdkCtx, req.PoolId, duration)
-
+		gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, req.PoolId, duration)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -42,37 +49,34 @@ func (k Keeper) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) (
 	return &types.QueryGaugeIdsResponse{GaugeIdsWithDuration: gaugeIdsWithDuration}, nil
 }
 
-func (k Keeper) DistrInfo(ctx context.Context, _ *types.QueryDistrInfoRequest) (*types.QueryDistrInfoResponse, error) {
+func (q Querier) DistrInfo(ctx context.Context, _ *types.QueryDistrInfoRequest) (*types.QueryDistrInfoResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	return &types.QueryDistrInfoResponse{DistrInfo: k.GetDistrInfo(sdkCtx)}, nil
+	return &types.QueryDistrInfoResponse{DistrInfo: q.Keeper.GetDistrInfo(sdkCtx)}, nil
 }
 
-func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (q Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	return &types.QueryParamsResponse{Params: k.GetParams(sdkCtx)}, nil
+	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(sdkCtx)}, nil
 }
 
-func (k Keeper) LockableDurations(ctx context.Context, _ *types.QueryLockableDurationsRequest) (*types.QueryLockableDurationsResponse, error) {
+func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDurationsRequest) (*types.QueryLockableDurationsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	return &types.QueryLockableDurationsResponse{LockableDurations: k.GetLockableDurations(sdkCtx)}, nil
+	return &types.QueryLockableDurationsResponse{LockableDurations: q.Keeper.GetLockableDurations(sdkCtx)}, nil
 }
 
-func (k Keeper) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivizedPoolsRequest) (*types.QueryIncentivizedPoolsResponse, error) {
+func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivizedPoolsRequest) (*types.QueryIncentivizedPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	lockableDurations := k.GetLockableDurations(sdkCtx)
+	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
+	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
 
-	distrInfo := k.GetDistrInfo(sdkCtx)
-
-	// While there are exceptions, typically the number of incentivizedPools equals to the number of incentivized gauges / number of lockable durations.
+	// While there are exceptions, typically the number of incentivizedPools
+	// equals to the number of incentivized gauges / number of lockable durations.
 	incentivizedPools := make([]types.IncentivizedPool, 0, len(distrInfo.Records)/len(lockableDurations))
 
 	for _, record := range distrInfo.Records {
 		for _, lockableDuration := range lockableDurations {
-			poolId, err := k.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
+			poolId, err := q.Keeper.GetPoolIdFromGaugeId(sdkCtx, record.GaugeId, lockableDuration)
 			if err == nil {
 				incentivizedPool := types.IncentivizedPool{
 					PoolId:           poolId,
@@ -83,7 +87,6 @@ func (k Keeper) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivize
 				incentivizedPools = append(incentivizedPools, incentivizedPool)
 			}
 		}
-
 	}
 
 	return &types.QueryIncentivizedPoolsResponse{
@@ -91,11 +94,15 @@ func (k Keeper) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivize
 	}, nil
 }
 
-// ExternalIncentiveGauges iterates over all gauges, returns gauges externally incentivized,
-// excluding default gagues created with pool
-func (k Keeper) ExternalIncentiveGauges(ctx context.Context, req *types.QueryExternalIncentiveGaugesRequest) (*types.QueryExternalIncentiveGaugesResponse, error) {
+// ExternalIncentiveGauges iterates over all gauges, returns gauges externally
+// incentivized, excluding default gauges created with pool.
+func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryExternalIncentiveGaugesRequest) (*types.QueryExternalIncentiveGaugesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	store := sdkCtx.KVStore(k.storeKey)
+	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	prefixStore := prefix.NewStore(store, []byte("pool-incentives"))
 
 	iterator := prefixStore.Iterator(nil, nil)
@@ -108,7 +115,7 @@ func (k Keeper) ExternalIncentiveGauges(ctx context.Context, req *types.QueryExt
 	}
 
 	// iterate over all gauges, exclude default created gauges, leaving externally incentivized gauges
-	allGauges := k.GetAllGauges(sdkCtx)
+	allGauges := q.Keeper.GetAllGauges(sdkCtx)
 	gauges := []incentivetypes.Gauge{}
 	for _, gauge := range allGauges {
 		if _, ok := poolGaugeIds[gauge.Id]; !ok {

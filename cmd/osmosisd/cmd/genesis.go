@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -26,15 +25,16 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	appParams "github.com/osmosis-labs/osmosis/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v7/app/params"
 
-	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
+//nolint:ineffassign
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare-genesis",
@@ -52,7 +52,7 @@ Example:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.Codec
-			cdc := depCdc.(codec.Codec)
+			cdc := depCdc
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
@@ -105,7 +105,7 @@ Example:
 
 func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, genesisParams GenesisParams, chainID string) (map[string]json.RawMessage, *tmtypes.GenesisDoc, error) {
 	depCdc := clientCtx.Codec
-	cdc := depCdc.(codec.Codec)
+	cdc := depCdc
 
 	// chain params genesis
 	genDoc.GenesisTime = genesisParams.GenesisTime
@@ -249,7 +249,7 @@ func MainnetGenesisParams() GenesisParams {
 
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{
-			Description: fmt.Sprintf("The native token of Osmosis"),
+			Description: "The native token of Osmosis",
 			DenomUnits: []*banktypes.DenomUnit{
 				{
 					Denom:    appParams.BaseCoinUnit,
@@ -527,7 +527,6 @@ func MainnetGenesisParams() GenesisParams {
 }
 
 func TestnetGenesisParams() GenesisParams {
-
 	genParams := MainnetGenesisParams()
 
 	genParams.GenesisTime = time.Now()

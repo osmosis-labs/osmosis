@@ -6,16 +6,17 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	"github.com/spf13/cobra"
 )
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the transaction commands for this module.
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -33,7 +34,7 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-// NewCreateGaugeCmd broadcast MsgCreateGauge
+// NewCreateGaugeCmd broadcast MsgCreateGauge.
 func NewCreateGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-gauge [lockup_denom] [reward] [flags]",
@@ -53,7 +54,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 				return err
 			}
 
-			startTime := time.Time{}
+			var startTime time.Time
 			timeStr, err := cmd.Flags().GetString(FlagStartTime)
 			if err != nil {
 				return err
@@ -112,7 +113,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 	return cmd
 }
 
-// NewAddToGaugeCmd broadcast MsgAddToGauge
+// NewAddToGaugeCmd broadcast MsgAddToGauge.
 func NewAddToGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-to-gauge [gauge_id] [rewards] [flags]",

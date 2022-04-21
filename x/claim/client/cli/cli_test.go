@@ -6,20 +6,23 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 
+	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/app/params"
+	"github.com/osmosis-labs/osmosis/v7/x/claim/client/cli"
+	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/app"
-	"github.com/osmosis-labs/osmosis/app/params"
-	"github.com/osmosis-labs/osmosis/x/claim/client/cli"
-	"github.com/osmosis-labs/osmosis/x/claim/types"
-	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
-	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
-var addr1 sdk.AccAddress
-var addr2 sdk.AccAddress
+var (
+	addr1 sdk.AccAddress
+	addr2 sdk.AccAddress
+)
 
 func init() {
 	params.SetAddressPrefixes()

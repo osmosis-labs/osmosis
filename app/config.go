@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v7/app/params"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/osmosis-labs/osmosis/app/params"
-	dbm "github.com/tendermint/tm-db"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -31,7 +32,7 @@ func DefaultConfig() network.Config {
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    NewAppConstructor(encCfg),
 		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
-		TimeoutCommit:     1 * time.Second,
+		TimeoutCommit:     1 * time.Second / 2,
 		ChainID:           "osmosis-code-test",
 		NumValidators:     1,
 		BondDenom:         sdk.DefaultBondDenom,
@@ -52,6 +53,8 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			simapp.EmptyAppOptions{},
+			GetWasmEnabledProposals(),
+			EmptyWasmOpts,
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}

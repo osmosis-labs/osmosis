@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	simapp "github.com/osmosis-labs/osmosis/app"
-	"github.com/osmosis-labs/osmosis/x/epochs"
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
+	simapp "github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/x/epochs"
+	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -52,7 +52,7 @@ func TestEpochsInitGenesis(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1)
 	ctx = ctx.WithBlockTime(now)
 
-	//test genesisState validation
+	// test genesisState validation
 	genesisState := types.GenesisState{
 		Epochs: []types.EpochInfo{
 			{

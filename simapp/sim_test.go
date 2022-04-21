@@ -7,16 +7,17 @@ import (
 	"os"
 	"testing"
 
+	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/osmosis-labs/osmosis/app"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 )
 
 // Profile with:
@@ -78,6 +79,8 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		sdkSimapp.FlagPeriodValue,
 		app.MakeEncodingConfig(),
 		sdkSimapp.EmptyAppOptions{},
+		app.GetWasmEnabledProposals(),
+		app.EmptyWasmOpts,
 		interBlockCacheOpt(),
 		fauxMerkleModeOpt)
 
@@ -154,6 +157,8 @@ func TestAppStateDeterminism(t *testing.T) {
 				sdkSimapp.FlagPeriodValue,
 				app.MakeEncodingConfig(),
 				sdkSimapp.EmptyAppOptions{},
+				app.GetWasmEnabledProposals(),
+				app.EmptyWasmOpts,
 				interBlockCacheOpt())
 
 			fmt.Printf(

@@ -4,14 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	osmoapp "github.com/osmosis-labs/osmosis/app"
-	"github.com/osmosis-labs/osmosis/x/incentives"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/x/incentives"
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestIncentivesExportGenesis(t *testing.T) {
@@ -32,6 +33,12 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	startTime := time.Now()
 	err := simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
 	require.NoError(t, err)
+
+	// mints coins so supply exists on chain
+	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	err = simapp.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
+	require.NoError(t, err)
+
 	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, startTime, 1)
 	require.NoError(t, err)
 
@@ -91,5 +98,4 @@ func TestIncentivesInitGenesis(t *testing.T) {
 	gauges := app.IncentivesKeeper.GetGauges(ctx)
 	require.Len(t, gauges, 1)
 	require.Equal(t, gauges[0], gauge)
-
 }

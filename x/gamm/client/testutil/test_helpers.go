@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	gammcli "github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gammcli "github.com/osmosis-labs/osmosis/x/gamm/client/cli"
 )
 
-// commonArgs is args for CLI test commands
+// commonArgs is args for CLI test commands.
 var commonArgs = []string{
 	fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 	fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -80,7 +81,7 @@ func MsgJoinPool(clientCtx client.Context, owner fmt.Stringer, poolID uint64, sh
 	return clitestutil.ExecTestCLICmd(clientCtx, gammcli.NewJoinPoolCmd(), args)
 }
 
-// MsgExitPool broadcast a pool exit message
+// MsgExitPool broadcast a pool exit message.
 func MsgExitPool(clientCtx client.Context, owner fmt.Stringer, poolID uint64, shareAmtIn string, minAmountsOut []string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
 		fmt.Sprintf("--%s=%d", gammcli.FlagPoolId, poolID),

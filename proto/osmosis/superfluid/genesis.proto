@@ -1,0 +1,21 @@
+syntax = "proto3";
+package osmosis.superfluid;
+
+import "gogoproto/gogo.proto";
+import "osmosis/superfluid/superfluid.proto";
+import "osmosis/superfluid/params.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
+
+// GenesisState defines the module's genesis state.
+message GenesisState {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated SuperfluidAsset superfluid_assets = 2
+      [ (gogoproto.nullable) = false ];
+  repeated OsmoEquivalentMultiplierRecord osmo_equivalent_multipliers = 3
+      [ (gogoproto.nullable) = false ];
+  repeated SuperfluidIntermediaryAccount intermediary_accounts = 4
+      [ (gogoproto.nullable) = false ];
+  repeated LockIdIntermediaryAccountConnection intemediary_account_connections =
+      5 [ (gogoproto.nullable) = false ];
+}

@@ -10,15 +10,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
-// Simulation parameter constants
+// Simulation parameter constants.
 const (
 	ParamsDistrEpochIdentifier = "distr_epoch_identifier"
 )
 
-// RandomizedGenState generates a random GenesisState for gov
+// RandomizedGenState generates a random GenesisState for gov.
 func RandomizedGenState(simState *module.SimulationState) {
 	// Parameter for how often rewards get distributed
 	var distrEpochIdentifier string

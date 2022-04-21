@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/simulation"
 )
 
 func TestParamChanges(t *testing.T) {
@@ -35,5 +35,4 @@ func TestParamChanges(t *testing.T) {
 		require.Equal(t, expected[i].simValue, p.SimValue()(r))
 		require.Equal(t, expected[i].subspace, p.Subspace())
 	}
-
 }

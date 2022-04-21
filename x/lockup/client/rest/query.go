@@ -8,10 +8,11 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
 func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
@@ -283,7 +284,6 @@ func queryAccountLockedLongerDurationFn(clientCtx client.Context) http.HandlerFu
 
 func queryAccountLockedLongerDurationDenomFn(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		vars := mux.Vars(r)
 		strOwnerAddress := vars[RestOwnerAddress]
 		owner, err := sdk.AccAddressFromBech32(strOwnerAddress)
