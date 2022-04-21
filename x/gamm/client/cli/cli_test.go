@@ -7,8 +7,6 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
@@ -24,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 type IntegrationTestSuite struct {
