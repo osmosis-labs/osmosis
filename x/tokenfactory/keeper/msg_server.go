@@ -24,7 +24,6 @@ func (server msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateD
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	denom, err := server.Keeper.CreateDenom(ctx, msg.Sender, msg.Nonce)
-
 	if err != nil {
 		return nil, err
 	}
