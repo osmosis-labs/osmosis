@@ -20,9 +20,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/osmosis-labs/osmosis/x/tokenfactory/client/cli"
-	"github.com/osmosis-labs/osmosis/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/x/tokenfactory/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/client/cli"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
 var (

@@ -2,8 +2,9 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/x/tokenfactory/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
 func (suite *KeeperTestSuite) TestMsgCreateDenom() {
@@ -11,7 +12,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
-	msgServer := keeper.NewMsgServerImpl(suite.app.TokenFactoryKeeper)
+	msgServer := keeper.NewMsgServerImpl(*suite.app.TokenFactoryKeeper)
 
 	// Creating a denom should work
 	res, err := msgServer.CreateDenom(sdk.WrapSDKContext(suite.ctx), types.NewMsgCreateDenom(addr1.String(), "bitcoin"))

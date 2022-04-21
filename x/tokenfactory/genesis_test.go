@@ -3,13 +3,14 @@ package tokenfactory_test
 import (
 	"testing"
 
-	simapp "github.com/osmosis-labs/osmosis/app"
-	appparams "github.com/osmosis-labs/osmosis/app/params"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/x/tokenfactory"
-	"github.com/osmosis-labs/osmosis/x/tokenfactory/types"
+	simapp "github.com/osmosis-labs/osmosis/v7/app"
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
 func TestGenesis(t *testing.T) {

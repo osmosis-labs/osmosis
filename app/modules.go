@@ -68,6 +68,9 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
 // appModuleBasics returns ModuleBasics for the module BasicManager.
@@ -112,6 +115,7 @@ var appModuleBasics = []module.AppModuleBasic{
 	superfluid.AppModuleBasic{},
 	bech32ibc.AppModuleBasic{},
 	wasm.AppModuleBasic{},
+	tokenfactory.AppModuleBasic{},
 }
 
 // moduleAccountPermissions defines module account permissions
@@ -132,6 +136,7 @@ var moduleAccountPermissions = map[string][]string{
 	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	txfeestypes.ModuleName:                   nil,
 	wasm.ModuleName:                          {authtypes.Burner},
+	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
 }
 
 // appModules return modules to initialize module manager.
@@ -184,6 +189,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
+		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper),
 	}
 }
 
@@ -217,6 +223,7 @@ func orderBeginBlockers() []string {
 		lockuptypes.ModuleName,
 		claimtypes.ModuleName,
 		poolincentivestypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 		// superfluid must come after distribution and epochs
 		superfluidtypes.ModuleName,
 		bech32ibctypes.ModuleName,
@@ -254,6 +261,7 @@ var orderEndBlockers = []string{
 	superfluidtypes.ModuleName,
 	bech32ibctypes.ModuleName,
 	txfeestypes.ModuleName,
+	tokenfactorytypes.ModuleName,
 	// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
 	epochstypes.ModuleName,
 	wasm.ModuleName,
@@ -287,6 +295,7 @@ var modulesOrderInitGenesis = []string{
 	epochstypes.ModuleName,
 	lockuptypes.ModuleName,
 	authz.ModuleName,
+	tokenfactorytypes.ModuleName,
 	// wasm after ibc transfer
 	wasm.ModuleName,
 }
@@ -330,6 +339,10 @@ func simulationModules(
 			app.EpochsKeeper,
 		),
 		app.transferModule,
+		tokenfactory.NewAppModule(
+			appCodec,
+			*app.TokenFactoryKeeper,
+		),
 	}
 }
 

@@ -2,8 +2,9 @@ package tokenfactory
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/x/tokenfactory/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

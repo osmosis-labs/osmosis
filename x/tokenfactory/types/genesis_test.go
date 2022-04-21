@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/x/tokenfactory/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {
