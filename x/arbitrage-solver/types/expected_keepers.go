@@ -5,14 +5,11 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 // GammKeeper interface we expect
 type GammKeeper interface {
 	CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error)
-	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,

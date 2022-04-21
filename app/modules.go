@@ -48,6 +48,8 @@ import (
 
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v7/x/arbitrage-solver"
+	arbitragetypes "github.com/osmosis-labs/osmosis/v7/x/arbitrage-solver/types"
 	"github.com/osmosis-labs/osmosis/v7/x/claim"
 	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs"
@@ -112,6 +114,7 @@ var appModuleBasics = []module.AppModuleBasic{
 	superfluid.AppModuleBasic{},
 	bech32ibc.AppModuleBasic{},
 	wasm.AppModuleBasic{},
+	arbitrage.AppModuleBasic{},
 }
 
 // moduleAccountPermissions defines module account permissions
@@ -184,6 +187,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
+		arbitrage.NewAppModule(appCodec, *app.ArbitrageKeeper, app.AccountKeeper, app.BankKeeper, app.GAMMKeeper),
 	}
 }
 
@@ -222,6 +226,7 @@ func orderBeginBlockers() []string {
 		bech32ibctypes.ModuleName,
 		txfeestypes.ModuleName,
 		wasm.ModuleName,
+		arbitragetypes.ModuleName,
 	}
 }
 
@@ -257,6 +262,7 @@ var orderEndBlockers = []string{
 	// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
 	epochstypes.ModuleName,
 	wasm.ModuleName,
+	arbitragetypes.ModuleName,
 }
 
 // modulesOrderInitGenesis returns module names in order for init genesis calls.
@@ -289,6 +295,7 @@ var modulesOrderInitGenesis = []string{
 	authz.ModuleName,
 	// wasm after ibc transfer
 	wasm.ModuleName,
+	arbitragetypes.ModuleName,
 }
 
 // simulationModules returns modules for simulation manager

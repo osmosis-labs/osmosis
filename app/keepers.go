@@ -47,6 +47,8 @@ import (
 
 	owasm "github.com/osmosis-labs/osmosis/v7/app/wasm"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
+	arbitragekeeper "github.com/osmosis-labs/osmosis/v7/x/arbitrage-solver/keeper"
+	arbitragetypes "github.com/osmosis-labs/osmosis/v7/x/arbitrage-solver/types"
 	claimkeeper "github.com/osmosis-labs/osmosis/v7/x/claim/keeper"
 	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
@@ -106,6 +108,7 @@ type appKeepers struct {
 	SuperfluidKeeper     *superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
+	ArbitrageKeeper      *arbitragekeeper.Keeper
 }
 
 func (app *OsmosisApp) InitSpecialKeepers(
@@ -376,6 +379,16 @@ func (app *OsmosisApp) InitNormalKeepers(
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper))
 	app.IBCKeeper.SetRouter(ibcRouter)
 
+	arbitrageKeeper := arbitragekeeper.NewKeeper(
+		appCodec,
+		keys[arbitragetypes.StoreKey],
+		app.GetSubspace(arbitragetypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.GAMMKeeper,
+	)
+	app.ArbitrageKeeper = &arbitrageKeeper
+
 	// register the proposal types
 	// TODO: This appears to be missing tx fees proposal type
 	govRouter := govtypes.NewRouter()
@@ -422,6 +435,7 @@ func (app *OsmosisApp) SetupHooks() {
 			// insert gamm hooks receivers here
 			app.PoolIncentivesKeeper.Hooks(),
 			app.ClaimKeeper.Hooks(),
+			app.ArbitrageKeeper.Hooks(),
 		),
 	)
 
@@ -481,6 +495,7 @@ func (app *OsmosisApp) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino 
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
+	paramsKeeper.Subspace(arbitragetypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -511,5 +526,6 @@ func KVStoreKeys() []string {
 		superfluidtypes.StoreKey,
 		bech32ibctypes.StoreKey,
 		wasm.StoreKey,
+		arbitragetypes.StoreKey,
 	}
 }
