@@ -467,6 +467,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	appKeepers.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
+			appKeepers.TxFeesKeeper.Hooks(),
 			appKeepers.SuperfluidKeeper.Hooks(),
 			appKeepers.IncentivesKeeper.Hooks(),
 			appKeepers.MintKeeper.Hooks(),
