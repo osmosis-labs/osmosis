@@ -103,24 +103,42 @@ type AppKeepers struct {
 	SuperfluidKeeper     *superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
+	// transfer module
+	TransferModule transfer.AppModule
+
+	// keys to access the substores
+	keys    map[string]*sdk.KVStoreKey
+	tkeys   map[string]*sdk.TransientStoreKey
+	memKeys map[string]*sdk.MemoryStoreKey
+}
+
+func (appKeepers *AppKeepers) GenerateKeys() {
+	// Define what keys will be used in the cosmos-sdk key/value store.
+	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain.
+	// Keys are in keys.go to kep app.go as brief as possible.
+	appKeepers.keys = sdk.NewKVStoreKeys(KVStoreKeys()...)
+
+	// Define transient store keys
+	appKeepers.tkeys = sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+
+	// MemKeys are for information that is stored only in RAM.
+	appKeepers.memKeys = sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 }
 
 func (appKeepers *AppKeepers) InitNormalKeepers(
 	appCodec codec.Codec,
 	bApp *baseapp.BaseApp,
-	keys map[string]*sdk.KVStoreKey,
 	maccPerms map[string][]string,
 	wasmDir string,
 	wasmConfig wasm.Config,
 	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
-	transferModule *transfer.AppModule,
 	blockedAddress map[string]bool,
 ) {
 	// Add 'normal' keepers
 	accountKeeper := authkeeper.NewAccountKeeper(
 		appCodec,
-		keys[authtypes.StoreKey],
+		appKeepers.keys[authtypes.StoreKey],
 		appKeepers.GetSubspace(authtypes.ModuleName),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
@@ -128,7 +146,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.AccountKeeper = &accountKeeper
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		appCodec,
-		keys[banktypes.StoreKey],
+		appKeepers.keys[banktypes.StoreKey],
 		appKeepers.AccountKeeper,
 		appKeepers.GetSubspace(banktypes.ModuleName),
 		blockedAddress,
@@ -136,7 +154,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.BankKeeper = &bankKeeper
 
 	authzKeeper := authzkeeper.NewKeeper(
-		keys[authzkeeper.StoreKey],
+		appKeepers.keys[authzkeeper.StoreKey],
 		appCodec,
 		bApp.MsgServiceRouter(),
 	)
@@ -144,7 +162,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec,
-		keys[stakingtypes.StoreKey],
+		appKeepers.keys[stakingtypes.StoreKey],
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.GetSubspace(stakingtypes.ModuleName),
@@ -152,7 +170,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.StakingKeeper = &stakingKeeper
 
 	distrKeeper := distrkeeper.NewKeeper(
-		appCodec, keys[distrtypes.StoreKey],
+		appCodec, appKeepers.keys[distrtypes.StoreKey],
 		appKeepers.GetSubspace(distrtypes.ModuleName),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
@@ -164,7 +182,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	slashingKeeper := slashingkeeper.NewKeeper(
 		appCodec,
-		keys[slashingtypes.StoreKey],
+		appKeepers.keys[slashingtypes.StoreKey],
 		appKeepers.StakingKeeper,
 		appKeepers.GetSubspace(slashingtypes.ModuleName),
 	)
@@ -173,7 +191,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Create IBC Keeper
 	appKeepers.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
-		keys[ibchost.StoreKey],
+		appKeepers.keys[ibchost.StoreKey],
 		appKeepers.GetSubspace(ibchost.ModuleName),
 		appKeepers.StakingKeeper,
 		appKeepers.UpgradeKeeper,
@@ -183,7 +201,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Create Transfer Keepers
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
-		keys[ibctransfertypes.StoreKey],
+		appKeepers.keys[ibctransfertypes.StoreKey],
 		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
@@ -192,14 +210,15 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedTransferKeeper,
 	)
 	appKeepers.TransferKeeper = &transferKeeper
+	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
+	ibcRouter.AddRoute(ibctransfertypes.ModuleName, appKeepers.TransferModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	appKeepers.Bech32IBCKeeper = bech32ibckeeper.NewKeeper(
-		appKeepers.IBCKeeper.ChannelKeeper, appCodec, keys[bech32ibctypes.StoreKey],
+		appKeepers.IBCKeeper.ChannelKeeper, appCodec, appKeepers.keys[bech32ibctypes.StoreKey],
 		appKeepers.TransferKeeper,
 	)
 
@@ -218,30 +237,30 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	appKeepers.EvidenceKeeper = evidencekeeper.NewKeeper(
 		appCodec,
-		keys[evidencetypes.StoreKey],
+		appKeepers.keys[evidencetypes.StoreKey],
 		appKeepers.StakingKeeper,
 		appKeepers.SlashingKeeper,
 	)
 
 	gammKeeper := gammkeeper.NewKeeper(
-		appCodec, keys[gammtypes.StoreKey],
+		appCodec, appKeepers.keys[gammtypes.StoreKey],
 		appKeepers.GetSubspace(gammtypes.ModuleName),
 		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.DistrKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appCodec,
-		keys[lockuptypes.StoreKey],
+		appKeepers.keys[lockuptypes.StoreKey],
 		// TODO: Visit why this needs to be deref'd
 		*appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper)
 
-	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
+	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appCodec,
-		keys[incentivestypes.StoreKey],
+		appKeepers.keys[incentivestypes.StoreKey],
 		appKeepers.GetSubspace(incentivestypes.ModuleName),
 		appKeepers.BankKeeper,
 		appKeepers.LockupKeeper,
@@ -250,7 +269,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appCodec,
-		keys[superfluidtypes.StoreKey],
+		appKeepers.keys[superfluidtypes.StoreKey],
 		appKeepers.GetSubspace(superfluidtypes.ModuleName),
 		*appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
@@ -265,7 +284,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	mintKeeper := mintkeeper.NewKeeper(
 		appCodec,
-		keys[minttypes.StoreKey],
+		appKeepers.keys[minttypes.StoreKey],
 		appKeepers.GetSubspace(minttypes.ModuleName),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
@@ -277,7 +296,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	poolIncentivesKeeper := poolincentiveskeeper.NewKeeper(
 		appCodec,
-		keys[poolincentivestypes.StoreKey],
+		appKeepers.keys[poolincentivestypes.StoreKey],
 		appKeepers.GetSubspace(poolincentivestypes.ModuleName),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
@@ -293,7 +312,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.EpochsKeeper,
-		keys[txfeestypes.StoreKey],
+		appKeepers.keys[txfeestypes.StoreKey],
 		appKeepers.GAMMKeeper,
 		appKeepers.GAMMKeeper,
 		txfeestypes.FeeCollectorName,
@@ -309,7 +328,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,
-		keys[wasm.StoreKey],
+		appKeepers.keys[wasm.StoreKey],
 		appKeepers.GetSubspace(wasm.ModuleName),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
@@ -352,7 +371,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	}
 
 	govKeeper := govkeeper.NewKeeper(
-		appCodec, keys[govtypes.StoreKey],
+		appCodec, appKeepers.keys[govtypes.StoreKey],
 		appKeepers.GetSubspace(govtypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper,
 		appKeepers.StakingKeeper, govRouter)
 	appKeepers.GovKeeper = &govKeeper
@@ -361,23 +380,21 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 func (appKeepers *AppKeepers) InitSpecialKeepers(
 	appCodec codec.Codec,
 	bApp *baseapp.BaseApp,
-	keys map[string]*sdk.KVStoreKey,
-	tkeys map[string]*sdk.TransientStoreKey,
-	memKeys map[string]*sdk.MemoryStoreKey,
 	wasmDir string,
 	cdc *codec.LegacyAmino,
 	invCheckPeriod uint,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 ) {
-	paramsKeeper := appKeepers.InitParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	appKeepers.GenerateKeys()
+	paramsKeeper := appKeepers.initParamsKeeper(appCodec, cdc, appKeepers.keys[paramstypes.StoreKey], appKeepers.tkeys[paramstypes.TStoreKey])
 	appKeepers.ParamsKeeper = &paramsKeeper
 
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(appKeepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramskeeper.ConsensusParamsKeyTable()))
 
 	// add capability keeper and ScopeToModule for ibc module
-	appKeepers.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
+	appKeepers.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, appKeepers.keys[capabilitytypes.StoreKey], appKeepers.memKeys[capabilitytypes.MemStoreKey])
 	appKeepers.ScopedIBCKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	appKeepers.ScopedTransferKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	appKeepers.ScopedWasmKeeper = appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
@@ -392,7 +409,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 
 	upgradeKeeper := upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
-		keys[upgradetypes.StoreKey],
+		appKeepers.keys[upgradetypes.StoreKey],
 		appCodec,
 		homePath,
 		bApp,
@@ -401,7 +418,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 }
 
 // initParamsKeeper init params keeper and its subspaces.
-func (appKeepers *AppKeepers) InitParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
+func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	paramsKeeper.Subspace(authtypes.ModuleName)
@@ -512,4 +529,37 @@ func KVStoreKeys() []string {
 func (appKeepers *AppKeepers) GetSubspace(moduleName string) paramstypes.Subspace {
 	subspace, _ := appKeepers.ParamsKeeper.GetSubspace(moduleName)
 	return subspace
+}
+
+func (appKeepers *AppKeepers) GetKVStoreKey() map[string]*sdk.KVStoreKey {
+	return appKeepers.keys
+}
+
+func (appKeepers *AppKeepers) GetTransientStoreKey() map[string]*sdk.TransientStoreKey {
+	return appKeepers.tkeys
+}
+
+func (appKeepers *AppKeepers) GetMemoryStoreKey() map[string]*sdk.MemoryStoreKey {
+	return appKeepers.memKeys
+}
+
+// GetKey returns the KVStoreKey for the provided store key.
+//
+// NOTE: This is solely to be used for testing purposes.
+func (appKeepers *AppKeepers) GetKey(storeKey string) *sdk.KVStoreKey {
+	return appKeepers.keys[storeKey]
+}
+
+// GetTKey returns the TransientStoreKey for the provided store key.
+//
+// NOTE: This is solely to be used for testing purposes.
+func (appKeepers *AppKeepers) GetTKey(storeKey string) *sdk.TransientStoreKey {
+	return appKeepers.tkeys[storeKey]
+}
+
+// GetMemKey returns the MemStoreKey for the provided mem key.
+//
+// NOTE: This is solely used for testing purposes.
+func (appKeepers *AppKeepers) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
+	return appKeepers.memKeys[storeKey]
 }

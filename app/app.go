@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -37,7 +36,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -121,15 +119,9 @@ type OsmosisApp struct {
 	interfaceRegistry types.InterfaceRegistry
 	invCheckPeriod    uint
 
-	// keys to access the substores
-	keys    map[string]*sdk.KVStoreKey
-	tkeys   map[string]*sdk.TransientStoreKey
-	memKeys map[string]*sdk.MemoryStoreKey
-
-	transferModule transfer.AppModule
-	mm             *module.Manager
-	sm             *module.SimulationManager
-	configurator   module.Configurator
+	mm           *module.Manager
+	sm           *module.SimulationManager
+	configurator module.Configurator
 }
 
 func init() {
@@ -165,26 +157,12 @@ func NewOsmosisApp(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
-	// Define what keys will be used in the cosmos-sdk key/value store.
-	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain.
-	// Keys are in keys.go to kep app.go as brief as possible.
-	keys := sdk.NewKVStoreKeys(keepers.KVStoreKeys()...)
-
-	// Define transient store keys
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-
-	// MemKeys are for information that is stored only in RAM.
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
-
 	app := &OsmosisApp{
 		BaseApp:           bApp,
 		cdc:               cdc,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
-		keys:              keys,
-		tkeys:             tkeys,
-		memKeys:           memKeys,
 	}
 
 	wasmDir := filepath.Join(homePath, "wasm")
@@ -192,13 +170,9 @@ func NewOsmosisApp(
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
-
 	app.InitSpecialKeepers(
 		appCodec,
 		bApp,
-		keys,
-		tkeys,
-		memKeys,
 		wasmDir,
 		cdc,
 		invCheckPeriod,
@@ -209,16 +183,13 @@ func NewOsmosisApp(
 	app.InitNormalKeepers(
 		appCodec,
 		bApp,
-		keys,
 		maccPerms,
 		wasmDir,
 		wasmConfig,
 		wasmEnabledProposals,
 		wasmOpts,
-		&app.transferModule,
 		app.BlockedAddrs(),
 	)
-	app.transferModule = transfer.NewAppModule(*app.TransferKeeper)
 
 	app.SetupHooks()
 
@@ -277,9 +248,9 @@ func NewOsmosisApp(
 	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
 
 	// initialize stores
-	app.MountKVStores(keys)
-	app.MountTransientStores(tkeys)
-	app.MountMemoryStores(memKeys)
+	app.MountKVStores(app.GetKVStoreKey())
+	app.MountTransientStores(app.GetTransientStoreKey())
+	app.MountMemoryStores(app.GetMemoryStoreKey())
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -288,7 +259,7 @@ func NewOsmosisApp(
 		NewAnteHandler(
 			appOpts,
 			wasmConfig,
-			keys[wasm.StoreKey],
+			app.GetKey(wasm.StoreKey),
 			app.AccountKeeper,
 			app.BankKeeper,
 			app.TxFeesKeeper,
@@ -372,27 +343,6 @@ func (app *OsmosisApp) AppCodec() codec.Codec {
 // InterfaceRegistry returns Osmosis' InterfaceRegistry.
 func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
-}
-
-// GetKey returns the KVStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *OsmosisApp) GetKey(storeKey string) *sdk.KVStoreKey {
-	return app.keys[storeKey]
-}
-
-// GetTKey returns the TransientStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *OsmosisApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
-	return app.tkeys[storeKey]
-}
-
-// GetMemKey returns the MemStoreKey for the provided mem key.
-//
-// NOTE: This is solely used for testing purposes.
-func (app *OsmosisApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
-	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.
