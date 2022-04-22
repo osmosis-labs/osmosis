@@ -56,6 +56,7 @@ docker run -v < path >:/tmp/osmo-test osmosis-e2e-chain-init:debug --data-dir=/t
 sudo rm -r < path > # must be root to clean up
 ```
 - runs a container with a volume mounted at < path > where all chain initialization files are placed.
+- < path > must be absolute.
 - `--data-dir` flag is needed for outputting the files into a directory inside the container
 
 ##### To build the debug Osmosis image:
