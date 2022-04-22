@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 
@@ -8,6 +9,14 @@ import (
 )
 
 func main() {
+	var dataDir string
+	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
+	flag.Parse()
+
+	if len(dataDir) == 0 {
+		panic("data-dir is required")
+	}
+
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 	if err != nil {
 		panic(err)

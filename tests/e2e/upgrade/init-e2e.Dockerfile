@@ -20,4 +20,4 @@ COPY --from=build /osmosis/build/upgrade /bin/upgrade
 ENV HOME /osmosis
 WORKDIR $HOME
 
-CMD [ "upgrade" ]
+ENTRYPOINT [ "upgrade" ]
