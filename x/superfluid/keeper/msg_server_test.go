@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
@@ -40,8 +40,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-		suite.Require().NoError(err)
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
 		c := sdk.WrapSDKContext(suite.Ctx)
@@ -88,8 +87,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-		suite.Require().NoError(err)
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
 		c := sdk.WrapSDKContext(suite.Ctx)
@@ -134,8 +132,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-		suite.Require().NoError(err)
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
 		c := sdk.WrapSDKContext(suite.Ctx)
@@ -180,14 +177,13 @@ func (suite *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-		suite.Require().NoError(err)
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
 		c := sdk.WrapSDKContext(suite.Ctx)
 		valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
-		_, err = msgServer.LockAndSuperfluidDelegate(c, types.NewMsgLockAndSuperfluidDelegate(test.param.lockOwner, test.param.coinsToLock, valAddrs[0]))
+		_, err := msgServer.LockAndSuperfluidDelegate(c, types.NewMsgLockAndSuperfluidDelegate(test.param.lockOwner, test.param.coinsToLock, valAddrs[0]))
 
 		if test.expectPass {
 			suite.Require().NoError(err)

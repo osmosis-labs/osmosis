@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,13 +14,12 @@ var (
 
 func (suite *KeeperTestSuite) measureLockGas(addr sdk.AccAddress, coins sdk.Coins, dur time.Duration) uint64 {
 	// fundAccount outside of gas measurement
-	err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr, coins)
-	suite.Require().NoError(err)
+	suite.FundAcc(addr, coins)
 	// start measuring gas
-	alreadySpent := suite.ctx.GasMeter().GasConsumed()
-	_, err = suite.app.LockupKeeper.LockTokens(suite.ctx, addr, coins, dur)
+	alreadySpent := suite.Ctx.GasMeter().GasConsumed()
+	_, err := suite.App.LockupKeeper.LockTokens(suite.Ctx, addr, coins, dur)
 	suite.Require().NoError(err)
-	newSpent := suite.ctx.GasMeter().GasConsumed()
+	newSpent := suite.Ctx.GasMeter().GasConsumed()
 	spentNow := newSpent - alreadySpent
 	return spentNow
 }
@@ -30,7 +28,8 @@ func (suite *KeeperTestSuite) measureAvgAndMaxLockGas(
 	numIterations int,
 	addr sdk.AccAddress,
 	coinsFn func(int) sdk.Coins,
-	durFn func(int) time.Duration) (avg uint64, maxGas uint64) {
+	durFn func(int) time.Duration,
+) (avg uint64, maxGas uint64) {
 	runningTotal := uint64(0)
 	maxGas = uint64(0)
 	for i := 1; i <= numIterations; i++ {
@@ -38,7 +37,7 @@ func (suite *KeeperTestSuite) measureAvgAndMaxLockGas(
 		runningTotal += lockGas
 		if lockGas > maxGas {
 			maxGas = lockGas
-			// fmt.Println(suite.ctx.GasMeter().String())
+			// fmt.Println(suite.Ctx.GasMeter().String())
 		}
 	}
 	avg = runningTotal / uint64(numIterations)

@@ -21,10 +21,11 @@ func (k Keeper) CalculateSpotPrice(
 	baseAssetDenom string,
 	quoteAssetDenom string,
 ) (sdk.Dec, error) {
-	pool, err := k.GetPool(ctx, poolID)
+	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
+
 	return pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
 }
 
@@ -52,7 +53,8 @@ func (k Keeper) validateCreatedPool(
 	ctx sdk.Context,
 	initialPoolLiquidity sdk.Coins,
 	poolId uint64,
-	pool types.PoolI) error {
+	pool types.PoolI,
+) error {
 	if pool.GetId() != poolId {
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool ID.")
@@ -182,7 +184,7 @@ func (k Keeper) JoinPoolNoSwap(
 	shareOutAmount sdk.Int,
 	tokenInMaxs sdk.Coins,
 ) (err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -330,7 +332,7 @@ func (k Keeper) ExitPool(
 	shareInAmount sdk.Int,
 	tokenOutMins sdk.Coins,
 ) (exitCoins sdk.Coins, err error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -393,20 +395,31 @@ func (k Keeper) ExitSwapShareAmountIn(
 	return tokenOutAmount, nil
 }
 
-func (k Keeper) ExitSwapExternAmountOut(
+func (k Keeper) ExitSwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	poolId uint64,
 	tokenOut sdk.Coin,
 	shareInMaxAmount sdk.Int,
 ) (shareInAmount sdk.Int, err error) {
-	// Basically what we have to do is:
-	// estimate how many LP shares this would take to do.
-	// We do so by calculating how much a swap of half of tokenOut to TokenIn would be.
-	// Then we calculate how many LP shares that'd be worth.
-	// We should have code for that once we implement JoinPoolNoSwap.
-	// Then check if the number of shares is LTE to shareInMaxAmount.
-	// if so, use the needed number of shares, do exit pool, and the swap.
+	pool, err := k.getPoolForSwap(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
-	panic("To implement later")
+	extendedPool, ok := pool.(types.PoolExitSwapExactAmountOutExtension)
+	if !ok {
+		return sdk.Int{}, fmt.Errorf("pool with id %d does not support this kind of exit", poolId)
+	}
+
+	shareInAmount, err = extendedPool.ExitSwapExactAmountOut(ctx, tokenOut, shareInMaxAmount)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	if err := k.applyExitPoolStateChange(ctx, pool, sender, shareInAmount, sdk.Coins{tokenOut}); err != nil {
+		return sdk.Int{}, err
+	}
+
+	return shareInAmount, nil
 }

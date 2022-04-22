@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/utils"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type msgServer struct {

@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetLastGaugeID returns ID used last time.

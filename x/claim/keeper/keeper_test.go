@@ -2,31 +2,25 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type KeeperTestSuite struct {
-	suite.Suite
-
-	ctx sdk.Context
-	// querier sdk.Querier
-	app *app.OsmosisApp
+	apptesting.KeeperTestHelper
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.app = app.Setup(false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	suite.Setup()
+	airdropStartTime := suite.Ctx.BlockHeader().Time
+	suite.App.ClaimKeeper.CreateModuleAccount(suite.Ctx, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
 
-	airdropStartTime := time.Now()
-	suite.app.ClaimKeeper.CreateModuleAccount(suite.ctx, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
-
-	err := suite.app.ClaimKeeper.SetParams(suite.ctx, types.Params{
+	err := suite.App.ClaimKeeper.SetParams(suite.Ctx, types.Params{
 		AirdropStartTime:   airdropStartTime,
 		DurationUntilDecay: types.DefaultDurationUntilDecay,
 		DurationOfDecay:    types.DefaultDurationOfDecay,
@@ -36,7 +30,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		panic(err)
 	}
 
-	suite.ctx = suite.ctx.WithBlockTime(airdropStartTime)
+	suite.Ctx = suite.Ctx.WithBlockTime(airdropStartTime)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

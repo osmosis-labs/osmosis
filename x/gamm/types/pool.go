@@ -1,9 +1,13 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"time"
+
 	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v7/v043_temp/address"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PoolI defines an interface for pools that hold tokens.
@@ -65,6 +69,26 @@ type PoolI interface {
 	// CalcExitPoolShares returns how many coins ExitPool would return on these arguments.
 	// This does not mutate the pool, or state.
 	CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
+
+	// PokePool determines if a pool's weights need to be updated and updates
+	// them if so.
+	PokePool(blockTime time.Time)
+}
+
+// PoolExitSwapExactAmountOutExtension is an extension of the PoolI
+// interface definiting an abstraction for pools that hold tokens.
+// In addition, it supports ExitSwapExactAmountOut method.
+// See definition below.
+type PoolExitSwapExactAmountOutExtension interface {
+	PoolI
+
+	// ExitSwapExactAmountOut removes liquidity from a specified pool with a maximum amount of LP shares (shareInMaxAmount)
+	// and swaps to an exact amount of one of the token pairs (tokenOut)
+	ExitSwapExactAmountOut(
+		ctx sdk.Context,
+		tokenOut sdk.Coin,
+		shareInMaxAmount sdk.Int,
+	) (shareInAmount sdk.Int, err error)
 }
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {

@@ -4,15 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
@@ -30,14 +27,11 @@ type KeeperTestSuite struct {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.App = app.Setup(false)
-
-	startTime := time.Unix(1645580000, 0)
-	suite.Ctx = suite.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: startTime.UTC()})
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*suite.App.SuperfluidKeeper))
-	suite.queryClient = types.NewQueryClient(queryHelper)
+	suite.Setup()
+	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 	suite.querier = keeper.NewQuerier(*suite.App.SuperfluidKeeper)
+
+	startTime := suite.Ctx.BlockHeader().Time
 
 	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 
@@ -108,8 +102,7 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 	}
 
 	acc1 := CreateRandomAccounts(1)[0]
-	err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, acc1, coins)
-	suite.Require().NoError(err)
+	suite.FundAcc(acc1, coins)
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),

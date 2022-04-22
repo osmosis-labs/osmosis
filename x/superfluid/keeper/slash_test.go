@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {

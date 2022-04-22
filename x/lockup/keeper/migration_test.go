@@ -5,8 +5,9 @@ import (
 	"math/rand"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (suite *KeeperTestSuite) TestLockupMergeMigration() {
@@ -49,7 +50,7 @@ func (suite *KeeperTestSuite) TestLockupMergeMigration() {
 
 	suite.Require().NotPanics(func() {
 		keeper.MergeLockupsForSimilarDurations(
-			suite.ctx, *suite.app.LockupKeeper, suite.app.AccountKeeper,
+			suite.Ctx, *suite.App.LockupKeeper, suite.App.AccountKeeper,
 			keeper.BaselineDurations, keeper.HourDuration,
 		)
 	})
@@ -57,7 +58,7 @@ func (suite *KeeperTestSuite) TestLockupMergeMigration() {
 	for i := 0; i < 5; i++ {
 		for j := 0; j < 5; j++ {
 			for _, duration := range keeper.BaselineDurations {
-				locks := suite.app.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.ctx, addr(i), denom(j), duration)
+				locks := suite.App.LockupKeeper.GetAccountLockedDurationNotUnlockingOnly(suite.Ctx, addr(i), denom(j), duration)
 				suite.Require().True(len(locks) <= 1)
 				if len(locks) == 1 {
 					suite.Require().Equal(locks[0].Coins[0].Amount.Int64(), get(addr(i), denom(j), duration),

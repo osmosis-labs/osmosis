@@ -65,6 +65,9 @@ endif
 ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
+ifeq ($(LINK_STATICALLY),true)
+	ldflags += -linkmode=external -extldflags "-L/usr/local/lib/ -lwasmvm_muslc -Wl,-z,muldefs -static"
+endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
@@ -96,12 +99,12 @@ $(BUILDDIR)/:
 build-reproducible: go.sum
 	$(DOCKER) rm latest-build || true
 	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64' \
-        --env APP=osmosisd \
-        --env VERSION=$(VERSION) \
-        --env COMMIT=$(COMMIT) \
-        --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-        --name latest-build cosmossdk/rbuilder:latest
+	--env TARGET_PLATFORMS='linux/amd64' \
+	--env APP=osmosisd \
+	--env VERSION=$(VERSION) \
+	--env COMMIT=$(COMMIT) \
+	--env LEDGER_ENABLED=$(LEDGER_ENABLED) \
+	--name latest-build osmolabs/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-linux: go.sum
@@ -125,7 +128,7 @@ draw-deps:
 	@goviz -i ./cmd/osmosisd -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -rf $(BUILDDIR)/ artifacts/
+	rm -rf $(CURDIR)/artifacts/
 
 distclean: clean
 	rm -rf vendor/
@@ -224,7 +227,7 @@ test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
 
 test-cover:
-    @VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
 
 test-sim:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
@@ -236,7 +239,7 @@ benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
 docker-build-debug:
-	@docker build -t osmolabs/osmosisd-e2e --build-arg IMG_TAG=debug -f e2e.Dockerfile .
+	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
@@ -247,9 +250,7 @@ lint:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
 
 ###############################################################################
 ###                                Localnet                                 ###

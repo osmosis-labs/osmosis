@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"math/big"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
@@ -53,7 +54,7 @@ func (q Querier) Pool(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -85,8 +86,8 @@ func (q Querier) Pools(
 			return err
 		}
 
-		// Use GetPool function because it runs PokeWeights
-		poolI, err = q.Keeper.GetPool(sdkCtx, poolI.GetId())
+		// Use GetPoolAndPoke function because it runs PokeWeights
+		poolI, err = q.Keeper.GetPoolAndPoke(sdkCtx, poolI.GetId())
 		if err != nil {
 			return err
 		}
@@ -115,14 +116,7 @@ func (q Querier) Pools(
 	}, nil
 }
 
-func (q Querier) NumPools(
-	ctx context.Context,
-	req *types.QueryNumPoolsRequest,
-) (*types.QueryNumPoolsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
+func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
@@ -137,7 +131,7 @@ func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsReque
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -166,7 +160,7 @@ func (q Querier) TotalPoolLiquidity(ctx context.Context, req *types.QueryTotalPo
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -183,7 +177,7 @@ func (q Querier) TotalShares(ctx context.Context, req *types.QueryTotalSharesReq
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -200,24 +194,22 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.TokenInDenom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if req.BaseAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
 	}
 
-	if req.TokenOutDenom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if req.QuoteAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid quote asset denom")
 	}
-
-	// Return the spot price anyway, even if the pool is inactive.
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to get pool by ID: %s", err)
 	}
 
-	sp, err := pool.SpotPrice(sdkCtx, req.TokenInDenom, req.TokenOutDenom)
+	sp, err := pool.SpotPrice(sdkCtx, req.BaseAssetDenom, req.QuoteAssetDenom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -227,11 +219,7 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 	}, nil
 }
 
-func (q Querier) TotalLiquidity(ctx context.Context, req *types.QueryTotalLiquidityRequest) (*types.QueryTotalLiquidityResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
+func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidityRequest) (*types.QueryTotalLiquidityResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryTotalLiquidityResponse{

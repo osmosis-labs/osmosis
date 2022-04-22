@@ -6,9 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
 // RandomizedGenState generates a random GenesisState for mint.
