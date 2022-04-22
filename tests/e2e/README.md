@@ -51,8 +51,11 @@ make docker-build-e2e-chain-init
 ##### To run the chain initialization container locally:
 
 ```
-docker run osmosis-e2e-chain-init:debug --data-dir=/tmp/osmo-test
+mkdir < path >
+docker run -v < path >:/tmp/osmo-test osmosis-e2e-chain-init:debug --data-dir=/tmp/osmo-test
+sudo rm -r < path > # must be root to clean up
 ```
+- runs a container with a volume mounted at < path > where all chain initialization files are placed.
 - `--data-dir` flag is needed for outputting the files into a directory inside the container
 
 ##### To build the debug Osmosis image:
