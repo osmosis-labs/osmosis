@@ -153,12 +153,12 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	// checks to make sure the module account has been set to collect fees in OSMO
+	// checks to make sure the module account has been set to collect fees in base token
 	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
 		return ctx, fmt.Errorf("Fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
-	// checks to make sure a separate module account has been set to collect fees not in OSMO
+	// checks to make sure a separate module account has been set to collect fees not in base token
 	if addrNonNativeFee := dfd.ak.GetModuleAddress(types.NonNativeFeeCollectorName); addrNonNativeFee == nil {
 		return ctx, fmt.Errorf("non native fee collector module account (%s) has not been set", types.NonNativeFeeCollectorName)
 	}

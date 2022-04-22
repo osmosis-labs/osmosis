@@ -190,7 +190,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		)
 		suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
 
-		suite.Ctx = suite.Ctx.WithIsCheckTx(tc.isCheckTx)
+		suite.Ctx = suite.Ctx.WithIsCheckTx(tc.isCheckTx).WithMinGasPrices(tc.minGasPrices)
 		suite.Ctx = suite.Ctx.WithMinGasPrices(tc.minGasPrices)
 
 		// TxBuilder components reset for every test case
