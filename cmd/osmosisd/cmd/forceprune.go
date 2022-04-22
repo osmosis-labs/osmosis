@@ -69,92 +69,122 @@ func forceprune() *cobra.Command {
 				return err
 			}
 
-			opts := opt.Options{
-				DisableSeeksCompaction: true,
-			}
-
-			db_bs, err := tmdb.NewGoLevelDBWithOpts("blockstore", db_path, &opts)
+			startHeight, currentHeight, err := pruneBlockStoreAndGetHeights(db_path, full_height)
 			if err != nil {
 				return err
 			}
 
-			bs := tmstore.NewBlockStore(db_bs)
-			start_height := bs.Base()
-			current_height := bs.Height()
-
-			fmt.Println("Pruning Block Store ...")
-			prunedBlocks, err := bs.PruneBlocks(current_height - full_height)
-			defer db_bs.Close()
+			err = compactBlockStore(db_path)
 			if err != nil {
 				return err
 			}
-			fmt.Println("Pruned Block Store ...", prunedBlocks)
-			db_bs.Close()
 
-			fmt.Println("Compacting Block Store ...")
-
-			db, err := leveldb.OpenFile(db_path+"/blockstore.db", &opts)
-			defer db.Close()
-			if err != nil {
-				return err
-			}
-			if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
-				return err
-			}
-
-			db, err = leveldb.OpenFile(db_path+"/state.db", &opts)
-			if err != nil {
-				return err
-			}
-			stateDBKeys := []string{kValidators, kConsensusParams, kABCIResponses}
-			fmt.Println("Pruning State Store ...")
-			for i, s := range stateDBKeys {
-				fmt.Println(i, s)
-
-				retain_height := int64(0)
-				if s == kABCIResponses {
-					retain_height = current_height - min_height
-				} else {
-					retain_height = current_height - full_height
-				}
-
-				batch := new(leveldb.Batch)
-				curBatchSize := uint64(0)
-
-				fmt.Println(start_height, current_height, retain_height)
-
-				for c := start_height; c < retain_height; c++ {
-					batch.Delete([]byte(s + strconv.FormatInt(c, 10)))
-					curBatchSize++
-
-					if curBatchSize%batchMaxSize == 0 && curBatchSize > 0 {
-						err := db.Write(batch, nil)
-						if err != nil {
-							return err
-						}
-						batch.Reset()
-						batch = new(leveldb.Batch)
-					}
-				}
-
-				err := db.Write(batch, nil)
-				if err != nil {
-					return err
-				}
-				batch.Reset()
-			}
-
-			fmt.Println("Compacting State Store ...")
-			if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
-				return err
-			}
-			fmt.Println("Done ...")
-
-			return nil
+			return forcepruneStateStore(db_path, startHeight, currentHeight, min_height, full_height)
 		},
 	}
 
 	cmd.Flags().StringP(fullHeight, "f", defaultFullHeight, "Full height to chop to")
 	cmd.Flags().StringP(minHeight, "m", defaultMinHeight, "Min height for ABCI to chop to")
 	return cmd
+}
+
+func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
+	startHeight int64, currentHeight int64, err error,
+) {
+	opts := opt.Options{
+		DisableSeeksCompaction: true,
+	}
+
+	db_bs, err := tmdb.NewGoLevelDBWithOpts("blockstore", dbPath, &opts)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer db_bs.Close()
+
+	bs := tmstore.NewBlockStore(db_bs)
+	startHeight = bs.Base()
+	currentHeight = bs.Height()
+
+	fmt.Println("Pruning Block Store ...")
+	prunedBlocks, err := bs.PruneBlocks(currentHeight - fullHeight)
+	if err != nil {
+		return 0, 0, err
+	}
+	fmt.Println("Pruned Block Store ...", prunedBlocks)
+	return startHeight, currentHeight, nil
+}
+
+func compactBlockStore(dbPath string) error {
+	compactOpts := opt.Options{
+		DisableSeeksCompaction: true,
+	}
+
+	fmt.Println("Compacting Block Store ...")
+
+	db, err := leveldb.OpenFile(dbPath+"/blockstore.db", &compactOpts)
+	defer db.Close()
+	if err != nil {
+		return err
+	}
+	if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
+		return err
+	}
+	return nil
+}
+
+func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, fullHeight int64) error {
+	opts := opt.Options{
+		DisableSeeksCompaction: true,
+	}
+
+	db, err := leveldb.OpenFile(dbPath+"/state.db", &opts)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	stateDBKeys := []string{kValidators, kConsensusParams, kABCIResponses}
+	fmt.Println("Pruning State Store ...")
+	for i, s := range stateDBKeys {
+		fmt.Println(i, s)
+
+		retain_height := int64(0)
+		if s == kABCIResponses {
+			retain_height = currentHeight - minHeight
+		} else {
+			retain_height = currentHeight - fullHeight
+		}
+
+		batch := new(leveldb.Batch)
+		curBatchSize := uint64(0)
+
+		fmt.Println(startHeight, currentHeight, retain_height)
+
+		for c := startHeight; c < retain_height; c++ {
+			batch.Delete([]byte(s + strconv.FormatInt(c, 10)))
+			curBatchSize++
+
+			if curBatchSize%batchMaxSize == 0 && curBatchSize > 0 {
+				err := db.Write(batch, nil)
+				if err != nil {
+					return err
+				}
+				batch.Reset()
+				batch = new(leveldb.Batch)
+			}
+		}
+
+		err := db.Write(batch, nil)
+		if err != nil {
+			return err
+		}
+		batch.Reset()
+	}
+
+	fmt.Println("Compacting State Store ...")
+	if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
+		return err
+	}
+	fmt.Println("Done ...")
+	return nil
 }
