@@ -9,7 +9,6 @@ import (
 
 const (
 	TypeMsgCreateBalancerPool = "create_balancer_pool"
-	TypePoolParams            = "pool_params"
 )
 
 var (
