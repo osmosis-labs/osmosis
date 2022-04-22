@@ -37,19 +37,19 @@ func forceprune() *cobra.Command {
 		Short: "Example osmosisd forceprune -f 188000 -m 1000, which would keep blockchain and state data of last 188000 blocks (approximately 2 weeks) and ABCI responses of last 1000 blocks.",
 		Long:  "Forceprune options prunes and compacts blockstore.db and state.db. One needs to shut down chain before running forceprune. By default it keeps last 188000 blocks (approximately 2 weeks of data) blockstore and state db (validator and consensus information) and 1000 blocks of abci responses from state.db. Everything beyond these heights in blockstore and state.db is pruned. ABCI Responses are stored in index db and so redundant especially if one is running pruned nodes. As a result we are removing ABCI data from state.db aggressively by default. One can override height for blockstore.db and state.db by using -f option and for abci response by using -m option. Example osmosisd forceprune -f 188000 -m 1000.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			full_height_flag, err := cmd.Flags().GetString(fullHeight)
+			fullHeightFlag, err := cmd.Flags().GetString(fullHeight)
 			if err != nil {
 				return err
 			}
 
-			min_height_flag, err := cmd.Flags().GetString(minHeight)
+			minHeightFlag, err := cmd.Flags().GetString(minHeight)
 			if err != nil {
 				return err
 			}
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			conf := config.DefaultConfig()
-			db_path := clientCtx.HomeDir + "/" + conf.DBPath
+			dbPath := clientCtx.HomeDir + "/" + conf.DBPath
 
 			cmdr := exec.Command("osmosisd", "status")
 			err = cmdr.Run()
@@ -59,27 +59,33 @@ func forceprune() *cobra.Command {
 				return nil
 			}
 
-			full_height, err := strconv.ParseInt(full_height_flag, 10, 64)
+			fullHeight, err := strconv.ParseInt(fullHeightFlag, 10, 64)
 			if err != nil {
 				return err
 			}
 
-			min_height, err := strconv.ParseInt(min_height_flag, 10, 64)
+			minHeight, err := strconv.ParseInt(minHeightFlag, 10, 64)
 			if err != nil {
 				return err
 			}
 
-			startHeight, currentHeight, err := pruneBlockStoreAndGetHeights(db_path, full_height)
+			startHeight, currentHeight, err := pruneBlockStoreAndGetHeights(dbPath, fullHeight)
 			if err != nil {
 				return err
 			}
 
-			err = compactBlockStore(db_path)
+			err = compactBlockStore(dbPath)
 			if err != nil {
 				return err
 			}
 
-			return forcepruneStateStore(db_path, startHeight, currentHeight, min_height, full_height)
+			err = forcepruneStateStore(dbPath, startHeight, currentHeight, minHeight, fullHeight)
+			if err != nil {
+				return err
+			}
+			fmt.Println("Done ...")
+
+			return nil
 		},
 	}
 
@@ -185,6 +191,5 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
 		return err
 	}
-	fmt.Println("Done ...")
 	return nil
 }
