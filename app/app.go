@@ -46,6 +46,7 @@ import (
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
 	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
@@ -421,15 +422,25 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
 	}
 
-	if upgradeInfo.Name == v7.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		// @Frey do we do this for Cosmwasm?
-		storeUpgrades := store.StoreUpgrades{
+	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		return
+	}
+
+	storeUpgrades := store.StoreUpgrades{}
+
+	if upgradeInfo.Name == v7.UpgradeName {
+		storeUpgrades = store.StoreUpgrades{
 			Added: []string{wasm.ModuleName, superfluidtypes.ModuleName},
 		}
-
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
+
+	if upgradeInfo.Name == v8.UpgradeName {
+		// TODO: Add claims module as deleted here
+		storeUpgrades = store.StoreUpgrades{}
+	}
+
+	// configure store loader that checks if version == upgradeHeight and applies store upgrades
+	app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 }
 
 func (app *OsmosisApp) setupUpgradeHandlers() {
@@ -469,6 +480,14 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 			app.LockupKeeper,
 			app.MintKeeper,
 			app.AccountKeeper,
+		),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v8.UpgradeName,
+		v8.CreateUpgradeHandler(
+			app.mm,
+			app.configurator,
 		),
 	)
 }
