@@ -329,10 +329,17 @@ func (app *OsmosisApp) InitNormalKeepers(
 	)
 	app.PoolIncentivesKeeper = &poolIncentivesKeeper
 
+	// Note: gammKeeper is expected to satisfy the SpotPriceCalculator interface parameter
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appCodec,
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.EpochsKeeper,
 		keys[txfeestypes.StoreKey],
 		app.GAMMKeeper,
+		app.GAMMKeeper,
+		txfeestypes.FeeCollectorName,
+		txfeestypes.NonNativeFeeCollectorName,
 	)
 	app.TxFeesKeeper = &txFeesKeeper
 
@@ -437,6 +444,7 @@ func (app *OsmosisApp) SetupHooks() {
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
+			app.TxFeesKeeper.Hooks(),
 			app.SuperfluidKeeper.Hooks(),
 			app.IncentivesKeeper.Hooks(),
 			app.MintKeeper.Hooks(),
