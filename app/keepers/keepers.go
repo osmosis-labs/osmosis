@@ -13,6 +13,7 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -358,6 +359,132 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(govtypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper,
 		appKeepers.StakingKeeper, govRouter)
 	appKeepers.GovKeeper = &govKeeper
+}
+
+func (appKeepers *AppKeepers) InitSpecialKeepers(
+	appCodec codec.Codec,
+	bApp *baseapp.BaseApp,
+	keys map[string]*sdk.KVStoreKey,
+	wasmDir string,
+	cdc *codec.LegacyAmino,
+	invCheckPeriod uint,
+	skipUpgradeHeights map[int64]bool,
+	homePath string,
+) {
+	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
+
+	paramsKeeper := appKeepers.initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	appKeepers.ParamsKeeper = &paramsKeeper
+
+	// set the BaseApp's parameter store
+	bApp.SetParamStore(appKeepers.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramskeeper.ConsensusParamsKeyTable()))
+
+	// add capability keeper and ScopeToModule for ibc module
+	appKeepers.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
+	appKeepers.ScopedIBCKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
+	appKeepers.ScopedTransferKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	appKeepers.ScopedWasmKeeper = appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
+	appKeepers.CapabilityKeeper.Seal()
+
+	// TODO: Make a SetInvCheckPeriod fn on CrisisKeeper.
+	// IMO, its bad design atm that it requires this in state machine initialization
+	crisisKeeper := crisiskeeper.NewKeeper(
+		appKeepers.GetSubspace(crisistypes.ModuleName), invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName,
+	)
+	appKeepers.CrisisKeeper = &crisisKeeper
+
+	upgradeKeeper := upgradekeeper.NewKeeper(
+		skipUpgradeHeights,
+		keys[upgradetypes.StoreKey],
+		appCodec,
+		homePath,
+		bApp,
+	)
+	appKeepers.UpgradeKeeper = &upgradeKeeper
+}
+
+// initParamsKeeper init params keeper and its subspaces.
+func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
+	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
+
+	paramsKeeper.Subspace(authtypes.ModuleName)
+	paramsKeeper.Subspace(banktypes.ModuleName)
+	paramsKeeper.Subspace(stakingtypes.ModuleName)
+	paramsKeeper.Subspace(minttypes.ModuleName)
+	paramsKeeper.Subspace(distrtypes.ModuleName)
+	paramsKeeper.Subspace(slashingtypes.ModuleName)
+	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
+	paramsKeeper.Subspace(crisistypes.ModuleName)
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
+	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(incentivestypes.ModuleName)
+	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
+	paramsKeeper.Subspace(superfluidtypes.ModuleName)
+	paramsKeeper.Subspace(gammtypes.ModuleName)
+	paramsKeeper.Subspace(wasm.ModuleName)
+
+	return paramsKeeper
+}
+
+func (appKeepers *AppKeepers) SetupHooks() {
+	// For every module that has hooks set on it,
+	// you must check InitNormalKeepers to ensure that its not passed by de-reference
+	// e.g. *app.StakingKeeper doesn't appear
+
+	// Recall that SetHooks is a mutative call.
+	appKeepers.StakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(
+			appKeepers.DistrKeeper.Hooks(),
+			appKeepers.SlashingKeeper.Hooks(),
+			appKeepers.ClaimKeeper.Hooks(),
+			appKeepers.SuperfluidKeeper.Hooks(),
+		),
+	)
+
+	appKeepers.GAMMKeeper.SetHooks(
+		gammtypes.NewMultiGammHooks(
+			// insert gamm hooks receivers here
+			appKeepers.PoolIncentivesKeeper.Hooks(),
+			appKeepers.ClaimKeeper.Hooks(),
+		),
+	)
+
+	appKeepers.LockupKeeper.SetHooks(
+		lockuptypes.NewMultiLockupHooks(
+			// insert lockup hooks receivers here
+			appKeepers.SuperfluidKeeper.Hooks(),
+		),
+	)
+
+	appKeepers.IncentivesKeeper.SetHooks(
+		incentivestypes.NewMultiIncentiveHooks(
+		// insert incentive hooks receivers here
+		),
+	)
+
+	appKeepers.MintKeeper.SetHooks(
+		minttypes.NewMultiMintHooks(
+			// insert mint hooks receivers here
+			appKeepers.PoolIncentivesKeeper.Hooks(),
+		),
+	)
+
+	appKeepers.EpochsKeeper.SetHooks(
+		epochstypes.NewMultiEpochHooks(
+			// insert epoch hooks receivers here
+			appKeepers.SuperfluidKeeper.Hooks(),
+			appKeepers.IncentivesKeeper.Hooks(),
+			appKeepers.MintKeeper.Hooks(),
+		),
+	)
+
+	appKeepers.GovKeeper.SetHooks(
+		govtypes.NewMultiGovHooks(
+			// insert governance hooks receivers here
+			appKeepers.ClaimKeeper.Hooks(),
+		),
+	)
 }
 
 func KVStoreKeys() []string {
