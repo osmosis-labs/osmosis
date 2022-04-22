@@ -254,7 +254,9 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 
 func (s *IntegrationTestSuite) configureChain(chainId string) {
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
-	newChain, err := chain.Init(chainId)
+	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
+	s.Require().NoError(err)
+	newChain, err := chain.Init(chainId, tmpDir)
 	s.chains = append(s.chains, newChain)
 	s.Require().NoError(err)
 }
