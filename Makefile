@@ -251,6 +251,7 @@ lint:
 
 format:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
+	@go run mvdan.cc/gofumpt -l -w .
 
 ###############################################################################
 ###                                Localnet                                 ###

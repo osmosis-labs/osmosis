@@ -140,7 +140,6 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 		StartTime:         startTime,
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
-
 }
 
 func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
