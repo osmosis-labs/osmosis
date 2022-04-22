@@ -114,6 +114,10 @@ build-contract-tests-hooks:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/contract_tests
 
+build-e2e-upgrade:
+	mkdir -p $(BUILDDIR)
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/upgrade
+
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
 	@go mod download
@@ -240,6 +244,9 @@ benchmark:
 
 docker-build-debug:
 	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+
+docker-build-e2e-init:
+	@docker build -t osmosis-e2e:debug --build-arg BASE_IMG_TAG=debug -f tests/e2e//upgrade/init-e2e.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
