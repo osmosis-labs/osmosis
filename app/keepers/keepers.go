@@ -365,16 +365,15 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	appCodec codec.Codec,
 	bApp *baseapp.BaseApp,
 	keys map[string]*sdk.KVStoreKey,
+	tkeys map[string]*sdk.TransientStoreKey,
+	memKeys map[string]*sdk.MemoryStoreKey,
 	wasmDir string,
 	cdc *codec.LegacyAmino,
 	invCheckPeriod uint,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 ) {
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
-
-	paramsKeeper := appKeepers.initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	paramsKeeper := appKeepers.InitParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 	appKeepers.ParamsKeeper = &paramsKeeper
 
 	// set the BaseApp's parameter store
@@ -405,7 +404,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 }
 
 // initParamsKeeper init params keeper and its subspaces.
-func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
+func (appKeepers *AppKeepers) InitParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	paramsKeeper.Subspace(authtypes.ModuleName)

@@ -42,6 +42,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/v7/app/keepers"
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
@@ -112,7 +113,7 @@ func GetWasmEnabledProposals() []wasm.ProposalType {
 // capabilities aren't needed for testing.
 type OsmosisApp struct {
 	*baseapp.BaseApp
-	appKeepers
+	keepers.AppKeepers
 
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
@@ -166,7 +167,7 @@ func NewOsmosisApp(
 	// Define what keys will be used in the cosmos-sdk key/value store.
 	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain.
 	// Keys are in keys.go to kep app.go as brief as possible.
-	keys := sdk.NewKVStoreKeys(KVStoreKeys()...)
+	keys := sdk.NewKVStoreKeys(keepers.KVStoreKeys()...)
 
 	// Define transient store keys
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -191,9 +192,32 @@ func NewOsmosisApp(
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
 
-	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
+	app.InitSpecialKeepers(
+		appCodec,
+		bApp,
+		keys,
+		tkeys,
+		memKeys,
+		wasmDir,
+		cdc,
+		invCheckPeriod,
+		skipUpgradeHeights,
+		homePath,
+	)
+
 	app.setupUpgradeStoreLoaders()
-	app.InitNormalKeepers(wasmDir, wasmConfig, wasmEnabledProposals, wasmOpts)
+	app.InitNormalKeepers(
+		appCodec,
+		bApp,
+		keys,
+		maccPerms,
+		wasmDir,
+		wasmConfig,
+		wasmEnabledProposals,
+		wasmOpts,
+		app.transferModule,
+		app.BlockedAddrs(),
+	)
 	app.SetupHooks()
 
 	/****  Module Options ****/
