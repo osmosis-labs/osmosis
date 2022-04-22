@@ -435,8 +435,9 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 	}
 
 	if upgradeInfo.Name == v8.UpgradeName {
-		// TODO: Add claims module as deleted here
-		storeUpgrades = store.StoreUpgrades{}
+		storeUpgrades = store.StoreUpgrades{
+			Deleted: []string{v8.ClaimsModuleName},
+		}
 	}
 
 	// configure store loader that checks if version == upgradeHeight and applies store upgrades
