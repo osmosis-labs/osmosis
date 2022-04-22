@@ -99,22 +99,3 @@ func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (typ
 	poolI, err := NewBalancerPool(poolID, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor, ctx.BlockTime())
 	return &poolI, err
 }
-
-var _ sdk.Msg = &PoolParams{}
-
-func (msg PoolParams) Route() string { return types.RouterKey }
-func (msg PoolParams) Type() string  { return TypeMsgCreateBalancerPool }
-
-// PoolParams doesn't normally have validation
-func (msg PoolParams) ValidateBasic() error {
-	return nil
-}
-
-func (msg PoolParams) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// PoolParams doesn't have signer
-func (msg PoolParams) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{}
-}
