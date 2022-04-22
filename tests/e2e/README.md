@@ -27,7 +27,7 @@ file and all required configuration files such as the `app.toml`. This package d
 
 ## `upgrade` Package
 
-The `upgrade` package starts chain initialization. In addition, there is a Dockerfile `init-e2e.Dockerfile. 
+The `upgrade` package starts chain initialization. In addition, there is a Dockerfile `init-e2e.Dockerfile`. 
 When executed, its container produces all files necessary for starting up a new chain. 
 These resulting files can be mounted on a volume and propagated to our production osmosis container to start the `osmosisd` service.
 
