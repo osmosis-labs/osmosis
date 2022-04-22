@@ -8,7 +8,7 @@ The `e2e` package defines an integration testing suite used for full end-to-end
 testing functionality. This package is decoupled from depending on the Osmosis codebase.
 It initializes the chains for testing via Docker files. As a result, the test suite may
 provide the desired Osmosis version to Docker containers during the initialization.
-This design allows for the opportunity for testing chain upgrades in the future by providing
+This design allows for the opportunity of testing chain upgrades in the future by providing
 an older Osmosis version to the container, performing the chain upgrade, and running the latest test suite.
 
 The file e2e_suite_test.go defines the testing suite and contains the core
@@ -23,7 +23,7 @@ Currently, there is a single test in `e2e_test.go` to query the balances of a va
 ## `chain` Package
 
 The `chain` package introduces the logic necessary for initializing a chain by creating a genesis
-file and all required configuration files such as the `app.tool. This package directly depends on the Osmosis codebase.
+file and all required configuration files such as the `app.toml`. This package directly depends on the Osmosis codebase.
 
 ## `upgrade` Package
 
@@ -31,7 +31,7 @@ The `upgrade` package starts chain initialization. In addition, there is a Docke
 When executed, its container produces all files necessary for starting up a new chain. 
 These resulting files can be mounted on a volume and propagated to our production osmosis container to start the `osmosisd` service.
 
-The decoupling between chain initialization and start-up allows bringing our test suite as close to the production environment as possible.
+The decoupling between chain initialization and start-up allows to minimize the differences between our test suite and the production environment.
 
 # Running Locally
 
@@ -58,6 +58,11 @@ sudo rm -r < path > # must be root to clean up
 - runs a container with a volume mounted at < path > where all chain initialization files are placed.
 - < path > must be absolute.
 - `--data-dir` flag is needed for outputting the files into a directory inside the container
+
+Example:
+```
+docker run -v /home/roman/cosmos/osmosis/tmp:/tmp/osmo-test osmosis-e2e-chain-init:debug --data-dir=/tmp/osmo-test
+```
 
 ##### To build the debug Osmosis image:
 
