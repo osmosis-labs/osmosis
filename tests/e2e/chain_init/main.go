@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 )
@@ -17,12 +17,11 @@ func main() {
 		panic("data-dir is required")
 	}
 
-	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
-	if err != nil {
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
 		panic(err)
 	}
 
-	chain, err := chain.Init(chain.ChainAID, tmpDir)
+	chain, err := chain.Init(chain.ChainAID, dataDir)
 	if err != nil {
 		panic(err)
 	}
