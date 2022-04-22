@@ -204,7 +204,6 @@ func NewOsmosisApp(
 		skipUpgradeHeights,
 		homePath,
 	)
-
 	app.setupUpgradeStoreLoaders()
 	app.InitNormalKeepers(
 		appCodec,
@@ -215,9 +214,11 @@ func NewOsmosisApp(
 		wasmConfig,
 		wasmEnabledProposals,
 		wasmOpts,
-		app.transferModule,
+		&app.transferModule,
 		app.BlockedAddrs(),
 	)
+	app.transferModule = transfer.NewAppModule(*app.TransferKeeper)
+
 	app.SetupHooks()
 
 	/****  Module Options ****/

@@ -117,7 +117,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	wasmConfig wasm.Config,
 	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
-	transferModule transfer.AppModule,
+	transferModule *transfer.AppModule,
 	blockedAddress map[string]bool,
 ) {
 	// Add 'normal' keepers
