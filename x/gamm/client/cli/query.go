@@ -13,7 +13,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 )
 
