@@ -3,10 +3,11 @@ package cmd
 // DONTCOVER
 
 import (
-	"github.com/spf13/cobra"
 	"fmt"
-	"strconv"
 	"os/exec"
+	"strconv"
+
+	"github.com/spf13/cobra"
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -18,14 +19,16 @@ import (
 	"github.com/tendermint/tendermint/config"
 )
 
-const batchMaxSize = 1000
-const kValidators = "validatorsKey:"
-const kConsensusParams = "consensusParamsKey:"
-const kABCIResponses = "abciResponsesKey:"
-const fullHeight = "full_height"
-const minHeight = "min_height"
-const defaultFullHeight = "188000"
-const defaultMinHeight = "1000"
+const (
+	batchMaxSize      = 1000
+	kValidators       = "validatorsKey:"
+	kConsensusParams  = "consensusParamsKey:"
+	kABCIResponses    = "abciResponsesKey:"
+	fullHeight        = "full_height"
+	minHeight         = "min_height"
+	defaultFullHeight = "188000"
+	defaultMinHeight  = "1000"
+)
 
 // get cmd to convert any bech32 address to an osmo prefix.
 func forceprune() *cobra.Command {
@@ -46,7 +49,7 @@ func forceprune() *cobra.Command {
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			conf := config.DefaultConfig()
-			db_path := string(clientCtx.HomeDir) + "/" + conf.DBPath
+			db_path := clientCtx.HomeDir + "/" + conf.DBPath
 
 			cmdr := exec.Command("osmosisd", "status")
 			err = cmdr.Run()
@@ -62,7 +65,7 @@ func forceprune() *cobra.Command {
 			}
 
 			min_height, err := strconv.ParseInt(min_height_flag, 10, 64)
-      			if err != nil {
+			if err != nil {
 				return err
 			}
 
