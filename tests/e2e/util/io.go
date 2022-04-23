@@ -1,4 +1,4 @@
-package e2e
+package util
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func copyFile(src, dst string) (int64, error) {
+func CopyFile(src, dst string) (int64, error) {
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
 		return 0, err
@@ -33,7 +33,7 @@ func copyFile(src, dst string) (int64, error) {
 	return nBytes, err
 }
 
-func writeFile(path string, body []byte) error {
+func WriteFile(path string, body []byte) error {
 	_, err := os.Create(path)
 	if err != nil {
 		return err
