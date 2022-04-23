@@ -48,8 +48,6 @@ import (
 
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v7/x/claim"
-	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm"
@@ -108,7 +106,6 @@ var appModuleBasics = []module.AppModuleBasic{
 	lockup.AppModuleBasic{},
 	poolincentives.AppModuleBasic{},
 	epochs.AppModuleBasic{},
-	claim.AppModuleBasic{},
 	superfluid.AppModuleBasic{},
 	bech32ibc.AppModuleBasic{},
 	wasm.AppModuleBasic{},
@@ -124,13 +121,13 @@ var moduleAccountPermissions = map[string][]string{
 	stakingtypes.NotBondedPoolName:           {authtypes.Burner, authtypes.Staking},
 	govtypes.ModuleName:                      {authtypes.Burner},
 	ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
-	claimtypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
 	gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 	poolincentivestypes.ModuleName:           nil,
 	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	txfeestypes.ModuleName:                   nil,
+	txfeestypes.NonNativeFeeCollectorName:    nil,
 	wasm.ModuleName:                          {authtypes.Burner},
 }
 
@@ -166,7 +163,6 @@ func appModules(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		app.transferModule,
-		claim.NewAppModule(appCodec, *app.ClaimKeeper),
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
 		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
@@ -215,7 +211,6 @@ func orderBeginBlockers() []string {
 		gammtypes.ModuleName,
 		incentivestypes.ModuleName,
 		lockuptypes.ModuleName,
-		claimtypes.ModuleName,
 		poolincentivestypes.ModuleName,
 		// superfluid must come after distribution and epochs
 		superfluidtypes.ModuleName,
@@ -232,7 +227,6 @@ var orderEndBlockers = []string{
 	crisistypes.ModuleName,
 	govtypes.ModuleName,
 	stakingtypes.ModuleName,
-	claimtypes.ModuleName,
 	capabilitytypes.ModuleName,
 	authtypes.ModuleName,
 	banktypes.ModuleName,
@@ -282,7 +276,6 @@ var modulesOrderInitGenesis = []string{
 	bech32ibctypes.ModuleName, // comes after ibctransfertypes
 	poolincentivestypes.ModuleName,
 	superfluidtypes.ModuleName,
-	claimtypes.ModuleName,
 	incentivestypes.ModuleName,
 	epochstypes.ModuleName,
 	lockuptypes.ModuleName,
