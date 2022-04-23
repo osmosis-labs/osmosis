@@ -1,7 +1,7 @@
 package chain
 
-func Init(id string) (*Chain, error) {
-	chain, err := new(id)
+func Init(id, dataDir string) (*Chain, error) {
+	chain, err := new(id, dataDir)
 	if err != nil {
 		return nil, err
 	}
