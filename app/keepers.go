@@ -47,8 +47,6 @@ import (
 
 	owasm "github.com/osmosis-labs/osmosis/v7/app/wasm"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	claimkeeper "github.com/osmosis-labs/osmosis/v7/x/claim/keeper"
-	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
@@ -95,7 +93,6 @@ type appKeepers struct {
 	Bech32IBCKeeper      *bech32ibckeeper.Keeper
 	Bech32ICS20Keeper    *bech32ics20keeper.Keeper
 	EvidenceKeeper       *evidencekeeper.Keeper
-	ClaimKeeper          *claimkeeper.Keeper
 	GAMMKeeper           *gammkeeper.Keeper
 	LockupKeeper         *lockupkeeper.Keeper
 	EpochsKeeper         *epochskeeper.Keeper
@@ -267,12 +264,6 @@ func (app *OsmosisApp) InitNormalKeepers(
 		app.SlashingKeeper,
 	)
 
-	app.ClaimKeeper = claimkeeper.NewKeeper(
-		appCodec,
-		keys[claimtypes.StoreKey],
-		app.AccountKeeper,
-		app.BankKeeper, app.StakingKeeper, app.DistrKeeper)
-
 	gammKeeper := gammkeeper.NewKeeper(
 		appCodec, keys[gammtypes.StoreKey],
 		app.GetSubspace(gammtypes.ModuleName),
@@ -338,10 +329,17 @@ func (app *OsmosisApp) InitNormalKeepers(
 	)
 	app.PoolIncentivesKeeper = &poolIncentivesKeeper
 
+	// Note: gammKeeper is expected to satisfy the SpotPriceCalculator interface parameter
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appCodec,
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.EpochsKeeper,
 		keys[txfeestypes.StoreKey],
 		app.GAMMKeeper,
+		app.GAMMKeeper,
+		txfeestypes.FeeCollectorName,
+		txfeestypes.NonNativeFeeCollectorName,
 	)
 	app.TxFeesKeeper = &txFeesKeeper
 
@@ -412,7 +410,6 @@ func (app *OsmosisApp) SetupHooks() {
 		stakingtypes.NewMultiStakingHooks(
 			app.DistrKeeper.Hooks(),
 			app.SlashingKeeper.Hooks(),
-			app.ClaimKeeper.Hooks(),
 			app.SuperfluidKeeper.Hooks(),
 		),
 	)
@@ -421,7 +418,6 @@ func (app *OsmosisApp) SetupHooks() {
 		gammtypes.NewMultiGammHooks(
 			// insert gamm hooks receivers here
 			app.PoolIncentivesKeeper.Hooks(),
-			app.ClaimKeeper.Hooks(),
 		),
 	)
 
@@ -448,6 +444,7 @@ func (app *OsmosisApp) SetupHooks() {
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
+			app.TxFeesKeeper.Hooks(),
 			app.SuperfluidKeeper.Hooks(),
 			app.IncentivesKeeper.Hooks(),
 			app.MintKeeper.Hooks(),
@@ -456,8 +453,7 @@ func (app *OsmosisApp) SetupHooks() {
 
 	app.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// insert governance hooks receivers here
-			app.ClaimKeeper.Hooks(),
+		// insert governance hooks receivers here
 		),
 	)
 }
@@ -502,7 +498,6 @@ func KVStoreKeys() []string {
 		capabilitytypes.StoreKey,
 		gammtypes.StoreKey,
 		lockuptypes.StoreKey,
-		claimtypes.StoreKey,
 		incentivestypes.StoreKey,
 		epochstypes.StoreKey,
 		poolincentivestypes.StoreKey,
