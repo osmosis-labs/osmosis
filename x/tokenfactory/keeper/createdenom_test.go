@@ -47,4 +47,8 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.ctx), types.NewMsgCreateDenom(addr2.String(), "bitcoin"))
 	suite.Require().NoError(err)
 	suite.Require().NotEmpty(res.GetNewTokenDenom())
+
+	// Make sure that an address with a "/" in it can't create denoms
+	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
+	suite.Require().Error(err)
 }

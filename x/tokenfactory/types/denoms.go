@@ -12,6 +12,9 @@ const (
 )
 
 func GetTokenDenom(creator, nonce string) (string, error) {
+	if strings.Contains(creator, "/") {
+		return "", ErrInvalidCreator
+	}
 	denom := strings.Join([]string{ModuleDenomPrefix, creator, nonce}, "/")
 	return denom, sdk.ValidateDenom(denom)
 }
