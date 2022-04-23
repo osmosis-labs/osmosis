@@ -2,7 +2,6 @@ package chain
 
 import (
 	"fmt"
-	"io/ioutil"
 )
 
 const (
@@ -16,15 +15,10 @@ type Chain struct {
 	Validators []*Validator
 }
 
-func new(id string) (*Chain, error) {
-	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
-	if err != nil {
-		return nil, err
-	}
-
+func new(id, dataDir string) (*Chain, error) {
 	return &Chain{
 		Id:      id,
-		DataDir: tmpDir,
+		DataDir: dataDir,
 	}, nil
 }
 
