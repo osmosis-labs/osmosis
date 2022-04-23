@@ -1,6 +1,10 @@
 package partialord
 
-import "github.com/osmosis-labs/osmosis/v7/osmoutils/partialord/internal/dag"
+import (
+	"sort"
+
+	"github.com/osmosis-labs/osmosis/v7/osmoutils/partialord/internal/dag"
+)
 
 type PartialOrdering struct {
 	dag         dag.Dag
@@ -9,8 +13,9 @@ type PartialOrdering struct {
 }
 
 func NewPartialOrdering(elements []string) PartialOrdering {
-	// TODO: Ensure elements has no duplicates
-	// TODO: sort elements in case caller obtains it via map iteration
+	elementsCopy := make([]string, len(elements))
+	copy(elementsCopy, elements)
+	sort.Strings(elementsCopy)
 	return PartialOrdering{
 		dag:         dag.NewDag(elements),
 		firstSealed: false,

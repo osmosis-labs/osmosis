@@ -23,6 +23,9 @@ func NewDag(nodes []string) Dag {
 		idToNodeNames[i] = node
 		directedEdgeList[i] = map[int]int8{}
 	}
+	if len(nodeNames) != len(nodes) {
+		panic("provided multiple nodes with the same name")
+	}
 	return Dag{
 		directedEdgeList: directedEdgeList,
 		nodeNames:        nodeNames,
