@@ -8,9 +8,60 @@ linters:
   enable:
     - errcheck
     - gofmt
+<<<<<<< HEAD
     # - goimports
     # - golint
     # - maligned
+=======
+    # - gofumpt <- disabled https://github.com/osmosis-labs/osmosis/issues/1309
+    - goheader
+    - goimports
+    #    - gomoddirectives <- disables replaces
+    - gomodguard
+    - goprintffuncname
+#    - gosec <- triggers too much for this round and should be re-enabled later
+#    - gosimple <- later
+    - govet
+    #   - ifshort <- seems to be of questionable value
+    - importas
+    - ineffassign
+    #    - ireturn <- disabled because we want to return interfaces
+    #    - lll <- disabled as it is a bit much.  Maybe we have a desired limit?
+    - makezero
+    - misspell
+    - nakedret
+#    - nestif <- ?
+    # - nilerr <- needs go 1.18 support
+    - nilnil
+    #    - nlreturn <- disabled as it doesn't auto-fix something simple and doesn't add anything useful
+    # - noctx <- needs go 1.18 support
+    #    - nolintlint <- disabled because we use nolint in some places
+    - paralleltest
+    # - prealloc <- disabled because it makes simple code complicated
+#    - predeclared <- later
+    - promlinter
+#    - revive <- temporarily disabled while jacob figures out how to make poolId not trigger it.
+    # - rowserrcheck <- needs go 1.18 support
+    # - sqlclosecheck <- needs go 1.18 support
+#    - staticcheck <- later
+#    - structcheck <- later
+#    - stylecheck <- enable later, atriggers on underscores in variable names and on poolId
+    #    - tagliatelle <- disabled for defying cosmos idiom
+    - tenv
+    - testpackage
+#    - thelper <- later
+    # - tparallel <- needs go 1.18 support
+    - typecheck
+    - unconvert
+#    - unparam <- looks for unused parameters (enable later)
+#    - unused <- looks for unused variables (enable later)
+#    - varcheck <- later
+    #    - varnamelen <- disabled because defies idiom
+    #    - wastedassign
+    - whitespace
+#    - wrapcheck
+#    - wsl
+>>>>>>> ed10116 (Remove gofumpt from required lints, directly use it in make format (#1318))
 
 issues:
   exclude-rules:
