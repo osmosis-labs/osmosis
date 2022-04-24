@@ -86,7 +86,7 @@ func (dag *Dag) replaceEdge(u, v int) error {
 // resetEdges deletes all edges directed to or from node `u`
 func (dag *Dag) resetEdges(u int) {
 	edges := dag.directedEdgeList[u]
-	for v, _ := range edges {
+	for v := range edges {
 		delete(dag.directedEdgeList[v], u)
 	}
 	dag.directedEdgeList[u] = map[int]int8{}
