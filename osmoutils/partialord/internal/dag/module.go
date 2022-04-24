@@ -1,4 +1,4 @@
-// Package dag implements a simple dag for deterministic topological sorts
+// Package dag implements a simple Directed Acyclical Graph (DAG) for deterministic topological sorts
 //
 // It should not be externally exposed, and is intended to be a very simple dag implementation
 // utilizing adjacency lists to store edges.

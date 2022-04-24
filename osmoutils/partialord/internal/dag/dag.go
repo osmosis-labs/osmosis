@@ -258,7 +258,7 @@ func (dag Dag) TopologicalSort() []string {
 	// G is the mutable graph we work on, which we remove edges from.
 	G := dag.Copy()
 	// L in pseudocode
-	sortedIDs := []int{}
+	sortedIDs := make([]int, 0, len(dag.nodeNames))
 	topLevelNodes := dag.topologicalTopLevelNodes()
 
 	// while len(topLevelNodes) != 0
