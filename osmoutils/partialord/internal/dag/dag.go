@@ -83,6 +83,15 @@ func (dag *Dag) replaceEdge(u, v int) error {
 	return nil
 }
 
+// resetEdges deletes all edges directed to or from node `u`
+func (dag *Dag) resetEdges(u int) {
+	edges := dag.directedEdgeList[u]
+	for v, _ := range edges {
+		delete(dag.directedEdgeList[v], u)
+	}
+	dag.directedEdgeList[u] = map[int]int8{}
+}
+
 // deleteEdge deletes edges between u and v.
 func (dag *Dag) deleteEdge(u, v int) {
 	delete(dag.directedEdgeList[u], v)
@@ -128,6 +137,7 @@ func (dag *Dag) addFirst(nodes []int) error {
 	}
 	// First we add an edge from nodes[-1] to every node in the graph aside from the provided first nodes.
 	// then we make nodes[-1] depend on nodes[-2], etc.
+	// We also clear all other edges from nodes[-2], to override previous settings.
 	lastOfFirstNodes := nodes[len(nodes)-1]
 	for i := 0; i < len(dag.nodeNameToId); i++ {
 		// skip any node in the 'first set'
@@ -145,6 +155,7 @@ func (dag *Dag) addFirst(nodes []int) error {
 
 	// Make nodes[i+1] depend on nodes[i]
 	for i := len(nodes) - 2; i >= 0; i-- {
+		dag.resetEdges(nodes[i])
 		err := dag.replaceEdge(nodes[i], nodes[i+1])
 		// can't happen by above check
 		if err != nil {
@@ -173,6 +184,7 @@ func (dag *Dag) addLast(nodes []int) error {
 	}
 	// First we add an edge from every node in the graph aside from the provided last nodes, to nodes[0]
 	// then we make nodes[1] depend on nodes[0], etc.
+	// We also clear all other edges from nodes[1], to override previous settings.
 	firstOfLastNodes := nodes[0]
 	for i := 0; i < len(dag.nodeNameToId); i++ {
 		// skip any node in the 'last set'
@@ -188,8 +200,9 @@ func (dag *Dag) addLast(nodes []int) error {
 		}
 	}
 
-	// Make nodes[i] depend on nodes[i-1]
+	// Make nodes[i] depend on nodes[i-1], and clear all other edges from nodes[i]
 	for i := 1; i < len(nodes); i++ {
+		dag.resetEdges(nodes[i])
 		err := dag.replaceEdge(nodes[i-1], nodes[i])
 		// can't happen by above check
 		if err != nil {

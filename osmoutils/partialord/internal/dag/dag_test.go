@@ -81,14 +81,13 @@ func TestAddFirst(t *testing.T) {
 			expectedTopologicalOrder: []string{"elephant", "dog", "banana", "cat", "apple", "frog"},
 		},
 		{
-			// add something before the first, via replace
 			nodes:                    simpleNodes,
 			first:                    []string{"elephant", "frog"},
 			replaceEdges:             []edge{},
 			expectedTopologicalOrder: []string{"elephant", "frog", "dog", "cat", "banana", "apple"},
 		},
 		{
-			// add two things before the first, via replace
+			// add three items in first, if implemented incorrectly could cause a cycle
 			nodes:                    simpleNodes,
 			first:                    []string{"dog", "elephant", "frog"},
 			replaceEdges:             []edge{},
@@ -98,6 +97,53 @@ func TestAddFirst(t *testing.T) {
 	for _, tc := range tests {
 		dag := dag.NewDag(tc.nodes)
 		dag.AddFirstElements(tc.first...)
+		for _, edge := range tc.replaceEdges {
+			err := dag.ReplaceEdge(edge.start, edge.end)
+			require.NoError(t, err)
+		}
+		order := dag.TopologicalSort()
+		require.Equal(t, tc.expectedTopologicalOrder, order)
+	}
+}
+
+func TestAddLast(t *testing.T) {
+	simpleNodes := []string{"frog", "elephant", "dog", "cat", "banana", "apple"}
+	tests := []struct {
+		nodes                    []string
+		last                     []string
+		replaceEdges             []edge
+		expectedTopologicalOrder []string
+	}{
+		{
+			// causes no order change
+			nodes:                    simpleNodes,
+			last:                     []string{"apple"},
+			replaceEdges:             []edge{{"banana", "apple"}, {"cat", "banana"}, {"dog", "cat"}},
+			expectedTopologicalOrder: simpleNodes,
+		},
+		{
+			nodes:                    simpleNodes,
+			last:                     []string{"elephant"},
+			replaceEdges:             []edge{{"banana", "apple"}, {"apple", "frog"}, {"dog", "cat"}},
+			expectedTopologicalOrder: []string{"dog", "banana", "cat", "apple", "frog", "elephant"},
+		},
+		{
+			nodes:                    simpleNodes,
+			last:                     []string{"elephant", "frog"},
+			replaceEdges:             []edge{},
+			expectedTopologicalOrder: []string{"dog", "cat", "banana", "apple", "elephant", "frog"},
+		},
+		{
+			// add three items in last, if implemented incorrectly could cause a cycle
+			nodes:                    simpleNodes,
+			last:                     []string{"dog", "elephant", "frog"},
+			replaceEdges:             []edge{},
+			expectedTopologicalOrder: []string{"cat", "banana", "apple", "dog", "elephant", "frog"},
+		},
+	}
+	for _, tc := range tests {
+		dag := dag.NewDag(tc.nodes)
+		dag.AddLastElements(tc.last...)
 		for _, edge := range tc.replaceEdges {
 			err := dag.ReplaceEdge(edge.start, edge.end)
 			require.NoError(t, err)

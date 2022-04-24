@@ -28,3 +28,25 @@ func TestAPI(t *testing.T) {
 		"auth", "authz", "wasm"}
 	require.Equal(t, expTotalOrd, totalOrd)
 }
+
+func TestNonStandardAPIOrder(t *testing.T) {
+	// This test uses direct ordering before First, and after Last
+	names := []string{"A", "B", "C", "D", "E", "F", "G"}
+	ord := partialord.NewPartialOrdering(names)
+	ord.After("A", "C")
+	ord.After("A", "D")
+	ord.After("E", "B")
+	// overrides the "A" after "C" & "A" after "D" constraints
+	ord.FirstElements("A", "B", "C")
+	expOrdering := []string{"A", "B", "C", "D", "E", "F", "G"}
+	require.Equal(t, expOrdering, ord.TotalOrdering())
+
+	ord.After("E", "D")
+	expOrdering = []string{"A", "B", "C", "D", "F", "G", "E"}
+	require.Equal(t, expOrdering, ord.TotalOrdering())
+
+	ord.LastElements("G")
+	ord.After("F", "E")
+	expOrdering = []string{"A", "B", "C", "D", "E", "F", "G"}
+	require.Equal(t, expOrdering, ord.TotalOrdering())
+}
