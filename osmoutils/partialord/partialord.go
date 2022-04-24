@@ -7,11 +7,15 @@ import (
 )
 
 type PartialOrdering struct {
-	dag         dag.Dag
+	// underlying dag, the partial ordering is stored via a dag
+	// https://en.wikipedia.org/wiki/Topological_sorting#Relation_to_partial_orders
+	dag dag.Dag
+	// bools for sealing, to prevent repeated invocation of first or last methods.
 	firstSealed bool
 	lastSealed  bool
 }
 
+// NewPartialOrdering creates a new partial ordering over the set of provided elements.
 func NewPartialOrdering(elements []string) PartialOrdering {
 	elementsCopy := make([]string, len(elements))
 	copy(elementsCopy, elements)
@@ -72,6 +76,10 @@ func (ord *PartialOrdering) LastElements(elems ...string) {
 	ord.lastSealed = true
 }
 
+// TotalOrdering returns a deterministically chosen total ordering that satisfies all specified
+// partial ordering constraints.
+//
+// Panics if no total ordering exists.
 func (ord *PartialOrdering) TotalOrdering() []string {
 	return ord.dag.TopologicalSort()
 }

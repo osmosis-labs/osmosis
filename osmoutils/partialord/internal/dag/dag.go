@@ -135,7 +135,7 @@ func (dag *Dag) addFirst(nodes []int) error {
 		if inMap {
 			continue
 		}
-		// We make everything on u, and therefore have an edge from u to it
+		// We make everything on `lastOfFirstNodes`, and therefore have an edge from `lastOfFirstNodes` to it
 		err := dag.replaceEdge(lastOfFirstNodes, i)
 		// can't happen by above check
 		if err != nil {
@@ -279,7 +279,8 @@ func (dag Dag) TopologicalSort() []string {
 		nodesM := make([]int, 0, len(nEdgeList))
 		for m, direction := range nEdgeList {
 			if direction != 1 {
-				panic("dag: correctness error")
+				panic("dag: topological sort correctness error. " +
+					"Popped node n was expected to have no incoming edges")
 			}
 			nodesM = append(nodesM, m)
 		}
@@ -298,7 +299,7 @@ func (dag Dag) TopologicalSort() []string {
 
 	if G.hasEdges() {
 		fmt.Println(G)
-		panic("dag: invalid construction, attempted to topologically sort a tree that is not a dag")
+		panic("dag: invalid construction, attempted to topologically sort a tree that is not a dag. A cycle exists")
 	}
 
 	return dag.idsToNames(sortedIDs)
