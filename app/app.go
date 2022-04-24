@@ -158,6 +158,7 @@ func NewOsmosisApp(
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	app := &OsmosisApp{
+		AppKeepers:        keepers.AppKeepers{},
 		BaseApp:           bApp,
 		cdc:               cdc,
 		appCodec:          appCodec,
