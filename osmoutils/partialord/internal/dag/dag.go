@@ -10,25 +10,25 @@ type Dag struct {
 	// there is a directed edge from u -> v, if directedEdgeList[u][v] = 1
 	// there is a directed edge from v -> u, if directedEdgeList[u][v] = -1
 	directedEdgeList []map[int]int8
-	nodeNames        map[string]int
+	nodeNameToId     map[string]int
 	idToNodeNames    map[int]string
 }
 
 func NewDag(nodes []string) Dag {
-	nodeNames := make(map[string]int, len(nodes))
+	nodeNameToId := make(map[string]int, len(nodes))
 	idToNodeNames := make(map[int]string, len(nodes))
 	directedEdgeList := make([]map[int]int8, len(nodes))
 	for i, node := range nodes {
-		nodeNames[node] = i
+		nodeNameToId[node] = i
 		idToNodeNames[i] = node
 		directedEdgeList[i] = map[int]int8{}
 	}
-	if len(nodeNames) != len(nodes) {
+	if len(nodeNameToId) != len(nodes) {
 		panic("provided multiple nodes with the same name")
 	}
 	return Dag{
 		directedEdgeList: directedEdgeList,
-		nodeNames:        nodeNames,
+		nodeNameToId:     nodeNameToId,
 		idToNodeNames:    idToNodeNames,
 	}
 }
@@ -36,18 +36,18 @@ func NewDag(nodes []string) Dag {
 // Copy returns a new dag struct that is a copy of the original dag.
 // Edges can be mutated in the copy, without altering the original.
 func (dag Dag) Copy() Dag {
-	directedEdgeList := make([]map[int]int8, len(dag.nodeNames))
-	for i := 0; i < len(dag.nodeNames); i++ {
+	directedEdgeList := make([]map[int]int8, len(dag.nodeNameToId))
+	for i := 0; i < len(dag.nodeNameToId); i++ {
 		originalEdgeList := dag.directedEdgeList[i]
 		directedEdgeList[i] = make(map[int]int8, len(originalEdgeList))
 		for k, v := range originalEdgeList {
 			directedEdgeList[i][k] = v
 		}
 	}
-	// we re-use nodeNames and idToNodeNames as these are fixed at dag creation.
+	// we re-use nodeNameToId and idToNodeNames as these are fixed at dag creation.
 	return Dag{
 		directedEdgeList: directedEdgeList,
-		nodeNames:        dag.nodeNames,
+		nodeNameToId:     dag.nodeNameToId,
 		idToNodeNames:    dag.idToNodeNames,
 	}
 }
@@ -90,8 +90,8 @@ func (dag *Dag) deleteEdge(u, v int) {
 }
 
 func (dag *Dag) AddEdge(u, v string) error {
-	uIndex, uExists := dag.nodeNames[u]
-	vIndex, vExists := dag.nodeNames[v]
+	uIndex, uExists := dag.nodeNameToId[u]
+	vIndex, vExists := dag.nodeNameToId[v]
 	if !uExists || !vExists {
 		return fmt.Errorf("one of %s, %s does not exist in dag", u, v)
 	}
@@ -101,8 +101,8 @@ func (dag *Dag) AddEdge(u, v string) error {
 // ReplaceEdge adds a directed edge from u -> v.
 // it removes any edge that may already exist between the two.
 func (dag *Dag) ReplaceEdge(u, v string) error {
-	uIndex, uExists := dag.nodeNames[u]
-	vIndex, vExists := dag.nodeNames[v]
+	uIndex, uExists := dag.nodeNameToId[u]
+	vIndex, vExists := dag.nodeNameToId[v]
 	if !uExists || !vExists {
 		return fmt.Errorf("one of %s, %s does not exist in dag", u, v)
 	}
@@ -129,7 +129,7 @@ func (dag *Dag) addFirst(nodes []int) error {
 	// First we add an edge from nodes[-1] to every node in the graph aside from the provided first nodes.
 	// then we make nodes[-1] depend on nodes[-2], etc.
 	lastOfFirstNodes := nodes[len(nodes)-1]
-	for i := 0; i < len(dag.nodeNames); i++ {
+	for i := 0; i < len(dag.nodeNameToId); i++ {
 		// skip any node in the 'first set'
 		_, inMap := nodeMap[i]
 		if inMap {
@@ -174,7 +174,7 @@ func (dag *Dag) addLast(nodes []int) error {
 	// First we add an edge from every node in the graph aside from the provided last nodes, to nodes[0]
 	// then we make nodes[1] depend on nodes[0], etc.
 	firstOfLastNodes := nodes[0]
-	for i := 0; i < len(dag.nodeNames); i++ {
+	for i := 0; i < len(dag.nodeNameToId); i++ {
 		// skip any node in the 'last set'
 		_, inMap := nodeMap[i]
 		if inMap {
@@ -210,19 +210,19 @@ func (dag Dag) hasEdges() bool {
 
 func (dag *Dag) namesToIds(names []string) ([]int, error) {
 	nodeIds := []int{}
-	for _, u := range names {
-		uIndex, uExists := dag.nodeNames[u]
-		if !uExists {
-			return []int{}, fmt.Errorf("%s does not exist in dag", u)
+	for _, name := range names {
+		nodeIndex, nodeExists := dag.nodeNameToId[name]
+		if !nodeExists {
+			return []int{}, fmt.Errorf("%s does not exist in dag", name)
 		}
-		nodeIds = append(nodeIds, uIndex)
+		nodeIds = append(nodeIds, nodeIndex)
 	}
 	return nodeIds, nil
 }
 
 func (dag Dag) idsToNames(ids []int) []string {
 	sortedNames := make([]string, 0, len(ids))
-	for i := 0; i < len(dag.nodeNames); i++ {
+	for i := 0; i < len(dag.nodeNameToId); i++ {
 		id := ids[i]
 		sortedNames = append(sortedNames, dag.idToNodeNames[id])
 	}
@@ -243,7 +243,7 @@ func (dag Dag) hasIncomingEdge(u int) bool {
 func (dag *Dag) topologicalTopLevelNodes() []int {
 	topLevelNodes := []int{}
 
-	for i := 0; i < len(dag.nodeNames); i++ {
+	for i := 0; i < len(dag.nodeNameToId); i++ {
 		if !dag.hasIncomingEdge(i) {
 			topLevelNodes = append(topLevelNodes, i)
 		}
@@ -258,7 +258,7 @@ func (dag Dag) TopologicalSort() []string {
 	// G is the mutable graph we work on, which we remove edges from.
 	G := dag.Copy()
 	// L in pseudocode
-	sortedIDs := make([]int, 0, len(dag.nodeNames))
+	sortedIDs := make([]int, 0, len(dag.nodeNameToId))
 	topLevelNodes := dag.topologicalTopLevelNodes()
 
 	// while len(topLevelNodes) != 0
@@ -266,7 +266,7 @@ func (dag Dag) TopologicalSort() []string {
 		if len(topLevelNodes) == 0 {
 			break
 		}
-		// pop a node off of topLevelNodes
+		// pop a node `n`` off of topLevelNodes
 		n := topLevelNodes[0]
 		topLevelNodes = topLevelNodes[1:]
 		// add it to the sorted list
@@ -274,7 +274,7 @@ func (dag Dag) TopologicalSort() []string {
 		nEdgeList := G.directedEdgeList[n]
 
 		// normally we'd do map iteration, but because we need cross-machine determinism,
-		// we gather all the nodes M for which there is an edge n->m, sort that list,
+		// we gather all the nodes M for which there is an edge n -> m, sort that list,
 		// and then iterate over it.
 		nodesM := make([]int, 0, len(nEdgeList))
 		for m, direction := range nEdgeList {
