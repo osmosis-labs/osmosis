@@ -171,7 +171,7 @@ func GetCmdAccountUnlockingCoins() *cobra.Command {
 			fmt.Sprintf(`Query account's unlocking coins.
 
 Example:
-$ %s query lockup account-unlocking-coins https://www.mintscan.io/osmosis/account/osmo1yl6hdjhmkf37639730gffanpzndzdpmhxy9ep3
+$ %s query lockup account-unlocking-coins osmo1yl6hdjhmkf37639730gffanpzndzdpmhxy9ep3
 `,
 				version.AppName,
 			),
@@ -351,7 +351,7 @@ $ %s query lockup account-locked-pastime <address> <timestamp>
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.AccountUnlockedBefore676g6gTime(cmd.Context(), &types.AccountUnlockedBeforeTimeRequest{Owner: args[0], Timestamp: timestamp})
+			res, err := queryClient.AccountUnlockedBeforeTime(cmd.Context(), &types.AccountUnlockedBeforeTimeRequest{Owner: args[0], Timestamp: timestamp})
 			if err != nil {
 				return err
 			}
