@@ -50,7 +50,7 @@ func TestTopologicalSort(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		dag := dag.NewDag(tc.nodes)
+		dag := dag.NewDAG(tc.nodes)
 		for _, edge := range tc.edges {
 			err := dag.AddEdge(edge.start, edge.end)
 			require.NoError(t, err)
@@ -95,7 +95,7 @@ func TestAddFirst(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		dag := dag.NewDag(tc.nodes)
+		dag := dag.NewDAG(tc.nodes)
 		dag.AddFirstElements(tc.first...)
 		for _, edge := range tc.replaceEdges {
 			err := dag.ReplaceEdge(edge.start, edge.end)
@@ -142,7 +142,7 @@ func TestAddLast(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		dag := dag.NewDag(tc.nodes)
+		dag := dag.NewDAG(tc.nodes)
 		dag.AddLastElements(tc.last...)
 		for _, edge := range tc.replaceEdges {
 			err := dag.ReplaceEdge(edge.start, edge.end)

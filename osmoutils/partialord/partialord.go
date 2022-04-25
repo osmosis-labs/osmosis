@@ -9,7 +9,7 @@ import (
 type PartialOrdering struct {
 	// underlying dag, the partial ordering is stored via a dag
 	// https://en.wikipedia.org/wiki/Topological_sorting#Relation_to_partial_orders
-	dag dag.Dag
+	dag dag.DAG
 	// bools for sealing, to prevent repeated invocation of first or last methods.
 	firstSealed bool
 	lastSealed  bool
@@ -21,13 +21,13 @@ func NewPartialOrdering(elements []string) PartialOrdering {
 	copy(elementsCopy, elements)
 	sort.Strings(elementsCopy)
 	return PartialOrdering{
-		dag:         dag.NewDag(elements),
+		dag:         dag.NewDAG(elements),
 		firstSealed: false,
 		lastSealed:  false,
 	}
 }
 
-func handleDagErr(err error) {
+func handleDAGErr(err error) {
 	// all dag errors are logic errors that the intended users of this package should not make.
 	if err != nil {
 		panic(err)
@@ -38,14 +38,14 @@ func handleDagErr(err error) {
 func (ord *PartialOrdering) After(A string, B string) {
 	// Set that A depends on B / an edge from B -> A
 	err := ord.dag.AddEdge(B, A)
-	handleDagErr(err)
+	handleDAGErr(err)
 }
 
 // After marks that A should come before B
 func (ord *PartialOrdering) Before(A string, B string) {
 	// Set that B depends on A / an edge from A -> B
 	err := ord.dag.AddEdge(A, B)
-	handleDagErr(err)
+	handleDAGErr(err)
 }
 
 // Sets elems to be the first elements in the ordering.
@@ -58,7 +58,7 @@ func (ord *PartialOrdering) FirstElements(elems ...string) {
 	// We make every node in the dag have a dependency on elems[-1]
 	// then we change elems[-1] to depend on elems[-2], and so forth.
 	err := ord.dag.AddFirstElements(elems...)
-	handleDagErr(err)
+	handleDAGErr(err)
 	ord.firstSealed = true
 }
 
@@ -72,7 +72,7 @@ func (ord *PartialOrdering) LastElements(elems ...string) {
 	// We make every node in the dag have a dependency on elems[0]
 	// then we make elems[1] depend on elems[0], and so forth.
 	err := ord.dag.AddLastElements(elems...)
-	handleDagErr(err)
+	handleDAGErr(err)
 	ord.lastSealed = true
 }
 

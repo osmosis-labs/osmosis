@@ -5,8 +5,8 @@ import (
 	"sort"
 )
 
-// Dag struct maintains a directed acyclic graph, using adjacency lists to track edges.
-type Dag struct {
+// DAG struct maintains a directed acyclic graph, using adjacency lists to track edges.
+type DAG struct {
 	// there is a directed edge from u -> v, if directedEdgeList[u][v] = 1
 	// there is a directed edge from v -> u, if directedEdgeList[u][v] = -1
 	directedEdgeList []map[int]int8
@@ -14,7 +14,7 @@ type Dag struct {
 	idToNodeNames    map[int]string
 }
 
-func NewDag(nodes []string) Dag {
+func NewDAG(nodes []string) DAG {
 	nodeNameToId := make(map[string]int, len(nodes))
 	idToNodeNames := make(map[int]string, len(nodes))
 	directedEdgeList := make([]map[int]int8, len(nodes))
@@ -26,7 +26,7 @@ func NewDag(nodes []string) Dag {
 	if len(nodeNameToId) != len(nodes) {
 		panic("provided multiple nodes with the same name")
 	}
-	return Dag{
+	return DAG{
 		directedEdgeList: directedEdgeList,
 		nodeNameToId:     nodeNameToId,
 		idToNodeNames:    idToNodeNames,
@@ -35,7 +35,7 @@ func NewDag(nodes []string) Dag {
 
 // Copy returns a new dag struct that is a copy of the original dag.
 // Edges can be mutated in the copy, without altering the original.
-func (dag Dag) Copy() Dag {
+func (dag DAG) Copy() DAG {
 	directedEdgeList := make([]map[int]int8, len(dag.nodeNameToId))
 	for i := 0; i < len(dag.nodeNameToId); i++ {
 		originalEdgeList := dag.directedEdgeList[i]
@@ -45,21 +45,21 @@ func (dag Dag) Copy() Dag {
 		}
 	}
 	// we re-use nodeNameToId and idToNodeNames as these are fixed at dag creation.
-	return Dag{
+	return DAG{
 		directedEdgeList: directedEdgeList,
 		nodeNameToId:     dag.nodeNameToId,
 		idToNodeNames:    dag.idToNodeNames,
 	}
 }
 
-func (dag Dag) hasDirectedEdge(u, v int) bool {
+func (dag DAG) hasDirectedEdge(u, v int) bool {
 	uAdjacencyList := dag.directedEdgeList[u]
 	_, exists := uAdjacencyList[v]
 	return exists
 }
 
 // addEdge adds a directed edge from u -> v.
-func (dag *Dag) addEdge(u, v int) error {
+func (dag *DAG) addEdge(u, v int) error {
 	if u == v {
 		return fmt.Errorf("can't make self-edge")
 	}
@@ -73,7 +73,7 @@ func (dag *Dag) addEdge(u, v int) error {
 
 // replaceEdge adds a directed edge from u -> v.
 // it removes any edge that may already exist between the two.
-func (dag *Dag) replaceEdge(u, v int) error {
+func (dag *DAG) replaceEdge(u, v int) error {
 	if u == v {
 		return fmt.Errorf("can't make self-edge")
 	}
@@ -84,7 +84,7 @@ func (dag *Dag) replaceEdge(u, v int) error {
 }
 
 // resetEdges deletes all edges directed to or from node `u`
-func (dag *Dag) resetEdges(u int) {
+func (dag *DAG) resetEdges(u int) {
 	edges := dag.directedEdgeList[u]
 	for v := range edges {
 		delete(dag.directedEdgeList[v], u)
@@ -93,12 +93,12 @@ func (dag *Dag) resetEdges(u int) {
 }
 
 // deleteEdge deletes edges between u and v.
-func (dag *Dag) deleteEdge(u, v int) {
+func (dag *DAG) deleteEdge(u, v int) {
 	delete(dag.directedEdgeList[u], v)
 	delete(dag.directedEdgeList[v], u)
 }
 
-func (dag *Dag) AddEdge(u, v string) error {
+func (dag *DAG) AddEdge(u, v string) error {
 	uIndex, uExists := dag.nodeNameToId[u]
 	vIndex, vExists := dag.nodeNameToId[v]
 	if !uExists || !vExists {
@@ -109,7 +109,7 @@ func (dag *Dag) AddEdge(u, v string) error {
 
 // ReplaceEdge adds a directed edge from u -> v.
 // it removes any edge that may already exist between the two.
-func (dag *Dag) ReplaceEdge(u, v string) error {
+func (dag *DAG) ReplaceEdge(u, v string) error {
 	uIndex, uExists := dag.nodeNameToId[u]
 	vIndex, vExists := dag.nodeNameToId[v]
 	if !uExists || !vExists {
@@ -121,7 +121,7 @@ func (dag *Dag) ReplaceEdge(u, v string) error {
 // AddFirstElements sets the provided elements to be first in all orderings.
 // So if were making an ordering over {A, B, C, D, E}, and elems provided is {D, B, A}
 // then we are guaranteed that the total ordering will begin with {D, B, A}
-func (dag *Dag) AddFirstElements(nodes ...string) error {
+func (dag *DAG) AddFirstElements(nodes ...string) error {
 	nodeIds, err := dag.namesToIds(nodes)
 	if err != nil {
 		return err
@@ -130,7 +130,7 @@ func (dag *Dag) AddFirstElements(nodes ...string) error {
 	return dag.addFirst(nodeIds)
 }
 
-func (dag *Dag) addFirst(nodes []int) error {
+func (dag *DAG) addFirst(nodes []int) error {
 	nodeMap := map[int]bool{}
 	for i := 0; i < len(nodes); i++ {
 		nodeMap[nodes[i]] = true
@@ -168,7 +168,7 @@ func (dag *Dag) addFirst(nodes []int) error {
 // AddLastElements sets the provided elements to be last in all orderings.
 // So if were making an ordering over {A, B, C, D, E}, and elems provided is {D, B, A}
 // then we are guaranteed that the total ordering will end with {D, B, A}
-func (dag *Dag) AddLastElements(nodes ...string) error {
+func (dag *DAG) AddLastElements(nodes ...string) error {
 	nodeIds, err := dag.namesToIds(nodes)
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func (dag *Dag) AddLastElements(nodes ...string) error {
 	return dag.addLast(nodeIds)
 }
 
-func (dag *Dag) addLast(nodes []int) error {
+func (dag *DAG) addLast(nodes []int) error {
 	nodeMap := map[int]bool{}
 	for i := 0; i < len(nodes); i++ {
 		nodeMap[nodes[i]] = true
@@ -212,7 +212,7 @@ func (dag *Dag) addLast(nodes []int) error {
 	return nil
 }
 
-func (dag Dag) hasEdges() bool {
+func (dag DAG) hasEdges() bool {
 	for _, m := range dag.directedEdgeList {
 		if len(m) > 0 {
 			return true
@@ -221,7 +221,7 @@ func (dag Dag) hasEdges() bool {
 	return false
 }
 
-func (dag *Dag) namesToIds(names []string) ([]int, error) {
+func (dag *DAG) namesToIds(names []string) ([]int, error) {
 	nodeIds := []int{}
 	for _, name := range names {
 		nodeIndex, nodeExists := dag.nodeNameToId[name]
@@ -233,7 +233,7 @@ func (dag *Dag) namesToIds(names []string) ([]int, error) {
 	return nodeIds, nil
 }
 
-func (dag Dag) idsToNames(ids []int) []string {
+func (dag DAG) idsToNames(ids []int) []string {
 	sortedNames := make([]string, 0, len(ids))
 	for i := 0; i < len(dag.nodeNameToId); i++ {
 		id := ids[i]
@@ -242,7 +242,7 @@ func (dag Dag) idsToNames(ids []int) []string {
 	return sortedNames
 }
 
-func (dag Dag) hasIncomingEdge(u int) bool {
+func (dag DAG) hasIncomingEdge(u int) bool {
 	adjacencyList := dag.directedEdgeList[u]
 	for _, v := range adjacencyList {
 		if v == -1 {
@@ -253,7 +253,7 @@ func (dag Dag) hasIncomingEdge(u int) bool {
 }
 
 // returns nodes with no incoming edges.
-func (dag *Dag) topologicalTopLevelNodes() []int {
+func (dag *DAG) topologicalTopLevelNodes() []int {
 	topLevelNodes := []int{}
 
 	for i := 0; i < len(dag.nodeNameToId); i++ {
@@ -267,7 +267,7 @@ func (dag *Dag) topologicalTopLevelNodes() []int {
 
 // Returns a Topological Sort of the DAG, using Kahn's algorithm.
 // https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
-func (dag Dag) TopologicalSort() []string {
+func (dag DAG) TopologicalSort() []string {
 	// G is the mutable graph we work on, which we remove edges from.
 	G := dag.Copy()
 	// L in pseudocode
