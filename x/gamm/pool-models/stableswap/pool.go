@@ -119,6 +119,12 @@ func (pa Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 	if err != nil {
 		return sdk.DecCoin{}, err
 	}
+	// TODO: Once we make calc in amt given out return a Coin
+	// if tokenInDecimal is non-zero, we add 1 to the tokenInCoin
+	// this is because tokenIn must round up
+	// if tokenInDecimal.Amount.IsPositive() {
+	// 	tokenIn.Amount = tokenIn.Amount.AddRaw(1)
+	// }
 	return sdk.DecCoin{Denom: tokenInDenom, Amount: amt}, nil
 }
 
@@ -127,12 +133,7 @@ func (pa *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDe
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	tokenIn, tokenInDecimal := tokenInDec.TruncateDecimal()
-	// if tokenInDecimal is non-zero, we add 1 to the tokenInCoin
-	// this is because tokenIn must round up
-	if tokenInDecimal.Amount.IsPositive() {
-		tokenIn.Amount = tokenIn.Amount.AddRaw(1)
-	}
+	tokenIn, _ = tokenInDec.TruncateDecimal()
 	if !tokenIn.Amount.IsPositive() {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}

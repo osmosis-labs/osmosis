@@ -164,7 +164,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 			}()
 
 			tokenInAmount, err := keeper.MultihopSwapExactAmountOut(suite.ctx, acc1, test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
-			suite.NoError(err, "test: %v", test.name)
+			suite.Require().NoError(err, "test: %v", test.name)
 
 			// Calculate the chained spot price.
 			spotPriceAfter := func() sdk.Dec {
