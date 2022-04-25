@@ -178,7 +178,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 
 	// spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
 	// spot_price = (weight_quote / weight_base) * (base_supply / quote_supply)
-	invWeightRatio := quote.Weight.ToDec().Quo(base.Weight.ToDec())
+	invWeightRatio := quote.NormalizedWeight.Quo(base.NormalizedWeight)
 	supplyRatio := base.Token.Amount.ToDec().Quo(quote.Token.Amount.ToDec())
 	fullRatio := supplyRatio.Mul(invWeightRatio)
 	ratio := (fullRatio.Mul(types.SigFigs).RoundInt()).ToDec().Quo(types.SigFigs)
@@ -225,10 +225,9 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoo
 	if totalWeight.IsZero() {
 		return sdk.ZeroInt(), errors.New("pool misconfigured, total weight = 0")
 	}
-	normalizedWeight := tokenInPoolAsset.Weight.ToDec().Quo(totalWeight.ToDec())
 	return calcPoolSharesOutGivenSingleAssetIn(
 		tokenInPoolAsset.Token.Amount.ToDec(),
-		normalizedWeight,
+		tokenInPoolAsset.NormalizedWeight,
 		totalShares.ToDec(),
 		tokenIn.Amount.ToDec(),
 		swapFee,
@@ -424,7 +423,7 @@ func (p *Pool) ExitSwapExactAmountOut(
 
 	sharesIn := calcPoolSharesInGivenSingleAssetOut(
 		pAsset.Token.Amount.ToDec(),
-		pAsset.Weight.ToDec().Quo(p.TotalWeight.ToDec()),
+		pAsset.NormalizedWeight,
 		p.GetTotalShares().ToDec(),
 		tokenOut.Amount.ToDec(),
 		p.GetSwapFee(ctx),

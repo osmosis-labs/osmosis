@@ -148,6 +148,10 @@ func (pa *Pool) setInitialPoolAssets(PoolAssets []PoolAsset) error {
 
 	pa.TotalWeight = newTotalWeight
 
+	for i, asset := range pa.PoolAssets {
+		pa.PoolAssets[i].NormalizedWeight = asset.Weight.ToDec().Quo(pa.TotalWeight.ToDec())
+	}
+
 	return nil
 }
 
@@ -380,8 +384,7 @@ func (pa *Pool) updateAllWeights(newWeights []PoolAsset) {
 		pa.PoolAssets[i].Weight = newWeights[i].Weight
 		totalWeight = totalWeight.Add(pa.PoolAssets[i].Weight)
 
-		newNormalizedWeight := asset.Weight.ToDec().Quo(sdk.Dec(pa.TotalWeight))
-		asset.NormalizedWeight = &newNormalizedWeight
+		asset.NormalizedWeight = asset.Weight.ToDec().Quo(sdk.Dec(pa.TotalWeight))
 	}
 	pa.TotalWeight = totalWeight
 }
