@@ -656,8 +656,8 @@ github.com/nats-io/nkeys v0.3.0/go.mod h1:gvUNGjVcM2IPr5rCsRsC6Wb3Hr2CQAm08dsxtV
 github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OSON2c=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
-github.com/notional-labs/tm-db v0.6.7-0.20220421174252-38e808a9bdee h1:czj9P0qi8/8oq+iLQc3xM6Py4euMC3JftwDBqC87d1g=
-github.com/notional-labs/tm-db v0.6.7-0.20220421174252-38e808a9bdee/go.mod h1:W18MUGBUQm1g/5Z5oIEGt40bRWr/qdOM/tDO5aTLbbI=
+github.com/notional-labs/tm-db v0.6.7-0.20220421180917-285dd8d7601f h1:6PXHW/tmZNBu3lbnWRtxXVkqABgL6RleKk+t9MxtKpY=
+github.com/notional-labs/tm-db v0.6.7-0.20220421180917-285dd8d7601f/go.mod h1:W18MUGBUQm1g/5Z5oIEGt40bRWr/qdOM/tDO5aTLbbI=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
