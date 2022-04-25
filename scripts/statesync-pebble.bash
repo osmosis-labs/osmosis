@@ -57,29 +57,17 @@ export OSMOSISD_STATESYNC_TRUST_HASH=$TRUST_HASH
 mkdir -p ~/.osmosisd/data/snapshots/metadata.db
 
 # THIS WILL FAIL BECAUSE THE APP VERSION IS CORRECTLY SET IN OSMOSIS
-<<<<<<< HEAD
-osmosisd start --db_backend pebbledb
-=======
 osmosisd start --db_backend pebbledb 
->>>>>>> 239298320a1f598bcffdff3906c15d6ec884cf31
 
 
 
 # THIS WILL FIX THE APP VERSION, contributed by callum and claimens
-<<<<<<< HEAD
-#git clone https://github.com/notional-labs/tendermint
-#cd tendermint
-#git checkout remotes/origin/callum/app-version
-#go install -tags pebbledb ./...
-#tendermint set-app-version 1 --home ~/.osmosisd
-=======
 # fix after adding pebbledb support to tendermint
 # git clone https://github.com/notional-labs/tendermint
 # cd tendermint
 # git checkout remotes/origin/callum/app-version
 # go install -tags pebbledb ./...
 # tendermint set-app-version 1 --home ~/.osmosisd
->>>>>>> 239298320a1f598bcffdff3906c15d6ec884cf31
 
 # THERE, NOW IT'S SYNCED AND YOU CAN PLAY
 osmosisd start --db_backend pebbledb
