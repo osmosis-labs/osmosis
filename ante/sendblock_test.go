@@ -14,7 +14,7 @@ func TestSendBlockDecorator(t *testing.T) {
 		to         sdk.AccAddress
 		expectPass bool
 	}{
-		{sdk.AccAddress("honest-sender"), sdk.AccAddress("honest-address"), true},	
+		{sdk.AccAddress("honest-sender"), sdk.AccAddress("honest-address"), true},
 		{sdk.AccAddress("honest-sender"), sdk.AccAddress("recovery-address"), true},
 		{sdk.AccAddress("malicious-sender"), sdk.AccAddress("recovery-address"), true},
 		{sdk.AccAddress("malicious-sender"), sdk.AccAddress("random-address"), false},
