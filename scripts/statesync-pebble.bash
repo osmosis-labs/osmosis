@@ -17,8 +17,8 @@ export PATH=$PATH:~/go/bin
 go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
 
 # MAKE HOME FOLDER AND GET GENESIS
-#osmosisd init osmosis-rocks
-#wget -O ~/.osmosisd/config/genesis.json https://cloudflare-ipfs.com/ipfs/QmXRvBT3hgoXwwPqbK6a2sXUuArGM8wPyo1ybskyyUwUxs
+osmosisd init osmosis-rocks
+cp networks/osmosis-1/genesis.json ~/.osmosisd/config/genesis.json
 
 # this will let tendermint know that we want pebble
 # sed -i 's/goleveldb/pebbledb/' ~/.osmosisd/config/config.toml
