@@ -174,13 +174,13 @@ func TestCalculateAmountOutAndIn_InverseRelationship_ZeroSwapFee(t *testing.T) {
 			actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, poolAssetIn.Token.Denom, sdk.ZeroDec())
 			require.NoError(t, err)
 
-			inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewInt64Coin(poolAssetIn.Token.Denom, actualTokenIn.Amount.TruncateInt64())), poolAssetOut.Token.Denom, sdk.ZeroDec())
+			inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewCoin(poolAssetIn.Token.Denom, actualTokenIn.Amount)), poolAssetOut.Token.Denom, sdk.ZeroDec())
 			require.NoError(t, err)
 
 			require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
 
-			expected := initialOut.Amount.ToDec()
-			actual := inverseTokenOut.Amount.RoundInt().ToDec() // must round to be able to compare with expected.
+			expected := initialOut.Amount
+			actual := inverseTokenOut.Amount // must round to be able to compare with expected.
 
 			require.Equal(t, expected, actual)
 		})
