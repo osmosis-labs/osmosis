@@ -47,7 +47,7 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
 	if err != nil {
-	    return nil, err
+		return nil, err
 	}
 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
 }
