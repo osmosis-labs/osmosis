@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -957,7 +956,6 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegationGovernanceVoting() {
 
 			// setup superfluid delegations
 			for _, sfdel := range tc.superDelegations {
-				fmt.Println(sfdel)
 				intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, sfdel, denoms)
 				suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 			}

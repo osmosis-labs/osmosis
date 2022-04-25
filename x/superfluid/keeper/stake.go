@@ -363,12 +363,20 @@ func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
 
 // IterateDelegations implements govtypes.StakingKeeper
 func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) {
+	// call the callback with the non-superfluid delegations
+	var index int64
+	k.sk.IterateDelegations(ctx, delegator, func(i int64, delegation stakingtypes.DelegationI) (stop bool) {
+		index = i
+		return fn(i, delegation)
+	})
+
 	synthlocks := k.lk.GetAllSyntheticLockupsByAddr(ctx, delegator)
 	for i, lock := range synthlocks {
 		// get locked coin from the lock ID
 		interim, ok := k.GetIntermediaryAccountFromLockId(ctx, lock.UnderlyingLockId)
 		if !ok {
-			panic(fmt.Sprintf("intermediary account retrieval failed with underlying lock(Lock: %+v)", lock))
+			ctx.Logger().Error("intermediary account retrieval failed with underlying lock", "Lock", lock)
+			continue
 		}
 		lock, err := k.lk.GetLockByID(ctx, lock.UnderlyingLockId)
 		if err != nil {
@@ -403,11 +411,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 			ValidatorAddress: interim.ValAddr,
 			Shares:           shares,
 		}
-		fn(int64(i), delegation)
+		fn(index+int64(i), delegation)
 	}
 
-	// call the callback with the non-superfluid delegations
-	k.sk.IterateDelegations(ctx, delegator, func(i int64, delegation stakingtypes.DelegationI) (stop bool) {
-		return fn(int64(len(synthlocks))+i, delegation) // add len(synthlocks) to index to avoid overlapping
-	})
 }
