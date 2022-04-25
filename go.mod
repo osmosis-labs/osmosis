@@ -221,6 +221,10 @@ require (
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/sylvia7788/contextcheck v1.0.4 // indirect
+<<<<<<< HEAD
+=======
+	github.com/syndtr/goleveldb v1.0.1-0.20200815110645-5c35d600f0ca
+>>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327))
 	github.com/tdakkota/asciicheck v0.1.1 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/tendermint/btcd v0.1.1 // indirect

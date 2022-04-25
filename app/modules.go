@@ -214,8 +214,12 @@ func appModules(app *OsmosisApp, encodingConfig appparams.EncodingConfig, skipGe
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
+<<<<<<< HEAD
 		app.transferModule,
 		claim.NewAppModule(appCodec, *app.ClaimKeeper),
+=======
+		app.TransferModule,
+>>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327))
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
 		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
@@ -332,9 +336,23 @@ func simulationModules(app *OsmosisApp, encodingConfig appparams.EncodingConfig,
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
+<<<<<<< HEAD
 		superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper,
 			app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper),
 		app.transferModule,
+=======
+		superfluid.NewAppModule(
+			appCodec,
+			*app.SuperfluidKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.StakingKeeper,
+			app.LockupKeeper,
+			app.GAMMKeeper,
+			app.EpochsKeeper,
+		),
+		app.TransferModule,
+>>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327))
 	}
 }
 
