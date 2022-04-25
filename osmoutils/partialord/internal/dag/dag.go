@@ -98,6 +98,7 @@ func (dag *DAG) deleteEdge(u, v int) {
 	delete(dag.directedEdgeList[v], u)
 }
 
+// AddEdge checks if either edge between u and v exists and adds a directed edge from u -> v
 func (dag *DAG) AddEdge(u, v string) error {
 	uIndex, uExists := dag.nodeNameToId[u]
 	vIndex, vExists := dag.nodeNameToId[v]
