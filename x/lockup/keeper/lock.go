@@ -545,14 +545,13 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration
 
 	// check synthetic lockup exists
 	if k.HasAnySyntheticLockups(ctx, lock.ID) {
-		return fmt.Errorf("cannot edit lockup with synthetic lock")
+		return fmt.Errorf("cannot edit lockup with synthetic lock %d", lock.ID)
 	}
 
 	oldLock := lock
 
 	if newDuration != 0 {
-		fmt.Println(newDuration, lock.Duration)
-		if !(newDuration > lock.Duration) {
+		if newDuration < lock.Duration {
 			return fmt.Errorf("new duration should be greater than the original")
 		}
 
@@ -570,9 +569,11 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration
 	if err != nil {
 		return err
 	}
+
 	err = k.addLockRefs(ctx, lock)
 	if err != nil {
 		return err
 	}
+
 	return k.setLock(ctx, lock)
 }
