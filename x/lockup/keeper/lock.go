@@ -540,7 +540,7 @@ func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) erro
 
 func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration time.Duration) error {
 	if lock.IsUnlocking() {
-		return fmt.Errorf("cannot edit unlocking lockup")
+		return fmt.Errorf("cannot edit unlocking lockup for lock %d", lock.ID)
 	}
 
 	// check synthetic lockup exists
