@@ -84,13 +84,24 @@ type PoolI interface {
 type PoolAmountOutExtension interface {
 	PoolI
 
-	// JoinSwapShareAmountOut add liquidity to a specified pool with a maximum amount of tokens in (tokenInMaxAmount)
-	// and swaps to an exact number of shares (shareOutAmount).
-	JoinSwapShareAmountOut(
+	// CalcTokenInShareAmountOut returns the number of tokenInDenom tokens
+	// that would be returned if swapped for an exact number of shares (shareOutAmount).
+	// Returns error if tokenInDenom is not in the pool or if fails to approximate
+	// given the shareOutAmount.
+	// This method does not mutate the pool
+	CalcTokenInShareAmountOut(
 		ctx sdk.Context,
 		tokenInDenom string,
 		shareOutAmount sdk.Int,
-		tokenInMaxAmount sdk.Int,
+		swapFee sdk.Dec,
+	) (tokenInAmount sdk.Int, err error)
+
+	// JoinPoolTokenInMaxShareAmountOut add liquidity to a specified pool with a maximum amount of tokens in (tokenInMaxAmount)
+	// and swaps to an exact number of shares (shareOutAmount).
+	JoinPoolTokenInMaxShareAmountOut(
+		ctx sdk.Context,
+		tokenInDenom string,
+		shareOutAmount sdk.Int,
 	) (tokenInAmount sdk.Int, err error)
 
 	// ExitSwapExactAmountOut removes liquidity from a specified pool with a maximum amount of LP shares (shareInMaxAmount)

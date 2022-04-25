@@ -398,9 +398,9 @@ func feeRatio(normalizedWeight, swapFee sdk.Dec) sdk.Dec {
 	return sdk.OneDec().Sub((sdk.OneDec().Sub(normalizedWeight)).Mul(swapFee))
 }
 
-// calcSingleAssetInInGivenPoolSharesOut returns token amount in with fee included
+// calcSingleAssetInGivenPoolSharesOut returns token amount in with fee included
 // given the swapped out shares amount, using solveConstantFunctionInvariant
-func calcSingleAssetInInGivenPoolSharesOut(
+func calcSingleAssetInGivenPoolSharesOut(
 	tokenBalanceIn,
 	normalizedTokenWeightIn,
 	totalPoolSharesSupply,
@@ -415,11 +415,11 @@ func calcSingleAssetInInGivenPoolSharesOut(
 	return tokenAmountInFeeIncluded
 }
 
-func (p *Pool) JoinSwapShareAmountOut(
+func (p *Pool) CalcTokenInShareAmountOut(
 	ctx sdk.Context,
 	tokenInDenom string,
 	shareOutAmount sdk.Int,
-	tokenInMaxAmount sdk.Int,
+	swapFee sdk.Dec,
 ) (tokenInAmount sdk.Int, err error) {
 	_, poolAssetIn, err := p.getPoolAssetAndIndex(tokenInDenom)
 	if err != nil {
@@ -428,7 +428,34 @@ func (p *Pool) JoinSwapShareAmountOut(
 
 	normalizedWeight := poolAssetIn.Weight.ToDec().Quo(p.GetTotalWeight().ToDec())
 
-	tokenInAmount = calcSingleAssetInInGivenPoolSharesOut(
+	tokenInAmount = calcSingleAssetInGivenPoolSharesOut(
+		poolAssetIn.Token.Amount.ToDec(),
+		normalizedWeight,
+		p.GetTotalShares().ToDec(),
+		shareOutAmount.ToDec(),
+		swapFee,
+	).TruncateInt()
+
+	if !tokenInAmount.IsPositive() {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMsgFormatTokenAmountNotPositive, tokenInAmount.Int64())
+	}
+
+	return tokenInAmount, nil
+}
+
+func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
+	ctx sdk.Context,
+	tokenInDenom string,
+	shareOutAmount sdk.Int,
+) (tokenInAmount sdk.Int, err error) {
+	_, poolAssetIn, err := p.getPoolAssetAndIndex(tokenInDenom)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	normalizedWeight := poolAssetIn.Weight.ToDec().Quo(p.GetTotalWeight().ToDec())
+
+	tokenInAmount = calcSingleAssetInGivenPoolSharesOut(
 		poolAssetIn.Token.Amount.ToDec(),
 		normalizedWeight,
 		p.GetTotalShares().ToDec(),
@@ -438,10 +465,6 @@ func (p *Pool) JoinSwapShareAmountOut(
 
 	if !tokenInAmount.IsPositive() {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMsgFormatTokenAmountNotPositive, tokenInAmount.Int64())
-	}
-
-	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMsgFormatTokensLargerThanMax, tokenInAmount.Int64(), tokenInMaxAmount.Int64())
 	}
 
 	poolAssetIn.Token.Amount = poolAssetIn.Token.Amount.Add(tokenInAmount)
