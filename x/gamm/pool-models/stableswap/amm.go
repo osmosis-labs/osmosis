@@ -20,7 +20,7 @@ func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
 // how many units `a` of x do we get out.
 // So we solve the following expression for `a`
 // xy(x^2 + y^2) = (x - a)(y + b)((x - a)^2 + (y + b)^2)
-func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
+func solveCfmmDirectEquation(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	if !yReserve.Add(yIn).IsPositive() {
 		panic("invalid yReserve, yIn combo")
 	}
@@ -166,6 +166,10 @@ func solveCFMMBinarySearch(constantFunction func(sdk.Dec, sdk.Dec) sdk.Dec) func
 		}
 		return xReserve.Sub(x_est)
 	}
+}
+
+func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
+	return solveCFMMBinarySearch(cfmmConstant)(xReserve, yReserve, yIn)
 }
 
 //nolint:unused
