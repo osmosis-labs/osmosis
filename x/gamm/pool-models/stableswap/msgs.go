@@ -90,7 +90,7 @@ func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (t
 		Id:                 poolId,
 		PoolParams:         *msg.PoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
-		PoolLiquidity:      nil,
+		PoolLiquidity:      msg.InitialPoolLiquidity,
 		FuturePoolGovernor: msg.FuturePoolGovernor,
 	}
 
