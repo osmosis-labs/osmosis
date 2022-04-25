@@ -8,11 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
-// GetQueryCmd returns the cli query commands for this module.
+// GetQueryCmd returns the cli query commands for this module
 func GetQueryCmd(queryRoute string) *cobra.Command {
 	// Group incentives queries under a subcommand
 	cmd := &cobra.Command{
@@ -31,13 +32,14 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdActiveGauges(),
 		GetCmdActiveGaugesPerDenom(),
 		GetCmdUpcomingGauges(),
+		GetCmdUpcomingGaugesPerDenom(),
 		GetCmdRewardsEst(),
 	)
 
 	return cmd
 }
 
-// GetCmdGauges returns full available gauges.
+// GetCmdGauges returns full available gauges
 func GetCmdGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gauges",
@@ -81,7 +83,7 @@ $ %s query incentives gauges
 	return cmd
 }
 
-// GetCmdToDistributeCoins returns coins that is going to be distributed.
+// GetCmdToDistributeCoins returns coins that is going to be distributed
 func GetCmdToDistributeCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "to-distribute-coins",
@@ -117,7 +119,7 @@ $ %s query incentives to-distribute-coins
 	return cmd
 }
 
-// GetCmdDistributedCoins returns coins that are distributed so far.
+// GetCmdDistributedCoins returns coins that are distributed so far
 func GetCmdDistributedCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "distributed-coins",
@@ -153,7 +155,7 @@ $ %s query incentives distributed-coins
 	return cmd
 }
 
-// GetCmdGaugeByID returns Gauge by id.
+// GetCmdGaugeByID returns Gauge by id
 func GetCmdGaugeByID() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gauge-by-id [id]",
@@ -194,7 +196,7 @@ $ %s query incentives gauge-by-id 1
 	return cmd
 }
 
-// GetCmdActiveGauges returns active gauges.
+// GetCmdActiveGauges returns active gauges
 func GetCmdActiveGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "active-gauges",
@@ -235,7 +237,7 @@ $ %s query incentives active-gauges
 	return cmd
 }
 
-// GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
+// GetCmdActiveGaugesPerDenom returns active gauges for specified denom
 func GetCmdActiveGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "active-gauges-per-denom [denom]",
@@ -276,7 +278,7 @@ $ %s query incentives active-gauges-per-denom [denom]
 	return cmd
 }
 
-// GetCmdUpcomingGauges returns scheduled gauges.
+// GetCmdUpcomingGauges returns scheduled gauges
 func GetCmdUpcomingGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upcoming-gauges",
@@ -303,6 +305,38 @@ $ %s query incentives upcoming-gauges
 			}
 
 			res, err := queryClient.UpcomingGauges(cmd.Context(), &types.UpcomingGaugesRequest{Pagination: pageReq})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "incentives")
+
+	return cmd
+}
+
+// GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
+func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "upcoming-gauges-per-denom [denom]",
+		Short: "Query scheduled gauges per denom",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.UpcomingGaugesPerDenom(cmd.Context(), &types.UpcomingGaugesPerDenomRequest{Denom: args[0], Pagination: pageReq})
 			if err != nil {
 				return err
 			}

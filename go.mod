@@ -3,9 +3,9 @@ module github.com/osmosis-labs/osmosis/v7
 go 1.18
 
 require (
-	github.com/CosmWasm/wasmd v0.24.0
+	github.com/CosmWasm/wasmd v0.23.0
 	github.com/CosmWasm/wasmvm v1.0.0-beta7
-	github.com/cosmos/cosmos-sdk v0.45.1
+	github.com/cosmos/cosmos-sdk v0.45.3
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
 	github.com/cosmos/ibc-go/v2 v2.0.3
@@ -239,7 +239,7 @@ require (
 	github.com/uudashr/gocognit v1.0.5 // indirect
 	github.com/yagipy/maintidx v1.0.0 // indirect
 	github.com/yeya24/promlinter v0.1.1-0.20210918184747-d757024714a1 // indirect
-	github.com/zondax/hid v0.9.0 // indirect
+	github.com/zondax/hid v0.9.1-0.20220302062450-5552068d2266 // indirect
 	gitlab.com/bosi/decorder v0.2.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
@@ -275,7 +275,6 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// use janky pebbledb
 	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220421180917-285dd8d7601f
-
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
