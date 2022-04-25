@@ -106,6 +106,12 @@ func NewMsgExtendLockup(owner sdk.AccAddress, id uint64, duration time.Duration)
 func (m MsgExtendLockup) Route() string { return RouterKey }
 func (m MsgExtendLockup) Type() string  { return TypeMsgExtendLockup }
 func (m MsgExtendLockup) ValidateBasic() error {
+	if len(m.Owner) == 0 {
+		return fmt.Errorf("owner is empty")
+	}
+	if m.ID == 0 {
+		return fmt.Errorf("id is empty")
+	}
 	if m.Duration <= 0 {
 		return fmt.Errorf("duration should be positive: %d < 0", m.Duration)
 	}
