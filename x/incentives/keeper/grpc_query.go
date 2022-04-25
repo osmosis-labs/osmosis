@@ -164,6 +164,36 @@ func (q Querier) UpcomingGauges(goCtx context.Context, req *types.UpcomingGauges
 	return &types.UpcomingGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
+func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.UpcomingGaugesPerDenomRequest) (*types.UpcomingGaugesPerDenomResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
+	gauges := []types.Gauge{}
+	store := ctx.KVStore(q.Keeper.storeKey)
+	prefixStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
+
+	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		upcomingGauges := q.Keeper.GetUpcomingGauges(ctx)
+		for _, gauge := range upcomingGauges {
+			if gauge.DistributeTo.Denom == req.Denom {
+				gauges = append(gauges, gauge)
+			}
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.UpcomingGaugesPerDenomResponse{UpcomingGauges: gauges, Pagination: pageRes}, nil
+}
+
 // RewardsEst returns rewards estimation at a future specific time.
 func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
 	if req == nil {

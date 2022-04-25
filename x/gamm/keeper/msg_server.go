@@ -224,7 +224,7 @@ func (server msgServer) ExitSwapExternAmountOut(goCtx context.Context, msg *type
 		return nil, err
 	}
 
-	shareInAmount, err := server.keeper.ExitSwapExternAmountOut(ctx, sender, msg.PoolId, msg.TokenOut, msg.ShareInMaxAmount)
+	shareInAmount, err := server.keeper.ExitSwapExactAmountOut(ctx, sender, msg.PoolId, msg.TokenOut, msg.ShareInMaxAmount)
 	if err != nil {
 		return nil, err
 	}
