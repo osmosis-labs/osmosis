@@ -131,7 +131,7 @@ func (pa *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDe
 	// if tokenInDecimal is non-zero, we add 1 to the tokenInCoin
 	// this is because tokenIn must round up
 	if tokenInDecimal.Amount.IsPositive() {
-		tokenIn.Amount.AddRaw(1)
+		tokenIn.Amount = tokenIn.Amount.AddRaw(1)
 	}
 	if !tokenIn.Amount.IsPositive() {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
