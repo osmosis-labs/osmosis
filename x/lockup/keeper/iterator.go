@@ -154,7 +154,7 @@ func (k Keeper) AccountLockIteratorDuration(ctx sdk.Context, isUnlocking bool, a
 	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)
 }
 
-// AccountLockIteratorShorterThanDuration returns iterator used for getting all locks by account longer than duration
+// AccountLockIteratorShorterThanDuration returns an iterator used for getting all locks by account shorter than the specified duration.
 func (k Keeper) AccountLockIteratorShorterThanDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorShorterDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)
