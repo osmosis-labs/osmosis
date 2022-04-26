@@ -175,7 +175,6 @@ $ %s query lockup account-unlocking-coins osmo1yl6hdjhmkf37639730gffanpzndzdpmhx
 `,
 				version.AppName,
 			),
-
 		),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -542,10 +541,10 @@ func GetCmdAccountLockedDuration() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-locked-duration <address> <duration>",
 		Short: "Query account locked records with a specific duration",
-		Long: strings.TrimSpace(
+		Example: strings.TrimSpace(
 			fmt.Sprintf(`Query account locked records with a specific duration.
 Example:
-$ %s query lockup account-locked-duration <address> <duration>
+$ %s query lockup account-locked-duration osmo1yl6hdjhmkf37639730gffanpzndzdpmhxy9ep3 604800s
 `,
 				version.AppName,
 			),
