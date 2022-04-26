@@ -84,15 +84,10 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-	// We assume that FuturePoolGovernor is valid.
-	pool := &Pool{
-		Address:            types.NewPoolAddress(poolId).String(),
-		Id:                 poolId,
-		PoolParams:         *msg.PoolParams,
-		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
-		PoolLiquidity:      msg.InitialPoolLiquidity,
-		FuturePoolGovernor: msg.FuturePoolGovernor,
+	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity, msg.FuturePoolGovernor, ctx.BlockTime())
+	if err != nil {
+		panic(err)
 	}
 
-	return pool, nil
+	return &stableswapPool, nil
 }
