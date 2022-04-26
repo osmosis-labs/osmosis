@@ -36,7 +36,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 		locks := server.keeper.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, msg.Coins[0].Denom, msg.Duration)
 		if len(locks) > 0 {
 			lock := locks[0]
-			_, err := server.keeper.AddTokensToLockByID(ctx, lock.ID, owner,  msg.Coins)
+			_, err := server.keeper.AddTokensToLockByID(ctx, lock.ID, owner, msg.Coins[0])
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 			}
@@ -53,7 +53,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 		}
 	}
 
-	lock, err := server.keeper.LockTokens(ctx, owner, msg.Coins, msg.Duration)
+	lock, err := server.keeper.CreateLock(ctx, owner, msg.Coins, msg.Duration)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}

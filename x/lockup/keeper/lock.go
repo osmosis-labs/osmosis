@@ -7,12 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/v7/store"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
- 
 )
 
 // TODO: Reorganize functions in this file
@@ -63,8 +61,8 @@ func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddr
 	return locks, err
 }
 
-func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
-	lock.Coins = lock.Coins.Add(coins...)
+func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coin sdk.Coin) error {
+	lock.Coins = lock.Coins.Add(coin)
 
 	err := k.setLock(ctx, *lock)
 	if err != nil {
@@ -72,20 +70,17 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 	}
 
 	// modifications to accumulation store
-	for _, coin := range coins {
-		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
-	}
-
+	k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
 	// modifications to accumulation store by synthlocks
 	// CONTRACT: lock will have synthetic lock only if it has a single coin
 	lockedCoin, err := lock.SingleCoin()
 	if err == nil {
 		for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
-			k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), coins.AmountOf(lockedCoin.Denom))
+			k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), sdk.NewCoins(coin).AmountOf(lockedCoin.Denom))
 		}
 	}
 
-	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), coins)
+	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), sdk.NewCoins(coin))
 
 	return nil
 }
@@ -118,26 +113,21 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 
 // AddTokensToLock locks more tokens into a lockup
 // This also saves the lock to the store.
-func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, coins sdk.Coins) (*types.PeriodLock, error) {
+func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, coin sdk.Coin) (*types.PeriodLock, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
-	
-	if lock.GetCoins().Len() != 1 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-	}
 
 	if lock.GetOwner() != owner.String() {
 		return nil, types.ErrNotLockOwner
 	}
 
-
 	if err != nil {
 		return nil, err
 	}
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.OwnerAddress(), types.ModuleName, coins); err != nil {
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.OwnerAddress(), types.ModuleName, sdk.NewCoins(coin)); err != nil {
 		return nil, err
 	}
 
-	err = k.addTokensToLock(ctx, lock, coins)
+	err = k.addTokensToLock(ctx, lock, coin)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +136,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 		return lock, nil
 	}
 
-	k.hooks.OnTokenLocked(ctx, lock.OwnerAddress(), lock.ID, coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenLocked(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return lock, nil
 }
 
@@ -177,7 +167,7 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 }
 
 // LockTokens lock tokens from an account for specified duration.
-func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
+func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is set at the beginning of unlocking time
 	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)

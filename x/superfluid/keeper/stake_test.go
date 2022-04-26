@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -333,10 +334,10 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().NoError(err)
 				lockOwner, err := sdk.AccAddressFromBech32(lock.Owner)
 				suite.Require().NoError(err)
-				coins := sdk.Coins{sdk.NewInt64Coin("gamm/pool/1", 1000000)}
-				suite.App.BankKeeper.MintCoins(suite.Ctx, minttypes.ModuleName, coins)
-				suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, minttypes.ModuleName, lockOwner, coins)
-				_, err = suite.App.LockupKeeper.AddTokensToLockByID(suite.Ctx, lockId, lockOwner, coins)
+				coin := sdk.NewInt64Coin("gamm/pool/1", 1000000)
+				suite.App.BankKeeper.MintCoins(suite.Ctx, minttypes.ModuleName, sdk.NewCoins(coin))
+				suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, minttypes.ModuleName, lockOwner, sdk.NewCoins(coin))
+				_, err = suite.App.LockupKeeper.AddTokensToLockByID(suite.Ctx, lockId, lockOwner, coin)
 				suite.Require().NoError(err)
 			}
 
@@ -814,6 +815,7 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				}
 
 				// calculating the estimated delegation amount for multiplier change
+				fmt.Println(intermediaryDels)
 				expDelegation := intermediaryDels[index].Mul(multiplier).Quo(originMultiplier)
 				lpTokenAmount := sdk.NewInt(1000000)
 				decAmt := multiplier.Mul(lpTokenAmount.ToDec())
