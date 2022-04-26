@@ -29,6 +29,11 @@ message PoolParams {
   ];
 }
 
+message PoolScalingFactor {
+  string denom = 1;
+  uint64 scalingFactor = 2;
+}
+
 // Pool is the stableswap Pool struct
 message Pool {
   option (gogoproto.goproto_getters) = false;
@@ -62,5 +67,9 @@ message Pool {
   repeated cosmos.base.v1beta1.Coin poolLiquidity = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  repeated PoolScalingFactor poolScalingFactor = 7 [
+    (gogoproto.moretags) = "yaml:\"stableswap_pool_scaling_factor\"",
+    (gogoproto.nullable) = false
   ];
 }

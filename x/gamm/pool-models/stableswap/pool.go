@@ -69,6 +69,31 @@ func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	return result, nil
 }
 
+func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
+	result := make([]sdk.Int, len(denoms))
+	poolLiquidity := pa.PoolLiquidity
+	for i, d := range denoms {
+		amt := poolLiquidity.AmountOf(d)
+		if amt.IsZero() {
+			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", d)
+		}
+
+		scalingFactor := pa.getPoolAssetScalingFactor(d)
+		result[i] = amt.QuoRaw(int64(scalingFactor))
+	}
+	return result, nil
+}
+
+func (pa Pool) getPoolAssetScalingFactor(denom string) uint64 {
+	var result uint64
+	for _, scalingFactor := range pa.PoolScalingFactor {
+		if scalingFactor.Denom == denom {
+			result = scalingFactor.ScalingFactor
+		}
+	}
+	return result
+}
+
 // updatePoolLiquidityForSwap updates the pool liquidity.
 // It requires caller to validate that tokensIn and tokensOut only consist of
 // denominations in the pool.
@@ -143,7 +168,7 @@ func (pa *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDe
 }
 
 func (pa Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	reserves, err := pa.getPoolAmts(baseAssetDenom, quoteAssetDenom)
+	reserves, err := pa.getScaledPoolAmts(baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}

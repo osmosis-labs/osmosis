@@ -191,7 +191,8 @@ func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
 
 // returns outAmt as a decimal
 func (pa *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := pa.getPoolAmts(tokenIn.Denom, tokenOutDenom)
+	reserves, err := pa.getScaledPoolAmts(tokenIn.Denom, tokenOutDenom)
+
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -204,7 +205,7 @@ func (pa *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFe
 
 // returns inAmt as a decimal
 func (pa *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := pa.getPoolAmts(tokenInDenom, tokenOut.Denom)
+	reserves, err := pa.getScaledPoolAmts(tokenInDenom, tokenOut.Denom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
