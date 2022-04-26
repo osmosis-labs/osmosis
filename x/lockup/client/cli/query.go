@@ -167,11 +167,11 @@ func GetCmdAccountUnlockingCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-unlocking-coins <address>",
 		Short: "Query account's unlocking coins",
-		Example: strings.TrimSpace(
+		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query account's unlocking coins.
 
 Example:
-$ %s query lockup account-unlocking-coins osmo1yl6hdjhmkf37639730gffanpzndzdpmhxy9ep3
+$ %s query lockup account-unlocking-coins <address>
 `,
 				version.AppName,
 			),
