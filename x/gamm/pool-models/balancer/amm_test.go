@@ -83,7 +83,9 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 	}
 }
 
-func TestCalculateAmountOutAndIn_InverseRelationship_ZeroSwapFee(t *testing.T) {
+// TestCalculateAmountOutAndIn_InverseRelationship tests that the same amount of token is guaranteed upon
+// sequential operation of CalcInAmtGivenOut and CalcOutAmtGivenIn.
+func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 	type testcase struct {
 		denomOut         string
 		initialPoolOut   int64
@@ -95,6 +97,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship_ZeroSwapFee(t *testing.T) {
 		initialWeightIn int64
 	}
 
+	// For every test case in testcases, apply a swap fee in swapFeeCases.
 	testcases := []testcase{
 		{
 			denomOut:         "uosmo",
@@ -138,53 +141,64 @@ func TestCalculateAmountOutAndIn_InverseRelationship_ZeroSwapFee(t *testing.T) {
 		},
 	}
 
-	getTestCaseName := func(tc testcase) string {
-		return fmt.Sprintf("tokenOutInitial: %d, tokenInInitial: %d, initialOut: %d",
+	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
+
+	getTestCaseName := func(tc testcase, swapFeeCase string) string {
+		return fmt.Sprintf("tokenOutInitial: %d, tokenInInitial: %d, initialOut: %d, swapFee: %s",
 			tc.initialPoolOut,
 			tc.initialPoolIn,
 			tc.initialCalcOut,
+			swapFeeCase,
 		)
 	}
 
 	for _, tc := range testcases {
-		t.Run(getTestCaseName(tc), func(t *testing.T) {
-			ctx := createTestContext(t)
+		for _, swapFee := range swapFeeCases {
+			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+				ctx := createTestContext(t)
 
-			poolAssetOut := balancer.PoolAsset{
-				Token:  sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut),
-				Weight: sdk.NewInt(tc.initialWeightOut),
-			}
+				poolAssetOut := balancer.PoolAsset{
+					Token:  sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut),
+					Weight: sdk.NewInt(tc.initialWeightOut),
+				}
 
-			poolAssetIn := balancer.PoolAsset{
-				Token:  sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn),
-				Weight: sdk.NewInt(tc.initialWeightIn),
-			}
+				poolAssetIn := balancer.PoolAsset{
+					Token:  sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn),
+					Weight: sdk.NewInt(tc.initialWeightIn),
+				}
 
-			pool := createTestPool(t, []balancer.PoolAsset{
-				poolAssetOut,
-				poolAssetIn,
-			},
-				"0",
-				"0",
-			)
-			require.NotNil(t, pool)
+				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
+				require.NoError(t, err)
 
-			initialOut := sdk.NewInt64Coin(poolAssetOut.Token.Denom, tc.initialCalcOut)
-			initialOutCoins := sdk.NewCoins(initialOut)
+				exitFeeDec, err := sdk.NewDecFromStr("0")
+				require.NoError(t, err)
 
-			actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, poolAssetIn.Token.Denom, sdk.ZeroDec())
-			require.NoError(t, err)
+				pool := createTestPool(t, []balancer.PoolAsset{
+					poolAssetOut,
+					poolAssetIn,
+				},
+					swapFeeDec,
+					exitFeeDec,
+				)
+				require.NotNil(t, pool)
 
-			inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewInt64Coin(poolAssetIn.Token.Denom, actualTokenIn.Amount.TruncateInt64())), poolAssetOut.Token.Denom, sdk.ZeroDec())
-			require.NoError(t, err)
+				initialOut := sdk.NewInt64Coin(poolAssetOut.Token.Denom, tc.initialCalcOut)
+				initialOutCoins := sdk.NewCoins(initialOut)
 
-			require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
+				actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, poolAssetIn.Token.Denom, swapFeeDec)
+				require.NoError(t, err)
 
-			expected := initialOut.Amount.ToDec()
-			actual := inverseTokenOut.Amount.RoundInt().ToDec() // must round to be able to compare with expected.
+				inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewInt64Coin(poolAssetIn.Token.Denom, actualTokenIn.Amount.TruncateInt64())), poolAssetOut.Token.Denom, swapFeeDec)
+				require.NoError(t, err)
 
-			require.Equal(t, expected, actual)
-		})
+				require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
+
+				expected := initialOut.Amount.ToDec()
+				actual := inverseTokenOut.Amount.RoundInt().ToDec() // must round to be able to compare with expected.
+
+				require.Equal(t, expected, actual)
+			})
+		}
 	}
 }
 
