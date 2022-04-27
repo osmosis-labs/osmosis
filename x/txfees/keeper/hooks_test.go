@@ -79,6 +79,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 
 	suite.App.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, int64(1))
 
+	moduleBaseDenomBalance := suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddrFee, baseDenom)
 	suite.Require().Empty(suite.App.BankKeeper.GetAllBalances(suite.Ctx, moduleAddrNonNativeFee))
-	suite.Require().True(suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddrFee, baseDenom).Amount.GTE(fullExpectedOutput.Amount.TruncateInt()))
+	suite.Require().True(moduleBaseDenomBalance.Amount.GTE(fullExpectedOutput.Amount))
 }
