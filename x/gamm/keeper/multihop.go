@@ -79,6 +79,7 @@ func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.S
 			return nil, err
 		}
 
+		// fmt.Printf("calc in given out %s, pool liquidity %s\n", sdk.NewCoins(tokenOut), pool.GetTotalPoolLiquidity(ctx))
 		tokenIn, err := pool.CalcInAmtGivenOut(ctx, sdk.NewCoins(tokenOut), route.TokenInDenom, pool.GetSwapFee(ctx))
 		if err != nil {
 			return nil, err
