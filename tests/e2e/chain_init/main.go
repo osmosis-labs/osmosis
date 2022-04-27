@@ -29,43 +29,10 @@ func main() {
 		panic(err)
 	}
 
-	// enc := gob.NewEncoder(f)
-	// if err := enc.Encode(chain); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// var b bytes.Buffer
-	// e := gob.NewEncoder(&b)
-	// if err := e.Encode(chain); err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Println("Encoded Struct ", b)
-
-	// fmt.Println(chain)
-
-	// var buf bytes.Buffer
-	// enc := gob.NewEncoder(&buf)
-
-	// if err := enc.Encode(chain); err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// fmt.Println(buf.Bytes())
-	fmt.Printf("test %+v", createdChain.Validators[0].PublicAddress)
 	b, err := json.Marshal(createdChain)
 	fileName := fmt.Sprintf("%v/%v-encode", dataDir, chainId)
 	err2 := os.WriteFile(fileName, b, 0777)
 	if err2 != nil {
 		panic(err)
 	}
-	encJson, _ := os.ReadFile(fileName)
-
-	var newChain chain.Chain
-	err3 := json.Unmarshal(encJson, &newChain)
-	if err3 != nil {
-		fmt.Println(err3)
-	}
-	fmt.Printf("TEEEEEEEEEST %+v\n", newChain.Validators[0])
-	fmt.Printf("TEEEEEEEEEST %+v\n", newChain.Validators[1])
-
 }

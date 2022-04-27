@@ -56,8 +56,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 
 	s.configureChain(chain.ChainAID)
+	s.Require().NoError(s.dkrPool.Purge(s.initResource))
 	s.configureChain(chain.ChainBID)
-	s.T().Logf("TESTTESTIJETSETSETSET %v", s.chains[1].Validators[0].PublicAddress)
+	s.Require().NoError(s.dkrPool.Purge(s.initResource))
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
@@ -259,8 +260,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 	s.T().Log(tmpDir)
 	s.Require().NoError(err)
-	//newChain, err := chain.Init(chainId, tmpDir)
-	// dataDir := "/temp"
+
 	s.initResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
@@ -282,17 +282,14 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 
 	var newChain chain.Chain
 	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
-	time.Sleep(8 * time.Second)
 	s.T().Log(fileName)
+	time.Sleep(8 * time.Second)
 	encJson, _ := os.ReadFile(fileName)
-	s.T().Log(encJson)
 	err3 := json.Unmarshal(encJson, &newChain)
-	s.T().Log(err3)
-	s.T().Log(newChain)
-	fmt.Printf("TEEEEEEEEEST %+v\n", newChain.Validators[0])
+	if err3 != nil {
+		panic(err3)
+	}
 	s.chains = append(s.chains, &newChain)
-	s.T().Logf("%+v", s.chains)
-	s.T().Log(s.chains[0].Validators[0])
 
 }
 
