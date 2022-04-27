@@ -381,12 +381,14 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 
 		lock, err := k.lk.GetLockByID(ctx, lock.UnderlyingLockId)
 		if err != nil {
-			panic(fmt.Sprintf("lockup retrieval failed with underlying lock(Lock: %+v; Error: %s)", lock, err))
+			ctx.Logger().Error("lockup retrieval failed with underlying lock", "Lock", lock, "Error", err))
+			continue
 		}
 
 		coin, err := lock.SingleCoin()
 		if err != nil {
-			panic(fmt.Sprintf("no single coin in the lock(Lock: %+v; Error: %s)", lock, err))
+			ctx.Logger().Error("no single coin in the lock", "Lock", lock, "Error", err)
+			continue
 		}
 
 		// get osmo-equivalent token amount
@@ -395,12 +397,14 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		// get validator shares equivalent to the token amount
 		valAddr, err := sdk.ValAddressFromBech32(interim.ValAddr)
 		if err != nil {
-			panic(fmt.Sprintf("failed to decode validator address %s for lock %d: %s)", interim.ValAddr, lock.ID, err))
+			ctx.Logger().Error("failed to decode validator address", "Intermediary", interim.ValAddr, "LockID", lock.ID, "Error", err))
+			continue
 		}
 
 		validator, found := k.sk.GetValidator(ctx, valAddr)
 		if !found {
-			panic(fmt.Sprintf("validator %s does not exist for lock %d", valAddr, lock.ID))
+			ctx.Logger().Error("validator does not exist for lock", "Validator", valAddr, "LockID", lock.ID)
+			continue
 		}
 
 		shares, err := validator.SharesFromTokens(amount)
@@ -417,5 +421,4 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		}
 		fn(index+int64(i), delegation)
 	}
-
 }
