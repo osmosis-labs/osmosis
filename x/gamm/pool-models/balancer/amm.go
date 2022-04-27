@@ -191,6 +191,12 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 	return ratio, nil
 }
 
+// feeRatio returns the fee ratio that is defined as follows:
+// 1 - ((1 - normalizedTokenWeightOut) * swapFee)
+func feeRatio(normalizedWeight, swapFee sdk.Dec) sdk.Dec {
+	return sdk.OneDec().Sub((sdk.OneDec().Sub(normalizedWeight)).Mul(swapFee))
+}
+
 // balancer notation: pAo - pool shares amount out, given single asset in
 // the second argument requires the tokenWeightIn / total token weight.
 func calcPoolSharesOutGivenSingleAssetIn(
@@ -203,9 +209,7 @@ func calcPoolSharesOutGivenSingleAssetIn(
 	// deduct swapfee on the in asset.
 	// We don't charge swap fee on the token amount that we imagine as unswapped (the normalized weight).
 	// So effective_swapfee = swapfee * (1 - normalized_token_weight)
-	effectiveSwapFee := (sdk.OneDec().Sub(normalizedTokenWeightIn)).Mul(swapFee)
-	// Apply swap fee, by multiplying tokenAmountIn by (1 - effective_swap_fee)
-	tokenAmountInAfterFee := tokenAmountIn.Mul(sdk.OneDec().Sub(effectiveSwapFee))
+	tokenAmountInAfterFee := tokenAmountIn.Mul(feeRatio(normalizedTokenWeightIn, swapFee))
 	// To figure out the number of shares we add, first notice that in balancer we can treat
 	// the number of shares as linearly related to the `k` value function. This is due to the normalization.
 	// e.g.
@@ -223,6 +227,23 @@ func calcPoolSharesOutGivenSingleAssetIn(
 		poolShares,
 		sdk.OneDec()).Neg()
 	return poolAmountOut
+}
+
+// calcSingleAssetInGivenPoolSharesOut returns token amount in with fee included
+// given the swapped out shares amount, using solveConstantFunctionInvariant
+func calcSingleAssetInGivenPoolSharesOut(
+	tokenBalanceIn,
+	normalizedTokenWeightIn,
+	totalPoolSharesSupply,
+	sharesAmountOut,
+	swapFee sdk.Dec,
+) sdk.Dec {
+	// delta balanceIn is negative(tokens inside the pool increases)
+	// pool weight is always 1
+	tokenAmountIn := solveConstantFunctionInvariant(totalPoolSharesSupply.Add(sharesAmountOut), totalPoolSharesSupply, sdk.OneDec(), tokenBalanceIn, normalizedTokenWeightIn).Neg()
+	// deduct swapfee on the in asset
+	tokenAmountInFeeIncluded := tokenAmountIn.Quo(feeRatio(normalizedTokenWeightIn, swapFee))
+	return tokenAmountInFeeIncluded
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.
