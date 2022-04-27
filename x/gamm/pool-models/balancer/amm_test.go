@@ -255,6 +255,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 			initialWeightOut: 100,
 			initialWeightIn:  100,
 		},
+		// TODO: https://github.com/osmosis-labs/osmosis/issues/1359
 		// {
 		// 	initialPoolOut:   1_000,
 		// 	tokenOut:         26,
