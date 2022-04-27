@@ -98,7 +98,7 @@ func (pa Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDen
 	if !tokenOutAmt.IsPositive() {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
-	return sdk.Coin{Denom: tokenOutDenom, Amount: tokenOutAmt}, nil
+	return sdk.NewCoin(tokenOutDenom, tokenOutAmt), nil
 }
 
 func (pa *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
@@ -123,13 +123,13 @@ func (pa Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 	}
 
 	// We round up tokenInAmt, as this is whats charged for the swap, for the precise amount out.
-	// (else the pool would under-charge by this rounding error)
+	// Otherwise, the pool would under-charge by this rounding error.
 	tokenInAmt := amt.Ceil().TruncateInt()
 
 	if !tokenInAmt.IsPositive() {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
-	return sdk.Coin{Denom: tokenInDenom, Amount: tokenInAmt}, nil
+	return sdk.NewCoin(tokenInDenom, tokenInAmt), nil
 }
 
 func (pa *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {

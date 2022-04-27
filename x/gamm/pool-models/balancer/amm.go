@@ -123,7 +123,7 @@ func (p Pool) CalcInAmtGivenOut(
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(swapFee))
 
 	// We round up tokenInAmt, as this is whats charged for the swap, for the precise amount out.
-	// (else the pool would under-charge by this rounding error)
+	// Otherwise, the pool would under-charge by this rounding error.
 	tokenInAmt := tokenAmountInBeforeFee.Ceil().TruncateInt()
 
 	if !tokenInAmt.IsPositive() {
