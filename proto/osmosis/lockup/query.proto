@@ -95,6 +95,14 @@ service Query {
     option (google.api.http).get =
         "/osmosis/lockup/v1beta1/account_locked_longer_duration/{owner}";
   }
+
+  // Returns account locked records with a specific duration
+  rpc AccountLockedDuration(AccountLockedDurationRequest)
+      returns (AccountLockedDurationResponse) {
+    option (google.api.http).get =
+        "/osmosis/lockup/v1beta1/account_locked_duration/{owner}";
+  }
+
   // Returns account locked records with longer duration excluding tokens
   // started unlocking
   rpc AccountLockedLongerDurationNotUnlockingOnly(
@@ -240,6 +248,18 @@ message AccountLockedLongerDurationRequest {
   ];
 };
 message AccountLockedLongerDurationResponse {
+  repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
+};
+
+message AccountLockedDurationRequest {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  google.protobuf.Duration duration = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+};
+message AccountLockedDurationResponse {
   repeated PeriodLock locks = 1 [ (gogoproto.nullable) = false ];
 };
 
