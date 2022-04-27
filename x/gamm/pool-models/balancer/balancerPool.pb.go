@@ -186,9 +186,7 @@ type PoolAsset struct {
 	Token types.Coin `protobuf:"bytes,1,opt,name=token,proto3" json:"token" yaml:"token"`
 	// Weight that is not normalized. This weight must be less than 2^50
 	Weight github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"weight" yaml:"weight"`
-	//   Weight that is normalized s.t. the sum of all pool assets' weights
-	// equals 1. If the user provides this value, it is ignored. This should only
-	// ever be set by the state machine. This is left as a TODO for a future PR.
+	//   Weight that is normalized s.t. the sum of all pool assets' weights equals 1.
 	NormalizedWeight github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=normalizedWeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"normalizedWeight" yaml:"normalized_weight"`
 }
 

@@ -103,9 +103,7 @@ message PoolAsset {
     (gogoproto.nullable) = false
   ];
 
-  //   Weight that is normalized s.t. the sum of all pool assets' weights
-  // equals 1. If the user provides this value, it is ignored. This should only
-  // ever be set by the state machine. This is left as a TODO for a future PR.
+  // Weight that is normalized s.t. the sum of all pool assets' weights equals 1. 
   string normalizedWeight = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"normalized_weight\"",
