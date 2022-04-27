@@ -18,7 +18,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		gauges := k.GetUpcomingGauges(ctx)
 		for _, gauge := range gauges {
 			if !ctx.BlockTime().Before(gauge.StartTime) {
-				if err := k.BeginDistribution(ctx, gauge); err != nil {
+				if err := k.moveUpcomingGaugeToActiveGauge(ctx, gauge); err != nil {
 					panic(err)
 				}
 			}
