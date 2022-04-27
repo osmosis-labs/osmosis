@@ -57,6 +57,8 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 	superfluid "github.com/osmosis-labs/osmosis/v7/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
@@ -79,6 +81,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.ModuleName:                   nil,
 	txfeestypes.NonNativeFeeCollectorName:    nil,
 	wasm.ModuleName:                          {authtypes.Burner},
+	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
 }
 
 // appModules return modules to initialize module manager.
@@ -251,6 +254,7 @@ func simulationModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
+		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper),
 		app.TransferModule,
 	}
 }
