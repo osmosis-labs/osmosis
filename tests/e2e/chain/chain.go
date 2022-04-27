@@ -9,35 +9,26 @@ const (
 	keyringAppName    = "testnet"
 )
 
-type ChainMeta struct {
-	DataDir string
-	Id      string
+type internalChain struct {
+	chainMeta  ChainMeta
+	validators []*internalValidator
 }
 
-type Chain struct {
-	ChainMeta  ChainMeta
-	Validators []*Validator
-}
-
-func new(id, dataDir string) (*Chain, error) {
+func new(id, dataDir string) (*internalChain, error) {
 	// return &ChainMeta{
 	// 	Id:      id,
 	// 	DataDir: dataDir,
 	// }, nil
-	chain := &ChainMeta{
+	chainMeta := ChainMeta{
 		Id:      id,
 		DataDir: dataDir,
 	}
-	return &Chain{
-		ChainMeta: *chain,
+	return &internalChain{
+		chainMeta: chainMeta,
 	}, nil
 }
 
-func (c *ChainMeta) configDir() string {
-	return fmt.Sprintf("%s/%s", c.DataDir, c.Id)
-}
-
-func (c *Chain) createAndInitValidators(count int) error {
+func (c *internalChain) createAndInitValidators(count int) error {
 	for i := 0; i < count; i++ {
 		node := c.createValidator(i)
 
@@ -46,7 +37,7 @@ func (c *Chain) createAndInitValidators(count int) error {
 			return err
 		}
 
-		c.Validators = append(c.Validators, node)
+		c.validators = append(c.validators, node)
 
 		// create keys
 		if err := node.createKey("val"); err != nil {
@@ -63,7 +54,7 @@ func (c *Chain) createAndInitValidators(count int) error {
 	return nil
 }
 
-func (c *Chain) createAndInitValidatorsWithMnemonics(count int, mnemonics []string) error {
+func (c *internalChain) createAndInitValidatorsWithMnemonics(count int, mnemonics []string) error {
 	for i := 0; i < count; i++ {
 		// create node
 		node := c.createValidator(i)
@@ -73,7 +64,7 @@ func (c *Chain) createAndInitValidatorsWithMnemonics(count int, mnemonics []stri
 			return err
 		}
 
-		c.Validators = append(c.Validators, node)
+		c.validators = append(c.validators, node)
 
 		// create keys
 		if err := node.createKeyFromMnemonic("val", mnemonics[i]); err != nil {
@@ -90,10 +81,22 @@ func (c *Chain) createAndInitValidatorsWithMnemonics(count int, mnemonics []stri
 	return nil
 }
 
-func (c *Chain) createValidator(index int) *Validator {
-	return &Validator{
-		ChainMeta: c.ChainMeta,
-		Index:     index,
-		Moniker:   fmt.Sprintf("%s-osmosis-%d", c.ChainMeta.Id, index),
+func (c *internalChain) createValidator(index int) *internalValidator {
+	return &internalValidator{
+		chain:   c,
+		index:   index,
+		moniker: fmt.Sprintf("%s-osmosis-%d", c.chainMeta.Id, index),
+	}
+}
+
+func (c *internalChain) export() *Chain {
+	exportValidators := make([]*Validator, 0, len(c.validators))
+	for _, v := range c.validators {
+		exportValidators = append(exportValidators, v.export())
+	}
+
+	return &Chain{
+		ChainMeta:  c.chainMeta,
+		Validators: exportValidators,
 	}
 }

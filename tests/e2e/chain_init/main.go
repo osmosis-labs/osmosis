@@ -12,7 +12,6 @@ import (
 func main() {
 	var dataDir string
 	var chainId string
-	var m chain.Chain
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
 	flag.Parse()
@@ -25,7 +24,7 @@ func main() {
 		panic(err)
 	}
 
-	chain, err := chain.Init(chainId, dataDir)
+	createdChain, err := chain.Init(chainId, dataDir)
 	if err != nil {
 		panic(err)
 	}
@@ -52,11 +51,8 @@ func main() {
 	// }
 
 	// fmt.Println(buf.Bytes())
-	fmt.Printf("test %+v", chain.Validators[0].KeyInfo)
-	b, err := json.Marshal(chain)
-	fmt.Println(b)
-	fmt.Println(m)
-
+	fmt.Printf("test %+v", createdChain.Validators[0].PublicAddress)
+	b, err := json.Marshal(createdChain)
 	fileName := fmt.Sprintf("%v/%v-encode", dataDir, chainId)
 	err2 := os.WriteFile(fileName, b, 0777)
 	if err2 != nil {
@@ -64,10 +60,12 @@ func main() {
 	}
 	encJson, _ := os.ReadFile(fileName)
 
-	err3 := json.Unmarshal(encJson, &m)
-	fmt.Println(err3)
-	fmt.Println(m)
-	fmt.Printf("TEEEEEEEEEST %+v\n", m.Validators[0])
-	fmt.Printf("TEEEEEEEEEST %+v\n", m.Validators[1])
+	var newChain chain.Chain
+	err3 := json.Unmarshal(encJson, &newChain)
+	if err3 != nil {
+		fmt.Println(err3)
+	}
+	fmt.Printf("TEEEEEEEEEST %+v\n", newChain.Validators[0])
+	fmt.Printf("TEEEEEEEEEST %+v\n", newChain.Validators[1])
 
 }

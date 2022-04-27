@@ -30,44 +30,40 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-type Validator struct {
-	ChainMeta        ChainMeta
-	Index            int
-	Moniker          string
-	Mnemonic         string
-	KeyInfo          keyring.Info
-	PrivateKey       cryptotypes.PrivKey
-	ConsensusKey     privval.FilePVKey
-	ConsensusPrivKey cryptotypes.PrivKey
-	NodeKey          p2p.NodeKey
+type internalValidator struct {
+	chain            *internalChain
+	index            int
+	moniker          string
+	mnemonic         string
+	keyInfo          keyring.Info
+	privateKey       cryptotypes.PrivKey
+	consensusKey     privval.FilePVKey
+	consensusPrivKey cryptotypes.PrivKey
+	nodeKey          p2p.NodeKey
 }
 
-func (v *Validator) InstanceName() string {
-	return fmt.Sprintf("%s%d", v.Moniker, v.Index)
+func (v *internalValidator) instanceName() string {
+	return fmt.Sprintf("%s%d", v.moniker, v.index)
 }
 
-func (v *Validator) ConfigDir() string {
-	return fmt.Sprintf("%s/%s", v.ChainMeta.configDir(), v.InstanceName())
+func (v *internalValidator) configDir() string {
+	return fmt.Sprintf("%s/%s", v.chain.chainMeta.configDir(), v.instanceName())
 }
 
-func (v *Validator) GetKeyInfo() keyring.Info {
-	return v.KeyInfo
+func (v *internalValidator) getKeyInfo() keyring.Info {
+	return v.keyInfo
 }
 
-func (v *Validator) GetMoniker() string {
-	return v.Moniker
+func (v *internalValidator) getMoniker() string {
+	return v.moniker
 }
 
-func (v *Validator) GetMnemonic() string {
-	return v.Mnemonic
+func (v *internalValidator) getMnemonic() string {
+	return v.mnemonic
 }
 
-func (v *Validator) GetIndex() int {
-	return v.Index
-}
-
-func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
-	description := stakingtypes.NewDescription(v.Moniker, "", "", "", "")
+func (v *internalValidator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
+	description := stakingtypes.NewDescription(v.moniker, "", "", "", "")
 	commissionRates := stakingtypes.CommissionRates{
 		Rate:          sdk.MustNewDecFromStr("0.1"),
 		MaxRate:       sdk.MustNewDecFromStr("0.2"),
@@ -77,13 +73,13 @@ func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	// get the initial validator min self delegation
 	minSelfDelegation, _ := sdk.NewIntFromString("1")
 
-	valPubKey, err := cryptocodec.FromTmPubKeyInterface(v.ConsensusKey.PubKey)
+	valPubKey, err := cryptocodec.FromTmPubKeyInterface(v.consensusKey.PubKey)
 	if err != nil {
 		return nil, err
 	}
 
 	return stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(v.KeyInfo.GetAddress()),
+		sdk.ValAddress(v.keyInfo.GetAddress()),
 		valPubKey,
 		amount,
 		description,
@@ -92,33 +88,33 @@ func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	)
 }
 
-func (v *Validator) createConfig() error {
-	p := path.Join(v.ConfigDir(), "config")
+func (v *internalValidator) createConfig() error {
+	p := path.Join(v.configDir(), "config")
 	return os.MkdirAll(p, 0o755)
 }
 
-func (v *Validator) createNodeKey() error {
+func (v *internalValidator) createNodeKey() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(v.ConfigDir())
-	config.Moniker = v.Moniker
+	config.SetRoot(v.configDir())
+	config.Moniker = v.moniker
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
-	v.NodeKey = *nodeKey
+	v.nodeKey = *nodeKey
 	return nil
 }
 
-func (v *Validator) createConsensusKey() error {
+func (v *internalValidator) createConsensusKey() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(v.ConfigDir())
-	config.Moniker = v.Moniker
+	config.SetRoot(v.configDir())
+	config.Moniker = v.moniker
 
 	pvKeyFile := config.PrivValidatorKeyFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0o777); err != nil {
@@ -131,13 +127,13 @@ func (v *Validator) createConsensusKey() error {
 	}
 
 	filePV := privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
-	v.ConsensusKey = filePV.Key
+	v.consensusKey = filePV.Key
 
 	return nil
 }
 
-func (v *Validator) createKeyFromMnemonic(name, mnemonic string) error {
-	kb, err := keyring.New(keyringAppName, keyring.BackendTest, v.ConfigDir(), nil)
+func (v *internalValidator) createKeyFromMnemonic(name, mnemonic string) error {
+	kb, err := keyring.New(keyringAppName, keyring.BackendTest, v.configDir(), nil)
 	if err != nil {
 		return err
 	}
@@ -163,14 +159,14 @@ func (v *Validator) createKeyFromMnemonic(name, mnemonic string) error {
 		return err
 	}
 
-	v.KeyInfo = info
-	v.Mnemonic = mnemonic
-	v.PrivateKey = privKey
+	v.keyInfo = info
+	v.mnemonic = mnemonic
+	v.privateKey = privKey
 
 	return nil
 }
 
-func (v *Validator) createKey(name string) error {
+func (v *internalValidator) createKey(name string) error {
 	mnemonic, err := createMnemonic()
 	if err != nil {
 		return err
@@ -179,14 +175,24 @@ func (v *Validator) createKey(name string) error {
 	return v.createKeyFromMnemonic(name, mnemonic)
 }
 
-func (v *Validator) getNodeKey() *p2p.NodeKey {
-	return &v.NodeKey
+func (v *internalValidator) export() *Validator {
+	return &Validator{
+		Name:          v.instanceName(),
+		ConfigDir:     v.configDir(),
+		Index:         v.index,
+		Mnemonic:      v.mnemonic,
+		PublicAddress: v.keyInfo.GetAddress().String(),
+	}
 }
 
-func (v *Validator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
+func (v *internalValidator) getNodeKey() *p2p.NodeKey {
+	return &v.nodeKey
+}
+
+func (v *internalValidator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
-	config.SetRoot(v.ConfigDir())
+	config.SetRoot(v.configDir())
 
 	genFile := config.GenesisFile()
 	doc := &tmtypes.GenesisDoc{}
@@ -207,7 +213,7 @@ func (v *Validator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
 	return doc, nil
 }
 
-func (v *Validator) init() error {
+func (v *internalValidator) init() error {
 	if err := v.createConfig(); err != nil {
 		return err
 	}
@@ -215,8 +221,8 @@ func (v *Validator) init() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(v.ConfigDir())
-	config.Moniker = v.Moniker
+	config.SetRoot(v.configDir())
+	config.Moniker = v.moniker
 
 	genDoc, err := v.getGenesisDoc()
 	if err != nil {
@@ -228,7 +234,7 @@ func (v *Validator) init() error {
 		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
 	}
 
-	genDoc.ChainID = v.ChainMeta.Id
+	genDoc.ChainID = v.chain.chainMeta.Id
 	genDoc.Validators = nil
 	genDoc.AppState = appState
 
@@ -254,19 +260,19 @@ func createMnemonic() (string, error) {
 	return mnemonic, nil
 }
 
-func (v *Validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
+func (v *internalValidator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	txBuilder := util.EncodingConfig.TxConfig.NewTxBuilder()
 
 	if err := txBuilder.SetMsgs(msgs...); err != nil {
 		return nil, err
 	}
 
-	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.NodeKey.ID(), v.InstanceName()))
+	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeKey.ID(), v.instanceName()))
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(200000)
 
 	signerData := authsigning.SignerData{
-		ChainID:       v.ChainMeta.Id,
+		ChainID:       v.chain.chainMeta.Id,
 		AccountNumber: 0,
 		Sequence:      0,
 	}
@@ -280,7 +286,7 @@ func (v *Validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	// also doesn't affect its generated sign bytes, so for code's simplicity
 	// sake, we put it here.
 	sig := txsigning.SignatureV2{
-		PubKey: v.KeyInfo.GetPubKey(),
+		PubKey: v.keyInfo.GetPubKey(),
 		Data: &txsigning.SingleSignatureData{
 			SignMode:  txsigning.SignMode_SIGN_MODE_DIRECT,
 			Signature: nil,
@@ -301,13 +307,13 @@ func (v *Validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 		return nil, err
 	}
 
-	sigBytes, err := v.PrivateKey.Sign(bytesToSign)
+	sigBytes, err := v.privateKey.Sign(bytesToSign)
 	if err != nil {
 		return nil, err
 	}
 
 	sig = txsigning.SignatureV2{
-		PubKey: v.KeyInfo.GetPubKey(),
+		PubKey: v.keyInfo.GetPubKey(),
 		Data: &txsigning.SingleSignatureData{
 			SignMode:  txsigning.SignMode_SIGN_MODE_DIRECT,
 			Signature: sigBytes,

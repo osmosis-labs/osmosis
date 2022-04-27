@@ -14,5 +14,5 @@ func Init(id, dataDir string) (*Chain, error) {
 	if err := initValidatorConfigs(chain); err != nil {
 		return nil, err
 	}
-	return chain, nil
+	return chain.export(), nil
 }

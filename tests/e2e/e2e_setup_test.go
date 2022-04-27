@@ -57,7 +57,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.configureChain(chain.ChainAID)
 	s.configureChain(chain.ChainBID)
-	s.T().Logf("TESTTESTIJETSETSETSET %v", s.chains[1].Validators[0].GetKeyInfo())
+	s.T().Logf("TESTTESTIJETSETSETSET %v", s.chains[1].Validators[0].PublicAddress)
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
@@ -101,17 +101,17 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 	s.valResources[c.ChainMeta.Id] = make([]*dockertest.Resource, len(c.Validators))
 	for i, val := range c.Validators {
 		runOpts := &dockertest.RunOptions{
-			Name:      val.InstanceName(),
+			Name:      val.Name,
 			NetworkID: s.dkrNet.Network.ID,
 			Mounts: []string{
-				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir()),
+				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
 			},
 			Repository: "osmosis",
 			Tag:        "debug",
 		}
 
 		// expose the first validator for debugging and communication
-		if val.GetIndex() == 0 {
+		if val.Index == 0 {
 			runOpts.PortBindings = map[docker.Port][]docker.PortBinding{
 				"1317/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}},
 				"6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}},
@@ -199,8 +199,8 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 			Env: []string{
 				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", s.chains[0].ChainMeta.Id),
 				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", s.chains[1].ChainMeta.Id),
-				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAVal.GetMnemonic()),
-				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBVal.GetMnemonic()),
+				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAVal.Mnemonic),
+				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBVal.Mnemonic),
 				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[s.chains[0].ChainMeta.Id][0].Container.Name[1:]),
 				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[s.chains[1].ChainMeta.Id][0].Container.Name[1:]),
 			},
