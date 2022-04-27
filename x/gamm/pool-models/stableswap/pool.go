@@ -122,7 +122,8 @@ func (pa Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 		return sdk.Coin{}, err
 	}
 
-	// We round final decimal up tokenInDec
+	// We round up tokenInAmt, as this is whats charged for the swap, for the precise amount out.
+	// (else the pool would under-charge by this rounding error)
 	tokenInAmt := amt.Ceil().TruncateInt()
 
 	if !tokenInAmt.IsPositive() {

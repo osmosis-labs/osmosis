@@ -67,6 +67,7 @@ func (p Pool) CalcOutAmtGivenIn(
 		poolAssetOut.Weight.ToDec(),
 	)
 
+	// We ignore the decimal component, as we round down the token amount out.
 	tokenAmountOutInt := tokenAmountOut.TruncateInt()
 	if !tokenAmountOutInt.IsPositive() {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
@@ -121,7 +122,8 @@ func (p Pool) CalcInAmtGivenOut(
 	// Therefore we divide by (1 - swapfee) here
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(swapFee))
 
-	// if tokenInDecimal is non-zero, we add 1 to the tokenInCoin
+	// We round up tokenInAmt, as this is whats charged for the swap, for the precise amount out.
+	// (else the pool would under-charge by this rounding error)
 	tokenInAmt := tokenAmountInBeforeFee.Ceil().TruncateInt()
 
 	if !tokenInAmt.IsPositive() {
