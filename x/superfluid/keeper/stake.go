@@ -381,7 +381,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 
 		lock, err := k.lk.GetLockByID(ctx, lock.UnderlyingLockId)
 		if err != nil {
-			ctx.Logger().Error("lockup retrieval failed with underlying lock", "Lock", lock, "Error", err))
+			ctx.Logger().Error("lockup retrieval failed with underlying lock", "Lock", lock, "Error", err)
 			continue
 		}
 
@@ -397,7 +397,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		// get validator shares equivalent to the token amount
 		valAddr, err := sdk.ValAddressFromBech32(interim.ValAddr)
 		if err != nil {
-			ctx.Logger().Error("failed to decode validator address", "Intermediary", interim.ValAddr, "LockID", lock.ID, "Error", err))
+			ctx.Logger().Error("failed to decode validator address", "Intermediary", interim.ValAddr, "LockID", lock.ID, "Error", err)
 			continue
 		}
 
