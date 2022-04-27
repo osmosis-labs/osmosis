@@ -180,7 +180,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship_ZeroSwapFee(t *testing.T) {
 			require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
 
 			expected := initialOut.Amount
-			actual := inverseTokenOut.Amount // must round to be able to compare with expected.
+			actual := inverseTokenOut.Amount
 
 			require.Equal(t, expected, actual)
 		})
