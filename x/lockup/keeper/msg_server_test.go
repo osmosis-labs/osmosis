@@ -6,6 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -314,16 +315,16 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, test.param.lockOwner, test.param.coinsToLock)
+		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsToLock)
 		suite.Require().NoError(err)
 
-		msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.ctx)
+		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
+		c := sdk.WrapSDKContext(suite.Ctx)
 		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		suite.Require().NoError(err)
 
 		if test.param.isSyntheticLockup {
-			err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, resp.ID, "synthetic", time.Second, false)
+			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
 			suite.Require().NoError(err)
 		}
 
