@@ -119,6 +119,11 @@ func (p Pool) CalcInAmtGivenOut(
 	// Thus in order to give X amount out, we solve the invariant for the invariant input. However invariant input = (1 - swapfee) * trade input.
 	// Therefore we divide by (1 - swapfee) here
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(swapFee))
+	// TODO: Once we make Calc methods return integers
+	// if tokenInDecimal is non-zero, we add 1 to the tokenInCoin
+	// if tokenInDecimal.Amount.IsPositive() {
+	// 	tokenInCoin.Amount = tokenInCoin.Amount.AddRaw(1)
+	// }
 	return sdk.NewDecCoinFromDec(tokenInDenom, tokenAmountInBeforeFee), nil
 }
 
@@ -132,6 +137,7 @@ func (p *Pool) SwapInAmtGivenOut(
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 	tokenInCoin, _ := tokenInDecCoin.TruncateDecimal()
+
 	if !tokenInCoin.Amount.IsPositive() {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
