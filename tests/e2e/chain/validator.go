@@ -31,43 +31,43 @@ import (
 )
 
 type Validator struct {
-	chain            *Chain
-	index            int
-	moniker          string
-	mnemonic         string
-	keyInfo          keyring.Info
-	privateKey       cryptotypes.PrivKey
-	consensusKey     privval.FilePVKey
-	consensusPrivKey cryptotypes.PrivKey
-	nodeKey          p2p.NodeKey
+	ChainMeta        ChainMeta
+	Index            int
+	Moniker          string
+	Mnemonic         string
+	KeyInfo          keyring.Info
+	PrivateKey       cryptotypes.PrivKey
+	ConsensusKey     privval.FilePVKey
+	ConsensusPrivKey cryptotypes.PrivKey
+	NodeKey          p2p.NodeKey
 }
 
 func (v *Validator) InstanceName() string {
-	return fmt.Sprintf("%s%d", v.moniker, v.index)
+	return fmt.Sprintf("%s%d", v.Moniker, v.Index)
 }
 
 func (v *Validator) ConfigDir() string {
-	return fmt.Sprintf("%s/%s", v.chain.configDir(), v.InstanceName())
+	return fmt.Sprintf("%s/%s", v.ChainMeta.configDir(), v.InstanceName())
 }
 
 func (v *Validator) GetKeyInfo() keyring.Info {
-	return v.keyInfo
+	return v.KeyInfo
 }
 
 func (v *Validator) GetMoniker() string {
-	return v.moniker
+	return v.Moniker
 }
 
 func (v *Validator) GetMnemonic() string {
-	return v.mnemonic
+	return v.Mnemonic
 }
 
 func (v *Validator) GetIndex() int {
-	return v.index
+	return v.Index
 }
 
 func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
-	description := stakingtypes.NewDescription(v.moniker, "", "", "", "")
+	description := stakingtypes.NewDescription(v.Moniker, "", "", "", "")
 	commissionRates := stakingtypes.CommissionRates{
 		Rate:          sdk.MustNewDecFromStr("0.1"),
 		MaxRate:       sdk.MustNewDecFromStr("0.2"),
@@ -77,13 +77,13 @@ func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	// get the initial validator min self delegation
 	minSelfDelegation, _ := sdk.NewIntFromString("1")
 
-	valPubKey, err := cryptocodec.FromTmPubKeyInterface(v.consensusKey.PubKey)
+	valPubKey, err := cryptocodec.FromTmPubKeyInterface(v.ConsensusKey.PubKey)
 	if err != nil {
 		return nil, err
 	}
 
 	return stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(v.keyInfo.GetAddress()),
+		sdk.ValAddress(v.KeyInfo.GetAddress()),
 		valPubKey,
 		amount,
 		description,
@@ -102,14 +102,14 @@ func (v *Validator) createNodeKey() error {
 	config := serverCtx.Config
 
 	config.SetRoot(v.ConfigDir())
-	config.Moniker = v.moniker
+	config.Moniker = v.Moniker
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
-	v.nodeKey = *nodeKey
+	v.NodeKey = *nodeKey
 	return nil
 }
 
@@ -118,7 +118,7 @@ func (v *Validator) createConsensusKey() error {
 	config := serverCtx.Config
 
 	config.SetRoot(v.ConfigDir())
-	config.Moniker = v.moniker
+	config.Moniker = v.Moniker
 
 	pvKeyFile := config.PrivValidatorKeyFile()
 	if err := tmos.EnsureDir(filepath.Dir(pvKeyFile), 0o777); err != nil {
@@ -131,7 +131,7 @@ func (v *Validator) createConsensusKey() error {
 	}
 
 	filePV := privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
-	v.consensusKey = filePV.Key
+	v.ConsensusKey = filePV.Key
 
 	return nil
 }
@@ -163,9 +163,9 @@ func (v *Validator) createKeyFromMnemonic(name, mnemonic string) error {
 		return err
 	}
 
-	v.keyInfo = info
-	v.mnemonic = mnemonic
-	v.privateKey = privKey
+	v.KeyInfo = info
+	v.Mnemonic = mnemonic
+	v.PrivateKey = privKey
 
 	return nil
 }
@@ -180,7 +180,7 @@ func (v *Validator) createKey(name string) error {
 }
 
 func (v *Validator) getNodeKey() *p2p.NodeKey {
-	return &v.nodeKey
+	return &v.NodeKey
 }
 
 func (v *Validator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
@@ -216,7 +216,7 @@ func (v *Validator) init() error {
 	config := serverCtx.Config
 
 	config.SetRoot(v.ConfigDir())
-	config.Moniker = v.moniker
+	config.Moniker = v.Moniker
 
 	genDoc, err := v.getGenesisDoc()
 	if err != nil {
@@ -228,7 +228,7 @@ func (v *Validator) init() error {
 		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
 	}
 
-	genDoc.ChainID = v.chain.Id
+	genDoc.ChainID = v.ChainMeta.Id
 	genDoc.Validators = nil
 	genDoc.AppState = appState
 
@@ -261,12 +261,12 @@ func (v *Validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 		return nil, err
 	}
 
-	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeKey.ID(), v.InstanceName()))
+	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.NodeKey.ID(), v.InstanceName()))
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(200000)
 
 	signerData := authsigning.SignerData{
-		ChainID:       v.chain.Id,
+		ChainID:       v.ChainMeta.Id,
 		AccountNumber: 0,
 		Sequence:      0,
 	}
@@ -280,7 +280,7 @@ func (v *Validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	// also doesn't affect its generated sign bytes, so for code's simplicity
 	// sake, we put it here.
 	sig := txsigning.SignatureV2{
-		PubKey: v.keyInfo.GetPubKey(),
+		PubKey: v.KeyInfo.GetPubKey(),
 		Data: &txsigning.SingleSignatureData{
 			SignMode:  txsigning.SignMode_SIGN_MODE_DIRECT,
 			Signature: nil,
@@ -301,13 +301,13 @@ func (v *Validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 		return nil, err
 	}
 
-	sigBytes, err := v.privateKey.Sign(bytesToSign)
+	sigBytes, err := v.PrivateKey.Sign(bytesToSign)
 	if err != nil {
 		return nil, err
 	}
 
 	sig = txsigning.SignatureV2{
-		PubKey: v.keyInfo.GetPubKey(),
+		PubKey: v.KeyInfo.GetPubKey(),
 		Data: &txsigning.SingleSignatureData{
 			SignMode:  txsigning.SignMode_SIGN_MODE_DIRECT,
 			Signature: sigBytes,

@@ -9,20 +9,31 @@ const (
 	keyringAppName    = "testnet"
 )
 
+type ChainMeta struct {
+	DataDir string
+	Id      string
+}
+
 type Chain struct {
-	DataDir    string
-	Id         string
+	ChainMeta  ChainMeta
 	Validators []*Validator
 }
 
 func new(id, dataDir string) (*Chain, error) {
-	return &Chain{
+	// return &ChainMeta{
+	// 	Id:      id,
+	// 	DataDir: dataDir,
+	// }, nil
+	chain := &ChainMeta{
 		Id:      id,
 		DataDir: dataDir,
+	}
+	return &Chain{
+		ChainMeta: *chain,
 	}, nil
 }
 
-func (c *Chain) configDir() string {
+func (c *ChainMeta) configDir() string {
 	return fmt.Sprintf("%s/%s", c.DataDir, c.Id)
 }
 
@@ -81,8 +92,8 @@ func (c *Chain) createAndInitValidatorsWithMnemonics(count int, mnemonics []stri
 
 func (c *Chain) createValidator(index int) *Validator {
 	return &Validator{
-		chain:   c,
-		index:   index,
-		moniker: fmt.Sprintf("%s-osmosis-%d", c.Id, index),
+		ChainMeta: c.ChainMeta,
+		Index:     index,
+		Moniker:   fmt.Sprintf("%s-osmosis-%d", c.ChainMeta.Id, index),
 	}
 }
