@@ -39,5 +39,8 @@ service Query {
   	rpc AccountLockedLongerDurationNotUnlockingOnly(AccountLockedLongerDurationNotUnlockingOnlyRequest) returns (AccountLockedLongerDurationNotUnlockingOnlyResponse) {}
 	// Returns account's locked records for a denom with longer duration
 	rpc AccountLockedLongerDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
+
+	// Returns account locked records with a specific duration
+	rpc AccountLockedDuration(AccountLockedDurationRequest) returns (AccountLockedDurationResponse);
 }
 ```
