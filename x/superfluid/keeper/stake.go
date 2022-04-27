@@ -395,12 +395,12 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		// get validator shares equivalent to the token amount
 		valAddr, err := sdk.ValAddressFromBech32(interim.ValAddr)
 		if err != nil {
-			panic(fmt.Sprintf("failed to decode validator address %s for lock %d: %s)", interim.ValAddr, lock.UnderlyingLockId, err))
+			panic(fmt.Sprintf("failed to decode validator address %s for lock %d: %s)", interim.ValAddr, lock.ID, err))
 		}
 
 		validator, found := k.sk.GetValidator(ctx, valAddr)
 		if !found {
-			panic(fmt.Sprintf("validator %s does not exist for lock %d",  valAddr, lock.UnderlyingLockId))
+			panic(fmt.Sprintf("validator %s does not exist for lock %d", valAddr, lock.ID))
 		}
 
 		shares, err := validator.SharesFromTokens(amount)
