@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+* [#1357] (https://github.com/osmosis-labs/osmosis/pull/1357) chore: upgrade sdk to v0.45.0x-osmo-v7.8.1
 * [#1262](https://github.com/osmosis-labs/osmosis/pull/1262) Add a `forceprune` command to the binaries, that prunes golevelDB data better.
 
 ## [v7.2.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.0)
