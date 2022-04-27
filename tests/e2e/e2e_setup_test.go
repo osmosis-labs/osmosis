@@ -281,9 +281,21 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 	s.Require().NoError(err)
 
 	var newChain chain.Chain
+	var dummyChain chain.Chain
 	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
 	s.T().Log(fileName)
-	time.Sleep(8 * time.Second)
+
+	err2 := Do(func(attempt int) (bool, error) {
+		encJson, _ := os.ReadFile(fileName)
+		err2 := json.Unmarshal(encJson, &dummyChain)
+		if err2 != nil {
+			time.Sleep(1 * time.Second) // wait 1 second
+		}
+		return attempt < 5, err2
+	})
+	if err2 != nil {
+		panic(err2)
+	}
 	encJson, _ := os.ReadFile(fileName)
 	err3 := json.Unmarshal(encJson, &newChain)
 	if err3 != nil {
