@@ -16,7 +16,7 @@ var _ types.PoolI = &Pool{}
 // * FutureGovernor is valid
 // * poolID doesn't already exist
 func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, futureGovernor string, blockTime time.Time) (Pool, error) {
-	pool := &Pool{
+	pool := Pool{
 		Address:            types.NewPoolAddress(poolId).String(),
 		Id:                 poolId,
 		PoolParams:         stableswapPoolParams,
@@ -25,5 +25,5 @@ func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLi
 		FuturePoolGovernor: futureGovernor,
 	}
 
-	return *pool, nil
+	return pool, nil
 }
