@@ -20,29 +20,29 @@ f_setup_pristine_src_dir() {
     go mod download
 }
 
-f_build_archs() {
-    local l_os
-
-    l_os=$1
-
-    case "${l_os}" in
-    darwin | windows)
-        echo 'amd64'
-        ;;
-    linux)
-        echo 'amd64 arm64'
-        ;;
-    *)
-        echo "unknown OS -- ${l_os}" >&2
-        return 1
-    esac
+f_exe_file_ext() {
+   [ $(go env GOOS) = windows ] && printf '%s' '.exe' || printf ''
 }
 
-f_binary_file_ext() {
-   [ $1 = windows ] && printf '%s' '.exe' || printf ''
+setup_build_env_for_platform() {
+    local l_platform=$1
+
+    g_old_GOOS="$(go env GOOS)"
+    g_old_GOARCH="$(go env GOARCH)"
+    g_old_OS_FILE_EXT="${OS_FILE_EXT}"
+
+    go env -w GOOS="${l_platform%%/*}"
+    go env -w GOARCH="${l_platform##*/}"
+    OS_FILE_EXT="$(f_exe_file_ext)"
 }
 
-f_generate_build_report() {
+restore_build_env() {
+    go env -w GOOS="${g_old_GOOS}"
+    go env -w GOARCH="${g_old_GOARCH}"
+    OS_FILE_EXT="${g_old_OS_FILE_EXT}"
+}
+
+generate_build_report() {
     local l_tempfile
 
     l_tempfile="$(mktemp)"
@@ -63,6 +63,7 @@ EOF
 
 [ "x${DEBUG}" = "x" ] || set -x
 
+OS_FILE_EXT=''
 BASEDIR="$(mktemp -d)"
 OUTDIR=$HOME/artifacts
 rm -rfv ${OUTDIR}/

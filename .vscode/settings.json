@@ -1,7 +1,7 @@
 {
   "tabnine.experimentalAutoImports": true,
   "go.lintTool": "golangci-lint",
-  "go.formatTool": "gofumports",
+  "go.formatTool": "goimports",
   "go.useLanguageServer": true,
   "[go.mod]": {
     "editor.formatOnSave": true,
