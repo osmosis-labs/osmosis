@@ -54,6 +54,13 @@ func (pa Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
 func (pa Pool) GetTotalShares() sdk.Int {
 	return pa.TotalShares.Amount
 }
+func (pa Pool) GetScalingFactors() []uint64 {
+	return pa.ScalingFactor
+}
+
+func (pa Pool) GetScalingFactorByLiquidityIndex(liquidityIndex int) uint64 {
+	return pa.ScalingFactor[liquidityIndex]
+}
 
 // returns pool liquidity of the provided denoms, in the same order the denoms were provided in
 func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
@@ -78,20 +85,10 @@ func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
 			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", d)
 		}
 
-		scalingFactor := pa.getPoolAssetScalingFactor(d)
+		scalingFactor := pa.GetScalingFactorByLiquidityIndex(i)
 		result[i] = amt.QuoRaw(int64(scalingFactor))
 	}
 	return result, nil
-}
-
-func (pa Pool) getPoolAssetScalingFactor(denom string) uint64 {
-	var result uint64
-	for _, scalingFactor := range pa.PoolScalingFactor {
-		if scalingFactor.Denom == denom {
-			result = scalingFactor.ScalingFactor
-		}
-	}
-	return result
 }
 
 // updatePoolLiquidityForSwap updates the pool liquidity.
