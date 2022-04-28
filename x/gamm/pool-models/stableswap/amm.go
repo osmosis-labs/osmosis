@@ -1,6 +1,8 @@
 package stableswap
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 var (
 	cubeRootTwo, _   = sdk.NewDec(2).ApproxRoot(3)
@@ -135,20 +137,26 @@ func solveCfmmDirectEquation(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	return a
 }
 
+// (a - b) must be within tolerance
 func approxDecEqual(a, b, tol sdk.Dec) bool {
 	diff := a.Sub(b).Abs()
-	return diff.Quo(a).LTE(tol) && diff.Quo(b).LTE(tol)
+	return diff.LTE(tol)
 }
 
 var (
-	twodec    = sdk.MustNewDecFromStr("2.0")
-	threshold = sdk.MustNewDecFromStr("0.00001") // 0.001%
+	twodec = sdk.MustNewDecFromStr("2.0")
+	// TODO: Come back and analyze this threshold
+	threshold = sdk.MustNewDecFromStr("0.00001")
 )
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 // added for future extension
 func solveCFMMBinarySearch(constantFunction func(sdk.Dec, sdk.Dec) sdk.Dec) func(sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec {
 	return func(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
+		if !yReserve.Add(yIn).IsPositive() {
+			panic("invalid yReserve, yIn combo")
+		}
+
 		k := constantFunction(xReserve, yReserve)
 		yf := yReserve.Add(yIn)
 		x_low_est := sdk.ZeroDec()
