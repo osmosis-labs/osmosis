@@ -146,7 +146,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	// begin distribution for all gauges
 	for _, gaugeId := range gaugeIds {
 		gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
-		err := app.IncentivesKeeper.moveUpcomingGaugeToActiveGauge(ctx, *gauge)
+		err := app.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(ctx, *gauge)
 		if err != nil {
 			fmt.Printf("Begin distribution, %v\n", err)
 			b.FailNow()

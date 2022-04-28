@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
-	err = suite.App.IncentivesKeeper.moveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
-	err = suite.App.IncentivesKeeper.moveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers
@@ -192,7 +192,7 @@ func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
-	err = suite.App.IncentivesKeeper.moveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
@@ -237,7 +237,7 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
-	err = suite.App.IncentivesKeeper.moveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution

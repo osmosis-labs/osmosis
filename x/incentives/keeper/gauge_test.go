@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
-	err = suite.App.IncentivesKeeper.moveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// check upcoming gauges
@@ -125,7 +125,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	suite.Require().Len(gaugeIds, 1)
 
 	// finish distribution
-	err = suite.App.IncentivesKeeper.moveActiveGaugeToFinishedGauge(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveActiveGaugeToFinishedGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// check finished gauges
@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
-	err = suite.App.IncentivesKeeper.moveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// check upcoming gauges
@@ -277,7 +277,7 @@ func (suite *KeeperTestSuite) TestGaugesByDenom() {
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 		gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 		suite.Require().NoError(err)
-		err = suite.App.IncentivesKeeper.moveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+		err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 		suite.Require().NoError(err)
 
 		// check gauge ids by denom
@@ -294,7 +294,7 @@ func (suite *KeeperTestSuite) TestGaugesByDenom() {
 
 		// finish distribution for non perpetual gauge
 		if !gauge.IsPerpetual {
-			err = suite.App.IncentivesKeeper.moveActiveGaugeToFinishedGauge(suite.Ctx, *gauge)
+			err = suite.App.IncentivesKeeper.MoveActiveGaugeToFinishedGauge(suite.Ctx, *gauge)
 			suite.Require().NoError(err)
 		}
 
