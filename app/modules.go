@@ -182,39 +182,6 @@ func OrderEndBlockers(allModuleNames []string) []string {
 	return ord.TotalOrdering()
 }
 
-// orderEndBlockers Tell the app's module manager how to set the order of
-// EndBlockers, which are run at the end of every block.
-var orderEndBlockers = []string{
-	lockuptypes.ModuleName, // no-op
-	crisistypes.ModuleName,
-	govtypes.ModuleName,
-	stakingtypes.ModuleName,        // no-op
-	capabilitytypes.ModuleName,     // no-op
-	authtypes.ModuleName,           // no-op
-	banktypes.ModuleName,           // no-op
-	distrtypes.ModuleName,          // no-op
-	slashingtypes.ModuleName,       // no-op
-	minttypes.ModuleName,           // no-op
-	genutiltypes.ModuleName,        // (can't tell if no-op)
-	evidencetypes.ModuleName,       // no-op
-	authz.ModuleName,               // no-op
-	paramstypes.ModuleName,         // no-op
-	upgradetypes.ModuleName,        // no-op
-	vestingtypes.ModuleName,        // no-op
-	ibchost.ModuleName,             // no-op
-	ibctransfertypes.ModuleName,    // no-op
-	gammtypes.ModuleName,           // no-op
-	incentivestypes.ModuleName,     // no-op
-	lockuptypes.ModuleName,         // no-op
-	poolincentivestypes.ModuleName, // no-op
-	superfluidtypes.ModuleName,     // no-op
-	bech32ibctypes.ModuleName,      // no-op
-	txfeestypes.ModuleName,         // should come before gamm
-	// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
-	epochstypes.ModuleName,
-	wasm.ModuleName, // no-op
-}
-
 // modulesOrderInitGenesis returns module names in order for init genesis calls.
 var modulesOrderInitGenesis = []string{
 	capabilitytypes.ModuleName,
