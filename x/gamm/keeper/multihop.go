@@ -84,9 +84,8 @@ func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.S
 			return nil, err
 		}
 
-		insExpected[i] = tokenIn.Amount.TruncateInt()
-
-		tokenOut, _ = tokenIn.TruncateDecimal()
+		insExpected[i] = tokenIn.Amount
+		tokenOut = tokenIn
 	}
 
 	return insExpected, nil
