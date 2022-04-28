@@ -289,13 +289,17 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 	for i := 0; i < 10; i++ {
 		attempts += i
 		encJson, _ := os.ReadFile(fileName)
-		err2 := json.Unmarshal(encJson, &newChain)
-		if err2 != nil {
-			time.Sleep(1 * time.Second)
-		} else if err2 != nil && attempts == 10 {
-			panic(err2)
-		} else {
-			break
+		err = json.Unmarshal(encJson, &newChain)
+		if err == nil {
+		    break
+		}
+		
+		if i == 10 {
+		    s.Require().NoError(err)
+		}
+		
+		if i > 0 {
+		    time.Sleep(1 * time.Second)
 		}
 	}
 	s.chains = append(s.chains, &newChain)
