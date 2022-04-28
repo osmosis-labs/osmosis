@@ -59,7 +59,7 @@ var (
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
 	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(appModuleBasics...)
+	ModuleBasics = module.NewBasicManager(keepers.AppModuleBasics...)
 
 	// module account permissions
 	maccPerms = moduleAccountPermissions
@@ -221,7 +221,7 @@ func NewOsmosisApp(
 	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
 
 	// Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
-	app.mm.SetOrderEndBlockers(orderEndBlockers...)
+	app.mm.SetOrderEndBlockers(OrderEndBlockers(app.mm.ModuleNames())...)
 
 	// NOTE: The genutils moodule must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
