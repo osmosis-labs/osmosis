@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 set -ue
@@ -12,7 +11,7 @@ set -ue
 # - DEBUG
 
 # Source builder's functions library
-. /usr/local/share/tendermint/buildlib.sh
+. /usr/local/share/osmosis/buildlib.sh
 
 # These variables are now available
 # - BASEDIR
@@ -25,14 +24,15 @@ for platform in ${TARGET_PLATFORMS} ; do
     # cases except when the target platform is 'windows'.
     setup_build_env_for_platform "${platform}"
 
-    make clean
     echo Building for $(go env GOOS)/$(go env GOARCH) >&2
     GOROOT_FINAL="$(go env GOROOT)" \
     make build \
         LDFLAGS=-buildid=${VERSION} \
         VERSION=${VERSION} \
         COMMIT=${COMMIT} \
-        LEDGER_ENABLED=${LEDGER_ENABLED}
+        LEDGER_ENABLED=${LEDGER_ENABLED} \
+        LINK_STATICALLY=true \
+        BUILD_TAGS=muslc
     mv ./build/${APP}${OS_FILE_EXT} ${OUTDIR}/${APP}-${VERSION}-$(go env GOOS)-$(go env GOARCH)${OS_FILE_EXT}
 
     # This function restore the build environment variables to their
