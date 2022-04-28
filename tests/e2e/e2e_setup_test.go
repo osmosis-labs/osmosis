@@ -297,7 +297,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 			break
 		}
 
-		if i == 10 {
+		if i == maxRetries - 1 {
 			s.Require().NoError(err)
 		}
 
