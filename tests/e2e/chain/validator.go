@@ -30,8 +30,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-type Validator struct {
-	chain            *Chain
+type internalValidator struct {
+	chain            *internalChain
 	index            int
 	moniker          string
 	mnemonic         string
@@ -42,31 +42,27 @@ type Validator struct {
 	nodeKey          p2p.NodeKey
 }
 
-func (v *Validator) InstanceName() string {
+func (v *internalValidator) instanceName() string {
 	return fmt.Sprintf("%s%d", v.moniker, v.index)
 }
 
-func (v *Validator) ConfigDir() string {
-	return fmt.Sprintf("%s/%s", v.chain.configDir(), v.InstanceName())
+func (v *internalValidator) configDir() string {
+	return fmt.Sprintf("%s/%s", v.chain.chainMeta.configDir(), v.instanceName())
 }
 
-func (v *Validator) GetKeyInfo() keyring.Info {
+func (v *internalValidator) getKeyInfo() keyring.Info {
 	return v.keyInfo
 }
 
-func (v *Validator) GetMoniker() string {
+func (v *internalValidator) getMoniker() string {
 	return v.moniker
 }
 
-func (v *Validator) GetMnemonic() string {
+func (v *internalValidator) getMnemonic() string {
 	return v.mnemonic
 }
 
-func (v *Validator) GetIndex() int {
-	return v.index
-}
-
-func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
+func (v *internalValidator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	description := stakingtypes.NewDescription(v.moniker, "", "", "", "")
 	commissionRates := stakingtypes.CommissionRates{
 		Rate:          sdk.MustNewDecFromStr("0.1"),
@@ -92,16 +88,16 @@ func (v *Validator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	)
 }
 
-func (v *Validator) createConfig() error {
-	p := path.Join(v.ConfigDir(), "config")
+func (v *internalValidator) createConfig() error {
+	p := path.Join(v.configDir(), "config")
 	return os.MkdirAll(p, 0o755)
 }
 
-func (v *Validator) createNodeKey() error {
+func (v *internalValidator) createNodeKey() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(v.ConfigDir())
+	config.SetRoot(v.configDir())
 	config.Moniker = v.moniker
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
@@ -113,11 +109,11 @@ func (v *Validator) createNodeKey() error {
 	return nil
 }
 
-func (v *Validator) createConsensusKey() error {
+func (v *internalValidator) createConsensusKey() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(v.ConfigDir())
+	config.SetRoot(v.configDir())
 	config.Moniker = v.moniker
 
 	pvKeyFile := config.PrivValidatorKeyFile()
@@ -136,8 +132,8 @@ func (v *Validator) createConsensusKey() error {
 	return nil
 }
 
-func (v *Validator) createKeyFromMnemonic(name, mnemonic string) error {
-	kb, err := keyring.New(keyringAppName, keyring.BackendTest, v.ConfigDir(), nil)
+func (v *internalValidator) createKeyFromMnemonic(name, mnemonic string) error {
+	kb, err := keyring.New(keyringAppName, keyring.BackendTest, v.configDir(), nil)
 	if err != nil {
 		return err
 	}
@@ -170,7 +166,7 @@ func (v *Validator) createKeyFromMnemonic(name, mnemonic string) error {
 	return nil
 }
 
-func (v *Validator) createKey(name string) error {
+func (v *internalValidator) createKey(name string) error {
 	mnemonic, err := createMnemonic()
 	if err != nil {
 		return err
@@ -179,14 +175,24 @@ func (v *Validator) createKey(name string) error {
 	return v.createKeyFromMnemonic(name, mnemonic)
 }
 
-func (v *Validator) getNodeKey() *p2p.NodeKey {
+func (v *internalValidator) export() *Validator {
+	return &Validator{
+		Name:          v.instanceName(),
+		ConfigDir:     v.configDir(),
+		Index:         v.index,
+		Mnemonic:      v.mnemonic,
+		PublicAddress: v.keyInfo.GetAddress().String(),
+	}
+}
+
+func (v *internalValidator) getNodeKey() *p2p.NodeKey {
 	return &v.nodeKey
 }
 
-func (v *Validator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
+func (v *internalValidator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
-	config.SetRoot(v.ConfigDir())
+	config.SetRoot(v.configDir())
 
 	genFile := config.GenesisFile()
 	doc := &tmtypes.GenesisDoc{}
@@ -207,7 +213,7 @@ func (v *Validator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
 	return doc, nil
 }
 
-func (v *Validator) init() error {
+func (v *internalValidator) init() error {
 	if err := v.createConfig(); err != nil {
 		return err
 	}
@@ -215,7 +221,7 @@ func (v *Validator) init() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(v.ConfigDir())
+	config.SetRoot(v.configDir())
 	config.Moniker = v.moniker
 
 	genDoc, err := v.getGenesisDoc()
@@ -228,7 +234,7 @@ func (v *Validator) init() error {
 		return fmt.Errorf("failed to JSON encode app genesis state: %w", err)
 	}
 
-	genDoc.ChainID = v.chain.Id
+	genDoc.ChainID = v.chain.chainMeta.Id
 	genDoc.Validators = nil
 	genDoc.AppState = appState
 
@@ -254,19 +260,19 @@ func createMnemonic() (string, error) {
 	return mnemonic, nil
 }
 
-func (v *Validator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
+func (v *internalValidator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	txBuilder := util.EncodingConfig.TxConfig.NewTxBuilder()
 
 	if err := txBuilder.SetMsgs(msgs...); err != nil {
 		return nil, err
 	}
 
-	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeKey.ID(), v.InstanceName()))
+	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeKey.ID(), v.instanceName()))
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(200000)
 
 	signerData := authsigning.SignerData{
-		ChainID:       v.chain.Id,
+		ChainID:       v.chain.chainMeta.Id,
 		AccountNumber: 0,
 		Sequence:      0,
 	}
