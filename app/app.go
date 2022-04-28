@@ -59,7 +59,7 @@ var (
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
 	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(appModuleBasics...)
+	ModuleBasics = module.NewBasicManager(keepers.AppModuleBasics...)
 
 	// module account permissions
 	maccPerms = moduleAccountPermissions
