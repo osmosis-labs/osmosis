@@ -46,20 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v7.2.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.0)
 
-<<<<<<< HEAD
 * [#1241](https://github.com/osmosis-labs/osmosis/pull/1241/files) chore: upgrade sdk to v0.45.0x-osmo-v7.7
-=======
-### Minor improvements & Bug Fixes
-* [#1286](https://github.com/osmosis-labs/osmosis/pull/1286) Fix release build scripts.
-* [#1203](https://github.com/osmosis-labs/osmosis/pull/1203) cleanup Makefile and ci workflows
-* [#1177](https://github.com/osmosis-labs/osmosis/pull/1177) upgrade to go 1.18
-* [#1193](https://github.com/osmosis-labs/osmosis/pull/1193) Setup e2e tests on a single chain; add balances query test
-* [#1095](https://github.com/osmosis-labs/osmosis/pull/1095) Fix authz being unable to use lockup & superfluid types.
-* [#1105](https://github.com/osmosis-labs/osmosis/pull/1105) Add GitHub Actions to automatically push the osmosis Docker image
-* [#1114](https://github.com/osmosis-labs/osmosis/pull/1114) Improve CI: remove duplicate runs of test worflow
-* [#1127](https://github.com/osmosis-labs/osmosis/pull/1127) Stricter Linting:  bump golangci-lint version and enable additional linters.
-* [#1184](https://github.com/osmosis-labs/osmosis/pull/1184) Fix endtime event output on BeginUnlocking
->>>>>>> 2029415 (fix: release build scripts (#1286))
 
 ## [v7.1.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.1.0)
 
