@@ -24,6 +24,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
+const maxRetries = 10 // max retries for json unmarshalling
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -258,7 +260,7 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 func (s *IntegrationTestSuite) configureChain(chainId string) {
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
-	s.T().Log(tmpDir)
+	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
 	s.Require().NoError(err)
 
 	s.initResource, err = s.dkrPool.RunWithOptions(
@@ -283,21 +285,21 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 	var newChain chain.Chain
 
 	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
-	s.T().Log(fileName)
+	s.T().Logf("serialized init file for chain-id %v: %v", chainId, fileName)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < maxRetries; i++ {
 		encJson, _ := os.ReadFile(fileName)
 		err = json.Unmarshal(encJson, &newChain)
 		if err == nil {
-		    break
+			break
 		}
-		
+
 		if i == 10 {
-		    s.Require().NoError(err)
+			s.Require().NoError(err)
 		}
-		
+
 		if i > 0 {
-		    time.Sleep(1 * time.Second)
+			time.Sleep(1 * time.Second)
 		}
 	}
 	s.chains = append(s.chains, &newChain)
