@@ -10,8 +10,11 @@ import (
 )
 
 func main() {
-	var dataDir string
-	var chainId string
+	var (
+		dataDir string
+		chainId string
+	)
+
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
 	flag.Parse()
