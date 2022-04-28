@@ -287,6 +287,8 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
 	s.T().Logf("serialized init file for chain-id %v: %v", chainId, fileName)
 
+	// loop through the reading and unmarshaling of the init file a total of maxRetries or until error is nil
+	// without this, test attempts to unmarshal file before docker container is finished writing
 	for i := 0; i < maxRetries; i++ {
 		encJson, _ := os.ReadFile(fileName)
 		err = json.Unmarshal(encJson, &newChain)
