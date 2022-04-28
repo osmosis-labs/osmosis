@@ -29,4 +29,3 @@ func (k Keeper) MoveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gaug
 func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gauge) error {
 	return k.moveActiveGaugeToFinishedGauge(ctx, gauge)
 }
-
