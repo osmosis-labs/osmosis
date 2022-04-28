@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
@@ -139,6 +140,16 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 			initialPoolIn:   1_000_000,
 			initialWeightIn: 50,
 		},
+		{
+			denomOut:         "uosmo",
+			initialPoolOut:   1_000_000,
+			initialWeightOut: 200,
+			initialCalcOut:   100000,
+
+			denomIn:         "ion",
+			initialPoolIn:   1_000_000_000,
+			initialWeightIn: 50,
+		},
 	}
 
 	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
@@ -188,15 +199,17 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 				actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, poolAssetIn.Token.Denom, swapFeeDec)
 				require.NoError(t, err)
 
-				inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewInt64Coin(poolAssetIn.Token.Denom, actualTokenIn.Amount.TruncateInt64())), poolAssetOut.Token.Denom, swapFeeDec)
+				inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), poolAssetOut.Token.Denom, swapFeeDec)
 				require.NoError(t, err)
 
 				require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
 
 				expected := initialOut.Amount.ToDec()
-				actual := inverseTokenOut.Amount.RoundInt().ToDec() // must round to be able to compare with expected.
+				actual := inverseTokenOut.Amount.ToDec()
 
-				require.Equal(t, expected, actual)
+				// allow a rounding error of up to 1 for this relation
+				tol := sdk.NewDec(1)
+				require.True(osmoutils.DecApproxEq(t, expected, actual, tol))
 			})
 		}
 	}
@@ -289,7 +302,6 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 				initialWeightIn := sdk.NewInt(tc.initialWeightIn)
 
 				initialTotalShares := types.InitPoolSharesSupply.ToDec()
-
 				initialCalcTokenOut := sdk.NewInt(tc.tokenOut)
 
 				actualSharesOut := balancer.CalcPoolSharesOutGivenSingleAssetIn(
