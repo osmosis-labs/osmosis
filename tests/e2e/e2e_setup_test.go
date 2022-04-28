@@ -285,7 +285,6 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
 	s.T().Log(fileName)
 
-	attempts := 0
 	for i := 0; i < 10; i++ {
 		encJson, _ := os.ReadFile(fileName)
 		err = json.Unmarshal(encJson, &newChain)
