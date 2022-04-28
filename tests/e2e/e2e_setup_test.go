@@ -287,7 +287,6 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 
 	attempts := 0
 	for i := 0; i < 10; i++ {
-		attempts += i
 		encJson, _ := os.ReadFile(fileName)
 		err = json.Unmarshal(encJson, &newChain)
 		if err == nil {
