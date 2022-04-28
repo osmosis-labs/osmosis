@@ -211,6 +211,26 @@ func (q Querier) AccountLockedLongerDurationDenom(goCtx context.Context, req *ty
 	return &types.AccountLockedLongerDurationDenomResponse{Locks: locks}, nil
 }
 
+// AccountLockedDuration returns the account locked with the specified duration.
+func (q Querier) AccountLockedDuration(goCtx context.Context, req *types.AccountLockedDurationRequest) (*types.AccountLockedDurationResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if len(req.Owner) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	owner, err := sdk.AccAddressFromBech32(req.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	locks := q.Keeper.GetAccountLockedDuration(ctx, owner, req.Duration)
+	return &types.AccountLockedDurationResponse{Locks: locks}, nil
+}
+
 // AccountLockedPastTimeNotUnlockingOnly Returns locked records of an account with unlock time beyond timestamp excluding tokens started unlocking.
 func (q Querier) AccountLockedPastTimeNotUnlockingOnly(goCtx context.Context, req *types.AccountLockedPastTimeNotUnlockingOnlyRequest) (*types.AccountLockedPastTimeNotUnlockingOnlyResponse, error) {
 	if req == nil {
