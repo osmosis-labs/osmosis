@@ -12,4 +12,5 @@ const (
 	QueryLockedByID                       = "locked_by_id"
 	QueryAccountLockedLongerDuration      = "account_locked_longer_than_duration"
 	QueryAccountLockedLongerDurationDenom = "account_locked_longer_than_duration_denom"
+	QueryAccountLockedDuration            = "account_locked_duration"
 )

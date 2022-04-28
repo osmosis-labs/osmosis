@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -37,11 +36,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/v7/app/keepers"
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
@@ -113,22 +112,16 @@ func GetWasmEnabledProposals() []wasm.ProposalType {
 // capabilities aren't needed for testing.
 type OsmosisApp struct {
 	*baseapp.BaseApp
-	appKeepers
+	keepers.AppKeepers
 
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
 	invCheckPeriod    uint
 
-	// keys to access the substores
-	keys    map[string]*sdk.KVStoreKey
-	tkeys   map[string]*sdk.TransientStoreKey
-	memKeys map[string]*sdk.MemoryStoreKey
-
-	transferModule transfer.AppModule
-	mm             *module.Manager
-	sm             *module.SimulationManager
-	configurator   module.Configurator
+	mm           *module.Manager
+	sm           *module.SimulationManager
+	configurator module.Configurator
 }
 
 func init() {
@@ -164,26 +157,13 @@ func NewOsmosisApp(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
-	// Define what keys will be used in the cosmos-sdk key/value store.
-	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain.
-	// Keys are in keys.go to kep app.go as brief as possible.
-	keys := sdk.NewKVStoreKeys(KVStoreKeys()...)
-
-	// Define transient store keys
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-
-	// MemKeys are for information that is stored only in RAM.
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
-
 	app := &OsmosisApp{
+		AppKeepers:        keepers.AppKeepers{},
 		BaseApp:           bApp,
 		cdc:               cdc,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
-		keys:              keys,
-		tkeys:             tkeys,
-		memKeys:           memKeys,
 	}
 
 	wasmDir := filepath.Join(homePath, "wasm")
@@ -191,10 +171,27 @@ func NewOsmosisApp(
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
-
-	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
+	app.InitSpecialKeepers(
+		appCodec,
+		bApp,
+		wasmDir,
+		cdc,
+		invCheckPeriod,
+		skipUpgradeHeights,
+		homePath,
+	)
 	app.setupUpgradeStoreLoaders()
-	app.InitNormalKeepers(wasmDir, wasmConfig, wasmEnabledProposals, wasmOpts)
+	app.InitNormalKeepers(
+		appCodec,
+		bApp,
+		maccPerms,
+		wasmDir,
+		wasmConfig,
+		wasmEnabledProposals,
+		wasmOpts,
+		app.BlockedAddrs(),
+	)
+
 	app.SetupHooks()
 
 	/****  Module Options ****/
@@ -252,9 +249,9 @@ func NewOsmosisApp(
 	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
 
 	// initialize stores
-	app.MountKVStores(keys)
-	app.MountTransientStores(tkeys)
-	app.MountMemoryStores(memKeys)
+	app.MountKVStores(app.GetKVStoreKey())
+	app.MountTransientStores(app.GetTransientStoreKey())
+	app.MountMemoryStores(app.GetMemoryStoreKey())
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -263,7 +260,7 @@ func NewOsmosisApp(
 		NewAnteHandler(
 			appOpts,
 			wasmConfig,
-			keys[wasm.StoreKey],
+			app.GetKey(wasm.StoreKey),
 			app.AccountKeeper,
 			app.BankKeeper,
 			app.TxFeesKeeper,

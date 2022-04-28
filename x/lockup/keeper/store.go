@@ -184,7 +184,15 @@ func (k Keeper) GetAccountLockedLongerDuration(ctx sdk.Context, addr sdk.AccAddr
 	return combineLocks(notUnlockings, unlockings)
 }
 
-// GetAccountLockedLongerDurationNotUnlockingOnly Returns account locked with duration longer than specified.
+// GetAccountLockedDuration returns locks with a specific duration for a given account.
+func (k Keeper) GetAccountLockedDuration(ctx sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock {
+	// it does not matter started unlocking or not for duration query
+	unlockedLocks := k.getLocksFromIterator(ctx, k.AccountLockIteratorDuration(ctx, true, addr, duration))
+	lockedLocks := k.getLocksFromIterator(ctx, k.AccountLockIteratorDuration(ctx, false, addr, duration))
+	return combineLocks(unlockedLocks, lockedLocks)
+}
+
+// GetAccountLockedLongerDurationNotUnlockingOnly Returns account locked with duration longer than specified
 func (k Keeper) GetAccountLockedLongerDurationNotUnlockingOnly(ctx sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock {
 	return k.getLocksFromIterator(ctx, k.AccountLockIteratorLongerDuration(ctx, false, addr, duration))
 }

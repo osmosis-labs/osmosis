@@ -91,6 +91,5 @@ func (suite *KeeperTestSuite) TestHooksPanicRecovery() {
 				suite.Require().Equal(tc.expectedCounterValues[i], epochHook.successCounter, "test case index %d", tcIndex)
 			}
 		}
-
 	}
 }

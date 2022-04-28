@@ -162,7 +162,7 @@ func appModules(
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
-		app.transferModule,
+		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
 		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
@@ -322,7 +322,7 @@ func simulationModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
-		app.transferModule,
+		app.TransferModule,
 	}
 }
 

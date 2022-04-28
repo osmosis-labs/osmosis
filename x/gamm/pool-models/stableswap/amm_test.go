@@ -33,8 +33,6 @@ func TestCFMMInvariant(t *testing.T) {
 			sdk.NewDec(100),
 			sdk.NewDec(100),
 			sdk.NewDec(1000),
-			// returns 87.445364416281417284
-			// should return 99.84973704262359
 		},
 		// {
 		// 	sdk.NewDec(100000),
