@@ -132,6 +132,7 @@ func appModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
+		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 	}
 }
@@ -165,6 +166,7 @@ func orderBeginBlockers() []string {
 		incentivestypes.ModuleName,
 		lockuptypes.ModuleName,
 		poolincentivestypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 		// superfluid must come after distribution and epochs
 		superfluidtypes.ModuleName,
 		bech32ibctypes.ModuleName,
@@ -208,6 +210,7 @@ var modulesOrderInitGenesis = []string{
 	bech32ibctypes.ModuleName, // comes after ibctransfertypes
 	poolincentivestypes.ModuleName,
 	superfluidtypes.ModuleName,
+	tokenfactorytypes.ModuleName,
 	incentivestypes.ModuleName,
 	epochstypes.ModuleName,
 	lockuptypes.ModuleName,
@@ -254,7 +257,7 @@ func simulationModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
-		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper),
+		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		app.TransferModule,
 	}
 }
