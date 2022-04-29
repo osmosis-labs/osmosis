@@ -8,10 +8,10 @@ import (
 
 // x/tokenfactory module sentinel errors
 var (
-	ErrDenomExists              = sdkerrors.Register(ModuleName, 1, "denom already exists")
-	ErrUnauthorized             = sdkerrors.Register(ModuleName, 2, "unauthorized account")
-	ErrInvalidDenom             = sdkerrors.Register(ModuleName, 3, "invalid denom")
-	ErrInvalidCreator           = sdkerrors.Register(ModuleName, 4, "invalid creator")
-	ErrInvalidAuthorityMetadata = sdkerrors.Register(ModuleName, 5, "invalid authority metadata")
-	ErrInvalidGenesis           = sdkerrors.Register(ModuleName, 6, "invalid genesis")
+	ErrDenomExists              = sdkerrors.Register(ModuleName, 2, "denom already exists")
+	ErrUnauthorized             = sdkerrors.Register(ModuleName, 3, "unauthorized account")
+	ErrInvalidDenom             = sdkerrors.Register(ModuleName, 4, "invalid denom")
+	ErrInvalidCreator           = sdkerrors.Register(ModuleName, 5, "invalid creator")
+	ErrInvalidAuthorityMetadata = sdkerrors.Register(ModuleName, 6, "invalid authority metadata")
+	ErrInvalidGenesis           = sdkerrors.Register(ModuleName, 7, "invalid genesis")
 )
