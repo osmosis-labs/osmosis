@@ -66,6 +66,9 @@ endif
 ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
+ifeq ($(LINK_STATICALLY),true)
+	ldflags += -linkmode=external -extldflags "-L/usr/local/lib/ -lwasmvm_muslc -Wl,-z,muldefs -static"
+endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
@@ -97,12 +100,12 @@ $(BUILDDIR)/:
 build-reproducible: go.sum
 	$(DOCKER) rm latest-build || true
 	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64' \
-        --env APP=osmosisd \
-        --env VERSION=$(VERSION) \
-        --env COMMIT=$(COMMIT) \
-        --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-        --name latest-build cosmossdk/rbuilder:latest
+	--env TARGET_PLATFORMS='linux/amd64' \
+	--env APP=osmosisd \
+	--env VERSION=$(VERSION) \
+	--env COMMIT=$(COMMIT) \
+	--env LEDGER_ENABLED=$(LEDGER_ENABLED) \
+	--name latest-build osmolabs/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-linux: go.sum
@@ -130,7 +133,7 @@ draw-deps:
 	@goviz -i ./cmd/osmosisd -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -rf $(BUILDDIR)/ artifacts/
+	rm -rf $(CURDIR)/artifacts/
 
 distclean: clean
 	rm -rf vendor/
