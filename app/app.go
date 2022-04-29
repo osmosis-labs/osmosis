@@ -48,6 +48,7 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
 const appName = "OsmosisApp"
@@ -412,6 +413,7 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 
 	if upgradeInfo.Name == v8.UpgradeName {
 		storeUpgrades = store.StoreUpgrades{
+			Added:   []string{tokenfactorytypes.ModuleName},
 			Deleted: []string{v8.ClaimsModuleName},
 		}
 	}
