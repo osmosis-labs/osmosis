@@ -11,6 +11,9 @@ const (
 	ModuleDenomPrefix = "factory"
 )
 
+// GetTokenDenom constructs a denom string for tokens created by tokenfactory
+// based on an input creator address and a nonce
+// The denom constructed is factory/{creator}/{nonce}
 func GetTokenDenom(creator, nonce string) (string, error) {
 	if strings.Contains(creator, "/") {
 		return "", ErrInvalidCreator
@@ -19,6 +22,9 @@ func GetTokenDenom(creator, nonce string) (string, error) {
 	return denom, sdk.ValidateDenom(denom)
 }
 
+// DeconstructDenom takes a token denom string and verifies that it is a valid
+// denom of the tokenfactory module, and is of the form `factory/{creator}/{nonce}`
+// If valid, it returns the creator address and nonce
 func DeconstructDenom(denom string) (creator string, nonce string, err error) {
 	err = sdk.ValidateDenom(denom)
 	if err != nil {
