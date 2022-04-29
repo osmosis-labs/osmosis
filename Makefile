@@ -115,6 +115,10 @@ build-contract-tests-hooks:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/contract_tests
 
+build-e2e-chain-init:
+	mkdir -p $(BUILDDIR)
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/chain_init
+
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
 	@go mod download
@@ -210,6 +214,11 @@ sync-docs:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
+PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'simapp|e2e')
+PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
+PACKAGES_SIM=$(shell go list ./... | grep '/simapp')
+TEST_PACKAGES=./...
+
 include sims.mk
 
 test: test-unit test-build
@@ -217,17 +226,28 @@ test: test-unit test-build
 test-all: check test-race test-cover
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
 
 test-cover:
-	@go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
+
+test-sim:
+	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
+
+test-e2e:
+	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 benchmark:
-	@go test -mod=readonly -bench=. ./...
+	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
+docker-build-debug:
+	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+
+docker-build-e2e-chain-init:
+	@docker build -t osmosis-e2e-chain-init:debug -f tests/e2e/chain_init/chain-init.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
