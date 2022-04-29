@@ -3929,7 +3929,9 @@ Execute superfluid redelegation for a lockup rpc SuperfluidRedelegate(MsgSuperfl
 <a name="osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata"></a>
 
 ### DenomAuthorityMetadata
-
+DenomAuthorityMetadata specifies metadata for addresses that have specific
+capabilities over a token factory denom. Right now there is only one Admin
+permission, but is planned to be extended to the future.
 
 
 | Field | Type | Label | Description |
@@ -4094,7 +4096,9 @@ Query defines the gRPC querier service.
 <a name="osmosis.tokenfactory.v1beta1.MsgBurn"></a>
 
 ### MsgBurn
-===================== MsgBurn
+MsgBurn is the sdk.Msg type for allowing an admin account to burn
+a token.  For now, we require sender == burnFromAddress
+but this restriction will be removed in the future.
 
 
 | Field | Type | Label | Description |
@@ -4121,7 +4125,8 @@ Query defines the gRPC querier service.
 <a name="osmosis.tokenfactory.v1beta1.MsgChangeAdmin"></a>
 
 ### MsgChangeAdmin
-===================== MsgChangeAdmin
+MsgChangeAdmin is the sdk.Msg type for allowing an admin account to reassign
+adminship of a denom to a new account
 
 
 | Field | Type | Label | Description |
@@ -4148,7 +4153,9 @@ Query defines the gRPC querier service.
 <a name="osmosis.tokenfactory.v1beta1.MsgCreateDenom"></a>
 
 ### MsgCreateDenom
-===================== MsgCreateDenom
+MsgCreateDenom is the sdk.Msg type for allowing an account to create
+a new denom.  It requires a sender address and a unique nonce
+(to allow accounts to create multiple denoms)
 
 
 | Field | Type | Label | Description |
@@ -4164,7 +4171,8 @@ Query defines the gRPC querier service.
 <a name="osmosis.tokenfactory.v1beta1.MsgCreateDenomResponse"></a>
 
 ### MsgCreateDenomResponse
-
+MsgCreateDenomResponse is the return value of MsgCreateDenom
+It returns the full string of the newly created denom
 
 
 | Field | Type | Label | Description |
@@ -4179,7 +4187,9 @@ Query defines the gRPC querier service.
 <a name="osmosis.tokenfactory.v1beta1.MsgMint"></a>
 
 ### MsgMint
-===================== MsgMint
+MsgMint is the sdk.Msg type for allowing an admin account to mint
+more of a token.  For now, we require sender == mintToAddress
+but this restriction will be removed in the future.
 
 
 | Field | Type | Label | Description |

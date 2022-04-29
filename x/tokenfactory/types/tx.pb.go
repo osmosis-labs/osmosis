@@ -29,7 +29,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ===================== MsgCreateDenom
+// MsgCreateDenom is the sdk.Msg type for allowing an account to create
+// a new denom.  It requires a sender address and a unique nonce
+// (to allow accounts to create multiple denoms)
 type MsgCreateDenom struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	Nonce  string `protobuf:"bytes,2,opt,name=nonce,proto3" json:"nonce,omitempty" yaml:"nonce"`
@@ -82,6 +84,8 @@ func (m *MsgCreateDenom) GetNonce() string {
 	return ""
 }
 
+// MsgCreateDenomResponse is the return value of MsgCreateDenom
+// It returns the full string of the newly created denom
 type MsgCreateDenomResponse struct {
 	NewTokenDenom string `protobuf:"bytes,1,opt,name=new_token_denom,json=newTokenDenom,proto3" json:"new_token_denom,omitempty" yaml:"new_token_denom"`
 }
@@ -126,7 +130,9 @@ func (m *MsgCreateDenomResponse) GetNewTokenDenom() string {
 	return ""
 }
 
-// ===================== MsgMint
+// MsgMint is the sdk.Msg type for allowing an admin account to mint
+// more of a token.  For now, we require sender == mintToAddress
+// but this restriction will be removed in the future.
 type MsgMint struct {
 	Sender        string     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	Amount        types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount" yaml:"amount"`
@@ -223,7 +229,9 @@ func (m *MsgMintResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgMintResponse proto.InternalMessageInfo
 
-// ===================== MsgBurn
+// MsgBurn is the sdk.Msg type for allowing an admin account to burn
+// a token.  For now, we require sender == burnFromAddress
+// but this restriction will be removed in the future.
 type MsgBurn struct {
 	Sender          string     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	Amount          types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount" yaml:"amount"`
@@ -320,7 +328,8 @@ func (m *MsgBurnResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgBurnResponse proto.InternalMessageInfo
 
-// ===================== MsgChangeAdmin
+// MsgChangeAdmin is the sdk.Msg type for allowing an admin account to reassign
+// adminship of a denom to a new account
 type MsgChangeAdmin struct {
 	Sender   string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	Denom    string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`

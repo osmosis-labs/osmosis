@@ -17,18 +17,24 @@ service Msg {
   rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
 }
 
-// ===================== MsgCreateDenom
+// MsgCreateDenom is the sdk.Msg type for allowing an account to create
+// a new denom.  It requires a sender address and a unique nonce
+// (to allow accounts to create multiple denoms)
 message MsgCreateDenom {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   string nonce = 2 [ (gogoproto.moretags) = "yaml:\"nonce\"" ];
 }
 
+// MsgCreateDenomResponse is the return value of MsgCreateDenom
+// It returns the full string of the newly created denom
 message MsgCreateDenomResponse {
   string new_token_denom = 1
       [ (gogoproto.moretags) = "yaml:\"new_token_denom\"" ];
 }
 
-// ===================== MsgMint
+// MsgMint is the sdk.Msg type for allowing an admin account to mint
+// more of a token.  For now, we require sender == mintToAddress
+// but this restriction will be removed in the future.
 message MsgMint {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   cosmos.base.v1beta1.Coin amount = 2 [
@@ -41,7 +47,9 @@ message MsgMint {
 
 message MsgMintResponse {}
 
-// ===================== MsgBurn
+// MsgBurn is the sdk.Msg type for allowing an admin account to burn
+// a token.  For now, we require sender == burnFromAddress
+// but this restriction will be removed in the future.
 message MsgBurn {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   cosmos.base.v1beta1.Coin amount = 2 [
@@ -69,7 +77,8 @@ message MsgBurnResponse {}
 
 // message MsgForceTransferResponse {}
 
-// ===================== MsgChangeAdmin
+// MsgChangeAdmin is the sdk.Msg type for allowing an admin account to reassign
+// adminship of a denom to a new account
 message MsgChangeAdmin {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
