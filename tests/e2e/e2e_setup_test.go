@@ -109,8 +109,11 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
 			},
-			Repository: "osmosis",
-			Tag:        "debug",
+			Repository: "osmolabs/osmosis-dev",
+			Tag:        "v7.0.4-debug",
+			Cmd: []string{
+				"start",
+			},
 		}
 
 		// expose the first validator for debugging and communication
@@ -267,8 +270,8 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 	s.initResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
-			Repository: "osmosis-e2e-chain-init",
-			Tag:        "debug",
+			Repository: "osmolabs/osmosis-init",
+			Tag:        "v7.2.1",
 			NetworkID:  s.dkrNet.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
