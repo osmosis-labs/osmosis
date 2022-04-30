@@ -54,10 +54,10 @@ export OSMOSISD_STATESYNC_TRUST_HASH=$TRUST_HASH
 
 
 # Rockdb won't make this folder, so we make it 
-mkdir -p ~/.osmosisd/data/snapshots/metadata.db
+# mkdir -p ~/.osmosisd/data/snapshots/metadata.db
 
 # THIS WILL FAIL BECAUSE THE APP VERSION IS CORRECTLY SET IN OSMOSIS
-osmosisd start --db_backend boltdb
+osmosisd start --db_backend boltdb --state-sync.snapshot-keep-recent 0
 
 
 
