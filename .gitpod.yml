@@ -2,12 +2,7 @@ image: ghcr.io/faddat/cosmos
 
 
 
-tasks:
-  - name: Setup
-    init: 
-    command: 
-    
-    
+
 ports:
   - port: 1317
   - port: 26657
