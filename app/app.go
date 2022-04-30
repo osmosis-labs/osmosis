@@ -28,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -42,12 +41,13 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
+	v3 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v6"
 	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
 	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 const appName = "OsmosisApp"
@@ -83,6 +83,9 @@ var (
 	EmptyWasmOpts []wasm.Option
 
 	_ App = (*OsmosisApp)(nil)
+
+	Upgrades []upgrades.Upgrade = []upgrades.Upgrade{v4.Upgrade, v7.Upgrade, v8.Upgrade}
+	Forks    []upgrades.Fork    = []upgrades.Fork{v3.Fork, v6.Fork}
 )
 
 // GetWasmEnabledProposals parses the WasmProposalsEnabled and
@@ -392,6 +395,7 @@ func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 
+// configure store loader that checks if version == upgradeHeight and applies store upgrades
 func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
@@ -402,71 +406,24 @@ func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 		return
 	}
 
-	storeUpgrades := store.StoreUpgrades{}
-
-	if upgradeInfo.Name == v7.UpgradeName {
-		storeUpgrades = store.StoreUpgrades{
-			Added: []string{wasm.ModuleName, superfluidtypes.ModuleName},
+	for _, upgrade := range Upgrades {
+		if upgradeInfo.Name == upgrade.UpgradeName {
+			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
 		}
 	}
-
-	if upgradeInfo.Name == v8.UpgradeName {
-		storeUpgrades = store.StoreUpgrades{
-			Deleted: []string{v8.ClaimsModuleName},
-		}
-	}
-
-	// configure store loader that checks if version == upgradeHeight and applies store upgrades
-	app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 }
 
 func (app *OsmosisApp) setupUpgradeHandlers() {
-	// this configures a no-op upgrade handler for the v4 upgrade,
-	// which improves the lockup module's store management.
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v4.UpgradeName,
-		v4.CreateUpgradeHandler(
-			app.mm,
-			app.configurator,
-			*app.BankKeeper,
-			app.DistrKeeper,
-			app.GAMMKeeper,
-		),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v5.UpgradeName,
-		v5.CreateUpgradeHandler(
-			app.mm,
-			app.configurator,
-			&app.IBCKeeper.ConnectionKeeper,
-			app.TxFeesKeeper,
-			app.GAMMKeeper,
-			app.StakingKeeper,
-		),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v7.UpgradeName,
-		v7.CreateUpgradeHandler(
-			app.mm,
-			app.configurator,
-			app.WasmKeeper,
-			app.SuperfluidKeeper,
-			app.EpochsKeeper,
-			app.LockupKeeper,
-			app.MintKeeper,
-			app.AccountKeeper,
-		),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v8.UpgradeName,
-		v8.CreateUpgradeHandler(
-			app.mm,
-			app.configurator,
-		),
-	)
+	for _, upgrade := range Upgrades {
+		app.UpgradeKeeper.SetUpgradeHandler(
+			upgrade.UpgradeName,
+			upgrade.CreateUpgradeHandler(
+				app.mm,
+				app.configurator,
+				&app.AppKeepers,
+			),
+		)
+	}
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server.
