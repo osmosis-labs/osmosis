@@ -44,6 +44,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
 	v3 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
 	v6 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v6"
 	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
 	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
@@ -84,7 +85,7 @@ var (
 
 	_ App = (*OsmosisApp)(nil)
 
-	Upgrades []upgrades.Upgrade = []upgrades.Upgrade{v4.Upgrade, v7.Upgrade, v8.Upgrade}
+	Upgrades []upgrades.Upgrade = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v8.Upgrade}
 	Forks    []upgrades.Fork    = []upgrades.Fork{v3.Fork, v6.Fork}
 )
 
