@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1114](https://github.com/osmosis-labs/osmosis/pull/1114) Improve CI: remove duplicate runs of test worflow
 * [#1127](https://github.com/osmosis-labs/osmosis/pull/1127) Stricter Linting:  bump golangci-lint version and enable additional linters.
 * [#1184](https://github.com/osmosis-labs/osmosis/pull/1184) Fix endtime event output on BeginUnlocking
+* [#1380](https://github.com/osmosis-labs/osmosis/pull/1380) Update tm-db and support badgerdb v3
 
 ## [v7.1.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.1.0)
 
