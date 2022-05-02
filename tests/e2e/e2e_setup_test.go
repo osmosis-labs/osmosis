@@ -339,9 +339,6 @@ func (s *IntegrationTestSuite) initUpgrade() {
 			filepath.Join(c.Validators[0].ConfigDir, "osmosis_upgrade.sh"),
 		)
 		s.Require().NoError(err)
-		cmd := fmt.Sprintf("chmod +x %s/osmosis_upgrade.sh", c.Validators[0].ConfigDir)
-		_, err2 := exec.Command("/bin/sh", "-c", cmd).CombinedOutput()
-		s.Require().NoError(err2)
 		s.T().Logf("submitting upgrade proposal for chain-id: %s", c.ChainMeta.Id)
 		cmdStr := fmt.Sprintf("docker exec %v bash -c 'chmod +x ~/.osmosisd/osmosis_upgrade.sh && ~/.osmosisd/osmosis_upgrade.sh \"%s\"'", s.valResources[c.ChainMeta.Id][0].Container.ID, c.ChainMeta.Id)
 		exec.Command("/bin/sh", "-c", cmdStr).Output()
