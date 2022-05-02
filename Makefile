@@ -243,7 +243,7 @@ benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
 docker-build-debug:
-	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f tests/e2e/Dockerfile .
 
 docker-build-e2e-chain-init:
 	@docker build -t osmosis-e2e-chain-init:debug -f tests/e2e/chain_init/chain-init.Dockerfile .
