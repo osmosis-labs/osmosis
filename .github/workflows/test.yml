@@ -87,6 +87,8 @@ jobs:
       - name: Build Docker Image
         run: |
           make docker-build-debug
+        if: env.GIT_DIFF
       - name: Test E2E
         run: |
           make test-e2e
+        if: env.GIT_DIFF
