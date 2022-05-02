@@ -101,14 +101,16 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 	s.T().Logf("starting Osmosis %s validator containers...", c.ChainMeta.Id)
-
 	s.valResources[c.ChainMeta.Id] = make([]*dockertest.Resource, len(c.Validators))
+	out, err := os.Getwd()
+	s.Require().NoError(err)
 	for i, val := range c.Validators {
 		runOpts := &dockertest.RunOptions{
 			Name:      val.Name,
 			NetworkID: s.dkrNet.Network.ID,
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
+				fmt.Sprintf("%s/scripts/osmosis_upgrade.sh:/scripts/osmosis_upgrade.sh", out),
 			},
 			Repository: "osmolabs/osmosis-dev",
 			Tag:        "v7.2.1-debug",
@@ -339,11 +341,11 @@ func (s *IntegrationTestSuite) initUpgrade() {
 		// 	filepath.Join(c.Validators[0].ConfigDir, "osmosis_upgrade.sh"),
 		// )
 		// s.Require().NoError(err)
-		cmdStr1 := fmt.Sprintf("cp ./scripts/osmosis_upgrade.sh %s/", c.Validators[0].ConfigDir)
-		_, err := exec.Command("/bin/sh", "-c", cmdStr1).Output()
-		s.Require().NoError(err)
+		// cmdStr1 := fmt.Sprintf("cp ./scripts/osmosis_upgrade.sh %s/", c.Validators[0].ConfigDir)
+		// _, err := exec.Command("/bin/sh", "-c", cmdStr1).Output()
+		// s.Require().NoError(err)
 		s.T().Logf("submitting upgrade proposal for chain-id: %s", c.ChainMeta.Id)
-		cmdStr := fmt.Sprintf("docker exec %v bash -c 'chmod +x ~/.osmosisd/osmosis_upgrade.sh && ~/.osmosisd/osmosis_upgrade.sh \"%s\"'", s.valResources[c.ChainMeta.Id][0].Container.ID, c.ChainMeta.Id)
+		cmdStr := fmt.Sprintf("docker exec %v bash -c 'chmod +x /scripts/osmosis_upgrade.sh && /scripts/osmosis_upgrade.sh \"%s\"'", s.valResources[c.ChainMeta.Id][0].Container.ID, c.ChainMeta.Id)
 		exec.Command("/bin/sh", "-c", cmdStr).Output()
 	}
 
