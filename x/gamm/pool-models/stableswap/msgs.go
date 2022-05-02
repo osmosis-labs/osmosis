@@ -44,6 +44,7 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	}
 
 	// validation for pool initial liquidity
+	// TO DO: expand this check to accommodate multi-asset pools for stableswap
 	if len(msg.InitialPoolLiquidity) < 2 {
 		return types.ErrTooFewPoolAssets
 	} else if len(msg.InitialPoolLiquidity) > 2 {
