@@ -5,11 +5,12 @@ import (
 	"sort"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/osmosis-labs/osmosis/v7/store"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO: Reorganize functions in this file

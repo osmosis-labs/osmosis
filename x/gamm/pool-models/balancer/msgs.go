@@ -11,14 +11,17 @@ const (
 	TypeMsgCreateBalancerPool = "create_balancer_pool"
 )
 
-var _ sdk.Msg = &MsgCreateBalancerPool{}
-var _ types.CreatePoolMsg = &MsgCreateBalancerPool{}
+var (
+	_ sdk.Msg             = &MsgCreateBalancerPool{}
+	_ types.CreatePoolMsg = &MsgCreateBalancerPool{}
+)
 
 func NewMsgCreateBalancerPool(
 	sender sdk.AccAddress,
 	poolParams PoolParams,
 	poolAssets []PoolAsset,
-	futurePoolGovernor string) MsgCreateBalancerPool {
+	futurePoolGovernor string,
+) MsgCreateBalancerPool {
 	return MsgCreateBalancerPool{
 		Sender:             sender.String(),
 		PoolParams:         &poolParams,
@@ -74,6 +77,7 @@ func (msg MsgCreateBalancerPool) PoolCreator() sdk.AccAddress {
 	}
 	return sender
 }
+
 func (msg MsgCreateBalancerPool) Validate(ctx sdk.Context) error {
 	return msg.ValidateBasic()
 }

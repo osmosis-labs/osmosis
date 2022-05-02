@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetParams returns the total set params.

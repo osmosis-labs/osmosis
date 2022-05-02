@@ -570,7 +570,8 @@ func (m *QueryTotalSharesResponse) GetTotalShares() types1.Coin {
 	return types1.Coin{}
 }
 
-// QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice query.
+// QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice
+// query.
 type QuerySpotPriceRequest struct {
 	PoolId          uint64 `protobuf:"varint,1,opt,name=poolId,proto3" json:"poolId,omitempty" yaml:"pool_id"`
 	BaseAssetDenom  string `protobuf:"bytes,2,opt,name=base_asset_denom,json=baseAssetDenom,proto3" json:"base_asset_denom,omitempty" yaml:"base_asset_denom"`
@@ -631,7 +632,8 @@ func (m *QuerySpotPriceRequest) GetQuoteAssetDenom() string {
 	return ""
 }
 
-// QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice query.
+// QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
+// query.
 type QuerySpotPriceResponse struct {
 	// String of the Dec. Ex) 10.203uatom
 	SpotPrice string `protobuf:"bytes,1,opt,name=spotPrice,proto3" json:"spotPrice,omitempty" yaml:"spot_price"`

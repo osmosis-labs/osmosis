@@ -10,10 +10,10 @@ linters:
   enable:
     - asciicheck
     - bidichk
-    - bodyclose
-    - contextcheck
+    #    - bodyclose <- needs go 1.18 support
+    # - contextcheck <- needs go 1.18 support
     #    - cyclop
-#    - deadcode <- re-enable in another pr
+    #    - deadcode <- re-enable in another pr
     - depguard
     #    - dogsled <- disabled because we would like to participate in the iditerod
     # - dupl <- really just catches cli stub text
@@ -38,7 +38,7 @@ linters:
     #    - godox <- detects TODO/BUG/FIXME and we may wantnthis later but isn't appropriate now
     #    - goerr113 <- disabled due to lack of comprehension
     - gofmt
-    # - gofumpt
+    # - gofumpt <- disabled https://github.com/osmosis-labs/osmosis/issues/1309
     - goheader
     - goimports
     #    - gomoddirectives <- disables replaces
@@ -56,18 +56,18 @@ linters:
     - misspell
     - nakedret
 #    - nestif <- ?
-    - nilerr
+    # - nilerr <- needs go 1.18 support
     - nilnil
     #    - nlreturn <- disabled as it doesn't auto-fix something simple and doesn't add anything useful
-    - noctx
+    # - noctx <- needs go 1.18 support
     #    - nolintlint <- disabled because we use nolint in some places
     - paralleltest
     # - prealloc <- disabled because it makes simple code complicated
 #    - predeclared <- later
     - promlinter
 #    - revive <- temporarily disabled while jacob figures out how to make poolId not trigger it.
-    - rowserrcheck
-    - sqlclosecheck
+    # - rowserrcheck <- needs go 1.18 support
+    # - sqlclosecheck <- needs go 1.18 support
 #    - staticcheck <- later
 #    - structcheck <- later
 #    - stylecheck <- enable later, atriggers on underscores in variable names and on poolId
@@ -75,7 +75,7 @@ linters:
     - tenv
     - testpackage
 #    - thelper <- later
-    - tparallel
+    # - tparallel <- needs go 1.18 support
     - typecheck
     - unconvert
 #    - unparam <- looks for unused parameters (enable later)

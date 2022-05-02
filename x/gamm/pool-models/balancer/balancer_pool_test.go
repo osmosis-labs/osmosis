@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -359,7 +360,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 	defaultStartTime := time.Unix(1618703511, 0)
 	defaultStartTimeUnix := defaultStartTime.Unix()
 	defaultDuration := 100 * time.Second
-	floatGuaranteedPrecison := float64(GuaranteedWeightPrecision)
+	floatGuaranteedPrecision := float64(GuaranteedWeightPrecision)
 
 	// testCases don't need to be ordered by time. but the blockTime should be
 	// less than the end time of the SmoothWeightChange. Testing past the end time
@@ -421,7 +422,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 					expectedWeights: []sdk.Int{
 						sdk.NewInt(1 * GuaranteedWeightPrecision),
 						// Quarter way between 1 & 2 = 1.25
-						sdk.NewInt(int64(1.25 * floatGuaranteedPrecison)),
+						sdk.NewInt(int64(1.25 * floatGuaranteedPrecision)),
 					},
 				},
 			},
@@ -469,9 +470,9 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 					blockTime: time.Unix(defaultStartTimeUnix+25, 0),
 					expectedWeights: []sdk.Int{
 						// Quarter way between 2 & 4 = 2.5
-						sdk.NewInt(int64(2.5 * floatGuaranteedPrecison)),
+						sdk.NewInt(int64(2.5 * floatGuaranteedPrecision)),
 						// Quarter way between 2 & 1 = 1.75
-						sdk.NewInt(int64(1.75 * floatGuaranteedPrecison)),
+						sdk.NewInt(int64(1.75 * floatGuaranteedPrecision)),
 					},
 				},
 			},
@@ -546,7 +547,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 
 		testCases := addDefaultCases(paramsCopy, tc.cases)
 		for caseNum, testCase := range testCases {
-			pacc.PokeTokenWeights(testCase.blockTime)
+			pacc.PokePool(testCase.blockTime)
 
 			totalWeight := sdk.ZeroInt()
 
@@ -563,5 +564,4 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		// Should have been deleted by the last test case of after PokeTokenWeights pokes past end time.
 		require.Nil(t, pacc.PoolParams.SmoothWeightChangeParams)
 	}
-
 }

@@ -58,7 +58,7 @@ func InitialWhitelistedFeetokens(ctx sdk.Context, gamm *gammkeeper.Keeper) []typ
 			panic(err)
 		}
 
-		pool, poolExistsErr := gamm.GetPool(ctx, poolId)
+		pool, poolExistsErr := gamm.GetPoolAndPoke(ctx, poolId)
 		_ = pool
 		if poolExistsErr != nil {
 			continue

@@ -4,31 +4,6 @@
 
 ## Table of Contents
 
-- [osmosis/claim/v1beta1/claim.proto](#osmosis/claim/v1beta1/claim.proto)
-    - [ClaimRecord](#osmosis.claim.v1beta1.ClaimRecord)
-  
-    - [Action](#osmosis.claim.v1beta1.Action)
-  
-- [osmosis/claim/v1beta1/params.proto](#osmosis/claim/v1beta1/params.proto)
-    - [Params](#osmosis.claim.v1beta1.Params)
-  
-- [osmosis/claim/v1beta1/genesis.proto](#osmosis/claim/v1beta1/genesis.proto)
-    - [GenesisState](#osmosis.claim.v1beta1.GenesisState)
-  
-- [osmosis/claim/v1beta1/query.proto](#osmosis/claim/v1beta1/query.proto)
-    - [QueryClaimRecordRequest](#osmosis.claim.v1beta1.QueryClaimRecordRequest)
-    - [QueryClaimRecordResponse](#osmosis.claim.v1beta1.QueryClaimRecordResponse)
-    - [QueryClaimableForActionRequest](#osmosis.claim.v1beta1.QueryClaimableForActionRequest)
-    - [QueryClaimableForActionResponse](#osmosis.claim.v1beta1.QueryClaimableForActionResponse)
-    - [QueryModuleAccountBalanceRequest](#osmosis.claim.v1beta1.QueryModuleAccountBalanceRequest)
-    - [QueryModuleAccountBalanceResponse](#osmosis.claim.v1beta1.QueryModuleAccountBalanceResponse)
-    - [QueryParamsRequest](#osmosis.claim.v1beta1.QueryParamsRequest)
-    - [QueryParamsResponse](#osmosis.claim.v1beta1.QueryParamsResponse)
-    - [QueryTotalClaimableRequest](#osmosis.claim.v1beta1.QueryTotalClaimableRequest)
-    - [QueryTotalClaimableResponse](#osmosis.claim.v1beta1.QueryTotalClaimableResponse)
-  
-    - [Query](#osmosis.claim.v1beta1.Query)
-  
 - [osmosis/epochs/genesis.proto](#osmosis/epochs/genesis.proto)
     - [EpochInfo](#osmosis.epochs.v1beta1.EpochInfo)
     - [GenesisState](#osmosis.epochs.v1beta1.GenesisState)
@@ -125,6 +100,8 @@
     - [QueryLockableDurationsResponse](#osmosis.incentives.QueryLockableDurationsResponse)
     - [RewardsEstRequest](#osmosis.incentives.RewardsEstRequest)
     - [RewardsEstResponse](#osmosis.incentives.RewardsEstResponse)
+    - [UpcomingGaugesPerDenomRequest](#osmosis.incentives.UpcomingGaugesPerDenomRequest)
+    - [UpcomingGaugesPerDenomResponse](#osmosis.incentives.UpcomingGaugesPerDenomResponse)
     - [UpcomingGaugesRequest](#osmosis.incentives.UpcomingGaugesRequest)
     - [UpcomingGaugesResponse](#osmosis.incentives.UpcomingGaugesResponse)
   
@@ -144,6 +121,8 @@
 - [osmosis/lockup/query.proto](#osmosis/lockup/query.proto)
     - [AccountLockedCoinsRequest](#osmosis.lockup.AccountLockedCoinsRequest)
     - [AccountLockedCoinsResponse](#osmosis.lockup.AccountLockedCoinsResponse)
+    - [AccountLockedDurationRequest](#osmosis.lockup.AccountLockedDurationRequest)
+    - [AccountLockedDurationResponse](#osmosis.lockup.AccountLockedDurationResponse)
     - [AccountLockedLongerDurationDenomRequest](#osmosis.lockup.AccountLockedLongerDurationDenomRequest)
     - [AccountLockedLongerDurationDenomResponse](#osmosis.lockup.AccountLockedLongerDurationDenomResponse)
     - [AccountLockedLongerDurationNotUnlockingOnlyRequest](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyRequest)
@@ -298,6 +277,33 @@
   
     - [Msg](#osmosis.superfluid.Msg)
   
+- [osmosis/tokenfactory/v1beta1/authorityMetadata.proto](#osmosis/tokenfactory/v1beta1/authorityMetadata.proto)
+    - [DenomAuthorityMetadata](#osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata)
+  
+- [osmosis/tokenfactory/v1beta1/genesis.proto](#osmosis/tokenfactory/v1beta1/genesis.proto)
+    - [GenesisDenom](#osmosis.tokenfactory.v1beta1.GenesisDenom)
+    - [GenesisState](#osmosis.tokenfactory.v1beta1.GenesisState)
+  
+- [osmosis/tokenfactory/v1beta1/query.proto](#osmosis/tokenfactory/v1beta1/query.proto)
+    - [QueryDenomAuthorityMetadataRequest](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest)
+    - [QueryDenomAuthorityMetadataResponse](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse)
+    - [QueryDenomsFromCreatorRequest](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest)
+    - [QueryDenomsFromCreatorResponse](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse)
+  
+    - [Query](#osmosis.tokenfactory.v1beta1.Query)
+  
+- [osmosis/tokenfactory/v1beta1/tx.proto](#osmosis/tokenfactory/v1beta1/tx.proto)
+    - [MsgBurn](#osmosis.tokenfactory.v1beta1.MsgBurn)
+    - [MsgBurnResponse](#osmosis.tokenfactory.v1beta1.MsgBurnResponse)
+    - [MsgChangeAdmin](#osmosis.tokenfactory.v1beta1.MsgChangeAdmin)
+    - [MsgChangeAdminResponse](#osmosis.tokenfactory.v1beta1.MsgChangeAdminResponse)
+    - [MsgCreateDenom](#osmosis.tokenfactory.v1beta1.MsgCreateDenom)
+    - [MsgCreateDenomResponse](#osmosis.tokenfactory.v1beta1.MsgCreateDenomResponse)
+    - [MsgMint](#osmosis.tokenfactory.v1beta1.MsgMint)
+    - [MsgMintResponse](#osmosis.tokenfactory.v1beta1.MsgMintResponse)
+  
+    - [Msg](#osmosis.tokenfactory.v1beta1.Msg)
+  
 - [osmosis/txfees/v1beta1/feetoken.proto](#osmosis/txfees/v1beta1/feetoken.proto)
     - [FeeToken](#osmosis.txfees.v1beta1.FeeToken)
   
@@ -320,291 +326,6 @@
     - [Query](#osmosis.txfees.v1beta1.Query)
   
 - [Scalar Value Types](#scalar-value-types)
-
-
-
-<a name="osmosis/claim/v1beta1/claim.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## osmosis/claim/v1beta1/claim.proto
-
-
-
-<a name="osmosis.claim.v1beta1.ClaimRecord"></a>
-
-### ClaimRecord
-A Claim Records is the metadata of claim data per address
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address of claim user |
-| `initial_claimable_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total initial claimable amount for the user |
-| `action_completed` | [bool](#bool) | repeated | true if action is completed index of bool in array refers to action enum # |
-
-
-
-
-
- <!-- end messages -->
-
-
-<a name="osmosis.claim.v1beta1.Action"></a>
-
-### Action
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| ActionAddLiquidity | 0 |  |
-| ActionSwap | 1 |  |
-| ActionVote | 2 |  |
-| ActionDelegateStake | 3 |  |
-
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="osmosis/claim/v1beta1/params.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## osmosis/claim/v1beta1/params.proto
-
-
-
-<a name="osmosis.claim.v1beta1.Params"></a>
-
-### Params
-Params defines the claim module's parameters.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `airdrop_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `duration_until_decay` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `duration_of_decay` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `claim_denom` | [string](#string) |  | denom of claimable asset |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="osmosis/claim/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## osmosis/claim/v1beta1/genesis.proto
-
-
-
-<a name="osmosis.claim.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the claim module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `module_account_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | balance of the claim module's account |
-| `params` | [Params](#osmosis.claim.v1beta1.Params) |  | params defines all the parameters of the module. |
-| `claim_records` | [ClaimRecord](#osmosis.claim.v1beta1.ClaimRecord) | repeated | list of claim records, one for every airdrop recipient |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="osmosis/claim/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## osmosis/claim/v1beta1/query.proto
-
-
-
-<a name="osmosis.claim.v1beta1.QueryClaimRecordRequest"></a>
-
-### QueryClaimRecordRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryClaimRecordResponse"></a>
-
-### QueryClaimRecordResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `claim_record` | [ClaimRecord](#osmosis.claim.v1beta1.ClaimRecord) |  |  |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryClaimableForActionRequest"></a>
-
-### QueryClaimableForActionRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `action` | [Action](#osmosis.claim.v1beta1.Action) |  |  |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryClaimableForActionResponse"></a>
-
-### QueryClaimableForActionResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryModuleAccountBalanceRequest"></a>
-
-### QueryModuleAccountBalanceRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryModuleAccountBalanceResponse"></a>
-
-### QueryModuleAccountBalanceResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `moduleAccountBalance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | params defines the parameters of the module. |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryParamsRequest"></a>
-
-### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#osmosis.claim.v1beta1.Params) |  | params defines the parameters of the module. |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryTotalClaimableRequest"></a>
-
-### QueryTotalClaimableRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryTotalClaimableResponse"></a>
-
-### QueryTotalClaimableResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="osmosis.claim.v1beta1.Query"></a>
-
-### Query
-Query defines the gRPC querier service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `ModuleAccountBalance` | [QueryModuleAccountBalanceRequest](#osmosis.claim.v1beta1.QueryModuleAccountBalanceRequest) | [QueryModuleAccountBalanceResponse](#osmosis.claim.v1beta1.QueryModuleAccountBalanceResponse) |  | GET|/osmosis/claim/v1beta1/module_account_balance|
-| `Params` | [QueryParamsRequest](#osmosis.claim.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#osmosis.claim.v1beta1.QueryParamsResponse) |  | GET|/osmosis/claim/v1beta1/params|
-| `ClaimRecord` | [QueryClaimRecordRequest](#osmosis.claim.v1beta1.QueryClaimRecordRequest) | [QueryClaimRecordResponse](#osmosis.claim.v1beta1.QueryClaimRecordResponse) |  | GET|/osmosis/claim/v1beta1/claim_record/{address}|
-| `ClaimableForAction` | [QueryClaimableForActionRequest](#osmosis.claim.v1beta1.QueryClaimableForActionRequest) | [QueryClaimableForActionResponse](#osmosis.claim.v1beta1.QueryClaimableForActionResponse) |  | GET|/osmosis/claim/v1beta1/claimable_for_action/{address}/{action}|
-| `TotalClaimable` | [QueryTotalClaimableRequest](#osmosis.claim.v1beta1.QueryTotalClaimableRequest) | [QueryTotalClaimableResponse](#osmosis.claim.v1beta1.QueryTotalClaimableResponse) |  | GET|/osmosis/claim/v1beta1/total_claimable/{address}|
-
- <!-- end services -->
 
 
 
@@ -1239,7 +960,8 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 <a name="osmosis.gamm.v1beta1.QuerySpotPriceRequest"></a>
 
 ### QuerySpotPriceRequest
-QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice query.
+QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice
+query.
 
 
 | Field | Type | Label | Description |
@@ -1256,7 +978,8 @@ QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice query.
 <a name="osmosis.gamm.v1beta1.QuerySpotPriceResponse"></a>
 
 ### QuerySpotPriceResponse
-QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice query.
+QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
+query.
 
 
 | Field | Type | Label | Description |
@@ -1901,6 +1624,38 @@ GenesisState defines the incentives module's genesis state.
 
 
 
+<a name="osmosis.incentives.UpcomingGaugesPerDenomRequest"></a>
+
+### UpcomingGaugesPerDenomRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="osmosis.incentives.UpcomingGaugesPerDenomResponse"></a>
+
+### UpcomingGaugesPerDenomResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `upcoming_gauges` | [Gauge](#osmosis.incentives.Gauge) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
 <a name="osmosis.incentives.UpcomingGaugesRequest"></a>
 
 ### UpcomingGaugesRequest
@@ -1950,8 +1705,9 @@ Query defines the gRPC querier service.
 | `GaugeByID` | [GaugeByIDRequest](#osmosis.incentives.GaugeByIDRequest) | [GaugeByIDResponse](#osmosis.incentives.GaugeByIDResponse) | returns Gauge by id | GET|/osmosis/incentives/v1beta1/gauge_by_id/{id}|
 | `Gauges` | [GaugesRequest](#osmosis.incentives.GaugesRequest) | [GaugesResponse](#osmosis.incentives.GaugesResponse) | returns gauges both upcoming and active | GET|/osmosis/incentives/v1beta1/gauges|
 | `ActiveGauges` | [ActiveGaugesRequest](#osmosis.incentives.ActiveGaugesRequest) | [ActiveGaugesResponse](#osmosis.incentives.ActiveGaugesResponse) | returns active gauges | GET|/osmosis/incentives/v1beta1/active_gauges|
-| `ActiveGaugesPerDenom` | [ActiveGaugesPerDenomRequest](#osmosis.incentives.ActiveGaugesPerDenomRequest) | [ActiveGaugesPerDenomResponse](#osmosis.incentives.ActiveGaugesPerDenomResponse) |  | GET|/osmosis/incentives/v1beta1/active_gauges_per_denom|
+| `ActiveGaugesPerDenom` | [ActiveGaugesPerDenomRequest](#osmosis.incentives.ActiveGaugesPerDenomRequest) | [ActiveGaugesPerDenomResponse](#osmosis.incentives.ActiveGaugesPerDenomResponse) | returns active gauges per denom | GET|/osmosis/incentives/v1beta1/active_gauges_per_denom|
 | `UpcomingGauges` | [UpcomingGaugesRequest](#osmosis.incentives.UpcomingGaugesRequest) | [UpcomingGaugesResponse](#osmosis.incentives.UpcomingGaugesResponse) | returns scheduled gauges | GET|/osmosis/incentives/v1beta1/upcoming_gauges|
+| `UpcomingGaugesPerDenom` | [UpcomingGaugesPerDenomRequest](#osmosis.incentives.UpcomingGaugesPerDenomRequest) | [UpcomingGaugesPerDenomResponse](#osmosis.incentives.UpcomingGaugesPerDenomResponse) | returns scheduled gauges per denom | GET|/osmosis/incentives/v1beta1/upcoming_gauges_per_denom|
 | `RewardsEst` | [RewardsEstRequest](#osmosis.incentives.RewardsEstRequest) | [RewardsEstResponse](#osmosis.incentives.RewardsEstResponse) | RewardsEst returns an estimate of the rewards at a future specific time. The querier either provides an address or a set of locks for which they want to find the associated rewards. | GET|/osmosis/incentives/v1beta1/rewards_est/{owner}|
 | `LockableDurations` | [QueryLockableDurationsRequest](#osmosis.incentives.QueryLockableDurationsRequest) | [QueryLockableDurationsResponse](#osmosis.incentives.QueryLockableDurationsResponse) | returns lockable durations that are valid to give incentives | GET|/osmosis/incentives/v1beta1/lockable_durations|
 
@@ -2107,6 +1863,37 @@ GenesisState defines the lockup module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="osmosis.lockup.AccountLockedDurationRequest"></a>
+
+### AccountLockedDurationRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+
+
+
+
+
+
+<a name="osmosis.lockup.AccountLockedDurationResponse"></a>
+
+### AccountLockedDurationResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
 
 
 
@@ -2559,6 +2346,7 @@ Query defines the gRPC querier service.
 | `LockedByID` | [LockedRequest](#osmosis.lockup.LockedRequest) | [LockedResponse](#osmosis.lockup.LockedResponse) | Returns lock record by id | GET|/osmosis/lockup/v1beta1/locked_by_id/{lock_id}|
 | `SyntheticLockupsByLockupID` | [SyntheticLockupsByLockupIDRequest](#osmosis.lockup.SyntheticLockupsByLockupIDRequest) | [SyntheticLockupsByLockupIDResponse](#osmosis.lockup.SyntheticLockupsByLockupIDResponse) | Returns synthetic lockups by native lockup id | GET|/osmosis/lockup/v1beta1/synthetic_lockups_by_lock_id/{lock_id}|
 | `AccountLockedLongerDuration` | [AccountLockedLongerDurationRequest](#osmosis.lockup.AccountLockedLongerDurationRequest) | [AccountLockedLongerDurationResponse](#osmosis.lockup.AccountLockedLongerDurationResponse) | Returns account locked records with longer duration | GET|/osmosis/lockup/v1beta1/account_locked_longer_duration/{owner}|
+| `AccountLockedDuration` | [AccountLockedDurationRequest](#osmosis.lockup.AccountLockedDurationRequest) | [AccountLockedDurationResponse](#osmosis.lockup.AccountLockedDurationResponse) | Returns account locked records with a specific duration | GET|/osmosis/lockup/v1beta1/account_locked_duration/{owner}|
 | `AccountLockedLongerDurationNotUnlockingOnly` | [AccountLockedLongerDurationNotUnlockingOnlyRequest](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyRequest) | [AccountLockedLongerDurationNotUnlockingOnlyResponse](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyResponse) | Returns account locked records with longer duration excluding tokens started unlocking | GET|/osmosis/lockup/v1beta1/account_locked_longer_duration_not_unlocking_only/{owner}|
 | `AccountLockedLongerDurationDenom` | [AccountLockedLongerDurationDenomRequest](#osmosis.lockup.AccountLockedLongerDurationDenomRequest) | [AccountLockedLongerDurationDenomResponse](#osmosis.lockup.AccountLockedLongerDurationDenomResponse) | Returns account's locked records for a denom with longer duration | GET|/osmosis/lockup/v1beta1/account_locked_longer_duration_denom/{owner}|
 
@@ -4126,6 +3914,322 @@ Msg defines the Msg service.
 Execute superfluid redelegation for a lockup rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns (MsgSuperfluidRedelegateResponse); | |
 | `SuperfluidUnbondLock` | [MsgSuperfluidUnbondLock](#osmosis.superfluid.MsgSuperfluidUnbondLock) | [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse) | For a given lock that is being superfluidly undelegated, also unbond the underlying lock. | |
 | `LockAndSuperfluidDelegate` | [MsgLockAndSuperfluidDelegate](#osmosis.superfluid.MsgLockAndSuperfluidDelegate) | [MsgLockAndSuperfluidDelegateResponse](#osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse) | Execute lockup lock and superfluid delegation in a single msg | |
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/authorityMetadata.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/authorityMetadata.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata"></a>
+
+### DenomAuthorityMetadata
+DenomAuthorityMetadata specifies metadata for addresses that have specific
+capabilities over a token factory denom. Right now there is only one Admin
+permission, but is planned to be extended to the future.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `Admin` | [string](#string) |  | Can be empty for no admin, or a valid osmosis address |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/genesis.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.GenesisDenom"></a>
+
+### GenesisDenom
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `authority_metadata` | [DenomAuthorityMetadata](#osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the tokenfactory module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `factory_denoms` | [GenesisDenom](#osmosis.tokenfactory.v1beta1.GenesisDenom) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/query.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest"></a>
+
+### QueryDenomAuthorityMetadataRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse"></a>
+
+### QueryDenomAuthorityMetadataResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority_metadata` | [DenomAuthorityMetadata](#osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest"></a>
+
+### QueryDenomsFromCreatorRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `creator` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse"></a>
+
+### QueryDenomsFromCreatorResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denoms` | [string](#string) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.tokenfactory.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `DenomAuthorityMetadata` | [QueryDenomAuthorityMetadataRequest](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest) | [QueryDenomAuthorityMetadataResponse](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse) |  | GET|/osmosis/tokenfactory/v1beta1/denoms/{denom}/authority_metadata|
+| `DenomsFromCreator` | [QueryDenomsFromCreatorRequest](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest) | [QueryDenomsFromCreatorResponse](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse) |  | GET|/osmosis/tokenfactory/v1beta1/denoms_from_creator/{creator}|
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/tx.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgBurn"></a>
+
+### MsgBurn
+MsgBurn is the sdk.Msg type for allowing an admin account to burn
+a token.  For now, we require sender == burnFromAddress
+but this restriction will be removed in the future.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `burnFromAddress` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgBurnResponse"></a>
+
+### MsgBurnResponse
+
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgChangeAdmin"></a>
+
+### MsgChangeAdmin
+MsgChangeAdmin is the sdk.Msg type for allowing an admin account to reassign
+adminship of a denom to a new account
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+| `newAdmin` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgChangeAdminResponse"></a>
+
+### MsgChangeAdminResponse
+
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgCreateDenom"></a>
+
+### MsgCreateDenom
+MsgCreateDenom is the sdk.Msg type for allowing an account to create
+a new denom.  It requires a sender address and a unique nonce
+(to allow accounts to create multiple denoms)
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `nonce` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgCreateDenomResponse"></a>
+
+### MsgCreateDenomResponse
+MsgCreateDenomResponse is the return value of MsgCreateDenom
+It returns the full string of the newly created denom
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `new_token_denom` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgMint"></a>
+
+### MsgMint
+MsgMint is the sdk.Msg type for allowing an admin account to mint
+more of a token.  For now, we require sender == mintToAddress
+but this restriction will be removed in the future.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `mintToAddress` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgMintResponse"></a>
+
+### MsgMintResponse
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.tokenfactory.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateDenom` | [MsgCreateDenom](#osmosis.tokenfactory.v1beta1.MsgCreateDenom) | [MsgCreateDenomResponse](#osmosis.tokenfactory.v1beta1.MsgCreateDenomResponse) |  | |
+| `Mint` | [MsgMint](#osmosis.tokenfactory.v1beta1.MsgMint) | [MsgMintResponse](#osmosis.tokenfactory.v1beta1.MsgMintResponse) |  | |
+| `Burn` | [MsgBurn](#osmosis.tokenfactory.v1beta1.MsgBurn) | [MsgBurnResponse](#osmosis.tokenfactory.v1beta1.MsgBurnResponse) |  | |
+| `ChangeAdmin` | [MsgChangeAdmin](#osmosis.tokenfactory.v1beta1.MsgChangeAdmin) | [MsgChangeAdminResponse](#osmosis.tokenfactory.v1beta1.MsgChangeAdminResponse) | ForceTransfer is deactivated for now because we need to think through edge cases rpc ForceTransfer(MsgForceTransfer) returns (MsgForceTransferResponse); | |
 
  <!-- end services -->
 

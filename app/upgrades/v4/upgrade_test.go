@@ -7,13 +7,14 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/osmosis-labs/osmosis/v7/app"
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type UpgradeTestSuite struct {
@@ -47,7 +48,7 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 			func() {
 				// mint coins to distribution module / feepool.communitypool
 
-				var bal = int64(1000000000000)
+				bal := int64(1000000000000)
 				coin := sdk.NewInt64Coin("uosmo", bal)
 				coins := sdk.NewCoins(coin)
 				err := suite.app.BankKeeper.MintCoins(suite.ctx, "mint", coins)
@@ -57,7 +58,6 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
 				feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinFromCoin(coin))
 				suite.app.DistrKeeper.SetFeePool(suite.ctx, feePool)
-
 			},
 			func() {
 				// run upgrade
@@ -75,7 +75,7 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				})
 			},
 			func() {
-				var total = int64(0)
+				total := int64(0)
 
 				// check that each account got the payment expected
 				payments := v4.GetProp12Payments()
@@ -92,7 +92,7 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 					total += amount
 				}
 
-				//check that the total paid out was as expected
+				// check that the total paid out was as expected
 				suite.Require().Equal(total, int64(367926557424))
 
 				expectedBal := 1000000000000 - total
@@ -122,7 +122,6 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 			tc.pre_update()
 			tc.update()
 			tc.post_update()
-
 		})
 	}
 }

@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	db "github.com/tendermint/tm-db"
+
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	db "github.com/tendermint/tm-db"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) getDistributedCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
@@ -33,8 +35,8 @@ func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Ite
 	return k.getDistributedCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
-// BeginDistribution is a utility to begin distribution for a specific gauge.
-func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
+// moveUpcomingGaugeToActiveGauge is a utility to begin distribution for a specific gauge.
+func (k Keeper) moveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gauge) error {
 	// validation for current time and distribution start time
 	if ctx.BlockTime().Before(gauge.StartTime) {
 		return fmt.Errorf("gauge is not able to start distribution yet: %s >= %s", ctx.BlockTime().String(), gauge.StartTime.String())
@@ -50,8 +52,8 @@ func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
 	return nil
 }
 
-// FinishDistribution is a utility to finish distribution for a specific gauge.
-func (k Keeper) FinishDistribution(ctx sdk.Context, gauge types.Gauge) error {
+// moveActiveGaugeToFinishedGauge is a utility to finish distribution for a specific gauge.
+func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gauge) error {
 	timeKey := getTimeKey(gauge.StartTime)
 	if err := k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
 		return err
@@ -401,7 +403,7 @@ func (k Keeper) checkFinishDistribution(ctx sdk.Context, gauges []types.Gauge) {
 		// TODO: Wat? we increment filled epochs earlier, this looks wrong and like
 		// were not paying out the last epoch of rewards...
 		if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
-			if err := k.FinishDistribution(ctx, gauge); err != nil {
+			if err := k.moveActiveGaugeToFinishedGauge(ctx, gauge); err != nil {
 				panic(err)
 			}
 		}

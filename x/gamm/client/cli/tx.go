@@ -4,19 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -47,14 +46,8 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-pool [flags]",
 		Short: "create a new pool and provide the liquidity to it",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`create a new pool and provide the liquidity to it.
-Pool initialization parameters must be provided through a pool JSON file.
-
-Example:
-$ %s tx gamm create-pool --pool-file="path/to/pool.json" --from mykey
-
-Where pool.json contains:
+		Long:  `Must provide path to a pool JSON file (--pool-file) describing the pool to be created`,
+		Example: `Sample pool JSON file contents:
 {
 	"weights": "4uatom,4osmo,2uakt",
 	"initial-deposit": "100uatom,5osmo,20uakt",
@@ -63,9 +56,6 @@ Where pool.json contains:
 	"future-governor": "168h"
 }
 `,
-				version.AppName,
-			),
-		),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

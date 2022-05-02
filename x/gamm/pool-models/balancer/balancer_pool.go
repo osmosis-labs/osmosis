@@ -13,7 +13,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-var _ types.PoolI = &Pool{}
+var (
+	_ types.PoolI                               = &Pool{}
+	_ types.PoolExitSwapExactAmountOutExtension = &Pool{}
+)
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
 // Invariants that are assumed to be satisfied and not checked:
@@ -239,7 +242,8 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 }
 
 func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
-	Aasset PoolAsset, Basset PoolAsset, err error) {
+	Aasset PoolAsset, Basset PoolAsset, err error,
+) {
 	Aasset, found1 := GetPoolAssetByDenom(p.PoolAssets, tokenADenom)
 	Basset, found2 := GetPoolAssetByDenom(p.PoolAssets, tokenBDenom)
 	if !(found1 && found2) {
@@ -249,7 +253,8 @@ func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
 }
 
 func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
-	tokenA sdk.Coin, Aasset PoolAsset, Basset PoolAsset, err error) {
+	tokenA sdk.Coin, Aasset PoolAsset, Basset PoolAsset, err error,
+) {
 	if len(tokensA) != 1 {
 		return tokenA, Aasset, Basset, errors.New("expected tokensB to be of length one")
 	}
@@ -258,7 +263,8 @@ func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
 }
 
 func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
-	Aasset PoolAsset, Basset PoolAsset, err error) {
+	Aasset PoolAsset, Basset PoolAsset, err error,
+) {
 	if len(tokensB) != 1 {
 		return Aasset, Basset, errors.New("expected tokensA to be of length one")
 	}
@@ -377,55 +383,63 @@ func (pa *Pool) updateAllWeights(newWeights []PoolAsset) {
 	pa.TotalWeight = totalWeight
 }
 
-// PokeTokenWeights checks to see if the pool's token weights need to be updated,
-// and if so, does so.
-func (pa *Pool) PokeTokenWeights(blockTime time.Time) {
-	// Pool weights aren't changing, do nothing.
-	poolWeightsChanging := (pa.PoolParams.SmoothWeightChangeParams != nil)
+// PokePool checks to see if the pool's token weights need to be updated, and
+// if so, does so.
+func (pa *Pool) PokePool(blockTime time.Time) {
+	// check if pool weights didn't change
+	poolWeightsChanging := pa.PoolParams.SmoothWeightChangeParams != nil
 	if !poolWeightsChanging {
 		return
 	}
-	// Pool weights are changing.
-	// TODO: Add intra-block cache check that we haven't already poked
-	// the block yet.
+
 	params := *pa.PoolParams.SmoothWeightChangeParams
 
-	// the weights w(t) for the pool at time `t` is the following:
-	//   t <= start_time: w(t) = initial_pool_weights
-	//   start_time < t <= start_time + duration:
+	// The weights w(t) for the pool at time `t` is defined in one of three
+	// possible ways:
+	//
+	// 1. t <= start_time: w(t) = initial_pool_weights
+	//
+	// 2. start_time < t <= start_time + duration:
 	//     w(t) = initial_pool_weights + (t - start_time) *
 	//       (target_pool_weights - initial_pool_weights) / (duration)
-	//   t > start_time + duration: w(t) = target_pool_weights
-
-	// t <= StartTime
-	if blockTime.Before(params.StartTime) || params.StartTime.Equal(blockTime) {
-		// Do nothing
+	//
+	// 3. t > start_time + duration: w(t) = target_pool_weights
+	switch {
+	case blockTime.Before(params.StartTime) || params.StartTime.Equal(blockTime):
+		// case 1: t <= start_time
 		return
-	} else if blockTime.After(params.StartTime.Add(params.Duration)) {
-		// t > start_time + duration
+
+	case blockTime.After(params.StartTime.Add(params.Duration)):
+		// case 2: start_time < t <= start_time + duration:
+
 		// Update weights to be the target weights.
-		// TODO: When we add support for adding new assets via this method,
-		// 		 Ensure the new asset has some token sent with it.
+		//
+		// TODO: When we add support for adding new assets via this method, ensure
+		// the new asset has some token sent with it.
 		pa.updateAllWeights(params.TargetPoolWeights)
-		// We've finished updating weights, so delete this parameter
+
+		// we've finished updating the weights, so reset the following fields
 		pa.PoolParams.SmoothWeightChangeParams = nil
 		return
-	} else {
-		//	w(t) = initial_pool_weights + (t - start_time) *
-		//       (target_pool_weights - initial_pool_weights) / (duration)
-		// We first compute percent duration elapsed = (t - start_time) / duration, via Unix time.
+
+	default:
+		// case 3: t > start_time + duration: w(t) = target_pool_weights
+
 		shiftedBlockTime := blockTime.Sub(params.StartTime).Milliseconds()
 		percentDurationElapsed := sdk.NewDec(shiftedBlockTime).QuoInt64(params.Duration.Milliseconds())
-		// If the duration elapsed is equal to the total time,
-		// or a rounding error makes it seem like it is, just set to target weight
+
+		// If the duration elapsed is equal to the total time, or a rounding error
+		// makes it seem like it is, just set to target weight.
 		if percentDurationElapsed.GTE(sdk.OneDec()) {
 			pa.updateAllWeights(params.TargetPoolWeights)
 			return
 		}
+
+		// below will be auto-truncated according to internal weight precision routine
 		totalWeightsDiff := subPoolAssetWeights(params.TargetPoolWeights, params.InitialPoolWeights)
-		// Below will be auto-truncated according to internal weight precision routine.
 		scaledDiff := poolAssetsMulDec(totalWeightsDiff, percentDurationElapsed)
 		updatedWeights := addPoolAssetWeights(params.InitialPoolWeights, scaledDiff)
+
 		pa.updateAllWeights(updatedWeights)
 	}
 }

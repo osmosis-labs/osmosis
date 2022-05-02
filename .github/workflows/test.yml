@@ -57,13 +57,13 @@ jobs:
             **/**.go
             go.mod
             go.sum
-      - name: Install Starport
+      - name: Install Ignite CLI
         run: |
-          curl https://get.starport.network/starport@v0.19.5! | bash
+          curl https://get.ignite.com/cli@v0.20.0! | bash
         if: env.GIT_DIFF
-      - name: Start Local Network via Starport
+      - name: Start Local Network via Ignite CLI
         run: |
-          starport chain serve --reset-once -v -c ./starport.ci.yml > starport.out 2>&1 &
+          ignite chain serve --reset-once -v -c ./ignite.ci.yml > ignite.out 2>&1 &
         if: env.GIT_DIFF
       - name: Test Local Network Liveness
         run: |
@@ -87,6 +87,7 @@ jobs:
       - name: Build Docker Image
         run: |
           make docker-build-debug
+          make docker-build-e2e-chain-init
         if: env.GIT_DIFF
       - name: Test E2E
         run: |

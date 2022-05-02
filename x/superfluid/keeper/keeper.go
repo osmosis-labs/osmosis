@@ -3,12 +3,13 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 // Keeper provides a way to manage module storage.

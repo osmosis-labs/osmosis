@@ -4,15 +4,17 @@ import (
 	"context"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
-var isPerpetual = true
-var notPerpetual = false
+var (
+	isPerpetual  = true
+	notPerpetual = false
+)
 
 func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.SetupTest()
@@ -26,11 +28,11 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.Error(err)
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
-	lockableDurations := suite.app.PoolIncentivesKeeper.GetLockableDurations(suite.ctx)
+	lockableDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	poolId := suite.prepareBalancerPool()
-	pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+	poolId := suite.PrepareBalancerPool()
+	pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 	suite.NoError(err)
 
 	res, err := queryClient.GaugeIds(context.Background(), &types.QueryGaugeIdsRequest{
@@ -43,21 +45,21 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.Equal(lockableDurations[2], res.GaugeIdsWithDuration[2].Duration)
 
 	poolLpDenom := gammtypes.GetPoolShareDenom(pool.GetId())
-	gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[0].GaugeId)
+	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, res.GaugeIdsWithDuration[0].GaugeId)
 	suite.NoError(err)
 	suite.Equal(0, len(gauge.Coins))
 	suite.Equal(true, gauge.IsPerpetual)
 	suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 	suite.Equal(lockableDurations[0], gauge.DistributeTo.Duration)
 
-	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[1].GaugeId)
+	gauge, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, res.GaugeIdsWithDuration[1].GaugeId)
 	suite.NoError(err)
 	suite.Equal(0, len(gauge.Coins))
 	suite.Equal(true, gauge.IsPerpetual)
 	suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
 	suite.Equal(lockableDurations[1], gauge.DistributeTo.Duration)
 
-	gauge, err = suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, res.GaugeIdsWithDuration[2].GaugeId)
+	gauge, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, res.GaugeIdsWithDuration[2].GaugeId)
 	suite.NoError(err)
 	suite.Equal(0, len(gauge.Coins))
 	suite.Equal(true, gauge.IsPerpetual)
@@ -80,26 +82,26 @@ func (suite *KeeperTestSuite) TestDistrInfo() {
 func (suite *KeeperTestSuite) TestDistrInfo2() {
 	suite.SetupTest()
 
-	keeper := suite.app.PoolIncentivesKeeper
+	keeper := suite.App.PoolIncentivesKeeper
 	queryClient := suite.queryClient
 
-	poolId := suite.prepareBalancerPool()
+	poolId := suite.PrepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
-	lockableDurations := keeper.GetLockableDurations(suite.ctx)
+	lockableDurations := keeper.GetLockableDurations(suite.Ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	gauge1Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
-	gauge2Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[1])
 	suite.NoError(err)
 
-	gauge3Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 3 records
-	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
+	err = keeper.UpdateDistrRecords(suite.Ctx, types.DistrRecord{
 		GaugeId: gauge1Id,
 		Weight:  sdk.NewInt(100),
 	}, types.DistrRecord{
@@ -159,30 +161,30 @@ func (suite *KeeperTestSuite) TestIncentivizedPools() {
 func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	suite.SetupTest()
 
-	keeper := suite.app.PoolIncentivesKeeper
+	keeper := suite.App.PoolIncentivesKeeper
 	queryClient := suite.queryClient
 
-	poolId := suite.prepareBalancerPool()
-	poolId2 := suite.prepareBalancerPool()
+	poolId := suite.PrepareBalancerPool()
+	poolId2 := suite.PrepareBalancerPool()
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
-	lockableDurations := keeper.GetLockableDurations(suite.ctx)
+	lockableDurations := keeper.GetLockableDurations(suite.Ctx)
 	suite.Equal(3, len(lockableDurations))
 
-	gauge1Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[0])
+	gauge1Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[0])
 	suite.NoError(err)
 
-	gauge2Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[1])
+	gauge2Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[1])
 	suite.NoError(err)
 
-	gauge3Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId, lockableDurations[2])
+	gauge3Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[2])
 	suite.NoError(err)
 
-	gauge4Id, err := keeper.GetPoolGaugeId(suite.ctx, poolId2, lockableDurations[2])
+	gauge4Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId2, lockableDurations[2])
 	suite.NoError(err)
 
 	// Create 4 records
-	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
+	err = keeper.UpdateDistrRecords(suite.Ctx, types.DistrRecord{
 		GaugeId: gauge1Id,
 		Weight:  sdk.NewInt(100),
 	}, types.DistrRecord{
@@ -220,15 +222,15 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 
 	// Actually, the pool incentives module can add incentives to any perpetual gauge, even if the gauge is not directly related to a pool.
 	// However, these records must be excluded in incentivizedPools.
-	gauge5Id, err := suite.app.IncentivesKeeper.CreateGauge(
-		suite.ctx, isPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
+	gauge5Id, err := suite.App.IncentivesKeeper.CreateGauge(
+		suite.Ctx, isPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "stake",
 			Duration:      time.Hour,
 		}, time.Now(), 1)
 	suite.NoError(err)
 
-	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
+	err = keeper.UpdateDistrRecords(suite.Ctx, types.DistrRecord{
 		GaugeId: gauge1Id,
 		Weight:  sdk.NewInt(100),
 	}, types.DistrRecord{
@@ -269,15 +271,15 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 
 	// Ensure that non-perpetual pot can't get rewards.
 	// TODO: extract this to standalone test
-	gauge6Id, err := suite.app.IncentivesKeeper.CreateGauge(
-		suite.ctx, notPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
+	gauge6Id, err := suite.App.IncentivesKeeper.CreateGauge(
+		suite.Ctx, notPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "stake",
 			Duration:      time.Hour,
 		}, time.Now(), 1)
 
 	suite.NoError(err)
-	err = keeper.UpdateDistrRecords(suite.ctx, types.DistrRecord{
+	err = keeper.UpdateDistrRecords(suite.Ctx, types.DistrRecord{
 		GaugeId: gauge6Id,
 		Weight:  sdk.NewInt(100),
 	})
