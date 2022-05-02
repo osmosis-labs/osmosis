@@ -1,20 +1,25 @@
 package e2e
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/ory/dockertest/v3"
+
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-func (s *IntegrationTestSuite) TestQueryBalances() {
+func (s *IntegrationTestSuite) TestBQueryBalances() {
 	var (
 		expectedDenomsA   = []string{chain.OsmoDenom, chain.StakeDenom}
 		expectedDenomsB   = []string{chain.OsmoDenom, chain.StakeDenom, chain.IbcDenom}
@@ -96,7 +101,7 @@ func queryBalances(endpoint, addr string) (sdk.Coins, error) {
 	return balancesResp.GetBalances(), nil
 }
 
-func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
+func (s *IntegrationTestSuite) TestAIBCTokenTransfer() {
 	var ibcStakeDenom string
 
 	s.Run("send_uosmo_to_chainB", func() {
@@ -132,4 +137,78 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 
 		s.Require().NotEmpty(ibcStakeDenom)
 	})
+}
+
+func (s *IntegrationTestSuite) TestCInitUpgrade() {
+	_, err := util.CopyFile(
+		filepath.Join("./scripts/", "osmosis_upgrade.sh"),
+		filepath.Join(s.chains[0].Validators[0].ConfigDir, "osmosis_upgrade.sh"),
+	)
+	s.Require().NoError(err)
+
+	cmdStr := fmt.Sprintf("docker exec %v bash -c 'chmod +x ~/.osmosisd/osmosis_upgrade.sh && ~/.osmosisd/osmosis_upgrade.sh'", s.valResources[s.chains[0].ChainMeta.Id][0].Container.ID)
+	out, _ := exec.Command("/bin/sh", "-c", cmdStr).Output()
+	fmt.Printf("%s", out)
+
+	type status struct {
+		LatestHeight string `json:"latest_block_height"`
+	}
+
+	type syncInfo struct {
+		SyncInfo status `json:"SyncInfo"`
+	}
+
+	s.Require().Eventually(
+		func() bool {
+			cmdStr := fmt.Sprintf("docker exec %v bash -c 'osmosisd status'", s.valResources[s.chains[0].ChainMeta.Id][0].Container.ID)
+			out, err := exec.Command("/bin/sh", "-c", cmdStr).CombinedOutput()
+			s.Require().NoError(err)
+			var syncInfo syncInfo
+			json.Unmarshal(out, &syncInfo)
+			if syncInfo.SyncInfo.LatestHeight != "75" {
+				fmt.Printf("current block height is %v, waiting for block 75\n", syncInfo.SyncInfo.LatestHeight)
+			}
+			return syncInfo.SyncInfo.LatestHeight == "75"
+		},
+		2*time.Minute,
+		5*time.Second,
+	)
+	for x := range s.chains {
+		c := s.chains[x]
+		for i := range c.Validators {
+			s.Require().NoError(s.dkrPool.RemoveContainerByName(s.valResources[c.ChainMeta.Id][i].Container.Name))
+		}
+	}
+}
+
+func (s *IntegrationTestSuite) TestDUpgrade() {
+	// s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
+	// tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
+
+	// s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
+	//s.Require().NoError(err)
+	for x := range s.chains {
+		c := s.chains[x]
+		for i, val := range c.Validators {
+			runOpts := &dockertest.RunOptions{
+				Name:       val.Name,
+				Repository: "osmosis",
+				Tag:        "debug",
+				NetworkID:  s.dkrNet.Network.ID,
+				User:       "root:root",
+				Mounts: []string{
+					fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
+				},
+			}
+			// _, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
+			// s.Require().NoError(err)
+
+			// s.T().Logf("started Osmosis %s validator container: %s", s.chains[0].ChainMeta.Id, s.valResources[s.chains[0].ChainMeta.Id][0].Container.ID)
+			resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
+			s.Require().NoError(err)
+
+			s.valResources[c.ChainMeta.Id][i] = resource
+			s.T().Logf("started Osmosis %s validator container: %s", c.ChainMeta.Id, resource.Container.ID)
+		}
+	}
 }

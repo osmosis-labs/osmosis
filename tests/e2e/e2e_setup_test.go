@@ -58,9 +58,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 
 	s.configureChain(chain.ChainAID)
-	s.Require().NoError(s.dkrPool.Purge(s.initResource))
 	s.configureChain(chain.ChainBID)
-	s.Require().NoError(s.dkrPool.Purge(s.initResource))
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
@@ -110,7 +108,7 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
 			},
 			Repository: "osmolabs/osmosis-dev",
-			Tag:        "v7.0.4-debug",
+			Tag:        "v7.2.1-debug",
 			Cmd: []string{
 				"start",
 			},
@@ -309,7 +307,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 		}
 	}
 	s.chains = append(s.chains, &newChain)
-
+	s.Require().NoError(s.dkrPool.Purge(s.initResource))
 }
 
 func (s *IntegrationTestSuite) configureDockerResources(chainIDOne, chainIDTwo string) {
