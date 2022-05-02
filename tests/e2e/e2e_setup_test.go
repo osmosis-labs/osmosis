@@ -334,10 +334,13 @@ func noRestart(config *docker.HostConfig) {
 func (s *IntegrationTestSuite) initUpgrade() {
 	for x := range s.chains {
 		c := s.chains[x]
-		_, err := util.CopyFile(
-			filepath.Join("./scripts/", "osmosis_upgrade.sh"),
-			filepath.Join(c.Validators[0].ConfigDir, "osmosis_upgrade.sh"),
-		)
+		// _, err := util.CopyFile(
+		// 	filepath.Join("./scripts/", "osmosis_upgrade.sh"),
+		// 	filepath.Join(c.Validators[0].ConfigDir, "osmosis_upgrade.sh"),
+		// )
+		// s.Require().NoError(err)
+		cmdStr1 := fmt.Sprintf("cp ./scripts/osmosis_upgrade.sh %s/", c.Validators[0].ConfigDir)
+		_, err := exec.Command("/bin/sh", "-c", cmdStr1).Output()
 		s.Require().NoError(err)
 		s.T().Logf("submitting upgrade proposal for chain-id: %s", c.ChainMeta.Id)
 		cmdStr := fmt.Sprintf("docker exec %v bash -c 'chmod +x ~/.osmosisd/osmosis_upgrade.sh && ~/.osmosisd/osmosis_upgrade.sh \"%s\"'", s.valResources[c.ChainMeta.Id][0].Container.ID, c.ChainMeta.Id)
