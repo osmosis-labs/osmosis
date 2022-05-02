@@ -363,6 +363,7 @@ func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
 
 // IterateDelegations implements govtypes.StakingKeeper
 // Iterates through staking keeper's delegations, and then all of the superfluid delegations.
+// Iterates through staking keeper's delegations, and then all of the superfluid delegations.
 func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) {
 	// call the callback with the non-superfluid delegations
 	var index int64
