@@ -9,24 +9,27 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
 func (s *IntegrationTestSuite) TestQueryBalances() {
 	var (
-		expectedDenomsA   = []string{osmoDenom, stakeDenom}
-		expectedDenomsB   = []string{osmoDenom, stakeDenom, ibcDenom}
-		expectedBalancesA = []uint64{osmoBalanceA - ibcSendAmount, stakeBalanceA - stakeAmountA}
-		expectedBalancesB = []uint64{osmoBalanceB, stakeBalanceB - stakeAmountB, ibcSendAmount}
+		expectedDenomsA   = []string{chain.OsmoDenom, chain.StakeDenom}
+		expectedDenomsB   = []string{chain.OsmoDenom, chain.StakeDenom, chain.IbcDenom}
+		expectedBalancesA = []uint64{chain.OsmoBalanceA - chain.IbcSendAmount, chain.StakeBalanceA - chain.StakeAmountA}
+		expectedBalancesB = []uint64{chain.OsmoBalanceB, chain.StakeBalanceB - chain.StakeAmountB, chain.IbcSendAmount}
 	)
 
-	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainA.id][0].GetHostPort("1317/tcp"))
-	balancesA, err := queryBalances(chainAAPIEndpoint, s.chainA.validators[0].keyInfo.GetAddress().String())
+	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[0].ChainMeta.Id][0].GetHostPort("1317/tcp"))
+	balancesA, err := queryBalances(chainAAPIEndpoint, s.chains[0].Validators[0].PublicAddress)
 	s.Require().NoError(err)
 	s.Require().NotNil(balancesA)
 	s.Require().Equal(2, len(balancesA))
 
-	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
-	balancesB, err := queryBalances(chainBAPIEndpoint, s.chainB.validators[0].keyInfo.GetAddress().String())
+	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[1].ChainMeta.Id][0].GetHostPort("1317/tcp"))
+	balancesB, err := queryBalances(chainBAPIEndpoint, s.chains[1].Validators[0].PublicAddress)
 	s.Require().NoError(err)
 	s.Require().NotNil(balancesB)
 	s.Require().Equal(3, len(balancesB))
@@ -86,7 +89,7 @@ func queryBalances(endpoint, addr string) (sdk.Coins, error) {
 	}
 
 	var balancesResp banktypes.QueryAllBalancesResponse
-	if err := cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
+	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
 		return nil, err
 	}
 
@@ -97,11 +100,11 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	var ibcStakeDenom string
 
 	s.Run("send_uosmo_to_chainB", func() {
-		recipient := s.chainB.validators[0].keyInfo.GetAddress().String()
-		token := sdk.NewInt64Coin(osmoDenom, ibcSendAmount) // 3,300uosmo
-		s.sendIBC(s.chainA.id, s.chainB.id, recipient, token)
+		recipient := s.chains[1].Validators[0].PublicAddress
+		token := sdk.NewInt64Coin(chain.OsmoDenom, chain.IbcSendAmount) // 3,300uosmo
+		s.sendIBC(s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id, recipient, token)
 
-		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
+		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[1].ChainMeta.Id][0].GetHostPort("1317/tcp"))
 
 		// require the recipient account receives the IBC tokens (IBC packets ACKd)
 		var (

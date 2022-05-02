@@ -11,7 +11,7 @@ import (
 )
 
 func (s *IntegrationTestSuite) connectIBCChains() {
-	s.T().Logf("connecting %s and %s chains via IBC", s.chainA.id, s.chainB.id)
+	s.T().Logf("connecting %s and %s chains via IBC", s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -26,8 +26,8 @@ func (s *IntegrationTestSuite) connectIBCChains() {
 			"hermes",
 			"create",
 			"channel",
-			s.chainA.id,
-			s.chainB.id,
+			s.chains[0].ChainMeta.Id,
+			s.chains[1].ChainMeta.Id,
 			"--port-a=transfer",
 			"--port-b=transfer",
 		},
@@ -56,7 +56,7 @@ func (s *IntegrationTestSuite) connectIBCChains() {
 		"failed to connect chains via IBC: %s", errBuf.String(),
 	)
 
-	s.T().Logf("connected %s and %s chains via IBC", s.chainA.id, s.chainB.id)
+	s.T().Logf("connected %s and %s chains via IBC", s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id)
 }
 
 func (s *IntegrationTestSuite) sendIBC(srcChainID, dstChainID, recipient string, token sdk.Coin) {
