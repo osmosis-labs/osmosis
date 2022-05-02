@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -63,6 +64,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
 	s.runIBCRelayer()
+	s.initUpgrade()
+	s.upgrade()
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -325,5 +328,107 @@ func noRestart(config *docker.HostConfig) {
 	// in this case we don't want the nodes to restart on failure
 	config.RestartPolicy = docker.RestartPolicy{
 		Name: "no",
+	}
+}
+
+func (s *IntegrationTestSuite) initUpgrade() {
+	for x := range s.chains {
+		c := s.chains[x]
+		_, err := util.CopyFile(
+			filepath.Join("./scripts/", "osmosis_upgrade.sh"),
+			filepath.Join(c.Validators[0].ConfigDir, "osmosis_upgrade.sh"),
+		)
+		s.Require().NoError(err)
+		s.T().Logf("submitting upgrade proposal for chain-id: %s", c.ChainMeta.Id)
+		cmdStr := fmt.Sprintf("docker exec %v bash -c 'chmod +x ~/.osmosisd/osmosis_upgrade.sh && ~/.osmosisd/osmosis_upgrade.sh \"%s\"'", s.valResources[c.ChainMeta.Id][0].Container.ID, c.ChainMeta.Id)
+		exec.Command("/bin/sh", "-c", cmdStr).Output()
+	}
+
+	for x := range s.chains {
+		c := s.chains[x]
+		s.T().Logf("waiting to reach upgrade height for chain-id: %s", c.ChainMeta.Id)
+		type status struct {
+			LatestHeight string `json:"latest_block_height"`
+		}
+
+		type syncInfo struct {
+			SyncInfo status `json:"SyncInfo"`
+		}
+
+		s.Require().Eventually(
+			func() bool {
+				cmdStr := fmt.Sprintf("docker exec %v bash -c 'osmosisd status'", s.valResources[c.ChainMeta.Id][0].Container.ID)
+				out, err := exec.Command("/bin/sh", "-c", cmdStr).CombinedOutput()
+				s.Require().NoError(err)
+				var syncInfo syncInfo
+				json.Unmarshal(out, &syncInfo)
+				if syncInfo.SyncInfo.LatestHeight != "75" {
+					fmt.Printf("current block height is %v, waiting for block 75\n", syncInfo.SyncInfo.LatestHeight)
+				}
+				return syncInfo.SyncInfo.LatestHeight == "75"
+			},
+			2*time.Minute,
+			5*time.Second,
+		)
+	}
+
+	for x := range s.chains {
+		c := s.chains[x]
+		for i := range c.Validators {
+			s.Require().NoError(s.dkrPool.RemoveContainerByName(s.valResources[c.ChainMeta.Id][i].Container.Name))
+		}
+	}
+}
+
+func (s *IntegrationTestSuite) upgrade() {
+	for x := range s.chains {
+		c := s.chains[x]
+		s.T().Logf("starting upgrade for chain-id: %s...", c.ChainMeta.Id)
+		for i, val := range c.Validators {
+			runOpts := &dockertest.RunOptions{
+				Name:       val.Name,
+				Repository: "osmosis",
+				Tag:        "debug",
+				NetworkID:  s.dkrNet.Network.ID,
+				User:       "root:root",
+				Mounts: []string{
+					fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
+				},
+			}
+			resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
+			s.Require().NoError(err)
+
+			s.valResources[c.ChainMeta.Id][i] = resource
+			s.T().Logf("started Osmosis %s validator container: %s", c.ChainMeta.Id, resource.Container.ID)
+		}
+	}
+	for x := range s.chains {
+		c := s.chains[x]
+		for i := range c.Validators {
+			type status struct {
+				LatestHeight string `json:"latest_block_height"`
+			}
+
+			type syncInfo struct {
+				SyncInfo status `json:"SyncInfo"`
+			}
+
+			s.Require().Eventually(
+				func() bool {
+					cmdStr := fmt.Sprintf("docker exec %v bash -c 'osmosisd status'", s.valResources[c.ChainMeta.Id][0].Container.ID)
+					out, err := exec.Command("/bin/sh", "-c", cmdStr).CombinedOutput()
+					s.Require().NoError(err)
+					var syncInfo syncInfo
+					json.Unmarshal(out, &syncInfo)
+					if syncInfo.SyncInfo.LatestHeight <= "75" {
+						fmt.Printf("current block height is %v, waiting to hit blocks\n", syncInfo.SyncInfo.LatestHeight)
+					}
+					return syncInfo.SyncInfo.LatestHeight > "75"
+				},
+				2*time.Minute,
+				5*time.Second,
+			)
+			s.T().Logf("upgrade successful on %s validator container: %s", c.ChainMeta.Id, s.valResources[c.ChainMeta.Id][i].Container.ID)
+		}
 	}
 }
