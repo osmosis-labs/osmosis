@@ -8,8 +8,8 @@ import (
 )
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
-func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomnonce string) (newTokenDenom string, err error) {
-	denom, err := types.GetTokenDenom(creatorAddr, denomnonce)
+func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomNonce string) (newTokenDenom string, err error) {
+	denom, err := types.GetTokenDenom(creatorAddr, denomNonce)
 	if err != nil {
 		return "", err
 	}
