@@ -306,7 +306,6 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 		}
 	}
 	s.chains = append(s.chains, &newChain)
-
 }
 
 func (s *IntegrationTestSuite) configureDockerResources(chainIDOne, chainIDTwo string) {

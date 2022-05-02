@@ -15,7 +15,7 @@ func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
 	return xy.Mul(x2.Add(y2))
 }
 
-// multi-asset CFMM is xyu(x^2 + y^2 + v) = k, 
+// multi-asset CFMM is xyu(x^2 + y^2 + v) = k,
 // where u is the product of the reserves of assets
 // outside of x and y (e.g. u = wz), and v is the sum
 // of their squares (e.g. v = w^2 + z^2).
