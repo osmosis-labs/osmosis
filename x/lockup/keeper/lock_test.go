@@ -668,7 +668,10 @@ func (suite *KeeperTestSuite) TestEditLockup() {
 	// duration decrease should fail
 	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second/2)
 	suite.Require().Error(err)
-
+	// extending lock with same duration should fail
+	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second)
+	suite.Require().Error(err)
+	
 	// duration increase should success
 	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second*2)
 	suite.Require().NoError(err)
@@ -676,7 +679,9 @@ func (suite *KeeperTestSuite) TestEditLockup() {
 	// check queries
 	lock, _ = suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
 	suite.Require().Equal(lock.Duration, time.Second*2)
-
+	suite.Require().Equal(1, lock.ID)
+	suite.Require().Equal(coins, lock.Coins)
+	
 	locks = suite.App.LockupKeeper.GetLocksLongerThanDurationDenom(suite.Ctx, "stake", time.Second)
 	suite.Require().Equal(len(locks), 1)
 
