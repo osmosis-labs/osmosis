@@ -19,14 +19,12 @@ func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomNonce stri
 		return "", types.ErrDenomExists
 	}
 
-	baseDenomUnit := banktypes.DenomUnit{
-		Denom:    denom,
-		Exponent: 0,
-	}
-
 	denomMetaData := banktypes.Metadata{
-		DenomUnits: []*banktypes.DenomUnit{&baseDenomUnit},
-		Base:       denom,
+		DenomUnits: []*banktypes.DenomUnit{{
+			Denom:    denom,
+			Exponent: 0,
+		}},
+		Base: denom,
 	}
 
 	k.bankKeeper.SetDenomMetaData(ctx, denomMetaData)
