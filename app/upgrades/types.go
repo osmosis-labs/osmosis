@@ -10,6 +10,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
 )
 
+// Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal
+// must have written, in order for the state migration to go smoothly.
+// An upgrade must implement this struct, and then set it in the app.go.
+// The app.go will then define the handler.
 type Upgrade struct {
 	// Upgrade version name, for the upgrade handler, e.g. `v7`
 	UpgradeName string
@@ -20,6 +24,11 @@ type Upgrade struct {
 	StoreUpgrades store.StoreUpgrades
 }
 
+// Fork defines a struct containing the requisite fields for a non-software upgrade proposal
+// Hard Fork at a given height to implement.
+// There is one time code that can be added for the start of the Fork, in `BeginForkLogic`.
+// Any other change in the code should be height-gated, if the goal is to have old and new binaries
+// to be compatible prior to the upgrade height.
 type Fork struct {
 	// Upgrade version name, for the upgrade handler, e.g. `v7`
 	UpgradeName string
