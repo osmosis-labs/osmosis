@@ -551,7 +551,7 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration
 	oldLock := lock
 
 	if newDuration != 0 {
-		if newDuration < lock.Duration {
+		if newDuration <= lock.Duration {
 			return fmt.Errorf("new duration should be greater than the original")
 		}
 
