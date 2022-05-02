@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -13,6 +14,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+type normalDelegation struct {
+	delIndex   int64
+	valIndex   int64
+	coinAmount int64
+}
 
 type superfluidDelegation struct {
 	delIndex int64
@@ -29,6 +36,15 @@ type superfluidRedelegation struct {
 type osmoEquivalentMultiplier struct {
 	lpIndex int64
 	price   sdk.Dec
+}
+
+func (suite *KeeperTestSuite) SetupNormalDelegation(delAddrs []sdk.AccAddress, valAddrs []sdk.ValAddress, del normalDelegation) error {
+	val, found := suite.App.StakingKeeper.GetValidator(suite.Ctx, valAddrs[del.valIndex])
+	if !found {
+		return fmt.Errorf("validator not found")
+	}
+	_, err := suite.App.StakingKeeper.Delegate(suite.Ctx, delAddrs[del.delIndex], sdk.NewIntFromUint64(uint64(del.coinAmount)), stakingtypes.Bonded, val, false)
+	return err
 }
 
 func (suite *KeeperTestSuite) SetupSuperfluidDelegations(delAddrs []sdk.AccAddress, valAddrs []sdk.ValAddress, superDelegations []superfluidDelegation, denoms []string) ([]types.SuperfluidIntermediaryAccount, []lockuptypes.PeriodLock) {
@@ -899,34 +915,40 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 
 func (suite *KeeperTestSuite) TestSuperfluidDelegationGovernanceVoting() {
 	testCases := []struct {
-		name             string
-		validatorStats   []stakingtypes.BondStatus
-		superDelegations [][]superfluidDelegation
+		name              string
+		validatorStats    []stakingtypes.BondStatus
+		superDelegations  [][]superfluidDelegation
+		normalDelegations []normalDelegation
 	}{
 		{
 			"with single validator and single delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[][]superfluidDelegation{{{0, 0, 0, 1000000}}},
+			nil,
 		},
 		{
 			"with single validator and additional delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[][]superfluidDelegation{{{0, 0, 0, 1000000}, {0, 0, 0, 1000000}}},
+			nil,
 		},
 		{
 			"with multiple validator and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[][]superfluidDelegation{{{0, 0, 0, 1000000}}, {{1, 1, 0, 1000000}}},
+			nil,
 		},
 		{
 			"with single validator and multiple denom superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[][]superfluidDelegation{{{0, 0, 0, 1000000}, {0, 0, 1, 1000000}}},
+			nil,
 		},
 		{
 			"with multiple validators and multiple denom superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
 			[][]superfluidDelegation{{{0, 0, 0, 1000000}, {0, 1, 1, 1000000}}},
+			nil,
 		},
 		{
 			"many delegations",
@@ -936,6 +958,17 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegationGovernanceVoting() {
 				{{1, 0, 0, 1000000}, {1, 0, 1, 1000000}},
 				{{2, 1, 1, 1000000}, {2, 1, 0, 1000000}},
 				{{3, 0, 0, 1000000}, {3, 1, 1, 1000000}},
+			},
+			nil,
+		},
+		{
+			"with normal delegations",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[][]superfluidDelegation{
+				{{0, 0, 0, 1000000}, {0, 0, 1, 1000000}},
+			},
+			[]normalDelegation{
+				{0, 0, 1000000},
 			},
 		},
 	}
@@ -960,6 +993,12 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegationGovernanceVoting() {
 				suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 			}
 
+			// setup normal delegations
+			for _, del := range tc.normalDelegations {
+				err := suite.SetupNormalDelegation(delAddrs, valAddrs, del)
+				suite.NoError(err)
+			}
+
 			// all expected delegated amounts to a validator from a delegator
 			delegatedAmount := func(delidx, validx int) sdk.Int {
 				res := sdk.ZeroInt()
@@ -967,6 +1006,10 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegationGovernanceVoting() {
 					if del.valIndex == int64(validx) {
 						res = res.AddRaw(del.lpAmount)
 					}
+				}
+				if len(tc.normalDelegations) != 0 {
+					del := tc.normalDelegations[delidx]
+					res = res.AddRaw(del.coinAmount / 10) // LP price is 10 osmo in this test
 				}
 				return res
 			}
