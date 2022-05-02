@@ -237,7 +237,7 @@ test-sim:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
 
 test-e2e:
-	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v github.com/osmosis-labs/osmosis/v7/tests/e2e
 
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
