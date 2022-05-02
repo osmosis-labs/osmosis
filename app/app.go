@@ -85,8 +85,8 @@ var (
 
 	_ App = (*OsmosisApp)(nil)
 
-	Upgrades []upgrades.Upgrade = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v8.Upgrade}
-	Forks    []upgrades.Fork    = []upgrades.Fork{v3.Fork, v6.Fork}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v8.Upgrade}
+	Forks    = []upgrades.Fork{v3.Fork, v6.Fork}
 )
 
 // GetWasmEnabledProposals parses the WasmProposalsEnabled and

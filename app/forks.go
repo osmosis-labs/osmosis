@@ -9,6 +9,7 @@ func BeginBlockForks(ctx sdk.Context, app *OsmosisApp) {
 	for _, fork := range Forks {
 		if ctx.BlockHeight() == fork.UpgradeHeight {
 			fork.BeginForkLogic(ctx, &app.AppKeepers)
+			return
 		}
 	}
 }
