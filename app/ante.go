@@ -3,14 +3,13 @@ package app
 import (
 	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	channelkeeper "github.com/cosmos/ibc-go/v2/modules/core/04-channel/keeper"
-	ibcante "github.com/cosmos/ibc-go/v2/modules/core/ante"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	channelkeeper "github.com/cosmos/ibc-go/v2/modules/core/04-channel/keeper"
+	ibcante "github.com/cosmos/ibc-go/v2/modules/core/ante"
 
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
@@ -23,7 +22,7 @@ func NewAnteHandler(
 	wasmConfig wasm.Config,
 	txCounterStoreKey sdk.StoreKey,
 	ak ante.AccountKeeper,
-	bankKeeper authtypes.BankKeeper,
+	bankKeeper txfeestypes.BankKeeper,
 	txFeesKeeper *txfeeskeeper.Keeper,
 	spotPriceCalculator txfeestypes.SpotPriceCalculator,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
@@ -32,7 +31,7 @@ func NewAnteHandler(
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
-
+	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, ak, bankKeeper, nil)
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
@@ -45,7 +44,7 @@ func NewAnteHandler(
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),
 		ante.NewConsumeGasForTxSizeDecorator(ak),
-		ante.NewDeductFeeDecorator(ak, bankKeeper, nil),
+		deductFeeDecorator,
 		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(ak),
 		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),
