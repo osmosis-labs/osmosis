@@ -15,6 +15,17 @@ func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
 	return xy.Mul(x2.Add(y2))
 }
 
+// multi-asset CFMM is xyu(x^2 + y^2 + v) = k, 
+// where u is the product of the reserves of assets
+// outside of x and y (e.g. u = wz), and v is the sum
+// of their squares (e.g. v = w^2 + z^2)
+func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares sdk.Dec) sdk.Dec {
+	xyu := xReserve.Mul(yReserve.Mul(uReserve))
+	x2 := xReserve.Mul(xReserve)
+	y2 := yReserve.Mul(yReserve)
+	return xyu.Mul(x2.Add(y2).Add(vSumSquares))
+}
+
 // solidly CFMM is xy(x^2 + y^2) = k
 // So we want to solve for a given addition of `b` units of y into the pool,
 // how many units `a` of x do we get out.
