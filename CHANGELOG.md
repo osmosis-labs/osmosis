@@ -39,13 +39,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]()
+## Unreleased
+
+## [v7.2.2](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.2)
+
+### Minor improvements & Bug Fixes
+
+* [1390](https://github.com/osmosis-labs/osmosis/pull/1390) Upgrade sdk to v0.45.0x-osmo-v7.9, fixing data races with GRPC
+and simulation queries
+* [1395](https://github.com/osmosis-labs/osmosis/pull/1395/) 
 
 ## [v7.2.1](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.1)
 
+### Features
+
+* [#1262](https://github.com/osmosis-labs/osmosis/pull/1262) Add a `forceprune` command to the binaries, that prunes golevelDB data better.
+
+### Minor improvements & Bug Fixes
+
 * [#1373](https://github.com/osmosis-labs/osmosis/pull/1373) fix: release build scripts
 * [#1357](https://github.com/osmosis-labs/osmosis/pull/1357) chore: upgrade sdk to v0.45.0x-osmo-v7.8.1
-* [#1262](https://github.com/osmosis-labs/osmosis/pull/1262) Add a `forceprune` command to the binaries, that prunes golevelDB data better.
 
 ## [v7.2.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.0)
 
