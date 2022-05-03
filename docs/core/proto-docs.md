@@ -121,6 +121,8 @@
 - [osmosis/lockup/query.proto](#osmosis/lockup/query.proto)
     - [AccountLockedCoinsRequest](#osmosis.lockup.AccountLockedCoinsRequest)
     - [AccountLockedCoinsResponse](#osmosis.lockup.AccountLockedCoinsResponse)
+    - [AccountLockedDurationRequest](#osmosis.lockup.AccountLockedDurationRequest)
+    - [AccountLockedDurationResponse](#osmosis.lockup.AccountLockedDurationResponse)
     - [AccountLockedLongerDurationDenomRequest](#osmosis.lockup.AccountLockedLongerDurationDenomRequest)
     - [AccountLockedLongerDurationDenomResponse](#osmosis.lockup.AccountLockedLongerDurationDenomResponse)
     - [AccountLockedLongerDurationNotUnlockingOnlyRequest](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyRequest)
@@ -1840,6 +1842,37 @@ GenesisState defines the lockup module's genesis state.
 
 
 
+<a name="osmosis.lockup.AccountLockedDurationRequest"></a>
+
+### AccountLockedDurationRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+
+
+
+
+
+
+<a name="osmosis.lockup.AccountLockedDurationResponse"></a>
+
+### AccountLockedDurationResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
+
+
+
+
+
+
 <a name="osmosis.lockup.AccountLockedLongerDurationDenomRequest"></a>
 
 ### AccountLockedLongerDurationDenomRequest
@@ -2286,6 +2319,7 @@ Query defines the gRPC querier service.
 | `LockedByID` | [LockedRequest](#osmosis.lockup.LockedRequest) | [LockedResponse](#osmosis.lockup.LockedResponse) | Returns lock record by id | GET|/osmosis/lockup/v1beta1/locked_by_id/{lock_id}|
 | `SyntheticLockupsByLockupID` | [SyntheticLockupsByLockupIDRequest](#osmosis.lockup.SyntheticLockupsByLockupIDRequest) | [SyntheticLockupsByLockupIDResponse](#osmosis.lockup.SyntheticLockupsByLockupIDResponse) | Returns synthetic lockups by native lockup id | GET|/osmosis/lockup/v1beta1/synthetic_lockups_by_lock_id/{lock_id}|
 | `AccountLockedLongerDuration` | [AccountLockedLongerDurationRequest](#osmosis.lockup.AccountLockedLongerDurationRequest) | [AccountLockedLongerDurationResponse](#osmosis.lockup.AccountLockedLongerDurationResponse) | Returns account locked records with longer duration | GET|/osmosis/lockup/v1beta1/account_locked_longer_duration/{owner}|
+| `AccountLockedDuration` | [AccountLockedDurationRequest](#osmosis.lockup.AccountLockedDurationRequest) | [AccountLockedDurationResponse](#osmosis.lockup.AccountLockedDurationResponse) | Returns account locked records with a specific duration | GET|/osmosis/lockup/v1beta1/account_locked_duration/{owner}|
 | `AccountLockedLongerDurationNotUnlockingOnly` | [AccountLockedLongerDurationNotUnlockingOnlyRequest](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyRequest) | [AccountLockedLongerDurationNotUnlockingOnlyResponse](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyResponse) | Returns account locked records with longer duration excluding tokens started unlocking | GET|/osmosis/lockup/v1beta1/account_locked_longer_duration_not_unlocking_only/{owner}|
 | `AccountLockedLongerDurationDenom` | [AccountLockedLongerDurationDenomRequest](#osmosis.lockup.AccountLockedLongerDurationDenomRequest) | [AccountLockedLongerDurationDenomResponse](#osmosis.lockup.AccountLockedLongerDurationDenomResponse) | Returns account's locked records for a denom with longer duration | GET|/osmosis/lockup/v1beta1/account_locked_longer_duration_denom/{owner}|
 
