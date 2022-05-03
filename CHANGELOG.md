@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [v7.3.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.2)
+## [v7.3.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.3.0)
 
 ### Bug Fixes
 
