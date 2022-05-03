@@ -9,7 +9,7 @@ Closes: #XXX
 ## Brief change log (include any info relevant to tests))
 *(for example:)*
   - *The metadata is stored in the blob store on job creation time as a persistent artifact*
-
+## Testing and Verifying
 *(tests example:)*
   - *Added unit test that validates ...*
 ## Documentation and Release Note (for new features, delete if N/A)
