@@ -11,7 +11,7 @@ v                               ✰  Thanks for creating an issue! ✰
 *here, you can put concrete steps as to what to do next*
 *(for example)*
 - *create test file in...*
-## Criteria
+## Acceptance Criteria
 *goals & criteria for success*
 *(for example)*
 - *all existing and new tests should pass*
