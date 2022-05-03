@@ -20,10 +20,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/client/rest"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/simulation"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/client/rest"
 )
 
 var (
