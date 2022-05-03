@@ -27,6 +27,11 @@ For the most up to date documentation please visit [docs.osmosis.zone](https://d
 
 Thank you for supporting a healthy blockchain network and community by running an Osmosis node!
 
+## Contributing
+The contributing guide for Osmosis explains the branching structure, how to use the SDK fork, and how to make / test updates to SDK branches.  
+
+For more information, please see [the contributing guide](https://docs.osmosis.zone/developing/get_started/contributing.html).
+
 ## Why Osmosis?
 ### On customizability of liquidity pools
 Most major AMMs limit the changeable parameters of liquidity pools. For example, Uniswap only allows the creation of a two-token pool of equal ratio with the swap fee of 0.3%. The simplicity of Uniswap protocol allowed quick onboarding of the average user that previously had little to no experience in market making.
