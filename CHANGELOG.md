@@ -41,13 +41,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [v7.2.2](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.2)
+## [v7.3.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.3.0)
 
-### Minor improvements & Bug Fixes
+### Bug Fixes
 
 * [1390](https://github.com/osmosis-labs/osmosis/pull/1390) Upgrade sdk to v0.45.0x-osmo-v7.9, fixing data races with GRPC
-and simulation queries
-* [1395](https://github.com/osmosis-labs/osmosis/pull/1395/) 
+and simulation queries; simulation queries are concurrent with ABCI commit flow
+* [1395](https://github.com/osmosis-labs/osmosis/pull/1395/) Add chain-id to PrepareGenesis command
 
 ## [v7.2.1](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.1)
 
