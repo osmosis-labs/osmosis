@@ -277,6 +277,33 @@
   
     - [Msg](#osmosis.superfluid.Msg)
   
+- [osmosis/tokenfactory/v1beta1/authorityMetadata.proto](#osmosis/tokenfactory/v1beta1/authorityMetadata.proto)
+    - [DenomAuthorityMetadata](#osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata)
+  
+- [osmosis/tokenfactory/v1beta1/genesis.proto](#osmosis/tokenfactory/v1beta1/genesis.proto)
+    - [GenesisDenom](#osmosis.tokenfactory.v1beta1.GenesisDenom)
+    - [GenesisState](#osmosis.tokenfactory.v1beta1.GenesisState)
+  
+- [osmosis/tokenfactory/v1beta1/query.proto](#osmosis/tokenfactory/v1beta1/query.proto)
+    - [QueryDenomAuthorityMetadataRequest](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest)
+    - [QueryDenomAuthorityMetadataResponse](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse)
+    - [QueryDenomsFromCreatorRequest](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest)
+    - [QueryDenomsFromCreatorResponse](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse)
+  
+    - [Query](#osmosis.tokenfactory.v1beta1.Query)
+  
+- [osmosis/tokenfactory/v1beta1/tx.proto](#osmosis/tokenfactory/v1beta1/tx.proto)
+    - [MsgBurn](#osmosis.tokenfactory.v1beta1.MsgBurn)
+    - [MsgBurnResponse](#osmosis.tokenfactory.v1beta1.MsgBurnResponse)
+    - [MsgChangeAdmin](#osmosis.tokenfactory.v1beta1.MsgChangeAdmin)
+    - [MsgChangeAdminResponse](#osmosis.tokenfactory.v1beta1.MsgChangeAdminResponse)
+    - [MsgCreateDenom](#osmosis.tokenfactory.v1beta1.MsgCreateDenom)
+    - [MsgCreateDenomResponse](#osmosis.tokenfactory.v1beta1.MsgCreateDenomResponse)
+    - [MsgMint](#osmosis.tokenfactory.v1beta1.MsgMint)
+    - [MsgMintResponse](#osmosis.tokenfactory.v1beta1.MsgMintResponse)
+  
+    - [Msg](#osmosis.tokenfactory.v1beta1.Msg)
+  
 - [osmosis/txfees/v1beta1/feetoken.proto](#osmosis/txfees/v1beta1/feetoken.proto)
     - [FeeToken](#osmosis.txfees.v1beta1.FeeToken)
   
@@ -3887,6 +3914,322 @@ Msg defines the Msg service.
 Execute superfluid redelegation for a lockup rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns (MsgSuperfluidRedelegateResponse); | |
 | `SuperfluidUnbondLock` | [MsgSuperfluidUnbondLock](#osmosis.superfluid.MsgSuperfluidUnbondLock) | [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse) | For a given lock that is being superfluidly undelegated, also unbond the underlying lock. | |
 | `LockAndSuperfluidDelegate` | [MsgLockAndSuperfluidDelegate](#osmosis.superfluid.MsgLockAndSuperfluidDelegate) | [MsgLockAndSuperfluidDelegateResponse](#osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse) | Execute lockup lock and superfluid delegation in a single msg | |
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/authorityMetadata.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/authorityMetadata.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata"></a>
+
+### DenomAuthorityMetadata
+DenomAuthorityMetadata specifies metadata for addresses that have specific
+capabilities over a token factory denom. Right now there is only one Admin
+permission, but is planned to be extended to the future.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `Admin` | [string](#string) |  | Can be empty for no admin, or a valid osmosis address |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/genesis.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.GenesisDenom"></a>
+
+### GenesisDenom
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `authority_metadata` | [DenomAuthorityMetadata](#osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the tokenfactory module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `factory_denoms` | [GenesisDenom](#osmosis.tokenfactory.v1beta1.GenesisDenom) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/query.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest"></a>
+
+### QueryDenomAuthorityMetadataRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse"></a>
+
+### QueryDenomAuthorityMetadataResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority_metadata` | [DenomAuthorityMetadata](#osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest"></a>
+
+### QueryDenomsFromCreatorRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `creator` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse"></a>
+
+### QueryDenomsFromCreatorResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denoms` | [string](#string) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.tokenfactory.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `DenomAuthorityMetadata` | [QueryDenomAuthorityMetadataRequest](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest) | [QueryDenomAuthorityMetadataResponse](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse) |  | GET|/osmosis/tokenfactory/v1beta1/denoms/{denom}/authority_metadata|
+| `DenomsFromCreator` | [QueryDenomsFromCreatorRequest](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest) | [QueryDenomsFromCreatorResponse](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse) |  | GET|/osmosis/tokenfactory/v1beta1/denoms_from_creator/{creator}|
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/tx.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgBurn"></a>
+
+### MsgBurn
+MsgBurn is the sdk.Msg type for allowing an admin account to burn
+a token.  For now, we require sender == burnFromAddress
+but this restriction will be removed in the future.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `burnFromAddress` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgBurnResponse"></a>
+
+### MsgBurnResponse
+
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgChangeAdmin"></a>
+
+### MsgChangeAdmin
+MsgChangeAdmin is the sdk.Msg type for allowing an admin account to reassign
+adminship of a denom to a new account
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+| `newAdmin` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgChangeAdminResponse"></a>
+
+### MsgChangeAdminResponse
+
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgCreateDenom"></a>
+
+### MsgCreateDenom
+MsgCreateDenom is the sdk.Msg type for allowing an account to create
+a new denom.  It requires a sender address and a unique nonce
+(to allow accounts to create multiple denoms)
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `nonce` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgCreateDenomResponse"></a>
+
+### MsgCreateDenomResponse
+MsgCreateDenomResponse is the return value of MsgCreateDenom
+It returns the full string of the newly created denom
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `new_token_denom` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgMint"></a>
+
+### MsgMint
+MsgMint is the sdk.Msg type for allowing an admin account to mint
+more of a token.  For now, we require sender == mintToAddress
+but this restriction will be removed in the future.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `mintToAddress` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgMintResponse"></a>
+
+### MsgMintResponse
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.tokenfactory.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateDenom` | [MsgCreateDenom](#osmosis.tokenfactory.v1beta1.MsgCreateDenom) | [MsgCreateDenomResponse](#osmosis.tokenfactory.v1beta1.MsgCreateDenomResponse) |  | |
+| `Mint` | [MsgMint](#osmosis.tokenfactory.v1beta1.MsgMint) | [MsgMintResponse](#osmosis.tokenfactory.v1beta1.MsgMintResponse) |  | |
+| `Burn` | [MsgBurn](#osmosis.tokenfactory.v1beta1.MsgBurn) | [MsgBurnResponse](#osmosis.tokenfactory.v1beta1.MsgBurnResponse) |  | |
+| `ChangeAdmin` | [MsgChangeAdmin](#osmosis.tokenfactory.v1beta1.MsgChangeAdmin) | [MsgChangeAdminResponse](#osmosis.tokenfactory.v1beta1.MsgChangeAdminResponse) | ForceTransfer is deactivated for now because we need to think through edge cases rpc ForceTransfer(MsgForceTransfer) returns (MsgForceTransferResponse); | |
 
  <!-- end services -->
 

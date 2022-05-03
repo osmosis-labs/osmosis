@@ -132,59 +132,60 @@ func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coin
 }
 
 // TODO: These should all get moved to amm.go
-func (pa Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.DecCoin, err error) {
+func (pa Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
 	if tokenIn.Len() != 1 {
-		return sdk.DecCoin{}, errors.New("stableswap CalcOutAmtGivenIn: tokenIn is of wrong length")
+		return sdk.Coin{}, errors.New("stableswap CalcOutAmtGivenIn: tokenIn is of wrong length")
 	}
-	amt, err := pa.calcOutAmtGivenIn(tokenIn[0], tokenOutDenom, swapFee)
-	if err != nil {
-		return sdk.DecCoin{}, err
-	}
-	return sdk.DecCoin{Denom: tokenOutDenom, Amount: amt}, nil
-}
-
-func (pa *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
-	tokenOutDec, err := pa.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
+	outAmtDec, err := pa.calcOutAmtGivenIn(tokenIn[0], tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
+
 	// we ignore the decimal component, as token out amount must round down
-	tokenOut, _ = tokenOutDec.TruncateDecimal()
-	if !tokenOut.Amount.IsPositive() {
+	tokenOutAmt := outAmtDec.TruncateInt()
+	if !tokenOutAmt.IsPositive() {
 		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
+	return sdk.NewCoin(tokenOutDenom, tokenOutAmt), nil
+}
+
+func (pa *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
+	tokenOut, err = pa.CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
 	pa.updatePoolLiquidityForSwap(tokenIn, sdk.NewCoins(tokenOut))
 
 	return tokenOut, nil
 }
 
-func (pa Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.DecCoin, err error) {
+func (pa Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
 	if tokenOut.Len() != 1 {
-		return sdk.DecCoin{}, errors.New("stableswap CalcInAmtGivenOut: tokenOut is of wrong length")
+		return sdk.Coin{}, errors.New("stableswap CalcInAmtGivenOut: tokenOut is of wrong length")
 	}
 	// TODO: Refactor this later to handle scaling factors
 	amt, err := pa.calcInAmtGivenOut(tokenOut[0], tokenInDenom, swapFee)
 	if err != nil {
-		return sdk.DecCoin{}, err
+		return sdk.Coin{}, err
 	}
-	// TODO: Once we make calc in amt given out return a Coin
-	// if tokenInDecimal is non-zero, we add 1 to the tokenInCoin
-	// this is because tokenIn must round up
-	// if tokenInDecimal.Amount.IsPositive() {
-	// 	tokenIn.Amount = tokenIn.Amount.AddRaw(1)
-	// }
-	return sdk.DecCoin{Denom: tokenInDenom, Amount: amt}, nil
+
+	// We round up tokenInAmt, as this is whats charged for the swap, for the precise amount out.
+	// Otherwise, the pool would under-charge by this rounding error.
+	tokenInAmt := amt.Ceil().TruncateInt()
+
+	if !tokenInAmt.IsPositive() {
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
+	}
+	return sdk.NewCoin(tokenInDenom, tokenInAmt), nil
 }
 
 func (pa *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error) {
-	tokenInDec, err := pa.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
+	tokenIn, err = pa.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	tokenIn, _ = tokenInDec.TruncateDecimal()
-	if !tokenIn.Amount.IsPositive() {
-		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
-	}
+
 	pa.updatePoolLiquidityForSwap(sdk.NewCoins(tokenIn), tokenOut)
 
 	return tokenIn, nil
