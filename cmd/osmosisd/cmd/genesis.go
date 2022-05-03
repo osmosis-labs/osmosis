@@ -107,6 +107,7 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	cdc := depCdc
 
 	// chain params genesis
+	genDoc.ChainID = chainID
 	genDoc.GenesisTime = genesisParams.GenesisTime
 
 	genDoc.ConsensusParams = genesisParams.ConsensusParams
