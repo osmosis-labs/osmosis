@@ -54,6 +54,7 @@ func (pa Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
 func (pa Pool) GetTotalShares() sdk.Int {
 	return pa.TotalShares.Amount
 }
+
 func (pa Pool) GetScalingFactors() []uint64 {
 	return pa.ScalingFactor
 }
