@@ -34,6 +34,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 
 	if len(msg.Coins) == 1 {
 		locks := server.keeper.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, msg.Coins[0].Denom, msg.Duration)
+		// if existing lock with same duration and denom exists, just add there
 		if len(locks) > 0 {
 			lock := locks[0]
 			_, err := server.keeper.AddTokensToLockByID(ctx, lock.ID, owner, msg.Coins[0])

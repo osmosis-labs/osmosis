@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -815,7 +814,6 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				}
 
 				// calculating the estimated delegation amount for multiplier change
-				fmt.Println(intermediaryDels)
 				expDelegation := intermediaryDels[index].Mul(multiplier).Quo(originMultiplier)
 				lpTokenAmount := sdk.NewInt(1000000)
 				decAmt := multiplier.Mul(lpTokenAmount.ToDec())

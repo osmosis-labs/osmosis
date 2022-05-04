@@ -61,7 +61,7 @@ func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddr
 	return locks, err
 }
 
-func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coin sdk.Coin) error {
+func (k Keeper) addTokenToLock(ctx sdk.Context, lock *types.PeriodLock, coin sdk.Coin) error {
 	lock.Coins = lock.Coins.Add(coin)
 
 	err := k.setLock(ctx, *lock)
@@ -127,7 +127,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 		return nil, err
 	}
 
-	err = k.addTokensToLock(ctx, lock, coin)
+	err = k.addTokenToLock(ctx, lock, coin)
 	if err != nil {
 		return nil, err
 	}
