@@ -30,15 +30,10 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 	suite.Require().Equal(addr1.String(), queryRes.AuthorityMetadata.Admin)
 
 	// Test minting to admins own account
-	_, err = msgServer.Mint(sdk.WrapSDKContext(suite.ctx), types.NewMsgMint(addr1.String(), sdk.NewInt64Coin(denom, 10), addr1.String()))
+	_, err = msgServer.Mint(sdk.WrapSDKContext(suite.ctx), types.NewMsgMint(addr1.String(), sdk.NewInt64Coin(denom, 10)))
 	addr1bal += 10
 	suite.Require().NoError(err)
 	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr1, denom).Amount.Int64() == addr1bal, suite.app.BankKeeper.GetBalance(suite.ctx, addr1, denom))
-
-	// Test minting to a separate account.  Should not work.
-	_, err = msgServer.Mint(sdk.WrapSDKContext(suite.ctx), types.NewMsgMint(addr1.String(), sdk.NewInt64Coin(denom, 10), addr2.String()))
-	suite.Require().Error(err)
-	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).Amount.Int64() == addr2bal)
 
 	// // Test force transferring
 	// _, err = msgServer.ForceTransfer(sdk.WrapSDKContext(suite.ctx), types.NewMsgForceTransfer(addr1.String(), sdk.NewInt64Coin(denom, 5), addr2.String(), addr1.String()))
@@ -50,11 +45,6 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.ctx), types.NewMsgBurn(addr1.String(), sdk.NewInt64Coin(denom, 5), addr1.String()))
 	addr1bal -= 5
 	suite.Require().NoError(err)
-	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).Amount.Int64() == addr2bal)
-
-	// Test burning from a separate account.  Should not work.
-	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.ctx), types.NewMsgBurn(addr1.String(), sdk.NewInt64Coin(denom, 5), addr2.String()))
-	suite.Require().Error(err)
 	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).Amount.Int64() == addr2bal)
 
 	// Test Change Admin
@@ -70,7 +60,7 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 	suite.Require().Error(err)
 
 	// Make sure the new admin works
-	_, err = msgServer.Mint(sdk.WrapSDKContext(suite.ctx), types.NewMsgMint(addr2.String(), sdk.NewInt64Coin(denom, 5), addr2.String()))
+	_, err = msgServer.Mint(sdk.WrapSDKContext(suite.ctx), types.NewMsgMint(addr2.String(), sdk.NewInt64Coin(denom, 5)))
 	addr2bal += 5
 	suite.Require().NoError(err)
 	suite.Require().True(suite.app.BankKeeper.GetBalance(suite.ctx, addr2, denom).Amount.Int64() == addr2bal)
