@@ -30,7 +30,7 @@ func solveConstantFunctionInvariant(
 	// weightRatio = (weightX/weightY)
 	weightRatio := tokenWeightFixed.Quo(tokenWeightUnknown)
 
-	// y = balanceXBefore/balanceYAfter
+	// y = balanceXBefore/balanceXAfter
 	y := tokenBalanceFixedBefore.Quo(tokenBalanceFixedAfter)
 
 	// amountY = balanceY * (1 - (y ^ weightRatio))
@@ -47,10 +47,10 @@ func (p Pool) CalcOutAmtGivenIn(
 	tokensIn sdk.Coins,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
-) (sdk.DecCoin, error) {
+) (sdk.Coin, error) {
 	tokenIn, poolAssetIn, poolAssetOut, err := p.parsePoolAssets(tokensIn, tokenOutDenom)
 	if err != nil {
-		return sdk.DecCoin{}, err
+		return sdk.Coin{}, err
 	}
 
 	tokenAmountInAfterFee := tokenIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
@@ -67,7 +67,13 @@ func (p Pool) CalcOutAmtGivenIn(
 		poolAssetOut.Weight.ToDec(),
 	)
 
-	return sdk.NewDecCoinFromDec(tokenOutDenom, tokenAmountOut), nil
+	// We ignore the decimal component, as we round down the token amount out.
+	tokenAmountOutInt := tokenAmountOut.TruncateInt()
+	if !tokenAmountOutInt.IsPositive() {
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
+	}
+
+	return sdk.NewCoin(tokenOutDenom, tokenAmountOutInt), nil
 }
 
 // SwapOutAmtGivenIn is a mutative method for CalcOutAmtGivenIn, which includes the actual swap.
@@ -79,13 +85,9 @@ func (p *Pool) SwapOutAmtGivenIn(
 ) (
 	tokenOut sdk.Coin, err error,
 ) {
-	tokenOutDecCoin, err := p.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
+	tokenOutCoin, err := p.CalcOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Coin{}, err
-	}
-	tokenOutCoin, _ := tokenOutDecCoin.TruncateDecimal()
-	if !tokenOutCoin.Amount.IsPositive() {
-		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
 	}
 
 	err = p.applySwap(ctx, tokensIn, sdk.Coins{tokenOutCoin})
@@ -99,11 +101,11 @@ func (p *Pool) SwapOutAmtGivenIn(
 // given the swapped out amount, using solveConstantFunctionInvariant.
 func (p Pool) CalcInAmtGivenOut(
 	ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (
-	tokenIn sdk.DecCoin, err error,
+	tokenIn sdk.Coin, err error,
 ) {
 	tokenOut, poolAssetOut, poolAssetIn, err := p.parsePoolAssets(tokensOut, tokenInDenom)
 	if err != nil {
-		return sdk.DecCoin{}, err
+		return sdk.Coin{}, err
 	}
 
 	// delta balanceOut is positive(tokens inside the pool decreases)
@@ -119,12 +121,15 @@ func (p Pool) CalcInAmtGivenOut(
 	// Thus in order to give X amount out, we solve the invariant for the invariant input. However invariant input = (1 - swapfee) * trade input.
 	// Therefore we divide by (1 - swapfee) here
 	tokenAmountInBeforeFee := tokenAmountIn.Quo(sdk.OneDec().Sub(swapFee))
-	// TODO: Once we make Calc methods return integers
-	// if tokenInDecimal is non-zero, we add 1 to the tokenInCoin
-	// if tokenInDecimal.Amount.IsPositive() {
-	// 	tokenInCoin.Amount = tokenInCoin.Amount.AddRaw(1)
-	// }
-	return sdk.NewDecCoinFromDec(tokenInDenom, tokenAmountInBeforeFee), nil
+
+	// We round up tokenInAmt, as this is whats charged for the swap, for the precise amount out.
+	// Otherwise, the pool would under-charge by this rounding error.
+	tokenInAmt := tokenAmountInBeforeFee.Ceil().TruncateInt()
+
+	if !tokenInAmt.IsPositive() {
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
+	}
+	return sdk.NewCoin(tokenInDenom, tokenInAmt), nil
 }
 
 // SwapInAmtGivenOut is a mutative method for CalcOutAmtGivenIn, which includes the actual swap.
@@ -132,14 +137,9 @@ func (p *Pool) SwapInAmtGivenOut(
 	ctx sdk.Context, tokensOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (
 	tokenIn sdk.Coin, err error,
 ) {
-	tokenInDecCoin, err := p.CalcInAmtGivenOut(ctx, tokensOut, tokenInDenom, swapFee)
+	tokenInCoin, err := p.CalcInAmtGivenOut(ctx, tokensOut, tokenInDenom, swapFee)
 	if err != nil {
-		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
-	}
-	tokenInCoin, _ := tokenInDecCoin.TruncateDecimal()
-
-	if !tokenInCoin.Amount.IsPositive() {
-		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Coin{}, err
 	}
 
 	err = p.applySwap(ctx, sdk.Coins{tokenInCoin}, tokensOut)
@@ -191,6 +191,12 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 	return ratio, nil
 }
 
+// feeRatio returns the fee ratio that is defined as follows:
+// 1 - ((1 - normalizedTokenWeightOut) * swapFee)
+func feeRatio(normalizedWeight, swapFee sdk.Dec) sdk.Dec {
+	return sdk.OneDec().Sub((sdk.OneDec().Sub(normalizedWeight)).Mul(swapFee))
+}
+
 // balancer notation: pAo - pool shares amount out, given single asset in
 // the second argument requires the tokenWeightIn / total token weight.
 func calcPoolSharesOutGivenSingleAssetIn(
@@ -203,9 +209,7 @@ func calcPoolSharesOutGivenSingleAssetIn(
 	// deduct swapfee on the in asset.
 	// We don't charge swap fee on the token amount that we imagine as unswapped (the normalized weight).
 	// So effective_swapfee = swapfee * (1 - normalized_token_weight)
-	effectiveSwapFee := (sdk.OneDec().Sub(normalizedTokenWeightIn)).Mul(swapFee)
-	// Apply swap fee, by multiplying tokenAmountIn by (1 - effective_swap_fee)
-	tokenAmountInAfterFee := tokenAmountIn.Mul(sdk.OneDec().Sub(effectiveSwapFee))
+	tokenAmountInAfterFee := tokenAmountIn.Mul(feeRatio(normalizedTokenWeightIn, swapFee))
 	// To figure out the number of shares we add, first notice that in balancer we can treat
 	// the number of shares as linearly related to the `k` value function. This is due to the normalization.
 	// e.g.
@@ -223,6 +227,23 @@ func calcPoolSharesOutGivenSingleAssetIn(
 		poolShares,
 		sdk.OneDec()).Neg()
 	return poolAmountOut
+}
+
+// calcSingleAssetInGivenPoolSharesOut returns token amount in with fee included
+// given the swapped out shares amount, using solveConstantFunctionInvariant
+func calcSingleAssetInGivenPoolSharesOut(
+	tokenBalanceIn,
+	normalizedTokenWeightIn,
+	totalPoolSharesSupply,
+	sharesAmountOut,
+	swapFee sdk.Dec,
+) sdk.Dec {
+	// delta balanceIn is negative(tokens inside the pool increases)
+	// pool weight is always 1
+	tokenAmountIn := solveConstantFunctionInvariant(totalPoolSharesSupply.Add(sharesAmountOut), totalPoolSharesSupply, sdk.OneDec(), tokenBalanceIn, normalizedTokenWeightIn).Neg()
+	// deduct swapfee on the in asset
+	tokenAmountInFeeIncluded := tokenAmountIn.Quo(feeRatio(normalizedTokenWeightIn, swapFee))
+	return tokenAmountInFeeIncluded
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.

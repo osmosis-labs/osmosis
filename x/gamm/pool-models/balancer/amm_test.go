@@ -7,7 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 // This test sets up 2 asset pools, and then checks the spot price on them.
@@ -138,6 +140,16 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 			initialPoolIn:   1_000_000,
 			initialWeightIn: 50,
 		},
+		{
+			denomOut:         "uosmo",
+			initialPoolOut:   1_000_000,
+			initialWeightOut: 200,
+			initialCalcOut:   100000,
+
+			denomIn:         "ion",
+			initialPoolIn:   1_000_000_000,
+			initialWeightIn: 50,
+		},
 	}
 
 	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
@@ -187,15 +199,127 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 				actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, poolAssetIn.Token.Denom, swapFeeDec)
 				require.NoError(t, err)
 
-				inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(sdk.NewInt64Coin(poolAssetIn.Token.Denom, actualTokenIn.Amount.TruncateInt64())), poolAssetOut.Token.Denom, swapFeeDec)
+				inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), poolAssetOut.Token.Denom, swapFeeDec)
 				require.NoError(t, err)
 
 				require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
 
 				expected := initialOut.Amount.ToDec()
-				actual := inverseTokenOut.Amount.RoundInt().ToDec() // must round to be able to compare with expected.
+				actual := inverseTokenOut.Amount.ToDec()
 
-				require.Equal(t, expected, actual)
+				// allow a rounding error of up to 1 for this relation
+				tol := sdk.NewDec(1)
+				require.True(osmoutils.DecApproxEq(t, expected, actual, tol))
+			})
+		}
+	}
+}
+
+func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
+	type testcase struct {
+		initialPoolOut   int64
+		initialPoolIn    int64
+		initialWeightOut int64
+		tokenOut         int64
+		initialWeightIn  int64
+	}
+
+	// For every test case in testcases, apply a swap fee in swapFeeCases.
+	testcases := []testcase{
+		{
+			initialPoolOut:   1_000_000_000_000,
+			tokenOut:         100,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
+		{
+			initialPoolOut:   1_000_000_000_000,
+			tokenOut:         100,
+			initialWeightOut: 50,
+			initialWeightIn:  100,
+		},
+		{
+			initialPoolOut:   1_000_000_000_000,
+			tokenOut:         50,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
+		{
+			initialPoolOut:   1_000_000_000_000,
+			tokenOut:         100,
+			initialWeightOut: 100,
+			initialWeightIn:  50,
+		},
+		{
+			initialPoolOut:   1_000_000,
+			tokenOut:         100,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
+		{
+			initialPoolOut:   2_351_333,
+			tokenOut:         7,
+			initialWeightOut: 148,
+			initialWeightIn:  57,
+		},
+		{
+			initialPoolOut:   1_000,
+			tokenOut:         25,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
+		// TODO: https://github.com/osmosis-labs/osmosis/issues/1359
+		// {
+		// 	initialPoolOut:   1_000,
+		// 	tokenOut:         26,
+		// 	initialWeightOut: 100,
+		// 	initialWeightIn:  100,
+		// },
+	}
+
+	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
+
+	getTestCaseName := func(tc testcase, swapFeeCase string) string {
+		return fmt.Sprintf("initialPoolOut: %d, initialCalcOut: %d, initialWeightOut: %d, initialWeightIn: %d, swapFee: %s",
+			tc.initialPoolOut,
+			tc.tokenOut,
+			tc.initialWeightOut,
+			tc.initialWeightIn,
+			swapFeeCase,
+		)
+	}
+
+	for _, tc := range testcases {
+		for _, swapFee := range swapFeeCases {
+			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
+				require.NoError(t, err)
+
+				initialPoolBalanceOut := sdk.NewInt(tc.initialPoolOut)
+
+				initialWeightOut := sdk.NewInt(tc.initialWeightOut)
+				initialWeightIn := sdk.NewInt(tc.initialWeightIn)
+
+				initialTotalShares := types.InitPoolSharesSupply.ToDec()
+				initialCalcTokenOut := sdk.NewInt(tc.tokenOut)
+
+				actualSharesOut := balancer.CalcPoolSharesOutGivenSingleAssetIn(
+					initialPoolBalanceOut.ToDec(),
+					initialWeightOut.ToDec().Quo(initialWeightOut.Add(initialWeightIn).ToDec()),
+					initialTotalShares,
+					initialCalcTokenOut.ToDec(),
+					swapFeeDec,
+				)
+
+				inverseCalcTokenOut := balancer.CalcSingleAssetInGivenPoolSharesOut(
+					initialPoolBalanceOut.Add(initialCalcTokenOut).ToDec(),
+					initialWeightOut.ToDec().Quo(initialWeightOut.Add(initialWeightIn).ToDec()),
+					initialTotalShares.Add(actualSharesOut),
+					actualSharesOut,
+					swapFeeDec,
+				)
+
+				require.Equal(t, initialCalcTokenOut, inverseCalcTokenOut.RoundInt())
 			})
 		}
 	}

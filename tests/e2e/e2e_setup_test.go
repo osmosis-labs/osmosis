@@ -24,6 +24,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
+const maxRetries = 10 // max retries for json unmarshalling
+
 type IntegrationTestSuite struct {
 	suite.Suite
 
@@ -32,6 +34,7 @@ type IntegrationTestSuite struct {
 	dkrPool        *dockertest.Pool
 	dkrNet         *dockertest.Network
 	hermesResource *dockertest.Resource
+	initResource   *dockertest.Resource
 	valResources   map[string][]*dockertest.Resource
 }
 
@@ -52,10 +55,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 2. Start both networks.
 	// 3. Run IBC relayer betweeen the two chains.
 	// 4. Execute various e2e tests, including IBC.
-	s.configureChain(chain.ChainAID)
-	s.configureChain(chain.ChainBID)
+	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 
-	s.configureDockerResources()
+	s.configureChain(chain.ChainAID)
+	s.Require().NoError(s.dkrPool.Purge(s.initResource))
+	s.configureChain(chain.ChainBID)
+	s.Require().NoError(s.dkrPool.Purge(s.initResource))
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
@@ -85,7 +90,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.Require().NoError(s.dkrPool.RemoveNetwork(s.dkrNet))
 
 	for _, chain := range s.chains {
-		os.RemoveAll(chain.DataDir)
+		os.RemoveAll(chain.ChainMeta.DataDir)
 	}
 
 	for _, td := range s.tmpDirs {
@@ -94,22 +99,22 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
-	s.T().Logf("starting Osmosis %s validator containers...", c.Id)
+	s.T().Logf("starting Osmosis %s validator containers...", c.ChainMeta.Id)
 
-	s.valResources[c.Id] = make([]*dockertest.Resource, len(c.Validators))
+	s.valResources[c.ChainMeta.Id] = make([]*dockertest.Resource, len(c.Validators))
 	for i, val := range c.Validators {
 		runOpts := &dockertest.RunOptions{
-			Name:      val.InstanceName(),
+			Name:      val.Name,
 			NetworkID: s.dkrNet.Network.ID,
 			Mounts: []string{
-				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir()),
+				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
 			},
 			Repository: "osmosis",
 			Tag:        "debug",
 		}
 
 		// expose the first validator for debugging and communication
-		if val.GetIndex() == 0 {
+		if val.Index == 0 {
 			runOpts.PortBindings = map[docker.Port][]docker.PortBinding{
 				"1317/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}},
 				"6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}},
@@ -127,8 +132,8 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
 		s.Require().NoError(err)
 
-		s.valResources[c.Id][i] = resource
-		s.T().Logf("started Osmosis %s validator container: %s", c.Id, resource.Container.ID)
+		s.valResources[c.ChainMeta.Id][i] = resource
+		s.T().Logf("started Osmosis %s validator container: %s", c.ChainMeta.Id, resource.Container.ID)
 	}
 
 	rpcClient, err := rpchttp.New("tcp://localhost:26657", "/websocket")
@@ -177,7 +182,7 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 
 	s.hermesResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s-%s-relayer", s.chains[0].Id, s.chains[1].Id),
+			Name:       fmt.Sprintf("%s-%s-relayer", s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id),
 			Repository: "osmolabs/hermes",
 			Tag:        "0.13.0",
 			NetworkID:  s.dkrNet.Network.ID,
@@ -195,12 +200,12 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
 			},
 			Env: []string{
-				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", s.chains[0].Id),
-				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", s.chains[1].Id),
-				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAVal.GetMnemonic()),
-				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBVal.GetMnemonic()),
-				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[s.chains[0].Id][0].Container.Name[1:]),
-				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[s.chains[1].Id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", s.chains[0].ChainMeta.Id),
+				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", s.chains[1].ChainMeta.Id),
+				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAVal.Mnemonic),
+				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBVal.Mnemonic),
+				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[s.chains[0].ChainMeta.Id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[s.chains[1].ChainMeta.Id][0].Container.Name[1:]),
 			},
 			Entrypoint: []string{
 				"sh",
@@ -255,18 +260,60 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 func (s *IntegrationTestSuite) configureChain(chainId string) {
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
+
+	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
 	s.Require().NoError(err)
-	newChain, err := chain.Init(chainId, tmpDir)
-	s.chains = append(s.chains, newChain)
+
+	s.initResource, err = s.dkrPool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       fmt.Sprintf("%s", chainId),
+			Repository: "osmosis-e2e-chain-init",
+			Tag:        "debug",
+			NetworkID:  s.dkrNet.Network.ID,
+			Cmd: []string{
+				fmt.Sprintf("--data-dir=%s", tmpDir),
+				fmt.Sprintf("--chain-id=%s", chainId),
+			},
+			User: "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s:%s", tmpDir, tmpDir),
+			},
+		},
+		noRestart,
+	)
 	s.Require().NoError(err)
+
+	var newChain chain.Chain
+
+	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
+	s.T().Logf("serialized init file for chain-id %v: %v", chainId, fileName)
+
+	// loop through the reading and unmarshaling of the init file a total of maxRetries or until error is nil
+	// without this, test attempts to unmarshal file before docker container is finished writing
+	for i := 0; i < maxRetries; i++ {
+		encJson, _ := os.ReadFile(fileName)
+		err = json.Unmarshal(encJson, &newChain)
+		if err == nil {
+			break
+		}
+
+		if i == maxRetries-1 {
+			s.Require().NoError(err)
+		}
+
+		if i > 0 {
+			time.Sleep(1 * time.Second)
+		}
+	}
+	s.chains = append(s.chains, &newChain)
 }
 
-func (s *IntegrationTestSuite) configureDockerResources() {
+func (s *IntegrationTestSuite) configureDockerResources(chainIDOne, chainIDTwo string) {
 	var err error
 	s.dkrPool, err = dockertest.NewPool("")
 	s.Require().NoError(err)
 
-	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", s.chains[0].Id, s.chains[1].Id))
+	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", chainIDOne, chainIDTwo))
 	s.Require().NoError(err)
 
 	s.valResources = make(map[string][]*dockertest.Resource)

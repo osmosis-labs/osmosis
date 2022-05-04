@@ -43,7 +43,13 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 		return err
 	}
 
-	// TODO: Add validation for pool initial liquidity
+	// validation for pool initial liquidity
+	// TO DO: expand this check to accommodate multi-asset pools for stableswap
+	if len(msg.InitialPoolLiquidity) < 2 {
+		return types.ErrTooFewPoolAssets
+	} else if len(msg.InitialPoolLiquidity) > 2 {
+		return types.ErrTooManyPoolAssets
+	}
 
 	// validation for future owner
 	if err = types.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
@@ -83,6 +89,11 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 	return msg.InitialPoolLiquidity
 }
 
-func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolID uint64) (types.PoolI, error) {
-	return &Pool{}, types.ErrNotImplemented
+func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity, msg.FuturePoolGovernor, ctx.BlockTime())
+	if err != nil {
+		return nil, err
+	}
+
+	return &stableswapPool, nil
 }
