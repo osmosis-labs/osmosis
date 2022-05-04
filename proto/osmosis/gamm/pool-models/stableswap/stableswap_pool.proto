@@ -64,7 +64,7 @@ message Pool {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   // for calculation amognst assets with different precisions
-  repeated uint64 scalingFactor = 7 [
+  repeated uint64 scaling_factor = 7 [
     (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"",
     (gogoproto.nullable) = false
   ];
