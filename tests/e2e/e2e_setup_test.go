@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -102,15 +101,12 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 	s.T().Logf("starting Osmosis %s validator containers...", c.ChainMeta.Id)
 	s.valResources[c.ChainMeta.Id] = make([]*dockertest.Resource, len(c.Validators))
-	out, err := os.Getwd()
-	s.Require().NoError(err)
 	for i, val := range c.Validators {
 		runOpts := &dockertest.RunOptions{
 			Name:      val.Name,
 			NetworkID: s.dkrNet.Network.ID,
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
-				fmt.Sprintf("%s/scripts/osmosis_upgrade.sh:/scripts/osmosis_upgrade.sh", out),
 			},
 			Repository: "osmolabs/osmosis-dev",
 			Tag:        "v7.2.1-debug",
@@ -334,13 +330,12 @@ func noRestart(config *docker.HostConfig) {
 }
 
 func (s *IntegrationTestSuite) initUpgrade() {
-	for x := range s.chains {
-		c := s.chains[x]
-		s.T().Logf("submitting upgrade proposal for chain-id: %s", c.ChainMeta.Id)
-		cmdStr := fmt.Sprintf("docker exec %v bash -c 'chmod +x /scripts/osmosis_upgrade.sh && /scripts/osmosis_upgrade.sh \"%s\"'", s.valResources[c.ChainMeta.Id][0].Container.ID, c.ChainMeta.Id)
-		exec.Command("/bin/sh", "-c", cmdStr).Output()
-	}
-
+	s.submitProposal(s.chains[0])
+	s.submitProposal(s.chains[1])
+	s.depositProposal(s.chains[0])
+	s.depositProposal(s.chains[1])
+	s.voteProposal(s.chains[0])
+	s.voteProposal(s.chains[1])
 	for x := range s.chains {
 		c := s.chains[x]
 		s.T().Logf("waiting to reach upgrade height for chain-id: %s", c.ChainMeta.Id)
@@ -354,9 +349,7 @@ func (s *IntegrationTestSuite) initUpgrade() {
 
 		s.Require().Eventually(
 			func() bool {
-				cmdStr := fmt.Sprintf("docker exec %v bash -c 'osmosisd status'", s.valResources[c.ChainMeta.Id][0].Container.ID)
-				out, err := exec.Command("/bin/sh", "-c", cmdStr).CombinedOutput()
-				s.Require().NoError(err)
+				out := s.chainStatus(c)
 				var syncInfo syncInfo
 				json.Unmarshal(out, &syncInfo)
 				if syncInfo.SyncInfo.LatestHeight != "75" {
@@ -412,9 +405,7 @@ func (s *IntegrationTestSuite) upgrade() {
 
 			s.Require().Eventually(
 				func() bool {
-					cmdStr := fmt.Sprintf("docker exec %v bash -c 'osmosisd status'", s.valResources[c.ChainMeta.Id][0].Container.ID)
-					out, err := exec.Command("/bin/sh", "-c", cmdStr).CombinedOutput()
-					s.Require().NoError(err)
+					out := s.chainStatus(c)
 					var syncInfo syncInfo
 					json.Unmarshal(out, &syncInfo)
 					if syncInfo.SyncInfo.LatestHeight <= "75" {

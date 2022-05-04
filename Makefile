@@ -237,13 +237,13 @@ test-sim:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
 
 test-e2e:
-	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v github.com/osmosis-labs/osmosis/v7/tests/e2e
+	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
 docker-build-debug:
-	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f tests/e2e/Dockerfile .
+	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
 
 docker-build-e2e-chain-init:
 	@docker build -t osmosis-e2e-chain-init:debug -f tests/e2e/chain_init/chain-init.Dockerfile .

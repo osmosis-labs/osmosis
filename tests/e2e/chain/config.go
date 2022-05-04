@@ -28,7 +28,7 @@ const (
 	IbcDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	MinGasPrice   = "0.000"
 	IbcSendAmount = 3300000000
-	VotingPeriod  = 180000000000
+	VotingPeriod  = 30000000000 // 30 seconds
 	// chainA
 	ChainAID      = "osmo-test-a"
 	OsmoBalanceA  = 200000000000
