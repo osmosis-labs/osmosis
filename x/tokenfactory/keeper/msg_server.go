@@ -155,8 +155,6 @@ func (server msgServer) ChangeAdmin(goCtx context.Context, msg *types.MsgChangeA
 	if err != nil {
 		return nil, err
 	}
-
-	// TODO: events
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeMsgChangeAdmin,

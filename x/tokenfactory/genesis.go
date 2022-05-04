@@ -7,7 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
-// InitGenesis initializes the capability module's state from a provided genesis
+// InitGenesis initializes the tokenfactory module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.CreateModuleAccount(ctx)
