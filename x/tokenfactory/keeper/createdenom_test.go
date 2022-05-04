@@ -12,31 +12,31 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
-	msgServer := keeper.NewMsgServerImpl(*suite.app.TokenFactoryKeeper)
+	msgServer := keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)
 
 	// Creating a denom should work
-	res, err := msgServer.CreateDenom(sdk.WrapSDKContext(suite.ctx), types.NewMsgCreateDenom(addr1.String(), "bitcoin"))
+	res, err := msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(addr1.String(), "bitcoin"))
 	suite.Require().NoError(err)
 	suite.Require().NotEmpty(res.GetNewTokenDenom())
 
 	// Make sure that the admin is set correctly
-	queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
+	queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
 		Denom: res.GetNewTokenDenom(),
 	})
 	suite.Require().NoError(err)
 	suite.Require().Equal(addr1.String(), queryRes.AuthorityMetadata.Admin)
 
 	// Make sure that a second version of the same denom can't be recreated
-	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.ctx), types.NewMsgCreateDenom(addr1.String(), "bitcoin"))
+	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(addr1.String(), "bitcoin"))
 	suite.Require().Error(err)
 
 	// Creating a second denom should work
-	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.ctx), types.NewMsgCreateDenom(addr1.String(), "litecoin"))
+	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(addr1.String(), "litecoin"))
 	suite.Require().NoError(err)
 	suite.Require().NotEmpty(res.GetNewTokenDenom())
 
 	// Try querying all the denoms created by addr1
-	queryRes2, err := suite.queryClient.DenomsFromCreator(suite.ctx.Context(), &types.QueryDenomsFromCreatorRequest{
+	queryRes2, err := suite.queryClient.DenomsFromCreator(suite.Ctx.Context(), &types.QueryDenomsFromCreatorRequest{
 		Creator: addr1.String(),
 	})
 	suite.Require().NoError(err)
@@ -44,11 +44,11 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 
 	// Make sure that a second account can create a denom with the same nonce
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
-	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.ctx), types.NewMsgCreateDenom(addr2.String(), "bitcoin"))
+	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(addr2.String(), "bitcoin"))
 	suite.Require().NoError(err)
 	suite.Require().NotEmpty(res.GetNewTokenDenom())
 
 	// Make sure that an address with a "/" in it can't create denoms
-	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
+	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
 	suite.Require().Error(err)
 }
