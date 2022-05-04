@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v7/osmomath"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -385,31 +386,7 @@ func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares s
 }
 
 func (p *Pool) CalcExitPoolShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	totalShares := p.GetTotalShares()
-	if exitingShares.GTE(totalShares) {
-		return sdk.Coins{}, errors.New(("too many shares out"))
-	}
-
-	refundedShares := exitingShares
-	if !exitFee.IsZero() {
-		// exitingShares * (1 - exit fee)
-		// Todo: make a -1 constant
-		oneSubExitFee := sdk.OneDec().Sub(exitFee)
-		refundedShares = oneSubExitFee.MulInt(exitingShares).TruncateInt()
-	}
-
-	shareOutRatio := refundedShares.ToDec().QuoInt(totalShares)
-	// Make it shareOutRatio * pool LP balances
-	exitedCoins = sdk.Coins{}
-	balances := p.GetTotalPoolLiquidity(ctx)
-	for _, asset := range balances {
-		exitAmt := shareOutRatio.MulInt(asset.Amount).TruncateInt()
-		if exitAmt.LTE(sdk.ZeroInt()) {
-			continue
-		}
-		exitedCoins = exitedCoins.Add(sdk.NewCoin(asset.Denom, exitAmt))
-	}
-	return exitedCoins, nil
+	return cfmm_common.CalcExitPool(ctx, p, exitingShares, exitFee)
 }
 
 // balancer notation: pAi - pool shares amount in, given single asset out.

@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -130,6 +131,13 @@ func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coin
 	}
 }
 
+// updatePoolLiquidityForExit updates the pool liquidity after an exit.
+// The function sanity checks that not all tokens of a given denom are removed,
+// and panics if thats the case.
+func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins) {
+	p.updatePoolLiquidityForSwap(sdk.Coins{}, tokensOut)
+}
+
 // TODO: These should all get moved to amm.go
 func (pa Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
 	if tokenIn.Len() != 1 {
@@ -209,12 +217,20 @@ func (pa *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 	return sdk.Int{}, types.ErrNotImplemented
 }
 
-func (pa *Pool) ExitPool(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	return sdk.Coins{}, types.ErrNotImplemented
+func (pa *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+	exitingCoins, err = pa.CalcExitPoolShares(ctx, exitingShares, exitFee)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	pa.TotalShares.Amount = pa.TotalShares.Amount.Sub(exitingShares)
+	pa.updatePoolLiquidityForExit(exitingCoins)
+
+	return exitingCoins, nil
 }
 
-func (pa Pool) CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	return sdk.Coins{}, types.ErrNotImplemented
+func (pa Pool) CalcExitPoolShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+	return cfmm_common.CalcExitPool(ctx, &pa, exitingShares, exitFee)
 }
 
 // no-op for stableswap
