@@ -4,7 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GetAuthorityMetadata returns the authority metadata for a specific denom
 func (k Keeper) addDenomFromCreator(ctx sdk.Context, creator, denom string) {
 	store := k.GetCreatorPrefixStore(ctx, creator)
 	store.Set([]byte(denom), []byte(denom))

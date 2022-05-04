@@ -7,7 +7,13 @@ import (
 )
 
 func (k Keeper) mintTo(ctx sdk.Context, amount sdk.Coin, mintTo string) error {
-	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
+	// verify that denom is an x/tokenfactory denom
+	_, _, err := types.DeconstructDenom(amount.Denom)
+	if err != nil {
+		return err
+	}
+
+	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
 	if err != nil {
 		return err
 	}
@@ -23,6 +29,12 @@ func (k Keeper) mintTo(ctx sdk.Context, amount sdk.Coin, mintTo string) error {
 }
 
 func (k Keeper) burnFrom(ctx sdk.Context, amount sdk.Coin, burnFrom string) error {
+	// verify that denom is an x/tokenfactory denom
+	_, _, err := types.DeconstructDenom(amount.Denom)
+	if err != nil {
+		return err
+	}
+
 	addr, err := sdk.AccAddressFromBech32(burnFrom)
 	if err != nil {
 		return err
@@ -40,6 +52,12 @@ func (k Keeper) burnFrom(ctx sdk.Context, amount sdk.Coin, burnFrom string) erro
 }
 
 func (k Keeper) forceTransfer(ctx sdk.Context, amount sdk.Coin, fromAddr string, toAddr string) error {
+	// verify that denom is an x/tokenfactory denom
+	_, _, err := types.DeconstructDenom(amount.Denom)
+	if err != nil {
+		return err
+	}
+
 	fromSdkAddr, err := sdk.AccAddressFromBech32(fromAddr)
 	if err != nil {
 		return err
