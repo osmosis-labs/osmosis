@@ -104,7 +104,7 @@ message PoolAsset {
   ];
 
   // Weight that is normalized s.t. the sum of all pool assets' weights equals 1. 
-  string normalizedWeight = 3 [
+  string normalized_weight = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"normalized_weight\"",
     (gogoproto.nullable) = false
