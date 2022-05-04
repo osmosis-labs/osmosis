@@ -5,8 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -14,7 +15,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module.
-func GetQueryCmd(queryRoute string) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	// Group superfluid queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
