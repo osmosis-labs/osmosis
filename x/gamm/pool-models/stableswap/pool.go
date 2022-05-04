@@ -82,7 +82,7 @@ func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	result := make([]sdk.Int, len(denoms))
 	poolLiquidity := pa.PoolLiquidity
-	liquidityIndexes := pa.getLiquidityIndexMap(poolLiquidity)
+	liquidityIndexes := pa.getLiquidityIndexMap()
 
 	for i, denom := range denoms {
 		liquidityIndex := liquidityIndexes[denom]
@@ -99,9 +99,7 @@ func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
 func (pa Pool) getDescaledPoolAmt(denom string, amount sdk.Dec) sdk.Dec {
-	poolLiquidity := pa.PoolLiquidity
-
-	liquidityIndexes := pa.getLiquidityIndexMap(poolLiquidity)
+	liquidityIndexes := pa.getLiquidityIndexMap()
 	liquidityIndex := liquidityIndexes[denom]
 
 	scalingFactor := pa.GetScalingFactorByLiquidityIndex(liquidityIndex)
@@ -109,8 +107,9 @@ func (pa Pool) getDescaledPoolAmt(denom string, amount sdk.Dec) sdk.Dec {
 }
 
 // getLiquidityIndexMap creates a map of denoms to its index in pool liquidity
-func (pa Pool) getLiquidityIndexMap(poolLiquidity sdk.Coins) map[string]int {
-	liquidityIndexMap := make(map[string]int)
+func (pa Pool) getLiquidityIndexMap() map[string]int {
+	poolLiquidity := pa.PoolLiquidity
+	liquidityIndexMap := make(map[string]int, poolLiquidity.Len())
 	for i, coin := range poolLiquidity {
 		liquidityIndexMap[coin.Denom] = i
 	}
