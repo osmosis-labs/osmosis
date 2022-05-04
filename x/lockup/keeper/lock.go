@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/v7/store"
@@ -111,6 +112,19 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 	return nil
 }
 
+func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sdk.Coin, duration time.Duration) ([]types.PeriodLock, error) {
+	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, coin.Denom, duration)
+	// if existing lock with same duration and denom exists, just add there
+	if len(locks) > 0 {
+		lock := locks[0]
+		_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
+	}
+	return locks, nil
+}
+
 // AddTokensToLock locks more tokens into a lockup
 // This also saves the lock to the store.
 func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, coin sdk.Coin) (*types.PeriodLock, error) {
@@ -136,7 +150,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 		return lock, nil
 	}
 
-	k.hooks.OnTokenLocked(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenLocked(ctx, lock.OwnerAddress(), lock.ID, sdk.Coins{coin}, lock.Duration, lock.EndTime)
 	return lock, nil
 }
 
