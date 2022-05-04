@@ -336,8 +336,7 @@ func (s *IntegrationTestSuite) initUpgrade() {
 	s.depositProposal(s.chains[1])
 	s.voteProposal(s.chains[0])
 	s.voteProposal(s.chains[1])
-	for x := range s.chains {
-		c := s.chains[x]
+	for _, chain := range s.chains {
 		s.T().Logf("waiting to reach upgrade height for chain-id: %s", c.ChainMeta.Id)
 		type status struct {
 			LatestHeight string `json:"latest_block_height"`
@@ -362,8 +361,7 @@ func (s *IntegrationTestSuite) initUpgrade() {
 		)
 	}
 
-	for x := range s.chains {
-		c := s.chains[x]
+	for _, chain := range s.chains {
 		for i := range c.Validators {
 			s.Require().NoError(s.dkrPool.RemoveContainerByName(s.valResources[c.ChainMeta.Id][i].Container.Name))
 		}
@@ -371,8 +369,7 @@ func (s *IntegrationTestSuite) initUpgrade() {
 }
 
 func (s *IntegrationTestSuite) upgrade() {
-	for x := range s.chains {
-		c := s.chains[x]
+	for _, chain := range s.chains {
 		s.T().Logf("starting upgrade for chain-id: %s...", c.ChainMeta.Id)
 		for i, val := range c.Validators {
 			runOpts := &dockertest.RunOptions{
@@ -392,8 +389,7 @@ func (s *IntegrationTestSuite) upgrade() {
 			s.T().Logf("started Osmosis %s validator container: %s", c.ChainMeta.Id, resource.Container.ID)
 		}
 	}
-	for x := range s.chains {
-		c := s.chains[x]
+	for _, chain := range s.chains {
 		for i := range c.Validators {
 			type status struct {
 				LatestHeight string `json:"latest_block_height"`
