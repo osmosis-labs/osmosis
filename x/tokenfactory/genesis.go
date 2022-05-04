@@ -15,20 +15,20 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, genDenom := range genState.GetFactoryDenoms() {
 		creator, nonce, err := types.DeconstructDenom(genDenom.GetDenom())
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 		_, err = k.CreateDenom(ctx, creator, nonce)
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 		err = k.SetAuthorityMetadata(ctx, genDenom.GetDenom(), genDenom.GetAuthorityMetadata())
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 	}
 }
 
-// ExportGenesis returns the capability module's exported genesis.
+// ExportGenesis returns the tokenfactory module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genDenoms := []types.GenesisDenom{}
 	iterator := k.GetAllDenomsIterator(ctx)
@@ -38,7 +38,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 		authorityMetadata, err := k.GetAuthorityMetadata(ctx, denom)
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 
 		genDenoms = append(genDenoms, types.GenesisDenom{
