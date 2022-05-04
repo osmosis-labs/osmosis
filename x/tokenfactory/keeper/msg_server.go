@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
@@ -54,13 +53,7 @@ func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.
 		return nil, types.ErrUnauthorized
 	}
 
-	// Temporary additional check that only allows sender to mint coins into their own account.
-	// This check will be removed in the future once edge cases can be worked out
-	if msg.Sender != msg.MintToAddress {
-		return nil, sdkerrors.Wrap(types.ErrUnauthorized, "MintToAddress must be the same as Sender address")
-	}
-
-	err = server.Keeper.mintTo(ctx, msg.Amount, msg.MintToAddress)
+	err = server.Keeper.mintTo(ctx, msg.Amount, msg.Sender)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +61,7 @@ func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeMsgMint,
-			sdk.NewAttribute(types.AttributeMintToAddress, msg.MintToAddress),
+			sdk.NewAttribute(types.AttributeMintToAddress, msg.Sender),
 			sdk.NewAttribute(types.AttributeAmount, msg.Amount.String()),
 		),
 	})
@@ -88,13 +81,7 @@ func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.
 		return nil, types.ErrUnauthorized
 	}
 
-	// Temporary additional check that only allows sender to burn coins from their own account.
-	// This check will be removed in the future once edge cases can be worked out
-	if msg.Sender != msg.BurnFromAddress {
-		return nil, sdkerrors.Wrap(types.ErrUnauthorized, "BurnFromAddress must be the same as Sender address")
-	}
-
-	err = server.Keeper.burnFrom(ctx, msg.Amount, msg.GetBurnFromAddress())
+	err = server.Keeper.burnFrom(ctx, msg.Amount, msg.Sender)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +89,7 @@ func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeMsgBurn,
-			sdk.NewAttribute(types.AttributeBurnFromAddress, msg.BurnFromAddress),
+			sdk.NewAttribute(types.AttributeBurnFromAddress, msg.Sender),
 			sdk.NewAttribute(types.AttributeAmount, msg.Amount.String()),
 		),
 	})
