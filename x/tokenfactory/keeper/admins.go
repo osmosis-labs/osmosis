@@ -19,6 +19,7 @@ func (k Keeper) GetAuthorityMetadata(ctx sdk.Context, denom string) (types.Denom
 	return metadata, nil
 }
 
+// SetAuthorityMetadata stores authority metadata for a specific denom
 func (k Keeper) SetAuthorityMetadata(ctx sdk.Context, denom string, metadata types.DenomAuthorityMetadata) error {
 	if metadata.Admin != "" {
 		_, err := sdk.AccAddressFromBech32(metadata.Admin)

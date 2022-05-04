@@ -46,7 +46,6 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
@@ -177,8 +176,6 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 
 // GenerateGenesisState creates a randomized GenState of the tokenfactory module.
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// gen := types.DefaultGenesis()
-	// gen.Basedenom = sdk.DefaultBondDenom
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
@@ -192,7 +189,7 @@ func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }
 
-// RegisterStoreDecoder registers a decoder for supply module's types
+// RegisterStoreDecoder registers a decoder for tokenfactory module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
