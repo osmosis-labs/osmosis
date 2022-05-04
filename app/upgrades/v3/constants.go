@@ -1,5 +1,7 @@
 package v3
 
+import "github.com/osmosis-labs/osmosis/v7/app/upgrades"
+
 const (
 	// UpgradeName defines the on-chain upgrade name for the Osmosis v3 upgrade.
 	UpgradeName = "v3"
@@ -8,3 +10,9 @@ const (
 	// triggered.
 	UpgradeHeight = 712_000
 )
+
+var Fork = upgrades.Fork{
+	UpgradeName:    UpgradeName,
+	UpgradeHeight:  UpgradeHeight,
+	BeginForkLogic: RunForkLogic,
+}
