@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -121,7 +122,7 @@ func (s *IntegrationTestSuite) submitProposal(c *chain.Chain) {
 		Container:    s.valResources[c.ChainMeta.Id][0].Container.ID,
 		User:         "root",
 		Cmd: []string{
-			"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", "v8", "--title=\"v8 upgrade\"", "--description=\"v8 upgrade proposal\"", "--upgrade-height=75", "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test",
+			"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", "v8", "--title=\"v8 upgrade\"", "--description=\"v8 upgrade proposal\"", "--upgrade-height=75", "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json",
 		},
 	})
 	s.Require().NoError(err)
@@ -143,8 +144,12 @@ func (s *IntegrationTestSuite) submitProposal(c *chain.Chain) {
 		"failed to submit proposal; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 	)
 
-	s.T().Log("successfully submitted proposal")
+	s.Require().Truef(
+		strings.Contains(outBuf.String(), "code: 0"),
+		"tx returned non code 0",
+	)
 
+	s.T().Log("successfully submitted proposal")
 }
 
 func (s *IntegrationTestSuite) depositProposal(c *chain.Chain) {
@@ -179,6 +184,11 @@ func (s *IntegrationTestSuite) depositProposal(c *chain.Chain) {
 	s.Require().NoErrorf(
 		err,
 		"failed to deposit to upgrade proposal; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
+	)
+
+	s.Require().Truef(
+		strings.Contains(outBuf.String(), "code: 0"),
+		"tx returned non code 0",
 	)
 
 	s.T().Log("successfully deposited to proposal")
@@ -217,6 +227,11 @@ func (s *IntegrationTestSuite) voteProposal(c *chain.Chain) {
 	s.Require().NoErrorf(
 		err,
 		"failed to vote for proposal; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
+	)
+
+	s.Require().Truef(
+		strings.Contains(outBuf.String(), "code: 0"),
+		"tx returned non code 0",
 	)
 
 	s.T().Log("successfully voted for proposal")
