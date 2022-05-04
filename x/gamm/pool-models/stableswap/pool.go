@@ -79,8 +79,8 @@ func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 }
 
 // getScaledPoolAmts returns scaled amount of pool liquidity based on each asset's precisions
-func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
-	result := make([]sdk.Int, len(denoms))
+func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
+	result := make([]sdk.Dec, len(denoms))
 	poolLiquidity := pa.PoolLiquidity
 	liquidityIndexes := pa.getLiquidityIndexMap()
 
@@ -89,10 +89,10 @@ func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
 
 		amt := poolLiquidity.AmountOf(denom)
 		if amt.IsZero() {
-			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", denom)
+			return []sdk.Dec{}, fmt.Errorf("denom %s does not exist in pool", denom)
 		}
 		scalingFactor := pa.GetScalingFactorByLiquidityIndex(liquidityIndex)
-		result[i] = amt.QuoRaw(int64(scalingFactor))
+		result[i] = amt.ToDec().QuoInt64Mut(int64(scalingFactor))
 	}
 	return result, nil
 }
@@ -195,7 +195,7 @@ func (pa Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	scaledSpotPrice := spotPrice(reserves[0].ToDec(), reserves[1].ToDec())
+	scaledSpotPrice := spotPrice(reserves[0], reserves[1])
 	spotPrice := pa.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
 
 	return spotPrice, nil

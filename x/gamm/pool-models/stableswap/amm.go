@@ -208,8 +208,7 @@ func (pa *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFe
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	tokenInSupply := reserves[0].ToDec()
-	tokenOutSupply := reserves[1].ToDec()
+	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
 	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, tokenIn.Amount.ToDec())
 	outAmt := pa.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
@@ -222,8 +221,7 @@ func (pa *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFe
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	tokenInSupply := reserves[0].ToDec()
-	tokenOutSupply := reserves[1].ToDec()
+	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
 	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, tokenOut.Amount.ToDec().Neg())
