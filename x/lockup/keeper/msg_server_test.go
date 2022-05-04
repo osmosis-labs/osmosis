@@ -6,6 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -258,6 +259,81 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 			suite.Require().NoError(err)
 		} else {
 			suite.Require().Error(err)
+		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestMsgEditLockup() {
+	type param struct {
+		coinsToLock       sdk.Coins
+		isSyntheticLockup bool
+		lockOwner         sdk.AccAddress
+		duration          time.Duration
+		newDuration       time.Duration
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "edit lockups by duration",
+			param: param{
+				coinsToLock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
+				isSyntheticLockup: false,
+				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:          time.Second,
+				newDuration:       time.Second * 2,
+			},
+			expectPass: true,
+		},
+		{
+			name: "edit lockups by lesser duration",
+			param: param{
+				coinsToLock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
+				isSyntheticLockup: false,
+				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:          time.Second,
+				newDuration:       time.Second / 2,
+			},
+			expectPass: false,
+		},
+		{
+			name: "disallow edit when synthetic lockup exists",
+			param: param{
+				coinsToLock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
+				isSyntheticLockup: true,
+				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:          time.Second,
+				newDuration:       time.Second * 2,
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.SetupTest()
+
+		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsToLock)
+		suite.Require().NoError(err)
+
+		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
+		c := sdk.WrapSDKContext(suite.Ctx)
+		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		suite.Require().NoError(err)
+
+		if test.param.isSyntheticLockup {
+			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
+			suite.Require().NoError(err)
+		}
+
+		_, err = msgServer.ExtendLockup(c, types.NewMsgExtendLockup(test.param.lockOwner, resp.ID, test.param.newDuration))
+
+		if test.expectPass {
+			suite.Require().NoError(err, test.name)
+		} else {
+			suite.Require().Error(err, test.name)
 		}
 	}
 }
