@@ -27,12 +27,12 @@ func (s *IntegrationTestSuite) TestAIBCTokenTransfer() {
 		// require the recipient account receives the IBC tokens (IBC packets ACKd)
 		var (
 			balances sdk.Coins
-			//err      error
+			err      error
 		)
 		s.Require().Eventually(
 			func() bool {
-				balances, _ = queryBalances(chainBAPIEndpoint, recipient)
-				//s.Require().NoError(err)
+				balances, err = queryBalances(chainBAPIEndpoint, recipient)
+				s.Require().NoError(err)
 
 				return balances.Len() == 3
 			},
@@ -127,11 +127,9 @@ func queryBalances(endpoint, addr string) (sdk.Coins, error) {
 	}
 
 	var balancesResp banktypes.QueryAllBalancesResponse
-	fmt.Printf("bz %v", bz)
 	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
 		return nil, err
 	}
-	fmt.Printf("balancesResp %v", balancesResp)
-	fmt.Printf("getbalances %v", balancesResp.GetBalances())
+
 	return balancesResp.GetBalances(), nil
 }

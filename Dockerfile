@@ -15,7 +15,7 @@ RUN sha256sum /lib/libwasmvm_muslc.a | grep d0152067a5609bfdfb3f0d5d6c0f2760f79d
 RUN BUILD_TAGS=muslc make build
 
 ## Deploy image
-FROM ubuntu
+FROM gcr.io/distroless/base-debian11:${BASE_IMG_TAG}
 
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 
