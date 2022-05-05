@@ -313,7 +313,7 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 	return numShares, nil
 }
 
-func (p *Pool) CalcJoinPoolShares(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
 	poolAssets := p.GetAllPoolAssets()
 	poolAssetsByDenom := make(map[string]PoolAsset)
 	for _, poolAsset := range poolAssets {
@@ -330,7 +330,7 @@ func (p *Pool) CalcJoinPoolShares(_ctx sdk.Context, tokensIn sdk.Coins, swapFee 
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
 	}
 
-	// Add all exact coins we can (no swap)
+	// add all exact coins we can (no swap)
 	numShares, remCoins, err := p.maximalExactRatioJoin(tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
