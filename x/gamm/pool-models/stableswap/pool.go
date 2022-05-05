@@ -55,6 +55,15 @@ func (pa Pool) GetTotalShares() sdk.Int {
 	return pa.TotalShares.Amount
 }
 
+func (pa Pool) GetScalingFactors() []uint64 {
+	return pa.ScalingFactor
+}
+
+// CONTRACT: scaling factors follow the same index with pool liquidity denoms
+func (pa Pool) GetScalingFactorByLiquidityIndex(liquidityIndex int) uint64 {
+	return pa.ScalingFactor[liquidityIndex]
+}
+
 // returns pool liquidity of the provided denoms, in the same order the denoms were provided in
 func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	result := make([]sdk.Int, len(denoms))
@@ -67,6 +76,44 @@ func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 		result[i] = amt
 	}
 	return result, nil
+}
+
+// getScaledPoolAmts returns scaled amount of pool liquidity based on each asset's precisions
+func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
+	result := make([]sdk.Int, len(denoms))
+	poolLiquidity := pa.PoolLiquidity
+	liquidityIndexes := pa.getLiquidityIndexMap()
+
+	for i, denom := range denoms {
+		liquidityIndex := liquidityIndexes[denom]
+
+		amt := poolLiquidity.AmountOf(denom)
+		if amt.IsZero() {
+			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", denom)
+		}
+		scalingFactor := pa.GetScalingFactorByLiquidityIndex(liquidityIndex)
+		result[i] = amt.QuoRaw(int64(scalingFactor))
+	}
+	return result, nil
+}
+
+// getDescaledPoolAmts gets descaled amount of given denom and amount
+func (pa Pool) getDescaledPoolAmt(denom string, amount sdk.Dec) sdk.Dec {
+	liquidityIndexes := pa.getLiquidityIndexMap()
+	liquidityIndex := liquidityIndexes[denom]
+
+	scalingFactor := pa.GetScalingFactorByLiquidityIndex(liquidityIndex)
+	return amount.MulInt64(int64(scalingFactor))
+}
+
+// getLiquidityIndexMap creates a map of denoms to its index in pool liquidity
+func (pa Pool) getLiquidityIndexMap() map[string]int {
+	poolLiquidity := pa.PoolLiquidity
+	liquidityIndexMap := make(map[string]int, poolLiquidity.Len())
+	for i, coin := range poolLiquidity {
+		liquidityIndexMap[coin.Denom] = i
+	}
+	return liquidityIndexMap
 }
 
 // updatePoolLiquidityForSwap updates the pool liquidity.
@@ -144,12 +191,14 @@ func (pa *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDe
 }
 
 func (pa Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	reserves, err := pa.getPoolAmts(baseAssetDenom, quoteAssetDenom)
+	reserves, err := pa.getScaledPoolAmts(baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	// TODO: apply scaling factors here
-	return spotPrice(reserves[0].ToDec(), reserves[1].ToDec()), nil
+	scaledSpotPrice := spotPrice(reserves[0].ToDec(), reserves[1].ToDec())
+	spotPrice := pa.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
+
+	return spotPrice, nil
 }
 
 func (pa Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
