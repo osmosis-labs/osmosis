@@ -238,7 +238,7 @@ func (s *IntegrationTestSuite) voteProposal(c *chain.Chain) {
 
 }
 
-func (s *IntegrationTestSuite) chainStatus(c *chain.Chain, i int) []byte {
+func (s *IntegrationTestSuite) chainStatus(containerId string) []byte {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -246,7 +246,7 @@ func (s *IntegrationTestSuite) chainStatus(c *chain.Chain, i int) []byte {
 		Context:      ctx,
 		AttachStdout: true,
 		AttachStderr: true,
-		Container:    s.valResources[c.ChainMeta.Id][i].Container.ID,
+		Container:    containerId,
 		User:         "root",
 		Cmd: []string{
 			"osmosisd", "status",

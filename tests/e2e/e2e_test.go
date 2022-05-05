@@ -14,7 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-func (s *IntegrationTestSuite) Test1IBCTokenTransfer() {
+func (s *IntegrationTestSuite) Test001IBCTokenTransfer() {
 	var ibcStakeDenom string
 
 	s.Run("send_uosmo_to_chainB", func() {
@@ -52,7 +52,7 @@ func (s *IntegrationTestSuite) Test1IBCTokenTransfer() {
 	})
 }
 
-func (s *IntegrationTestSuite) Test2QueryBalances() {
+func (s *IntegrationTestSuite) Test002QueryBalances() {
 	var (
 		expectedDenomsA   = []string{chain.OsmoDenom, chain.StakeDenom}
 		expectedDenomsB   = []string{chain.OsmoDenom, chain.StakeDenom, chain.IbcDenom}

@@ -349,14 +349,14 @@ func (s *IntegrationTestSuite) initUpgrade() {
 	// wait till all chains halt at upgrade height
 	for _, chain := range s.chains {
 		for i := range chain.Validators {
-			s.T().Logf("waiting to reach upgrade height for chain-id: %s", chain.ChainMeta.Id)
+			s.T().Logf("waiting to reach upgrade height on %s validator container: %s", chain.ChainMeta.Id, s.valResources[chain.ChainMeta.Id][i].Container.ID)
 			s.Require().Eventually(
 				func() bool {
-					out := s.chainStatus(chain, i)
+					out := s.chainStatus(s.valResources[chain.ChainMeta.Id][i].Container.ID)
 					var syncInfo syncInfo
 					json.Unmarshal(out, &syncInfo)
 					if syncInfo.SyncInfo.LatestHeight != "75" {
-						fmt.Printf("current block height is %v, waiting for block 75\n", syncInfo.SyncInfo.LatestHeight)
+						s.T().Logf("current block height is %v, waiting for block 75 container: %s", syncInfo.SyncInfo.LatestHeight, s.valResources[chain.ChainMeta.Id][i].Container.ID)
 					}
 					return syncInfo.SyncInfo.LatestHeight == "75"
 				},
@@ -403,7 +403,7 @@ func (s *IntegrationTestSuite) upgrade() {
 		for i := range chain.Validators {
 			s.Require().Eventually(
 				func() bool {
-					out := s.chainStatus(chain, i)
+					out := s.chainStatus(s.valResources[chain.ChainMeta.Id][i].Container.ID)
 					var syncInfo syncInfo
 					json.Unmarshal(out, &syncInfo)
 					if syncInfo.SyncInfo.LatestHeight <= "75" {
