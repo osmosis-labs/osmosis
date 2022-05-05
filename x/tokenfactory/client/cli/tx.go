@@ -160,7 +160,7 @@ func NewBurnCmd() *cobra.Command {
 // 	return cmd
 // }
 
-// NewForceTransferCmd broadcast MsgForceTransfer
+// NewChangeAdminCmd broadcast MsgChangeAdmin
 func NewChangeAdminCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "change-admin [denom] [new-admin-address] [flags]",
