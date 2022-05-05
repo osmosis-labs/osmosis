@@ -13,6 +13,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -27,6 +28,7 @@ const (
 	IbcDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	MinGasPrice   = "0.000"
 	IbcSendAmount = 3300000000
+	VotingPeriod  = 30000000000 // 30 seconds
 	// chainA
 	ChainAID      = "osmo-test-a"
 	OsmoBalanceA  = 200000000000
@@ -157,6 +159,21 @@ func initGenesis(c *internalChain) error {
 		return err
 	}
 	appGenState[banktypes.ModuleName] = bz
+
+	var govGenState govtypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState); err != nil {
+		return err
+	}
+
+	govGenState.VotingParams = govtypes.VotingParams{
+		VotingPeriod: VotingPeriod,
+	}
+
+	gz, err := util.Cdc.MarshalJSON(&govGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[govtypes.ModuleName] = gz
 
 	var genUtilGenState genutiltypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[genutiltypes.ModuleName], &genUtilGenState); err != nil {

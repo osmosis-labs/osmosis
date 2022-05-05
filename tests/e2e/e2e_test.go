@@ -14,7 +14,45 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-func (s *IntegrationTestSuite) TestQueryBalances() {
+func (s *IntegrationTestSuite) Test001IBCTokenTransfer() {
+	var ibcStakeDenom string
+
+	s.Run("send_uosmo_to_chainB", func() {
+		recipient := s.chains[1].Validators[0].PublicAddress
+		token := sdk.NewInt64Coin(chain.OsmoDenom, chain.IbcSendAmount) // 3,300uosmo
+		s.sendIBC(s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id, recipient, token)
+
+		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[1].ChainMeta.Id][0].GetHostPort("1317/tcp"))
+
+		// require the recipient account receives the IBC tokens (IBC packets ACKd)
+		var (
+			balances sdk.Coins
+			err      error
+		)
+		s.Require().Eventually(
+			func() bool {
+				balances, err = queryBalances(chainBAPIEndpoint, recipient)
+				s.Require().NoError(err)
+
+				return balances.Len() == 3
+			},
+			time.Minute,
+			5*time.Second,
+		)
+
+		for _, c := range balances {
+			if strings.Contains(c.Denom, "ibc/") {
+				ibcStakeDenom = c.Denom
+				s.Require().Equal(token.Amount.Int64(), c.Amount.Int64())
+				break
+			}
+		}
+
+		s.Require().NotEmpty(ibcStakeDenom)
+	})
+}
+
+func (s *IntegrationTestSuite) Test002QueryBalances() {
 	var (
 		expectedDenomsA   = []string{chain.OsmoDenom, chain.StakeDenom}
 		expectedDenomsB   = []string{chain.OsmoDenom, chain.StakeDenom, chain.IbcDenom}
@@ -94,42 +132,4 @@ func queryBalances(endpoint, addr string) (sdk.Coins, error) {
 	}
 
 	return balancesResp.GetBalances(), nil
-}
-
-func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
-	var ibcStakeDenom string
-
-	s.Run("send_uosmo_to_chainB", func() {
-		recipient := s.chains[1].Validators[0].PublicAddress
-		token := sdk.NewInt64Coin(chain.OsmoDenom, chain.IbcSendAmount) // 3,300uosmo
-		s.sendIBC(s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id, recipient, token)
-
-		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[1].ChainMeta.Id][0].GetHostPort("1317/tcp"))
-
-		// require the recipient account receives the IBC tokens (IBC packets ACKd)
-		var (
-			balances sdk.Coins
-			err      error
-		)
-		s.Require().Eventually(
-			func() bool {
-				balances, err = queryBalances(chainBAPIEndpoint, recipient)
-				s.Require().NoError(err)
-
-				return balances.Len() == 3
-			},
-			time.Minute,
-			5*time.Second,
-		)
-
-		for _, c := range balances {
-			if strings.Contains(c.Denom, "ibc/") {
-				ibcStakeDenom = c.Denom
-				s.Require().Equal(token.Amount.Int64(), c.Amount.Int64())
-				break
-			}
-		}
-
-		s.Require().NotEmpty(ibcStakeDenom)
-	})
 }
