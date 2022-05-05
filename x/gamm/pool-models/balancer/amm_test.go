@@ -184,13 +184,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 				exitFeeDec, err := sdk.NewDecFromStr("0")
 				require.NoError(t, err)
 
-				pool := createTestPool(t, []balancer.PoolAsset{
-					poolAssetOut,
-					poolAssetIn,
-				},
-					swapFeeDec,
-					exitFeeDec,
-				)
+				pool := createTestPool(t, swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 				require.NotNil(t, pool)
 
 				initialOut := sdk.NewInt64Coin(poolAssetOut.Token.Denom, tc.initialCalcOut)
@@ -322,5 +316,34 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 				require.Equal(t, initialCalcTokenOut, inverseCalcTokenOut.RoundInt())
 			})
 		}
+	}
+}
+
+func TestCalcJoinPoolShares(t *testing.T) {
+	testCases := map[string]struct {
+		swapFee      sdk.Dec
+		exitFee      sdk.Dec
+		poolAssets   []balancer.PoolAsset
+		tokensIn     sdk.Coins
+		expectErr    bool
+		expectShares sdk.Int
+		expectLiq    sdk.Coins
+	}{}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		t.Run(name, func(t *testing.T) {
+			pool := createTestPool(t, tc.swapFee, tc.exitFee, tc.poolAssets...)
+
+			shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Equal(t, sdk.ZeroInt(), shares)
+				require.Equal(t, sdk.NewCoins(), liquidity)
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }

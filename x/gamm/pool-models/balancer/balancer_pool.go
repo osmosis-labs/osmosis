@@ -470,6 +470,14 @@ func (pa Pool) IsActive(ctx sdk.Context) bool {
 	return true
 }
 
+func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
+	return PoolParams{
+		SwapFee:                  swapFee,
+		ExitFee:                  exitFee,
+		SmoothWeightChangeParams: params,
+	}
+}
+
 func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	if params.ExitFee.IsNegative() {
 		return types.ErrNegativeExitFee
