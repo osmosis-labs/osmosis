@@ -313,6 +313,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[tokenfactorytypes.StoreKey],
+		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper.WithMintCoinsRestriction(tokenfactorytypes.NewTokenFactoryDenomMintCoinsRestriction()),
 	)
