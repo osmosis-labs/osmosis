@@ -12,6 +12,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
+<<<<<<< HEAD
+=======
+
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+>>>>>>> b2ae53b (fix: pool params query (#1315))
 )
 
 // GetQueryCmd returns the cli query commands for this module
@@ -216,8 +222,17 @@ $ %s query gamm pool-params 1
 			}
 
 			if clientCtx.OutputFormat == "text" {
+<<<<<<< HEAD
 				out, err := yaml.Marshal(res.GetParams())
 
+=======
+				poolParams := &balancer.PoolParams{}
+				if err := poolParams.Unmarshal(res.GetParams().Value); err != nil {
+					return err
+				}
+
+				out, err := yaml.Marshal(poolParams)
+>>>>>>> b2ae53b (fix: pool params query (#1315))
 				if err != nil {
 					return err
 				}
@@ -228,6 +243,7 @@ $ %s query gamm pool-params 1
 				if err != nil {
 					return err
 				}
+
 				return writeOutputBoilerplate(clientCtx, out)
 			}
 		},

@@ -5,7 +5,11 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+<<<<<<< HEAD
 	types "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+=======
+	proto "github.com/gogo/protobuf/proto"
+>>>>>>> b2ae53b (fix: pool params query (#1315))
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
@@ -26,6 +30,11 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgCreateBalancerPool{},
 	)
+	registry.RegisterImplementations(
+		(*proto.Message)(nil),
+		&PoolParams{},
+	)
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
