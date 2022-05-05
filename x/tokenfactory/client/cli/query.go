@@ -64,7 +64,7 @@ func GetCmdDenomAuthorityMetadata() *cobra.Command {
 	return cmd
 }
 
-// GetCmdDenomAuthorityMetadata returns the authority metadata for a queried denom
+// GetCmdDenomsFromCreator a command to get a list of all tokens created by a specific creator address
 func GetCmdDenomsFromCreator() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "denoms-from-creator [creator address] [flags]",
