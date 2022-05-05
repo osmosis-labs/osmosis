@@ -581,12 +581,9 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration
 	}
 
 	k.hooks.OnLockupExtend(ctx,
-		lock.OwnerAddress(),
 		lock.GetID(),
-		lock.GetCoins(),
 		oldLock.GetDuration(),
 		lock.GetDuration(),
-		lock.GetEndTime(),
 	)
 
 	return nil
