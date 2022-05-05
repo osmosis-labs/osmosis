@@ -1,6 +1,8 @@
 package stableswap
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -229,4 +231,11 @@ func (pa *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFe
 	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, tokenOut.Amount.ToDec().Neg())
 	inAmt := pa.getDescaledPoolAmt(tokenInDenom, cfmmIn.NegMut())
 	return inAmt, nil
+}
+
+func (pa *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
+	// paDeref := *pa
+	// paCopy := paDeref
+	// cfmm_common.BinarySearchSingleAssetJoin(paCopy, tokenIn, )
+	return sdk.Int{}, errors.New("Unimplemented")
 }

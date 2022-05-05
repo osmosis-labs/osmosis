@@ -65,6 +65,10 @@ func (pa Pool) GetScalingFactorByLiquidityIndex(liquidityIndex int) uint64 {
 	return pa.ScalingFactor[liquidityIndex]
 }
 
+func (pa Pool) NumAssets() int {
+	return len(pa.PoolLiquidity)
+}
+
 // returns pool liquidity of the provided denoms, in the same order the denoms were provided in
 func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	result := make([]sdk.Int, len(denoms))
@@ -138,6 +142,10 @@ func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins) {
 	p.updatePoolLiquidityForSwap(sdk.Coins{}, tokensOut)
 }
 
+func (p *Pool) updatePoolLiquidityForJoin(tokensIn sdk.Coins) {
+	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...)
+}
+
 // TODO: These should all get moved to amm.go
 func (pa Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error) {
 	if tokenIn.Len() != 1 {
@@ -209,12 +217,35 @@ func (pa Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom
 	return spotPrice, nil
 }
 
-func (pa Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	return sdk.Int{}, sdk.Coins{}, types.ErrNotImplemented
+func (pa *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+	if len(tokensIn) == 1 {
+		numShares, err = pa.calcSingleAssetJoinShares(tokensIn[0], swapFee)
+		newLiquidity = tokensIn
+		return numShares, newLiquidity, err
+	} else if len(tokensIn) != pa.NumAssets() {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
+			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
+	}
+
+	// Add all exact coins we can (no swap). ctx arg doesn't matter for Balancer
+	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(pa, sdk.Context{}, tokensIn)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	// TODO: Do single asset joins for each of the coins in remCoins, when implemented
+	return numShares, tokensIn.Sub(remCoins), nil
 }
 
 func (pa *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	return sdk.Int{}, types.ErrNotImplemented
+	newShares, newLiquidity, err := pa.CalcJoinPoolShares(ctx, tokensIn, swapFee)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	pa.TotalShares.Amount = pa.TotalShares.Amount.Add(newShares)
+	pa.updatePoolLiquidityForJoin(newLiquidity)
+	return newShares, nil
 }
 
 func (pa *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
