@@ -218,8 +218,7 @@ $ %s query gamm pool-params 1
 
 			if clientCtx.OutputFormat == "text" {
 				poolParams := &balancer.PoolParams{}
-				err := poolParams.Unmarshal(res.GetParams().Value)
-				if err != nil {
+				if err := poolParams.Unmarshal(res.GetParams().Value); err != nil {
 					return err
 				}
 
