@@ -292,7 +292,6 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
 			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
-
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
 				require.NoError(t, err)
 

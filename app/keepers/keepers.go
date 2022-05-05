@@ -350,7 +350,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	// register the proposal types
-	// TODO: This appears to be missing tx fees proposal type
 	govRouter := govtypes.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*appKeepers.ParamsKeeper)).
