@@ -162,7 +162,7 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	// This returns (copied from wolfram):
 	// assuming (correctly) that b + y!=0
 	// a ≈(0.26457 (-27 b^2 w x y - 27 b^2 x^3 y - 27 b^2 x y^3 + sqrt((-27 b^2 w x y - 27 b^2 x^3 y - 27 b^2 x y^3 - 54 b w x y^2 - 54 b x^3 y^2 - 54 b x y^4 - 27 w x y^3 - 27 x^3 y^3 - 27 x y^5)^2 + 4 (3 b^4 + 12 b^3 y + 3 b^2 w + 18 b^2 y^2 + 6 b w y + 12 b y^3 + 3 w y^2 + 3 y^4)^3) - 54 b w x y^2 - 54 b x^3 y^2 - 54 b x y^4 - 27 w x y^3 - 27 x^3 y^3 - 27 x y^5)^(1/3))/(b + y) - (0.41997 (3 b^4 + 12 b^3 y + 3 b^2 w + 18 b^2 y^2 + 6 b w y + 12 b y^3 + 3 w y^2 + 3 y^4))/((b + y) (-27 b^2 w x y - 27 b^2 x^3 y - 27 b^2 x y^3 + sqrt((-27 b^2 w x y - 27 b^2 x^3 y - 27 b^2 x y^3 - 54 b w x y^2 - 54 b x^3 y^2 - 54 b x y^4 - 27 w x y^3 - 27 x^3 y^3 - 27 x y^5)^2 + 4 (3 b^4 + 12 b^3 y + 3 b^2 w + 18 b^2 y^2 + 6 b w y + 12 b y^3 + 3 w y^2 + 3 y^4)^3) - 54 b w x y^2 - 54 b x^3 y^2 - 54 b x y^4 - 27 w x y^3 - 27 x^3 y^3 - 27 x y^5)^(1/3)) + (b x + x y)/(b + y) and b + y!=0
-	// 
+	//
 	// The key substitutions are (where w represents the sum of the squares as represented in the multi-asset CFMM function):
 	// 1. S1: 3 (b + y)^2 (b^2 + 2 b y + y^2 + w) = 3 b^4 + 12 b^3 y + 3b^2w + 18 b^2 y^2 + 6bwy + 12 b y^3 + 3wy^2 + 3 y^4
 	// 2. S2: -27 x y (b + y)^2 (x^2 + y^2 + w) = -27b^2xyw - 27b^2x^3y - 27b^2xy^3 - 54bxy^2w - 54bx^3y^2 - 54bxy^4 - 27xy^3w - 27x^3y^3 - 27xy^5
@@ -177,7 +177,7 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	// To further simplify, let:
 	// foo = (S2 + sqrt(S2^2 + 4*(S1^3)))^(1/3)
 	// bar = (b + y)
-	// 
+	//
 	// Thus, a further simplifies to:
 	// a = 0.26457 * (foo / bar)
 	//			- 0.41997 * (S1 / (bar * foo))

@@ -33,5 +33,4 @@ func TestSendBlockDecorator(t *testing.T) {
 			require.Error(t, err)
 		}
 	}
-
 }
