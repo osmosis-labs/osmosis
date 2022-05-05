@@ -95,3 +95,15 @@ func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (
 
 	return numShares, remCoins, nil
 }
+
+// We binary search a number of LP shares, s.t. if we exited the pool with the updated liquidity,
+// and swapped all the tokens back to the input denom, we'd get the same amount. (under 0 swap fee)
+// We do the swap estimation, 'synthetically', so we ignore the slippage each swap would cause on other swaps.
+// This is because its important to not over-estimate, and error here is tolerable.
+func BinarySearchSingleAssetJoin(
+	poolWithTokenInAddedToLiquidity types.PoolI,
+	tokenIn sdk.Coin,
+	setPoolLPShares func(numShares sdk.Int) types.PoolI) (numLPShares sdk.Int, err error) {
+	// updatedPool :=
+	return sdk.Int{}, nil
+}
