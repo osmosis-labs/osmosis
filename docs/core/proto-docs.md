@@ -4097,15 +4097,13 @@ Query defines the gRPC querier service.
 
 ### MsgBurn
 MsgBurn is the sdk.Msg type for allowing an admin account to burn
-a token.  For now, we require sender == burnFromAddress
-but this restriction will be removed in the future.
+a token.  For now, we only support burning from the sender account.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `burnFromAddress` | [string](#string) |  |  |
 
 
 
@@ -4188,15 +4186,13 @@ It returns the full string of the newly created denom
 
 ### MsgMint
 MsgMint is the sdk.Msg type for allowing an admin account to mint
-more of a token.  For now, we require sender == mintToAddress
-but this restriction will be removed in the future.
+more of a token.  For now, we only support minting to the sender account
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `mintToAddress` | [string](#string) |  |  |
 
 
 
