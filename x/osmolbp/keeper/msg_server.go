@@ -32,7 +32,7 @@ func (k Keeper) CreateLBP(goCtx context.Context, msg *api.MsgCreateLBP) (*api.Ms
 }
 
 func (k Keeper) createLBP(msg *api.MsgCreateLBP, now time.Time, store storetypes.KVStore) (uint64, error) {
-	if err := msg.Validate(now); err != nil {
+	if err := msg.Validate(now); err != nil { // handle.ValidateMsgCreateLBP(msg)
 		return 0, err
 	}
 	id, idBz := k.nextPoolID(store)
@@ -74,6 +74,8 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 		return errors.Wrap(err, "user doesn't have enough tokens to subscribe for a LBP")
 	}
 	subscribe(p, u, msg.Amount, ctx.BlockTime())
+
+	p.Subscribe(u, msg.Amount, now)
 
 	k.saveLBP(store, poolIdBz, p)
 	k.saveUserPosition(store, poolIdBz, sender, u)

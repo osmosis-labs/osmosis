@@ -16,14 +16,17 @@ service Msg {
   // CreateLBP creates new liquidity bootstraping pool.
   rpc CreateLBP(MsgCreateLBP) returns (MsgCreateLBPResponse);
 
-  // Subscribe to a token sale
+  // Subscribe to a token sale. Any use any time before the sale end can join
+  // the sale by adding `token_in`. During the sale his `token_in` will be
+  // automatically charged every epoch to purchase `token_out`.
   rpc Subscribe(MsgSubscribe) returns (google.protobuf.Empty);
 
-  // Withdraw sends back `amount` of unspent in_tokens back to the user
+  // Withdraw sends back `amount` of unspent tokens_in back to the user.
+  // User can do it any time unless his deposit is empty.
   rpc Withdraw(MsgWithdraw) returns (google.protobuf.Empty);
 
-  // ExitLBP the purchased tokens from the pool and remained staked
-  // tokens. Returns error if the LBP is still active.
+  // ExitLBP withdraws purchased tokens_out from the pool and remained
+  // tokens_in. Returns error if the LBP is still active.
   rpc ExitLBP(MsgExitLBP) returns (MsgExitLBPResponse);
 
   // FinalizeLBP sends income (earned tokens_in) to the LBP treasury.
@@ -51,6 +54,7 @@ message MsgCreateLBP {
 
   // total number of `tokens_out` to be sold during the continous sale.
   // tokens are deposited from the treasury account.
+  // TODO: change to `creator`
   string initial_deposit = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.nullable) = false
@@ -104,7 +108,7 @@ message MsgExitLBPResponse {
 }
 
 message MsgFinalizeLBP {
-  // sender is an account address exiting a pool
+  // sender is an account address triggering the finalization.
   string sender = 1;
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }

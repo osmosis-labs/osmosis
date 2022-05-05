@@ -17,6 +17,11 @@ service Query {
   rpc LBPs(QueryLBPs) returns (QueryLBPsResponse) {
     option (google.api.http).get = "/cosmos/osmolbp/v1/lbps";
   }
+
+  //   rpc LBP(QueryBasketRequest) returns (QueryBasketResponse) {
+  //   option (google.api.http).get =
+  //       "/regen/ecocredit/basket/v1/baskets/{basket_denom}";
+  // }
 }
 
 message QueryLBPs {
