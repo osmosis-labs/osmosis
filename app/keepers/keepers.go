@@ -314,7 +314,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appCodec,
 		appKeepers.keys[tokenfactorytypes.StoreKey],
 		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
+		appKeepers.BankKeeper.WithMintCoinsRestriction(tokenfactorytypes.NewTokenFactoryDenomMintCoinsRestriction()),
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
