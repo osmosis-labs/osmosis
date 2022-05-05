@@ -24,7 +24,24 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-const maxRetries = 10 // max retries for json unmarshalling
+var (
+	// common
+	maxRetries = 10 // max retries for json unmarshalling
+	// chainA
+	NumValA             int = 3
+	PruningA                = []string{"nothing", "default", "custom"} // default, nothing, everything, or custom
+	PruningKeepRecentA      = []string{"0", "0", "10000"}              // keep all of the last N states (only used with custom pruning)
+	PruningIntervalA        = []string{"0", "0", "13"}                 // delete old states from every Nth block (only used with custom pruning)
+	SnapshotIntervalA       = []uint64{1500, 1500, 1500}               // statesync snapshot every Nth block (0 to disable)
+	SnapshotKeepRecentA     = []uint32{2, 2, 2}                        // number of recent snapshots to keep and serve (0 to keep all)
+	// chainB
+	NumValB             int = 3
+	PruningB                = []string{"nothing", "default", "custom"} // default, nothing, everything, or custom
+	PruningKeepRecentB      = []string{"0", "0", "10000"}              // keep all of the last N states (only used with custom pruning)
+	PruningIntervalB        = []string{"0", "0", "13"}                 // delete old states from every Nth block (only used with custom pruning)
+	SnapshotIntervalB       = []uint64{1500, 1500, 1500}               // statesync snapshot every Nth block (0 to disable)
+	SnapshotKeepRecentB     = []uint32{2, 2, 2}                        // number of recent snapshots to keep and serve (0 to keep all)
+)
 
 type IntegrationTestSuite struct {
 	suite.Suite
@@ -36,6 +53,15 @@ type IntegrationTestSuite struct {
 	hermesResource *dockertest.Resource
 	initResource   *dockertest.Resource
 	valResources   map[string][]*dockertest.Resource
+}
+
+type ValidatorConfig struct {
+	NumVal             int
+	Pruning            []string
+	PruningKeepRecent  []string
+	PruningInterval    []string
+	SnapshotInterval   []uint64
+	SnapshotKeepRecent []uint32
 }
 
 type status struct {
@@ -268,17 +294,43 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 }
 
 func (s *IntegrationTestSuite) configureChain(chainId string) {
+	var config ValidatorConfig
+
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 
 	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
 	s.Require().NoError(err)
+	if chainId == chain.ChainAID {
+		config.NumVal = NumValA
+		config.Pruning = PruningA
+		config.PruningKeepRecent = PruningKeepRecentA
+		config.PruningInterval = PruningIntervalA
+		config.SnapshotInterval = SnapshotIntervalA
+		config.SnapshotKeepRecent = SnapshotKeepRecentA
+	} else if chainId == chain.ChainBID {
+		config.NumVal = NumValB
+		config.Pruning = PruningB
+		config.PruningKeepRecent = PruningKeepRecentB
+		config.PruningInterval = PruningIntervalB
+		config.SnapshotInterval = SnapshotIntervalB
+		config.SnapshotKeepRecent = SnapshotKeepRecentB
+	} else {
+		s.T().Log("unexpected chainId")
+	}
+
+	b, _ := json.Marshal(config)
+	file := fmt.Sprintf("%v/%v-configEncode", tmpDir, chainId)
+	if err = os.WriteFile(file, b, 0o777); err != nil {
+		panic(err)
+	}
+	s.T().Logf("serialized config file for chain-id %v: %v", chainId, file)
 
 	s.initResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
 			Repository: "osmolabs/osmosis-init",
-			Tag:        "v7.2.1",
+			Tag:        "v7.3.0",
 			NetworkID:  s.dkrNet.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
