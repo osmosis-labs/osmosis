@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 	// suite.Require().True(suite.App.BankKeeper.GetBalance(suite.Ctx, addr2, denom).IsEqual(sdk.NewInt64Coin(denom, 5)))
 
 	// Test burning from own account
-	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(addr1.String(), sdk.NewInt64Coin(denom, 5), addr1.String()))
+	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(addr1.String(), sdk.NewInt64Coin(denom, 5)))
 	addr1bal -= 5
 	suite.Require().NoError(err)
 	suite.Require().True(suite.App.BankKeeper.GetBalance(suite.Ctx, addr2, denom).Amount.Int64() == addr2bal)
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 	suite.Require().Equal(addr2.String(), queryRes.AuthorityMetadata.Admin)
 
 	// Make sure old admin can no longer do actions
-	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(addr1.String(), sdk.NewInt64Coin(denom, 5), addr1.String()))
+	_, err = msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(addr1.String(), sdk.NewInt64Coin(denom, 5)))
 	suite.Require().Error(err)
 
 	// Make sure the new admin works

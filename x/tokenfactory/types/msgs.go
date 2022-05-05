@@ -86,7 +86,7 @@ func (m MsgMint) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgBurn{}
 
 // NewMsgBurn creates a message to burn tokens
-func NewMsgBurn(sender string, amount sdk.Coin, burnFrom string) *MsgBurn {
+func NewMsgBurn(sender string, amount sdk.Coin) *MsgBurn {
 	return &MsgBurn{
 		Sender: sender,
 		Amount: amount,
