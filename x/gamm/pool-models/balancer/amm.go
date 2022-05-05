@@ -324,8 +324,13 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 
 	if tokensIn.Len() == 1 {
 		numShares, err = p.calcSingleAssetJoin(tokensIn[0], swapFee, poolAssetsByDenom[tokensIn[0].Denom], totalShares)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
 		newLiquidity = tokensIn
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+
+		return numShares, newLiquidity, nil
 	} else if tokensIn.Len() != p.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
 	}
