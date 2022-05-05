@@ -263,48 +263,6 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoo
 	).TruncateInt(), nil
 }
 
-func (p *Pool) maximalExactRatioJoin(tokensIn sdk.Coins) (numShares sdk.Int, remCoins sdk.Coins, err error) {
-	coinShareRatios := make([]sdk.Dec, len(tokensIn), len(tokensIn))
-	minShareRatio := sdk.MaxSortableDec
-	maxShareRatio := sdk.ZeroDec()
-
-	poolLiquidity := p.GetTotalPoolLiquidity(sdk.Context{})
-
-	for i, coin := range tokensIn {
-		shareRatio := coin.Amount.ToDec().QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
-		if shareRatio.LT(minShareRatio) {
-			minShareRatio = shareRatio
-		}
-		if shareRatio.GT(maxShareRatio) {
-			maxShareRatio = shareRatio
-		}
-		coinShareRatios[i] = shareRatio
-	}
-
-	remCoins = sdk.Coins{}
-	if minShareRatio.Equal(sdk.MaxSortableDec) {
-		return numShares, remCoins, errors.New("unexpected error in balancer maximalExactRatioJoin")
-	}
-	numShares = minShareRatio.MulInt(p.TotalShares.Amount).TruncateInt()
-
-	// if we have multiple shares, calculate remCoins
-	if !minShareRatio.Equal(maxShareRatio) {
-		// we have to calculate remCoins
-		for i, coin := range tokensIn {
-			if !coinShareRatios[i].Equal(minShareRatio) {
-				usedAmount := minShareRatio.MulInt(coin.Amount).Ceil().TruncateInt()
-				newAmt := coin.Amount.Sub(usedAmount)
-				// add to RemCoins
-				if !newAmt.IsZero() {
-					remCoins = remCoins.Add(sdk.Coin{Denom: coin.Denom, Amount: newAmt})
-				}
-			}
-		}
-	}
-
-	return numShares, remCoins, nil
-}
-
 func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
 	numShares, newLiquidity, err := p.CalcJoinPoolShares(_ctx, tokensIn, swapFee)
 	if err != nil {
@@ -330,8 +288,8 @@ func (p *Pool) CalcJoinPoolShares(_ctx sdk.Context, tokensIn sdk.Coins, swapFee 
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
 			"balancer pool only supports LP'ing with one asset, or all assets in pool")
 	}
-	// Add all exact coins we can (no swap)
-	numShares, remCoins, err := p.maximalExactRatioJoin(tokensIn)
+	// Add all exact coins we can (no swap). ctx arg doesn't matter for Balancer
+	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
