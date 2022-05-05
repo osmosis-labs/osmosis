@@ -57,6 +57,8 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 	superfluid "github.com/osmosis-labs/osmosis/v7/x/superfluid"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
@@ -79,6 +81,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.ModuleName:                   nil,
 	txfeestypes.NonNativeFeeCollectorName:    nil,
 	wasm.ModuleName:                          {authtypes.Burner},
+	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
 }
 
 // appModules return modules to initialize module manager.
@@ -129,6 +132,7 @@ func appModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
+		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 	}
 }
@@ -162,6 +166,7 @@ func orderBeginBlockers() []string {
 		incentivestypes.ModuleName,
 		lockuptypes.ModuleName,
 		poolincentivestypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 		// superfluid must come after distribution and epochs
 		superfluidtypes.ModuleName,
 		bech32ibctypes.ModuleName,
@@ -205,6 +210,7 @@ var modulesOrderInitGenesis = []string{
 	bech32ibctypes.ModuleName, // comes after ibctransfertypes
 	poolincentivestypes.ModuleName,
 	superfluidtypes.ModuleName,
+	tokenfactorytypes.ModuleName,
 	incentivestypes.ModuleName,
 	epochstypes.ModuleName,
 	lockuptypes.ModuleName,
@@ -251,6 +257,7 @@ func simulationModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
+		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		app.TransferModule,
 	}
 }

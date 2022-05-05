@@ -64,6 +64,9 @@ func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID u
 func (h Hooks) OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins) {
 }
 
+func (h Hooks) OnLockupExtend(ctx sdk.Context, lockID uint64, oldDuration, newDuration time.Duration) {
+}
+
 // staking hooks.
 func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)   {}
 func (h Hooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {}
