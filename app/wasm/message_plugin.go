@@ -2,32 +2,36 @@ package wasm
 
 import (
 	"encoding/json"
-
+	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"time"
 
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 )
 
-func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
+func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper, lockupKeeper *lockupkeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
 		return &CustomMessenger{
-			wrapped:    old,
-			bank:       bank,
-			gammKeeper: gammKeeper,
+			wrapped:      old,
+			bank:         bank,
+			gammKeeper:   gammKeeper,
+			lockupKeeper: lockupKeeper,
 		}
 	}
 }
 
 type CustomMessenger struct {
-	wrapped    wasmkeeper.Messenger
-	bank       *bankkeeper.BaseKeeper
-	gammKeeper *gammkeeper.Keeper
+	wrapped      wasmkeeper.Messenger
+	bank         *bankkeeper.BaseKeeper
+	gammKeeper   *gammkeeper.Keeper
+	lockupKeeper *lockupkeeper.Keeper
 }
 
 var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
@@ -38,16 +42,24 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		// leave everything else for the wrapped version
 		var contractMsg wasmbindings.OsmosisMsg
 		if err := json.Unmarshal(msg.Custom, &contractMsg); err != nil {
-			return nil, nil, sdkerrors.Wrap(err, "osmosis msg")
+			return nil, nil, sdkerrors.Wrap(err, "osmosis msg, HERE4!")
 		}
 		// if contractMsg.MintTokens != nil {
 		// 	return m.mintTokens(ctx, contractAddr, contractMsg.MintTokens)
 		// }
 		if contractMsg.Swap != nil {
-			return m.swapTokens(ctx, contractAddr, contractMsg.Swap)
+			a, b, err := m.swapTokens(ctx, contractAddr, contractMsg.Swap)
+			return a, b, sdkerrors.Wrap(err, fmt.Sprintf("%s", msg))
+		}
+		if contractMsg.LockTokens != nil {
+			a, b, err := m.lockTokens(ctx, contractAddr, contractMsg.LockTokens)
+			return a, b, sdkerrors.Wrap(err, "HERE2!")
+		} else {
+			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, fmt.Sprintf("%s %s", contractMsg, msg))
 		}
 	}
-	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
+	a, b, err := m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
+	return a, b, sdkerrors.Wrap(err, fmt.Sprintf("%s", msg))
 }
 
 // func (m *CustomMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAddress, mint *wasmbindings.MintTokens) ([]sdk.Event, [][]byte, error) {
@@ -86,6 +98,16 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 // 	}
 // 	return nil
 // }
+
+func (m *CustomMessenger) lockTokens(ctx sdk.Context, contractAddr sdk.AccAddress, lock *wasmbindings.LockTokensMsg) ([]sdk.Event, [][]byte, error) {
+	coins := []sdk.Coin{sdk.NewCoin(lock.Denom, lock.Amount)}
+
+	_, err := m.lockupKeeper.LockTokens(ctx, contractAddr, coins, time.Duration(lock.Duration))
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "perform lock")
+	}
+	return nil, nil, nil
+}
 
 func (m *CustomMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAddress, swap *wasmbindings.SwapMsg) ([]sdk.Event, [][]byte, error) {
 	_, err := PerformSwap(m.gammKeeper, ctx, contractAddr, swap)

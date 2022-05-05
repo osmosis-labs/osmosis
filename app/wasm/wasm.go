@@ -7,11 +7,13 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 )
 
 func RegisterCustomPlugins(
 	gammKeeper *gammkeeper.Keeper,
 	bank *bankkeeper.BaseKeeper,
+	lockup *lockupkeeper.Keeper,
 ) []wasmkeeper.Option {
 	wasmQueryPlugin := NewQueryPlugin(gammKeeper)
 
@@ -19,7 +21,7 @@ func RegisterCustomPlugins(
 		Custom: CustomQuerier(wasmQueryPlugin),
 	})
 	messengerDecoratorOpt := wasmkeeper.WithMessageHandlerDecorator(
-		CustomMessageDecorator(gammKeeper, bank),
+		CustomMessageDecorator(gammKeeper, bank, lockup),
 	)
 
 	return []wasm.Option{
