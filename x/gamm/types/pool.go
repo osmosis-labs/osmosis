@@ -58,6 +58,7 @@ type PoolI interface {
 	// It is up to pool implementation if they support LP'ing at arbitrary ratios, or a subset of ratios.
 	// Pools are expected to guarantee LP'ing at the exact ratio, and single sided LP'ing.
 	JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
+
 	// CalcJoinPoolShares returns how many LP shares JoinPool would return on these arguments.
 	// This does not mutate the pool, or state.
 	CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error)

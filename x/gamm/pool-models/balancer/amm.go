@@ -319,21 +319,23 @@ func (p *Pool) CalcJoinPoolShares(_ctx sdk.Context, tokensIn sdk.Coins, swapFee 
 	for _, poolAsset := range poolAssets {
 		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
 	}
+
 	totalShares := p.GetTotalShares()
 
 	if tokensIn.Len() == 1 {
 		numShares, err = p.calcSingleAssetJoin(tokensIn[0], swapFee, poolAssetsByDenom[tokensIn[0].Denom], totalShares)
 		newLiquidity = tokensIn
-		return numShares, newLiquidity, err
+		return sdk.ZeroInt(), sdk.NewCoins(), err
 	} else if tokensIn.Len() != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
-			"balancer pool only supports LP'ing with one asset, or all assets in pool")
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
 	}
+
 	// Add all exact coins we can (no swap)
 	numShares, remCoins, err := p.maximalExactRatioJoin(tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
+
 	// update liquidity for accurate calcSingleAssetJoin calculation
 	newLiquidity = tokensIn.Sub(remCoins)
 	for _, coin := range newLiquidity {
@@ -341,19 +343,23 @@ func (p *Pool) CalcJoinPoolShares(_ctx sdk.Context, tokensIn sdk.Coins, swapFee 
 		poolAsset.Token.Amount = poolAssetsByDenom[coin.Denom].Token.Amount.Add(coin.Amount)
 		poolAssetsByDenom[coin.Denom] = poolAsset
 	}
+
 	totalShares = totalShares.Add(numShares)
 
-	// if there are coins that couldn't be perfectly joined, do single asset joins for each of them.
+	// If there are coins that couldn't be perfectly joined, do single asset joins
+	// for each of them.
 	if !remCoins.Empty() {
 		for _, coin := range remCoins {
 			newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], totalShares)
 			if err != nil {
 				return sdk.ZeroInt(), sdk.NewCoins(), err
 			}
+
 			newLiquidity = newLiquidity.Add(coin)
 			numShares = numShares.Add(newShares)
 		}
 	}
+
 	return numShares, newLiquidity, nil
 }
 
