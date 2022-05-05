@@ -21,6 +21,15 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
+type ValidatorConfig struct {
+	NumVal             int
+	Pruning            []string
+	PruningKeepRecent  []string
+	PruningInterval    []string
+	SnapshotInterval   []uint64
+	SnapshotKeepRecent []uint32
+}
+
 const (
 	// common
 	OsmoDenom     = "uosmo"
@@ -234,8 +243,8 @@ func initGenesis(c *internalChain) error {
 	return nil
 }
 
-func initNodes(c *internalChain) error {
-	if err := c.createAndInitValidators(2); err != nil {
+func initNodes(c *internalChain, numVal int) error {
+	if err := c.createAndInitValidators(numVal); err != nil {
 		return err
 	}
 
@@ -266,7 +275,7 @@ func initNodes(c *internalChain) error {
 	return nil
 }
 
-func initValidatorConfigs(c *internalChain) error {
+func initValidatorConfigs(c *internalChain, pruning []string, pruningKeepRecent []string, pruningInterval []string, snapshotInterval []uint64, snapshotKeepRecent []uint32) error {
 	for i, val := range c.validators {
 		tmCfgPath := filepath.Join(val.configDir(), "config", "config.toml")
 
@@ -308,8 +317,13 @@ func initValidatorConfigs(c *internalChain) error {
 		appCfgPath := filepath.Join(val.configDir(), "config", "app.toml")
 
 		appConfig := srvconfig.DefaultConfig()
+		appConfig.BaseConfig.Pruning = pruning[i]
+		appConfig.BaseConfig.PruningKeepRecent = pruningKeepRecent[i]
+		appConfig.BaseConfig.PruningInterval = pruningInterval[i]
 		appConfig.API.Enable = true
 		appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
+		appConfig.StateSync.SnapshotInterval = snapshotInterval[i]
+		appConfig.StateSync.SnapshotKeepRecent = snapshotKeepRecent[i]
 
 		srvconfig.WriteConfigFile(appCfgPath, appConfig)
 	}
