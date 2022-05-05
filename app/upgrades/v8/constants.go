@@ -4,6 +4,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
+
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v7 upgrade.
@@ -17,6 +19,7 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
+		Added:   []string{tokenfactorytypes.ModuleName},
 		Deleted: []string{ClaimsModuleName},
 	},
 }

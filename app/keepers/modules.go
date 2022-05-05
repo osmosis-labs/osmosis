@@ -37,6 +37,7 @@ import (
 	poolincentivesclient "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/client"
 	superfluid "github.com/osmosis-labs/osmosis/v7/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v7/x/superfluid/client"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 )
 
@@ -79,6 +80,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	poolincentives.AppModuleBasic{},
 	epochs.AppModuleBasic{},
 	superfluid.AppModuleBasic{},
+	tokenfactory.AppModuleBasic{},
 	bech32ibc.AppModuleBasic{},
 	wasm.AppModuleBasic{},
 }

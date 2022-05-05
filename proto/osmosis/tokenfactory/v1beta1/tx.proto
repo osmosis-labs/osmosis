@@ -33,31 +33,25 @@ message MsgCreateDenomResponse {
 }
 
 // MsgMint is the sdk.Msg type for allowing an admin account to mint
-// more of a token.  For now, we require sender == mintToAddress
-// but this restriction will be removed in the future.
+// more of a token.  For now, we only support minting to the sender account
 message MsgMint {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   cosmos.base.v1beta1.Coin amount = 2 [
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
   ];
-  string mintToAddress = 3
-      [ (gogoproto.moretags) = "yaml:\"mint_to_address\"" ];
 }
 
 message MsgMintResponse {}
 
 // MsgBurn is the sdk.Msg type for allowing an admin account to burn
-// a token.  For now, we require sender == burnFromAddress
-// but this restriction will be removed in the future.
+// a token.  For now, we only support burning from the sender account.
 message MsgBurn {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   cosmos.base.v1beta1.Coin amount = 2 [
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
   ];
-  string burnFromAddress = 3
-      [ (gogoproto.moretags) = "yaml:\"burn_from_address\"" ];
 }
 
 message MsgBurnResponse {}
