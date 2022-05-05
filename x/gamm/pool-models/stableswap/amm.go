@@ -147,7 +147,7 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	return a
 }
 
-// solidly CFMM is xyz(x^2 + y^2 + w) = k
+// Our multi-asset CFMM is xyz(x^2 + y^2 + w) = k
 // So we want to solve for a given addition of `b` units of y into the pool,
 // how many units `a` of x do we get out.
 // So we solve the following expression for `a`
