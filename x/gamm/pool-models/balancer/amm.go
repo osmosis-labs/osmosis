@@ -293,7 +293,7 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	p.updateLiquidity(numShares, newLiquidity)
+	p.IncreaseLiquidity(numShares, newLiquidity)
 	return numShares, nil
 }
 

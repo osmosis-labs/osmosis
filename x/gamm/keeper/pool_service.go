@@ -309,12 +309,8 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%d resulted tokens is larger than the max amount of %d", tokenInAmount.Int64(), tokenInMaxAmount.Int64())
 	}
 
-	tokenIn := sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}
-
-	sharesCreated, err := extendedPool.JoinPool(ctx, tokenIn, pool.GetSwapFee(ctx))
-	if sharesCreated != shareOutAmount {
-		panic(fmt.Sprintf("%d shares created is not equal to the requested amount of %d", sharesCreated, shareOutAmount))
-	}
+	tokenIn := sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInAmount))
+	extendedPool.IncreaseLiquidity(shareOutAmount, tokenIn)
 
 	err = k.applyJoinPoolStateChange(ctx, pool, sender, shareOutAmount, tokenIn)
 	if err != nil {

@@ -111,6 +111,9 @@ type PoolAmountOutExtension interface {
 		tokenOut sdk.Coin,
 		shareInMaxAmount sdk.Int,
 	) (shareInAmount sdk.Int, err error)
+
+	// IncreaseLiquidity increases the pool's liquidity by the specified sharesOut and coinsIn.
+	IncreaseLiquidity(sharesOut sdk.Int, coinsIn sdk.Coins)
 }
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {
