@@ -87,14 +87,6 @@ type IntegrationTestSuite struct {
 	valResources   map[string][]*dockertest.Resource
 }
 
-type ValidatorConfig struct {
-	NumVal             int
-	Pruning            []string
-	PruningKeepRecent  []string
-	PruningInterval    []string
-	SnapshotInterval   []uint64
-	SnapshotKeepRecent []uint32
-}
 
 type status struct {
 	LatestHeight string `json:"latest_block_height"`
