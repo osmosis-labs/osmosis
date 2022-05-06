@@ -20,24 +20,18 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 	kErrTolerance := sdk.OneDec()
 
 	tests := []struct {
-		xReserve    sdk.Dec
-		yReserve    sdk.Dec
-		uReserve    sdk.Dec
-		wSumSquares sdk.Dec
-		yIn         sdk.Dec
+		xReserve sdk.Dec
+		yReserve sdk.Dec
+		yIn      sdk.Dec
 	}{
 		{
 			sdk.NewDec(100),
 			sdk.NewDec(100),
 			sdk.NewDec(1),
-			sdk.NewDec(0),
-			sdk.NewDec(1),
 		},
 		{
 			sdk.NewDec(100),
 			sdk.NewDec(100),
-			sdk.NewDec(1),
-			sdk.NewDec(0),
 			sdk.NewDec(1000),
 		},
 		// {
@@ -56,10 +50,10 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 		decApproxEq(t, k0, k1, kErrTolerance)
 
 		// using multi-asset cfmm
-		k2 := cfmmConstantMulti(test.xReserve, test.yReserve, test.uReserve, test.wSumSquares)
-		xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, test.wSumSquares, test.yIn)
+		k2 := cfmmConstantMulti(test.xReserve, test.yReserve, sdk.OneDec(), sdk.ZeroDec())
+		xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, sdk.ZeroDec(), test.yIn)
 		fmt.Println(xOut2)
-		k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), test.uReserve, test.wSumSquares)
+		k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), sdk.OneDec(), sdk.ZeroDec())
 		decApproxEq(t, k2, k3, kErrTolerance)
 	}
 }
