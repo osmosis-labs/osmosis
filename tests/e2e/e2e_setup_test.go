@@ -324,12 +324,8 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
 	s.Require().NoError(err)
 
-	b, _ := json.Marshal(validatorConfigs)
-	file := fmt.Sprintf("%v/%v-configEncode", tmpDir, chainId)
-	if err = os.WriteFile(file, b, 0o777); err != nil {
-		panic(err)
-	}
-	s.T().Logf("serialized config file for chain-id %v: %v", chainId, file)
+	b, err := json.Marshal(validatorConfigs)
+	s.Require().NoError(err)
 
 	s.initResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
@@ -340,6 +336,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
 				fmt.Sprintf("--chain-id=%s", chainId),
+				fmt.Sprintf("--config=%s", b),
 			},
 			User: "root:root",
 			Mounts: []string{

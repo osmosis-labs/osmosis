@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 )
@@ -15,27 +14,18 @@ func main() {
 		valConfig []*chain.ValidatorConfig
 		dataDir   string
 		chainId   string
+		config    string
 	)
 
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
+	flag.StringVar(&config, "config", "", "serialized config")
 
 	flag.Parse()
-	file := fmt.Sprintf("%v/%v-configEncode", dataDir, chainId)
-	for i := 0; i < 10; i++ {
-		encJson, _ := os.ReadFile(file)
-		err := json.Unmarshal(encJson, &valConfig)
-		if err == nil {
-			break
-		}
 
-		if i == 9 {
-			panic(err)
-		}
-
-		if i > 0 {
-			time.Sleep(1 * time.Second)
-		}
+	err := json.Unmarshal([]byte(config), &valConfig)
+	if err != nil {
+		panic(err)
 	}
 
 	if len(dataDir) == 0 {
