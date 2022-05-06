@@ -10,12 +10,15 @@ import (
 func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 	suite.SetupTest()
 
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-
 	msgServer := keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)
 
+	denomCreationFee := suite.App.TokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee
+
+	// Get balance of acc 0 before creating a denom
+	preCreateBalance := suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], denomCreationFee[0].Denom)
+
 	// Creating a denom should work
-	res, err := msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(addr1.String(), "bitcoin"))
+	res, err := msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
 	suite.Require().NoError(err)
 	suite.Require().NotEmpty(res.GetNewTokenDenom())
 
@@ -24,27 +27,30 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 		Denom: res.GetNewTokenDenom(),
 	})
 	suite.Require().NoError(err)
-	suite.Require().Equal(addr1.String(), queryRes.AuthorityMetadata.Admin)
+	suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
+
+	// Make sure that creation fee was deducted
+	postCreateBalance := suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.App.TokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee[0].Denom)
+	suite.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee[0]))
 
 	// Make sure that a second version of the same denom can't be recreated
-	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(addr1.String(), "bitcoin"))
+	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
 	suite.Require().Error(err)
 
 	// Creating a second denom should work
-	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(addr1.String(), "litecoin"))
+	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "litecoin"))
 	suite.Require().NoError(err)
 	suite.Require().NotEmpty(res.GetNewTokenDenom())
 
-	// Try querying all the denoms created by addr1
+	// Try querying all the denoms created by suite.TestAccs[0]
 	queryRes2, err := suite.queryClient.DenomsFromCreator(suite.Ctx.Context(), &types.QueryDenomsFromCreatorRequest{
-		Creator: addr1.String(),
+		Creator: suite.TestAccs[0].String(),
 	})
 	suite.Require().NoError(err)
 	suite.Require().Len(queryRes2.Denoms, 2)
 
 	// Make sure that a second account can create a denom with the same nonce
-	addr2 := sdk.AccAddress([]byte("addr2---------------"))
-	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(addr2.String(), "bitcoin"))
+	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[1].String(), "bitcoin"))
 	suite.Require().NoError(err)
 	suite.Require().NotEmpty(res.GetNewTokenDenom())
 
