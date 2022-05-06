@@ -1,0 +1,15 @@
+on:
+  pull_request_target:
+    types: [opened]
+jobs:
+  createCard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create or Update Project Card
+        uses: peter-evans/create-or-update-project-card@v2
+        with:
+          token: ${{ secrets.github_token }}
+          project-number: 1
+          project-name: Osmosis Chain Development
+          column-name: PR Reviews
+          issue-number: ${{ github.event.number }}
