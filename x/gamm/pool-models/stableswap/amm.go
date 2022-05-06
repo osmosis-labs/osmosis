@@ -1,6 +1,8 @@
 package stableswap
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 var (
 	cubeRootTwo, _   = sdk.NewDec(2).ApproxRoot(3)
@@ -199,37 +201,54 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	w := wSumSquares
 	b := yIn
 
+	xy := x.Mul(y)
+
 	bpy := b.Add(y)
 	bpy2 := bpy.Mul(bpy)
+	// bpy3 := bpy2.Mul(bpy)
+	// bpy4 := bpy2.Mul(bpy2)
 
 	// S1 = 3 (b + y)^2 (b^2 + 2 b y + y^2 + w)
-	s1_inner := b.MulMut(b).AddMut(b.MulMut(y).MulInt64Mut(2)).AddMut(w)
-	s1 := bpy2.MulInt64Mut(3).MulMut(s1_inner)
+	s1_inner := b.Mul(b).Add(b.Mul(y).MulInt64(2)).Add(w) // (b^2 + 2 b y + y^2 + w)
+	s1 := bpy2.MulInt64(3).Mul(s1_inner)
 	// S2 = -27 x y (b + y)^2 (x^2 + y^2 + w)
-	s2_inner := x.MulMut(x).AddMut(y.MulMut(y)).AddMut(w)
-	s2 := bpy2.MulInt64Mut(-27).MulMut(x).MulMut(y).MulMut(s2_inner)
+	s2_inner := x.Mul(x).Add(y.Mul(y)).Add(w) // (x^2 + y^2 + w)
+	s2 := bpy2.MulInt64(-27).Mul(x).Mul(y).Mul(s2_inner)
 
-	// foo = (S2 + sqrt(S2^2 + 4*(S1^3)))^(1/3)
-	sqrt_inner := s2.MulMut(s2).AddMut(s1.MulMut(s1.MulMut(s1)).MulInt64Mut(4)) // S2^2 + 4*(S1^3)
+	// Calculating foo directly causes an integer overflow due to having a y^12 term, so we expand and factor to reduce its max bitlen:
+	// Original foo = (S2 + sqrt(S2^2 + 4*(S1^3)))^(1/3)
+	// Expand:
+	// foo = (S2 + sqrt((-27 x y (b + y)^2 (x^2 + y^2 + w))^2 + 
+	// 					4*(3 (b + y)^2 (b^2 + 2 b y + y^2 + w))^3)
+	// 		 )^(1/3)
+	// Factor (b+y)^2 out from within the square root:
+	// foo = (S2 + (b + y)^2 
+	// 			* sqrt((-27 x y (x^2 + y^2 + w))^2 + 
+	// 					4 * ((b + y)^2) * (3 (b^2 + 2 b y + y^2 + w))^3)
+	// 		 )^(1/3)
+	sqrt_inner_term1 := x.Mul(y).MulInt64(-27).Mul(s2_inner) // (-27 x y (x^2 + y^2 + w))
+	sqrt_inner_term1_2 := sqrt_inner_term1.Mul(sqrt_inner_term1) // sqrt_inner_term1^2
+	s1_inner_3 := (s1_inner.MulInt64(3)).Mul(s1_inner.MulInt64(3)).Mul(s1_inner.MulInt64(3)) // (3 (b^2 + 2 b y + y^2 + w))^3
+	sqrt_inner_term2 := s1_inner_3.MulInt64(4).Mul(bpy2) // 4 * ((b + y)^2) * s1_inner_3
+	sqrt_inner := sqrt_inner_term1_2.Add(sqrt_inner_term2) // (-27xy(x^2 + y^2 + w))^2 + 4 * (b + y)^2 * (3(b^2 + 2 b y + y^2 + w))^3
 	sqrt, err := sqrt_inner.ApproxSqrt()
 	if err != nil {
 		panic(err)
 	}
-	foo3 := s2.AddMut(sqrt)
-	foo, err := foo3.ApproxRoot(3)
-	if err != nil {
-		panic(err)
-	}
+	foo3 := s2.Add(bpy2.Mul(sqrt))
+	foo, _ := foo3.ApproxRoot(3)
+
 	// bar = (b + y)
 	bar := bpy
 
 	// term1 = (foo / (3 * 2^(1/3) * bar))
-	term1Denominator := cubeRootTwo.MulInt64Mut(3).MulMut(bar) // 3 * 2^(1/3) * bar
+	term1Denominator := cubeRootTwo.MulInt64(3).Mul(bar) // 3 * 2^(1/3) * bar
 	term1 := foo.Quo(term1Denominator)
 	// term2 = (2^(1/3) * S1 / (3 * bar * foo))
-	term2 := (cubeRootTwo.MulMut(s1)).Quo(foo.MulMut(bar).MulInt64Mut(3))
+	term2 := (cubeRootTwo.Mul(s1)).Quo(foo.Mul(bar).MulInt64(3))
 	// term3 = ((bx + xy) / bar)
-	term3 := (b.MulMut(x).AddMut(x.MulMut(y))).Quo(bar)
+	term3Numerator := b.Mul(x).Add(xy)
+	term3 := term3Numerator.Quo(bpy)
 
 	a := term1.Sub(term2).Add(term3)
 
