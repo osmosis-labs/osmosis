@@ -159,6 +159,8 @@
     - [MsgBeginUnlockingAll](#osmosis.lockup.MsgBeginUnlockingAll)
     - [MsgBeginUnlockingAllResponse](#osmosis.lockup.MsgBeginUnlockingAllResponse)
     - [MsgBeginUnlockingResponse](#osmosis.lockup.MsgBeginUnlockingResponse)
+    - [MsgExtendLockup](#osmosis.lockup.MsgExtendLockup)
+    - [MsgExtendLockupResponse](#osmosis.lockup.MsgExtendLockupResponse)
     - [MsgLockTokens](#osmosis.lockup.MsgLockTokens)
     - [MsgLockTokensResponse](#osmosis.lockup.MsgLockTokensResponse)
   
@@ -280,6 +282,9 @@
 - [osmosis/tokenfactory/v1beta1/authorityMetadata.proto](#osmosis/tokenfactory/v1beta1/authorityMetadata.proto)
     - [DenomAuthorityMetadata](#osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata)
   
+- [osmosis/tokenfactory/v1beta1/params.proto](#osmosis/tokenfactory/v1beta1/params.proto)
+    - [Params](#osmosis.tokenfactory.v1beta1.Params)
+  
 - [osmosis/tokenfactory/v1beta1/genesis.proto](#osmosis/tokenfactory/v1beta1/genesis.proto)
     - [GenesisDenom](#osmosis.tokenfactory.v1beta1.GenesisDenom)
     - [GenesisState](#osmosis.tokenfactory.v1beta1.GenesisState)
@@ -289,6 +294,8 @@
     - [QueryDenomAuthorityMetadataResponse](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse)
     - [QueryDenomsFromCreatorRequest](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest)
     - [QueryDenomsFromCreatorResponse](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse)
+    - [QueryParamsRequest](#osmosis.tokenfactory.v1beta1.QueryParamsRequest)
+    - [QueryParamsResponse](#osmosis.tokenfactory.v1beta1.QueryParamsResponse)
   
     - [Query](#osmosis.tokenfactory.v1beta1.Query)
   
@@ -2423,6 +2430,39 @@ Query defines the gRPC querier service.
 
 
 
+<a name="osmosis.lockup.MsgExtendLockup"></a>
+
+### MsgExtendLockup
+MsgExtendLockup extends the existing lockup's duration.
+The new duration is longer than the original.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `ID` | [uint64](#uint64) |  |  |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  | duration to be set. fails if lower than the current duration, or is unlocking |
+
+
+
+
+
+
+<a name="osmosis.lockup.MsgExtendLockupResponse"></a>
+
+### MsgExtendLockupResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `success` | [bool](#bool) |  |  |
+
+
+
+
+
+
 <a name="osmosis.lockup.MsgLockTokens"></a>
 
 ### MsgLockTokens
@@ -2471,6 +2511,7 @@ Msg defines the Msg service.
 | `LockTokens` | [MsgLockTokens](#osmosis.lockup.MsgLockTokens) | [MsgLockTokensResponse](#osmosis.lockup.MsgLockTokensResponse) | LockTokens lock tokens | |
 | `BeginUnlockingAll` | [MsgBeginUnlockingAll](#osmosis.lockup.MsgBeginUnlockingAll) | [MsgBeginUnlockingAllResponse](#osmosis.lockup.MsgBeginUnlockingAllResponse) | BeginUnlockingAll begin unlocking all tokens | |
 | `BeginUnlocking` | [MsgBeginUnlocking](#osmosis.lockup.MsgBeginUnlocking) | [MsgBeginUnlockingResponse](#osmosis.lockup.MsgBeginUnlockingResponse) | MsgBeginUnlocking begins unlocking tokens by lock ID | |
+| `ExtendLockup` | [MsgExtendLockup](#osmosis.lockup.MsgExtendLockup) | [MsgExtendLockupResponse](#osmosis.lockup.MsgExtendLockupResponse) | MsgEditLockup edits the existing lockups by lock ID | |
 
  <!-- end services -->
 
@@ -3952,6 +3993,37 @@ permission, but is planned to be extended to the future.
 
 
 
+<a name="osmosis/tokenfactory/v1beta1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/params.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.Params"></a>
+
+### Params
+Params holds parameters for the tokenfactory module
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom_creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
 <a name="osmosis/tokenfactory/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -3983,6 +4055,7 @@ GenesisState defines the tokenfactory module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `params` | [Params](#osmosis.tokenfactory.v1beta1.Params) |  | params defines the paramaters of the module. |
 | `factory_denoms` | [GenesisDenom](#osmosis.tokenfactory.v1beta1.GenesisDenom) | repeated |  |
 
 
@@ -4065,6 +4138,31 @@ GenesisState defines the tokenfactory module's genesis state.
 
 
 
+
+<a name="osmosis.tokenfactory.v1beta1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#osmosis.tokenfactory.v1beta1.Params) |  | params defines the parameters of the module. |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -4079,6 +4177,7 @@ Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#osmosis.tokenfactory.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#osmosis.tokenfactory.v1beta1.QueryParamsResponse) | Params returns the total set of minting parameters. | GET|/osmosis/tokenfactory/v1beta1/params|
 | `DenomAuthorityMetadata` | [QueryDenomAuthorityMetadataRequest](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest) | [QueryDenomAuthorityMetadataResponse](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse) |  | GET|/osmosis/tokenfactory/v1beta1/denoms/{denom}/authority_metadata|
 | `DenomsFromCreator` | [QueryDenomsFromCreatorRequest](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest) | [QueryDenomsFromCreatorResponse](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse) |  | GET|/osmosis/tokenfactory/v1beta1/denoms_from_creator/{creator}|
 
@@ -4097,15 +4196,13 @@ Query defines the gRPC querier service.
 
 ### MsgBurn
 MsgBurn is the sdk.Msg type for allowing an admin account to burn
-a token.  For now, we require sender == burnFromAddress
-but this restriction will be removed in the future.
+a token.  For now, we only support burning from the sender account.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `burnFromAddress` | [string](#string) |  |  |
 
 
 
@@ -4188,15 +4285,13 @@ It returns the full string of the newly created denom
 
 ### MsgMint
 MsgMint is the sdk.Msg type for allowing an admin account to mint
-more of a token.  For now, we require sender == mintToAddress
-but this restriction will be removed in the future.
+more of a token.  For now, we only support minting to the sender account
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `mintToAddress` | [string](#string) |  |  |
 
 
 

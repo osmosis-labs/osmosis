@@ -75,7 +75,7 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(types.QuerierRoute)
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the pool-incentives module.
@@ -137,9 +137,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock performs a no-op.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	BeginBlocker(ctx, req, am.keeper)
-}
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the pool-incentives module. It returns no validator
 // updates.
