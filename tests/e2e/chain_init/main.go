@@ -12,7 +12,7 @@ import (
 
 func main() {
 	var (
-		valConfig chain.ValidatorConfig
+		valConfig []*chain.ValidatorConfig
 		dataDir   string
 		chainId   string
 	)
@@ -46,7 +46,7 @@ func main() {
 		panic(err)
 	}
 
-	createdChain, err := chain.Init(chainId, dataDir, valConfig.NumVal, valConfig.Pruning, valConfig.PruningKeepRecent, valConfig.PruningInterval, valConfig.SnapshotInterval, valConfig.SnapshotKeepRecent)
+	createdChain, err := chain.Init(chainId, dataDir, valConfig)
 	if err != nil {
 		panic(err)
 	}
