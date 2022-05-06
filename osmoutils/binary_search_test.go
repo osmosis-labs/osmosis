@@ -39,3 +39,26 @@ func TestBinarySearch(t *testing.T) {
 		}
 	}
 }
+
+func TestErrTolerance_Compare(t *testing.T) {
+	ZeroErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.Dec{}}
+	tests := []struct {
+		name      string
+		tol       ErrTolerance
+		input     sdk.Int
+		reference sdk.Int
+
+		expectedCompareResult int8
+	}{
+		{"0 tolerance: <", ZeroErrTolerance, sdk.NewInt(1000), sdk.NewInt(1001), -1},
+		{"0 tolerance: =", ZeroErrTolerance, sdk.NewInt(1001), sdk.NewInt(1001), 0},
+		{"0 tolerance: >", ZeroErrTolerance, sdk.NewInt(1002), sdk.NewInt(1001), 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.tol.Compare(tt.input, tt.reference); got != tt.expectedCompareResult {
+				t.Errorf("ErrTolerance.Compare() = %v, want %v", got, tt.expectedCompareResult)
+			}
+		})
+	}
+}
