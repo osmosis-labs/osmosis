@@ -3,14 +3,16 @@ package osmosis.tokenfactory.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/tokenfactory/v1beta1/authorityMetadata.proto";
+import "osmosis/tokenfactory/v1beta1/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types";
 
 // GenesisState defines the tokenfactory module's genesis state.
 message GenesisState {
-  option (gogoproto.equal) = true;
+  // params defines the paramaters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
 
-  repeated GenesisDenom factory_denoms = 1 [
+  repeated GenesisDenom factory_denoms = 2 [
     (gogoproto.moretags) = "yaml:\"factory_denoms\"",
     (gogoproto.nullable) = false
   ];

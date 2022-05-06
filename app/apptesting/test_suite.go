@@ -86,6 +86,10 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	return valAddr
 }
 
+func (s *KeeperTestHelper) SetupTokenFactory() {
+	s.App.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
+}
+
 func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	var valAddr []byte
 
