@@ -13,15 +13,19 @@ option (gogoproto.goproto_getters_all) = false;
 
 // Query defines the gRPC querier service.
 service Query {
-  // Returns list of `Authorization`, granted to the grantee by the granter.
+  // Returns list of LBPs ordered by the creation time
   rpc LBPs(QueryLBPs) returns (QueryLBPsResponse) {
     option (google.api.http).get = "/cosmos/osmolbp/v1/lbps";
   }
 
-  //   rpc LBP(QueryBasketRequest) returns (QueryBasketResponse) {
-  //   option (google.api.http).get =
-  //       "/regen/ecocredit/basket/v1/baskets/{basket_denom}";
-  // }
+  // Returns the specific LBP object
+  rpc LBP(QueryLBP) returns (QueryLBPResponse) {
+    option (google.api.http).get = "/cosmos/osmolbp/v1/lbps/{id}";
+  }
+
+  rpc UserPositin(QueryUserPosition) returns (QueryUserPositionResponse) {
+    option (google.api.http).get = "/cosmos/osmolbp/v1/lbps/{id}";
+  }
 }
 
 message QueryLBPs {
@@ -32,4 +36,27 @@ message QueryLBPs {
 message QueryLBPsResponse {
   repeated osmosis.osmolbp.v1.LBP lbps = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// Request type for Query/LBP
+message QueryLBP {
+  // LBP ID
+  uint64 id = 1;
+}
+
+message QueryLBPResponse {
+  osmosis.osmolbp.v1.LBP lbp = 1 [ (gogoproto.nullable) = false ];
+}
+
+// Request type for Query/LBP
+message QueryUserPosition {
+  // ID of the LBP
+  uint64 lbp_id = 1;
+  // user account address
+  string user = 2;
+}
+
+message QueryUserPositionResponse {
+  osmosis.osmolbp.v1.UserPosition user_position = 1
+      [ (gogoproto.nullable) = false ];
 }
