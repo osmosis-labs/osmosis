@@ -27,13 +27,17 @@ import (
 var (
 	// common
 	maxRetries = 10 // max retries for json unmarshalling
-	// chainA
-	NumValA             int = 3
-	PruningA                = []string{"nothing", "default", "custom"} // default, nothing, everything, or custom
-	PruningKeepRecentA      = []string{"0", "0", "10000"}              // keep all of the last N states (only used with custom pruning)
-	PruningIntervalA        = []string{"0", "0", "13"}                 // delete old states from every Nth block (only used with custom pruning)
-	SnapshotIntervalA       = []uint64{1500, 1500, 1500}               // statesync snapshot every Nth block (0 to disable)
-	SnapshotKeepRecentA     = []uint32{2, 2, 2}                        // number of recent snapshots to keep and serve (0 to keep all)
+        validatorConfigsChainA = []*chain.ValidatorConfig{
+             {
+                 PruningStrategy: "default",
+                 ....
+             },
+             {
+                 PruningStrategy: "nothing",
+                 ....
+             },
+             ...
+        }
 	// chainB
 	NumValB             int = 3
 	PruningB                = []string{"nothing", "default", "custom"} // default, nothing, everything, or custom
@@ -293,33 +297,15 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.connectIBCChains()
 }
 
-func (s *IntegrationTestSuite) configureChain(chainId string) {
-	var config ValidatorConfig
+func (s *IntegrationTestSuite) configureChain(chainId, validatorConfigs []*chain.ValidatorConfig) {
 
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 
 	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
 	s.Require().NoError(err)
-	if chainId == chain.ChainAID {
-		config.NumVal = NumValA
-		config.Pruning = PruningA
-		config.PruningKeepRecent = PruningKeepRecentA
-		config.PruningInterval = PruningIntervalA
-		config.SnapshotInterval = SnapshotIntervalA
-		config.SnapshotKeepRecent = SnapshotKeepRecentA
-	} else if chainId == chain.ChainBID {
-		config.NumVal = NumValB
-		config.Pruning = PruningB
-		config.PruningKeepRecent = PruningKeepRecentB
-		config.PruningInterval = PruningIntervalB
-		config.SnapshotInterval = SnapshotIntervalB
-		config.SnapshotKeepRecent = SnapshotKeepRecentB
-	} else {
-		s.T().Log("unexpected chainId")
-	}
 
-	b, _ := json.Marshal(config)
+	b, _ := json.Marshal(validatorConfig)
 	file := fmt.Sprintf("%v/%v-configEncode", tmpDir, chainId)
 	if err = os.WriteFile(file, b, 0o777); err != nil {
 		panic(err)

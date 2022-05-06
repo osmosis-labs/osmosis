@@ -22,12 +22,11 @@ import (
 )
 
 type ValidatorConfig struct {
-	NumVal             int
-	Pruning            []string
-	PruningKeepRecent  []string
-	PruningInterval    []string
-	SnapshotInterval   []uint64
-	SnapshotKeepRecent []uint32
+	Pruning            string
+	PruningKeepRecent  string
+	PruningInterval    string
+	SnapshotInterval   uint64
+	SnapshotKeepRecent uint32
 }
 
 const (
@@ -275,7 +274,7 @@ func initNodes(c *internalChain, numVal int) error {
 	return nil
 }
 
-func initValidatorConfigs(c *internalChain, pruning []string, pruningKeepRecent []string, pruningInterval []string, snapshotInterval []uint64, snapshotKeepRecent []uint32) error {
+func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig) error {
 	for i, val := range c.validators {
 		tmCfgPath := filepath.Join(val.configDir(), "config", "config.toml")
 
@@ -317,7 +316,7 @@ func initValidatorConfigs(c *internalChain, pruning []string, pruningKeepRecent 
 		appCfgPath := filepath.Join(val.configDir(), "config", "app.toml")
 
 		appConfig := srvconfig.DefaultConfig()
-		appConfig.BaseConfig.Pruning = pruning[i]
+		appConfig.BaseConfig.Pruning = validatorConfigs[i].Pruning
 		appConfig.BaseConfig.PruningKeepRecent = pruningKeepRecent[i]
 		appConfig.BaseConfig.PruningInterval = pruningInterval[i]
 		appConfig.API.Enable = true
