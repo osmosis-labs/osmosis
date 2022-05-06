@@ -28,7 +28,7 @@ func NewParams(denomCreationFee sdk.Coins) Params {
 // default gamm module parameters.
 func DefaultParams() Params {
 	return Params{
-		DenomCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 10_000_000)}, // 10 OSMO
+		DenomCreationFee: sdk.NewCoins(sdk.NewInt64Coin(appparams.BaseCoinUnit, 10_000_000)), // 10 OSMO
 	}
 }
 
