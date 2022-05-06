@@ -87,7 +87,6 @@ type IntegrationTestSuite struct {
 	valResources   map[string][]*dockertest.Resource
 }
 
-
 type status struct {
 	LatestHeight string `json:"latest_block_height"`
 }
