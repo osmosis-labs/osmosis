@@ -17,7 +17,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/app/wasm"
-	"github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 )
 
@@ -175,7 +175,7 @@ func TestQuerySpotPrice(t *testing.T) {
 func TestQueryEstimateSwap(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
-	epsilon := 1e-3
+	epsilon := 2e-3
 
 	fundAccount(t, ctx, osmosis, actor, defaultFunds)
 

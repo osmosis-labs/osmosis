@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v7/store"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
@@ -534,5 +535,56 @@ func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) erro
 	}
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	return nil
+}
+
+func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration time.Duration) error {
+	if lock.IsUnlocking() {
+		return fmt.Errorf("cannot edit unlocking lockup for lock %d", lock.ID)
+	}
+
+	// check synthetic lockup exists
+	if k.HasAnySyntheticLockups(ctx, lock.ID) {
+		return fmt.Errorf("cannot edit lockup with synthetic lock %d", lock.ID)
+	}
+
+	oldLock := lock
+
+	if newDuration != 0 {
+		if newDuration <= lock.Duration {
+			return fmt.Errorf("new duration should be greater than the original")
+		}
+
+		// update accumulation store
+		for _, coin := range lock.Coins {
+			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(newDuration), coin.Amount)
+		}
+
+		lock.Duration = newDuration
+	}
+
+	// update lockup
+	err := k.deleteLockRefs(ctx, unlockingPrefix(oldLock.IsUnlocking()), oldLock)
+	if err != nil {
+		return err
+	}
+
+	err = k.addLockRefs(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	err = k.setLock(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	k.hooks.OnLockupExtend(ctx,
+		lock.GetID(),
+		oldLock.GetDuration(),
+		lock.GetDuration(),
+	)
+
 	return nil
 }

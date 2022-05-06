@@ -13,6 +13,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -27,6 +28,7 @@ const (
 	IbcDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	MinGasPrice   = "0.000"
 	IbcSendAmount = 3300000000
+	VotingPeriod  = 30000000000 // 30 seconds
 	// chainA
 	ChainAID      = "osmo-test-a"
 	OsmoBalanceA  = 200000000000
@@ -120,12 +122,12 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
-func initGenesis(c *Chain) error {
+func initGenesis(c *internalChain) error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(c.Validators[0].ConfigDir())
-	config.Moniker = c.Validators[0].GetMoniker()
+	config.SetRoot(c.validators[0].configDir())
+	config.Moniker = c.validators[0].getMoniker()
 
 	genFilePath := config.GenesisFile()
 	appGenState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFilePath)
@@ -158,16 +160,31 @@ func initGenesis(c *Chain) error {
 	}
 	appGenState[banktypes.ModuleName] = bz
 
+	var govGenState govtypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState); err != nil {
+		return err
+	}
+
+	govGenState.VotingParams = govtypes.VotingParams{
+		VotingPeriod: VotingPeriod,
+	}
+
+	gz, err := util.Cdc.MarshalJSON(&govGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[govtypes.ModuleName] = gz
+
 	var genUtilGenState genutiltypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[genutiltypes.ModuleName], &genUtilGenState); err != nil {
 		return err
 	}
 
 	// generate genesis txs
-	genTxs := make([]json.RawMessage, len(c.Validators))
-	for i, val := range c.Validators {
+	genTxs := make([]json.RawMessage, len(c.validators))
+	for i, val := range c.validators {
 		stakeAmountCoin := StakeAmountCoinA
-		if c.Id != ChainAID {
+		if c.chainMeta.Id != ChainAID {
 			stakeAmountCoin = StakeAmountCoinB
 		}
 		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
@@ -209,38 +226,38 @@ func initGenesis(c *Chain) error {
 	}
 
 	// write the updated genesis file to each validator
-	for _, val := range c.Validators {
-		if err := util.WriteFile(filepath.Join(val.ConfigDir(), "config", "genesis.json"), bz); err != nil {
+	for _, val := range c.validators {
+		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), bz); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func initNodes(c *Chain) error {
+func initNodes(c *internalChain) error {
 	if err := c.createAndInitValidators(2); err != nil {
 		return err
 	}
 
 	// initialize a genesis file for the first validator
-	val0ConfigDir := c.Validators[0].ConfigDir()
-	for _, val := range c.Validators {
-		if c.Id == ChainAID {
-			if err := addAccount(val0ConfigDir, "", InitBalanceStrA, val.GetKeyInfo().GetAddress()); err != nil {
+	val0ConfigDir := c.validators[0].configDir()
+	for _, val := range c.validators {
+		if c.chainMeta.Id == ChainAID {
+			if err := addAccount(val0ConfigDir, "", InitBalanceStrA, val.getKeyInfo().GetAddress()); err != nil {
 				return err
 			}
-		} else if c.Id == ChainBID {
-			if err := addAccount(val0ConfigDir, "", InitBalanceStrB, val.GetKeyInfo().GetAddress()); err != nil {
+		} else if c.chainMeta.Id == ChainBID {
+			if err := addAccount(val0ConfigDir, "", InitBalanceStrB, val.getKeyInfo().GetAddress()); err != nil {
 				return err
 			}
 		}
 	}
 
 	// copy the genesis file to the remaining validators
-	for _, val := range c.Validators[1:] {
+	for _, val := range c.validators[1:] {
 		_, err := util.CopyFile(
 			filepath.Join(val0ConfigDir, "config", "genesis.json"),
-			filepath.Join(val.ConfigDir(), "config", "genesis.json"),
+			filepath.Join(val.configDir(), "config", "genesis.json"),
 		)
 		if err != nil {
 			return err
@@ -249,9 +266,9 @@ func initNodes(c *Chain) error {
 	return nil
 }
 
-func initValidatorConfigs(c *Chain) error {
-	for i, val := range c.Validators {
-		tmCfgPath := filepath.Join(val.ConfigDir(), "config", "config.toml")
+func initValidatorConfigs(c *internalChain) error {
+	for i, val := range c.validators {
+		tmCfgPath := filepath.Join(val.configDir(), "config", "config.toml")
 
 		vpr := viper.New()
 		vpr.SetConfigFile(tmCfgPath)
@@ -266,20 +283,20 @@ func initValidatorConfigs(c *Chain) error {
 
 		valConfig.P2P.ListenAddress = "tcp://0.0.0.0:26656"
 		valConfig.P2P.AddrBookStrict = false
-		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.InstanceName(), 26656)
+		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.instanceName(), 26656)
 		valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
 		valConfig.StateSync.Enable = false
 		valConfig.LogLevel = "info"
 
 		var peers []string
 
-		for j := 0; j < len(c.Validators); j++ {
+		for j := 0; j < len(c.validators); j++ {
 			if i == j {
 				continue
 			}
 
-			peer := c.Validators[j]
-			peerID := fmt.Sprintf("%s@%s%d:26656", peer.getNodeKey().ID(), peer.GetMoniker(), j)
+			peer := c.validators[j]
+			peerID := fmt.Sprintf("%s@%s%d:26656", peer.getNodeKey().ID(), peer.getMoniker(), j)
 			peers = append(peers, peerID)
 		}
 
@@ -288,7 +305,7 @@ func initValidatorConfigs(c *Chain) error {
 		tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 
 		// set application configuration
-		appCfgPath := filepath.Join(val.ConfigDir(), "config", "app.toml")
+		appCfgPath := filepath.Join(val.configDir(), "config", "app.toml")
 
 		appConfig := srvconfig.DefaultConfig()
 		appConfig.API.Enable = true

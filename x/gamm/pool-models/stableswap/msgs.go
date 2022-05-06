@@ -43,7 +43,13 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 		return err
 	}
 
-	// TODO: Add validation for pool initial liquidity
+	// validation for pool initial liquidity
+	// TO DO: expand this check to accommodate multi-asset pools for stableswap
+	if len(msg.InitialPoolLiquidity) < 2 {
+		return types.ErrTooFewPoolAssets
+	} else if len(msg.InitialPoolLiquidity) > 2 {
+		return types.ErrTooManyPoolAssets
+	}
 
 	// validation for future owner
 	if err = types.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {

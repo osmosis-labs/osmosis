@@ -63,6 +63,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
@@ -103,6 +105,7 @@ type AppKeepers struct {
 	SuperfluidKeeper     *superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
+	TokenFactoryKeeper   *tokenfactorykeeper.Keeper
 	// transfer module
 	TransferModule transfer.AppModule
 
@@ -307,6 +310,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
 
+	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[tokenfactorytypes.StoreKey],
+		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper.WithMintCoinsRestriction(tokenfactorytypes.NewTokenFactoryDenomMintCoinsRestriction()),
+		appKeepers.DistrKeeper,
+	)
+	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis"
@@ -339,7 +352,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	// register the proposal types
-	// TODO: This appears to be missing tx fees proposal type
 	govRouter := govtypes.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*appKeepers.ParamsKeeper)).
@@ -423,6 +435,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
+	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -510,5 +523,6 @@ func KVStoreKeys() []string {
 		superfluidtypes.StoreKey,
 		bech32ibctypes.StoreKey,
 		wasm.StoreKey,
+		tokenfactorytypes.StoreKey,
 	}
 }
