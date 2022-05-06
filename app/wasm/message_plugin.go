@@ -42,24 +42,21 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		// leave everything else for the wrapped version
 		var contractMsg wasmbindings.OsmosisMsg
 		if err := json.Unmarshal(msg.Custom, &contractMsg); err != nil {
-			return nil, nil, sdkerrors.Wrap(err, "osmosis msg, HERE4!")
+			return nil, nil, sdkerrors.Wrap(err, "osmosis msg")
 		}
 		// if contractMsg.MintTokens != nil {
 		// 	return m.mintTokens(ctx, contractAddr, contractMsg.MintTokens)
 		// }
 		if contractMsg.Swap != nil {
-			a, b, err := m.swapTokens(ctx, contractAddr, contractMsg.Swap)
-			return a, b, sdkerrors.Wrap(err, fmt.Sprintf("%s", msg))
+			return m.swapTokens(ctx, contractAddr, contractMsg.Swap)
 		}
 		if contractMsg.LockTokens != nil {
-			a, b, err := m.lockTokens(ctx, contractAddr, contractMsg.LockTokens)
-			return a, b, sdkerrors.Wrap(err, "HERE2!")
+			return m.lockTokens(ctx, contractAddr, contractMsg.LockTokens)
 		} else {
 			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, fmt.Sprintf("%s %s", contractMsg, msg))
 		}
 	}
-	a, b, err := m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
-	return a, b, sdkerrors.Wrap(err, fmt.Sprintf("%s", msg))
+	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
 }
 
 // func (m *CustomMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAddress, mint *wasmbindings.MintTokens) ([]sdk.Event, [][]byte, error) {
