@@ -45,12 +45,13 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 		// using two-asset cfmm
 		k0 := cfmmConstant(test.xReserve, test.yReserve)
 		xOut := solveCfmm(test.xReserve, test.yReserve, test.yIn)
-		fmt.Println(xOut)
+		fmt.Println("xOut", xOut)
 		k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
 		decApproxEq(t, k0, k1, kErrTolerance)
 
 		// using multi-asset cfmm (should be equivalent with u = 1, w = 0)
 		k2 := cfmmConstantMulti(test.xReserve, test.yReserve, sdk.OneDec(), sdk.ZeroDec())
+		decApproxEq(t, k2, k0, kErrTolerance)
 		xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, sdk.ZeroDec(), test.yIn)
 		fmt.Println(xOut2)
 		k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), sdk.OneDec(), sdk.ZeroDec())

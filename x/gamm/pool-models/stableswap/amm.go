@@ -209,7 +209,7 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	// bpy4 := bpy2.Mul(bpy2)
 
 	// S1 = 3 (b + y)^2 (b^2 + 2 b y + y^2 + w)
-	s1_inner := b.Mul(b).Add(b.Mul(y).MulInt64(2)).Add(w) // (b^2 + 2 b y + y^2 + w)
+	s1_inner := bpy2.Add(w) // (b^2 + 2 b y + y^2 + w) =
 	s1 := bpy2.MulInt64(3).Mul(s1_inner)
 	// S2 = -27 x y (b + y)^2 (x^2 + y^2 + w)
 	s2_inner := x.Mul(x).Add(y.Mul(y)).Add(w) // (x^2 + y^2 + w)
