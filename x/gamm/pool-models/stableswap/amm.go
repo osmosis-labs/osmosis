@@ -158,7 +158,7 @@ func approxDecEqual(a, b, tol sdk.Dec) bool {
 
 var (
 	twodec    = sdk.MustNewDecFromStr("2.0")
-	threshold = sdk.MustNewDecFromStr("0.00001") // 0.001%
+	threshold = sdk.NewDecWithPrec(1, 10) // Correct within a factor of 1 * 10^{-10}
 )
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.

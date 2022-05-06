@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -121,80 +122,46 @@ func BinarySearchSingleAssetJoin(
 	existingLPShares := pool.GetTotalShares()
 	LPShareUpperBound := existingLPShares.Mul(tokenIn.Amount).ToDec().QuoInt(existingTokenLiquidity).Ceil().TruncateInt()
 	LPShareLowerBound := sdk.ZeroInt()
-	LPShareEstimate := LPShareUpperBound.Add(LPShareLowerBound).QuoRaw(2)
 
-	actualTokenOut, err := coinFromLPShareEstimate(ctx, pool, addToPoolLiquidity, setPoolLPShares, tokenIn, LPShareEstimate)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-	diff := actualTokenOut.Sub(tokenIn.Amount)
-	curIteration := 0
-	// binary search, terminating at first of curIteration = max bound, or we've found the answer correct to within
-	// 1 unit of native coin.
-	for ; curIteration < maxIterations; curIteration += 1 {
-		// accept token outs in the range [tokenIn - correctnessThreshold, tokenIn]
-		// TODO: Later optimize using a shift, and then abs operators.
-		if diff.IsPositive() {
-			// in the case where guess > tokenIn, we guessed too high
-			LPShareUpperBound = LPShareEstimate
-		} else if diff.Abs().GT(correctnessThreshold) {
-			// in the case where guess < tokenIn - correctnessThreshold, we guessed too low
-			LPShareLowerBound = LPShareEstimate
-		} else {
-			// success!
-			break
-		}
-		// next iteration
-		LPShareEstimate = LPShareUpperBound.Add(LPShareLowerBound).QuoRaw(2)
-		actualTokenOut, err = coinFromLPShareEstimate(ctx, pool, addToPoolLiquidity, setPoolLPShares, tokenIn, LPShareEstimate)
+	// Creates a pool with tokenIn liquidity added, where it created `sharesIn` number of shares.
+	// Returns how many tokens you'd get, if you then exited all of `sharesIn` for tokenIn.Denom
+	estimateCoinOutGivenShares := func(sharesIn sdk.Int) (tokenOut sdk.Int, err error) {
+		reserveLPShares := pool.GetTotalShares()
+		// new pool copy we can mutate
+		poolWithUpdatedLiquidity := addToPoolLiquidity(pool, tokenIn)
+		swapToDenom := tokenIn.Denom
+		// now poolWithUpdatedLiquidity is a pool with new liquidity added in, and new LP shares added in.
+		setPoolLPShares(poolWithUpdatedLiquidity, reserveLPShares.Add(sharesIn))
+		// so now due to correctness of exitPool, we exitPool and swap all remaining assets to base asset
+		exitFee := sdk.ZeroDec()
+		exitedCoins, err := poolWithUpdatedLiquidity.ExitPool(ctx, sharesIn, exitFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
-		diff = actualTokenOut.Sub(tokenIn.Amount)
-	}
 
-	return sdk.Int{}, nil
+		return swapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
+	}
+	// TODO: Come back and revisit err tolerance
+	errTolerance := osmoutils.ErrTolerance{AdditiveTolerance: correctnessThreshold, MultiplicativeTolerance: sdk.Dec{}}
+	numLPShares, err = osmoutils.BinarySearch(
+		estimateCoinOutGivenShares,
+		LPShareLowerBound, LPShareUpperBound, tokenIn.Amount, errTolerance, maxIterations)
+
+	return numLPShares, err
 }
 
-// Returns the number of coins you'd get, for swapping an LP share all into one token.
-// Keeps in mind that we have to add LP shares to this.
-//
-// TODO: The original design of this function has been significantly simplified.
-// What is now here, can actually be refactored to get code reuse with whats in the
-// gamm keeper code for exiting pool all into one asset.
-// we'd have this function update LP share / liquidity amount, but then
-// both functions could call the same 'core' function, with a swapfee arg.
-func coinFromLPShareEstimate(
-	ctx sdk.Context,
-	pool types.PoolI,
-	addToPoolLiquidity func(types.PoolI, sdk.Coin) types.PoolI, // non-mutative, returns new pool
-	setPoolLPShares func(pool types.PoolI, numShares sdk.Int),
-	tokenIn sdk.Coin,
-	exitingLPShares sdk.Int) (sdk.Int, error) {
-	reserveLPShares := pool.GetTotalShares()
-	poolWithUpdatedLiquidity := addToPoolLiquidity(pool, tokenIn)
-	swapToDenom := tokenIn.Denom
-	// now poolWithUpdatedLiquidity is a pool with new liquidity added in, and new LP shares added in.
-	setPoolLPShares(poolWithUpdatedLiquidity, reserveLPShares.Add(exitingLPShares))
-	// so now due to correctness of exitPool, we exitPool and swap all remaining assets to base asset
-	exitFee := sdk.ZeroDec()
-	exitedCoins, err := poolWithUpdatedLiquidity.ExitPool(ctx, exitingLPShares, exitFee)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
+func swapAllCoinsToSingleAsset(pool types.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (sdk.Int, error) {
 	swapFee := sdk.ZeroDec()
-	exitedCoin := exitedCoins.AmountOfNoDenomValidation(swapToDenom)
-	// Note that due to path independence of a CFMM, the order of these swaps do not matter.
-	for _, coin := range exitedCoins {
+	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
+	for _, coin := range inTokens {
 		if coin.Denom == swapToDenom {
 			continue
 		}
-		tokenOut, err := poolWithUpdatedLiquidity.SwapOutAmtGivenIn(ctx, sdk.NewCoins(coin), swapToDenom, swapFee)
+		tokenOut, err := pool.SwapOutAmtGivenIn(ctx, sdk.NewCoins(coin), swapToDenom, swapFee)
 		if err != nil {
 			return sdk.Int{}, err
 		}
-		exitedCoin = exitedCoin.Add(tokenOut.Amount)
+		tokenOutAmt = tokenOutAmt.Add(tokenOut.Amount)
 	}
-	return exitedCoin, nil
+	return tokenOutAmt, nil
 }
