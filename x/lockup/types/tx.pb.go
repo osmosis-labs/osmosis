@@ -331,6 +331,8 @@ func (m *MsgBeginUnlockingResponse) GetSuccess() bool {
 	return false
 }
 
+// MsgExtendLockup extends the existing lockup's duration.
+// The new duration is longer than the original.
 type MsgExtendLockup struct {
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
 	ID    uint64 `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`

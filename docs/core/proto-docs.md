@@ -159,6 +159,8 @@
     - [MsgBeginUnlockingAll](#osmosis.lockup.MsgBeginUnlockingAll)
     - [MsgBeginUnlockingAllResponse](#osmosis.lockup.MsgBeginUnlockingAllResponse)
     - [MsgBeginUnlockingResponse](#osmosis.lockup.MsgBeginUnlockingResponse)
+    - [MsgExtendLockup](#osmosis.lockup.MsgExtendLockup)
+    - [MsgExtendLockupResponse](#osmosis.lockup.MsgExtendLockupResponse)
     - [MsgLockTokens](#osmosis.lockup.MsgLockTokens)
     - [MsgLockTokensResponse](#osmosis.lockup.MsgLockTokensResponse)
   
@@ -2423,6 +2425,39 @@ Query defines the gRPC querier service.
 
 
 
+<a name="osmosis.lockup.MsgExtendLockup"></a>
+
+### MsgExtendLockup
+MsgExtendLockup extends the existing lockup's duration.
+The new duration is longer than the original.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `ID` | [uint64](#uint64) |  |  |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  | duration to be set. fails if lower than the current duration, or is unlocking |
+
+
+
+
+
+
+<a name="osmosis.lockup.MsgExtendLockupResponse"></a>
+
+### MsgExtendLockupResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `success` | [bool](#bool) |  |  |
+
+
+
+
+
+
 <a name="osmosis.lockup.MsgLockTokens"></a>
 
 ### MsgLockTokens
@@ -2471,6 +2506,7 @@ Msg defines the Msg service.
 | `LockTokens` | [MsgLockTokens](#osmosis.lockup.MsgLockTokens) | [MsgLockTokensResponse](#osmosis.lockup.MsgLockTokensResponse) | LockTokens lock tokens | |
 | `BeginUnlockingAll` | [MsgBeginUnlockingAll](#osmosis.lockup.MsgBeginUnlockingAll) | [MsgBeginUnlockingAllResponse](#osmosis.lockup.MsgBeginUnlockingAllResponse) | BeginUnlockingAll begin unlocking all tokens | |
 | `BeginUnlocking` | [MsgBeginUnlocking](#osmosis.lockup.MsgBeginUnlocking) | [MsgBeginUnlockingResponse](#osmosis.lockup.MsgBeginUnlockingResponse) | MsgBeginUnlocking begins unlocking tokens by lock ID | |
+| `ExtendLockup` | [MsgExtendLockup](#osmosis.lockup.MsgExtendLockup) | [MsgExtendLockupResponse](#osmosis.lockup.MsgExtendLockupResponse) | MsgEditLockup edits the existing lockups by lock ID | |
 
  <!-- end services -->
 
