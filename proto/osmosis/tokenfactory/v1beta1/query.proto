@@ -34,7 +34,7 @@ message QueryDenomAuthorityMetadataResponse {
 }
 
 message QueryDenomsFromCreatorRequest {
-  string creator = 1 [ (gogoproto.moretags) = "yaml:\"denoms\"" ];
+  string creator = 1 [ (gogoproto.moretags) = "yaml:\"creator\"" ];
 }
 message QueryDenomsFromCreatorResponse {
   repeated string denoms = 1 [ (gogoproto.moretags) = "yaml:\"denoms\"" ];
