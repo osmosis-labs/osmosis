@@ -5,11 +5,17 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/tokenfactory/v1beta1/authorityMetadata.proto";
+import "osmosis/tokenfactory/v1beta1/params.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  // Params returns the total set of minting parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/tokenfactory/v1beta1/params";
+  }
+
   rpc DenomAuthorityMetadata(QueryDenomAuthorityMetadataRequest)
       returns (QueryDenomAuthorityMetadataResponse) {
     option (google.api.http).get =
@@ -23,6 +29,15 @@ service Query {
   }
 }
 
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
 message QueryDenomAuthorityMetadataRequest {
   string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
 }
@@ -34,7 +49,7 @@ message QueryDenomAuthorityMetadataResponse {
 }
 
 message QueryDenomsFromCreatorRequest {
-  string creator = 1 [ (gogoproto.moretags) = "yaml:\"denoms\"" ];
+  string creator = 1 [ (gogoproto.moretags) = "yaml:\"creator\"" ];
 }
 message QueryDenomsFromCreatorResponse {
   repeated string denoms = 1 [ (gogoproto.moretags) = "yaml:\"denoms\"" ];

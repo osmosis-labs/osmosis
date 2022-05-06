@@ -9,6 +9,16 @@ import (
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
 func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomNonce string) (newTokenDenom string, err error) {
+	// Send creation fee to community pool
+	creationFee := k.GetParams(ctx).DenomCreationFee
+	accAddr, err := sdk.AccAddressFromBech32(creatorAddr)
+	if err != nil {
+		return "", err
+	}
+	if err := k.distrKeeper.FundCommunityPool(ctx, creationFee, accAddr); err != nil {
+		return "", err
+	}
+
 	denom, err := types.GetTokenDenom(creatorAddr, denomNonce)
 	if err != nil {
 		return "", err

@@ -1,5 +1,7 @@
 # Osmosis
 
+![Banner!](assets/banner.png)
+
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://img.shields.io/badge/repo%20status-Active-green.svg?style=flat-square)](https://www.repostatus.org/#active)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue?style=flat-square&logo=go)](https://godoc.org/github.com/osmosis-labs/osmosis)
 [![Go Report Card](https://goreportcard.com/badge/github.com/osmosis-labs/osmosis?style=flat-square)](https://goreportcard.com/report/github.com/osmosis-labs/osmosis)
@@ -7,6 +9,7 @@
 [![License: Apache-2.0](https://img.shields.io/github/license/osmosis-labs/osmosis.svg?style=flat-square)](https://github.com/osmosis-labs/osmosis/blob/main/LICENSE)
 [![Lines Of Code](https://img.shields.io/tokei/lines/github/osmosis-labs/osmosis?style=flat-square)](https://github.com/osmosis-labs/osmosis)
 [![GitHub Super-Linter](https://img.shields.io/github/workflow/status/osmosis-labs/osmosis/Lint?style=flat-square&label=Lint)](https://github.com/marketplace/actions/super-linter)
+[![Discord](https://badgen.net/badge/icon/discord?icon=discord&label)](https://discord.gg/osmosis)
 
 Osmosis is a fair-launched, customizable automated market maker for interchain
 assets that allows the creation and management of non-custodial, self-balancing,
