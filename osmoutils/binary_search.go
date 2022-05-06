@@ -1,6 +1,10 @@
 package osmoutils
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"errors"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 type ErrTolerance struct {
 	AdditiveTolerance       sdk.Int
@@ -19,6 +23,15 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int8 {
 		comparisonSign = 1
 	} else {
 		comparisonSign = -1
+	}
+
+	// if no error accepted, do a direct compare.
+	if e.AdditiveTolerance.IsZero() {
+		if expected.Equal(actual) {
+			return 0
+		} else {
+			return comparisonSign
+		}
 	}
 
 	// Check additive tolerance equations
@@ -55,7 +68,7 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
-		compRes := errTolerance.Compare(targetOutput, curOutput)
+		compRes := errTolerance.Compare(curOutput, targetOutput)
 		if compRes > 0 {
 			upperbound = curEstimate
 		} else if compRes < 0 {
@@ -68,6 +81,9 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 		if err != nil {
 			return sdk.Int{}, err
 		}
+	}
+	if curIteration == maxIterations {
+		return sdk.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
 	}
 	return curEstimate, nil
 }
