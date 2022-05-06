@@ -26,3 +26,8 @@ type AccountKeeper interface {
 	SetModuleAccount(ctx sdk.Context, macc authtypes.ModuleAccountI)
 	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
 }
+
+// DistrKeeper defines the contract needed to be fulfilled for distribution keeper.
+type DistrKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}

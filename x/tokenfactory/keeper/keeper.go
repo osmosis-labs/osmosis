@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type (
@@ -19,24 +20,45 @@ type (
 		cdc      codec.Codec
 		storeKey sdk.StoreKey
 
+		paramSpace paramtypes.Subspace
+
 		accountKeeper types.AccountKeeper
 		bankKeeper    types.BankKeeper
+		distrKeeper   types.DistrKeeper
 	}
 )
+
+func permContains(perms []string, perm string) bool {
+	for _, v := range perms {
+		if v == perm {
+			return true
+		}
+	}
+
+	return false
+}
 
 // NewKeeper returns a new instance of the x/tokenfactory keeper
 func NewKeeper(
 	cdc codec.Codec,
 	storeKey sdk.StoreKey,
+	paramSpace paramtypes.Subspace,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
+	distrKeeper types.DistrKeeper,
 ) Keeper {
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
+		cdc:        cdc,
+		storeKey:   storeKey,
+		paramSpace: paramSpace,
 
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
+		distrKeeper:   distrKeeper,
 	}
 }
 
