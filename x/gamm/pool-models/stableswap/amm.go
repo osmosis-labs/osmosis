@@ -191,7 +191,49 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	// The final result should be:
 	// a = term1 - term2 + term3
 
-	return sdk.ZeroDec()
+	// Prelude, compute all the xy cross terms. Consider keeping these precomputed in the struct,
+	// and maybe in state.
+
+	x := xReserve
+	y := yReserve
+	w := wSumSquares
+	b := yIn
+
+	bpy := b.Add(y)
+	bpy2 := bpy.Mul(bpy)
+	
+	// S1 = 3 (b + y)^2 (b^2 + 2 b y + y^2 + w)
+	s1_inner := b.MulMut(b).AddMut(b.MulMut(y).MulInt64Mut(2)).AddMut(w)
+	s1 := bpy2.MulInt64Mut(3).MulMut(s1_inner)
+	// S2 = -27 x y (b + y)^2 (x^2 + y^2 + w)
+	s2_inner := x.MulMut(x).AddMut(y.MulMut(y)).AddMut(w)
+	s2 := bpy2.MulInt64Mut(-27).MulMut(x).MulMut(y).MulMut(s2_inner)
+	
+	// foo = (S2 + sqrt(S2^2 + 4*(S1^3)))^(1/3)
+	sqrt_inner := s2.MulMut(s2).AddMut(s1.MulMut(s1.MulMut(s1)).MulInt64Mut(4)) // S2^2 + 4*(S1^3)
+	sqrt, err := sqrt_inner.ApproxSqrt()
+	if err != nil {
+		panic(err)
+	}
+	foo3 := s2.AddMut(sqrt)
+	foo, err := foo3.ApproxRoot(3)
+	if err != nil {
+		panic(err)
+	}
+	// bar = (b + y)
+	bar := bpy
+
+	// term1 = (foo / (3 * 2^(1/3) * bar))
+	term1Denominator := cubeRootTwo.MulInt64Mut(3).MulMut(bar) // 3 * 2^(1/3) * bar
+	term1 := foo.Quo(term1Denominator)
+	// term2 = (2^(1/3) * S1 / (3 * bar * foo))
+	term2 := (cubeRootTwo.MulMut(s1)).Quo(foo.MulMut(bar).MulInt64Mut(3))
+	// term3 = ((bx + xy) / bar)
+	term3 := (b.MulMut(x).AddMut(x.MulMut(y))).Quo(bar)
+
+	a := term1.Sub(term2).Add(term3)
+
+	return a
 }
 
 func approxDecEqual(a, b, tol sdk.Dec) bool {
