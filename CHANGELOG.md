@@ -47,9 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1244](https://github.com/osmosis-labs/osmosis/pull/1244) Refactor `x/gamm`'s `ExitSwapExternAmountOut`.
 * [#1107](https://github.com/osmosis-labs/osmosis/pull/1107) Update to wasmvm v0.24.0, re-enabling building on M1 macs!
 * [#1292](https://github.com/osmosis-labs/osmosis/pull/1292) CLI account-locked-duration
-* 
+ 
 ### Minor improvements & Bug Fixes
 
+* [#1442](https://github.com/osmosis-labs/osmosis/pull/1442) Use latest tm-db release for badgerdb and rocksdb improvments
 * [#1379](https://github.com/osmosis-labs/osmosis/pull/1379) Introduce `Upgrade` and `Fork` structs, to simplify upgrade logic.
 * [#1363](https://github.com/osmosis-labs/osmosis/pull/1363) Switch e2e test setup to create genesis and configs via Dockertest
 * [#1335](https://github.com/osmosis-labs/osmosis/pull/1335) Add utility for deriving total orderings from partial orderings.
