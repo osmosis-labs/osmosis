@@ -12,97 +12,97 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// func TestMint(t *testing.T) {
-// 	actor := RandomAccountAddress()
-// 	osmosis, ctx := SetupCustomApp(t, actor)
+func TestMint(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
 
-// 	lucky := RandomAccountAddress()
+	lucky := RandomAccountAddress()
 
-// 	// lucky was broke
-// 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
-// 	require.Empty(t, balances)
+	// lucky was broke
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Empty(t, balances)
 
-// 	amount, ok := sdk.NewIntFromString("8080")
-// 	require.True(t, ok)
+	amount, ok := sdk.NewIntFromString("8080")
+	require.True(t, ok)
 
-// 	specs := map[string]struct {
-// 		mint   *wasmbindings.MintTokens
-// 		expErr bool
-// 	}{
-// 		"valid mint": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "MOON",
-// 				Amount:    amount,
-// 				Recipient: lucky.String(),
-// 			},
-// 		},
-// 		"empty sub-denom": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "",
-// 				Amount:    amount,
-// 				Recipient: lucky.String(),
-// 			},
-// 			expErr: true,
-// 		},
-// 		"invalid sub-denom": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "sub-denom_2",
-// 				Amount:    amount,
-// 				Recipient: lucky.String(),
-// 			},
-// 			expErr: true,
-// 		},
-// 		"zero amount": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "MOON",
-// 				Amount:    sdk.ZeroInt(),
-// 				Recipient: lucky.String(),
-// 			},
-// 			expErr: true,
-// 		},
-// 		"negative amount": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "MOON",
-// 				Amount:    amount.Neg(),
-// 				Recipient: lucky.String(),
-// 			},
-// 			expErr: true,
-// 		},
-// 		"empty recipient": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "MOON",
-// 				Amount:    amount,
-// 				Recipient: "",
-// 			},
-// 			expErr: true,
-// 		},
-// 		"invalid recipient": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "MOON",
-// 				Amount:    amount,
-// 				Recipient: "invalid",
-// 			},
-// 			expErr: true,
-// 		},
-// 		"null mint": {
-// 			mint:   nil,
-// 			expErr: true,
-// 		},
-// 	}
-// 	for name, spec := range specs {
-// 		t.Run(name, func(t *testing.T) {
-// 			// when
-// 			gotErr := wasm.PerformMint(osmosis.BankKeeper, ctx, actor, spec.mint)
-// 			// then
-// 			if spec.expErr {
-// 				require.Error(t, gotErr)
-// 				return
-// 			}
-// 			require.NoError(t, gotErr)
-// 		})
-// 	}
+	specs := map[string]struct {
+		mint   *wasmbindings.MintTokens
+		expErr bool
+	}{
+		"valid mint": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "MOON",
+				Amount:    amount,
+				Recipient: lucky.String(),
+			},
+		},
+		"empty sub-denom": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "",
+				Amount:    amount,
+				Recipient: lucky.String(),
+			},
+			expErr: true,
+		},
+		"invalid sub-denom": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "sub-denom_2",
+				Amount:    amount,
+				Recipient: lucky.String(),
+			},
+			expErr: true,
+		},
+		"zero amount": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "MOON",
+				Amount:    sdk.ZeroInt(),
+				Recipient: lucky.String(),
+			},
+			expErr: true,
+		},
+		"negative amount": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "MOON",
+				Amount:    amount.Neg(),
+				Recipient: lucky.String(),
+			},
+			expErr: true,
+		},
+		"empty recipient": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "MOON",
+				Amount:    amount,
+				Recipient: "",
+			},
+			expErr: true,
+		},
+		"invalid recipient": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "MOON",
+				Amount:    amount,
+				Recipient: "invalid",
+			},
+			expErr: true,
+		},
+		"null mint": {
+			mint:   nil,
+			expErr: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// when
+			gotErr := wasm.PerformMint(osmosis.BankKeeper, ctx, actor, spec.mint)
+			// then
+			if spec.expErr {
+				require.Error(t, gotErr)
+				return
+			}
+			require.NoError(t, gotErr)
+		})
+	}
 
-// }
+}
 
 func TestSwap(t *testing.T) {
 	actor := RandomAccountAddress()
