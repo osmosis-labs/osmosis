@@ -172,7 +172,7 @@ docs:
 	@echo "=========== Generate Complete ============"
 	@echo
 
-protoVer=v0.2
+protoVer=v0.7
 protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
 containerProtoGen=osmosis-proto-gen-$(protoVer)
 containerProtoFmt=osmosis-proto-fmt-$(protoVer)
