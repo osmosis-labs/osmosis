@@ -67,5 +67,5 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 		}
 	}
 
-	return
+	return app, cleanupFn
 }

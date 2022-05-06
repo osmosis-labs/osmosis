@@ -114,6 +114,7 @@ func (k Keeper) addLegacyLockRefByKey(ctx sdk.Context, key []byte, lockID uint64
 }
 
 // deleteLegacyLockRefByKey removes lock ID from an array associated to provided key
+//nolint:ineffassign
 func (k Keeper) deleteLegacyLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
 	index := -1
 	store := ctx.KVStore(k.storeKey)

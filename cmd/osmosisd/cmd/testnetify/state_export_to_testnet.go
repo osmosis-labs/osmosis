@@ -27,6 +27,7 @@ type ValidatorDetails struct {
 	OperatorAddress string
 }
 
+//nolint:ineffassign
 func defaultTestnetParams() TestnetParams {
 	/* priv_validator_key.json file
 	{

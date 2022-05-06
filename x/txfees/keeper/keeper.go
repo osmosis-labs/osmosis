@@ -39,5 +39,5 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) GetFeeTokensStore(ctx sdk.Context) sdk.KVStore {
 	store := ctx.KVStore(k.storeKey)
-	return prefix.NewStore(store, []byte(types.FeeTokensStorePrefix))
+	return prefix.NewStore(store, (types.FeeTokensStorePrefix))
 }

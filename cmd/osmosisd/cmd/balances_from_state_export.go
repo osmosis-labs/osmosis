@@ -141,6 +141,7 @@ func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, er
 }
 
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json
+//nolint:ineffassign
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-derive-balances [input-genesis-file] [output-snapshot-json]",
