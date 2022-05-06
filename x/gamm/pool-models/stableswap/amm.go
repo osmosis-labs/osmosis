@@ -269,6 +269,29 @@ func solveCFMMBinarySearch(constantFunction func(sdk.Dec, sdk.Dec) sdk.Dec) func
 	}
 }
 
+// solveCFMMBinarySearch searches the correct dx using binary search over constant K.
+// added for future extension
+func solveCFMMBinarySearchMulti(constantFunction func(sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec) func(sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec {
+	return func(xReserve, yReserve, uReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
+		k := constantFunction(xReserve, yReserve, uReserve, wSumSquares)
+		yf := yReserve.Add(yIn)
+		x_low_est := sdk.ZeroDec()
+		x_high_est := xReserve
+		x_est := (x_high_est.Add(x_low_est)).Quo(twodec)
+		cur_k := constantFunction(x_est, yf, uReserve, wSumSquares)
+		for !approxDecEqual(cur_k, k, threshold) { // cap max iteration to 256
+			if cur_k.GT(k) {
+				x_high_est = x_est
+			} else if cur_k.LT(k) {
+				x_low_est = x_est
+			}
+			x_est = (x_high_est.Add(x_low_est)).Quo(twodec)
+			cur_k = constantFunction(x_est, yf, uReserve, wSumSquares)
+		}
+		return xReserve.Sub(x_est)
+	}
+}
+
 //nolint:unused
 func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
 	// y = baseAsset, x = quoteAsset
