@@ -108,8 +108,7 @@ func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (
 func BinarySearchSingleAssetJoin(
 	pool types.PoolI,
 	tokenIn sdk.Coin,
-	addToPoolLiquidity func(types.PoolI, sdk.Coin) types.PoolI, // non-mutative, returns new pool
-	setPoolLPShares func(pool types.PoolI, numShares sdk.Int), // mutative
+	poolWithAddedLiquidityAndShares func(newLiquidity sdk.Coin, newShares sdk.Int) types.PoolI,
 ) (numLPShares sdk.Int, err error) {
 	// use dummy context
 	ctx := sdk.Context{}
@@ -126,12 +125,9 @@ func BinarySearchSingleAssetJoin(
 	// Creates a pool with tokenIn liquidity added, where it created `sharesIn` number of shares.
 	// Returns how many tokens you'd get, if you then exited all of `sharesIn` for tokenIn.Denom
 	estimateCoinOutGivenShares := func(sharesIn sdk.Int) (tokenOut sdk.Int, err error) {
-		reserveLPShares := pool.GetTotalShares()
-		// new pool copy we can mutate
-		poolWithUpdatedLiquidity := addToPoolLiquidity(pool, tokenIn)
+		// new pool with added liquidity & LP shares, which we can mutate.
+		poolWithUpdatedLiquidity := poolWithAddedLiquidityAndShares(tokenIn, sharesIn)
 		swapToDenom := tokenIn.Denom
-		// now poolWithUpdatedLiquidity is a pool with new liquidity added in, and new LP shares added in.
-		setPoolLPShares(poolWithUpdatedLiquidity, reserveLPShares.Add(sharesIn))
 		// so now due to correctness of exitPool, we exitPool and swap all remaining assets to base asset
 		exitFee := sdk.ZeroDec()
 		exitedCoins, err := poolWithUpdatedLiquidity.ExitPool(ctx, sharesIn, exitFee)

@@ -142,8 +142,9 @@ func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins) {
 	p.updatePoolLiquidityForSwap(sdk.Coins{}, tokensOut)
 }
 
-func (p *Pool) updatePoolLiquidityForJoin(tokensIn sdk.Coins) {
+func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdk.Int) {
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...)
+	p.TotalShares.Amount = p.TotalShares.Amount.Add(newShares)
 }
 
 // TODO: These should all get moved to amm.go
@@ -217,35 +218,20 @@ func (pa Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom
 	return spotPrice, nil
 }
 
+func (pa Pool) Copy() Pool {
+	pa2 := pa
+	pa2.PoolLiquidity = sdk.NewCoins(pa.PoolLiquidity...)
+	return pa2
+}
+
 func (pa *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	if len(tokensIn) == 1 {
-		numShares, err = pa.calcSingleAssetJoinShares(tokensIn[0], swapFee)
-		newLiquidity = tokensIn
-		return numShares, newLiquidity, err
-	} else if len(tokensIn) != pa.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
-			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
-	}
-
-	// Add all exact coins we can (no swap). ctx arg doesn't matter for Balancer
-	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(pa, sdk.Context{}, tokensIn)
-	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
-	}
-
-	// TODO: Do single asset joins for each of the coins in remCoins, when implemented
-	return numShares, tokensIn.Sub(remCoins), nil
+	paCopy := pa.Copy()
+	return paCopy.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 }
 
 func (pa *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	newShares, newLiquidity, err := pa.CalcJoinPoolShares(ctx, tokensIn, swapFee)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	pa.TotalShares.Amount = pa.TotalShares.Amount.Add(newShares)
-	pa.updatePoolLiquidityForJoin(newLiquidity)
-	return newShares, nil
+	numShares, _, err = pa.joinPoolSharesInternal(ctx, tokensIn, swapFee)
+	return numShares, err
 }
 
 func (pa *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {

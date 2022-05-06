@@ -4,6 +4,9 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/cfmm_common"
+	types "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 var (
@@ -234,8 +237,42 @@ func (pa *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFe
 }
 
 func (pa *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
-	// paDeref := *pa
-	// paCopy := paDeref
-	// cfmm_common.BinarySearchSingleAssetJoin(paCopy, tokenIn, )
-	return sdk.Int{}, errors.New("Unimplemented")
+	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares sdk.Int) types.PoolI {
+		paCopy := pa.Copy()
+		paCopy.updatePoolForJoin(sdk.NewCoins(tokenIn), newShares)
+		return &paCopy
+	}
+	// TODO: Correctly handle swap fee
+	return cfmm_common.BinarySearchSingleAssetJoin(pa, tokenIn, poolWithAddedLiquidityAndShares)
+}
+
+// We can mutate pa here
+// TODO: some day switch this to a COW wrapped pa, for better perf
+func (pa *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+	if len(tokensIn) == 1 {
+		numShares, err = pa.calcSingleAssetJoinShares(tokensIn[0], swapFee)
+		newLiquidity = tokensIn
+		return numShares, newLiquidity, err
+	} else if len(tokensIn) != pa.NumAssets() {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
+			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
+	}
+
+	// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
+	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(pa, sdk.Context{}, tokensIn)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
+	}
+	pa.updatePoolForJoin(tokensIn.Sub(remCoins), numShares)
+
+	for _, coin := range remCoins {
+		// TODO: Perhaps add a method to skip if this is too small.
+		newShare, err := pa.calcSingleAssetJoinShares(coin, swapFee)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+		pa.updatePoolForJoin(sdk.NewCoins(coin), newShare)
+	}
+
+	return numShares, tokensIn, nil
 }
