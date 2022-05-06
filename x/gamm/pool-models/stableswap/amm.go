@@ -218,19 +218,19 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	// Calculating foo directly causes an integer overflow due to having a y^12 term, so we expand and factor to reduce its max bitlen:
 	// Original foo = (S2 + sqrt(S2^2 + 4*(S1^3)))^(1/3)
 	// Expand:
-	// foo = (S2 + sqrt((-27 x y (b + y)^2 (x^2 + y^2 + w))^2 + 
+	// foo = (S2 + sqrt((-27 x y (b + y)^2 (x^2 + y^2 + w))^2 +
 	// 					4*(3 (b + y)^2 (b^2 + 2 b y + y^2 + w))^3)
 	// 		 )^(1/3)
 	// Factor (b+y)^2 out from within the square root:
-	// foo = (S2 + (b + y)^2 
-	// 			* sqrt((-27 x y (x^2 + y^2 + w))^2 + 
+	// foo = (S2 + (b + y)^2
+	// 			* sqrt((-27 x y (x^2 + y^2 + w))^2 +
 	// 					4 * ((b + y)^2) * (3 (b^2 + 2 b y + y^2 + w))^3)
 	// 		 )^(1/3)
-	sqrt_inner_term1 := x.Mul(y).MulInt64(-27).Mul(s2_inner) // (-27 x y (x^2 + y^2 + w))
-	sqrt_inner_term1_2 := sqrt_inner_term1.Mul(sqrt_inner_term1) // sqrt_inner_term1^2
+	sqrt_inner_term1 := x.Mul(y).MulInt64(-27).Mul(s2_inner)                                 // (-27 x y (x^2 + y^2 + w))
+	sqrt_inner_term1_2 := sqrt_inner_term1.Mul(sqrt_inner_term1)                             // sqrt_inner_term1^2
 	s1_inner_3 := (s1_inner.MulInt64(3)).Mul(s1_inner.MulInt64(3)).Mul(s1_inner.MulInt64(3)) // (3 (b^2 + 2 b y + y^2 + w))^3
-	sqrt_inner_term2 := s1_inner_3.MulInt64(4).Mul(bpy2) // 4 * ((b + y)^2) * s1_inner_3
-	sqrt_inner := sqrt_inner_term1_2.Add(sqrt_inner_term2) // (-27xy(x^2 + y^2 + w))^2 + 4 * (b + y)^2 * (3(b^2 + 2 b y + y^2 + w))^3
+	sqrt_inner_term2 := s1_inner_3.MulInt64(4).Mul(bpy2)                                     // 4 * ((b + y)^2) * s1_inner_3
+	sqrt_inner := sqrt_inner_term1_2.Add(sqrt_inner_term2)                                   // (-27xy(x^2 + y^2 + w))^2 + 4 * (b + y)^2 * (3(b^2 + 2 b y + y^2 + w))^3
 	sqrt, err := sqrt_inner.ApproxSqrt()
 	if err != nil {
 		panic(err)

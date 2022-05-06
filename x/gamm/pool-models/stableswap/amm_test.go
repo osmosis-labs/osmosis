@@ -20,11 +20,11 @@ func TestCFMMInvariant(t *testing.T) {
 	kErrTolerance := sdk.OneDec()
 
 	tests := []struct {
-		xReserve sdk.Dec
-		yReserve sdk.Dec
-		uReserve sdk.Dec
+		xReserve    sdk.Dec
+		yReserve    sdk.Dec
+		uReserve    sdk.Dec
 		wSumSquares sdk.Dec
-		yIn      sdk.Dec
+		yIn         sdk.Dec
 	}{
 		{
 			sdk.NewDec(100),
