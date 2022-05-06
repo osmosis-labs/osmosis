@@ -178,17 +178,17 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	//
 	// To further simplify, let:
 	// foo = (S2 + sqrt(S2^2 + 4*(S1^3)))^(1/3)
-	// bar = (b + y)
+	// bpy = (b + y)
 	//
 	// Thus, a further simplifies to:
-	// a = (foo / (3 * 2^(1/3) * bar))
-	//			- (2^(1/3) * S1 / (3 * bar * foo))
-	// 			+ ((bx + xy) / bar)
+	// a = (foo / (3 * 2^(1/3) * bpy))
+	//			- (2^(1/3) * S1 / (3 * bpy * foo))
+	// 			+ ((bx + xy) / bpy)
 	//
 	// Finally, let:
-	// term1 = (foo / (3 * 2^(1/3) * bar))
-	// term2 = (2^(1/3) * S1 / (3 * bar * foo))
-	// term3 = ((bx + xy) / bar)
+	// term1 = (foo / (3 * 2^(1/3) * bpy))
+	// term2 = (2^(1/3) * S1 / (3 * bpy * foo))
+	// term3 = ((bx + xy) / bpy)
 	//
 	// The final result should be:
 	// a = term1 - term2 + term3
@@ -197,7 +197,9 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	// and maybe in state.
 
 	x := xReserve
+	x2 := x.Mul(x)
 	y := yReserve
+	y2 := y.Mul(y)
 	w := wSumSquares
 	b := yIn
 
@@ -209,11 +211,11 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	// bpy4 := bpy2.Mul(bpy2)
 
 	// S1 = 3 (b + y)^2 (b^2 + 2 b y + y^2 + w)
-	s1_inner := bpy2.Add(w) // (b^2 + 2 b y + y^2 + w) =
+	s1_inner := bpy2.Add(w) // (b^2 + 2 b y + y^2 + w) = (b+y)^2 + w
 	s1 := bpy2.MulInt64(3).Mul(s1_inner)
 	// S2 = -27 x y (b + y)^2 (x^2 + y^2 + w)
-	s2_inner := x.Mul(x).Add(y.Mul(y)).Add(w) // (x^2 + y^2 + w)
-	s2 := bpy2.MulInt64(-27).Mul(x).Mul(y).Mul(s2_inner)
+	s2_inner := x2.Add(y2).Add(w) // (x^2 + y^2 + w)
+	s2 := bpy2.MulInt64(-27).Mul(xy).Mul(s2_inner)
 
 	// Calculating foo directly causes an integer overflow due to having a y^12 term, so we expand and factor to reduce its max bitlen:
 	// Original foo = (S2 + sqrt(S2^2 + 4*(S1^3)))^(1/3)
@@ -228,9 +230,9 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	// 		 )^(1/3)
 	sqrt_inner_term1 := xy.MulInt64(-27).Mul(s2_inner)                // (-27 x y (x^2 + y^2 + w))
 	sqrt_inner_term1_2 := sqrt_inner_term1.Mul(sqrt_inner_term1)      // sqrt_inner_term1^2
-	s1_inner_3 := (s1_inner).Mul(s1_inner).Mul(s1_inner).MulInt64(27) // (3 (b^2 + 2 b y + y^2 + w))^3
+	s1_inner_3 := (s1_inner).Mul(s1_inner).Mul(s1_inner).MulInt64(27) // (3 (b^2 + 2 b y + y^2 + w))^3 = 27 s1_inner^3
 	sqrt_inner_term2 := s1_inner_3.MulInt64(4).Mul(bpy2)              // 4 * ((b + y)^2) * s1_inner_3
-	sqrt_inner := sqrt_inner_term1_2.Add(sqrt_inner_term2)            // (-27xy(x^2 + y^2 + w))^2 + 4 * (b + y)^2 * (3(b^2 + 2 b y + y^2 + w))^3
+	sqrt_inner := sqrt_inner_term1_2.Add(sqrt_inner_term2)            // sqrt_inner_term1 + sqrt_inner_term2
 	sqrt, err := sqrt_inner.ApproxSqrt()
 	if err != nil {
 		panic(err)
@@ -238,15 +240,12 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	foo3 := s2.Add(bpy2.Mul(sqrt))
 	foo, _ := foo3.ApproxRoot(3)
 
-	// bar = (b + y)
-	bar := bpy
-
 	// term1 = (foo / (3 * 2^(1/3) * bar))
-	term1Denominator := cubeRootTwo.MulInt64(3).Mul(bar) // 3 * 2^(1/3) * bar
+	term1Denominator := cubeRootTwo.MulInt64(3).Mul(bpy) // 3 * 2^(1/3) * (b + y)
 	term1 := foo.Quo(term1Denominator)
 	// term2 = (2^(1/3) * S1 / (3 * bar * foo))
-	term2 := (cubeRootTwo.Mul(s1)).Quo(foo.Mul(bar).MulInt64(3))
-	// term3 = ((bx + xy) / bar)
+	term2 := (cubeRootTwo.Mul(s1)).Quo(foo.Mul(bpy).MulInt64(3))
+	// term3 = ((bx + xy) / bpy)
 	term3Numerator := b.Mul(x).Add(xy)
 	term3 := term3Numerator.Quo(bpy)
 
