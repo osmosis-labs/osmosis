@@ -241,7 +241,7 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	foo, _ := foo3.ApproxRoot(3)
 
 	// term1 = (foo / (3 * 2^(1/3) * bar))
-	term1Denominator := cubeRootTwo.MulInt64(3).Mul(bpy) // 3 * 2^(1/3) * (b + y)
+	term1Denominator := threeCubeRootTwo.Mul(bpy) // 3 * 2^(1/3) * (b + y)
 	term1 := foo.Quo(term1Denominator)
 	// term2 = (2^(1/3) * S1 / (3 * bar * foo))
 	term2 := (cubeRootTwo.Mul(s1)).Quo(foo.Mul(bpy).MulInt64(3))
