@@ -317,12 +317,12 @@ func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig)
 
 		appConfig := srvconfig.DefaultConfig()
 		appConfig.BaseConfig.Pruning = validatorConfigs[i].Pruning
-		appConfig.BaseConfig.PruningKeepRecent = pruningKeepRecent[i]
-		appConfig.BaseConfig.PruningInterval = pruningInterval[i]
+		appConfig.BaseConfig.PruningKeepRecent = validatorConfigs[i].PruningKeepRecent
+		appConfig.BaseConfig.PruningInterval = validatorConfigs[i].PruningInterval
 		appConfig.API.Enable = true
 		appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
-		appConfig.StateSync.SnapshotInterval = snapshotInterval[i]
-		appConfig.StateSync.SnapshotKeepRecent = snapshotKeepRecent[i]
+		appConfig.StateSync.SnapshotInterval = validatorConfigs[i].SnapshotInterval
+		appConfig.StateSync.SnapshotKeepRecent = validatorConfigs[i].SnapshotKeepRecent
 
 		srvconfig.WriteConfigFile(appCfgPath, appConfig)
 	}

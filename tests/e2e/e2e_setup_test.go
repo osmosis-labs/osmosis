@@ -26,25 +26,53 @@ import (
 
 var (
 	// common
-	maxRetries = 10 // max retries for json unmarshalling
-        validatorConfigsChainA = []*chain.ValidatorConfig{
-             {
-                 PruningStrategy: "default",
-                 ....
-             },
-             {
-                 PruningStrategy: "nothing",
-                 ....
-             },
-             ...
-        }
-	// chainB
-	NumValB             int = 3
-	PruningB                = []string{"nothing", "default", "custom"} // default, nothing, everything, or custom
-	PruningKeepRecentB      = []string{"0", "0", "10000"}              // keep all of the last N states (only used with custom pruning)
-	PruningIntervalB        = []string{"0", "0", "13"}                 // delete old states from every Nth block (only used with custom pruning)
-	SnapshotIntervalB       = []uint64{1500, 1500, 1500}               // statesync snapshot every Nth block (0 to disable)
-	SnapshotKeepRecentB     = []uint32{2, 2, 2}                        // number of recent snapshots to keep and serve (0 to keep all)
+	maxRetries             = 10 // max retries for json unmarshalling
+	validatorConfigsChainA = []*chain.ValidatorConfig{
+		{
+			Pruning:            "default", // default, nothing, everything, or custom
+			PruningKeepRecent:  "0",       // keep all of the last N states (only used with custom pruning)
+			PruningInterval:    "0",       // delete old states from every Nth block (only used with custom pruning)
+			SnapshotInterval:   1500,      // statesync snapshot every Nth block (0 to disable)
+			SnapshotKeepRecent: 2,         // number of recent snapshots to keep and serve (0 to keep all)
+		},
+		{
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+	}
+	validatorConfigsChainB = []*chain.ValidatorConfig{
+		{
+			Pruning:            "default", // default, nothing, everything, or custom
+			PruningKeepRecent:  "0",       // keep all of the last N states (only used with custom pruning)
+			PruningInterval:    "0",       // delete old states from every Nth block (only used with custom pruning)
+			SnapshotInterval:   1500,      // statesync snapshot every Nth block (0 to disable)
+			SnapshotKeepRecent: 2,         // number of recent snapshots to keep and serve (0 to keep all)
+		},
+		{
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+	}
 )
 
 type IntegrationTestSuite struct {
@@ -95,8 +123,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 4. Execute various e2e tests, including IBC.
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 
-	s.configureChain(chain.ChainAID)
-	s.configureChain(chain.ChainBID)
+	s.configureChain(chain.ChainAID, validatorConfigsChainA)
+	s.configureChain(chain.ChainBID, validatorConfigsChainB)
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
@@ -297,7 +325,7 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.connectIBCChains()
 }
 
-func (s *IntegrationTestSuite) configureChain(chainId, validatorConfigs []*chain.ValidatorConfig) {
+func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig) {
 
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
@@ -305,7 +333,7 @@ func (s *IntegrationTestSuite) configureChain(chainId, validatorConfigs []*chain
 	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
 	s.Require().NoError(err)
 
-	b, _ := json.Marshal(validatorConfig)
+	b, _ := json.Marshal(validatorConfigs)
 	file := fmt.Sprintf("%v/%v-configEncode", tmpDir, chainId)
 	if err = os.WriteFile(file, b, 0o777); err != nil {
 		panic(err)

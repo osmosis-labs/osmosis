@@ -11,7 +11,7 @@ func Init(id, dataDir string, validatorConfigs []*ValidatorConfig) (*Chain, erro
 	if err := initGenesis(chain); err != nil {
 		return nil, err
 	}
-	if err := initValidatorConfigs(chain, pruning, pruningKeepRecent, pruningInterval, snapshotInterval, snapshotKeepRecent); err != nil {
+	if err := initValidatorConfigs(chain, validatorConfigs); err != nil {
 		return nil, err
 	}
 	return chain.export(), nil
