@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
@@ -216,8 +217,12 @@ $ %s query gamm pool-params 1
 			}
 
 			if clientCtx.OutputFormat == "text" {
-				out, err := yaml.Marshal(res.GetParams())
+				poolParams := &balancer.PoolParams{}
+				if err := poolParams.Unmarshal(res.GetParams().Value); err != nil {
+					return err
+				}
 
+				out, err := yaml.Marshal(poolParams)
 				if err != nil {
 					return err
 				}
@@ -228,6 +233,7 @@ $ %s query gamm pool-params 1
 				if err != nil {
 					return err
 				}
+
 				return writeOutputBoilerplate(clientCtx, out)
 			}
 		},
