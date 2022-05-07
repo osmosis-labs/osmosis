@@ -3,6 +3,7 @@ package wasm
 import (
 	"encoding/json"
 	"fmt"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
 	"regexp"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -16,20 +17,22 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
+func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
 		return &CustomMessenger{
-			wrapped:    old,
-			bank:       bank,
-			gammKeeper: gammKeeper,
+			wrapped:      old,
+			bank:         bank,
+			gammKeeper:   gammKeeper,
+			tokenFactory: tokenFactory,
 		}
 	}
 }
 
 type CustomMessenger struct {
-	wrapped    wasmkeeper.Messenger
-	bank       *bankkeeper.BaseKeeper
-	gammKeeper *gammkeeper.Keeper
+	wrapped      wasmkeeper.Messenger
+	bank         *bankkeeper.BaseKeeper
+	gammKeeper   *gammkeeper.Keeper
+	tokenFactory *tokenfactorykeeper.Keeper
 }
 
 var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
