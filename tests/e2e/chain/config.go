@@ -13,12 +13,21 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
+
+type ValidatorConfig struct {
+	Pruning            string // default, nothing, everything, or custom
+	PruningKeepRecent  string // keep all of the last N states (only used with custom pruning)
+	PruningInterval    string // delete old states from every Nth block (only used with custom pruning)
+	SnapshotInterval   uint64 // statesync snapshot every Nth block (0 to disable)
+	SnapshotKeepRecent uint32 // number of recent snapshots to keep and serve (0 to keep all)
+}
 
 const (
 	// common
@@ -27,6 +36,7 @@ const (
 	IbcDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	MinGasPrice   = "0.000"
 	IbcSendAmount = 3300000000
+	VotingPeriod  = 30000000000 // 30 seconds
 	// chainA
 	ChainAID      = "osmo-test-a"
 	OsmoBalanceA  = 200000000000
@@ -158,6 +168,21 @@ func initGenesis(c *internalChain) error {
 	}
 	appGenState[banktypes.ModuleName] = bz
 
+	var govGenState govtypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState); err != nil {
+		return err
+	}
+
+	govGenState.VotingParams = govtypes.VotingParams{
+		VotingPeriod: VotingPeriod,
+	}
+
+	gz, err := util.Cdc.MarshalJSON(&govGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[govtypes.ModuleName] = gz
+
 	var genUtilGenState genutiltypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[genutiltypes.ModuleName], &genUtilGenState); err != nil {
 		return err
@@ -217,8 +242,8 @@ func initGenesis(c *internalChain) error {
 	return nil
 }
 
-func initNodes(c *internalChain) error {
-	if err := c.createAndInitValidators(2); err != nil {
+func initNodes(c *internalChain, numVal int) error {
+	if err := c.createAndInitValidators(numVal); err != nil {
 		return err
 	}
 
@@ -249,7 +274,7 @@ func initNodes(c *internalChain) error {
 	return nil
 }
 
-func initValidatorConfigs(c *internalChain) error {
+func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig) error {
 	for i, val := range c.validators {
 		tmCfgPath := filepath.Join(val.configDir(), "config", "config.toml")
 
@@ -291,8 +316,13 @@ func initValidatorConfigs(c *internalChain) error {
 		appCfgPath := filepath.Join(val.configDir(), "config", "app.toml")
 
 		appConfig := srvconfig.DefaultConfig()
+		appConfig.BaseConfig.Pruning = validatorConfigs[i].Pruning
+		appConfig.BaseConfig.PruningKeepRecent = validatorConfigs[i].PruningKeepRecent
+		appConfig.BaseConfig.PruningInterval = validatorConfigs[i].PruningInterval
 		appConfig.API.Enable = true
 		appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
+		appConfig.StateSync.SnapshotInterval = validatorConfigs[i].SnapshotInterval
+		appConfig.StateSync.SnapshotKeepRecent = validatorConfigs[i].SnapshotKeepRecent
 
 		srvconfig.WriteConfigFile(appCfgPath, appConfig)
 	}

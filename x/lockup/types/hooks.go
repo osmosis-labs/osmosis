@@ -12,6 +12,7 @@ type LockupHooks interface {
 	OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time)
 	OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time)
 	OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins)
+	OnLockupExtend(ctx sdk.Context, lockID uint64, prevDuration time.Duration, newDuration time.Duration)
 }
 
 var _ LockupHooks = MultiLockupHooks{}
@@ -50,5 +51,11 @@ func (h MultiLockupHooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddres
 func (h MultiLockupHooks) OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins) {
 	for i := range h {
 		h[i].OnTokenSlashed(ctx, lockID, amount)
+	}
+}
+
+func (h MultiLockupHooks) OnLockupExtend(ctx sdk.Context, lockID uint64, prevDuration, newDuration time.Duration) {
+	for i := range h {
+		h[i].OnLockupExtend(ctx, lockID, prevDuration, newDuration)
 	}
 }

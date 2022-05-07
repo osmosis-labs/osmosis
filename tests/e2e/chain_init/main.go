@@ -11,13 +11,22 @@ import (
 
 func main() {
 	var (
-		dataDir string
-		chainId string
+		valConfig []*chain.ValidatorConfig
+		dataDir   string
+		chainId   string
+		config    string
 	)
 
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
+	flag.StringVar(&config, "config", "", "serialized config")
+
 	flag.Parse()
+
+	err := json.Unmarshal([]byte(config), &valConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	if len(dataDir) == 0 {
 		panic("data-dir is required")
@@ -27,7 +36,7 @@ func main() {
 		panic(err)
 	}
 
-	createdChain, err := chain.Init(chainId, dataDir)
+	createdChain, err := chain.Init(chainId, dataDir, valConfig)
 	if err != nil {
 		panic(err)
 	}
