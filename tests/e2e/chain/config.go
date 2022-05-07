@@ -22,11 +22,11 @@ import (
 )
 
 type ValidatorConfig struct {
-	Pruning            string
-	PruningKeepRecent  string
-	PruningInterval    string
-	SnapshotInterval   uint64
-	SnapshotKeepRecent uint32
+	Pruning            string // default, nothing, everything, or custom
+	PruningKeepRecent  string // keep all of the last N states (only used with custom pruning)
+	PruningInterval    string // delete old states from every Nth block (only used with custom pruning)
+	SnapshotInterval   uint64 // statesync snapshot every Nth block (0 to disable)
+	SnapshotKeepRecent uint32 // number of recent snapshots to keep and serve (0 to keep all)
 }
 
 const (

@@ -29,11 +29,11 @@ var (
 	maxRetries             = 10 // max retries for json unmarshalling
 	validatorConfigsChainA = []*chain.ValidatorConfig{
 		{
-			Pruning:            "default", // default, nothing, everything, or custom
-			PruningKeepRecent:  "0",       // keep all of the last N states (only used with custom pruning)
-			PruningInterval:    "0",       // delete old states from every Nth block (only used with custom pruning)
-			SnapshotInterval:   1500,      // statesync snapshot every Nth block (0 to disable)
-			SnapshotKeepRecent: 2,         // number of recent snapshots to keep and serve (0 to keep all)
+			Pruning:            "default",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
 		},
 		{
 			Pruning:            "nothing",
@@ -52,11 +52,11 @@ var (
 	}
 	validatorConfigsChainB = []*chain.ValidatorConfig{
 		{
-			Pruning:            "default", // default, nothing, everything, or custom
-			PruningKeepRecent:  "0",       // keep all of the last N states (only used with custom pruning)
-			PruningInterval:    "0",       // delete old states from every Nth block (only used with custom pruning)
-			SnapshotInterval:   1500,      // statesync snapshot every Nth block (0 to disable)
-			SnapshotKeepRecent: 2,         // number of recent snapshots to keep and serve (0 to keep all)
+			Pruning:            "default",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
 		},
 		{
 			Pruning:            "nothing",
