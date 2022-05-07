@@ -24,7 +24,56 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-const maxRetries = 10 // max retries for json unmarshalling
+var (
+	// common
+	maxRetries             = 10 // max retries for json unmarshalling
+	validatorConfigsChainA = []*chain.ValidatorConfig{
+		{
+			Pruning:            "default",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+	}
+	validatorConfigsChainB = []*chain.ValidatorConfig{
+		{
+			Pruning:            "default",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+	}
+)
 
 type IntegrationTestSuite struct {
 	suite.Suite
@@ -65,8 +114,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 4. Execute various e2e tests, including IBC.
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 
-	s.configureChain(chain.ChainAID)
-	s.configureChain(chain.ChainBID)
+	s.configureChain(chain.ChainAID, validatorConfigsChainA)
+	s.configureChain(chain.ChainBID, validatorConfigsChainB)
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
@@ -267,22 +316,27 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.connectIBCChains()
 }
 
-func (s *IntegrationTestSuite) configureChain(chainId string) {
+func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig) {
+
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 
 	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
 	s.Require().NoError(err)
 
+	b, err := json.Marshal(validatorConfigs)
+	s.Require().NoError(err)
+
 	s.initResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
 			Repository: "osmolabs/osmosis-init",
-			Tag:        "v7.2.1",
+			Tag:        "v7.3.0",
 			NetworkID:  s.dkrNet.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
 				fmt.Sprintf("--chain-id=%s", chainId),
+				fmt.Sprintf("--config=%s", b),
 			},
 			User: "root:root",
 			Mounts: []string{
