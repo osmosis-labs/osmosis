@@ -7,12 +7,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
 func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
@@ -82,23 +83,26 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 	if mint.Amount.IsNegative() {
 		return wasmvmtypes.InvalidRequest{Err: "mint token negative amount"}
 	}
-	coins := []sdk.Coin{sdk.NewCoin(denom, mint.Amount)}
+	coin := sdk.NewCoin(denom, mint.Amount)
+
+	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
 
 	// Check if denom already exists
 	_, found := b.GetDenomMetaData(ctx, denom)
 	if !found {
 		// Create denom
-		_, err := f.CreateDenom(ctx, contractAddr.String(), mint.SubDenom)
+		_, err := msgServer.CreateDenom(sdk.WrapSDKContext(ctx), tokenfactorytypes.NewMsgCreateDenom(contractAddr.String(), mint.SubDenom))
 		if err != nil {
-			return sdkerrors.Wrap(err, "create token for mint")
+			return sdkerrors.Wrap(err, "creating token for mint")
 		}
 	}
 
-	err = b.MintCoins(ctx, gammtypes.ModuleName, coins)
+	// Mint through token factory / message server
+	_, err = msgServer.Mint(sdk.WrapSDKContext(ctx), tokenfactorytypes.NewMsgMint(contractAddr.String(), coin))
 	if err != nil {
 		return sdkerrors.Wrap(err, "minting coins from message")
 	}
-	err = b.SendCoinsFromModuleToAccount(ctx, gammtypes.ModuleName, rcpt, coins)
+	err = b.SendCoins(ctx, contractAddr, rcpt, sdk.NewCoins(coin))
 	if err != nil {
 		return sdkerrors.Wrap(err, "sending newly minted coins from message")
 	}
@@ -179,7 +183,7 @@ func GetFullDenom(contract string, subDenom string) (string, error) {
 	if _, err := parseAddress(contract); err != nil {
 		return "", err
 	}
-	fullDenom, err := types.GetTokenDenom(contract, subDenom)
+	fullDenom, err := tokenfactorytypes.GetTokenDenom(contract, subDenom)
 	if err != nil {
 		return "", sdkerrors.Wrap(err, "validate sub-denom")
 	}
