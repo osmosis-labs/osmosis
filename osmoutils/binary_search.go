@@ -6,6 +6,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// ErrTolerance is used to define a compare function, which checks if two
+// ints are within a certain error tolerance of one another.
+// ErrTolerance.Compare(a, b) returns true iff:
+// |a - b| <= AdditiveTolerance
+// |a - b| / min(a, b) <= MultiplicativeTolerance
+// Each check is respectively ignored if the entry is nil (sdk.Dec{}, sdk.Int{})
 type ErrTolerance struct {
 	AdditiveTolerance       sdk.Int
 	MultiplicativeTolerance sdk.Dec
