@@ -200,42 +200,43 @@ func (s *IntegrationTestSuite) voteProposal(c *chain.Chain) {
 	defer cancel()
 
 	s.T().Logf("voting for upgrade proposal for chain-id: %s", c.ChainMeta.Id)
-	exec, err := s.dkrPool.Client.CreateExec(docker.CreateExecOptions{
-		Context:      ctx,
-		AttachStdout: true,
-		AttachStderr: true,
-		Container:    s.valResources[c.ChainMeta.Id][0].Container.ID,
-		User:         "root",
-		Cmd: []string{
-			"osmosisd", "tx", "gov", "vote", "1", "yes", "--from=val", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
-		},
-	})
-	s.Require().NoError(err)
+	for i := range c.Validators {
+		exec, err := s.dkrPool.Client.CreateExec(docker.CreateExecOptions{
+			Context:      ctx,
+			AttachStdout: true,
+			AttachStderr: true,
+			Container:    s.valResources[c.ChainMeta.Id][i].Container.ID,
+			User:         "root",
+			Cmd: []string{
+				"osmosisd", "tx", "gov", "vote", "1", "yes", "--from=val", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
+			},
+		})
+		s.Require().NoError(err)
 
-	var (
-		outBuf bytes.Buffer
-		errBuf bytes.Buffer
-	)
+		var (
+			outBuf bytes.Buffer
+			errBuf bytes.Buffer
+		)
 
-	err = s.dkrPool.Client.StartExec(exec.ID, docker.StartExecOptions{
-		Context:      ctx,
-		Detach:       false,
-		OutputStream: &outBuf,
-		ErrorStream:  &errBuf,
-	})
+		err = s.dkrPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			Context:      ctx,
+			Detach:       false,
+			OutputStream: &outBuf,
+			ErrorStream:  &errBuf,
+		})
 
-	s.Require().NoErrorf(
-		err,
-		"failed to vote for proposal; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
-	)
+		s.Require().NoErrorf(
+			err,
+			"failed to vote for proposal; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
+		)
 
-	s.Require().Truef(
-		strings.Contains(outBuf.String(), "code: 0"),
-		"tx returned non code 0",
-	)
+		s.Require().Truef(
+			strings.Contains(outBuf.String(), "code: 0"),
+			"tx returned non code 0",
+		)
 
-	s.T().Log("successfully voted for proposal")
-
+		s.T().Logf("successfully voted for proposal on container: %s", s.valResources[c.ChainMeta.Id][i].Container.ID)
+	}
 }
 
 func (s *IntegrationTestSuite) chainStatus(containerId string) []byte {
