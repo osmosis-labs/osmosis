@@ -336,7 +336,8 @@ func (m *MsgBeginUnlockingResponse) GetSuccess() bool {
 type MsgExtendLockup struct {
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
 	ID    uint64 `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
-	// duration to be set. fails if lower than the current duration, or is unlocking
+	// duration to be set. fails if lower than the current duration, or is
+	// unlocking
 	Duration time.Duration `protobuf:"bytes,3,opt,name=duration,proto3,stdduration" json:"duration,omitempty" yaml:"duration"`
 }
 

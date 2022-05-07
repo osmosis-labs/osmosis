@@ -30,6 +30,89 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+type QueryParamsRequest struct {
+}
+
+func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
+func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryParamsRequest) ProtoMessage()    {}
+func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6f22013ad0f72e3f, []int{0}
+}
+func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParamsRequest.Merge(m, src)
+}
+func (m *QueryParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+type QueryParamsResponse struct {
+	// params defines the parameters of the module.
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+}
+
+func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
+func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryParamsResponse) ProtoMessage()    {}
+func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6f22013ad0f72e3f, []int{1}
+}
+func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParamsResponse.Merge(m, src)
+}
+func (m *QueryParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
+
+func (m *QueryParamsResponse) GetParams() Params {
+	if m != nil {
+		return m.Params
+	}
+	return Params{}
+}
+
 type QueryDenomAuthorityMetadataRequest struct {
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
 }
@@ -38,7 +121,7 @@ func (m *QueryDenomAuthorityMetadataRequest) Reset()         { *m = QueryDenomAu
 func (m *QueryDenomAuthorityMetadataRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryDenomAuthorityMetadataRequest) ProtoMessage()    {}
 func (*QueryDenomAuthorityMetadataRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6f22013ad0f72e3f, []int{0}
+	return fileDescriptor_6f22013ad0f72e3f, []int{2}
 }
 func (m *QueryDenomAuthorityMetadataRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -82,7 +165,7 @@ func (m *QueryDenomAuthorityMetadataResponse) Reset()         { *m = QueryDenomA
 func (m *QueryDenomAuthorityMetadataResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDenomAuthorityMetadataResponse) ProtoMessage()    {}
 func (*QueryDenomAuthorityMetadataResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6f22013ad0f72e3f, []int{1}
+	return fileDescriptor_6f22013ad0f72e3f, []int{3}
 }
 func (m *QueryDenomAuthorityMetadataResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -126,7 +209,7 @@ func (m *QueryDenomsFromCreatorRequest) Reset()         { *m = QueryDenomsFromCr
 func (m *QueryDenomsFromCreatorRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryDenomsFromCreatorRequest) ProtoMessage()    {}
 func (*QueryDenomsFromCreatorRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6f22013ad0f72e3f, []int{2}
+	return fileDescriptor_6f22013ad0f72e3f, []int{4}
 }
 func (m *QueryDenomsFromCreatorRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -170,7 +253,7 @@ func (m *QueryDenomsFromCreatorResponse) Reset()         { *m = QueryDenomsFromC
 func (m *QueryDenomsFromCreatorResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDenomsFromCreatorResponse) ProtoMessage()    {}
 func (*QueryDenomsFromCreatorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6f22013ad0f72e3f, []int{3}
+	return fileDescriptor_6f22013ad0f72e3f, []int{5}
 }
 func (m *QueryDenomsFromCreatorResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -207,6 +290,8 @@ func (m *QueryDenomsFromCreatorResponse) GetDenoms() []string {
 }
 
 func init() {
+	proto.RegisterType((*QueryParamsRequest)(nil), "osmosis.tokenfactory.v1beta1.QueryParamsRequest")
+	proto.RegisterType((*QueryParamsResponse)(nil), "osmosis.tokenfactory.v1beta1.QueryParamsResponse")
 	proto.RegisterType((*QueryDenomAuthorityMetadataRequest)(nil), "osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest")
 	proto.RegisterType((*QueryDenomAuthorityMetadataResponse)(nil), "osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse")
 	proto.RegisterType((*QueryDenomsFromCreatorRequest)(nil), "osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest")
@@ -218,39 +303,43 @@ func init() {
 }
 
 var fileDescriptor_6f22013ad0f72e3f = []byte{
-	// 502 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0xcf, 0x6b, 0x13, 0x41,
-	0x14, 0xce, 0x58, 0x5a, 0xe9, 0xf8, 0x03, 0x33, 0x88, 0xd4, 0x50, 0x77, 0xeb, 0x08, 0x12, 0x45,
-	0x77, 0x68, 0x2d, 0x14, 0xac, 0xa2, 0x49, 0x45, 0x0f, 0xda, 0x43, 0xf7, 0xe8, 0x25, 0xcc, 0xa6,
-	0xd3, 0xed, 0x62, 0x76, 0xdf, 0x76, 0x67, 0x52, 0x5c, 0x4a, 0x2f, 0x1e, 0x3c, 0x0b, 0xfe, 0x1f,
-	0xfe, 0x19, 0xd2, 0x63, 0xa1, 0x17, 0x4f, 0x8b, 0x24, 0xe2, 0x1f, 0x90, 0xbf, 0x40, 0x32, 0x33,
-	0x89, 0xd5, 0xc4, 0xb5, 0xe8, 0x69, 0x87, 0x79, 0xdf, 0xfb, 0xbe, 0xf7, 0x7d, 0x6f, 0x16, 0xd7,
-	0x41, 0xc6, 0x20, 0x23, 0xc9, 0x14, 0xbc, 0x11, 0xc9, 0x0e, 0x6f, 0x2b, 0xc8, 0x72, 0xb6, 0xbf,
-	0x1c, 0x08, 0xc5, 0x97, 0xd9, 0x5e, 0x57, 0x64, 0xb9, 0x97, 0x66, 0xa0, 0x80, 0x2c, 0x5a, 0xa4,
-	0x77, 0x1a, 0xe9, 0x59, 0x64, 0xed, 0x6a, 0x08, 0x21, 0x68, 0x20, 0x1b, 0x9e, 0x4c, 0x4f, 0x6d,
-	0x31, 0x04, 0x08, 0x3b, 0x82, 0xf1, 0x34, 0x62, 0x3c, 0x49, 0x40, 0x71, 0x15, 0x41, 0x22, 0x6d,
-	0xf5, 0x6e, 0x5b, 0x53, 0xb2, 0x80, 0x4b, 0x61, 0xa4, 0xc6, 0xc2, 0x29, 0x0f, 0xa3, 0x44, 0x83,
-	0x2d, 0x76, 0xb5, 0x74, 0x4e, 0xde, 0x55, 0xbb, 0x90, 0x45, 0x2a, 0xdf, 0x14, 0x8a, 0x6f, 0x73,
-	0xc5, 0x4d, 0x17, 0x7d, 0x85, 0xe9, 0xd6, 0x90, 0xf7, 0x99, 0x48, 0x20, 0x6e, 0xfc, 0x0e, 0xf2,
-	0xc5, 0x5e, 0x57, 0x48, 0x45, 0x6e, 0xe3, 0xd9, 0xed, 0x21, 0x60, 0x01, 0x2d, 0xa1, 0xfa, 0x7c,
-	0xf3, 0xca, 0xa0, 0x70, 0x2f, 0xe6, 0x3c, 0xee, 0x3c, 0xa4, 0xfa, 0x9a, 0xfa, 0xa6, 0x4c, 0x3f,
-	0x21, 0x7c, 0xab, 0x94, 0x4e, 0xa6, 0x90, 0x48, 0x41, 0xde, 0x23, 0x4c, 0xc6, 0x13, 0xb5, 0x62,
-	0x5b, 0xd6, 0xec, 0x17, 0x56, 0x56, 0xbd, 0xb2, 0x1c, 0xbd, 0xe9, 0xd4, 0xcd, 0x9b, 0x47, 0x85,
-	0x5b, 0x19, 0x14, 0xee, 0x75, 0x33, 0xd7, 0x24, 0x3b, 0xf5, 0xab, 0x13, 0x21, 0xd0, 0x4d, 0x7c,
-	0xe3, 0xe7, 0xbc, 0xf2, 0x79, 0x06, 0xf1, 0x46, 0x26, 0xb8, 0x82, 0x6c, 0xe4, 0xfc, 0x1e, 0x3e,
-	0xdf, 0x36, 0x37, 0xd6, 0x3b, 0x19, 0x14, 0xee, 0x65, 0xa3, 0x61, 0x0b, 0xd4, 0x1f, 0x41, 0xe8,
-	0x4b, 0xec, 0xfc, 0x89, 0xce, 0x3a, 0xbf, 0x83, 0xe7, 0x74, 0x54, 0x72, 0x01, 0x2d, 0xcd, 0xd4,
-	0xe7, 0x9b, 0xd5, 0x41, 0xe1, 0x5e, 0x3a, 0x15, 0xa5, 0xa4, 0xbe, 0x05, 0xac, 0x7c, 0x9e, 0xc1,
-	0xb3, 0x9a, 0x8d, 0x7c, 0x47, 0xf8, 0xda, 0x74, 0xdb, 0xe4, 0x69, 0x79, 0x58, 0x7f, 0xdf, 0x6d,
-	0xad, 0xf1, 0x1f, 0x0c, 0xc6, 0x14, 0x7d, 0xf1, 0xee, 0xe4, 0xdb, 0xc7, 0x73, 0x0d, 0xf2, 0x84,
-	0x95, 0xbe, 0x41, 0xe3, 0x8b, 0x1d, 0xe8, 0xef, 0x21, 0x9b, 0x5c, 0x11, 0x39, 0x41, 0xb8, 0x3a,
-	0x91, 0x1d, 0x59, 0x3f, 0xeb, 0x84, 0x53, 0x16, 0x58, 0x7b, 0xf4, 0x6f, 0xcd, 0xd6, 0xd9, 0x86,
-	0x76, 0xf6, 0x98, 0xac, 0x9f, 0xc5, 0x59, 0x6b, 0x27, 0x83, 0xb8, 0x65, 0xdf, 0x02, 0x3b, 0xb0,
-	0x87, 0xc3, 0xe6, 0xd6, 0x51, 0xcf, 0x41, 0xc7, 0x3d, 0x07, 0x7d, 0xed, 0x39, 0xe8, 0x43, 0xdf,
-	0xa9, 0x1c, 0xf7, 0x9d, 0xca, 0x97, 0xbe, 0x53, 0x79, 0xbd, 0x16, 0x46, 0x6a, 0xb7, 0x1b, 0x78,
-	0x6d, 0x88, 0x47, 0x02, 0xf7, 0x3b, 0x3c, 0x90, 0x63, 0xb5, 0xfd, 0x35, 0xf6, 0xf6, 0x57, 0x49,
-	0x95, 0xa7, 0x42, 0x06, 0x73, 0xfa, 0xef, 0x7d, 0xf0, 0x23, 0x00, 0x00, 0xff, 0xff, 0x3f, 0x7c,
-	0x95, 0x87, 0x9d, 0x04, 0x00, 0x00,
+	// 573 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x4d, 0x6b, 0x13, 0x4f,
+	0x18, 0xcf, 0xfc, 0xff, 0x6d, 0xa4, 0xe3, 0x0b, 0x66, 0x2c, 0xa2, 0xa1, 0x6e, 0x74, 0x2c, 0x25,
+	0x95, 0xba, 0x63, 0x6a, 0xa1, 0x60, 0x15, 0xcd, 0x56, 0xf4, 0xa0, 0x05, 0xbb, 0x37, 0xbd, 0x84,
+	0x49, 0x3a, 0xdd, 0x2e, 0x66, 0x77, 0xb6, 0x3b, 0x93, 0x62, 0x28, 0xbd, 0x78, 0xf0, 0x2c, 0x78,
+	0xf4, 0x3b, 0xf8, 0x39, 0x7a, 0x2c, 0xf4, 0xe2, 0x69, 0x91, 0xa4, 0xf8, 0x01, 0xf2, 0x09, 0x64,
+	0x67, 0x26, 0xb1, 0x75, 0xe3, 0x12, 0xf5, 0x94, 0x65, 0x9e, 0xdf, 0xf3, 0x7b, 0x79, 0x9e, 0x87,
+	0xc0, 0x2a, 0x17, 0x01, 0x17, 0xbe, 0x20, 0x92, 0xbf, 0x65, 0xe1, 0x36, 0x6d, 0x49, 0x1e, 0x77,
+	0xc9, 0x5e, 0xad, 0xc9, 0x24, 0xad, 0x91, 0xdd, 0x0e, 0x8b, 0xbb, 0x76, 0x14, 0x73, 0xc9, 0xd1,
+	0x9c, 0x41, 0xda, 0xa7, 0x91, 0xb6, 0x41, 0x96, 0x67, 0x3d, 0xee, 0x71, 0x05, 0x24, 0xe9, 0x97,
+	0xee, 0x29, 0xcf, 0x79, 0x9c, 0x7b, 0x6d, 0x46, 0x68, 0xe4, 0x13, 0x1a, 0x86, 0x5c, 0x52, 0xe9,
+	0xf3, 0x50, 0x98, 0xea, 0x9d, 0x96, 0xa2, 0x24, 0x4d, 0x2a, 0x98, 0x96, 0x1a, 0x09, 0x47, 0xd4,
+	0xf3, 0x43, 0x05, 0x36, 0xd8, 0x95, 0x5c, 0x9f, 0xb4, 0x23, 0x77, 0x78, 0xec, 0xcb, 0xee, 0x06,
+	0x93, 0x74, 0x8b, 0x4a, 0x6a, 0xba, 0x16, 0x73, 0xbb, 0x22, 0x1a, 0xd3, 0xc0, 0x98, 0xc1, 0xb3,
+	0x10, 0x6d, 0xa6, 0x16, 0x5e, 0xa9, 0x47, 0x97, 0xed, 0x76, 0x98, 0x90, 0xf8, 0x35, 0xbc, 0x72,
+	0xe6, 0x55, 0x44, 0x3c, 0x14, 0x0c, 0x39, 0xb0, 0xa8, 0x9b, 0xaf, 0x81, 0x9b, 0xa0, 0x7a, 0x7e,
+	0x79, 0xde, 0xce, 0x1b, 0x8e, 0xad, 0xbb, 0x9d, 0xa9, 0xc3, 0xa4, 0x52, 0x70, 0x4d, 0x27, 0x7e,
+	0x09, 0xb1, 0xa2, 0x7e, 0xca, 0x42, 0x1e, 0xd4, 0x7f, 0x0d, 0x60, 0x0c, 0xa0, 0x05, 0x38, 0xbd,
+	0x95, 0x02, 0x94, 0xd0, 0x8c, 0x73, 0x79, 0x90, 0x54, 0x2e, 0x74, 0x69, 0xd0, 0x7e, 0x80, 0xd5,
+	0x33, 0x76, 0x75, 0x19, 0x7f, 0x01, 0xf0, 0x76, 0x2e, 0x9d, 0x71, 0xfe, 0x01, 0x40, 0x34, 0x9a,
+	0x56, 0x23, 0x30, 0x65, 0x13, 0x63, 0x25, 0x3f, 0xc6, 0x78, 0x6a, 0xe7, 0x56, 0x1a, 0x6b, 0x90,
+	0x54, 0xae, 0x6b, 0x5f, 0x59, 0x76, 0xec, 0x96, 0x32, 0x0b, 0xc2, 0x1b, 0xf0, 0xc6, 0x4f, 0xbf,
+	0xe2, 0x59, 0xcc, 0x83, 0xf5, 0x98, 0x51, 0xc9, 0xe3, 0x61, 0xf2, 0x25, 0x78, 0xae, 0xa5, 0x5f,
+	0x4c, 0x76, 0x34, 0x48, 0x2a, 0x97, 0xb4, 0x86, 0x29, 0x60, 0x77, 0x08, 0xc1, 0x2f, 0xa0, 0xf5,
+	0x3b, 0x3a, 0x93, 0x7c, 0x11, 0x16, 0xd5, 0xa8, 0xd2, 0x9d, 0xfd, 0x5f, 0x9d, 0x71, 0x4a, 0x83,
+	0xa4, 0x72, 0xf1, 0xd4, 0x28, 0x05, 0x76, 0x0d, 0x60, 0xf9, 0x64, 0x0a, 0x4e, 0x2b, 0x36, 0xf4,
+	0x19, 0xc0, 0xa2, 0xde, 0x1e, 0xba, 0x97, 0x3f, 0x9c, 0xec, 0xf1, 0x94, 0x6b, 0x7f, 0xd0, 0xa1,
+	0x4d, 0xe2, 0xa5, 0xf7, 0xc7, 0x27, 0x9f, 0xfe, 0x5b, 0x40, 0xf3, 0x64, 0x82, 0xcb, 0x45, 0xdf,
+	0x01, 0xbc, 0x3a, 0x7e, 0x29, 0xe8, 0xc9, 0x04, 0xda, 0xb9, 0x97, 0x57, 0xae, 0xff, 0x03, 0x83,
+	0x49, 0xf3, 0x5c, 0xa5, 0xa9, 0xa3, 0xc7, 0xf9, 0x69, 0xf4, 0xd4, 0xc9, 0xbe, 0xfa, 0x3d, 0x20,
+	0xd9, 0x03, 0x42, 0xc7, 0x00, 0x96, 0x32, 0x9b, 0x45, 0x6b, 0x93, 0x3a, 0x1c, 0x73, 0x5e, 0xe5,
+	0x87, 0x7f, 0xd7, 0x6c, 0x92, 0xad, 0xab, 0x64, 0x8f, 0xd0, 0xda, 0x24, 0xc9, 0x1a, 0xdb, 0x31,
+	0x0f, 0x1a, 0xe6, 0x52, 0xc9, 0xbe, 0xf9, 0x38, 0x70, 0x36, 0x0f, 0x7b, 0x16, 0x38, 0xea, 0x59,
+	0xe0, 0x5b, 0xcf, 0x02, 0x1f, 0xfb, 0x56, 0xe1, 0xa8, 0x6f, 0x15, 0xbe, 0xf6, 0xad, 0xc2, 0x9b,
+	0x55, 0xcf, 0x97, 0x3b, 0x9d, 0xa6, 0xdd, 0xe2, 0xc1, 0x50, 0xe0, 0x6e, 0x9b, 0x36, 0xc5, 0x48,
+	0x6d, 0x6f, 0x95, 0xbc, 0x3b, 0x2b, 0x29, 0xbb, 0x11, 0x13, 0xcd, 0xa2, 0xfa, 0x33, 0xbb, 0xff,
+	0x23, 0x00, 0x00, 0xff, 0xff, 0x10, 0x82, 0xc8, 0x64, 0xd7, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -265,6 +354,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// Params returns the total set of minting parameters.
+	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	DenomAuthorityMetadata(ctx context.Context, in *QueryDenomAuthorityMetadataRequest, opts ...grpc.CallOption) (*QueryDenomAuthorityMetadataResponse, error)
 	DenomsFromCreator(ctx context.Context, in *QueryDenomsFromCreatorRequest, opts ...grpc.CallOption) (*QueryDenomsFromCreatorResponse, error)
 }
@@ -275,6 +366,15 @@ type queryClient struct {
 
 func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
+}
+
+func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
+	out := new(QueryParamsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.tokenfactory.v1beta1.Query/Params", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *queryClient) DenomAuthorityMetadata(ctx context.Context, in *QueryDenomAuthorityMetadataRequest, opts ...grpc.CallOption) (*QueryDenomAuthorityMetadataResponse, error) {
@@ -297,6 +397,8 @@ func (c *queryClient) DenomsFromCreator(ctx context.Context, in *QueryDenomsFrom
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// Params returns the total set of minting parameters.
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	DenomAuthorityMetadata(context.Context, *QueryDenomAuthorityMetadataRequest) (*QueryDenomAuthorityMetadataResponse, error)
 	DenomsFromCreator(context.Context, *QueryDenomsFromCreatorRequest) (*QueryDenomsFromCreatorResponse, error)
 }
@@ -305,6 +407,9 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
+func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
 func (*UnimplementedQueryServer) DenomAuthorityMetadata(ctx context.Context, req *QueryDenomAuthorityMetadataRequest) (*QueryDenomAuthorityMetadataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DenomAuthorityMetadata not implemented")
 }
@@ -314,6 +419,24 @@ func (*UnimplementedQueryServer) DenomsFromCreator(ctx context.Context, req *Que
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
+}
+
+func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Params(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.tokenfactory.v1beta1.Query/Params",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Query_DenomAuthorityMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -357,6 +480,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "Params",
+			Handler:    _Query_Params_Handler,
+		},
+		{
 			MethodName: "DenomAuthorityMetadata",
 			Handler:    _Query_DenomAuthorityMetadata_Handler,
 		},
@@ -367,6 +494,62 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "osmosis/tokenfactory/v1beta1/query.proto",
+}
+
+func (m *QueryParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *QueryDenomAuthorityMetadataRequest) Marshal() (dAtA []byte, err error) {
@@ -505,6 +688,26 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *QueryParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Params.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
 func (m *QueryDenomAuthorityMetadataRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -562,6 +765,139 @@ func sovQuery(x uint64) (n int) {
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *QueryDenomAuthorityMetadataRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
