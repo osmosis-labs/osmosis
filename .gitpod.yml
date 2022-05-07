@@ -1,8 +1,5 @@
 image: ghcr.io/faddat/cosmos
 
-
-
-
 ports:
   - port: 1317
   - port: 26657
