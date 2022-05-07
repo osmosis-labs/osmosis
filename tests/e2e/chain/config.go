@@ -21,6 +21,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
+type ValidatorConfig struct {
+	Pruning            string // default, nothing, everything, or custom
+	PruningKeepRecent  string // keep all of the last N states (only used with custom pruning)
+	PruningInterval    string // delete old states from every Nth block (only used with custom pruning)
+	SnapshotInterval   uint64 // statesync snapshot every Nth block (0 to disable)
+	SnapshotKeepRecent uint32 // number of recent snapshots to keep and serve (0 to keep all)
+}
+
 const (
 	// common
 	OsmoDenom     = "uosmo"
@@ -234,8 +242,8 @@ func initGenesis(c *internalChain) error {
 	return nil
 }
 
-func initNodes(c *internalChain) error {
-	if err := c.createAndInitValidators(2); err != nil {
+func initNodes(c *internalChain, numVal int) error {
+	if err := c.createAndInitValidators(numVal); err != nil {
 		return err
 	}
 
@@ -266,7 +274,7 @@ func initNodes(c *internalChain) error {
 	return nil
 }
 
-func initValidatorConfigs(c *internalChain) error {
+func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig) error {
 	for i, val := range c.validators {
 		tmCfgPath := filepath.Join(val.configDir(), "config", "config.toml")
 
@@ -308,8 +316,13 @@ func initValidatorConfigs(c *internalChain) error {
 		appCfgPath := filepath.Join(val.configDir(), "config", "app.toml")
 
 		appConfig := srvconfig.DefaultConfig()
+		appConfig.BaseConfig.Pruning = validatorConfigs[i].Pruning
+		appConfig.BaseConfig.PruningKeepRecent = validatorConfigs[i].PruningKeepRecent
+		appConfig.BaseConfig.PruningInterval = validatorConfigs[i].PruningInterval
 		appConfig.API.Enable = true
 		appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
+		appConfig.StateSync.SnapshotInterval = validatorConfigs[i].SnapshotInterval
+		appConfig.StateSync.SnapshotKeepRecent = validatorConfigs[i].SnapshotKeepRecent
 
 		srvconfig.WriteConfigFile(appCfgPath, appConfig)
 	}
