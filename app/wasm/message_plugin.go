@@ -2,15 +2,13 @@ package wasm
 
 import (
 	"encoding/json"
-	"fmt"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
-	"regexp"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
@@ -56,14 +54,14 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 }
 
 func (m *CustomMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAddress, mint *wasmbindings.MintTokens) ([]sdk.Event, [][]byte, error) {
-	err := PerformMint(m.bank, ctx, contractAddr, mint)
+	err := PerformMint(m.tokenFactory, m.bank, ctx, contractAddr, mint)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "perform mint")
 	}
 	return nil, nil, nil
 }
 
-func PerformMint(b *bankkeeper.BaseKeeper, ctx sdk.Context, contractAddr sdk.AccAddress, mint *wasmbindings.MintTokens) error {
+func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk.Context, contractAddr sdk.AccAddress, mint *wasmbindings.MintTokens) error {
 	if mint == nil {
 		return wasmvmtypes.InvalidRequest{Err: "mint token null mint"}
 	}
@@ -72,14 +70,29 @@ func PerformMint(b *bankkeeper.BaseKeeper, ctx sdk.Context, contractAddr sdk.Acc
 		return err
 	}
 
+	// Check if denom is valid
 	denom, err := GetFullDenom(contractAddr.String(), mint.SubDenom)
 	if err != nil {
-		return sdkerrors.Wrap(err, "mint token denom")
+		return err
+	}
+
+	if mint.Amount.IsZero() {
+		return wasmvmtypes.InvalidRequest{Err: "mint token zero amount"}
 	}
 	if mint.Amount.IsNegative() {
 		return wasmvmtypes.InvalidRequest{Err: "mint token negative amount"}
 	}
 	coins := []sdk.Coin{sdk.NewCoin(denom, mint.Amount)}
+
+	// Check if denom already exists
+	_, found := b.GetDenomMetaData(ctx, denom)
+	if !found {
+		// Create denom
+		_, err := f.CreateDenom(ctx, contractAddr.String(), mint.SubDenom)
+		if err != nil {
+			return sdkerrors.Wrap(err, "create token for mint")
+		}
+	}
 
 	err = b.MintCoins(ctx, gammtypes.ModuleName, coins)
 	if err != nil {
@@ -166,11 +179,10 @@ func GetFullDenom(contract string, subDenom string) (string, error) {
 	if _, err := parseAddress(contract); err != nil {
 		return "", err
 	}
-	err := ValidateSubDenom(subDenom)
+	fullDenom, err := types.GetTokenDenom(contract, subDenom)
 	if err != nil {
 		return "", sdkerrors.Wrap(err, "validate sub-denom")
 	}
-	fullDenom := fmt.Sprintf("cw/%s/%s", contract, subDenom)
 
 	return fullDenom, nil
 }
@@ -185,19 +197,4 @@ func parseAddress(addr string) (sdk.AccAddress, error) {
 		return nil, sdkerrors.Wrap(err, "verify address format")
 	}
 	return parsed, nil
-}
-
-const reSubdenomStr = `^[a-zA-Z][a-zA-Z0-9]{2,31}$`
-
-var reSubdenom *regexp.Regexp
-
-func init() {
-	reSubdenom = regexp.MustCompile(reSubdenomStr)
-}
-
-func ValidateSubDenom(subDenom string) error {
-	if !reSubdenom.MatchString(subDenom) {
-		return fmt.Errorf("invalid subdenom: %s", subDenom)
-	}
-	return nil
 }
