@@ -59,7 +59,7 @@ func TestQueryFullDenom(t *testing.T) {
 	resp := wasmbindings.FullDenomResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
-	expected := fmt.Sprintf("cw/%s/ustart", reflect.String())
+	expected := fmt.Sprintf("factory/%s/ustart", reflect.String())
 	require.EqualValues(t, expected, resp.Denom)
 }
 

@@ -40,7 +40,7 @@ func TestMintMsg(t *testing.T) {
 	require.Len(t, balances, 1)
 	coin := balances[0]
 	require.Equal(t, amount, coin.Amount)
-	require.Contains(t, coin.Denom, "cw/")
+	require.Contains(t, coin.Denom, "factory/")
 
 	// query the denom and see if it matches
 	query := wasmbindings.OsmosisQuery{

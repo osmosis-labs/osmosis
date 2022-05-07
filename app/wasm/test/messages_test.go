@@ -42,7 +42,7 @@ func TestMint(t *testing.T) {
 				Amount:    amount,
 				Recipient: lucky.String(),
 			},
-			expErr: true,
+			expErr: false,
 		},
 		"invalid sub-denom": {
 			mint: &wasmbindings.MintTokens{
@@ -92,7 +92,7 @@ func TestMint(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasm.PerformMint(osmosis.BankKeeper, ctx, actor, spec.mint)
+			gotErr := wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.mint)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
