@@ -11,9 +11,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-var (
-	KeyMintedDenom = []byte("MintedDenom")
-)
+var KeyMintedDenom = []byte("MintedDenom")
 
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})

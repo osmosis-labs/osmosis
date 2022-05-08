@@ -19,8 +19,10 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(&ReplacePoolIncentivesProposal{}, "osmosis/ReplacePoolIncentivesProposal")
 }
 
-var _ govtypes.Content = &UpdatePoolIncentivesProposal{}
-var _ govtypes.Content = &ReplacePoolIncentivesProposal{}
+var (
+	_ govtypes.Content = &UpdatePoolIncentivesProposal{}
+	_ govtypes.Content = &ReplacePoolIncentivesProposal{}
+)
 
 func NewReplacePoolIncentivesProposal(title, description string, records []DistrRecord) govtypes.Content {
 	return &ReplacePoolIncentivesProposal{

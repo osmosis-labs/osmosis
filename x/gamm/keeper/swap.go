@@ -21,8 +21,7 @@ func (k Keeper) SwapExactAmountIn(
 		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
 	}
 
-	pool, inPoolAsset, outPoolAsset, err :=
-		k.getPoolAndInOutAssets(ctx, poolId, tokenIn.Denom, tokenOutDenom)
+	pool, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolId, tokenIn.Denom, tokenOutDenom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
@@ -75,8 +74,7 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, sdk.Dec{}, errors.New("cannot trade same denomination in and out")
 	}
 
-	pool, inPoolAsset, outPoolAsset, err :=
-		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOut.Denom)
+	pool, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOut.Denom)
 	if err != nil {
 		return sdk.Int{}, sdk.Dec{}, err
 	}
@@ -168,8 +166,7 @@ func (k Keeper) updatePoolForSwap(
 }
 
 func (k Keeper) CalculateSpotPriceWithSwapFee(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
-	pool, inPoolAsset, outPoolAsset, err :=
-		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
+	pool, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -184,8 +181,7 @@ func (k Keeper) CalculateSpotPriceWithSwapFee(ctx sdk.Context, poolId uint64, to
 }
 
 func (k Keeper) CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error) {
-	_, inPoolAsset, outPoolAsset, err :=
-		k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
+	_, inPoolAsset, outPoolAsset, err := k.getPoolAndInOutAssets(ctx, poolId, tokenInDenom, tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}

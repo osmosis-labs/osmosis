@@ -8,9 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
-var (
-	flagBech32Prefix = "prefix"
-)
+var flagBech32Prefix = "prefix"
 
 // get cmd to convert any bech32 address to an osmo prefix
 func ConvertBech32Cmd() *cobra.Command {

@@ -10,7 +10,6 @@ import (
 )
 
 func TestUpdatePoolIncentivesProposalMarshalUnmarshal(t *testing.T) {
-
 	tests := []struct {
 		proposal *types.UpdatePoolIncentivesProposal
 	}{

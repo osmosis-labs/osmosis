@@ -12,9 +12,12 @@ var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
 // Singletons
 var zero sdk.Dec = sdk.ZeroDec()
-var one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
-var one sdk.Dec = sdk.OneDec()
-var two sdk.Dec = sdk.MustNewDecFromStr("2")
+
+var (
+	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
+	one      sdk.Dec = sdk.OneDec()
+	two      sdk.Dec = sdk.MustNewDecFromStr("2")
+)
 
 // calcSpotPrice returns the spot price of the pool
 // This is the weight-adjusted balance of the tokens in the pool.
@@ -112,7 +115,7 @@ func calcPoolOutGivenSingleIn(
 	return newPoolSupply.Sub(poolSupply)
 }
 
-//tAi
+// tAi
 func calcSingleInGivenPoolOut(
 	tokenBalanceIn,
 	tokenWeightIn,
@@ -125,14 +128,14 @@ func calcSingleInGivenPoolOut(
 	newPoolSupply := poolSupply.Add(poolAmountOut)
 	poolRatio := newPoolSupply.Quo(poolSupply)
 
-	//uint newBalTi = poolRatio^(1/weightTi) * balTi;
+	// uint newBalTi = poolRatio^(1/weightTi) * balTi;
 	boo := sdk.OneDec().Quo(normalizedWeight)
 	tokenInRatio := pow(poolRatio, boo)
 	newTokenBalanceIn := tokenInRatio.Mul(tokenBalanceIn)
 	tokenAmountInAfterFee := newTokenBalanceIn.Sub(tokenBalanceIn)
 	// Do reverse order of fees charged in joinswap_ExternAmountIn, this way
 	//     ``` pAo == joinswap_ExternAmountIn(Ti, joinswap_PoolAmountOut(pAo, Ti)) ```
-	//uint tAi = tAiAfterFee / (1 - (1-weightTi) * swapFee) ;
+	// uint tAi = tAiAfterFee / (1 - (1-weightTi) * swapFee) ;
 	zar := (sdk.OneDec().Sub(normalizedWeight)).Mul(swapFee)
 	return tokenAmountInAfterFee.Quo(sdk.OneDec().Sub(zar))
 }
@@ -162,7 +165,7 @@ func calcSingleOutGivenPoolIn(
 	tokenAmountOutBeforeSwapFee := tokenBalanceOut.Sub(newTokenBalanceOut)
 
 	// charge swap fee on the output token side
-	//uint tAo = tAoBeforeSwapFee * (1 - (1-weightTo) * swapFee)
+	// uint tAo = tAoBeforeSwapFee * (1 - (1-weightTo) * swapFee)
 	zaz := (sdk.OneDec().Sub(normalizedWeight)).Mul(swapFee)
 	tokenAmountOut := tokenAmountOutBeforeSwapFee.Mul(sdk.OneDec().Sub(zaz))
 	return tokenAmountOut
@@ -180,7 +183,7 @@ func calcPoolInGivenSingleOut(
 ) sdk.Dec {
 	// charge swap fee on the output token side
 	normalizedWeight := tokenWeightOut.Quo(totalWeight)
-	//uint tAoBeforeSwapFee = tAo / (1 - (1-weightTo) * swapFee) ;
+	// uint tAoBeforeSwapFee = tAo / (1 - (1-weightTo) * swapFee) ;
 	zoo := sdk.OneDec().Sub(normalizedWeight)
 	zar := zoo.Mul(swapFee)
 	tokenAmountOutBeforeSwapFee := tokenAmountOut.Quo(sdk.OneDec().Sub(zar))
@@ -188,7 +191,7 @@ func calcPoolInGivenSingleOut(
 	newTokenBalanceOut := tokenBalanceOut.Sub(tokenAmountOutBeforeSwapFee)
 	tokenOutRatio := newTokenBalanceOut.Quo(tokenBalanceOut)
 
-	//uint newPoolSupply = (ratioTo ^ weightTo) * poolSupply;
+	// uint newPoolSupply = (ratioTo ^ weightTo) * poolSupply;
 	poolRatio := pow(tokenOutRatio, normalizedWeight)
 	newPoolSupply := poolRatio.Mul(poolSupply)
 	poolAmountInAfterExitFee := poolSupply.Sub(newPoolSupply)

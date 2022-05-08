@@ -72,7 +72,6 @@ func (pa Pool) MarshalYAML() (interface{}, error) {
 		TotalShares:        pa.TotalShares,
 		PoolAssets:         pa.PoolAssets,
 	})
-
 	if err != nil {
 		return nil, err
 	}

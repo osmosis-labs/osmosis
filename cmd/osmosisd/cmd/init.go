@@ -81,8 +81,8 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			//This is a slice of SEED nodes, not peers.  They must be configured in seed mode.
-			//An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
+			// This is a slice of SEED nodes, not peers.  They must be configured in seed mode.
+			// An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
 
 			seeds := []string{
 				"21d7539792ee2e0d650b199bf742c56ae0cf499e@162.55.132.230:2000",               // Notional

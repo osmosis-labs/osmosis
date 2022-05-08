@@ -35,9 +35,11 @@ func (m MsgLockTokens) ValidateBasic() error {
 	}
 	return nil
 }
+
 func (m MsgLockTokens) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
+
 func (m MsgLockTokens) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
@@ -57,9 +59,11 @@ func (m MsgBeginUnlockingAll) Type() string  { return TypeMsgBeginUnlockingAll }
 func (m MsgBeginUnlockingAll) ValidateBasic() error {
 	return nil
 }
+
 func (m MsgBeginUnlockingAll) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
+
 func (m MsgBeginUnlockingAll) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
@@ -79,9 +83,11 @@ func (m MsgUnlockTokens) Type() string  { return TypeMsgUnlockTokens }
 func (m MsgUnlockTokens) ValidateBasic() error {
 	return nil
 }
+
 func (m MsgUnlockTokens) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
+
 func (m MsgUnlockTokens) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
@@ -102,9 +108,11 @@ func (m MsgBeginUnlocking) Type() string  { return TypeMsgBeginUnlocking }
 func (m MsgBeginUnlocking) ValidateBasic() error {
 	return nil
 }
+
 func (m MsgBeginUnlocking) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
+
 func (m MsgBeginUnlocking) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}
@@ -125,9 +133,11 @@ func (m MsgUnlockPeriodLock) Type() string  { return TypeMsgUnlockPeriodLock }
 func (m MsgUnlockPeriodLock) ValidateBasic() error {
 	return nil
 }
+
 func (m MsgUnlockPeriodLock) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
 }
+
 func (m MsgUnlockPeriodLock) GetSigners() []sdk.AccAddress {
 	owner, _ := sdk.AccAddressFromBech32(m.Owner)
 	return []sdk.AccAddress{owner}

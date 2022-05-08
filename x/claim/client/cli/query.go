@@ -49,7 +49,6 @@ func GetCmdQueryModuleAccountBalance() *cobra.Command {
 
 			req := &types.QueryModuleAccountBalanceRequest{}
 			res, err := queryClient.ModuleAccountBalance(context.Background(), req)
-
 			if err != nil {
 				return err
 			}
@@ -79,7 +78,6 @@ func GetCmdQueryParams() *cobra.Command {
 
 			params := &types.QueryParamsRequest{}
 			res, err := queryClient.Params(context.Background(), params)
-
 			if err != nil {
 				return err
 			}

@@ -694,7 +694,7 @@ $ %s query lockup output-all-locks <max lock ID>
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile("lock_export.json", (bz), 0777)
+			err = ioutil.WriteFile("lock_export.json", (bz), 0o777)
 			if err != nil {
 				return err
 			}

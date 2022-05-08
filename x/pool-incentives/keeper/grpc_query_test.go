@@ -10,8 +10,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v3/x/pool-incentives/types"
 )
 
-var isPerpetual = true
-var notPerpetual = false
+var (
+	isPerpetual  = true
+	notPerpetual = false
+)
 
 func (suite *KeeperTestSuite) TestGaugeIds() {
 	suite.SetupTest()

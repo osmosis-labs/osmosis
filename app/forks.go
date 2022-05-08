@@ -18,7 +18,7 @@ func forks(ctx sdk.Context, app *OsmosisApp) {
 // Fixes an error where minimum deposit was set to "500 osmo"
 // This denom does not exist, which makes it impossible for a proposal to go to a vote
 func fix_min_deposit_denom(ctx sdk.Context, app *OsmosisApp) {
-	var params = app.GovKeeper.GetDepositParams(ctx)
+	params := app.GovKeeper.GetDepositParams(ctx)
 	params.MinDeposit = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(500000000)))
 	app.GovKeeper.SetDepositParams(ctx, params)
 }

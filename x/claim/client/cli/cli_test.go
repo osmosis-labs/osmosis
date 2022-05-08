@@ -27,8 +27,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
-var addr1 sdk.AccAddress
-var addr2 sdk.AccAddress
+var (
+	addr1 sdk.AccAddress
+	addr2 sdk.AccAddress
+)
 
 func init() {
 	params.SetAddressPrefixes()
@@ -44,7 +46,6 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-
 	s.T().Log("setting up integration test suite")
 	encCfg := app.MakeEncodingConfig()
 

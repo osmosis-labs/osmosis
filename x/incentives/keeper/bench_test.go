@@ -45,7 +45,8 @@ func genQueryCondition(
 	r *rand.Rand,
 	blocktime time.Time,
 	coins sdk.Coins,
-	durationOptions []time.Duration) lockuptypes.QueryCondition {
+	durationOptions []time.Duration,
+) lockuptypes.QueryCondition {
 	lockQueryType := lockuptypes.ByDuration
 	denom := coins[r.Intn(len(coins))].Denom
 	durationOption := r.Intn(len(durationOptions))
