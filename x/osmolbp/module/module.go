@@ -17,7 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/x/osmolbp"
 	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 	"github.com/osmosis-labs/osmosis/x/osmolbp/keeper"
-	// "github.com/osmosis-labs/osmosisgit/x/osmolbp/client/cli"
+	"github.com/osmosis-labs/osmosis/x/osmolbp/client/cli"
 )
 
 var (
@@ -80,7 +80,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // GetTxCmd returns the transaction commands for the authz module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil // TODO cli.GetTxCmd()
+	return cli.GetTxCmd()
 }
 
 // AppModule implements the sdk.AppModule interface

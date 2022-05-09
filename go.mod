@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis
 go 1.17
 
 require (
-	github.com/cosmos/cosmos-sdk v0.44.5
+	github.com/cosmos/cosmos-sdk v0.45.4
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.2
 	github.com/cosmos/ibc-go/v2 v2.0.0

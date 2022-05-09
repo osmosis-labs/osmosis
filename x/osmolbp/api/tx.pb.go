@@ -52,6 +52,7 @@ type MsgCreateLBP struct {
 	Duration time.Duration `protobuf:"bytes,5,opt,name=duration,proto3,stdduration" json:"duration"`
 	// total number of `tokens_out` to be sold during the continous sale.
 	// tokens are deposited from the treasury account.
+	// TODO: change to `creator`
 	InitialDeposit github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,6,opt,name=initial_deposit,json=initialDeposit,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"initial_deposit"`
 	// Treasury is the account which provides the tokens to sale and receives
 	// earned money.
@@ -290,7 +291,7 @@ func (m *MsgExitLBPResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgExitLBPResponse proto.InternalMessageInfo
 
 type MsgFinalizeLBP struct {
-	// sender is an account address exiting a pool
+	// sender is an account address triggering the finalization.
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	PoolId uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
@@ -441,12 +442,15 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// CreateLBP creates new liquidity bootstraping pool.
 	CreateLBP(ctx context.Context, in *MsgCreateLBP, opts ...grpc.CallOption) (*MsgCreateLBPResponse, error)
-	// Subscribe to a token sale
+	// Subscribe to a token sale. Any use any time before the sale end can join
+	// the sale by adding `token_in`. During the sale his `token_in` will be
+	// automatically charged every epoch to purchase `token_out`.
 	Subscribe(ctx context.Context, in *MsgSubscribe, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Withdraw sends back `amount` of unspent in_tokens back to the user
+	// Withdraw sends back `amount` of unspent tokens_in back to the user.
+	// User can do it any time unless his deposit is empty.
 	Withdraw(ctx context.Context, in *MsgWithdraw, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// ExitLBP the purchased tokens from the pool and remained staked
-	// tokens. Returns error if the LBP is still active.
+	// ExitLBP withdraws purchased tokens_out from the pool and remained
+	// tokens_in. Returns error if the LBP is still active.
 	ExitLBP(ctx context.Context, in *MsgExitLBP, opts ...grpc.CallOption) (*MsgExitLBPResponse, error)
 	// FinalizeLBP sends income (earned tokens_in) to the LBP treasury.
 	// Returns error if called before the LBP finishes. Anyone can call this
@@ -511,12 +515,15 @@ func (c *msgClient) FinalizeLBP(ctx context.Context, in *MsgFinalizeLBP, opts ..
 type MsgServer interface {
 	// CreateLBP creates new liquidity bootstraping pool.
 	CreateLBP(context.Context, *MsgCreateLBP) (*MsgCreateLBPResponse, error)
-	// Subscribe to a token sale
+	// Subscribe to a token sale. Any use any time before the sale end can join
+	// the sale by adding `token_in`. During the sale his `token_in` will be
+	// automatically charged every epoch to purchase `token_out`.
 	Subscribe(context.Context, *MsgSubscribe) (*emptypb.Empty, error)
-	// Withdraw sends back `amount` of unspent in_tokens back to the user
+	// Withdraw sends back `amount` of unspent tokens_in back to the user.
+	// User can do it any time unless his deposit is empty.
 	Withdraw(context.Context, *MsgWithdraw) (*emptypb.Empty, error)
-	// ExitLBP the purchased tokens from the pool and remained staked
-	// tokens. Returns error if the LBP is still active.
+	// ExitLBP withdraws purchased tokens_out from the pool and remained
+	// tokens_in. Returns error if the LBP is still active.
 	ExitLBP(context.Context, *MsgExitLBP) (*MsgExitLBPResponse, error)
 	// FinalizeLBP sends income (earned tokens_in) to the LBP treasury.
 	// Returns error if called before the LBP finishes. Anyone can call this

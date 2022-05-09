@@ -3,10 +3,9 @@ package osmosis.osmolbp.v1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-
+import "osmosis/osmolbp/v1/state.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
-import "osmosis/osmolbp/v1/types.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/api";
 option (gogoproto.goproto_getters_all) = false;
@@ -30,7 +29,7 @@ service Query {
 
 message QueryLBPs {
   // pagination defines an pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 message QueryLBPsResponse {
@@ -45,18 +44,18 @@ message QueryLBP {
 }
 
 message QueryLBPResponse {
-  osmosis.osmolbp.v1.LBP lbp = 1 [ (gogoproto.nullable) = false ];
+  LBP lbp = 1 [ (gogoproto.nullable) = false ];
 }
 
 // Request type for Query/LBP
 message QueryUserPosition {
   // ID of the LBP
-  uint64 lbp_id = 1;
+  uint64 id = 1;
   // user account address
   string user = 2;
 }
 
 message QueryUserPositionResponse {
-  osmosis.osmolbp.v1.UserPosition user_position = 1
+  UserPosition user_position = 1
       [ (gogoproto.nullable) = false ];
 }

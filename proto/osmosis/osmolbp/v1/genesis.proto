@@ -1,0 +1,18 @@
+syntax = "proto3";
+package osmosis.osmolbp.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/osmolbp/v1/state.proto";
+import "osmosis/osmolbp/v1/params.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/api";
+
+// GenesisState defines the osmolbp module's genesis state.
+message GenesisState {
+  repeated  LBP lbps = 1;
+  uint64 next_lbp_number = 2;
+  Params params = 3 [ (gogoproto.nullable) = false ];
+}
