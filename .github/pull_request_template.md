@@ -9,7 +9,7 @@ Closes: #XXX
 
 ## What is the purpose of the change
 
->Add a description of the overall background and high level changes that this PR introduces
+> Add a description of the overall background and high level changes that this PR introduces
 
 *(E.g.: This pull request improves documation of area A by adding ....*
 
