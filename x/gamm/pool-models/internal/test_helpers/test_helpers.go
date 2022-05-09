@@ -42,5 +42,6 @@ func (suite *CfmmCommonTestSuite) TestCalculateAmountOutAndIn_InverseRelationshi
 }
 
 func TestKeeperTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(CfmmCommonTestSuite))
 }
