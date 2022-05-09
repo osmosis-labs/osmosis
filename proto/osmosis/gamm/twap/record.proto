@@ -1,0 +1,15 @@
+message twap_record {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 pool_id = 1;
+  string asset_in_denom = 2;
+  string asset_out_denom = 3;
+  uint64 height = 4 [(gogoproto.moretags) = "yaml:\"record_height\"", (gogoproto.jsontag) = "record_height"];
+  // TODO: This field should only exist until we have a global registry in the state machine, mapping prior block heights within {TIME RANGE} to times.
+  google.protobuf.Timestamp time = 5
+      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"record_time\""];
+
+  string arithmetic_twap_accumulator = 6 [(gogoproto.customtype) = "[github.com/cosmos/cosmos-sdk/types.Dec](http://github.com/cosmos/cosmos-sdk/types.Dec)", (gogoproto.nullable) = false];
+  string geometric_twap_accumulator = 7 [(gogoproto.customtype) = "[github.com/cosmos/cosmos-sdk/types.Dec](http://github.com/cosmos/cosmos-sdk/types.Dec)", (gogoproto.nullable) = false];
+}
