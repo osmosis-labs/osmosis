@@ -1,55 +1,45 @@
 #!/usr/bin/env bash
 
+#== Requirements ==
+#
+## make sure your `go env GOPATH` is in the `$PATH`
+## Install:
+## + latest buf (v1.0.0-rc11 or later)
+## + protobuf v3
+#
+## All protoc dependencies must be installed not in the module scope
+## currently we must use grpc-gateway v1
+# cd ~
+# go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+# go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+# go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
+# go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest
+# go get github.com/regen-network/cosmos-proto@latest # doesn't work in install mode
+# go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos@v0.3.1
+
 set -eo pipefail
 
-# get protoc executions
-go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
-# get cosmos sdk from github
-go get github.com/cosmos/cosmos-sdk 2>/dev/null
-
-# move the vendor folder to a temp dir so that go list works properly
-temp_dir="f29ea6aa861dc4b083e8e48f67cce"
-if [ -d vendor ]; then
-  mv ./vendor ./$temp_dir
-fi
-
-# Get the path of the cosmos-sdk repo from go/pkg/mod
-cosmos_sdk_dir=$(go list -f '{{ .Dir }}' -m github.com/cosmos/cosmos-sdk)
-
-# move the vendor folder back to ./vendor
-if [ -d $temp_dir ]; then
-  mv ./$temp_dir ./vendor
-fi
-
+echo "Generating gogo proto code"
+cd proto
 proto_dirs=$(find . \( -path ./third_party -o -path ./vendor \) -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 
 for dir in $proto_dirs; do
-  # generate protobuf bind
-  buf protoc \
-  -I "proto" \
-  -I "$cosmos_sdk_dir/third_party/proto" \
-  -I "$cosmos_sdk_dir/proto" \
-  --gocosmos_out=plugins=interfacetype+grpc,\
-Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
-  $(find "${dir}" -name '*.proto')
-
-  # generate grpc gateway
-  buf protoc \
-  -I "proto" \
-  -I "$cosmos_sdk_dir/third_party/proto" \
-  -I "$cosmos_sdk_dir/proto" \
-  --grpc-gateway_out=logtostderr=true:. \
-  $(find "${dir}" -maxdepth 1 -name '*.proto')
+  for file in $(find "${dir}" -maxdepth 1 -name '*.proto'); do
+    if grep "option go_package" $file &> /dev/null ; then
+      buf generate --template buf.gen.gogo.yaml $file
+    fi
+  done
 done
 
-# command to generate docs using protoc-gen-doc
-buf protoc \
-  -I "proto" \
-  -I "$cosmos_sdk_dir/third_party/proto" \
-  -I "$cosmos_sdk_dir/proto" \
-  --doc_out=./docs/core \
-  --doc_opt=./docs/protodoc-markdown.tmpl,proto-docs.md \
-  $(find "$(pwd)/proto" -maxdepth 4 -name '*.proto')
+cd ..
 
-cp -r ./github.com/osmosis-labs/osmosis/v*/x/* x/
-rm -rf ./github.com
+# generate codec/testdata proto code
+(cd testutil/testdata; buf generate)
+
+# move proto files to the right places
+cp -r github.com/cosmos/cosmos-sdk/* ./
+rm -rf github.com
+
+go mod tidy -compat=1.17
+
+./scripts/protocgen2.sh
