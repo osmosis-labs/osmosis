@@ -6,13 +6,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 type CfmmCommonTestSuite struct {
-	apptesting.KeeperTestHelper
+	suite.Suite
 }
 
 func (suite *CfmmCommonTestSuite) TestCalculateAmountOutAndIn_InverseRelationship(

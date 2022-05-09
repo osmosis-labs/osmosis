@@ -8,9 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/test_helpers"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 type BalancerTestSuite struct {
@@ -171,7 +170,7 @@ func (suite *BalancerTestSuite) Test_Balancer_CalculateAmountOutAndIn_InverseRel
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
 			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
-				ctx := suite.CreateTestContext()
+				ctx := createTestContext(t)
 
 				poolAssetOut := balancer.PoolAsset{
 					Token:  sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut),

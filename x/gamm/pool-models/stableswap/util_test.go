@@ -1,8 +1,7 @@
-package balancer_test
+package stableswap
 
 import (
 	"testing"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,15 +10,14 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-func createTestPool(t *testing.T, poolAssets []balancer.PoolAsset, swapFee, exitFee sdk.Dec) types.PoolI {
-	pool, err := balancer.NewBalancerPool(1, balancer.PoolParams{
+func createTestPool(t *testing.T, poolLiquidity sdk.Coins, swapFee, exitFee sdk.Dec) types.PoolI {
+	pool, err := NewStableswapPool(1, PoolParams{
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	}, poolAssets, "", time.Now())
+	}, poolLiquidity, "")
 
 	require.NoError(t, err)
 
