@@ -6,15 +6,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func Min(x, y int) int {
@@ -47,7 +49,8 @@ func genQueryCondition(
 	r *rand.Rand,
 	blocktime time.Time,
 	coins sdk.Coins,
-	durationOptions []time.Duration) lockuptypes.QueryCondition {
+	durationOptions []time.Duration,
+) lockuptypes.QueryCondition {
 	lockQueryType := r.Intn(2)
 	denom := coins[r.Intn(len(coins))].Denom
 	durationOption := r.Intn(len(durationOptions))
@@ -143,7 +146,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	// begin distribution for all gauges
 	for _, gaugeId := range gaugeIds {
 		gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
-		err := app.IncentivesKeeper.BeginDistribution(ctx, *gauge)
+		err := app.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(ctx, *gauge)
 		if err != nil {
 			fmt.Printf("Begin distribution, %v\n", err)
 			b.FailNow()

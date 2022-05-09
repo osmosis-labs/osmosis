@@ -10,6 +10,7 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
@@ -50,7 +51,6 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 	handler := govKeeper.Router().GetRoute(storedProposal.ProposalRoute())
 	err = handler(ctx, storedProposal.GetContent())
 	require.NoError(t, err)
-
 }
 
 func TestStoreCodeProposal(t *testing.T) {

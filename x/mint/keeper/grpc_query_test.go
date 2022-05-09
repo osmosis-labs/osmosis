@@ -4,40 +4,24 @@ import (
 	gocontext "context"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
 type MintTestSuite struct {
-	suite.Suite
-
-	app         *simapp.OsmosisApp
-	ctx         sdk.Context
+	apptesting.KeeperTestHelper
 	queryClient types.QueryClient
 }
 
 func (suite *MintTestSuite) SetupTest() {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(*app.MintKeeper))
-	queryClient := types.NewQueryClient(queryHelper)
-
-	suite.app = app
-	suite.ctx = ctx
-
-	suite.queryClient = queryClient
+	suite.Setup()
+	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 }
 
 func (suite *MintTestSuite) TestGRPCParams() {
-	_, _, queryClient := suite.app, suite.ctx, suite.queryClient
+	_, _, queryClient := suite.App, suite.Ctx, suite.queryClient
 
 	_, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)

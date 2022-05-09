@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (suite *KeeperTestSuite) TestBaseDenom() {
@@ -217,5 +218,4 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 			suite.Require().Error(err, "test: %s", tc.name)
 		}
 	}
-
 }

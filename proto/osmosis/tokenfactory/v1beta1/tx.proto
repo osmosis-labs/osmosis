@@ -1,0 +1,82 @@
+syntax = "proto3";
+package osmosis.tokenfactory.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc CreateDenom(MsgCreateDenom) returns (MsgCreateDenomResponse);
+  rpc Mint(MsgMint) returns (MsgMintResponse);
+  rpc Burn(MsgBurn) returns (MsgBurnResponse);
+  // ForceTransfer is deactivated for now because we need to think through edge
+  // cases rpc ForceTransfer(MsgForceTransfer) returns
+  // (MsgForceTransferResponse);
+  rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
+}
+
+// MsgCreateDenom is the sdk.Msg type for allowing an account to create
+// a new denom.  It requires a sender address and a unique nonce
+// (to allow accounts to create multiple denoms)
+message MsgCreateDenom {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string nonce = 2 [ (gogoproto.moretags) = "yaml:\"nonce\"" ];
+}
+
+// MsgCreateDenomResponse is the return value of MsgCreateDenom
+// It returns the full string of the newly created denom
+message MsgCreateDenomResponse {
+  string new_token_denom = 1
+      [ (gogoproto.moretags) = "yaml:\"new_token_denom\"" ];
+}
+
+// MsgMint is the sdk.Msg type for allowing an admin account to mint
+// more of a token.  For now, we only support minting to the sender account
+message MsgMint {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgMintResponse {}
+
+// MsgBurn is the sdk.Msg type for allowing an admin account to burn
+// a token.  For now, we only support burning from the sender account.
+message MsgBurn {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgBurnResponse {}
+
+// // ===================== MsgForceTransfer
+// message MsgForceTransfer {
+//   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+//   cosmos.base.v1beta1.Coin amount = 2 [
+//     (gogoproto.moretags) = "yaml:\"amount\"",
+//     (gogoproto.nullable) = false
+//   ];
+//   string transferFromAddress = 3
+//       [ (gogoproto.moretags) = "yaml:\"transfer_from_address\"" ];
+//   string transferToAddress = 4
+//       [ (gogoproto.moretags) = "yaml:\"transfer_to_address\"" ];
+// }
+
+// message MsgForceTransferResponse {}
+
+// MsgChangeAdmin is the sdk.Msg type for allowing an admin account to reassign
+// adminship of a denom to a new account
+message MsgChangeAdmin {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string newAdmin = 3 [ (gogoproto.moretags) = "yaml:\"new_admin\"" ];
+}
+
+message MsgChangeAdminResponse {}

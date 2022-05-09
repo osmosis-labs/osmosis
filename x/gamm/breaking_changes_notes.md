@@ -4,8 +4,8 @@
 
 * PoolAssetsQuery
   * Deleted
-  * New query is TotalLiquidity (TODO: Write this query)
-  * Or if you wanted the pool weights, you must now query the pool itself.
+  * New query is TotalLiquidity
+  * If you wanted the pool weights, you must now query the pool itself.
     * Please give feedback if more queries should be exposed that are pool-type specific
 * QuerySpotPrice
   * The `withswapfee` param is now removed. If this was needed for anything, please flag it. Its mainly removed due to not having a clear use, and a better query can probably be crafted for.
@@ -14,17 +14,15 @@
 
 ## Messages
 
-* (TODO) Rename JoinPool -> JoinPoolNoSwap
 * JoinPoolNoSwap
   * TokenInMaxs must either contain every token in pool, or no tokens
-* JoinPoolSwapExternAmountIn
-  * Replace sdk.Coin w/ sdk.Coins
-  * (TODO) Consider renaming to JoinPool, hesistant due to collison with old message
-* (TODO) Update the version for all of gamm's proto files
+    * Before it could just apply a max constraint on one input token.
 * ExitPool
-  * Before the message would fail if you had too few shares to get a single token out for any given denom. Now you can 0 of one side out, if the min amount is also not present.
+  * Before the message would fail if you had too few shares to get a single token out for any given denom. Now you can get 0 tokens of one side out, if the min amount is also not present.
 * ExitSwapShareAmountIn
   * Switched to a more inefficient algorithm for now, so gas numbers will be much higher.
+* MsgSwapExactAmountOut
+  * Prior behavior rounded down the required AmountIn input. The logic now rounds up. Any prior test vectors will likely be off by one.
 * Messages now have responses
 
 ## Events
@@ -36,3 +34,9 @@ I anticipate there are lots of error messages that have changed. This is a best-
 * ExitPool when slippage was too high
 
 ## Gas numbers
+
+Many are changed, need to re-review what the new normals are for each operation.
+
+## Questions for integrators
+
+* Would it be problematic if we renamed the message name / amino route of JoinPool to JoinPoolNoSwap

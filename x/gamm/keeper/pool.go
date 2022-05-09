@@ -3,9 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	gogotypes "github.com/gogo/protobuf/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
@@ -20,7 +21,9 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+// GetPoolAndPoke returns a PoolI based on it's identifier if one exists. Prior
+// to returning the pool, the weights of the pool are updated via PokePool.
+func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
@@ -34,19 +37,19 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 		return nil, err
 	}
 
-	// pool.PokeTokenWeights(ctx.BlockTime())
+	pool.PokePool(ctx.BlockTime())
 
 	return pool, nil
 }
 
 // Get pool, and check if the pool is active / allowed to be swapped against
 func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return &balancer.Pool{}, err
 	}
 
-	if !pool.IsActive(ctx.BlockTime()) {
+	if !pool.IsActive(ctx) {
 		return &balancer.Pool{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
 	}
 	return pool, nil
@@ -57,7 +60,7 @@ func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	return sdk.KVStorePrefixIterator(store, prefix)
 }
 
-func (k Keeper) GetPools(ctx sdk.Context) (res []types.PoolI, err error) {
+func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.PoolI, err error) {
 	iter := k.iterator(ctx, types.KeyPrefixPools)
 	defer iter.Close()
 
@@ -69,12 +72,11 @@ func (k Keeper) GetPools(ctx sdk.Context) (res []types.PoolI, err error) {
 			return nil, err
 		}
 
-		// pool.PokeTokenWeights(ctx.BlockTime())
-
+		pool.PokePool(ctx.BlockTime())
 		res = append(res, pool)
 	}
 
-	return
+	return res, nil
 }
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {

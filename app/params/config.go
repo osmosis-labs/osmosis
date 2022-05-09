@@ -1,9 +1,10 @@
 package params
 
 import (
+	"github.com/osmosis-labs/osmosis/v7/v043_temp/address"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/v7/v043_temp/address"
 )
 
 const (

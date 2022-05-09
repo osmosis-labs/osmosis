@@ -2,7 +2,13 @@ package app
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
+	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v2/modules/core"
+	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
+	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
+	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
+	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -18,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -27,28 +32,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
-	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v2/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
-	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
-	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
 
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v7/x/claim"
-	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm"
@@ -60,58 +54,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/mint"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	poolincentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/client"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 	superfluid "github.com/osmosis-labs/osmosis/v7/x/superfluid"
-	superfluidclient "github.com/osmosis-labs/osmosis/v7/x/superfluid/client"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
-
-// appModuleBasics returns ModuleBasics for the module BasicManager.
-var appModuleBasics = []module.AppModuleBasic{
-	auth.AppModuleBasic{},
-	genutil.AppModuleBasic{},
-	bank.AppModuleBasic{},
-	capability.AppModuleBasic{},
-	staking.AppModuleBasic{},
-	mint.AppModuleBasic{},
-	distr.AppModuleBasic{},
-	gov.NewAppModuleBasic(
-		append(
-			wasmclient.ProposalHandlers,
-			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
-			upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler,
-			poolincentivesclient.UpdatePoolIncentivesHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
-			superfluidclient.SetSuperfluidAssetsProposalHandler,
-			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
-		)...,
-	),
-	params.AppModuleBasic{},
-	crisis.AppModuleBasic{},
-	slashing.AppModuleBasic{},
-	authzmodule.AppModuleBasic{},
-	ibc.AppModuleBasic{},
-	upgrade.AppModuleBasic{},
-	evidence.AppModuleBasic{},
-	transfer.AppModuleBasic{},
-	vesting.AppModuleBasic{},
-	gamm.AppModuleBasic{},
-	txfees.AppModuleBasic{},
-	incentives.AppModuleBasic{},
-	lockup.AppModuleBasic{},
-	poolincentives.AppModuleBasic{},
-	epochs.AppModuleBasic{},
-	claim.AppModuleBasic{},
-	superfluid.AppModuleBasic{},
-	bech32ibc.AppModuleBasic{},
-	wasm.AppModuleBasic{},
-}
 
 // moduleAccountPermissions defines module account permissions
 var moduleAccountPermissions = map[string][]string{
@@ -123,14 +73,15 @@ var moduleAccountPermissions = map[string][]string{
 	stakingtypes.NotBondedPoolName:           {authtypes.Burner, authtypes.Staking},
 	govtypes.ModuleName:                      {authtypes.Burner},
 	ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
-	claimtypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
 	gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 	poolincentivestypes.ModuleName:           nil,
 	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	txfeestypes.ModuleName:                   nil,
+	txfeestypes.NonNativeFeeCollectorName:    nil,
 	wasm.ModuleName:                          {authtypes.Burner},
+	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
 }
 
 // appModules return modules to initialize module manager.
@@ -164,8 +115,7 @@ func appModules(
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
-		app.transferModule,
-		claim.NewAppModule(appCodec, *app.ClaimKeeper),
+		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
 		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
@@ -182,6 +132,7 @@ func appModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
+		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 	}
 }
@@ -214,8 +165,8 @@ func orderBeginBlockers() []string {
 		gammtypes.ModuleName,
 		incentivestypes.ModuleName,
 		lockuptypes.ModuleName,
-		claimtypes.ModuleName,
 		poolincentivestypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 		// superfluid must come after distribution and epochs
 		superfluidtypes.ModuleName,
 		bech32ibctypes.ModuleName,
@@ -224,38 +175,16 @@ func orderBeginBlockers() []string {
 	}
 }
 
-// orderEndBlockers Tell the app's module manager how to set the order of
-// EndBlockers, which are run at the end of every block.
-var orderEndBlockers = []string{
-	lockuptypes.ModuleName,
-	crisistypes.ModuleName,
-	govtypes.ModuleName,
-	stakingtypes.ModuleName,
-	claimtypes.ModuleName,
-	capabilitytypes.ModuleName,
-	authtypes.ModuleName,
-	banktypes.ModuleName,
-	distrtypes.ModuleName,
-	slashingtypes.ModuleName,
-	minttypes.ModuleName,
-	genutiltypes.ModuleName,
-	evidencetypes.ModuleName,
-	authz.ModuleName,
-	paramstypes.ModuleName,
-	upgradetypes.ModuleName,
-	vestingtypes.ModuleName,
-	ibchost.ModuleName,
-	ibctransfertypes.ModuleName,
-	gammtypes.ModuleName,
-	incentivestypes.ModuleName,
-	lockuptypes.ModuleName,
-	poolincentivestypes.ModuleName,
-	superfluidtypes.ModuleName,
-	bech32ibctypes.ModuleName,
-	txfeestypes.ModuleName,
-	// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
-	epochstypes.ModuleName,
-	wasm.ModuleName,
+func OrderEndBlockers(allModuleNames []string) []string {
+	ord := partialord.NewPartialOrdering(allModuleNames)
+	// Epochs must run after all other end blocks
+	ord.LastElements(epochstypes.ModuleName)
+	// txfees auto-swap code should occur before any potential gamm end block code.
+	ord.Before(txfeestypes.ModuleName, gammtypes.ModuleName)
+	// only remaining modules that aren;t no-ops are: crisis & govtypes
+	// we don't care about the relative ordering between them.
+
+	return ord.TotalOrdering()
 }
 
 // modulesOrderInitGenesis returns module names in order for init genesis calls.
@@ -281,7 +210,7 @@ var modulesOrderInitGenesis = []string{
 	bech32ibctypes.ModuleName, // comes after ibctransfertypes
 	poolincentivestypes.ModuleName,
 	superfluidtypes.ModuleName,
-	claimtypes.ModuleName,
+	tokenfactorytypes.ModuleName,
 	incentivestypes.ModuleName,
 	epochstypes.ModuleName,
 	lockuptypes.ModuleName,
@@ -328,7 +257,8 @@ func simulationModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
-		app.transferModule,
+		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		app.TransferModule,
 	}
 }
 

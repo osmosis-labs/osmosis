@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1
 
+ARG BASE_IMG_TAG=nonroot 
+
 ## Build Image
-FROM golang:1.17-bullseye as build
+FROM golang:1.18-bullseye as build
 
 WORKDIR /osmosis
 COPY . /osmosis
@@ -13,7 +15,7 @@ RUN sha256sum /lib/libwasmvm_muslc.a | grep d0152067a5609bfdfb3f0d5d6c0f2760f79d
 RUN BUILD_TAGS=muslc make build
 
 ## Deploy image
-FROM gcr.io/distroless/base-debian11:nonroot
+FROM gcr.io/distroless/base-debian11:${BASE_IMG_TAG}
 
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 
@@ -22,6 +24,7 @@ WORKDIR $HOME
 
 EXPOSE 26656 
 EXPOSE 26657
-EXPOSE 1317  
+EXPOSE 1317
 
 ENTRYPOINT ["osmosisd"]
+CMD [ "start" ]

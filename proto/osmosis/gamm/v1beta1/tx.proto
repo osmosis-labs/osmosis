@@ -125,8 +125,6 @@ message MsgJoinSwapExternAmountIn {
     (gogoproto.moretags) = "yaml:\"token_in\"",
     (gogoproto.nullable) = false
   ];
-  // reserved 3;
-  // reserved "token_in";
   string shareOutMinAmount = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"share_out_min_amount\"",

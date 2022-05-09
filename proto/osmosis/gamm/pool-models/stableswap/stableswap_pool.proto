@@ -1,0 +1,71 @@
+syntax = "proto3";
+package osmosis.gamm.stableswap.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap";
+
+// PoolParams defined the parameters that will be managed by the pool
+// governance in the future. This params are not managed by the chain
+// governance. Instead they will be managed by the token holders of the pool.
+// The pool's token holders are specified in future_pool_governor.
+message PoolParams {
+  string swapFee = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+  string exitFee = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"exit_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// Pool is the stableswap Pool struct
+message Pool {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (cosmos_proto.implements_interface) = "PoolI";
+
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  uint64 id = 2;
+
+  PoolParams poolParams = 3 [
+    (gogoproto.moretags) = "yaml:\"stableswap_pool_params\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // This string specifies who will govern the pool in the future.
+  // Valid forms of this are:
+  // {token name},{duration}
+  // {duration}
+  // where {token name} if specified is the token which determines the
+  // governor, and if not specified is the LP token for this pool.duration is
+  // a time specified as 0w,1w,2w, etc. which specifies how long the token
+  // would need to be locked up to count in governance. 0w means no lockup.
+  string future_pool_governor = 4
+      [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
+  // sum of all LP shares
+  cosmos.base.v1beta1.Coin totalShares = 5 [
+    (gogoproto.moretags) = "yaml:\"total_shares\"",
+    (gogoproto.nullable) = false
+  ];
+  // assets in the pool
+  repeated cosmos.base.v1beta1.Coin poolLiquidity = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // for calculation amognst assets with different precisions
+  repeated uint64 scaling_factor = 7 [
+    (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"",
+    (gogoproto.nullable) = false
+  ];
+}

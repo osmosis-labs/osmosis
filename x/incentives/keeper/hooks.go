@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
@@ -17,7 +18,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		gauges := k.GetUpcomingGauges(ctx)
 		for _, gauge := range gauges {
 			if !ctx.BlockTime().Before(gauge.StartTime) {
-				if err := k.BeginDistribution(ctx, gauge); err != nil {
+				if err := k.moveUpcomingGaugeToActiveGauge(ctx, gauge); err != nil {
 					panic(err)
 				}
 			}

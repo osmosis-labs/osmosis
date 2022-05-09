@@ -10,7 +10,6 @@ import (
 )
 
 func TestQueryGaugeIdsResponseMarshalUnmarshal(t *testing.T) {
-
 	tests := []struct {
 		response *types.QueryGaugeIdsResponse
 	}{
@@ -40,7 +39,6 @@ func TestQueryGaugeIdsResponseMarshalUnmarshal(t *testing.T) {
 }
 
 func TestQueryIncentivizedPoolsResponseMarshalUnmarshal(t *testing.T) {
-
 	tests := []struct {
 		response *types.QueryIncentivizedPoolsResponse
 	}{

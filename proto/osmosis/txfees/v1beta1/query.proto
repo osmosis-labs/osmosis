@@ -19,7 +19,8 @@ service Query {
 
   rpc DenomSpotPrice(QueryDenomSpotPriceRequest)
       returns (QueryDenomSpotPriceResponse) {
-    option (google.api.http).get = "/osmosis/txfees/v1beta1/spot_price_by_denom";
+    option (google.api.http).get =
+        "/osmosis/txfees/v1beta1/spot_price_by_denom";
   }
 
   rpc DenomPoolId(QueryDenomPoolIdRequest) returns (QueryDenomPoolIdResponse) {

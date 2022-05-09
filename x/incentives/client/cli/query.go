@@ -5,15 +5,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	"github.com/spf13/cobra"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
-func GetQueryCmd(queryRoute string) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	// Group incentives queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -31,6 +33,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdActiveGauges(),
 		GetCmdActiveGaugesPerDenom(),
 		GetCmdUpcomingGauges(),
+		GetCmdUpcomingGaugesPerDenom(),
 		GetCmdRewardsEst(),
 	)
 
@@ -303,6 +306,38 @@ $ %s query incentives upcoming-gauges
 			}
 
 			res, err := queryClient.UpcomingGauges(cmd.Context(), &types.UpcomingGaugesRequest{Pagination: pageReq})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "incentives")
+
+	return cmd
+}
+
+// GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
+func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "upcoming-gauges-per-denom [denom]",
+		Short: "Query scheduled gauges per denom",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.UpcomingGaugesPerDenom(cmd.Context(), &types.UpcomingGaugesPerDenomRequest{Denom: args[0], Pagination: pageReq})
 			if err != nil {
 				return err
 			}

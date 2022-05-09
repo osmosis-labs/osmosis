@@ -3,10 +3,11 @@ package keeper
 import (
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	db "github.com/tendermint/tm-db"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func unlockingPrefix(isUnlocking bool) []byte {
@@ -36,9 +37,9 @@ func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, maxTime time.
 }
 
 func (k Keeper) iteratorDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
-	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
+	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(store, key)
 }
 
@@ -147,7 +148,13 @@ func (k Keeper) AccountLockIteratorLongerDuration(ctx sdk.Context, isUnlocking b
 	return k.iteratorLongerDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)
 }
 
-// AccountLockIteratorShorterThanDuration returns iterator used for getting all locks by account longer than duration.
+// AccountLockIteratorDuration returns an iterator used for getting all locks for a given account, isUnlocking, and specific duration.
+func (k Keeper) AccountLockIteratorDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(isUnlocking)
+	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)
+}
+
+// AccountLockIteratorShorterThanDuration returns an iterator used for getting all locks by account shorter than the specified duration.
 func (k Keeper) AccountLockIteratorShorterThanDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorShorterDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)

@@ -39,6 +39,7 @@ service Query {
   rpc ActiveGauges(ActiveGaugesRequest) returns (ActiveGaugesResponse) {
     option (google.api.http).get = "/osmosis/incentives/v1beta1/active_gauges";
   }
+  // returns active gauges per denom
   rpc ActiveGaugesPerDenom(ActiveGaugesPerDenomRequest)
       returns (ActiveGaugesPerDenomResponse) {
     option (google.api.http).get =
@@ -49,6 +50,13 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/upcoming_gauges";
   }
+  // returns scheduled gauges per denom
+  rpc UpcomingGaugesPerDenom(UpcomingGaugesPerDenomRequest)
+      returns (UpcomingGaugesPerDenomResponse) {
+    option (google.api.http).get =
+        "/osmosis/incentives/v1beta1/upcoming_gauges_per_denom";
+  }
+
   // RewardsEst returns an estimate of the rewards at a future specific time.
   // The querier either provides an address or a set of locks
   // for which they want to find the associated rewards.
@@ -121,6 +129,16 @@ message UpcomingGaugesRequest {
 message UpcomingGaugesResponse {
   repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
   // pagination defines an pagination for the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message UpcomingGaugesPerDenomRequest {
+  string denom = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message UpcomingGaugesPerDenomResponse {
+  repeated Gauge upcoming_gauges = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
