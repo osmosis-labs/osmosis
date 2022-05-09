@@ -98,10 +98,10 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor, ctx.BlockTime())
+	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor)
 	if err != nil {
 		return nil, err
 	}
 
-	return &stableswapPool, nil
+	return stableswapPool, nil
 }
