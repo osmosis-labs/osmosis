@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,28 +50,23 @@ func (pa Pool) IsActive(ctx sdk.Context) bool {
 
 // Returns the coins in the pool owned by all LP shareholders
 func (pa Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
-	return pa.PoolLiquidity
+	coins := sdk.Coins{}
+	for _, asset := range pa.PoolAssets {
+		coins = coins.Add(asset.Token)
+	}
+	return coins
 }
 
 func (pa Pool) GetTotalShares() sdk.Int {
 	return pa.TotalShares.Amount
 }
 
-func (pa Pool) GetScalingFactors() []uint64 {
-	return pa.ScalingFactor
-}
-
-// CONTRACT: scaling factors follow the same index with pool liquidity denoms
-func (pa Pool) GetScalingFactorByLiquidityIndex(liquidityIndex int) uint64 {
-	return pa.ScalingFactor[liquidityIndex]
-}
-
 // returns pool liquidity of the provided denoms, in the same order the denoms were provided in
 func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	result := make([]sdk.Int, len(denoms))
-	poolLiquidity := pa.PoolLiquidity
+	poolLiquidity := pa.PoolAssets
 	for i, d := range denoms {
-		amt := poolLiquidity.AmountOf(d)
+		amt := poolLiquidity[i].GetToken().Amount
 		if amt.IsZero() {
 			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", d)
 		}
@@ -81,39 +78,28 @@ func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 // getScaledPoolAmts returns scaled amount of pool liquidity based on each asset's precisions
 func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	result := make([]sdk.Int, len(denoms))
-	poolLiquidity := pa.PoolLiquidity
-	liquidityIndexes := pa.getLiquidityIndexMap()
+	poolLiquidity := pa.PoolAssets
 
 	for i, denom := range denoms {
-		liquidityIndex := liquidityIndexes[denom]
 
-		amt := poolLiquidity.AmountOf(denom)
+		amt := poolLiquidity[i].GetToken().Amount
 		if amt.IsZero() {
 			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", denom)
 		}
-		scalingFactor := pa.GetScalingFactorByLiquidityIndex(liquidityIndex)
-		result[i] = amt.QuoRaw(int64(scalingFactor))
+		scalingFactor := poolLiquidity[i].ScalingFactor
+		result[i] = amt.Quo(scalingFactor)
 	}
 	return result, nil
 }
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
-func (pa Pool) getDescaledPoolAmt(denom string, amount sdk.Dec) sdk.Dec {
-	liquidityIndexes := pa.getLiquidityIndexMap()
-	liquidityIndex := liquidityIndexes[denom]
-
-	scalingFactor := pa.GetScalingFactorByLiquidityIndex(liquidityIndex)
-	return amount.MulInt64(int64(scalingFactor))
-}
-
-// getLiquidityIndexMap creates a map of denoms to its index in pool liquidity
-func (pa Pool) getLiquidityIndexMap() map[string]int {
-	poolLiquidity := pa.PoolLiquidity
-	liquidityIndexMap := make(map[string]int, poolLiquidity.Len())
-	for i, coin := range poolLiquidity {
-		liquidityIndexMap[coin.Denom] = i
+func (pa Pool) getDescaledPoolAmt(denom string, amount sdk.Dec) (sdk.Dec, error) {
+	for _, asset := range pa.PoolAssets {
+		if asset.Token.Denom == denom {
+			return amount.MulInt(asset.ScalingFactor), nil
+		}
 	}
-	return liquidityIndexMap
+	return sdk.Dec{}, errors.New(fmt.Sprintf("denom %s is not found in pool", denom))
 }
 
 // updatePoolLiquidityForSwap updates the pool liquidity.
@@ -121,12 +107,20 @@ func (pa Pool) getLiquidityIndexMap() map[string]int {
 // denominations in the pool.
 // The function sanity checks this, and panics if not the case.
 func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) {
-	numTokens := p.PoolLiquidity.Len()
-	// update liquidity
-	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut)
-	// sanity check that no new denoms were added
-	if len(p.PoolLiquidity) != numTokens {
-		panic("updatePoolLiquidityForSwap changed number of tokens in pool")
+	for _, tokenIn := range tokensIn {
+		index, pa, err := p.getPoolAssetAndIndex(tokenIn.Denom)
+		if err != nil {
+			panic(err)
+		}
+		p.PoolAssets[index].Token = pa.Token.Add(tokenIn)
+	}
+
+	for _, tokenOut := range tokensOut {
+		index, pa, err := p.getPoolAssetAndIndex(tokenOut.Denom)
+		if err != nil {
+			panic(err)
+		}
+		p.PoolAssets[index].Token = pa.Token.Sub(tokenOut)
 	}
 }
 
@@ -196,7 +190,10 @@ func (pa Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom
 		return sdk.Dec{}, err
 	}
 	scaledSpotPrice := spotPrice(reserves[0].ToDec(), reserves[1].ToDec())
-	spotPrice := pa.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
+	spotPrice, err := pa.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
 
 	return spotPrice, nil
 }
@@ -219,3 +216,31 @@ func (pa Pool) CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sd
 
 // no-op for stableswap
 func (pa *Pool) PokePool(blockTime time.Time) {}
+
+// Returns a pool asset, and its index. If err != nil, then the index will be valid.
+func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
+	if denom == "" {
+		return -1, PoolAsset{}, fmt.Errorf("you tried to find the PoolAsset with empty denom")
+	}
+
+	if len(pa.PoolAssets) == 0 {
+		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+	}
+
+	i := sort.Search(len(pa.PoolAssets), func(i int) bool {
+		PoolAssetA := pa.PoolAssets[i]
+
+		compare := strings.Compare(PoolAssetA.Token.Denom, denom)
+		return compare >= 0
+	})
+
+	if i < 0 || i >= len(pa.PoolAssets) {
+		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+	}
+
+	if pa.PoolAssets[i].Token.Denom != denom {
+		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+	}
+
+	return i, pa.PoolAssets[i], nil
+}

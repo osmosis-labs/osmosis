@@ -19,14 +19,14 @@ var (
 func NewMsgCreateStableswapPool(
 	sender sdk.AccAddress,
 	poolParams PoolParams,
-	initialLiquidity sdk.Coins,
+	poolAssets []PoolAsset,
 	futurePoolGovernor string,
 ) MsgCreateStableswapPool {
 	return MsgCreateStableswapPool{
-		Sender:               sender.String(),
-		PoolParams:           &poolParams,
-		InitialPoolLiquidity: initialLiquidity,
-		FuturePoolGovernor:   futurePoolGovernor,
+		Sender:             sender.String(),
+		PoolParams:         &poolParams,
+		PoolAssets:         poolAssets,
+		FuturePoolGovernor: futurePoolGovernor,
 	}
 }
 
@@ -45,9 +45,9 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 
 	// validation for pool initial liquidity
 	// TO DO: expand this check to accommodate multi-asset pools for stableswap
-	if len(msg.InitialPoolLiquidity) < 2 {
+	if len(msg.PoolAssets) < 2 {
 		return types.ErrTooFewPoolAssets
-	} else if len(msg.InitialPoolLiquidity) > 2 {
+	} else if len(msg.PoolAssets) > 2 {
 		return types.ErrTooManyPoolAssets
 	}
 
@@ -86,11 +86,19 @@ func (msg MsgCreateStableswapPool) Validate(ctx sdk.Context) error {
 }
 
 func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
-	return msg.InitialPoolLiquidity
+	var coins sdk.Coins
+	for _, asset := range msg.PoolAssets {
+		coins = append(coins, asset.Token)
+	}
+	if coins == nil {
+		panic("Shouldn't happen")
+	}
+	coins = coins.Sort()
+	return coins
 }
 
 func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity, msg.FuturePoolGovernor, ctx.BlockTime())
+	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor, ctx.BlockTime())
 	if err != nil {
 		return nil, err
 	}

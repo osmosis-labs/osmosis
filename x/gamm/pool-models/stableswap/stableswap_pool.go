@@ -15,13 +15,13 @@ var _ types.PoolI = &Pool{}
 // * len(initialLiquidity) = 2
 // * FutureGovernor is valid
 // * poolID doesn't already exist
-func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, futureGovernor string, blockTime time.Time) (Pool, error) {
+func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, poolAssets []PoolAsset, futureGovernor string, blockTime time.Time) (Pool, error) {
 	pool := Pool{
 		Address:            types.NewPoolAddress(poolId).String(),
 		Id:                 poolId,
 		PoolParams:         stableswapPoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
-		PoolLiquidity:      initialLiquidity,
+		PoolAssets:         poolAssets,
 		FuturePoolGovernor: futureGovernor,
 	}
 

@@ -17,10 +17,8 @@ message MsgCreateStableswapPool {
 
   PoolParams poolParams = 2 [ (gogoproto.moretags) = "yaml:\"pool_params\"" ];
 
-  repeated cosmos.base.v1beta1.Coin initial_pool_liquidity = 3 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  repeated osmosis.gamm.stableswap.v1beta1.PoolAsset poolAssets = 3
+      [ (gogoproto.nullable) = false ];
 
   string future_pool_governor = 4
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];

@@ -29,6 +29,24 @@ message PoolParams {
   ];
 }
 
+// Pool asset is an internal struct that combines the amount of the
+// token in the pool, and its balancer weight.
+// This is an awkward packaging of data,
+// and should be revisited in a future state migration.
+message PoolAsset {
+  // Coins we are talking about,
+  // the denomination must be unique amongst all PoolAssets for this pool.
+  cosmos.base.v1beta1.Coin token = 1
+      [ (gogoproto.moretags) = "yaml:\"token\"", (gogoproto.nullable) = false ];
+  // used for normalizing values for calculation amognst assets with different
+  // precisions
+  string scalingFactor = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"scaling_factor\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
 // Pool is the stableswap Pool struct
 message Pool {
   option (gogoproto.goproto_getters) = false;
@@ -59,13 +77,6 @@ message Pool {
     (gogoproto.nullable) = false
   ];
   // assets in the pool
-  repeated cosmos.base.v1beta1.Coin poolLiquidity = 6 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  // for calculation amognst assets with different precisions
-  repeated uint64 scaling_factor = 7 [
-    (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"",
-    (gogoproto.nullable) = false
-  ];
+  repeated osmosis.gamm.stableswap.v1beta1.PoolAsset poolAssets = 6
+      [ (gogoproto.nullable) = false ];
 }
