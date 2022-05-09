@@ -53,12 +53,13 @@ message MsgBeginUnlocking {
 message MsgBeginUnlockingResponse { bool success = 1; }
 
 // MsgExtendLockup extends the existing lockup's duration.
-// The new duration is longer than the original. 
+// The new duration is longer than the original.
 message MsgExtendLockup {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;
 
-  // duration to be set. fails if lower than the current duration, or is unlocking
+  // duration to be set. fails if lower than the current duration, or is
+  // unlocking
   google.protobuf.Duration duration = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
