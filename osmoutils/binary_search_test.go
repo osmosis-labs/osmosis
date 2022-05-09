@@ -48,7 +48,7 @@ func TestErrTolerance_Compare(t *testing.T) {
 		input     sdk.Int
 		reference sdk.Int
 
-		expectedCompareResult int8
+		expectedCompareResult int
 	}{
 		{"0 tolerance: <", ZeroErrTolerance, sdk.NewInt(1000), sdk.NewInt(1001), -1},
 		{"0 tolerance: =", ZeroErrTolerance, sdk.NewInt(1001), sdk.NewInt(1001), 0},

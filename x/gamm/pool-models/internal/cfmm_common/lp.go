@@ -21,7 +21,6 @@ func CalcExitPool(ctx sdk.Context, pool types.PoolI, exitingShares sdk.Int, exit
 	var refundedShares sdk.Dec
 	if !exitFee.IsZero() {
 		// exitingShares * (1 - exit fee)
-		// Todo: make a -1 constant
 		oneSubExitFee := sdk.OneDec().SubMut(exitFee)
 		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
 	} else {
@@ -103,8 +102,8 @@ func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (
 // (by path-independence, swap all of B -> A, and then swap all of C -> A will yield same amount of A, regardless
 // of order and interleaving)
 //
-// This implementation all of pool.GetTotalPoolLiquidity, pool.ExitPool, and pool.SwapExactAmountIn to not
-// require any updates to state, and instead only do updates based upon the pool struct.
+// This implementation requires each of pool.GetTotalPoolLiquidity, pool.ExitPool, and pool.SwapExactAmountIn
+// to not update or read from state, and instead only do updates based upon the pool struct.
 func BinarySearchSingleAssetJoin(
 	pool types.PoolI,
 	tokenIn sdk.Coin,
@@ -115,7 +114,7 @@ func BinarySearchSingleAssetJoin(
 	// Need to get something that makes the result correct within 1 LP share
 	// If we fail to reach it within maxIterations, we return an error
 	correctnessThreshold := sdk.NewInt(2)
-	maxIterations := 512
+	maxIterations := 300
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
 	existingTokenLiquidity := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenIn.Denom)
 	existingLPShares := pool.GetTotalShares()

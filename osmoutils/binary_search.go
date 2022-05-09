@@ -12,6 +12,7 @@ import (
 // |a - b| <= AdditiveTolerance
 // |a - b| / min(a, b) <= MultiplicativeTolerance
 // Each check is respectively ignored if the entry is nil (sdk.Dec{}, sdk.Int{})
+// Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.
 type ErrTolerance struct {
 	AdditiveTolerance       sdk.Int
 	MultiplicativeTolerance sdk.Dec
@@ -21,10 +22,10 @@ type ErrTolerance struct {
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int8 {
+func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 	diff := expected.Sub(actual).Abs()
 
-	comparisonSign := int8(0)
+	comparisonSign := 0
 	if expected.GT(actual) {
 		comparisonSign = 1
 	} else {
