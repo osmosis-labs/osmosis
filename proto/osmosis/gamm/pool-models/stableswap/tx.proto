@@ -10,7 +10,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stabl
 service Msg {
   rpc CreateStableswapPool(MsgCreateStableswapPool)
       returns (MsgCreateStableswapPoolResponse);
-  rpc AdjustScalingFactors(MsgStableSwapAdjustScalingFactors)
+  rpc StableSwapAdjustScalingFactors(MsgStableSwapAdjustScalingFactors)
       returns (MsgStableSwapAdjustScalingFactorsResponse);
 }
 
