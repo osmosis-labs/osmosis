@@ -1,6 +1,5 @@
 syntax = "proto3";
-// this is a temporary package setup, needs migration logic
-package osmosis.gamm.v1beta1;
+package osmosis.gamm.poolmodels.balancer;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
@@ -45,7 +44,7 @@ message SmoothWeightChangeParams {
   // The amount PoolAsset.token.amount field is ignored if present,
   // future type refactorings should just have a type with the denom & weight
   // here.
-  repeated osmosis.gamm.v1beta1.PoolAsset initialPoolWeights = 3 [
+  repeated osmosis.gamm.poolmodels.balancer.PoolAsset initialPoolWeights = 3 [
     (gogoproto.moretags) = "yaml:\"initial_pool_weights\"",
     (gogoproto.nullable) = false
   ];
@@ -53,7 +52,7 @@ message SmoothWeightChangeParams {
   // to time between start_time, and start_time + duration. The amount
   // PoolAsset.token.amount field is ignored if present, future type
   // refactorings should just have a type with the denom & weight here.
-  repeated osmosis.gamm.v1beta1.PoolAsset targetPoolWeights = 4 [
+  repeated osmosis.gamm.poolmodels.balancer.PoolAsset targetPoolWeights = 4 [
     (gogoproto.moretags) = "yaml:\"target_pool_weights\"",
     (gogoproto.nullable) = false
   ];
@@ -135,7 +134,7 @@ message Pool {
   ];
   // These are assumed to be sorted by denomiation.
   // They contain the pool asset and the information about the weight
-  repeated osmosis.gamm.v1beta1.PoolAsset poolAssets = 6 [
+  repeated osmosis.gamm.poolmodels.balancer.PoolAsset poolAssets = 6 [
     (gogoproto.moretags) = "yaml:\"pool_assets\"",
     (gogoproto.nullable) = false
   ];

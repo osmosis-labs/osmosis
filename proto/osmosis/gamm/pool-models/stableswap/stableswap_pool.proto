@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.gamm.stableswap.v1beta1;
+package osmosis.gamm.poolmodels.stableswap;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";

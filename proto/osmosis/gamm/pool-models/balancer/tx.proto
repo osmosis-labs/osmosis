@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.gamm.v1beta1;
+package osmosis.gamm.poolmodels.balancer;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
@@ -17,7 +17,7 @@ message MsgCreateBalancerPool {
 
   PoolParams poolParams = 2 [ (gogoproto.moretags) = "yaml:\"pool_params\"" ];
 
-  repeated osmosis.gamm.v1beta1.PoolAsset poolAssets = 3
+  repeated osmosis.gamm.poolmodels.balancer.PoolAsset poolAssets = 3
       [ (gogoproto.nullable) = false ];
 
   string future_pool_governor = 4
