@@ -255,17 +255,8 @@ func (pa *Pool) validateAndSortInitialPoolAssets() error {
 		return fmt.Errorf(errMsgFmtTooLittlePoolAssetsGiven, len(pa.PoolAssets))
 	}
 
-	existsSet := make(map[string]struct{})
-	for _, asset := range pa.PoolAssets {
-		err := asset.Validate()
-		if err != nil {
-			return err
-		}
-
-		if _, exists := existsSet[asset.Token.Denom]; exists {
-			return fmt.Errorf(errMsgFmtDuplicateDenomFound, asset.Token.Denom)
-		}
-		existsSet[asset.Token.Denom] = struct{}{}
+	if err := validatePoolAssetsAgainstDuplicates(pa.PoolAssets); err != nil {
+		return err
 	}
 
 	SortPoolAssetsByDenom(pa.PoolAssets)

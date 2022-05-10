@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	types "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 const (
@@ -15,6 +17,10 @@ const (
 
 // Validates a pool asset, returns nil if valid, error otherwise.
 func (asset PoolAsset) Validate() error {
+	if asset.Token.Denom == "" {
+		return types.ErrEmptyPoolAssets
+	}
+
 	if asset.Token.Amount.LTE(sdk.ZeroInt()) {
 		return fmt.Errorf(errMsgFmtNonPositiveTokenAmount, asset.Token.Denom, asset.Token.Amount.Int64())
 	}
@@ -33,4 +39,20 @@ func SortPoolAssetsByDenom(assets []PoolAsset) {
 
 		return strings.Compare(PoolAssetA.Token.Denom, PoolAssetB.Token.Denom) == -1
 	})
+}
+
+func validatePoolAssetsAgainstDuplicates(assets []PoolAsset) error {
+	existsSet := make(map[string]struct{})
+	for _, asset := range assets {
+		err := asset.Validate()
+		if err != nil {
+			return err
+		}
+
+		if _, exists := existsSet[asset.Token.Denom]; exists {
+			return fmt.Errorf(errMsgFmtDuplicateDenomFound, asset.Token.Denom)
+		}
+		existsSet[asset.Token.Denom] = struct{}{}
+	}
+	return nil
 }

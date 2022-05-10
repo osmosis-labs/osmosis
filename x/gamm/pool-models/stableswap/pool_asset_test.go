@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap"
+	types "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 func TestStableSwapPoolAssetValidate(t *testing.T) {
@@ -21,6 +22,12 @@ func TestStableSwapPoolAssetValidate(t *testing.T) {
 			name:          "ust",
 			tokenAmount:   100,
 			scalingFactor: 10,
+		},
+		"empty denom": {
+			name:          "",
+			tokenAmount:   100,
+			scalingFactor: 10,
+			expected:      types.ErrEmptyPoolAssets,
 		},
 		"zero scaling factor - invalid": {
 			name:          "ust",
@@ -38,7 +45,7 @@ func TestStableSwapPoolAssetValidate(t *testing.T) {
 	for name, tc := range testcase {
 		t.Run(name, func(t *testing.T) {
 			poolAsset := stableswap.PoolAsset{
-				Token:         sdk.NewCoin(tc.name, sdk.NewInt(tc.tokenAmount)),
+				Token:         sdk.Coin{tc.name, sdk.NewInt(tc.tokenAmount)},
 				ScalingFactor: sdk.NewInt(tc.scalingFactor),
 			}
 

@@ -37,25 +37,15 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
-
-	err = msg.PoolParams.Validate()
-	if err != nil {
+	if err := msg.PoolParams.Validate(); err != nil {
 		return err
 	}
-
-	// validation for pool initial liquidity
-	// TO DO: expand this check to accommodate multi-asset pools for stableswap
-	if len(msg.PoolAssets) < 2 {
-		return types.ErrTooFewPoolAssets
-	} else if len(msg.PoolAssets) > 2 {
-		return types.ErrTooManyPoolAssets
+	if err := ValidatePoolAssets(msg.PoolAssets); err != nil {
+		return err
 	}
-
-	// validation for future owner
 	if err = types.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -104,4 +94,26 @@ func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (t
 	}
 
 	return stableswapPool, nil
+}
+
+func ValidatePoolAssets(poolAssets []PoolAsset) error {
+	// validation for pool initial liquidity
+	// TODO: expand this check to accommodate multi-asset pools for stableswap
+	if len(poolAssets) < 2 {
+		return types.ErrTooFewPoolAssets
+	}
+	if len(poolAssets) > 2 {
+		return types.ErrTooManyPoolAssets
+	}
+
+	if err := validatePoolAssetsAgainstDuplicates(poolAssets); err != nil {
+		return err
+	}
+
+	for _, pa := range poolAssets {
+		if err := pa.Validate(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
