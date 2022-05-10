@@ -72,9 +72,7 @@ func (m *PoolParams) XXX_DiscardUnknown() {
 var xxx_messageInfo_PoolParams proto.InternalMessageInfo
 
 // Pool asset is an internal struct that combines the amount of the
-// token in the pool, and its balancer weight.
-// This is an awkward packaging of data,
-// and should be revisited in a future state migration.
+// token in the pool, and scaling factor.
 type PoolAsset struct {
 	// Coins we are talking about,
 	// the denomination must be unique amongst all PoolAssets for this pool.
