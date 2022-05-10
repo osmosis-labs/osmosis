@@ -23,5 +23,9 @@ func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, poolAsset
 		FuturePoolGovernor: futureGovernor,
 	}
 
+	if err := pool.validateAndSortInitialPoolAssets(); err != nil {
+		return nil, err
+	}
+
 	return &pool, nil
 }

@@ -333,13 +333,17 @@ func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
 
 // returns outAmt as a decimal
 func (pa *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := pa.getScaledPoolAmts(tokenIn.Denom, tokenOutDenom)
-
+	tokenInScaledInt, err := pa.getScaledPoolAmt(tokenIn.Denom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	tokenInSupply := reserves[0].ToDec()
-	tokenOutSupply := reserves[1].ToDec()
+
+	tokenOutScaledInt, err := pa.getScaledPoolAmt(tokenOutDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	tokenInSupply := tokenInScaledInt.ToDec()
+	tokenOutSupply := tokenOutScaledInt.ToDec()
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
 	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, tokenIn.Amount.ToDec())
 	outAmt, err := pa.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
@@ -351,12 +355,17 @@ func (pa *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFe
 
 // returns inAmt as a decimal
 func (pa *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := pa.getScaledPoolAmts(tokenInDenom, tokenOut.Denom)
+	tokenInScaledInt, err := pa.getScaledPoolAmt(tokenInDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	tokenInSupply := reserves[0].ToDec()
-	tokenOutSupply := reserves[1].ToDec()
+
+	tokenOutScaledInt, err := pa.getScaledPoolAmt(tokenOut.Denom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	tokenInSupply := tokenInScaledInt.ToDec()
+	tokenOutSupply := tokenOutScaledInt.ToDec()
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
 	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, tokenOut.Amount.ToDec().Neg())

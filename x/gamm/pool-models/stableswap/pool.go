@@ -16,6 +16,13 @@ import (
 
 var _ types.PoolI = &Pool{}
 
+const (
+	errMsgFmtTooLittlePoolAssetsGiven = "too little pool assets given: %d, need at least 2"
+	errMsgFmtNonExistentDenomGiven    = "can't find the PoolAsset (%s)"
+	errMsgFmtDuplicateDenomFound      = "duplicate denom (%s) found"
+	errMsgEmptyDenomGiven             = "denom name cannot be empty"
+)
+
 func (pa Pool) GetAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(pa.Address)
 	if err != nil {
@@ -61,35 +68,14 @@ func (pa Pool) GetTotalShares() sdk.Int {
 	return pa.TotalShares.Amount
 }
 
-// returns pool liquidity of the provided denoms, in the same order the denoms were provided in
-func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
-	result := make([]sdk.Int, len(denoms))
-	poolLiquidity := pa.PoolAssets
-	for i, d := range denoms {
-		amt := poolLiquidity[i].GetToken().Amount
-		if amt.IsZero() {
-			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", d)
-		}
-		result[i] = amt
+// getScaledPoolAmts returns scaled amount of pool liquidity based on the asset's precisions
+func (pa Pool) getScaledPoolAmt(denom string) (sdk.Int, error) {
+	idx, asset, err := pa.getPoolAssetAndIndex(denom)
+	if err != nil {
+		return sdk.Int{}, err
 	}
-	return result, nil
-}
-
-// getScaledPoolAmts returns scaled amount of pool liquidity based on each asset's precisions
-func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
-	result := make([]sdk.Int, len(denoms))
-	poolLiquidity := pa.PoolAssets
-
-	for i, denom := range denoms {
-
-		amt := poolLiquidity[i].GetToken().Amount
-		if amt.IsZero() {
-			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", denom)
-		}
-		scalingFactor := poolLiquidity[i].ScalingFactor
-		result[i] = amt.Quo(scalingFactor)
-	}
-	return result, nil
+	scalingFactor := pa.PoolAssets[idx].ScalingFactor
+	return asset.Token.Amount.Quo(scalingFactor), nil
 }
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
@@ -185,11 +171,15 @@ func (pa *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDe
 }
 
 func (pa Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
-	reserves, err := pa.getScaledPoolAmts(baseAssetDenom, quoteAssetDenom)
+	baseAssetScaledInt, err := pa.getScaledPoolAmt(baseAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	scaledSpotPrice := spotPrice(reserves[0].ToDec(), reserves[1].ToDec())
+	quoteAssetScaledInt, err := pa.getScaledPoolAmt(quoteAssetDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	scaledSpotPrice := spotPrice(baseAssetScaledInt.ToDec(), quoteAssetScaledInt.ToDec())
 	spotPrice, err := pa.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -220,11 +210,11 @@ func (pa *Pool) PokePool(blockTime time.Time) {}
 // Returns a pool asset, and its index. If err != nil, then the index will be valid.
 func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	if denom == "" {
-		return -1, PoolAsset{}, fmt.Errorf("you tried to find the PoolAsset with empty denom")
+		return -1, PoolAsset{}, errors.New(errMsgEmptyDenomGiven)
 	}
 
 	if len(pa.PoolAssets) == 0 {
-		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+		return -1, PoolAsset{}, fmt.Errorf(errMsgFmtNonExistentDenomGiven, denom)
 	}
 
 	i := sort.Search(len(pa.PoolAssets), func(i int) bool {
@@ -235,12 +225,38 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	})
 
 	if i < 0 || i >= len(pa.PoolAssets) {
-		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+		return -1, PoolAsset{}, fmt.Errorf(errMsgFmtNonExistentDenomGiven, denom)
 	}
 
 	if pa.PoolAssets[i].Token.Denom != denom {
-		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+		return -1, PoolAsset{}, fmt.Errorf(errMsgFmtNonExistentDenomGiven, denom)
 	}
 
 	return i, pa.PoolAssets[i], nil
+}
+
+// validateAndSortInitialPoolAssets sets the PoolAssets in the pool.
+// It is only designed to be called at the pool's creation.
+// If the same denom's PoolAsset exists, will return error.
+// Sorts the list of PoolAssets by denom. This is done to enable fast searching for a PoolAsset by denomination.
+func (pa *Pool) validateAndSortInitialPoolAssets() error {
+	if len(pa.PoolAssets) < 2 {
+		return fmt.Errorf(errMsgFmtTooLittlePoolAssetsGiven, len(pa.PoolAssets))
+	}
+
+	existsSet := make(map[string]struct{})
+	for _, asset := range pa.PoolAssets {
+		err := asset.Validate()
+		if err != nil {
+			return err
+		}
+
+		if _, exists := existsSet[asset.Token.Denom]; exists {
+			return fmt.Errorf(errMsgFmtDuplicateDenomFound, asset.Token.Denom)
+		}
+		existsSet[asset.Token.Denom] = struct{}{}
+	}
+
+	SortPoolAssetsByDenom(pa.PoolAssets)
+	return nil
 }
