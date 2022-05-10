@@ -19,6 +19,7 @@ func createTestPool(t *testing.T, poolAssets []stableswap.PoolAsset, swapFee, ex
 		"")
 
 	require.NoError(t, err)
+	require.NotNil(t, pool)
 
 	return pool
 }
