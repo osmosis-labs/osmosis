@@ -151,12 +151,15 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 	s.T().Logf("starting %s validator containers...", c.ChainMeta.Id)
 	s.valResources[c.ChainMeta.Id] = make([]*dockertest.Resource, len(c.Validators))
+	pwd, err := os.Getwd()
+	s.Require().NoError(err)
 	for i, val := range c.Validators {
 		runOpts := &dockertest.RunOptions{
 			Name:      val.Name,
 			NetworkID: s.dkrNet.Network.ID,
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
+				fmt.Sprintf("%s/scripts:/osmosis", pwd),
 			},
 			Repository: "osmolabs/osmosis-dev",
 			Tag:        "v7.2.1-debug",
@@ -454,6 +457,8 @@ func (s *IntegrationTestSuite) upgradeContainers(c *chain.Chain, wg *sync.WaitGr
 	defer wg.Done()
 	// upgrade containers to the locally compiled daemon
 	s.T().Logf("starting upgrade for chain-id: %s...", c.ChainMeta.Id)
+	pwd, err := os.Getwd()
+	s.Require().NoError(err)
 	for i, val := range c.Validators {
 		runOpts := &dockertest.RunOptions{
 			Name:       val.Name,
@@ -463,6 +468,7 @@ func (s *IntegrationTestSuite) upgradeContainers(c *chain.Chain, wg *sync.WaitGr
 			User:       "root:root",
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
+				fmt.Sprintf("%s/scripts:/osmosis", pwd),
 			},
 		}
 		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)

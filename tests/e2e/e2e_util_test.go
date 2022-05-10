@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -376,11 +375,6 @@ func (s *IntegrationTestSuite) queryBalances(containerId string, addr string) (s
 func (s *IntegrationTestSuite) createPool(c *chain.Chain, poolFile string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	_, err := util.CopyFile(
-		filepath.Join("./scripts/", poolFile),
-		filepath.Join(c.Validators[0].ConfigDir, poolFile),
-	)
-	s.Require().NoError(err)
 
 	var (
 		outBuf bytes.Buffer
@@ -394,7 +388,7 @@ func (s *IntegrationTestSuite) createPool(c *chain.Chain, poolFile string) {
 		Container:    s.valResources[c.ChainMeta.Id][0].Container.ID,
 		User:         "root",
 		Cmd: []string{
-			"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/.osmosisd/%s", poolFile), fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test",
+			"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test",
 		},
 	})
 	s.Require().NoError(err)
