@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -25,8 +26,11 @@ import (
 )
 
 var (
-	// common
-	maxRetries             = 10 // max retries for json unmarshalling
+	propHeight  int
+	propHeightA int  // upgrade proposal height for chain A
+	propHeightB int  // upgrade proposal height for chain B
+	maxRetries  = 60 // max retries for json unmarshalling
+	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
 	validatorConfigsChainA = []*chain.ValidatorConfig{
 		{
 			Pruning:            "default",
@@ -35,20 +39,8 @@ var (
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
 		},
-		{
-			Pruning:            "nothing",
-			PruningKeepRecent:  "0",
-			PruningInterval:    "0",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-		},
-		{
-			Pruning:            "custom",
-			PruningKeepRecent:  "10000",
-			PruningInterval:    "13",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-		},
+		{Pruning: "nothing", PruningKeepRecent: "0", PruningInterval: "0", SnapshotInterval: 1500, SnapshotKeepRecent: 2},
+		{Pruning: "custom", PruningKeepRecent: "10000", PruningInterval: "13", SnapshotInterval: 1500, SnapshotKeepRecent: 2},
 	}
 	validatorConfigsChainB = []*chain.ValidatorConfig{
 		{
@@ -58,20 +50,8 @@ var (
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
 		},
-		{
-			Pruning:            "nothing",
-			PruningKeepRecent:  "0",
-			PruningInterval:    "0",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-		},
-		{
-			Pruning:            "custom",
-			PruningKeepRecent:  "10000",
-			PruningInterval:    "13",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-		},
+		{Pruning: "nothing", PruningKeepRecent: "0", PruningInterval: "0", SnapshotInterval: 1500, SnapshotKeepRecent: 2},
+		{Pruning: "custom", PruningKeepRecent: "10000", PruningInterval: "13", SnapshotInterval: 1500, SnapshotKeepRecent: 2},
 	}
 )
 
@@ -113,15 +93,28 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 3. Run IBC relayer betweeen the two chains.
 	// 4. Execute various e2e tests, including IBC.
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
-
 	s.configureChain(chain.ChainAID, validatorConfigsChainA)
 	s.configureChain(chain.ChainBID, validatorConfigsChainB)
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
 	s.runIBCRelayer()
-	s.initUpgrade()
+	// pre upgrade state creation
+	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.StakeToken)
+	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.StakeToken)
+	s.createPool(s.chains[0], "pool1A.json")
+	s.createPool(s.chains[1], "pool1B.json")
+	// initialize and run the upgrade
 	s.upgrade()
+	// post upgrade tests
+	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.StakeToken)
+	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.StakeToken)
+	s.createPool(s.chains[0], "pool2A.json")
+	s.createPool(s.chains[1], "pool2B.json")
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -156,7 +149,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
-	s.T().Logf("starting Osmosis %s validator containers...", c.ChainMeta.Id)
+	s.T().Logf("starting %s validator containers...", c.ChainMeta.Id)
 	s.valResources[c.ChainMeta.Id] = make([]*dockertest.Resource, len(c.Validators))
 	for i, val := range c.Validators {
 		runOpts := &dockertest.RunOptions{
@@ -192,7 +185,7 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 		s.Require().NoError(err)
 
 		s.valResources[c.ChainMeta.Id][i] = resource
-		s.T().Logf("started Osmosis %s validator container: %s", c.ChainMeta.Id, resource.Container.ID)
+		s.T().Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	}
 
 	rpcClient, err := rpchttp.New("tcp://localhost:26657", "/websocket")
@@ -391,84 +384,113 @@ func noRestart(config *docker.HostConfig) {
 	}
 }
 
-func (s *IntegrationTestSuite) initUpgrade() {
+func (s *IntegrationTestSuite) upgrade() {
 	// submit, deposit, and vote for upgrade proposal
-	s.submitProposal(s.chains[0])
-	s.submitProposal(s.chains[1])
+	currentHeightA := s.chainHeight(s.valResources[s.chains[0].ChainMeta.Id][0].Container.ID)
+	currentHeightB := s.chainHeight(s.valResources[s.chains[1].ChainMeta.Id][0].Container.ID)
+	propHeightA = currentHeightA + 40 + len(s.chains[0].Validators)
+	propHeightB = currentHeightB + 40 + len(s.chains[1].Validators)
+
+	s.submitProposal(s.chains[0], propHeightA)
+	s.submitProposal(s.chains[1], propHeightB)
 	s.depositProposal(s.chains[0])
 	s.depositProposal(s.chains[1])
-	s.voteProposal(s.chains[0])
-	s.voteProposal(s.chains[1])
-
+	var wg sync.WaitGroup
+	wg.Add(2)
+	// use goroutines to vote on both chains concurrently (no possibility of sequence mismatch)
+	go s.voteProposal(s.chains[0], &wg)
+	go s.voteProposal(s.chains[1], &wg)
+	wg.Wait()
 	// wait till all chains halt at upgrade height
-	for _, chain := range s.chains {
-		for i := range chain.Validators {
-			s.T().Logf("waiting to reach upgrade height on %s validator container: %s", chain.ChainMeta.Id, s.valResources[chain.ChainMeta.Id][i].Container.ID)
+	for _, c := range s.chains {
+		if c.ChainMeta.Id == chain.ChainAID {
+			propHeight = propHeightA
+		} else {
+			propHeight = propHeightB
+		}
+		for i := range c.Validators {
+			// use counter to ensure no new blocks are being created
+			counter := 0
+			s.T().Logf("waiting to reach upgrade height on %s validator container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
 			s.Require().Eventually(
 				func() bool {
-					out := s.chainStatus(s.valResources[chain.ChainMeta.Id][i].Container.ID)
-					var syncInfo syncInfo
-					json.Unmarshal(out, &syncInfo)
-					if syncInfo.SyncInfo.LatestHeight != "75" {
-						s.T().Logf("current block height is %v, waiting for block 75 container: %s", syncInfo.SyncInfo.LatestHeight, s.valResources[chain.ChainMeta.Id][i].Container.ID)
+					currentHeight := s.chainHeight(s.valResources[c.ChainMeta.Id][i].Container.ID)
+					if currentHeight != propHeight {
+						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], currentHeight, propHeight, s.valResources[c.ChainMeta.Id][i].Container.ID)
 					}
-					return syncInfo.SyncInfo.LatestHeight == "75"
+					if currentHeight > propHeight {
+						panic("chain did not halt at upgrade height")
+					}
+					if currentHeight == propHeight {
+						counter++
+					}
+					return counter == 3
 				},
-				2*time.Minute,
-				5*time.Second,
+				5*time.Minute,
+				time.Second,
 			)
-			s.T().Logf("reached upgrade height on %s validator container: %s", chain.ChainMeta.Id, s.valResources[chain.ChainMeta.Id][i].Container.ID)
+			s.T().Logf("reached upgrade height on %s container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
 		}
 	}
 
 	// remove all containers so we can upgrade them to the new version
 	for _, chain := range s.chains {
 		for i := range chain.Validators {
-			s.Require().NoError(s.dkrPool.RemoveContainerByName(s.valResources[chain.ChainMeta.Id][i].Container.Name))
+			var opts docker.RemoveContainerOptions
+			opts.ID = s.valResources[chain.ChainMeta.Id][i].Container.ID
+			opts.Force = true
+			s.dkrPool.Client.RemoveContainer(opts)
+			s.T().Logf("removed container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:])
 		}
 	}
+	// upgrade to locally compiled binary concurently
+	wg.Add(2)
+	go s.upgradeContainers(s.chains[0], &wg)
+	go s.upgradeContainers(s.chains[1], &wg)
+	wg.Wait()
 }
 
-func (s *IntegrationTestSuite) upgrade() {
+func (s *IntegrationTestSuite) upgradeContainers(c *chain.Chain, wg *sync.WaitGroup) {
+	defer wg.Done()
 	// upgrade containers to the locally compiled daemon
-	for _, chain := range s.chains {
-		s.T().Logf("starting upgrade for chain-id: %s...", chain.ChainMeta.Id)
-		for i, val := range chain.Validators {
-			runOpts := &dockertest.RunOptions{
-				Name:       val.Name,
-				Repository: "osmosis",
-				Tag:        "debug",
-				NetworkID:  s.dkrNet.Network.ID,
-				User:       "root:root",
-				Mounts: []string{
-					fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
-				},
-			}
-			resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
-			s.Require().NoError(err)
-
-			s.valResources[chain.ChainMeta.Id][i] = resource
-			s.T().Logf("started Osmosis %s validator container: %s", chain.ChainMeta.Id, resource.Container.ID)
+	s.T().Logf("starting upgrade for chain-id: %s...", c.ChainMeta.Id)
+	for i, val := range c.Validators {
+		runOpts := &dockertest.RunOptions{
+			Name:       val.Name,
+			Repository: "osmosis",
+			Tag:        "debug",
+			NetworkID:  s.dkrNet.Network.ID,
+			User:       "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
+			},
 		}
+		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
+		s.Require().NoError(err)
+
+		s.valResources[c.ChainMeta.Id][i] = resource
+		s.T().Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	}
 
-	// check that we are hitting blocks again
-	for _, chain := range s.chains {
-		for i := range chain.Validators {
-			s.Require().Eventually(
-				func() bool {
-					out := s.chainStatus(s.valResources[chain.ChainMeta.Id][i].Container.ID)
-					var syncInfo syncInfo
-					json.Unmarshal(out, &syncInfo)
-					if syncInfo.SyncInfo.LatestHeight <= "75" {
-						fmt.Printf("current block height is %v, waiting to hit blocks\n", syncInfo.SyncInfo.LatestHeight)
-					}
-					return syncInfo.SyncInfo.LatestHeight > "75"
-				},
-				2*time.Minute,
-				5*time.Second,
-			)
-			s.T().Logf("upgrade successful on %s validator container: %s", chain.ChainMeta.Id, s.valResources[chain.ChainMeta.Id][i].Container.ID)
+	// check that we are creating blocks again
+	for i := range c.Validators {
+		if c.ChainMeta.Id == chain.ChainAID {
+			propHeight = propHeightA
+		} else {
+			propHeight = propHeightB
 		}
+		s.Require().Eventually(
+			func() bool {
+				currentHeight := s.chainHeight(s.valResources[c.ChainMeta.Id][i].Container.ID)
+				if currentHeight <= propHeight {
+					s.T().Logf("current block height on %s is %v, creating a few blocks container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], currentHeight, s.valResources[c.ChainMeta.Id][i].Container.ID)
+				}
+				return currentHeight > propHeight+2
+			},
+			5*time.Minute,
+			time.Second,
+		)
+		s.T().Logf("upgrade successful on %s validator container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
 	}
+
 }
