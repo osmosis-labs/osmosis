@@ -115,7 +115,7 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chain.Chain, dstChain *chain.Ch
 
 	s.Require().Truef(
 		strings.Contains(outBuf.String(), "Success"),
-		"tx returned non code 0; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
+		"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 	)
 
 	currentHeight := s.chainHeight(s.valResources[srcChain.ChainMeta.Id][0].Container.ID)
@@ -168,7 +168,7 @@ func (s *IntegrationTestSuite) submitProposal(c *chain.Chain, upgradeHeight int)
 
 	s.Require().Truef(
 		strings.Contains(outBuf.String(), "code: 0"),
-		"tx returned non code 0; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
+		"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 	)
 
 	currentHeight := s.chainHeight(s.valResources[c.ChainMeta.Id][0].Container.ID)
