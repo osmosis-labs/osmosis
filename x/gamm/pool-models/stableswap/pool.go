@@ -69,7 +69,7 @@ func (pa Pool) GetTotalShares() sdk.Int {
 	return pa.TotalShares.Amount
 }
 
-// getScaledPoolAmts returns scaled amount of pool liquidity based on the asset's precisions
+// getScaledPoolAmt returns scaled amount of pool liquidity based on the asset's precisions
 func (pa Pool) getScaledPoolAmt(denom string) (sdk.Int, error) {
 	_, asset, err := pa.getPoolAssetAndIndex(denom)
 	if err != nil {
@@ -246,10 +246,10 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	return i, pa.PoolAssets[i], nil
 }
 
-// validateAndSortInitialPoolAssets sets the PoolAssets in the pool.
+// validateAndSortInitialPoolAssets validates and sorts the PoolAssets in the pool.
 // It is only designed to be called at the pool's creation.
-// If the same denom's PoolAsset exists, will return error.
-// Sorts the list of PoolAssets by denom. This is done to enable fast searching for a PoolAsset by denomination.
+// If the same denom's PoolAsset exists, it will return error.
+// It sorts the list of PoolAssets by denom. This is done to enable fast searching for a PoolAsset by denomination.
 func (pa *Pool) validateAndSortInitialPoolAssets() error {
 	if len(pa.PoolAssets) < 2 {
 		return fmt.Errorf(errMsgFmtTooLittlePoolAssetsGiven, len(pa.PoolAssets))
