@@ -33,8 +33,9 @@ message MsgCreateStableswapPoolResponse {
 }
 
 message MsgStableSwapAdjustScalingFactors {
-  string scaling_factor_governor = 8
+  string scaling_factor_governor = 1
       [ (gogoproto.moretags) = "yaml:\"scaling_factor_governor\"" ];
+  uint64 pool_id = 2 [ (gogoproto.customname) = "PoolID" ];
 }
 
 message MsgStableSwapAdjustScalingFactorsResponse {}
