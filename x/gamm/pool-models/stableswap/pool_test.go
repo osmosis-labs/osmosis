@@ -34,7 +34,7 @@ func TestStableswapValidateAndSetInitiailPoolAssets(t *testing.T) {
 		"1 asset - failure  - need at least 2": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 			},
@@ -43,11 +43,11 @@ func TestStableswapValidateAndSetInitiailPoolAssets(t *testing.T) {
 		"2 assets - success": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 			},
@@ -55,15 +55,15 @@ func TestStableswapValidateAndSetInitiailPoolAssets(t *testing.T) {
 		"3 assets - success": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -71,53 +71,53 @@ func TestStableswapValidateAndSetInitiailPoolAssets(t *testing.T) {
 		"3 assets - duplicate - failure": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
-			expectedError: fmt.Errorf(stableswap.ErrMsgFmtDuplicateDenomFound, "usdc"),
+			expectedError: fmt.Errorf(stableswap.ErrMsgFmtDuplicateDenomFound, usdcDenom),
 		},
 		"3 assets - 1 denom with 0 scaling factor - error": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(0),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
-			expectedError: fmt.Errorf(stableswap.ErrMsgFmtNonPositiveScalingFactor, "ust", 0),
+			expectedError: fmt.Errorf(stableswap.ErrMsgFmtNonPositiveScalingFactor, ustDenom, 0),
 		},
 		"3 assets - 1 denom with 0 token amount - error": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(0)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(0)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
-			expectedError: fmt.Errorf(stableswap.ErrMsgFmtNonPositiveTokenAmount, "ust", 0),
+			expectedError: fmt.Errorf(stableswap.ErrMsgFmtNonPositiveTokenAmount, ustDenom, 0),
 		},
 	}
 
@@ -153,7 +153,7 @@ func TestStableswapCreatePool(t *testing.T) {
 			id: 100,
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 			},
@@ -168,11 +168,11 @@ func TestStableswapCreatePool(t *testing.T) {
 			id: 100,
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 			},
@@ -185,15 +185,15 @@ func TestStableswapCreatePool(t *testing.T) {
 			id: 100,
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -206,15 +206,15 @@ func TestStableswapCreatePool(t *testing.T) {
 			id: 100,
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -224,21 +224,21 @@ func TestStableswapCreatePool(t *testing.T) {
 
 			futureGovernor: "testGovernor",
 
-			expectedError: fmt.Errorf(stableswap.ErrMsgFmtDuplicateDenomFound, "usdc"),
+			expectedError: fmt.Errorf(stableswap.ErrMsgFmtDuplicateDenomFound, usdcDenom),
 		},
 		"error - invalid denom with 0 scaling factor - error": {
 			id: 100,
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(0),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -248,21 +248,21 @@ func TestStableswapCreatePool(t *testing.T) {
 
 			futureGovernor: "testGovernor",
 
-			expectedError: fmt.Errorf(stableswap.ErrMsgFmtNonPositiveScalingFactor, "ust", 0),
+			expectedError: fmt.Errorf(stableswap.ErrMsgFmtNonPositiveScalingFactor, ustDenom, 0),
 		},
 		"error - invalid denom with 0 token amount - error": {
 			id: 100,
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(0)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(0)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -272,7 +272,7 @@ func TestStableswapCreatePool(t *testing.T) {
 
 			futureGovernor: "testGovernor",
 
-			expectedError: fmt.Errorf(stableswap.ErrMsgFmtNonPositiveTokenAmount, "ust", 0),
+			expectedError: fmt.Errorf(stableswap.ErrMsgFmtNonPositiveTokenAmount, ustDenom, 0),
 		},
 	}
 
@@ -308,11 +308,11 @@ func TestStableswapGetTotalPoolLiquidity(t *testing.T) {
 		"2 assets": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(3454)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(3454)),
 					ScalingFactor: sdk.NewInt(123),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(211)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(211)),
 					ScalingFactor: sdk.NewInt(3),
 				},
 			},
@@ -320,23 +320,23 @@ func TestStableswapGetTotalPoolLiquidity(t *testing.T) {
 		"5 assets": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -367,11 +367,11 @@ func TestStableswapGetPoolAssetAndIndex(t *testing.T) {
 		"2 assets - request each - sucess": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(3454)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(3454)),
 					ScalingFactor: sdk.NewInt(123),
 				},
 				{
-					Token:         sdk.NewCoin("usdb", sdk.NewInt(211)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(211)),
 					ScalingFactor: sdk.NewInt(3),
 				},
 			},
@@ -379,23 +379,23 @@ func TestStableswapGetPoolAssetAndIndex(t *testing.T) {
 		"5 assets - request each - sucess": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("usdb", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usdd", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usde", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -403,23 +403,23 @@ func TestStableswapGetPoolAssetAndIndex(t *testing.T) {
 		"5 asssets - non existent denom - error": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("usdb", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usdd", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usde", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -428,23 +428,23 @@ func TestStableswapGetPoolAssetAndIndex(t *testing.T) {
 		"5 asssets - empty string denom - error": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("usb", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usdd", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usde", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -495,11 +495,11 @@ func TestStableswapGetScaledPoolAmt(t *testing.T) {
 		"2 assets - request each - sucess": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(3454)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(3454)),
 					ScalingFactor: sdk.NewInt(123),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(211)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(211)),
 					ScalingFactor: sdk.NewInt(3),
 				},
 			},
@@ -507,23 +507,23 @@ func TestStableswapGetScaledPoolAmt(t *testing.T) {
 		"5 assets - request each - sucess": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -531,23 +531,23 @@ func TestStableswapGetScaledPoolAmt(t *testing.T) {
 		"5 asssets - non existent denom - error": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -556,23 +556,23 @@ func TestStableswapGetScaledPoolAmt(t *testing.T) {
 		"5 asssets - empty string denom - error": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -623,11 +623,11 @@ func TestStableswapGetDeScaledPoolAmt(t *testing.T) {
 		"2 assets - request each - sucess": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(3454)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(3454)),
 					ScalingFactor: sdk.NewInt(123),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(211)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(211)),
 					ScalingFactor: sdk.NewInt(3),
 				},
 			},
@@ -635,23 +635,23 @@ func TestStableswapGetDeScaledPoolAmt(t *testing.T) {
 		"5 assets - request each - sucess": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -659,23 +659,23 @@ func TestStableswapGetDeScaledPoolAmt(t *testing.T) {
 		"5 asssets - non existent denom - error": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -684,23 +684,23 @@ func TestStableswapGetDeScaledPoolAmt(t *testing.T) {
 		"5 asssets - empty string denom - error": {
 			poolAssets: []stableswap.PoolAsset{
 				{
-					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 					ScalingFactor: sdk.NewInt(100000),
 				},
 				{
-					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 					ScalingFactor: sdk.NewInt(1),
 				},
 				{
-					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 				{
-					Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+					Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 					ScalingFactor: sdk.NewInt(10),
 				},
 			},
@@ -761,198 +761,198 @@ func TestStableswapUpdatePoolLiquidityForSwap(t *testing.T) {
 			base: stableSwapPoolTest{
 				poolAssets: []stableswap.PoolAsset{
 					{
-						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 						ScalingFactor: sdk.NewInt(100000),
 					},
 					{
-						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 						ScalingFactor: sdk.NewInt(1),
 					},
 				},
 			},
-			tokensIn:  sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000))},
-			tokensOut: sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(50))},
+			tokensIn:  sdk.Coins{sdk.NewCoin(usdcDenom, sdk.NewInt(100000000))},
+			tokensOut: sdk.Coins{sdk.NewCoin(ustDenom, sdk.NewInt(50))},
 		},
 		"2 assets - single in and out - drained pool to 0 - error": {
 			base: stableSwapPoolTest{
 				poolAssets: []stableswap.PoolAsset{
 					{
-						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 						ScalingFactor: sdk.NewInt(100000),
 					},
 					{
-						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 						ScalingFactor: sdk.NewInt(1),
 					},
 				},
-				expectedError: fmt.Errorf(stableswap.ErrMsgFmrDrainedPool, "ust", 0),
+				expectedError: fmt.Errorf(stableswap.ErrMsgFmrDrainedPool, ustDenom, 0),
 			},
-			tokensIn:  sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000))},
-			tokensOut: sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(100))},
+			tokensIn:  sdk.Coins{sdk.NewCoin(usdcDenom, sdk.NewInt(100000000))},
+			tokensOut: sdk.Coins{sdk.NewCoin(ustDenom, sdk.NewInt(100))},
 		},
 		"2 assets - single in and out - subtracted to negative - panic": {
 			base: stableSwapPoolTest{
 				poolAssets: []stableswap.PoolAsset{
 					{
-						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 						ScalingFactor: sdk.NewInt(100000),
 					},
 					{
-						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 						ScalingFactor: sdk.NewInt(1),
 					},
 				},
 			},
-			tokensIn:    sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000))},
-			tokensOut:   sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(101))},
+			tokensIn:    sdk.Coins{sdk.NewCoin(usdcDenom, sdk.NewInt(100000000))},
+			tokensOut:   sdk.Coins{sdk.NewCoin(ustDenom, sdk.NewInt(101))},
 			shouldPanic: true,
 		},
 		"5 assets - single in and out - valid": {
 			base: stableSwapPoolTest{
 				poolAssets: []stableswap.PoolAsset{
 					{
-						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 						ScalingFactor: sdk.NewInt(100000),
 					},
 					{
-						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 						ScalingFactor: sdk.NewInt(1),
 					},
 					{
-						Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 					{
-						Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 					{
-						Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 				},
 			},
-			tokensIn:  sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000))},
-			tokensOut: sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(50))},
+			tokensIn:  sdk.Coins{sdk.NewCoin(usdcDenom, sdk.NewInt(100000000))},
+			tokensOut: sdk.Coins{sdk.NewCoin(ustDenom, sdk.NewInt(50))},
 		},
 		"5 assets - multiple in and out - valid": {
 			base: stableSwapPoolTest{
 				poolAssets: []stableswap.PoolAsset{
 					{
-						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 						ScalingFactor: sdk.NewInt(100000),
 					},
 					{
-						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 						ScalingFactor: sdk.NewInt(1),
 					},
 					{
-						Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 					{
-						Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 					{
-						Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 				},
 			},
-			tokensIn:  sdk.Coins{sdk.NewCoin("usdb", sdk.NewInt(200000)), sdk.NewCoin("usdc", sdk.NewInt(100000000)), sdk.NewCoin("ust", sdk.NewInt(50))},
-			tokensOut: sdk.Coins{sdk.NewCoin("usda", sdk.NewInt(50000)), sdk.NewCoin("ust", sdk.NewInt(99))},
+			tokensIn:  sdk.Coins{sdk.NewCoin(usdbDenom, sdk.NewInt(200000)), sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)), sdk.NewCoin(ustDenom, sdk.NewInt(50))},
+			tokensOut: sdk.Coins{sdk.NewCoin(usdaDenom, sdk.NewInt(50000)), sdk.NewCoin(ustDenom, sdk.NewInt(99))},
 		},
 		"5 assets - multiple in and out, in not sorted - panic": {
 			base: stableSwapPoolTest{
 				poolAssets: []stableswap.PoolAsset{
 					{
-						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 						ScalingFactor: sdk.NewInt(100000),
 					},
 					{
-						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 						ScalingFactor: sdk.NewInt(1),
 					},
 					{
-						Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 					{
-						Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 					{
-						Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 				},
 			},
-			tokensIn:    sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000)), sdk.NewCoin("ust", sdk.NewInt(50)), sdk.NewCoin("usdb", sdk.NewInt(200000))},
-			tokensOut:   sdk.Coins{sdk.NewCoin("usda", sdk.NewInt(50000)), sdk.NewCoin("ust", sdk.NewInt(99))},
+			tokensIn:    sdk.Coins{sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)), sdk.NewCoin(ustDenom, sdk.NewInt(50)), sdk.NewCoin(usdbDenom, sdk.NewInt(200000))},
+			tokensOut:   sdk.Coins{sdk.NewCoin(usdaDenom, sdk.NewInt(50000)), sdk.NewCoin(ustDenom, sdk.NewInt(99))},
 			shouldPanic: true,
 		},
 		"5 assets - multiple in and out, out not sorted - panic": {
 			base: stableSwapPoolTest{
 				poolAssets: []stableswap.PoolAsset{
 					{
-						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 						ScalingFactor: sdk.NewInt(100000),
 					},
 					{
-						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 						ScalingFactor: sdk.NewInt(1),
 					},
 					{
-						Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdtDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 					{
-						Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdaDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 					{
-						Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+						Token:         sdk.NewCoin(usdbDenom, sdk.NewInt(100000)),
 						ScalingFactor: sdk.NewInt(10),
 					},
 				},
 			},
-			tokensIn:    sdk.Coins{sdk.NewCoin("usdb", sdk.NewInt(200000)), sdk.NewCoin("usdc", sdk.NewInt(100000000)), sdk.NewCoin("ust", sdk.NewInt(50))},
-			tokensOut:   sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(99)), sdk.NewCoin("usda", sdk.NewInt(50000))},
+			tokensIn:    sdk.Coins{sdk.NewCoin(usdbDenom, sdk.NewInt(200000)), sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)), sdk.NewCoin(ustDenom, sdk.NewInt(50))},
+			tokensOut:   sdk.Coins{sdk.NewCoin(ustDenom, sdk.NewInt(99)), sdk.NewCoin(usdaDenom, sdk.NewInt(50000))},
 			shouldPanic: true,
 		},
 		"2 assets - tokenIn denom does not exist - valid": {
 			base: stableSwapPoolTest{
 				poolAssets: []stableswap.PoolAsset{
 					{
-						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 						ScalingFactor: sdk.NewInt(100000),
 					},
 					{
-						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 						ScalingFactor: sdk.NewInt(1),
 					},
 				},
 				expectedError: fmt.Errorf(stableswap.ErrMsgFmtDenomDoesNotExist, nonExistentDenom),
 			},
 			tokensIn:  sdk.Coins{sdk.NewCoin(nonExistentDenom, sdk.NewInt(100000000))},
-			tokensOut: sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(50))},
+			tokensOut: sdk.Coins{sdk.NewCoin(ustDenom, sdk.NewInt(50))},
 		},
 		"2 assets - tokenOut denom does not exist - valid": {
 			base: stableSwapPoolTest{
 				poolAssets: []stableswap.PoolAsset{
 					{
-						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						Token:         sdk.NewCoin(usdcDenom, sdk.NewInt(100000000)),
 						ScalingFactor: sdk.NewInt(100000),
 					},
 					{
-						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						Token:         sdk.NewCoin(ustDenom, sdk.NewInt(100)),
 						ScalingFactor: sdk.NewInt(1),
 					},
 				},
 				expectedError: fmt.Errorf(stableswap.ErrMsgFmtDenomDoesNotExist, nonExistentDenom),
 			},
-			tokensIn:  sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+			tokensIn:  sdk.Coins{sdk.NewCoin(usdcDenom, sdk.NewInt(100000000))},
 			tokensOut: sdk.Coins{sdk.NewCoin(nonExistentDenom, sdk.NewInt(50))},
 		},
 	}

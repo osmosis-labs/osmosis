@@ -19,7 +19,7 @@ func TestStableSwapPoolAssetValidate(t *testing.T) {
 		expected      error
 	}{
 		"valid pool asset": {
-			name:          "ust",
+			name:          ustDenom,
 			tokenAmount:   100,
 			scalingFactor: 10,
 		},
@@ -30,16 +30,16 @@ func TestStableSwapPoolAssetValidate(t *testing.T) {
 			expected:      types.ErrEmptyPoolAssets,
 		},
 		"zero scaling factor - invalid": {
-			name:          "ust",
+			name:          ustDenom,
 			tokenAmount:   100,
 			scalingFactor: 0,
-			expected:      fmt.Errorf(stableswap.ErrMsgFmtNonPositiveScalingFactor, "ust", 0),
+			expected:      fmt.Errorf(stableswap.ErrMsgFmtNonPositiveScalingFactor, ustDenom, 0),
 		},
 		"zero token amount - invalid": {
-			name:          "ust",
+			name:          ustDenom,
 			tokenAmount:   0,
 			scalingFactor: 10,
-			expected:      fmt.Errorf(stableswap.ErrMsgFmtNonPositiveTokenAmount, "ust", 0),
+			expected:      fmt.Errorf(stableswap.ErrMsgFmtNonPositiveTokenAmount, ustDenom, 0),
 		},
 	}
 	for name, tc := range testcase {
