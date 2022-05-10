@@ -58,6 +58,28 @@ func TestMintMsg(t *testing.T) {
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	require.Equal(t, resp.Denom, coin.Denom)
+
+	// mint the same denom again
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Len(t, balances, 1)
+	coin = balances[0]
+	require.Equal(t, amount.MulRaw(2), coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query = wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp = wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
 }
 
 type BaseState struct {
