@@ -26,10 +26,14 @@ import (
 )
 
 var (
-	propHeight  int
-	propHeightA int  // upgrade proposal height for chain A
-	propHeightB int  // upgrade proposal height for chain B
-	maxRetries  = 60 // max retries for json unmarshalling
+	// variable used to switch between chain A and B prop height in for loop
+	propHeight int
+	// upgrade proposal height for chain A
+	propHeightA int
+	// upgrade proposal height for chain B
+	propHeightB int
+	// max retries for json unmarshalling
+	maxRetries = 60
 	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
 	validatorConfigsChainA = []*chain.ValidatorConfig{
 		{
