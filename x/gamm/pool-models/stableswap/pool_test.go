@@ -749,6 +749,256 @@ func TestStableswapGetDeScaledPoolAmt(t *testing.T) {
 	}
 }
 
+func TestStableswapUpdatePoolLiquidityForSwap(t *testing.T) {
+	// Pool assets in test cases must be sorted for the test to function correctly.
+	testcase := map[string]struct {
+		base        stableSwapPoolTest
+		tokensIn    sdk.Coins
+		tokensOut   sdk.Coins
+		shouldPanic bool
+	}{
+		"2 assets - single in and out - valid": {
+			base: stableSwapPoolTest{
+				poolAssets: []stableswap.PoolAsset{
+					{
+						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						ScalingFactor: sdk.NewInt(100000),
+					},
+					{
+						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						ScalingFactor: sdk.NewInt(1),
+					},
+				},
+			},
+			tokensIn:  sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+			tokensOut: sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(50))},
+		},
+		"2 assets - single in and out - drained pool to 0 - error": {
+			base: stableSwapPoolTest{
+				poolAssets: []stableswap.PoolAsset{
+					{
+						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						ScalingFactor: sdk.NewInt(100000),
+					},
+					{
+						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						ScalingFactor: sdk.NewInt(1),
+					},
+				},
+				expectedError: fmt.Errorf(stableswap.ErrMsgFmrDrainedPool, "ust", 0),
+			},
+			tokensIn:  sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+			tokensOut: sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(100))},
+		},
+		"2 assets - single in and out - subtracted to negative - panic": {
+			base: stableSwapPoolTest{
+				poolAssets: []stableswap.PoolAsset{
+					{
+						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						ScalingFactor: sdk.NewInt(100000),
+					},
+					{
+						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						ScalingFactor: sdk.NewInt(1),
+					},
+				},
+			},
+			tokensIn:    sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+			tokensOut:   sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(101))},
+			shouldPanic: true,
+		},
+		"5 assets - single in and out - valid": {
+			base: stableSwapPoolTest{
+				poolAssets: []stableswap.PoolAsset{
+					{
+						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						ScalingFactor: sdk.NewInt(100000),
+					},
+					{
+						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						ScalingFactor: sdk.NewInt(1),
+					},
+					{
+						Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+					{
+						Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+					{
+						Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+				},
+			},
+			tokensIn:  sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+			tokensOut: sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(50))},
+		},
+		"5 assets - multiple in and out - valid": {
+			base: stableSwapPoolTest{
+				poolAssets: []stableswap.PoolAsset{
+					{
+						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						ScalingFactor: sdk.NewInt(100000),
+					},
+					{
+						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						ScalingFactor: sdk.NewInt(1),
+					},
+					{
+						Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+					{
+						Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+					{
+						Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+				},
+			},
+			tokensIn:  sdk.Coins{sdk.NewCoin("usdb", sdk.NewInt(200000)), sdk.NewCoin("usdc", sdk.NewInt(100000000)), sdk.NewCoin("ust", sdk.NewInt(50))},
+			tokensOut: sdk.Coins{sdk.NewCoin("usda", sdk.NewInt(50000)), sdk.NewCoin("ust", sdk.NewInt(99))},
+		},
+		"5 assets - multiple in and out, in not sorted - panic": {
+			base: stableSwapPoolTest{
+				poolAssets: []stableswap.PoolAsset{
+					{
+						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						ScalingFactor: sdk.NewInt(100000),
+					},
+					{
+						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						ScalingFactor: sdk.NewInt(1),
+					},
+					{
+						Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+					{
+						Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+					{
+						Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+				},
+			},
+			tokensIn:    sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000)), sdk.NewCoin("ust", sdk.NewInt(50)), sdk.NewCoin("usdb", sdk.NewInt(200000))},
+			tokensOut:   sdk.Coins{sdk.NewCoin("usda", sdk.NewInt(50000)), sdk.NewCoin("ust", sdk.NewInt(99))},
+			shouldPanic: true,
+		},
+		"5 assets - multiple in and out, out not sorted - panic": {
+			base: stableSwapPoolTest{
+				poolAssets: []stableswap.PoolAsset{
+					{
+						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						ScalingFactor: sdk.NewInt(100000),
+					},
+					{
+						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						ScalingFactor: sdk.NewInt(1),
+					},
+					{
+						Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+					{
+						Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+					{
+						Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+						ScalingFactor: sdk.NewInt(10),
+					},
+				},
+			},
+			tokensIn:    sdk.Coins{sdk.NewCoin("usdb", sdk.NewInt(200000)), sdk.NewCoin("usdc", sdk.NewInt(100000000)), sdk.NewCoin("ust", sdk.NewInt(50))},
+			tokensOut:   sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(99)), sdk.NewCoin("usda", sdk.NewInt(50000))},
+			shouldPanic: true,
+		},
+		"2 assets - tokenIn denom does not exist - valid": {
+			base: stableSwapPoolTest{
+				poolAssets: []stableswap.PoolAsset{
+					{
+						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						ScalingFactor: sdk.NewInt(100000),
+					},
+					{
+						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						ScalingFactor: sdk.NewInt(1),
+					},
+				},
+				expectedError: fmt.Errorf(stableswap.ErrMsgFmtDenomDoesNotExist, nonExistentDenom),
+			},
+			tokensIn:  sdk.Coins{sdk.NewCoin(nonExistentDenom, sdk.NewInt(100000000))},
+			tokensOut: sdk.Coins{sdk.NewCoin("ust", sdk.NewInt(50))},
+		},
+		"2 assets - tokenOut denom does not exist - valid": {
+			base: stableSwapPoolTest{
+				poolAssets: []stableswap.PoolAsset{
+					{
+						Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+						ScalingFactor: sdk.NewInt(100000),
+					},
+					{
+						Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+						ScalingFactor: sdk.NewInt(1),
+					},
+				},
+				expectedError: fmt.Errorf(stableswap.ErrMsgFmtDenomDoesNotExist, nonExistentDenom),
+			},
+			tokensIn:  sdk.Coins{sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+			tokensOut: sdk.Coins{sdk.NewCoin(nonExistentDenom, sdk.NewInt(50))},
+		},
+	}
+
+	for name, tc := range testcase {
+		t.Run(name, func(t *testing.T) {
+			// setup
+			pool := createTestPool(t, tc.base.id, tc.base.poolAssets, tc.base.swapFee, tc.base.exitFee)
+
+			stableSwapPool, ok := pool.(*stableswap.Pool)
+			require.True(t, ok)
+
+			defer func() {
+				r := recover()
+				if r == nil {
+					return
+				}
+				if tc.shouldPanic {
+					return
+				}
+				t.Error("Panicked when should not have")
+			}()
+
+			expectedLiqudity := stableSwapPool.GetTotalPoolLiquidity(sdk.Context{})
+
+			// Test
+			err := stableSwapPool.UpdatePoolLiquidityForSwap(tc.tokensIn, tc.tokensOut)
+
+			// Add non-existent denom to request
+			if tc.base.expectedError != nil {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.base.expectedError.Error())
+				return
+			}
+
+			require.NoError(t, err)
+
+			// Prepare expectedLiqudity
+			expectedLiqudity = expectedLiqudity.Add(tc.tokensIn...)
+			expectedLiqudity = expectedLiqudity.Sub(tc.tokensOut)
+
+			require.EqualValues(t, expectedLiqudity, stableSwapPool.GetTotalPoolLiquidity(sdk.Context{}))
+		})
+	}
+}
+
 func getDecFromStr(t *testing.T, str string) sdk.Dec {
 	dec, err := sdk.NewDecFromStr(str)
 	require.NoError(t, err)

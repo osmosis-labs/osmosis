@@ -20,6 +20,7 @@ const (
 	errMsgFmtTooLittlePoolAssetsGiven = "too little pool assets given: %d, need at least 2"
 	errMsgFmtNonExistentDenomGiven    = "can't find the PoolAsset (%s)"
 	errMsgFmtDuplicateDenomFound      = "duplicate denom (%s) found"
+	errMsfFmtDrainedPool              = "pool balance must stay above 0, updating liqudity for token %s would drain the pool to %d"
 	errMsgEmptyDenomGiven             = "denom name cannot be empty"
 )
 
@@ -89,12 +90,13 @@ func (pa Pool) getDescaledPoolAmt(denom string, amtToDeScale sdk.Dec) (sdk.Dec, 
 // updatePoolLiquidityForSwap updates the pool liquidity.
 // It requires caller to validate that tokensIn and tokensOut only consist of
 // denominations in the pool.
-// The function sanity checks this, and panics if not the case.
-func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) {
+// The function sanity checks this, and returns an error if that is not the case.
+// Additionally, tokensIn and tokensOut must be sorted by denom. If not, function panics.
+func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) error {
 	for _, tokenIn := range tokensIn {
 		index, pa, err := p.getPoolAssetAndIndex(tokenIn.Denom)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		p.PoolAssets[index].Token = pa.Token.Add(tokenIn)
 	}
@@ -102,10 +104,15 @@ func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coin
 	for _, tokenOut := range tokensOut {
 		index, pa, err := p.getPoolAssetAndIndex(tokenOut.Denom)
 		if err != nil {
-			panic(err)
+			return err
 		}
-		p.PoolAssets[index].Token = pa.Token.Sub(tokenOut)
+		subtracted := pa.Token.Sub(tokenOut)
+		if !subtracted.IsPositive() {
+			return fmt.Errorf(errMsfFmtDrainedPool, pa.Token.Denom, subtracted.Amount.Int64())
+		}
+		p.PoolAssets[index].Token = subtracted
 	}
+	return nil
 }
 
 // TODO: These should all get moved to amm.go
@@ -132,7 +139,9 @@ func (pa *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDe
 		return sdk.Coin{}, err
 	}
 
-	pa.updatePoolLiquidityForSwap(tokenIn, sdk.NewCoins(tokenOut))
+	if err := pa.updatePoolLiquidityForSwap(tokenIn, sdk.NewCoins(tokenOut)); err != nil {
+		panic(err)
+	}
 
 	return tokenOut, nil
 }
@@ -163,7 +172,9 @@ func (pa *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDe
 		return sdk.Coin{}, err
 	}
 
-	pa.updatePoolLiquidityForSwap(sdk.NewCoins(tokenIn), tokenOut)
+	if err := pa.updatePoolLiquidityForSwap(sdk.NewCoins(tokenIn), tokenOut); err != nil {
+		panic(err)
+	}
 
 	return tokenIn, nil
 }

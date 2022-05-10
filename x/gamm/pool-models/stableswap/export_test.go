@@ -8,6 +8,7 @@ const (
 	ErrMsgFmtDuplicateDenomFound      = errMsgFmtDuplicateDenomFound
 	ErrMsgFmtTooLittlePoolAssetsGiven = errMsgFmtTooLittlePoolAssetsGiven
 	ErrMsgFmtNonPositiveScalingFactor = errMsgFmtNonPositiveScalingFactor
+	ErrMsgFmrDrainedPool              = errMsfFmtDrainedPool
 	ErrMsgEmptyDenomGiven             = errMsgEmptyDenomGiven
 )
 
@@ -25,4 +26,8 @@ func (pa Pool) GetDescaledPoolAmt(denom string, amtToDeScale sdk.Dec) (sdk.Dec, 
 
 func (pa Pool) ValidateAndSortInitialPoolAssets() error {
 	return pa.validateAndSortInitialPoolAssets()
+}
+
+func (pa Pool) UpdatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) error {
+	return pa.updatePoolLiquidityForSwap(tokensIn, tokensOut)
 }
