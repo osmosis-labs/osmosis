@@ -10,6 +10,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stabl
 service Msg {
   rpc CreateStableswapPool(MsgCreateStableswapPool)
       returns (MsgCreateStableswapPoolResponse);
+  rpc AdjustScalingFactors(MsgStableSwapAdjustScalingFactors)
+      returns (MsgStableSwapAdjustScalingFactorsResponse);
 }
 
 message MsgCreateStableswapPool {
@@ -29,3 +31,10 @@ message MsgCreateStableswapPool {
 message MsgCreateStableswapPoolResponse {
   uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
 }
+
+message MsgStableSwapAdjustScalingFactors {
+  string scaling_factor_governor = 8
+      [ (gogoproto.moretags) = "yaml:\"scaling_factor_governor\"" ];
+}
+
+message MsgStableSwapAdjustScalingFactorsResponse {}
