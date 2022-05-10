@@ -489,6 +489,139 @@ func TestStableswapGetScaledPoolAmt(t *testing.T) {
 	}
 }
 
+func TestStableswapGetDeScaledPoolAmt(t *testing.T) {
+	const nonExistentDenom = "nonExistentDenom"
+
+	testcase := map[string]stableSwapPoolTest{
+		"2 assets - request each - sucess": {
+			poolAssets: []stableswap.PoolAsset{
+				{
+					Token:         sdk.NewCoin("usdc", sdk.NewInt(3454)),
+					ScalingFactor: sdk.NewInt(123),
+				},
+				{
+					Token:         sdk.NewCoin("ust", sdk.NewInt(211)),
+					ScalingFactor: sdk.NewInt(3),
+				},
+			},
+		},
+		"5 assets - request each - sucess": {
+			poolAssets: []stableswap.PoolAsset{
+				{
+					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					ScalingFactor: sdk.NewInt(100000),
+				},
+				{
+					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					ScalingFactor: sdk.NewInt(1),
+				},
+				{
+					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					ScalingFactor: sdk.NewInt(10),
+				},
+				{
+					Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+					ScalingFactor: sdk.NewInt(10),
+				},
+				{
+					Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+					ScalingFactor: sdk.NewInt(10),
+				},
+			},
+		},
+		"5 asssets - non existent denom - error": {
+			poolAssets: []stableswap.PoolAsset{
+				{
+					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					ScalingFactor: sdk.NewInt(100000),
+				},
+				{
+					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					ScalingFactor: sdk.NewInt(1),
+				},
+				{
+					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					ScalingFactor: sdk.NewInt(10),
+				},
+				{
+					Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+					ScalingFactor: sdk.NewInt(10),
+				},
+				{
+					Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+					ScalingFactor: sdk.NewInt(10),
+				},
+			},
+			expectedError: fmt.Errorf(stableswap.ErrMsgFmtDenomDoesNotExist, nonExistentDenom),
+		},
+		"5 asssets - empty string denom - error": {
+			poolAssets: []stableswap.PoolAsset{
+				{
+					Token:         sdk.NewCoin("usdc", sdk.NewInt(100000000)),
+					ScalingFactor: sdk.NewInt(100000),
+				},
+				{
+					Token:         sdk.NewCoin("ust", sdk.NewInt(100)),
+					ScalingFactor: sdk.NewInt(1),
+				},
+				{
+					Token:         sdk.NewCoin("usdt", sdk.NewInt(100000)),
+					ScalingFactor: sdk.NewInt(10),
+				},
+				{
+					Token:         sdk.NewCoin("usda", sdk.NewInt(100000)),
+					ScalingFactor: sdk.NewInt(10),
+				},
+				{
+					Token:         sdk.NewCoin("usdb", sdk.NewInt(100000)),
+					ScalingFactor: sdk.NewInt(10),
+				},
+			},
+			expectedError: errors.New(stableswap.ErrMsgEmptyDenomGiven),
+		},
+	}
+
+	for name, tc := range testcase {
+		t.Run(name, func(t *testing.T) {
+			// setup
+			pool := createTestPool(t, tc.id, tc.poolAssets, tc.swapFee, tc.exitFee)
+
+			stableSwapPool, ok := pool.(*stableswap.Pool)
+			require.True(t, ok)
+
+			// Always request descale first amount to ensure that it is done on the input
+			toDescaleRequestDec := tc.poolAssets[0].Token.Amount.ToDec()
+
+			// Add non-existent denom to request
+			if tc.expectedError != nil {
+				// Test
+				var denomToRequest string
+				if tc.expectedError.Error() != stableswap.ErrMsgEmptyDenomGiven {
+					denomToRequest = nonExistentDenom
+				}
+
+				actualDescaled, err := stableSwapPool.GetDescaledPoolAmt(denomToRequest, toDescaleRequestDec)
+
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError.Error())
+				require.Equal(t, sdk.Dec{}, actualDescaled)
+				return
+			}
+
+			for _, asset := range tc.poolAssets {
+
+				expectedScaled := toDescaleRequestDec.MulInt(asset.ScalingFactor)
+
+				// Test
+				actualDescaled, err := stableSwapPool.GetDescaledPoolAmt(asset.Token.GetDenom(), toDescaleRequestDec)
+
+				require.NoError(t, err)
+				require.Equal(t, expectedScaled, actualDescaled)
+			}
+		})
+	}
+}
+
 func getDecFromStr(t *testing.T, str string) sdk.Dec {
 	dec, err := sdk.NewDecFromStr(str)
 	require.NoError(t, err)

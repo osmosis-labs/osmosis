@@ -70,22 +70,20 @@ func (pa Pool) GetTotalShares() sdk.Int {
 
 // getScaledPoolAmts returns scaled amount of pool liquidity based on the asset's precisions
 func (pa Pool) getScaledPoolAmt(denom string) (sdk.Int, error) {
-	idx, asset, err := pa.getPoolAssetAndIndex(denom)
+	_, asset, err := pa.getPoolAssetAndIndex(denom)
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	scalingFactor := pa.PoolAssets[idx].ScalingFactor
-	return asset.Token.Amount.Quo(scalingFactor), nil
+	return asset.Token.Amount.Quo(asset.ScalingFactor), nil
 }
 
 // getDescaledPoolAmts gets descaled amount of given denom and amount
-func (pa Pool) getDescaledPoolAmt(denom string, amount sdk.Dec) (sdk.Dec, error) {
-	for _, asset := range pa.PoolAssets {
-		if asset.Token.Denom == denom {
-			return amount.MulInt(asset.ScalingFactor), nil
-		}
+func (pa Pool) getDescaledPoolAmt(denom string, amtToDeScale sdk.Dec) (sdk.Dec, error) {
+	_, asset, err := pa.getPoolAssetAndIndex(denom)
+	if err != nil {
+		return sdk.Dec{}, err
 	}
-	return sdk.Dec{}, errors.New(fmt.Sprintf("denom %s is not found in pool", denom))
+	return amtToDeScale.MulInt(asset.ScalingFactor), nil
 }
 
 // updatePoolLiquidityForSwap updates the pool liquidity.

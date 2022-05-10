@@ -15,8 +15,8 @@ func (pa Pool) GetScaledPoolAmt(denom string) (sdk.Int, error) {
 	return pa.getScaledPoolAmt(denom)
 }
 
-func (pa Pool) GetDescaledPoolAmt(denom string, amount sdk.Dec) (sdk.Dec, error) {
-	return pa.getDescaledPoolAmt(denom, amount)
+func (pa Pool) GetDescaledPoolAmt(denom string, amtToDeScale sdk.Dec) (sdk.Dec, error) {
+	return pa.getDescaledPoolAmt(denom, amtToDeScale)
 }
 
 func (pa Pool) ValidateAndSortInitialPoolAssets() error {
