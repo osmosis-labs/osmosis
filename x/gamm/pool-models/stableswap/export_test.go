@@ -11,6 +11,10 @@ const (
 	ErrMsgEmptyDenomGiven             = errMsgEmptyDenomGiven
 )
 
+func (pa Pool) GetPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
+	return pa.getPoolAssetAndIndex(denom)
+}
+
 func (pa Pool) GetScaledPoolAmt(denom string) (sdk.Int, error) {
 	return pa.getScaledPoolAmt(denom)
 }

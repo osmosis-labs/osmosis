@@ -206,6 +206,8 @@ func (pa Pool) CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sd
 func (pa *Pool) PokePool(blockTime time.Time) {}
 
 // Returns a pool asset, and its index. If err != nil, then the index will be valid.
+// CONTRACT: pool must be created with NewStableSwapPool so that the pool assets are sorted
+// by denom. Otherwise, the behavior is undefined.
 func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	if denom == "" {
 		return -1, PoolAsset{}, errors.New(errMsgEmptyDenomGiven)
