@@ -80,6 +80,51 @@ func TestMintMsg(t *testing.T) {
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	require.Equal(t, resp.Denom, coin.Denom)
+
+	// now mint another amount / denom
+	amount = amount.SubRaw(1)
+	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+		SubDenom:  "MOON",
+		Amount:    amount,
+		Recipient: lucky.String(),
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Len(t, balances, 2)
+	coin = balances[0]
+	require.Equal(t, amount, coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query = wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "MOON",
+		},
+	}
+	resp = wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
+
+	// and check the first denom is unchanged
+	coin = balances[1]
+	require.Equal(t, amount.AddRaw(1).MulRaw(2), coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query = wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp = wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
 }
 
 type BaseState struct {
