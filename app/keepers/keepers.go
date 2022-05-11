@@ -170,15 +170,10 @@ type AppKeepers struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 }
 
-<<<<<<< HEAD:app/keepers.go
-// Note: I put x/wasm here as I need to write it up to these other ones
-func (app *OsmosisApp) InitNormalKeepers(
-=======
 func (appKeepers *AppKeepers) InitNormalKeepers(
 	appCodec codec.Codec,
 	bApp *baseapp.BaseApp,
 	maccPerms map[string][]string,
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 	wasmDir string,
 	wasmConfig wasm.Config,
 	wasmEnabledProposals []wasm.ProposalType,
@@ -220,11 +215,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.StakingKeeper = &stakingKeeper
 
 	distrKeeper := distrkeeper.NewKeeper(
-<<<<<<< HEAD:app/keepers.go
-		appCodec, keys[distrtypes.StoreKey],
-		app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		app.StakingKeeper, authtypes.FeeCollectorName, app.BlockedAddrs(),
-=======
 		appCodec, appKeepers.keys[distrtypes.StoreKey],
 		appKeepers.GetSubspace(distrtypes.ModuleName),
 		appKeepers.AccountKeeper,
@@ -232,38 +222,20 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.StakingKeeper,
 		authtypes.FeeCollectorName,
 		blockedAddress,
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 	)
 	appKeepers.DistrKeeper = &distrKeeper
 
 	slashingKeeper := slashingkeeper.NewKeeper(
-<<<<<<< HEAD:app/keepers.go
-		appCodec, keys[slashingtypes.StoreKey], app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
-=======
 		appCodec,
 		appKeepers.keys[slashingtypes.StoreKey],
 		appKeepers.StakingKeeper,
 		appKeepers.GetSubspace(slashingtypes.ModuleName),
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 	)
 	appKeepers.SlashingKeeper = &slashingKeeper
 
 	// Create IBC Keeper
 	appKeepers.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
-<<<<<<< HEAD:app/keepers.go
-		keys[ibchost.StoreKey],
-		app.GetSubspace(ibchost.ModuleName),
-		app.StakingKeeper,
-		app.UpgradeKeeper,
-		app.ScopedIBCKeeper)
-
-	// Create Transfer Keepers
-	transferKeeper := ibctransferkeeper.NewKeeper(
-		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
-		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
-		app.AccountKeeper, app.BankKeeper, app.ScopedTransferKeeper,
-=======
 		appKeepers.keys[ibchost.StoreKey],
 		appKeepers.GetSubspace(ibchost.ModuleName),
 		appKeepers.StakingKeeper,
@@ -281,7 +253,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.ScopedTransferKeeper,
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 	)
 	appKeepers.TransferKeeper = &transferKeeper
 	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
@@ -298,42 +269,29 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// TODO: Should we be passing this instead of bank in many places?
 	// Where do we want send coins to be cross-chain?
-<<<<<<< HEAD:app/keepers.go
-	app.Bech32ICS20Keeper = bech32ics20keeper.NewKeeper(
-		app.IBCKeeper.ChannelKeeper,
-		app.BankKeeper, app.TransferKeeper,
-		app.Bech32IBCKeeper,
-		app.TransferKeeper,
-=======
 	appKeepers.Bech32ICS20Keeper = bech32ics20keeper.NewKeeper(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.TransferKeeper,
 		appKeepers.Bech32IBCKeeper,
 		appKeepers.TransferKeeper,
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 		appCodec,
 	)
 
 	// create evidence keeper with router
 	// If evidence needs to be handled for the app, set routes in router here and seal
-<<<<<<< HEAD:app/keepers.go
-	app.EvidenceKeeper = evidencekeeper.NewKeeper(
-		appCodec, keys[evidencetypes.StoreKey], app.StakingKeeper, app.SlashingKeeper,
-=======
 	appKeepers.EvidenceKeeper = evidencekeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[evidencetypes.StoreKey],
 		appKeepers.StakingKeeper,
 		appKeepers.SlashingKeeper,
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 	)
 
-	app.ClaimKeeper = claimkeeper.NewKeeper(
+	appKeepers.ClaimKeeper = claimkeeper.NewKeeper(
 		appCodec,
-		keys[claimtypes.StoreKey],
-		app.AccountKeeper,
-		app.BankKeeper, app.StakingKeeper, app.DistrKeeper)
+		appKeepers.keys[claimtypes.StoreKey],
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper)
 
 	gammKeeper := gammkeeper.NewKeeper(
 		appCodec, appKeepers.keys[gammtypes.StoreKey],
@@ -341,14 +299,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.DistrKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
-<<<<<<< HEAD:app/keepers.go
-	app.LockupKeeper = lockupkeeper.NewKeeper(
-		appCodec, keys[lockuptypes.StoreKey],
-=======
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[lockuptypes.StoreKey],
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 		// TODO: Visit why this needs to be deref'd
 		*appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
@@ -356,22 +309,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 
-<<<<<<< HEAD:app/keepers.go
-	app.IncentivesKeeper = incentiveskeeper.NewKeeper(
-		appCodec, keys[incentivestypes.StoreKey],
-		app.GetSubspace(incentivestypes.ModuleName),
-		app.BankKeeper, app.LockupKeeper, app.EpochsKeeper)
-
-	app.SuperfluidKeeper = superfluidkeeper.NewKeeper(
-		appCodec, keys[superfluidtypes.StoreKey], app.GetSubspace(superfluidtypes.ModuleName),
-		*app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.DistrKeeper, app.EpochsKeeper, app.LockupKeeper, gammKeeper, app.IncentivesKeeper,
-		lockupkeeper.NewMsgServerImpl(app.LockupKeeper))
-
-	mintKeeper := mintkeeper.NewKeeper(
-		appCodec, keys[minttypes.StoreKey],
-		app.GetSubspace(minttypes.ModuleName),
-		app.AccountKeeper, app.BankKeeper, app.DistrKeeper, app.EpochsKeeper,
-=======
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[incentivestypes.StoreKey],
@@ -404,7 +341,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.EpochsKeeper,
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 		authtypes.FeeCollectorName,
 	)
 	appKeepers.MintKeeper = &mintKeeper
@@ -424,32 +360,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appCodec,
-<<<<<<< HEAD:app/keepers.go
-		keys[txfeestypes.StoreKey],
-		app.GAMMKeeper,
-=======
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.EpochsKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
 		appKeepers.GAMMKeeper,
-		appKeepers.GAMMKeeper,
-		txfeestypes.FeeCollectorName,
-		txfeestypes.NonNativeFeeCollectorName,
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 	)
 	appKeepers.TxFeesKeeper = &txFeesKeeper
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-<<<<<<< HEAD:app/keepers.go
 	supportedFeatures := "iterator,staking,stargate"
-=======
-	supportedFeatures := "iterator,staking,stargate,osmosis"
-
-	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.GAMMKeeper, appKeepers.BankKeeper), wasmOpts...)
-
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,
 		appKeepers.keys[wasm.StoreKey],
@@ -572,28 +490,18 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	// Recall that SetHooks is a mutative call.
 	appKeepers.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
-<<<<<<< HEAD:app/keepers.go
-			app.DistrKeeper.Hooks(),
-			app.SlashingKeeper.Hooks(),
-			app.ClaimKeeper.Hooks(),
-			app.SuperfluidKeeper.Hooks(),
-=======
 			appKeepers.DistrKeeper.Hooks(),
 			appKeepers.SlashingKeeper.Hooks(),
+			appKeepers.ClaimKeeper.Hooks(),
 			appKeepers.SuperfluidKeeper.Hooks(),
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 		),
 	)
 
 	appKeepers.GAMMKeeper.SetHooks(
 		gammtypes.NewMultiGammHooks(
 			// insert gamm hooks receivers here
-<<<<<<< HEAD:app/keepers.go
-			app.PoolIncentivesKeeper.Hooks(),
-			app.ClaimKeeper.Hooks(),
-=======
 			appKeepers.PoolIncentivesKeeper.Hooks(),
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
+			appKeepers.ClaimKeeper.Hooks(),
 		),
 	)
 
@@ -620,53 +528,20 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	appKeepers.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
-<<<<<<< HEAD:app/keepers.go
-			app.SuperfluidKeeper.Hooks(),
-			app.IncentivesKeeper.Hooks(),
-			app.MintKeeper.Hooks(),
-=======
-			appKeepers.TxFeesKeeper.Hooks(),
 			appKeepers.SuperfluidKeeper.Hooks(),
 			appKeepers.IncentivesKeeper.Hooks(),
 			appKeepers.MintKeeper.Hooks(),
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 		),
 	)
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 			// insert governance hooks receivers here
-			app.ClaimKeeper.Hooks(),
+			appKeepers.ClaimKeeper.Hooks(),
 		),
 	)
 }
 
-<<<<<<< HEAD:app/keepers.go
-// initParamsKeeper init params keeper and its subspaces
-func (app *OsmosisApp) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
-	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
-
-	paramsKeeper.Subspace(authtypes.ModuleName)
-	paramsKeeper.Subspace(banktypes.ModuleName)
-	paramsKeeper.Subspace(stakingtypes.ModuleName)
-	paramsKeeper.Subspace(minttypes.ModuleName)
-	paramsKeeper.Subspace(distrtypes.ModuleName)
-	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
-	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
-	paramsKeeper.Subspace(incentivestypes.ModuleName)
-	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
-	paramsKeeper.Subspace(superfluidtypes.ModuleName)
-	paramsKeeper.Subspace(gammtypes.ModuleName)
-	paramsKeeper.Subspace(wasm.ModuleName)
-
-	return paramsKeeper
-}
-
-=======
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327)):app/keepers/keepers.go
 func KVStoreKeys() []string {
 	return []string{
 		authtypes.StoreKey,

@@ -9,11 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-<<<<<<< HEAD
-	// HTTP Router
-=======
 	"github.com/CosmWasm/wasmd/x/wasm"
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327))
+	// HTTP Router
 	"github.com/gorilla/mux"
 
 	// Used to serve OpenAPI information
@@ -54,14 +51,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-<<<<<<< HEAD
-
-	// Capability: allows developers to atomically define what a module can and cannot do
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
-	// Crisis: Halting the blockchain under certain circumstances (e.g. if an invariant is broken).
-=======
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327))
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 
 	// Evidence handling for double signing, misbehaviour, etc.
@@ -73,14 +62,7 @@ import (
 	// Upgrade:  Software upgrades handling and coordination.
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-<<<<<<< HEAD
-	// IBC Transfer: Defines the "transfer" IBC port
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
-
-	// Osmosis application prarmeters
-=======
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327))
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 
 	// Upgrades from earlier versions of Osmosis
@@ -153,12 +135,7 @@ var _ App = (*OsmosisApp)(nil)
 // capabilities aren't needed for testing.
 type OsmosisApp struct {
 	*baseapp.BaseApp
-<<<<<<< HEAD
-
-	appKeepers
-=======
 	keepers.AppKeepers
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327))
 
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
@@ -166,24 +143,8 @@ type OsmosisApp struct {
 
 	invCheckPeriod uint
 
-<<<<<<< HEAD
-	// keys to access the substores
-	keys    map[string]*sdk.KVStoreKey
-	tkeys   map[string]*sdk.TransientStoreKey
-	memKeys map[string]*sdk.MemoryStoreKey
-
-	transferModule transfer.AppModule
-	// the module manager
-	mm *module.Manager
-
-	// simulation manager
-	sm *module.SimulationManager
-
-	// module migration manager
-=======
 	mm           *module.Manager
 	sm           *module.SimulationManager
->>>>>>> 66ebf33 (Move appKeepers struct to a different package (#1327))
 	configurator module.Configurator
 }
 
