@@ -5,19 +5,31 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 )
 
 func main() {
 	var (
-		dataDir string
-		chainId string
+		valConfig    []*chain.ValidatorConfig
+		dataDir      string
+		chainId      string
+		config       string
+		votingPeriod time.Duration
 	)
 
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
+	flag.StringVar(&config, "config", "", "serialized config")
+	flag.DurationVar(&votingPeriod, "voting-period", 30000000000, "voting period")
+
 	flag.Parse()
+
+	err := json.Unmarshal([]byte(config), &valConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	if len(dataDir) == 0 {
 		panic("data-dir is required")
@@ -27,14 +39,14 @@ func main() {
 		panic(err)
 	}
 
-	createdChain, err := chain.Init(chainId, dataDir)
+	createdChain, err := chain.Init(chainId, dataDir, valConfig, votingPeriod)
 	if err != nil {
 		panic(err)
 	}
 
 	b, _ := json.Marshal(createdChain)
 	fileName := fmt.Sprintf("%v/%v-encode", dataDir, chainId)
-	if err = os.WriteFile(fileName, b, 0777); err != nil {
+	if err = os.WriteFile(fileName, b, 0o777); err != nil {
 		panic(err)
 	}
 }
