@@ -24,7 +24,81 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-const maxRetries = 10 // max retries for json unmarshalling
+var (
+	// voting period for chain A
+	votingPeriodA float32
+	// voting period for chain B
+	votingPeriodB float32
+	// estimated number of blocks it takes to submit for a proposal
+	propSubmitBlocks float32 = 10
+	// estimated number of blocks it takes to deposit for a proposal
+	propDepositBlocks float32 = 10
+	// number of blocks it takes to vote for a single validator to vote for a proposal
+	propVoteBlocks float32 = 1.2
+	// number of blocks used as a calculation buffer
+	propBufferBlocks float32 = 5
+	// variable used to switch between chain A and B prop height in for loop
+	propHeight int
+	// upgrade proposal height for chain A
+	propHeightA int
+	// upgrade proposal height for chain B
+	propHeightB int
+	// max retries for json unmarshalling
+	maxRetries = 60
+	// keys for chain A hermes
+	chainAKeys      = [2]string{"val01-osmosis-a", "val02-osmosis-a"}
+	chainALastIndex = 0
+	// keys for chain A hermes
+	chainBKeys      = [2]string{"val01-osmosis-b", "val02-osmosis-b"}
+	chainBLastIndex = 0
+	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
+	validatorConfigsChainA = []*chain.ValidatorConfig{
+		{
+			Pruning:            "default",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+	}
+	validatorConfigsChainB = []*chain.ValidatorConfig{
+		{
+			Pruning:            "default",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+	}
+)
 
 type IntegrationTestSuite struct {
 	suite.Suite
@@ -57,10 +131,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 4. Execute various e2e tests, including IBC.
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 
-	s.configureChain(chain.ChainAID)
-	s.Require().NoError(s.dkrPool.Purge(s.initResource))
-	s.configureChain(chain.ChainBID)
-	s.Require().NoError(s.dkrPool.Purge(s.initResource))
+	s.configureChain(chain.ChainAID, validatorConfigsChainA)
+	s.configureChain(chain.ChainBID, validatorConfigsChainA)
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
@@ -257,22 +329,38 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.connectIBCChains()
 }
 
-func (s *IntegrationTestSuite) configureChain(chainId string) {
+func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig) {
+
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 
 	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
 	s.Require().NoError(err)
 
+	b, err := json.Marshal(validatorConfigs)
+	s.Require().NoError(err)
+
+	numVal := float32(len(validatorConfigs))
+	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, then a buffer
+	votingPeriodNum := propDepositBlocks + numVal*propVoteBlocks + propBufferBlocks
+	if chainId == chain.ChainAID {
+		votingPeriodA = votingPeriodNum
+	} else if chainId == chain.ChainBID {
+		votingPeriodB = votingPeriodNum
+	}
+	votingPeriod := time.Duration(int(votingPeriodNum) * 1000000000)
+
 	s.initResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
-			Repository: "osmosis-e2e-chain-init",
-			Tag:        "debug",
+			Repository: "osmolabs/osmosis-init",
+			Tag:        "v7.3.0-1",
 			NetworkID:  s.dkrNet.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
 				fmt.Sprintf("--chain-id=%s", chainId),
+				fmt.Sprintf("--config=%s", b),
+				fmt.Sprintf("--voting-period=%v", votingPeriod),
 			},
 			User: "root:root",
 			Mounts: []string{
@@ -306,7 +394,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string) {
 		}
 	}
 	s.chains = append(s.chains, &newChain)
-
+	s.Require().NoError(s.dkrPool.Purge(s.initResource))
 }
 
 func (s *IntegrationTestSuite) configureDockerResources(chainIDOne, chainIDTwo string) {
