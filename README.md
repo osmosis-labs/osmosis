@@ -57,6 +57,12 @@ For the most up to date documentation please visit [docs.osmosis.zone](https://d
 
 Thank you for supporting a healthy blockchain network and community by running an Osmosis node!
 
+## Contributing
+
+The contributing guide for Osmosis explains the branching structure, how to use the SDK fork, and how to make / test updates to SDK branches.  
+
+For more information, please see [the contributing guide](https://docs.osmosis.zone/developing/get_started/contributing.html).
+
 ## Why Osmosis?
 
 ### On customizability of liquidity pools
