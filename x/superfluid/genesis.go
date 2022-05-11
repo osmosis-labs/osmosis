@@ -23,24 +23,23 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetOsmoEquivalentMultiplier(ctx, multiplierRecord.EpochNumber, multiplierRecord.Denom, multiplierRecord.Multiplier)
 	}
 
+	accountsToReplace := make(map[string]types.SuperfluidIntermediaryAccount)
+
 	for _, intermediaryAcc := range genState.IntermediaryAccounts {
 		fmt.Printf("INT GAUGEID %v", intermediaryAcc.GaugeId)
 		fmt.Printf("INT DENOM %v", intermediaryAcc.Denom)
 
-		if string(intermediaryAcc.ValAddr) == "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n" {
-			fmt.Println("osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n")
-		}
-
-		if string(intermediaryAcc.ValAddr) == "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj" {
-			fmt.Println("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj")
-		}
-
-		if string(intermediaryAcc.ValAddr) == "osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5" {
-			fmt.Println("osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5")
-		}
-
 		if string(intermediaryAcc.ValAddr) == "osmovaloper12smx2wdlyttvyzvzg54y2vnqwq2qjatex7kgq4" {
-			panic("osmovaloper12smx2wdlyttvyzvzg54y2vnqwq2qjatex7kgq4")
+			// This the account we are replacing
+			oldAcc := types.SuperfluidIntermediaryAccount{
+				Denom:   intermediaryAcc.Denom,
+				ValAddr: "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n",
+				GaugeId: intermediaryAcc.GaugeId,
+			}
+
+			// Key is the old account address and value is the new account
+			accountsToReplace[oldAcc.GetAccAddress().String()] = intermediaryAcc
+			fmt.Printf("for old account %v caching new acc %v\n", oldAcc, intermediaryAcc)
 		}
 
 		k.SetIntermediaryAccount(ctx, intermediaryAcc)
@@ -53,6 +52,17 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 		intermediaryAcc := k.GetIntermediaryAccount(ctx, acc)
+
+		// We state exported an old address that was created from hash(denom + old address)
+		// So we want to replace it with a new address that replaced old
+		if intermediaryAcc.Empty() {
+			toReplace, ok := accountsToReplace[acc.String()]
+			if !ok {
+				panic(fmt.Sprintf("did not find %s in accountsToReplace", acc.String()))
+			}
+			intermediaryAcc = toReplace
+		}
+
 		if intermediaryAcc.Denom == "" {
 			fmt.Printf("GAUGE ID %v\n", intermediaryAcc.GaugeId)
 			fmt.Printf("VAL ADDR %v\n", intermediaryAcc.ValAddr)

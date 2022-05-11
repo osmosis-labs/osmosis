@@ -47,7 +47,7 @@ func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) 
 
 	bz := prefixStore.Get(address)
 	if bz == nil {
-		panic(fmt.Sprintf("buffer was nil for address %s", address.String()))
+		return types.SuperfluidIntermediaryAccount{}
 	}
 	err := proto.Unmarshal(bz, &acc)
 	if err != nil {
