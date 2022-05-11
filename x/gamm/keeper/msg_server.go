@@ -281,3 +281,13 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 
 	return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
 }
+
+func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := server.keeper.setStableSwapScalingFactors(ctx, msg.ScalingFactors, msg.PoolID, msg.ScalingFactorGovernor); err != nil {
+		return nil, err
+	}
+
+	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+}

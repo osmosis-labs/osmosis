@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -107,4 +108,31 @@ func (k *Keeper) SetHooks(gh types.GammHooks) *Keeper {
 	k.hooks = gh
 
 	return k
+}
+
+func (k *Keeper) setStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, poolId uint64, scalingFactorGovernor string) error {
+	poolI, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	stableswapPool, ok := poolI.(*stableswap.Pool)
+	if !ok {
+		return types.ErrNotStableSwapPool
+	}
+
+	if scalingFactorGovernor != stableswapPool.ScalingFactorGovernor {
+		return types.ErrNotScalingFactorGovernor
+	}
+
+	if len(scalingFactors) != stableswapPool.PoolLiquidity.Len() {
+		return types.ErrInvalidStableswapScalingFactors
+	}
+
+	stableswapPool.ScalingFactor = scalingFactors
+
+	if err = k.SetPool(ctx, stableswapPool); err != nil {
+		return err
+	}
+	return nil
 }

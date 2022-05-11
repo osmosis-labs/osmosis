@@ -31,4 +31,9 @@ var (
 	ErrPoolParamsInvalidNumDenoms = sdkerrors.Register(ModuleName, 51, "pool params' LBP doesn't have same number of params as underlying pool")
 
 	ErrNotImplemented = sdkerrors.Register(ModuleName, 60, "function not implemented")
+
+	ErrNotStableSwapPool               = sdkerrors.Register(ModuleName, 61, "not stableswap pool")
+	ErrNotStableswap                   = sdkerrors.Register(ModuleName, 62, "not governor address")
+	ErrInvalidStableswapScalingFactors = sdkerrors.Register(ModuleName, 63, "length between liquidity and scaling factors mismatch")
+	ErrNotScalingFactorGovernor        = sdkerrors.Register(ModuleName, 64, "not scaling factor governor")
 )
