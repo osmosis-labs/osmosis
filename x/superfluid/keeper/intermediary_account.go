@@ -114,6 +114,10 @@ func (k Keeper) SetIntermediaryAccount(ctx sdk.Context, acc types.SuperfluidInte
 	if err != nil {
 		panic(err)
 	}
+	if bz == nil {
+		fmt.Println(acc)
+		panic("tried to set an empty intermediary account")
+	}
 	prefixStore.Set(acc.GetAccAddress(), bz)
 }
 
