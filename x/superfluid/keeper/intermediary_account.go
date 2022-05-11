@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -40,12 +42,12 @@ func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) 
 
 	acc := types.SuperfluidIntermediaryAccount{}
 	if address == nil {
-		return acc
+		panic("address was nil")
 	}
 
 	bz := prefixStore.Get(address)
 	if bz == nil {
-		return acc
+		panic(fmt.Sprintf("buffer was nil for address %s", address.String()))
 	}
 	err := proto.Unmarshal(bz, &acc)
 	if err != nil {

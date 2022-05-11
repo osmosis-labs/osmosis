@@ -1,6 +1,8 @@
 package superfluid
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
@@ -22,6 +24,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	for _, intermediaryAcc := range genState.IntermediaryAccounts {
+		fmt.Printf("INT GAUGEID %v", intermediaryAcc.GaugeId)
+		fmt.Printf("INT DENOM %v", intermediaryAcc.Denom)
+
 		k.SetIntermediaryAccount(ctx, intermediaryAcc)
 	}
 
@@ -33,6 +38,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 		intermediaryAcc := k.GetIntermediaryAccount(ctx, acc)
 		if intermediaryAcc.Denom == "" {
+			fmt.Printf("GAUGE ID %v\n", intermediaryAcc.GaugeId)
+			fmt.Printf("VAL ADDR %v\n", intermediaryAcc.ValAddr)
+			fmt.Printf("intermediaryAcc.GetValAddr()%v\n", intermediaryAcc.GetValAddr())
+			fmt.Printf("intermediaryAcc.GetDenom()%v\n", intermediaryAcc.GetValAddr())
+			fmt.Printf("intermediaryAcc.GetGaugeId()%v\n", intermediaryAcc.GetValAddr())
 			panic("connection to invalid intermediary account found")
 		}
 		k.SetLockIdIntermediaryAccountConnection(ctx, connection.LockId, intermediaryAcc)
