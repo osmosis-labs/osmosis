@@ -1,6 +1,8 @@
 package superfluid
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
@@ -21,7 +23,22 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetOsmoEquivalentMultiplier(ctx, multiplierRecord.EpochNumber, multiplierRecord.Denom, multiplierRecord.Multiplier)
 	}
 
+	accountsToReplace := make(map[string]types.SuperfluidIntermediaryAccount)
+
 	for _, intermediaryAcc := range genState.IntermediaryAccounts {
+		if string(intermediaryAcc.ValAddr) == "osmovaloper12smx2wdlyttvyzvzg54y2vnqwq2qjatex7kgq4" {
+			// This the account we are replacing
+			oldAcc := types.SuperfluidIntermediaryAccount{
+				Denom:   intermediaryAcc.Denom,
+				ValAddr: "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n",
+				GaugeId: intermediaryAcc.GaugeId,
+			}
+
+			// Key is the old account address and value is the new account
+			accountsToReplace[oldAcc.GetAccAddress().String()] = intermediaryAcc
+			fmt.Printf("for old account %v caching new acc %v\n", oldAcc, intermediaryAcc)
+		}
+
 		k.SetIntermediaryAccount(ctx, intermediaryAcc)
 	}
 
@@ -32,6 +49,17 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 		intermediaryAcc := k.GetIntermediaryAccount(ctx, acc)
+
+		// We state exported an old address that was created from hash(denom + old address)
+		// So we want to replace it with a new address that replaced old
+		if intermediaryAcc.Empty() {
+			toReplace, ok := accountsToReplace[acc.String()]
+			if !ok {
+				panic(fmt.Sprintf("did not find %s in accountsToReplace", acc.String()))
+			}
+			intermediaryAcc = toReplace
+		}
+
 		if intermediaryAcc.Denom == "" {
 			panic("connection to invalid intermediary account found")
 		}

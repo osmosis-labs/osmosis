@@ -36,7 +36,7 @@ func (k Keeper) GetIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) 
 
 	acc := types.SuperfluidIntermediaryAccount{}
 	if address == nil {
-		return acc
+		panic("address was nil")
 	}
 
 	bz := prefixStore.Get(address)
@@ -132,6 +132,7 @@ func (k Keeper) GetAllLockIdIntermediaryAccountConnections(ctx sdk.Context) []ty
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
 	iterator := prefixStore.Iterator(nil, nil)
+	defer iterator.Close()
 
 	connections := []types.LockIdIntermediaryAccountConnection{}
 	for ; iterator.Valid(); iterator.Next() {
