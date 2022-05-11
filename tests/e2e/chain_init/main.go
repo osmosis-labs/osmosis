@@ -22,7 +22,7 @@ func main() {
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
 	flag.StringVar(&config, "config", "", "serialized config")
-	flag.DurationVar(&votingPeriod, "voting-period", 30000000000, "votingPeriod")
+	flag.DurationVar(&votingPeriod, "voting-period", 30000000000, "voting period")
 
 	flag.Parse()
 
