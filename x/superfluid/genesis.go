@@ -27,6 +27,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		fmt.Printf("INT GAUGEID %v", intermediaryAcc.GaugeId)
 		fmt.Printf("INT DENOM %v", intermediaryAcc.Denom)
 
+		if string(intermediaryAcc.ValAddr) == "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n" {
+			panic("osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n")
+		}
+
+		if string(intermediaryAcc.ValAddr) == "osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5" {
+			panic("osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5")
+		}
+
 		k.SetIntermediaryAccount(ctx, intermediaryAcc)
 	}
 
