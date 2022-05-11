@@ -41,7 +41,7 @@ func (suite *CfmmCommonTestSuite) TestCalculateAmountOutAndIn_InverseRelationshi
 	suite.Require().True(approxEqual)
 }
 
-func TestKeeperTestSuite(t *testing.T) {
+func TestCfmmCommonTestSuite(t *testing.T) {
 	t.Parallel()
 	suite.Run(t, new(CfmmCommonTestSuite))
 }
