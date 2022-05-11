@@ -17,7 +17,7 @@ import (
 func (s *IntegrationTestSuite) TestQueryBalances() {
 	var (
 		expectedDenomsA   = []string{chain.OsmoDenom, chain.StakeDenom}
-		expectedDenomsB   = []string{chain.OsmoDenom, chain.StakeDenom, chain.IbcDenom}
+		expectedDenomsB   = []string{chain.OsmoDenom, chain.StakeDenom, chain.OsmoIBCDenom}
 		expectedBalancesA = []uint64{chain.OsmoBalanceA - chain.IbcSendAmount, chain.StakeBalanceA - chain.StakeAmountA}
 		expectedBalancesB = []uint64{chain.OsmoBalanceB, chain.StakeBalanceB - chain.StakeAmountB, chain.IbcSendAmount}
 	)
