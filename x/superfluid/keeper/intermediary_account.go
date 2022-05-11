@@ -15,14 +15,14 @@ func (k Keeper) GetAllIntermediaryAccounts(ctx sdk.Context) []types.SuperfluidIn
 
 	accounts := []types.SuperfluidIntermediaryAccount{}
 
-	iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		account := types.SuperfluidIntermediaryAccount{}
 		err := proto.Unmarshal(iterator.Value(), &account)
 		if account.Denom == "" {
-			panic("account denom is empty")
+			panic("GetAllIntermediaryAccounts - account denom is empty")
 		}
 
 		if err != nil {
@@ -104,6 +104,10 @@ func (k Keeper) SetIntermediaryAccount(ctx sdk.Context, acc types.SuperfluidInte
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
 
+	if acc.Denom == "" {
+		panic("SetIntermediaryAccount - account denom is empty")
+	}
+
 	bz, err := proto.Marshal(&acc)
 	if err != nil {
 		panic(err)
@@ -136,6 +140,7 @@ func (k Keeper) GetAllLockIdIntermediaryAccountConnections(ctx sdk.Context) []ty
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
 	iterator := prefixStore.Iterator(nil, nil)
+	defer iterator.Close()
 
 	connections := []types.LockIdIntermediaryAccountConnection{}
 	for ; iterator.Valid(); iterator.Next() {
