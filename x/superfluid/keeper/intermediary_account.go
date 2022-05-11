@@ -21,6 +21,10 @@ func (k Keeper) GetAllIntermediaryAccounts(ctx sdk.Context) []types.SuperfluidIn
 	for ; iterator.Valid(); iterator.Next() {
 		account := types.SuperfluidIntermediaryAccount{}
 		err := proto.Unmarshal(iterator.Value(), &account)
+		if account.Denom == "" {
+			panic("account denom is empty")
+		}
+
 		if err != nil {
 			panic(err)
 		}
