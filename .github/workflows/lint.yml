@@ -25,7 +25,7 @@ jobs:
         if: env.GIT_DIFF
 
   super-linter:
-    name: Run super-linter
+    name: Run super-linter (Markdown)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
