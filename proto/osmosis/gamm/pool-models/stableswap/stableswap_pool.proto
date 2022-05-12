@@ -38,7 +38,7 @@ message PoolAsset {
       [ (gogoproto.moretags) = "yaml:\"token\"", (gogoproto.nullable) = false ];
   // used for normalizing values for calculation amognst assets with different
   // precisions
-  string scalingFactor = 2 [
+  string scaling_factor = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"scaling_factor\"",
     (gogoproto.nullable) = false
@@ -75,6 +75,6 @@ message Pool {
     (gogoproto.nullable) = false
   ];
   // assets in the pool
-  repeated osmosis.gamm.stableswap.v1beta1.PoolAsset poolAssets = 6
+  repeated osmosis.gamm.stableswap.v1beta1.PoolAsset pool_assets = 6
       [ (gogoproto.nullable) = false ];
 }
