@@ -1,14 +1,10 @@
-<!--
-order: 4
--->
-
 # Keepers
 
 ## Keeper functions
 
 Epochs keeper module provides utility functions to manage epochs.
 
-```go
+``` {.go}
 // Keeper is the interface for lockup module keeper
 type Keeper interface {
   // GetEpochInfo returns epoch info by identifier
