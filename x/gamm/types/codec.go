@@ -13,6 +13,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*PoolI)(nil), nil)
 	cdc.RegisterConcrete(&MsgJoinPool{}, "osmosis/gamm/join-pool", nil)
 	cdc.RegisterConcrete(&MsgExitPool{}, "osmosis/gamm/exit-pool", nil)
+	cdc.RegisterConcrete(&MsgUnpool{}, "osmosis/gamm/unpool", nil)
 	cdc.RegisterConcrete(&MsgSwapExactAmountIn{}, "osmosis/gamm/swap-exact-amount-in", nil)
 	cdc.RegisterConcrete(&MsgSwapExactAmountOut{}, "osmosis/gamm/swap-exact-amount-out", nil)
 	cdc.RegisterConcrete(&MsgJoinSwapExternAmountIn{}, "osmosis/gamm/join-swap-extern-amount-in", nil)
@@ -31,6 +32,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgJoinPool{},
 		&MsgExitPool{},
+		&MsgUnpool{},
 		&MsgSwapExactAmountIn{},
 		&MsgSwapExactAmountOut{},
 		&MsgJoinSwapExternAmountIn{},

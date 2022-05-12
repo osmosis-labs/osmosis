@@ -1,0 +1,35 @@
+syntax = "proto3";
+package osmosis.gamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/types";
+
+enum RiskLevel {
+  DEFAULT_SAFE = 0;
+  SAFE = 1;
+  UNPOOL_ALLOWED = 2;
+}
+
+message UpdatePoolParam {
+  option (gogoproto.equal) = true;
+  uint64 poolId = 1;
+  // emergency implementation, support risk level only for now
+  // string swapFee = 2;
+  // string exitFee = 3;
+  
+  RiskLevel riskLevel = 4;
+}
+
+// UpdatePoolParamsProposal replaces pool params of existing pools
+message UpdatePoolParamsProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  repeated UpdatePoolParam updates = 3 [ (gogoproto.nullable) = false ];
+}
+

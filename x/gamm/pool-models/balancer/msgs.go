@@ -53,6 +53,10 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 		return err
 	}
 
+	if !msg.PoolParams.RiskLevel.IsEmpty() {
+		return sdkerrors.Wrapf(types.ErrInvalidRiskLevel, "Non-empty risk level")
+	}
+
 	return nil
 }
 

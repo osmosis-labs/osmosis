@@ -26,6 +26,8 @@ var (
 	ErrNotPositiveCriteria      = sdkerrors.Register(ModuleName, 29, "min out amount or max in amount should be positive")
 	ErrNotPositiveRequireAmount = sdkerrors.Register(ModuleName, 30, "required amount should be positive")
 	ErrTooManyTokensOut         = sdkerrors.Register(ModuleName, 31, "tx is trying to get more tokens out of the pool than exist")
+	ErrEmptyProposalUpdates     = sdkerrors.Register(ModuleName, 32, "Proposal updates are empty")
+	ErrInvalidRiskLevel         = sdkerrors.Register(ModuleName, 33, "Risk level is not empty on initialization")
 
 	ErrPoolParamsInvalidDenom     = sdkerrors.Register(ModuleName, 50, "pool params' LBP params has an invalid denomination")
 	ErrPoolParamsInvalidNumDenoms = sdkerrors.Register(ModuleName, 51, "pool params' LBP doesn't have same number of params as underlying pool")

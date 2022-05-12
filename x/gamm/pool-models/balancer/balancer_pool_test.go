@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -564,4 +566,54 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		// Should have been deleted by the last test case of after PokeTokenWeights pokes past end time.
 		require.Nil(t, pacc.PoolParams.SmoothWeightChangeParams)
 	}
+}
+
+func TestBalancerPoolUpdatePoolParam(t *testing.T) {
+	initialPoolAssets := []PoolAsset{
+		{
+			Weight: sdk.NewInt(1),
+			Token:  sdk.NewCoin("asset1", sdk.NewInt(1000)),
+		},
+		{
+			Weight: sdk.NewInt(1),
+			Token:  sdk.NewCoin("asset2", sdk.NewInt(1000)),
+		},
+	}
+
+	pacc, err := NewBalancerPool(defaultPoolId, PoolParams{
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
+	}, initialPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
+	require.NoError(t, err)
+
+	require.Equal(t, pacc.PoolParams.RiskLevel, types.RiskLevel_DEFAULT_SAFE)
+
+	// panic on wrong pool ID
+	require.Panics(t, func() {
+		pacc.ApplyUpdateParam(sdk.Context{}, types.UpdatePoolParam{
+			PoolId: 9999999,
+		})
+	})
+
+	// No change on empty risk level
+	pacc.ApplyUpdateParam(sdk.Context{}, types.UpdatePoolParam{
+		PoolId: pacc.Id,
+	})
+
+	require.Equal(t, pacc.PoolParams.RiskLevel, types.RiskLevel_DEFAULT_SAFE)
+
+	// change on new risk level
+	pacc.ApplyUpdateParam(sdk.Context{}, types.UpdatePoolParam{
+		PoolId:    pacc.Id,
+		RiskLevel: types.RiskLevel_UNPOOL_ALLOWED,
+	})
+
+	require.Equal(t, pacc.PoolParams.RiskLevel, types.RiskLevel_UNPOOL_ALLOWED)
+
+	// No change on empty risk level again
+	pacc.ApplyUpdateParam(sdk.Context{}, types.UpdatePoolParam{
+		PoolId: pacc.Id,
+	})
+
+	require.Equal(t, pacc.PoolParams.RiskLevel, types.RiskLevel_UNPOOL_ALLOWED)
 }

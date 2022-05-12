@@ -42,6 +42,19 @@ func (pa Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
 	return pa.PoolParams.ExitFee
 }
 
+func (pa Pool) GetRiskLevel(ctx sdk.Context) types.RiskLevel {
+	return pa.PoolParams.RiskLevel
+}
+
+func (pa *Pool) ApplyUpdateParam(ctx sdk.Context, update types.UpdatePoolParam) {
+	if update.PoolId != pa.Id {
+		panic("UpdatePoolParam with different ID should not be provided")
+	}
+	if !update.RiskLevel.IsEmpty() {
+		pa.PoolParams.RiskLevel = update.RiskLevel
+	}
+}
+
 func (pa Pool) IsActive(ctx sdk.Context) bool {
 	return true
 }

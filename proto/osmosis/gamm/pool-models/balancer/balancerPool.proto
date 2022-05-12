@@ -11,6 +11,8 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
+import "osmosis/gamm/v1beta1/gov.proto";
+
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer";
 
 // Parameters for changing the weights in a balancer pool smoothly from
@@ -84,6 +86,9 @@ message PoolParams {
   SmoothWeightChangeParams smoothWeightChangeParams = 3 [
     (gogoproto.moretags) = "yaml:\"smooth_weight_change_params\"",
     (gogoproto.nullable) = true
+  ];
+  osmosis.gamm.v1beta1.RiskLevel riskLevel = 4 [
+    (gogoproto.moretags) = "yaml:\"risk_level\""
   ];
 }
 

@@ -9,6 +9,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/types";
 service Msg {
   rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
   rpc ExitPool(MsgExitPool) returns (MsgExitPoolResponse);
+  rpc Unpool(MsgUnpool) returns (MsgUnpoolResponse);
   rpc SwapExactAmountIn(MsgSwapExactAmountIn)
       returns (MsgSwapExactAmountInResponse);
   rpc SwapExactAmountOut(MsgSwapExactAmountOut)
@@ -59,6 +60,25 @@ message MsgExitPool {
 
 message MsgExitPoolResponse {}
 
+// ===================== MsgUnpool
+message MsgUnpool {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  /*
+  string shareInAmount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"share_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+
+  repeated cosmos.base.v1beta1.Coin tokenOutMins = 4 [
+    (gogoproto.moretags) = "yaml:\"token_out_min_amounts\"",
+    (gogoproto.nullable) = false
+  ];
+  */
+}
+
+message MsgUnpoolResponse {}
 // ===================== MsgSwapExactAmountIn
 message SwapAmountInRoute {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];

@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // NewHandler returns a handler for "gamm" type messages.
@@ -58,4 +59,20 @@ func NewHandler(k *keeper.Keeper) sdk.Handler {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}
 	}
+}
+
+func NewPoolMetadataProposalHandler(k keeper.Keeper) govtypes.Handler {
+	return func(ctx sdk.Context, content govtypes.Content) error {
+		switch c := content.(type) {
+		case *types.UpdatePoolParamsProposal:
+			return handleUpdatePoolParamsProposal(ctx, k, c)
+
+		default:
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized pool incentives proposal content type: %T", c)
+		}
+	}
+}
+
+func handleUpdatePoolParamsProposal(ctx sdk.Context, k keeper.Keeper, p *types.UpdatePoolParamsProposal) error {
+	return k.HandleUpdatePoolParamsProposal(ctx, p)
 }

@@ -14,6 +14,7 @@ const (
 	TypeMsgSwapExactAmountIn       = "swap_exact_amount_in"
 	TypeMsgSwapExactAmountOut      = "swap_exact_amount_out"
 	TypeMsgJoinPool                = "join_pool"
+	TypeMsgUnpool                  = "unpool"
 	TypeMsgExitPool                = "exit_pool"
 	TypeMsgJoinSwapExternAmountIn  = "join_swap_extern_amount_in"
 	TypeMsgJoinSwapShareAmountOut  = "join_swap_share_amount_out"
@@ -60,6 +61,30 @@ func ValidateFutureGovernor(governor string) error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
 	}
 	return nil
+}
+
+var _ sdk.Msg = &MsgUnpool{}
+
+func (msg MsgUnpool) Route() string { return RouterKey }
+func (msg MsgUnpool) Type() string  { return TypeMsgUnpool }
+func (msg MsgUnpool) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	return nil
+}
+func (msg MsgUnpool) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUnpool) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
 }
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}

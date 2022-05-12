@@ -9,6 +9,7 @@ import (
 const (
 	TypeEvtPoolJoined   = "pool_joined"
 	TypeEvtPoolExited   = "pool_exited"
+	TypeEvtUnpooled     = "pool_unpooled"
 	TypeEvtPoolCreated  = "pool_created"
 	TypeEvtTokenSwapped = "token_swapped"
 

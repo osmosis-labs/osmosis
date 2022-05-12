@@ -360,6 +360,15 @@ func (k Keeper) ExitPool(
 	return exitCoins, nil
 }
 
+func (k Keeper) Unpool(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	poolId uint64,
+) error {
+	// TODO
+	return nil
+}
+
 // ExitSwapShareAmountIn is an Exit Pool transaction, that will exit all of the provided LP shares,
 // and then swap it all against the pool into tokenOutDenom.
 // If the amount of tokens gotten out after the swap is less than tokenOutMinAmount, return an error.
