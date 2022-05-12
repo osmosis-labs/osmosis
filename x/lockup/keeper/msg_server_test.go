@@ -43,16 +43,6 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 			},
 			expectPass: false,
 		},
-		{
-			name: "try creating multiple coin lockup",
-			param: param{
-				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("take", 10)}, // setup wallet
-				lockOwner:           sdk.AccAddress([]byte("addr1---------------")),                         // setup wallet
-				duration:            time.Second,
-				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("take", 10)},
-			},
-			expectPass: false,
-		},
 	}
 
 	for _, test := range tests {
