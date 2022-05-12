@@ -26,6 +26,9 @@ func GetTxCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		CreateLBPCmd(),
+		SubscribeCmd(),
+		WithdrawCmd(),
+		ExitLBPCmd(),
 	)
 
 	return cmd
@@ -65,11 +68,11 @@ func CreateLBPCmd() *cobra.Command {
 	return cmd
 }
 
-// SubscribeLBP broadcast MsgSubscribe.
-func SubscribeLBPCmd() *cobra.Command {
+// Subscribe broadcast MsgSubscribe.
+func SubscribeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "subscribe-lbp [flags]",
-		Short: "subscribe-lbp used to join/subscribe LBP",
+		Use:   "subscribe [flags]",
+		Short: "subscribe used to join/subscribe LBP",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -79,7 +82,7 @@ func SubscribeLBPCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildSubscribeLBPMsg(clientCtx, txf, cmd.Flags())
+			txf, msg, err := NewBuildSubscribeMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -87,11 +90,71 @@ func SubscribeLBPCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetCreateLBP())
+	cmd.Flags().AddFlagSet(FlagSetSubscribe())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagTokenIn)
-	_ = cmd.MarkFlagRequired(FlagTokenOut)
+	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagAmount)
+
+	return cmd
+}
+
+// SubscribeLBP broadcast MsgSubscribe.
+func WithdrawCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw [flags]",
+		Short: "withdraw used to withdraw amount from LBP",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildWithdrawMsg(clientCtx, txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetWithdraw())
+	flags.AddTxFlagsToCmd(cmd)
+
+	_ = cmd.MarkFlagRequired(FlagPoolId)
+
+	return cmd
+}
+
+// ExitLBPCmd broadcast MsgExitLBP.
+func ExitLBPCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exit [flags]",
+		Short: "exit used to exit from LBP",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildExitLBPMsg(clientCtx, txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetWithdraw())
+	flags.AddTxFlagsToCmd(cmd)
+
+	_ = cmd.MarkFlagRequired(FlagPoolId)
 
 	return cmd
 }
@@ -147,7 +210,7 @@ func NewBuildCreateLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 	return txf, msg, nil
 }
 
-func NewBuildSubscribeLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+func NewBuildSubscribeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 	poolId, err := fs.GetUint64(FlagPoolId)
 	if err != nil {
 		return txf, nil, err
@@ -161,6 +224,33 @@ func NewBuildSubscribeLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.
 		Sender: clientCtx.GetFromAddress().String(),
 		PoolId: poolId,
 		Amount: sdk.NewInt(amount),
+	}
+	return txf, msg, nil
+}
+
+func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolId, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	msg := &api.MsgWithdraw{
+		Sender: clientCtx.GetFromAddress().String(),
+		PoolId: poolId,
+		Amount: nil,
+	}
+	return txf, msg, nil
+}
+
+func NewBuildExitLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolId, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	msg := &api.MsgExitLBP{
+		Sender: clientCtx.GetFromAddress().String(),
+		PoolId: poolId,
 	}
 	return txf, msg, nil
 }

@@ -28,3 +28,29 @@ func FlagSetCreateLBP() *flag.FlagSet {
 
 	return fs
 }
+
+func FlagSetSubscribe() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.Uint64(FlagPoolId, 0, "id of the pool.")
+	fs.Int64(FlagAmount, 0, "amount to pool.")
+
+	return fs
+}
+
+func FlagSetWithdraw() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.Uint64(FlagPoolId, 0, "id of the pool.")
+	fs.Int64(FlagAmount, 0, "amount to pool.")
+
+	return fs
+}
+
+func FlagSetExit() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.Uint64(FlagPoolId, 0, "id of the pool.")
+
+	return fs
+}
