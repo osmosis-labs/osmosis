@@ -13,6 +13,7 @@ option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/api";
 // GenesisState defines the osmolbp module's genesis state.
 message GenesisState {
   repeated  LBP lbps = 1;
-  uint64 next_lbp_number = 2;
-  Params params = 3 [ (gogoproto.nullable) = false ];
+  repeated UserPosition user_positions = 2;
+  uint64 next_lbp_number = 3;
+  Params params = 4 [ (gogoproto.nullable) = false ];
 }

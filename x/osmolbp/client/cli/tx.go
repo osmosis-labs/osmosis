@@ -65,6 +65,37 @@ func CreateLBPCmd() *cobra.Command {
 	return cmd
 }
 
+// SubscribeLBP broadcast MsgSubscribe.
+func SubscribeLBPCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "subscribe-lbp [flags]",
+		Short: "subscribe-lbp used to join/subscribe LBP",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildSubscribeLBPMsg(clientCtx, txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetCreateLBP())
+	flags.AddTxFlagsToCmd(cmd)
+
+	_ = cmd.MarkFlagRequired(FlagTokenIn)
+	_ = cmd.MarkFlagRequired(FlagTokenOut)
+
+	return cmd
+}
+
 func NewBuildCreateLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
 	tokenIn, err := fs.GetString(FlagTokenIn)
 	if err != nil {
@@ -103,6 +134,7 @@ func NewBuildCreateLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 	if err != nil {
 		return txf, nil, fmt.Errorf("failed to parse treasury address: %s", treasuryStr)
 	}
+
 	msg := &api.MsgCreateLBP{
 		TokenIn: tokenIn,
 		TokenOut: tokenOut,
@@ -110,6 +142,25 @@ func NewBuildCreateLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 		Duration: duration,
 		InitialDeposit: InitialDeposit,
 		Treasury: treasury.String(),
+		Creator: clientCtx.GetFromAddress().String(),
+	}
+	return txf, msg, nil
+}
+
+func NewBuildSubscribeLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolId, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	amount, err := fs.GetInt64(FlagAmount)
+	if err != nil {
+		return txf, nil, err
+	}
+	msg := &api.MsgSubscribe{
+		Sender: clientCtx.GetFromAddress().String(),
+		PoolId: poolId,
+		Amount: sdk.NewInt(amount),
 	}
 	return txf, msg, nil
 }

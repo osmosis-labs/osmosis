@@ -11,17 +11,20 @@ const (
 	FlagDuration = "duration"
 	FlagInitialDeposit = "initial-deposit"
 	FlagTreasury = "treasury"
+
+	FlagPoolId = "pool-id"
+	FlagAmount = "amount"
 )
 
 func FlagSetCreateLBP() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagTokenIn, "", "")
-	fs.String(FlagTokenOut, "", "")
-	fs.String(FlagStartTime, "", "")
-	fs.String(FlagDuration, "", "")
-	fs.String(FlagInitialDeposit, "", "")
-	fs.String(FlagTreasury, "", "")
+	fs.String(FlagTokenIn, "", "denom used to buy LB tokens.")
+	fs.String(FlagTokenOut, "", "token denom to be bootstrapped.")
+	fs.String(FlagStartTime, "", "when the token sale starts.")
+	fs.String(FlagDuration, "", "time that the sale takes place over.")
+	fs.String(FlagInitialDeposit, "", "total number of `tokens_out` to be sold during the continuous sale.")
+	fs.String(FlagTreasury, "", "account which provides the tokens to sale and receives")
 
 	return fs
 }
