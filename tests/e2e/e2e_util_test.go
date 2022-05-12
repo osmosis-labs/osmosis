@@ -133,7 +133,7 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chain.Chain, dstChain *chain.Ch
 				return false
 			}
 		},
-		time.Minute,
+		5*time.Minute,
 		time.Second,
 		"tx not recieved on destination chain",
 	)
