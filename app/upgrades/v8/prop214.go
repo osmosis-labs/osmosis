@@ -21,5 +21,8 @@ func Prop214(ctx sdk.Context, gamm *gammkeeper.Keeper) {
 
 	balancerPool.PoolParams.SwapFee = sdk.MustNewDecFromStr("0.002")
 
-	gamm.SetPool(ctx, balancerPool)
+	err = gamm.SetPool(ctx, balancerPool)
+	if err != nil {
+		panic(err)
+	}
 }
