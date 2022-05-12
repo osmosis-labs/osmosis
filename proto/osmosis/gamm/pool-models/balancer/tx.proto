@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.gamm.poolmodels.balancer;
+package osmosis.gamm.poolmodels.balancer.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
