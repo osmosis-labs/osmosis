@@ -11,7 +11,6 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 
@@ -26,6 +25,18 @@ import (
 )
 
 var (
+	// voting period for chain A
+	votingPeriodA float32
+	// voting period for chain B
+	votingPeriodB float32
+	// estimated number of blocks it takes to submit for a proposal
+	propSubmitBlocks float32 = 10
+	// estimated number of blocks it takes to deposit for a proposal
+	propDepositBlocks float32 = 10
+	// number of blocks it takes to vote for a single validator to vote for a proposal
+	propVoteBlocks float32 = 1.2
+	// number of blocks used as a calculation buffer
+	propBufferBlocks float32 = 5
 	// variable used to switch between chain A and B prop height in for loop
 	propHeight int
 	// upgrade proposal height for chain A
@@ -43,8 +54,20 @@ var (
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
 		},
-		{Pruning: "nothing", PruningKeepRecent: "0", PruningInterval: "0", SnapshotInterval: 1500, SnapshotKeepRecent: 2},
-		{Pruning: "custom", PruningKeepRecent: "10000", PruningInterval: "13", SnapshotInterval: 1500, SnapshotKeepRecent: 2},
+		{
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
 	}
 	validatorConfigsChainB = []*chain.ValidatorConfig{
 		{
@@ -54,8 +77,20 @@ var (
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
 		},
-		{Pruning: "nothing", PruningKeepRecent: "0", PruningInterval: "0", SnapshotInterval: 1500, SnapshotKeepRecent: 2},
-		{Pruning: "custom", PruningKeepRecent: "10000", PruningInterval: "13", SnapshotInterval: 1500, SnapshotKeepRecent: 2},
+		{
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
 	}
 )
 
@@ -104,21 +139,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.runValidators(s.chains[1], 10)
 	s.runIBCRelayer()
 	// pre upgrade state creation
-	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.OsmoToken)
-	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.OsmoToken)
-	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.StakeToken)
-	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.StakeToken)
-	s.createPool(s.chains[0], "pool1A.json")
-	s.createPool(s.chains[1], "pool1B.json")
+	s.createPreUpgradeState()
 	// initialize and run the upgrade
 	s.upgrade()
 	// post upgrade tests
-	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.OsmoToken)
-	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.OsmoToken)
-	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.StakeToken)
-	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.StakeToken)
-	s.createPool(s.chains[0], "pool2A.json")
-	s.createPool(s.chains[1], "pool2B.json")
+	s.runPostUpgradeTests()
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -327,16 +352,27 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	b, err := json.Marshal(validatorConfigs)
 	s.Require().NoError(err)
 
+	numVal := float32(len(validatorConfigs))
+	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, then a buffer
+	votingPeriodNum := propDepositBlocks + numVal*propVoteBlocks + propBufferBlocks
+	if chainId == chain.ChainAID {
+		votingPeriodA = votingPeriodNum
+	} else if chainId == chain.ChainBID {
+		votingPeriodB = votingPeriodNum
+	}
+	votingPeriod := time.Duration(int(votingPeriodNum) * 1000000000)
+
 	s.initResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
 			Repository: "osmolabs/osmosis-init",
-			Tag:        "v7.3.0",
+			Tag:        "v7.3.0-1",
 			NetworkID:  s.dkrNet.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
 				fmt.Sprintf("--chain-id=%s", chainId),
 				fmt.Sprintf("--config=%s", b),
+				fmt.Sprintf("--voting-period=%v", votingPeriod),
 			},
 			User: "root:root",
 			Mounts: []string{
@@ -393,21 +429,19 @@ func noRestart(config *docker.HostConfig) {
 
 func (s *IntegrationTestSuite) upgrade() {
 	// submit, deposit, and vote for upgrade proposal
-	currentHeightA := s.chainHeight(s.valResources[s.chains[0].ChainMeta.Id][0].Container.ID)
-	currentHeightB := s.chainHeight(s.valResources[s.chains[1].ChainMeta.Id][0].Container.ID)
-	propHeightA = currentHeightA + 40 + len(s.chains[0].Validators)
-	propHeightB = currentHeightB + 40 + len(s.chains[1].Validators)
-
+	// prop height = current height + voting period + time it takes to submit proposal + small buffer
+	currentHeightA := s.getCurrentChainHeight(s.valResources[s.chains[0].ChainMeta.Id][0].Container.ID)
+	propHeightA = currentHeightA + int(votingPeriodA) + int(propSubmitBlocks) + int(propBufferBlocks)
 	s.submitProposal(s.chains[0], propHeightA)
-	s.submitProposal(s.chains[1], propHeightB)
 	s.depositProposal(s.chains[0])
+	s.voteProposal(s.chains[0])
+	// prop height = current height + voting period + time it takes to submit proposal + small buffer
+	currentHeightB := s.getCurrentChainHeight(s.valResources[s.chains[1].ChainMeta.Id][0].Container.ID)
+	propHeightB = currentHeightB + int(votingPeriodB) + int(propSubmitBlocks) + int(propBufferBlocks)
+	s.submitProposal(s.chains[1], propHeightB)
 	s.depositProposal(s.chains[1])
-	var wg sync.WaitGroup
-	wg.Add(2)
-	// use goroutines to vote on both chains concurrently (no possibility of sequence mismatch)
-	go s.voteProposal(s.chains[0], &wg)
-	go s.voteProposal(s.chains[1], &wg)
-	wg.Wait()
+	s.voteProposal(s.chains[1])
+
 	// wait till all chains halt at upgrade height
 	for _, c := range s.chains {
 		if c.ChainMeta.Id == chain.ChainAID {
@@ -421,7 +455,7 @@ func (s *IntegrationTestSuite) upgrade() {
 			s.T().Logf("waiting to reach upgrade height on %s validator container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
 			s.Require().Eventually(
 				func() bool {
-					currentHeight := s.chainHeight(s.valResources[c.ChainMeta.Id][i].Container.ID)
+					currentHeight := s.getCurrentChainHeight(s.valResources[c.ChainMeta.Id][i].Container.ID)
 					if currentHeight != propHeight {
 						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], currentHeight, propHeight, s.valResources[c.ChainMeta.Id][i].Container.ID)
 					}
@@ -450,15 +484,11 @@ func (s *IntegrationTestSuite) upgrade() {
 			s.T().Logf("removed container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:])
 		}
 	}
-	// upgrade to locally compiled binary concurently
-	wg.Add(2)
-	go s.upgradeContainers(s.chains[0], &wg)
-	go s.upgradeContainers(s.chains[1], &wg)
-	wg.Wait()
+	s.upgradeContainers(s.chains[0])
+	s.upgradeContainers(s.chains[1])
 }
 
-func (s *IntegrationTestSuite) upgradeContainers(c *chain.Chain, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (s *IntegrationTestSuite) upgradeContainers(c *chain.Chain) {
 	// upgrade containers to the locally compiled daemon
 	s.T().Logf("starting upgrade for chain-id: %s...", c.ChainMeta.Id)
 	pwd, err := os.Getwd()
@@ -491,11 +521,11 @@ func (s *IntegrationTestSuite) upgradeContainers(c *chain.Chain, wg *sync.WaitGr
 		}
 		s.Require().Eventually(
 			func() bool {
-				currentHeight := s.chainHeight(s.valResources[c.ChainMeta.Id][i].Container.ID)
+				currentHeight := s.getCurrentChainHeight(s.valResources[c.ChainMeta.Id][i].Container.ID)
 				if currentHeight <= propHeight {
-					s.T().Logf("current block height on %s is %v, creating a few blocks container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], currentHeight, s.valResources[c.ChainMeta.Id][i].Container.ID)
+					s.T().Logf("current block height on %s is %v, waiting to create blocks container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], currentHeight, s.valResources[c.ChainMeta.Id][i].Container.ID)
 				}
-				return currentHeight > propHeight+2
+				return currentHeight > propHeight
 			},
 			5*time.Minute,
 			time.Second,
@@ -503,4 +533,22 @@ func (s *IntegrationTestSuite) upgradeContainers(c *chain.Chain, wg *sync.WaitGr
 		s.T().Logf("upgrade successful on %s validator container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
 	}
 
+}
+
+func (s *IntegrationTestSuite) createPreUpgradeState() {
+	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.StakeToken)
+	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.StakeToken)
+	s.createPool(s.chains[0], "pool1A.json")
+	s.createPool(s.chains[1], "pool1B.json")
+}
+
+func (s *IntegrationTestSuite) runPostUpgradeTests() {
+	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(s.chains[0], s.chains[1], s.chains[1].Validators[0].PublicAddress, chain.StakeToken)
+	s.sendIBC(s.chains[1], s.chains[0], s.chains[0].Validators[0].PublicAddress, chain.StakeToken)
+	s.createPool(s.chains[0], "pool2A.json")
+	s.createPool(s.chains[1], "pool2B.json")
 }
