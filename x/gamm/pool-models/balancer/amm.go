@@ -432,13 +432,15 @@ func (p *Pool) CalcTokenInShareAmountOut(
 
 	normalizedWeight := poolAssetIn.Weight.ToDec().Quo(p.GetTotalWeight().ToDec())
 
+	// We round up tokenInAmount, as this is whats charged for the swap, for the precise amount out.
+	// Otherwise, the pool would under-charge by this rounding error.
 	tokenInAmount = calcSingleAssetInGivenPoolSharesOut(
 		poolAssetIn.Token.Amount.ToDec(),
 		normalizedWeight,
 		p.GetTotalShares().ToDec(),
 		shareOutAmount.ToDec(),
 		swapFee,
-	).TruncateInt()
+	).Ceil().TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMsgFormatTokenAmountNotPositive, tokenInAmount.Int64())
