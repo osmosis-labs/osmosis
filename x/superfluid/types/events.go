@@ -9,6 +9,8 @@ const (
 	TypeEvtSuperfluidUndelegate         = "superfluid_undelegate"
 	TypeEvtSuperfluidUnbondLock         = "superfluid_unbond_lock"
 
+	TypeEvtUnpoolId = "unpool_pool_id"
+
 	AttributeDenom               = "denom"
 	AttributeSuperfluidAssetType = "superfluid_asset_type"
 	AttributeLockId              = "lock_id"

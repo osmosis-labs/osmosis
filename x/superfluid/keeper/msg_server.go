@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	v8constants "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8/constants"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
@@ -111,18 +114,27 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 		return nil, err
 	}
 
-	lockId, err := server.keeper.UnpoolAllowedPools(ctx, sender, msg.PoolId, msg.LockId)
-	if err != nil {
-		return nil, err
+	// We get all the lockIDs to unpool
+	lpShareDenom := gammtypes.GetPoolShareDenom(msg.PoolId)
+	minimalDuration := time.Second
+	unpoolLocks := server.keeper.lk.GetAccountLockedLongerDurationDenom(ctx, sender, lpShareDenom, minimalDuration)
+
+	allExitedLockIDs := []uint64{}
+	for _, lock := range unpoolLocks {
+		exitedLockIDs, err := server.keeper.UnpoolAllowedPools(ctx, sender, msg.PoolId, lock.ID)
+		if err != nil {
+			return nil, err
+		}
+		allExitedLockIDs = append(allExitedLockIDs, exitedLockIDs)
 	}
 
-	// Swap and LP events are handled elsewhere
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			sdk.EventTypeMessage,
+			types.TypeEvtUnpoolId,
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeDenom, lpShareDenom),
 		),
 	})
 
-	return &types.MsgUnPoolWhitelistedPoolResponse{LockId: lockId}, nil
+	return &types.MsgUnPoolWhitelistedPoolResponse{ExitedLockIds: allExitedLockIDs}, nil
 }
