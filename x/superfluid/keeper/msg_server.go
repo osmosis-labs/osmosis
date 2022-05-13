@@ -97,3 +97,27 @@ func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *ty
 		ID: lockupRes.ID,
 	}, err
 }
+
+func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.MsgUnPoolWhitelistedPool) (*types.MsgUnPoolWhitelistedPoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	lockId, err := server.keeper.UnpoolAllowedPools(ctx, sender, msg.PoolId, msg.LockId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Swap and LP events are handled elsewhere
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+	})
+
+	return &types.MsgUnPoolWhitelistedPoolResponse{LockId: lockId}, nil
+}

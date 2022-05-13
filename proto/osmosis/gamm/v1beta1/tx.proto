@@ -21,8 +21,6 @@ service Msg {
       returns (MsgExitSwapExternAmountOutResponse);
   rpc ExitSwapShareAmountIn(MsgExitSwapShareAmountIn)
       returns (MsgExitSwapShareAmountInResponse);
-  rpc UnPoolWhitelistedPool(MsgUnPoolWhitelistedPool)
-      returns (MsgUnPoolWhitelistedPoolResponse);
 }
 
 // ===================== MsgJoinPool
@@ -219,12 +217,3 @@ message MsgExitSwapExternAmountOutResponse {
     (gogoproto.nullable) = false
   ];
 }
-
-// ===================== MsgUnPoolWhitelistedPool
-message MsgUnPoolWhitelistedPool {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  uint64 lockId = 3 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
-}
-
-message MsgUnPoolWhitelistedPoolResponse { uint64 lockId = 1; }

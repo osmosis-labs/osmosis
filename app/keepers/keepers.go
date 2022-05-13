@@ -235,7 +235,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	gammKeeper := gammkeeper.NewKeeper(
 		appCodec, appKeepers.keys[gammtypes.StoreKey],
 		appKeepers.GetSubspace(gammtypes.ModuleName),
-		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.DistrKeeper)
+		appKeepers.AccountKeeper, appKeepers.BankKeeper,
+		appKeepers.DistrKeeper, appKeepers.LockupKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(

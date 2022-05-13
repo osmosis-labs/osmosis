@@ -224,27 +224,3 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	k.SetNextPoolNumber(ctx, poolNumber+1)
 	return poolNumber
 }
-
-func (k Keeper) GetUnpoolAllowedPools(ctx sdk.Context) []uint64 {
-	store := ctx.KVStore(k.storeKey)
-
-	bz := store.Get(types.KeyUnpoolAllowedPools)
-	if len(bz) == 0 {
-		return []uint64{}
-	}
-
-	allowedPools := types.UnpoolWhitelistedPools{}
-	k.cdc.MustUnmarshal(bz, &allowedPools)
-	return allowedPools.Ids
-}
-
-func (k Keeper) SetUnpoolAllowedPools(ctx sdk.Context, poolIds []uint64) {
-	store := ctx.KVStore(k.storeKey)
-
-	allowedPools := types.UnpoolWhitelistedPools{
-		Ids: poolIds,
-	}
-
-	bz := k.cdc.MustMarshal(&allowedPools)
-	store.Set(types.KeyNextGlobalPoolNumber, bz)
-}

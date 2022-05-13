@@ -67,12 +67,9 @@ type DistrKeeper interface {
 }
 
 type LockupKeeper interface {
-	BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error
+	BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error
+	BeginForceUnlockWithEndTime(ctx sdk.Context, lockID uint64, endTime time.Time) error
 	BreakLockForUnpool(ctx sdk.Context, lock lockuptypes.PeriodLock) error
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
-}
-
-type SuperfluidKeeper interface {
-	SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error
 }

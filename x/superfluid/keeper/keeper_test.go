@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 	denoms := []string{}
 	poolIds := []uint64{}
 	for _, pool := range pools {
-		denom := gammtypes.GetPoolShareDenom(pool.GetId())
+		denom := fmt.Sprintf("gamm/pool/%d", pool.GetId())
 
 		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,

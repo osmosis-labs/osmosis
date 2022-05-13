@@ -17,4 +17,7 @@ var (
 	ErrBondingLockupNotSupported       = sdkerrors.Register(ModuleName, 9, "bonded superfluid stake is not allowed to have underlying lock unlocked")
 
 	ErrNonSuperfluidAsset = sdkerrors.Register(ModuleName, 10, "provided asset is not supported for superfluid staking")
+
+	ErrUnpoolNotAllowed     = sdkerrors.Register(ModuleName, 41, "pool not whitelisted to unpool")
+	ErrLockUnpoolNotAllowed = sdkerrors.Register(ModuleName, 42, "lock not eligible for unpooling")
 )

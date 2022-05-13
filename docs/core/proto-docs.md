@@ -37,8 +37,6 @@
     - [MsgSwapExactAmountInResponse](#osmosis.gamm.v1beta1.MsgSwapExactAmountInResponse)
     - [MsgSwapExactAmountOut](#osmosis.gamm.v1beta1.MsgSwapExactAmountOut)
     - [MsgSwapExactAmountOutResponse](#osmosis.gamm.v1beta1.MsgSwapExactAmountOutResponse)
-    - [MsgUnPoolWhitelistedPool](#osmosis.gamm.v1beta1.MsgUnPoolWhitelistedPool)
-    - [MsgUnPoolWhitelistedPoolResponse](#osmosis.gamm.v1beta1.MsgUnPoolWhitelistedPoolResponse)
     - [SwapAmountInRoute](#osmosis.gamm.v1beta1.SwapAmountInRoute)
     - [SwapAmountOutRoute](#osmosis.gamm.v1beta1.SwapAmountOutRoute)
   
@@ -67,9 +65,6 @@
     - [QueryTotalSharesResponse](#osmosis.gamm.v1beta1.QueryTotalSharesResponse)
   
     - [Query](#osmosis.gamm.v1beta1.Query)
-  
-- [osmosis/gamm/v1beta1/unpool.proto](#osmosis/gamm/v1beta1/unpool.proto)
-    - [UnpoolWhitelistedPools](#osmosis.gamm.v1beta1.UnpoolWhitelistedPools)
   
 - [osmosis/lockup/lock.proto](#osmosis/lockup/lock.proto)
     - [PeriodLock](#osmosis.lockup.PeriodLock)
@@ -230,6 +225,7 @@
     - [SuperfluidAsset](#osmosis.superfluid.SuperfluidAsset)
     - [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord)
     - [SuperfluidIntermediaryAccount](#osmosis.superfluid.SuperfluidIntermediaryAccount)
+    - [UnpoolWhitelistedPools](#osmosis.superfluid.UnpoolWhitelistedPools)
   
     - [SuperfluidAssetType](#osmosis.superfluid.SuperfluidAssetType)
   
@@ -281,6 +277,8 @@
     - [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse)
     - [MsgSuperfluidUndelegate](#osmosis.superfluid.MsgSuperfluidUndelegate)
     - [MsgSuperfluidUndelegateResponse](#osmosis.superfluid.MsgSuperfluidUndelegateResponse)
+    - [MsgUnPoolWhitelistedPool](#osmosis.superfluid.MsgUnPoolWhitelistedPool)
+    - [MsgUnPoolWhitelistedPoolResponse](#osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse)
   
     - [Msg](#osmosis.superfluid.Msg)
   
@@ -788,38 +786,6 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 
 
-<a name="osmosis.gamm.v1beta1.MsgUnPoolWhitelistedPool"></a>
-
-### MsgUnPoolWhitelistedPool
-===================== MsgUnPoolWhitelistedPool
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `lockId` | [uint64](#uint64) |  |  |
-
-
-
-
-
-
-<a name="osmosis.gamm.v1beta1.MsgUnPoolWhitelistedPoolResponse"></a>
-
-### MsgUnPoolWhitelistedPoolResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `lockId` | [uint64](#uint64) |  |  |
-
-
-
-
-
-
 <a name="osmosis.gamm.v1beta1.SwapAmountInRoute"></a>
 
 ### SwapAmountInRoute
@@ -873,7 +839,6 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | `JoinSwapShareAmountOut` | [MsgJoinSwapShareAmountOut](#osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOut) | [MsgJoinSwapShareAmountOutResponse](#osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOutResponse) |  | |
 | `ExitSwapExternAmountOut` | [MsgExitSwapExternAmountOut](#osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut) | [MsgExitSwapExternAmountOutResponse](#osmosis.gamm.v1beta1.MsgExitSwapExternAmountOutResponse) |  | |
 | `ExitSwapShareAmountIn` | [MsgExitSwapShareAmountIn](#osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn) | [MsgExitSwapShareAmountInResponse](#osmosis.gamm.v1beta1.MsgExitSwapShareAmountInResponse) |  | |
-| `UnPoolWhitelistedPool` | [MsgUnPoolWhitelistedPool](#osmosis.gamm.v1beta1.MsgUnPoolWhitelistedPool) | [MsgUnPoolWhitelistedPoolResponse](#osmosis.gamm.v1beta1.MsgUnPoolWhitelistedPoolResponse) |  | |
 
  <!-- end services -->
 
@@ -1210,37 +1175,6 @@ query.
 | `SpotPrice` | [QuerySpotPriceRequest](#osmosis.gamm.v1beta1.QuerySpotPriceRequest) | [QuerySpotPriceResponse](#osmosis.gamm.v1beta1.QuerySpotPriceResponse) | SpotPrice defines a gRPC query handler that returns the spot price given a base denomination and a quote denomination. | GET|/osmosis/gamm/v1beta1/pools/{poolId}/prices|
 | `EstimateSwapExactAmountIn` | [QuerySwapExactAmountInRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest) | [QuerySwapExactAmountInResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse) | Estimate the swap. | GET|/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_in|
 | `EstimateSwapExactAmountOut` | [QuerySwapExactAmountOutRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutRequest) | [QuerySwapExactAmountOutResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse) |  | GET|/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_out|
-
- <!-- end services -->
-
-
-
-<a name="osmosis/gamm/v1beta1/unpool.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## osmosis/gamm/v1beta1/unpool.proto
-
-
-
-<a name="osmosis.gamm.v1beta1.UnpoolWhitelistedPools"></a>
-
-### UnpoolWhitelistedPools
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `ids` | [uint64](#uint64) | repeated |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
 
  <!-- end services -->
 
@@ -3336,6 +3270,21 @@ and OSMO tokens for superfluid staking
 
 
 
+
+<a name="osmosis.superfluid.UnpoolWhitelistedPools"></a>
+
+### UnpoolWhitelistedPools
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ids` | [uint64](#uint64) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
 
@@ -4004,6 +3953,38 @@ specified validator addr.
 
 
 
+
+<a name="osmosis.superfluid.MsgUnPoolWhitelistedPool"></a>
+
+### MsgUnPoolWhitelistedPool
+===================== MsgUnPoolWhitelistedPool
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `poolId` | [uint64](#uint64) |  |  |
+| `lockId` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse"></a>
+
+### MsgUnPoolWhitelistedPoolResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `lockId` | [uint64](#uint64) |  |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -4024,6 +4005,7 @@ Msg defines the Msg service.
 Execute superfluid redelegation for a lockup rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns (MsgSuperfluidRedelegateResponse); | |
 | `SuperfluidUnbondLock` | [MsgSuperfluidUnbondLock](#osmosis.superfluid.MsgSuperfluidUnbondLock) | [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse) | For a given lock that is being superfluidly undelegated, also unbond the underlying lock. | |
 | `LockAndSuperfluidDelegate` | [MsgLockAndSuperfluidDelegate](#osmosis.superfluid.MsgLockAndSuperfluidDelegate) | [MsgLockAndSuperfluidDelegateResponse](#osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse) | Execute lockup lock and superfluid delegation in a single msg | |
+| `UnPoolWhitelistedPool` | [MsgUnPoolWhitelistedPool](#osmosis.superfluid.MsgUnPoolWhitelistedPool) | [MsgUnPoolWhitelistedPoolResponse](#osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse) |  | |
 
  <!-- end services -->
 
