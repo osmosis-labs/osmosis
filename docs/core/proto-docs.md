@@ -811,6 +811,11 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 
 
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `lockId` | [uint64](#uint64) |  |  |
+
+
 
 
 

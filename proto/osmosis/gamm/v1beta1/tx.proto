@@ -227,4 +227,4 @@ message MsgUnPoolWhitelistedPool {
   uint64 lockId = 3 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
 }
 
-message MsgUnPoolWhitelistedPoolResponse {}
+message MsgUnPoolWhitelistedPoolResponse { uint64 lockId = 1; }

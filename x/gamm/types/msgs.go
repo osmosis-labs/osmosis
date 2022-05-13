@@ -347,3 +347,28 @@ func (msg MsgExitSwapShareAmountIn) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{sender}
 }
+
+var _ sdk.Msg = &MsgUnPoolWhitelistedPool{}
+
+func (msg MsgUnPoolWhitelistedPool) Route() string { return RouterKey }
+func (msg MsgUnPoolWhitelistedPool) Type() string  { return TypeMsgExitSwapShareAmountIn }
+func (msg MsgUnPoolWhitelistedPool) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	return nil
+}
+
+func (msg MsgUnPoolWhitelistedPool) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUnPoolWhitelistedPool) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}

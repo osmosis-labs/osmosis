@@ -290,12 +290,10 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 		return nil, err
 	}
 
-	// tokenOutAmount, err := server.keeper.ExitSwapShareAmountIn(ctx, sender, msg.PoolId, msg.TokenOutDenom, msg.ShareInAmount, msg.TokenOutMinAmount)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	server.keeper.UnpoolAllowedPools(ctx, sender, msg.PoolId, msg.LockId)
+	lockId, err := server.keeper.UnpoolAllowedPools(ctx, sender, msg.PoolId, msg.LockId)
+	if err != nil {
+		return nil, err
+	}
 
 	// Swap and LP events are handled elsewhere
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -306,6 +304,5 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 		),
 	})
 
-	return &types.MsgUnPoolWhitelistedPoolResponse{}, nil
-	// return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
+	return &types.MsgUnPoolWhitelistedPoolResponse{LockId: lockId}, nil
 }
