@@ -423,3 +423,62 @@ func (k Keeper) ExitSwapExactAmountOut(
 
 	return shareInAmount, nil
 }
+
+func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (uint64, error) {
+	// check if pool is whitelisted for unpool
+	allowedPools := k.GetUnpoolAllowedPools(ctx)
+	allowed := false
+
+	for _, allowedPoolId := range allowedPools {
+		if poolId == allowedPoolId {
+			allowed = true
+		}
+	}
+
+	if !allowed {
+		return 0, types.ErrUnpoolNotAllowed
+	}
+
+	// check if lock is unlocking
+	lock, err := k.lockupKeeper.GetLockByID(ctx, lockId)
+	if err != nil {
+		return 0, err
+	}
+
+	gammShare := lock.Coins[0]
+	if gammShare.Denom != types.GetPoolShareDenom(poolId) {
+		return 0, types.ErrLockUnpoolNotAllowed
+	}
+
+	// superfluid undelegate first
+	// this undelegates delegation, breaks synthetic locks and create a new synthetic lock
+	// representing unstaking
+	err = k.superfluidKeeper.SuperfluidUndelegate(ctx, sender.String(), lock.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	// finish unlocking directly for locked locks
+	// this also unlocks locks that were in the unlocking queue
+	err = k.lockupKeeper.BreakLockForUnpool(ctx, *lock)
+	if err != nil {
+		return 0, err
+	}
+
+	exitCoins, err := k.ExitPool(ctx, sender, poolId, gammShare.Amount, sdk.NewCoins())
+	if err != nil {
+		return 0, err
+	}
+
+	newLock, err := k.lockupKeeper.CreateLock(ctx, sender, exitCoins, lock.Duration)
+	if err != nil {
+		return 0, err
+	}
+
+	err = k.lockupKeeper.BeginUnlock(ctx, newLock.ID, newLock.Coins)
+	if err != nil {
+		return 0, err
+	}
+
+	return newLock.ID, nil
+}

@@ -1,9 +1,13 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -60,4 +64,15 @@ type BankKeeper interface {
 // DistrKeeper defines the contract needed to be fulfilled for distribution keeper.
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
+type LockupKeeper interface {
+	BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error
+	BreakLockForUnpool(ctx sdk.Context, lock lockuptypes.PeriodLock) error
+	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
+	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
+}
+
+type SuperfluidKeeper interface {
+	SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error
 }

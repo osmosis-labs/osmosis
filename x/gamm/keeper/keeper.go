@@ -30,12 +30,14 @@ type Keeper struct {
 	hooks      types.GammHooks
 
 	// keepers
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	distrKeeper   types.DistrKeeper
+	accountKeeper    types.AccountKeeper
+	bankKeeper       types.BankKeeper
+	distrKeeper      types.DistrKeeper
+	lockupKeeper     types.LockupKeeper
+	superfluidKeeper types.SuperfluidKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, distrKeeper types.DistrKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, distrKeeper types.DistrKeeper, lockupKeeper types.LockupKeeper, superfluidKeeper types.SuperfluidKeeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -55,9 +57,11 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		cdc:        cdc,
 		paramSpace: paramSpace,
 		// keepers
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
-		distrKeeper:   distrKeeper,
+		accountKeeper:    accountKeeper,
+		bankKeeper:       bankKeeper,
+		distrKeeper:      distrKeeper,
+		lockupKeeper:     lockupKeeper,
+		superfluidKeeper: superfluidKeeper,
 	}
 }
 

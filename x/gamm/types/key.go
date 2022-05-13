@@ -25,6 +25,8 @@ var (
 	KeyPrefixPools = []byte{0x02}
 	// KeyTotalLiquidity defines key to store total liquidity.
 	KeyTotalLiquidity = []byte{0x03}
+	// KeyUnpoolAllowedPools defines key to unpool allowed pools.
+	KeyUnpoolAllowedPools = []byte{0x04}
 )
 
 func MustGetPoolIdFromShareDenom(denom string) uint64 {

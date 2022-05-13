@@ -525,6 +525,10 @@ func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	return k.unlockInternalLogic(ctx, lock)
 }
 
+func (k Keeper) BreakLockForUnpool(ctx sdk.Context, lock types.PeriodLock) error {
+	return k.unlockInternalLogic(ctx, lock)
+}
+
 func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {

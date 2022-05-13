@@ -281,3 +281,31 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 
 	return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
 }
+
+func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.MsgUnPoolWhitelistedPool) (*types.MsgUnPoolWhitelistedPoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	// tokenOutAmount, err := server.keeper.ExitSwapShareAmountIn(ctx, sender, msg.PoolId, msg.TokenOutDenom, msg.ShareInAmount, msg.TokenOutMinAmount)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	server.keeper.UnpoolAllowedPools(ctx, sender, msg.PoolId, msg.LockId)
+
+	// Swap and LP events are handled elsewhere
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+	})
+
+	return &types.MsgUnPoolWhitelistedPoolResponse{}, nil
+	// return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
+}
