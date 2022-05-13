@@ -15,6 +15,11 @@ import (
 // and queue them for deletion.
 // See https://github.com/osmosis-labs/osmosis/issues/864
 func (k Keeper) BeginUnwindSuperfluidAsset(ctx sdk.Context, epochNum int64, asset types.SuperfluidAsset) {
+	// TODO, steps:
+	// 1) Delete all intermediate accounts for this superfluid asset
+	// 2) Delete all synthetic locks for this asset
+	// 3) Set multipler to 0
+	// 4) Delete superfluid asset
 	// Right now set the TWAP to 0, and delete the asset.
 	k.SetOsmoEquivalentMultiplier(ctx, epochNum, asset.Denom, sdk.ZeroDec())
 	k.DeleteSuperfluidAsset(ctx, asset.Denom)

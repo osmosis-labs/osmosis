@@ -17,6 +17,8 @@ service Msg {
       returns (MsgBeginUnlockingAllResponse);
   // MsgBeginUnlocking begins unlocking tokens by lock ID
   rpc BeginUnlocking(MsgBeginUnlocking) returns (MsgBeginUnlockingResponse);
+  // MsgBeginUnlocking begins unlocking tokens by lock ID
+  rpc QuickBreakAllLocks(MsgQuickBreakAllLocks) returns (MsgQuickBreakAllLocksResponse);
 }
 
 message MsgLockTokens {
@@ -49,3 +51,9 @@ message MsgBeginUnlocking {
   ];
 }
 message MsgBeginUnlockingResponse { bool success = 1; }
+
+message MsgQuickBreakAllLocks {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  uint64 pool_ID = 2;
+}
+message MsgQuickBreakAllLocksResponse { bool success = 1; }
