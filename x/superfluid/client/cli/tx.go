@@ -33,6 +33,7 @@ func GetTxCmd() *cobra.Command {
 		NewCmdSubmitSetSuperfluidAssetsProposal(),
 		NewCmdSubmitRemoveSuperfluidAssetsProposal(),
 		NewCmdLockAndSuperfluidDelegate(),
+		NewCmdUnPoolWhitelistedPool(),
 	)
 
 	return cmd
@@ -363,6 +364,42 @@ func NewCmdLockAndSuperfluidDelegate() *cobra.Command {
 			}
 
 			msg := types.NewMsgLockAndSuperfluidDelegate(sender, coins, valAddr)
+
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewCmdUnPoolWhitelistedPool implements a command handler for unpooling whitelisted pools.
+func NewCmdUnPoolWhitelistedPool() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unpool-whitelisted-pool [pool_id] [lock_id] [flags]",
+		Short: "lock and superfluid delegate",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			sender := clientCtx.GetFromAddress()
+
+			poolId, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			lockId, err := strconv.Atoi(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgUnPoolWhitelistedPool(sender, uint64(poolId), uint64(lockId))
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
