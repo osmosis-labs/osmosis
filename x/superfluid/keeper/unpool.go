@@ -67,7 +67,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	}
 
 	initializedTime := time.Time{}
-	// if the lock was unlocking, run seperate logic to preserve lock endTime
+	// if the lock was unlocking, run separate logic to preserve lock endTime
 	if lock.EndTime != initializedTime {
 		err = k.lk.BeginForceUnlockWithEndTime(ctx, lockId, lock.EndTime)
 		if err != nil {
