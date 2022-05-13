@@ -116,7 +116,7 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 
 	// We get all the lockIDs to unpool
 	lpShareDenom := gammtypes.GetPoolShareDenom(msg.PoolId)
-	minimalDuration := time.Second
+	minimalDuration := time.Millisecond
 	unpoolLocks := server.keeper.lk.GetAccountLockedLongerDurationDenom(ctx, sender, lpShareDenom, minimalDuration)
 
 	allExitedLockIDs := []uint64{}
