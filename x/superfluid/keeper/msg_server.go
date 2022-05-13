@@ -124,5 +124,6 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 		),
 	})
 
+	x := &typesMsgUnPoolWhitelistedPool{}
 	return &types.MsgUnPoolWhitelistedPoolResponse{LockId: lockId}, nil
 }
