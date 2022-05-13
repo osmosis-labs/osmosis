@@ -24,7 +24,7 @@ func RunForkLogic(ctx sdk.Context, superfluid *superfluidkeeper.Keeper, poolince
 // osmosisd q gov proposal 226
 func RegisterWhitelistedDirectUnbondPools(ctx sdk.Context, superfluid *superfluidkeeper.Keeper) {
 	// These are the pools listed in the proposal. Proposal raw text for the listing of UST pools:
-	// 	The list of pools affected is:
+	// 	The list of pools affected are defined below:
 	// #560 (UST/OSMO)
 	// #562 (UST/LUNA)
 	// #567 (UST/EEUR)
