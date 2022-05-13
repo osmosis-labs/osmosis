@@ -377,9 +377,9 @@ func NewCmdLockAndSuperfluidDelegate() *cobra.Command {
 // NewCmdUnPoolWhitelistedPool implements a command handler for unpooling whitelisted pools.
 func NewCmdUnPoolWhitelistedPool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unpool-whitelisted-pool [pool_id] [lock_id] [flags]",
-		Short: "lock and superfluid delegate",
-		Args:  cobra.ExactArgs(2),
+		Use:   "unpool-whitelisted-pool [pool_id] [flags]",
+		Short: "unpool whitelisted pool",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -395,12 +395,7 @@ func NewCmdUnPoolWhitelistedPool() *cobra.Command {
 				return err
 			}
 
-			lockId, err := strconv.Atoi(args[1])
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgUnPoolWhitelistedPool(sender, uint64(poolId), uint64(lockId))
+			msg := types.NewMsgUnPoolWhitelistedPool(sender, uint64(poolId))
 
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},

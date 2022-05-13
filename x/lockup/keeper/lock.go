@@ -473,41 +473,6 @@ func (k Keeper) beginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins s
 	return nil
 }
 
-func (k Keeper) BeginForceUnlockWithEndTime(ctx sdk.Context, lockID uint64, endTime time.Time) error {
-	lock, err := k.GetLockByID(ctx, lockID)
-	if err != nil {
-		return err
-	}
-	return k.beginForceUnlockWithEndTime(ctx, *lock, endTime)
-}
-
-func (k Keeper) beginForceUnlockWithEndTime(ctx sdk.Context, lock types.PeriodLock, endTime time.Time) error {
-	// remove lock refs from not unlocking queue if exists
-	err := k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
-	if err != nil {
-		return err
-	}
-
-	// store lock with end time set
-	lock.EndTime = endTime
-	err = k.setLock(ctx, lock)
-	if err != nil {
-		return err
-	}
-
-	// add lock refs into unlocking queue
-	err = k.addLockRefs(ctx, lock)
-	if err != nil {
-		return err
-	}
-
-	if k.hooks != nil {
-		k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
-	}
-
-	return nil
-}
-
 // Unlock is a utility to unlock coins from module account
 func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// validation for current time and unlock time
@@ -522,56 +487,53 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	return k.unlockInternalLogic(ctx, lock)
 }
 
-// ForceUnlock ignores unlock duration and immediately unlock and refund.
-// CONTRACT: should be used only at the chain upgrade script
-// TODO: Revisit for Superfluid Staking
+// ForceUnlock ignores unlock duration and immediately unlocks the lock and refunds tokens to lock owner..
 func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
+	// Steps:
+	// 1) Break associated synthetic locks. (Superfluid data)
+	// 2) If lock is bonded, move it to unlocking
+	// 3) Run logic to delete unlocking metadata, and send tokens to owner.
+
+	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
+	err := k.BreakAllSyntheticLocks(ctx, lock, synthLocks)
+	if err != nil {
+		return err
+	}
+
 	if !lock.IsUnlocking() {
 		err := k.BeginUnlock(ctx, lock, nil)
 		if err != nil {
 			return err
 		}
 	}
-	return k.unlockInternalLogic(ctx, lock)
-}
-
-func (k Keeper) BreakLockForUnpool(ctx sdk.Context, lock types.PeriodLock) error {
-	return k.breakLockInternalLogic(ctx, lock)
-}
-
-func (k Keeper) breakLockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
-	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	// NOTE: This caused a bug! BeginUnlock changes the owner the lock.EndTime
+	// This shows the bad API design of not using lock.ID in every public function.
+	lockPtr, err := k.GetLockByID(ctx, lock.ID)
 	if err != nil {
 		return err
 	}
+	return k.unlockInternalLogic(ctx, *lockPtr)
+}
 
-	// send coins back to owner
-	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Coins); err != nil {
-		return err
+func (k Keeper) BreakAllSyntheticLocks(ctx sdk.Context, lock types.PeriodLock, synthLocks []types.SyntheticLock) error {
+	if len(synthLocks) == 0 {
+		return nil
 	}
 
-	// change lock status to unlocking if it lock wasn't unlocking
-	if !lock.IsUnlocking() {
-		err = k.beginForceUnlock(ctx, lock, lock.Coins)
+	// Synth locks have data set in two places, accumulation store & setSyntheticLockAndResetRefs
+	// see that [CreateSyntheticLock](https://github.com/osmosis-labs/osmosis/blob/v7.3.0/x/lockup/keeper/synthetic_lock.go#L105)
+	// only has 3 set locations:
+	// - k.setSyntheticLockupObject(ctx, &synthLock)
+	// - k.addSyntheticLockRefs(ctx, *lock, synthLock)
+	// - k.accumulationStore(ctx, synthLock.SynthDenom).Increase(accumulationKey(unlockDuration), coin.Amount)
+	// ALL of which are reverted in the method DeleteSyntheticLock, here:
+	// https://github.com/osmosis-labs/osmosis/blob/v7.3.0/x/lockup/keeper/synthetic_lock.go#L156
+	for _, synthLock := range synthLocks {
+		err := k.DeleteSyntheticLockup(ctx, lock.ID, synthLock.SynthDenom)
 		if err != nil {
 			return err
 		}
 	}
-
-	k.deleteLock(ctx, lock.ID)
-
-	// delete lock refs from the unlocking queue
-	err = k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)
-	if err != nil {
-		return err
-	}
-
-	// remove from accumulation store
-	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-	}
-
-	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
 

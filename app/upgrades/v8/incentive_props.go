@@ -21,7 +21,7 @@ func applyPoolIncentivesUpdate(ctx sdk.Context, poolincentiveskeeper *poolincent
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(wrappedCtx sdk.Context) error {
 		err := poolincentiveskeeper.UpdateDistrRecords(wrappedCtx, records...)
 		if err != nil {
-			ctx.Logger().Error("Something has happened, prop 223 update did not apply. Continuing to proceed with other components of the upgrade.")
+			ctx.Logger().Error("Something has happened, prop update did not apply. Continuing to proceed with other components of the upgrade.")
 		}
 		return err
 	})
@@ -109,12 +109,12 @@ func ApplyProp224Change(ctx sdk.Context, poolincentiveskeeper *poolincentiveskee
 	//   weight: "752464"
 	// _PLEASE_ double check these numbers, and double the check the proposals choice itself
 	records := []poolincentivestypes.DistrRecord{
-		{GaugeId: 1718, Weight: sdk.NewInt(1881159)},
-		{GaugeId: 1719, Weight: sdk.NewInt(1128695)},
-		{GaugeId: 1720, Weight: sdk.NewInt(752463)},
-		{GaugeId: 2965, Weight: sdk.NewInt(1881160)},
-		{GaugeId: 2966, Weight: sdk.NewInt(1128696)},
-		{GaugeId: 2967, Weight: sdk.NewInt(752464)},
+		{GaugeId: 1724, Weight: sdk.NewInt(1881159)},
+		{GaugeId: 1725, Weight: sdk.NewInt(1128695)},
+		{GaugeId: 1726, Weight: sdk.NewInt(752463)},
+		{GaugeId: 2949, Weight: sdk.NewInt(1881160)},
+		{GaugeId: 2950, Weight: sdk.NewInt(1128696)},
+		{GaugeId: 2951, Weight: sdk.NewInt(752464)},
 	}
 
 	ctx.Logger().Info("Applying proposal 224 update")

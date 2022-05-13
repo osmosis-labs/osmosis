@@ -1,15 +1,17 @@
 package v8
 
-import "github.com/osmosis-labs/osmosis/v7/app/upgrades"
+import (
+	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
+	v8constants "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8/constants"
+)
 
 const (
-	// UpgradeName defines the on-chain upgrade name for the Osmosis v3 upgrade.
-	UpgradeName = "v8"
+	// UpgradeName defines the on-chain upgrade name for the Osmosis v8 upgrade.
+	UpgradeName = v8constants.UpgradeName
 
 	// UpgradeHeight defines the block height at which the Osmosis v8 upgrade is
 	// triggered.
-	// TODO: Choose upgrade height
-	UpgradeHeight = 100_000
+	UpgradeHeight = v8constants.UpgradeHeight
 )
 
 var Fork = upgrades.Fork{

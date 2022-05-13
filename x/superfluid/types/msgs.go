@@ -190,11 +190,10 @@ func (m MsgLockAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgUnPoolWhitelistedPool{}
 
 // NewMsgUnPoolWhitelistedPool creates a message to create a lockup lock and superfluid delegation
-func NewMsgUnPoolWhitelistedPool(sender sdk.AccAddress, poolID, lockID uint64) *MsgUnPoolWhitelistedPool {
+func NewMsgUnPoolWhitelistedPool(sender sdk.AccAddress, poolID uint64) *MsgUnPoolWhitelistedPool {
 	return &MsgUnPoolWhitelistedPool{
 		Sender: sender.String(),
 		PoolId: poolID,
-		LockId: lockID,
 	}
 }
 
