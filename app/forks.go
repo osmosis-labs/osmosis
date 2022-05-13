@@ -16,7 +16,7 @@ func BeginBlockForks(ctx sdk.Context, app *OsmosisApp) {
 	case v6.UpgradeHeight:
 		v6.RunForkLogic(ctx)
 	case v8.UpgradeHeight:
-		v8.RunForkLogic(ctx, app.SuperfluidKeeper, app.PoolIncentivesKeeper)
+		v8.RunForkLogic(ctx, app.SuperfluidKeeper, app.PoolIncentivesKeeper, app.GAMMKeeper)
 	default:
 		// do nothing
 		return
