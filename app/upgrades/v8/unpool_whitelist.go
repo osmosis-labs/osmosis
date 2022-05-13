@@ -45,10 +45,7 @@ func CheckPoolContainsUST(ctx sdk.Context, gamm *gammkeeper.Keeper, poolID uint6
 		return err
 	}
 
-	assets, err := pool.GetPoolAssets()
-	if err != nil {
-		return err
-	}
+	assets := pool.GetAllPoolAssets()
 
 	for _, asset := range assets {
 		if asset.Token.Denom == "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC" {
