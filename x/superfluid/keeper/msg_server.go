@@ -2,12 +2,17 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
+
+// TODO: fix upgrade height
+const v8UpgradeHeight = 721_000
 
 type msgServer struct {
 	keeper *Keeper
@@ -94,4 +99,32 @@ func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *ty
 	return &types.MsgLockAndSuperfluidDelegateResponse{
 		ID: lockupRes.ID,
 	}, err
+}
+
+func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.MsgUnPoolWhitelistedPool) (*types.MsgUnPoolWhitelistedPoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if ctx.BlockHeight() < v8UpgradeHeight {
+		return nil, errors.New("message not activated")
+	}
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	lockId, err := server.keeper.UnpoolAllowedPools(ctx, sender, msg.PoolId, msg.LockId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Swap and LP events are handled elsewhere
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+	})
+
+	return &types.MsgUnPoolWhitelistedPoolResponse{LockId: lockId}, nil
 }

@@ -311,10 +311,10 @@ func (k Keeper) ExitPool(
 	poolId uint64,
 	shareInAmount sdk.Int,
 	tokenOutMins sdk.Coins,
-) (err error) {
+) (exitCoins sdk.Coins, err error) {
 	pool, err := k.GetPool(ctx, poolId)
 	if err != nil {
-		return err
+		return sdk.Coins{}, err
 	}
 
 	totalSharesAmount := pool.GetTotalShares().Amount
@@ -323,7 +323,7 @@ func (k Keeper) ExitPool(
 	shareRatio := shareInAmountAfterExitFee.ToDec().QuoInt(totalSharesAmount)
 
 	if shareRatio.LTE(sdk.ZeroDec()) {
-		return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
+		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 
 	// Assume that the tokenInMaxAmounts is validated.
@@ -339,13 +339,13 @@ func (k Keeper) ExitPool(
 	for _, PoolAsset := range PoolAssets {
 		tokenOutAmount := shareRatio.MulInt(PoolAsset.Token.Amount).TruncateInt()
 		if tokenOutAmount.LTE(sdk.ZeroInt()) {
-			return sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+			return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 		}
 
 		// Check if a minimum token amount is specified for this token,
 		// and if so ensure that the minimum is less than the amount returned.
 		if tokenOutMinAmount, ok := tokenOutMinMap[PoolAsset.Token.Denom]; ok && tokenOutAmount.LT(tokenOutMinAmount) {
-			return sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", PoolAsset.Token.Denom)
+			return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", PoolAsset.Token.Denom)
 		}
 
 		newPoolCoins = append(newPoolCoins,
@@ -355,12 +355,12 @@ func (k Keeper) ExitPool(
 
 	err = pool.UpdatePoolAssetBalances(newPoolCoins)
 	if err != nil {
-		return err
+		return sdk.Coins{}, err
 	}
 
 	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, coins)
 	if err != nil {
-		return err
+		return sdk.Coins{}, err
 	}
 
 	// Remove the exit fee shares from the pool.
@@ -368,25 +368,25 @@ func (k Keeper) ExitPool(
 	if exitFee.IsPositive() {
 		err = k.BurnPoolShareFromAccount(ctx, pool, sender, exitFee)
 		if err != nil {
-			return err
+			return sdk.Coins{}, err
 		}
 	}
 
 	err = k.BurnPoolShareFromAccount(ctx, pool, sender, shareInAmountAfterExitFee)
 	if err != nil {
-		return err
+		return sdk.Coins{}, err
 	}
 
 	err = k.SetPool(ctx, pool)
 	if err != nil {
-		return err
+		return sdk.Coins{}, err
 	}
 
 	k.createRemoveLiquidityEvent(ctx, sender, pool.GetId(), coins)
 	k.hooks.AfterExitPool(ctx, sender, pool.GetId(), shareInAmount, coins)
 	k.RecordTotalLiquidityDecrease(ctx, coins)
 
-	return nil
+	return coins, nil
 }
 
 func (k Keeper) ExitSwapShareAmountIn(

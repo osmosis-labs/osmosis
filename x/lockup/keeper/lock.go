@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v7/store"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
@@ -472,6 +473,41 @@ func (k Keeper) beginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins s
 	return nil
 }
 
+func (k Keeper) BeginForceUnlockWithEndTime(ctx sdk.Context, lockID uint64, endTime time.Time) error {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+	return k.beginForceUnlockWithEndTime(ctx, *lock, endTime)
+}
+
+func (k Keeper) beginForceUnlockWithEndTime(ctx sdk.Context, lock types.PeriodLock, endTime time.Time) error {
+	// remove lock refs from not unlocking queue if exists
+	err := k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+	if err != nil {
+		return err
+	}
+
+	// store lock with end time set
+	lock.EndTime = endTime
+	err = k.setLock(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	// add lock refs into unlocking queue
+	err = k.addLockRefs(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	if k.hooks != nil {
+		k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	}
+
+	return nil
+}
+
 // Unlock is a utility to unlock coins from module account
 func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// validation for current time and unlock time
@@ -497,6 +533,46 @@ func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 		}
 	}
 	return k.unlockInternalLogic(ctx, lock)
+}
+
+func (k Keeper) BreakLockForUnpool(ctx sdk.Context, lock types.PeriodLock) error {
+	return k.breakLockInternalLogic(ctx, lock)
+}
+
+func (k Keeper) breakLockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return err
+	}
+
+	// send coins back to owner
+	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Coins); err != nil {
+		return err
+	}
+
+	// change lock status to unlocking if it lock wasn't unlocking
+	if !lock.IsUnlocking() {
+		err = k.beginForceUnlock(ctx, lock, lock.Coins)
+		if err != nil {
+			return err
+		}
+	}
+
+	k.deleteLock(ctx, lock.ID)
+
+	// delete lock refs from the unlocking queue
+	err = k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+	if err != nil {
+		return err
+	}
+
+	// remove from accumulation store
+	for _, coin := range lock.Coins {
+		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+	}
+
+	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	return nil
 }
 
 func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
