@@ -18,6 +18,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	for _, allowedPoolId := range allowedPools {
 		if poolId == allowedPoolId {
 			allowed = true
+			break
 		}
 	}
 
