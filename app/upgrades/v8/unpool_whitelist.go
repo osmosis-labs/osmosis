@@ -24,22 +24,16 @@ func RegisterWhitelistedDirectUnbondPools(ctx sdk.Context, superfluid *superflui
 	// #615 (UST/LUM)
 	// #642 (UST/UMEE)
 	// #679 (4Pool)
-	whitelistedPoolShares := []int64{560, 562, 567, 578, 592, 610, 612, 615, 642, 679}
+	whitelistedPoolShares := []uint64{560, 562, 567, 578, 592, 610, 612, 615, 642, 679}
 
 	// Consistency check that each whitelisted pool contains UST
 	for _, whitelistedPool := range whitelistedPoolShares {
-		if err := CheckPoolContainsUST(ctx, gamm, uint64(whitelistedPool)); err != nil {
+		if err := CheckPoolContainsUST(ctx, gamm, whitelistedPool); err != nil {
 			panic(err)
 		}
 	}
 
-	unpoolAllowedPools := superfluid.GetUnpoolAllowedPools(ctx)
-
-	for _, whitelistedPool := range whitelistedPoolShares {
-		unpoolAllowedPools = append(unpoolAllowedPools, uint64(whitelistedPool))
-	}
-
-	superfluid.SetUnpoolAllowedPools(ctx, unpoolAllowedPools)
+	superfluid.SetUnpoolAllowedPools(ctx, whitelistedPoolShares)
 }
 
 // CheckPoolContainsUST looks up the pool from the gammkeeper and
