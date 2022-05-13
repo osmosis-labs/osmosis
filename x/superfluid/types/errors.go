@@ -18,6 +18,7 @@ var (
 
 	ErrNonSuperfluidAsset = sdkerrors.Register(ModuleName, 10, "provided asset is not supported for superfluid staking")
 
-	ErrUnpoolNotAllowed     = sdkerrors.Register(ModuleName, 41, "pool not whitelisted to unpool")
+	ErrPoolNotWhitelisted   = sdkerrors.Register(ModuleName, 41, "pool not whitelisted to unpool")
 	ErrLockUnpoolNotAllowed = sdkerrors.Register(ModuleName, 42, "lock not eligible for unpooling")
+	ErrLockLengthMismatch   = sdkerrors.Register(ModuleName, 43, "lock has more than one asset")
 )

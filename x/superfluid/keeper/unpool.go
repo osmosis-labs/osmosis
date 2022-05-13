@@ -22,14 +22,27 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	}
 
 	if !allowed {
-		return 0, types.ErrUnpoolNotAllowed
+		return 0, types.ErrPoolNotWhitelisted
 	}
 
-	// check if lock is unlocking
 	lock, err := k.lk.GetLockByID(ctx, lockId)
 	if err != nil {
 		return 0, err
 	}
+
+	// validate lock owner and lock length
+	err = k.validateLockForSF(ctx, lock, sender.String())
+	if err != nil {
+		return 0, err
+	}
+
+	// Steps for unpooling
+	// 1) If superfluid delegated, superfluid undelegate
+	// 2) Break underlying lock. This will clear any metadata if things are superfluid unbonding
+	// 3) Get duration from {} (Consider if we can handle complexity for already unbonding Locks)
+	// 4) ExitPool with these unlocked LP shares
+	// 5) Make 1 new lock for every asset in collateral. Many code paths need this assumption to hold
+	// 6) Make new lock begin unlocking
 
 	gammShare := lock.Coins[0]
 	if gammShare.Denom != gammtypes.GetPoolShareDenom(poolId) {
@@ -66,10 +79,12 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 		return 0, err
 	}
 
-	initializedTime := time.Time{}
-	// if the lock was unlocking, run separate logic to preserve lock endTime
-	if lock.EndTime != initializedTime {
-		err = k.lk.BeginForceUnlockWithEndTime(ctx, lockId, lock.EndTime)
+	// lock.EndTime is initialized to time.Time{} at `CreateLock` by default
+	// lock.EndTime has value when the lock started unlocking
+	// check if the lock was unlocking, run separate logic to preserve lock endTime
+	defaultInitializedTime := time.Time{}
+	if lock.EndTime != defaultInitializedTime {
+		err = k.lk.BeginForceUnlockWithEndTime(ctx, newLock.ID, lock.EndTime)
 		if err != nil {
 			return 0, err
 		}

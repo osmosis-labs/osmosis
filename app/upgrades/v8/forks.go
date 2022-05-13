@@ -1,4 +1,4 @@
-package vx
+package v8
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,6 +18,7 @@ func RunForkLogic(ctx sdk.Context, keepers *keepers.AppKeepers) {
 // RegisterWhitelistedDirectUnbondPools registers pools that are allowed to unpool
 // https://www.mintscan.io/osmosis/proposals/226
 func RegisterWhitelistedDirectUnbondPools(ctx sdk.Context, superfluid *superfluidkeeper.Keeper) {
+	// TODO: Get from proposal
 	whitelistedPoolShares := []int64{1, 2, 3, 4}
 	unpoolAllowedPools := superfluid.GetUnpoolAllowedPools(ctx)
 
