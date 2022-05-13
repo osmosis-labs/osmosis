@@ -7,12 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	v8constants "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8/constants"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
-
-// TODO: fix upgrade height
-const v8UpgradeHeight = 721_000
 
 type msgServer struct {
 	keeper *Keeper
@@ -104,7 +102,7 @@ func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *ty
 func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.MsgUnPoolWhitelistedPool) (*types.MsgUnPoolWhitelistedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if ctx.BlockHeight() < v8UpgradeHeight {
+	if ctx.BlockHeight() < v8constants.UpgradeHeight {
 		return nil, errors.New("message not activated")
 	}
 
