@@ -28,6 +28,8 @@ service Msg {
   // Execute lockup lock and superfluid delegation in a single msg
   rpc LockAndSuperfluidDelegate(MsgLockAndSuperfluidDelegate)
       returns (MsgLockAndSuperfluidDelegateResponse);
+  rpc UnPoolWhitelistedPool(MsgUnPoolWhitelistedPool)
+      returns (MsgUnPoolWhitelistedPoolResponse);
 }
 
 message MsgSuperfluidDelegate {
@@ -68,3 +70,12 @@ message MsgLockAndSuperfluidDelegate {
   string val_addr = 3;
 }
 message MsgLockAndSuperfluidDelegateResponse { uint64 ID = 1; }
+
+// ===================== MsgUnPoolWhitelistedPool
+message MsgUnPoolWhitelistedPool {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 lockId = 3 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+}
+
+message MsgUnPoolWhitelistedPoolResponse { uint64 lockId = 1; }

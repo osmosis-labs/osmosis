@@ -24,6 +24,11 @@ type LockupKeeper interface {
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
 	BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error
 
+	BeginForceUnlockWithEndTime(ctx sdk.Context, lockID uint64, endTime time.Time) error
+	BreakLockForUnpool(ctx sdk.Context, lock lockuptypes.PeriodLock) error
+
+	LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
+
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
 
 	GetSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) (*lockuptypes.SyntheticLock, error)
@@ -42,6 +47,7 @@ type GammKeeper interface {
 	CalculateSpotPrice(ctx sdk.Context, poolId uint64, tokenInDenom, tokenOutDenom string) (sdk.Dec, error)
 	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.PoolI, err error)
+	ExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, tokenOutMins sdk.Coins) (exitCoins sdk.Coins, err error)
 }
 
 type BankKeeper interface {
