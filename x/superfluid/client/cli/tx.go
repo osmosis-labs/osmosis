@@ -377,7 +377,7 @@ func NewCmdLockAndSuperfluidDelegate() *cobra.Command {
 func NewCmdUnPoolWhitelistedPool() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unpool-whitelisted-pool [pool_id] [flags]",
-		Short: "lock and superfluid delegate",
+		Short: "unpool whitelisted pool",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)

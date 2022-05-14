@@ -21,7 +21,7 @@ func applyPoolIncentivesUpdate(ctx sdk.Context, poolincentiveskeeper *poolincent
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(wrappedCtx sdk.Context) error {
 		err := poolincentiveskeeper.UpdateDistrRecords(wrappedCtx, records...)
 		if err != nil {
-			ctx.Logger().Error("Something has happened, prop 223 update did not apply. Continuing to proceed with other components of the upgrade.")
+			ctx.Logger().Error("Something has happened, prop update did not apply. Continuing to proceed with other components of the upgrade.")
 		}
 		return err
 	})

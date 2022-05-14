@@ -3,7 +3,7 @@
 package v8constants
 
 const (
-	// UpgradeName defines the on-chain upgrade name for the Osmosis v3 upgrade.
+	// UpgradeName defines the on-chain upgrade name for the Osmosis v8 upgrade.
 	UpgradeName = "v8"
 
 	// UpgradeHeight defines the block height at which the Osmosis v8 upgrade is
