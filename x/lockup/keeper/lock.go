@@ -481,6 +481,7 @@ func (k Keeper) BeginForceUnlockWithEndTime(ctx sdk.Context, lockID uint64, endT
 	return k.beginForceUnlockWithEndTime(ctx, *lock, endTime)
 }
 
+// CONTRACT: the provided lock must be a fresh lock, thus a NotUnlocking. 
 func (k Keeper) beginForceUnlockWithEndTime(ctx sdk.Context, lock types.PeriodLock, endTime time.Time) error {
 	// remove lock refs from not unlocking queue if exists
 	err := k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
