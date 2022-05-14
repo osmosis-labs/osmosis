@@ -51,17 +51,30 @@ func (k Keeper) validateLockForUnpool(ctx sdk.Context, sender sdk.AccAddress, po
 	return lock, nil
 }
 
+func (k Keeper) getExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) time.Duration {
+	// a bonded lock has its end time field set to the default time value.
+	// cref: https://github.com/osmosis-labs/osmosis/blob/v7.3.0/x/lockup/keeper/lock.go#L167-L170
+	bondedLockEndTime := time.Time{}
+	if lock.EndTime.Equal(bondedLockEndTime) {
+		// bonded, thus duration to unlock = lock.Duration
+		return lock.Duration
+	}
+	// lock is unbonded, so remaining duration equals lock.EndTime - ctx.BlockHeight
+	remainingDuration := lock.EndTime.Sub(ctx.BlockTime())
+	return remainingDuration
+}
+
 // Returns a list of newly created lockIDs, or an error.
 func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) ([]uint64, error) {
 	// Steps for unpooling for a (sender, poolID, lockID) triplet.
 	// 0) Check if its for a whitelisted unpooling poolID
 	// 1) Consistency check that lockID corresponds to sender, and contains correct LP shares. (Should also be validated by caller)
-	// 2) If superfluid delegated, superfluid undelegate
-	// 3) Break underlying lock. This will clear any metadata if things are superfluid unbonding
-	// 3) Get duration from {} (Consider if we can handle complexity for already unbonding Locks)
-	// 4) ExitPool with these unlocked LP shares
-	// 5) Make 1 new lock for every asset in collateral. Many code paths need this assumption to hold
-	// 6) Make new lock begin unlocking
+	// 2) Get remaining duration on the lock.
+	// 3) If superfluid delegated, superfluid undelegate
+	// 4) Break underlying lock. This will clear any metadata if things are superfluid unbonding
+	// 5) ExitPool with these unlocked LP shares
+	// 6) Make 1 new lock for every asset in collateral. Many code paths need this assumption to hold
+	// 7) Make new lock begin unlocking
 
 	// 0) check if pool is whitelisted for unpool
 	err := k.checkUnpoolWhitelisted(ctx, poolId)
@@ -76,6 +89,9 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	if err != nil {
 		return []uint64{}, err
 	}
+
+	// 2) Get remaining duration on the lock. Handle if the lock was unbonding.
+	lockRemainingDuration := k.getExistingLockRemainingDuration(ctx, lock)
 
 	// check if the lock is superfluid delegated
 	_, found := k.GetIntermediaryAccountFromLockId(ctx, lockId)
@@ -105,11 +121,12 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 		return []uint64{}, err
 	}
 
-	newLock, err := k.lk.LockTokens(ctx, sender, exitedCoins, lock.Duration)
+	newLock, err := k.lk.LockTokens(ctx, sender, exitedCoins, lockRemainingDuration)
 	if err != nil {
 		return []uint64{}, err
 	}
 
+	// TODO: What is going on here? We need a sub-method for just finding the duration remaining of the lock, and using that above.
 	// lock.EndTime is initialized to time.Time{} at `LockTokens` by default
 	// lock.EndTime has value when the lock started unlocking
 	// check if the lock was unlocking, run separate logic to preserve lock endTime
