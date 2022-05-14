@@ -44,7 +44,7 @@ func TestMsgFilterDecorator(t *testing.T) {
 			ctx:  sdk.Context{}.WithBlockHeight(v8.UpgradeHeight - 1),
 			msgs: []sdk.Msg{
 				banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin("foo", 5))),
-				superfluidtypes.NewMsgUnPoolWhitelistedPool(addr1, 1),
+				superfluidtypes.NewMsgUnPoolWhitelistedPool(addr1, 1, 1),
 			},
 			expectErr: true,
 		},
@@ -53,7 +53,7 @@ func TestMsgFilterDecorator(t *testing.T) {
 			ctx:  sdk.Context{}.WithBlockHeight(v8.UpgradeHeight),
 			msgs: []sdk.Msg{
 				banktypes.NewMsgSend(addr1, addr2, sdk.NewCoins(sdk.NewInt64Coin("foo", 5))),
-				superfluidtypes.NewMsgUnPoolWhitelistedPool(addr1, 1),
+				superfluidtypes.NewMsgUnPoolWhitelistedPool(addr1, 1, 1),
 			},
 			expectErr: false,
 		},
