@@ -184,33 +184,39 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			newLockIDs, err := suite.App.SuperfluidKeeper.UnpoolAllowedPools(suite.Ctx, poolJoinAcc, poolId, lockID)
 			suite.Require().NoError(err)
 
+			cumulativeNewLockCoins := sdk.NewCoins()
+
+			for _, newLockId := range newLockIDs {
+				newLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, newLockId)
+				suite.Require().NoError(err)
+
+				// check lock end time has been preserved after unpooling
+				// if lock wasn't unlocking, it should be initiated unlocking
+				// if lock was unlocking, lock end time should be preserved
+				if tc.unlocking {
+					suite.Require().Equal(lock.EndTime, newLock.EndTime)
+				} else {
+					suite.Require().Equal(suite.Ctx.BlockTime().Add(unbondingDuration), newLock.EndTime)
+				}
+
+				cumulativeNewLockCoins = cumulativeNewLockCoins.Add(newLock.Coins...)
+			}
+
 			// check if the new lock created has the same amount as pool exited
-			// TODO: Update this test.
-			newLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, newLockIDs[0])
-			suite.Require().NoError(err)
 
 			// exitPool has rounding difference,
 			// we test if correct amt has been exited and locked via comparing with rounding tolerance
 			roundingToleranceCoins := sdk.NewCoins(sdk.NewCoin(defaultFooAsset.Token.Denom, sdk.NewInt(5)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(5)))
 			roundDownTolerance, _ := joinPoolAmt.SafeSub(roundingToleranceCoins)
 			roundUpTolerance := joinPoolAmt.Add(roundingToleranceCoins...)
-			suite.Require().True(newLock.Coins.AmountOf("foo").GTE(roundDownTolerance.AmountOf("foo")))
-			suite.Require().True(newLock.Coins.AmountOf(sdk.DefaultBondDenom).GTE(roundDownTolerance.AmountOf(sdk.DefaultBondDenom)))
-			suite.Require().True(newLock.Coins.AmountOf("foo").LTE(roundUpTolerance.AmountOf("foo")))
-			suite.Require().True(newLock.Coins.AmountOf(sdk.DefaultBondDenom).LTE(roundUpTolerance.AmountOf(sdk.DefaultBondDenom)))
+			suite.Require().True(cumulativeNewLockCoins.AmountOf("foo").GTE(roundDownTolerance.AmountOf("foo")))
+			suite.Require().True(cumulativeNewLockCoins.AmountOf(sdk.DefaultBondDenom).GTE(roundDownTolerance.AmountOf(sdk.DefaultBondDenom)))
+			suite.Require().True(cumulativeNewLockCoins.AmountOf("foo").LTE(roundUpTolerance.AmountOf("foo")))
+			suite.Require().True(cumulativeNewLockCoins.AmountOf(sdk.DefaultBondDenom).LTE(roundUpTolerance.AmountOf(sdk.DefaultBondDenom)))
 
 			// check if old lock is deleted
 			_, err = suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 			suite.Require().Error(err)
-
-			// check lock end time has been preserved after unpooling
-			// if lock wasn't unlocking, it should be initiated unlocking
-			// if lock was unlocking, lock end time should be preserved
-			if tc.unlocking {
-				suite.Require().Equal(lock.EndTime, newLock.EndTime)
-			} else {
-				suite.Require().Equal(suite.Ctx.BlockTime().Add(unbondingDuration), newLock.EndTime)
-			}
 
 			// check for locks that were superfluid staked.
 			if tc.superfluidDelegated {
