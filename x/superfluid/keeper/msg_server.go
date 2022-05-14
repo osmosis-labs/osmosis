@@ -125,7 +125,7 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 		if err != nil {
 			return nil, err
 		}
-		allExitedLockIDs = append(allExitedLockIDs, exitedLockIDs)
+		allExitedLockIDs = append(allExitedLockIDs, exitedLockIDs...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

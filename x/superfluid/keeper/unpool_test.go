@@ -181,11 +181,12 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			suite.Require().NoError(err)
 
 			// run unpooling logic
-			newLockID, err := suite.App.SuperfluidKeeper.UnpoolAllowedPools(suite.Ctx, poolJoinAcc, poolId, lockID)
+			newLockIDs, err := suite.App.SuperfluidKeeper.UnpoolAllowedPools(suite.Ctx, poolJoinAcc, poolId, lockID)
 			suite.Require().NoError(err)
 
 			// check if the new lock created has the same amount as pool exited
-			newLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, newLockID)
+			// TODO: Update this test.
+			newLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, newLockIDs[0])
 			suite.Require().NoError(err)
 
 			// exitPool has rounding difference,
