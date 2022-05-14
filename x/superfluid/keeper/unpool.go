@@ -6,12 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (uint64, error) {
-	// check if pool is whitelisted for unpool
+// check if pool is whitelisted for unpool
+func (k Keeper) checkUnpoolWhitelisted(ctx sdk.Context, poolId uint64) error {
 	allowedPools := k.GetUnpoolAllowedPools(ctx)
 	allowed := false
 
@@ -23,7 +24,17 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	}
 
 	if !allowed {
-		return 0, types.ErrPoolNotWhitelisted
+		return types.ErrPoolNotWhitelisted
+	}
+
+	return nil
+}
+
+func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) (uint64, error) {
+	// check if pool is whitelisted for unpool
+	err := k.checkUnpoolWhitelisted(ctx, poolId)
+	if err != nil {
+		return 0, err
 	}
 
 	lock, err := k.lk.GetLockByID(ctx, lockId)
@@ -31,10 +42,10 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 		return 0, err
 	}
 
-	// validate lock owner and lock length
-	err = k.validateLockForSF(ctx, lock, sender.String())
-	if err != nil {
-		return 0, err
+	// consistency check: validate lock owner
+	// However, we expect this to be guaranteed by caller though.
+	if lock.Owner != sender.String() {
+		return 0, lockuptypes.ErrNotLockOwner
 	}
 
 	// Steps for unpooling
