@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -128,11 +129,13 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 		allExitedLockIDs = append(allExitedLockIDs, exitedLockIDs...)
 	}
 
+	allExitedLockIDsSerialized, _ := json.Marshal(allExitedLockIDs)
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtUnpoolId,
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeDenom, lpShareDenom),
+			sdk.NewAttribute(types.AttributeNewLockIds, string(allExitedLockIDsSerialized)),
 		),
 	})
 
