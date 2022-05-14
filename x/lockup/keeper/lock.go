@@ -473,42 +473,6 @@ func (k Keeper) beginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins s
 	return nil
 }
 
-func (k Keeper) BeginForceUnlockWithEndTime(ctx sdk.Context, lockID uint64, endTime time.Time) error {
-	lock, err := k.GetLockByID(ctx, lockID)
-	if err != nil {
-		return err
-	}
-	return k.beginForceUnlockWithEndTime(ctx, *lock, endTime)
-}
-
-// CONTRACT: the provided lock must be a fresh lock, thus a NotUnlocking. 
-func (k Keeper) beginForceUnlockWithEndTime(ctx sdk.Context, lock types.PeriodLock, endTime time.Time) error {
-	// remove lock refs from not unlocking queue if exists
-	err := k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
-	if err != nil {
-		return err
-	}
-
-	// store lock with end time set
-	lock.EndTime = endTime
-	err = k.setLock(ctx, lock)
-	if err != nil {
-		return err
-	}
-
-	// add lock refs into unlocking queue
-	err = k.addLockRefs(ctx, lock)
-	if err != nil {
-		return err
-	}
-
-	if k.hooks != nil {
-		k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
-	}
-
-	return nil
-}
-
 // Unlock is a utility to unlock coins from module account
 func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// validation for current time and unlock time
