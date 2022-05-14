@@ -1,6 +1,8 @@
 package lockup
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,6 +15,8 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 
 // Called every block to automatically unlock matured locks
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
+	test := ctx.ConsensusParams().Version.GetAppVersion()
+	fmt.Println("HI BOLD LETTERS HERE IN THE LOG-- app version is", test)
 	// disable automatic withdraw before specific block height
 	// it is actually for testing with legacy
 	MinBlockHeightToBeginAutoWithdrawing := int64(6)

@@ -261,6 +261,7 @@ func orderBeginBlockers() []string {
 }
 
 // orderEndBlockers Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
+// We've shimmied a state sync fix into the lockup module's endblocker.
 var orderEndBlockers = []string{
 	lockuptypes.ModuleName,
 	crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, claimtypes.ModuleName,
