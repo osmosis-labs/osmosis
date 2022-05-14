@@ -121,29 +121,27 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 		return []uint64{}, err
 	}
 
-	newLock, err := k.lk.LockTokens(ctx, sender, exitedCoins, lockRemainingDuration)
-	if err != nil {
-		return []uint64{}, err
-	}
-
-	// TODO: What is going on here? We need a sub-method for just finding the duration remaining of the lock, and using that above.
-	// lock.EndTime is initialized to time.Time{} at `LockTokens` by default
-	// lock.EndTime has value when the lock started unlocking
-	// check if the lock was unlocking, run separate logic to preserve lock endTime
-	defaultInitializedTime := time.Time{}
-	if lock.EndTime != defaultInitializedTime {
-		err = k.lk.BeginForceUnlockWithEndTime(ctx, newLock.ID, lock.EndTime)
+	// Make one new lock for every coin exited from the pool.
+	newLocks := make([]lockuptypes.PeriodLock, 0, len(exitedCoins))
+	newLockIds := make([]uint64, 0, len(exitedCoins))
+	for _, exitedCoin := range exitedCoins {
+		newLock, err := k.lk.LockTokens(ctx, sender, sdk.NewCoins(exitedCoin), lockRemainingDuration)
 		if err != nil {
 			return []uint64{}, err
 		}
-	} else {
+		newLocks = append(newLocks, newLock)
+		newLockIds = append(newLockIds, newLock.ID)
+	}
+
+	// 7) Begin unlocking every new lock
+	for _, newLock := range newLocks {
 		err = k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
 		if err != nil {
 			return []uint64{}, err
 		}
 	}
 
-	return []uint64{newLock.ID}, nil
+	return newLockIds, nil
 }
 
 func (k Keeper) GetUnpoolAllowedPools(ctx sdk.Context) []uint64 {
