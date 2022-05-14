@@ -8,7 +8,7 @@ import (
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 )
 
-// RunForkLogic executes height-gated on-chain fork logic for the Osmosis v3
+// RunForkLogic executes height-gated on-chain fork logic for the Osmosis v8
 // upgrade.
 func RunForkLogic(ctx sdk.Context, superfluid *superfluidkeeper.Keeper, poolincentives *poolincentiveskeeper.Keeper, gamm *gammkeeper.Keeper) {
 	ctx.Logger().Info("Applying Osmosis v8 upgrade. Allowing direct unpooling for whitelisted pools")
