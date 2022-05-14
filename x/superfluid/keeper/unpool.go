@@ -11,6 +11,79 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
+// Returns a list of newly created lockIDs, or an error.
+func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) ([]uint64, error) {
+	// Steps for unpooling for a (sender, poolID, lockID) triplet.
+	// 0) Check if its for a whitelisted unpooling poolID
+	// 1) Consistency check that lockID corresponds to sender, and contains correct LP shares. (Should also be validated by caller)
+	// 2) Get remaining duration on the lock.
+	// 3) If superfluid delegated, superfluid undelegate
+	// 4) Break underlying lock. This will clear any metadata if things are superfluid unbonding
+	// 5) ExitPool with these unlocked LP shares
+	// 6) Make 1 new lock for every asset in collateral. Many code paths need this assumption to hold
+	// 7) Make new lock begin unlocking
+
+	// 0) check if pool is whitelisted for unpool
+	err := k.checkUnpoolWhitelisted(ctx, poolId)
+	if err != nil {
+		return []uint64{}, err
+	}
+
+	// 1) Consistency check that lockID corresponds to sender, and contains correct LP shares.
+	// These are expected to be true by the caller, but good to double check
+	// TODO: Try to minimize dependence on lock here
+	lock, err := k.validateLockForUnpool(ctx, sender, poolId, lockId)
+	if err != nil {
+		return []uint64{}, err
+	}
+
+	// 2) Get remaining duration on the lock. Handle if the lock was unbonding.
+	lockRemainingDuration := k.getExistingLockRemainingDuration(ctx, lock)
+
+	// 3) If superfluid delegated, superfluid undelegate
+	err = k.unbondSuperfluidIfExists(ctx, sender, lockId)
+	if err != nil {
+		return []uint64{}, err
+	}
+
+	// finish unlocking directly for locked locks
+	// this also unlocks locks that were in the unlocking queue
+	err = k.lk.ForceUnlock(ctx, *lock)
+	if err != nil {
+		return []uint64{}, err
+	}
+
+	// 4) ExitPool with these unlocked LP shares
+	gammShares := lock.Coins[0]
+	minOutCoins := sdk.NewCoins()
+	exitedCoins, err := k.gk.ExitPool(ctx, sender, poolId, gammShares.Amount, minOutCoins)
+	if err != nil {
+		return []uint64{}, err
+	}
+
+	// Make one new lock for every coin exited from the pool.
+	newLocks := make([]lockuptypes.PeriodLock, 0, len(exitedCoins))
+	newLockIds := make([]uint64, 0, len(exitedCoins))
+	for _, exitedCoin := range exitedCoins {
+		newLock, err := k.lk.LockTokens(ctx, sender, sdk.NewCoins(exitedCoin), lockRemainingDuration)
+		if err != nil {
+			return []uint64{}, err
+		}
+		newLocks = append(newLocks, newLock)
+		newLockIds = append(newLockIds, newLock.ID)
+	}
+
+	// 7) Begin unlocking every new lock
+	for _, newLock := range newLocks {
+		err = k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
+		if err != nil {
+			return []uint64{}, err
+		}
+	}
+
+	return newLockIds, nil
+}
+
 // check if pool is whitelisted for unpool
 func (k Keeper) checkUnpoolWhitelisted(ctx sdk.Context, poolId uint64) error {
 	allowedPools := k.GetUnpoolAllowedPools(ctx)
@@ -78,79 +151,6 @@ func (k Keeper) unbondSuperfluidIfExists(ctx sdk.Context, sender sdk.AccAddress,
 		// we don't need to call `SuperfluidUnbondLock` here as we would unlock break the lock anyways
 	}
 	return nil
-}
-
-// Returns a list of newly created lockIDs, or an error.
-func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) ([]uint64, error) {
-	// Steps for unpooling for a (sender, poolID, lockID) triplet.
-	// 0) Check if its for a whitelisted unpooling poolID
-	// 1) Consistency check that lockID corresponds to sender, and contains correct LP shares. (Should also be validated by caller)
-	// 2) Get remaining duration on the lock.
-	// 3) If superfluid delegated, superfluid undelegate
-	// 4) Break underlying lock. This will clear any metadata if things are superfluid unbonding
-	// 5) ExitPool with these unlocked LP shares
-	// 6) Make 1 new lock for every asset in collateral. Many code paths need this assumption to hold
-	// 7) Make new lock begin unlocking
-
-	// 0) check if pool is whitelisted for unpool
-	err := k.checkUnpoolWhitelisted(ctx, poolId)
-	if err != nil {
-		return []uint64{}, err
-	}
-
-	// 1) Consistency check that lockID corresponds to sender, and contains correct LP shares.
-	// These are expected to be true by the caller, but good to double check
-	// TODO: Try to minimize dependence on lock here
-	lock, err := k.validateLockForUnpool(ctx, sender, poolId, lockId)
-	if err != nil {
-		return []uint64{}, err
-	}
-
-	// 2) Get remaining duration on the lock. Handle if the lock was unbonding.
-	lockRemainingDuration := k.getExistingLockRemainingDuration(ctx, lock)
-
-	// 3) If superfluid delegated, superfluid undelegate
-	err = k.unbondSuperfluidIfExists(ctx, sender, lockId)
-	if err != nil {
-		return []uint64{}, err
-	}
-
-	// finish unlocking directly for locked locks
-	// this also unlocks locks that were in the unlocking queue
-	err = k.lk.BreakLockForUnpool(ctx, *lock)
-	if err != nil {
-		return []uint64{}, err
-	}
-
-	// 4) ExitPool with these unlocked LP shares
-	gammShares := lock.Coins[0]
-	minOutCoins := sdk.NewCoins()
-	exitedCoins, err := k.gk.ExitPool(ctx, sender, poolId, gammShares.Amount, minOutCoins)
-	if err != nil {
-		return []uint64{}, err
-	}
-
-	// Make one new lock for every coin exited from the pool.
-	newLocks := make([]lockuptypes.PeriodLock, 0, len(exitedCoins))
-	newLockIds := make([]uint64, 0, len(exitedCoins))
-	for _, exitedCoin := range exitedCoins {
-		newLock, err := k.lk.LockTokens(ctx, sender, sdk.NewCoins(exitedCoin), lockRemainingDuration)
-		if err != nil {
-			return []uint64{}, err
-		}
-		newLocks = append(newLocks, newLock)
-		newLockIds = append(newLockIds, newLock.ID)
-	}
-
-	// 7) Begin unlocking every new lock
-	for _, newLock := range newLocks {
-		err = k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
-		if err != nil {
-			return []uint64{}, err
-		}
-	}
-
-	return newLockIds, nil
 }
 
 func (k Keeper) GetUnpoolAllowedPools(ctx sdk.Context) []uint64 {

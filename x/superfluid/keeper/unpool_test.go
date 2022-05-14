@@ -229,12 +229,12 @@ func (suite *KeeperTestSuite) TestUnpool() {
 				suite.Require().Error(err)
 
 				// check unbonding synthetic lockup creation
-				unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
-				synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
-				suite.Require().NoError(err)
-				suite.Require().Equal(synthLock.UnderlyingLockId, lockID)
-				suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
-				suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
+				// unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+				// synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockID, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
+				// suite.Require().NoError(err)
+				// suite.Require().Equal(synthLock.UnderlyingLockId, lockID)
+				// suite.Require().Equal(synthLock.SynthDenom, keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
+				// suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
 
 				// check if delegation has reduced from intermediary account
 				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, intermediaryAcc.GetAccAddress(), valAddr)
