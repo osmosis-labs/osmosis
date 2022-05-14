@@ -64,6 +64,22 @@ func (k Keeper) getExistingLockRemainingDuration(ctx sdk.Context, lock *lockupty
 	return remainingDuration
 }
 
+// TODO: Review this in more depth
+func (k Keeper) unbondSuperfluidIfExists(ctx sdk.Context, sender sdk.AccAddress, lockId uint64) error {
+	_, found := k.GetIntermediaryAccountFromLockId(ctx, lockId)
+	if found {
+		// superfluid undelegate first
+		// this undelegates delegation, breaks synthetic locks and
+		// create a new synthetic lock representing unstaking
+		err := k.SuperfluidUndelegate(ctx, sender.String(), lockId)
+		if err != nil {
+			return err
+		}
+		// we don't need to call `SuperfluidUnbondLock` here as we would unlock break the lock anyways
+	}
+	return nil
+}
+
 // Returns a list of newly created lockIDs, or an error.
 func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) ([]uint64, error) {
 	// Steps for unpooling for a (sender, poolID, lockID) triplet.
@@ -93,17 +109,10 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	// 2) Get remaining duration on the lock. Handle if the lock was unbonding.
 	lockRemainingDuration := k.getExistingLockRemainingDuration(ctx, lock)
 
-	// check if the lock is superfluid delegated
-	_, found := k.GetIntermediaryAccountFromLockId(ctx, lockId)
-	if found {
-		// superfluid undelegate first
-		// this undelegates delegation, breaks synthetic locks and
-		// create a new synthetic lock representing unstaking
-		err = k.SuperfluidUndelegate(ctx, sender.String(), lockId)
-		if err != nil {
-			return []uint64{}, err
-		}
-		// we don't need to call `SuperfluidUnbondLock` here as we would unlock break the lock anyways
+	// 3) If superfluid delegated, superfluid undelegate
+	err = k.unbondSuperfluidIfExists(ctx, sender, lockId)
+	if err != nil {
+		return []uint64{}, err
 	}
 
 	// finish unlocking directly for locked locks
