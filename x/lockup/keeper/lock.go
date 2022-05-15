@@ -487,12 +487,12 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 	return k.unlockInternalLogic(ctx, lock)
 }
 
-// ForceUnlock ignores unlock duration and immediately unlock and refund.
+// ForceUnlock ignores unlock duration and immediately unlocks the lock and refunds tokens to lock owner..
 func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	// Steps:
 	// 1) Break associated synthetic locks. (Superfluid data)
 	// 2) If lock is bonded, move it to unlocking
-	// 3) Run logic to delete unlocking metadata.
+	// 3) Run logic to delete unlocking metadata, and send tokens to owner.
 
 	synthLocks := k.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
 	err := k.BreakAllSyntheticLocks(ctx, lock, synthLocks)
@@ -506,7 +506,12 @@ func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 			return err
 		}
 	}
-	return k.unlockInternalLogic(ctx, lock)
+	// NOTE: This caused a bug! BeginUnlock changes the owner the lock.EndTime
+	lockPtr, err := k.GetLockByID(ctx, lock.ID)
+	if err != nil {
+		return err
+	}
+	return k.unlockInternalLogic(ctx, *lockPtr)
 }
 
 func (k Keeper) BreakAllSyntheticLocks(ctx sdk.Context, lock types.PeriodLock, synthLocks []types.SyntheticLock) error {

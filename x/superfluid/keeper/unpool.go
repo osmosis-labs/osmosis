@@ -14,22 +14,22 @@ import (
 // Returns a list of newly created lockIDs, or an error.
 func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, lockId uint64) ([]uint64, error) {
 	// Steps for unpooling for a (sender, poolID, lockID) triplet.
-	// 0) Check if its for a whitelisted unpooling poolID
-	// 1) Consistency check that lockID corresponds to sender, and contains correct LP shares. (Should also be validated by caller)
-	// 2) Get remaining duration on the lock.
-	// 3) If superfluid delegated, superfluid undelegate
-	// 4) Break underlying lock. This will clear any metadata if things are superfluid unbonding
-	// 5) ExitPool with these unlocked LP shares
-	// 6) Make 1 new lock for every asset in collateral. Many code paths need this assumption to hold
-	// 7) Make new lock begin unlocking
+	// 1) Check if its for a whitelisted unpooling poolID
+	// 2) Consistency check that lockID corresponds to sender, and contains correct LP shares. (Should also be validated by caller)
+	// 3) Get remaining duration on the lock.
+	// 4) If superfluid delegated, superfluid undelegate
+	// 5) Break underlying lock. This will clear any metadata if things are superfluid unbonding
+	// 6) ExitPool with these unlocked LP shares
+	// 7) Make 1 new lock for every asset in collateral. Many code paths need 1 coin / lock assumption to hold
+	// 8) Make new lock begin unlocking
 
-	// 0) check if pool is whitelisted for unpool
+	// 1) check if pool is whitelisted for unpool
 	err := k.checkUnpoolWhitelisted(ctx, poolId)
 	if err != nil {
 		return []uint64{}, err
 	}
 
-	// 1) Consistency check that lockID corresponds to sender, and contains correct LP shares.
+	// 2) Consistency check that lockID corresponds to sender, and contains correct LP shares.
 	// These are expected to be true by the caller, but good to double check
 	// TODO: Try to minimize dependence on lock here
 	lock, err := k.validateLockForUnpool(ctx, sender, poolId, lockId)
@@ -37,23 +37,23 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 		return []uint64{}, err
 	}
 
-	// 2) Get remaining duration on the lock. Handle if the lock was unbonding.
+	// 3) Get remaining duration on the lock. Handle if the lock was unbonding.
 	lockRemainingDuration := k.getExistingLockRemainingDuration(ctx, lock)
 
-	// 3) If superfluid delegated, superfluid undelegate
+	// 4) If superfluid delegated, superfluid undelegate
 	err = k.unbondSuperfluidIfExists(ctx, sender, lockId)
 	if err != nil {
 		return []uint64{}, err
 	}
 
-	// finish unlocking directly for locked locks
+	// 5) finish unlocking directly for locked locks
 	// this also unlocks locks that were in the unlocking queue
 	err = k.lk.ForceUnlock(ctx, *lock)
 	if err != nil {
 		return []uint64{}, err
 	}
 
-	// 4) ExitPool with these unlocked LP shares
+	// 6) ExitPool with these unlocked LP shares
 	gammShares := lock.Coins[0]
 	minOutCoins := sdk.NewCoins()
 	exitedCoins, err := k.gk.ExitPool(ctx, sender, poolId, gammShares.Amount, minOutCoins)
@@ -61,7 +61,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 		return []uint64{}, err
 	}
 
-	// Make one new lock for every coin exited from the pool.
+	// 7) Make one new lock for every coin exited from the pool.
 	newLocks := make([]lockuptypes.PeriodLock, 0, len(exitedCoins))
 	newLockIds := make([]uint64, 0, len(exitedCoins))
 	for _, exitedCoin := range exitedCoins {
@@ -73,7 +73,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 		newLockIds = append(newLockIds, newLock.ID)
 	}
 
-	// 7) Begin unlocking every new lock
+	// 8) Begin unlocking every new lock
 	for _, newLock := range newLocks {
 		err = k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
 		if err != nil {
@@ -87,20 +87,14 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 // check if pool is whitelisted for unpool
 func (k Keeper) checkUnpoolWhitelisted(ctx sdk.Context, poolId uint64) error {
 	allowedPools := k.GetUnpoolAllowedPools(ctx)
-	allowed := false
 
 	for _, allowedPoolId := range allowedPools {
 		if poolId == allowedPoolId {
-			allowed = true
-			break
+			return nil
 		}
 	}
 
-	if !allowed {
-		return types.ErrPoolNotWhitelisted
-	}
-
-	return nil
+	return types.ErrPoolNotWhitelisted
 }
 
 // check if pool is whitelisted for unpool
@@ -116,6 +110,10 @@ func (k Keeper) validateLockForUnpool(ctx sdk.Context, sender sdk.AccAddress, po
 		return lock, lockuptypes.ErrNotLockOwner
 	}
 
+	if lock.Coins.Len() != 1 {
+		return lock, types.ErrMultipleCoinsLockupNotSupported
+	}
+
 	gammShare := lock.Coins[0]
 	if gammShare.Denom != gammtypes.GetPoolShareDenom(poolId) {
 		return lock, types.ErrLockUnpoolNotAllowed
@@ -125,20 +123,20 @@ func (k Keeper) validateLockForUnpool(ctx sdk.Context, sender sdk.AccAddress, po
 }
 
 func (k Keeper) getExistingLockRemainingDuration(ctx sdk.Context, lock *lockuptypes.PeriodLock) time.Duration {
-	// a bonded lock has its end time field set to the default time value.
-	// cref: https://github.com/osmosis-labs/osmosis/blob/v7.3.0/x/lockup/keeper/lock.go#L167-L170
-	bondedLockEndTime := time.Time{}
-	if lock.EndTime.Equal(bondedLockEndTime) {
-		// bonded, thus duration to unlock = lock.Duration
-		return lock.Duration
+	if lock.IsUnlocking() {
+		// lock is unlocking, so remaining duration equals lock.EndTime - ctx.BlockTime
+		remainingDuration := lock.EndTime.Sub(ctx.BlockTime())
+		return remainingDuration
 	}
-	// lock is unbonded, so remaining duration equals lock.EndTime - ctx.BlockHeight
-	remainingDuration := lock.EndTime.Sub(ctx.BlockTime())
-	return remainingDuration
+	// lock is bonded, thus the time it should take to unlock is lock.Duration
+	return lock.Duration
 }
 
 // TODO: Review this in more depth
 func (k Keeper) unbondSuperfluidIfExists(ctx sdk.Context, sender sdk.AccAddress, lockId uint64) error {
+	// Proxy for determining if a lock is superfluid delegated. This is because, every lock that is superfluid
+	// delegated, has a state entry mapping the lock ID, to an intermediary account.
+	// This state entry is deleted in Superfluid undelegate, hence detects if undelegating.
 	_, found := k.GetIntermediaryAccountFromLockId(ctx, lockId)
 	if found {
 		// superfluid undelegate first
