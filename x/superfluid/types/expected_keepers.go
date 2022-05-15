@@ -23,6 +23,8 @@ type LockupKeeper interface {
 	GetAccountPeriodLocks(ctx sdk.Context, addr sdk.AccAddress) []lockuptypes.PeriodLock
 	GetPeriodLocks(ctx sdk.Context) ([]lockuptypes.PeriodLock, error)
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
+	// Despite the name, BeginForceUnlock is really BeginUnlock
+	// TODO: Fix this in future code update
 	BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error
 	ForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock) error
 

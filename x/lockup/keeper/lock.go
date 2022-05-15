@@ -507,6 +507,7 @@ func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 		}
 	}
 	// NOTE: This caused a bug! BeginUnlock changes the owner the lock.EndTime
+	// This shows the bad API design of not using lock.ID in every public function.
 	lockPtr, err := k.GetLockByID(ctx, lock.ID)
 	if err != nil {
 		return err
