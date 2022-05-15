@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -101,16 +102,21 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // ----------------------------------------------------------------------------
 
 // AppModule implements the AppModule interface for the capability module.
+
 type AppModule struct {
 	AppModuleBasic
 
 	keeper        keeper.Keeper
 	accountKeeper stakingtypes.AccountKeeper
 	bankKeeper    stakingtypes.BankKeeper
+	keys          map[string]*store.KVStoreKey
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
-	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
+func NewAppModule(cdc codec.Codec,
+	keeper keeper.Keeper,
+	accountKeeper stakingtypes.AccountKeeper,
+	bankKeeper stakingtypes.BankKeeper,
+	keys map[string]*store.KVStoreKey,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
@@ -118,6 +124,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
+		keys:          keys,
 	}
 }
 
@@ -174,7 +181,7 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
 // returns no validator updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
+	EndBlocker(ctx, am.keeper, am.keys)
 	return []abci.ValidatorUpdate{}
 }
 
