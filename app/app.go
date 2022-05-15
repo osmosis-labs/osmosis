@@ -40,7 +40,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/version"
 
 	// Cosmos-SDK Modules
 	// https://github.com/cosmos/cosmos-sdk/tree/master/x
@@ -191,14 +190,13 @@ func NewOsmosisApp(
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
-
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
 	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetVersion(version.Version)
+	bApp.SetVersion("1")
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	// Define what keys will be used in the cosmos-sdk key/value store.
@@ -238,7 +236,7 @@ func NewOsmosisApp(
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
-	var skipGenesisInvariants = cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	// NOTE: All module / keeper changes should happen prior to this module.NewManager line being called.
 	// However in the event any changes do need to happen after this call, ensure that that keeper
@@ -486,16 +484,19 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 			&app.IBCKeeper.ConnectionKeeper, app.TxFeesKeeper,
 			app.GAMMKeeper, app.StakingKeeper))
 
+	keys := app.keys
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v7.UpgradeName,
 		v7.CreateUpgradeHandler(
-			app.mm, app.configurator,
+			app.mm,
+			app.configurator,
 			app.WasmKeeper,
 			app.SuperfluidKeeper,
 			app.EpochsKeeper,
 			app.LockupKeeper,
 			app.MintKeeper,
-			app.AccountKeeper))
+			app.AccountKeeper,
+			keys))
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
