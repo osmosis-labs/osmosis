@@ -531,46 +531,6 @@ func (k Keeper) BreakAllSyntheticLocks(ctx sdk.Context, lock types.PeriodLock, s
 	return nil
 }
 
-func (k Keeper) BreakLockForUnpool(ctx sdk.Context, lock types.PeriodLock) error {
-	return k.breakLockInternalLogic(ctx, lock)
-}
-
-func (k Keeper) breakLockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
-	owner, err := sdk.AccAddressFromBech32(lock.Owner)
-	if err != nil {
-		return err
-	}
-
-	// send coins back to owner
-	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, lock.Coins); err != nil {
-		return err
-	}
-
-	// change lock status to unlocking if it lock wasn't unlocking
-	if !lock.IsUnlocking() {
-		err = k.beginForceUnlock(ctx, lock, lock.Coins)
-		if err != nil {
-			return err
-		}
-	}
-
-	k.deleteLock(ctx, lock.ID)
-
-	// delete lock refs from the unlocking queue
-	err = k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)
-	if err != nil {
-		return err
-	}
-
-	// remove from accumulation store
-	for _, coin := range lock.Coins {
-		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
-	}
-
-	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
-	return nil
-}
-
 func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {

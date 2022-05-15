@@ -410,7 +410,14 @@ func (m *MsgLockAndSuperfluidDelegateResponse) GetID() uint64 {
 	return 0
 }
 
-// ===================== MsgUnPoolWhitelistedPool
+// MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is
+// associated with pool pool_id. If pool_id is not approved for unpooling by
+// governance, this is a no-op. Unpooling takes the locked gamm shares, and runs
+// "ExitPool" on it, to get the constituent tokens. e.g. z gamm/pool/1 tokens
+// ExitPools into constituent tokens x uatom, y uosmo. Then it creates a new
+// lock for every constituent token, with the duration associated with the lock.
+// If the lock was unbonding, the new lockup durations should be the time left
+// until unbond completion.
 type MsgUnPoolWhitelistedPool struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	PoolId uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
