@@ -16,6 +16,6 @@ func RunForkLogic(ctx sdk.Context, superfluid *superfluidkeeper.Keeper, poolince
 	ApplyProp222Change(ctx, poolincentives)
 	ApplyProp223Change(ctx, poolincentives)
 	ApplyProp224Change(ctx, poolincentives)
-	ctx.Logger().Info("Registering state change for whitelisted pools for unpooling ")
+	ctx.Logger().Info("Registering state change for whitelisted pools for unpooling per proposal 226 ")
 	RegisterWhitelistedDirectUnbondPools(ctx, superfluid, gamm)
 }
