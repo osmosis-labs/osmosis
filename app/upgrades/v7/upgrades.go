@@ -1,9 +1,6 @@
 package v7
 
 import (
-	"encoding/binary"
-
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -27,7 +24,6 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 	lockupKeeper *lockupkeeper.Keeper,
 	mintKeeper *mintkeeper.Keeper,
 	accountKeeper *authkeeper.AccountKeeper,
-	keys map[string]*types.KVStoreKey,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// Set wasm old version to 1 if we want to call wasm's InitGenesis ourselves
@@ -54,11 +50,6 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
 			ctx, *lockupKeeper, accountKeeper,
 			lockupkeeper.BaselineDurations, lockupkeeper.HourDuration,
 		)
-
-		store := ctx.KVStore(keys[upgradetypes.StoreKey])
-		versionBytes := make([]byte, 8)
-		binary.BigEndian.PutUint64(versionBytes, AppVersion)
-		store.Set([]byte{upgradetypes.ProtocolVersionByte}, versionBytes)
 
 		ctx.Logger().Info("Migration for superfluid staking")
 
