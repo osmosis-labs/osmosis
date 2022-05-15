@@ -4,12 +4,17 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 // MsgFilterDecorator defines an AnteHandler decorator for the v8 upgrade that
 // provide height-gated message filtering acceptance.
 type MsgFilterDecorator struct{}
+
+func NewMsgFilterDecorator() MsgFilterDecorator {
+	return MsgFilterDecorator{}
+}
 
 // AnteHandle performs an AnteHandler check that returns an error if the current
 // block height is less than the v8 upgrade height and contains messages that are
