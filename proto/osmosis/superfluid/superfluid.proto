@@ -65,3 +65,5 @@ message LockIdIntermediaryAccountConnection {
   uint64 lock_id = 1;
   string intermediary_account = 2;
 }
+
+message UnpoolWhitelistedPools { repeated uint64 ids = 1; }

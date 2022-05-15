@@ -24,4 +24,7 @@ var (
 
 	// KeyPrefixLockIntermediaryAccAddr defines prefix to connect lockId and intermediary account address
 	KeyPrefixLockIntermediaryAccAddr = []byte{0x05}
+
+	// KeyUnpoolAllowedPools defines key to unpool allowed pools.
+	KeyUnpoolAllowedPools = []byte{0x06}
 )
