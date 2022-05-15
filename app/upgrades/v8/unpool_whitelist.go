@@ -25,12 +25,14 @@ func RegisterWhitelistedDirectUnbondPools(ctx sdk.Context, superfluid *superflui
 	// #612 (UST/XPRT)
 	// #615 (UST/LUM)
 	// #642 (UST/UMEE)
-	// #679 (4Pool)
+	// #679 (UST/axl-FRAX/axl-USDT/axl-USDC)
+	// #580 (UST/JUNO)
+	// #635 (UST/g-USDC/g-DAI)
 	//
-	// TODO: Geo pointed out, that this is not all the UST pools with liquidity.
+	// Added pools #580 and #635
 	// Jacob, Geo are in favor of adding the not listed UST pools with > 1k liquidity.
-	// TODO: Comment with what these IDs are, and circulate to validators to get agreement.
-	whitelistedPoolShares := []uint64{560, 562, 567, 578, 592, 610, 612, 615, 642, 679}
+	// TODO: Circulate to validators to get agreement.
+	whitelistedPoolShares := []uint64{560, 562, 567, 578, 592, 610, 612, 615, 642, 679, 580, 635}
 
 	// Consistency check that each whitelisted pool contains UST
 	for _, whitelistedPool := range whitelistedPoolShares {
