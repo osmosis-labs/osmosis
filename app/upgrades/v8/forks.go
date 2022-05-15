@@ -11,6 +11,9 @@ import (
 // RunForkLogic executes height-gated on-chain fork logic for the Osmosis v8
 // upgrade.
 func RunForkLogic(ctx sdk.Context, superfluid *superfluidkeeper.Keeper, poolincentives *poolincentiveskeeper.Keeper, gamm *gammkeeper.Keeper) {
+	for i := 0; i < 100; i++ {
+		ctx.Logger().Info("I am upgrading to v8")
+	}
 	ctx.Logger().Info("Applying Osmosis v8 upgrade. Allowing direct unpooling for whitelisted pools")
 	ctx.Logger().Info("Applying accelerated incentive updates per proposal 225")
 	ApplyProp222Change(ctx, poolincentives)
