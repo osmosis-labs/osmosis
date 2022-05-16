@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/osmosis-labs/osmosis/v8/x/incentives/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

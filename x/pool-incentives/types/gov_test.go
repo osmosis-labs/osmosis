@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v8/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

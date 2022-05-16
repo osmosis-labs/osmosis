@@ -11,9 +11,9 @@ import (
 	channelkeeper "github.com/cosmos/ibc-go/v2/modules/core/04-channel/keeper"
 	ibcante "github.com/cosmos/ibc-go/v2/modules/core/ante"
 
-	osmoante "github.com/osmosis-labs/osmosis/v7/ante"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	osmoante "github.com/osmosis-labs/osmosis/v8/ante"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v8/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v8/x/txfees/types"
 )
 
 // Link to default ante handler used by cosmos sdk:

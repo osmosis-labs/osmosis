@@ -7,10 +7,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/osmosis-labs/osmosis/v8/app"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"

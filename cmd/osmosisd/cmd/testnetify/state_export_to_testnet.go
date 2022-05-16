@@ -1,8 +1,9 @@
 package testnetify
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v8/app"
 )
 
 var (

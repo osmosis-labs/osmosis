@@ -5,9 +5,10 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/v8/app"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
