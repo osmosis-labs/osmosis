@@ -10,7 +10,7 @@ require (
 	github.com/cosmos/ibc-go/v2 v2.0.3
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
-	github.com/golangci/golangci-lint v1.46.0
+	github.com/golangci/golangci-lint v1.46.1
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/ory/dockertest/v3 v3.8.1
@@ -32,13 +32,6 @@ require (
 )
 
 require (
-	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
-	github.com/GaijinEntertainment/go-exhaustruct/v2 v2.1.0 // indirect
-	github.com/firefart/nonamedreturns v1.0.1 // indirect
-	github.com/lufeee/execinquery v1.0.0 // indirect
-	github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567 // indirect
-	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
-	golang.org/x/exp/typeparams v0.0.0-20220218215828-6cf2b201936e // indirect
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -51,6 +44,7 @@ require (
 	github.com/CosmWasm/wasmvm v1.0.0-beta7
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
+	github.com/GaijinEntertainment/go-exhaustruct/v2 v2.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
@@ -100,6 +94,7 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
+	github.com/firefart/nonamedreturns v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/fzipp/gocyclo v0.5.1 // indirect
 	github.com/gin-gonic/gin v1.7.0 // indirect
@@ -172,6 +167,7 @@ require (
 	github.com/leonklingele/grouper v1.1.0 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
+	github.com/lufeee/execinquery v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/maratori/testpackage v1.0.1 // indirect
 	github.com/matoous/godox v0.0.0-20210227103229-6504466cf951 // indirect
@@ -209,6 +205,7 @@ require (
 	github.com/quasilyte/go-ruleguard v0.3.16-0.20220213074421-6aa060fab41a // indirect
 	github.com/quasilyte/gogrep v0.0.0-20220120141003-628d8b3623b5 // indirect
 	github.com/quasilyte/regex/syntax v0.0.0-20200407221936-30656e2c4a95 // indirect
+	github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rs/cors v1.8.2 // indirect
@@ -227,6 +224,7 @@ require (
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
+	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/sylvia7788/contextcheck v1.0.4 // indirect
@@ -251,6 +249,7 @@ require (
 	gitlab.com/bosi/decorder v0.2.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
+	golang.org/x/exp/typeparams v0.0.0-20220218215828-6cf2b201936e // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
