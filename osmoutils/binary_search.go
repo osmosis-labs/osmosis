@@ -18,7 +18,7 @@ type ErrTolerance struct {
 	MultiplicativeTolerance sdk.Dec
 }
 
-// IsSatisfied returns if actual is within errTolerance of expected.
+// Compare returns if actual is within errTolerance of expected.
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
