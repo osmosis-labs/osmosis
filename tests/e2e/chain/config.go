@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -21,14 +22,22 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
+type ValidatorConfig struct {
+	Pruning            string // default, nothing, everything, or custom
+	PruningKeepRecent  string // keep all of the last N states (only used with custom pruning)
+	PruningInterval    string // delete old states from every Nth block (only used with custom pruning)
+	SnapshotInterval   uint64 // statesync snapshot every Nth block (0 to disable)
+	SnapshotKeepRecent uint32 // number of recent snapshots to keep and serve (0 to keep all)
+}
+
 const (
 	// common
 	OsmoDenom     = "uosmo"
 	StakeDenom    = "stake"
-	IbcDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+	OsmoIBCDenom  = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+	StakeIBCDenom = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
 	MinGasPrice   = "0.000"
 	IbcSendAmount = 3300000000
-	VotingPeriod  = 30000000000 // 30 seconds
 	// chainA
 	ChainAID      = "osmo-test-a"
 	OsmoBalanceA  = 200000000000
@@ -49,6 +58,8 @@ var (
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom)
+	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)  // 3,300uosmo
+	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
@@ -122,7 +133,7 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
-func initGenesis(c *internalChain) error {
+func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
@@ -166,7 +177,7 @@ func initGenesis(c *internalChain) error {
 	}
 
 	govGenState.VotingParams = govtypes.VotingParams{
-		VotingPeriod: VotingPeriod,
+		VotingPeriod: votingPeriod,
 	}
 
 	gz, err := util.Cdc.MarshalJSON(&govGenState)
@@ -234,8 +245,8 @@ func initGenesis(c *internalChain) error {
 	return nil
 }
 
-func initNodes(c *internalChain) error {
-	if err := c.createAndInitValidators(2); err != nil {
+func initNodes(c *internalChain, numVal int) error {
+	if err := c.createAndInitValidators(numVal); err != nil {
 		return err
 	}
 
@@ -266,7 +277,7 @@ func initNodes(c *internalChain) error {
 	return nil
 }
 
-func initValidatorConfigs(c *internalChain) error {
+func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig) error {
 	for i, val := range c.validators {
 		tmCfgPath := filepath.Join(val.configDir(), "config", "config.toml")
 
@@ -308,8 +319,13 @@ func initValidatorConfigs(c *internalChain) error {
 		appCfgPath := filepath.Join(val.configDir(), "config", "app.toml")
 
 		appConfig := srvconfig.DefaultConfig()
+		appConfig.BaseConfig.Pruning = validatorConfigs[i].Pruning
+		appConfig.BaseConfig.PruningKeepRecent = validatorConfigs[i].PruningKeepRecent
+		appConfig.BaseConfig.PruningInterval = validatorConfigs[i].PruningInterval
 		appConfig.API.Enable = true
 		appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
+		appConfig.StateSync.SnapshotInterval = validatorConfigs[i].SnapshotInterval
+		appConfig.StateSync.SnapshotKeepRecent = validatorConfigs[i].SnapshotKeepRecent
 
 		srvconfig.WriteConfigFile(appCfgPath, appConfig)
 	}

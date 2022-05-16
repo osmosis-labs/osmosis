@@ -17,7 +17,7 @@ func (suite *KeeperTestSuite) measureLockGas(addr sdk.AccAddress, coins sdk.Coin
 	suite.FundAcc(addr, coins)
 	// start measuring gas
 	alreadySpent := suite.Ctx.GasMeter().GasConsumed()
-	_, err := suite.App.LockupKeeper.LockTokens(suite.Ctx, addr, coins, dur)
+	_, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr, coins, dur)
 	suite.Require().NoError(err)
 	newSpent := suite.Ctx.GasMeter().GasConsumed()
 	spentNow := newSpent - alreadySpent

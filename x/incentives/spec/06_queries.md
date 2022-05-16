@@ -1,12 +1,15 @@
+```{=html}
 <!--
 order: 7
 -->
+```
 
-# Queries
+Queries
+=======
 
 In this section we describe the queries required on grpc server.
 
-```protobuf
+``` {.protobuf}
 // Query defines the gRPC querier service.
 service Query {
   // returns coins that is going to be distributed
