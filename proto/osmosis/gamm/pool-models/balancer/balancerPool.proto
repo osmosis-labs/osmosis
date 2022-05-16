@@ -1,5 +1,4 @@
 syntax = "proto3";
-// this is a temporary package setup, needs migration logic
 package osmosis.gamm.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
