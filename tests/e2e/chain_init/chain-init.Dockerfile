@@ -8,8 +8,8 @@ COPY . /osmosis
 
 # From https://github.com/CosmWasm/wasmd/blob/master/Dockerfile
 # For more details see https://github.com/CosmWasm/wasmvm#builds-of-libwasmvm 
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0-beta7/libwasmvm_muslc.a /lib/libwasmvm_muslc.a
-RUN sha256sum /lib/libwasmvm_muslc.a | grep d0152067a5609bfdfb3f0d5d6c0f2760f79d5f2cd7fd8513cafa9932d22eb350
+ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0-beta10/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.a
+RUN sha256sum /usr/local/lib/libwasmvm_muslc.a | grep 2f44efa9c6c1cda138bd1f46d8d53c5ebfe1f4a53cf3457b01db86472c4917ac
 RUN BUILD_TAGS=muslc make build-e2e-chain-init
 
 ## Deploy image
