@@ -24,7 +24,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *UpgradeTestSuite) TestProp214() {
 	poolId := suite.PrepareBalancerPool()
-	v8.Prop214(suite.Ctx, suite.App.GAMMKeeper)
+	v8.ExecuteProp214(suite.Ctx, suite.App.GAMMKeeper)
 
 	pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 	suite.Require().NoError(err)
