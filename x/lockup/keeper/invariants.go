@@ -37,6 +37,8 @@ func SyntheticLockupInvariant(keeper Keeper) sdk.Invariant {
 	}
 }
 
+// AccumulationStoreInvariant ensures that the sum of all lockups at a given duration
+// is equal to the value stored within the accumulation store.
 func AccumulationStoreInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		moduleAcc := keeper.ak.GetModuleAccount(ctx, types.ModuleName)
