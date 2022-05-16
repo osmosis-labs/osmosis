@@ -128,8 +128,8 @@ func (m *Pool) XXX_DiscardUnknown() {
 var xxx_messageInfo_Pool proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*PoolParams)(nil), "osmosis.gamm.stableswap.v1beta1.PoolParams")
-	proto.RegisterType((*Pool)(nil), "osmosis.gamm.stableswap.v1beta1.Pool")
+	proto.RegisterType((*PoolParams)(nil), "osmosis.gamm.poolmodels.stableswap.v1beta1.PoolParams")
+	proto.RegisterType((*Pool)(nil), "osmosis.gamm.poolmodels.stableswap.v1beta1.Pool")
 }
 
 func init() {

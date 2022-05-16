@@ -247,6 +247,7 @@ func init() {
 	proto.RegisterType((*MsgCreateStableswapPoolResponse)(nil), "osmosis.gamm.stableswap.v1beta1.MsgCreateStableswapPoolResponse")
 	proto.RegisterType((*MsgStableSwapAdjustScalingFactors)(nil), "osmosis.gamm.stableswap.v1beta1.MsgStableSwapAdjustScalingFactors")
 	proto.RegisterType((*MsgStableSwapAdjustScalingFactorsResponse)(nil), "osmosis.gamm.stableswap.v1beta1.MsgStableSwapAdjustScalingFactorsResponse")
+
 }
 
 func init() {
@@ -321,7 +322,7 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 
 func (c *msgClient) CreateStableswapPool(ctx context.Context, in *MsgCreateStableswapPool, opts ...grpc.CallOption) (*MsgCreateStableswapPoolResponse, error) {
 	out := new(MsgCreateStableswapPoolResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.gamm.stableswap.v1beta1.Msg/CreateStableswapPool", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/osmosis.gamm.poolmodels.stableswap.v1beta1.Msg/CreateStableswapPool", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +369,7 @@ func _Msg_CreateStableswapPool_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.gamm.stableswap.v1beta1.Msg/CreateStableswapPool",
+		FullMethod: "/osmosis.gamm.poolmodels.stableswap.v1beta1.Msg/CreateStableswapPool",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateStableswapPool(ctx, req.(*MsgCreateStableswapPool))
@@ -395,7 +396,7 @@ func _Msg_StableSwapAdjustScalingFactors_Handler(srv interface{}, ctx context.Co
 }
 
 var _Msg_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "osmosis.gamm.stableswap.v1beta1.Msg",
+	ServiceName: "osmosis.gamm.poolmodels.stableswap.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

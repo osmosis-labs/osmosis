@@ -1,0 +1,5 @@
+# Default state for all rules
+default: true
+MD003: 
+  # Heading style
+  style: "atx"
