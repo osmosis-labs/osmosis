@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/claim/types";
+option go_package = "github.com/osmosis-labs/osmosis/v8/x/claim/types";
 
 // Params defines the claim module's parameters.
 message Params {

@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v8/x/gamm/pool-models/balancer"
 )
 
 func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {

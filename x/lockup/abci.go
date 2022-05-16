@@ -4,7 +4,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/lockup/keeper"
 )
 
 // BeginBlocker is called on every block

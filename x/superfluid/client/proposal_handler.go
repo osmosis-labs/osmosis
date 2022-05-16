@@ -2,8 +2,8 @@ package client
 
 import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/client/rest"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/client/cli"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/client/rest"
 )
 
 var SetSuperfluidAssetsProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitSetSuperfluidAssetsProposal, rest.ProposalSetSuperfluidAssetsRESTHandler)

@@ -5,8 +5,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v8/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v8/x/pool-incentives/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
 

@@ -15,12 +15,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
-	gammtestutil "github.com/osmosis-labs/osmosis/v7/x/gamm/client/testutil"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v8/app"
+	"github.com/osmosis-labs/osmosis/v8/osmoutils"
+	"github.com/osmosis-labs/osmosis/v8/x/gamm/client/cli"
+	gammtestutil "github.com/osmosis-labs/osmosis/v8/x/gamm/client/testutil"
+	"github.com/osmosis-labs/osmosis/v8/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 

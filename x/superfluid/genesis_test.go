@@ -5,9 +5,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	simapp "github.com/osmosis-labs/osmosis/v8/app"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"

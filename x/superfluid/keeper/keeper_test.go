@@ -8,18 +8,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v8/app"
+	"github.com/osmosis-labs/osmosis/v8/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v8/x/gamm/pool-models/balancer"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v8/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v8/x/mint/types"
 )
 
 type KeeperTestSuite struct {

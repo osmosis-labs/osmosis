@@ -2,8 +2,8 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v8/osmoutils"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 )
 
 // BeginUnwindSuperfluidAsset starts the deletion process for a superfluid asset.

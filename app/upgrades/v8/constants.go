@@ -1,6 +1,6 @@
 package v8
 
-import v8constants "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8/constants"
+import v8constants "github.com/osmosis-labs/osmosis/v8/app/upgrades/v8/constants"
 
 const (
 	// UpgradeName defines the on-chain upgrade name for the Osmosis v8 upgrade.

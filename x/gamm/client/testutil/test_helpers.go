@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gammcli "github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
+	gammcli "github.com/osmosis-labs/osmosis/v8/x/gamm/client/cli"
 )
 
 // commonArgs is args for CLI test commands

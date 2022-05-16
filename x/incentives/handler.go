@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v8/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/incentives/types"
 )
 
 // NewHandler returns msg handler for this module

@@ -15,8 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v8/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v8/x/gamm/types"
 )
 
 func NewTxCmd() *cobra.Command {

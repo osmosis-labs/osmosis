@@ -78,48 +78,48 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 
 	// Osmosis application prarmeters
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v8/app/params"
 
 	// Upgrades from earlier versions of Osmosis
-	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
+	_ "github.com/osmosis-labs/osmosis/v8/client/docs/statik"
 
 	// Modules that live in the Osmosis repository and are specific to Osmosis
-	"github.com/osmosis-labs/osmosis/v7/x/claim"
-	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v8/x/claim"
+	claimtypes "github.com/osmosis-labs/osmosis/v8/x/claim/types"
 
 	// Epochs: gives Osmosis a sense of "clock time" so that events can be based on days instead of "number of blocks"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs"
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v8/x/epochs"
+	epochstypes "github.com/osmosis-labs/osmosis/v8/x/epochs/types"
 
 	// Generalized Automated Market Maker
-	"github.com/osmosis-labs/osmosis/v7/x/gamm"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v8/x/gamm"
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
 
 	// Incentives: Allows Osmosis and foriegn chain communities to incentivize users to provide liquidity
-	"github.com/osmosis-labs/osmosis/v7/x/incentives"
-	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v8/x/incentives"
+	incentivestypes "github.com/osmosis-labs/osmosis/v8/x/incentives/types"
 
 	// Lockup: allows tokens to be locked (made non-transferrable)
-	"github.com/osmosis-labs/osmosis/v7/x/lockup"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v8/x/lockup"
+	lockuptypes "github.com/osmosis-labs/osmosis/v8/x/lockup/types"
 
 	// Mint: Our modified version of github.com/cosmos/cosmos-sdk/x/mint
-	"github.com/osmosis-labs/osmosis/v7/x/mint"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v8/x/mint"
+	minttypes "github.com/osmosis-labs/osmosis/v8/x/mint/types"
 
 	// Pool incentives:
-	poolincentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/client"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v8/x/pool-incentives"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v8/x/pool-incentives/client"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v8/x/pool-incentives/types"
 
 	// Superfluid: Allows users to stake gamm (bonded liquidity)
-	superfluid "github.com/osmosis-labs/osmosis/v7/x/superfluid"
-	superfluidclient "github.com/osmosis-labs/osmosis/v7/x/superfluid/client"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	superfluid "github.com/osmosis-labs/osmosis/v8/x/superfluid"
+	superfluidclient "github.com/osmosis-labs/osmosis/v8/x/superfluid/client"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 
 	// txfees: Allows Osmosis to charge transaction fees without harming IBC user experience
-	"github.com/osmosis-labs/osmosis/v7/x/txfees"
-	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v8/x/txfees"
+	txfeestypes "github.com/osmosis-labs/osmosis/v8/x/txfees/types"
 
 	// Wasm: Allows Osmosis to interact with web assembly smart contracts
 	"github.com/CosmWasm/wasmd/x/wasm"

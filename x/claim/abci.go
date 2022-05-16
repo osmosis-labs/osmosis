@@ -2,7 +2,7 @@ package claim
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/x/claim/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/claim/keeper"
 )
 
 // EndBlocker called every block, process inflation, update validator set.

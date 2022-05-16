@@ -7,7 +7,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/osmosis-labs/osmosis/v7/app/params"
+	"github.com/osmosis-labs/osmosis/v8/app/params"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -39,7 +39,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	osmosis "github.com/osmosis-labs/osmosis/v7/app"
+	osmosis "github.com/osmosis-labs/osmosis/v8/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v8/x/claim/types"
 	"github.com/spf13/cobra"
 )
 

@@ -10,7 +10,7 @@ import (
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	types "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	types "github.com/osmosis-labs/osmosis/v8/x/incentives/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
