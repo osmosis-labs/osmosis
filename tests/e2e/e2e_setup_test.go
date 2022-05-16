@@ -348,7 +348,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
 			Repository: "osmolabs/osmosis-init",
-			Tag:        "v7.3.0-1",
+			Tag:        "v8.0.0",
 			NetworkID:  s.dkrNet.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
