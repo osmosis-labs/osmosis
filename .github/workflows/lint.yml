@@ -24,8 +24,8 @@ jobs:
         run: make lint
         if: env.GIT_DIFF
 
-  super-linter:
-    name: Run super-linter (Markdown)
+  documentation-linter:
+    name: Run super-linter
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
