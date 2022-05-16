@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -33,10 +34,10 @@ const (
 	// common
 	OsmoDenom     = "uosmo"
 	StakeDenom    = "stake"
-	IbcDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+	OsmoIBCDenom  = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+	StakeIBCDenom = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
 	MinGasPrice   = "0.000"
 	IbcSendAmount = 3300000000
-	VotingPeriod  = 30000000000 // 30 seconds
 	// chainA
 	ChainAID      = "osmo-test-a"
 	OsmoBalanceA  = 200000000000
@@ -57,6 +58,8 @@ var (
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom)
+	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)  // 3,300uosmo
+	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
@@ -130,7 +133,7 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
-func initGenesis(c *internalChain) error {
+func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
@@ -174,7 +177,7 @@ func initGenesis(c *internalChain) error {
 	}
 
 	govGenState.VotingParams = govtypes.VotingParams{
-		VotingPeriod: VotingPeriod,
+		VotingPeriod: votingPeriod,
 	}
 
 	gz, err := util.Cdc.MarshalJSON(&govGenState)
