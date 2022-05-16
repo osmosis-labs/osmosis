@@ -162,7 +162,7 @@ func (s *IntegrationTestSuite) submitProposal(c *chain.Chain, upgradeHeight int)
 				Container:    s.valResources[c.ChainMeta.Id][0].Container.ID,
 				User:         "root",
 				Cmd: []string{
-					"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", "v8", "--title=\"v8 upgrade\"", "--description=\"v8 upgrade proposal\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json",
+					"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", "v9", "--title=\"v9 upgrade\"", "--description=\"v9 upgrade proposal\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json",
 				},
 			})
 			s.Require().NoError(err)
