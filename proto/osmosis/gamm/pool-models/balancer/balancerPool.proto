@@ -13,7 +13,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 import "osmosis/gamm/v1beta1/pool.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer";
+option go_package = "github.com/osmosis-labs/osmosis/v8/x/gamm/pool-models/balancer";
 
 // Parameters for changing the weights in a balancer pool smoothly from
 // a start weight and end weight over a period of time.

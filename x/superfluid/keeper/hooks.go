@@ -5,8 +5,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v8/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 )
 
 // Hooks wrapper struct for incentives keeper

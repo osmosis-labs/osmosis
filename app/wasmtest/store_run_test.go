@@ -12,7 +12,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v8/app"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {

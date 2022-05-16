@@ -6,10 +6,10 @@ import (
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+	gammkeeper "github.com/osmosis-labs/osmosis/v8/x/gamm/keeper"
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
 )
 
 func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,

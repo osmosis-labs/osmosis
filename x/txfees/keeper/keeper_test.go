@@ -13,10 +13,10 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v8/app"
+	balancertypes "github.com/osmosis-labs/osmosis/v8/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v8/x/txfees/types"
 )
 
 type KeeperTestSuite struct {

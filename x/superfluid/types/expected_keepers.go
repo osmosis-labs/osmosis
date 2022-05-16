@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v8/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v8/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v8/x/lockup/types"
 )
 
 // LockupKeeper defines the expected interface needed to retrieve locks

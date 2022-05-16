@@ -17,7 +17,7 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v8/tests/e2e/util"
 )
 
 const (

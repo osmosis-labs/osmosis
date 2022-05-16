@@ -18,9 +18,9 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v8/x/pool-incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v8/x/pool-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/pool-incentives/types"
 )
 
 var (

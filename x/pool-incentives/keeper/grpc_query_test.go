@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v8/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v8/x/pool-incentives/types"
 )
 
 var isPerpetual = true

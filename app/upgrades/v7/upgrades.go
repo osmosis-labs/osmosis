@@ -9,12 +9,12 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	mintkeeper "github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
+	epochskeeper "github.com/osmosis-labs/osmosis/v8/x/epochs/keeper"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v8/x/lockup/keeper"
+	mintkeeper "github.com/osmosis-labs/osmosis/v8/x/mint/keeper"
 
-	superfluidkeeper "github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v8/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 )
 
 func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,

@@ -3,9 +3,9 @@ package v8
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/keeper"
-	superfluidkeeper "github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
+	gammkeeper "github.com/osmosis-labs/osmosis/v8/x/gamm/keeper"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v8/x/pool-incentives/keeper"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v8/x/superfluid/keeper"
 )
 
 // RunForkLogic executes height-gated on-chain fork logic for the Osmosis v8

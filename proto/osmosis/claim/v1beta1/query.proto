@@ -7,7 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/claim/v1beta1/claim.proto";
 import "osmosis/claim/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/claim/types";
+option go_package = "github.com/osmosis-labs/osmosis/v8/x/claim/types";
 
 // Query defines the gRPC querier service.
 service Query {

@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 import "osmosis/claim/v1beta1/claim.proto";
 import "osmosis/claim/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/claim/types";
+option go_package = "github.com/osmosis-labs/osmosis/v8/x/claim/types";
 
 // GenesisState defines the claim module's genesis state.
 message GenesisState {

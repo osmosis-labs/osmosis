@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v8/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v8/x/incentives/types"
 )
 
 var _ types.QueryServer = Keeper{}

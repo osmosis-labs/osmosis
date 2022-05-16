@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper/gov"
+	"github.com/osmosis-labs/osmosis/v8/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v8/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/keeper/gov"
 
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 

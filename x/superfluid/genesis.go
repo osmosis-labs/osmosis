@@ -2,8 +2,8 @@ package superfluid
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

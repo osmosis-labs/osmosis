@@ -2,7 +2,7 @@ package txfee_filters
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v8/x/gamm/types"
 )
 
 // We check if a tx is an arbitrage for the mempool right now by seeing:

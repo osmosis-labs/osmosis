@@ -12,7 +12,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v8/app"
 )
 
 func CreateTestInput() (*app.OsmosisApp, sdk.Context) {

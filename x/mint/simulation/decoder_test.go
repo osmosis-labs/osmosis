@@ -8,9 +8,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/simulation"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	simapp "github.com/osmosis-labs/osmosis/v8/app"
+	"github.com/osmosis-labs/osmosis/v8/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/v8/x/mint/types"
 )
 
 func TestDecodeStore(t *testing.T) {

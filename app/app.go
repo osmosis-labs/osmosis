@@ -70,16 +70,16 @@ import (
 	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 
 	// Osmosis application prarmeters
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v8/app/params"
 
 	// Upgrades from earlier versions of Osmosis
-	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
-	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
-	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
+	v4 "github.com/osmosis-labs/osmosis/v8/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v8/app/upgrades/v5"
+	v7 "github.com/osmosis-labs/osmosis/v8/app/upgrades/v7"
+	_ "github.com/osmosis-labs/osmosis/v8/client/docs/statik"
 
 	// Superfluid: Allows users to stake gamm (bonded liquidity)
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v8/x/superfluid/types"
 
 	// Wasm: Allows Osmosis to interact with web assembly smart contracts
 	"github.com/CosmWasm/wasmd/x/wasm"
