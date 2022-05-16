@@ -56,3 +56,11 @@ pull_request_rules:
       backport:
         branches:
           - v7.x
+  - name: backport patches to v8.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v8.x
+    actions:
+      backport:
+        branches:
+          - v8.x

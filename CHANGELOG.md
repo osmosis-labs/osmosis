@@ -41,6 +41,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+
+## [v8.0.0 - Emergency proposals upgrade](https://github.com/osmosis-labs/osmosis/releases/tag/v8.0.0)
+
+This upgrade is a patch that must be hard forked in, as on-chain governance of Osmosis approved proposal 227 and proposal 228.
+
+This upgrade includes:
+
+* Adding height-gated AnteHandler message filter to filter unpooling tx pre-upgrade.
+* At block height 4402000 accelerates prop 225, which in turn moves incentives from certain pools according to props 222-224
+* Adds a msg allowing unpooling of UST pools. 
+  * This procedure is initiated by whitelisting pools 560, 562, 567, 578, 592, 610, 612, 615, 642, 679, 580, 635. 
+  * Unpooling allows exiting whitelisted pools directly, finish unbonding duration with the exited tokens instead of having to wait unbonding duration to swap LP shares back to collaterals. 
+  * This procedure also includes locks that were already unbonding pre-upgrade and locks that were superfluid delegated.
+
+Every node should upgrade their software version to v8.0.0 before the upgrade block height 4402000. If you use cosmovisor, simply swap out the binary at upgrades/v7/bin to be v8.0.0, and restart the node. Do check cosmovisor version returns v8.0.0
+
+### Features 
+* {Across many PRs} Initiate emergency upgrade 
+* [#1481] Emergency upgrade as of prop [226] (https://www.mintscan.io/osmosis/proposals/226) 
+* [#1435] `x/tokenfactory` create denom fee for spam resistance 
+* [#1429] solver for multi-asset CFMM
+* [#1253] Add lockup duration edit method
+
+### Minor improvements & Bug Fixes
+* [#1233] Move messageServer logic for LockTokens into keeper method 
+* [#1440] fix(proto/tokenfactory): fix annotation 
+* [#1307] refactor: JoinSwapShareAmountOut
+* [#1477] Update codeql-analysis.yml
+* [#1389] test: upgrade testing automation
+* [#1474] bump github.com/spf13/cast from 1.4.1 to 1.5.0
+
 ### Features
 
 * [#1378](https://github.com/osmosis-labs/osmosis/pull/1378) add .gitpod.yml
