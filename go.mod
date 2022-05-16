@@ -7,7 +7,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.45.4
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
-	github.com/cosmos/ibc-go/v2 v2.0.3
+	github.com/cosmos/ibc-go/v2 v2.2.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.46.1
@@ -69,7 +69,7 @@ require (
 	github.com/charithe/durationcheck v0.0.9 // indirect
 	github.com/chavacava/garif v0.0.0-20220316182200-5cad0b5181d4 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.0 // indirect
-	github.com/confio/ics23/go v0.6.6 // indirect
+	github.com/confio/ics23/go v0.7.0 // indirect
 	github.com/containerd/continuity v0.2.1 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
@@ -270,8 +270,8 @@ require (
 )
 
 replace (
-	// branch: v0.24.0-osmo, current tag: v0.24.0-osmo-rc0
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.24.0-osmo-rc0
+	// branch: v0.26.0-osmo, current tag: v0.26.0-osmo
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.26.0-osmo
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220412153824-b375ea016dae
 	// Use Osmosis fast iavl
