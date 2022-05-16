@@ -18,9 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v8/x/txfees/client/cli"
+	"github.com/osmosis-labs/osmosis/v8/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/txfees/types"
 )
 
 var (
