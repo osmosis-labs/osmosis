@@ -1,11 +1,4 @@
-<!--
-order: 0
-title: Mint Overview
-parent:
-  title: "mint"
--->
-
-# `mint`
+# Mint
 
 The ```mint``` module is responsible for creating tokens in a flexible way to reward 
 validators, incentivize providing pool liquidity, provide funds for Osmosis governance, and pay developers to maintain and improve Osmosis.

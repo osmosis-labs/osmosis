@@ -1,11 +1,4 @@
-<!--
-order: 0
-title: "Lockup Overview"
-parent:
-  title: "lockup"
--->
-
-# `lockup`
+# Lockup
 
 ## Abstract
 

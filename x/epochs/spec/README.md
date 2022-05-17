@@ -1,11 +1,4 @@
-<!--
-order: 0
-title: "Epochs Overview"
-parent:
-  title: "epochs"
--->
-
-# `epochs`
+# Epochs
 
 ## Abstract
 

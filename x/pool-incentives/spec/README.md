@@ -1,11 +1,4 @@
-<!--
-order: 0
-title: "Pool Incentives Overview"
-parent:
-  title: "pool incentives"
--->
-
-# `pool incentives`
+# Pool Incentives
 
 The `pool-incentives` module is separate but related to the `incentives` module. When a pool is created using the `GAMM` module, the `pool-incentives` module automatically creates individual gauges in the `incentives` module for every lock duration that exists in that pool. The `pool-incentives` module also takes takes the `pool_incentives` distributed from the `gov` module and distributes it to the various incentivized gauges.
 
