@@ -25,18 +25,17 @@ import (
 )
 
 var (
-	// docker repository for initialization
+	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
+	upgradeVersion = "v9"
+	// osmosis repo/version for initialization (this should be one version below upgradeVersion)
 	initRepository = "osmolabs/osmosis-init"
-	// osmosis version for initialization
-	initVersion = "v8.0.0"
-	// docker repository for relayer
-	relayerRepository = "osmolabs/hermes"
-	// hermes version for relayer
-	relayerVersion = "0.13.0"
-	// if upgrading, pre upgrade repo to pull docker image from
+	initVersion    = "v8.0.0"
+	// pre upgrade osmosis repo/version to pull (should match initVersion numer)
 	debugRepository = "osmolabs/osmosis-dev"
-	// if upgrading, pre upgrade osmosis version to pull
-	debugVersion = "v8.0.0-debug"
+	debugVersion    = "v8.0.0-debug"
+	// hermes repo/version for relayer
+	relayerRepository = "osmolabs/hermes"
+	relayerVersion    = "0.13.0"
 	// voting period for chain A
 	votingPeriodA float32
 	// voting period for chain B
