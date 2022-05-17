@@ -73,7 +73,6 @@ jobs:
 
   test-e2e:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     timeout-minutes: 25
     steps:
       - uses: actions/setup-go@v2.2.0
