@@ -25,6 +25,7 @@ import (
 )
 
 var (
+	random = "random diff"
 	// docker repository for initialization
 	initRepository = "osmolabs/osmosis-init"
 	// osmosis version for initialization
