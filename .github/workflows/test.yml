@@ -70,8 +70,10 @@ jobs:
           sleep 3m
           ./contrib/scripts/test_localnet_liveness.sh 100 5 50 localhost
         if: env.GIT_DIFF
+
   test-e2e:
     runs-on: ubuntu-latest
+    if: github.event.push == true
     timeout-minutes: 25
     steps:
       - uses: actions/setup-go@v2.2.0
@@ -89,6 +91,30 @@ jobs:
           make docker-build-debug
         if: env.GIT_DIFF
       - name: Test E2E
+        run: |
+          make test-e2e-skip-upgrade
+        if: env.GIT_DIFF
+  
+  test-e2e-with-upgrade:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request == true
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-go@v2.2.0
+        with:
+          go-version: 1.17
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: Build Docker Image
+        run: |
+          make docker-build-debug
+        if: env.GIT_DIFF
+      - name: Test E2E and Upgrade
         run: |
           make test-e2e
         if: env.GIT_DIFF
