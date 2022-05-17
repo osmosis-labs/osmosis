@@ -133,7 +133,6 @@ func TestErrTolerance_Compare(t *testing.T) {
 	}
 }
 
-
 func TestErrToleranceNonzero_Compare(t *testing.T) {
 	// Nonzero error tolerance test, tolerance is used in context of searching for a solution for stable swap over a cfmm function
 	NonZeroErrTolerance := ErrTolerance{AdditiveTolerance: sdk.NewInt(10), MultiplicativeTolerance: sdk.Dec{}}
