@@ -72,6 +72,7 @@ jobs:
         if: env.GIT_DIFF
 
   test-e2e:
+    if: ${{ (github.event_name == 'push')}}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -92,9 +93,29 @@ jobs:
       - name: Test E2E
         run: |
           make test-e2e-skip-upgrade
-        if: ${{ (env.GIT_DIFF) && (github.event_name == 'push') && (github.event_name == 'pull_request')}}
+        if: env.GIT_DIFF
+
+  test-e2e-with-upgrade:
+    if: ${{ (github.event_name == 'pull_request' || github.event.pull_request.draft == true)}}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/setup-go@v2.2.0
+        with:
+          go-version: 1.17
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: Build Docker Image
+        run: |
+          make docker-build-debug
+        if: env.GIT_DIFF
       - name: Test E2E and Upgrade
         run: |
           make test-e2e
-        if: ${{ (env.GIT_DIFF) && (github.event_name == 'pull_request' || github.event.pull_request.draft == true) }}
+        if: env.GIT_DIFF
   
