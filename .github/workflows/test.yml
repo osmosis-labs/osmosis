@@ -44,7 +44,7 @@ jobs:
 
   liveness-test:
     runs-on: ubuntu-latest
-    if: github.event.push == true
+    if: github.event_name == 'push'
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
@@ -74,7 +74,7 @@ jobs:
 
   test-e2e:
     runs-on: ubuntu-latest
-    if: github.event.push == true
+    if: github.event_name == 'push'
     timeout-minutes: 25
     steps:
       - uses: actions/setup-go@v2.2.0
@@ -91,7 +91,7 @@ jobs:
   
   test-e2e-with-upgrade:
     runs-on: ubuntu-latest
-    if: github.event.pull_request == true
+    if: github.event_name == 'pull_request'
     timeout-minutes: 25
     steps:
       - uses: actions/setup-go@v2.2.0
