@@ -129,7 +129,6 @@ func TestErrTolerance_Compare(t *testing.T) {
 	}
 }
 
-
 func TestErrToleranceNonzero_Compare(t *testing.T) {
 	// Nonzero error tolerance test
 	NonZeroErrTolerance := ErrTolerance{AdditiveTolerance: sdk.NewInt(10), MultiplicativeTolerance: sdk.Dec{}}
