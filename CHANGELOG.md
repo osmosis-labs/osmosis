@@ -40,11 +40,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-
-
+* [#1435] `x/tokenfactory` create denom fee for spam resistance 
+* [#1429] solver for multi-asset CFMM
+* [#1253] Add lockup duration edit method
+* [#1253] Add lockup duration edit method 
+* [#1312] Stableswap: Createpool logic 
+* [#1230] Stableswap CFMM equations  
 ## [v8.0.0 - Emergency proposals upgrade](https://github.com/osmosis-labs/osmosis/releases/tag/v8.0.0)
 
-This upgrade is a patch that must be hard forked in, as on-chain governance of Osmosis approved proposal 227 and proposal 228.
+This upgrade is a patch that must be hard forked in, as on-chain governance of Osmosis approved proposal [227](https://www.mintscan.io/osmosis/proposals/227) and proposal [228](https://www.mintscan.io/osmosis/proposals/228).
 
 This upgrade includes:
 
@@ -60,18 +64,21 @@ Every node should upgrade their software version to v8.0.0 before the upgrade bl
 ### Features 
 * {Across many PRs} Initiate emergency upgrade 
 * [#1481] Emergency upgrade as of prop [226] (https://www.mintscan.io/osmosis/proposals/226) 
-* [#1435] `x/tokenfactory` create denom fee for spam resistance 
-* [#1429] solver for multi-asset CFMM
-* [#1253] Add lockup duration edit method
-
+* [#1482] Checking Whitelisted Pools contain UST 
+* [#1486] Update whitelisted pool IDs
 ### Minor improvements & Bug Fixes
-* [#1233] Move messageServer logic for LockTokens into keeper method 
-* [#1440] fix(proto/tokenfactory): fix annotation 
-* [#1307] refactor: JoinSwapShareAmountOut
-* [#1477] Update codeql-analysis.yml
-* [#1389] test: upgrade testing automation
-* [#1474] bump github.com/spf13/cast from 1.4.1 to 1.5.0
-
+* [#1428] fix: pool params query (backport #1315)
+* [#1390] upgrade sdk to v0.45.0x-osmo-v7.9
+* [#1087] Test improvisation for Superfluid (backport #1070)
+* [#1154] Database stability improvements
+* [#1022] upgrade iavl to v0.17.3-osmo-v4
+* [#958] Fix queries and add codec for msgsuperfluidunbondlock
+* [#958] Update the risk factor from 5% to 50%
+* [#894] x/superfluid: Delegate bug fixes and refactors
+* [#840] Move lock.go functions into iterator.go, lock_refs.go and store.go
+* [#916] And a fn for Unbond and Burn tokens
+* [#908] Superfluid slashing code
+* [#904] LockAndSuperfluidDelegate
 ### Features
 
 * [#1378](https://github.com/osmosis-labs/osmosis/pull/1378) add .gitpod.yml
