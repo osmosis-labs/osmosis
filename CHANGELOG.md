@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
 * [#1435] `x/tokenfactory` create denom fee for spam resistance 
 * [#1429] solver for multi-asset CFMM
 * [#1253] Add lockup duration edit method
@@ -62,11 +63,13 @@ This upgrade includes:
 Every node should upgrade their software version to v8.0.0 before the upgrade block height 4402000. If you use cosmovisor, simply swap out the binary at upgrades/v7/bin to be v8.0.0, and restart the node. Do check cosmovisor version returns v8.0.0
 
 ### Features 
+
 * {Across many PRs} Initiate emergency upgrade 
 * [#1481] Emergency upgrade as of prop [226] (https://www.mintscan.io/osmosis/proposals/226) 
 * [#1482] Checking Whitelisted Pools contain UST 
 * [#1486] Update whitelisted pool IDs
 ### Minor improvements & Bug Fixes
+
 * [#1428] fix: pool params query (backport #1315)
 * [#1390] upgrade sdk to v0.45.0x-osmo-v7.9
 * [#1087] Test improvisation for Superfluid (backport #1070)
