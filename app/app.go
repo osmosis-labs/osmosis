@@ -67,7 +67,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	// IBC Transfer: Defines the "transfer" IBC port
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
+	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 
 	// Osmosis application prarmeters
 	appparams "github.com/osmosis-labs/osmosis/v8/app/params"
@@ -307,7 +307,7 @@ func NewOsmosisApp(
 			app.GAMMKeeper,
 			ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
-			app.IBCKeeper.ChannelKeeper,
+			app.IBCKeeper,
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)
