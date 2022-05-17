@@ -363,7 +363,6 @@ func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
 
 // IterateDelegations implements govtypes.StakingKeeper
 // Iterates through staking keeper's delegations, and then all of the superfluid delegations.
-// Iterates through staking keeper's delegations, and then all of the superfluid delegations.
 func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) {
 	// call the callback with the non-superfluid delegations
 	var index int64
@@ -377,7 +376,6 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		// get locked coin from the lock ID
 		interim, ok := k.GetIntermediaryAccountFromLockId(ctx, lock.UnderlyingLockId)
 		if !ok {
-			ctx.Logger().Error("intermediary account retrieval failed with underlying lock", "Lock", lock)
 			continue
 		}
 
@@ -421,6 +419,8 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 			ValidatorAddress: interim.ValAddr,
 			Shares:           shares,
 		}
+
+		// if valid delegation has been found, increment delegation index
 		fn(index+int64(i), delegation)
 	}
 }
