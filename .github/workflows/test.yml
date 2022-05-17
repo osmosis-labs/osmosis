@@ -1,10 +1,7 @@
 name: Tests & Code Coverage
 
 on:
-  pull_request:
-  push:
-    branches:
-      - "**"
+  workflow_dispatch:
 
 jobs:
   should_run_test:
