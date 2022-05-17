@@ -93,9 +93,9 @@ jobs:
       - name: Test E2E
         run: |
           make test-e2e-skip-upgrade
-        if: ${{ (env.GIT_DIFF) && (github.event_name == 'push') }}
+        if: ${{ (env.GIT_DIFF) && (github.event_name == 'push') && (github.event_name == 'pull_request')}}
       - name: Test E2E and Upgrade
         run: |
           make test-e2e
-        if: ${{ (env.GIT_DIFF) && (github.event_name == 'pull_request') }}
+        if: ${{ (env.GIT_DIFF) && (github.event_name == 'pull_request' || github.event.pull_request.draft == true) }}
   
