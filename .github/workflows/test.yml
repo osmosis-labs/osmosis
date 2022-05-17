@@ -89,11 +89,10 @@ jobs:
       - name: Build Docker Image
         run: |
           make docker-build-debug
-        if: env.GIT_DIFF
       - name: Test E2E
         run: |
           make test-e2e-skip-upgrade
-        if: env.GIT_DIFF
+
   
   test-e2e-with-upgrade:
     runs-on: ubuntu-latest
@@ -113,8 +112,6 @@ jobs:
       - name: Build Docker Image
         run: |
           make docker-build-debug
-        if: env.GIT_DIFF
       - name: Test E2E and Upgrade
         run: |
           make test-e2e
-        if: env.GIT_DIFF
