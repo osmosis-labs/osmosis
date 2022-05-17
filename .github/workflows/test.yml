@@ -71,8 +71,13 @@ jobs:
           ./contrib/scripts/test_localnet_liveness.sh 100 5 50 localhost
         if: env.GIT_DIFF
 
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
   test-e2e:
-    if: ${{ (github.event_name == 'push')}}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -95,8 +100,11 @@ jobs:
           make test-e2e-skip-upgrade
         if: env.GIT_DIFF
 
+on:
+  pull_request:
+
+jobs:
   test-e2e-with-upgrade:
-    if: ${{ (github.event_name == 'pull_request' || github.event.pull_request.draft == true)}}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
