@@ -71,28 +71,19 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				})
 			}
 
-			title, err := cmd.Flags().GetString(cli.FlagTitle)
-			if err != nil {
-				return err
-			}
-
-			description, err := cmd.Flags().GetString(cli.FlagDescription)
-			if err != nil {
-				return err
-			}
-
 			from := clientCtx.GetFromAddress()
 
-			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
+			proposal, err := parseProposalFlags(cmd.Flags())
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			
+			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 			if err != nil {
 				return err
 			}
 
-			content := types.NewUpdatePoolIncentivesProposal(title, description, records)
+			content := types.NewUpdatePoolIncentivesProposal(proposal.Title, proposal.Deposit, records)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
@@ -110,8 +101,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	_ = cmd.MarkFlagRequired(cli.FlagTitle)
-	_ = cmd.MarkFlagRequired(cli.FlagDescription)
+	cmd.Flags().String(cli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 
 	return cmd
 }
@@ -153,28 +143,19 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 				})
 			}
 
-			title, err := cmd.Flags().GetString(cli.FlagTitle)
-			if err != nil {
-				return err
-			}
-
-			description, err := cmd.Flags().GetString(cli.FlagDescription)
-			if err != nil {
-				return err
-			}
-
 			from := clientCtx.GetFromAddress()
 
-			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
+			proposal, err := parseProposalFlags(cmd.Flags())
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			
+			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 			if err != nil {
 				return err
 			}
 
-			content := types.NewReplacePoolIncentivesProposal(title, description, records)
+			content := types.NewReplacePoolIncentivesProposal(proposal.Title, proposal.Description, records)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
@@ -192,8 +173,7 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	_ = cmd.MarkFlagRequired(cli.FlagTitle)
-	_ = cmd.MarkFlagRequired(cli.FlagDescription)
+	cmd.Flags().String(cli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 
 	return cmd
 }
