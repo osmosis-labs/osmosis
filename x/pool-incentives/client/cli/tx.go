@@ -77,7 +77,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
-			
+
 			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 			if err != nil {
 				return err
@@ -146,7 +146,7 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
-			
+
 			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 			if err != nil {
 				return err

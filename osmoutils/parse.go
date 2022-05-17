@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/pflag"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/spf13/pflag"
 )
 
 type Proposal struct {
@@ -15,7 +15,7 @@ type Proposal struct {
 	Deposit     string
 }
 
-var ProposalFlags = []string {
+var ProposalFlags = []string{
 	cli.FlagTitle,
 	cli.FlagDescription,
 	cli.FlagDeposit,
