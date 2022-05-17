@@ -41,35 +41,6 @@ jobs:
           make test-cover
       - name: Codecov
         uses: codecov/codecov-action@v1.5.2
-
-  liveness_test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
-      - uses: technote-space/get-diff-action@v6.0.1
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - name: Install Ignite CLI
-        run: |
-          curl https://get.ignite.com/cli@v0.20.0! | bash
-        if: env.GIT_DIFF
-      - name: Start Local Network via Ignite CLI
-        run: |
-          ignite chain serve --reset-once -v -c ./ignite.ci.yml > ignite.out 2>&1 &
-        if: env.GIT_DIFF
-      - name: Test Local Network Liveness
-        run: |
-          sleep 3m
-          ./contrib/scripts/test_localnet_liveness.sh 100 5 50 localhost
-        if: env.GIT_DIFF
   
   e2e_test:
     runs-on: ubuntu-latest
