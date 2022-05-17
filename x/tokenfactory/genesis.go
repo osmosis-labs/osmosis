@@ -12,6 +12,8 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.CreateModuleAccount(ctx)
 
+	k.SetParams(ctx, genState.Params)
+
 	for _, genDenom := range genState.GetFactoryDenoms() {
 		creator, nonce, err := types.DeconstructDenom(genDenom.GetDenom())
 		if err != nil {
@@ -49,5 +51,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	return &types.GenesisState{
 		FactoryDenoms: genDenoms,
+		Params:        k.GetParams(ctx),
 	}
 }

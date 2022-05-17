@@ -350,10 +350,10 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 				suite.Require().NoError(err)
 				lockOwner, err := sdk.AccAddressFromBech32(lock.Owner)
 				suite.Require().NoError(err)
-				coins := sdk.Coins{sdk.NewInt64Coin("gamm/pool/1", 1000000)}
-				suite.App.BankKeeper.MintCoins(suite.Ctx, minttypes.ModuleName, coins)
-				suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, minttypes.ModuleName, lockOwner, coins)
-				_, err = suite.App.LockupKeeper.AddTokensToLockByID(suite.Ctx, lockId, coins)
+				coin := sdk.NewInt64Coin("gamm/pool/1", 1000000)
+				suite.App.BankKeeper.MintCoins(suite.Ctx, minttypes.ModuleName, sdk.NewCoins(coin))
+				suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, minttypes.ModuleName, lockOwner, sdk.NewCoins(coin))
+				_, err = suite.App.LockupKeeper.AddTokensToLockByID(suite.Ctx, lockId, lockOwner, coin)
 				suite.Require().NoError(err)
 			}
 

@@ -7,102 +7,107 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v7/app/wasm"
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
-	"github.com/stretchr/testify/assert"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// func TestMint(t *testing.T) {
-// 	actor := RandomAccountAddress()
-// 	osmosis, ctx := SetupCustomApp(t, actor)
+func TestMint(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
 
-// 	lucky := RandomAccountAddress()
+	// Fund actor with 100 base denom creation fees
+	actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, actor, actorAmount)
 
-// 	// lucky was broke
-// 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
-// 	require.Empty(t, balances)
+	lucky := RandomAccountAddress()
 
-// 	amount, ok := sdk.NewIntFromString("8080")
-// 	require.True(t, ok)
+	// lucky was broke
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Empty(t, balances)
 
-// 	specs := map[string]struct {
-// 		mint   *wasmbindings.MintTokens
-// 		expErr bool
-// 	}{
-// 		"valid mint": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "MOON",
-// 				Amount:    amount,
-// 				Recipient: lucky.String(),
-// 			},
-// 		},
-// 		"empty sub-denom": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "",
-// 				Amount:    amount,
-// 				Recipient: lucky.String(),
-// 			},
-// 			expErr: true,
-// 		},
-// 		"invalid sub-denom": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "sub-denom_2",
-// 				Amount:    amount,
-// 				Recipient: lucky.String(),
-// 			},
-// 			expErr: true,
-// 		},
-// 		"zero amount": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "MOON",
-// 				Amount:    sdk.ZeroInt(),
-// 				Recipient: lucky.String(),
-// 			},
-// 			expErr: true,
-// 		},
-// 		"negative amount": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "MOON",
-// 				Amount:    amount.Neg(),
-// 				Recipient: lucky.String(),
-// 			},
-// 			expErr: true,
-// 		},
-// 		"empty recipient": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "MOON",
-// 				Amount:    amount,
-// 				Recipient: "",
-// 			},
-// 			expErr: true,
-// 		},
-// 		"invalid recipient": {
-// 			mint: &wasmbindings.MintTokens{
-// 				SubDenom:  "MOON",
-// 				Amount:    amount,
-// 				Recipient: "invalid",
-// 			},
-// 			expErr: true,
-// 		},
-// 		"null mint": {
-// 			mint:   nil,
-// 			expErr: true,
-// 		},
-// 	}
-// 	for name, spec := range specs {
-// 		t.Run(name, func(t *testing.T) {
-// 			// when
-// 			gotErr := wasm.PerformMint(osmosis.BankKeeper, ctx, actor, spec.mint)
-// 			// then
-// 			if spec.expErr {
-// 				require.Error(t, gotErr)
-// 				return
-// 			}
-// 			require.NoError(t, gotErr)
-// 		})
-// 	}
+	amount, ok := sdk.NewIntFromString("8080")
+	require.True(t, ok)
 
-// }
+	specs := map[string]struct {
+		mint   *wasmbindings.MintTokens
+		expErr bool
+	}{
+		"valid mint": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "MOON",
+				Amount:    amount,
+				Recipient: lucky.String(),
+			},
+		},
+		"empty sub-denom": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "",
+				Amount:    amount,
+				Recipient: lucky.String(),
+			},
+			expErr: false,
+		},
+		"invalid sub-denom": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "sub-denom_2",
+				Amount:    amount,
+				Recipient: lucky.String(),
+			},
+			expErr: true,
+		},
+		"zero amount": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "MOON",
+				Amount:    sdk.ZeroInt(),
+				Recipient: lucky.String(),
+			},
+			expErr: true,
+		},
+		"negative amount": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "MOON",
+				Amount:    amount.Neg(),
+				Recipient: lucky.String(),
+			},
+			expErr: true,
+		},
+		"empty recipient": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "MOON",
+				Amount:    amount,
+				Recipient: "",
+			},
+			expErr: true,
+		},
+		"invalid recipient": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "MOON",
+				Amount:    amount,
+				Recipient: "invalid",
+			},
+			expErr: true,
+		},
+		"null mint": {
+			mint:   nil,
+			expErr: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// when
+			gotErr := wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.mint)
+			// then
+			if spec.expErr {
+				require.Error(t, gotErr)
+				return
+			}
+			require.NoError(t, gotErr)
+		})
+	}
+
+}
 
 func TestSwap(t *testing.T) {
 	actor := RandomAccountAddress()

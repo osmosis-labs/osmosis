@@ -13,7 +13,6 @@ import (
 	gammtestutil "github.com/osmosis-labs/osmosis/v7/x/gamm/client/testutil"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -23,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -654,68 +654,67 @@ func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
 	}
 }
 
-// TODO: Re-add once implemented
-// func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
-// 	val := s.network.Validators[0]
+func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
+	val := s.network.Validators[0]
 
-// 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOutAddr", keyring.English,
-// 		sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-// 	s.Require().NoError(err)
+	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOutAddr", keyring.English,
+		sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	s.Require().NoError(err)
 
-// 	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	newAddr := sdk.AccAddress(info.GetPubKey().Address())
 
-// 	_, err = banktestutil.MsgSendExec(
-// 		val.ClientCtx,
-// 		val.Address,
-// 		newAddr,
-// 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 		osmoutils.DefaultFeeString(s.cfg),
-// 	)
-// 	s.Require().NoError(err)
+	_, err = banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		newAddr,
+		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		osmoutils.DefaultFeeString(s.cfg),
+	)
+	s.Require().NoError(err)
 
-// 	testCases := []struct {
-// 		name         string
-// 		args         []string
-// 		expectErr    bool
-// 		respType     proto.Message
-// 		expectedCode uint32
-// 	}{
-// 		{
-// 			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
-// 			[]string{
-// 				"stake", "50", "5000000000000000000",
-// 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-// 				// common args
-// 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-// 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-// 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
-// 			},
-// 			false, &sdk.TxResponse{}, 0,
-// 		},
-// 	}
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		respType     proto.Message
+		expectedCode uint32
+	}{
+		{
+			"join swap share amount out", // osmosisd tx gamm join-swap-share-amount-out --pool-id=1 stake 10 1 --from=validator --keyring-backend=test --chain-id=testing --yes
+			[]string{
+				"stake", "50", "5000000000000000000",
+				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				// common args
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, &sdk.TxResponse{}, 0,
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		tc := tc
+	for _, tc := range testCases {
+		tc := tc
 
-// 		s.Run(tc.name, func() {
-// 			cmd := cli.NewJoinSwapShareAmountOut()
-// 			clientCtx := val.ClientCtx
+		s.Run(tc.name, func() {
+			cmd := cli.NewJoinSwapShareAmountOut()
+			clientCtx := val.ClientCtx
 
-// 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-// 			if tc.expectErr {
-// 				s.Require().Error(err)
-// 			} else {
-// 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err, out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
-// 				txResp := tc.respType.(*sdk.TxResponse)
-// 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
-// 			}
-// 		})
-// 	}
-// }
+				txResp := tc.respType.(*sdk.TxResponse)
+				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+			}
+		})
+	}
+}
 
 func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
 	val := s.network.Validators[0]

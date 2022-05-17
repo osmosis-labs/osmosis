@@ -69,10 +69,14 @@ func (s *decimalTestSuite) TestNewDecFromStr() {
 		{"0.8", false, NewDecWithPrec(8, 1)},
 		{"0.11111", false, NewDecWithPrec(11111, 5)},
 		{"314460551102969.3144278234343371835", true, NewBigDec(3141203149163817869)},
-		{"314460551102969314427823434337.1835718092488231350",
-			true, NewDecFromBigIntWithPrec(largeBigInt, 4)},
-		{"314460551102969314427823434337.1835",
-			false, NewDecFromBigIntWithPrec(largeBigInt, 4)},
+		{
+			"314460551102969314427823434337.1835718092488231350",
+			true, NewDecFromBigIntWithPrec(largeBigInt, 4),
+		},
+		{
+			"314460551102969314427823434337.1835",
+			false, NewDecFromBigIntWithPrec(largeBigInt, 4),
+		},
 		{".", true, BigDec{}},
 		{".0", true, NewBigDec(0)},
 		{"1.", true, NewBigDec(1)},
@@ -178,7 +182,6 @@ func (s *decimalTestSuite) TestEqualities() {
 		s.Require().Equal(tc.lt, tc.d1.LT(tc.d2), "LT result is incorrect, tc %d", tcIndex)
 		s.Require().Equal(tc.eq, tc.d1.Equal(tc.d2), "equality result is incorrect, tc %d", tcIndex)
 	}
-
 }
 
 func (s *decimalTestSuite) TestDecsEqual() {
@@ -222,19 +225,27 @@ func (s *decimalTestSuite) TestArithmetic() {
 		{NewBigDec(1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(0), NewBigDec(2)},
 		{NewBigDec(-1), NewBigDec(1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(-1), NewBigDec(0), NewBigDec(-2)},
 
-		{NewBigDec(3), NewBigDec(7), NewBigDec(21), NewBigDec(21),
+		{
+			NewBigDec(3), NewBigDec(7), NewBigDec(21), NewBigDec(21),
 			NewDecWithPrec(428571428571428571, 18), NewDecWithPrec(428571428571428572, 18), NewDecWithPrec(428571428571428571, 18),
-			NewBigDec(10), NewBigDec(-4)},
-		{NewBigDec(2), NewBigDec(4), NewBigDec(8), NewBigDec(8), NewDecWithPrec(5, 1), NewDecWithPrec(5, 1), NewDecWithPrec(5, 1),
-			NewBigDec(6), NewBigDec(-2)},
+			NewBigDec(10), NewBigDec(-4),
+		},
+		{
+			NewBigDec(2), NewBigDec(4), NewBigDec(8), NewBigDec(8), NewDecWithPrec(5, 1), NewDecWithPrec(5, 1), NewDecWithPrec(5, 1),
+			NewBigDec(6), NewBigDec(-2),
+		},
 
 		{NewBigDec(100), NewBigDec(100), NewBigDec(10000), NewBigDec(10000), NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(200), NewBigDec(0)},
 
-		{NewDecWithPrec(15, 1), NewDecWithPrec(15, 1), NewDecWithPrec(225, 2), NewDecWithPrec(225, 2),
-			NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(3), NewBigDec(0)},
-		{NewDecWithPrec(3333, 4), NewDecWithPrec(333, 4), NewDecWithPrec(1109889, 8), NewDecWithPrec(1109889, 8),
+		{
+			NewDecWithPrec(15, 1), NewDecWithPrec(15, 1), NewDecWithPrec(225, 2), NewDecWithPrec(225, 2),
+			NewBigDec(1), NewBigDec(1), NewBigDec(1), NewBigDec(3), NewBigDec(0),
+		},
+		{
+			NewDecWithPrec(3333, 4), NewDecWithPrec(333, 4), NewDecWithPrec(1109889, 8), NewDecWithPrec(1109889, 8),
 			MustNewDecFromStr("10.009009009009009009"), MustNewDecFromStr("10.009009009009009010"), MustNewDecFromStr("10.009009009009009009"),
-			NewDecWithPrec(3666, 4), NewDecWithPrec(3, 1)},
+			NewDecWithPrec(3666, 4), NewDecWithPrec(3, 1),
+		},
 	}
 
 	for tcIndex, tc := range tests {
