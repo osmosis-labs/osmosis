@@ -1,4 +1,4 @@
-package cli
+package osmoutils
 
 import (
 	"encoding/json"
@@ -32,7 +32,7 @@ func (p Proposal) validate() error {
 	return nil
 }
 
-func parseProposalFlags(fs *pflag.FlagSet) (*Proposal, error) {
+func ParseProposalFlags(fs *pflag.FlagSet) (*Proposal, error) {
 	proposal := &Proposal{}
 	proposalFile, _ := fs.GetString(cli.FlagProposal)
 

@@ -73,7 +73,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 
 			from := clientCtx.GetFromAddress()
 
-			proposal, err := parseProposalFlags(cmd.Flags())
+			proposal, err := osmoutils.ParseProposalFlags(cmd.Flags())
 			if err != nil {
 				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
@@ -142,7 +142,7 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 
 			from := clientCtx.GetFromAddress()
 
-			proposal, err := parseProposalFlags(cmd.Flags())
+			proposal, err := osmoutils.ParseProposalFlags(cmd.Flags())
 			if err != nil {
 				return fmt.Errorf("failed to parse proposal: %w", err)
 			}
