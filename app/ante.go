@@ -3,13 +3,14 @@ package app
 import (
 	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
-	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
 
 	v8 "github.com/osmosis-labs/osmosis/v8/app/upgrades/v8"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v8/x/txfees/keeper"
