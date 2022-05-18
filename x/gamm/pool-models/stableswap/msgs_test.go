@@ -72,7 +72,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has no coins",
+			name: "has nil InitialPoolLiquidity ",
 			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = nil
 				return msg
@@ -80,7 +80,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has one Pool Asset",
+			name: "has one coin in InitialPoolLiquidity",
 			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
 					sdk.NewCoin("osmo", sdk.NewInt(100)),
@@ -90,7 +90,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "has three Pool Asset",
+			name: "has three coins in InitialPoolLiquidity",
 			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
 					sdk.NewCoin("osmo", sdk.NewInt(100)),
@@ -121,12 +121,28 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "valid governor: lptoken and lock",
+			name: "invalid governor : len governor > 2",
 			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
-				msg.FuturePoolGovernor = "lptoken,1000h"
+				msg.FuturePoolGovernor = "lptoken,1000h,invalid_cosmos_address"
 				return msg
 			}),
-			expectPass: true,
+			expectPass: false,
+		},
+		{
+			name: "invalid governor : len governor > 2",
+			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+				msg.FuturePoolGovernor = "lptoken,1000h,invalid_cosmos_address"
+				return msg
+			}),
+			expectPass: false,
+		},
+		{
+			name: "valid governor: err when parse duration ",
+			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+				msg.FuturePoolGovernor = "lptoken, invalid_duration"
+				return msg
+			}),
+			expectPass: false,
 		},
 		{
 			name: "valid governor: just lock duration for pool token",
@@ -140,6 +156,14 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			name: "valid governor: address",
 			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
 				msg.FuturePoolGovernor = "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
+				return msg
+			}),
+			expectPass: true,
+		},
+		{
+			name: "valid governor: address",
+			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+				msg.FuturePoolGovernor = ""
 				return msg
 			}),
 			expectPass: true,
