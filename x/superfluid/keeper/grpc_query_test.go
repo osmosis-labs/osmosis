@@ -60,6 +60,8 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	// setup superfluid delegations
 	_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
 
+	// setup normal delegations
+
 	// for each superfluid delegation, query the amount and make sure it is 1000000
 	for _, delegation := range superfluidDelegations {
 		lpDenom := denoms[delegation.lpIndex]
@@ -189,4 +191,8 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 	totalSuperfluidDelegationsRes, err := suite.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(suite.Ctx), &types.TotalSuperfluidDelegationsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(totalSuperfluidDelegationsRes.TotalDelegations, sdk.NewInt(30000000))
+}
+
+func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsWithNormalStaking() {
+
 }

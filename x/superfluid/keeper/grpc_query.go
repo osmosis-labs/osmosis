@@ -199,6 +199,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 
 	syntheticLocks := q.Keeper.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
 
+	// this if for getting superfluid staking
 	for _, syntheticLock := range syntheticLocks {
 		// don't include unbonding delegations
 		if strings.Contains(syntheticLock.SynthDenom, "superunbonding") {
@@ -225,6 +226,28 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		)
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
 	}
+
+	//this is for getting normal staking
+	q.sk.IterateDelegations(ctx, delAddr, func(_ int64, del stakingtypes.DelegationI) bool {
+		val, found := q.sk.GetValidator(ctx, del.GetValidatorAddr())
+		if !found {
+			return true
+		}
+
+		lockedCoins := sdk.NewCoin(q.sk.BondDenom(ctx), val.TokensFromShares(del.GetShares()).TruncateInt())
+
+		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
+			types.SuperfluidDelegationRecord{
+				DelegatorAddress: del.GetDelegatorAddr().String(),
+				ValidatorAddress: del.GetValidatorAddr().String(),
+				DelegationAmount: lockedCoins,
+			},
+		)
+
+		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
+
+		return false
+	})
 
 	return &res, nil
 }
