@@ -8,14 +8,14 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	connectionkeeper "github.com/cosmos/ibc-go/v3/modules/core/03-connection/keeper"
+	connectionkeeper "github.com/cosmos/ibc-go/v2/modules/core/03-connection/keeper"
 	gammkeeper "github.com/osmosis-labs/osmosis/v8/x/gamm/keeper"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v8/x/txfees/keeper"
 
 	"github.com/osmosis-labs/osmosis/v8/x/txfees"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v3/modules/core/03-connection/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v8/x/txfees/types"
 )
