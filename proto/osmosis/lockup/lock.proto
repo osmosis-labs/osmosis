@@ -6,7 +6,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/lockup/types";
+option go_package = "github.com/osmosis-labs/osmosis/v9/x/lockup/types";
 
 // PeriodLock is a single unit of lock by period. It's a record of locked coin
 // at a specific time. It stores owner, duration, unlock time and the amount of

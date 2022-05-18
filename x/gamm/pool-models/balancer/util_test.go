@@ -11,8 +11,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v9/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v9/x/gamm/types"
 )
 
 func createTestPool(t *testing.T, poolAssets []balancer.PoolAsset, swapFee, exitFee sdk.Dec) types.PoolI {

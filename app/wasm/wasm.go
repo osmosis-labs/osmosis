@@ -2,12 +2,13 @@ package wasm
 
 import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
+
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v9/x/tokenfactory/keeper"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+	gammkeeper "github.com/osmosis-labs/osmosis/v9/x/gamm/keeper"
 )
 
 func RegisterCustomPlugins(
