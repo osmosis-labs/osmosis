@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -23,7 +22,7 @@ var (
 	}
 	defaultFutureGovernor = ""
 	defaultCurBlockTime   = time.Unix(1618700000, 0)
-	//
+
 	dummyPoolAssets = []PoolAsset{}
 	wantErr         = true
 	noErr           = false
@@ -569,78 +568,6 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 	}
 }
 
-// This test sets up 2 asset pools, and then checks the spot price on them.
-// It uses the pools spot price method, rather than the Gamm keepers spot price method.
-func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
-	baseDenom := "uosmo"
-	quoteDenom := "uion"
-
-	tests := []struct {
-		name                string
-		baseDenomPoolInput  sdk.Coin
-		quoteDenomPoolInput sdk.Coin
-		expectError         bool
-		expectedOutput      sdk.Dec
-	}{
-		{
-			name:                "equal value",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 100),
-			expectError:         false,
-			expectedOutput:      sdk.MustNewDecFromStr("1"),
-		},
-		{
-			name:                "1:2 ratio",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 200),
-			expectError:         false,
-			expectedOutput:      sdk.MustNewDecFromStr("0.500000000000000000"),
-		},
-		{
-			name:                "2:1 ratio",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 200),
-			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 100),
-			expectError:         false,
-			expectedOutput:      sdk.MustNewDecFromStr("2.000000000000000000"),
-		},
-		{
-			name:                "rounding after sigfig ratio",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 220),
-			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 115),
-			expectError:         false,
-			expectedOutput:      sdk.MustNewDecFromStr("1.913043480000000000"), // ans is 1.913043478260869565, rounded is 1.91304348
-		},
-	}
-
-	for _, tc := range tests {
-		suite.SetupTest()
-
-		poolId := suite.PrepareUni2PoolWithAssets(
-			tc.baseDenomPoolInput,
-			tc.quoteDenomPoolInput,
-		)
-
-		pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
-		suite.Require().NoError(err, "test: %s", tc.name)
-		balancerPool, isPool := pool.(*balancer.Pool)
-		suite.Require().True(isPool, "test: %s", tc.name)
-
-		spotPrice, err := balancerPool.SpotPrice(
-			suite.Ctx,
-			tc.baseDenomPoolInput.Denom,
-			tc.quoteDenomPoolInput.Denom)
-
-		if tc.expectError {
-			suite.Require().Error(err, "test: %s", tc.name)
-		} else {
-			suite.Require().NoError(err, "test: %s", tc.name)
-			suite.Require().True(spotPrice.Equal(tc.expectedOutput),
-				"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
-				spotPrice, tc.expectedOutput)
-		}
-	}
-}
-
 // TestCalculateAmountOutAndIn_InverseRelationship tests that the same amount of token is guaranteed upon
 // sequential operation of CalcInAmtGivenOut and CalcOutAmtGivenIn.
 func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
@@ -725,12 +652,12 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
 				ctx := createTestContext(t)
 
-				poolAssetOut := balancer.PoolAsset{
+				poolAssetOut := PoolAsset{
 					Token:  sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut),
 					Weight: sdk.NewInt(tc.initialWeightOut),
 				}
 
-				poolAssetIn := balancer.PoolAsset{
+				poolAssetIn := PoolAsset{
 					Token:  sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn),
 					Weight: sdk.NewInt(tc.initialWeightIn),
 				}
@@ -741,7 +668,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 				exitFeeDec, err := sdk.NewDecFromStr("0")
 				require.NoError(t, err)
 
-				pool := createTestPool(t, []balancer.PoolAsset{
+				pool := createTestPool(t, []PoolAsset{
 					poolAssetOut,
 					poolAssetIn,
 				},
@@ -859,7 +786,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 				initialTotalShares := types.InitPoolSharesSupply.ToDec()
 				initialCalcTokenOut := sdk.NewInt(tc.tokenOut)
 
-				actualSharesOut := balancer.CalcPoolSharesOutGivenSingleAssetIn(
+				actualSharesOut := CalcPoolSharesOutGivenSingleAssetIn(
 					initialPoolBalanceOut.ToDec(),
 					initialWeightOut.ToDec().Quo(initialWeightOut.Add(initialWeightIn).ToDec()),
 					initialTotalShares,
@@ -867,7 +794,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 					swapFeeDec,
 				)
 
-				inverseCalcTokenOut := balancer.CalcSingleAssetInGivenPoolSharesOut(
+				inverseCalcTokenOut := CalcSingleAssetInGivenPoolSharesOut(
 					initialPoolBalanceOut.Add(initialCalcTokenOut).ToDec(),
 					initialWeightOut.ToDec().Quo(initialWeightOut.Add(initialWeightIn).ToDec()),
 					initialTotalShares.Add(actualSharesOut),
