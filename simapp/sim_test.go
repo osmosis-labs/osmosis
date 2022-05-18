@@ -43,8 +43,6 @@ func TestFullAppSimulation(t *testing.T) {
 	sdkSimapp.FlagVerboseValue = true
 	sdkSimapp.FlagPeriodValue = 10
 	sdkSimapp.FlagSeedValue = 10
-	dir, _ := os.Getwd()
-	fmt.Println(dir)
 	fullAppSimulation(t, true)
 }
 
