@@ -43,6 +43,8 @@ func TestFullAppSimulation(t *testing.T) {
 	sdkSimapp.FlagVerboseValue = true
 	sdkSimapp.FlagPeriodValue = 10
 	sdkSimapp.FlagSeedValue = 10
+	dir, _ := os.Getwd()
+	fmt.Println(dir)
 	fullAppSimulation(t, true)
 }
 
@@ -51,6 +53,9 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
+	// This file is needed to provide the correct path
+	// to reflect.wasm test file needed for wasmd simulation testing.
+	config.ParamsFile = "params.json"
 
 	defer func() {
 		db.Close()
