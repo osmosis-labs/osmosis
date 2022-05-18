@@ -271,7 +271,7 @@ func NewOsmosisApp(
 			app.GAMMKeeper,
 			ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
-			app.IBCKeeper.ChannelKeeper,
+			app.IBCKeeper,
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)
