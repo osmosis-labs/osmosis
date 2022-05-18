@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v9/x/txfees/types"
 )
 
 func NewTxCmd() *cobra.Command {

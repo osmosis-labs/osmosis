@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/cfmm_common"
-	types "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v9/x/gamm/pool-models/internal/cfmm_common"
+	types "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
 )
 
 var (

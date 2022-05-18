@@ -19,9 +19,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v9/x/pool-incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v9/x/pool-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v9/x/pool-incentives/types"
 )
 
 var (

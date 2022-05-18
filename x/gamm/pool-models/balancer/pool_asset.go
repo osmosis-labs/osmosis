@@ -5,8 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"gopkg.in/yaml.v2"
+
+	"github.com/osmosis-labs/osmosis/v9/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

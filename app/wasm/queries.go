@@ -5,9 +5,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	wasmbindings "github.com/osmosis-labs/osmosis/v9/app/wasm/bindings"
+	gammkeeper "github.com/osmosis-labs/osmosis/v9/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
 )
 
 type QueryPlugin struct {

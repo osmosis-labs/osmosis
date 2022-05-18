@@ -5,8 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v9/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

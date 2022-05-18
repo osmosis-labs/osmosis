@@ -7,10 +7,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	types "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v9/x/incentives/types"
+	types "github.com/osmosis-labs/osmosis/v9/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
 )
 
 type AccountKeeper interface {

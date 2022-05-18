@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v9/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v9/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
