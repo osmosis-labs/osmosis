@@ -80,9 +80,6 @@ Every node should upgrade their software version to v8.0.0 before the upgrade bl
 * [#1390] upgrade sdk to v0.45.0x-osmo-v7.9
 * [#1087] Test improvisation for Superfluid (backport #1070)
 * [#1022] upgrade iavl to v0.17.3-osmo-v4
-* [#958] Fix queries and add codec for msgsuperfluidunbondlock
-* [#958] Update the risk factor from 5% to 50%
-* [#894] x/superfluid: Delegate bug fixes and refactors
 
 ### Features
 
