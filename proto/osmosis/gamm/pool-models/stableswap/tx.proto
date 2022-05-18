@@ -33,8 +33,9 @@ message MsgCreateStableswapPoolResponse {
 }
 
 message MsgStableSwapAdjustScalingFactors {
-  string scaling_factor_governor = 1
-      [ (gogoproto.moretags) = "yaml:\"scaling_factor_governor\"" ];
+  // Sender must be the pool's scaling_factor_governor in order for the tx to succeed
+  string sender = 1
+      [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.customname) = "PoolID" ];
 
   repeated uint64 scaling_factors = 3 [
