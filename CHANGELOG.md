@@ -41,12 +41,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#1535](https://github.com/osmosis-labs/osmosis/pull/1535) upgrade wasmd to v0.27.0.rc3-osmo and ibc-go to v3
 * [#1435] `x/tokenfactory` create denom fee for spam resistance 
 * [#1429] solver for multi-asset CFMM
 * [#1253] Add lockup duration edit method
 * [#1253] Add lockup duration edit method 
 * [#1312] Stableswap: Createpool logic 
-* [#1230] Stableswap CFMM equations  
+* [#1230] Stableswap CFMM equations
+
 ## [v8.0.0 - Emergency proposals upgrade](https://github.com/osmosis-labs/osmosis/releases/tag/v8.0.0)
 
 This upgrade is a patch that must be hard forked in, as on-chain governance of Osmosis approved proposal [227](https://www.mintscan.io/osmosis/proposals/227) and proposal [228](https://www.mintscan.io/osmosis/proposals/228).
@@ -63,7 +65,6 @@ This upgrade includes:
 Every node should upgrade their software version to v8.0.0 before the upgrade block height 4402000. If you use cosmovisor, simply swap out the binary at upgrades/v7/bin to be v8.0.0, and restart the node. Do check cosmovisor version returns v8.0.0
 
 ### Features 
-
 * {Across many PRs} Initiate emergency upgrade 
 * [#1481] Emergency upgrade as of prop [226] (https://www.mintscan.io/osmosis/proposals/226) 
 * [#1482] Checking Whitelisted Pools contain UST 
@@ -74,6 +75,7 @@ Every node should upgrade their software version to v8.0.0 before the upgrade bl
 * [#916] And a fn for Unbond and Burn tokens
 * [#908] Superfluid slashing code
 * [#904] LockAndSuperfluidDelegate
+
 ### Minor improvements & Bug Fixes
 
 * [#1428] fix: pool params query (backport #1315)
