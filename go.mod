@@ -13,7 +13,7 @@ require (
 	github.com/golangci/golangci-lint v1.45.2
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/bech32-ibc v0.2.0-rc2.0.20220517225746-b0182ac51063
+	github.com/osmosis-labs/bech32-ibc v0.3.0-rc1
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
@@ -32,7 +32,6 @@ require (
 
 require (
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
-	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.0-beta.8 // indirect
 )
 
