@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-func TestMsgCreateBalancerPool(t *testing.T) {
+func TestMsgCreateStableswapPool(t *testing.T) {
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
