@@ -64,3 +64,11 @@ pull_request_rules:
       backport:
         branches:
           - v8.x
+  - name: backport patches to v9.x branch
+    conditions:
+      - base=main
+      - label=A:backport/v9.x
+    actions:
+      backport:
+        branches:
+          - v9.x
