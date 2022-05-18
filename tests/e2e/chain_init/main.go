@@ -5,21 +5,24 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 )
 
 func main() {
 	var (
-		valConfig []*chain.ValidatorConfig
-		dataDir   string
-		chainId   string
-		config    string
+		valConfig    []*chain.ValidatorConfig
+		dataDir      string
+		chainId      string
+		config       string
+		votingPeriod time.Duration
 	)
 
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
 	flag.StringVar(&config, "config", "", "serialized config")
+	flag.DurationVar(&votingPeriod, "voting-period", 30000000000, "voting period")
 
 	flag.Parse()
 
@@ -36,7 +39,7 @@ func main() {
 		panic(err)
 	}
 
-	createdChain, err := chain.Init(chainId, dataDir, valConfig)
+	createdChain, err := chain.Init(chainId, dataDir, valConfig, votingPeriod)
 	if err != nil {
 		panic(err)
 	}
