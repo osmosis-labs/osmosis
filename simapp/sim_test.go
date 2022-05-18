@@ -133,6 +133,10 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
 
+	// This file is needed to provide the correct path
+	// to reflect.wasm test file needed for wasmd simulation testing.
+	config.ParamsFile = "params.json"
+
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
