@@ -262,19 +262,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[superfluidtypes.StoreKey],
-		appKeepers.GetSubspace(superfluidtypes.ModuleName),
-		*appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.StakingKeeper,
-		appKeepers.DistrKeeper,
-		appKeepers.EpochsKeeper,
-		appKeepers.LockupKeeper,
-		gammKeeper,
-		appKeepers.IncentivesKeeper,
-		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper),
-	)
+		appCodec, appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
+		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
+		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper))
 
 	mintKeeper := mintkeeper.NewKeeper(
 		appCodec,
