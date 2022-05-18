@@ -68,20 +68,22 @@ Every node should upgrade their software version to v8.0.0 before the upgrade bl
 * [#1481] Emergency upgrade as of prop [226] (https://www.mintscan.io/osmosis/proposals/226) 
 * [#1482] Checking Whitelisted Pools contain UST 
 * [#1486] Update whitelisted pool IDs
+* [#1262] Add a forceprune command to the binaries, that prunes golevelDB data better
+* [#1154] Database stability improvements
+* [#840] Move lock.go functions into iterator.go, lock_refs.go and store.go
+* [#916] And a fn for Unbond and Burn tokens
+* [#908] Superfluid slashing code
+* [#904] LockAndSuperfluidDelegate
 ### Minor improvements & Bug Fixes
 
 * [#1428] fix: pool params query (backport #1315)
 * [#1390] upgrade sdk to v0.45.0x-osmo-v7.9
 * [#1087] Test improvisation for Superfluid (backport #1070)
-* [#1154] Database stability improvements
 * [#1022] upgrade iavl to v0.17.3-osmo-v4
 * [#958] Fix queries and add codec for msgsuperfluidunbondlock
 * [#958] Update the risk factor from 5% to 50%
 * [#894] x/superfluid: Delegate bug fixes and refactors
-* [#840] Move lock.go functions into iterator.go, lock_refs.go and store.go
-* [#916] And a fn for Unbond and Burn tokens
-* [#908] Superfluid slashing code
-* [#904] LockAndSuperfluidDelegate
+
 ### Features
 
 * [#1378](https://github.com/osmosis-labs/osmosis/pull/1378) add .gitpod.yml
