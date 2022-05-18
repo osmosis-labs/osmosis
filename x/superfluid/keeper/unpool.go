@@ -66,7 +66,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 	newLocks := make([]lockuptypes.PeriodLock, 0, len(exitedCoins))
 	newLockIds := make([]uint64, 0, len(exitedCoins))
 	for _, exitedCoin := range exitedCoins {
-		newLock, err := k.lk.LockTokens(ctx, sender, sdk.NewCoins(exitedCoin), lockRemainingDuration)
+		newLock, err := k.lk.CreateLock(ctx, sender, sdk.NewCoins(exitedCoin), lockRemainingDuration)
 		if err != nil {
 			return []uint64{}, err
 		}

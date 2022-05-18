@@ -28,7 +28,7 @@ type LockupKeeper interface {
 	BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error
 	ForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock) error
 
-	LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
+	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
 

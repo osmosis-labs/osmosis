@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/v7/store"
@@ -33,14 +34,14 @@ func (k Keeper) accumulationStore(ctx sdk.Context, denom string) store.Tree {
 	return store.NewTree(prefix.NewStore(ctx.KVStore(k.storeKey), accumulationStorePrefix(denom)), 10)
 }
 
-// GetModuleBalance Returns full balance of the module
+// GetModuleBalance Returns full balance of the module.
 func (k Keeper) GetModuleBalance(ctx sdk.Context) sdk.Coins {
 	// TODO: should add invariant test for module balance and lock items
 	acc := k.ak.GetModuleAccount(ctx, types.ModuleName)
 	return k.bk.GetAllBalances(ctx, acc.GetAddress())
 }
 
-// GetModuleLockedCoins Returns locked balance of the module
+// GetModuleLockedCoins Returns locked balance of the module.
 func (k Keeper) GetModuleLockedCoins(ctx sdk.Context) sdk.Coins {
 	// all not unlocking + not finished unlocking
 	notUnlockingCoins := k.getCoinsFromIterator(ctx, k.LockIterator(ctx, false))
@@ -49,20 +50,20 @@ func (k Keeper) GetModuleLockedCoins(ctx sdk.Context) sdk.Coins {
 }
 
 // GetPeriodLocksByDuration returns the total amount of query.Denom tokens locked for longer than
-// query.Duration
+// query.Duration.
 func (k Keeper) GetPeriodLocksAccumulation(ctx sdk.Context, query types.QueryCondition) sdk.Int {
 	beginKey := accumulationKey(query.Duration)
 	return k.accumulationStore(ctx, query.Denom).SubsetAccumulation(beginKey, nil)
 }
 
-// BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins
+// BeginUnlockAllNotUnlockings begins unlock for all not unlocking coins.
 func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddress) ([]types.PeriodLock, error) {
 	locks, err := k.beginUnlockFromIterator(ctx, k.AccountLockIterator(ctx, false, account))
 	return locks, err
 }
 
-func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
-	lock.Coins = lock.Coins.Add(coins...)
+func (k Keeper) addTokenToLock(ctx sdk.Context, lock *types.PeriodLock, coin sdk.Coin) error {
+	lock.Coins = lock.Coins.Add(coin)
 
 	err := k.setLock(ctx, *lock)
 	if err != nil {
@@ -70,25 +71,22 @@ func (k Keeper) addTokensToLock(ctx sdk.Context, lock *types.PeriodLock, coins s
 	}
 
 	// modifications to accumulation store
-	for _, coin := range coins {
-		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
-	}
-
+	k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
 	// modifications to accumulation store by synthlocks
 	// CONTRACT: lock will have synthetic lock only if it has a single coin
 	lockedCoin, err := lock.SingleCoin()
 	if err == nil {
 		for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
-			k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), coins.AmountOf(lockedCoin.Denom))
+			k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), sdk.NewCoins(coin).AmountOf(lockedCoin.Denom))
 		}
 	}
 
-	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), coins)
+	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), sdk.NewCoins(coin))
 
 	return nil
 }
 
-// removeTokensFromLock is called by lockup slash function - called by superfluid module only
+// removeTokensFromLock is called by lockup slash function - called by superfluid module only.
 func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, coins sdk.Coins) error {
 	// TODO: Handle 100% slash eventually, not needed for osmosis codebase atm.
 	lock.Coins = lock.Coins.Sub(coins)
@@ -114,18 +112,36 @@ func (k Keeper) removeTokensFromLock(ctx sdk.Context, lock *types.PeriodLock, co
 	return nil
 }
 
+func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sdk.Coin, duration time.Duration) ([]types.PeriodLock, error) {
+	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, coin.Denom, duration)
+	// if existing lock with same duration and denom exists, just add there
+	if len(locks) > 0 {
+		lock := locks[0]
+		_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
+	}
+	return locks, nil
+}
+
 // AddTokensToLock locks more tokens into a lockup
 // This also saves the lock to the store.
-func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
+func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, coin sdk.Coin) (*types.PeriodLock, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
+
+	if lock.GetOwner() != owner.String() {
+		return nil, types.ErrNotLockOwner
+	}
+
 	if err != nil {
 		return nil, err
 	}
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.OwnerAddress(), types.ModuleName, coins); err != nil {
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.OwnerAddress(), types.ModuleName, sdk.NewCoins(coin)); err != nil {
 		return nil, err
 	}
 
-	err = k.addTokensToLock(ctx, lock, coins)
+	err = k.addTokenToLock(ctx, lock, coin)
 	if err != nil {
 		return nil, err
 	}
@@ -134,11 +150,11 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, coins sdk.Co
 		return lock, nil
 	}
 
-	k.hooks.OnTokenLocked(ctx, lock.OwnerAddress(), lock.ID, coins, lock.Duration, lock.EndTime)
+	k.hooks.OnTokenLocked(ctx, lock.OwnerAddress(), lock.ID, sdk.Coins{coin}, lock.Duration, lock.EndTime)
 	return lock, nil
 }
 
-// SlashTokensFromLockByID send slashed tokens to community pool - called by superfluid module only
+// SlashTokensFromLockByID send slashed tokens to community pool - called by superfluid module only.
 func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -164,8 +180,8 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 	return lock, nil
 }
 
-// LockTokens lock tokens from an account for specified duration
-func (k Keeper) LockTokens(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
+// LockTokens lock tokens from an account for specified duration.
+func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is set at the beginning of unlocking time
 	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
@@ -342,7 +358,7 @@ func (k Keeper) setLockAndResetLockRefs(ctx sdk.Context, lock types.PeriodLock) 
 	return k.addLockRefs(ctx, lock)
 }
 
-// setLock is a utility to store lock object into the store
+// setLock is a utility to store lock object into the store.
 func (k Keeper) setLock(ctx sdk.Context, lock types.PeriodLock) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := proto.Marshal(&lock)
@@ -353,13 +369,13 @@ func (k Keeper) setLock(ctx sdk.Context, lock types.PeriodLock) error {
 	return nil
 }
 
-// deleteLock removes the lock object from the state
+// deleteLock removes the lock object from the state.
 func (k Keeper) deleteLock(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(lockStoreKey(id))
 }
 
-// Lock is a utility to lock coins into module account
+// Lock is a utility to lock coins into module account.
 func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {
@@ -392,7 +408,7 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
 	return nil
 }
 
-// splitLock splits a lock with the given amount, and stores split new lock to the state
+// splitLock splits a lock with the given amount, and stores split new lock to the state.
 func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) (types.PeriodLock, error) {
 	if lock.IsUnlocking() {
 		return types.PeriodLock{}, fmt.Errorf("cannot split unlocking lock")
@@ -411,15 +427,19 @@ func (k Keeper) splitLock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coin
 	return splitLock, err
 }
 
-// BeginUnlock is a utility to start unlocking coins from NotUnlocking queue
-func (k Keeper) BeginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
+// BeginUnlock is a utility to start unlocking coins from NotUnlocking queue.
+func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
 	// prohibit BeginUnlock if synthetic locks are referring to this
 	// TODO: In the future, make synthetic locks only get partial restrictions on the main lock.
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
 	if k.HasAnySyntheticLockups(ctx, lock.ID) {
 		return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
 	}
 
-	return k.beginForceUnlock(ctx, lock, coins)
+	return k.beginForceUnlock(ctx, *lock, coins)
 }
 
 func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
@@ -473,8 +493,48 @@ func (k Keeper) beginForceUnlock(ctx sdk.Context, lock types.PeriodLock, coins s
 	return nil
 }
 
-// Unlock is a utility to unlock coins from module account
-func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
+func (k Keeper) BeginForceUnlockWithEndTime(ctx sdk.Context, lockID uint64, endTime time.Time) error {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+	return k.beginForceUnlockWithEndTime(ctx, *lock, endTime)
+}
+
+func (k Keeper) beginForceUnlockWithEndTime(ctx sdk.Context, lock types.PeriodLock, endTime time.Time) error {
+	// remove lock refs from not unlocking queue if exists
+	err := k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
+	if err != nil {
+		return err
+	}
+
+	// store lock with end time set
+	lock.EndTime = endTime
+	err = k.setLock(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	// add lock refs into unlocking queue
+	err = k.addLockRefs(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	if k.hooks != nil {
+		k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	}
+
+	return nil
+}
+
+// Unlock is a utility to unlock coins from module account.
+func (k Keeper) Unlock(ctx sdk.Context, lockID uint64) error {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
 	// validation for current time and unlock time
 	curTime := ctx.BlockTime()
 	if !lock.IsUnlocking() {
@@ -484,7 +544,7 @@ func (k Keeper) Unlock(ctx sdk.Context, lock types.PeriodLock) error {
 		return fmt.Errorf("lock is not unlockable yet: %s >= %s", curTime.String(), lock.EndTime.String())
 	}
 
-	return k.unlockInternalLogic(ctx, lock)
+	return k.unlockInternalLogic(ctx, *lock)
 }
 
 // ForceUnlock ignores unlock duration and immediately unlocks the lock and refunds tokens to lock owner..
@@ -501,7 +561,7 @@ func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	}
 
 	if !lock.IsUnlocking() {
-		err := k.BeginUnlock(ctx, lock, nil)
+		err := k.BeginUnlock(ctx, lock.ID, nil)
 		if err != nil {
 			return err
 		}
@@ -562,5 +622,56 @@ func (k Keeper) unlockInternalLogic(ctx sdk.Context, lock types.PeriodLock) erro
 	}
 
 	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	return nil
+}
+
+func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration time.Duration) error {
+	if lock.IsUnlocking() {
+		return fmt.Errorf("cannot edit unlocking lockup for lock %d", lock.ID)
+	}
+
+	// check synthetic lockup exists
+	if k.HasAnySyntheticLockups(ctx, lock.ID) {
+		return fmt.Errorf("cannot edit lockup with synthetic lock %d", lock.ID)
+	}
+
+	oldLock := lock
+
+	if newDuration != 0 {
+		if newDuration <= lock.Duration {
+			return fmt.Errorf("new duration should be greater than the original")
+		}
+
+		// update accumulation store
+		for _, coin := range lock.Coins {
+			k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
+			k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(newDuration), coin.Amount)
+		}
+
+		lock.Duration = newDuration
+	}
+
+	// update lockup
+	err := k.deleteLockRefs(ctx, unlockingPrefix(oldLock.IsUnlocking()), oldLock)
+	if err != nil {
+		return err
+	}
+
+	err = k.addLockRefs(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	err = k.setLock(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	k.hooks.OnLockupExtend(ctx,
+		lock.GetID(),
+		oldLock.GetDuration(),
+		lock.GetDuration(),
+	)
+
 	return nil
 }

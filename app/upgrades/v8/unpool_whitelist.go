@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	superfluidkeeper "github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 )
@@ -48,15 +49,15 @@ func RegisterWhitelistedDirectUnbondPools(ctx sdk.Context, superfluid *superflui
 // returns nil if the pool contains UST's ibc denom
 // returns an error if the pool does not contain UST's ibc denom or on any other error case.
 func CheckPoolContainsUST(ctx sdk.Context, gamm *gammkeeper.Keeper, poolID uint64) error {
-	pool, err := gamm.GetPool(ctx, poolID)
+	pool, err := gamm.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
 		return err
 	}
 
-	assets := pool.GetAllPoolAssets()
+	assets := pool.GetTotalPoolLiquidity(ctx)
 
 	for _, asset := range assets {
-		if asset.Token.Denom == ustDenom {
+		if asset.Denom == ustDenom {
 			return nil
 		}
 	}

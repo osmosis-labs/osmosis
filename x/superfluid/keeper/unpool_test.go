@@ -24,16 +24,16 @@ var (
 	defaultFutureGovernor = ""
 
 	// pool assets
-	defaultFooAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+	defaultFooAsset balancer.PoolAsset = balancer.PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 	}
-	defaultBondDenomAsset gammtypes.PoolAsset = gammtypes.PoolAsset{
+	defaultBondDenomAsset balancer.PoolAsset = balancer.PoolAsset{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
 	}
-	defaultPoolAssets []gammtypes.PoolAsset = []gammtypes.PoolAsset{defaultFooAsset, defaultBondDenomAsset}
-	defaultAcctFunds  sdk.Coins             = sdk.NewCoins(
+	defaultPoolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBondDenomAsset}
+	defaultAcctFunds  sdk.Coins            = sdk.NewCoins(
 		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000000)),
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewCoin("foo", sdk.NewInt(10000000)),
@@ -105,26 +105,26 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			valAddr := suite.SetupValidator(stakingtypes.BondStatus(stakingtypes.Bonded))
 
 			// create pool of "stake" and "foo"
-			poolId, err := suite.App.GAMMKeeper.CreateBalancerPool(suite.Ctx, poolCreateAcc, balancer.PoolParams{
+			msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
+
+			poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
 			suite.Require().NoError(err)
 
 			// join pool
 			balanceBeforeJoin := suite.App.BankKeeper.GetAllBalances(suite.Ctx, poolJoinAcc)
-			err = suite.App.GAMMKeeper.JoinPool(suite.Ctx, poolJoinAcc, poolId, gammtypes.OneShare.MulRaw(50), sdk.Coins{
-				sdk.NewCoin("foo", sdk.NewInt(5000)),
-			})
+			err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, poolJoinAcc, poolId, gammtypes.OneShare.MulRaw(50), sdk.Coins{})
 			suite.Require().NoError(err)
 			balanceAfterJoin := suite.App.BankKeeper.GetAllBalances(suite.Ctx, poolJoinAcc)
 
 			joinPoolAmt, _ := balanceBeforeJoin.SafeSub(balanceAfterJoin)
 
-			pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
+			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 			suite.Require().NoError(err)
 
-			poolDenom := pool.GetTotalShares().Denom
+			poolDenom := gammtypes.GetPoolShareDenom(pool.GetId())
 			poolShareOut := suite.App.BankKeeper.GetBalance(suite.Ctx, poolJoinAcc, poolDenom)
 
 			// register a LP token as a superfluid asset
@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 				} else {
 					lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 					suite.Require().NoError(err)
-					err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, *lock, lock.Coins)
+					err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lockID, lock.Coins)
 					suite.Require().NoError(err)
 
 					// add time to current time to test lock end time
