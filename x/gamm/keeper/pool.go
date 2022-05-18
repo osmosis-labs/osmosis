@@ -9,6 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -223,4 +224,32 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 
 	k.SetNextPoolNumber(ctx, poolNumber+1)
 	return poolNumber
+}
+
+// set ScalingFactors in stable stableswap pools
+func (k *Keeper) setStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, poolId uint64, scalingFactorGovernor string) error {
+	poolI, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	stableswapPool, ok := poolI.(*stableswap.Pool)
+	if !ok {
+		return types.ErrNotStableSwapPool
+	}
+
+	if scalingFactorGovernor != stableswapPool.ScalingFactorGovernor {
+		return types.ErrNotScalingFactorGovernor
+	}
+
+	if len(scalingFactors) != stableswapPool.PoolLiquidity.Len() {
+		return types.ErrInvalidStableswapScalingFactors
+	}
+
+	stableswapPool.ScalingFactor = scalingFactors
+
+	if err = k.SetPool(ctx, stableswapPool); err != nil {
+		return err
+	}
+	return nil
 }
