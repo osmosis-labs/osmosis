@@ -25,6 +25,17 @@ import (
 )
 
 var (
+	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
+	upgradeVersion = "v9"
+	// osmosis repo/version for initialization (this should be one version below upgradeVersion)
+	initRepository = "osmolabs/osmosis-init"
+	initVersion    = "v8.0.0"
+	// pre upgrade osmosis repo/version to pull (should match initVersion numer)
+	debugRepository = "osmolabs/osmosis-dev"
+	debugVersion    = "v8.0.0-debug"
+	// hermes repo/version for relayer
+	relayerRepository = "osmolabs/hermes"
+	relayerVersion    = "0.13.0"
 	// voting period for chain A
 	votingPeriodA float32
 	// voting period for chain B
@@ -131,6 +142,24 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 2. Start both networks.
 	// 3. Run IBC relayer betweeen the two chains.
 	// 4. Execute various e2e tests, including IBC.
+	if str := os.Getenv("OSMOSIS_E2E_SKIP_UPGRADE"); len(str) > 0 {
+		skipUpgrade, err := strconv.ParseBool(str)
+		s.Require().NoError(err)
+
+		if skipUpgrade {
+			debugRepository = "osmosis"
+			debugVersion = "debug"
+			s.configureDockerResources(chain.ChainAID, chain.ChainBID)
+			s.configureChain(chain.ChainAID, validatorConfigsChainA)
+			s.configureChain(chain.ChainBID, validatorConfigsChainB)
+
+			s.runValidators(s.chains[0], 0)
+			s.runValidators(s.chains[1], 10)
+			s.runIBCRelayer()
+			s.runPostUpgradeTests()
+			return
+		}
+	}
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 	s.configureChain(chain.ChainAID, validatorConfigsChainA)
 	s.configureChain(chain.ChainBID, validatorConfigsChainB)
@@ -190,8 +219,8 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
 				fmt.Sprintf("%s/scripts:/osmosis", pwd),
 			},
-			Repository: "osmolabs/osmosis-dev",
-			Tag:        "v7.2.1-debug",
+			Repository: debugRepository,
+			Tag:        debugVersion,
 			Cmd: []string{
 				"start",
 			},
@@ -267,8 +296,8 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.hermesResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s-%s-relayer", s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id),
-			Repository: "osmolabs/hermes",
-			Tag:        "0.13.0",
+			Repository: relayerRepository,
+			Tag:        relayerVersion,
 			NetworkID:  s.dkrNet.Network.ID,
 			Cmd: []string{
 				"start",
@@ -365,8 +394,8 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	s.initResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
-			Repository: "osmolabs/osmosis-init",
-			Tag:        "v7.3.0-1",
+			Repository: initRepository,
+			Tag:        initVersion,
 			NetworkID:  s.dkrNet.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
