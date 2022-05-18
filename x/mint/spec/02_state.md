@@ -1,6 +1,8 @@
+```{=html}
 <!--
 order: 2
 -->
+```
 
 # State
 
@@ -25,15 +27,18 @@ type Params struct {
     EpochIdentifier         string                  // identifier of epoch
     ReductionPeriodInEpochs int64                   // number of epochs between reward reductions
     ReductionFactor         sdk.Dec                 // reduction multiplier to execute on each period
-	DistributionProportions DistributionProportions // distribution_proportions defines the proportion of the minted denom
-	WeightedDeveloperRewardsReceivers    []WeightedAddress // address to receive developer rewards
-	MintingRewardsDistributionStartEpoch int64             // start epoch to distribute minting rewards
+ DistributionProportions DistributionProportions // distribution_proportions defines the proportion of the minted denom
+ WeightedDeveloperRewardsReceivers    []WeightedAddress // address to receive developer rewards
+ MintingRewardsDistributionStartEpoch int64             // start epoch to distribute minting rewards
 }
 ```
 
 ## LastHalvenEpoch
 
-Last halven epoch stores the epoch number when the last reduction of coin mint amount per epoch has happened.
+Last halven epoch stores the epoch number when the last reduction of
+coin mint amount per epoch has happened.
 
 **TODO:**
-- Update the name to LastReductionEpoch as the reduction amount could be set by governance.
+
+- Update the name to LastReductionEpoch as the reduction amount could
+    be set by governance.

@@ -79,7 +79,7 @@ func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) sdk.KVSto
 	return prefix.NewStore(store, types.GetCreatorPrefix(creator))
 }
 
-// GetCreatorPrefixStore returns the substore that contains a list of creators
+// GetCreatorsPrefixStore returns the substore that contains a list of creators
 func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) sdk.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetCreatorsPrefix())

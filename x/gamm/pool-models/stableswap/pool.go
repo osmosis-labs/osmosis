@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -64,6 +65,10 @@ func (pa Pool) GetScalingFactorByLiquidityIndex(liquidityIndex int) uint64 {
 	return pa.ScalingFactor[liquidityIndex]
 }
 
+func (pa Pool) NumAssets() int {
+	return len(pa.PoolLiquidity)
+}
+
 // returns pool liquidity of the provided denoms, in the same order the denoms were provided in
 func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 	result := make([]sdk.Int, len(denoms))
@@ -79,8 +84,8 @@ func (pa Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
 }
 
 // getScaledPoolAmts returns scaled amount of pool liquidity based on each asset's precisions
-func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
-	result := make([]sdk.Int, len(denoms))
+func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Dec, error) {
+	result := make([]sdk.Dec, len(denoms))
 	poolLiquidity := pa.PoolLiquidity
 	liquidityIndexes := pa.getLiquidityIndexMap()
 
@@ -89,10 +94,10 @@ func (pa Pool) getScaledPoolAmts(denoms ...string) ([]sdk.Int, error) {
 
 		amt := poolLiquidity.AmountOf(denom)
 		if amt.IsZero() {
-			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", denom)
+			return []sdk.Dec{}, fmt.Errorf("denom %s does not exist in pool", denom)
 		}
 		scalingFactor := pa.GetScalingFactorByLiquidityIndex(liquidityIndex)
-		result[i] = amt.QuoRaw(int64(scalingFactor))
+		result[i] = amt.ToDec().QuoInt64Mut(int64(scalingFactor))
 	}
 	return result, nil
 }
@@ -128,6 +133,18 @@ func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coin
 	if len(p.PoolLiquidity) != numTokens {
 		panic("updatePoolLiquidityForSwap changed number of tokens in pool")
 	}
+}
+
+// updatePoolLiquidityForExit updates the pool liquidity after an exit.
+// The function sanity checks that not all tokens of a given denom are removed,
+// and panics if thats the case.
+func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins) {
+	p.updatePoolLiquidityForSwap(sdk.Coins{}, tokensOut)
+}
+
+func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdk.Int) {
+	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...)
+	p.TotalShares.Amount = p.TotalShares.Amount.Add(newShares)
 }
 
 // TODO: These should all get moved to amm.go
@@ -195,26 +212,42 @@ func (pa Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	scaledSpotPrice := spotPrice(reserves[0].ToDec(), reserves[1].ToDec())
+	scaledSpotPrice := spotPrice(reserves[0], reserves[1])
 	spotPrice := pa.getDescaledPoolAmt(baseAssetDenom, scaledSpotPrice)
 
 	return spotPrice, nil
 }
 
-func (pa Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	return sdk.Int{}, sdk.Coins{}, types.ErrNotImplemented
+func (pa Pool) Copy() Pool {
+	pa2 := pa
+	pa2.PoolLiquidity = sdk.NewCoins(pa.PoolLiquidity...)
+	return pa2
+}
+
+func (pa *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+	paCopy := pa.Copy()
+	return paCopy.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 }
 
 func (pa *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	return sdk.Int{}, types.ErrNotImplemented
+	numShares, _, err = pa.joinPoolSharesInternal(ctx, tokensIn, swapFee)
+	return numShares, err
 }
 
-func (pa *Pool) ExitPool(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	return sdk.Coins{}, types.ErrNotImplemented
+func (pa *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+	exitingCoins, err = pa.CalcExitPoolShares(ctx, exitingShares, exitFee)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	pa.TotalShares.Amount = pa.TotalShares.Amount.Sub(exitingShares)
+	pa.updatePoolLiquidityForExit(exitingCoins)
+
+	return exitingCoins, nil
 }
 
-func (pa Pool) CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	return sdk.Coins{}, types.ErrNotImplemented
+func (pa Pool) CalcExitPoolShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+	return cfmm_common.CalcExitPool(ctx, &pa, exitingShares, exitFee)
 }
 
 // no-op for stableswap

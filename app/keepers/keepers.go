@@ -258,19 +258,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
-		appCodec,
-		appKeepers.keys[superfluidtypes.StoreKey],
-		appKeepers.GetSubspace(superfluidtypes.ModuleName),
-		*appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.StakingKeeper,
-		appKeepers.DistrKeeper,
-		appKeepers.EpochsKeeper,
-		appKeepers.LockupKeeper,
-		gammKeeper,
-		appKeepers.IncentivesKeeper,
-		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper),
-	)
+		appCodec, appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
+		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
+		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper))
 
 	mintKeeper := mintkeeper.NewKeeper(
 		appCodec,
@@ -324,7 +314,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis"
 
-	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.GAMMKeeper, appKeepers.BankKeeper), wasmOpts...)
+	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.GAMMKeeper, appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,
