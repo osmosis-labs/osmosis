@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 
-import "osmosis/osmolbp/v1/types.proto";
+import "osmosis/osmolbp/v1/state.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/x/osmolbp/api";
 option (gogoproto.goproto_getters_all) = false;
@@ -20,11 +20,11 @@ service Query {
 
   // Returns the specific LBP object
   rpc LBP(QueryLBP) returns (QueryLBPResponse) {
-    option (google.api.http).get = "/cosmos/osmolbp/v1/lbps/{id}";
+    option (google.api.http).get = "/cosmos/osmolbp/v1/lbps/{lbp_id}";
   }
 
-  rpc UserPositin(QueryUserPosition) returns (QueryUserPositionResponse) {
-    option (google.api.http).get = "/cosmos/osmolbp/v1/lbps/{id}";
+  rpc UserPosition(QueryUserPosition) returns (QueryUserPositionResponse) {
+    option (google.api.http).get = "/cosmos/osmolbp/v1/lbps/{lbp_id}/{user}";
   }
 }
 
@@ -41,7 +41,7 @@ message QueryLBPsResponse {
 // Request type for Query/LBP
 message QueryLBP {
   // LBP ID
-  uint64 id = 1;
+  uint64 lbp_id = 1;
 }
 
 message QueryLBPResponse {
