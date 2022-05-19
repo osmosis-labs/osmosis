@@ -15,7 +15,7 @@ The `pool-incentives` module is separate but related to the `incentives` module.
 
 ### replace-pool-incentives 
 
-```
+```sh
 osmosisd tx poolincentives replace-pool-incentives [gaugeIds] [weights] [flags]
 ```
 
@@ -59,7 +59,7 @@ The proposal.json would look as follows:
 
 Update the weight of specified pool gauges in regards to their share of incentives (by creating a proposal)
 
-```
+```sh
 osmosisd tx poolincentives update-pool-incentives [gaugeIds] [weights] [flags] --from --chain-id
 ```
 
@@ -98,7 +98,7 @@ The proposal.json would look as follows:
 
 Query distribution info for all pool gauges
 
-```
+```sh
 osmosisd query poolincentives distr-info
 ```
 
@@ -130,7 +130,7 @@ An example output:
 
 Query externally incentivized gauges (gauges distributing rewards on top of the normal OSMO rewards)
 
-```
+```sh
 osmosisd query pool-incentives external-incentivized-gauges
 ```
 
@@ -185,7 +185,7 @@ An example output:
 
 Query the gauge ids (by duration) by pool id
 
-```
+```sh
 osmosisd query poolincentives gauge-ids [pool-id] [flags]
 ```
 
@@ -218,7 +218,7 @@ In this example, we see that gauge IDs 1,2, and 3 are for the one day, one week,
 
 Query all incentivized pools with their respective gauge IDs and lockup durations
 
-```
+```sh
 osmosisd query poolincentives incentivized-pools [flags]
 ```
 
@@ -251,7 +251,7 @@ An example output:
 
 Query incentivized lockup durations
 
-```
+```sh
 osmosisd query poolincentives lockable-durations [flags]
 ```
 
@@ -277,7 +277,7 @@ lockable_durations:
 
 Query pool-incentives module parameters
 
-```
+```sh
 osmosisd query poolincentives params [flags]
 ```
 

@@ -41,7 +41,7 @@ If the liquidity provider begins the unbonding process for their 2 week bonded L
 
 Bond tokens in a LP for a set duration
 
-```
+```sh
 osmosisd tx lockup lock-tokens [tokens] --duration --from --chain-id
 ```
 
@@ -71,7 +71,7 @@ osmosisd tx lockup lock-tokens 35527546134174465309gamm/pool/197 --duration="336
 
 Begin the unbonding process for tokens given their unique lock ID
 
-```
+```sh
 osmosisd tx lockup begin-unlock-by-id [id] --from --chain-id
 ```
 
@@ -91,7 +91,7 @@ The ID corresponds to the unique ID given to your lockup transaction (explained 
 
 Begin unbonding process for all bonded tokens in a wallet
 
-```
+```sh
 osmosisd tx lockup begin-unlock-tokens --from --chain-id
 ```
 
@@ -168,7 +168,7 @@ locks:
 
 Query an account's locked (bonded) LP tokens
 
-```
+```sh
 osmosisd query lockup account-locked-coins [address]
 ```
 
@@ -207,7 +207,7 @@ You may also specify a --height flag to see bonded LP tokens at a specified heig
 
 Query an account's locked records that are greater than or equal to a specified lock duration
 
-```
+```sh
 osmosisd query lockup account-locked-longer-duration [address] [duration]
 ```
 
@@ -245,7 +245,7 @@ locks:
 
 Query an account's locked records for a denom that is locked equal to or greater than the specified duration AND match a specified denom
 
-```
+```sh
 osmosisd query lockup account-locked-longer-duration-denom [address] [duration] [denom]
 ```
 
@@ -285,7 +285,7 @@ As shown, the gamm/pool/3 is returned but not the gamm/pool/1 due to the denom f
 
 Query an account's locked records for a denom that is locked equal to or greater than the specified duration AND is not in the process of being unlocked
 
-```
+```sh
 osmosisd query lockup account-locked-longer-duration-not-unlocking [address] [duration]
 ```
 
@@ -384,7 +384,7 @@ Note that the `1 day` lock ID did not display because, if the unbonding time beg
 
 Query the locked records of an account with the unlock time beyond timestamp (unix) AND is not in the process of unlocking
 
-```
+```sh
 osmosisd query lockup account-locked-pasttime [address] [timestamp]
 ```
 
@@ -427,7 +427,7 @@ osmosisd query lockup account-unlockable-coins ADDRESS
 
 Query an address's LP shares that are currently unlocking
 
-```
+```sh
 osmosisd query lockup account-unlocking-coins [address]
 ```
 
@@ -451,7 +451,7 @@ coins:
 
 Query a lock record by its ID
 
-```
+```sh
 osmosisd query lockup lock-by-id [id]
 ```
 
@@ -486,7 +486,7 @@ In summary, this shows wallet `osmo16r39ghhwqjcwxa8q3yswlz8jhzldygy66vlm82` bond
 
 Query the balance of all LP shares (bonded and unbonded)
 
-```
+```sh
 osmosisd query lockup module-balance
 ```
 
@@ -540,7 +540,7 @@ coins:
 
 Query the balance of all bonded LP shares
 
-```
+```sh
 osmosisd query lockup module-locked-amount
 ```
 
@@ -599,7 +599,7 @@ NOTE: This command seems to only work on gRPC and on CLI returns an EOF error.
 
 Output all locks into a json file
 
-```
+```sh
 osmosisd query lockup output-all-locks [max lock ID]
 ```
 
@@ -620,7 +620,7 @@ If a lockup has been completed, the lockup status will show as "0" (or successfu
 
 Query locked amount for a specific denom in the duration provided
 
-```
+```sh
 osmosisd query lockup total-locked-of-denom [denom] --min-duration
 ```
 

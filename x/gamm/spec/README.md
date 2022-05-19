@@ -54,7 +54,7 @@ The GAMM module also has a **PoolCreationFee** parameter, which currently is set
 ### create-pool
 Create a new liquidity pool and provide initial liquidity to it.
 
-```
+```sh
 osmosisd tx gamm create-pool [config-file] --from --chain-id
 ```
 
@@ -99,7 +99,7 @@ There is now a 100 OSMO fee for creating pools.
 ### join-pool
 Add liquidity to a specified pool to get an **exact** amount of LP shares while specifying a **maximum** number tokens willing to swap to receive said LP shares.
 
-```
+```sh
 osmosisd tx gamm join-pool --pool-id --max-amounts-in --share-amount-out --from --chain-id
 ```
 
@@ -118,7 +118,7 @@ osmosisd tx gamm join-pool --pool-id 3 --max-amounts-in 37753ibc/1480B8FD20AD5FC
 ### exit-pool
 Remove liquidity from a specified pool with an **exact** amount of LP shares while specifying the **minimum** number of tokens willing to receive for said LP shares.
 
-```
+```sh
 osmosisd tx gamm exit-pool --pool-id --min-amounts-out --share-amount-in --from --chain-id
 ```
 
@@ -140,7 +140,7 @@ Add liquidity to a specified pool with only one of the required assets (i.e. Joi
 
 This command essentially swaps an **exact** amount of an asset for the required pairing and then converts the pair to a **minimum** of the requested LP shares in a single step (i.e. combines the `swap-exact-amount-in` and `join-pool` commands)
 
-```
+```sh
 osmosisd tx gamm join-swap-extern-amount-in [token-in] [share-out-min-amount] --from --pool-id --chain-id
 ```
 
@@ -162,7 +162,7 @@ Remove liquidity from a specified pool with a **maximum** amount of LP shares an
 
 This command essentially converts an LP share into the corresponding share of tokens and then swaps to the specified `token-out` in a single step (i.e. combines the `swap-exact-amount-out` and `exit-pool` commands)
 
-```
+```sh
 osmosisd tx gamm exit-swap-extern-amount-out [token-out] [share-in-max-amount] --pool-id --from --chain-id
 ```
 
@@ -182,7 +182,7 @@ osmosisd tx gamm exit-swap-extern-amount-out 199430ibc/1480B8FD20AD5FCAE81EA8758
 
 Swap a **maximum** amount of a specified token for another token, similar to swapping a token on the trade screen GUI (i.e. takes the specified asset and swaps it to the other asset needed to join the specified pool) and then adds an **exact** amount of LP shares to the specified pool.
 
-```
+```sh
 osmosisd tx gamm join-swap-share-amount-out [token-in-denom] [token-in-max-amount] [share-out-amount] --pool-id --from --chain-id
 ```
 
@@ -222,7 +222,7 @@ osmosisd tx gamm exit-swap-share-amount-in uosmo 14563185400026723131 298548 --p
 Swap an **exact** amount of tokens for a **minimum** of another token, similar to swapping a token on the trade screen GUI.
 
 
-```
+```sh
 osmosisd tx gamm swap-exact-amount-in [token-in] [token-out-min-amount] --pool-id --from --chain-id
 ```
 
@@ -241,7 +241,7 @@ osmosisd tx gamm swap-exact-amount-in 407239ibc/1480B8FD20AD5FCAE81EA87584D26954
 
 Swap a **maximum** amount of tokens for an **exact** amount of another token, similar to swapping a token on the trade screen GUI.
 
-```
+```sh
 osmosisd tx gamm swap-exact-amount-out [token-out] [token-out-max-amount] --swap-route-pool-ids --from --chain-id
 ```
 
@@ -266,7 +266,7 @@ osmosisd tx gamm swap-exact-amount-out 140530uosmo 407239 --swap-route-pool-ids 
 
 Query the estimated result of the [swap-exact-amount-in](#swap-exact-amount-in) transaction.
 
-```
+```sh
 osmosisd query gamm estimate-swap-exact-amount-in [poolID] [sender] [tokenIn] --swap-route-pool-ids --swap-route-denoms
 ```
 
@@ -285,7 +285,7 @@ osmosisd query gamm estimate-swap-exact-amount-in 1 osmo123nfq6m8f88m4g3sky570un
 
 Query the estimated result of the [swap-exact-amount-out](#swap-exact-amount-out) transaction.
 
-```
+```sh
 osmosisd query gamm estimate-swap-exact-amount-out [poolID] [sender] [tokenOut] --swap-route-pool-ids --swap-route-denoms
 ```
 
@@ -314,7 +314,7 @@ osmosisd query gamm num-pools
 
 Query the parameter and assets of a specific pool.
 
-```
+```sh
 osmosisd query gamm pool [poolID] [flags]
 ```
 
@@ -359,7 +359,7 @@ Which outputs:
 
 Query the assets of a specific pool. This query is a reduced form of the [pool](#pool) query.
 
-```
+```sh
 osmosisd query gamm pool-assets [poolID] [flags]
 ```
 
@@ -391,7 +391,7 @@ poolAssets:
 
 Query the parameters of a specific pool. This query is a reduced form of the [pool](#pool) query.
 
-```
+sh
 osmosisd query gamm pool-params [poolID] [flags]
 ```
 
@@ -428,7 +428,7 @@ osmosisd query gamm pools
 
 Query the spot price of a pool asset based on a specific pool it is in.
 
-```
+```sh
 osmosisd query gamm spot-price [poolID] [tokenInDenom] [tokenOutDenom] [flags]
 ```
 
@@ -467,7 +467,7 @@ osmosisd query gamm total-liquidity
 
 Query the total amount of GAMM shares of a specific pool.
 
-```
+```sh
 osmosisd query gamm total-share [poolID] [flags]
 ```
 

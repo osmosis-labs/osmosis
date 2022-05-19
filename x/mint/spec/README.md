@@ -43,7 +43,7 @@ Below are all the network parameters for the ```mint``` module:
 
 Query all the current mint parameter values
 
-```
+```sh
 query mint params
 ``` 
 
@@ -142,7 +142,7 @@ An example of the output:
 
 Query the current epoch provisions
 
-```
+```sh
 query mint epoch-provisions
 ```
 

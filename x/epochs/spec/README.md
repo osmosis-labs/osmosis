@@ -55,7 +55,7 @@ epochs:
 
 Query the current epoch by the specified identifier
 
-```
+```sh
 osmosisd query epochs current-epoch [identifier]
 ```
 

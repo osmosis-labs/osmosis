@@ -56,7 +56,7 @@ There are two kinds of gauges: **`perpetual`** and **`non-perpetual`**:
 
 Create a gauge to distribute rewards to users
 
-```
+```sh
 osmosisd tx incentives create-gauge [lockup_denom] [reward] [flags]
 ```
 
@@ -90,7 +90,7 @@ osmosisd tx incentives create-gauge ibc/27394FB092D2ECCD56123C74F36E4C1F926001CE
 
 Add coins to a gauge previously created to distribute more rewards to users
 
-```
+```sh
 osmosisd tx incentives add-to-gauge [gauge_id] [rewards] [flags]
 ```
 
@@ -111,7 +111,7 @@ osmosisd tx incentives add-to-gauge 1914 500000000ibc/46B44899322F3CD854D2D46DEE
 
 Query active gauges
 
-```
+```sh
 osmosisd query incentives active-gauges [flags]
 ```
 
@@ -161,7 +161,7 @@ pagination:
 
 Query active gauges per denom
 
-```
+```sh
 osmosisd query incentives active-gauges-per-denom [denom] [flags]
 ```
 
@@ -213,7 +213,7 @@ pagination:
 
 Query coins distributed so far
 
-```
+```sh
 osmosisd query incentives distributed-coins [flags]
 ```
 
@@ -263,7 +263,7 @@ coins:
 
 Query gauge by id
 
-```
+```sh
 osmosisd query incentives gauge-by-id [id] [flags]
 ```
 
@@ -271,7 +271,7 @@ osmosisd query incentives gauge-by-id [id] [flags]
 
 Query the incentive distribution for gauge ID 1:
 
-```
+```sh
 osmosisd query incentives gauge-by-id 1
 ```
 
@@ -303,7 +303,7 @@ gauge:
 
 Query available gauges
 
-```
+```sh
 osmosisd query incentives gauges [flags]
 ```
 
@@ -373,7 +373,7 @@ Query rewards estimation
 
 Query coins that is going to be distributed
 
-```
+```sh
 osmosisd query incentives to-distribute-coins [flags]
 ```
 
@@ -419,7 +419,7 @@ coins:
 
 Query scheduled gauges (gauges whose `start_time` has not yet occurred)
 
-```
+```sh
 osmosisd query incentives upcoming-gauges [flags]
 ```
 
