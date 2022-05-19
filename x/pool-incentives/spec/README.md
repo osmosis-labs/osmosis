@@ -15,8 +15,6 @@ The `pool-incentives` module is separate but related to the `incentives` module.
 
 ### replace-pool-incentives 
 
-Submit a full replacement to the records for pool incentives (by creating a proposal)
-
 ```
 osmosisd tx poolincentives replace-pool-incentives [gaugeIds] [weights] [flags]
 ```

@@ -6,7 +6,8 @@ Lockup module provides an interface for users to lock tokens (also known as bond
 
 After tokens have been added to a specific pool and turned into LP shares through the GAMM module, users can then lock these LP shares with a specific duration in order to begin earing rewards. To unlock these LP shares, users must trigger the unlock timer and wait for the unlock period that was set initially to be completed. After the unlock period is over, users can turn LP shares back into their respective share of tokens. 
 
-This module provides interfaces for other modules to iterate the locks efficiently and grpc query to check the status of locked coins.
+This module provides interfaces for other modules to iterate the locks
+efficiently and grpc query to check the status of locked coins.
 
 ## Contents
 
@@ -14,9 +15,9 @@ This module provides interfaces for other modules to iterate the locks efficient
 2. **[State](02_state.md)**
 3. **[Messages](03_messages.md)**
 4. **[Events](04_events.md)**
-5. **[Keeper](05_keeper.md)**  
-6. **[Hooks](06_hooks.md)**  
-7. **[Queries](07_queries.md)**  
+5. **[Keeper](05_keeper.md)**\
+6. **[Hooks](06_hooks.md)**\
+7. **[Queries](07_queries.md)**\
 8. **[Params](08_params.md)**
 9. **[Endblocker](09_endblocker.md)**
 

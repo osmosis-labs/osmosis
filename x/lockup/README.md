@@ -1,6 +1,7 @@
-# Commands
+Commands
+========
 
-```sh
+``` {.sh}
 # 1 day 100stake lock-tokens command
 osmosisd tx lockup lock-tokens 200stake --duration="86400s" --from=validator --chain-id=testing --keyring-backend=test --yes
 

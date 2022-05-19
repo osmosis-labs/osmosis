@@ -23,3 +23,22 @@ jobs:
       - name: Run golangci-lint
         run: make lint
         if: env.GIT_DIFF
+
+  documentation-linter:
+    name: Run super-linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          # Full git history is needed to get a proper list of changed files
+          # within `super-linter`.
+          fetch-depth: 0
+      - name: Run documentation linter
+        uses: github/super-linter@v4
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_MARKDOWN: true
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
