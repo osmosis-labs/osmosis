@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // constants.
@@ -13,6 +14,7 @@ const (
 	TypeMsgSuperfluidRedelegate      = "superfluid_redelegate"
 	TypeMsgSuperfluidUnbondLock      = "superfluid_unbond_underlying_lock"
 	TypeMsgLockAndSuperfluidDelegate = "lock_and_superfluid_delegate"
+	TypeMsgUnPoolWhitelistedPool     = "unpool_whitelisted_pool"
 )
 
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
@@ -182,5 +184,38 @@ func (m MsgLockAndSuperfluidDelegate) GetSignBytes() []byte {
 
 func (m MsgLockAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgUnPoolWhitelistedPool{}
+
+// NewMsgUnPoolWhitelistedPool creates a message to create a lockup lock and superfluid delegation
+func NewMsgUnPoolWhitelistedPool(sender sdk.AccAddress, poolID uint64) *MsgUnPoolWhitelistedPool {
+	return &MsgUnPoolWhitelistedPool{
+		Sender: sender.String(),
+		PoolId: poolID,
+	}
+}
+
+func (msg MsgUnPoolWhitelistedPool) Route() string { return RouterKey }
+func (msg MsgUnPoolWhitelistedPool) Type() string  { return TypeMsgUnPoolWhitelistedPool }
+func (msg MsgUnPoolWhitelistedPool) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	return nil
+}
+
+func (msg MsgUnPoolWhitelistedPool) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUnPoolWhitelistedPool) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{sender}
 }
