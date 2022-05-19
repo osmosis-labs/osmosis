@@ -27,55 +27,56 @@ func mulCoins(coins sdk.Coins, multiplier sdk.Dec) sdk.Coins {
 }
 
 func TestCalcExitPool(t *testing.T) {
-	var (
-		emptyContext = sdk.Context{}
 
-		// create these pools used for testing
-		twoAssetPool, err1 = stableswap.NewStableswapPool(
-			1,
-			stableswap.PoolParams{ExitFee: sdk.ZeroDec()},
-			sdk.NewCoins(sdk.NewInt64Coin("foo", 1000000000),
-				sdk.NewInt64Coin("bar", 1000000000)),
-			"",
-			time.Now(),
-		)
-		threeAssetPool, err2 = balancer.NewBalancerPool(
-			1,
-			balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
-			[]balancer.PoolAsset{
-				{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: sdk.NewIntFromUint64(5)},
-				{Token: sdk.NewInt64Coin("bar", 3000000000), Weight: sdk.NewIntFromUint64(5)},
-				{Token: sdk.NewInt64Coin("baz", 4000000000), Weight: sdk.NewIntFromUint64(5)},
-			},
-			"",
-			time.Now(),
-		)
-		twoAssetPoolWithExitFee, err3 = stableswap.NewStableswapPool(
-			1,
-			stableswap.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
-			sdk.NewCoins(sdk.NewInt64Coin("foo", 1000000000),
-				sdk.NewInt64Coin("bar", 1000000000)),
-			"",
-			time.Now(),
-		)
-		threeAssetPoolWithExitFee, err4 = balancer.NewBalancerPool(
-			1,
-			balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.MustNewDecFromStr("0.0002")},
-			[]balancer.PoolAsset{
-				{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: sdk.NewIntFromUint64(5)},
-				{Token: sdk.NewInt64Coin("bar", 3000000000), Weight: sdk.NewIntFromUint64(5)},
-				{Token: sdk.NewInt64Coin("baz", 4000000000), Weight: sdk.NewIntFromUint64(5)},
-			},
-			"",
-			time.Now(),
-		)
+	emptyContext := sdk.Context{}
+
+	twoStablePoolAssets := sdk.NewCoins(
+		sdk.NewInt64Coin("foo", 1000000000),
+		sdk.NewInt64Coin("bar", 1000000000),
 	)
 
-	// make sure there're no error creating those pools
-	require.NoError(t, err1)
-	require.NoError(t, err2)
-	require.NoError(t, err3)
-	require.NoError(t, err4)
+	threeBalancerPoolAssets := []balancer.PoolAsset{
+		{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: sdk.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("bar", 3000000000), Weight: sdk.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("baz", 4000000000), Weight: sdk.NewIntFromUint64(5)},
+	}
+
+	// create these pools used for testing
+	twoAssetPool, err := stableswap.NewStableswapPool(
+		1,
+		stableswap.PoolParams{ExitFee: sdk.ZeroDec()},
+		twoStablePoolAssets,
+		"",
+		time.Now(),
+	)
+	require.NoError(t, err)
+
+	threeAssetPool, err := balancer.NewBalancerPool(
+		1,
+		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+		threeBalancerPoolAssets,
+		"",
+		time.Now(),
+	)
+	require.NoError(t, err)
+
+	twoAssetPoolWithExitFee, err := stableswap.NewStableswapPool(
+		1,
+		stableswap.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
+		twoStablePoolAssets,
+		"",
+		time.Now(),
+	)
+	require.NoError(t, err)
+
+	threeAssetPoolWithExitFee, err := balancer.NewBalancerPool(
+		1,
+		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.MustNewDecFromStr("0.0002")},
+		threeBalancerPoolAssets,
+		"",
+		time.Now(),
+	)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name          string
