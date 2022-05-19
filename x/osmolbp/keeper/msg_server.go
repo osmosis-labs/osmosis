@@ -75,8 +75,6 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 	}
 	subscribe(p, u, msg.Amount, ctx.BlockTime())
 
-	p.Subscribe(u, msg.Amount, now)
-
 	k.saveLBP(store, poolIdBz, p)
 	k.saveUserPosition(store, poolIdBz, sender, u)
 	// TODO: event

@@ -66,7 +66,6 @@ func subscribe(p *api.LBP, u *api.UserPosition, amount sdk.Int, now time.Time) {
 	u.Shares = u.Shares.Add(shares)
 	p.Shares = p.Shares.Add(shares)
 	p.Staked = p.Staked.Add(amount)
-
 	u.Staked = lbpRemainigBalance(p, u.Shares)
 }
 
