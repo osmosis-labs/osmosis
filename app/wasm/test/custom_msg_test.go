@@ -2,9 +2,10 @@ package wasm
 
 import (
 	"encoding/json"
-	"testing"
-
+	"fmt"
 	"github.com/stretchr/testify/require"
+	"testing"
+	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -373,7 +374,7 @@ func TestSwapMsg(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			creator := RandomAccountAddress()
 			osmosis, ctx := SetupCustomApp(t, creator)
-			state := prepareSwapState(t, ctx, osmosis)
+			state := prepareBaseState(t, ctx, osmosis)
 
 			trader := RandomAccountAddress()
 			fundAccount(t, ctx, osmosis, trader, []sdk.Coin{tc.initFunds})
@@ -397,7 +398,7 @@ func TestSwapMsg(t *testing.T) {
 }
 
 // test setup for each run through the table test above
-func prepareSwapState(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp) BaseState {
+func prepareBaseState(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp) BaseState {
 	actor := RandomAccountAddress()
 
 	swapperFunds := sdk.NewCoins(
@@ -471,4 +472,61 @@ func executeCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contr
 	contractKeeper := keeper.NewDefaultPermissionKeeper(osmosis.WasmKeeper)
 	_, err = contractKeeper.Execute(ctx, contract, sender, reflectBz, coins)
 	return err
+}
+
+func TestLockTokensMsg(t *testing.T) {
+	cases := []struct {
+		name       string
+		msg        func(BaseState) *wasmbindings.LockTokensMsg
+		expectErr  bool
+		initFunds  sdk.Coin
+		finalFunds []sdk.Coin
+		locked     []sdk.Coin
+	}{
+		{
+			name: "simple lock works",
+			msg: func(state BaseState) *wasmbindings.LockTokensMsg {
+				tmp, _ := time.ParseDuration("3600")
+				duration := wasmbindings.Duration(tmp)
+				return &wasmbindings.LockTokensMsg{
+					"gamm/pool/1",
+					sdk.NewInt(1),
+					duration,
+				}
+			},
+			initFunds: sdk.NewInt64Coin("gamm/pool/1", 10),
+			finalFunds: []sdk.Coin{
+				sdk.NewInt64Coin("gamm/pool/1", 9),
+			},
+			locked: []sdk.Coin{
+				sdk.NewInt64Coin("gamm/pool/1", 1),
+			},
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			creator := RandomAccountAddress()
+			osmosis, ctx := SetupCustomApp(t, creator)
+			state := prepareBaseState(t, ctx, osmosis)
+
+			lp := RandomAccountAddress()
+			fundAccount(t, ctx, osmosis, lp, []sdk.Coin{tc.initFunds})
+			reflect := instantiateReflectContract(t, ctx, osmosis, lp)
+			require.NotEmpty(t, reflect)
+
+			msg := wasmbindings.OsmosisMsg{LockTokens: tc.msg(state)}
+			err := executeCustom(t, ctx, osmosis, reflect, lp, msg, tc.initFunds)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				balances := osmosis.BankKeeper.GetAllBalances(ctx, reflect)
+				// uncomment these to debug any confusing results (show balances, not (*big.Int)(0x140005e51e0))
+				// fmt.Printf("Expected: %s\n", tc.finalFunds)
+				fmt.Printf("Got: %s\n", balances)
+				require.EqualValues(t, tc.finalFunds, balances)
+			}
+		})
+	}
 }
