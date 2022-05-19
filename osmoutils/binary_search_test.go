@@ -13,6 +13,7 @@ func TestBinarySearch(t *testing.T) {
 	lineF := func(a sdk.Int) (sdk.Int, error) {
 		return a, nil
 	}
+	// error tolerance value when binary searching for the answer.
 	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
 	tests := []struct {
 		f             func(sdk.Int) (sdk.Int, error)
@@ -24,6 +25,12 @@ func TestBinarySearch(t *testing.T) {
 
 		expectedSolvedInput sdk.Int
 		expectErr           bool
+	// This binary searches inputs to a monotonic increasing function F
+	// We stop when the answer is within error bounds stated by errTolerance
+	// First, (lowerbound + upperbound) / 2 becomes the current estimate.
+	// A current output is also defined as f(current estimate). In this case f is lineF
+	// We then compare the current output with the target output to see if it's within error tolerance bounds. If not, continue binary searching by iterating.
+	// If it is, we return current output
 	}{
 		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(1 + (1 << 25)), false},
 		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
@@ -41,6 +48,9 @@ func TestBinarySearch(t *testing.T) {
 }
 
 func TestBinarySearchNonlinear(t *testing.T) {
+	lineF := func(a sdk.Int) (sdk.Int, error) {
+		return a, nil
+	}
 	// x^2 function, a test example for a monotonic increasing function
 	// binary search directly reveals one bit of the answer in each iteration with this function.
 	expF := func(a sdk.Int) (sdk.Int, error) {
@@ -63,6 +73,8 @@ func TestBinarySearchNonlinear(t *testing.T) {
 	}{
 		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(322539792367616), false},
 		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
+		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(1 + (1 << 25)), false},
+		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
 	}
 
 	for _, tc := range tests {
@@ -79,12 +91,16 @@ func TestBinarySearchNonlinear(t *testing.T) {
 func TestBinarySearchNonlinearNonzero(t *testing.T) {
 	// now we test nonzero tolerance with a nonlinear function
 	// binary search directly reveals one bit of the answer in each iteration with this function.
+	lineF := func(a sdk.Int) (sdk.Int, error) {
+		return a, nil
+	}
 	expF := func(a sdk.Int) (sdk.Int, error) {
 		calculation := sdk.Dec(a)
 		result := calculation.Power(3)
 		output := sdk.Int(result)
 		return output, nil
 	}
+	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
 	testErrTolerance := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
 	tests := []struct {
 		f             func(sdk.Int) (sdk.Int, error)
@@ -99,6 +115,8 @@ func TestBinarySearchNonlinearNonzero(t *testing.T) {
 	}{
 		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrTolerance, 51, sdk.NewInt(1 << 46), false},
 		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrTolerance, 10, sdk.Int{}, true},
+		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(1 + (1 << 25)), false},
+		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
 	}
 
 	for _, tc := range tests {
