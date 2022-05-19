@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -194,5 +196,52 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 }
 
 func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsWithNormalStaking() {
+	suite.SetupTest()
 
+	// Generate delegator addresses
+	delAddrs := CreateRandomAccounts(2)
+
+	// setup 2 validators
+	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
+
+	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+	// create a delegation of 1000000 for every combination of 2 delegations, 2 validators, and 2 superfluid denoms
+	superfluidDelegations := []superfluidDelegation{
+		{0, 0, 0, 1000000},
+		{0, 1, 1, 1000000},
+		{1, 0, 1, 1000000},
+		{1, 1, 0, 1000000},
+	}
+
+	// setup superfluid delegations
+	suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
+
+	// setup normal delegations
+	bond0to0 := stakingtypes.NewDelegation(delAddrs[0], valAddrs[0], sdk.NewDec(9))
+	bond0to1 := stakingtypes.NewDelegation(delAddrs[0], valAddrs[1], sdk.NewDec(9))
+	bond1to0 := stakingtypes.NewDelegation(delAddrs[1], valAddrs[0], sdk.NewDec(9))
+	bond1to1 := stakingtypes.NewDelegation(delAddrs[1], valAddrs[1], sdk.NewDec(9))
+
+	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond0to0)
+	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond0to1)
+	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond1to0)
+	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond1to1)
+
+	// for each delegator, query all their superfluid delegations and normal delegations. Making sure they have 4 delegations
+	for _, delegator := range delAddrs {
+		res, err := suite.queryClient.SuperfluidDelegationsByDelegator(sdk.WrapSDKContext(suite.Ctx), &types.SuperfluidDelegationsByDelegatorRequest{
+			DelegatorAddress: delegator.String(),
+		})
+
+		fmt.Printf("res = %v", res)
+
+		suite.Require().NoError(err)
+		suite.Require().Len(res.SuperfluidDelegationRecords, 4)
+		suite.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+			sdk.NewInt64Coin(denoms[0], 1000000),
+			sdk.NewInt64Coin(denoms[1], 1000000),
+			sdk.NewInt64Coin(suite.App.StakingKeeper.BondDenom(suite.Ctx), 18),
+		)))
+	}
 }
