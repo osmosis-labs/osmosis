@@ -10,6 +10,13 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+func (k Keeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	params := k.GetParams(sdkCtx)
+
+	return &types.QueryParamsResponse{Params: params}, nil
+}
+
 func (k Keeper) DenomAuthorityMetadata(ctx context.Context, req *types.QueryDenomAuthorityMetadataRequest) (*types.QueryDenomAuthorityMetadataResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

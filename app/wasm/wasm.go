@@ -2,6 +2,7 @@ package wasm
 
 import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -13,6 +14,7 @@ import (
 func RegisterCustomPlugins(
 	gammKeeper *gammkeeper.Keeper,
 	bank *bankkeeper.BaseKeeper,
+	tokenFactory *tokenfactorykeeper.Keeper,
 	lockup *lockupkeeper.Keeper,
 ) []wasmkeeper.Option {
 	wasmQueryPlugin := NewQueryPlugin(gammKeeper)
@@ -21,7 +23,7 @@ func RegisterCustomPlugins(
 		Custom: CustomQuerier(wasmQueryPlugin),
 	})
 	messengerDecoratorOpt := wasmkeeper.WithMessageHandlerDecorator(
-		CustomMessageDecorator(gammKeeper, bank, lockup),
+		CustomMessageDecorator(gammKeeper, bank, tokenFactory, lockup),
 	)
 
 	return []wasm.Option{

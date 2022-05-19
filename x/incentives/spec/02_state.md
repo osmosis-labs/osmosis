@@ -1,18 +1,27 @@
+```{=html}
 <!--
 order: 2
 -->
+```
 
-# State
+State
+=====
 
-## Incentives management
+Incentives management
+---------------------
 
-All the incentives that are going to be provided are locked into `IncentivePool` until released to the appropriate recipients after a specific period of time.
+All the incentives that are going to be provided are locked into
+`IncentivePool` until released to the appropriate recipients after a
+specific period of time.
 
 ### Gauge
 
-Rewards to be distributed are organized by `Gauge`. The `Gauge` describes how users can get reward, stores the amount of coins in the gauge, the cadence at which rewards are to be distributed, and the number of epochs to distribute the reward over.
+Rewards to be distributed are organized by `Gauge`. The `Gauge`
+describes how users can get reward, stores the amount of coins in the
+gauge, the cadence at which rewards are to be distributed, and the
+number of epochs to distribute the reward over.
 
-```protobuf
+``` {.protobuf}
 enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
@@ -40,25 +49,31 @@ message Gauge {
 
 #### Upcoming queue
 
-To start release `Gauges` at a specific time, we schedule distribution start time with time key queue.
+To start release `Gauges` at a specific time, we schedule distribution
+start time with time key queue.
 
 #### Active queue
 
-Active queue has all the `Gauges` that are distributing and after distribution period finish, it's removed from the queue.
+Active queue has all the `Gauges` that are distributing and after
+distribution period finish, it's removed from the queue.
 
 #### Active by Denom queue
 
-To speed up the distribution process, module introduces the active `Gauges` by denom.
+To speed up the distribution process, module introduces the active
+`Gauges` by denom.
 
 #### Finished queue
 
-Finished queue saves the `Gauges` that has finished distribution to keep in track.
+Finished queue saves the `Gauges` that has finished distribution to keep
+in track.
 
-## Module state
+Module state
+------------
 
-The state of the module is expressed by `params`, `lockable_durations` and `gauges`.
+The state of the module is expressed by `params`, `lockable_durations`
+and `gauges`.
 
-```protobuf
+``` {.protobuf}
 // GenesisState defines the incentives module's genesis state.
 message GenesisState {
   // params defines all the parameters of the module

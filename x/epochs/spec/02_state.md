@@ -1,15 +1,12 @@
-<!--
-order: 2
--->
-
 # State
 
-Epochs module keeps `EpochInfo` objects and modify the information as epochs info changes.
-Epochs are initialized as part of genesis initialization, and modified on begin blockers or end blockers.
+Epochs module keeps `EpochInfo` objects and modify the information as
+epochs info changes. Epochs are initialized as part of genesis
+initialization, and modified on begin blockers or end blockers.
 
-### Epoch information type
+## Epoch information type
 
-```protobuf
+``` {.protobuf}
 message EpochInfo {
     string identifier = 1;
     google.protobuf.Timestamp start_time = 2 [
@@ -35,12 +32,17 @@ message EpochInfo {
 }
 ```
 
-EpochInfo keeps `identifier`, `start_time`,`duration`, `current_epoch`, `current_epoch_start_time`,  `epoch_counting_started`, `current_epoch_start_height`.
+EpochInfo keeps `identifier`, `start_time`,`duration`, `current_epoch`,
+`current_epoch_start_time`, `epoch_counting_started`,
+`current_epoch_start_height`.
 
 1. `identifier` keeps epoch identification string.
-2. `start_time` keeps epoch counting start time, if block time passes `start_time`, `epoch_counting_started` is set.
+2. `start_time` keeps epoch counting start time, if block time passes
+    `start_time`, `epoch_counting_started` is set.
 3. `duration` keeps target epoch duration.
 4. `current_epoch` keeps current active epoch number.
 5. `current_epoch_start_time` keeps the start time of current epoch.
-6. `epoch_number` is counted only when `epoch_counting_started` flag is set.
-7. `current_epoch_start_height` keeps the start block height of current epoch.
+6. `epoch_number` is counted only when `epoch_counting_started` flag is
+    set.
+7. `current_epoch_start_height` keeps the start block height of current
+    epoch.
