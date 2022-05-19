@@ -5,7 +5,7 @@ import (
 )
 
 // OsmosisQuery contains osmosis custom queries.
-// See https://github.com/confio/osmosis-bindings/blob/main/packages/bindings/src/query.rs
+// See https://github.com/osmosis-labs/osmosis-bindings/blob/main/packages/bindings/src/query.rs
 type OsmosisQuery struct {
 	/// Given a subdenom minted by a contract via `OsmosisMsg::MintTokens`,
 	/// returns the full denom as used by `BankMsg::Send`.
