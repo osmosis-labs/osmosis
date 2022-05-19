@@ -2,12 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/x/osmolbp"
 	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -37,8 +38,8 @@ func GetTxCmd() *cobra.Command {
 // CreateLBPCmd broadcast MsgCreateLBP.
 func CreateLBPCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-lbp [flags]",
-		Short: "create-lbp creates s lbp",
+		Use:   "create [flags]",
+		Short: "Create/Setup LBP",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -72,7 +73,7 @@ func CreateLBPCmd() *cobra.Command {
 func SubscribeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "subscribe [flags]",
-		Short: "subscribe used to join/subscribe LBP",
+		Short: "Subscribe or Join LBP",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -103,7 +104,7 @@ func SubscribeCmd() *cobra.Command {
 func WithdrawCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw [flags]",
-		Short: "withdraw used to withdraw amount from LBP",
+		Short: "Withdraw amount from LBP",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -133,7 +134,7 @@ func WithdrawCmd() *cobra.Command {
 func ExitLBPCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exit [flags]",
-		Short: "exit used to exit from LBP",
+		Short: "Exit from LBP",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -199,14 +200,16 @@ func NewBuildCreateLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 	}
 
 	msg := &api.MsgCreateLBP{
-		TokenIn: tokenIn,
-		TokenOut: tokenOut,
-		StartTime: startTime,
-		Duration: duration,
+		TokenIn:        tokenIn,
+		TokenOut:       tokenOut,
+		StartTime:      startTime,
+		Duration:       duration,
 		InitialDeposit: InitialDeposit,
-		Treasury: treasury.String(),
-		Creator: clientCtx.GetFromAddress().String(),
+		Treasury:       treasury.String(),
+		Creator:        clientCtx.GetFromAddress().String(),
 	}
+
+	//Add validateBasic here before return
 	return txf, msg, nil
 }
 
