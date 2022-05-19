@@ -2,7 +2,6 @@ package wasm
 
 import (
 	"encoding/json"
-	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,8 +51,6 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		}
 		if contractMsg.LockTokens != nil {
 			return m.lockTokens(ctx, contractAddr, contractMsg.LockTokens)
-		} else {
-			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, fmt.Sprintf("%s %s", contractMsg, msg))
 		}
 	}
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)

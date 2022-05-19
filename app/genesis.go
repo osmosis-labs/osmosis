@@ -24,7 +24,7 @@ func NewDefaultGenesisState() GenesisState {
 	// here we override wasm config to make it permissioned by default
 	wasmGen := wasm.GenesisState{
 		Params: wasmtypes.Params{
-			CodeUploadAccess:             wasmtypes.AllowNobody,
+			//CodeUploadAccess:             wasmtypes.AllowNobody,
 			InstantiateDefaultPermission: wasmtypes.AccessTypeEverybody,
 			// DefaultMaxWasmCodeSize limit max bytes read to prevent gzip bombs
 			// It is 1200 KB in x/wasm, update it later via governance if really needed
