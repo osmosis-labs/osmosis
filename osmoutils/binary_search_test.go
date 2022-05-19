@@ -25,12 +25,12 @@ func TestBinarySearch(t *testing.T) {
 
 		expectedSolvedInput sdk.Int
 		expectErr           bool
-	// This binary searches inputs to a monotonic increasing function F
-	// We stop when the answer is within error bounds stated by errTolerance
-	// First, (lowerbound + upperbound) / 2 becomes the current estimate.
-	// A current output is also defined as f(current estimate). In this case f is lineF
-	// We then compare the current output with the target output to see if it's within error tolerance bounds. If not, continue binary searching by iterating.
-	// If it is, we return current output
+		// This binary searches inputs to a monotonic increasing function F
+		// We stop when the answer is within error bounds stated by errTolerance
+		// First, (lowerbound + upperbound) / 2 becomes the current estimate.
+		// A current output is also defined as f(current estimate). In this case f is lineF
+		// We then compare the current output with the target output to see if it's within error tolerance bounds. If not, continue binary searching by iterating.
+		// If it is, we return current output
 	}{
 		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(1 + (1 << 25)), false},
 		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
