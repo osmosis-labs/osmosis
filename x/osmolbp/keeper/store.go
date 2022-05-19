@@ -30,8 +30,7 @@ func (k *Keeper) saveLBP(modulestore storetypes.KVStore, id []byte, p *api.LBP) 
 // returns pool, pool bytes id, error
 func (k *Keeper) getLBP(modulestore storetypes.KVStore, id uint64) (api.LBP, []byte, error) {
 	store := k.lbpStore(modulestore)
-	idBz := make([]byte, 8)
-	binary.BigEndian.PutUint64(idBz, id)
+	idBz := storeIntIdKey(id)
 	bz := store.Get(idBz)
 	var p api.LBP
 	if bz == nil {
@@ -121,4 +120,10 @@ func (k Keeper) getUserAndLBP(modulestore storetypes.KVStore, poolId uint64, use
 	}
 	u, err := k.getUserPosition(modulestore, poolIdBz, userAddr, create)
 	return userAddr, &p, poolIdBz, &u, err
+}
+
+func storeIntIdKey(id uint64) []byte {
+	idBz := make([]byte, 8)
+	binary.BigEndian.PutUint64(idBz, id)
+	return idBz
 }
