@@ -14,6 +14,7 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&Pool{}, "osmosis/gamm/StableswapPool", nil)
 	cdc.RegisterConcrete(&MsgCreateStableswapPool{}, "osmosis/gamm/create-stableswap-pool", nil)
+	cdc.RegisterConcrete(&MsgStableSwapAdjustScalingFactors{}, "osmosis/gamm/stableswap-adjust-scaling-factors", nil)
 	cdc.RegisterConcrete(&PoolParams{}, "osmosis/gamm/StableswapPoolParams", nil)
 }
 
@@ -26,6 +27,7 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreateStableswapPool{},
+		&MsgStableSwapAdjustScalingFactors{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
