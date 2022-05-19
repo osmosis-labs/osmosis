@@ -5,13 +5,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"testing"
 
-	"fmt"
-	"github.com/stretchr/testify/require"
-	"time"
-
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
@@ -547,59 +544,59 @@ func executeCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contr
 	return err
 }
 
-func TestLockTokensMsg(t *testing.T) {
-	cases := []struct {
-		name       string
-		msg        func(BaseState) *wasmbindings.LockTokensMsg
-		expectErr  bool
-		initFunds  sdk.Coin
-		finalFunds []sdk.Coin
-		locked     []sdk.Coin
-	}{
-		{
-			name: "simple lock works",
-			msg: func(state BaseState) *wasmbindings.LockTokensMsg {
-				tmp, _ := time.ParseDuration("3600")
-				duration := wasmbindings.Duration(tmp)
-				return &wasmbindings.LockTokensMsg{
-					"gamm/pool/1",
-					sdk.NewInt(1),
-					duration,
-				}
-			},
-			initFunds: sdk.NewInt64Coin("gamm/pool/1", 10),
-			finalFunds: []sdk.Coin{
-				sdk.NewInt64Coin("gamm/pool/1", 9),
-			},
-			locked: []sdk.Coin{
-				sdk.NewInt64Coin("gamm/pool/1", 1),
-			},
-		},
-	}
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			creator := RandomAccountAddress()
-			osmosis, ctx := SetupCustomApp(t, creator)
-			state := prepareBaseState(t, ctx, osmosis)
-
-			lp := RandomAccountAddress()
-			fundAccount(t, ctx, osmosis, lp, []sdk.Coin{tc.initFunds})
-			reflect := instantiateReflectContract(t, ctx, osmosis, lp)
-			require.NotEmpty(t, reflect)
-
-			msg := wasmbindings.OsmosisMsg{LockTokens: tc.msg(state)}
-			err := executeCustom(t, ctx, osmosis, reflect, lp, msg, tc.initFunds)
-			if tc.expectErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				balances := osmosis.BankKeeper.GetAllBalances(ctx, reflect)
-				// uncomment these to debug any confusing results (show balances, not (*big.Int)(0x140005e51e0))
-				// fmt.Printf("Expected: %s\n", tc.finalFunds)
-				fmt.Printf("Got: %s\n", balances)
-				require.EqualValues(t, tc.finalFunds, balances)
-			}
-		})
-	}
-}
+//func TestLockTokensMsg(t *testing.T) {
+//	cases := []struct {
+//		name       string
+//		msg        func(BaseState) *wasmbindings.LockTokensMsg
+//		expectErr  bool
+//		initFunds  sdk.Coin
+//		finalFunds []sdk.Coin
+//		locked     []sdk.Coin
+//	}{
+//		{
+//			name: "simple lock works",
+//			msg: func(state BaseState) *wasmbindings.LockTokensMsg {
+//				tmp, _ := time.ParseDuration("3600")
+//				duration := wasmbindings.Duration(tmp)
+//				return &wasmbindings.LockTokensMsg{
+//					"gamm/pool/1",
+//					sdk.NewInt(1),
+//					duration,
+//				}
+//			},
+//			initFunds: sdk.NewInt64Coin("gamm/pool/1", 10),
+//			finalFunds: []sdk.Coin{
+//				sdk.NewInt64Coin("gamm/pool/1", 9),
+//			},
+//			locked: []sdk.Coin{
+//				sdk.NewInt64Coin("gamm/pool/1", 1),
+//			},
+//		},
+//	}
+//	for _, tc := range cases {
+//		tc := tc
+//		t.Run(tc.name, func(t *testing.T) {
+//			creator := RandomAccountAddress()
+//			osmosis, ctx := SetupCustomApp(t, creator)
+//			state := prepareBaseState(t, ctx, osmosis)
+//
+//			lp := RandomAccountAddress()
+//			fundAccount(t, ctx, osmosis, lp, []sdk.Coin{tc.initFunds})
+//			reflect := instantiateReflectContract(t, ctx, osmosis, lp)
+//			require.NotEmpty(t, reflect)
+//
+//			msg := wasmbindings.OsmosisMsg{LockTokens: tc.msg(state)}
+//			err := executeCustom(t, ctx, osmosis, reflect, lp, msg, tc.initFunds)
+//			if tc.expectErr {
+//				require.Error(t, err)
+//			} else {
+//				require.NoError(t, err)
+//				balances := osmosis.BankKeeper.GetAllBalances(ctx, reflect)
+//				// uncomment these to debug any confusing results (show balances, not (*big.Int)(0x140005e51e0))
+//				// fmt.Printf("Expected: %s\n", tc.finalFunds)
+//				fmt.Printf("Got: %s\n", balances)
+//				require.EqualValues(t, tc.finalFunds, balances)
+//			}
+//		})
+//	}
+//}

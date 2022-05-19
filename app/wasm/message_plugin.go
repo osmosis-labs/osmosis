@@ -21,9 +21,9 @@ import (
 func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper, lockupKeeper *lockupkeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
 		return &CustomMessenger{
-			wrapped:    old,
-			bank:       bank,
-			gammKeeper: gammKeeper,
+			wrapped:      old,
+			bank:         bank,
+			gammKeeper:   gammKeeper,
 			tokenFactory: tokenFactory,
 			lockupKeeper: lockupKeeper,
 		}
@@ -31,9 +31,9 @@ func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.Base
 }
 
 type CustomMessenger struct {
-	wrapped    wasmkeeper.Messenger
-	bank       *bankkeeper.BaseKeeper
-	gammKeeper *gammkeeper.Keeper
+	wrapped      wasmkeeper.Messenger
+	bank         *bankkeeper.BaseKeeper
+	gammKeeper   *gammkeeper.Keeper
 	tokenFactory *tokenfactorykeeper.Keeper
 	lockupKeeper *lockupkeeper.Keeper
 }
@@ -119,7 +119,8 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 func (m *CustomMessenger) lockTokens(ctx sdk.Context, contractAddr sdk.AccAddress, lock *wasmbindings.LockTokensMsg) ([]sdk.Event, [][]byte, error) {
 	coins := []sdk.Coin{sdk.NewCoin(lock.Denom, lock.Amount)}
 
-	_, err := m.lockupKeeper.LockTokens(ctx, contractAddr, coins, time.Duration(lock.Duration))
+	_, err := m.lockupKeeper.CreateLock(ctx, contractAddr, coins, time.Duration(lock.Duration))
+
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "perform lock")
 	}
