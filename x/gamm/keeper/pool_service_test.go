@@ -573,3 +573,37 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 		})
 	}
 }
+
+// func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
+// 	stableSwapPoolParams := stableswap.PoolParams{
+// 		SwapFee: defaultSwapFee,
+// 		ExitFee: defaultExitFee,
+// 	}
+
+// 	testPoolAsset := sdk.Coins{
+// 		sdk.NewCoin("foo", sdk.NewInt(10000)),
+// 		sdk.NewCoin("bar", sdk.NewInt(10000)),
+// 	}
+
+// 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
+
+// 	testScalingFactors := []uint64{1, 1}
+
+// 	msg := stableswap.NewMsgCreateStableswapPool(
+// 		suite.TestAccs[0], stableSwapPoolParams, testPoolAsset, defaultFutureGovernor)
+// 	poolID, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+// 	suite.Require().NoError(err)
+
+// 	err = suite.App.GAMMKeeper.SetStableSwapScalingFactors(suite.Ctx, testScalingFactors, poolID, "")
+// 	suite.Require().NoError(err)
+
+// 	poolI, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolID)
+// 	suite.Require().NoError(err)
+
+// 	poolScalingFactors := poolI.(*stableswap.Pool).GetScalingFactors()
+
+// 	suite.Require().Equal(
+// 		poolScalingFactors,
+// 		testScalingFactors,
+// 	)
+// }

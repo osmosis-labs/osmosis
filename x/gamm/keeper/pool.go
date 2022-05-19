@@ -227,7 +227,7 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 }
 
 // set ScalingFactors in stable stableswap pools
-func (k *Keeper) setStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, poolId uint64, scalingFactorGovernor string) error {
+func (k *Keeper) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, poolId uint64, scalingFactorGovernor string) error {
 	poolI, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return err
