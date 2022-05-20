@@ -74,6 +74,7 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 		return errors.Wrap(err, "user doesn't have enough tokens to subscribe for a LBP")
 	}
 	subscribe(p, u, msg.Amount, ctx.BlockTime())
+
 	k.saveLBP(store, poolIdBz, p)
 	k.saveUserPosition(store, poolIdBz, sender, u)
 	// TODO: event
