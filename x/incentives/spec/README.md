@@ -4,22 +4,15 @@
 
 Incentives module provides general interface to give yield to stakers.
 
-The yield to be given to stakers are stored in `gauge` and it is
-distributed on epoch basis to the stakers who meet specific conditions.
+The yield to be given to stakers are stored in `gauge` and it is distributed on epoch basis to the stakers who meet specific conditions.
 
-Anyone can create gauge and add rewards to the gauge, there is no way to
-take it out other than distribution.
+Anyone can create gauge and add rewards to the gauge, there is no way to take it out other than distribution.
 
 There are two kinds of `gauges`, perpetual and non-perpetual ones.
 
-- Non perpetual ones get removed from active queue after the the
-    distribution period finish but perpetual ones persist.
-- For non perpetual ones, they distribute the tokens equally per epoch
-    during the `gauge` is in the active period.
-- For perpetual ones, it distribute all the tokens at a single time
-    and somewhere else put the tokens regularly to distribute the
-    tokens, it's mainly used to distribute minted OSMO tokens to LP
-    token stakers.
+- Non perpetual ones get removed from active queue after the the distribution period finish but perpetual ones persist.
+- For non perpetual ones, they distribute the tokens equally per epoch during the `gauge` is in the active period.
+- For perpetual ones, it distribute all the tokens at a single time and somewhere else put the tokens regularly to distribute the tokens, it's mainly used to distribute minted OSMO tokens to LP token stakers.
 
 ## Contents
 
@@ -27,15 +20,17 @@ There are two kinds of `gauges`, perpetual and non-perpetual ones.
 2. **[State](02_state.md)**
 3. **[Messages](03_messages.md)**
 4. **[Events](04_events.md)**
-5. **[Hooks](05_hooks.md)**  
-6. **[Queries](06_queries.md)**  
-7. **[Params](07_params.md)**  
+5. **[Hooks](05_hooks.md)**
+6. **[Queries](06_queries.md)**
+7. **[Params](07_params.md)**
 
-## Overview 
+## Overview
 
 The purpose of incentives module is to provide incentives to users who lock certain tokens for specified periods of time.
 
-Locked tokens can be of any denomination, including LP tokens (gamm/pool/x), IBC tokens (tokens sent through IBC such as ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2), and native tokens (such as ATOM or LUNA). The incentive amount is entered by the gauge creator. Rewards for a given pool of locked up tokens are pooled into a gauge until the disbursement time. At the disbursement time, they are distributed pro-rata (proportionally) to members of the pool.
+Locked tokens can be of any denomination, including LP tokens (gamm/pool/x), IBC tokens (tokens sent through IBC such as ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2), and native tokens (such as ATOM or LUNA). 
+
+The incentive amount is entered by the gauge creator. Rewards for a given pool of locked up tokens are pooled into a gauge until the disbursement time. At the disbursement time, they are distributed pro-rata (proportionally) to members of the pool.
 
 Anyone can create a gauge and add rewards to the gauge. There is no way to withdraw gauge rewards other than distribution. Governance proposals can be raised to match the external incentive tokens with equivalent Osmo incentives (see for example: [proposal 47](https://www.mintscan.io/osmosis/proposals/47)).
 
@@ -44,7 +39,6 @@ There are two kinds of gauges: **`perpetual`** and **`non-perpetual`**:
 - **`Non-perpetual`** gauges distribute their tokens equally per epoch while the gauge is in the active period. These gauges get removed from the active queue after the distribution period finishes
 
 - **`Perpetual gauges`** distribute all their tokens at a single time and only distribute their tokens again once the gauge is refilled (this is mainly used to distribute minted OSMO tokens to LP token stakers). Perpetual gauges persist and will re-disburse tokens when refilled (there is no "active" period)
-
 
 
 </br>
@@ -107,7 +101,7 @@ osmosisd tx incentives add-to-gauge 1914 500000000ibc/46B44899322F3CD854D2D46DEE
 
 ## Queries
 
-### active-gauges           
+### active-gauges
 
 Query active gauges
 
@@ -157,7 +151,7 @@ pagination:
 
 
 
-### active-gauges-per-denom 
+### active-gauges-per-denom
 
 Query active gauges per denom
 
@@ -209,7 +203,7 @@ pagination:
 
 
 
-### distributed-coins       
+### distributed-coins
 
 Query coins distributed so far
 
@@ -259,7 +253,7 @@ coins:
 :::
 
 
-### gauge-by-id             
+### gauge-by-id
 
 Query gauge by id
 
@@ -299,7 +293,7 @@ gauge:
 
 
 
-### gauges                  
+### gauges
 
 Query available gauges
 
@@ -353,23 +347,14 @@ pagination:
 ```
 :::
 
-
-
-
-
-
-### rewards-estimation      
+### rewards-estimation
 
 Query rewards estimation
 
 // Error: strconv.ParseUint: parsing "": invalid syntax
 
 
-
-
-
-
-### to-distribute-coins     
+### to-distribute-coins
 
 Query coins that is going to be distributed
 
@@ -415,7 +400,7 @@ coins:
 :::
 
 
-### upcoming-gauges         
+### upcoming-gauges
 
 Query scheduled gauges (gauges whose `start_time` has not yet occurred)
 

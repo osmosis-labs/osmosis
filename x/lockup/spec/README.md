@@ -4,10 +4,11 @@
 
 Lockup module provides an interface for users to lock tokens (also known as bonding) into the module to get incentives.
 
-After tokens have been added to a specific pool and turned into LP shares through the GAMM module, users can then lock these LP shares with a specific duration in order to begin earing rewards. To unlock these LP shares, users must trigger the unlock timer and wait for the unlock period that was set initially to be completed. After the unlock period is over, users can turn LP shares back into their respective share of tokens. 
+After tokens have been added to a specific pool and turned into LP shares through the GAMM module, users can then lock these LP shares with a specific duration in order to begin earing rewards.
 
-This module provides interfaces for other modules to iterate the locks
-efficiently and grpc query to check the status of locked coins.
+To unlock these LP shares, users must trigger the unlock timer and wait for the unlock period that was set initially to be completed. After the unlock period is over, users can turn LP shares back into their respective share of tokens.
+
+This module provides interfaces for other modules to iterate the locks efficiently and grpc query to check the status of locked coins.
 
 ## Contents
 
@@ -23,9 +24,13 @@ efficiently and grpc query to check the status of locked coins.
 
 ## Overview 
 
-There are currently three incentivize lockup periods; `1 day` (24h), `1 week` (168h), and `2 weeks` (336h). When locking tokens in the 2 week period, the liquidity provider is effectively earning rewards for a combination of the 1 day, 1 week, and 2 week bonding periods. The 2 week period refers to how long it takes to unbond the LP shares. The liquidity provider can keep their LP shares bonded to the 2 week lockup period indefinitely. Unbonding is only required when the liquidity provider desires access to the underlying assets.
+There are currently three incentivize lockup periods; `1 day` (24h), `1 week` (168h), and `2 weeks` (336h). When locking tokens in the 2 week period, the liquidity provider is effectively earning rewards for a combination of the 1 day, 1 week, and 2 week bonding periods.
 
-If the liquidity provider begins the unbonding process for their 2 week bonded LP shares, they will earn rewards for all three bonding periods during the first day of unbonding. After the first day passes, they will only receive rewards for the 1 day and 1 week lockup periods. After seven days pass, they will only receive the 1 day rewards until the 2 weeks is complete and their LP shares are unlocked. The below chart is a visual example of what was just explained.
+The 2 week period refers to how long it takes to unbond the LP shares. The liquidity provider can keep their LP shares bonded to the 2 week lockup period indefinitely. Unbonding is only required when the liquidity provider desires access to the underlying assets.
+
+If the liquidity provider begins the unbonding process for their 2 week bonded LP shares, they will earn rewards for all three bonding periods during the first day of unbonding.
+
+After the first day passes, they will only receive rewards for the 1 day and 1 week lockup periods. After seven days pass, they will only receive the 1 day rewards until the 2 weeks is complete and their LP shares are unlocked. The below chart is a visual example of what was just explained.
 
 <br/>
 <p style="text-align:center;">
@@ -95,7 +100,7 @@ Begin unbonding process for all bonded tokens in a wallet
 osmosisd tx lockup begin-unlock-tokens --from --chain-id
 ```
 
-::: details Example 
+::: details Example
 
 To begin unbonding time for ALL pools and ALL bonded tokens in `WALLET_NAME` on the osmosis mainnet:
 
@@ -202,8 +207,7 @@ You may also specify a --height flag to see bonded LP tokens at a specified heig
 :::
 ::::
 
-
-### account-locked-longer-duration 
+### account-locked-longer-duration
 
 Query an account's locked records that are greater than or equal to a specified lock duration
 
@@ -241,7 +245,7 @@ locks:
 :::
 
 
-### account-locked-longer-duration-denom 
+### account-locked-longer-duration-denom
 
 Query an account's locked records for a denom that is locked equal to or greater than the specified duration AND match a specified denom
 
@@ -423,7 +427,7 @@ osmosisd query lockup account-unlockable-coins ADDRESS
 
 
 
-### account-unlocking-coins 
+### account-unlocking-coins
 
 Query an address's LP shares that are currently unlocking
 
@@ -457,7 +461,7 @@ osmosisd query lockup lock-by-id [id]
 
 ::: details Example
 
-Every time a user bonds tokens to an LP, a unique lock ID is created for that transaction. 
+Every time a user bonds tokens to an LP, a unique lock ID is created for that transaction.
 
 Here is an example viewing the lock record for ID 9:
 
@@ -553,8 +557,8 @@ osmosisd query lockup module-locked-amount
 An example output:
 
 ```bash
-{
-  "coins": [
+
+  "coins":
     {
       "denom": "gamm/pool/1",
       "amount": "247321084020868094262821308"
@@ -588,6 +592,7 @@ An example output:
       "amount": "3622601406125950733194696"
     },
 ...
+
 ```
 
 NOTE: This command seems to only work on gRPC and on CLI returns an EOF error.
