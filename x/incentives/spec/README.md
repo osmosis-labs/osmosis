@@ -117,7 +117,7 @@ osmosisd query incentives active-gauges
 
 An example output
 
-```
+```sh
 - coins: []
   distribute_to:
     denom: gamm/pool/99
@@ -169,7 +169,7 @@ osmosisd query incentives active-gauges-per-denom gamm/pool/341
 
 An example output:
 
-```
+```sh
 - coins: []
   distribute_to:
     denom: gamm/pool/341
@@ -219,7 +219,7 @@ osmosisd query incentives distributed-coins
 
 An example output:
 
-```
+```sh
 coins:
 - amount: "27632051924"
   denom: ibc/0954E1C28EB7AF5B72D24F3BC2B47BBB2FDF91BDDFD57B74B99E133AED40972A
@@ -311,7 +311,7 @@ osmosisd query incentives gauges --limit 2000
 
 An example output:
 
-```
+```sh
 - coins:
   - amount: "1924196414964"
     denom: uosmo
@@ -370,7 +370,7 @@ osmosisd query incentives to-distribute-coins
 
 An example output:
 
-```
+```sh
 coins:
 - amount: "20000000"
   denom: gamm/pool/87
@@ -416,7 +416,7 @@ osmosisd query incentives upcoming-gauges
 
 Using this command, we will see the gauge we created earlier, among all other upcoming gauges:
 
-```
+```sh
 - coins:
   - amount: "10000"
     denom: ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4
