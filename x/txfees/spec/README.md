@@ -33,14 +33,14 @@ Currently the only supported metadata & spot price calculator is using a GAMM po
 
 ## Queries
 
-base-denom    
-Query the base fee denom
+base-denom
+- Query the base fee denom
 
-denom-pool-id 
-Query the pool id associated with a specific whitelisted fee token
+denom-pool-id
+- Query the pool id associated with a specific whitelisted fee token
 
-fee-tokens    
-Query the list of non-basedenom fee tokens and their associated pool ids
+fee-tokens
+- Query the list of non-basedenom fee tokens and their associated pool ids
 
 ## Future directions
 

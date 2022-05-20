@@ -101,6 +101,8 @@ osmosisd query gamm pool-params 1
 
 ### Pools
 Query parameters and assets of all active pools.
+
+
 #### Usage
 Query the price of OSMO based on the price of ATOM in pool 1.
 
