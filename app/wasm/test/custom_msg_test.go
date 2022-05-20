@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"testing"
 
@@ -14,6 +15,37 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app"
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 )
+
+func TestCreateDenomMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	lucky := RandomAccountAddress()
+	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
+	require.NotEmpty(t, reflect)
+
+	// Fund reflect contract with 100 base denom creation fees
+	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
+
+	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "SUN",
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	// query the denom and see if it matches
+	query := wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp := wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, fmt.Sprintf("factory/%s/SUN", reflect.String()))
+}
 
 func TestMintMsg(t *testing.T) {
 	creator := RandomAccountAddress()
