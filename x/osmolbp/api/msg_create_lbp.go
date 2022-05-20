@@ -49,7 +49,6 @@ func (msg *MsgCreateLBP) validate() []string {
 	}
 
 	return errmsgs
-	return errmsgs
 }
 
 func (msg *MsgCreateLBP) Validate(now time.Time) error {
