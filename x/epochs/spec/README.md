@@ -25,7 +25,7 @@ they can easily be signalled upon such events.
 
 Query the currently running epochInfos
 
-```
+```sh
 osmosisd query epochs epoch-infos
 ```
 ::: details Example

@@ -50,6 +50,7 @@ Query the number of active pools.
 #### Usage
 ```sh
 osmosisd query gamm num-pools
+```
 
 ## Pool
 <<<<<<< HEAD:x/gamm/spec/05_queries_transactions.md
@@ -160,7 +161,7 @@ osmosisd tx gamm create-pool [flags]
 
 The configuration file *config.json* must specify the following parameters.
 
-```sh
+```json
 {
  "weights": [list weighted denoms],
  "initial-deposit": [list of denoms with initial deposit amount],
@@ -178,7 +179,7 @@ tx gamm create-pool --pool-file ../public/config.json --from myKeyringWallet
 
 The configuration file contains the following parameters.
 
-```sh
+```json
 {
  "weights": "5uatom,5uosmo",
  "initial-deposit": "100uatom,100uosmo",
@@ -244,6 +245,8 @@ osmosisd tx gamm join-swap-extern-amount-in 1000000uosmo 1000000 --pool-id 1 --f
 
 ### Exit Swap Extern Amount Out
 Note that the flag *pool-id* is required.
+
+```sh
 osmosisd tx gamm exit-swap-extern-amount-out [token-out] [share-in-max-amount] [flags]
 ```
 
@@ -251,7 +254,6 @@ osmosisd tx gamm exit-swap-extern-amount-out [token-out] [share-in-max-amount] [
 
 ```sh
 osmosisd tx gamm exit-swap-extern-amount-out 1000000uosmo 1000000 --pool-id 1 --from myKeyringWallet
-
 ```
 
 

@@ -8,8 +8,8 @@ The ``GAMM`` module (**G**eneralized **A**utomated **M**arket **M**aker) provide
 2. **[Concepts](01_concepts.md)**
 3. **[Pool Params](02_pool_params.md)**
 4. **[Messages](03_msgs.md)**
-5. **[Params](04_params.md)** 
-5. **[Queries and Transactions](05_queries_transactions.md)** 
+5. **[Params](04_params.md)**
+5. **[Queries and Transactions](05_queries_transactions.md)**
 
 ## Overview
 
