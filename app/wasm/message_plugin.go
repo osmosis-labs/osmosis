@@ -39,11 +39,14 @@ var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
 
 func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
 	if msg.Custom != nil {
-		// only handle the happy path where this is really minting / swapping ...
+		// only handle the happy path where this is really creating / minting / swapping ...
 		// leave everything else for the wrapped version
 		var contractMsg wasmbindings.OsmosisMsg
 		if err := json.Unmarshal(msg.Custom, &contractMsg); err != nil {
 			return nil, nil, sdkerrors.Wrap(err, "osmosis msg")
+		}
+		if contractMsg.CreateDenom != nil {
+			return m.createDenom(ctx, contractAddr, contractMsg.CreateDenom)
 		}
 		if contractMsg.MintTokens != nil {
 			return m.mintTokens(ctx, contractAddr, contractMsg.MintTokens)
@@ -53,6 +56,29 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		}
 	}
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
+}
+
+func (m *CustomMessenger) createDenom(ctx sdk.Context, contractAddr sdk.AccAddress, createDenom *wasmbindings.CreateDenom) ([]sdk.Event, [][]byte, error) {
+	err := PerformCreateDenom(m.tokenFactory, m.bank, ctx, contractAddr, createDenom)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "perform create denom")
+	}
+	return nil, nil, nil
+}
+
+func PerformCreateDenom(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk.Context, contractAddr sdk.AccAddress, createDenom *wasmbindings.CreateDenom) error {
+	if createDenom == nil {
+		return wasmvmtypes.InvalidRequest{Err: "create denom null create denom"}
+	}
+
+	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
+
+	// Create denom
+	_, err := msgServer.CreateDenom(sdk.WrapSDKContext(ctx), tokenfactorytypes.NewMsgCreateDenom(contractAddr.String(), createDenom.SubDenom))
+	if err != nil {
+		return sdkerrors.Wrap(err, "creating denom")
+	}
+	return nil
 }
 
 func (m *CustomMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAddress, mint *wasmbindings.MintTokens) ([]sdk.Event, [][]byte, error) {
