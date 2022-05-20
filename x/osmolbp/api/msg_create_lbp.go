@@ -47,7 +47,7 @@ func (msg *MsgCreateLBP) validate() []string {
 	if msg.InitialDeposit.Amount.GT(sdk.NewInt(d)) {
 		errmsgs = append(errmsgs, "`initial_deposit` amount must be positive and must be bigger than duration in seconds")
 	}
-	
+
 	return errmsgs
 }
 
