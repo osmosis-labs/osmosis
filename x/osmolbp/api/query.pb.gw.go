@@ -381,4 +381,8 @@ var (
 	forward_Query_LBP_0 = runtime.ForwardResponseMessage
 
 	forward_Query_UserPosition_0 = runtime.ForwardResponseMessage
+<<<<<<< HEAD
 )
+=======
+)
+>>>>>>> 2de0aefed795f8f824a6066c00e2720f33e423bd

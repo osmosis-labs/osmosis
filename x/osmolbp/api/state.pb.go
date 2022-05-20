@@ -1251,4 +1251,8 @@ var (
 	ErrInvalidLengthState        = fmt.Errorf("proto: negative length found during unmarshaling")
 	ErrIntOverflowState          = fmt.Errorf("proto: integer overflow")
 	ErrUnexpectedEndOfGroupState = fmt.Errorf("proto: unexpected end of group")
+<<<<<<< HEAD:x/osmolbp/api/state.pb.go
 )
+=======
+)
+>>>>>>> 2de0aefed795f8f824a6066c00e2720f33e423bd:x/osmolbp/api/state.pb.go

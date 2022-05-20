@@ -126,4 +126,12 @@ func storeIntIdKey(id uint64) []byte {
 	idBz := make([]byte, 8)
 	binary.BigEndian.PutUint64(idBz, id)
 	return idBz
+<<<<<<< HEAD
 }
+=======
+<<<<<<< HEAD
+}
+=======
+}
+>>>>>>> 2de0aefed795f8f824a6066c00e2720f33e423bd
+>>>>>>> osmosis-labs-osmolbp
