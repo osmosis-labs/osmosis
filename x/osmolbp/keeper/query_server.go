@@ -27,8 +27,6 @@ func (k Keeper) LBPs(goCtx context.Context, q *api.QueryLBPs) (*api.QueryLBPsRes
 		return nil, err
 	}
 	return &api.QueryLBPsResponse{lbps, pageRes}, nil
-<<<<<<< HEAD
-=======
 }
 
 func (k Keeper) LBP(ctx context.Context, q *api.QueryLBP) (*api.QueryLBPResponse, error) {
@@ -51,7 +49,6 @@ func (k Keeper) UserPosition(ctx context.Context, q *api.QueryUserPosition) (*ap
 		return nil, err
 	}
 	return &api.QueryUserPositionResponse{up}, nil
->>>>>>> 2de0aefed795f8f824a6066c00e2720f33e423bd
 }
 
 func (k Keeper) LBP(ctx context.Context, q *api.QueryLBP) (*api.QueryLBPResponse, error) {
