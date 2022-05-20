@@ -13,6 +13,55 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestCreateDenom(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	// Fund actor with 100 base denom creation fees
+	actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, actor, actorAmount)
+
+	specs := map[string]struct {
+		createDenom *wasmbindings.CreateDenom
+		expErr      bool
+	}{
+		"valid sub-denom": {
+			createDenom: &wasmbindings.CreateDenom{
+				SubDenom: "MOON",
+			},
+		},
+		"empty sub-denom": {
+			createDenom: &wasmbindings.CreateDenom{
+				SubDenom: "",
+			},
+			expErr: false,
+		},
+		"invalid sub-denom": {
+			createDenom: &wasmbindings.CreateDenom{
+				SubDenom: "sub-denom_2",
+			},
+			expErr: true,
+		},
+		"null create denom": {
+			createDenom: nil,
+			expErr:      true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// when
+			gotErr := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.createDenom)
+			// then
+			if spec.expErr {
+				require.Error(t, gotErr)
+				return
+			}
+			require.NoError(t, gotErr)
+		})
+	}
+
+}
+
 func TestMint(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
