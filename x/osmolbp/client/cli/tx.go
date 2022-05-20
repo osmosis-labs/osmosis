@@ -39,7 +39,7 @@ func GetTxCmd() *cobra.Command {
 func CreateLBPCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [flags]",
-		Short: "Create/Setup LBP",
+		Short: "Create or Setup LBP",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -209,7 +209,6 @@ func NewBuildCreateLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 		Creator:        clientCtx.GetFromAddress().String(),
 	}
 
-	//Add validateBasic here before return
 	return txf, msg, nil
 }
 
