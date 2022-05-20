@@ -15,8 +15,10 @@ func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomNonce stri
 	if err != nil {
 		return "", err
 	}
-	if err := k.distrKeeper.FundCommunityPool(ctx, creationFee, accAddr); err != nil {
-		return "", err
+	if len(creationFee) > 0 {
+		if err := k.distrKeeper.FundCommunityPool(ctx, creationFee, accAddr); err != nil {
+			return "", err
+		}
 	}
 
 	denom, err := types.GetTokenDenom(creatorAddr, denomNonce)
