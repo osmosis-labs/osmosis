@@ -35,8 +35,4 @@ EXPOSE 26657
 EXPOSE 1317
 
 ENTRYPOINT ["osmosisd"]
-<<<<<<< HEAD
 CMD [ "start" ]
-=======
-CMD [ "start" ]
->>>>>>> d610ff3 (Make token factory handle empty genesis configurations better (#1551))
