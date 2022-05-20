@@ -37,7 +37,8 @@ We will go through these in sequence.
 4. **Weights** -
     This defines the weights of the pool - [https://balancer.fi/whitepaper.pdf](https://balancer.fi/whitepaper.pdf)
 5. **SmoothWeightChangeParams** -
-    This allows pool governance to smoothly change the weights of the assets it holds in the pool. So it can slowly move from a 2:1 ratio, to a 1:1 ratio. Currently, smooth weight changes are implemented as a linear change in weight ratios over a given duration of time. So weights changed from 4:1 to 2:2 over 2 days, then at day 1 of the change, the weights would be 3:1.5, and at day 2 its 2:2, and will remain at these weight ratios.
+    This allows pool governance to smoothly change the weights of the assets it holds in the pool. So it can slowly move from a 2:1 ratio, to a 1:1 ratio. 
+    Currently, smooth weight changes are implemented as a linear change in weight ratios over a given duration of time. So weights changed from 4:1 to 2:2 over 2 days, then at day 1 of the change, the weights would be 3:1.5, and at day 2 its 2:2, and will remain at these weight ratios.
 
 The GAMM module also has a **PoolCreationFee** parameter, which currently is set to `100000000 uosmo` or `100 OSMO`.
 
@@ -61,7 +62,7 @@ osmosisd tx gamm create-pool [config-file] --from --chain-id
 ::: details Example
 The JSON [config-file] must specify the following parameters:
 
-```json
+```
 {
 	"weights": [list weighted denoms],
 	"initial-deposit": [list of denoms with initial deposit amount],
@@ -79,7 +80,7 @@ osmosisd tx gamm create-pool --pool-file [config-file] --from WALLET_NAME --chai
 
 The configuration json file contains the following parameters:
 
-```json
+```
 {
 	"weights": "5ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4,5uosmo",
 	"initial-deposit": "499404ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4,500000uosmo",
@@ -391,7 +392,7 @@ poolAssets:
 
 Query the parameters of a specific pool. This query is a reduced form of the [pool](#pool) query.
 
-sh
+```sh
 osmosisd query gamm pool-params [poolID] [flags]
 ```
 

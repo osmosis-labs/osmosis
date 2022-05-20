@@ -22,7 +22,7 @@ This module provides interfaces for other modules to iterate the locks efficient
 8. **[Params](08_params.md)**
 9. **[Endblocker](09_endblocker.md)**
 
-## Overview 
+## Overview
 
 There are currently three incentivize lockup periods; `1 day` (24h), `1 week` (168h), and `2 weeks` (336h). When locking tokens in the 2 week period, the liquidity provider is effectively earning rewards for a combination of the 1 day, 1 week, and 2 week bonding periods.
 
@@ -285,7 +285,7 @@ As shown, the gamm/pool/3 is returned but not the gamm/pool/1 due to the denom f
 :::
 
 
-###  account-locked-longer-duration-not-unlocking
+### account-locked-longer-duration-not-unlocking
 
 Query an account's locked records for a denom that is locked equal to or greater than the specified duration AND is not in the process of being unlocked
 
@@ -600,7 +600,7 @@ NOTE: This command seems to only work on gRPC and on CLI returns an EOF error.
 
 
 
-### output-all-locks 
+### output-all-locks
 
 Output all locks into a json file
 
