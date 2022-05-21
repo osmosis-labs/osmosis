@@ -114,16 +114,6 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 
 	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
 
-	// Check if denom already exists
-	_, found := b.GetDenomMetaData(ctx, denom)
-	if !found {
-		// Create denom
-		_, err := msgServer.CreateDenom(sdk.WrapSDKContext(ctx), tokenfactorytypes.NewMsgCreateDenom(contractAddr.String(), mint.SubDenom))
-		if err != nil {
-			return sdkerrors.Wrap(err, "creating token for mint")
-		}
-	}
-
 	// Mint through token factory / message server
 	_, err = msgServer.Mint(sdk.WrapSDKContext(ctx), tokenfactorytypes.NewMsgMint(contractAddr.String(), coin))
 	if err != nil {
