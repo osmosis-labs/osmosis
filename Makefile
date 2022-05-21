@@ -267,6 +267,17 @@ format:
 ###                                Localnet                                 ###
 ###############################################################################
 
+localnet-keys:
+	. tests/localosmosis/keys.sh
+
+localnet-build:
+	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
+
+localnet-start:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-remove:
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

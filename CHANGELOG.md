@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+* [#1554](https://github.com/osmosis-labs/osmosis/pull/1554) local dev environment
 * [#1535](https://github.com/osmosis-labs/osmosis/pull/1535) upgrade wasmd to v0.27.0.rc3-osmo and ibc-go to v3
 * [#1435] `x/tokenfactory` create denom fee for spam resistance 
 * [#1429] solver for multi-asset CFMM
