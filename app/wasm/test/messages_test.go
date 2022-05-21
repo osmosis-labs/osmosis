@@ -176,7 +176,129 @@ func TestMint(t *testing.T) {
 			require.NoError(t, gotErr)
 		})
 	}
+}
 
+func TestBurn(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	// Fund actor with 100 base denom creation fees
+	actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, actor, actorAmount)
+
+	// Create denoms for valid burn tests
+	validDenom := wasmbindings.CreateDenom{
+		SubDenom: "MOON",
+	}
+	err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &validDenom)
+	require.NoError(t, err)
+
+	emptyDenom := wasmbindings.CreateDenom{
+		SubDenom: "",
+	}
+	err = wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &emptyDenom)
+	require.NoError(t, err)
+
+	amount, ok := sdk.NewIntFromString("8080")
+	require.True(t, ok)
+
+	// Fund denoms through mint and send to actor (minter)
+	mintValidDenom := wasmbindings.MintTokens{
+		SubDenom:  "MOON",
+		Amount:    amount,
+		Recipient: actor.String(),
+	}
+	err = wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &mintValidDenom)
+	require.NoError(t, err)
+
+	mintEmptyDenom := wasmbindings.MintTokens{
+		SubDenom:  "",
+		Amount:    amount,
+		Recipient: actor.String(),
+	}
+	err = wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &mintEmptyDenom)
+	require.NoError(t, err)
+
+	// actor was funded
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, actor)
+	require.NotEmpty(t, balances)
+
+	specs := map[string]struct {
+		burn   *wasmbindings.BurnTokens
+		expErr bool
+	}{
+		"valid burn": {
+			burn: &wasmbindings.BurnTokens{
+				SubDenom: "MOON",
+				Amount:   amount,
+			},
+		},
+		"empty sub-denom": {
+			burn: &wasmbindings.BurnTokens{
+				SubDenom: "",
+				Amount:   amount.SubRaw(1),
+			},
+			expErr: false,
+		},
+		"partial burn": {
+			burn: &wasmbindings.BurnTokens{
+				SubDenom: "",
+				Amount:   sdk.NewInt(1),
+			},
+			expErr: false,
+		},
+		"nonexistent sub-denom": {
+			burn: &wasmbindings.BurnTokens{
+				SubDenom: "SUN",
+				Amount:   amount,
+			},
+			expErr: true,
+		},
+		"invalid sub-denom": {
+			burn: &wasmbindings.BurnTokens{
+				SubDenom: "sub-denom_2",
+				Amount:   amount,
+			},
+			expErr: true,
+		},
+		"zero amount": {
+			burn: &wasmbindings.BurnTokens{
+				SubDenom: "MOON",
+				Amount:   sdk.ZeroInt(),
+			},
+			expErr: true,
+		},
+		"negative amount": {
+			burn: &wasmbindings.BurnTokens{
+				SubDenom: "MOON",
+				Amount:   amount.Neg(),
+			},
+			expErr: true,
+		},
+		"null burn": {
+			burn:   nil,
+			expErr: true,
+		},
+		"excessive burn": {
+			burn: &wasmbindings.BurnTokens{
+				SubDenom: "MOON",
+				Amount:   amount.MulRaw(2),
+			},
+			expErr: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// when
+			gotErr := wasm.PerformBurn(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.burn)
+			// then
+			if spec.expErr {
+				require.Error(t, gotErr)
+				return
+			}
+			require.NoError(t, gotErr)
+		})
+	}
 }
 
 func TestSwap(t *testing.T) {
