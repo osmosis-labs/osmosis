@@ -32,14 +32,16 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 # Runner
 # --------------------------------------------------------
 
-FROM ubuntu
+FROM alpine
 
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 COPY /tests/localosmosis/setup.sh /setup.sh
 
 ENV HOME /osmosis
 WORKDIR $HOME
-RUN apt-get update && apt-get install -y jq
+RUN apk update \
+ && apk add jq \
+ && rm -rf /var/cache/apk/*
 RUN chmod +x /setup.sh
 RUN /setup.sh
 EXPOSE 26656
