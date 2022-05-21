@@ -24,7 +24,7 @@ func NewDefaultGenesisState() GenesisState {
 	// here we override wasm config to make it permissioned by default
 	wasmGen := wasm.GenesisState{
 		Params: wasmtypes.Params{
-			//CodeUploadAccess:             wasmtypes.AllowNobody,
+			CodeUploadAccess:             wasmtypes.AllowNobody,
 			InstantiateDefaultPermission: wasmtypes.AccessTypeEverybody,
 		},
 	}
