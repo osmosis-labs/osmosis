@@ -11,6 +11,9 @@ type OsmosisMsg struct {
 	MintTokens *MintTokens `json:"mint_tokens,omitempty"`
 	/// Swap over one or more pools
 	Swap *SwapMsg `json:"swap,omitempty"`
+	/// Contracts can burn native tokens for an existing denom
+	/// namespaced under the contract's address.
+	BurnTokens *BurnTokens `json:"burn_tokens,omitempty"`
 }
 
 type CreateDenom struct {
@@ -32,4 +35,9 @@ type SwapMsg struct {
 	First  Swap                `json:"first"`
 	Route  []Step              `json:"route"`
 	Amount SwapAmountWithLimit `json:"amount"`
+}
+
+type BurnTokens struct {
+	SubDenom string  `json:"sub_denom"`
+	Amount   sdk.Int `json:"amount"`
 }

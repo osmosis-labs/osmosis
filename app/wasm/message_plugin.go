@@ -39,7 +39,7 @@ var _ wasmkeeper.Messenger = (*CustomMessenger)(nil)
 
 func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress, contractIBCPortID string, msg wasmvmtypes.CosmosMsg) ([]sdk.Event, [][]byte, error) {
 	if msg.Custom != nil {
-		// only handle the happy path where this is really creating / minting / swapping ...
+		// only handle the happy path where this is really creating / minting / swapping / burning ...
 		// leave everything else for the wrapped version
 		var contractMsg wasmbindings.OsmosisMsg
 		if err := json.Unmarshal(msg.Custom, &contractMsg); err != nil {
@@ -53,6 +53,9 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		}
 		if contractMsg.Swap != nil {
 			return m.swapTokens(ctx, contractAddr, contractMsg.Swap)
+		}
+		if contractMsg.BurnTokens != nil {
+			return m.burnTokens(ctx, contractAddr, contractMsg.BurnTokens)
 		}
 	}
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
@@ -122,6 +125,43 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 	err = b.SendCoins(ctx, contractAddr, rcpt, sdk.NewCoins(coin))
 	if err != nil {
 		return sdkerrors.Wrap(err, "sending newly minted coins from message")
+	}
+	return nil
+}
+
+func (m *CustomMessenger) burnTokens(ctx sdk.Context, contractAddr sdk.AccAddress, burn *wasmbindings.BurnTokens) ([]sdk.Event, [][]byte, error) {
+	err := PerformBurn(m.tokenFactory, m.bank, ctx, contractAddr, burn)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "perform burn")
+	}
+	return nil, nil, nil
+}
+
+func PerformBurn(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk.Context, contractAddr sdk.AccAddress, burn *wasmbindings.BurnTokens) error {
+	if burn == nil {
+		return wasmvmtypes.InvalidRequest{Err: "burn token null burn"}
+	}
+
+	// Check if denom is valid
+	denom, err := GetFullDenom(contractAddr.String(), burn.SubDenom)
+	if err != nil {
+		return err
+	}
+
+	if burn.Amount.IsZero() {
+		return wasmvmtypes.InvalidRequest{Err: "burn token zero amount"}
+	}
+	if burn.Amount.IsNegative() {
+		return wasmvmtypes.InvalidRequest{Err: "burn token negative amount"}
+	}
+	coin := sdk.NewCoin(denom, burn.Amount)
+
+	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
+
+	// Burn through token factory / message server
+	_, err = msgServer.Burn(sdk.WrapSDKContext(ctx), tokenfactorytypes.NewMsgBurn(contractAddr.String(), coin))
+	if err != nil {
+		return sdkerrors.Wrap(err, "burning coins from message")
 	}
 	return nil
 }
