@@ -1,7 +1,5 @@
 # syntax=docker/dockerfile:1
 
-ARG BASE_IMG_TAG=nonroot
-
 # --------------------------------------------------------
 # Build
 # --------------------------------------------------------
@@ -39,9 +37,10 @@ COPY /tests/localosmosis/setup.sh /setup.sh
 
 ENV HOME /osmosis
 WORKDIR $HOME
-RUN apk update \
- && apk add jq \
- && rm -rf /var/cache/apk/*
+RUN apk update
+RUN apk add jq
+RUN apk add moreutils
+RUN rm -rf /var/cache/apk/*
 RUN chmod +x /setup.sh
 RUN /setup.sh
 EXPOSE 26656
