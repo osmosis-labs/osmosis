@@ -242,6 +242,18 @@ test-e2e:
 test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
+lo-keys:
+	. tests/localosmosis/keys.sh
+
+lo-build:
+	@docker build -t local:osmosis --build-arg BASE_IMG_TAG=debug -f tests/localosmosis/Dockerfile .
+
+lo-start:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up
+
+lo-remove:
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
+
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
