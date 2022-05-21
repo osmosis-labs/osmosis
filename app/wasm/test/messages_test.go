@@ -70,6 +70,19 @@ func TestMint(t *testing.T) {
 	actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
 	fundAccount(t, ctx, osmosis, actor, actorAmount)
 
+	// Create denoms for valid mint tests
+	validDenom := wasmbindings.CreateDenom{
+		SubDenom: "MOON",
+	}
+	err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &validDenom)
+	require.NoError(t, err)
+
+	emptyDenom := wasmbindings.CreateDenom{
+		SubDenom: "",
+	}
+	err = wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &emptyDenom)
+	require.NoError(t, err)
+
 	lucky := RandomAccountAddress()
 
 	// lucky was broke
@@ -97,6 +110,14 @@ func TestMint(t *testing.T) {
 				Recipient: lucky.String(),
 			},
 			expErr: false,
+		},
+		"nonexistent sub-denom": {
+			mint: &wasmbindings.MintTokens{
+				SubDenom:  "SUN",
+				Amount:    amount,
+				Recipient: lucky.String(),
+			},
+			expErr: true,
 		},
 		"invalid sub-denom": {
 			mint: &wasmbindings.MintTokens{
