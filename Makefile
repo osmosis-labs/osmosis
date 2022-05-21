@@ -266,6 +266,7 @@ format:
 ###                                Localnet                                 ###
 ###############################################################################
 
+<<<<<<< HEAD
 build-docker-osmosisdnode:
 	$(MAKE) -C contrib/localtestnet
 
@@ -292,6 +293,19 @@ test-docker-push: test-docker
 	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD)
 	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --abbrev-ref HEAD | sed 's#/#_#g')
 	@docker push ${TEST_DOCKER_REPO}:latest
+=======
+localnet-keys:
+	. tests/localosmosis/keys.sh
+
+localnet-build:
+	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
+
+localnet-start:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-remove:
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
+>>>>>>> f5472e0 (feat: local dev environment (#1554))
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build \
