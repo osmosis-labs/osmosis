@@ -1,4 +1,5 @@
 #!/bin/bash
+
 echo "satisfy adjust timber high purchase tuition stool faith fine install that you unaware feed domain license impose boss human eager hat rent enjoy dawn" | osmosisd keys add lo-val --recover --keyring-backend test
 echo "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius" | osmosisd keys add lo-test1 --recover --keyring-backend test
 echo "quality vacuum heart guard buzz spike sight swarm shove special gym robust assume sudden deposit grid alcohol choice devote leader tilt noodle tide penalty" | osmosisd keys add lo-test2 --recover --keyring-backend test
