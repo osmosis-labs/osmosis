@@ -51,7 +51,7 @@ func TestBinarySearchNonlinear(t *testing.T) {
 	lineF := func(a sdk.Int) (sdk.Int, error) {
 		return a, nil
 	}
-	// x^2 function, a test example for a monotonic increasing function
+	// x^3 function, a test example for a monotonic increasing function
 	// binary search directly reveals one bit of the answer in each iteration with this function.
 	expF := func(a sdk.Int) (sdk.Int, error) {
 		calculation := sdk.Dec(a)
