@@ -13,6 +13,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+const (
+	usdaDenom = "usda"
+	usdbDenom = "usdb"
+	usdcDenom = "usdc"
+	usdtDenom = "usdt"
+	ustDenom  = "ust"
+)
+
 func createTestPool(t *testing.T, poolLiquidity sdk.Coins, swapFee, exitFee sdk.Dec) types.PoolI {
 	pool, err := NewStableswapPool(1, PoolParams{
 		SwapFee: swapFee,

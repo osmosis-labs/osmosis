@@ -111,65 +111,65 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 	type testcase struct {
 		denomOut         string
 		initialPoolOut   int64
-		initialWeightOut int64
+		scalingFactorOut int64
 		initialCalcOut   int64
 
 		denomIn         string
 		initialPoolIn   int64
-		initialWeightIn int64
+		scalingFactorIn int64
 	}
 
 	// For every test case in testcases, apply a swap fee in swapFeeCases.
 	testcases := []testcase{
 		{
-			denomOut:         "uosmo",
+			denomOut:         usdcDenom,
 			initialPoolOut:   1_000_000_000_000,
-			initialWeightOut: 100,
+			scalingFactorOut: 100,
 			initialCalcOut:   100,
 
-			denomIn:         "ion",
+			denomIn:         usdbDenom,
 			initialPoolIn:   1_000_000_000_000,
-			initialWeightIn: 100,
+			scalingFactorIn: 100,
 		},
 		{
-			denomOut:         "uosmo",
+			denomOut:         usdcDenom,
 			initialPoolOut:   1_000,
-			initialWeightOut: 100,
+			scalingFactorOut: 100,
 			initialCalcOut:   100,
 
-			denomIn:         "ion",
+			denomIn:         usdbDenom,
 			initialPoolIn:   1_000_000,
-			initialWeightIn: 100,
+			scalingFactorIn: 100,
 		},
 		{
-			denomOut:         "uosmo",
+			denomOut:         usdcDenom,
 			initialPoolOut:   1_000,
-			initialWeightOut: 100,
+			scalingFactorOut: 100,
 			initialCalcOut:   100,
 
-			denomIn:         "ion",
+			denomIn:         usdbDenom,
 			initialPoolIn:   1_000_000,
-			initialWeightIn: 100,
+			scalingFactorIn: 100,
 		},
 		{
-			denomOut:         "uosmo",
+			denomOut:         usdcDenom,
 			initialPoolOut:   1_000,
-			initialWeightOut: 200,
+			scalingFactorOut: 200,
 			initialCalcOut:   100,
 
-			denomIn:         "ion",
+			denomIn:         usdbDenom,
 			initialPoolIn:   1_000_000,
-			initialWeightIn: 50,
+			scalingFactorIn: 50,
 		},
 		{
-			denomOut:         "uosmo",
+			denomOut:         usdcDenom,
 			initialPoolOut:   1_000_000,
-			initialWeightOut: 200,
+			scalingFactorOut: 200,
 			initialCalcOut:   100000,
 
-			denomIn:         "ion",
+			denomIn:         usdbDenom,
 			initialPoolIn:   1_000_000_000,
-			initialWeightIn: 50,
+			scalingFactorIn: 50,
 		},
 	}
 
@@ -189,9 +189,17 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
 				ctx := createTestContext(t)
 
-				poolLiquidityIn := sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut)
-				poolLiquidityOut := sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn)
-				poolLiquidity := sdk.NewCoins(poolLiquidityIn, poolLiquidityOut)
+				poolAssetOut := stableswap.PoolAsset{
+					Token:         sdk.NewCoin(tc.denomOut, tc.initialPoolOut),
+					ScalingFactor: sdk.NewInt(tc.scalingFactorOut),
+				}
+
+				poolAssetIn := stableswap.PoolAsset{
+					Token:         sdk.NewCoin(tc.denomIn, tc.initialPoolIn),
+					ScalingFactor: sdk.NewInt(tc.scalingFactorIn),
+				}
+
+				//poolLiquidity := sdk.NewCoins(poolLiquidityIn, poolLiquidityOut)
 
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
 				require.NoError(t, err)
@@ -199,10 +207,17 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				exitFeeDec, err := sdk.NewDecFromStr("0")
 				require.NoError(t, err)
 
-				pool := createTestPool(t, poolLiquidity, swapFeeDec, exitFeeDec)
+				pool := createTestPool(t, []stableswap.PoolAsset{
+					poolAssetOut,
+					poolAssetIn,
+				},
+					swapFeeDec,
+					exitFeeDec,
+				)
+
 				require.NotNil(t, pool)
 
-				suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
+				suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
 			})
 		}
 	}
