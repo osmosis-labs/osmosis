@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.gamm.stableswap.v1beta1;
+package osmosis.gamm.poolmodels.stableswap.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
@@ -68,4 +68,7 @@ message Pool {
     (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"",
     (gogoproto.nullable) = false
   ];
+  // scaling_factor_governor is the address can adjust pool scaling factors
+  string scaling_factor_governor = 8
+      [ (gogoproto.moretags) = "yaml:\"scaling_factor_governor\"" ];
 }

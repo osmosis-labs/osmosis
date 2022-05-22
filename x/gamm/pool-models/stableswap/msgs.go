@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	TypeMsgCreateStableswapPool = "create_stableswap_pool"
+	TypeMsgCreateStableswapPool           = "create_stableswap_pool"
+	TypeMsgStableSwapAdjustScalingFactors = "stable_swap_adjust_scaling_factors"
 )
 
 var (
@@ -96,4 +97,48 @@ func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (t
 	}
 
 	return &stableswapPool, nil
+}
+
+var _ sdk.Msg = &MsgStableSwapAdjustScalingFactors{}
+
+// Implement sdk.Msg
+func NewMsgStableSwapAdjustScalingFactors(
+	sender string,
+	poolID uint64,
+) MsgStableSwapAdjustScalingFactors {
+	return MsgStableSwapAdjustScalingFactors{
+		ScalingFactorGovernor: sender,
+		PoolID:                poolID,
+	}
+}
+
+func (msg MsgStableSwapAdjustScalingFactors) Route() string {
+	return types.RouterKey
+}
+
+func (msg MsgStableSwapAdjustScalingFactors) Type() string { return TypeMsgCreateStableswapPool }
+func (msg MsgStableSwapAdjustScalingFactors) ValidateBasic() error {
+	if msg.ScalingFactorGovernor == "" {
+		return nil
+	}
+
+	_, err := sdk.AccAddressFromBech32(msg.ScalingFactorGovernor)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	return nil
+}
+
+func (msg MsgStableSwapAdjustScalingFactors) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgStableSwapAdjustScalingFactors) GetSigners() []sdk.AccAddress {
+	scalingFactorGovernor, err := sdk.AccAddressFromBech32(msg.ScalingFactorGovernor)
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.AccAddress{scalingFactorGovernor}
 }

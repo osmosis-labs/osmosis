@@ -467,8 +467,8 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 			if tc.expectPass {
 				_, err = suite.App.GAMMKeeper.JoinSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], poolId, foocoins, sdk.ZeroInt())
 				suite.Require().NoError(err)
-				// _, err = suite.App.GAMMKeeper.JoinSwapShareAmountOut(suite.Ctx, suite.TestAccs[0], poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
-				// suite.Require().NoError(err)
+				_, err = suite.App.GAMMKeeper.JoinSwapShareAmountOut(suite.Ctx, suite.TestAccs[0], poolId, "foo", types.OneShare.MulRaw(10), sdk.NewInt(1000000000000000000))
+				suite.Require().NoError(err)
 				_, err = suite.App.GAMMKeeper.ExitSwapShareAmountIn(suite.Ctx, suite.TestAccs[0], poolId, "foo", types.OneShare.MulRaw(10), sdk.ZeroInt())
 				suite.Require().NoError(err)
 				_, err = suite.App.GAMMKeeper.ExitSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, foocoin, sdk.NewInt(1000000000000000000))
@@ -573,3 +573,37 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 		})
 	}
 }
+
+// func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
+// 	stableSwapPoolParams := stableswap.PoolParams{
+// 		SwapFee: defaultSwapFee,
+// 		ExitFee: defaultExitFee,
+// 	}
+
+// 	testPoolAsset := sdk.Coins{
+// 		sdk.NewCoin("foo", sdk.NewInt(10000)),
+// 		sdk.NewCoin("bar", sdk.NewInt(10000)),
+// 	}
+
+// 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
+
+// 	testScalingFactors := []uint64{1, 1}
+
+// 	msg := stableswap.NewMsgCreateStableswapPool(
+// 		suite.TestAccs[0], stableSwapPoolParams, testPoolAsset, defaultFutureGovernor)
+// 	poolID, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+// 	suite.Require().NoError(err)
+
+// 	err = suite.App.GAMMKeeper.SetStableSwapScalingFactors(suite.Ctx, testScalingFactors, poolID, "")
+// 	suite.Require().NoError(err)
+
+// 	poolI, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolID)
+// 	suite.Require().NoError(err)
+
+// 	poolScalingFactors := poolI.(*stableswap.Pool).GetScalingFactors()
+
+// 	suite.Require().Equal(
+// 		poolScalingFactors,
+// 		testScalingFactors,
+// 	)
+// }

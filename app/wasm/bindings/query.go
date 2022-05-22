@@ -5,11 +5,11 @@ import (
 )
 
 // OsmosisQuery contains osmosis custom queries.
-// See https://github.com/confio/osmosis-bindings/blob/main/packages/bindings/src/query.rs
+// See https://github.com/osmosis-labs/osmosis-bindings/blob/main/packages/bindings/src/query.rs
 type OsmosisQuery struct {
-	// /// Given a subdenom minted by a contract via `OsmosisMsg::MintTokens`,
-	// /// returns the full denom as used by `BankMsg::Send`.
-	// FullDenom *FullDenom `json:"full_denom,omitempty"`
+	/// Given a subdenom minted by a contract via `OsmosisMsg::MintTokens`,
+	/// returns the full denom as used by `BankMsg::Send`.
+	FullDenom *FullDenom `json:"full_denom,omitempty"`
 	/// For a given pool ID, list all tokens traded on it with current liquidity (spot).
 	/// As well as the total number of LP shares and their denom.
 	PoolState *PoolState `json:"pool_state,omitempty"`
@@ -21,10 +21,10 @@ type OsmosisQuery struct {
 	EstimateSwap *EstimateSwap `json:"estimate_swap,omitempty"`
 }
 
-// type FullDenom struct {
-// 	Contract string `json:"contract"`
-// 	SubDenom string `json:"sub_denom"`
-// }
+type FullDenom struct {
+	Contract string `json:"contract"`
+	SubDenom string `json:"sub_denom"`
+}
 
 type PoolState struct {
 	PoolId uint64 `json:"id"`
@@ -50,9 +50,9 @@ func (e *EstimateSwap) ToSwapMsg() *SwapMsg {
 	}
 }
 
-// type FullDenomResponse struct {
-// 	Denom string `json:"denom"`
-// }
+type FullDenomResponse struct {
+	Denom string `json:"denom"`
+}
 
 type PoolStateResponse struct {
 	/// The various assets that be swapped. Including current liquidity.

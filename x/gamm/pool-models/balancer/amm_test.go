@@ -256,13 +256,12 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 			initialWeightOut: 100,
 			initialWeightIn:  100,
 		},
-		// TODO: https://github.com/osmosis-labs/osmosis/issues/1359
-		// {
-		// 	initialPoolOut:   1_000,
-		// 	tokenOut:         26,
-		// 	initialWeightOut: 100,
-		// 	initialWeightIn:  100,
-		// },
+		{
+			initialPoolOut:   1_000,
+			tokenOut:         26,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
 	}
 
 	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
@@ -307,7 +306,8 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 					swapFeeDec,
 				)
 
-				require.Equal(t, initialCalcTokenOut, inverseCalcTokenOut.RoundInt())
+				tol := sdk.NewDec(1)
+				require.True(osmoutils.DecApproxEq(t, initialCalcTokenOut.ToDec(), inverseCalcTokenOut, tol))
 			})
 		}
 	}
