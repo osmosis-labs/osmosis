@@ -12,7 +12,3 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	// diff should only be the amount sent
 	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.OsmoToken)
 }
-
-func (s *IntegrationTestSuite) TestStateSync() {
-
-}
