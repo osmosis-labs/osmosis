@@ -17,8 +17,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-func (s *IntegrationTestSuite) connectIBCChains() {
-	s.T().Logf("connecting %s and %s chains via IBC", s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id)
+func (s *IntegrationTestSuite) connectIBCChains(chainA *chain.Chain, chainB *chain.Chain) {
+	s.T().Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -33,8 +33,8 @@ func (s *IntegrationTestSuite) connectIBCChains() {
 			"hermes",
 			"create",
 			"channel",
-			s.chains[0].ChainMeta.Id,
-			s.chains[1].ChainMeta.Id,
+			chainA.ChainMeta.Id,
+			chainB.ChainMeta.Id,
 			"--port-a=transfer",
 			"--port-b=transfer",
 		},
@@ -63,7 +63,7 @@ func (s *IntegrationTestSuite) connectIBCChains() {
 		"failed to connect chains via IBC: %s", errBuf.String(),
 	)
 
-	s.T().Logf("connected %s and %s chains via IBC", s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id)
+	s.T().Logf("connected %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
 }
 
 func (s *IntegrationTestSuite) sendIBC(srcChain *chain.Chain, dstChain *chain.Chain, recipient string, token sdk.Coin) {
