@@ -195,6 +195,7 @@ func NewOsmosisApp(
 		wasmEnabledProposals,
 		wasmOpts,
 		app.BlockedAddrs(),
+		app.MsgServiceRouter(),
 	)
 
 	app.SetupHooks()
