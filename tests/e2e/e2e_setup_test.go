@@ -518,6 +518,10 @@ func (s *IntegrationTestSuite) upgrade() {
 	for _, chainConfig := range s.chainConfigs {
 		curChain := chainConfig.chain
 		for valIdx := range curChain.Validators {
+			if _, ok := chainConfig.skipRunValidatorIndexes[valIdx]; ok {
+				continue
+			}
+
 			var opts docker.RemoveContainerOptions
 			opts.ID = s.valResources[curChain.ChainMeta.Id][valIdx].Container.ID
 			opts.Force = true
