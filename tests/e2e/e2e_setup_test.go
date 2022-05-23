@@ -29,10 +29,10 @@ var (
 	upgradeVersion = "v9"
 	// osmosis repo/version for initialization (this should be one version below upgradeVersion)
 	initRepository = "osmolabs/osmosis-init"
-	initVersion    = "v8.0.0"
+	initVersion    = "v8.0.0-1-osmo"
 	// pre upgrade osmosis repo/version to pull (should match initVersion numer)
 	debugRepository = "osmolabs/osmosis-dev"
-	debugVersion    = "v8.0.0-debug"
+	debugVersion    = "v8.0.0-1-debug"
 	// hermes repo/version for relayer
 	relayerRepository = "osmolabs/hermes"
 	relayerVersion    = "0.13.0"
@@ -54,6 +54,8 @@ var (
 	propHeightA int
 	// upgrade proposal height for chain B
 	propHeightB int
+	// current prop number
+	propNumber int = 1
 	// max retries for json unmarshalling
 	maxRetries = 60
 	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
@@ -125,6 +127,10 @@ type syncInfo struct {
 	SyncInfo status `json:"SyncInfo"`
 }
 
+type operInfo struct {
+	Bech32Val string `json:"Bech32 Val"`
+}
+
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
@@ -155,6 +161,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 			s.runValidators(s.chains[0], 0)
 			s.runValidators(s.chains[1], 10)
+			s.extractOperAddress(s.chains[0])
+			s.extractOperAddress(s.chains[1])
 			s.runIBCRelayer()
 			s.runPostUpgradeTests()
 			return
@@ -166,6 +174,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
+	s.extractOperAddress(s.chains[0])
+	s.extractOperAddress(s.chains[1])
 	s.runIBCRelayer()
 	// pre upgrade state creation
 	s.createPreUpgradeState()
@@ -221,8 +231,10 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 			},
 			Repository: debugRepository,
 			Tag:        debugVersion,
-			Cmd: []string{
-				"start",
+			Entrypoint: []string{
+				"sh",
+				"-c",
+				"chmod +x /osmosis/genesis_mod.sh && /osmosis/genesis_mod.sh",
 			},
 		}
 
@@ -461,13 +473,13 @@ func (s *IntegrationTestSuite) upgrade() {
 	// prop height = current height + voting period + time it takes to submit proposal + small buffer
 	currentHeightA := s.getCurrentChainHeight(s.valResources[s.chains[0].ChainMeta.Id][0].Container.ID)
 	propHeightA = currentHeightA + int(votingPeriodA) + int(propSubmitBlocks) + int(propBufferBlocks)
-	s.submitProposal(s.chains[0], propHeightA)
+	s.submitUpgradeProposal(s.chains[0], propHeightA)
 	s.depositProposal(s.chains[0])
 	s.voteProposal(s.chains[0])
 	// prop height = current height + voting period + time it takes to submit proposal + small buffer
 	currentHeightB := s.getCurrentChainHeight(s.valResources[s.chains[1].ChainMeta.Id][0].Container.ID)
 	propHeightB = currentHeightB + int(votingPeriodB) + int(propSubmitBlocks) + int(propBufferBlocks)
-	s.submitProposal(s.chains[1], propHeightB)
+	s.submitUpgradeProposal(s.chains[1], propHeightB)
 	s.depositProposal(s.chains[1])
 	s.voteProposal(s.chains[1])
 
