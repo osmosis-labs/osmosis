@@ -84,6 +84,13 @@ var (
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
 		},
+		{
+			Pruning:            "everything",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   0,
+			SnapshotKeepRecent: 0,
+		},
 	}
 	validatorConfigsChainB = []*chain.ValidatorConfig{
 		{
