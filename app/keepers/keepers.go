@@ -33,7 +33,7 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
+	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
@@ -97,6 +97,7 @@ type AppKeepers struct {
 	DistrKeeper          *distrkeeper.Keeper
 	SlashingKeeper       *slashingkeeper.Keeper
 	IBCKeeper            *ibckeeper.Keeper
+	ICAHostKeeper        *icahostkeeper.Keeper
 	TransferKeeper       *ibctransferkeeper.Keeper
 	Bech32IBCKeeper      *bech32ibckeeper.Keeper
 	Bech32ICS20Keeper    *bech32ics20keeper.Keeper
@@ -115,7 +116,6 @@ type AppKeepers struct {
 	// IBC modules
 	// transfer module
 	TransferModule transfer.AppModule
-	IcaModule
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -213,7 +213,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
 
-	appKeepers.ICAHostKeeper = icahostkeeper.NewKeeper(
+	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
 		appKeepers.GetSubspace(icahosttypes.SubModuleName),
 		appKeepers.IBCKeeper.ChannelKeeper,
@@ -222,8 +222,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedICAHostKeeper,
 		msgServiceRouter,
 	)
-	appKeepers.IcaModule = ica.NewAppModule(nil, &app.ICAHostKeeper)
-	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
+	appKeepers.ICAHostKeeper = &icaHostKeeper
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
