@@ -194,19 +194,15 @@ func PerformJoin(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, g *gamm
 		return wasmvmtypes.InvalidRequest{Err: "join pool null"}
 	}
 	
-	rcpt, err := g.GetPoolAndPoke(ctx, joinPool.PoolId)
+	//poolInfo, err := g.GetPoolAndPoke(ctx, joinPool.PoolId)
+
+	err := g.JoinPoolNoSwap(ctx, contractAddr, joinPool.PoolId, joinPool.ShareOutAmount, sdk.Coins{})
 
 	if err != nil {
 		return err
 	}
-	
-	return &wasmbindings.JoinPool{}, nil
 
-
-
-	if err != nil {
-		return err
-	}
+	return nil
 }
 
 // GetFullDenom is a function, not method, so the message_plugin can use it
