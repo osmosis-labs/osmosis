@@ -182,60 +182,31 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 }
 
 func (m *CustomMessenger) joinPool(ctx sdk.Context, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPool) ([]sdk.Event, [][]byte, error) {
-	err := PerformJoin(m.tokenFactory, m.bank, keeper *gammkeeper.Keeper, ctx, contractAddr, joinPool)
+	err := PerformJoin(m.tokenFactory, m.bank, m.gammKeeper, ctx, contractAddr, joinPool)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "join pool")
 	}
 	return nil, nil, nil
 }
 
-func PerformJoin(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, g *gammkeeper.Keeper, ctx sdk.Context, poolId uint64, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPool) error {
+func PerformJoin(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, g *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPool) error {
 	if joinPool == nil {
 		return wasmvmtypes.InvalidRequest{Err: "join pool null"}
 	}
 	
-	rcpt, err := g.GetPoolAndPoke(ctx, poolId)
+	rcpt, err := g.GetPoolAndPoke(ctx, joinPool.PoolId)
+
+	if err != nil {
+		return err
+	}
 	
+	return &wasmbindings.JoinPool{}, nil
+
+
+
 	if err != nil {
 		return err
 	}
-
-	// Check if denom is valid
-	denom, err := GetFullDenom(contractAddr.String(), mint.SubDenom)
-	if err != nil {
-		return err
-	}
-
-	if mint.Amount.IsZero() {
-		return wasmvmtypes.InvalidRequest{Err: "mint token zero amount"}
-	}
-	if mint.Amount.IsNegative() {
-		return wasmvmtypes.InvalidRequest{Err: "mint token negative amount"}
-	}
-	coin := sdk.NewCoin(denom, mint.Amount)
-
-	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
-
-	// Check if denom already exists
-	_, found := b.GetDenomMetaData(ctx, denom)
-	if !found {
-		// Create denom
-		_, err := msgServer.CreateDenom(sdk.WrapSDKContext(ctx), tokenfactorytypes.NewMsgCreateDenom(contractAddr.String(), mint.SubDenom))
-		if err != nil {
-			return sdkerrors.Wrap(err, "creating token for mint")
-		}
-	}
-
-	// Mint through token factory / message server
-	_, err = msgServer.Mint(sdk.WrapSDKContext(ctx), tokenfactorytypes.NewMsgMint(contractAddr.String(), coin))
-	if err != nil {
-		return sdkerrors.Wrap(err, "minting coins from message")
-	}
-	err = b.SendCoins(ctx, contractAddr, rcpt, sdk.NewCoins(coin))
-	if err != nil {
-		return sdkerrors.Wrap(err, "sending newly minted coins from message")
-	}
-	return nil
 }
 
 // GetFullDenom is a function, not method, so the message_plugin can use it
