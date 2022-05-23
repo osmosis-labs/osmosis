@@ -88,7 +88,7 @@ all: install lint test
 
 BUILD_TARGETS := build install
 
-build: BUILD_ARGS=-o $(BUILDDIR)/
+build: BUILD_ARGS=-o $(BUILDDIR)/ -buildvcs=false
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
