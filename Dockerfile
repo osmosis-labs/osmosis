@@ -32,6 +32,7 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 # --------------------------------------------------------
 
 FROM ubuntu
+RUN apt-get update && apt-get install -y jq moreutils
 
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 
@@ -43,4 +44,3 @@ EXPOSE 26657
 EXPOSE 1317
 
 ENTRYPOINT ["osmosisd"]
-CMD [ "start" ]

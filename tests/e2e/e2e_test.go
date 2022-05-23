@@ -20,8 +20,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 		s.depositProposal(s.chains[0])
 		s.voteProposal(s.chains[0])
 		//s.lockTokens(s.chains[0], "100000000000000000000gamm/pool/2", "1814400s")
-		delAddr := s.chains[0].Validators[1].OperAddress
-		fmt.Printf("DELADDR %s", delAddr)
-		s.superfluidDelegate(s.chains[0], "100000000000000000000gamm/pool/1", delAddr)
+		fmt.Printf("DELADDR %s", s.chains[0].Validators[1].OperAddress)
+		s.superfluidDelegate(s.chains[0], "100000000000000000000gamm/pool/1", s.chains[0].Validators[1].OperAddress)
 	})
 }

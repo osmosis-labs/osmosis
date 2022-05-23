@@ -155,6 +155,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		if skipUpgrade {
 			debugRepository = "osmosis"
 			debugVersion = "debug"
+			initRepository = "osmosis-e2e-chain-init"
+			initVersion = "debug"
 			s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 			s.configureChain(chain.ChainAID, validatorConfigsChainA)
 			s.configureChain(chain.ChainBID, validatorConfigsChainB)

@@ -514,7 +514,7 @@ func (s *IntegrationTestSuite) superfluidDelegate(c *chain.Chain, tokens string,
 				Container:    s.valResources[c.ChainMeta.Id][0].Container.ID,
 				User:         "root",
 				Cmd: []string{
-					"osmosisd", "tx", "superfluid", "lock-and-superfluid-delegate", "100000000000000000000gamm/pool/2", valAddress, fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test",
+					"osmosisd", "tx", "superfluid", "lock-and-superfluid-delegate", fmt.Sprintf("%s", tokens), fmt.Sprintf("%s", valAddress), fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test",
 				},
 			})
 			s.Require().NoError(err)
@@ -526,7 +526,7 @@ func (s *IntegrationTestSuite) superfluidDelegate(c *chain.Chain, tokens string,
 			})
 			return strings.Contains(outBuf.String(), "code: 0")
 		},
-		time.Minute,
+		5*time.Minute,
 		time.Second,
 		"tx returned non code 0; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 	)
@@ -556,7 +556,7 @@ func (s *IntegrationTestSuite) extractOperAddress(c *chain.Chain) {
 					Container:    s.valResources[c.ChainMeta.Id][i].Container.ID,
 					User:         "root",
 					Cmd: []string{
-						"osmosisd", "debug", "addr", val.PublicKey, "--log_format=json",
+						"osmosisd", "debug", "addr", val.PublicKey,
 					},
 				})
 				s.Require().NoError(err)
@@ -575,8 +575,10 @@ func (s *IntegrationTestSuite) extractOperAddress(c *chain.Chain) {
 			time.Minute,
 			time.Second,
 		)
-		re := regexp.MustCompile(`[^: ]*$`)
-		val.OperAddress = fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
+		re := regexp.MustCompile("osmovaloper(.{39})")
+
+		operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
+		val.OperAddress = strings.TrimSuffix(operAddr, "\n")
 		// valOper := valOperFull[0:len(valOperFull)-2]
 		// fmt.Printf("TESTING %s")
 		// errBufByte := errBuf.Bytes()
