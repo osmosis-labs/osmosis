@@ -225,6 +225,7 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, dockerRep
 		// This is needed for testing functionality like
 		// state-sunc where we might want to start some validators during tests.
 		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+			s.T().Logf("skipping %s validator with index %d from running...", val.Name, i)
 			continue
 		}
 
