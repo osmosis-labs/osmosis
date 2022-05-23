@@ -486,6 +486,10 @@ func (s *IntegrationTestSuite) upgrade() {
 		curChain := chainConfig.chain
 
 		for i := range chainConfig.chain.Validators {
+			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+				continue
+			}
+
 			// use counter to ensure no new blocks are being created
 			counter := 0
 			s.T().Logf("waiting to reach upgrade height on %s validator container: %s", s.valResources[curChain.ChainMeta.Id][i].Container.Name[1:], s.valResources[curChain.ChainMeta.Id][i].Container.ID)
