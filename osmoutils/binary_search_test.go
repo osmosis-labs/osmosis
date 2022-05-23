@@ -13,8 +13,16 @@ func TestBinarySearch(t *testing.T) {
 	lineF := func(a sdk.Int) (sdk.Int, error) {
 		return a, nil
 	}
-	// error tolerance value when binary searching for the answer.
+	expF := func(a sdk.Int) (sdk.Int, error) {
+		calculation := sdk.Dec(a)
+		result := calculation.Power(3)
+		output := sdk.Int(result)
+		return output, nil
+	}
 	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
+	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
+	testErrToleranceMultiplicative := ErrTolerance{MultiplicativeTolerance: sdk.NewDec(1 << 10)}
+	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 10)}
 	tests := []struct {
 		f             func(sdk.Int) (sdk.Int, error)
 		lowerbound    sdk.Int
@@ -34,89 +42,14 @@ func TestBinarySearch(t *testing.T) {
 	}{
 		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(1 + (1 << 25)), false},
 		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
-	}
-
-	for _, tc := range tests {
-		actualSolvedInput, err := BinarySearch(tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance, tc.maxIterations)
-		if tc.expectErr {
-			require.Error(t, err)
-		} else {
-			require.NoError(t, err)
-			require.True(sdk.IntEq(t, tc.expectedSolvedInput, actualSolvedInput))
-		}
-	}
-}
-
-func TestBinarySearchNonlinear(t *testing.T) {
-	lineF := func(a sdk.Int) (sdk.Int, error) {
-		return a, nil
-	}
-	// x^2 function, a test example for a monotonic increasing function
-	// binary search directly reveals one bit of the answer in each iteration with this function.
-	expF := func(a sdk.Int) (sdk.Int, error) {
-		calculation := sdk.Dec(a)
-		result := calculation.Power(3)
-		output := sdk.Int(result)
-		return output, nil
-	}
-	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
-	tests := []struct {
-		f             func(sdk.Int) (sdk.Int, error)
-		lowerbound    sdk.Int
-		upperbound    sdk.Int
-		targetOutput  sdk.Int
-		errTolerance  ErrTolerance
-		maxIterations int
-
-		expectedSolvedInput sdk.Int
-		expectErr           bool
-	}{
 		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(322539792367616), false},
 		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
-		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(1 + (1 << 25)), false},
-		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
-	}
-
-	for _, tc := range tests {
-		actualSolvedInput, err := BinarySearch(tc.f, tc.lowerbound, tc.upperbound, tc.targetOutput, tc.errTolerance, tc.maxIterations)
-		if tc.expectErr {
-			require.Error(t, err)
-		} else {
-			require.NoError(t, err)
-			require.True(sdk.IntEq(t, tc.expectedSolvedInput, actualSolvedInput))
-		}
-	}
-}
-
-func TestBinarySearchNonlinearNonzero(t *testing.T) {
-	// now we test nonzero tolerance with a nonlinear function
-	// binary search directly reveals one bit of the answer in each iteration with this function.
-	lineF := func(a sdk.Int) (sdk.Int, error) {
-		return a, nil
-	}
-	expF := func(a sdk.Int) (sdk.Int, error) {
-		calculation := sdk.Dec(a)
-		result := calculation.Power(3)
-		output := sdk.Int(result)
-		return output, nil
-	}
-	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
-	testErrTolerance := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
-	tests := []struct {
-		f             func(sdk.Int) (sdk.Int, error)
-		lowerbound    sdk.Int
-		upperbound    sdk.Int
-		targetOutput  sdk.Int
-		errTolerance  ErrTolerance
-		maxIterations int
-
-		expectedSolvedInput sdk.Int
-		expectErr           bool
-	}{
-		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrTolerance, 51, sdk.NewInt(1 << 46), false},
-		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrTolerance, 10, sdk.Int{}, true},
-		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 51, sdk.NewInt(1 + (1 << 25)), false},
-		{lineF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
+		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceAdditive, 51, sdk.NewInt(1 << 46), false},
+		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceAdditive, 10, sdk.Int{}, true},
+		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceMultiplicative, 51, sdk.NewInt(1 << 46), false},
+		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceMultiplicative, 10, sdk.Int{}, true},
+		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceBoth, 51, sdk.NewInt(1 << 46), false},
+		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceBoth, 10, sdk.Int{}, true},
 	}
 
 	for _, tc := range tests {
@@ -132,6 +65,9 @@ func TestBinarySearchNonlinearNonzero(t *testing.T) {
 
 func TestErrTolerance_Compare(t *testing.T) {
 	ZeroErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.Dec{}}
+	NonZeroErrAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(10), MultiplicativeTolerance: sdk.Dec{}}
+	NonZeroErrMultiplicative := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.NewDec(10)}
+	NonZeroErrBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(10), MultiplicativeTolerance: sdk.NewDec(10)}
 	tests := []struct {
 		name      string
 		tol       ErrTolerance
@@ -143,30 +79,15 @@ func TestErrTolerance_Compare(t *testing.T) {
 		{"0 tolerance: <", ZeroErrTolerance, sdk.NewInt(1000), sdk.NewInt(1001), -1},
 		{"0 tolerance: =", ZeroErrTolerance, sdk.NewInt(1001), sdk.NewInt(1001), 0},
 		{"0 tolerance: >", ZeroErrTolerance, sdk.NewInt(1002), sdk.NewInt(1001), 1},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.tol.Compare(tt.input, tt.reference); got != tt.expectedCompareResult {
-				t.Errorf("ErrTolerance.Compare() = %v, want %v", got, tt.expectedCompareResult)
-			}
-		})
-	}
-}
-
-func TestErrToleranceNonzero_Compare(t *testing.T) {
-	// Nonzero error tolerance test, tolerance is used in context of searching for a solution for stable swap over a cfmm function
-	NonZeroErrTolerance := ErrTolerance{AdditiveTolerance: sdk.NewInt(10), MultiplicativeTolerance: sdk.Dec{}}
-	tests := []struct {
-		name      string
-		tol       ErrTolerance
-		input     sdk.Int
-		reference sdk.Int
-
-		expectedCompareResult int
-	}{
-		{"Nonzero tolerance: <", NonZeroErrTolerance, sdk.NewInt(420), sdk.NewInt(1001), -1},
-		{"Nonzero tolerance: =", NonZeroErrTolerance, sdk.NewInt(1011), sdk.NewInt(1001), 0},
-		{"Nonzero tolerance: >", NonZeroErrTolerance, sdk.NewInt(1230), sdk.NewInt(1001), 1},
+		{"Nonzero additive tolerance: <", NonZeroErrAdditive, sdk.NewInt(420), sdk.NewInt(1001), -1},
+		{"Nonzero additive tolerance: =", NonZeroErrAdditive, sdk.NewInt(1011), sdk.NewInt(1001), 0},
+		{"Nonzero additive tolerance: >", NonZeroErrAdditive, sdk.NewInt(1230), sdk.NewInt(1001), 1},
+		{"Nonzero multiplicative tolerance: <", NonZeroErrMultiplicative, sdk.NewInt(420), sdk.NewInt(1001), -1},
+		{"Nonzero multiplicative tolerance: =", NonZeroErrMultiplicative, sdk.NewInt(1001), sdk.NewInt(1001), 0},
+		{"Nonzero multiplicative tolerance: >", NonZeroErrMultiplicative, sdk.NewInt(4200), sdk.NewInt(1001), 1},
+		{"Nonzero both tolerance: <", NonZeroErrBoth, sdk.NewInt(420), sdk.NewInt(1001), -1},
+		{"Nonzero both tolerance: =", NonZeroErrBoth, sdk.NewInt(1001), sdk.NewInt(1001), 0},
+		{"Nonzero both tolerance: >", NonZeroErrBoth, sdk.NewInt(4200), sdk.NewInt(1001), 1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
