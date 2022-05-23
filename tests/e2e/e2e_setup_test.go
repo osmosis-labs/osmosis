@@ -528,16 +528,22 @@ func (s *IntegrationTestSuite) upgrade() {
 
 	// remove all containers so we can upgrade them to the new version
 	for _, chainConfig := range s.chainConfigs {
-		s.upgradeContainers(chainConfig.chain, chainConfig.propHeight)
+		s.upgradeContainers(chainConfig, chainConfig.propHeight)
 	}
 }
 
-func (s *IntegrationTestSuite) upgradeContainers(c *chain.Chain, propHeight int) {
+func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propHeight int) {
 	// upgrade containers to the locally compiled daemon
-	s.T().Logf("starting upgrade for chain-id: %s...", c.ChainMeta.Id)
+	chain := chainConfig.chain
+	s.T().Logf("starting upgrade for chain-id: %s...", chain.ChainMeta.Id)
 	pwd, err := os.Getwd()
 	s.Require().NoError(err)
-	for i, val := range c.Validators {
+
+	for i, val := range chain.Validators {
+		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+			continue
+		}
+
 		runOpts := &dockertest.RunOptions{
 			Name:       val.Name,
 			Repository: dockerconfig.LocalOsmoRepository,
@@ -552,24 +558,28 @@ func (s *IntegrationTestSuite) upgradeContainers(c *chain.Chain, propHeight int)
 		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
 		s.Require().NoError(err)
 
-		s.valResources[c.ChainMeta.Id][i] = resource
+		s.valResources[chain.ChainMeta.Id][i] = resource
 		s.T().Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	}
 
 	// check that we are creating blocks again
-	for i := range c.Validators {
+	for i := range chain.Validators {
+		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+			continue
+		}
+
 		s.Require().Eventually(
 			func() bool {
-				currentHeight := s.getCurrentChainHeight(s.valResources[c.ChainMeta.Id][i].Container.ID)
+				currentHeight := s.getCurrentChainHeight(s.valResources[chain.ChainMeta.Id][i].Container.ID)
 				if currentHeight <= propHeight {
-					s.T().Logf("current block height on %s is %v, waiting to create blocks container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], currentHeight, s.valResources[c.ChainMeta.Id][i].Container.ID)
+					s.T().Logf("current block height on %s is %v, waiting to create blocks container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:], currentHeight, s.valResources[chain.ChainMeta.Id][i].Container.ID)
 				}
 				return currentHeight > propHeight
 			},
 			5*time.Minute,
 			time.Second,
 		)
-		s.T().Logf("upgrade successful on %s validator container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
+		s.T().Logf("upgrade successful on %s validator container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:], s.valResources[chain.ChainMeta.Id][i].Container.ID)
 	}
 }
 
