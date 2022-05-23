@@ -217,7 +217,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, dockerRepository, dockerTag string, portOffset int) {
 	chain := chainConfig.chain
 	s.T().Logf("starting %s validator containers...", chain.ChainMeta.Id)
-	s.valResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators))
+	s.valResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.skipRunValidatorIndexes))
 	pwd, err := os.Getwd()
 	s.Require().NoError(err)
 	for i, val := range chain.Validators {
