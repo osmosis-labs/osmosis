@@ -225,12 +225,16 @@ func (s *IntegrationTestSuite) depositProposal(c *chain.Chain) {
 
 }
 
-func (s *IntegrationTestSuite) voteProposal(c *chain.Chain) {
+func (s *IntegrationTestSuite) voteProposal(chainConfig *chainConfig) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
+	chain := chainConfig.chain
 
-	s.T().Logf("voting for upgrade proposal for chain-id: %s", c.ChainMeta.Id)
-	for i := range c.Validators {
+	s.T().Logf("voting for upgrade proposal for chain-id: %s", chain.ChainMeta.Id)
+	for i := range chain.Validators {
+		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+			continue
+		}
 
 		var (
 			outBuf bytes.Buffer
@@ -243,10 +247,10 @@ func (s *IntegrationTestSuite) voteProposal(c *chain.Chain) {
 					Context:      ctx,
 					AttachStdout: true,
 					AttachStderr: true,
-					Container:    s.valResources[c.ChainMeta.Id][i].Container.ID,
+					Container:    s.valResources[chain.ChainMeta.Id][i].Container.ID,
 					User:         "root",
 					Cmd: []string{
-						"osmosisd", "tx", "gov", "vote", "1", "yes", "--from=val", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
+						"osmosisd", "tx", "gov", "vote", "1", "yes", "--from=val", fmt.Sprintf("--chain-id=%s", chain.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
 					},
 				})
 				s.Require().NoError(err)
@@ -264,7 +268,7 @@ func (s *IntegrationTestSuite) voteProposal(c *chain.Chain) {
 			"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 		)
 
-		s.T().Logf("successfully voted for proposal from %s container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
+		s.T().Logf("successfully voted for proposal from %s container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:], s.valResources[chain.ChainMeta.Id][i].Container.ID)
 	}
 }
 

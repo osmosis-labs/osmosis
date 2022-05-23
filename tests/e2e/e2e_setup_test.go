@@ -478,7 +478,7 @@ func (s *IntegrationTestSuite) upgrade() {
 		chainConfig.propHeight = currentHeight + int(chainConfig.votingPeriod) + int(propSubmitBlocks) + int(propBufferBlocks)
 		s.submitProposal(chainConfig.chain, chainConfig.propHeight)
 		s.depositProposal(chainConfig.chain)
-		s.voteProposal(chainConfig.chain)
+		s.voteProposal(chainConfig)
 	}
 
 	// wait till all chains halt at upgrade height
