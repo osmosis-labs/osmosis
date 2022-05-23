@@ -9,10 +9,9 @@ type OsmosisMsg struct {
 	MintTokens *MintTokens `json:"mint_tokens,omitempty"`
 	/// Swap over one or more pools
 	Swap *SwapMsg `json:"swap,omitempty"`
-	/// Add liquidity to a specified pool to get an exact amount of LP shares while specifying a maximum number tokens 
+	/// Add liquidity to a specified pool to get an exact amount of LP shares while specifying a maximum number tokens
 	/// willing to swap to receive said LP shares.
 	JoinPool *JoinPool `json:"join_pool,omitempty"`
-	
 }
 
 type MintTokens struct {
@@ -29,6 +28,7 @@ type SwapMsg struct {
 }
 
 type JoinPool struct {
-	PoolId  uint64            `json:"pool_id"`
-	ShareOutAmount  sdk.Int              `json:"route"`
+	PoolId         uint64    `json:"pool_id"`
+	ShareOutAmount sdk.Int   `json:"route"`
+	TokenInMaxs    sdk.Coins `json:"token_in_maxs"`
 }

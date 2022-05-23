@@ -193,10 +193,12 @@ func PerformJoin(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, g *gamm
 	if joinPool == nil {
 		return wasmvmtypes.InvalidRequest{Err: "join pool null"}
 	}
-	
-	//poolInfo, err := g.GetPoolAndPoke(ctx, joinPool.PoolId)
 
-	err := g.JoinPoolNoSwap(ctx, contractAddr, joinPool.PoolId, joinPool.ShareOutAmount, sdk.Coins{})
+	if joinPool.ShareOutAmount.IsNegative() {
+		return wasmvmtypes.InvalidRequest{Err: "share out amount negative"}
+	}
+
+	err := g.JoinPoolNoSwap(ctx, contractAddr, joinPool.PoolId, joinPool.ShareOutAmount, joinPool.TokenInMaxs)
 
 	if err != nil {
 		return err
