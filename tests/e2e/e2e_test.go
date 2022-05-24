@@ -7,25 +7,26 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+	chainA := s.chainConfigs[0].chain
 	s.Run("superfluid_vote_chainA", func() {
-		s.submitSuperfluidProposal(s.chains[0], "gamm/pool/1")
-		s.depositProposal(s.chains[0])
-		s.voteProposal(s.chains[0])
+		s.submitSuperfluidProposal(chainA, "gamm/pool/1")
+		s.depositProposal(chainA)
+		s.voteProposal(s.chainConfigs[0])
 		// send gamm tokens to validator's other wallet (non self-delegation wallet)
-		s.sendTx(s.chains[0], 0, "100000000000000000000gamm/pool/1", s.chains[0].Validators[0].PublicAddress, s.chains[0].Validators[0].PublicAddress2)
+		s.sendTx(chainA, 0, "100000000000000000000gamm/pool/1", chainA.Validators[0].PublicAddress, chainA.Validators[0].PublicAddress2)
 		// lock tokens from validator 0 on chain A
-		s.lockTokens(s.chains[0], 0, "100000000000000000000gamm/pool/1", "240s", "val2")
+		s.lockTokens(chainA, 0, "100000000000000000000gamm/pool/1", "240s", "val2")
 		// superfluid delegate from validator 0 non self-delegation wallet to validator 1 on chain A
-		s.superfluidDelegate(s.chains[0], "100000000000000000000gamm/pool/1", s.chains[0].Validators[1].OperAddress, "val2")
+		s.superfluidDelegate(chainA, "100000000000000000000gamm/pool/1", chainA.Validators[1].OperAddress, "val2")
 		// create a text prop, deposit and vote yes
-		s.submitTextProposal(s.chains[0], "superfluid vote overwrite test")
-		s.depositProposal(s.chains[0])
-		s.voteProposal(s.chains[0])
+		s.submitTextProposal(chainA, "superfluid vote overwrite test")
+		s.depositProposal(chainA)
+		s.voteProposal(s.chainConfigs[0])
 		// set delegator vote to no
-		s.voteNoProposal(s.chains[0], 0, "val2")
+		s.voteNoProposal(chainA, 0, "val2")
 
-		chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[0].ChainMeta.Id][0].GetHostPort("1317/tcp"))
-		sfProposalNumber := strconv.Itoa(s.chains[0].PropNumber)
+		chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[chainA.ChainMeta.Id][0].GetHostPort("1317/tcp"))
+		sfProposalNumber := strconv.Itoa(chainA.PropNumber)
 		s.Require().Eventually(
 			func() bool {
 				noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := s.queryPropTally(chainAAPIEndpoint, sfProposalNumber)
@@ -47,7 +48,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 
 		s.Require().Eventually(
 			func() bool {
-				intAccountBalance, err := s.queryIntermediaryAccount(s.chains[0], chainAAPIEndpoint, "gamm/pool/1", s.chains[0].Validators[1].OperAddress)
+				intAccountBalance, err := s.queryIntermediaryAccount(chainA, chainAAPIEndpoint, "gamm/pool/1", chainA.Validators[1].OperAddress)
 				s.Require().NoError(err)
 				if err != nil {
 					return false
