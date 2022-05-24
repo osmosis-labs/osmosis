@@ -387,7 +387,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, appKeepers.keys[govtypes.StoreKey],
 		appKeepers.GetSubspace(govtypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper,
-		appKeepers.StakingKeeper, govRouter)
+		appKeepers.SuperfluidKeeper, govRouter)
 	appKeepers.GovKeeper = &govKeeper
 }
 
