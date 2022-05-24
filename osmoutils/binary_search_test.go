@@ -21,8 +21,8 @@ func TestBinarySearch(t *testing.T) {
 	}
 	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
 	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
-	//testErrToleranceMultiplicative := ErrTolerance{MultiplicativeTolerance: sdk.NewDec(10)}
-	// testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
+	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.NewInt(1), MultiplicativeTolerance: sdk.NewDec(10)}
+	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
 	tests := []struct {
 		f             func(sdk.Int) (sdk.Int, error)
 		lowerbound    sdk.Int
@@ -47,10 +47,10 @@ func TestBinarySearch(t *testing.T) {
 		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), noErrTolerance, 10, sdk.Int{}, true},
 		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceAdditive, 51, sdk.NewInt(1 << 46), false},
 		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceAdditive, 10, sdk.Int{}, true},
-		//{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), testErrToleranceMultiplicative, 51, sdk.NewInt(322539792367616), false},
-		//{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), testErrToleranceMultiplicative, 10, sdk.Int{}, true},
-		//{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceBoth, 51, sdk.NewInt(1 << 46), false},
-		//{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceBoth, 10, sdk.Int{}, true},
+		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), testErrToleranceMultiplicative, 51, sdk.NewInt(322539796561920), false},
+		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt(1 + (1 << 25)), testErrToleranceMultiplicative, 10, sdk.Int{}, true},
+		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 15)), testErrToleranceBoth, 51, sdk.NewInt(1 << 45), false},
+		{expF, sdk.ZeroInt(), sdk.NewInt(1 << 50), sdk.NewInt((1 << 30)), testErrToleranceBoth, 10, sdk.Int{}, true},
 	}
 
 	for _, tc := range tests {
