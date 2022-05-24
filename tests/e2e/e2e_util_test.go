@@ -3,7 +3,6 @@ package e2e
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	net "github.com/osmosis-labs/osmosis/v7/tests/e2e/network"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
@@ -23,11 +23,11 @@ func (s *IntegrationTestSuite) connectIBCChains(chainA *chain.Chain, chainB *cha
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	exec, err := s.dkrPool.Client.CreateExec(docker.CreateExecOptions{
+	exec, err := s.dockerResources.Pool.Client.CreateExec(docker.CreateExecOptions{
 		Context:      ctx,
 		AttachStdout: true,
 		AttachStderr: true,
-		Container:    s.hermesResource.Container.ID,
+		Container:    s.dockerResources.Hermes.Container.ID,
 		User:         "root",
 		Cmd: []string{
 			"hermes",
@@ -46,7 +46,7 @@ func (s *IntegrationTestSuite) connectIBCChains(chainA *chain.Chain, chainB *cha
 		errBuf bytes.Buffer
 	)
 
-	err = s.dkrPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+	err = s.dockerResources.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 		Context:      ctx,
 		Detach:       false,
 		OutputStream: &outBuf,
@@ -71,7 +71,7 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chain.Chain, dstChain *chain.Ch
 	defer cancel()
 
 	s.T().Logf("sending %s from %s to %s (%s)", token, srcChain.ChainMeta.Id, dstChain.ChainMeta.Id, recipient)
-	balancesBPre, err := s.queryBalances(s.valResources[dstChain.ChainMeta.Id][0].Container.ID, recipient)
+	balancesBPre, err := s.queryBalances(s.dockerResources.Validators[dstChain.ChainMeta.Id][0].Container.ID, recipient)
 	s.Require().NoError(err)
 
 	var (
@@ -81,11 +81,11 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chain.Chain, dstChain *chain.Ch
 
 	s.Require().Eventually(
 		func() bool {
-			exec, err := s.dkrPool.Client.CreateExec(docker.CreateExecOptions{
+			exec, err := s.dockerResources.Pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    s.hermesResource.Container.ID,
+				Container:    s.dockerResources.Hermes.Container.ID,
 				User:         "root",
 				Cmd: []string{
 					"hermes",
@@ -104,7 +104,7 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chain.Chain, dstChain *chain.Ch
 			})
 			s.Require().NoError(err)
 
-			err = s.dkrPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			err = s.dockerResources.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 				Context:      ctx,
 				Detach:       false,
 				OutputStream: &outBuf,
@@ -120,7 +120,7 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chain.Chain, dstChain *chain.Ch
 
 	s.Require().Eventually(
 		func() bool {
-			balancesBPost, err := s.queryBalances(s.valResources[dstChain.ChainMeta.Id][0].Container.ID, recipient)
+			balancesBPost, err := s.queryBalances(s.dockerResources.Validators[dstChain.ChainMeta.Id][0].Container.ID, recipient)
 			s.Require().NoError(err)
 			ibcCoin := balancesBPost.Sub(balancesBPre)
 			if ibcCoin.Len() == 1 {
@@ -141,12 +141,12 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chain.Chain, dstChain *chain.Ch
 	s.T().Log("successfully sent IBC tokens")
 }
 
-func (s *IntegrationTestSuite) submitProposal(c *chain.Chain, upgradeHeight int) {
-	upgradeHeightStr := strconv.Itoa(upgradeHeight)
+func (s *IntegrationTestSuite) submitProposal(c *chain.Chain, proposalHeight int) {
+	upgradeHeightStr := strconv.Itoa(proposalHeight)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	s.T().Logf("submitting upgrade proposal on %s container: %s", s.valResources[c.ChainMeta.Id][0].Container.Name[1:], s.valResources[c.ChainMeta.Id][0].Container.ID)
+	s.T().Logf("submitting upgrade proposal on %s container: %s", s.dockerResources.Validators[c.ChainMeta.Id][0].Container.Name[1:], s.dockerResources.Validators[c.ChainMeta.Id][0].Container.ID)
 
 	var (
 		outBuf bytes.Buffer
@@ -155,11 +155,11 @@ func (s *IntegrationTestSuite) submitProposal(c *chain.Chain, upgradeHeight int)
 
 	s.Require().Eventually(
 		func() bool {
-			exec, err := s.dkrPool.Client.CreateExec(docker.CreateExecOptions{
+			exec, err := s.dockerResources.Pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    s.valResources[c.ChainMeta.Id][0].Container.ID,
+				Container:    s.dockerResources.Validators[c.ChainMeta.Id][0].Container.ID,
 				User:         "root",
 				Cmd: []string{
 					"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json",
@@ -167,7 +167,7 @@ func (s *IntegrationTestSuite) submitProposal(c *chain.Chain, upgradeHeight int)
 			})
 			s.Require().NoError(err)
 
-			err = s.dkrPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			err = s.dockerResources.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 				Context:      ctx,
 				Detach:       false,
 				OutputStream: &outBuf,
@@ -187,7 +187,7 @@ func (s *IntegrationTestSuite) depositProposal(c *chain.Chain) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	s.T().Logf("depositing to upgrade proposal from %s container: %s", s.valResources[c.ChainMeta.Id][0].Container.Name[1:], s.valResources[c.ChainMeta.Id][0].Container.ID)
+	s.T().Logf("depositing to upgrade proposal from %s container: %s", s.dockerResources.Validators[c.ChainMeta.Id][0].Container.Name[1:], s.dockerResources.Validators[c.ChainMeta.Id][0].Container.ID)
 
 	var (
 		outBuf bytes.Buffer
@@ -196,11 +196,11 @@ func (s *IntegrationTestSuite) depositProposal(c *chain.Chain) {
 
 	s.Require().Eventually(
 		func() bool {
-			exec, err := s.dkrPool.Client.CreateExec(docker.CreateExecOptions{
+			exec, err := s.dockerResources.Pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    s.valResources[c.ChainMeta.Id][0].Container.ID,
+				Container:    s.dockerResources.Validators[c.ChainMeta.Id][0].Container.ID,
 				User:         "root",
 				Cmd: []string{
 					"osmosisd", "tx", "gov", "deposit", "1", "10000000stake", "--from=val", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
@@ -208,7 +208,7 @@ func (s *IntegrationTestSuite) depositProposal(c *chain.Chain) {
 			})
 			s.Require().NoError(err)
 
-			err = s.dkrPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			err = s.dockerResources.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 				Context:      ctx,
 				Detach:       false,
 				OutputStream: &outBuf,
@@ -225,17 +225,13 @@ func (s *IntegrationTestSuite) depositProposal(c *chain.Chain) {
 
 }
 
-func (s *IntegrationTestSuite) voteProposal(chainConfig *chainConfig) {
+func (s *IntegrationTestSuite) voteProposal(network *net.Network) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	chain := chainConfig.chain
+	chain := network.GetChain()
 
 	s.T().Logf("voting for upgrade proposal for chain-id: %s", chain.ChainMeta.Id)
 	for i := range chain.Validators {
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-			continue
-		}
-
 		var (
 			outBuf bytes.Buffer
 			errBuf bytes.Buffer
@@ -243,11 +239,11 @@ func (s *IntegrationTestSuite) voteProposal(chainConfig *chainConfig) {
 
 		s.Require().Eventually(
 			func() bool {
-				exec, err := s.dkrPool.Client.CreateExec(docker.CreateExecOptions{
+				exec, err := s.dockerResources.Pool.Client.CreateExec(docker.CreateExecOptions{
 					Context:      ctx,
 					AttachStdout: true,
 					AttachStderr: true,
-					Container:    s.valResources[chain.ChainMeta.Id][i].Container.ID,
+					Container:    s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.ID,
 					User:         "root",
 					Cmd: []string{
 						"osmosisd", "tx", "gov", "vote", "1", "yes", "--from=val", fmt.Sprintf("--chain-id=%s", chain.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
@@ -255,7 +251,7 @@ func (s *IntegrationTestSuite) voteProposal(chainConfig *chainConfig) {
 				})
 				s.Require().NoError(err)
 
-				err = s.dkrPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+				err = s.dockerResources.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 					Context:      ctx,
 					Detach:       false,
 					OutputStream: &outBuf,
@@ -268,63 +264,15 @@ func (s *IntegrationTestSuite) voteProposal(chainConfig *chainConfig) {
 			"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 		)
 
-		s.T().Logf("successfully voted for proposal from %s container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:], s.valResources[chain.ChainMeta.Id][i].Container.ID)
+		s.T().Logf("successfully voted for proposal from %s container: %s", s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.Name[1:], s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.ID)
 	}
-}
-
-func (s *IntegrationTestSuite) chainStatus(containerId string) []byte {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	exec, err := s.dkrPool.Client.CreateExec(docker.CreateExecOptions{
-		Context:      ctx,
-		AttachStdout: true,
-		AttachStderr: true,
-		Container:    containerId,
-		User:         "root",
-		Cmd: []string{
-			"osmosisd", "status",
-		},
-	})
-	s.Require().NoError(err)
-
-	var (
-		outBuf bytes.Buffer
-		errBuf bytes.Buffer
-	)
-
-	err = s.dkrPool.Client.StartExec(exec.ID, docker.StartExecOptions{
-		Context:      ctx,
-		Detach:       false,
-		OutputStream: &outBuf,
-		ErrorStream:  &errBuf,
-	})
-
-	s.Require().NoErrorf(
-		err,
-		"failed to query height; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
-	)
-
-	errBufByte := errBuf.Bytes()
-	return errBufByte
-
-}
-
-func (s *IntegrationTestSuite) getCurrentChainHeight(containerId string) int {
-	var block syncInfo
-	out := s.chainStatus(containerId)
-	err := json.Unmarshal(out, &block)
-	s.Require().NoError(err)
-	currentHeight, err := strconv.Atoi(block.SyncInfo.LatestHeight)
-	s.Require().NoError(err)
-	return currentHeight
 }
 
 func (s *IntegrationTestSuite) queryBalances(containerId string, addr string) (sdk.Coins, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	exec, err := s.dkrPool.Client.CreateExec(docker.CreateExecOptions{
+	exec, err := s.dockerResources.Pool.Client.CreateExec(docker.CreateExecOptions{
 		Context:      ctx,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -341,7 +289,7 @@ func (s *IntegrationTestSuite) queryBalances(containerId string, addr string) (s
 		errBuf bytes.Buffer
 	)
 
-	err = s.dkrPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+	err = s.dockerResources.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 		Context:      ctx,
 		Detach:       false,
 		OutputStream: &outBuf,
@@ -374,18 +322,18 @@ func (s *IntegrationTestSuite) createPool(c *chain.Chain, poolFile string) {
 
 	s.Require().Eventually(
 		func() bool {
-			exec, err := s.dkrPool.Client.CreateExec(docker.CreateExecOptions{
+			exec, err := s.dockerResources.Pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    s.valResources[c.ChainMeta.Id][0].Container.ID,
+				Container:    s.dockerResources.Validators[c.ChainMeta.Id][0].Container.ID,
 				User:         "root",
 				Cmd: []string{
 					"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test",
 				},
 			})
 			s.Require().NoError(err)
-			err = s.dkrPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			err = s.dockerResources.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 				Context:      ctx,
 				Detach:       false,
 				OutputStream: &outBuf,
@@ -398,6 +346,6 @@ func (s *IntegrationTestSuite) createPool(c *chain.Chain, poolFile string) {
 		"tx returned non code 0; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 	)
 
-	s.T().Logf("successfully created pool from %s container: %s", s.valResources[c.ChainMeta.Id][0].Container.Name[1:], s.valResources[c.ChainMeta.Id][0].Container.ID)
+	s.T().Logf("successfully created pool from %s container: %s", s.dockerResources.Validators[c.ChainMeta.Id][0].Container.Name[1:], s.dockerResources.Validators[c.ChainMeta.Id][0].Container.ID)
 
 }

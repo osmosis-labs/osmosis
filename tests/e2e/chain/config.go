@@ -40,11 +40,13 @@ const (
 	IbcSendAmount = 3300000000
 	// chainA
 	ChainAID      = "osmo-test-a"
+	ChainAIndex   = 0
 	OsmoBalanceA  = 200000000000
 	StakeBalanceA = 110000000000
 	StakeAmountA  = 100000000000
 	// chainB
 	ChainBID      = "osmo-test-b"
+	ChainBIndex   = 0
 	OsmoBalanceB  = 500000000000
 	StakeBalanceB = 440000000000
 	StakeAmountB  = 400000000000
@@ -296,11 +298,11 @@ func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig)
 		valConfig.P2P.AddrBookStrict = false
 		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.instanceName(), 26656)
 		valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
+		valConfig.StateSync = tmconfig.DefaultStateSyncConfig()
 		valConfig.StateSync.Enable = false
-		valConfig.LogLevel = "info"
 
 		var peers []string
-
+		var stateSyncRPCServers []string
 		for j := 0; j < len(c.validators); j++ {
 			if i == j {
 				continue
@@ -309,10 +311,14 @@ func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig)
 			peer := c.validators[j]
 			peerID := fmt.Sprintf("%s@%s%d:26656", peer.getNodeKey().ID(), peer.getMoniker(), j)
 			peers = append(peers, peerID)
+
+			stateSyncRPCServer := fmt.Sprintf("%s@%s%d:26657", peer.getNodeKey().ID(), peer.getMoniker(), j)
+			stateSyncRPCServers = append(stateSyncRPCServers, stateSyncRPCServer)
 		}
 
+		valConfig.StateSync.RPCServers = stateSyncRPCServers
 		valConfig.P2P.PersistentPeers = strings.Join(peers, ",")
-
+		valConfig.LogLevel = "info"
 		tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 
 		// set application configuration

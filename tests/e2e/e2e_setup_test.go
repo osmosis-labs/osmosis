@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,10 +17,9 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/suite"
 
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	dockerconfig "github.com/osmosis-labs/osmosis/v7/tests/e2e/docker"
+	net "github.com/osmosis-labs/osmosis/v7/tests/e2e/network"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
@@ -33,29 +31,10 @@ type syncInfo struct {
 	SyncInfo status `json:"SyncInfo"`
 }
 
-type chainConfig struct {
-	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, and a buffer.
-	votingPeriod float32
-	// upgrade proposal height for chain.
-	propHeight int
-	// Indexes of the validators to skip from running during initialization.
-	// This is needed for testing functionality like state-sync where we would
-	// like to start a node during tests post-initialization.
-	skipRunValidatorIndexes map[int]struct{}
-	chain                   *chain.Chain
-}
-
 const (
 	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
 	upgradeVersion = "v9"
-	// estimated number of blocks it takes to submit for a proposal
-	propSubmitBlocks float32 = 10
-	// estimated number of blocks it takes to deposit for a proposal
-	propDepositBlocks float32 = 10
-	// number of blocks it takes to vote for a single validator to vote for a proposal
-	propVoteBlocks float32 = 1.2
-	// number of blocks used as a calculation buffer
-	propBufferBlocks float32 = 5
+
 	// max retries for json unmarshalling
 	maxRetries = 60
 )
@@ -67,7 +46,7 @@ var (
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
-			SnapshotInterval:   1500,
+			SnapshotInterval:   20,
 			SnapshotKeepRecent: 2,
 		},
 		{
@@ -120,14 +99,13 @@ var (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	tmpDirs        []string
-	chainConfigs   []*chainConfig
-	dkrPool        *dockertest.Pool
-	dkrNet         *dockertest.Network
-	hermesResource *dockertest.Resource
-	initResource   *dockertest.Resource
-	valResources   map[string][]*dockertest.Resource
-	dockerImages   dockerconfig.ImageConfig
+	tmpDirs  []string
+	networks []*net.Network
+
+	workingDirectory string
+
+	dockerImages    *dockerconfig.ImageConfig
+	dockerResources *dockerconfig.Resources
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -137,7 +115,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
-	s.chainConfigs = make([]*chainConfig, 0, 2)
+	s.networks = make([]*net.Network, 0, 2)
 
 	// The e2e test flow is as follows:
 	//
@@ -152,27 +130,32 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		err         error
 	)
 
+	s.workingDirectory, err = os.Getwd()
+	s.Require().NoError(err)
+
 	if str := os.Getenv("OSMOSIS_E2E_SKIP_UPGRADE"); len(str) > 0 {
 		skipUpgrade, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
 	}
 
-	s.dockerImages = *dockerconfig.NewImageConfig(!skipUpgrade)
+	s.dockerImages = dockerconfig.NewImageConfig(!skipUpgrade)
 
-	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
-	s.configureChain(chain.ChainAID, validatorConfigsChainA, map[int]struct{}{
-		3: {}, // skip validator at index 3
-	})
-	s.configureChain(chain.ChainBID, validatorConfigsChainB, map[int]struct{}{})
+	s.dockerResources, err = dockerconfig.NewResources()
+	s.Require().NoError(err)
 
-	for i, chainConfig := range s.chainConfigs {
-		s.runValidators(chainConfig, s.dockerImages.OsmosisRepository, s.dockerImages.OsmosisTag, i*10)
+	s.configureChain(chain.ChainAID, validatorConfigsChainA)
+	s.configureChain(chain.ChainBID, validatorConfigsChainB)
+
+	for _, network := range s.networks {
+		networkResources, err := network.RunValidators()
+		s.Require().NoError(err)
+		s.dockerResources.Validators[network.GetChain().ChainMeta.Id] = networkResources
 	}
 
 	// Run a relayer between every possible pair of chains.
-	for i := 0; i < len(s.chainConfigs); i++ {
-		for j := i + 1; j < len(s.chainConfigs); j++ {
-			s.runIBCRelayer(s.chainConfigs[i].chain, s.chainConfigs[j].chain)
+	for i := 0; i < len(s.networks); i++ {
+		for j := i + 1; j < len(s.networks); j++ {
+			s.runIBCRelayer(s.networks[i].GetChain(), s.networks[j].GetChain())
 		}
 	}
 
@@ -181,6 +164,22 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.upgrade()
 		s.runPostUpgradeTests()
 	}
+
+	// Stop a validator container so that we can restart it later
+	// for testing state sync.
+	if err := s.networks[0].RemoveValidatorContainer(3); err != nil {
+		s.Require().NoError(err)
+	}
+
+	stateSyncValidatorConfigDir := s.networks[0].GetChain().Validators[3].ConfigDir
+	_, err = os.ReadFile(stateSyncValidatorConfigDir + "/config/config.toml")
+	s.Require().NoError(err)
+
+	// configBytes.=
+
+	// valConfig.StateSync = tmconfig.DefaultStateSyncConfig()
+	// valConfig.StateSync.Enable = true
+	// valConfig.StateSync.RPCServers =
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -195,101 +194,16 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	s.T().Log("tearing down e2e integration test suite...")
 
-	s.Require().NoError(s.dkrPool.Purge(s.hermesResource))
+	err := s.dockerResources.Purge()
+	s.Require().NoError(err)
 
-	for _, vr := range s.valResources {
-		for _, r := range vr {
-			s.Require().NoError(s.dkrPool.Purge(r))
-		}
-	}
-
-	s.Require().NoError(s.dkrPool.RemoveNetwork(s.dkrNet))
-
-	for _, chainConfig := range s.chainConfigs {
-		os.RemoveAll(chainConfig.chain.ChainMeta.DataDir)
+	for _, network := range s.networks {
+		os.RemoveAll(network.GetChain().ChainMeta.DataDir)
 	}
 
 	for _, td := range s.tmpDirs {
 		os.RemoveAll(td)
 	}
-}
-
-func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, dockerRepository, dockerTag string, portOffset int) {
-	chain := chainConfig.chain
-	s.T().Logf("starting %s validator containers...", chain.ChainMeta.Id)
-	s.valResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.skipRunValidatorIndexes))
-	pwd, err := os.Getwd()
-	s.Require().NoError(err)
-	for i, val := range chain.Validators {
-		// Skip some validators from running during set up.
-		// This is needed for testing functionality like
-		// state-sunc where we might want to start some validators during tests.
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-			s.T().Logf("skipping %s validator with index %d from running...", val.Name, i)
-			continue
-		}
-
-		runOpts := &dockertest.RunOptions{
-			Name:      val.Name,
-			NetworkID: s.dkrNet.Network.ID,
-			Mounts: []string{
-				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
-				fmt.Sprintf("%s/scripts:/osmosis", pwd),
-			},
-			Repository: dockerRepository,
-			Tag:        dockerTag,
-			Cmd: []string{
-				"start",
-			},
-		}
-
-		// expose the first validator for debugging and communication
-		if val.Index == 0 {
-			runOpts.PortBindings = map[docker.Port][]docker.PortBinding{
-				"1317/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}},
-				"6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}},
-				"6061/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6061+portOffset)}},
-				"6062/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6062+portOffset)}},
-				"6063/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6063+portOffset)}},
-				"6064/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6064+portOffset)}},
-				"6065/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6065+portOffset)}},
-				"9090/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 9090+portOffset)}},
-				"26656/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26656+portOffset)}},
-				"26657/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26657+portOffset)}},
-			}
-		}
-
-		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
-		s.Require().NoError(err)
-
-		s.valResources[chain.ChainMeta.Id][i] = resource
-		s.T().Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
-	}
-
-	rpcClient, err := rpchttp.New("tcp://localhost:26657", "/websocket")
-	s.Require().NoError(err)
-
-	s.Require().Eventually(
-		func() bool {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-			defer cancel()
-
-			status, err := rpcClient.Status(ctx)
-			if err != nil {
-				return false
-			}
-
-			// let the node produce a few blocks
-			if status.SyncInfo.CatchingUp || status.SyncInfo.LatestBlockHeight < 3 {
-				return false
-			}
-
-			return true
-		},
-		5*time.Minute,
-		time.Second,
-		"Osmosis node failed to produce blocks",
-	)
 }
 
 func (s *IntegrationTestSuite) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain) {
@@ -310,12 +224,12 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chain.Chain, chainB *chain.
 	)
 	s.Require().NoError(err)
 
-	s.hermesResource, err = s.dkrPool.RunWithOptions(
+	s.dockerResources.Hermes, err = s.dockerResources.Pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s-%s-relayer", chainA.ChainMeta.Id, chainB.ChainMeta.Id),
 			Repository: s.dockerImages.RelayerRepository,
 			Tag:        s.dockerImages.RelayerTag,
-			NetworkID:  s.dkrNet.Network.ID,
+			NetworkID:  s.dockerResources.Network.Network.ID,
 			Cmd: []string{
 				"start",
 			},
@@ -334,8 +248,8 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chain.Chain, chainB *chain.
 				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", chainB.ChainMeta.Id),
 				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAVal.Mnemonic),
 				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBVal.Mnemonic),
-				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[chainA.ChainMeta.Id][0].Container.Name[1:]),
-				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[chainB.ChainMeta.Id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.dockerResources.Validators[chainA.ChainMeta.Id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.dockerResources.Validators[chainB.ChainMeta.Id][0].Container.Name[1:]),
 			},
 			Entrypoint: []string{
 				"sh",
@@ -347,7 +261,7 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chain.Chain, chainB *chain.
 	)
 	s.Require().NoError(err)
 
-	endpoint := fmt.Sprintf("http://%s/state", s.hermesResource.GetHostPort("3031/tcp"))
+	endpoint := fmt.Sprintf("http://%s/state", s.dockerResources.Hermes.GetHostPort("3031/tcp"))
 	s.Require().Eventually(
 		func() bool {
 			resp, err := http.Get(endpoint)
@@ -377,7 +291,7 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chain.Chain, chainB *chain.
 		"hermes relayer not healthy",
 	)
 
-	s.T().Logf("started Hermes relayer container: %s", s.hermesResource.Container.ID)
+	s.T().Logf("started Hermes relayer container: %s", s.dockerResources.Hermes.Container.ID)
 
 	// XXX: Give time to both networks to start, otherwise we might see gRPC
 	// transport errors.
@@ -387,7 +301,7 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chain.Chain, chainB *chain.
 	s.connectIBCChains(chainA, chainB)
 }
 
-func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig, skipValidatorIndexes map[int]struct{}) {
+func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig) {
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 
@@ -397,21 +311,16 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	validatorConfigBytes, err := json.Marshal(validatorConfigs)
 	s.Require().NoError(err)
 
-	numVal := float32(len(validatorConfigs))
+	newNetwork := net.New(s.T(), len(s.networks), len(validatorConfigs), s.dockerResources, s.dockerImages, s.workingDirectory)
 
-	newChainConfig := chainConfig{
-		votingPeriod:            propDepositBlocks + numVal*propVoteBlocks + propBufferBlocks,
-		skipRunValidatorIndexes: skipValidatorIndexes,
-	}
+	votingPeriodDuration := time.Duration(int(newNetwork.GetVotingPeriod()) * 1000000000)
 
-	votingPeriodDuration := time.Duration(int(newChainConfig.votingPeriod) * 1000000000)
-
-	s.initResource, err = s.dkrPool.RunWithOptions(
+	initResource, err := s.dockerResources.Pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
 			Repository: s.dockerImages.InitRepository,
 			Tag:        s.dockerImages.InitTag,
-			NetworkID:  s.dkrNet.Network.ID,
+			NetworkID:  s.dockerResources.Network.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
 				fmt.Sprintf("--chain-id=%s", chainId),
@@ -434,7 +343,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	// without this, test attempts to unmarshal file before docker container is finished writing
 	for i := 0; i < maxRetries; i++ {
 		encJson, _ := os.ReadFile(fileName)
-		err = json.Unmarshal(encJson, &newChainConfig.chain)
+		err = json.Unmarshal(encJson, newNetwork.GetChain())
 		if err == nil {
 			break
 		}
@@ -447,20 +356,9 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 			time.Sleep(1 * time.Second)
 		}
 	}
-	s.Require().NoError(s.dkrPool.Purge(s.initResource))
+	s.Require().NoError(s.dockerResources.Pool.Purge(initResource))
 
-	s.chainConfigs = append(s.chainConfigs, &newChainConfig)
-}
-
-func (s *IntegrationTestSuite) configureDockerResources(chainIDOne, chainIDTwo string) {
-	var err error
-	s.dkrPool, err = dockertest.NewPool("")
-	s.Require().NoError(err)
-
-	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", chainIDOne, chainIDTwo))
-	s.Require().NoError(err)
-
-	s.valResources = make(map[string][]*dockertest.Resource)
+	s.networks = append(s.networks, newNetwork)
 }
 
 func noRestart(config *docker.HostConfig) {
@@ -473,36 +371,41 @@ func noRestart(config *docker.HostConfig) {
 func (s *IntegrationTestSuite) upgrade() {
 	// submit, deposit, and vote for upgrade proposal
 	// prop height = current height + voting period + time it takes to submit proposal + small buffer
-	for _, chainConfig := range s.chainConfigs {
-		currentHeight := s.getCurrentChainHeight(s.valResources[chainConfig.chain.ChainMeta.Id][0].Container.ID)
-		chainConfig.propHeight = currentHeight + int(chainConfig.votingPeriod) + int(propSubmitBlocks) + int(propBufferBlocks)
-		s.submitProposal(chainConfig.chain, chainConfig.propHeight)
-		s.depositProposal(chainConfig.chain)
-		s.voteProposal(chainConfig)
+	for _, network := range s.networks {
+		currentHeight, err := network.GetCurrentHeightFromValidator(0)
+		s.Require().NoError(err)
+
+		network.CalclulateAndSetProposalHeight(currentHeight)
+		proposalHeight := network.GetProposalHeight()
+
+		curChain := network.GetChain()
+		s.submitProposal(curChain, proposalHeight)
+		s.depositProposal(curChain)
+		s.voteProposal(network)
 	}
 
 	// wait till all chains halt at upgrade height
-	for _, chainConfig := range s.chainConfigs {
-		curChain := chainConfig.chain
+	for _, network := range s.networks {
+		curChain := network.GetChain()
 
-		for i := range chainConfig.chain.Validators {
-			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-				continue
-			}
+		for i := range curChain.Validators {
 
 			// use counter to ensure no new blocks are being created
 			counter := 0
-			s.T().Logf("waiting to reach upgrade height on %s validator container: %s", s.valResources[curChain.ChainMeta.Id][i].Container.Name[1:], s.valResources[curChain.ChainMeta.Id][i].Container.ID)
+			s.T().Logf("waiting to reach upgrade height on %s validator container: %s", s.dockerResources.Validators[curChain.ChainMeta.Id][i].Container.Name[1:], s.dockerResources.Validators[curChain.ChainMeta.Id][i].Container.ID)
 			s.Require().Eventually(
 				func() bool {
-					currentHeight := s.getCurrentChainHeight(s.valResources[curChain.ChainMeta.Id][i].Container.ID)
-					if currentHeight != chainConfig.propHeight {
-						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", s.valResources[curChain.ChainMeta.Id][i].Container.Name[1:], currentHeight, chainConfig.propHeight, s.valResources[curChain.ChainMeta.Id][i].Container.ID)
+					currentHeight, err := network.GetCurrentHeightFromValidator(i)
+					s.Require().NoError(err)
+					propHeight := network.GetProposalHeight()
+
+					if currentHeight != propHeight {
+						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", s.dockerResources.Validators[curChain.ChainMeta.Id][i].Container.Name[1:], currentHeight, propHeight, s.dockerResources.Validators[curChain.ChainMeta.Id][i].Container.ID)
 					}
-					if currentHeight > chainConfig.propHeight {
+					if currentHeight > propHeight {
 						panic("chain did not halt at upgrade height")
 					}
-					if currentHeight == chainConfig.propHeight {
+					if currentHeight == propHeight {
 						counter++
 					}
 					return counter == 3
@@ -510,86 +413,73 @@ func (s *IntegrationTestSuite) upgrade() {
 				5*time.Minute,
 				time.Second,
 			)
-			s.T().Logf("reached upgrade height on %s container: %s", s.valResources[curChain.ChainMeta.Id][i].Container.Name[1:], s.valResources[curChain.ChainMeta.Id][i].Container.ID)
+			s.T().Logf("reached upgrade height on %s container: %s", s.dockerResources.Validators[curChain.ChainMeta.Id][i].Container.Name[1:], s.dockerResources.Validators[curChain.ChainMeta.Id][i].Container.ID)
 		}
 	}
 
 	// remove all containers so we can upgrade them to the new version
-	for _, chainConfig := range s.chainConfigs {
-		curChain := chainConfig.chain
-		for valIdx := range curChain.Validators {
-			if _, ok := chainConfig.skipRunValidatorIndexes[valIdx]; ok {
-				continue
+	for _, network := range s.networks {
+		curChain := network.GetChain()
+		for i := range curChain.Validators {
+			if err := network.RemoveValidatorContainer(i); err != nil {
+				s.Require().NoError(err)
 			}
-
-			var opts docker.RemoveContainerOptions
-			opts.ID = s.valResources[curChain.ChainMeta.Id][valIdx].Container.ID
-			opts.Force = true
-			s.dkrPool.Client.RemoveContainer(opts)
-			s.T().Logf("removed container: %s", s.valResources[curChain.ChainMeta.Id][valIdx].Container.Name[1:])
 		}
 	}
 
-	// remove all containers so we can upgrade them to the new version
-	for _, chainConfig := range s.chainConfigs {
-		s.upgradeContainers(chainConfig, chainConfig.propHeight)
+	for _, network := range s.networks {
+		s.upgradeContainers(network)
 	}
 }
 
-func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propHeight int) {
+func (s *IntegrationTestSuite) upgradeContainers(network *net.Network) {
 	// upgrade containers to the locally compiled daemon
-	chain := chainConfig.chain
+	chain := network.GetChain()
 	s.T().Logf("starting upgrade for chain-id: %s...", chain.ChainMeta.Id)
 	pwd, err := os.Getwd()
 	s.Require().NoError(err)
 
-	for i, val := range chain.Validators {
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-			continue
-		}
-
+	for _, val := range chain.Validators {
 		runOpts := &dockertest.RunOptions{
 			Name:       val.Name,
 			Repository: dockerconfig.LocalOsmoRepository,
 			Tag:        dockerconfig.LocalOsmoTag,
-			NetworkID:  s.dkrNet.Network.ID,
+			NetworkID:  s.dockerResources.Network.Network.ID,
 			User:       "root:root",
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
 				fmt.Sprintf("%s/scripts:/osmosis", pwd),
 			},
 		}
-		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
+		resource, err := s.dockerResources.Pool.RunWithOptions(runOpts, noRestart)
 		s.Require().NoError(err)
 
-		s.valResources[chain.ChainMeta.Id][i] = resource
+		s.dockerResources.Validators[chain.ChainMeta.Id][val.Index] = resource
 		s.T().Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	}
 
+	propHeight := network.GetProposalHeight()
 	// check that we are creating blocks again
 	for i := range chain.Validators {
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-			continue
-		}
-
 		s.Require().Eventually(
 			func() bool {
-				currentHeight := s.getCurrentChainHeight(s.valResources[chain.ChainMeta.Id][i].Container.ID)
+				currentHeight, err := network.GetCurrentHeightFromValidator(i)
+				s.Require().NoError(err)
 				if currentHeight <= propHeight {
-					s.T().Logf("current block height on %s is %v, waiting to create blocks container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:], currentHeight, s.valResources[chain.ChainMeta.Id][i].Container.ID)
+					s.T().Logf("current block height on %s is %v, waiting to create blocks container: %s", s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.Name[1:], currentHeight, s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.ID)
 				}
 				return currentHeight > propHeight
 			},
 			5*time.Minute,
 			time.Second,
 		)
-		s.T().Logf("upgrade successful on %s validator container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:], s.valResources[chain.ChainMeta.Id][i].Container.ID)
+		s.T().Logf("upgrade successful on %s validator container: %s", s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.Name[1:], s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.ID)
 	}
 }
 
 func (s *IntegrationTestSuite) createPreUpgradeState() {
-	chainA := s.chainConfigs[0].chain
-	chainB := s.chainConfigs[1].chain
+	chainA := s.networks[0].GetChain()
+	chainB := s.networks[1].GetChain()
 
 	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.OsmoToken)
 	s.sendIBC(chainB, chainA, chainA.Validators[0].PublicAddress, chain.OsmoToken)
@@ -600,8 +490,8 @@ func (s *IntegrationTestSuite) createPreUpgradeState() {
 }
 
 func (s *IntegrationTestSuite) runPostUpgradeTests() {
-	chainA := s.chainConfigs[0].chain
-	chainB := s.chainConfigs[1].chain
+	chainA := s.networks[0].GetChain()
+	chainB := s.networks[1].GetChain()
 
 	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.OsmoToken)
 	s.sendIBC(chainB, chainA, chainA.Validators[0].PublicAddress, chain.OsmoToken)
