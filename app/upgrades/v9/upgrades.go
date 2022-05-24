@@ -64,8 +64,8 @@ func CreateUpgradeHandler(
 		}
 
 		// initialize ICS27 module
-		icamodule, err := mm.Modules[icatypes.ModuleName].(ica.AppModule)
-		if err {
+		icamodule, correctTypecast := mm.Modules[icatypes.ModuleName].(ica.AppModule)
+		if !correctTypecast {
 			panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
 		}
 		icamodule.InitModule(ctx, controllerParams, hostParams)
