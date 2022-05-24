@@ -29,6 +29,6 @@ type SwapMsg struct {
 
 type JoinPool struct {
 	PoolId         uint64    `json:"pool_id"`
-	ShareOutAmount sdk.Int   `json:"route"`
+	ShareOutAmount sdk.Int   `json:"share_out_amount"`
 	TokenInMaxs    sdk.Coins `json:"token_in_maxs"`
 }

@@ -182,14 +182,14 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 }
 
 func (m *CustomMessenger) joinPool(ctx sdk.Context, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPool) ([]sdk.Event, [][]byte, error) {
-	err := PerformJoin(m.tokenFactory, m.bank, m.gammKeeper, ctx, contractAddr, joinPool)
+	err := PerformJoin(m.gammKeeper, ctx, contractAddr, joinPool)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "join pool")
 	}
 	return nil, nil, nil
 }
 
-func PerformJoin(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, g *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPool) error {
+func PerformJoin(g *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPool) error {
 	if joinPool == nil {
 		return wasmvmtypes.InvalidRequest{Err: "join pool null"}
 	}

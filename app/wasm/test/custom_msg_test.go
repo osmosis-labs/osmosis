@@ -2,8 +2,9 @@ package wasm
 
 import (
 	"encoding/json"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"testing"
+
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -38,7 +39,7 @@ func TestMintMsg(t *testing.T) {
 		Amount:    amount,
 		Recipient: lucky.String(),
 	}}
-	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
 
 	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
@@ -60,7 +61,7 @@ func TestMintMsg(t *testing.T) {
 	require.Equal(t, resp.Denom, coin.Denom)
 
 	// mint the same denom again
-	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
 
 	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
@@ -88,7 +89,7 @@ func TestMintMsg(t *testing.T) {
 		Amount:    amount,
 		Recipient: lucky.String(),
 	}}
-	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
 
 	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
@@ -453,7 +454,7 @@ func TestSwapMsg(t *testing.T) {
 			require.NotEmpty(t, reflect)
 
 			msg := wasmbindings.OsmosisMsg{Swap: tc.msg(state)}
-			err := executeCustom(t, ctx, osmosis, reflect, trader, msg, tc.initFunds)
+			err := executeCustom(t, ctx, osmosis, reflect, trader, msg, []sdk.Coin{tc.initFunds})
 			if tc.expectErr {
 				require.Error(t, err)
 			} else {
@@ -466,6 +467,74 @@ func TestSwapMsg(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestJoinPoolMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	actor := RandomAccountAddress()
+
+	swapperFunds := sdk.NewCoins(
+		sdk.NewInt64Coin("uatom", 333000000),
+		sdk.NewInt64Coin("uosmo", 555000000+3*poolFee),
+		sdk.NewInt64Coin("uregen", 777000000),
+		sdk.NewInt64Coin("ustar", 999000000),
+	)
+	fundAccount(t, ctx, osmosis, actor, swapperFunds)
+
+	// 20 star to 1 osmo
+	funds1 := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12000000),
+		sdk.NewInt64Coin("ustar", 240000000),
+	}
+	starPool := preparePool(t, ctx, osmosis, actor, funds1)
+
+	poolInfo, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
+
+	require.NoError(t, err)
+
+	coinsInPool := poolInfo.GetTotalPoolLiquidity(ctx)
+
+	require.Equal(t, sdk.NewCoin("uosmo", sdk.NewInt(12000000)), coinsInPool[0])
+	require.Equal(t, sdk.NewCoin("ustar", sdk.NewInt(240000000)), coinsInPool[1])
+
+	totalSharesBefore := poolInfo.GetTotalShares()
+
+	require.Equal(t, "100000000000000000000", totalSharesBefore.String())
+
+	osmoStarLiquidity := sdk.NewCoins(sdk.NewInt64Coin("uosmo", 12_000), sdk.NewInt64Coin("ustar", 240_000))
+	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+
+	//ShareOutAmount = TotalShares * tokenInAmount / poolAsset.amount
+	//Either asset can be used for tokenInAmount and poolAsset.amount can be used to calculate this amount
+	//ShareOutAmount = 100000000000000000000 * 12000 / 12000000 = 100000000000000000000 * 240000 / 240000000
+
+	msg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
+		PoolId:         starPool,
+		ShareOutAmount: sdk.NewInt(100000000000000000),
+		TokenInMaxs:    osmoStarLiquidity,
+	}}
+	err1 := executeCustom(t, ctx, osmosis, reflect, actor, msg, osmoStarLiquidity)
+	require.NoError(t, err1)
+
+	poolInfoAfterDeposit, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
+
+	require.NoError(t, err)
+
+	coinsInPoolAfter := poolInfoAfterDeposit.GetTotalPoolLiquidity(ctx)
+
+	require.Equal(t, sdk.NewCoin("uosmo", sdk.NewInt(12012000)), coinsInPoolAfter[0])
+	require.Equal(t, sdk.NewCoin("ustar", sdk.NewInt(240240000)), coinsInPoolAfter[1])
+
+	poolInfoAfterDeposit, err2 := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
+
+	require.NoError(t, err2)
+
+	totalSharesAfter := poolInfoAfterDeposit.GetTotalShares()
+
+	require.Equal(t, "100100000000000000000", totalSharesAfter.String())
+
 }
 
 // test setup for each run through the table test above
@@ -521,7 +590,7 @@ type ReflectSubMsgs struct {
 	Msgs []wasmvmtypes.SubMsg `json:"msgs"`
 }
 
-func executeCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, sender sdk.AccAddress, msg wasmbindings.OsmosisMsg, funds sdk.Coin) error {
+func executeCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, sender sdk.AccAddress, msg wasmbindings.OsmosisMsg, funds []sdk.Coin) error {
 	customBz, err := json.Marshal(msg)
 	require.NoError(t, err)
 	reflectMsg := ReflectExec{
@@ -536,9 +605,7 @@ func executeCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contr
 
 	// no funds sent if amount is 0
 	var coins sdk.Coins
-	if !funds.Amount.IsNil() {
-		coins = sdk.Coins{funds}
-	}
+	coins = funds
 
 	contractKeeper := keeper.NewDefaultPermissionKeeper(osmosis.WasmKeeper)
 	_, err = contractKeeper.Execute(ctx, contract, sender, reflectBz, coins)
