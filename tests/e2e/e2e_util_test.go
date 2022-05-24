@@ -192,7 +192,6 @@ func (s *IntegrationTestSuite) depositProposal(c *chain.Chain) {
 	)
 
 	s.T().Log("successfully deposited to proposal")
-
 }
 
 func (s *IntegrationTestSuite) voteProposal(c *chain.Chain) {
@@ -274,5 +273,4 @@ func (s *IntegrationTestSuite) chainStatus(containerId string) []byte {
 
 	errBufByte := errBuf.Bytes()
 	return errBufByte
-
 }

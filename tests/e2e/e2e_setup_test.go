@@ -317,7 +317,6 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 }
 
 func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig) {
-
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 
