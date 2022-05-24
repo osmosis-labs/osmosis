@@ -2,7 +2,7 @@
 
 # Default state for all rules
 default: true
-MD006: false
+MD024: false
 MD003: 
   # Heading style
   style: "atx"
