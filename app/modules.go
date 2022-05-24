@@ -67,9 +67,11 @@ import (
 )
 
 // moduleAccountPermissions defines module account permissions
+// TODO: Having to input nil's here is unacceptable, we need a way to automatically derive this.
 var moduleAccountPermissions = map[string][]string{
 	authtypes.FeeCollectorName:               nil,
 	distrtypes.ModuleName:                    nil,
+	icatypes.ModuleName:                      nil,
 	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	minttypes.DeveloperVestingModuleAcctName: nil,
 	stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
