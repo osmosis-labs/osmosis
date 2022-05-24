@@ -459,7 +459,6 @@ osmosisd query gamm num-pools
 ```
 
 ## Pool
-<<<<<<< HEAD:x/gamm/spec/05_queries_transactions.md
 Query the parameter and assets of a specific pool. 
 
 ### Usage

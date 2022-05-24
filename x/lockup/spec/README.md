@@ -12,17 +12,25 @@ This module provides interfaces for other modules to iterate the locks efficient
 
 ## Contents
 
-1. **[Concept](01_concepts.md)**
-2. **[State](02_state.md)**
-3. **[Messages](03_messages.md)**
-4. **[Events](04_events.md)**
-5. **[Keeper](05_keeper.md)**\
-6. **[Hooks](06_hooks.md)**\
-7. **[Queries](07_queries.md)**\
-8. **[Params](08_params.md)**
-9. **[Endblocker](09_endblocker.md)**
+1. **[Concept](#concepts)**
+2. **[State](#state)**
+3. **[Messages](#messages)**
+4. **[Events](#events)**
+5. **[Keeper](#keeper)**
+6. **[Hooks](#hooks)**
+7. **[Queries](#queries)**
+8. **[Transactions](#transactions)**
+9. **[Params](#params)**
+10. **[Endblocker](#endblocker)**
 
-## Overview
+## Concepts
+
+The purpose of `lockup` module is to provide the functionality to lock
+tokens for specific period of time for LP token stakers to get
+incentives.
+
+This module provides interfaces for other modules to iterate the locks
+efficiently and grpc query to check the status of locked coins.
 
 There are currently three incentivize lockup periods; `1 day` (24h), `1 week` (168h), and `2 weeks` (336h). When locking tokens in the 2 week period, the liquidity provider is effectively earning rewards for a combination of the 1 day, 1 week, and 2 week bonding periods.
 
@@ -40,6 +48,422 @@ After the first day passes, they will only receive rewards for the 1 day and 1 w
 </br>
 </br>
 
+## State
+
+### Locked coins management
+
+Locked coins are all stored in module account for `lockup` module which
+is called `LockPool`. When user lock coins within `lockup` module, it's
+moved from user account to `LockPool` and a record (`PeriodLock` struct)
+is created.
+
+Once the period is over, user can withdraw it at anytime from
+`LockPool`. User can withdraw by PeriodLock ID or withdraw all
+`UnlockableCoins` at a time.
+
+### Period Lock
+
+A `PeriodLock` is a single unit of lock by period. It's a record of
+locked coin at a specific time. It stores owner, duration, unlock time
+and the amount of coins locked.
+
+``` {.go}
+type PeriodLock struct {
+  ID         uint64
+  Owner      sdk.AccAddress
+  Duration   time.Duration
+  UnlockTime time.Time
+  Coins      sdk.Coins
+}
+```
+
+All locks are stored on the KVStore as value at
+`{KeyPrefixPeriodLock}{ID}` key.
+
+### Period lock reference queues
+
+To provide time efficient queries, several reference queues are managed
+by denom, unlock time, and duration. There are two big queues to store
+the lock references. (`a_prefix_key`)
+
+1. Lock references that hasn't started with unlocking yet has prefix of
+    `KeyPrefixNotUnlocking`.
+2. Lock references that has started unlocking already has prefix of
+    `KeyPrefixUnlocking`.
+3. Lock references that has withdrawn, it's removed from the store.
+
+Regardless the lock has started unlocking or not, it stores below
+references. (`b_prefix_key`)
+
+1. `{KeyPrefixLockDuration}{Duration}`
+2. `{KeyPrefixAccountLockDuration}{Owner}{Duration}`
+3. `{KeyPrefixDenomLockDuration}{Denom}{Duration}`
+4. `{KeyPrefixAccountDenomLockDuration}{Owner}{Denom}{Duration}`
+
+If the lock is unlocking, it also stores the below referneces.
+
+1. `{KeyPrefixLockTimestamp}{LockEndTime}`
+2. `{KeyPrefixAccountLockTimestamp}{Owner}{LockEndTime}`
+3. `{KeyPrefixDenomLockTimestamp}{Denom}{LockEndTime}`
+4. `{KeyPrefixAccountDenomLockTimestamp}{Owner}{Denom}{LockEndTime}`
+
+For end time keys, they are converted to sortable string by using
+`sdk.FormatTimeBytes` function.
+
+**Note:** Additionally, for locks that hasn't started unlocking yet, it
+stores accumulation store for efficient rewards distribution mechanism.
+
+For reference management, `addLockRefByKey` function is used a lot. Here
+key is the prefix key to be used for iteration. It is combination of two
+prefix keys.(`{a_prefix_key}{b_prefix_key}`)
+
+``` {.go}
+// addLockRefByKey make a lockID iterable with the prefix `key`
+func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
+ store := ctx.KVStore(k.storeKey)
+ lockIDBz := sdk.Uint64ToBigEndian(lockID)
+ endKey := combineKeys(key, lockIDBz)
+ if store.Has(endKey) {
+  return fmt.Errorf("lock with same ID exist: %d", lockID)
+ }
+ store.Set(endKey, lockIDBz)
+ return nil
+}
+```
+
+### Synthetic Lockup
+
+Synthetic Lockups are a concept that serve the following roles:
+
+- Add "restrictions" to an underlying PeriodLock, so that its bond
+    status must be managed by a module rather than a BeginUnlockMessage
+- Allow issuing of a locked, "synthetic" denom type
+- Allow distribution of rewards to locked synthetic denominations.
+
+The first goal can eventually be pushed into a new data structure, as it
+doesn't really relate to the synthetic component.
+
+This is then used for superfluid staking. (Old docs below):
+
+The goal of synthetic lockup is to support the querying of locks by
+denom especially for delegated staking. By combining native denom and
+synthetic suffix, lockup supports querying with synthetic denom with
+existing denom querying functions.
+
+Synthetic lockup is creating virtual lockup where new denom is
+combination of original denom and synthetic suffix. At the time of
+synthetic lockup creation and deletion, accumulation store is also being
+updated and on querier side, they can query as freely as native lockup.
+
+Note: The staking, distribution, slashing, superfluid module would be
+refactored to use lockup module and synthetic lockup. The following
+changes for synthetic lockup on native lockup change could be defined as
+per use case. For now we assume this change is made on hook receiver
+side which manages synthetic lockup, e.g. use cases are when user start
+/ pause superfluid staking on a lockup, redelegation event, unbonding
+event etc.
+
+External modules are managing synthetic locks to use it on their own
+logic implementation. (e.g. delegated staking and superfluid staking)
+
+A `SyntheticLock` is a single unit of synthetic lockup. Each synthetic
+lockup has reference `PeriodLock` ID, synthetic suffix (`Suffix`) and
+synthetic lock's removal time (`EndTime`).
+
+``` {.go}
+type SyntheticLock struct {
+ LockId  uint64
+ Suffix  string
+ EndTime time.Time
+}
+```
+
+All synthetic locks are stored on the KVStore as value at
+`{KeyPrefixPeriodLock}{LockID}{Suffix}` key.
+
+### Synthetic lock reference queues
+
+To provide time efficient queries, several reference queues are managed
+by denom, unlock time, and duration.
+
+1. `{KeyPrefixDenomLockTimestamp}{SyntheticDenom}{LockEndTime}`
+2. `{KeyPrefixDenomLockDuration}{SyntheticDenom}{Duration}`
+3. `{KeyPrefixAccountDenomLockTimestamp}{Owner}{SyntheticDenom}{LockEndTime}`
+4. `{KeyPrefixAccountDenomLockDuration}{Owner}{SyntheticDenom}{Duration}`
+
+SyntheticDenom is expressed as `{Denom}{Suffix}`. (Note: we can change
+this to `{Prefix}{Denom}` as per discussion with Dev)
+
+For end time keys, they are converted to sortable string by using
+`sdk.FormatTimeBytes` function.
+
+**Note:** To implement the auto removal of synthetic lockups that is
+already finished, we manage a separate time basis queue at
+`{KeyPrefixSyntheticLockTimestamp}{EndTime}{LockId}{Suffix}`
+
+## Messages
+
+### Lock Tokens
+
+`MsgLockTokens` can be submitted by any token holder via a
+`MsgLockTokens` transaction.
+
+``` {.go}
+type MsgLockTokens struct {
+ Owner    sdk.AccAddress
+ Duration time.Duration
+ Coins    sdk.Coins
+}
+```
+
+**State modifications:**
+
+- Validate `Owner` has enough tokens
+- Generate new `PeriodLock` record
+- Save the record inside the keeper's time basis unlock queue
+- Transfer the tokens from the `Owner` to lockup `ModuleAccount`.
+
+### Begin Unlock of all locks
+
+Once time is over, users can withdraw unlocked coins from lockup
+`ModuleAccount`.
+
+``` {.go}
+type MsgBeginUnlockingAll struct {
+ Owner string
+}
+```
+
+**State modifications:**
+
+- Fetch all unlockable `PeriodLock`s that has not started unlocking
+    yet
+- Set `PeriodLock`'s unlock time
+- Remove lock references from `NotUnlocking` queue
+- Add lock references to `Unlocking` queue
+
+### Begin unlock for a lock
+
+Once time is over, users can withdraw unlocked coins from lockup
+`ModuleAccount`.
+
+``` {.go}
+type MsgBeginUnlocking struct {
+ Owner string
+ ID    uint64
+}
+```
+
+**State modifications:**
+
+- Check `PeriodLock` with `ID` specified by `MsgBeginUnlocking` is not
+    started unlocking yet
+- Set `PeriodLock`'s unlock time
+- Remove lock references from `NotUnlocking` queue
+- Add lock references to `Unlocking` queue
+
+Note: If another module needs past `PeriodLock` item, it can log the
+details themselves using the hooks.
+
+## Events
+
+The lockup module emits the following events:
+
+### Handlers
+
+#### MsgLockTokens
+
+  Type           Attribute Key      Attribute Value
+  -------------- ------------------ -----------------
+  lock\_tokens   period\_lock\_id   {periodLockID}
+  lock\_tokens   owner              {owner}
+  lock\_tokens   amount             {amount}
+  lock\_tokens   duration           {duration}
+  lock\_tokens   unlock\_time       {unlockTime}
+  message        action             lock\_tokens
+  message        sender             {owner}
+  transfer       recipient          {moduleAccount}
+  transfer       sender             {owner}
+  transfer       amount             {amount}
+
+#### MsgBeginUnlocking
+
+  Type            Attribute Key      Attribute Value
+  --------------- ------------------ ------------------
+  begin\_unlock   period\_lock\_id   {periodLockID}
+  begin\_unlock   owner              {owner}
+  begin\_unlock   amount             {amount}
+  begin\_unlock   duration           {duration}
+  begin\_unlock   unlock\_time       {unlockTime}
+  message         action             begin\_unlocking
+  message         sender             {owner}
+
+#### MsgBeginUnlockingAll
+
+  Type                 Attribute Key      Attribute Value
+  -------------------- ------------------ -----------------------
+  begin\_unlock\_all   owner              {owner}
+  begin\_unlock\_all   unlocked\_coins    {unlockedCoins}
+  begin\_unlock        period\_lock\_id   {periodLockID}
+  begin\_unlock        owner              {owner}
+  begin\_unlock        amount             {amount}
+  begin\_unlock        duration           {duration}
+  begin\_unlock        unlock\_time       {unlockTime}
+  message              action             begin\_unlocking\_all
+  message              sender             {owner}
+
+### Endblocker
+
+#### Automatic withdraw when unlock time mature
+
+  Type             Attribute Key      Attribute Value
+  ---------------- ------------------ -----------------
+  message          action             unlock\_tokens
+  message          sender             {owner}
+  transfer\[\]     recipient          {owner}
+  transfer\[\]     sender             {moduleAccount}
+  transfer\[\]     amount             {unlockAmount}
+  unlock\[\]       period\_lock\_id   {owner}
+  unlock\[\]       owner              {lockID}
+  unlock\[\]       duration           {lockDuration}
+  unlock\[\]       unlock\_time       {unlockTime}
+  unlock\_tokens   owner              {owner}
+  unlock\_tokens   unlocked\_coins    {totalAmount}
+
+# Keepers
+
+## Lockup Keeper
+
+Lockup keeper provides utility functions to store lock queues and query
+locks.
+
+```go
+// Keeper is the interface for lockup module keeper
+type Keeper interface {
+    // GetModuleBalance Returns full balance of the module
+    GetModuleBalance(sdk.Context) sdk.Coins
+    // GetModuleLockedCoins Returns locked balance of the module
+    GetModuleLockedCoins(sdk.Context) sdk.Coins
+    // GetAccountUnlockableCoins Returns whole unlockable coins which are not withdrawn yet
+    GetAccountUnlockableCoins(sdk.Context, addr sdk.AccAddress) sdk.Coins
+    // GetAccountUnlockingCoins Returns whole unlocking coins
+    GetAccountUnlockingCoins(sdk.Context, addr sdk.AccAddress) sdk.Coins
+    // GetAccountLockedCoins Returns a locked coins that can't be withdrawn
+    GetAccountLockedCoins(sdk.Context, addr sdk.AccAddress) sdk.Coins
+    // GetAccountLockedPastTime Returns the total locks of an account whose unlock time is beyond timestamp
+    GetAccountLockedPastTime(sdk.Context, addr sdk.AccAddress, timestamp time.Time) []types.PeriodLock
+    // GetAccountUnlockedBeforeTime Returns the total unlocks of an account whose unlock time is before timestamp
+    GetAccountUnlockedBeforeTime(sdk.Context, addr sdk.AccAddress, timestamp time.Time) []types.PeriodLock
+    // GetAccountLockedPastTimeDenom is equal to GetAccountLockedPastTime but denom specific
+    GetAccountLockedPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []types.PeriodLock
+
+    // GetAccountLockedLongerDuration Returns account locked with duration longer than specified
+    GetAccountLockedLongerDuration(sdk.Context, addr sdk.AccAddress, duration time.Duration) []types.PeriodLock
+    // GetAccountLockedLongerDurationDenom Returns account locked with duration longer than specified with specific denom
+    GetAccountLockedLongerDurationDenom(sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock
+    // GetLocksPastTimeDenom Returns the locks whose unlock time is beyond timestamp
+    GetLocksPastTimeDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, timestamp time.Time) []types.PeriodLock
+    // GetLocksLongerThanDurationDenom Returns the locks whose unlock duration is longer than duration
+    GetLocksLongerThanDurationDenom(ctx sdk.Context, addr sdk.AccAddress, denom string, duration time.Duration) []types.PeriodLock
+    // GetLockByID Returns lock from lockID
+    GetLockByID(sdk.Context, lockID uint64) (*types.PeriodLock, error)
+    // GetPeriodLocks Returns the period locks on pool
+    GetPeriodLocks(sdk.Context) ([]types.PeriodLock, error)
+    // UnlockAllUnlockableCoins Unlock all unlockable coins
+    UnlockAllUnlockableCoins(sdk.Context, account sdk.AccAddress) (sdk.Coins, error)
+    // LockTokens lock tokens from an account for specified duration
+    LockTokens(sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error)
+    // AddTokensToLock locks more tokens into a lockup
+    AddTokensToLock(ctx sdk.Context, owner sdk.AccAddress, lockID uint64, coins sdk.Coins) (*types.PeriodLock, error)
+    // Lock is a utility to lock coins into module account
+    Lock(sdk.Context, lock types.PeriodLock) error
+    // Unlock is a utility to unlock coins from module account
+    Unlock(sdk.Context, lock types.PeriodLock) error
+    GetSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) (*types.SyntheticLock, error)
+    GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []types.SyntheticLock
+    GetAllSyntheticLockups(ctx sdk.Context) []types.SyntheticLock
+    // CreateSyntheticLockup create synthetic lockup with lock id and denom suffix
+    CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration) error
+    // DeleteSyntheticLockup delete synthetic lockup with lock id and suffix
+    DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
+    DeleteAllMaturedSyntheticLocks(ctx sdk.Context)
+```
+
+### Lock Admin Keeper
+
+Lockup admin keeper provides god privilege functions to remove tokens
+from locks and create new locks.
+
+```go
+// AdminKeeper defines a god priviledge keeper functions to remove tokens from locks and create new locks
+// For the governance system of token pools, we want a "ragequit" feature
+// So governance changes will take 1 week to go into effect
+// During that time, people can choose to "ragequit" which means they would leave the original pool
+// and form a new pool with the old parameters but if they still had 2 months of lockup left,
+// their liquidity still needs to be 2 month lockup-ed, just in the new pool
+// And we need to replace their pool1 LP tokens with pool2 LP tokens with the same lock duration and end time
+
+type AdminKeeper interface {
+    Keeper
+
+    // this unlock previous lockID and create a new lock with newCoins with same duration and endtime
+    Relock(sdk.Context, lockID uint64, newCoins sdk.Coins) error
+    // this unlock without time check with an admin priviledge
+    BreakLock(sdk.Context, lockID uint64) error
+}
+```
+
+## Hooks
+
+In this section we describe the "hooks" that `lockup` module provide for
+other modules.
+
+### Tokens Locked
+
+On lock/unlock events, lockup module execute hooks for other modules to
+make following actions.
+
+``` go
+  OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time)
+  OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time)
+```
+
+## Parameters
+
+The lockup module contains the following parameters:
+
+| Key                    | Type            | Example |
+| ---------------------- | --------------- | ------- |
+
+Note: Currently no parameters are set for `lockup` module, we will need
+to move lockable durations from incentives module to lockup module.
+
+## Endblocker
+
+### Withdraw tokens after unlock time mature
+
+Once time is over, endblocker withdraw coins from matured locks and
+coins are sent from lockup `ModuleAccount`.
+
+**State modifications:**
+
+- Fetch all unlockable `PeriodLock`s that `Owner` has not withdrawn
+    yet
+- Remove `PeriodLock` records from the state
+- Transfer the tokens from lockup `ModuleAccount` to the
+    `MsgUnlockTokens.Owner`.
+
+### Remove synthetic locks after removal time mature
+
+For synthetic lockups, no coin movement is made, but lockup record and
+reference queues are removed.
+
+**State modifications:**
+
+- Fetch all synthetic lockups that is matured
+- Remove `SyntheticLock` records from the state along with reference
+    queues
+    
 ## Transactions
 
 ### lock-tokens
@@ -111,6 +535,47 @@ osmosisd tx lockup begin-unlock-tokens --from=WALLET_NAME --chain-id=osmosis-1 -
 :::
 
 ## Queries
+
+In this section we describe the queries required on grpc server.
+
+``` protobuf
+// Query defines the gRPC querier service.
+service Query {
+    // Return full balance of the module
+ rpc ModuleBalance(ModuleBalanceRequest) returns (ModuleBalanceResponse);
+ // Return locked balance of the module
+ rpc ModuleLockedAmount(ModuleLockedAmountRequest) returns (ModuleLockedAmountResponse);
+
+ // Returns unlockable coins which are not withdrawn yet
+ rpc AccountUnlockableCoins(AccountUnlockableCoinsRequest) returns (AccountUnlockableCoinsResponse);
+ // Returns unlocking coins
+   rpc AccountUnlockingCoins(AccountUnlockingCoinsRequest) returns (AccountUnlockingCoinsResponse) {}
+ // Return a locked coins that can't be withdrawn
+ rpc AccountLockedCoins(AccountLockedCoinsRequest) returns (AccountLockedCoinsResponse);
+
+ // Returns locked records of an account with unlock time beyond timestamp
+ rpc AccountLockedPastTime(AccountLockedPastTimeRequest) returns (AccountLockedPastTimeResponse);
+ // Returns locked records of an account with unlock time beyond timestamp excluding tokens started unlocking
+ rpc AccountLockedPastTimeNotUnlockingOnly(AccountLockedPastTimeNotUnlockingOnlyRequest) returns (AccountLockedPastTimeNotUnlockingOnlyResponse) {}
+ // Returns unlocked records with unlock time before timestamp
+ rpc AccountUnlockedBeforeTime(AccountUnlockedBeforeTimeRequest) returns (AccountUnlockedBeforeTimeResponse);
+
+ // Returns lock records by address, timestamp, denom
+ rpc AccountLockedPastTimeDenom(AccountLockedPastTimeDenomRequest) returns (AccountLockedPastTimeDenomResponse);
+ // Returns lock record by id
+ rpc LockedByID(LockedRequest) returns (LockedResponse);
+
+ // Returns account locked records with longer duration
+ rpc AccountLockedLongerDuration(AccountLockedLongerDurationRequest) returns (AccountLockedLongerDurationResponse);
+ // Returns account locked records with longer duration excluding tokens started unlocking
+   rpc AccountLockedLongerDurationNotUnlockingOnly(AccountLockedLongerDurationNotUnlockingOnlyRequest) returns (AccountLockedLongerDurationNotUnlockingOnlyResponse) {}
+ // Returns account's locked records for a denom with longer duration
+ rpc AccountLockedLongerDurationDenom(AccountLockedLongerDurationDenomRequest) returns (AccountLockedLongerDurationDenomResponse);
+
+ // Returns account locked records with a specific duration
+ rpc AccountLockedDuration(AccountLockedDurationRequest) returns (AccountLockedDurationResponse);
+}
+```
 
 ### account-locked-beforetime
 
