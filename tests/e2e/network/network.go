@@ -12,6 +12,7 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	dockerconfig "github.com/osmosis-labs/osmosis/v7/tests/e2e/docker"
@@ -50,7 +51,7 @@ const (
 	propBufferBlocks int = 5
 
 	repeatTime = 5 * time.Second
-	repeatMax  = 6
+	repeatMax  = 20
 )
 
 func New(t *testing.T, index int, numValidators int, dockerResources *dockerconfig.Resources, dockerImages *dockerconfig.ImageConfig, workingDirectory string) *Network {
@@ -94,14 +95,15 @@ func (n *Network) GetProposalHeight() int {
 	return n.proposalHeight
 }
 
-// GetStatus returns nil if validator with validatorIndex is making progress,
-// error otherwise.
-func (n *Network) WaitUntilHeight(validatorIndex int, height int) error {
+// WaitUntil waits until validator with validatorIndex reaches doneCondition. Return nil
+// if reached, error otherwise.
+func (n *Network) WaitUntil(validatorIndex int, doneCondition func(syncInfo coretypes.SyncInfo) bool) error {
 	hostPort := n.dockerResources.Validators[n.chain.ChainMeta.Id][validatorIndex].GetHostPort("26657/tcp")
 	rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
 	if err != nil {
 		return err
 	}
+	var latestBlockHeight int64
 	for i := 0; i < repeatMax; i++ {
 		ctx, cancel := context.WithTimeout(context.Background(), repeatTime)
 		defer cancel()
@@ -109,15 +111,15 @@ func (n *Network) WaitUntilHeight(validatorIndex int, height int) error {
 		if err != nil {
 			return err
 		}
-
+		latestBlockHeight = status.SyncInfo.LatestBlockHeight
 		// let the node produce a few blocks
-		if status.SyncInfo.CatchingUp || status.SyncInfo.LatestBlockHeight < int64(height) {
+		if !doneCondition(status.SyncInfo) {
 			time.Sleep(repeatTime)
 			continue
 		}
-		break
+		return nil
 	}
-	return nil
+	return fmt.Errorf("validator with index %d timed out waiting for condition, latest block height was %d", validatorIndex, latestBlockHeight)
 }
 
 func (n *Network) CalclulateAndSetProposalHeight(currentHeight int) {
@@ -148,7 +150,13 @@ func (n *Network) RunValidators() ([]*dockertest.Resource, error) {
 		}
 
 	}
-	if err := n.WaitUntilHeight(0, 3); err != nil {
+
+	// Ensure the node is making progress.
+	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
+		return syncInfo.CatchingUp || syncInfo.LatestBlockHeight > 3
+	}
+
+	if err := n.WaitUntil(0, doneCondition); err != nil {
 		return nil, err
 	}
 	return n.dockerResources.Validators[n.chain.ChainMeta.Id], nil
@@ -167,13 +175,6 @@ func (n *Network) RunValidator(validatorIndex int, shouldExposePorts bool) (*doc
 	n.dockerResources.Validators[n.chain.ChainMeta.Id][validatorIndex] = resource
 	n.t.Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	return resource, nil
-}
-
-func (n *Network) StopStateSyncContainers() error {
-	// for valIdx, c := n.skipRunValidatorIndexes {
-	// 	n.chain.Validators[valIdx].
-	// }
-	return nil
 }
 
 func (n *Network) chainStatus(validatorIndex int) ([]byte, error) {

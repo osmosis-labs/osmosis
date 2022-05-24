@@ -1,6 +1,8 @@
 package e2e
 
 import (
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 )
 
@@ -17,9 +19,10 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	_, err := s.networks[0].RunValidator(3, true)
 	s.Require().NoError(err)
 
-	currentChainHeight, err := s.networks[0].GetCurrentHeightFromValidator(0)
-	s.Require().NoError(err)
+	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
+		return !syncInfo.CatchingUp
+	}
 
-	err = s.networks[0].WaitUntilHeight(3, currentChainHeight)
+	err = s.networks[0].WaitUntil(3, doneCondition)
 	s.Require().NoError(err)
 }

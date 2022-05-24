@@ -16,6 +16,7 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/suite"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	dockerconfig "github.com/osmosis-labs/osmosis/v7/tests/e2e/docker"
@@ -53,15 +54,15 @@ var (
 			Pruning:            "nothing",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
+			SnapshotInterval:   30,
+			SnapshotKeepRecent: 1,
 		},
 		{
 			Pruning:            "custom",
 			PruningKeepRecent:  "10000",
 			PruningInterval:    "13",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
+			SnapshotInterval:   15,
+			SnapshotKeepRecent: 3,
 		},
 		{
 			Pruning:            "everything",
@@ -171,15 +172,32 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.Require().NoError(err)
 	}
 
-	stateSyncValidatorConfigDir := s.networks[0].GetChain().Validators[3].ConfigDir
-	_, err = os.ReadFile(stateSyncValidatorConfigDir + "/config/config.toml")
+	maxSnapshotInterval := uint64(0)
+
+	for _, valConfig := range validatorConfigsChainA {
+		if valConfig.SnapshotInterval > maxSnapshotInterval {
+			maxSnapshotInterval = valConfig.SnapshotInterval
+		}
+	}
+
+	// ensure we cover enough heights for a few snapshots to be taken
+
+	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
+		return syncInfo.LatestBlockHeight > int64(maxSnapshotInterval)*2
+	}
+
+	err = s.networks[0].WaitUntil(0, doneCondition)
 	s.Require().NoError(err)
 
-	// configBytes.=
+	currentHeight, err := s.networks[0].GetCurrentHeightFromValidator(0)
+	s.Require().NoError(err)
 
-	// valConfig.StateSync = tmconfig.DefaultStateSyncConfig()
-	// valConfig.StateSync.Enable = true
-	// valConfig.StateSync.RPCServers =
+	// Ensure that state sync trust height is slightly lower than the latest
+	// snapshot of every node
+	stateSyncTrustHeight := int64(currentHeight - int(float32(maxSnapshotInterval)*1.5))
+
+	err = configureNodeForStateSync(s.networks[0].GetChain().Validators[3].ConfigDir, stateSyncTrustHeight)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
