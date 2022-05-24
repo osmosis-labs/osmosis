@@ -506,6 +506,15 @@ func TestJoinPoolMsg(t *testing.T) {
 	osmoStarLiquidity := sdk.NewCoins(sdk.NewInt64Coin("uosmo", 12_000), sdk.NewInt64Coin("ustar", 240_000))
 	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
 
+	invalidMsg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
+		PoolId:         starPool,
+		ShareOutAmount: sdk.NewInt(100000000000000000),
+		TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))),
+	}}
+	expectedErr := executeCustom(t, ctx, osmosis, reflect, actor, invalidMsg, osmoStarLiquidity)
+	require.Error(t, expectedErr)
+	require.Equal(t, "dispatch: submessages: join pool: TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap, upperbound: 10random, needed 12000uosmo,240000ustar: calculated amount is larger than max amount", expectedErr.Error())
+
 	//ShareOutAmount = TotalShares * tokenInAmount / poolAsset.amount
 	//Either asset can be used for tokenInAmount and poolAsset.amount can be used to calculate this amount
 	//ShareOutAmount = 100000000000000000000 * 12000 / 12000000 = 100000000000000000000 * 240000 / 240000000
@@ -515,8 +524,14 @@ func TestJoinPoolMsg(t *testing.T) {
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    osmoStarLiquidity,
 	}}
-	err1 := executeCustom(t, ctx, osmosis, reflect, actor, msg, osmoStarLiquidity)
-	require.NoError(t, err1)
+	err1 := executeCustom(t, ctx, osmosis, reflect, actor, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
+
+	require.Error(t, err1)
+	require.Equal(t, "0random is smaller than 10random: insufficient funds", err1.Error())
+
+	err2 := executeCustom(t, ctx, osmosis, reflect, actor, msg, osmoStarLiquidity)
+
+	require.NoError(t, err2)
 
 	poolInfoAfterDeposit, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
 
@@ -527,9 +542,9 @@ func TestJoinPoolMsg(t *testing.T) {
 	require.Equal(t, sdk.NewCoin("uosmo", sdk.NewInt(12012000)), coinsInPoolAfter[0])
 	require.Equal(t, sdk.NewCoin("ustar", sdk.NewInt(240240000)), coinsInPoolAfter[1])
 
-	poolInfoAfterDeposit, err2 := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
+	poolInfoAfterDeposit, err3 := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
 
-	require.NoError(t, err2)
+	require.NoError(t, err3)
 
 	totalSharesAfter := poolInfoAfterDeposit.GetTotalShares()
 
