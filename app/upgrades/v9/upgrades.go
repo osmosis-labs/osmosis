@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icacontrollertypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
@@ -34,7 +35,11 @@ func CreateUpgradeHandler(
 		}
 
 		// initialize ICS27 module
-		mm.Modules[icatypes.ModuleName].InitModule(ctx, controllerParams, hostParams)
+		icamodule, err := mm.Modules[icatypes.ModuleName].(ica.AppModule)
+		if err {
+			panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
+		}
+		icamodule.InitModule(ctx, controllerParams, hostParams)
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
