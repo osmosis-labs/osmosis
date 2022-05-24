@@ -274,7 +274,7 @@ The lockup module emits the following events:
 
 #### MsgLockTokens
 
-|  Type          | Attribute Key     | Attribute Value  |    
+|  Type          | Attribute Key     | Attribute Value  |
 |  --------------| ------------------| -----------------|
 |  lock\_tokens  | period\_lock\_id  | {periodLockID}   |
 |  lock\_tokens  | owner             | {owner}          |
