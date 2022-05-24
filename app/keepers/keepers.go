@@ -133,7 +133,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
 	blockedAddress map[string]bool,
-	msgServiceRouter *baseapp.MsgServiceRouter,
 ) {
 	// Add 'normal' keepers
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -221,7 +220,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.ScopedICAHostKeeper,
-		msgServiceRouter,
+		bApp.MsgServiceRouter(),
 	)
 	appKeepers.ICAHostKeeper = &icaHostKeeper
 
