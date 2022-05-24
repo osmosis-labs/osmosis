@@ -133,7 +133,8 @@ The minting module contains the following parameters:
 | distribution_proportions.developer_rewards | string (dec) | "0.2"                                  |
 | distribution_proportions.community_pool    | string (dec) | "0.1"                                  |
 | weighted_developer_rewards_receivers       | array        | [{"address": "osmoxx", "weight": "1"}] |
-| minting_rewards_distribution_start_epoch   | int64        | 10
+| minting_rewards_distribution_start_epoch   | int64        | 10                                     |
+
 
 Below are all the network parameters for the ```mint``` module:
 

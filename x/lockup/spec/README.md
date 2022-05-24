@@ -29,8 +29,9 @@ The purpose of `lockup` module is to provide the functionality to lock
 tokens for specific period of time for LP token stakers to get
 incentives.
 
-This module provides interfaces for other modules to iterate the locks
-efficiently and grpc query to check the status of locked coins.
+To unlock these LP shares, users must trigger the unlock timer and wait for the unlock period that was set initially to be completed. After the unlock period is over, users can turn LP shares back into their respective share of tokens.
+
+This module provides interfaces for other modules to iterate the locks efficiently and grpc query to check the status of locked coins.
 
 There are currently three incentivize lockup periods; `1 day` (24h), `1 week` (168h), and `2 weeks` (336h). When locking tokens in the 2 week period, the liquidity provider is effectively earning rewards for a combination of the 1 day, 1 week, and 2 week bonding periods.
 

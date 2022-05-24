@@ -280,8 +280,6 @@ An example output:
 ```
 :::
 
-
-
 ### gauge-ids                    
 
 Query the gauge ids (by duration) by pool id
