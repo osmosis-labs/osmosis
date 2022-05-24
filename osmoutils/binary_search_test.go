@@ -21,7 +21,7 @@ func TestBinarySearch(t *testing.T) {
 	}
 	noErrTolerance := ErrTolerance{AdditiveTolerance: sdk.ZeroInt()}
 	testErrToleranceAdditive := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20)}
-	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.NewInt(1), MultiplicativeTolerance: sdk.NewDec(10)}
+	testErrToleranceMultiplicative := ErrTolerance{AdditiveTolerance: sdk.ZeroInt(), MultiplicativeTolerance: sdk.NewDec(10)}
 	testErrToleranceBoth := ErrTolerance{AdditiveTolerance: sdk.NewInt(1 << 20), MultiplicativeTolerance: sdk.NewDec(1 << 3)}
 	tests := []struct {
 		f             func(sdk.Int) (sdk.Int, error)
