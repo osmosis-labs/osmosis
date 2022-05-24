@@ -11,11 +11,11 @@ Module uses time basis epochs supported by ```epochs``` module.
 
 1. **[Concept](#concepts)**
 2. **[State](#state)**
-3. **[End Epoch](03_end_epoch.md)**
+3. **[Begin Epoch](#begin-epoch)**
 4. **[Parameters](#network-parameters)**
-5. **[Events](05_events.md)**
-6. **[Transactions](05_events.md)**
-7. **[Queries](05_events.md)**
+5. **[Events](#events)**
+6. **[Transactions](#transaction)**
+7. **[Queries](#queries)**
     
 ## Concepts
 
