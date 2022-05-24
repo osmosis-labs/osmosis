@@ -475,13 +475,13 @@ func TestJoinPoolMsg(t *testing.T) {
 
 	actor := RandomAccountAddress()
 
-	swapperFunds := sdk.NewCoins(
+	providerFunds := sdk.NewCoins(
 		sdk.NewInt64Coin("uatom", 333000000),
 		sdk.NewInt64Coin("uosmo", 555000000+3*poolFee),
 		sdk.NewInt64Coin("uregen", 777000000),
 		sdk.NewInt64Coin("ustar", 999000000),
 	)
-	fundAccount(t, ctx, osmosis, actor, swapperFunds)
+	fundAccount(t, ctx, osmosis, actor, providerFunds)
 
 	// 20 star to 1 osmo
 	funds1 := []sdk.Coin{
