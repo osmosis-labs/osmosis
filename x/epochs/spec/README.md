@@ -190,6 +190,7 @@ epochs:
 
 ### Current Epoch
 
+
 Query the current epoch by the specified identifier
 
 ```sh
@@ -209,6 +210,7 @@ Which in this example outputs:
 ```sh
 current_epoch: "183"
 ```
+
 :::
 
 ## Future Improvements
@@ -237,3 +239,4 @@ blocks time. It will slow down epochs.
 
 It's going to slow down epoch by 10-20s per week when epoch duration is
 1 week. This should be resolved after launch.
+

@@ -1,9 +1,7 @@
 # syntax=docker/dockerfile:1
 
-ARG BASE_IMG_TAG=nonroot
-
 # --------------------------------------------------------
-# Build 
+# Build
 # --------------------------------------------------------
 
 FROM golang:1.18.2-alpine3.15 as build
@@ -15,6 +13,7 @@ RUN apk add linux-headers
 
 WORKDIR /osmosis
 COPY . /osmosis
+
 
 # CosmWasm: see https://github.com/CosmWasm/wasmvm/releases
 ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
@@ -31,16 +30,22 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 # Runner
 # --------------------------------------------------------
 
-FROM gcr.io/distroless/base-debian11:${BASE_IMG_TAG}
+FROM alpine
 
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
+COPY /tests/localosmosis/setup.sh /setup.sh
 
 ENV HOME /osmosis
 WORKDIR $HOME
-
+RUN apk update
+RUN apk add jq
+RUN apk add moreutils
+RUN rm -rf /var/cache/apk/*
+RUN chmod +x /setup.sh
+RUN /setup.sh
 EXPOSE 26656
 EXPOSE 26657
 EXPOSE 1317
 
 ENTRYPOINT ["osmosisd"]
-CMD [ "start" ]
+CMD ["start"]

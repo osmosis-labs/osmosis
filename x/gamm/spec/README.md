@@ -153,6 +153,7 @@ The GAMM module also has a **PoolCreationFee** parameter, which currently is set
 </br>
 
 
+
 ## Messages
 
 The `x/gamm` module supports the following message types:
@@ -197,6 +198,7 @@ The `x/gamm` module supports the following message types:
 
 
 ### Create pool
+
 Create a new liquidity pool and provide initial liquidity to it.
 
 ```sh
@@ -240,8 +242,8 @@ There is now a 100 OSMO fee for creating pools.
 :::
 
 
-
 ### Join pool
+
 Add liquidity to a specified pool to get an **exact** amount of LP shares while specifying a **maximum** number tokens willing to swap to receive said LP shares.
 
 ```sh
@@ -259,8 +261,8 @@ osmosisd tx gamm join-pool --pool-id 3 --max-amounts-in 37753ibc/1480B8FD20AD5FC
 
 
 
-
 ### Exit pool
+
 Remove liquidity from a specified pool with an **exact** amount of LP shares while specifying the **minimum** number of tokens willing to receive for said LP shares.
 
 ```sh
@@ -275,7 +277,6 @@ Exit `pool 3` with for **exactly** `1.136326462628731195 gamm/pool/3` in order t
 osmosisd tx gamm exit-pool --pool-id 3 --min-amounts-out 33358ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 --share-amount-in 1136326462628731195 --from WALLET_NAME --chain-id osmosis-1
 ```
 :::
-
 
 
 
@@ -361,7 +362,6 @@ osmosisd tx gamm exit-swap-share-amount-in uosmo 14563185400026723131 298548 --p
 :::
 
 
-
 ### Swap-exact-amount-in
 
 Swap an **exact** amount of tokens for a **minimum** of another token, similar to swapping a token on the trade screen GUI.
@@ -401,7 +401,6 @@ osmosisd tx gamm swap-exact-amount-out 140530uosmo 407239 --swap-route-pool-ids 
 
 [comment]: <> (Other resources Creating a liquidity bootstrapping pool and Creating a pool with a pool file)
 :::
-
 
 
 
@@ -452,6 +451,7 @@ osmosisd query gamm estimate-swap-exact-amount-out 1 osmo123nfq6m8f88m4g3sky570u
 
 ### Num Pools
 Query the number of active pools.
+
 #### Usage
 ```sh
 osmosisd query gamm num-pools
@@ -468,7 +468,6 @@ osmosisd query gamm pool <poolID> [flags]
 
 ### Example
 
->>>>>>> main:x/gamm/README.md
 Query parameters and assets from pool 1.
 
 ```sh
@@ -483,8 +482,10 @@ Query the assets of a specific pool. This query is a reduced form of the [Pool](
 osmosisd query gamm pool-assets <poolID> [flags]
 ```
 
-Query the assets from pool 1.
 #### Example
+
+Query the assets from pool 1.
+
 ```sh
 osmosisd query gamm pool-assets 1
 ```
@@ -648,6 +649,7 @@ Which outputs:
 
 ### Pool-assets
 
+
 Query the assets of a specific pool. This query is a reduced form of the [pool](#pool) query.
 
 ```sh
@@ -704,7 +706,9 @@ smooth_weight_change_params: null
 :::
 
 
+
 ### Pools
+
 
 Query parameters and assets of all active pools.
 
@@ -715,7 +719,9 @@ osmosisd query gamm pools
 
 
 
+
 ### Spot-price
+
 
 Query the spot price of a pool asset based on a specific pool it is in.
 
@@ -743,7 +749,9 @@ In other words, at the time of this writing, ~5.314 OSMO is equivalent to 1 ATOM
 
 
 
+
 ### Total-liquidity
+
 
 Query the total liquidity of all active pools.
 
@@ -754,7 +762,9 @@ osmosisd query gamm total-liquidity
 
 
 
+
 ### Total-share
+
 
 Query the total amount of GAMM shares of a specific pool.
 
@@ -779,6 +789,7 @@ totalShares:
 ```
 
 Indicating there are a total of `252328895.834096787303097071 gamm/pool/1` at the time of this writing
+
 :::
 
 
@@ -959,3 +970,4 @@ osmosisd tx gamm swap-exact-amount-out 1000000ibc/27394FB092D2ECCD56123C74F36E4C
 ## Other resources
 * [Creating a liquidity bootstrapping pool](./client/docs/create-lbp-pool.md)
 * [Creating a pool with a pool file](./client/docs/create-pool.md)
+
