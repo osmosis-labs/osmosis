@@ -26,12 +26,12 @@ var (
 	// _ module.AppModuleSimulation = AppModule{}
 )
 
-// AppModuleBasic defines the basic application module used by the authz module.
+// AppModuleBasic defines the basic application module used by the osmolbp module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
-// Name returns the authz module's name.
+// Name returns the osmolbp module's name.
 func (AppModuleBasic) Name() string {
 	return osmolbp.ModuleName
 }
@@ -43,42 +43,42 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	api.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
-// RegisterLegacyAminoCodec registers the authz module's types for the given codec.
+// RegisterLegacyAminoCodec registers the osmolbp module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
-// RegisterInterfaces registers the authz module's interface types
+// RegisterInterfaces registers the osmolbp module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	osmolbp.RegisterInterfaces(registry)
 }
 
-// DefaultGenesis returns default genesis state as raw bytes for the authz
+// DefaultGenesis returns default genesis state as raw bytes for the osmolbp
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(nil)
+	return cdc.MustMarshalJSON(api.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the authz module.
+// ValidateGenesis performs genesis state validation for the osmolbp module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
 	return nil
 }
 
-// RegisterRESTRoutes registers the REST routes for the authz module.
+// RegisterRESTRoutes registers the REST routes for the osmolbp module.
 // Deprecated: RegisterRESTRoutes is deprecated.
 func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the authz module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the osmolbp module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
 	if err := api.RegisterQueryHandlerClient(context.Background(), mux, api.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
-// GetQueryCmd returns the cli query commands for the authz module
+// GetQueryCmd returns the cli query commands for the osmolbp module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return nil // TODO cli.GetQueryCmd()
 }
 
-// GetTxCmd returns the transaction commands for the authz module
+// GetTxCmd returns the transaction commands for the osmolbp module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
 }
@@ -101,7 +101,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, bk keeper.BankKeeper, r
 	}
 }
 
-// Name returns the authz module's name.
+// Name returns the osmolbp module's name.
 func (AppModule) Name() string {
 	return osmolbp.ModuleName
 }
@@ -109,7 +109,7 @@ func (AppModule) Name() string {
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the authz module.
+// Deprecated: Route returns the message routing key for the osmolbp module.
 func (am AppModule) Route() sdk.Route {
 	return sdk.Route{}
 }
@@ -121,24 +121,26 @@ func (am AppModule) NewHandler() sdk.Handler {
 // QuerierRoute returns the route we respond to for abci queries
 func (AppModule) QuerierRoute() string { return "" }
 
-// LegacyQuerierHandler returns the authz module sdk.Querier.
+// LegacyQuerierHandler returns the osmolbp module sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
-// InitGenesis performs genesis initialization for the authz module. It returns
+// InitGenesis performs genesis initialization for the osmolbp module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+	var genState api.GenesisState
+	// Initialize global index to index in genesis state
+	cdc.MustUnmarshalJSON(data, &genState)
+	osmolbp.InitGenesis(ctx, am.keeper, genState)
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the authz
+// ExportGenesis returns the exported genesis state as raw bytes for the osmolbp
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	// TODO
-	// gs := am.keeper.ExportGenesis(ctx)
-	// return cdc.MustMarshalJSON(gs)
-	return nil
+	gs := osmolbp.ExportGenesis(ctx, am.keeper)
+	return cdc.MustMarshalJSON(gs)
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
