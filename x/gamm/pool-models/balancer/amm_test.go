@@ -344,6 +344,17 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			},
 			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 			expectErr:    false,
+
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1),
+			// where:
+			// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+			//	A_t = amount of deposited asset = 50,000
+			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
+			//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
+			// Plugging all of this in, we get:
+			// 	Full solution: https://www.wolframalpha.com/input?i=100000000000000000000*%28%281+%2B+%2850000%2F1000000000000%29%29%5E0.5+-+1%29
+			// 	Simplified:  P_issued = 2,499,999,968,750
 			expectShares: sdk.NewInt(2499999968800),
 			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50000)),
 		},
