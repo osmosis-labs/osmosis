@@ -119,14 +119,14 @@ PR, to save work for our future selves)
 
 Pools have the following parameters:
 
-  Key                        Type
-  --------------------------; ----------------------------;
-  SwapFee                    sdk.Dec
-  ExitFee                    sdk.Dec
-  FutureGovernor             \*FutureGovernor
-  Weights                    \*Weights
-  SmoothWeightChangeParams   \*SmoothWeightChangeParams
-  PoolCreationFee            sdk.Coins
+|  Key                       | Type                        |
+|  --------------------------| ----------------------------|
+|  SwapFee                   | sdk.Dec                     |
+|  ExitFee                   | sdk.Dec                     |
+|  FutureGovernor            | \*FutureGovernor            |
+|  Weights                   | \*Weights                   |
+|  SmoothWeightChangeParams  | \*SmoothWeightChangeParams  |
+|  PoolCreationFee           | sdk.Coins                   |
 
 1. **SwapFee** -
     The swap fee is the cut of all swaps that goes to the Liquidity Providers (LPs) for a pool. Suppose a pool has a swap fee `s`. Then if a user wants to swap `T` tokens in the pool, `sT` tokens go to the LP's, and then `(1 - s)T` tokens are swapped according to the AMM swap function.

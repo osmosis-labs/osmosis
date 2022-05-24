@@ -172,40 +172,40 @@ The incentives module emits the following events:
 
 #### MsgCreateGauge
 
-  Type            Attribute Key             Attribute Value
-  ---------------; -------------------------; ---------------------;
-  create\_gauge   gauge\_id                 {gaugeID}
-  create\_gauge   distribute\_to            {owner}
-  create\_gauge   rewards                   {rewards}
-  create\_gauge   start\_time               {startTime}
-  create\_gauge   num\_epochs\_paid\_over   {numEpochsPaidOver}
-  message         action                    create\_gauge
-  message         sender                    {owner}
-  transfer        recipient                 {moduleAccount}
-  transfer        sender                    {owner}
-  transfer        amount                    {amount}
+|  Type           |Attribute Key             | Attribute Value      |
+|  ---------------| -------------------------| ---------------------|
+|  create\_gauge  | gauge\_id                | {gaugeID}            |
+|  create\_gauge  | distribute\_to           | {owner}              |
+|  create\_gauge  | rewards                  | {rewards}            |
+|  create\_gauge  | start\_time              | {startTime}          |
+|  create\_gauge  | num\_epochs\_paid\_over  | {numEpochsPaidOver}  |
+|  message        | action                   | create\_gauge        |
+|  message        | sender                   | {owner}              |
+|  transfer       | recipient                | {moduleAccount}      |
+|  transfer       | sender                   | {owner}              |
+|  transfer       | amount                   | {amount}             |
 
 #### MsgAddToGauge
 
-  Type             Attribute Key   Attribute Value
-  ----------------; ---------------; -----------------;
-  add\_to\_gauge   gauge\_id       {gaugeID}
-  create\_gauge    rewards         {rewards}
-  message          action          create\_gauge
-  message          sender          {owner}
-  transfer         recipient       {moduleAccount}
-  transfer         sender          {owner}
-  transfer         amount          {amount}
+|  Type            | Attribute Key  | Attribute Value  |
+|  ----------------| ---------------| -----------------|
+|  add\_to\_gauge  | gauge\_id      | {gaugeID}        |
+|  create\_gauge   | rewards        | {rewards}        |
+|  message         | action         | create\_gauge    |
+|  message         | sender         | {owner}          |
+|  transfer        | recipient      | {moduleAccount}  |
+|  transfer        | sender         | {owner}          |
+|  transfer        | amount         | {amount}         |
 
 ### EndBlockers
 
 #### Incentives distribution
 
-  Type           Attribute Key   Attribute Value
-  --------------; ---------------; -----------------;
-  transfer\[\]   recipient       {receiver}
-  transfer\[\]   sender          {moduleAccount}
-  transfer\[\]   amount          {distrAmount}
+|  Type          |Attribute Key   |Attribute Value   |
+|  --------------| ---------------| -----------------|
+|  transfer\[\]  | recipient      | {receiver}       |
+|  transfer\[\]  | sender         | {moduleAccount}  |
+|  transfer\[\]  | amount         | {distrAmount}    |
 
 ## Hooks
 
@@ -225,9 +225,9 @@ If there's no usecase for this, we could ignore this.
 
 The incentives module contains the following parameters:
 
-  Key                    Type     Example
-  ---------------------- -------- ----------
-  DistrEpochIdentifier   string   "weekly"
+|  Key                   | Type    | Example   |
+|  ----------------------| --------| ----------|
+|  DistrEpochIdentifier  | string  | "weekly"  |
 
 Note: DistrEpochIdentifier is a epoch identifier, and module distribute
 rewards at the end of epochs. As `epochs` module is handling multiple
