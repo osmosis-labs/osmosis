@@ -66,7 +66,7 @@ func (r *Resources) ExecValidator(chainId string, validatorIndex int, command []
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute: %v\nstdout: %s\nstderr: %s\nerr: %w", command, outBuf.String(), errBuf.String(), err)
 	}
-	return errBuf.Bytes(), nil
+	return outBuf.Bytes(), nil
 }
 
 func (r *Resources) Purge() error {

@@ -141,8 +141,8 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chain.Chain, dstChain *chain.Ch
 	s.T().Log("successfully sent IBC tokens")
 }
 
-func (s *IntegrationTestSuite) submitProposal(c *chain.Chain, proposalHeight int) {
-	upgradeHeightStr := strconv.Itoa(proposalHeight)
+func (s *IntegrationTestSuite) submitProposal(c *chain.Chain, proposalHeight int64) {
+	upgradeHeightStr := strconv.Itoa(int(proposalHeight))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 

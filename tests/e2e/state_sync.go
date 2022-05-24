@@ -7,7 +7,7 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 )
 
-func configureNodeForStateSync(stateSyncValidatorConfigDir string, trustHeight int64) error {
+func configureNodeForStateSync(stateSyncValidatorConfigDir string, trustHeight int64, trustHash string) error {
 	tmCfgPath := filepath.Join(stateSyncValidatorConfigDir, "config", "config.toml")
 
 	vpr := viper.New()
@@ -22,6 +22,7 @@ func configureNodeForStateSync(stateSyncValidatorConfigDir string, trustHeight i
 	}
 	valConfig.StateSync.Enable = true
 	valConfig.StateSync.TrustHeight = trustHeight
+	valConfig.StateSync.TrustHash = trustHash
 	// configBytes.=
 
 	// valConfig.StateSync = tmconfig.DefaultStateSyncConfig()

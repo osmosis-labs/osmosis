@@ -2,9 +2,7 @@ package network
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 
@@ -22,9 +20,9 @@ type Network struct {
 	t     *testing.T
 	index int
 	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, and a buffer.
-	votingPeriod int
+	votingPeriod int64
 	// upgrade proposal height for chain.
-	proposalHeight   int
+	proposalHeight   int64
 	chain            chain.Chain
 	dockerResources  *dockerconfig.Resources
 	dockerImages     *dockerconfig.ImageConfig
@@ -57,7 +55,7 @@ func New(t *testing.T, index int, numValidators int, dockerResources *dockerconf
 	return &Network{
 		t:                t,
 		index:            index,
-		votingPeriod:     propDepositBlocks + numValidators*propVoteBlocks + propBufferBlocks,
+		votingPeriod:     int64(propDepositBlocks + numValidators*propVoteBlocks + propBufferBlocks),
 		dockerResources:  dockerResources,
 		dockerImages:     dockerImages,
 		workingDirectory: workingDirectory,
@@ -68,32 +66,44 @@ func (n *Network) GetChain() *chain.Chain {
 	return &n.chain
 }
 
-func (n *Network) GetVotingPeriod() int {
+func (n *Network) GetVotingPeriod() int64 {
 	return n.votingPeriod
 }
 
 // GetCurrentHeightFromValidator returns current height by querying a validator with
 // validatorIndex.
-func (n *Network) GetCurrentHeightFromValidator(validatorIndex int) (int, error) {
-	var block syncInfo
-	out, err := n.dockerResources.ExecValidator(
-		n.chain.ChainMeta.Id,
-		validatorIndex,
-		[]string{"osmosisd", "status"})
+func (n *Network) GetCurrentHeightFromValidator(validatorIndex int) (int64, error) {
+	hostPort := n.dockerResources.Validators[n.chain.ChainMeta.Id][0].GetHostPort("26657/tcp")
+	rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
 	if err != nil {
 		return 0, err
 	}
-	if err = json.Unmarshal(out, &block); err != nil {
-		return 0, err
-	}
-	currentHeight, err := strconv.Atoi(block.SyncInfo.LatestHeight)
+	ctx, cancel := context.WithTimeout(context.Background(), repeatTime)
+	defer cancel()
+	status, err := rpcClient.Status(ctx)
 	if err != nil {
 		return 0, err
 	}
-	return currentHeight, nil
+	return status.SyncInfo.LatestBlockHeight, nil
 }
 
-func (n *Network) GetProposalHeight() int {
+// GetHashFromBlock gets block hash at a specific height. Otherwise, error.
+func (n *Network) GetHashFromBlock(height int64) (string, error) {
+	hostPort := n.dockerResources.Validators[n.chain.ChainMeta.Id][0].GetHostPort("26657/tcp")
+	rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), repeatTime)
+	defer cancel()
+	block, err := rpcClient.Block(ctx, &height)
+	if err != nil {
+		return "", err
+	}
+	return block.BlockID.Hash.String(), nil
+}
+
+func (n *Network) GetProposalHeight() int64 {
 	return n.proposalHeight
 }
 
@@ -124,8 +134,8 @@ func (n *Network) WaitUntil(validatorIndex int, doneCondition func(syncInfo core
 	return fmt.Errorf("validator with index %d timed out waiting for condition, latest block height was %d", validatorIndex, latestBlockHeight)
 }
 
-func (n *Network) CalclulateAndSetProposalHeight(currentHeight int) {
-	n.proposalHeight = currentHeight + int(n.votingPeriod) + int(propSubmitBlocks) + int(propBufferBlocks)
+func (n *Network) CalclulateAndSetProposalHeight(currentHeight int64) {
+	n.proposalHeight = currentHeight + n.votingPeriod + int64(propSubmitBlocks) + int64(propBufferBlocks)
 }
 
 func (n *Network) RemoveValidatorContainer(validatorIndex int) error {

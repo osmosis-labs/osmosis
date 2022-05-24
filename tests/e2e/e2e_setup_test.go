@@ -194,10 +194,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// Ensure that state sync trust height is slightly lower than the latest
 	// snapshot of every node
-	stateSyncTrustHeight := int64(currentHeight - int(float32(maxSnapshotInterval)*1.5))
+	stateSyncTrustHeight := int64(currentHeight - int64(float32(maxSnapshotInterval)*1.5))
+	stateSyncTrustHash, err := s.networks[0].GetHashFromBlock(stateSyncTrustHeight)
+	s.Require().NoError(err)
 
 	//blockId := coretypes.ResultBlock
-	err = configureNodeForStateSync(s.networks[0].GetChain().Validators[3].ConfigDir, stateSyncTrustHeight)
+	err = configureNodeForStateSync(s.networks[0].GetChain().Validators[3].ConfigDir, stateSyncTrustHeight, stateSyncTrustHash)
 	s.Require().NoError(err)
 }
 
