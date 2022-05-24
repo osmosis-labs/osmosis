@@ -57,7 +57,7 @@ describes how users can get reward, stores the amount of coins in the
 gauge, the cadence at which rewards are to be distributed, and the
 number of epochs to distribute the reward over.
 
-``` {.protobuf}
+``` protobuf
 enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
@@ -103,13 +103,12 @@ To speed up the distribution process, module introduces the active
 Finished queue saves the `Gauges` that has finished distribution to keep
 in track.
 
-Module state
-------------
+#### Module state
 
 The state of the module is expressed by `params`, `lockable_durations`
 and `gauges`.
 
-``` {.protobuf}
+``` protobuf
 // GenesisState defines the incentives module's genesis state.
 message GenesisState {
   // params defines all the parameters of the module
@@ -128,7 +127,7 @@ message GenesisState {
 
 `MsgCreateGauge` can be submitted by any account to create a `Gauge`.
 
-``` {.go}
+``` go
 type MsgCreateGauge struct {
  Owner             sdk.AccAddress
   DistributeTo      QueryCondition
@@ -150,7 +149,7 @@ type MsgCreateGauge struct {
 `MsgAddToGauge` can be submitted by any account to add more incentives
 to a `Gauge`.
 
-``` {.go}
+``` go
 type MsgAddToGauge struct {
  GaugeID uint64
   Rewards sdk.Coins
@@ -214,7 +213,7 @@ for other modules.
 
 If there's no usecase for this, we could ignore this.
 
-``` {.go}
+``` go
  AfterCreateGauge(ctx sdk.Context, gaugeId uint64)
  AfterAddToGauge(ctx sdk.Context, gaugeId uint64)
  AfterStartDistribution(ctx sdk.Context, gaugeId uint64)

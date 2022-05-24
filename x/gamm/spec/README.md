@@ -450,7 +450,6 @@ Query the amount of OSMO the sender would require to swap 1 ATOM out of pool 1.
 osmosisd query gamm estimate-swap-exact-amount-out 1 osmo123nfq6m8f88m4g3sky570unsnk4zng4uqv7cm8 1000000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 --swap-route-pool-ids 1 --swap-route-denoms uosmo
 ```
 
-
 ### Num Pools
 Query the number of active pools.
 #### Usage

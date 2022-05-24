@@ -274,7 +274,7 @@ The lockup module emits the following events:
 #### MsgLockTokens
 
 |  Type          | Attribute Key     | Attribute Value  |    
-|  --------------| ------------------| -----------------|    
+|  --------------| ------------------| -----------------|
 |  lock\_tokens  | period\_lock\_id  | {periodLockID}   |
 |  lock\_tokens  | owner             | {owner}          |
 |  lock\_tokens  | amount            | {amount}         |
@@ -330,9 +330,9 @@ The lockup module emits the following events:
 |  unlock\_tokens  | owner             | {owner}          |
 |  unlock\_tokens  | unlocked\_coins   | {totalAmount}    |
 
-# Keepers
+## Keepers
 
-## Lockup Keeper
+### Lockup Keeper
 
 Lockup keeper provides utility functions to store lock queues and query
 locks.
@@ -463,7 +463,7 @@ reference queues are removed.
 - Fetch all synthetic lockups that is matured
 - Remove `SyntheticLock` records from the state along with reference
     queues
-    
+
 ## Transactions
 
 ### lock-tokens
