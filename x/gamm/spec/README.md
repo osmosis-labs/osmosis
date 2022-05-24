@@ -458,7 +458,7 @@ osmosisd query gamm num-pools
 ```
 
 ## Pool
-Query the parameter and assets of a specific pool. 
+Query the parameter and assets of a specific pool.
 
 ### Usage
 
