@@ -1,6 +1,7 @@
-package e2e
+package main
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/viper"
@@ -23,10 +24,15 @@ func configureNodeForStateSync(stateSyncValidatorConfigDir string, trustHeight i
 	valConfig.StateSync.Enable = true
 	valConfig.StateSync.TrustHeight = trustHeight
 	valConfig.StateSync.TrustHash = trustHash
-	// configBytes.=
 
-	// valConfig.StateSync = tmconfig.DefaultStateSyncConfig()
-	// valConfig.StateSync.Enable = true
-	// valConfig.StateSync.RPCServers =
+	if err := os.Chown(tmCfgPath, os.Getuid(), os.Getgid()); err != nil {
+		return err
+	}
+
+	if err := os.Chmod(tmCfgPath, 0777); err != nil {
+		return err
+	}
+
+	tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 	return nil
 }

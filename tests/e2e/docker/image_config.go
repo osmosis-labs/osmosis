@@ -6,6 +6,9 @@ type ImageConfig struct {
 	InitRepository string
 	InitTag        string
 
+	StateSyncRepository string
+	StateSyncTag        string
+
 	OsmosisRepository string
 	OsmosisTag        string
 
@@ -24,6 +27,9 @@ const (
 	// This image should be pre-built with `make docker-build-e2e-chain-init` either in CI or locally.
 	localInitRepository = "osmosis-e2e-chain-init"
 	localInitTag        = "debug"
+	// TODO:
+	localStateSyncRepository = "osmosis-e2e-state-sync"
+	localStateSyncTag        = "debug"
 	// Pre-upgrade osmosis repo/tag to pull.
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
@@ -44,6 +50,9 @@ func NewImageConfig(isUpgrade bool) *ImageConfig {
 	config := &ImageConfig{
 		RelayerRepository: relayerRepository,
 		RelayerTag:        relayerTag,
+
+		StateSyncRepository: localStateSyncRepository,
+		StateSyncTag:        localStateSyncTag,
 	}
 
 	if isUpgrade {

@@ -198,9 +198,33 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	stateSyncTrustHash, err := s.networks[0].GetHashFromBlock(stateSyncTrustHeight)
 	s.Require().NoError(err)
 
-	//blockId := coretypes.ResultBlock
-	err = configureNodeForStateSync(s.networks[0].GetChain().Validators[3].ConfigDir, stateSyncTrustHeight, stateSyncTrustHash)
+	configDir := s.networks[0].GetChain().Validators[3].ConfigDir
+
+	stateSyncResource, err := s.dockerResources.Pool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       fmt.Sprintf("state-sync-%s", s.networks[0].GetChain().Validators[3].Name),
+			Repository: s.dockerImages.InitRepository,
+			Tag:        s.dockerImages.InitTag,
+			NetworkID:  s.dockerResources.Network.Network.ID,
+			Cmd: []string{
+				fmt.Sprintf("--config-dir=%s", configDir),
+				fmt.Sprintf("--trust-height=%d", stateSyncTrustHeight),
+				fmt.Sprintf("--trust-hash=%s", stateSyncTrustHash),
+			},
+			User: "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s:%s", configDir, configDir),
+			},
+		},
+		noRestart,
+	)
 	s.Require().NoError(err)
+
+	s.Require().NoError(s.dockerResources.Pool.Purge(stateSyncResource))
+
+	//blockId := coretypes.ResultBlock
+	// err = configureNodeForStateSync(s.networks[0].GetChain().Validators[3].ConfigDir, stateSyncTrustHeight, stateSyncTrustHash)
+	// s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

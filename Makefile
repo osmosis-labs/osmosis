@@ -118,6 +118,10 @@ build-e2e-chain-init:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/chain_init
 
+build-e2e-state-sync:
+	mkdir -p $(BUILDDIR)
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/state_sync
+
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
 	@go mod download
@@ -250,6 +254,9 @@ docker-build-debug:
 
 docker-build-e2e-chain-init:
 	@docker build -t osmosis-e2e-chain-init:debug -f tests/e2e/chain_init/chain-init.Dockerfile .
+
+docker-build-e2e-state-sync:
+	@docker build -t osmosis-e2e-state-sync:debug -f tests/e2e/state_sync/state-sync.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
