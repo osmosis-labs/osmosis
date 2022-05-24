@@ -166,9 +166,50 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.runPostUpgradeTests()
 	}
 
-	// Stop a validator container so that we can restart it later
-	// for testing state sync.
-	if err := s.networks[0].RemoveValidatorContainer(3); err != nil {
+	currentHeight, err := s.networks[0].GetCurrentHeightFromValidator(0)
+	s.Require().NoError(err)
+
+	// Ensure that state sync trust height is slightly lower than the latest
+	// snapshot of every node
+	stateSyncTrustHeight := currentHeight
+	stateSyncTrustHash, err := s.networks[0].GetHashFromBlock(stateSyncTrustHeight)
+	s.Require().NoError(err)
+
+	for valIdx := range s.networks[0].GetChain().Validators {
+		// Stop a validator container to update its config
+		if err := s.networks[0].RemoveValidatorContainer(valIdx); err != nil {
+			s.Require().NoError(err)
+		}
+
+		configDir := s.networks[0].GetChain().Validators[valIdx].ConfigDir
+
+		stateSyncResource, err := s.dockerResources.Pool.RunWithOptions(
+			&dockertest.RunOptions{
+				Name:       fmt.Sprintf("state-sync-%s", s.networks[0].GetChain().Validators[valIdx].Name),
+				Repository: s.dockerImages.InitRepository,
+				Tag:        s.dockerImages.InitTag,
+				NetworkID:  s.dockerResources.Network.Network.ID,
+				Cmd: []string{
+					fmt.Sprintf("--config-dir=%s", configDir),
+					fmt.Sprintf("--trust-height=%d", stateSyncTrustHeight),
+					fmt.Sprintf("--trust-hash=%s", stateSyncTrustHash),
+				},
+				User: "root:root",
+				Mounts: []string{
+					fmt.Sprintf("%s:%s", configDir, configDir),
+				},
+			},
+			noRestart,
+		)
+		s.Require().NoError(err)
+		s.Require().NoError(s.dockerResources.Pool.Purge(stateSyncResource))
+
+		// Start this validator in state sync test.
+		if valIdx == 3 {
+			continue
+		}
+
+		_, err = s.networks[0].RunValidator(valIdx, valIdx == 0)
 		s.Require().NoError(err)
 	}
 
@@ -180,51 +221,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
-	// ensure we cover enough heights for a few snapshots to be taken
-
+	// Ensure that chain is making progress after restart
+	// and that several heights are covered with snapshots.
 	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
-		return syncInfo.LatestBlockHeight > int64(maxSnapshotInterval)*2
+		return !syncInfo.CatchingUp && syncInfo.LatestBlockHeight > stateSyncTrustHeight+int64(maxSnapshotInterval)+1
 	}
 
 	err = s.networks[0].WaitUntil(0, doneCondition)
 	s.Require().NoError(err)
-
-	currentHeight, err := s.networks[0].GetCurrentHeightFromValidator(0)
-	s.Require().NoError(err)
-
-	// Ensure that state sync trust height is slightly lower than the latest
-	// snapshot of every node
-	stateSyncTrustHeight := int64(currentHeight - int64(float32(maxSnapshotInterval)*1.5))
-	stateSyncTrustHash, err := s.networks[0].GetHashFromBlock(stateSyncTrustHeight)
-	s.Require().NoError(err)
-
-	configDir := s.networks[0].GetChain().Validators[3].ConfigDir
-
-	stateSyncResource, err := s.dockerResources.Pool.RunWithOptions(
-		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("state-sync-%s", s.networks[0].GetChain().Validators[3].Name),
-			Repository: s.dockerImages.InitRepository,
-			Tag:        s.dockerImages.InitTag,
-			NetworkID:  s.dockerResources.Network.Network.ID,
-			Cmd: []string{
-				fmt.Sprintf("--config-dir=%s", configDir),
-				fmt.Sprintf("--trust-height=%d", stateSyncTrustHeight),
-				fmt.Sprintf("--trust-hash=%s", stateSyncTrustHash),
-			},
-			User: "root:root",
-			Mounts: []string{
-				fmt.Sprintf("%s:%s", configDir, configDir),
-			},
-		},
-		noRestart,
-	)
-	s.Require().NoError(err)
-
-	s.Require().NoError(s.dockerResources.Pool.Purge(stateSyncResource))
-
-	//blockId := coretypes.ResultBlock
-	// err = configureNodeForStateSync(s.networks[0].GetChain().Validators[3].ConfigDir, stateSyncTrustHeight, stateSyncTrustHash)
-	// s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
