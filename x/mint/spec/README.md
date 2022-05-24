@@ -9,15 +9,131 @@ Module uses time basis epochs supported by ```epochs``` module.
 
 ## Contents
 
-1. **[Concept](01_concepts.md)**
-2. **[State](02_state.md)**
+1. **[Concept](#concepts)**
+2. **[State](#state)**
 3. **[End Epoch](03_end_epoch.md)**
-4. **[Parameters](04_params.md)**
+4. **[Parameters](#network-parameters)**
 5. **[Events](05_events.md)**
+6. **[Transactions](05_events.md)**
+7. **[Queries](05_events.md)**
     
-## Overview 
+## Concepts
 
-### Network Parameters
+The `x/mint` module is designed to handle the regular printing of new
+tokens within a chain. The design taken within Osmosis is to
+
+- Mint new tokens once per epoch (default one week)
+- To have a "Reductioning factor" every period, which reduces the
+    amount of rewards per epoch. (default: period is 3 years, where a
+    year is 52 epochs. The next period's rewards are 2/3 of the prior
+    period's rewards)
+
+### Reductioning factor
+
+This is a generalization over the Bitcoin style halvenings. Every year,
+the amount of rewards issued per week will reduce by a governance
+specified factor, instead of a fixed `1/2`. So
+`RewardsPerEpochNextPeriod = ReductionFactor * CurrentRewardsPerEpoch)`.
+When `ReductionFactor = 1/2`, the Bitcoin halvenings are recreated. We
+default to having a reduction factor of `2/3`, and thus reduce rewards
+at the end of every year by `33%`.
+
+The implication of this is that the total supply is finite, according to
+the following formula:
+
+`Total Supply = InitialSupply + EpochsPerPeriod * { {InitialRewardsPerEpoch} / {1 - ReductionFactor} }`
+
+## State
+
+### Minter
+
+The minter is a space for holding current rewards information.
+
+```go
+type Minter struct {
+    EpochProvisions sdk.Dec   // Rewards for the current epoch
+}
+```
+
+### Params
+
+Minting params are held in the global params store.
+
+```go
+type Params struct {
+    MintDenom               string                  // type of coin to mint
+    GenesisEpochProvisions  sdk.Dec                 // initial epoch provisions at genesis
+    EpochIdentifier         string                  // identifier of epoch
+    ReductionPeriodInEpochs int64                   // number of epochs between reward reductions
+    ReductionFactor         sdk.Dec                 // reduction multiplier to execute on each period
+ DistributionProportions DistributionProportions // distribution_proportions defines the proportion of the minted denom
+ WeightedDeveloperRewardsReceivers    []WeightedAddress // address to receive developer rewards
+ MintingRewardsDistributionStartEpoch int64             // start epoch to distribute minting rewards
+}
+```
+
+### LastHalvenEpoch
+
+Last halven epoch stores the epoch number when the last reduction of
+coin mint amount per epoch has happened.
+
+**TODO:**
+
+- Update the name to LastReductionEpoch as the reduction amount could
+    be set by governance.
+
+## Begin-Epoch
+
+Minting parameters are recalculated and inflation paid at the beginning
+of each epoch. An epoch is signalled by x/epochs
+
+### NextEpochProvisions
+
+The target epoch provision is recalculated on each reduction period
+(default 3 years). At the time of reduction, the current provision is
+multiplied by reduction factor (default `2/3`), to calculate the
+provisions for the next epoch. Consequently, the rewards of the next
+period will be lowered by `1 - reduction factor`.
+
+``` go
+func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
+    return m.EpochProvisions.Mul(params.ReductionFactor)
+}
+```
+
+### EpochProvision
+
+Calculate the provisions generated for each epoch based on current epoch
+provisions. The provisions are then minted by the `mint` module's
+`ModuleMinterAccount`. These rewards are transferred to a
+`FeeCollector`, which handles distributing the rewards per the chains
+needs. (See TODO.md for details) This fee collector is specified as the
+`auth` module's `FeeCollector` `ModuleAccount`.
+
+``` go
+func (m Minter) EpochProvision(params Params) sdk.Coin {
+    provisionAmt := m.EpochProvisions.QuoInt(sdk.NewInt(int64(params.EpochsPerYear)))
+    return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
+}
+```
+
+## Network Parameters
+
+The minting module contains the following parameters:
+
+| Key                                        | Type         | Example                                |
+| ------------------------------------------ | ------------ | -------------------------------------- |
+| mint_denom                                 | string       | "uosmo"                                |
+| genesis_epoch_provisions                   | string (dec) | "500000000"                            |
+| epoch_identifier                           | string       | "weekly"                               |
+| reduction_period_in_epochs                 | int64        | 156                                    |
+| reduction_factor                           | string (dec) | "0.6666666666666"                      |
+| distribution_proportions.staking           | string (dec) | "0.4"                                  |
+| distribution_proportions.pool_incentives   | string (dec) | "0.3"                                  |
+| distribution_proportions.developer_rewards | string (dec) | "0.2"                                  |
+| distribution_proportions.community_pool    | string (dec) | "0.1"                                  |
+| weighted_developer_rewards_receivers       | array        | [{"address": "osmoxx", "weight": "1"}] |
+| minting_rewards_distribution_start_epoch   | int64        | 10
 
 Below are all the network parameters for the ```mint``` module:
 
@@ -33,6 +149,37 @@ Below are all the network parameters for the ```mint``` module:
   - **```community_pool```** - Proportion of minted funds to be set aside for the community pool
 - **```weighted_developer_rewards_receivers```** - Addresses that developer rewards will go to. The weight attached to an address is the percent of the developer rewards that the specific address will receive
 - **```minting_rewards_distribution_start_epoch```** - What epoch will start the rewards distribution to the aforementioned distribution categories
+
+**Notes**
+
+1. `mint_denom` defines denom for minting token - uosmo
+2. `genesis_epoch_provisions` provides minting tokens per epoch at
+    genesis.
+3. `epoch_identifier` defines the epoch identifier to be used for mint
+    module e.g. "weekly"
+4. `reduction_period_in_epochs` defines the number of epochs to pass to
+    reduce mint amount
+5. `reduction_factor` defines the reduction factor of tokens at every
+    `reduction_period_in_epochs`
+6. `distribution_proportions` defines distribution rules for minted
+    tokens, when developer rewards address is empty, it distribute
+    tokens to community pool.
+7. `weighted_developer_rewards_receivers` provides the addresses that
+    receives developer rewards by weight
+8. `minting_rewards_distribution_start_epoch` defines the start epoch
+    of minting to make sure minting start after initial pools are set
+
+## Events
+
+The minting module emits the following events:
+
+### End of Epoch
+
+|  Type  | Attribute Key     |  Attribute Value  |
+|  ------ | ------------------- | -------------------|
+|  mint |  epoch\_number     |  {epochNumber}    |
+|  mint |  epoch\_provisions |  {epochProvisions}|
+|  mint |  amount            |  {amount}         |
 
 </br>
 </br>
