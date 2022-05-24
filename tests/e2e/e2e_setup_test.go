@@ -196,6 +196,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// snapshot of every node
 	stateSyncTrustHeight := int64(currentHeight - int(float32(maxSnapshotInterval)*1.5))
 
+	//blockId := coretypes.ResultBlock
 	err = configureNodeForStateSync(s.networks[0].GetChain().Validators[3].ConfigDir, stateSyncTrustHeight)
 	s.Require().NoError(err)
 }

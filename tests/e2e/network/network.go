@@ -1,7 +1,6 @@
 package network
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -77,7 +76,10 @@ func (n *Network) GetVotingPeriod() int {
 // validatorIndex.
 func (n *Network) GetCurrentHeightFromValidator(validatorIndex int) (int, error) {
 	var block syncInfo
-	out, err := n.chainStatus(validatorIndex)
+	out, err := n.dockerResources.ExecValidator(
+		n.chain.ChainMeta.Id,
+		validatorIndex,
+		[]string{"osmosisd", "status"})
 	if err != nil {
 		return 0, err
 	}
@@ -175,45 +177,6 @@ func (n *Network) RunValidator(validatorIndex int, shouldExposePorts bool) (*doc
 	n.dockerResources.Validators[n.chain.ChainMeta.Id][validatorIndex] = resource
 	n.t.Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	return resource, nil
-}
-
-func (n *Network) chainStatus(validatorIndex int) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	containerId := n.dockerResources.Validators[n.chain.ChainMeta.Id][validatorIndex].Container.ID
-
-	exec, err := n.dockerResources.Pool.Client.CreateExec(docker.CreateExecOptions{
-		Context:      ctx,
-		AttachStdout: true,
-		AttachStderr: true,
-		Container:    containerId,
-		User:         "root",
-		Cmd: []string{
-			"osmosisd", "status",
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	var (
-		outBuf bytes.Buffer
-		errBuf bytes.Buffer
-	)
-
-	err = n.dockerResources.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
-		Context:      ctx,
-		Detach:       false,
-		OutputStream: &outBuf,
-		ErrorStream:  &errBuf,
-	})
-	if err != nil {
-		n.t.Errorf("failed to query height; stdout: %s, stderr: %s", outBuf.String(), errBuf.String())
-		return nil, err
-	}
-	return errBuf.Bytes(), nil
-
 }
 
 func (c *Network) getValidatorOptions(valIndex int) *dockertest.RunOptions {

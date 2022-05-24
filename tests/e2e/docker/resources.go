@@ -1,9 +1,13 @@
 package docker
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3/docker"
 )
 
 type Resources struct {
@@ -28,6 +32,41 @@ func NewResources() (*Resources, error) {
 		Network:    network,
 		Validators: make(map[string][]*dockertest.Resource),
 	}, nil
+}
+
+func (r *Resources) ExecValidator(chainId string, validatorIndex int, command []string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	containerId := r.Validators[chainId][validatorIndex].Container.ID
+
+	exec, err := r.Pool.Client.CreateExec(docker.CreateExecOptions{
+		Context:      ctx,
+		AttachStdout: true,
+		AttachStderr: true,
+		Container:    containerId,
+		User:         "root",
+		Cmd:          command,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		outBuf bytes.Buffer
+		errBuf bytes.Buffer
+	)
+
+	err = r.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
+		Context:      ctx,
+		Detach:       false,
+		OutputStream: &outBuf,
+		ErrorStream:  &errBuf,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute: %v\nstdout: %s\nstderr: %s\nerr: %w", command, outBuf.String(), errBuf.String(), err)
+	}
+	return errBuf.Bytes(), nil
 }
 
 func (r *Resources) Purge() error {
