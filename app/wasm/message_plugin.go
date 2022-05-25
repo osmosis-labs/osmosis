@@ -194,10 +194,6 @@ func PerformJoin(g *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddr
 		return wasmvmtypes.InvalidRequest{Err: "join pool null"}
 	}
 
-	if joinPool.ShareOutAmount.IsNegative() {
-		return wasmvmtypes.InvalidRequest{Err: "share out amount negative"}
-	}
-
 	err := g.JoinPoolNoSwap(ctx, contractAddr, joinPool.PoolId, joinPool.ShareOutAmount, joinPool.TokenInMaxs)
 
 	if err != nil {
