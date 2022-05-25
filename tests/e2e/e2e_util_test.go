@@ -712,12 +712,17 @@ func (s *IntegrationTestSuite) sendTx(c *chain.Chain, i int, amount string, send
 
 }
 
-func (s *IntegrationTestSuite) extractOperAddress(c *chain.Chain) {
-	// var oper operInfo
+func (s *IntegrationTestSuite) extractOperAddress(chainConfig *chainConfig) {
+	chain := chainConfig.chain
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	s.T().Logf("extracting validator operator addresses for chain-id: %s", c.ChainMeta.Id)
-	for i, val := range c.Validators {
+
+	s.T().Logf("extracting validator operator addresses for chain-id: %s", chain.ChainMeta.Id)
+	for i, val := range chain.Validators {
+		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+			s.T().Logf("skipping %s validator with index %d from running...", val.Name, i)
+			continue
+		}
 
 		var (
 			outBuf bytes.Buffer
@@ -730,7 +735,7 @@ func (s *IntegrationTestSuite) extractOperAddress(c *chain.Chain) {
 					Context:      ctx,
 					AttachStdout: true,
 					AttachStderr: true,
-					Container:    s.valResources[c.ChainMeta.Id][i].Container.ID,
+					Container:    s.valResources[chain.ChainMeta.Id][i].Container.ID,
 					User:         "root",
 					Cmd: []string{
 						"osmosisd", "debug", "addr", val.PublicKey,
