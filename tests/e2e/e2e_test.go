@@ -20,6 +20,10 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {
+	if s.skipStateSync {
+		s.T().Skip()
+	}
+
 	_, err := s.networks[0].RunValidator(3)
 	s.Require().NoError(err)
 

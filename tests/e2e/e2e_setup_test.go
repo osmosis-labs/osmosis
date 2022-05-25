@@ -105,8 +105,9 @@ type IntegrationTestSuite struct {
 
 	workingDirectory string
 
-	skipIBC     bool
-	skipUpgrade bool
+	skipIBC       bool
+	skipUpgrade   bool
+	skipStateSync bool
 
 	dockerImages    *dockerconfig.ImageConfig
 	dockerResources *dockerconfig.Resources
@@ -145,6 +146,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Log("skipping upgrade testing")
 	}
 
+	if str := os.Getenv("OSMOSIS_E2E_SKIP_STATE_SYNC"); len(str) > 0 {
+		s.skipStateSync, err = strconv.ParseBool(str)
+		s.Require().NoError(err)
+		s.T().Log("skipping state sync testing")
+	}
+
 	if s.skipIBC && !s.skipUpgrade {
 		s.T().Fatal("if IBC is skipped, upgrade must be as well")
 	}
@@ -156,6 +163,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.networks = make([]*net.Network, 0)
 	s.configureChain(chain.ChainAID, validatorConfigsChainA)
+
 	if !s.skipIBC {
 		s.configureChain(chain.ChainBID, validatorConfigsChainB)
 	}
@@ -181,75 +189,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.runPostUpgradeTests()
 	}
 
-	currentHeight, err := s.networks[0].GetCurrentHeightFromValidator(0)
-	s.Require().NoError(err)
-
-	// Ensure that state sync trust height is slightly lower than the latest
-	// snapshot of every node
-	stateSyncTrustHeight := currentHeight
-	stateSyncTrustHash, err := s.networks[0].GetHashFromBlock(stateSyncTrustHeight)
-	s.Require().NoError(err)
-
-	for valIdx := range s.networks[0].GetChain().Validators {
-		// Stop a validator container to update its config
-		if err := s.networks[0].RemoveValidatorContainer(valIdx); err != nil {
-			s.Require().NoError(err)
-		}
-
-		configDir := s.networks[0].GetChain().Validators[valIdx].ConfigDir
-
-		stateSyncResource, err := s.dockerResources.Pool.RunWithOptions(
-			&dockertest.RunOptions{
-				Name:       fmt.Sprintf("state-sync-%s", s.networks[0].GetChain().Validators[valIdx].Name),
-				Repository: s.dockerImages.InitRepository,
-				Tag:        s.dockerImages.InitTag,
-				NetworkID:  s.dockerResources.Network.Network.ID,
-				Cmd: []string{
-					fmt.Sprintf("--config-dir=%s", configDir),
-					fmt.Sprintf("--trust-height=%d", stateSyncTrustHeight),
-					fmt.Sprintf("--trust-hash=%s", stateSyncTrustHash),
-				},
-				User: "root:root",
-				Mounts: []string{
-					fmt.Sprintf("%s:%s", configDir, configDir),
-				},
-			},
-			noRestart,
-		)
-		s.Require().NoError(err)
-		s.Require().NoError(s.dockerResources.Pool.Purge(stateSyncResource))
-
-		// Start this validator in state sync test.
-		if valIdx == 3 {
-			continue
-		}
-
-		_, err = s.networks[0].RunValidator(valIdx)
-		s.Require().NoError(err)
-	}
-
-	maxSnapshotInterval := uint64(0)
-
-	for _, valConfig := range validatorConfigsChainA {
-		if valConfig.SnapshotInterval > maxSnapshotInterval {
-			maxSnapshotInterval = valConfig.SnapshotInterval
-		}
-	}
-
-	// Ensure that all restarted validators are making progress.
-	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
-		return !syncInfo.CatchingUp && syncInfo.LatestBlockHeight > stateSyncTrustHeight+int64(maxSnapshotInterval)+1
-	}
-
-	for valIdx := range s.networks[0].GetChain().Validators {
-		if valIdx == 3 {
-			continue
-		}
-
-		if err = s.networks[0].WaitUntil(valIdx, doneCondition); err != nil {
-			s.T().Errorf("validator with index %d failed to start", valIdx)
-			s.Require().NoError(err)
-		}
+	if !s.skipStateSync {
+		s.configureStateSync(s.networks[0])
 	}
 }
 
@@ -545,6 +486,79 @@ func (s *IntegrationTestSuite) upgradeContainers(network *net.Network) {
 			time.Second,
 		)
 		s.T().Logf("upgrade successful on %s validator container: %s", s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.Name[1:], s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.ID)
+	}
+}
+
+func (s *IntegrationTestSuite) configureStateSync(network *net.Network) {
+	currentHeight, err := network.GetCurrentHeightFromValidator(0)
+	s.Require().NoError(err)
+
+	// Ensure that state sync trust height is slightly lower than the latest
+	// snapshot of every node
+	stateSyncTrustHeight := currentHeight
+	stateSyncTrustHash, err := network.GetHashFromBlock(stateSyncTrustHeight)
+	s.Require().NoError(err)
+
+	for valIdx := range network.GetChain().Validators {
+		// Stop a validator container to update its config
+		if err := network.RemoveValidatorContainer(valIdx); err != nil {
+			s.Require().NoError(err)
+		}
+
+		configDir := network.GetChain().Validators[valIdx].ConfigDir
+
+		stateSyncResource, err := s.dockerResources.Pool.RunWithOptions(
+			&dockertest.RunOptions{
+				Name:       fmt.Sprintf("state-sync-%s", network.GetChain().Validators[valIdx].Name),
+				Repository: s.dockerImages.InitRepository,
+				Tag:        s.dockerImages.InitTag,
+				NetworkID:  s.dockerResources.Network.Network.ID,
+				Cmd: []string{
+					fmt.Sprintf("--config-dir=%s", configDir),
+					fmt.Sprintf("--trust-height=%d", stateSyncTrustHeight),
+					fmt.Sprintf("--trust-hash=%s", stateSyncTrustHash),
+				},
+				User: "root:root",
+				Mounts: []string{
+					fmt.Sprintf("%s:%s", configDir, configDir),
+				},
+			},
+			noRestart,
+		)
+		s.Require().NoError(err)
+		s.Require().NoError(s.dockerResources.Pool.Purge(stateSyncResource))
+
+		// Start this validator in state sync test.
+		if valIdx == 3 {
+			continue
+		}
+
+		_, err = network.RunValidator(valIdx)
+		s.Require().NoError(err)
+	}
+
+	maxSnapshotInterval := uint64(0)
+
+	for _, valConfig := range validatorConfigsChainA {
+		if valConfig.SnapshotInterval > maxSnapshotInterval {
+			maxSnapshotInterval = valConfig.SnapshotInterval
+		}
+	}
+
+	// Ensure that all restarted validators are making progress.
+	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
+		return !syncInfo.CatchingUp && syncInfo.LatestBlockHeight > stateSyncTrustHeight+int64(maxSnapshotInterval)+1
+	}
+
+	for valIdx := range network.GetChain().Validators {
+		if valIdx == 3 {
+			continue
+		}
+
+		if err = network.WaitUntil(valIdx, doneCondition); err != nil {
+			s.T().Errorf("validator with index %d failed to start", valIdx)
+			s.Require().NoError(err)
+		}
 	}
 }
 
