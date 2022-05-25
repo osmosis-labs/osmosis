@@ -1,4 +1,4 @@
-package ante_test
+package v9_test
 
 import (
 	"testing"
@@ -9,9 +9,9 @@ import (
 
 	ibcchanneltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 
-	"github.com/osmosis-labs/osmosis/v7/ante"
 	"github.com/osmosis-labs/osmosis/v7/app"
 	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v9"
 )
 
 func noOpAnteDecorator() sdk.AnteHandler {
@@ -21,7 +21,7 @@ func noOpAnteDecorator() sdk.AnteHandler {
 }
 
 func TestMsgFilterDecorator(t *testing.T) {
-	handler := ante.MsgFilterDecorator{}
+	handler := v9.MsgFilterDecorator{}
 	txCfg := app.MakeEncodingConfig().TxConfig
 
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
