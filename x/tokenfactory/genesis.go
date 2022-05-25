@@ -12,6 +12,9 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.CreateModuleAccount(ctx)
 
+	if genState.Params.DenomCreationFee == nil {
+		genState.Params.DenomCreationFee = sdk.NewCoins()
+	}
 	k.SetParams(ctx, genState.Params)
 
 	for _, genDenom := range genState.GetFactoryDenoms() {
