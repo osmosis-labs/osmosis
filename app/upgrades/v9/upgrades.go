@@ -10,18 +10,14 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-<<<<<<< HEAD
-	"github.com/osmosis-labs/osmosis/v9/app/keepers"
-=======
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icacontrollertypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/keepers"
->>>>>>> 09f3184 (Adding ICA Host module (#1564))
+	"github.com/osmosis-labs/osmosis/v9/app/keepers"
 )
 
 func CreateUpgradeHandler(

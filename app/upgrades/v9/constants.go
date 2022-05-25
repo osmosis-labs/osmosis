@@ -5,13 +5,9 @@ import (
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 
-<<<<<<< HEAD
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v9/x/tokenfactory/types"
-=======
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
->>>>>>> 09f3184 (Adding ICA Host module (#1564))
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v9/x/tokenfactory/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v9 upgrade.
