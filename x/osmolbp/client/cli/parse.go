@@ -9,15 +9,15 @@ import (
 	"github.com/spf13/pflag"
 )
 
-type XCreateLBPInputs createLBPInputs
+type CreateLBPInputs createLBPInputs
 
 type XCreateLBPInputsExceptions struct {
-	XCreateLBPInputs
+	CreateLBPInputs
 	Other *string // Other won't raise an error
 }
 
 // UnmarshalJSON should error if there are fields unexpected.
-func (release *createLBPInputs) UnmarshalJSON(data []byte) error {
+func (inputs *createLBPInputs) UnmarshalJSON(data []byte) error {
 	var createLBPE XCreateLBPInputsExceptions
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields() // Force
@@ -26,7 +26,7 @@ func (release *createLBPInputs) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	*release = createLBPInputs(createLBPE.XCreateLBPInputs)
+	*inputs = createLBPInputs(createLBPE.CreateLBPInputs)
 	return nil
 }
 

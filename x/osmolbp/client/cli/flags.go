@@ -6,13 +6,6 @@ import (
 )
 
 const (
-	FlagTokenIn        = "token-in"
-	FlagTokenOut       = "token-out"
-	FlagStartTime      = "start-time"
-	FlagDuration       = "duration"
-	FlagInitialDeposit = "initial-deposit"
-	FlagTreasury       = "treasury"
-
 	FlagPoolId  = "pool-id"
 	FlagAmount  = "amount"
 	FlagLBPFile = "lbp-file"
