@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v7/app/wasm"
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
@@ -27,18 +28,18 @@ func TestCreateDenom(t *testing.T) {
 	}{
 		"valid sub-denom": {
 			createDenom: &wasmbindings.CreateDenom{
-				SubDenom: "MOON",
+				Subdenom: "MOON",
 			},
 		},
 		"empty sub-denom": {
 			createDenom: &wasmbindings.CreateDenom{
-				SubDenom: "",
+				Subdenom: "",
 			},
 			expErr: false,
 		},
 		"invalid sub-denom": {
 			createDenom: &wasmbindings.CreateDenom{
-				SubDenom: "sub-denom_2",
+				Subdenom: "sub-denom_2",
 			},
 			expErr: true,
 		},
@@ -72,13 +73,13 @@ func TestMint(t *testing.T) {
 
 	// Create denoms for valid mint tests
 	validDenom := wasmbindings.CreateDenom{
-		SubDenom: "MOON",
+		Subdenom: "MOON",
 	}
 	err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &validDenom)
 	require.NoError(t, err)
 
 	emptyDenom := wasmbindings.CreateDenom{
-		SubDenom: "",
+		Subdenom: "",
 	}
 	err = wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &emptyDenom)
 	require.NoError(t, err)
@@ -98,14 +99,14 @@ func TestMint(t *testing.T) {
 	}{
 		"valid mint": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "MOON",
+				Subdenom:  "MOON",
 				Amount:    amount,
 				Recipient: lucky.String(),
 			},
 		},
 		"empty sub-denom": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "",
+				Subdenom:  "",
 				Amount:    amount,
 				Recipient: lucky.String(),
 			},
@@ -113,7 +114,7 @@ func TestMint(t *testing.T) {
 		},
 		"nonexistent sub-denom": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "SUN",
+				Subdenom:  "SUN",
 				Amount:    amount,
 				Recipient: lucky.String(),
 			},
@@ -121,7 +122,7 @@ func TestMint(t *testing.T) {
 		},
 		"invalid sub-denom": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "sub-denom_2",
+				Subdenom:  "sub-denom_2",
 				Amount:    amount,
 				Recipient: lucky.String(),
 			},
@@ -129,7 +130,7 @@ func TestMint(t *testing.T) {
 		},
 		"zero amount": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "MOON",
+				Subdenom:  "MOON",
 				Amount:    sdk.ZeroInt(),
 				Recipient: lucky.String(),
 			},
@@ -137,7 +138,7 @@ func TestMint(t *testing.T) {
 		},
 		"negative amount": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "MOON",
+				Subdenom:  "MOON",
 				Amount:    amount.Neg(),
 				Recipient: lucky.String(),
 			},
@@ -145,7 +146,7 @@ func TestMint(t *testing.T) {
 		},
 		"empty recipient": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "MOON",
+				Subdenom:  "MOON",
 				Amount:    amount,
 				Recipient: "",
 			},
@@ -153,7 +154,7 @@ func TestMint(t *testing.T) {
 		},
 		"invalid recipient": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "MOON",
+				Subdenom:  "MOON",
 				Amount:    amount,
 				Recipient: "invalid",
 			},

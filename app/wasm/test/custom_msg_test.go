@@ -3,8 +3,9 @@ package wasm
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"testing"
+
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -29,7 +30,7 @@ func TestCreateDenomMsg(t *testing.T) {
 	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
 
 	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
-		SubDenom: "SUN",
+		Subdenom: "SUN",
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
@@ -65,7 +66,7 @@ func TestMintMsg(t *testing.T) {
 
 	// Create denom for minting
 	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
-		SubDenom: "SUN",
+		Subdenom: "SUN",
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
@@ -73,7 +74,7 @@ func TestMintMsg(t *testing.T) {
 	amount, ok := sdk.NewIntFromString("808010808")
 	require.True(t, ok)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
-		SubDenom:  "SUN",
+		Subdenom:  "SUN",
 		Amount:    amount,
 		Recipient: lucky.String(),
 	}}
@@ -123,14 +124,14 @@ func TestMintMsg(t *testing.T) {
 	// now mint another amount / denom
 	// create it first
 	msg = wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
-		SubDenom: "MOON",
+		Subdenom: "MOON",
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
 
 	amount = amount.SubRaw(1)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
-		SubDenom:  "MOON",
+		Subdenom:  "MOON",
 		Amount:    amount,
 		Recipient: lucky.String(),
 	}}

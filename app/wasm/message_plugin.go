@@ -74,7 +74,9 @@ func PerformCreateDenom(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, 
 	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
 
 	// Create denom
-	_, err := msgServer.CreateDenom(sdk.WrapSDKContext(ctx), tokenfactorytypes.NewMsgCreateDenom(contractAddr.String(), createDenom.SubDenom))
+	_, err := msgServer.CreateDenom(
+		sdk.WrapSDKContext(ctx),
+		tokenfactorytypes.NewMsgCreateDenom(contractAddr.String(), createDenom.Subdenom))
 	if err != nil {
 		return sdkerrors.Wrap(err, "creating denom")
 	}
@@ -99,7 +101,7 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 	}
 
 	// Check if denom is valid
-	denom, err := GetFullDenom(contractAddr.String(), mint.SubDenom)
+	denom, err := GetFullDenom(contractAddr.String(), mint.Subdenom)
 	if err != nil {
 		return err
 	}
