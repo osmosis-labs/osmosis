@@ -11,16 +11,29 @@ import (
 
 const (
 	ModuleDenomPrefix = "factory"
+	// See the TokenFactory readme for a derivation of these.
+	// TL;DR, MaxSubdenomLength + MaxHrpLength = 60 comes from SDK max denom length = 128
+	// and the structure of tokenfactory denoms.
+	MaxSubdenomLength = 44
+	MaxHrpLength      = 16
+	// MaxCreatorLength = 59 + MaxHrpLength
+	MaxCreatorLength = 59 + MaxHrpLength
 )
 
 // GetTokenDenom constructs a denom string for tokens created by tokenfactory
 // based on an input creator address and a nonce
 // The denom constructed is factory/{creator}/{nonce}
-func GetTokenDenom(creator, nonce string) (string, error) {
+func GetTokenDenom(creator, subdenom string) (string, error) {
+	if len(subdenom) > MaxSubdenomLength {
+		return "", ErrSubdenomTooLong
+	}
+	if len(subdenom) > MaxCreatorLength {
+		return "", ErrCreatorTooLong
+	}
 	if strings.Contains(creator, "/") {
 		return "", ErrInvalidCreator
 	}
-	denom := strings.Join([]string{ModuleDenomPrefix, creator, nonce}, "/")
+	denom := strings.Join([]string{ModuleDenomPrefix, creator, subdenom}, "/")
 	return denom, sdk.ValidateDenom(denom)
 }
 

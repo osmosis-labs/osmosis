@@ -19,6 +19,7 @@ type CreateDenom struct {
 	/// 76 "alphanumeric" (https://github.com/cosmos/cosmos-sdk/blob/2646b474c7beb0c93d4fafd395ef345f41afc251/types/coin.go#L677)
 	/// characters long.
 	/// Empty subdenoms are valid. The token will then be prefix + contract address, i.e. "factory/<bech32 address>/"
+	/// Please note that the admin
 	Subdenom string `json:"subdenom"`
 }
 
