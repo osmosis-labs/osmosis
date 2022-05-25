@@ -29,10 +29,10 @@ var (
 	upgradeVersion = "v9"
 	// osmosis repo/version for initialization (this should be one version below upgradeVersion)
 	initRepository = "osmolabs/osmosis-init"
-	initVersion    = "v8.0.0-1-osmo"
+	initVersion    = "v8.0.0-2-osmo"
 	// pre upgrade osmosis repo/version to pull (should match initVersion numer)
 	debugRepository = "osmolabs/osmosis-dev"
-	debugVersion    = "v8.0.0-1-debug"
+	debugVersion    = "v8.0.0-2-debug"
 	// hermes repo/version for relayer
 	relayerRepository = "osmolabs/hermes"
 	relayerVersion    = "0.13.0"
@@ -123,8 +123,13 @@ type status struct {
 	LatestHeight string `json:"latest_block_height"`
 }
 
+type valinfo struct {
+	VotingPower string `json:"VotingPower"`
+}
+
 type syncInfo struct {
-	SyncInfo status `json:"SyncInfo"`
+	SyncInfo      status  `json:"SyncInfo"`
+	ValidatorInfo valinfo `json:"ValidatorInfo"`
 }
 
 type operInfo struct {
@@ -233,10 +238,13 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 			},
 			Repository: debugRepository,
 			Tag:        debugVersion,
-			Entrypoint: []string{
-				"sh",
-				"-c",
-				"chmod +x /osmosis/genesis_mod.sh && /osmosis/genesis_mod.sh",
+			// Entrypoint: []string{
+			// 	"sh",
+			// 	"-c",
+			// 	"chmod +x /osmosis/genesis_mod.sh && /osmosis/genesis_mod.sh",
+			// },
+			Cmd: []string{
+				"start",
 			},
 		}
 

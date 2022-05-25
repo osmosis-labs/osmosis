@@ -44,3 +44,4 @@ EXPOSE 26657
 EXPOSE 1317
 
 ENTRYPOINT ["osmosisd"]
+CMD [ "start" ]

@@ -12,12 +12,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+
+	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
@@ -171,6 +180,157 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 	appGenState[banktypes.ModuleName] = bz
 
+	var stakeGenState staketypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[staketypes.ModuleName], &stakeGenState); err != nil {
+		return err
+	}
+
+	stakeGenState.Params = staketypes.Params{
+		BondDenom:         OsmoDenom,
+		MaxValidators:     100,
+		MaxEntries:        7,
+		HistoricalEntries: 10000,
+		UnbondingTime:     240000000000,
+		MinCommissionRate: sdk.ZeroDec(),
+	}
+
+	sz, err := util.Cdc.MarshalJSON(&stakeGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[staketypes.ModuleName] = sz
+
+	var pooliGenState poolitypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[poolitypes.ModuleName], &pooliGenState); err != nil {
+		return err
+	}
+
+	pooliGenState.LockableDurations =
+		[]time.Duration{
+			time.Second * 120,
+			time.Second * 180,
+			time.Second * 240,
+		}
+
+	pooliGenState.Params = poolitypes.Params{
+		MintedDenom: OsmoDenom,
+	}
+
+	pz, err := util.Cdc.MarshalJSON(&pooliGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[poolitypes.ModuleName] = pz
+
+	var incentivesGenState incentivestypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[incentivestypes.ModuleName], &incentivesGenState); err != nil {
+		return err
+	}
+
+	incentivesGenState.LockableDurations =
+		[]time.Duration{
+			time.Second,
+			time.Second * 120,
+			time.Second * 180,
+			time.Second * 240,
+		}
+
+	incentivesGenState.Params = incentivestypes.Params{
+		DistrEpochIdentifier: "day",
+	}
+
+	iz, err := util.Cdc.MarshalJSON(&incentivesGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[incentivestypes.ModuleName] = iz
+
+	var mintGenState minttypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState); err != nil {
+		return err
+	}
+
+	mintGenState.Params.MintDenom = OsmoDenom
+	mintGenState.Params.EpochIdentifier = "day"
+
+	mz, err := util.Cdc.MarshalJSON(&mintGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[minttypes.ModuleName] = mz
+
+	var txfeesGenState txfeestypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[txfeestypes.ModuleName], &txfeesGenState); err != nil {
+		return err
+	}
+
+	txfeesGenState.Basedenom = OsmoDenom
+
+	tz, err := util.Cdc.MarshalJSON(&txfeesGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[txfeestypes.ModuleName] = tz
+
+	var gammGenState gammtypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[gammtypes.ModuleName], &gammGenState); err != nil {
+		return err
+	}
+
+	gammGenState.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10000000)}
+
+	gaz, err := util.Cdc.MarshalJSON(&gammGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[gammtypes.ModuleName] = gaz
+
+	var epochGenState epochtypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[epochtypes.ModuleName], &epochGenState); err != nil {
+		return err
+	}
+
+	epochGenState.Epochs =
+		[]epochtypes.EpochInfo{
+			{
+				Identifier:              "week",
+				StartTime:               time.Time{},
+				Duration:                time.Hour * 24 * 7,
+				CurrentEpoch:            0,
+				CurrentEpochStartHeight: 0,
+				CurrentEpochStartTime:   time.Time{},
+				EpochCountingStarted:    false,
+			},
+			{
+				Identifier:              "day",
+				StartTime:               time.Time{},
+				Duration:                time.Second * 60,
+				CurrentEpoch:            0,
+				CurrentEpochStartHeight: 0,
+				CurrentEpochStartTime:   time.Time{},
+				EpochCountingStarted:    false,
+			},
+		}
+
+	ez, err := util.Cdc.MarshalJSON(&epochGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[epochtypes.ModuleName] = ez
+
+	var crisisGenState crisistypes.GenesisState
+	if err := util.Cdc.UnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState); err != nil {
+		return err
+	}
+
+	crisisGenState.ConstantFee.Denom = OsmoDenom
+
+	cz, err := util.Cdc.MarshalJSON(&crisisGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[crisistypes.ModuleName] = cz
+
 	var govGenState govtypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState); err != nil {
 		return err
@@ -179,6 +339,8 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	govGenState.VotingParams = govtypes.VotingParams{
 		VotingPeriod: votingPeriod,
 	}
+
+	govGenState.DepositParams.MinDeposit = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10000000)}
 
 	gz, err := util.Cdc.MarshalJSON(&govGenState)
 	if err != nil {
