@@ -13,7 +13,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	dockerconfig "github.com/osmosis-labs/osmosis/v7/tests/e2e/docker"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/network/portoffset"
 )
 
 type Network struct {
@@ -23,6 +22,7 @@ type Network struct {
 	votingPeriod int64
 	// upgrade proposal height for chain.
 	proposalHeight   int64
+	validatorRPC     []*rpchttp.HTTP
 	chain            chain.Chain
 	dockerResources  *dockerconfig.Resources
 	dockerImages     *dockerconfig.ImageConfig
@@ -73,16 +73,9 @@ func (n *Network) GetVotingPeriod() int64 {
 // GetCurrentHeightFromValidator returns current height by querying a validator with
 // validatorIndex.
 func (n *Network) GetCurrentHeightFromValidator(validatorIndex int) (int64, error) {
-	n.dockerResources.ExecValidator(n.chain.ChainMeta.Id, validatorIndex, []string{"osmosisd", "status"})
-
-	hostPort := n.dockerResources.Validators[n.chain.ChainMeta.Id][0].GetHostPort("26657/tcp")
-	rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
-	if err != nil {
-		return 0, err
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), repeatTime)
 	defer cancel()
-	status, err := rpcClient.Status(ctx)
+	status, err := n.validatorRPC[validatorIndex].Status(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -91,14 +84,9 @@ func (n *Network) GetCurrentHeightFromValidator(validatorIndex int) (int64, erro
 
 // GetHashFromBlock gets block hash at a specific height. Otherwise, error.
 func (n *Network) GetHashFromBlock(height int64) (string, error) {
-	hostPort := n.dockerResources.Validators[n.chain.ChainMeta.Id][0].GetHostPort("26657/tcp")
-	rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
-	if err != nil {
-		return "", err
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), repeatTime)
 	defer cancel()
-	block, err := rpcClient.Block(ctx, &height)
+	block, err := n.validatorRPC[0].Block(ctx, &height)
 	if err != nil {
 		return "", err
 	}
@@ -112,16 +100,11 @@ func (n *Network) GetProposalHeight() int64 {
 // WaitUntil waits until validator with validatorIndex reaches doneCondition. Return nil
 // if reached, error otherwise.
 func (n *Network) WaitUntil(validatorIndex int, doneCondition func(syncInfo coretypes.SyncInfo) bool) error {
-	hostPort := n.dockerResources.Validators[n.chain.ChainMeta.Id][validatorIndex].GetHostPort("26657/tcp")
-	rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
-	if err != nil {
-		return err
-	}
 	var latestBlockHeight int64
 	for i := 0; i < repeatMax; i++ {
 		ctx, cancel := context.WithTimeout(context.Background(), repeatTime)
 		defer cancel()
-		status, err := rpcClient.Status(ctx)
+		status, err := n.validatorRPC[validatorIndex].Status(ctx)
 		if err != nil {
 			return err
 		}
@@ -148,6 +131,7 @@ func (n *Network) RemoveValidatorContainer(validatorIndex int) error {
 	if err := n.dockerResources.Pool.Client.RemoveContainer(opts); err != nil {
 		return err
 	}
+
 	n.t.Logf("removed container: %s", n.dockerResources.Validators[chainId][validatorIndex].Container.Name[1:])
 	return nil
 }
@@ -155,43 +139,54 @@ func (n *Network) RemoveValidatorContainer(validatorIndex int) error {
 func (n *Network) RunValidators() ([]*dockertest.Resource, error) {
 	chain := n.chain
 	n.dockerResources.Validators[n.chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators))
+	n.validatorRPC = make([]*rpchttp.HTTP, len(chain.Validators))
+
 	for i := range chain.Validators {
-		// expose the first two validators for state sync. State-sync needs at least
-		// 2 RPC servers to be enabled to work.
 		_, err := n.RunValidator(i)
 		if err != nil {
+			n.t.Errorf("container for validator with index %d failed to run", i)
 			return nil, err
 		}
-
 	}
 
-	// Ensure the node is making progress.
+	// Ensure the nodes are making progress.
 	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
 		return syncInfo.CatchingUp || syncInfo.LatestBlockHeight > 3
 	}
 
-	if err := n.WaitUntil(0, doneCondition); err != nil {
-		return nil, err
+	for i := range chain.Validators {
+		if err := n.WaitUntil(i, doneCondition); err != nil {
+			n.t.Errorf("validator with index %d failed to start", i)
+			return nil, err
+		}
 	}
+
 	return n.dockerResources.Validators[n.chain.ChainMeta.Id], nil
 }
 
 func (n *Network) RunValidator(validatorIndex int) (*dockertest.Resource, error) {
 	runOpts := n.getValidatorOptions(validatorIndex)
 
-	var err error
-	runOpts.PortBindings, err = n.getPortBindings()
-	if err != nil {
-		return nil, err
-	}
-
-	n.t.Logf("exposing ports for validator %s with port mapping: \n%v\n", n.chain.Validators[validatorIndex].Name, runOpts.PortBindings)
-
 	resource, err := n.dockerResources.Pool.RunWithOptions(runOpts, noRestart)
 	if err != nil {
 		return nil, err
 	}
 	n.dockerResources.Validators[n.chain.ChainMeta.Id][validatorIndex] = resource
+
+	hostPort := resource.GetHostPort("26657/tcp")
+
+	// This is needed to ensure that the Tenderming RPC server has enough time
+	// to start up. We cannot deterministically predict how long it is going to take
+	// so the value of one second is anecdotally chosen. If this sleep did not exist,
+	// the first query to the Tendermint RPC could return "connection reset by peer".
+	time.Sleep(time.Second)
+
+	rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
+	if err != nil {
+		return nil, err
+	}
+	n.validatorRPC[validatorIndex] = rpcClient
+
 	n.t.Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	return resource, nil
 }
@@ -211,20 +206,6 @@ func (c *Network) getValidatorOptions(valIndex int) *dockertest.RunOptions {
 			"start",
 		},
 	}
-}
-
-func (c *Network) getPortBindings() (map[docker.Port][]docker.PortBinding, error) {
-	freePort, err := portoffset.GetFreePort()
-	if err != nil {
-		return nil, err
-	}
-	return map[docker.Port][]docker.PortBinding{
-		// "1317/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}}, // API server
-		// "6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}}, // pprof address
-		// "9090/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 9090+portOffset)}}, // gRPC server address
-		// "26656/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26656+portOffset)}}, # p2p listen address
-		"26657/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", freePort)}}, // Tendermint RPC
-	}, nil
 }
 
 func noRestart(config *docker.HostConfig) {

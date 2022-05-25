@@ -105,6 +105,9 @@ type IntegrationTestSuite struct {
 
 	workingDirectory string
 
+	skipIBC     bool
+	skipUpgrade bool
+
 	dockerImages    *dockerconfig.ImageConfig
 	dockerResources *dockerconfig.Resources
 }
@@ -116,8 +119,6 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
-	s.networks = make([]*net.Network, 0, 2)
-
 	// The e2e test flow is as follows:
 	//
 	// 1. Configure two chains - chan A and chain B.
@@ -126,26 +127,38 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 2. Start both networks.
 	// 3. Run IBC relayer betweeen the two chains.
 	// 4. Execute various e2e tests, including IBC.
-	var (
-		skipUpgrade bool
-		err         error
-	)
+
+	var err error
 
 	s.workingDirectory, err = os.Getwd()
 	s.Require().NoError(err)
 
-	if str := os.Getenv("OSMOSIS_E2E_SKIP_UPGRADE"); len(str) > 0 {
-		skipUpgrade, err = strconv.ParseBool(str)
+	if str := os.Getenv("OSMOSIS_E2E_SKIP_IBC"); len(str) > 0 {
+		s.skipIBC, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
+		s.T().Log("skipping IBC testing")
 	}
 
-	s.dockerImages = dockerconfig.NewImageConfig(!skipUpgrade)
+	if str := os.Getenv("OSMOSIS_E2E_SKIP_UPGRADE"); len(str) > 0 {
+		s.skipUpgrade, err = strconv.ParseBool(str)
+		s.Require().NoError(err)
+		s.T().Log("skipping upgrade testing")
+	}
+
+	if s.skipIBC && !s.skipUpgrade {
+		s.T().Fatal("if IBC is skipped, upgrade must be as well")
+	}
+
+	s.dockerImages = dockerconfig.NewImageConfig(!s.skipUpgrade)
 
 	s.dockerResources, err = dockerconfig.NewResources()
 	s.Require().NoError(err)
 
+	s.networks = make([]*net.Network, 0)
 	s.configureChain(chain.ChainAID, validatorConfigsChainA)
-	s.configureChain(chain.ChainBID, validatorConfigsChainB)
+	if !s.skipIBC {
+		s.configureChain(chain.ChainBID, validatorConfigsChainB)
+	}
 
 	for _, network := range s.networks {
 		networkResources, err := network.RunValidators()
@@ -153,14 +166,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.dockerResources.Validators[network.GetChain().ChainMeta.Id] = networkResources
 	}
 
-	// Run a relayer between every possible pair of chains.
-	for i := 0; i < len(s.networks); i++ {
-		for j := i + 1; j < len(s.networks); j++ {
-			s.runIBCRelayer(s.networks[i].GetChain(), s.networks[j].GetChain())
+	if !s.skipIBC {
+		// Run a relayer between every possible pair of chains.
+		for i := 0; i < len(s.networks); i++ {
+			for j := i + 1; j < len(s.networks); j++ {
+				s.runIBCRelayer(s.networks[i].GetChain(), s.networks[j].GetChain())
+			}
 		}
 	}
 
-	if !skipUpgrade {
+	if !s.skipUpgrade {
 		s.createPreUpgradeState()
 		s.upgrade()
 		s.runPostUpgradeTests()
@@ -221,14 +236,21 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
-	// Ensure that chain is making progress after restart
-	// and that several heights are covered with snapshots.
+	// Ensure that all restarted validators are making progress.
 	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
 		return !syncInfo.CatchingUp && syncInfo.LatestBlockHeight > stateSyncTrustHeight+int64(maxSnapshotInterval)+1
 	}
 
-	err = s.networks[0].WaitUntil(0, doneCondition)
-	s.Require().NoError(err)
+	for valIdx := range s.networks[0].GetChain().Validators {
+		if valIdx == 3 {
+			continue
+		}
+
+		if err = s.networks[0].WaitUntil(valIdx, doneCondition); err != nil {
+			s.T().Errorf("validator with index %d failed to start", valIdx)
+			s.Require().NoError(err)
+		}
+	}
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

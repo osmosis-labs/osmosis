@@ -7,6 +7,10 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
+	if s.skipIBC {
+		s.T().Skip()
+	}
+
 	chainA := s.networks[0].GetChain()
 	chainB := s.networks[1].GetChain()
 
