@@ -481,6 +481,7 @@ func TestJoinPoolMsg(t *testing.T) {
 		sdk.NewInt64Coin("uregen", 777000000),
 		sdk.NewInt64Coin("ustar", 999000000),
 	)
+	fundAccount(t, ctx, osmosis, creator, providerFunds)
 	fundAccount(t, ctx, osmosis, actor, providerFunds)
 
 	// 20 star to 1 osmo
@@ -488,7 +489,13 @@ func TestJoinPoolMsg(t *testing.T) {
 		sdk.NewInt64Coin("uosmo", 12000000),
 		sdk.NewInt64Coin("ustar", 240000000),
 	}
-	starPool := preparePool(t, ctx, osmosis, actor, funds1)
+	starPool := preparePool(t, ctx, osmosis, creator, funds1)
+
+	poolDenom := "gamm/pool/1"
+
+	creatorBalance := osmosis.BankKeeper.GetBalance(ctx, creator, poolDenom)
+
+	require.Equal(t, "100000000000000000000", creatorBalance.Amount.String())
 
 	poolInfo, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
 
@@ -550,6 +557,9 @@ func TestJoinPoolMsg(t *testing.T) {
 
 	require.Equal(t, "100100000000000000000", totalSharesAfter.String())
 
+	contractBalance := osmosis.BankKeeper.GetBalance(ctx, reflect, poolDenom)
+
+	require.Equal(t, "100000000000000000", contractBalance.Amount.String())
 }
 
 // test setup for each run through the table test above
