@@ -209,7 +209,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			continue
 		}
 
-		_, err = s.networks[0].RunValidator(valIdx, valIdx == 0)
+		_, err = s.networks[0].RunValidator(valIdx)
 		s.Require().NoError(err)
 	}
 

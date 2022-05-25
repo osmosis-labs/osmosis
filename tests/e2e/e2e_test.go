@@ -16,7 +16,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {
-	_, err := s.networks[0].RunValidator(3, true)
+	_, err := s.networks[0].RunValidator(3)
 	s.Require().NoError(err)
 
 	doneCondition := func(syncInfo coretypes.SyncInfo) bool {

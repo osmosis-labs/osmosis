@@ -73,6 +73,8 @@ func (n *Network) GetVotingPeriod() int64 {
 // GetCurrentHeightFromValidator returns current height by querying a validator with
 // validatorIndex.
 func (n *Network) GetCurrentHeightFromValidator(validatorIndex int) (int64, error) {
+	n.dockerResources.ExecValidator(n.chain.ChainMeta.Id, validatorIndex, []string{"osmosisd", "status"})
+
 	hostPort := n.dockerResources.Validators[n.chain.ChainMeta.Id][0].GetHostPort("26657/tcp")
 	rpcClient, err := rpchttp.New("tcp://"+hostPort, "/websocket")
 	if err != nil {
@@ -156,7 +158,7 @@ func (n *Network) RunValidators() ([]*dockertest.Resource, error) {
 	for i := range chain.Validators {
 		// expose the first two validators for state sync. State-sync needs at least
 		// 2 RPC servers to be enabled to work.
-		_, err := n.RunValidator(i, i == 0 || i == 1)
+		_, err := n.RunValidator(i)
 		if err != nil {
 			return nil, err
 		}
@@ -174,12 +176,12 @@ func (n *Network) RunValidators() ([]*dockertest.Resource, error) {
 	return n.dockerResources.Validators[n.chain.ChainMeta.Id], nil
 }
 
-func (n *Network) RunValidator(validatorIndex int, shouldExposePorts bool) (*dockertest.Resource, error) {
+func (n *Network) RunValidator(validatorIndex int) (*dockertest.Resource, error) {
 	runOpts := n.getValidatorOptions(validatorIndex)
-	if shouldExposePorts {
-		runOpts.PortBindings = n.getPortBindings()
-		n.t.Logf("exposing ports for validator %s with port mapping: \n%v\n", n.chain.Validators[validatorIndex].Name, runOpts.PortBindings)
-	}
+
+	runOpts.PortBindings = n.getPortBindings()
+	n.t.Logf("exposing ports for validator %s with port mapping: \n%v\n", n.chain.Validators[validatorIndex].Name, runOpts.PortBindings)
+
 	resource, err := n.dockerResources.Pool.RunWithOptions(runOpts, noRestart)
 	if err != nil {
 		return nil, err
@@ -209,16 +211,11 @@ func (c *Network) getValidatorOptions(valIndex int) *dockertest.RunOptions {
 func (c *Network) getPortBindings() map[docker.Port][]docker.PortBinding {
 	portOffset := portoffset.GetNext()
 	return map[docker.Port][]docker.PortBinding{
-		"1317/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}},
-		"6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}},
-		"6061/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6061+portOffset)}},
-		"6062/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6062+portOffset)}},
-		"6063/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6063+portOffset)}},
-		"6064/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6064+portOffset)}},
-		"6065/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6065+portOffset)}},
-		"9090/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 9090+portOffset)}},
-		"26656/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26656+portOffset)}},
-		"26657/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26657+portOffset)}},
+		// "1317/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}}, // API server
+		// "6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}}, // pprof address
+		// "9090/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 9090+portOffset)}}, // gRPC server address
+		// "26656/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26656+portOffset)}}, # p2p listen address
+		"26657/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26657+portOffset)}}, // Tendermint RPC
 	}
 }
 
