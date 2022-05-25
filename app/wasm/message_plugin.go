@@ -182,7 +182,7 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 }
 
 func (m *CustomMessenger) exitPool(ctx sdk.Context, contractAddr sdk.AccAddress, exitPool *wasmbindings.ExitPool) ([]sdk.Event, [][]byte, error) {
-	_, err := PerformExit(m.gammKeeper, ctx, contractAddr, exitPool)
+	err := PerformExit(m.gammKeeper, ctx, contractAddr, exitPool)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "exit pool")
 	}
@@ -194,7 +194,7 @@ func PerformExit(g *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddr
 		return wasmvmtypes.InvalidRequest{Err: "join pool null"}
 	}
 
-	coins, err := g.ExitPool(ctx, contractAddr, exitPool.PoolId, exitPool.ShareInAmount, exitPool.TokenOutMins)
+	_, err := g.ExitPool(ctx, contractAddr, exitPool.PoolId, exitPool.ShareInAmount, exitPool.TokenOutMins)
 
 	if err != nil {
 		return err
