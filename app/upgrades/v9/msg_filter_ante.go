@@ -7,7 +7,7 @@ import (
 	ibcchanneltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 )
 
-// MsgFilterDecorator defines an AnteHandler decorator for the v8 upgrade that
+// MsgFilterDecorator defines an AnteHandler decorator for the v9 upgrade that
 // provide height-gated message filtering acceptance.
 type MsgFilterDecorator struct{}
 
