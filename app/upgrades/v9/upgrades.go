@@ -29,8 +29,8 @@ func CreateUpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		ExecuteProp214(ctx, keepers.GAMMKeeper)
-    
-         // We set the app version to pre-upgrade because it will be incremented by one
+
+		// We set the app version to pre-upgrade because it will be incremented by one
 		// after the upgrade is applied by the handler.
 		if err := keepers.UpgradeKeeper.SetAppVersion(ctx, preUpgradeAppVersion); err != nil {
 			return nil, err
