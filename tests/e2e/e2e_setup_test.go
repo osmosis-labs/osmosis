@@ -169,9 +169,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	for _, network := range s.networks {
-		networkResources, err := network.RunValidators()
+		validatorResources, err := network.RunValidators()
 		s.Require().NoError(err)
-		s.dockerResources.Validators[network.GetChain().ChainMeta.Id] = networkResources
+		s.dockerResources.Validators[network.GetChain().ChainMeta.Id] = validatorResources
+
+		s.Require().NoError(network.WaitUntilHeight(3))
 	}
 
 	if !s.skipIBC {
@@ -445,32 +447,19 @@ func (s *IntegrationTestSuite) upgrade() {
 }
 
 func (s *IntegrationTestSuite) upgradeContainers(network *net.Network) {
+	s.dockerImages.SwitchToUpgradeImages()
 	// upgrade containers to the locally compiled daemon
 	chain := network.GetChain()
 	s.T().Logf("starting upgrade for chain-id: %s...", chain.ChainMeta.Id)
-	pwd, err := os.Getwd()
+
+	newValidatorResources, err := network.RunValidators()
 	s.Require().NoError(err)
-
-	for _, val := range chain.Validators {
-		runOpts := &dockertest.RunOptions{
-			Name:       val.Name,
-			Repository: dockerconfig.LocalOsmoRepository,
-			Tag:        dockerconfig.LocalOsmoTag,
-			NetworkID:  s.dockerResources.Network.Network.ID,
-			User:       "root:root",
-			Mounts: []string{
-				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
-				fmt.Sprintf("%s/scripts:/osmosis", pwd),
-			},
-		}
-		resource, err := s.dockerResources.Pool.RunWithOptions(runOpts, noRestart)
-		s.Require().NoError(err)
-
-		s.dockerResources.Validators[chain.ChainMeta.Id][val.Index] = resource
-		s.T().Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
-	}
+	s.dockerResources.Validators[network.GetChain().ChainMeta.Id] = newValidatorResources
 
 	propHeight := network.GetProposalHeight()
+
+	s.Require().NoError(network.WaitUntilHeight(propHeight))
+
 	// check that we are creating blocks again
 	for i := range chain.Validators {
 		s.Require().Eventually(

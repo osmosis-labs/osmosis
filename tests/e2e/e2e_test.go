@@ -23,14 +23,17 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	if s.skipStateSync {
 		s.T().Skip()
 	}
+	network := s.networks[0]
 
-	_, err := s.networks[0].RunValidator(3)
+	// peer := network.GetValidatorRPCClient(0)
+
+	_, err := network.RunValidator(3)
 	s.Require().NoError(err)
 
 	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
 		return !syncInfo.CatchingUp
 	}
 
-	err = s.networks[0].WaitUntil(3, doneCondition)
+	err = network.WaitUntil(3, doneCondition)
 	s.Require().NoError(err)
 }

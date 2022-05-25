@@ -44,9 +44,10 @@ const (
 )
 
 // Returns ImageConfig needed for running e2e test.
-// If isUpgrade is true, returns images for running the upgrade
-// Otherwise, returns images for running non-upgrade e2e tests.
-func NewImageConfig(isUpgrade bool) *ImageConfig {
+// If isPreviousVersion is true, returns images for running the
+// previous version of Osmosis.
+// Otherwise, returns images for running Osmosis that should be built locally.
+func NewImageConfig(isPreviousVersion bool) *ImageConfig {
 	config := &ImageConfig{
 		RelayerRepository: relayerRepository,
 		RelayerTag:        relayerTag,
@@ -55,7 +56,7 @@ func NewImageConfig(isUpgrade bool) *ImageConfig {
 		StateSyncTag:        localStateSyncTag,
 	}
 
-	if isUpgrade {
+	if isPreviousVersion {
 		config.InitRepository = previousVersionInitRepository
 		config.InitTag = previousVersionInitTag
 
@@ -70,4 +71,9 @@ func NewImageConfig(isUpgrade bool) *ImageConfig {
 	}
 
 	return config
+}
+
+func (ic *ImageConfig) SwitchToUpgradeImages() {
+	ic.OsmosisRepository = LocalOsmoRepository
+	ic.OsmosisTag = LocalOsmoTag
 }
