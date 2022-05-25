@@ -6,6 +6,13 @@
 
 FROM golang:1.18.2-alpine3.15 as build
 
+ARG NAME="osmosis"
+ARG APP_NAME="osmosisd"
+ARG VERSION 
+ARG COMMIT
+ARG COSMWASM_VERSION="v1.0.0"
+ARG BUILD_TAGS="netgo ledger muslc"
+
 RUN set -eux; apk add --no-cache ca-certificates build-base;
 RUN apk add git
 # Needed by github.com/zondax/hid
@@ -15,17 +22,18 @@ WORKDIR /osmosis
 COPY . /osmosis
 
 # CosmWasm: see https://github.com/CosmWasm/wasmvm/releases
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
-RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep 7d2239e9f25e96d0d4daba982ce92367aacf0cbd95d2facb8442268f2b1cc1fc
-RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep f6282df732a13dec836cda1f399dd874b1e3163504dbd9607c6af915b2740479
+ADD https://github.com/CosmWasm/wasmvm/releases/download/$COSMWASM_VERSION/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
+ADD https://github.com/CosmWasm/wasmvm/releases/download/$COSMWASM_VERSION/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
 
 # CosmWasm: copy the right library according to architecture. The final location will be found by the linker flag `-lwasmvm_muslc`
 RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 
-# Build
-RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
-RUN mkdir /artifacts/
-RUN cp /osmosis/build/osmosisd /artifacts/osmosisd
+RUN go build \
+    -mod=readonly \
+    -tags "$BUILD_TAGS" \
+    -ldflags "-X github.com/osmosis-labs/osmosis/version.Name=$NAME -X github.com/osmosis-labs/osmosis/version.AppName=$APP_NAME -X github.com/osmosis-labs/osmosis/version.Version=$VERSION -X github.com/osmosis-labs/osmosis/version.Commit=$COMMIT -X github.com/osmosis-labs/osmosis/version.BuildTags='netgo,ledger,muslc' -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
+    -trimpath \
+    -o /osmosis/build/ \
+    ./...
 
 ENTRYPOINT ["ash"]
