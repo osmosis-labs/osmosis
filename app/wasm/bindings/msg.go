@@ -11,6 +11,9 @@ type OsmosisMsg struct {
 	Swap *SwapMsg `json:"swap,omitempty"`
 	/// Remove liquidity from a specified pool with an **exact** amount of LP shares while specifying the **minimum** number of tokens willing to receive for said LP shares.
 	ExitPool *ExitPool `json:"exit_pool,omitempty"`
+	/// Add liquidity to a specified pool to get an exact amount of LP shares while specifying a maximum number tokens
+	/// willing to swap to receive said LP shares.
+	JoinPool *JoinPool `json:"join_pool,omitempty"`
 }
 
 type MintTokens struct {
@@ -30,4 +33,10 @@ type ExitPool struct {
 	PoolId        uint64    `json:"pool_id"`
 	ShareInAmount sdk.Int   `json:"share_in_amount"`
 	TokenOutMins  sdk.Coins `json:"token_out_mins"`
+}
+
+type JoinPool struct {
+	PoolId         uint64    `json:"pool_id"`
+	ShareOutAmount sdk.Int   `json:"share_out_amount"`
+	TokenInMaxs    sdk.Coins `json:"token_in_maxs"`
 }

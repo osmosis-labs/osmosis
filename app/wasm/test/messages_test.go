@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v7/app/wasm"
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
@@ -520,6 +521,83 @@ func TestSwapMultiHop(t *testing.T) {
 			}
 			require.NoError(t, gotErr)
 			assert.InEpsilonf(t, (*spec.expCost.Out).ToDec().MustFloat64(), (*gotAmount.Out).ToDec().MustFloat64(), epsilon, "exp %s but got %s", spec.expCost.Out.String(), gotAmount.Out.String())
+		})
+	}
+}
+
+func TestJoinPool(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12_000_000),
+		sdk.NewInt64Coin("ustar", 240_000_000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	osmoStarLiquidity := sdk.NewCoins(sdk.NewInt64Coin("uosmo", 12_000),
+		sdk.NewInt64Coin("ustar", 240_000))
+
+	specs := map[string]struct {
+		join_pool *wasmbindings.JoinPool
+		expErr    bool
+	}{
+		"empty share out amount": {
+			join_pool: &wasmbindings.JoinPool{
+				PoolId:         starPool,
+				ShareOutAmount: sdk.NewInt(1),
+				TokenInMaxs:    osmoStarLiquidity,
+			},
+			expErr: true,
+		},
+		"incorrect pool id": {
+			join_pool: &wasmbindings.JoinPool{
+				PoolId:         starPool + uint64(10),
+				ShareOutAmount: sdk.NewInt(1),
+				TokenInMaxs:    osmoStarLiquidity,
+			},
+			expErr: true,
+		},
+		"empty coins array": {
+			join_pool: &wasmbindings.JoinPool{
+				PoolId:         starPool,
+				ShareOutAmount: sdk.NewInt(1),
+				TokenInMaxs:    sdk.NewCoins(),
+			},
+			expErr: true,
+		},
+		"sending one coin": {
+			join_pool: &wasmbindings.JoinPool{
+				PoolId:         starPool,
+				ShareOutAmount: sdk.NewInt(1),
+				TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("osmo", sdk.NewInt(10))),
+			},
+			expErr: true,
+		},
+		"valid join pool": {
+			join_pool: &wasmbindings.JoinPool{
+				PoolId:         starPool,
+				ShareOutAmount: sdk.NewInt(1000000),
+				TokenInMaxs:    osmoStarLiquidity,
+			},
+			expErr: false,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// use scratch context to avoid interference between tests
+			subCtx, _ := ctx.CacheContext()
+			// when
+			gotErr := wasm.PerformJoin(osmosis.GAMMKeeper, subCtx, actor, spec.join_pool)
+			// then
+			if spec.expErr {
+				require.Error(t, gotErr)
+				return
+			}
+			require.NoError(t, gotErr)
 		})
 	}
 }
