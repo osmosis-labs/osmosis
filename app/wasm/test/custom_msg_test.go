@@ -39,7 +39,7 @@ func TestCreateDenomMsg(t *testing.T) {
 	query := wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
 			Contract: reflect.String(),
-			SubDenom: "SUN",
+			Subdenom: "SUN",
 		},
 	}
 	resp := wasmbindings.FullDenomResponse{}
@@ -91,7 +91,7 @@ func TestMintMsg(t *testing.T) {
 	query := wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
 			Contract: reflect.String(),
-			SubDenom: "SUN",
+			Subdenom: "SUN",
 		},
 	}
 	resp := wasmbindings.FullDenomResponse{}
@@ -113,7 +113,7 @@ func TestMintMsg(t *testing.T) {
 	query = wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
 			Contract: reflect.String(),
-			SubDenom: "SUN",
+			Subdenom: "SUN",
 		},
 	}
 	resp = wasmbindings.FullDenomResponse{}
@@ -148,7 +148,7 @@ func TestMintMsg(t *testing.T) {
 	query = wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
 			Contract: reflect.String(),
-			SubDenom: "MOON",
+			Subdenom: "MOON",
 		},
 	}
 	resp = wasmbindings.FullDenomResponse{}
@@ -165,7 +165,7 @@ func TestMintMsg(t *testing.T) {
 	query = wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
 			Contract: reflect.String(),
-			SubDenom: "SUN",
+			Subdenom: "SUN",
 		},
 	}
 	resp = wasmbindings.FullDenomResponse{}
