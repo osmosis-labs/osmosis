@@ -128,7 +128,6 @@ import (
 
 	osmolbpkeeper "github.com/osmosis-labs/osmosis/x/osmolbp/keeper"
 	osmolbpmodule "github.com/osmosis-labs/osmosis/x/osmolbp/module"
-	osmolbptypes "github.com/osmosis-labs/osmosis/x/osmolbp/api"
 )
 
 const appName = "OsmosisApp"
@@ -727,7 +726,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
-	paramsKeeper.Subspace(osmolbptypes.ModuleName)
+	paramsKeeper.Subspace(osmolbp.ModuleName)
 
 	return paramsKeeper
 }
