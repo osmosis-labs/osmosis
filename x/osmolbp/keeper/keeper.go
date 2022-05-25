@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
+	"github.com/osmosis-labs/osmosis/x/osmolbp"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -30,5 +30,5 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, bank BankKee
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", api.ModuleName))
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", osmolbp.ModuleName))
 }

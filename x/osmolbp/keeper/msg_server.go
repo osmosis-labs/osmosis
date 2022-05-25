@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -9,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
+	"github.com/osmosis-labs/osmosis/x/osmolbp"
 )
 
 var _ api.MsgServer = Keeper{}
@@ -68,7 +69,7 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 	}
 
 	coin := sdk.NewCoin(p.TokenIn, msg.Amount)
-	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, api.ModuleName, sdk.NewCoins(coin))
+	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, osmolbp.ModuleName, sdk.NewCoins(coin))
 	if err != nil {
 		return errors.Wrap(err, "user doesn't have enough tokens to subscribe for a LBP")
 	}
@@ -108,7 +109,7 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes
 		return err
 	}
 	coin := sdk.NewCoin(p.TokenIn, *msg.Amount)
-	err = k.bank.SendCoinsFromModuleToAccount(ctx, api.ModuleName, sender, sdk.NewCoins(coin))
+	err = k.bank.SendCoinsFromModuleToAccount(ctx, osmolbp.ModuleName, sender, sdk.NewCoins(coin))
 	if err != nil {
 		return err
 	}
@@ -148,7 +149,7 @@ func (k Keeper) exitLBP(ctx sdk.Context, msg *api.MsgExitLBP, store storetypes.K
 	// we don't need to update u.Spent, because we delete user record
 
 	coin := sdk.NewCoin(p.TokenOut, u.Purchased)
-	err = k.bank.SendCoinsFromModuleToAccount(ctx, api.ModuleName, sender, sdk.NewCoins(coin))
+	err = k.bank.SendCoinsFromModuleToAccount(ctx, osmolbp.ModuleName, sender, sdk.NewCoins(coin))
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -157,7 +158,7 @@ func (k Keeper) exitLBP(ctx sdk.Context, msg *api.MsgExitLBP, store storetypes.K
 	if u.Shares.IsPositive() || u.Staked.IsPositive() {
 		ctx.Logger().Error("user has outstanding token_in balance", "user", msg.Sender, "balance", u.Staked)
 		coin = sdk.NewCoin(p.TokenIn, u.Staked)
-		err = k.bank.SendCoinsFromModuleToAccount(ctx, api.ModuleName, sender, sdk.NewCoins(coin))
+		err = k.bank.SendCoinsFromModuleToAccount(ctx, osmolbp.ModuleName, sender, sdk.NewCoins(coin))
 		if err != nil {
 			return sdk.Int{}, err
 		}
@@ -201,7 +202,7 @@ func (k Keeper) finalizeLBP(ctx sdk.Context, msg *api.MsgFinalizeLBP, store stor
 
 	pingLBP(&p, ctx.BlockTime())
 	coin := sdk.NewCoin(p.TokenOut, p.Income)
-	err = k.bank.SendCoinsFromModuleToAccount(ctx, api.ModuleName, treasury, sdk.NewCoins(coin))
+	err = k.bank.SendCoinsFromModuleToAccount(ctx, osmolbp.ModuleName, treasury, sdk.NewCoins(coin))
 	if err != nil {
 		return sdk.Int{}, err
 	}
