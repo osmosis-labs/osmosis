@@ -1,10 +1,10 @@
 # Token Factory
 
 The tokenfactory module allows any account to create a new token with
-the name `factory/{creator address}/{nonce}`. Because tokens are
+the name `factory/{creator address}/{subdenom}`. Because tokens are
 namespaced by creator address, this allows token minting to be
 permissionless, due to not needing to resolve name collisions. A single
-account can create multiple denoms, by providing a unique nonce for each
+account can create multiple denoms, by providing a unique subdenom for each
 created denom. Once a denom is created, the original creator is given
 "admin" privileges over the asset. This allows them to:
 
@@ -48,7 +48,7 @@ message MsgMint {
 ```
 
 **State Modifications:**
-- Saftey check the following
+- Safety check the following
   - Check that the denom minting is created via `tokenfactory` module
   - Check that the sender of the message is the admin of the denom
 - Mint designated amount of tokens for the denom via `bank` module
@@ -87,3 +87,7 @@ message MsgChangeAdmin {
 **State Modifications:**
 - Check that sender of the message is the admin of denom
 - Modify `AuthorityMetadata` state entry to change the admin of the denom
+
+## Expectations from the chain
+
+The chain's bech32 prefix for addresses can be at most 16 characters long.

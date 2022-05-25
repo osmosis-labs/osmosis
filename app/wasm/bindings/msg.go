@@ -14,16 +14,16 @@ type OsmosisMsg struct {
 }
 
 type CreateDenom struct {
-	/// Sub_denoms (nonces) are validated as part of the full denomination.
+	/// Subdenoms (nonces) are validated as part of the full denomination.
 	/// Can be up to 128 - prefix length (currently 7) - bech32 address length (4 (osmo) + 39) - number of separators (2) =
 	/// 76 "alphanumeric" (https://github.com/cosmos/cosmos-sdk/blob/2646b474c7beb0c93d4fafd395ef345f41afc251/types/coin.go#L677)
 	/// characters long.
-	/// Empty sub-denoms are valid. The token will then be prefix + contract address, i.e. "factory/<bech32 address>/"
-	SubDenom string `json:"sub_denom"`
+	/// Empty subdenoms are valid. The token will then be prefix + contract address, i.e. "factory/<bech32 address>/"
+	Subdenom string `json:"subdenom"`
 }
 
 type MintTokens struct {
-	SubDenom  string  `json:"sub_denom"`
+	Subdenom  string  `json:"subdenom"`
 	Amount    sdk.Int `json:"amount"`
 	Recipient string  `json:"recipient"`
 }

@@ -18,11 +18,15 @@ service Msg {
 }
 
 // MsgCreateDenom is the sdk.Msg type for allowing an account to create
-// a new denom.  It requires a sender address and a unique nonce
-// (to allow accounts to create multiple denoms)
+// a new denom. It requires a sender address and a subdenomination.
+// The (sender_address, sub_denomination) pair must be unique and cannot be re-used.
+// The resulting denom created is `factory/{creator address}/{subdenom}`.
+// The resultant denom's admin is originally set to be the creator, but this can be changed later.
+// The token denom does not indicate the current admin.
 message MsgCreateDenom {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  string nonce = 2 [ (gogoproto.moretags) = "yaml:\"nonce\"" ];
+  // subdenom can be up to 64 "alphanumeric" characters long.
+  string subdenom = 2 [ (gogoproto.moretags) = "yaml:\"subdenom\"" ];
 }
 
 // MsgCreateDenomResponse is the return value of MsgCreateDenom
