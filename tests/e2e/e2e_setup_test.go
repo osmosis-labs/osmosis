@@ -238,11 +238,6 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 			},
 			Repository: debugRepository,
 			Tag:        debugVersion,
-			// Entrypoint: []string{
-			// 	"sh",
-			// 	"-c",
-			// 	"chmod +x /osmosis/genesis_mod.sh && /osmosis/genesis_mod.sh",
-			// },
 			Cmd: []string{
 				"start",
 			},

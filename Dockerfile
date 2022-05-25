@@ -1,3 +1,4 @@
+
 # syntax=docker/dockerfile:1
 
 ARG BASE_IMG_TAG=nonroot
@@ -31,8 +32,7 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 # Runner
 # --------------------------------------------------------
 
-FROM ubuntu
-RUN apt-get update && apt-get install -y jq moreutils
+FROM gcr.io/distroless/base-debian11:${BASE_IMG_TAG}
 
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 
