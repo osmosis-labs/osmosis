@@ -16,8 +16,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/x/osmolbp"
 	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
-	"github.com/osmosis-labs/osmosis/x/osmolbp/keeper"
 	"github.com/osmosis-labs/osmosis/x/osmolbp/client/cli"
+	"github.com/osmosis-labs/osmosis/x/osmolbp/keeper"
 )
 
 var (
@@ -132,14 +132,14 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	var genState api.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(data, &genState)
-	osmolbp.InitGenesis(ctx, am.keeper, genState)
+	keeper.InitGenesis(ctx, am.keeper, genState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the osmolbp
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := osmolbp.ExportGenesis(ctx, am.keeper)
+	gs := keeper.ExportGenesis(ctx, am.keeper)
 	return cdc.MustMarshalJSON(gs)
 }
 

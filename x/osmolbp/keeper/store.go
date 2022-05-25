@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -9,11 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
+	"github.com/osmosis-labs/osmosis/x/osmolbp"
 )
 
 // StoreKey is the store key string for osmolbp
-const StoreKey = api.ModuleName
+const StoreKey = osmolbp.ModuleName
 
 var (
 	lbpSeqStoreKey = []byte{0} // lbp id sequence
