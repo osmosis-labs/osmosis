@@ -20,6 +20,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v9/app/keepers"
 )
 
+const preUpgradeAppVersion = 8
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -27,6 +29,12 @@ func CreateUpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		ExecuteProp214(ctx, keepers.GAMMKeeper)
+
+		// We set the app version to pre-upgrade because it will be incremented by one
+		// after the upgrade is applied by the handler.
+		if err := keepers.UpgradeKeeper.SetAppVersion(ctx, preUpgradeAppVersion); err != nil {
+			return nil, err
+		}
 
 		// Add Interchain Accounts host module
 		// set the ICS27 consensus version so InitGenesis is not run
