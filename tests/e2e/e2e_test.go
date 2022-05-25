@@ -17,7 +17,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 		// lock tokens from validator 0 on chain A
 		s.lockTokens(chainA, 0, "100000000000000000000gamm/pool/1", "240s", "val2")
 		// superfluid delegate from validator 0 non self-delegation wallet to validator 1 on chain A
-		s.superfluidDelegate(chainA, "100000000000000000000gamm/pool/1", chainA.Validators[1].OperAddress, "val2")
+		s.superfluidDelegate(chainA, s.chainConfigs[0].chain.Validators[1].OperAddress, "val2")
 		// create a text prop, deposit and vote yes
 		s.submitTextProposal(chainA, "superfluid vote overwrite test")
 		s.depositProposal(chainA)

@@ -632,11 +632,11 @@ func (s *IntegrationTestSuite) lockTokens(c *chain.Chain, i int, tokens string, 
 
 }
 
-func (s *IntegrationTestSuite) superfluidDelegate(c *chain.Chain, tokens string, valAddress string, from string) {
+func (s *IntegrationTestSuite) superfluidDelegate(c *chain.Chain, valAddress string, from string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	s.T().Logf("superfluid delegating %s to %s on chain-id: %s", tokens, valAddress, c.ChainMeta.Id)
 	lockStr := strconv.Itoa(c.LockNumber)
+	s.T().Logf("superfluid delegating lock %s to %s on chain-id: %s", lockStr, valAddress, c.ChainMeta.Id)
 	var (
 		outBuf bytes.Buffer
 		errBuf bytes.Buffer

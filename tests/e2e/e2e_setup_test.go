@@ -174,6 +174,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.configureChain(chain.ChainBID, validatorConfigsChainB, map[int]struct{}{})
 
 	for i, chainConfig := range s.chainConfigs {
+		s.extractOperAddress(s.chainConfigs[i].chain)
 		s.runValidators(chainConfig, s.dockerImages.OsmosisRepository, s.dockerImages.OsmosisTag, i*10)
 	}
 
