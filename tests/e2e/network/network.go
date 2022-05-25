@@ -179,7 +179,12 @@ func (n *Network) RunValidators() ([]*dockertest.Resource, error) {
 func (n *Network) RunValidator(validatorIndex int) (*dockertest.Resource, error) {
 	runOpts := n.getValidatorOptions(validatorIndex)
 
-	runOpts.PortBindings = n.getPortBindings()
+	var err error
+	runOpts.PortBindings, err = n.getPortBindings()
+	if err != nil {
+		return nil, err
+	}
+
 	n.t.Logf("exposing ports for validator %s with port mapping: \n%v\n", n.chain.Validators[validatorIndex].Name, runOpts.PortBindings)
 
 	resource, err := n.dockerResources.Pool.RunWithOptions(runOpts, noRestart)
@@ -208,15 +213,18 @@ func (c *Network) getValidatorOptions(valIndex int) *dockertest.RunOptions {
 	}
 }
 
-func (c *Network) getPortBindings() map[docker.Port][]docker.PortBinding {
-	portOffset := portoffset.GetNext()
+func (c *Network) getPortBindings() (map[docker.Port][]docker.PortBinding, error) {
+	freePort, err := portoffset.GetFreePort()
+	if err != nil {
+		return nil, err
+	}
 	return map[docker.Port][]docker.PortBinding{
 		// "1317/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}}, // API server
 		// "6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}}, // pprof address
 		// "9090/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 9090+portOffset)}}, // gRPC server address
 		// "26656/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26656+portOffset)}}, # p2p listen address
-		"26657/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26657+portOffset)}}, // Tendermint RPC
-	}
+		"26657/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", freePort)}}, // Tendermint RPC
+	}, nil
 }
 
 func noRestart(config *docker.HostConfig) {
