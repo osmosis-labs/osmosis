@@ -155,7 +155,7 @@ func (n *Network) WaitUntil(validatorIndex int, doneCondition func(syncInfo core
 	return fmt.Errorf("validator with index %d timed out waiting for condition, latest block height was %d", validatorIndex, latestBlockHeight)
 }
 
-// WaitUntilHeight waits for all validators to reach the specified height at teh minimum.
+// WaitUntilHeight waits for all validators to reach the specified height at the minimum.
 // returns error, if any.
 func (n *Network) WaitUntilHeight(height int64) error {
 	// Ensure the nodes are making progress.
