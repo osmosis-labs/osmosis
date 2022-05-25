@@ -25,7 +25,7 @@ service Msg {
 // The token denom does not indicate the current admin.
 message MsgCreateDenom {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  // subdenom can be up to 64 "alphanumeric" characters long.
+  // subdenom can be up to 44 "alphanumeric" characters long.
   string subdenom = 2 [ (gogoproto.moretags) = "yaml:\"subdenom\"" ];
 }
 
