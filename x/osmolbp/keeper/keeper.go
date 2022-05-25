@@ -19,11 +19,12 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a new osmolbp Keeper
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, bank BankKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, bank BankKeeper, paramSpace paramtypes.Subspace) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
 		bank:     bank,
+		paramSpace: paramSpace,
 	}
 }
 
