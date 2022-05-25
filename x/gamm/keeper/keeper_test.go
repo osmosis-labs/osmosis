@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], poolParams, poolAssets, ""),
 	)
-	suite.Require().Error(err)
+	suite.Require().NoError(err)
 
 	return poolID
 }
