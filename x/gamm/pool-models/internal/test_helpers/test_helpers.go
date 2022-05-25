@@ -3,8 +3,12 @@ package test_helpers
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
@@ -12,6 +16,15 @@ import (
 
 type CfmmCommonTestSuite struct {
 	suite.Suite
+}
+
+func (suite *CfmmCommonTestSuite) CreateTestContext() sdk.Context {
+	db := dbm.NewMemDB()
+	logger := log.NewNopLogger()
+
+	ms := rootmulti.NewStore(db, logger)
+
+	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
 func (suite *CfmmCommonTestSuite) TestCalculateAmountOutAndIn_InverseRelationship(

@@ -170,7 +170,7 @@ func (suite *BalancerTestSuite) Test_Balancer_CalculateAmountOutAndIn_InverseRel
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
 			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
-				ctx := createTestContext(t)
+				ctx := suite.CreateTestContext()
 
 				poolAssetOut := balancer.PoolAsset{
 					Token:  sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut),

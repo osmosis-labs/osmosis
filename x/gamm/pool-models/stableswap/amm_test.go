@@ -187,7 +187,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
 			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
-				ctx := createTestContext(t)
+				ctx := suite.CreateTestContext()
 
 				poolLiquidityIn := sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut)
 				poolLiquidityOut := sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn)
