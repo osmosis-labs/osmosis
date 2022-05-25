@@ -18,11 +18,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	k.SetParams(ctx, genState.Params)
 
 	for _, genDenom := range genState.GetFactoryDenoms() {
-		creator, nonce, err := types.DeconstructDenom(genDenom.GetDenom())
+		creator, subdenom, err := types.DeconstructDenom(genDenom.GetDenom())
 		if err != nil {
 			panic(err)
 		}
-		_, err = k.CreateDenom(ctx, creator, nonce)
+		_, err = k.CreateDenom(ctx, creator, subdenom)
 		if err != nil {
 			panic(err)
 		}

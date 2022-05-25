@@ -4308,14 +4308,18 @@ adminship of a denom to a new account
 
 ### MsgCreateDenom
 MsgCreateDenom is the sdk.Msg type for allowing an account to create
-a new denom.  It requires a sender address and a unique nonce
-(to allow accounts to create multiple denoms)
+a new denom. It requires a sender address and a subdenomination.
+The (sender_address, sub_denomination) pair must be unique and cannot be
+re-used. The resulting denom created is `factory/{creator
+address}/{subdenom}`. The resultant denom's admin is originally set to be the
+creator, but this can be changed later. The token denom does not indicate the
+current admin.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `nonce` | [string](#string) |  |  |
+| `subdenom` | [string](#string) |  | subdenom can be up to 44 "alphanumeric" characters long. |
 
 
 

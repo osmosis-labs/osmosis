@@ -23,7 +23,7 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateDenom) (*types.MsgCreateDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	denom, err := server.Keeper.CreateDenom(ctx, msg.Sender, msg.Nonce)
+	denom, err := server.Keeper.CreateDenom(ctx, msg.Sender, msg.Subdenom)
 	if err != nil {
 		return nil, err
 	}

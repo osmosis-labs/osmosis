@@ -21,8 +21,8 @@ const (
 )
 
 // GetTokenDenom constructs a denom string for tokens created by tokenfactory
-// based on an input creator address and a nonce
-// The denom constructed is factory/{creator}/{nonce}
+// based on an input creator address and a subdenom
+// The denom constructed is factory/{creator}/{subdenom}
 func GetTokenDenom(creator, subdenom string) (string, error) {
 	if len(subdenom) > MaxSubdenomLength {
 		return "", ErrSubdenomTooLong
@@ -38,9 +38,9 @@ func GetTokenDenom(creator, subdenom string) (string, error) {
 }
 
 // DeconstructDenom takes a token denom string and verifies that it is a valid
-// denom of the tokenfactory module, and is of the form `factory/{creator}/{nonce}`
-// If valid, it returns the creator address and nonce
-func DeconstructDenom(denom string) (creator string, nonce string, err error) {
+// denom of the tokenfactory module, and is of the form `factory/{creator}/{subdenom}`
+// If valid, it returns the creator address and subdenom
+func DeconstructDenom(denom string) (creator string, subdenom string, err error) {
 	err = sdk.ValidateDenom(denom)
 	if err != nil {
 		return "", "", err
@@ -61,12 +61,12 @@ func DeconstructDenom(denom string) (creator string, nonce string, err error) {
 		return "", "", sdkerrors.Wrapf(ErrInvalidDenom, "Invalid creator address (%s)", err)
 	}
 
-	// Handle the case where a denom has a slash in its nonce. For example,
-	// when we did the split, we'd turn factory/sunnyaddr/atomderivative/sikka into ["factory", "sunnyaddr", "atomderivative", "sikka"]
-	// So we have to join [2:] with a "/" as the delimiter to get back the correct nonce which should be "atomderivative/sikka"
-	nonce = strings.Join(strParts[2:], "/")
+	// Handle the case where a denom has a slash in its subdenom. For example,
+	// when we did the split, we'd turn factory/accaddr/atomderivative/sikka into ["factory", "accaddr", "atomderivative", "sikka"]
+	// So we have to join [2:] with a "/" as the delimiter to get back the correct subdenom which should be "atomderivative/sikka"
+	subdenom = strings.Join(strParts[2:], "/")
 
-	return creator, nonce, nil
+	return creator, subdenom, nil
 }
 
 // NewTokenFactoryDenomMintCoinsRestriction creates and returns a BankMintingRestrictionFn that only allows minting of

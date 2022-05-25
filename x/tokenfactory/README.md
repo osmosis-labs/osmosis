@@ -21,18 +21,18 @@ created denom. Once a denom is created, the original creator is given
 ## Messages
 
 ### CreateDenom
-- Creates a denom of `factory/{creator address}/{nonce}` given the denom creator address and the denom nonce. The case a denom has a slash in its nonce is handled within the module.
+- Creates a denom of `factory/{creator address}/{subdenom}` given the denom creator address and the subdenom. Subdenoms can contain `[a-zA-Z0-9./]`.
 ``` {.go}
 message MsgCreateDenom {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  string nonce = 2 [ (gogoproto.moretags) = "yaml:\"nonce\"" ];
+  string subdenom = 2 [ (gogoproto.moretags) = "yaml:\"subdenom\"" ];
 }
 ```
 
 **State Modifications:**
 - Fund community pool with the denom creation fee from the creator address, set in `Params`
 - Set `DenomMetaData` via bank keeper
-- Set `AuthorityMetadata` for the given denom to store the admin for the created denom `factory/{creator address}/{nonce}`. Admin is automatically set as the Msg sender
+- Set `AuthorityMetadata` for the given denom to store the admin for the created denom `factory/{creator address}/{subdenom}`. Admin is automatically set as the Msg sender
 - Add denom to the `CreatorPrefixStore`, where a state of denoms created per creator is kept
 
 ### Mint
