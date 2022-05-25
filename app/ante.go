@@ -11,11 +11,19 @@ import (
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
+<<<<<<< HEAD
 	osmoante "github.com/osmosis-labs/osmosis/v9/ante"
 
 	v8 "github.com/osmosis-labs/osmosis/v9/app/upgrades/v8"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v9/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v9/x/txfees/types"
+=======
+	osmoante "github.com/osmosis-labs/osmosis/v7/ante"
+	v9 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v9"
+
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+>>>>>>> 78ed877 (Add msg_filter_ante_handler to block IBCTimeoutOnClose (#1571))
 )
 
 // Link to default ante handler used by cosmos sdk:
@@ -42,7 +50,7 @@ func NewAnteHandler(
 		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(txCounterStoreKey),
 		ante.NewRejectExtensionOptionsDecorator(),
-		v8.MsgFilterDecorator{},
+		v9.MsgFilterDecorator{},
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
 		mempoolFeeDecorator,
