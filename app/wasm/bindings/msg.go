@@ -9,6 +9,8 @@ type OsmosisMsg struct {
 	MintTokens *MintTokens `json:"mint_tokens,omitempty"`
 	/// Swap over one or more pools
 	Swap *SwapMsg `json:"swap,omitempty"`
+	/// Remove liquidity from a specified pool with an **exact** amount of LP shares while specifying the **minimum** number of tokens willing to receive for said LP shares.
+	ExitPool *ExitPool `json:"exit_pool,omitempty"`
 }
 
 type MintTokens struct {
@@ -22,4 +24,10 @@ type SwapMsg struct {
 	First  Swap                `json:"first"`
 	Route  []Step              `json:"route"`
 	Amount SwapAmountWithLimit `json:"amount"`
+}
+
+type ExitPool struct {
+	PoolId        uint64    `json:"pool_id"`
+	ShareInAmount sdk.Int   `json:"share_in_amount"`
+	TokenOutMins  sdk.Coins `json:"token_out_mins"`
 }
