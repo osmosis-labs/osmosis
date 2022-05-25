@@ -457,25 +457,7 @@ func (s *IntegrationTestSuite) upgradeContainers(network *net.Network) {
 	s.dockerResources.Validators[network.GetChain().ChainMeta.Id] = newValidatorResources
 
 	propHeight := network.GetProposalHeight()
-
 	s.Require().NoError(network.WaitUntilHeight(propHeight))
-
-	// check that we are creating blocks again
-	for i := range chain.Validators {
-		s.Require().Eventually(
-			func() bool {
-				currentHeight, err := network.GetCurrentHeightFromValidator(i)
-				s.Require().NoError(err)
-				if currentHeight <= propHeight {
-					s.T().Logf("current block height on %s is %v, waiting to create blocks container: %s", s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.Name[1:], currentHeight, s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.ID)
-				}
-				return currentHeight > propHeight
-			},
-			5*time.Minute,
-			time.Second,
-		)
-		s.T().Logf("upgrade successful on %s validator container: %s", s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.Name[1:], s.dockerResources.Validators[chain.ChainMeta.Id][i].Container.ID)
-	}
 }
 
 func (s *IntegrationTestSuite) configureStateSync(network *net.Network) {
