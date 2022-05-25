@@ -14,19 +14,21 @@ func TestSendBlockDecorator(t *testing.T) {
 		to         sdk.AccAddress
 		expectPass bool
 	}{
-		{sdk.AccAddress("honest-sender"), sdk.AccAddress("honest-address"), true},
-		{sdk.AccAddress("honest-sender"), sdk.AccAddress("recovery-address"), true},
-		{sdk.AccAddress("malicious-sender"), sdk.AccAddress("recovery-address"), true},
-		{sdk.AccAddress("malicious-sender"), sdk.AccAddress("random-address"), false},
+		{sdk.AccAddress("honest-sender_______"), sdk.AccAddress("honest-address"), true},
+		{sdk.AccAddress("honest-sender_______"), sdk.AccAddress("recovery-address"), true},
+		{sdk.AccAddress("malicious-sender____"), sdk.AccAddress("recovery-address"), true},
+		{sdk.AccAddress("malicious-sender____"), sdk.AccAddress("random-address"), false},
 	}
 
 	permittedOnlySendTo := map[string]string{
-		sdk.AccAddress("malicious-sender").String(): sdk.AccAddress("recovery-address").String(),
+		sdk.AccAddress("malicious-sender____").String(): sdk.AccAddress("recovery-address").String(),
 	}
 	decorator := NewSendBlockDecorator(SendBlockOptions{permittedOnlySendTo})
 
 	for _, testCase := range testCases {
-		err := decorator.CheckIfBlocked([]sdk.Msg{bank.NewMsgSend(testCase.from, testCase.to, sdk.NewCoins(sdk.NewInt64Coin("test", 1)))})
+		err := decorator.CheckIfBlocked(
+			[]sdk.Msg{
+				bank.NewMsgSend(testCase.from, testCase.to, sdk.NewCoins(sdk.NewInt64Coin("test", 1)))})
 		if testCase.expectPass {
 			require.NoError(t, err)
 		} else {
