@@ -78,8 +78,8 @@ func TestMintMsg(t *testing.T) {
 		Amount:    amount,
 		Recipient: lucky.String(),
 	}}
-	err1 := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
-	require.NoError(t, err1)
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
+	require.NoError(t, err)
 
 	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Len(t, balances, 1)
@@ -577,14 +577,14 @@ func TestJoinPoolMsg(t *testing.T) {
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    osmoStarLiquidity,
 	}}
-	err1 := executeCustom(t, ctx, osmosis, reflect, provider, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
+	err = executeCustom(t, ctx, osmosis, reflect, provider, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
 
-	require.Error(t, err1)
-	require.Equal(t, "0random is smaller than 10random: insufficient funds", err1.Error())
+	require.Error(t, err)
+	require.Equal(t, "0random is smaller than 10random: insufficient funds", err.Error())
 
-	err2 := executeCustom(t, ctx, osmosis, reflect, provider, msg, osmoStarLiquidity)
+	err = executeCustom(t, ctx, osmosis, reflect, provider, msg, osmoStarLiquidity)
 
-	require.NoError(t, err2)
+	require.NoError(t, err)
 
 	//Simualate sending share tokens to user
 	err = osmosis.BankKeeper.SendCoins(ctx, reflect, provider, sdk.NewCoins(sdk.NewCoin(poolDenom, sdk.NewInt(100000000000000000))))
@@ -601,10 +601,6 @@ func TestJoinPoolMsg(t *testing.T) {
 
 	require.Equal(t, sdk.NewCoin("uosmo", sdk.NewInt(12012000)), coinsInPoolAfter[0])
 	require.Equal(t, sdk.NewCoin("ustar", sdk.NewInt(240240000)), coinsInPoolAfter[1])
-
-	poolInfoAfterDeposit, err3 := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
-
-	require.NoError(t, err3)
 
 	totalSharesAfter := poolInfoAfterDeposit.GetTotalShares()
 
