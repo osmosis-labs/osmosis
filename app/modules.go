@@ -235,11 +235,6 @@ func simulationModules(
 ) []module.AppModuleSimulation {
 	appCodec := encodingConfig.Marshaler
 
-	// appModules := appModules(app, encodingConfig, skipGenesisInvariants)
-	// simulationModules := []module.AppModuleSimulation{}
-	// overrideSimulationModules := []module.AppModuleSimulation{
-	// 	auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
-	// }
 	return []module.AppModuleSimulation{
 		auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
