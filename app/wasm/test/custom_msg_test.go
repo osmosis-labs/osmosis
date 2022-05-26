@@ -473,7 +473,7 @@ func TestJoinPoolMsg(t *testing.T) {
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
-	actor := RandomAccountAddress()
+	provider := RandomAccountAddress()
 
 	providerFunds := sdk.NewCoins(
 		sdk.NewInt64Coin("uatom", 333000000),
@@ -482,7 +482,7 @@ func TestJoinPoolMsg(t *testing.T) {
 		sdk.NewInt64Coin("ustar", 999000000),
 	)
 	fundAccount(t, ctx, osmosis, creator, providerFunds)
-	fundAccount(t, ctx, osmosis, actor, providerFunds)
+	fundAccount(t, ctx, osmosis, provider, providerFunds)
 
 	// 20 star to 1 osmo
 	funds1 := []sdk.Coin{
@@ -511,14 +511,14 @@ func TestJoinPoolMsg(t *testing.T) {
 	require.Equal(t, "100000000000000000000", totalSharesBefore.String())
 
 	osmoStarLiquidity := sdk.NewCoins(sdk.NewInt64Coin("uosmo", 12_000), sdk.NewInt64Coin("ustar", 240_000))
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	reflect := instantiateReflectContract(t, ctx, osmosis, provider)
 
 	invalidMsg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
 		PoolId:         starPool,
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))),
 	}}
-	expectedErr := executeCustom(t, ctx, osmosis, reflect, actor, invalidMsg, osmoStarLiquidity)
+	expectedErr := executeCustom(t, ctx, osmosis, reflect, provider, invalidMsg, osmoStarLiquidity)
 	require.Error(t, expectedErr)
 	require.Equal(t, "dispatch: submessages: join pool: TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap, upperbound: 10random, needed 12000uosmo,240000ustar: calculated amount is larger than max amount", expectedErr.Error())
 
@@ -531,14 +531,21 @@ func TestJoinPoolMsg(t *testing.T) {
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    osmoStarLiquidity,
 	}}
-	err1 := executeCustom(t, ctx, osmosis, reflect, actor, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
+	err1 := executeCustom(t, ctx, osmosis, reflect, provider, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
 
 	require.Error(t, err1)
 	require.Equal(t, "0random is smaller than 10random: insufficient funds", err1.Error())
 
-	err2 := executeCustom(t, ctx, osmosis, reflect, actor, msg, osmoStarLiquidity)
+	err2 := executeCustom(t, ctx, osmosis, reflect, provider, msg, osmoStarLiquidity)
 
 	require.NoError(t, err2)
+
+	//Simualate sending share tokens to user
+	err = osmosis.BankKeeper.SendCoins(ctx, reflect, provider, sdk.NewCoins(sdk.NewCoin(poolDenom, sdk.NewInt(100000000000000000))))
+
+	providerBalanceAfterJoining := osmosis.BankKeeper.GetBalance(ctx, provider, poolDenom)
+
+	require.Equal(t, "100000000000000000", providerBalanceAfterJoining.Amount.String())
 
 	poolInfoAfterDeposit, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
 
@@ -556,10 +563,6 @@ func TestJoinPoolMsg(t *testing.T) {
 	totalSharesAfter := poolInfoAfterDeposit.GetTotalShares()
 
 	require.Equal(t, "100100000000000000000", totalSharesAfter.String())
-
-	contractBalance := osmosis.BankKeeper.GetBalance(ctx, reflect, poolDenom)
-
-	require.Equal(t, "100000000000000000", contractBalance.Amount.String())
 }
 
 // test setup for each run through the table test above
