@@ -155,6 +155,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	if str := os.Getenv("OSMOSIS_E2E_SKIP_UPGRADE"); len(str) > 0 {
 		skipUpgrade, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
+		s.T().Log("OSMOSIS_E2E_SKIP_UPGRADE was true, skipping upgrade tests")
 	}
 
 	s.dockerImages = *dockerconfig.NewImageConfig(!skipUpgrade)
