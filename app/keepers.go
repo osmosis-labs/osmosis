@@ -53,6 +53,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	mintkeeper "github.com/osmosis-labs/osmosis/x/mint/keeper"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
+	"github.com/osmosis-labs/osmosis/x/osmolbp"
 	osmolbpkeeper "github.com/osmosis-labs/osmosis/x/osmolbp/keeper"
 	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
@@ -258,7 +259,7 @@ func (app *OsmosisApp) InitNormalKeepers() {
 	)
 	app.TxFeesKeeper = &txFeesKeeper
 
-	app.OsmolbpKeeper = osmolbpkeeper.NewKeeper(keys[osmolbpkeeper.StoreKey], appCodec, bankKeeper)
+	app.OsmolbpKeeper = osmolbpkeeper.NewKeeper(keys[osmolbpkeeper.StoreKey], appCodec, bankKeeper, app.GetSubspace(osmolbp.ModuleName))
 
 	// register the proposal types
 	// TODO: This appears to be missing tx fees proposal type

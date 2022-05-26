@@ -2,17 +2,17 @@ package cli
 
 import (
 	"fmt"
-	"time"
-
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/osmosis-labs/osmosis/x/osmolbp"
 	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
+	"strings"
+	"time"
 )
 
 // GetTxCmd returns the transaction commands for this module.
@@ -27,6 +27,7 @@ func GetTxCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		CreateLBPCmd(),
+		FinalizeLBPCmd(),
 		SubscribeCmd(),
 		WithdrawCmd(),
 		ExitLBPCmd(),
@@ -40,7 +41,26 @@ func CreateLBPCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [flags]",
 		Short: "Create or Setup LBP",
-		Args:  cobra.ExactArgs(0),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`create a new LBP.
+
+Example:
+$ %s tx osmolbp create --lbp-file="path/to/lbp.json" --from mykey
+
+Where lbp.json contains:
+{
+	"token-in": "token1",
+	"token-out": "token2",
+	"initial-deposit": "1000token2",
+	"start-time": "2022-05-23T11:17:36.755Z",
+	"duration": 432000s,
+	"treasury": "osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6"
+}
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -60,11 +80,37 @@ func CreateLBPCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetCreateLBP())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagTokenIn)
-	_ = cmd.MarkFlagRequired(FlagTokenOut)
-	_ = cmd.MarkFlagRequired(FlagStartTime)
-	_ = cmd.MarkFlagRequired(FlagDuration)
-	_ = cmd.MarkFlagRequired(FlagInitialDeposit)
+	_ = cmd.MarkFlagRequired(FlagLBPFile)
+
+	return cmd
+}
+
+// finalizeLBP broadcasts MsgFinalizeLBP
+func FinalizeLBPCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "finalize [flags]",
+		Short: "Finalize LBP",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+
+			txf, msg, err := NewBuildFinalizeLBPMsg(clientCtx, txf, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+		},
+	}
+
+	cmd.Flags().AddFlagSet(FlagSetFinalizeLBP())
+	flags.AddTxFlagsToCmd(cmd)
+
+	_ = cmd.MarkFlagRequired(FlagPoolId)
 
 	return cmd
 }
@@ -152,7 +198,7 @@ func ExitLBPCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetWithdraw())
+	cmd.Flags().AddFlagSet(FlagSetExit())
 	flags.AddTxFlagsToCmd(cmd)
 
 	_ = cmd.MarkFlagRequired(FlagPoolId)
@@ -161,54 +207,53 @@ func ExitLBPCmd() *cobra.Command {
 }
 
 func NewBuildCreateLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	tokenIn, err := fs.GetString(FlagTokenIn)
+	lbp, err := parseCreateLBPFlags(fs)
 	if err != nil {
-		return txf, nil, err
+		return txf, nil, fmt.Errorf("failed to parse lbp: %w", err)
 	}
 
-	tokenOut, err := fs.GetString(FlagTokenOut)
+	InitialDeposit, err := sdk.ParseCoinNormalized(lbp.InitialDeposit)
+	if err != nil {
+		return txf, nil, fmt.Errorf("failed to parse Initial-deposit amount: %s", lbp.InitialDeposit)
+	}
+	treasury, err := sdk.AccAddressFromBech32(lbp.Treasury)
+	if err != nil {
+		return txf, nil, fmt.Errorf("failed to parse treasury address: %s", lbp.Treasury)
+	}
+	duration, err := time.ParseDuration(lbp.Duration)
 	if err != nil {
 		return txf, nil, err
-	}
-	startTimeStr, err := fs.GetString(FlagStartTime)
-	if err != nil {
-		return txf, nil, err
-	}
-	startTime, err := time.Parse(time.RFC3339, startTimeStr)
-	if err != nil {
-		return txf, nil, fmt.Errorf("could not parse time: %w", err)
-	}
-	duration, err := fs.GetDuration(FlagDuration)
-	if err != nil {
-		return txf, nil, fmt.Errorf("could not parse time: %w", err)
-	}
-	InitialDepositStr, err := fs.GetString(FlagInitialDeposit)
-	if err != nil {
-		return txf, nil, err
-	}
-	InitialDeposit, err := sdk.ParseCoinNormalized(InitialDepositStr)
-	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse Initial_deposit amoung: %s", InitialDepositStr)
-	}
-	treasuryStr, err := fs.GetString(FlagTreasury)
-	if err != nil {
-		return txf, nil, err
-	}
-	treasury, err := sdk.AccAddressFromBech32(treasuryStr)
-	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse treasury address: %s", treasuryStr)
 	}
 
 	msg := &api.MsgCreateLBP{
-		TokenIn:        tokenIn,
-		TokenOut:       tokenOut,
-		StartTime:      startTime,
+		TokenIn:        lbp.TokenIn,
+		TokenOut:       lbp.TokenOut,
+		StartTime:      lbp.StartTime,
 		Duration:       duration,
 		InitialDeposit: InitialDeposit,
 		Treasury:       treasury.String(),
 		Creator:        clientCtx.GetFromAddress().String(),
 	}
+	if err = msg.ValidateBasic(); err != nil {
+		return txf, nil, err
+	}
 
+	return txf, msg, nil
+}
+
+func NewBuildFinalizeLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolId, err := fs.GetUint64(FlagPoolId)
+	if err != nil {
+		return txf, nil, err
+	}
+
+	msg := &api.MsgFinalizeLBP{
+		Sender: clientCtx.GetFromAddress().String(),
+		PoolId: poolId,
+	}
+	if err = msg.ValidateBasic(); err != nil {
+		return txf, nil, err
+	}
 	return txf, msg, nil
 }
 
@@ -227,6 +272,9 @@ func NewBuildSubscribeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 		PoolId: poolId,
 		Amount: sdk.NewInt(amount),
 	}
+	if err = msg.ValidateBasic(); err != nil {
+		return txf, nil, err
+	}
 	return txf, msg, nil
 }
 
@@ -241,6 +289,9 @@ func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		PoolId: poolId,
 		Amount: nil,
 	}
+	if err = msg.ValidateBasic(); err != nil {
+		return txf, nil, err
+	}
 	return txf, msg, nil
 }
 
@@ -253,6 +304,9 @@ func NewBuildExitLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagS
 	msg := &api.MsgExitLBP{
 		Sender: clientCtx.GetFromAddress().String(),
 		PoolId: poolId,
+	}
+	if err = msg.ValidateBasic(); err != nil {
+		return txf, nil, err
 	}
 	return txf, msg, nil
 }

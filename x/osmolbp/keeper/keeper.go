@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"fmt"
-
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/osmosis-labs/osmosis/x/osmolbp"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -15,14 +15,16 @@ type Keeper struct {
 	storeKey storetypes.StoreKey
 	cdc      codec.BinaryCodec
 	bank     BankKeeper
+	paramSpace paramtypes.Subspace
 }
 
 // NewKeeper constructs a new osmolbp Keeper
-func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, bank BankKeeper) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, cdc codec.BinaryCodec, bank BankKeeper, paramSpace paramtypes.Subspace) Keeper {
 	return Keeper{
 		storeKey: storeKey,
 		cdc:      cdc,
 		bank:     bank,
+		paramSpace: paramSpace,
 	}
 }
 
