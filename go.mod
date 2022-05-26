@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/CosmWasm/wasmd v0.24.0
+	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk v0.45.4
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
