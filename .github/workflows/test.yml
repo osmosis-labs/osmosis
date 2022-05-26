@@ -2,9 +2,12 @@ name: Tests & Code Coverage
 
 on:
   pull_request:
-  push:
     branches:
       - "**"
+  push:
+    branches:
+      - "main"
+      - "v[0-9]**"
 
 jobs:
   should_run_go_test:
