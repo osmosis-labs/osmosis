@@ -29,7 +29,6 @@ func FlagSetCreateLBP() *flag.FlagSet {
 
 func FlagSetFinalizeLBP() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-
 	fs.Uint64(FlagPoolId, 0, "id of the pool.")
 
 	return fs
