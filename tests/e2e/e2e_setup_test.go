@@ -483,11 +483,11 @@ func (s *IntegrationTestSuite) upgrade() {
 	// submit, deposit, and vote for upgrade proposal
 	// prop height = current height + voting period + time it takes to submit proposal + small buffer
 	for _, chainConfig := range s.chainConfigs {
-		currentHeight := s.getCurrentChainHeight(s.valResources[chainConfig.chain.ChainMeta.Id][0].Container.ID)
+		currentHeight := s.getCurrentChainHeight(chainConfig.chain, 0)
 		chainConfig.propHeight = currentHeight + int(chainConfig.votingPeriod) + int(propSubmitBlocks) + int(propBufferBlocks)
 		s.submitUpgradeProposal(chainConfig.chain, chainConfig.propHeight)
 		s.depositProposal(chainConfig.chain)
-		s.voteProposal(chainConfig)
+		s.voteProposal(chainConfig.chain, chainConfig)
 	}
 
 	// wait till all chains halt at upgrade height
@@ -504,7 +504,7 @@ func (s *IntegrationTestSuite) upgrade() {
 			s.T().Logf("waiting to reach upgrade height on %s validator container: %s", s.valResources[curChain.ChainMeta.Id][i].Container.Name[1:], s.valResources[curChain.ChainMeta.Id][i].Container.ID)
 			s.Require().Eventually(
 				func() bool {
-					currentHeight := s.getCurrentChainHeight(s.valResources[curChain.ChainMeta.Id][i].Container.ID)
+					currentHeight := s.getCurrentChainHeight(chainConfig.chain, i)
 					if currentHeight != chainConfig.propHeight {
 						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", s.valResources[curChain.ChainMeta.Id][i].Container.Name[1:], currentHeight, chainConfig.propHeight, s.valResources[curChain.ChainMeta.Id][i].Container.ID)
 					}
@@ -583,7 +583,7 @@ func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propH
 
 		s.Require().Eventually(
 			func() bool {
-				currentHeight := s.getCurrentChainHeight(s.valResources[chain.ChainMeta.Id][i].Container.ID)
+				currentHeight := s.getCurrentChainHeight(chainConfig.chain, i)
 				if currentHeight <= propHeight {
 					s.T().Logf("current block height on %s is %v, waiting to create blocks container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:], currentHeight, s.valResources[chain.ChainMeta.Id][i].Container.ID)
 				}

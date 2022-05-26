@@ -11,7 +11,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	s.Run("superfluid_vote_chainA", func() {
 		s.submitSuperfluidProposal(chainA, "gamm/pool/1")
 		s.depositProposal(chainA)
-		s.voteProposal(s.chainConfigs[0])
+		s.voteProposal(chainA, s.chainConfigs[0])
 		// send gamm tokens to validator's other wallet (non self-delegation wallet)
 		s.sendTx(chainA, 0, "100000000000000000000gamm/pool/1", chainA.Validators[0].PublicAddress, chainA.Validators[0].PublicAddress2)
 		// lock tokens from validator 0 on chain A
@@ -21,7 +21,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 		// create a text prop, deposit and vote yes
 		s.submitTextProposal(chainA, "superfluid vote overwrite test")
 		s.depositProposal(chainA)
-		s.voteProposal(s.chainConfigs[0])
+		s.voteProposal(chainA, s.chainConfigs[0])
 		// set delegator vote to no
 		s.voteNoProposal(chainA, 0, "val2")
 
