@@ -103,7 +103,7 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 		return err
 	}
 
-	coin := sdk.NewCoin(mint.Denom, mint.Amount)
+	coin := sdk.Coin{Denom: mint.Denom, Amount: mint.Amount}
 	sdkMsg := tokenfactorytypes.NewMsgMint(contractAddr.String(), coin)
 	if err = sdkMsg.ValidateBasic(); err != nil {
 		return err
@@ -138,7 +138,7 @@ func PerformBurn(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk
 		return wasmvmtypes.InvalidRequest{Err: "BurnFromAddress must be \"\""}
 	}
 
-	coin := sdk.NewCoin(burn.Denom, burn.Amount)
+	coin := sdk.Coin{Denom: burn.Denom, Amount: burn.Amount}
 	sdkMsg := tokenfactorytypes.NewMsgBurn(contractAddr.String(), coin)
 	if err := sdkMsg.ValidateBasic(); err != nil {
 		return err
