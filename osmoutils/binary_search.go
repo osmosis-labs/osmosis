@@ -42,7 +42,7 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 	}
 
 	// Check additive tolerance equations
-	if !e.AdditiveTolerance.IsNil() && !e.AdditiveTolerance.IsZero() {
+	if !e.AdditiveTolerance.IsNil() {
 		if diff.GT(e.AdditiveTolerance) {
 			return comparisonSign
 		}
