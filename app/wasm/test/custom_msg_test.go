@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
@@ -15,6 +16,37 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app"
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 )
+
+func TestCreateDenomMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	lucky := RandomAccountAddress()
+	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
+	require.NotEmpty(t, reflect)
+
+	// Fund reflect contract with 100 base denom creation fees
+	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
+
+	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "SUN",
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
+	require.NoError(t, err)
+
+	// query the denom and see if it matches
+	query := wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp := wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, fmt.Sprintf("factory/%s/SUN", reflect.String()))
+}
 
 func TestMintMsg(t *testing.T) {
 	creator := RandomAccountAddress()
@@ -32,14 +64,21 @@ func TestMintMsg(t *testing.T) {
 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Empty(t, balances)
 
+	// Create denom for minting
+	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "SUN",
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
+	require.NoError(t, err)
+
 	amount, ok := sdk.NewIntFromString("808010808")
 	require.True(t, ok)
-	msg := wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
 		SubDenom:  "SUN",
 		Amount:    amount,
 		Recipient: lucky.String(),
 	}}
-	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
 
 	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
@@ -83,6 +122,13 @@ func TestMintMsg(t *testing.T) {
 	require.Equal(t, resp.Denom, coin.Denom)
 
 	// now mint another amount / denom
+	// create it first
+	msg = wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "MOON",
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
+	require.NoError(t, err)
+
 	amount = amount.SubRaw(1)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
 		SubDenom:  "MOON",
@@ -531,14 +577,14 @@ func TestJoinPoolMsg(t *testing.T) {
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    osmoStarLiquidity,
 	}}
-	err1 := executeCustom(t, ctx, osmosis, reflect, actor, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
+	err = executeCustom(t, ctx, osmosis, reflect, actor, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
 
-	require.Error(t, err1)
-	require.Equal(t, "0random is smaller than 10random: insufficient funds", err1.Error())
+	require.Error(t, err)
+	require.Equal(t, "0random is smaller than 10random: insufficient funds", err.Error())
 
-	err2 := executeCustom(t, ctx, osmosis, reflect, actor, msg, osmoStarLiquidity)
+	err = executeCustom(t, ctx, osmosis, reflect, actor, msg, osmoStarLiquidity)
 
-	require.NoError(t, err2)
+	require.NoError(t, err)
 
 	poolInfoAfterDeposit, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
 
@@ -548,10 +594,6 @@ func TestJoinPoolMsg(t *testing.T) {
 
 	require.Equal(t, sdk.NewCoin("uosmo", sdk.NewInt(12012000)), coinsInPoolAfter[0])
 	require.Equal(t, sdk.NewCoin("ustar", sdk.NewInt(240240000)), coinsInPoolAfter[1])
-
-	poolInfoAfterDeposit, err3 := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
-
-	require.NoError(t, err3)
 
 	totalSharesAfter := poolInfoAfterDeposit.GetTotalShares()
 
@@ -622,14 +664,14 @@ func TestExitPoolMsg(t *testing.T) {
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    osmoStarLiquidity,
 	}}
-	err1 := executeCustom(t, ctx, osmosis, reflect, provider, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
+	err = executeCustom(t, ctx, osmosis, reflect, provider, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
 
-	require.Error(t, err1)
-	require.Equal(t, "0random is smaller than 10random: insufficient funds", err1.Error())
+	require.Error(t, err)
+	require.Equal(t, "0random is smaller than 10random: insufficient funds", err.Error())
 
-	err2 := executeCustom(t, ctx, osmosis, reflect, provider, msg, osmoStarLiquidity)
+	err = executeCustom(t, ctx, osmosis, reflect, provider, msg, osmoStarLiquidity)
 
-	require.NoError(t, err2)
+	require.NoError(t, err)
 
 	providerUstarBalanceAfterJoining := osmosis.BankKeeper.GetBalance(ctx, provider, "ustar")
 
@@ -644,10 +686,6 @@ func TestExitPoolMsg(t *testing.T) {
 
 	require.Equal(t, sdk.NewCoin("uosmo", sdk.NewInt(12012000)), coinsInPoolAfter[0])
 	require.Equal(t, sdk.NewCoin("ustar", sdk.NewInt(240240000)), coinsInPoolAfter[1])
-
-	poolInfoAfterDeposit, err3 := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
-
-	require.NoError(t, err3)
 
 	totalSharesAfter := poolInfoAfterDeposit.GetTotalShares()
 
