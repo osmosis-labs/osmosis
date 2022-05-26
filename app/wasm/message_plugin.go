@@ -95,13 +95,13 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 	if mint == nil {
 		return wasmvmtypes.InvalidRequest{Err: "mint token null mint"}
 	}
-	rcpt, err := parseAddress(mint.Recipient)
+	rcpt, err := parseAddress(mint.MintToAddress)
 	if err != nil {
 		return err
 	}
 
 	// Check if denom is valid
-	denom, err := GetFullDenom(contractAddr.String(), mint.Subdenom)
+	_, _, err = tokenfactorytypes.DeconstructDenom(mint.Denom)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 	if mint.Amount.IsNegative() {
 		return wasmvmtypes.InvalidRequest{Err: "mint token negative amount"}
 	}
-	coin := sdk.NewCoin(denom, mint.Amount)
+	coin := sdk.NewCoin(mint.Denom, mint.Amount)
 
 	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
 

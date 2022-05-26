@@ -44,7 +44,7 @@ func TestFullDenom(t *testing.T) {
 		},
 		"invalid sub-denom (contains underscore)": {
 			addr:     actor.String(),
-			subdenom: "subdenom",
+			subdenom: "sub_denom",
 			expErr:   true,
 		},
 	}

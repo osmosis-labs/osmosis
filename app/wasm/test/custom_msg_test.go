@@ -70,13 +70,14 @@ func TestMintMsg(t *testing.T) {
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
+	sunDenom := fmt.Sprintf("factory/%s/%s", lucky.String(), msg.CreateDenom.Subdenom)
 
 	amount, ok := sdk.NewIntFromString("808010808")
 	require.True(t, ok)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
-		Subdenom:  "SUN",
-		Amount:    amount,
-		Recipient: lucky.String(),
+		Denom:         sunDenom,
+		Amount:        amount,
+		MintToAddress: lucky.String(),
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
@@ -128,12 +129,13 @@ func TestMintMsg(t *testing.T) {
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
+	moonDenom := fmt.Sprintf("factory/%s/%s", lucky.String(), msg.CreateDenom.Subdenom)
 
 	amount = amount.SubRaw(1)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
-		Subdenom:  "MOON",
-		Amount:    amount,
-		Recipient: lucky.String(),
+		Denom:         moonDenom,
+		Amount:        amount,
+		MintToAddress: lucky.String(),
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
