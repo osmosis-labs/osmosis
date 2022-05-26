@@ -1,9 +1,7 @@
-{
 # Default state for all rules
 "default": true,
 "MD024": false,
 "MD003": {
   # Heading style
   style: "atx"
-  }
 }
