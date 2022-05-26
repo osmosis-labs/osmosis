@@ -7,17 +7,18 @@ type ChainMeta struct {
 	Id      string `json:"id"`
 }
 
-type Validator struct {
+type Node struct {
 	Name          string `json:"name"`
 	ConfigDir     string `json:"configDir"`
-	Index         int    `json:"index"`
 	Mnemonic      string `json:"mnemonic"`
 	PublicAddress string `json:"publicAddress"`
+	PeerId        string `json:"peerId"`
+	IsValidator   bool   `json:"isValidator"`
 }
 
 type Chain struct {
-	ChainMeta  ChainMeta    `json:"chainMeta"`
-	Validators []*Validator `json:"validators"`
+	ChainMeta ChainMeta `json:"chainMeta"`
+	Nodes     []*Node   `json:"nodes"`
 }
 
 func (c *ChainMeta) configDir() string {

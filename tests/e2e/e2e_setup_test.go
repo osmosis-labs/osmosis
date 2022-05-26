@@ -46,50 +46,62 @@ var (
 	// max retries for json unmarshalling
 	maxRetries = 60
 	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
-	validatorConfigsChainA = []*chain.ValidatorConfig{
+	validatorConfigsChainA = []*chain.NodeConfig{
 		{
+			Name:               "prune-default-snapshot",
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-nothing-snapshot",
 			Pruning:            "nothing",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-custom-snapshot",
 			Pruning:            "custom",
 			PruningKeepRecent:  "10000",
 			PruningInterval:    "13",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 	}
-	validatorConfigsChainB = []*chain.ValidatorConfig{
+	validatorConfigsChainB = []*chain.NodeConfig{
 		{
+			Name:               "prune-default-snapshot",
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-nothing-snapshot",
 			Pruning:            "nothing",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-custom-snapshot",
 			Pruning:            "custom",
 			PruningKeepRecent:  "10000",
 			PruningInterval:    "13",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 	}
 )
@@ -125,8 +137,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 4. Execute various e2e tests, including IBC.
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 
-	s.configureChain(chain.ChainAID, validatorConfigsChainA)
-	s.configureChain(chain.ChainBID, validatorConfigsChainB)
+	for _, chainConfig := range s.chainConfigs {
+		s.runValidators(chainConfig, s.dockerImages.OsmosisRepository, s.dockerImages.OsmosisTag)
+	}
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
@@ -179,22 +192,6 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 			Tag:        "debug",
 		}
 
-		// expose the first validator for debugging and communication
-		if val.Index == 0 {
-			runOpts.PortBindings = map[docker.Port][]docker.PortBinding{
-				"1317/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}},
-				"6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}},
-				"6061/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6061+portOffset)}},
-				"6062/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6062+portOffset)}},
-				"6063/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6063+portOffset)}},
-				"6064/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6064+portOffset)}},
-				"6065/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6065+portOffset)}},
-				"9090/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 9090+portOffset)}},
-				"26656/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26656+portOffset)}},
-				"26657/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26657+portOffset)}},
-			}
-		}
-
 		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
 		s.Require().NoError(err)
 
@@ -235,8 +232,8 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.Require().NoError(err)
 	s.tmpDirs = append(s.tmpDirs, tmpDir)
 
-	osmoAVal := s.chains[0].Validators[0]
-	osmoBVal := s.chains[1].Validators[0]
+	osmoAVal := chainA.Nodes[0]
+	osmoBVal := chainB.Nodes[0]
 	hermesCfgPath := path.Join(tmpDir, "hermes")
 
 	s.Require().NoError(os.MkdirAll(hermesCfgPath, 0o755))

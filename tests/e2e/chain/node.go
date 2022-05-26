@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -13,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
+	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -20,7 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
+	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
+	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
@@ -30,9 +34,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v8/tests/e2e/util"
 )
 
-type internalValidator struct {
+type internalNode struct {
 	chain            *internalChain
-	index            int
 	moniker          string
 	mnemonic         string
 	keyInfo          keyring.Info
@@ -40,29 +43,27 @@ type internalValidator struct {
 	consensusKey     privval.FilePVKey
 	consensusPrivKey cryptotypes.PrivKey
 	nodeKey          p2p.NodeKey
+	peerId           string
+	isValidator      bool
 }
 
-func (v *internalValidator) instanceName() string {
-	return fmt.Sprintf("%s%d", v.moniker, v.index)
+func (v *internalNode) configDir() string {
+	return fmt.Sprintf("%s/%s", v.chain.chainMeta.configDir(), v.getMoniker())
 }
 
-func (v *internalValidator) configDir() string {
-	return fmt.Sprintf("%s/%s", v.chain.chainMeta.configDir(), v.instanceName())
-}
-
-func (v *internalValidator) getKeyInfo() keyring.Info {
+func (v *internalNode) getKeyInfo() keyring.Info {
 	return v.keyInfo
 }
 
-func (v *internalValidator) getMoniker() string {
+func (v *internalNode) getMoniker() string {
 	return v.moniker
 }
 
-func (v *internalValidator) getMnemonic() string {
+func (v *internalNode) getMnemonic() string {
 	return v.mnemonic
 }
 
-func (v *internalValidator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
+func (v *internalNode) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
 	description := stakingtypes.NewDescription(v.moniker, "", "", "", "")
 	commissionRates := stakingtypes.CommissionRates{
 		Rate:          sdk.MustNewDecFromStr("0.1"),
@@ -88,12 +89,28 @@ func (v *internalValidator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, e
 	)
 }
 
-func (v *internalValidator) createConfig() error {
+func (v *internalNode) createConfig() error {
 	p := path.Join(v.configDir(), "config")
 	return os.MkdirAll(p, 0o755)
 }
 
-func (v *internalValidator) createNodeKey() error {
+func (v *internalNode) createAppConfig(nodeConfig *NodeConfig) {
+	// set application configuration
+	appCfgPath := filepath.Join(v.configDir(), "config", "app.toml")
+
+	appConfig := srvconfig.DefaultConfig()
+	appConfig.BaseConfig.Pruning = nodeConfig.Pruning
+	appConfig.BaseConfig.PruningKeepRecent = nodeConfig.PruningKeepRecent
+	appConfig.BaseConfig.PruningInterval = nodeConfig.PruningInterval
+	appConfig.API.Enable = true
+	appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
+	appConfig.StateSync.SnapshotInterval = nodeConfig.SnapshotInterval
+	appConfig.StateSync.SnapshotKeepRecent = nodeConfig.SnapshotKeepRecent
+
+	srvconfig.WriteConfigFile(appCfgPath, appConfig)
+}
+
+func (v *internalNode) createNodeKey() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
@@ -109,7 +126,7 @@ func (v *internalValidator) createNodeKey() error {
 	return nil
 }
 
-func (v *internalValidator) createConsensusKey() error {
+func (v *internalNode) createConsensusKey() error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
@@ -132,7 +149,21 @@ func (v *internalValidator) createConsensusKey() error {
 	return nil
 }
 
-func (v *internalValidator) createKeyFromMnemonic(name, mnemonic string) error {
+func createMnemonic() (string, error) {
+	entropySeed, err := bip39.NewEntropy(256)
+	if err != nil {
+		return "", err
+	}
+
+	mnemonic, err := bip39.NewMnemonic(entropySeed)
+	if err != nil {
+		return "", err
+	}
+
+	return mnemonic, nil
+}
+
+func (v *internalNode) createKeyFromMnemonic(name, mnemonic string) error {
 	kb, err := keyring.New(keyringAppName, keyring.BackendTest, v.configDir(), nil)
 	if err != nil {
 		return err
@@ -166,7 +197,7 @@ func (v *internalValidator) createKeyFromMnemonic(name, mnemonic string) error {
 	return nil
 }
 
-func (v *internalValidator) createKey(name string) error {
+func (v *internalNode) createKey(name string) error {
 	mnemonic, err := createMnemonic()
 	if err != nil {
 		return err
@@ -175,21 +206,30 @@ func (v *internalValidator) createKey(name string) error {
 	return v.createKeyFromMnemonic(name, mnemonic)
 }
 
-func (v *internalValidator) export() *Validator {
-	return &Validator{
-		Name:          v.instanceName(),
+func (v *internalNode) export() *Node {
+	return &Node{
+		Name:          v.getMoniker(),
 		ConfigDir:     v.configDir(),
-		Index:         v.index,
 		Mnemonic:      v.mnemonic,
 		PublicAddress: v.keyInfo.GetAddress().String(),
+		PeerId:        v.getPeerId(),
+		IsValidator:   v.isValidator,
 	}
 }
 
-func (v *internalValidator) getNodeKey() *p2p.NodeKey {
+func (v *internalNode) getNodeKey() *p2p.NodeKey {
 	return &v.nodeKey
 }
 
-func (v *internalValidator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
+func (v *internalNode) getPeerId() string {
+	return v.peerId
+}
+
+func (v *internalNode) setPeerId(peerId string) {
+	v.peerId = peerId
+}
+
+func (v *internalNode) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 	config.SetRoot(v.configDir())
@@ -213,7 +253,7 @@ func (v *internalValidator) getGenesisDoc() (*tmtypes.GenesisDoc, error) {
 	return doc, nil
 }
 
-func (v *internalValidator) init() error {
+func (v *internalNode) init() error {
 	if err := v.createConfig(); err != nil {
 		return err
 	}
@@ -246,28 +286,40 @@ func (v *internalValidator) init() error {
 	return nil
 }
 
-func createMnemonic() (string, error) {
-	entropySeed, err := bip39.NewEntropy(256)
-	if err != nil {
-		return "", err
+func (v *internalNode) initValidatorConfigs(c *internalChain, persistendtPeers []string) error {
+	tmCfgPath := filepath.Join(v.configDir(), "config", "config.toml")
+
+	vpr := viper.New()
+	vpr.SetConfigFile(tmCfgPath)
+	if err := vpr.ReadInConfig(); err != nil {
+		return err
 	}
 
-	mnemonic, err := bip39.NewMnemonic(entropySeed)
-	if err != nil {
-		return "", err
+	valConfig := &tmconfig.Config{}
+	if err := vpr.Unmarshal(valConfig); err != nil {
+		return err
 	}
 
-	return mnemonic, nil
+	valConfig.P2P.ListenAddress = "tcp://0.0.0.0:26656"
+	valConfig.P2P.AddrBookStrict = false
+	valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", v.getMoniker(), 26656)
+	valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
+	valConfig.StateSync.Enable = false
+	valConfig.LogLevel = "info"
+	valConfig.P2P.PersistentPeers = strings.Join(persistendtPeers, ",")
+
+	tmconfig.WriteConfigFile(tmCfgPath, valConfig)
+	return nil
 }
 
-func (v *internalValidator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
+func (v *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	txBuilder := util.EncodingConfig.TxConfig.NewTxBuilder()
 
 	if err := txBuilder.SetMsgs(msgs...); err != nil {
 		return nil, err
 	}
 
-	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeKey.ID(), v.instanceName()))
+	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeKey.ID(), v.getMoniker()))
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(200000)
 

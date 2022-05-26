@@ -4,30 +4,33 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/server"
-	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/spf13/viper"
-	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	"github.com/osmosis-labs/osmosis/v8/tests/e2e/util"
 )
 
-type ValidatorConfig struct {
+// NodeConfig is a confiuration for the node supplied from the test runner
+// to initialization scripts. It should be backwards compatible with earlier
+// versions. If this struct is updated, the change must be backported to earlier
+// branches that might be used for upgrade testing.
+type NodeConfig struct {
+	Name               string
 	Pruning            string // default, nothing, everything, or custom
 	PruningKeepRecent  string // keep all of the last N states (only used with custom pruning)
 	PruningInterval    string // delete old states from every Nth block (only used with custom pruning)
 	SnapshotInterval   uint64 // statesync snapshot every Nth block (0 to disable)
 	SnapshotKeepRecent uint32 // number of recent snapshots to keep and serve (0 to keep all)
+	IsValidator        bool   // flag indicating whether a node should be a validator
 }
 
 const (
@@ -133,12 +136,37 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
-func initGenesis(c *internalChain, votingPeriod time.Duration) error {
+func initGenesis(chain *internalChain, votingPeriod time.Duration) error {
+	// initialize a genesis file
+	configDir := chain.nodes[0].configDir()
+	for _, val := range chain.nodes {
+		if chain.chainMeta.Id == ChainAID {
+			if err := addAccount(configDir, "", InitBalanceStrA, val.getKeyInfo().GetAddress()); err != nil {
+				return err
+			}
+		} else if chain.chainMeta.Id == ChainBID {
+			if err := addAccount(configDir, "", InitBalanceStrB, val.getKeyInfo().GetAddress()); err != nil {
+				return err
+			}
+		}
+	}
+
+	// copy the genesis file to the remaining validators
+	for _, val := range chain.nodes[1:] {
+		_, err := util.CopyFile(
+			filepath.Join(configDir, "config", "genesis.json"),
+			filepath.Join(val.configDir(), "config", "genesis.json"),
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(c.validators[0].configDir())
-	config.Moniker = c.validators[0].getMoniker()
+	config.SetRoot(chain.nodes[0].configDir())
+	config.Moniker = chain.nodes[0].getMoniker()
 
 	genFilePath := config.GenesisFile()
 	appGenState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFilePath)
@@ -192,10 +220,14 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 
 	// generate genesis txs
-	genTxs := make([]json.RawMessage, len(c.validators))
-	for i, val := range c.validators {
+	genTxs := make([]json.RawMessage, len(chain.nodes))
+	for i, val := range chain.nodes {
+		if !val.isValidator {
+			continue
+		}
+
 		stakeAmountCoin := StakeAmountCoinA
-		if c.chainMeta.Id != ChainAID {
+		if chain.chainMeta.Id != ChainAID {
 			stakeAmountCoin = StakeAmountCoinB
 		}
 		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
@@ -237,7 +269,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 
 	// write the updated genesis file to each validator
-	for _, val := range c.validators {
+	for _, val := range chain.nodes {
 		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), bz); err != nil {
 			return err
 		}
@@ -245,89 +277,29 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	return nil
 }
 
-func initNodes(c *internalChain, numVal int) error {
-	if err := c.createAndInitValidators(numVal); err != nil {
-		return err
+func newNode(chain *internalChain, nodeConfig *NodeConfig) (*internalNode, error) {
+	node := &internalNode{
+		chain:       chain,
+		moniker:     fmt.Sprintf("%s-node-%s", chain.chainMeta.Id, nodeConfig.Name),
+		isValidator: nodeConfig.IsValidator,
 	}
 
-	// initialize a genesis file for the first validator
-	val0ConfigDir := c.validators[0].configDir()
-	for _, val := range c.validators {
-		if c.chainMeta.Id == ChainAID {
-			if err := addAccount(val0ConfigDir, "", InitBalanceStrA, val.getKeyInfo().GetAddress()); err != nil {
-				return err
-			}
-		} else if c.chainMeta.Id == ChainBID {
-			if err := addAccount(val0ConfigDir, "", InitBalanceStrB, val.getKeyInfo().GetAddress()); err != nil {
-				return err
-			}
-		}
+	// generate genesis files
+	if err := node.init(); err != nil {
+		return nil, err
+	}
+	// create keys
+	if err := node.createKey(nodeConfig.Name); err != nil {
+		return nil, err
+	}
+	if err := node.createNodeKey(); err != nil {
+		return nil, err
+	}
+	if err := node.createConsensusKey(); err != nil {
+		return nil, err
 	}
 
-	// copy the genesis file to the remaining validators
-	for _, val := range c.validators[1:] {
-		_, err := util.CopyFile(
-			filepath.Join(val0ConfigDir, "config", "genesis.json"),
-			filepath.Join(val.configDir(), "config", "genesis.json"),
-		)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+	node.createAppConfig(nodeConfig)
 
-func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig) error {
-	for i, val := range c.validators {
-		tmCfgPath := filepath.Join(val.configDir(), "config", "config.toml")
-
-		vpr := viper.New()
-		vpr.SetConfigFile(tmCfgPath)
-		if err := vpr.ReadInConfig(); err != nil {
-			return err
-		}
-
-		valConfig := &tmconfig.Config{}
-		if err := vpr.Unmarshal(valConfig); err != nil {
-			return err
-		}
-
-		valConfig.P2P.ListenAddress = "tcp://0.0.0.0:26656"
-		valConfig.P2P.AddrBookStrict = false
-		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.instanceName(), 26656)
-		valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
-		valConfig.StateSync.Enable = false
-		valConfig.LogLevel = "info"
-
-		var peers []string
-
-		for j := 0; j < len(c.validators); j++ {
-			if i == j {
-				continue
-			}
-
-			peer := c.validators[j]
-			peerID := fmt.Sprintf("%s@%s%d:26656", peer.getNodeKey().ID(), peer.getMoniker(), j)
-			peers = append(peers, peerID)
-		}
-
-		valConfig.P2P.PersistentPeers = strings.Join(peers, ",")
-
-		tmconfig.WriteConfigFile(tmCfgPath, valConfig)
-
-		// set application configuration
-		appCfgPath := filepath.Join(val.configDir(), "config", "app.toml")
-
-		appConfig := srvconfig.DefaultConfig()
-		appConfig.BaseConfig.Pruning = validatorConfigs[i].Pruning
-		appConfig.BaseConfig.PruningKeepRecent = validatorConfigs[i].PruningKeepRecent
-		appConfig.BaseConfig.PruningInterval = validatorConfigs[i].PruningInterval
-		appConfig.API.Enable = true
-		appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
-		appConfig.StateSync.SnapshotInterval = validatorConfigs[i].SnapshotInterval
-		appConfig.StateSync.SnapshotKeepRecent = validatorConfigs[i].SnapshotKeepRecent
-
-		srvconfig.WriteConfigFile(appCfgPath, appConfig)
-	}
-	return nil
+	return node, nil
 }

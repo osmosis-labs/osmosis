@@ -15,9 +15,9 @@ RUN BUILD_TAGS=muslc make build-e2e-chain-init
 ## Deploy image
 FROM ubuntu
 
-COPY --from=build /osmosis/build/chain_init /bin/chain_init
+COPY --from=build /osmosis/build/${E2E_SCRIPT_NAME} /bin/${E2E_SCRIPT_NAME}
 
 ENV HOME /osmosis
 WORKDIR $HOME
 
-ENTRYPOINT [ "chain_init" ]
+ENTRYPOINT [ ${E2E_SCRIPT_NAME} ]
