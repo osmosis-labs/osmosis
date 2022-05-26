@@ -70,10 +70,7 @@ func TestMintMsg(t *testing.T) {
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
-	sunDenom := fmt.Sprintf("factory/%s/%s", lucky.String(), msg.CreateDenom.Subdenom)
-	metadata, err := osmosis.TokenFactoryKeeper.GetAuthorityMetadata(ctx, sunDenom)
-	require.NoError(t, err)
-	fmt.Printf("HELLO %s\n", metadata.Admin)
+	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
 	amount, ok := sdk.NewIntFromString("808010808")
 	require.True(t, ok)
@@ -132,7 +129,7 @@ func TestMintMsg(t *testing.T) {
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
-	moonDenom := fmt.Sprintf("factory/%s/%s", lucky.String(), msg.CreateDenom.Subdenom)
+	moonDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
 	amount = amount.SubRaw(1)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{

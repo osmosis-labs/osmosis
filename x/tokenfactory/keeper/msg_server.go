@@ -44,6 +44,12 @@ func (server msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateD
 func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// pay some extra gas cost to give a better error here.
+	_, denomExists := server.bankKeeper.GetDenomMetaData(ctx, msg.Amount.Denom)
+	if !denomExists {
+		return nil, types.ErrDenomDoesNotExist
+	}
+
 	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Amount.GetDenom())
 	if err != nil {
 		return nil, err

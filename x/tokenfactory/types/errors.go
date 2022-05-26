@@ -18,4 +18,5 @@ var (
 	ErrInvalidGenesis           = sdkerrors.Register(ModuleName, 7, "invalid genesis")
 	ErrSubdenomTooLong          = sdkerrors.Register(ModuleName, 8, fmt.Sprintf("subdenom too long, max length is %d bytes", MaxSubdenomLength))
 	ErrCreatorTooLong           = sdkerrors.Register(ModuleName, 9, fmt.Sprintf("creator too long, max length is %d bytes", MaxCreatorLength))
+	ErrDenomDoesNotExist        = sdkerrors.Register(ModuleName, 10, "denom does not exist")
 )
