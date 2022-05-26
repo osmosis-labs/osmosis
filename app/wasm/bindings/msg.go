@@ -29,6 +29,8 @@ type CreateDenom struct {
 	Subdenom string `json:"subdenom"`
 }
 
+/// ChangeAdmin changes the admin for a factory denom.
+/// If the NewAdminAddress is empty, the denom has no admin.
 type ChangeAdmin struct {
 	Denom           string `json:"denom"`
 	NewAdminAddress string `json:"new_admin_address"`
