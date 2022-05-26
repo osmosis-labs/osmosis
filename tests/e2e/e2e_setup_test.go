@@ -64,7 +64,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	if str := os.Getenv(skipUpgradeEnv); len(str) > 0 {
 		s.skipUpgrade, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
-		s.T().Log(fmt.Sprintf("%s was true, skipping upgrafe tests", skipIBCEnv))
+		s.T().Log(fmt.Sprintf("%s was true, skipping upgrade tests", skipIBCEnv))
 	}
 
 	if str := os.Getenv(skipIBCEnv); len(str) > 0 {
