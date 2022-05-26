@@ -54,8 +54,8 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		if contractMsg.Swap != nil {
 			return m.swapTokens(ctx, contractAddr, contractMsg.Swap)
 		}
-		if contractMsg.JoinPool != nil {
-			return m.joinPool(ctx, contractAddr, contractMsg.JoinPool)
+		if contractMsg.JoinPoolNoSwap != nil {
+			return m.joinPool(ctx, contractAddr, contractMsg.JoinPoolNoSwap)
 		}
 	}
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
@@ -197,7 +197,7 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 	}
 }
 
-func (m *CustomMessenger) joinPool(ctx sdk.Context, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPool) ([]sdk.Event, [][]byte, error) {
+func (m *CustomMessenger) joinPool(ctx sdk.Context, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPoolNoSwap) ([]sdk.Event, [][]byte, error) {
 	err := PerformJoin(m.gammKeeper, ctx, contractAddr, joinPool)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "join pool")
@@ -205,7 +205,7 @@ func (m *CustomMessenger) joinPool(ctx sdk.Context, contractAddr sdk.AccAddress,
 	return nil, nil, nil
 }
 
-func PerformJoin(g *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPool) error {
+func PerformJoin(g *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPoolNoSwap) error {
 	if joinPool == nil {
 		return wasmvmtypes.InvalidRequest{Err: "join pool null"}
 	}

@@ -612,11 +612,11 @@ func TestJoinPool(t *testing.T) {
 		sdk.NewInt64Coin("ustar", 240_000))
 
 	specs := map[string]struct {
-		join_pool *wasmbindings.JoinPool
-		expErr    bool
+		join_pool_no_swap *wasmbindings.JoinPoolNoSwap
+		expErr            bool
 	}{
 		"empty share out amount": {
-			join_pool: &wasmbindings.JoinPool{
+			join_pool_no_swap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool,
 				ShareOutAmount: sdk.NewInt(1),
 				TokenInMaxs:    osmoStarLiquidity,
@@ -624,7 +624,7 @@ func TestJoinPool(t *testing.T) {
 			expErr: true,
 		},
 		"incorrect pool id": {
-			join_pool: &wasmbindings.JoinPool{
+			join_pool_no_swap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool + uint64(10),
 				ShareOutAmount: sdk.NewInt(1),
 				TokenInMaxs:    osmoStarLiquidity,
@@ -632,7 +632,7 @@ func TestJoinPool(t *testing.T) {
 			expErr: true,
 		},
 		"empty coins array": {
-			join_pool: &wasmbindings.JoinPool{
+			join_pool_no_swap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool,
 				ShareOutAmount: sdk.NewInt(1),
 				TokenInMaxs:    sdk.NewCoins(),
@@ -640,7 +640,7 @@ func TestJoinPool(t *testing.T) {
 			expErr: true,
 		},
 		"sending one coin": {
-			join_pool: &wasmbindings.JoinPool{
+			join_pool_no_swap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool,
 				ShareOutAmount: sdk.NewInt(1),
 				TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("osmo", sdk.NewInt(10))),
@@ -648,7 +648,7 @@ func TestJoinPool(t *testing.T) {
 			expErr: true,
 		},
 		"valid join pool": {
-			join_pool: &wasmbindings.JoinPool{
+			join_pool_no_swap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool,
 				ShareOutAmount: sdk.NewInt(1000000),
 				TokenInMaxs:    osmoStarLiquidity,
@@ -661,7 +661,7 @@ func TestJoinPool(t *testing.T) {
 			// use scratch context to avoid interference between tests
 			subCtx, _ := ctx.CacheContext()
 			// when
-			gotErr := wasm.PerformJoin(osmosis.GAMMKeeper, subCtx, actor, spec.join_pool)
+			gotErr := wasm.PerformJoin(osmosis.GAMMKeeper, subCtx, actor, spec.join_pool_no_swap)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)

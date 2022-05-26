@@ -13,7 +13,7 @@ type OsmosisMsg struct {
 	Swap *SwapMsg `json:"swap,omitempty"`
 	/// Add liquidity to a specified pool to get an exact amount of LP shares while specifying a maximum number tokens
 	/// willing to swap to receive said LP shares.
-	JoinPool *JoinPool `json:"join_pool,omitempty"`
+	JoinPoolNoSwap *JoinPoolNoSwap `json:"join_pool_no_swap,omitempty"`
 }
 
 type CreateDenom struct {
@@ -37,7 +37,7 @@ type SwapMsg struct {
 	Amount SwapAmountWithLimit `json:"amount"`
 }
 
-type JoinPool struct {
+type JoinPoolNoSwap struct {
 	PoolId         uint64    `json:"pool_id"`
 	ShareOutAmount sdk.Int   `json:"share_out_amount"`
 	TokenInMaxs    sdk.Coins `json:"token_in_maxs"`

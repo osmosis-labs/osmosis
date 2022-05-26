@@ -559,7 +559,7 @@ func TestJoinPoolMsg(t *testing.T) {
 	osmoStarLiquidity := sdk.NewCoins(sdk.NewInt64Coin("uosmo", 12_000), sdk.NewInt64Coin("ustar", 240_000))
 	reflect := instantiateReflectContract(t, ctx, osmosis, provider)
 
-	invalidMsg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
+	invalidMsg := wasmbindings.OsmosisMsg{JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 		PoolId:         starPool,
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))),
@@ -572,7 +572,7 @@ func TestJoinPoolMsg(t *testing.T) {
 	//Either asset can be used for tokenInAmount and poolAsset.amount can be used to calculate this amount
 	//ShareOutAmount = 100000000000000000000 * 12000 / 12000000 = 100000000000000000000 * 240000 / 240000000
 
-	msg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
+	msg := wasmbindings.OsmosisMsg{JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 		PoolId:         starPool,
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    osmoStarLiquidity,
