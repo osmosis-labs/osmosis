@@ -62,19 +62,11 @@ jobs:
         uses: codecov/codecov-action@v1.5.2
   
   e2e_test:
+    needs: should_run_go_test
+    if: ${{ needs.should_run_test.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/setup-go@v2.2.0
-        with:
-          go-version: 1.18
-      - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v6.0.1
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
       - name: Get data from build cache
         uses: actions/cache@v2
         with:
@@ -98,4 +90,3 @@ jobs:
       - name: Test E2E and Upgrade
         run: |
           make test-e2e
-        if: env.GIT_DIFF
