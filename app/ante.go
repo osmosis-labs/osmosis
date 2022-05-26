@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	osmoante "github.com/osmosis-labs/osmosis/v7/ante"
+	v9 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v9"
 
-	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
@@ -42,7 +42,7 @@ func NewAnteHandler(
 		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
 		wasmkeeper.NewCountTXDecorator(txCounterStoreKey),
 		ante.NewRejectExtensionOptionsDecorator(),
-		v8.MsgFilterDecorator{},
+		v9.MsgFilterDecorator{},
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
 		mempoolFeeDecorator,

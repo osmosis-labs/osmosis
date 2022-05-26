@@ -44,7 +44,7 @@ func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, denomNonce stri
 	authorityMetadata := types.DenomAuthorityMetadata{
 		Admin: creatorAddr,
 	}
-	err = k.SetAuthorityMetadata(ctx, denom, authorityMetadata)
+	err = k.setAuthorityMetadata(ctx, denom, authorityMetadata)
 	if err != nil {
 		return "", err
 	}
