@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"testing"
+	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -600,3 +601,128 @@ func executeCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contr
 //		})
 //	}
 //}
+
+func TestLockTokensMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+
+	osmosis, ctx := SetupCustomApp(t, creator)
+	lp := RandomAccountAddress()
+	initFunds := sdk.NewCoins(
+		sdk.NewInt64Coin("uosmo", 555000000+3*poolFee),
+		sdk.NewInt64Coin("ustar", 999000000),
+	)
+	fundAccount(t, ctx, osmosis, lp, initFunds)
+
+	// 20 star to 1 osmo
+	funds1 := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12000000),
+		sdk.NewInt64Coin("ustar", 240000000),
+	}
+	preparePool(t, ctx, osmosis, lp, funds1)
+
+	reflect := instantiateReflectContract(t, ctx, osmosis, lp)
+	require.NotEmpty(t, reflect)
+
+	// lp has some pool tokens
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, lp)
+	require.Len(t, balances, 3)
+	coin := balances[0]
+	require.Equal(t, coin.Denom, "gamm/pool/1")
+
+	amount, ok := sdk.NewIntFromString("200")
+	require.True(t, ok)
+	duration, _ := time.ParseDuration("3600")
+	msg := wasmbindings.OsmosisMsg{LockTokens: &wasmbindings.LockTokensMsg{
+		Denom:    "gamm/pool/1",
+		Amount:   amount,
+		Duration: wasmbindings.Duration(duration),
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lp, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	//
+	//balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	//require.Len(t, balances, 1)
+	//coin := balances[0]
+	//require.Equal(t, amount, coin.Amount)
+	//require.Contains(t, coin.Denom, "factory/")
+	//
+	//// query the denom and see if it matches
+	//query := wasmbindings.OsmosisQuery{
+	//	FullDenom: &wasmbindings.FullDenom{
+	//		Contract: reflect.String(),
+	//		SubDenom: "SUN",
+	//	},
+	//}
+	//resp := wasmbindings.FullDenomResponse{}
+	//queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	//
+	//require.Equal(t, resp.Denom, coin.Denom)
+	//
+	//// mint the same denom again
+	//err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	//require.NoError(t, err)
+	//
+	//balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	//require.Len(t, balances, 1)
+	//coin = balances[0]
+	//require.Equal(t, amount.MulRaw(2), coin.Amount)
+	//require.Contains(t, coin.Denom, "factory/")
+	//
+	//// query the denom and see if it matches
+	//query = wasmbindings.OsmosisQuery{
+	//	FullDenom: &wasmbindings.FullDenom{
+	//		Contract: reflect.String(),
+	//		SubDenom: "SUN",
+	//	},
+	//}
+	//resp = wasmbindings.FullDenomResponse{}
+	//queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	//
+	//require.Equal(t, resp.Denom, coin.Denom)
+	//
+	//// now mint another amount / denom
+	//amount = amount.SubRaw(1)
+	//msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+	//	SubDenom:  "MOON",
+	//	Amount:    amount,
+	//	Recipient: lucky.String(),
+	//}}
+	//err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	//require.NoError(t, err)
+	//
+	//balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	//require.Len(t, balances, 2)
+	//coin = balances[0]
+	//require.Equal(t, amount, coin.Amount)
+	//require.Contains(t, coin.Denom, "factory/")
+	//
+	//// query the denom and see if it matches
+	//query = wasmbindings.OsmosisQuery{
+	//	FullDenom: &wasmbindings.FullDenom{
+	//		Contract: reflect.String(),
+	//		SubDenom: "MOON",
+	//	},
+	//}
+	//resp = wasmbindings.FullDenomResponse{}
+	//queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	//
+	//require.Equal(t, resp.Denom, coin.Denom)
+	//
+	//// and check the first denom is unchanged
+	//coin = balances[1]
+	//require.Equal(t, amount.AddRaw(1).MulRaw(2), coin.Amount)
+	//require.Contains(t, coin.Denom, "factory/")
+	//
+	//// query the denom and see if it matches
+	//query = wasmbindings.OsmosisQuery{
+	//	FullDenom: &wasmbindings.FullDenom{
+	//		Contract: reflect.String(),
+	//		SubDenom: "SUN",
+	//	},
+	//}
+	//resp = wasmbindings.FullDenomResponse{}
+	//queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	//
+	//require.Equal(t, resp.Denom, coin.Denom)
+}

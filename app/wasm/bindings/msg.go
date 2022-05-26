@@ -54,6 +54,10 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 	}
 }
 
+func (d Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Duration(d).String())
+}
+
 type LockTokensMsg struct {
 	Denom    string   `json:"denom"`
 	Amount   sdk.Int  `json:"amount"`
