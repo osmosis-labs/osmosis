@@ -83,6 +83,11 @@ jobs:
           key: ${{ runner.os }}-go-docker-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-docker-${{ matrix.go-version }}-
+
+      - name: Disable Long Tests
+        run: |
+          echo "OSMOSIS_E2E_SKIP_UPGRADE=true" >> $GITHUB_ENV
+        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || (startsWith(github.ref,'refs/heads/v') && endsWith(github.ref, '.x'))) }}
       - name: Build Docker Image
         run: |
           make docker-build-debug
