@@ -67,7 +67,7 @@ func (m MsgMint) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if !m.Amount.IsValid() {
+	if !m.Amount.IsValid() || m.Amount.Equal(sdk.ZeroInt()) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 
@@ -101,7 +101,7 @@ func (m MsgBurn) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if !m.Amount.IsValid() {
+	if !m.Amount.IsValid() || m.Amount.Equal(sdk.ZeroInt()) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 

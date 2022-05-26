@@ -51,6 +51,9 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		if contractMsg.MintTokens != nil {
 			return m.mintTokens(ctx, contractAddr, contractMsg.MintTokens)
 		}
+		if contractMsg.BurnTokens != nil {
+			return m.burnTokens(ctx, contractAddr, contractMsg.BurnTokens)
+		}
 		if contractMsg.Swap != nil {
 			return m.swapTokens(ctx, contractAddr, contractMsg.Swap)
 		}
@@ -100,30 +103,52 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 		return err
 	}
 
-	// Check if denom is valid
-	_, _, err = tokenfactorytypes.DeconstructDenom(mint.Denom)
-	if err != nil {
+	coin := sdk.NewCoin(mint.Denom, mint.Amount)
+	sdkMsg := tokenfactorytypes.NewMsgMint(contractAddr.String(), coin)
+	if err = sdkMsg.ValidateBasic(); err != nil {
 		return err
 	}
 
-	if mint.Amount.IsZero() {
-		return wasmvmtypes.InvalidRequest{Err: "mint token zero amount"}
-	}
-	if mint.Amount.IsNegative() {
-		return wasmvmtypes.InvalidRequest{Err: "mint token negative amount"}
-	}
-	coin := sdk.NewCoin(mint.Denom, mint.Amount)
-
-	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
-
 	// Mint through token factory / message server
-	_, err = msgServer.Mint(sdk.WrapSDKContext(ctx), tokenfactorytypes.NewMsgMint(contractAddr.String(), coin))
+	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
+	_, err = msgServer.Mint(sdk.WrapSDKContext(ctx), sdkMsg)
 	if err != nil {
 		return sdkerrors.Wrap(err, "minting coins from message")
 	}
 	err = b.SendCoins(ctx, contractAddr, rcpt, sdk.NewCoins(coin))
 	if err != nil {
 		return sdkerrors.Wrap(err, "sending newly minted coins from message")
+	}
+	return nil
+}
+
+func (m *CustomMessenger) burnTokens(ctx sdk.Context, contractAddr sdk.AccAddress, burn *wasmbindings.BurnTokens) ([]sdk.Event, [][]byte, error) {
+	err := PerformBurn(m.tokenFactory, ctx, contractAddr, burn)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "perform mint")
+	}
+	return nil, nil, nil
+}
+
+func PerformBurn(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, burn *wasmbindings.BurnTokens) error {
+	if burn == nil {
+		return wasmvmtypes.InvalidRequest{Err: "burn token null mint"}
+	}
+	if burn.BurnFromAddress != "" && burn.BurnFromAddress != contractAddr.String() {
+		return wasmvmtypes.InvalidRequest{Err: "BurnFromAddress must be \"\""}
+	}
+
+	coin := sdk.NewCoin(burn.Denom, burn.Amount)
+	sdkMsg := tokenfactorytypes.NewMsgBurn(contractAddr.String(), coin)
+	if err := sdkMsg.ValidateBasic(); err != nil {
+		return err
+	}
+
+	// Burn through token factory / message server
+	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
+	_, err := msgServer.Burn(sdk.WrapSDKContext(ctx), sdkMsg)
+	if err != nil {
+		return sdkerrors.Wrap(err, "burning coins from message")
 	}
 	return nil
 }
