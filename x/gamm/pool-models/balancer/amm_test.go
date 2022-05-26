@@ -345,20 +345,62 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 			expectErr:    false,
 			expectShares: sdk.NewInt(2499999968800),
-			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50000)),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		},
-		// {
-		// 	name: "equal weights with 0.001 swap fee",
-		// 	swapFee: sdk.MustNewDecFromStr("0.001"),
-		// },
-		// {
-		// 	name: "equal weights with 0.1 swap fee",
-		// 	swapFee: sdk.MustNewDecFromStr("0.1"),
-		// },
-		// {
-		// 	name: "equal weights with 0.99 swap fee",
-		// 	swapFee: sdk.MustNewDecFromStr("0.99"),
-		// },
+		{
+			name:    "equal weights with 0.001 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.001"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(2498749968800),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
+		{
+			name:    "equal weights with 0.1 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.1"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(2374999971800),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
+		{
+			name:    "equal weights with 0.99 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.99"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(1262499992100),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
 	}
 
 	for _, tc := range testCases {
