@@ -712,9 +712,9 @@ func TestExitPoolMsg(t *testing.T) {
 		TokenOutMins:  sdk.NewCoins(),
 	}}
 
-	err4 := executeCustom(t, ctx, osmosis, reflect, provider, exitPoolMsg, sdk.NewCoins(sdk.NewCoin(poolDenom, sdk.NewInt(100000000000000000))))
+	err = executeCustom(t, ctx, osmosis, reflect, provider, exitPoolMsg, sdk.NewCoins(sdk.NewCoin(poolDenom, sdk.NewInt(100000000000000000))))
 
-	require.NoError(t, err4)
+	require.NoError(t, err)
 
 	providerLpTokenBalanceAfter := osmosis.BankKeeper.GetBalance(ctx, provider, poolDenom)
 
