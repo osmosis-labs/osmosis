@@ -1,12 +1,15 @@
+```html
 <!--
 order: 5
 -->
+```
 
-# Keepers
+Keepers
 
-## Lockup Keeper
+Lockup Keeper
 
-Lockup keeper provides utility functions to store lock queues and query locks.
+Lockup keeper provides utility functions to store lock queues and query
+locks.
 
 ```go
 // Keeper is the interface for lockup module keeper
@@ -62,9 +65,10 @@ type Keeper interface {
 
 # Lock Admin Keeper
 
-Lockup admin keeper provides god privilege functions to remove tokens from locks and create new locks.
+Lockup admin keeper provides god privilege functions to remove tokens
+from locks and create new locks.
 
-```go
+``` go
 // AdminKeeper defines a god priviledge keeper functions to remove tokens from locks and create new locks
 // For the governance system of token pools, we want a "ragequit" feature
 // So governance changes will take 1 week to go into effect

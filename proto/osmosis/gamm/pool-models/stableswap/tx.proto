@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.gamm.stableswap.v1beta1;
+package osmosis.gamm.poolmodels.stableswap.v1beta1;
 
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
@@ -10,6 +10,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stabl
 service Msg {
   rpc CreateStableswapPool(MsgCreateStableswapPool)
       returns (MsgCreateStableswapPoolResponse);
+  rpc StableSwapAdjustScalingFactors(MsgStableSwapAdjustScalingFactors)
+      returns (MsgStableSwapAdjustScalingFactorsResponse);
 }
 
 message MsgCreateStableswapPool {
@@ -29,3 +31,17 @@ message MsgCreateStableswapPool {
 message MsgCreateStableswapPoolResponse {
   uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
 }
+
+message MsgStableSwapAdjustScalingFactors {
+  // Sender must be the pool's scaling_factor_governor in order for the tx to succeed
+  string sender = 1
+      [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 pool_id = 2 [ (gogoproto.customname) = "PoolID" ];
+
+  repeated uint64 scaling_factors = 3 [
+    (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgStableSwapAdjustScalingFactorsResponse {}

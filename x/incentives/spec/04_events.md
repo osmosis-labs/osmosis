@@ -1,7 +1,3 @@
-<!--
-order: 4
--->
-
 # Events
 
 The incentives module emits the following events:
@@ -10,37 +6,37 @@ The incentives module emits the following events:
 
 ### MsgCreateGauge
 
-| Type         | Attribute Key        | Attribute Value     |
-| ------------ | -------------------- | ------------------- |
-| create_gauge | gauge_id             | {gaugeID}           |
-| create_gauge | distribute_to        | {owner}             |
-| create_gauge | rewards              | {rewards}           |
-| create_gauge | start_time           | {startTime}         |
-| create_gauge | num_epochs_paid_over | {numEpochsPaidOver} |
-| message      | action               | create_gauge        |
-| message      | sender               | {owner}             |
-| transfer     | recipient            | {moduleAccount}     |
-| transfer     | sender               | {owner}             |
-| transfer     | amount               | {amount}            |
+  Type            Attribute Key             Attribute Value
+  ---------------; -------------------------; ---------------------;
+  create\_gauge   gauge\_id                 {gaugeID}
+  create\_gauge   distribute\_to            {owner}
+  create\_gauge   rewards                   {rewards}
+  create\_gauge   start\_time               {startTime}
+  create\_gauge   num\_epochs\_paid\_over   {numEpochsPaidOver}
+  message         action                    create\_gauge
+  message         sender                    {owner}
+  transfer        recipient                 {moduleAccount}
+  transfer        sender                    {owner}
+  transfer        amount                    {amount}
 
 ### MsgAddToGauge
 
-| Type         | Attribute Key | Attribute Value |
-| ------------ | ------------- | --------------- |
-| add_to_gauge | gauge_id      | {gaugeID}       |
-| create_gauge | rewards       | {rewards}       |
-| message      | action        | create_gauge    |
-| message      | sender        | {owner}         |
-| transfer     | recipient     | {moduleAccount} |
-| transfer     | sender        | {owner}         |
-| transfer     | amount        | {amount}        |
+  Type             Attribute Key   Attribute Value
+  ----------------; ---------------; -----------------;
+  add\_to\_gauge   gauge\_id       {gaugeID}
+  create\_gauge    rewards         {rewards}
+  message          action          create\_gauge
+  message          sender          {owner}
+  transfer         recipient       {moduleAccount}
+  transfer         sender          {owner}
+  transfer         amount          {amount}
 
 ## EndBlockers
 
 ### Incentives distribution
 
-| Type       | Attribute Key | Attribute Value |
-| ---------- | ------------- | --------------- |
-| transfer[] | recipient     | {receiver}      |
-| transfer[] | sender        | {moduleAccount} |
-| transfer[] | amount        | {distrAmount}   |
+  Type           Attribute Key   Attribute Value
+  --------------; ---------------; -----------------;
+  transfer\[\]   recipient       {receiver}
+  transfer\[\]   sender          {moduleAccount}
+  transfer\[\]   amount          {distrAmount}

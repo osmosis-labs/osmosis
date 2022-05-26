@@ -52,6 +52,9 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
+	// This file is needed to provide the correct path
+	// to reflect.wasm test file needed for wasmd simulation testing.
+	config.ParamsFile = "params.json"
 
 	defer func() {
 		db.Close()
@@ -130,6 +133,10 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
+
+	// This file is needed to provide the correct path
+	// to reflect.wasm test file needed for wasmd simulation testing.
+	config.ParamsFile = "params.json"
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5

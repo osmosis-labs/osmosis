@@ -2,6 +2,8 @@ package wasm
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,46 +16,162 @@ import (
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 )
 
-// func TestMintMsg(t *testing.T) {
-// 	creator := RandomAccountAddress()
-// 	osmosis, ctx := SetupCustomApp(t, creator)
+func TestCreateDenomMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
 
-// 	lucky := RandomAccountAddress()
-// 	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
-// 	require.NotEmpty(t, reflect)
+	lucky := RandomAccountAddress()
+	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
+	require.NotEmpty(t, reflect)
 
-// 	// lucky was broke
-// 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
-// 	require.Empty(t, balances)
+	// Fund reflect contract with 100 base denom creation fees
+	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
 
-// 	amount, ok := sdk.NewIntFromString("808010808")
-// 	require.True(t, ok)
-// 	msg := wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
-// 		SubDenom:  "SUN",
-// 		Amount:    amount,
-// 		Recipient: lucky.String(),
-// 	}}
-// 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
-// 	require.NoError(t, err)
+	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "SUN",
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
 
-// 	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
-// 	require.Len(t, balances, 1)
-// 	coin := balances[0]
-// 	require.Equal(t, amount, coin.Amount)
-// 	require.Contains(t, coin.Denom, "cw/")
+	// query the denom and see if it matches
+	query := wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp := wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
-// 	// query the denom and see if it matches
-// 	query := wasmbindings.OsmosisQuery{
-// 		FullDenom: &wasmbindings.FullDenom{
-// 			Contract: reflect.String(),
-// 			SubDenom: "SUN",
-// 		},
-// 	}
-// 	resp := wasmbindings.FullDenomResponse{}
-// 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	require.Equal(t, resp.Denom, fmt.Sprintf("factory/%s/SUN", reflect.String()))
+}
 
-// 	require.Equal(t, resp.Denom, coin.Denom)
-// }
+func TestMintMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	lucky := RandomAccountAddress()
+	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
+	require.NotEmpty(t, reflect)
+
+	// Fund reflect contract with 100 base denom creation fees
+	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
+
+	// lucky was broke
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Empty(t, balances)
+
+	// Create denom for minting
+	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "SUN",
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	amount, ok := sdk.NewIntFromString("808010808")
+	require.True(t, ok)
+	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+		SubDenom:  "SUN",
+		Amount:    amount,
+		Recipient: lucky.String(),
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Len(t, balances, 1)
+	coin := balances[0]
+	require.Equal(t, amount, coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query := wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp := wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
+
+	// mint the same denom again
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Len(t, balances, 1)
+	coin = balances[0]
+	require.Equal(t, amount.MulRaw(2), coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query = wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp = wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
+
+	// now mint another amount / denom
+	// create it first
+	msg = wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "MOON",
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	amount = amount.SubRaw(1)
+	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+		SubDenom:  "MOON",
+		Amount:    amount,
+		Recipient: lucky.String(),
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Len(t, balances, 2)
+	coin = balances[0]
+	require.Equal(t, amount, coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query = wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "MOON",
+		},
+	}
+	resp = wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
+
+	// and check the first denom is unchanged
+	coin = balances[1]
+	require.Equal(t, amount.AddRaw(1).MulRaw(2), coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query = wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp = wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
+}
 
 type BaseState struct {
 	StarPool  uint64
