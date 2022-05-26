@@ -176,7 +176,9 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 			var opts docker.RemoveContainerOptions
 			opts.ID = uc.valResources[curChain.ChainMeta.Id][valIdx].Container.ID
 			opts.Force = true
-			uc.dockerPool.Client.RemoveContainer(opts)
+			if err := uc.dockerPool.Client.RemoveContainer(opts); err != nil {
+				return err
+			}
 			uc.t.Logf("removed container: %s", uc.valResources[curChain.ChainMeta.Id][valIdx].Container.Name[1:])
 		}
 	}

@@ -50,6 +50,7 @@ func (bc *BaseConfigurer) CreatePool(chainId string, valIdx int, poolFile string
 				OutputStream: &outBuf,
 				ErrorStream:  &errBuf,
 			})
+			require.NoError(bc.t, err)
 			return strings.Contains(outBuf.String(), "code: 0")
 		},
 		time.Minute,
@@ -105,7 +106,7 @@ func (bc *BaseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, 
 				OutputStream: &outBuf,
 				ErrorStream:  &errBuf,
 			})
-
+			require.NoError(bc.t, err)
 			return strings.Contains(outBuf.String(), "Success")
 		},
 		time.Minute,
@@ -131,7 +132,7 @@ func (bc *BaseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, 
 		},
 		5*time.Minute,
 		time.Second,
-		"tx not recieved on destination chain",
+		"tx not received on destination chain",
 	)
 
 	bc.t.Log("successfully sent IBC tokens")
@@ -178,7 +179,6 @@ func (bc *BaseConfigurer) queryBalances(containerId string, addr string) (sdk.Co
 	}
 
 	return balancesResp.GetBalances(), nil
-
 }
 
 func (bc *BaseConfigurer) getCurrentChainHeight(containerId string) int {
@@ -261,6 +261,7 @@ func (bc *BaseConfigurer) submitProposal(c *chain.Chain, upgradeHeight int) {
 				OutputStream: &outBuf,
 				ErrorStream:  &errBuf,
 			})
+			require.NoError(bc.t, err)
 			return strings.Contains(outBuf.String(), "code: 0")
 		},
 		time.Minute,
@@ -303,6 +304,7 @@ func (bc *BaseConfigurer) depositProposal(c *chain.Chain) {
 				OutputStream: &outBuf,
 				ErrorStream:  &errBuf,
 			})
+			require.NoError(bc.t, err)
 			return strings.Contains(outBuf.String(), "code: 0")
 		},
 		time.Minute,
@@ -350,6 +352,7 @@ func (bc *BaseConfigurer) voteProposal(chainConfig *ChainConfig) {
 					OutputStream: &outBuf,
 					ErrorStream:  &errBuf,
 				})
+				require.NoError(bc.t, err)
 				return strings.Contains(outBuf.String(), "code: 0")
 			},
 			time.Minute,

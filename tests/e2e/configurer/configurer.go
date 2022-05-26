@@ -404,10 +404,15 @@ func (bc *BaseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 			return false
 		}
 
-		status := respBody["status"].(string)
-		result := respBody["result"].(map[string]interface{})
+		status, ok := respBody["status"].(string)
+		require.True(bc.t, ok)
+		result, ok := respBody["result"].(map[string]interface{})
+		require.True(bc.t, ok)
 
-		return status == "success" && len(result["chains"].([]interface{})) == 2
+		chains, ok := result["chains"].([]interface{})
+		require.True(bc.t, ok)
+
+		return status == "success" && len(chains) == 2
 	},
 		5*time.Minute,
 		time.Second,
