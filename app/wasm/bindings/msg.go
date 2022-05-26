@@ -24,7 +24,7 @@ type OsmosisMsg struct {
 /// Subdenom can be of length at most 44 characters, in [0-9a-zA-Z./]
 /// The (creating contract address, subdenom) pair must be unique.
 /// The created denom's admin is the creating contract address,
-/// but this admin can be changed using the UpdateAdmin binding.
+/// but this admin can be changed using the ChangeAdmin binding.
 type CreateDenom struct {
 	Subdenom string `json:"subdenom"`
 }
