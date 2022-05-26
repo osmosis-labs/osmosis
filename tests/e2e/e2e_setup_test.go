@@ -62,57 +62,71 @@ const (
 
 var (
 	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
-	validatorConfigsChainA = []*chain.ValidatorConfig{
+	validatorConfigsChainA = []*chain.NodeConfig{
 		{
+			Name:               "prune-default-snapshot",
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-nothing-snapshot",
 			Pruning:            "nothing",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-custom-snapshot",
 			Pruning:            "custom",
 			PruningKeepRecent:  "10000",
 			PruningInterval:    "13",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-everything-no-snapshot",
 			Pruning:            "everything",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   0,
 			SnapshotKeepRecent: 0,
+			IsValidator:        true,
 		},
 	}
-	validatorConfigsChainB = []*chain.ValidatorConfig{
+	validatorConfigsChainB = []*chain.NodeConfig{
 		{
+			Name:               "prune-default-snapshot",
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-nothing-snapshot",
 			Pruning:            "nothing",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-custom-snapshot",
 			Pruning:            "custom",
 			PruningKeepRecent:  "10000",
 			PruningInterval:    "13",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 	}
 )
@@ -165,8 +179,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	})
 	s.configureChain(chain.ChainBID, validatorConfigsChainB, map[int]struct{}{})
 
-	for i, chainConfig := range s.chainConfigs {
-		s.runValidators(chainConfig, s.dockerImages.OsmosisRepository, s.dockerImages.OsmosisTag, i*10)
+	for _, chainConfig := range s.chainConfigs {
+		s.runValidators(chainConfig, s.dockerImages.OsmosisRepository, s.dockerImages.OsmosisTag)
 	}
 
 	// Run a relayer between every possible pair of chains.
@@ -214,13 +228,13 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	}
 }
 
-func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, dockerRepository, dockerTag string, portOffset int) {
+func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, dockerRepository, dockerTag string) {
 	chain := chainConfig.chain
 	s.T().Logf("starting %s validator containers...", chain.ChainMeta.Id)
-	s.valResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.skipRunValidatorIndexes))
+	s.valResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Nodes)-len(chainConfig.skipRunValidatorIndexes))
 	pwd, err := os.Getwd()
 	s.Require().NoError(err)
-	for i, val := range chain.Validators {
+	for i, val := range chain.Nodes {
 		// Skip some validators from running during set up.
 		// This is needed for testing functionality like
 		// state-sunc where we might want to start some validators during tests.
@@ -241,22 +255,6 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, dockerRep
 			Cmd: []string{
 				"start",
 			},
-		}
-
-		// expose the first validator for debugging and communication
-		if val.Index == 0 {
-			runOpts.PortBindings = map[docker.Port][]docker.PortBinding{
-				"1317/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}},
-				"6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}},
-				"6061/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6061+portOffset)}},
-				"6062/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6062+portOffset)}},
-				"6063/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6063+portOffset)}},
-				"6064/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6064+portOffset)}},
-				"6065/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6065+portOffset)}},
-				"9090/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 9090+portOffset)}},
-				"26656/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26656+portOffset)}},
-				"26657/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26657+portOffset)}},
-			}
 		}
 
 		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
@@ -299,8 +297,8 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chain.Chain, chainB *chain.
 	s.Require().NoError(err)
 	s.tmpDirs = append(s.tmpDirs, tmpDir)
 
-	osmoAVal := chainA.Validators[0]
-	osmoBVal := chainB.Validators[0]
+	osmoAVal := chainA.Nodes[0]
+	osmoBVal := chainB.Nodes[0]
 	hermesCfgPath := path.Join(tmpDir, "hermes")
 
 	s.Require().NoError(os.MkdirAll(hermesCfgPath, 0o755))
@@ -387,7 +385,7 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chain.Chain, chainB *chain.
 	s.connectIBCChains(chainA, chainB)
 }
 
-func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig, skipValidatorIndexes map[int]struct{}) {
+func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.NodeConfig, skipValidatorIndexes map[int]struct{}) {
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 
@@ -485,7 +483,7 @@ func (s *IntegrationTestSuite) upgrade() {
 	for _, chainConfig := range s.chainConfigs {
 		curChain := chainConfig.chain
 
-		for i := range chainConfig.chain.Validators {
+		for i := range chainConfig.chain.Nodes {
 			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
 				continue
 			}
@@ -517,7 +515,7 @@ func (s *IntegrationTestSuite) upgrade() {
 	// remove all containers so we can upgrade them to the new version
 	for _, chainConfig := range s.chainConfigs {
 		curChain := chainConfig.chain
-		for valIdx := range curChain.Validators {
+		for valIdx := range curChain.Nodes {
 			if _, ok := chainConfig.skipRunValidatorIndexes[valIdx]; ok {
 				continue
 			}
@@ -543,7 +541,7 @@ func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propH
 	pwd, err := os.Getwd()
 	s.Require().NoError(err)
 
-	for i, val := range chain.Validators {
+	for i, val := range chain.Nodes {
 		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
 			continue
 		}
@@ -567,7 +565,7 @@ func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propH
 	}
 
 	// check that we are creating blocks again
-	for i := range chain.Validators {
+	for i := range chain.Nodes {
 		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
 			continue
 		}
@@ -591,10 +589,10 @@ func (s *IntegrationTestSuite) createPreUpgradeState() {
 	chainA := s.chainConfigs[0].chain
 	chainB := s.chainConfigs[1].chain
 
-	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.OsmoToken)
-	s.sendIBC(chainB, chainA, chainA.Validators[0].PublicAddress, chain.OsmoToken)
-	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.StakeToken)
-	s.sendIBC(chainB, chainA, chainA.Validators[0].PublicAddress, chain.StakeToken)
+	s.sendIBC(chainA, chainB, chainB.Nodes[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(chainB, chainA, chainA.Nodes[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(chainA, chainB, chainB.Nodes[0].PublicAddress, chain.StakeToken)
+	s.sendIBC(chainB, chainA, chainA.Nodes[0].PublicAddress, chain.StakeToken)
 	s.createPool(chainA, "pool1A.json")
 	s.createPool(chainB, "pool1B.json")
 }
@@ -603,10 +601,10 @@ func (s *IntegrationTestSuite) runPostUpgradeTests() {
 	chainA := s.chainConfigs[0].chain
 	chainB := s.chainConfigs[1].chain
 
-	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.OsmoToken)
-	s.sendIBC(chainB, chainA, chainA.Validators[0].PublicAddress, chain.OsmoToken)
-	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.StakeToken)
-	s.sendIBC(chainB, chainA, chainA.Validators[0].PublicAddress, chain.StakeToken)
+	s.sendIBC(chainA, chainB, chainB.Nodes[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(chainB, chainA, chainA.Nodes[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(chainA, chainB, chainB.Nodes[0].PublicAddress, chain.StakeToken)
+	s.sendIBC(chainB, chainA, chainA.Nodes[0].PublicAddress, chain.StakeToken)
 	s.createPool(chainA, "pool2A.json")
 	s.createPool(chainB, "pool2B.json")
 }

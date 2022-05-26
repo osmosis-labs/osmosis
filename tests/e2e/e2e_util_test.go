@@ -231,7 +231,7 @@ func (s *IntegrationTestSuite) voteProposal(chainConfig *chainConfig) {
 	chain := chainConfig.chain
 
 	s.T().Logf("voting for upgrade proposal for chain-id: %s", chain.ChainMeta.Id)
-	for i := range chain.Validators {
+	for i := range chain.Nodes {
 		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
 			continue
 		}

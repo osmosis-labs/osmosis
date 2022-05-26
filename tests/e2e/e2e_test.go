@@ -10,5 +10,5 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 
 	// compare coins of reciever pre and post IBC send
 	// diff should only be the amount sent
-	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(chainA, chainB, chainB.Nodes[0].PublicAddress, chain.OsmoToken)
 }
