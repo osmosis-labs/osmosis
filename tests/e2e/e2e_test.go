@@ -5,11 +5,12 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestCreatePool() {
-	chainA := s.configurer.GetChainConfig(0).GetChain()
-	chainB := s.configurer.GetChainConfig(1).GetChain()
+	if s.skipUpgrade {
+		s.T().Skip()
+	}
 
+	chainA := s.configurer.GetChainConfig(0).GetChain()
 	s.configurer.CreatePool(chainA.ChainMeta.Id, 0, "pool2A.json")
-	s.configurer.CreatePool(chainB.ChainMeta.Id, 0, "pool2B.json")
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
