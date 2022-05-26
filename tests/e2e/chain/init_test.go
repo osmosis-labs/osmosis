@@ -5,12 +5,19 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+)
+
+var (
+	expectedConfigFiles = []string{
+		"app.toml", "config.toml", "genesis.json", "node_key.json", "priv_validator_key.json",
+	}
 )
 
 func TestChainInit(t *testing.T) {
@@ -52,41 +59,20 @@ func TestChainInit(t *testing.T) {
 
 	actualNodes := chain.Nodes
 
-	expectedConfigFiles := []string{
-		"app.toml", "config.toml", "genesis.json", "node_key.json", "priv_validator_key.json",
-	}
-
 	for i, expectedConfig := range nodeConfigs {
 		actualNode := actualNodes[i]
 
-		require.Equal(t, fmt.Sprintf("%s-node-%s", id, expectedConfig.Name), actualNode.Name)
-		require.Equal(t, expectedConfig.IsValidator, actualNode.IsValidator)
-
-		expectedPath := fmt.Sprintf("%s/%s/%s-node-%s", dataDir, id, id, expectedConfig.Name)
-
-		require.Equal(t, expectedPath, actualNode.ConfigDir)
-
-		require.NotEmpty(t, actualNode.Mnemonic)
-		require.NotEmpty(t, actualNode.PublicAddress)
-		require.NotEmpty(t, actualNode.PeerId)
-
-		for _, expectedFileName := range expectedConfigFiles {
-			expectedFilePath := path.Join(expectedPath, "config", expectedFileName)
-			_, err := os.Stat(expectedFilePath)
-			require.NoError(t, err)
-		}
-		_, err := os.Stat(path.Join(expectedPath, "keyring-test"))
-		require.NoError(t, err)
+		validateNode(t, id, dataDir, expectedConfig, actualNode)
 	}
 }
 
-func TestNodeInit(t *testing.T) {
+func TestInitSingleNode(t *testing.T) {
 	const (
 		id = chain.ChainAID
 	)
 
 	var (
-		nodeConfigs = []*chain.NodeConfig{
+		existingChainNodeConfigs = []*chain.NodeConfig{
 			{
 				Name:               "0",
 				Pruning:            "default",
@@ -103,46 +89,51 @@ func TestNodeInit(t *testing.T) {
 				PruningInterval:    "0",
 				SnapshotInterval:   100,
 				SnapshotKeepRecent: 1,
-				IsValidator:        false,
+				IsValidator:        true,
 			},
+		}
+		expectedConfig = &chain.NodeConfig{
+			Name:               "2",
+			Pruning:            "everything",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   100,
+			SnapshotKeepRecent: 1,
+			IsValidator:        false,
 		}
 		dataDir, err = ioutil.TempDir("", "osmosis-e2e-testnet-test")
 	)
 
-	chain, err := chain.Init(id, dataDir, nodeConfigs, time.Second*3)
+	// Setup
+	existingChain, err := chain.Init(id, dataDir, existingChainNodeConfigs, time.Second*3)
 	require.NoError(t, err)
 
-	require.Equal(t, chain.ChainMeta.DataDir, dataDir)
-	require.Equal(t, chain.ChainMeta.Id, id)
+	actualNode, err := chain.InitSingleNode(existingChain.ChainMeta.Id, dataDir, filepath.Join(existingChain.Nodes[0].ConfigDir, "config", "genesis.json"), expectedConfig, time.Second*3, 3, "testHash", []string{"some server"})
+	require.NoError(t, err)
 
-	require.Equal(t, len(nodeConfigs), len(chain.Nodes))
+	validateNode(t, id, dataDir, expectedConfig, actualNode)
+}
 
-	actualNodes := chain.Nodes
+func validateNode(t *testing.T, chainId string, dataDir string, expectedConfig *chain.NodeConfig, actualNode *chain.Node) {
+	require.Equal(t, fmt.Sprintf("%s-node-%s", chainId, expectedConfig.Name), actualNode.Name)
+	require.Equal(t, expectedConfig.IsValidator, actualNode.IsValidator)
 
-	expectedConfigFiles := []string{
-		"app.toml", "config.toml", "genesis.json", "node_key.json", "priv_validator_key.json",
+	expectedPath := fmt.Sprintf("%s/%s/%s-node-%s", dataDir, chainId, chainId, expectedConfig.Name)
+
+	require.Equal(t, expectedPath, actualNode.ConfigDir)
+
+	require.NotEmpty(t, actualNode.Mnemonic)
+	require.NotEmpty(t, actualNode.PublicAddress)
+
+	if expectedConfig.IsValidator {
+		require.NotEmpty(t, actualNode.PeerId)
 	}
 
-	for i, expectedConfig := range nodeConfigs {
-		actualNode := actualNodes[i]
-
-		require.Equal(t, fmt.Sprintf("%s-node-%s", id, expectedConfig.Name), actualNode.Name)
-		require.Equal(t, expectedConfig.IsValidator, actualNode.IsValidator)
-
-		expectedPath := fmt.Sprintf("%s/%s/%s-node-%s", dataDir, id, id, expectedConfig.Name)
-
-		require.Equal(t, expectedPath, actualNode.ConfigDir)
-
-		require.NotEmpty(t, actualNode.Mnemonic)
-		require.NotEmpty(t, actualNode.PublicAddress)
-		require.NotEmpty(t, actualNode.PeerId)
-
-		for _, expectedFileName := range expectedConfigFiles {
-			expectedFilePath := path.Join(expectedPath, "config", expectedFileName)
-			_, err := os.Stat(expectedFilePath)
-			require.NoError(t, err)
-		}
-		_, err := os.Stat(path.Join(expectedPath, "keyring-test"))
+	for _, expectedFileName := range expectedConfigFiles {
+		expectedFilePath := path.Join(expectedPath, "config", expectedFileName)
+		_, err := os.Stat(expectedFilePath)
 		require.NoError(t, err)
 	}
+	_, err := os.Stat(path.Join(expectedPath, "keyring-test"))
+	require.NoError(t, err)
 }
