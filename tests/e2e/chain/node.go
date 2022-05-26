@@ -312,6 +312,30 @@ func (n *internalNode) initValidatorConfigs(c *internalChain, persistendtPeers [
 	return nil
 }
 
+func (n *internalNode) initStateSyncConfig(trustHeight int64, trustHash string, stateSyncRPCServers []string) error {
+	tmCfgPath := filepath.Join(n.configDir(), "config", "config.toml")
+
+	vpr := viper.New()
+	vpr.SetConfigFile(tmCfgPath)
+	if err := vpr.ReadInConfig(); err != nil {
+		return err
+	}
+
+	valConfig := &tmconfig.Config{}
+	if err := vpr.Unmarshal(valConfig); err != nil {
+		return err
+	}
+
+	valConfig.StateSync = tmcfg.DefaultStateSyncConfig()
+	valConfig.StateSync.Enable = true
+	valConfig.StateSync.TrustHeight = trustHeight
+	valConfig.StateSync.TrustHash = trustHash
+	valConfig.StateSync.RPCServers = stateSyncRPCServers
+
+	tmconfig.WriteConfigFile(tmCfgPath, valConfig)
+	return nil
+}
+
 func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	txBuilder := util.EncodingConfig.TxConfig.NewTxBuilder()
 

@@ -1,8 +1,12 @@
 package chain
 
 import (
+	"errors"
 	"fmt"
+	"path/filepath"
 	"time"
+
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
 func Init(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.Duration) (*Chain, error) {
@@ -38,4 +42,31 @@ func Init(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.Durat
 		}
 	}
 	return chain.export(), nil
+}
+
+func InitSingleNode(chainId, dataDir string, existingGenesisDir string, nodeConfig *NodeConfig, votingPeriod time.Duration, trustHeight int64, trustHash string, stateSyncRPCServers []string) (*Node, error) {
+	if nodeConfig.IsValidator {
+		return nil, errors.New("creating individual validator nodes after starting up chain is not currently supported")
+	}
+
+	chain, err := new(chainId, dataDir)
+	if err != nil {
+		return nil, err
+	}
+
+	newNode, err := newNode(chain, nodeConfig)
+
+	_, err = util.CopyFile(
+		existingGenesisDir,
+		filepath.Join(newNode.configDir(), "config", "genesis.json"),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := newNode.initStateSyncConfig(trustHeight, trustHash, stateSyncRPCServers); err != nil {
+		return nil, err
+	}
+
+	return newNode.export(), nil
 }
