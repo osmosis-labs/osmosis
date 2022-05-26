@@ -11,22 +11,18 @@ import (
 
 type CreateLBPInputs createLBPInputs
 
-type XCreateLBPInputsExceptions struct {
-	CreateLBPInputs
-	Other *string // Other won't raise an error
-}
 
 // UnmarshalJSON should error if there are fields unexpected.
 func (inputs *createLBPInputs) UnmarshalJSON(data []byte) error {
-	var createLBPE XCreateLBPInputsExceptions
+	var lbpInputs CreateLBPInputs
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields() // Force
 
-	if err := dec.Decode(&createLBPE); err != nil {
+	if err := dec.Decode(&lbpInputs); err != nil {
 		return err
 	}
 
-	*inputs = createLBPInputs(createLBPE.CreateLBPInputs)
+	*inputs = createLBPInputs(lbpInputs)
 	return nil
 }
 
