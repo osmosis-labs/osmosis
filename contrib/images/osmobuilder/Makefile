@@ -46,8 +46,8 @@ get-binary-amd64: build-binary-amd64
 	mkdir -p release/
 	docker rm -f osmobinary || true
 	docker create -ti --name osmobinary $(IMAGE)-amd64
-	docker cp osmobinary:/osmosis/build/osmosisd release/osmosis-$(TAG)-linux-amd64
-	tar -zcvf release/osmosis-$(TAG)-linux-amd64.tar.gz release/osmosis-$(TAG)-linux-amd64
+	docker cp osmobinary:/osmosis/build/osmosisd release/osmosis-$(VERSION)-linux-amd64
+	tar -zcvf release/osmosis-$(VERSION)-linux-amd64.tar.gz release/osmosis-$(VERSION)-linux-amd64
 	docker rm -f osmobinary
 
 # Build image for arm64 architecture
@@ -70,8 +70,8 @@ get-binary-arm64: build-binary-arm64
 	mkdir -p release/
 	docker rm -f osmobinary || true
 	docker create -ti --name osmobinary $(IMAGE)-arm64
-	docker cp osmobinary:/osmosis/build/osmosisd release/osmosis-$(TAG)-linux-arm64
-	tar -zcvf release/osmosis-$(TAG)-linux-arm64.tar.gz release/osmosis-$(TAG)-linux-arm64
+	docker cp osmobinary:/osmosis/build/osmosisd release/osmosis-$(VERSION)-linux-arm64
+	tar -zcvf release/osmosis-$(VERSION)-linux-arm64.tar.gz release/osmosis-$(VERSION)-linux-arm64
 	docker rm -f osmobinary
 
 # Calculate sha
@@ -85,13 +85,13 @@ git:
 	mkdir -p release/
 	git archive \
 		--format zip \
-		--prefix "osmosis-$(TAG)/" \
+		--prefix "osmosis-$(VERSION)/" \
 		-o "release/Source code.zip" \
 		HEAD 
 
 	git archive \
 		--format tar.gz \
-		--prefix "osmosis-$(TAG)/" \
+		--prefix "osmosis-$(VERSION)/" \
 		-o "release/Source code.tar.gz" \
 		HEAD 
 
