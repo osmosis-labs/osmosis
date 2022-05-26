@@ -58,6 +58,12 @@ const (
 	propBufferBlocks float32 = 5
 	// max retries for json unmarshalling
 	maxRetries = 60
+	// Environment variable name to skip the upgrade tests
+	skipUpgradeEnv = "OSMOSIS_E2E_SKIP_UPGRADE"
+	// Environment variable name to skip the IBC tests
+	skipIBCEnv = "OSMOSIS_E2E_SKIP_IBC"
+	// Environment variable name to skip cleaning up Docker resources in teardown.
+	skipCleanupEnv = "OSMOSIS_E2E_SKIP_CLEANUP"
 )
 
 var (
@@ -149,31 +155,49 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 4. Execute various e2e tests, including IBC.
 	var (
 		skipUpgrade bool
+		skipIBC     bool
 		err         error
 	)
 
-	if str := os.Getenv("OSMOSIS_E2E_SKIP_UPGRADE"); len(str) > 0 {
+	if str := os.Getenv(skipUpgradeEnv); len(str) > 0 {
 		skipUpgrade, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
-		s.T().Log("OSMOSIS_E2E_SKIP_UPGRADE was true, skipping upgrade tests")
+		s.T().Log(fmt.Sprintf("%s was true, skipping upgrafe tests", skipIBCEnv))
+	}
+
+	if str := os.Getenv(skipIBCEnv); len(str) > 0 {
+		skipIBC, err = strconv.ParseBool(str)
+		s.Require().NoError(err)
+		s.T().Log(fmt.Sprintf("%s was true, skipping IBC tests", skipIBCEnv))
+	}
+
+	if skipIBC && !skipUpgrade {
+		s.T().Fatalf(fmt.Sprintf("IBC tests must be enabled for upgrade tests, either set %s to false or %s to true", skipIBCEnv, skipUpgradeEnv))
 	}
 
 	s.dockerImages = *dockerconfig.NewImageConfig(!skipUpgrade)
 
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
+
 	s.configureChain(chain.ChainAID, validatorConfigsChainA, map[int]struct{}{
 		3: {}, // skip validator at index 3
 	})
-	s.configureChain(chain.ChainBID, validatorConfigsChainB, map[int]struct{}{})
+
+	if !skipIBC {
+		// Configure second chain for IBC tests only.
+		s.configureChain(chain.ChainBID, validatorConfigsChainB, map[int]struct{}{})
+	}
 
 	for i, chainConfig := range s.chainConfigs {
 		s.runValidators(chainConfig, s.dockerImages.OsmosisRepository, s.dockerImages.OsmosisTag, i*10)
 	}
 
-	// Run a relayer between every possible pair of chains.
-	for i := 0; i < len(s.chainConfigs); i++ {
-		for j := i + 1; j < len(s.chainConfigs); j++ {
-			s.runIBCRelayer(s.chainConfigs[i].chain, s.chainConfigs[j].chain)
+	if !skipIBC {
+		// Run a relayer between every possible pair of chains.
+		for i := 0; i < len(s.chainConfigs); i++ {
+			for j := i + 1; j < len(s.chainConfigs); j++ {
+				s.runIBCRelayer(s.chainConfigs[i].chain, s.chainConfigs[j].chain)
+			}
 		}
 	}
 
@@ -185,7 +209,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	if str := os.Getenv("OSMOSIS_E2E_SKIP_CLEANUP"); len(str) > 0 {
+	if str := os.Getenv(skipCleanupEnv); len(str) > 0 {
 		skipCleanup, err := strconv.ParseBool(str)
 		s.Require().NoError(err)
 
