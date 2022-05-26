@@ -13,16 +13,70 @@ design allows for the opportunity of testing chain upgrades in the
 future by providing an older Osmosis version to the container,
 performing the chain upgrade, and running the latest test suite.
 
-The file e2e\_suite\_test.go defines the testing suite and contains the
+The file `e2e_suite_test.go` defines the testing suite and contains the
 core bootstrapping logic that creates a testing environment via Docker
 containers. A testing network is created dynamically with 2 test
 validators.
 
-The file e2e\_test.go contains the actual end-to-end integration tests
+The file `e2e_test.go` contains the actual end-to-end integration tests
 that utilize the testing suite.
 
-Currently, there is a single test in `e2e_test.go` to query the balances
-of a validator.
+Currently, there is a single IBC test in `e2e_test.go`.
+
+Additionally, there is an ability to disable certain components
+of the e2e suite. This can be done by setting the environment
+variables. See "Environment variables" section below for more details.
+
+## How It Works
+
+Conceptually, we can split the e2e setup into 2 parts:
+
+1. Chain Initialization
+
+    This part can either be local or with the upgrade.
+
+    If local, we run chain initialization locally
+    by calling `chain.Init(...)` method in the `local_configurer.go`
+
+    If with the upgrade, the same `chain.Init(...)` function is run on a Docker container
+    of the previous Osmosis version, inside `upgrade_configurer.go`. This is
+    needed to initialize chain configs and the genesis of the previous version that
+    we are upgrading from.
+
+    The decision of what configuration type to use is decided by the `Configurer`.
+    This is an interface that has `LocalConfigurer` and `UpgradeConfigurer` implementations.
+
+    When the desired configurer is created, the caller may
+    configure the chain in the desired way as follows:
+
+    ```go
+    conf, _ := configurer.New(...)
+
+    conf.ConfigureChains()
+    ```
+
+2. Setting up e2e components
+
+    Currently, there exist the following components:
+
+    - Base logic
+    - This is the most basic type of setup where a single chain is created
+    - It simply spins up the desired number of validators on a chain.
+    - IBC testing
+    - 2 chains are created connected by Hermes relayer
+    - Upgrade Testing
+    - 2 chains of the older Osmosis version are created, and
+    connected by Hermes relayer
+    - CLI commands are run to create an upgrade proposal and approve it
+    - Old version containers are stopped and the upgrade binary is added
+    - Local codebase Osmosis version is spun up to continue with testing
+    - State Sync Testing (WIP)
+    - An additional full node is created after a chain has started.
+    This node is meant to state sync with the rest of the system.
+
+    This is done in `configurer/setup_runner.go` via function decorator design pattern
+    where we chain the desired setup components during configurer creation.
+    [Example](https://github.com/osmosis-labs/osmosis/blob/c5d5c9f0c6b5c7fdf9688057eb78ec793f6dd580/tests/e2e/configurer/configurer.go#L166)
 
 ## `chain` Package
 
@@ -47,7 +101,9 @@ environment.
 
 ### To build the binary that initializes the chain
 
+```sh
     make build-e2e-chain-init
+```
 
 - The produced binary is an entrypoint to the
     `osmosis-e2e-chain-init:debug` image.
