@@ -298,7 +298,7 @@ Example:
 			}
 
 			// convert balances to underlying coins and sum up balances to total balance
-			for addr, account := range snapshotAccs {
+			for _, account := range snapshotAccs {
 				// All pool shares are in liquid balances OR bonded balances (locked),
 				// therefore underlyingCoinsForSelectPools on liquidBalances + bondedBalances
 				// will include everything that is in one of those two pools.
@@ -310,9 +310,13 @@ Example:
 					Add(account.LiquidBalances...).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Staked)).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.UnbondingStake)).
+<<<<<<< HEAD:cmd/osmosisd/cmd/balances_from_state_export.go
 					Add(account.Bonded...).
 					Add(account.UnclaimedAirdrop...)
 				snapshotAccs[addr] = account
+=======
+					Add(account.Bonded...)
+>>>>>>> 74c9bd5 (Add back balances_from_state_export_command (#1594)):cmd/osmosisd/cmd/balances_from_state_export.go.history
 			}
 
 			snapshot := DeriveSnapshot{
