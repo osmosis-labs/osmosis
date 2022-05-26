@@ -76,9 +76,26 @@ jobs:
             **/**.go
             go.mod
             go.sum
+      - name: Get data from build cache
+        uses: actions/cache@v2
+        with:
+          # In order:
+          # * Module download cache
+          # * Build cache (Linux)
+          # * Build cache (Mac)
+          # * Build cache (Windows)
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            ~\AppData\Local\go-build
+          key: ${{ runner.os }}-go-docker-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-docker-${{ matrix.go-version }}-
       - name: Disable Long Tests
         run: |
           echo "OSMOSIS_E2E_SKIP_UPGRADE=true" >> $GITHUB_ENV
+          echo 
         if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || (startsWith(github.ref,'refs/heads/v') && endsWith(github.ref, '.x'))) }}
       - name: Build Docker Image
         run: |
