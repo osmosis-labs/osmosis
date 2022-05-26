@@ -194,37 +194,39 @@ func OrderEndBlockers(allModuleNames []string) []string {
 	return ord.TotalOrdering()
 }
 
-// modulesOrderInitGenesis returns module names in order for init genesis calls.
-var modulesOrderInitGenesis = []string{
-	capabilitytypes.ModuleName,
-	authtypes.ModuleName,
-	banktypes.ModuleName,
-	distrtypes.ModuleName,
-	stakingtypes.ModuleName,
-	slashingtypes.ModuleName,
-	govtypes.ModuleName,
-	minttypes.ModuleName,
-	crisistypes.ModuleName,
-	ibchost.ModuleName,
-	icatypes.ModuleName,
-	gammtypes.ModuleName,
-	txfeestypes.ModuleName,
-	genutiltypes.ModuleName,
-	evidencetypes.ModuleName,
-	paramstypes.ModuleName,
-	upgradetypes.ModuleName,
-	vestingtypes.ModuleName,
-	ibctransfertypes.ModuleName,
-	bech32ibctypes.ModuleName, // comes after ibctransfertypes
-	poolincentivestypes.ModuleName,
-	superfluidtypes.ModuleName,
-	tokenfactorytypes.ModuleName,
-	incentivestypes.ModuleName,
-	epochstypes.ModuleName,
-	lockuptypes.ModuleName,
-	authz.ModuleName,
-	// wasm after ibc transfer
-	wasm.ModuleName,
+// OrderInitGenesis returns module names in order for init genesis calls.
+func OrderInitGenesis(allModuleNames []string) []string {
+	return []string{
+		capabilitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		stakingtypes.ModuleName,
+		slashingtypes.ModuleName,
+		govtypes.ModuleName,
+		minttypes.ModuleName,
+		crisistypes.ModuleName,
+		ibchost.ModuleName,
+		icatypes.ModuleName,
+		gammtypes.ModuleName,
+		txfeestypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		ibctransfertypes.ModuleName,
+		bech32ibctypes.ModuleName, // comes after ibctransfertypes
+		poolincentivestypes.ModuleName,
+		superfluidtypes.ModuleName,
+		tokenfactorytypes.ModuleName,
+		incentivestypes.ModuleName,
+		epochstypes.ModuleName,
+		lockuptypes.ModuleName,
+		authz.ModuleName,
+		// wasm after ibc transfer
+		wasm.ModuleName,
+	}
 }
 
 // simulationModules returns modules for simulation manager
