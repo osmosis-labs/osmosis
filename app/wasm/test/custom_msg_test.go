@@ -562,6 +562,136 @@ func TestJoinPoolMsg(t *testing.T) {
 	require.Equal(t, "100000000000000000", contractBalance.Amount.String())
 }
 
+func TestExitPoolMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	provider := RandomAccountAddress()
+
+	providerFunds := sdk.NewCoins(
+		sdk.NewInt64Coin("uosmo", 555000000+3*poolFee),
+		sdk.NewInt64Coin("ustar", 999000000),
+	)
+	fundAccount(t, ctx, osmosis, creator, providerFunds)
+	fundAccount(t, ctx, osmosis, provider, providerFunds)
+
+	// 20 star to 1 osmo
+	funds1 := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12000000),
+		sdk.NewInt64Coin("ustar", 240000000),
+	}
+	starPool := preparePool(t, ctx, osmosis, creator, funds1)
+
+	poolInfo, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
+
+	poolDenom := "gamm/pool/1"
+
+	creatorBalance := osmosis.BankKeeper.GetBalance(ctx, creator, poolDenom)
+
+	require.Equal(t, "100000000000000000000", creatorBalance.Amount.String())
+
+	require.NoError(t, err)
+
+	coinsInPool := poolInfo.GetTotalPoolLiquidity(ctx)
+
+	require.Equal(t, sdk.NewCoin("uosmo", sdk.NewInt(12000000)), coinsInPool[0])
+	require.Equal(t, sdk.NewCoin("ustar", sdk.NewInt(240000000)), coinsInPool[1])
+
+	totalSharesBefore := poolInfo.GetTotalShares()
+
+	require.Equal(t, "100000000000000000000", totalSharesBefore.String())
+
+	osmoStarLiquidity := sdk.NewCoins(sdk.NewInt64Coin("uosmo", 12_000), sdk.NewInt64Coin("ustar", 240_000))
+	reflect := instantiateReflectContract(t, ctx, osmosis, provider)
+
+	invalidMsg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
+		PoolId:         starPool,
+		ShareOutAmount: sdk.NewInt(100000000000000000),
+		TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))),
+	}}
+	expectedErr := executeCustom(t, ctx, osmosis, reflect, provider, invalidMsg, sdk.NewCoins())
+	require.Error(t, expectedErr)
+	require.Equal(t, "dispatch: submessages: join pool: TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap, upperbound: 10random, needed 12000uosmo,240000ustar: calculated amount is larger than max amount", expectedErr.Error())
+
+	//ShareOutAmount = TotalShares * tokenInAmount / poolAsset.amount
+	//Either asset can be used for tokenInAmount and poolAsset.amount can be used to calculate this amount
+	//ShareOutAmount = 100000000000000000000 * 12000 / 12000000 = 100000000000000000000 * 240000 / 240000000
+
+	msg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
+		PoolId:         starPool,
+		ShareOutAmount: sdk.NewInt(100000000000000000),
+		TokenInMaxs:    osmoStarLiquidity,
+	}}
+	err1 := executeCustom(t, ctx, osmosis, reflect, provider, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
+
+	require.Error(t, err1)
+	require.Equal(t, "0random is smaller than 10random: insufficient funds", err1.Error())
+
+	err2 := executeCustom(t, ctx, osmosis, reflect, provider, msg, osmoStarLiquidity)
+
+	require.NoError(t, err2)
+
+	providerUstarBalanceAfterJoining := osmosis.BankKeeper.GetBalance(ctx, provider, "ustar")
+
+	// 999_000_000 - 240_000 ustar
+	require.Equal(t, "998760000", providerUstarBalanceAfterJoining.Amount.String())
+
+	poolInfoAfterDeposit, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
+
+	require.NoError(t, err)
+
+	coinsInPoolAfter := poolInfoAfterDeposit.GetTotalPoolLiquidity(ctx)
+
+	require.Equal(t, sdk.NewCoin("uosmo", sdk.NewInt(12012000)), coinsInPoolAfter[0])
+	require.Equal(t, sdk.NewCoin("ustar", sdk.NewInt(240240000)), coinsInPoolAfter[1])
+
+	poolInfoAfterDeposit, err3 := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
+
+	require.NoError(t, err3)
+
+	totalSharesAfter := poolInfoAfterDeposit.GetTotalShares()
+
+	require.Equal(t, "100100000000000000000", totalSharesAfter.String())
+
+	contractBalanceAfterJoining := osmosis.BankKeeper.GetBalance(ctx, reflect, poolDenom)
+
+	require.Equal(t, "100000000000000000", contractBalanceAfterJoining.Amount.String())
+
+	//Simualate sending share tokens to user
+	err = osmosis.BankKeeper.SendCoins(ctx, reflect, provider, sdk.NewCoins(sdk.NewCoin(poolDenom, sdk.NewInt(100000000000000000))))
+
+	providerBalanceAfterJoining := osmosis.BankKeeper.GetBalance(ctx, provider, poolDenom)
+
+	require.Equal(t, "100000000000000000", providerBalanceAfterJoining.Amount.String())
+
+	providerUatomBalanceBefore := osmosis.BankKeeper.GetBalance(ctx, provider, "uatom")
+
+	require.Equal(t, "0", providerUatomBalanceBefore.Amount.String())
+
+	exitPoolMsg := wasmbindings.OsmosisMsg{ExitPool: &wasmbindings.ExitPool{
+		PoolId:        starPool,
+		ShareInAmount: sdk.NewInt(100000000000000000),
+		TokenOutMins:  sdk.NewCoins(),
+	}}
+
+	err4 := executeCustom(t, ctx, osmosis, reflect, provider, exitPoolMsg, sdk.NewCoins(sdk.NewCoin(poolDenom, sdk.NewInt(100000000000000000))))
+
+	require.NoError(t, err4)
+
+	providerLpTokenBalanceAfter := osmosis.BankKeeper.GetBalance(ctx, provider, poolDenom)
+
+	require.Equal(t, "0", providerLpTokenBalanceAfter.Amount.String())
+
+	providerUosmoBalanceAfter := osmosis.BankKeeper.GetBalance(ctx, reflect, "uosmo")
+
+	require.Equal(t, "11999", providerUosmoBalanceAfter.Amount.String())
+
+	providerUstarBalanceAfter := osmosis.BankKeeper.GetBalance(ctx, reflect, "ustar")
+
+	require.Equal(t, "239999", providerUstarBalanceAfter.Amount.String())
+
+}
+
 // test setup for each run through the table test above
 func prepareSwapState(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp) BaseState {
 	actor := RandomAccountAddress()
