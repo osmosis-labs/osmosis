@@ -67,6 +67,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
+      - uses: actions/setup-go@v2.2.0
+        with:
+          go-version: 1.18
+      - uses: actions/checkout@v2
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
       - name: Disable Long Tests
         run: |
           echo "OSMOSIS_E2E_SKIP_UPGRADE=true" >> $GITHUB_ENV
