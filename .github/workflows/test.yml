@@ -96,6 +96,7 @@ jobs:
         run: |
           echo "OSMOSIS_E2E_SKIP_UPGRADE=true" >> $GITHUB_ENV
           echo 
+        # This ensures that we disable long tests on all events other than push to main or release branches i.e. v9.x
         if: ${{ !(github.event_name == 'push' && (github.ref == 'refs/heads/master' || (startsWith(github.ref,'refs/heads/v') && endsWith(github.ref, '.x')))) }}
       - name: Build Docker Image
         run: |
