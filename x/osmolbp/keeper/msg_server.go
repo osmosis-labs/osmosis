@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -11,6 +10,7 @@ import (
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/osmosis-labs/osmosis/x/osmolbp"
+	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 )
 
 var _ api.MsgServer = Keeper{}

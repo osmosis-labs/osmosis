@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/binary"
-	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -11,6 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/x/osmolbp"
+	"github.com/osmosis-labs/osmosis/x/osmolbp/api"
 )
 
 // StoreKey is the store key string for osmolbp
