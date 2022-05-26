@@ -52,8 +52,8 @@ func TestQueryFullDenom(t *testing.T) {
 	// query full denom
 	query := wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			Subdenom: "ustart",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "ustart",
 		},
 	}
 	resp := wasmbindings.FullDenomResponse{}

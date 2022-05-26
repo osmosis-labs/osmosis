@@ -22,8 +22,8 @@ type OsmosisQuery struct {
 }
 
 type FullDenom struct {
-	Contract string `json:"contract"`
-	Subdenom string `json:"subdenom"`
+	CreatorAddr string `json:"creator_addr"`
+	Subdenom    string `json:"subdenom"`
 }
 
 type PoolState struct {
