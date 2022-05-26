@@ -17,8 +17,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-func (s *IntegrationTestSuite) connectIBCChains() {
-	s.T().Logf("connecting %s and %s chains via IBC", s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id)
+func (s *IntegrationTestSuite) connectIBCChains(chainA *chain.Chain, chainB *chain.Chain) {
+	s.T().Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -33,8 +33,8 @@ func (s *IntegrationTestSuite) connectIBCChains() {
 			"hermes",
 			"create",
 			"channel",
-			s.chains[0].ChainMeta.Id,
-			s.chains[1].ChainMeta.Id,
+			chainA.ChainMeta.Id,
+			chainB.ChainMeta.Id,
 			"--port-a=transfer",
 			"--port-b=transfer",
 		},
@@ -63,7 +63,7 @@ func (s *IntegrationTestSuite) connectIBCChains() {
 		"failed to connect chains via IBC: %s", errBuf.String(),
 	)
 
-	s.T().Logf("connected %s and %s chains via IBC", s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id)
+	s.T().Logf("connected %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
 }
 
 func (s *IntegrationTestSuite) sendIBC(srcChain *chain.Chain, dstChain *chain.Chain, recipient string, token sdk.Coin) {
@@ -225,12 +225,16 @@ func (s *IntegrationTestSuite) depositProposal(c *chain.Chain) {
 
 }
 
-func (s *IntegrationTestSuite) voteProposal(c *chain.Chain) {
+func (s *IntegrationTestSuite) voteProposal(chainConfig *chainConfig) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
+	chain := chainConfig.chain
 
-	s.T().Logf("voting for upgrade proposal for chain-id: %s", c.ChainMeta.Id)
-	for i := range c.Validators {
+	s.T().Logf("voting for upgrade proposal for chain-id: %s", chain.ChainMeta.Id)
+	for i := range chain.Validators {
+		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+			continue
+		}
 
 		var (
 			outBuf bytes.Buffer
@@ -243,10 +247,10 @@ func (s *IntegrationTestSuite) voteProposal(c *chain.Chain) {
 					Context:      ctx,
 					AttachStdout: true,
 					AttachStderr: true,
-					Container:    s.valResources[c.ChainMeta.Id][i].Container.ID,
+					Container:    s.valResources[chain.ChainMeta.Id][i].Container.ID,
 					User:         "root",
 					Cmd: []string{
-						"osmosisd", "tx", "gov", "vote", "1", "yes", "--from=val", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
+						"osmosisd", "tx", "gov", "vote", "1", "yes", "--from=val", fmt.Sprintf("--chain-id=%s", chain.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
 					},
 				})
 				s.Require().NoError(err)
@@ -264,7 +268,7 @@ func (s *IntegrationTestSuite) voteProposal(c *chain.Chain) {
 			"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 		)
 
-		s.T().Logf("successfully voted for proposal from %s container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
+		s.T().Logf("successfully voted for proposal from %s container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:], s.valResources[chain.ChainMeta.Id][i].Container.ID)
 	}
 }
 

@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/v7
 go 1.18
 
 require (
-	github.com/CosmWasm/wasmd v0.24.0
+	github.com/CosmWasm/wasmd v1.0.0
 	github.com/cosmos/cosmos-sdk v0.45.4
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
@@ -13,7 +13,7 @@ require (
 	github.com/golangci/golangci-lint v1.46.2
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/ory/dockertest/v3 v3.8.1
+	github.com/ory/dockertest/v3 v3.9.0
 	github.com/osmosis-labs/bech32-ibc v0.3.0-rc1
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -46,7 +46,7 @@ require (
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
 	github.com/GaijinEntertainment/go-exhaustruct/v2 v2.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Microsoft/go-winio v0.5.1 // indirect
+	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/OpenPeeDeeP/depguard v1.1.0 // indirect
 	github.com/Workiva/go-datastructures v1.0.53 // indirect
@@ -63,14 +63,14 @@ require (
 	github.com/breml/errchkjson v0.3.0 // indirect
 	github.com/btcsuite/btcd v0.22.0-beta // indirect
 	github.com/butuzov/ireturn v0.1.1 // indirect
-	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
+	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/charithe/durationcheck v0.0.9 // indirect
 	github.com/chavacava/garif v0.0.0-20220316182200-5cad0b5181d4 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.0 // indirect
 	github.com/confio/ics23/go v0.7.0 // indirect
-	github.com/containerd/continuity v0.2.1 // indirect
+	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
@@ -83,7 +83,7 @@ require (
 	github.com/dgraph-io/badger/v2 v2.2007.3 // indirect
 	github.com/dgraph-io/ristretto v0.0.3 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
-	github.com/docker/cli v20.10.11+incompatible // indirect
+	github.com/docker/cli v20.10.14+incompatible // indirect
 	github.com/docker/docker v20.10.7+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
@@ -190,7 +190,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
-	github.com/opencontainers/runc v1.0.3 // indirect
+	github.com/opencontainers/runc v1.1.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.0 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
@@ -272,7 +272,7 @@ replace (
 	// branch: v0.27.0.rc3-osmo, current tag: v0.27.0.rc3-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk v0.45.0x-osmo-v7
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220517190359-30ebc413ddff
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220524162204-830f277f8259
 	// Use Osmosis fast iavl
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7
 	// use cosmos-compatible protobufs

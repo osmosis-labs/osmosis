@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
@@ -15,6 +16,37 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app"
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 )
+
+func TestCreateDenomMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	lucky := RandomAccountAddress()
+	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
+	require.NotEmpty(t, reflect)
+
+	// Fund reflect contract with 100 base denom creation fees
+	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
+
+	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "SUN",
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
+	require.NoError(t, err)
+
+	// query the denom and see if it matches
+	query := wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp := wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, fmt.Sprintf("factory/%s/SUN", reflect.String()))
+}
 
 func TestMintMsg(t *testing.T) {
 	creator := RandomAccountAddress()
@@ -32,15 +64,22 @@ func TestMintMsg(t *testing.T) {
 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Empty(t, balances)
 
+	// Create denom for minting
+	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "SUN",
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
+	require.NoError(t, err)
+
 	amount, ok := sdk.NewIntFromString("808010808")
 	require.True(t, ok)
-	msg := wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
 		SubDenom:  "SUN",
 		Amount:    amount,
 		Recipient: lucky.String(),
 	}}
-	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
-	require.NoError(t, err)
+	err1 := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
+	require.NoError(t, err1)
 
 	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Len(t, balances, 1)
@@ -83,6 +122,13 @@ func TestMintMsg(t *testing.T) {
 	require.Equal(t, resp.Denom, coin.Denom)
 
 	// now mint another amount / denom
+	// create it first
+	msg = wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "MOON",
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
+	require.NoError(t, err)
+
 	amount = amount.SubRaw(1)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
 		SubDenom:  "MOON",
