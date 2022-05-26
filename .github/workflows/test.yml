@@ -96,7 +96,7 @@ jobs:
         run: |
           echo "OSMOSIS_E2E_SKIP_UPGRADE=true" >> $GITHUB_ENV
           echo 
-        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || (startsWith(github.ref,'refs/heads/v') && endsWith(github.ref, '.x'))) }}
+        if: ${{ !(github.event_name == 'push' && (github.ref == 'refs/heads/master' || (startsWith(github.ref,'refs/heads/v') && endsWith(github.ref, '.x')))) }}
       - name: Build Docker Image
         run: |
           make docker-build-debug
