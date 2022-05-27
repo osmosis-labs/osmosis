@@ -1,6 +1,8 @@
 package wasm
 
 import (
+	"errors"
+	"fmt"
 	"math"
 	"testing"
 
@@ -28,18 +30,18 @@ func TestCreateDenom(t *testing.T) {
 	}{
 		"valid sub-denom": {
 			createDenom: &wasmbindings.CreateDenom{
-				SubDenom: "MOON",
+				Subdenom: "MOON",
 			},
 		},
 		"empty sub-denom": {
 			createDenom: &wasmbindings.CreateDenom{
-				SubDenom: "",
+				Subdenom: "",
 			},
 			expErr: false,
 		},
 		"invalid sub-denom": {
 			createDenom: &wasmbindings.CreateDenom{
-				SubDenom: "sub-denom_2",
+				Subdenom: "sub-denom_2",
 			},
 			expErr: true,
 		},
@@ -63,26 +65,133 @@ func TestCreateDenom(t *testing.T) {
 
 }
 
+func TestChangeAdmin(t *testing.T) {
+	const validDenom = "validdenom"
+
+	tokenCreator := RandomAccountAddress()
+
+	specs := map[string]struct {
+		actor       sdk.AccAddress
+		changeAdmin *wasmbindings.ChangeAdmin
+
+		expErrMsg string
+	}{
+		"valid": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", tokenCreator.String(), validDenom),
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor: tokenCreator,
+		},
+		"typo in factory in denom name": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("facory/%s/%s", tokenCreator.String(), validDenom),
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor:     tokenCreator,
+			expErrMsg: "denom prefix is incorrect. Is: facory.  Should be: factory: invalid denom",
+		},
+		"invalid address in denom": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", RandomBech32AccountAddress(), validDenom),
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor:     tokenCreator,
+			expErrMsg: "failed changing admin from message: unauthorized account",
+		},
+		"other denom name in 3 part name": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", tokenCreator.String(), "invalid denom"),
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor:     tokenCreator,
+			expErrMsg: fmt.Sprintf("invalid denom: factory/%s/invalid denom", tokenCreator.String()),
+		},
+		"empty denom": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           "",
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor:     tokenCreator,
+			expErrMsg: "invalid denom: ",
+		},
+		"empty address": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", tokenCreator.String(), validDenom),
+				NewAdminAddress: "",
+			},
+			actor:     tokenCreator,
+			expErrMsg: "address from bech32: empty address string is not allowed",
+		},
+		"creator is a different address": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", tokenCreator.String(), validDenom),
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor:     RandomAccountAddress(),
+			expErrMsg: "failed changing admin from message: unauthorized account",
+		},
+		"change to the same address": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", tokenCreator.String(), validDenom),
+				NewAdminAddress: tokenCreator.String(),
+			},
+			actor: tokenCreator,
+		},
+		"nil binding": {
+			actor:     tokenCreator,
+			expErrMsg: "invalid request: changeAdmin is nil - original request: ",
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			osmosis, ctx := SetupCustomApp(t, tokenCreator)
+
+			// Fund actor with 100 base denom creation fees
+			actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+			fundAccount(t, ctx, osmosis, tokenCreator, actorAmount)
+
+			err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &wasmbindings.CreateDenom{
+				Subdenom: validDenom,
+			})
+			require.NoError(t, err)
+
+			err = wasm.ChangeAdmin(osmosis.TokenFactoryKeeper, ctx, spec.actor, spec.changeAdmin)
+			if len(spec.expErrMsg) > 0 {
+				require.Error(t, err)
+				actualErrMsg := err.Error()
+				require.Equal(t, spec.expErrMsg, actualErrMsg)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
 func TestMint(t *testing.T) {
-	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
 
 	// Fund actor with 100 base denom creation fees
-	actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, actor, actorAmount)
+	tokenCreationFeeAmt := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
 
 	// Create denoms for valid mint tests
 	validDenom := wasmbindings.CreateDenom{
-		SubDenom: "MOON",
+		Subdenom: "MOON",
 	}
-	err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &validDenom)
+	err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
 	emptyDenom := wasmbindings.CreateDenom{
-		SubDenom: "",
+		Subdenom: "",
 	}
-	err = wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &emptyDenom)
+	err = wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &emptyDenom)
 	require.NoError(t, err)
+
+	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
+	emptyDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), emptyDenom.Subdenom)
 
 	lucky := RandomAccountAddress()
 
@@ -99,64 +208,64 @@ func TestMint(t *testing.T) {
 	}{
 		"valid mint": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "MOON",
-				Amount:    amount,
-				Recipient: lucky.String(),
+				Denom:         validDenomStr,
+				Amount:        amount,
+				MintToAddress: lucky.String(),
 			},
 		},
 		"empty sub-denom": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "",
-				Amount:    amount,
-				Recipient: lucky.String(),
+				Denom:         emptyDenomStr,
+				Amount:        amount,
+				MintToAddress: lucky.String(),
 			},
 			expErr: false,
 		},
 		"nonexistent sub-denom": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "SUN",
-				Amount:    amount,
-				Recipient: lucky.String(),
+				Denom:         fmt.Sprintf("factory/%s/%s", creator.String(), "SUN"),
+				Amount:        amount,
+				MintToAddress: lucky.String(),
 			},
 			expErr: true,
 		},
 		"invalid sub-denom": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "sub-denom_2",
-				Amount:    amount,
-				Recipient: lucky.String(),
+				Denom:         "sub-denom_2",
+				Amount:        amount,
+				MintToAddress: lucky.String(),
 			},
 			expErr: true,
 		},
 		"zero amount": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "MOON",
-				Amount:    sdk.ZeroInt(),
-				Recipient: lucky.String(),
+				Denom:         validDenomStr,
+				Amount:        sdk.ZeroInt(),
+				MintToAddress: lucky.String(),
 			},
 			expErr: true,
 		},
 		"negative amount": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "MOON",
-				Amount:    amount.Neg(),
-				Recipient: lucky.String(),
+				Denom:         validDenomStr,
+				Amount:        amount.Neg(),
+				MintToAddress: lucky.String(),
 			},
 			expErr: true,
 		},
 		"empty recipient": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "MOON",
-				Amount:    amount,
-				Recipient: "",
+				Denom:         validDenomStr,
+				Amount:        amount,
+				MintToAddress: "",
 			},
 			expErr: true,
 		},
 		"invalid recipient": {
 			mint: &wasmbindings.MintTokens{
-				SubDenom:  "MOON",
-				Amount:    amount,
-				Recipient: "invalid",
+				Denom:         validDenomStr,
+				Amount:        amount,
+				MintToAddress: "invalid",
 			},
 			expErr: true,
 		},
@@ -168,7 +277,7 @@ func TestMint(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.mint)
+			gotErr := wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, spec.mint)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -595,7 +704,7 @@ func TestSwapMultiHop(t *testing.T) {
 	}
 }
 
-func TestJoinPool(t *testing.T) {
+func TestJoinPoolNoSwap(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
 
@@ -612,48 +721,40 @@ func TestJoinPool(t *testing.T) {
 		sdk.NewInt64Coin("ustar", 240_000))
 
 	specs := map[string]struct {
-		join_pool *wasmbindings.JoinPool
-		expErr    bool
+		JoinPoolNoSwap *wasmbindings.JoinPoolNoSwap
+		expErr         error
 	}{
-		"empty share out amount": {
-			join_pool: &wasmbindings.JoinPool{
+		"zero share out amount": {
+			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool,
-				ShareOutAmount: sdk.NewInt(1),
+				ShareOutAmount: sdk.NewInt(0),
 				TokenInMaxs:    osmoStarLiquidity,
 			},
-			expErr: true,
+			expErr: errors.New("share ratio is zero or negative: invalid calculated result"),
 		},
 		"incorrect pool id": {
-			join_pool: &wasmbindings.JoinPool{
+			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool + uint64(10),
-				ShareOutAmount: sdk.NewInt(1),
+				ShareOutAmount: sdk.NewInt(1000000),
 				TokenInMaxs:    osmoStarLiquidity,
 			},
-			expErr: true,
-		},
-		"empty coins array": {
-			join_pool: &wasmbindings.JoinPool{
-				PoolId:         starPool,
-				ShareOutAmount: sdk.NewInt(1),
-				TokenInMaxs:    sdk.NewCoins(),
-			},
-			expErr: true,
+			expErr: errors.New("pool with ID 11 does not exist"),
 		},
 		"sending one coin": {
-			join_pool: &wasmbindings.JoinPool{
+			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool,
-				ShareOutAmount: sdk.NewInt(1),
+				ShareOutAmount: sdk.NewInt(1000000),
 				TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("osmo", sdk.NewInt(10))),
 			},
-			expErr: true,
+			expErr: errors.New("TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap, upperbound: 10osmo, needed 1uosmo,1ustar: calculated amount is larger than max amount"),
 		},
 		"valid join pool": {
-			join_pool: &wasmbindings.JoinPool{
+			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool,
 				ShareOutAmount: sdk.NewInt(1000000),
 				TokenInMaxs:    osmoStarLiquidity,
 			},
-			expErr: false,
+			expErr: nil,
 		},
 	}
 	for name, spec := range specs {
@@ -661,10 +762,10 @@ func TestJoinPool(t *testing.T) {
 			// use scratch context to avoid interference between tests
 			subCtx, _ := ctx.CacheContext()
 			// when
-			gotErr := wasm.PerformJoin(osmosis.GAMMKeeper, subCtx, actor, spec.join_pool)
+			gotErr := wasm.PerformJoinPoolNoSwap(osmosis.GAMMKeeper, subCtx, actor, spec.JoinPoolNoSwap)
 			// then
-			if spec.expErr {
-				require.Error(t, gotErr)
+			if spec.expErr != nil {
+				require.EqualError(t, gotErr, spec.expErr.Error())
 				return
 			}
 			require.NoError(t, gotErr)

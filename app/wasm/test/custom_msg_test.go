@@ -30,7 +30,7 @@ func TestCreateDenomMsg(t *testing.T) {
 	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
 
 	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
-		SubDenom: "SUN",
+		Subdenom: "SUN",
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
@@ -38,8 +38,8 @@ func TestCreateDenomMsg(t *testing.T) {
 	// query the denom and see if it matches
 	query := wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "SUN",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "SUN",
 		},
 	}
 	resp := wasmbindings.FullDenomResponse{}
@@ -66,17 +66,18 @@ func TestMintMsg(t *testing.T) {
 
 	// Create denom for minting
 	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
-		SubDenom: "SUN",
+		Subdenom: "SUN",
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
+	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
 	amount, ok := sdk.NewIntFromString("808010808")
 	require.True(t, ok)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
-		SubDenom:  "SUN",
-		Amount:    amount,
-		Recipient: lucky.String(),
+		Denom:         sunDenom,
+		Amount:        amount,
+		MintToAddress: lucky.String(),
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
@@ -90,8 +91,8 @@ func TestMintMsg(t *testing.T) {
 	// query the denom and see if it matches
 	query := wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "SUN",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "SUN",
 		},
 	}
 	resp := wasmbindings.FullDenomResponse{}
@@ -112,8 +113,8 @@ func TestMintMsg(t *testing.T) {
 	// query the denom and see if it matches
 	query = wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "SUN",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "SUN",
 		},
 	}
 	resp = wasmbindings.FullDenomResponse{}
@@ -124,16 +125,17 @@ func TestMintMsg(t *testing.T) {
 	// now mint another amount / denom
 	// create it first
 	msg = wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
-		SubDenom: "MOON",
+		Subdenom: "MOON",
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
+	moonDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
 	amount = amount.SubRaw(1)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
-		SubDenom:  "MOON",
-		Amount:    amount,
-		Recipient: lucky.String(),
+		Denom:         moonDenom,
+		Amount:        amount,
+		MintToAddress: lucky.String(),
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
@@ -147,8 +149,8 @@ func TestMintMsg(t *testing.T) {
 	// query the denom and see if it matches
 	query = wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "MOON",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "MOON",
 		},
 	}
 	resp = wasmbindings.FullDenomResponse{}
@@ -164,8 +166,8 @@ func TestMintMsg(t *testing.T) {
 	// query the denom and see if it matches
 	query = wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "SUN",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "SUN",
 		},
 	}
 	resp = wasmbindings.FullDenomResponse{}
@@ -519,7 +521,7 @@ func TestJoinPoolMsg(t *testing.T) {
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
-	actor := RandomAccountAddress()
+	provider := RandomAccountAddress()
 
 	providerFunds := sdk.NewCoins(
 		sdk.NewInt64Coin("uatom", 333000000),
@@ -528,7 +530,7 @@ func TestJoinPoolMsg(t *testing.T) {
 		sdk.NewInt64Coin("ustar", 999000000),
 	)
 	fundAccount(t, ctx, osmosis, creator, providerFunds)
-	fundAccount(t, ctx, osmosis, actor, providerFunds)
+	fundAccount(t, ctx, osmosis, provider, providerFunds)
 
 	// 20 star to 1 osmo
 	funds1 := []sdk.Coin{
@@ -557,34 +559,38 @@ func TestJoinPoolMsg(t *testing.T) {
 	require.Equal(t, "100000000000000000000", totalSharesBefore.String())
 
 	osmoStarLiquidity := sdk.NewCoins(sdk.NewInt64Coin("uosmo", 12_000), sdk.NewInt64Coin("ustar", 240_000))
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	reflect := instantiateReflectContract(t, ctx, osmosis, provider)
 
-	invalidMsg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
+	invalidMsg := wasmbindings.OsmosisMsg{JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 		PoolId:         starPool,
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))),
 	}}
-	expectedErr := executeCustom(t, ctx, osmosis, reflect, actor, invalidMsg, osmoStarLiquidity)
+	expectedErr := executeCustom(t, ctx, osmosis, reflect, provider, invalidMsg, osmoStarLiquidity)
 	require.Error(t, expectedErr)
-	require.Equal(t, "dispatch: submessages: join pool: TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap, upperbound: 10random, needed 12000uosmo,240000ustar: calculated amount is larger than max amount", expectedErr.Error())
+	require.Equal(t, "dispatch: submessages: join pool no swap: TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap, upperbound: 10random, needed 12000uosmo,240000ustar: calculated amount is larger than max amount", expectedErr.Error())
 
 	//ShareOutAmount = TotalShares * tokenInAmount / poolAsset.amount
 	//Either asset can be used for tokenInAmount and poolAsset.amount can be used to calculate this amount
 	//ShareOutAmount = 100000000000000000000 * 12000 / 12000000 = 100000000000000000000 * 240000 / 240000000
 
-	msg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
+	msg := wasmbindings.OsmosisMsg{JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 		PoolId:         starPool,
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    osmoStarLiquidity,
 	}}
-	err = executeCustom(t, ctx, osmosis, reflect, actor, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
+	err = executeCustom(t, ctx, osmosis, reflect, provider, msg, sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))))
 
 	require.Error(t, err)
 	require.Equal(t, "0random is smaller than 10random: insufficient funds", err.Error())
 
-	err = executeCustom(t, ctx, osmosis, reflect, actor, msg, osmoStarLiquidity)
+	err = executeCustom(t, ctx, osmosis, reflect, provider, msg, osmoStarLiquidity)
 
 	require.NoError(t, err)
+
+	reflectBalanceAfterJoining := osmosis.BankKeeper.GetBalance(ctx, reflect, poolDenom)
+
+	require.Equal(t, "100000000000000000", reflectBalanceAfterJoining.Amount.String())
 
 	poolInfoAfterDeposit, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
 
@@ -598,10 +604,6 @@ func TestJoinPoolMsg(t *testing.T) {
 	totalSharesAfter := poolInfoAfterDeposit.GetTotalShares()
 
 	require.Equal(t, "100100000000000000000", totalSharesAfter.String())
-
-	contractBalance := osmosis.BankKeeper.GetBalance(ctx, reflect, poolDenom)
-
-	require.Equal(t, "100000000000000000", contractBalance.Amount.String())
 }
 
 func TestExitPoolMsg(t *testing.T) {
@@ -646,7 +648,7 @@ func TestExitPoolMsg(t *testing.T) {
 	osmoStarLiquidity := sdk.NewCoins(sdk.NewInt64Coin("uosmo", 12_000), sdk.NewInt64Coin("ustar", 240_000))
 	reflect := instantiateReflectContract(t, ctx, osmosis, provider)
 
-	invalidMsg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
+	invalidMsg := wasmbindings.OsmosisMsg{JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 		PoolId:         starPool,
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10))),
@@ -659,7 +661,7 @@ func TestExitPoolMsg(t *testing.T) {
 	//Either asset can be used for tokenInAmount and poolAsset.amount can be used to calculate this amount
 	//ShareOutAmount = 100000000000000000000 * 12000 / 12000000 = 100000000000000000000 * 240000 / 240000000
 
-	msg := wasmbindings.OsmosisMsg{JoinPool: &wasmbindings.JoinPool{
+	msg := wasmbindings.OsmosisMsg{JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 		PoolId:         starPool,
 		ShareOutAmount: sdk.NewInt(100000000000000000),
 		TokenInMaxs:    osmoStarLiquidity,
