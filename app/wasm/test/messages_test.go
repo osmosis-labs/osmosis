@@ -130,7 +130,7 @@ func TestChangeAdmin(t *testing.T) {
 			actor:     RandomAccountAddress(),
 			expErrMsg: "failed changing admin from message: unauthorized account",
 		},
-		"change to the same address": { // TODO: make sure that success is expected here
+		"change to the same address": {
 			changeAdmin: &wasmbindings.ChangeAdmin{
 				Denom:           fmt.Sprintf("factory/%s/%s", actor.String(), validDenom),
 				NewAdminAddress: actor.String(),
