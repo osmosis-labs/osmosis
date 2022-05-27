@@ -139,7 +139,7 @@ func TestChangeAdmin(t *testing.T) {
 		},
 		"nil binding": {
 			actor:     tokenCreator,
-			expErrMsg: "invalid request: changeAdmin was nil - original request: ",
+			expErrMsg: "invalid request: changeAdmin is nil - original request: ",
 		},
 	}
 	for name, spec := range specs {
