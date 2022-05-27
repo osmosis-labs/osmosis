@@ -15,7 +15,8 @@ jobs:
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
-      - id: skip_check
+      -
+        id: skip_check
         uses: fkirc/skip-duplicate-actions@master
         with:
           cancel_others: "true" # workflow-runs from outdated commits will be cancelled.
@@ -23,7 +24,8 @@ jobs:
           skip_after_successful_duplicate: "true"
           paths: '["**/*.go", "**/*.mod", "**/*.sum"]'
           do_not_skip: '["pull_request", "workflow_dispatch", "schedule"]'
-      - name: Skipping test
+      -
+        name: Skipping test
         run: echo Should I skip tests? ${{ steps.skip_check.outputs.should_skip }}
 
   go_test:
@@ -31,15 +33,19 @@ jobs:
     if: ${{ needs.should_run_test.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository code
+      -
+        name: Check out repository code
         uses: actions/checkout@v2
-      - name: Setup Golang
+      -
+        name: Setup Golang
         uses: actions/setup-go@v2.1.4
         with:
           go-version: 1.18
-      - name: Display go version
+      -
+        name: Display go version
         run: go version
-      - name: Get data from build cache
+      -
+        name: Get data from build cache
         uses: actions/cache@v2
         with:
           # In order:
@@ -55,27 +61,35 @@ jobs:
           key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-${{ matrix.go-version }}-
-      - name: Run all tests
-        run: |
-          make test-cover
-      - name: Codecov
+      -
+        name: Run all tests
+        run: make test-cover
+      -
+        name: Codecov
         uses: codecov/codecov-action@v1.5.2
   
   e2e_test:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/setup-go@v2.2.0
+      -
+        name: Setup Go
+        uses: actions/setup-go@v2.2.0
         with:
           go-version: 1.18
-      - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v6.0.1
+      -
+        name: Check out repository code
+        uses: actions/checkout@v2
+      -
+        name: Get git diff
+        uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
             **/**.go
             go.mod
             go.sum
-      - name: Get data from build cache
+      -
+        name: Get data from build cache
         uses: actions/cache@v2
         with:
           # In order:
@@ -91,11 +105,20 @@ jobs:
           key: ${{ runner.os }}-go-docker-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-docker-${{ matrix.go-version }}-
-      - name: Build Docker Image
-        run: |
-          make docker-build-debug
+      -
+        name: Build e2e image
+        uses: docker/build-push-action@v3
+        with:
+          load: true
+          context: .
+          tags: osmosis:debug
+          # Use experimental Cache backend API: https://github.com/docker/build-push-action/blob/master/docs/advanced/cache.md#cache-backend-api
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+          BASE_IMG_TAG=debug
         if: env.GIT_DIFF
-      - name: Test E2E and Upgrade
-        run: |
-          make test-e2e
+      -
+        name: Test E2E and Upgrade
+        run: make test-e2e
         if: env.GIT_DIFF
