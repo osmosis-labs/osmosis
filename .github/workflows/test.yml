@@ -1,4 +1,4 @@
-name: Tests & Code Coverage
+name: Tests  & Code Coverage
 
 on:
   pull_request:
@@ -8,6 +8,7 @@ on:
     branches:
       - "main"
       - "v[0-9]**"
+  workflow_dispatch:
 
 jobs:
   should_run_go_test:
