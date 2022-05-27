@@ -24,9 +24,15 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true E2E_SCRIPT_NAME=${E2E_SCRIPT_NAME} mak
 ## Deploy image
 FROM ubuntu
 
+# Args only last for a single build stage - renew
+ARG E2E_SCRIPT_NAME
+
 COPY --from=build /osmosis/build/${E2E_SCRIPT_NAME} /bin/${E2E_SCRIPT_NAME}
+
+# ARGs are not expanded in ENTRYPOINT - use ENV
+ENV ENTER_SCRIPT=$E2E_SCRIPT_NAME
 
 ENV HOME /osmosis
 WORKDIR $HOME
 
-ENTRYPOINT [ ${E2E_SCRIPT_NAME} ]
+ENTRYPOINT $ENTER_SCRIPT
