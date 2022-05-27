@@ -107,8 +107,8 @@ func NewMsgStableSwapAdjustScalingFactors(
 	poolID uint64,
 ) MsgStableSwapAdjustScalingFactors {
 	return MsgStableSwapAdjustScalingFactors{
-		ScalingFactorGovernor: sender,
-		PoolID:                poolID,
+		Sender: sender,
+		PoolID: poolID,
 	}
 }
 
@@ -118,11 +118,11 @@ func (msg MsgStableSwapAdjustScalingFactors) Route() string {
 
 func (msg MsgStableSwapAdjustScalingFactors) Type() string { return TypeMsgCreateStableswapPool }
 func (msg MsgStableSwapAdjustScalingFactors) ValidateBasic() error {
-	if msg.ScalingFactorGovernor == "" {
+	if msg.Sender == "" {
 		return nil
 	}
 
-	_, err := sdk.AccAddressFromBech32(msg.ScalingFactorGovernor)
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
@@ -135,7 +135,7 @@ func (msg MsgStableSwapAdjustScalingFactors) GetSignBytes() []byte {
 }
 
 func (msg MsgStableSwapAdjustScalingFactors) GetSigners() []sdk.AccAddress {
-	scalingFactorGovernor, err := sdk.AccAddressFromBech32(msg.ScalingFactorGovernor)
+	scalingFactorGovernor, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
 	}

@@ -30,7 +30,7 @@ func TestCreateDenomMsg(t *testing.T) {
 	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
 
 	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
-		SubDenom: "SUN",
+		Subdenom: "SUN",
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
@@ -38,8 +38,8 @@ func TestCreateDenomMsg(t *testing.T) {
 	// query the denom and see if it matches
 	query := wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "SUN",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "SUN",
 		},
 	}
 	resp := wasmbindings.FullDenomResponse{}
@@ -66,17 +66,18 @@ func TestMintMsg(t *testing.T) {
 
 	// Create denom for minting
 	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
-		SubDenom: "SUN",
+		Subdenom: "SUN",
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
+	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
 	amount, ok := sdk.NewIntFromString("808010808")
 	require.True(t, ok)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
-		SubDenom:  "SUN",
-		Amount:    amount,
-		Recipient: lucky.String(),
+		Denom:         sunDenom,
+		Amount:        amount,
+		MintToAddress: lucky.String(),
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
@@ -90,8 +91,8 @@ func TestMintMsg(t *testing.T) {
 	// query the denom and see if it matches
 	query := wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "SUN",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "SUN",
 		},
 	}
 	resp := wasmbindings.FullDenomResponse{}
@@ -112,8 +113,8 @@ func TestMintMsg(t *testing.T) {
 	// query the denom and see if it matches
 	query = wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "SUN",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "SUN",
 		},
 	}
 	resp = wasmbindings.FullDenomResponse{}
@@ -124,16 +125,17 @@ func TestMintMsg(t *testing.T) {
 	// now mint another amount / denom
 	// create it first
 	msg = wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
-		SubDenom: "MOON",
+		Subdenom: "MOON",
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
+	moonDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
 	amount = amount.SubRaw(1)
 	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
-		SubDenom:  "MOON",
-		Amount:    amount,
-		Recipient: lucky.String(),
+		Denom:         moonDenom,
+		Amount:        amount,
+		MintToAddress: lucky.String(),
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
@@ -147,8 +149,8 @@ func TestMintMsg(t *testing.T) {
 	// query the denom and see if it matches
 	query = wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "MOON",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "MOON",
 		},
 	}
 	resp = wasmbindings.FullDenomResponse{}
@@ -164,8 +166,8 @@ func TestMintMsg(t *testing.T) {
 	// query the denom and see if it matches
 	query = wasmbindings.OsmosisQuery{
 		FullDenom: &wasmbindings.FullDenom{
-			Contract: reflect.String(),
-			SubDenom: "SUN",
+			CreatorAddr: reflect.String(),
+			Subdenom:    "SUN",
 		},
 	}
 	resp = wasmbindings.FullDenomResponse{}
