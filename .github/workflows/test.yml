@@ -1,4 +1,4 @@
-name: Tests  & Code Coverage
+name: Tests & Code Coverage
 
 on:
   pull_request:
@@ -107,6 +107,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-docker-${{ matrix.go-version }}-
       -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
         name: Build e2e image
         uses: docker/build-push-action@v3
         with:
@@ -118,8 +124,6 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BASE_IMG_TAG=debug
-        if: env.GIT_DIFF
       -
-        name: Test E2E and Upgrade
+        name: Test e2e and Upgrade
         run: make test-e2e
-        if: env.GIT_DIFF
