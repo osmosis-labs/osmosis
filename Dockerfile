@@ -32,7 +32,7 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 # Runner
 # --------------------------------------------------------
 
-FROM gcr.io/distroless/base-debian11:${BASE_IMG_TAG}
+FROM alpine
 
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 

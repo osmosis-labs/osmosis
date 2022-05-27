@@ -180,6 +180,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 	appGenState[banktypes.ModuleName] = bz
 
+	// modify stake module genesis params
 	var stakeGenState staketypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[staketypes.ModuleName], &stakeGenState); err != nil {
 		return err
@@ -200,6 +201,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 	appGenState[staketypes.ModuleName] = sz
 
+	// modify pool incentives module genesis params
 	var pooliGenState poolitypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[poolitypes.ModuleName], &pooliGenState); err != nil {
 		return err
@@ -222,6 +224,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 	appGenState[poolitypes.ModuleName] = pz
 
+	// modify incentives module genesis params
 	var incentivesGenState incentivestypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[incentivestypes.ModuleName], &incentivesGenState); err != nil {
 		return err
@@ -245,6 +248,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 	appGenState[incentivestypes.ModuleName] = iz
 
+	// modify mint module genesis params
 	var mintGenState minttypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState); err != nil {
 		return err
@@ -259,6 +263,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 	appGenState[minttypes.ModuleName] = mz
 
+	// modify txfees module genesis params
 	var txfeesGenState txfeestypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[txfeestypes.ModuleName], &txfeesGenState); err != nil {
 		return err
@@ -272,6 +277,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 	appGenState[txfeestypes.ModuleName] = tz
 
+	// modify gamm module genesis params
 	var gammGenState gammtypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[gammtypes.ModuleName], &gammGenState); err != nil {
 		return err
@@ -285,6 +291,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 	appGenState[gammtypes.ModuleName] = gaz
 
+	// modify epoch module genesis params
 	var epochGenState epochtypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[epochtypes.ModuleName], &epochGenState); err != nil {
 		return err
@@ -318,6 +325,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 	appGenState[epochtypes.ModuleName] = ez
 
+	// modify crisis module genesis params
 	var crisisGenState crisistypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState); err != nil {
 		return err
@@ -331,6 +339,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 	appGenState[crisistypes.ModuleName] = cz
 
+	// modify gov module genesis params
 	var govGenState govtypes.GenesisState
 	if err := util.Cdc.UnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState); err != nil {
 		return err

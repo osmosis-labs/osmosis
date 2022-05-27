@@ -41,9 +41,6 @@ func (c *internalChain) createAndInitValidators(count int) error {
 		if err := node.createKey("val"); err != nil {
 			return err
 		}
-		if err := node.createKey("val2"); err != nil {
-			return err
-		}
 		if err := node.createNodeKey(); err != nil {
 			return err
 		}

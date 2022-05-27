@@ -26,7 +26,6 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build-e2e-chain-init
 
 ## Deploy image
 FROM ubuntu
-RUN apt-get update && apt-get install -y jq moreutils
 
 COPY --from=build /osmosis/build/chain_init /bin/chain_init
 

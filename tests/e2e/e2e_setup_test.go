@@ -33,12 +33,8 @@ type syncInfo struct {
 	SyncInfo status `json:"SyncInfo"`
 }
 
-type valinfo struct {
-	VotingPower string `json:"VotingPower"`
-}
-
 type operInfo struct {
-	Bech32Val string `json:"Bech32 Val"`
+	Bech32Val string `json:"bech32_val"`
 }
 
 type chainConfig struct {
@@ -50,6 +46,8 @@ type chainConfig struct {
 	// This is needed for testing functionality like state-sync where we would
 	// like to start a node during tests post-initialization.
 	skipRunValidatorIndexes map[int]struct{}
+	propNumber              int
+	lockNumber              int
 	chain                   *chain.Chain
 }
 
@@ -175,7 +173,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	for i, chainConfig := range s.chainConfigs {
 		s.runValidators(chainConfig, s.dockerImages.OsmosisRepository, s.dockerImages.OsmosisTag, i*10)
-		s.extractOperAddress(chainConfig)
+		s.extractValidatorOperatorAddress(chainConfig)
 	}
 
 	// Run a relayer between every possible pair of chains.
@@ -485,9 +483,9 @@ func (s *IntegrationTestSuite) upgrade() {
 	for _, chainConfig := range s.chainConfigs {
 		currentHeight := s.getCurrentChainHeight(chainConfig.chain, 0)
 		chainConfig.propHeight = currentHeight + int(chainConfig.votingPeriod) + int(propSubmitBlocks) + int(propBufferBlocks)
-		s.submitUpgradeProposal(chainConfig.chain, chainConfig.propHeight)
-		s.depositProposal(chainConfig.chain)
-		s.voteProposal(chainConfig.chain, chainConfig)
+		s.submitUpgradeProposal(chainConfig)
+		s.depositProposal(chainConfig)
+		s.voteProposal(chainConfig)
 	}
 
 	// wait till all chains halt at upgrade height
