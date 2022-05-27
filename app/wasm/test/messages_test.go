@@ -64,6 +64,111 @@ func TestCreateDenom(t *testing.T) {
 
 }
 
+func TestChangeAdmin(t *testing.T) {
+	const validDenom = "validdenom"
+
+	actor := RandomAccountAddress()
+
+	specs := map[string]struct {
+		actor       sdk.AccAddress
+		changeAdmin *wasmbindings.ChangeAdmin
+
+		expErrMsg string
+	}{
+		"valid": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", actor.String(), validDenom),
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor: actor,
+		},
+		"typo in factory in denom name": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("facory/%s/%s", actor.String(), validDenom),
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor:     actor,
+			expErrMsg: "denom prefix is incorrect. Is: facory.  Should be: factory: invalid denom",
+		},
+		"invalid actor address in denom": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", RandomBech32AccountAddress(), validDenom),
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor:     actor,
+			expErrMsg: "failed changing admin from message: unauthorized account",
+		},
+		"other denom name in 3 part name": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", actor.String(), "invalid denom"),
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor:     actor,
+			expErrMsg: fmt.Sprintf("invalid denom: factory/%s/invalid denom", actor.String()),
+		},
+		"empty denom": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           "",
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor:     actor,
+			expErrMsg: "invalid denom: ",
+		},
+		"empty address": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", actor.String(), validDenom),
+				NewAdminAddress: "",
+			},
+			actor:     actor,
+			expErrMsg: "address from bech32: empty address string is not allowed",
+		},
+		"actor is a different address": {
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", actor.String(), validDenom),
+				NewAdminAddress: RandomBech32AccountAddress(),
+			},
+			actor:     RandomAccountAddress(),
+			expErrMsg: "failed changing admin from message: unauthorized account",
+		},
+		"change to the same address": { // TODO: make sure that success is expected here
+			changeAdmin: &wasmbindings.ChangeAdmin{
+				Denom:           fmt.Sprintf("factory/%s/%s", actor.String(), validDenom),
+				NewAdminAddress: actor.String(),
+			},
+			actor: actor,
+		},
+		"nil binding": {
+			actor:     actor,
+			expErrMsg: "invalid request: changeAdmin was nil - original request: ",
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			osmosis, ctx := SetupCustomApp(t, actor)
+
+			// Fund actor with 100 base denom creation fees
+			actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+			fundAccount(t, ctx, osmosis, actor, actorAmount)
+
+			err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, &wasmbindings.CreateDenom{
+				Subdenom: validDenom,
+			})
+			require.NoError(t, err)
+
+			err = wasm.ChangeAdmin(osmosis.TokenFactoryKeeper, ctx, spec.actor, spec.changeAdmin)
+			if len(spec.expErrMsg) > 0 {
+				require.Error(t, err)
+				actualErrMsg := err.Error()
+				require.Equal(t, spec.expErrMsg, actualErrMsg)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+
+}
+
 func TestMint(t *testing.T) {
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)

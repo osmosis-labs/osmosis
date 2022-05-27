@@ -51,6 +51,9 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		if contractMsg.MintTokens != nil {
 			return m.mintTokens(ctx, contractAddr, contractMsg.MintTokens)
 		}
+		if contractMsg.ChangeAdmin != nil {
+			return m.changeAdmin(ctx, contractAddr, contractMsg.ChangeAdmin)
+		}
 		if contractMsg.BurnTokens != nil {
 			return m.burnTokens(ctx, contractAddr, contractMsg.BurnTokens)
 		}
@@ -76,10 +79,17 @@ func PerformCreateDenom(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, 
 
 	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
 
+	msgCreateDenom := tokenfactorytypes.NewMsgCreateDenom(contractAddr.String(), createDenom.Subdenom)
+
+	if err := msgCreateDenom.ValidateBasic(); err != nil {
+		sdkerrors.Wrap(err, "failed validating MsgCreateDenom")
+	}
+
 	// Create denom
 	_, err := msgServer.CreateDenom(
 		sdk.WrapSDKContext(ctx),
-		tokenfactorytypes.NewMsgCreateDenom(contractAddr.String(), createDenom.Subdenom))
+		msgCreateDenom,
+	)
 	if err != nil {
 		return sdkerrors.Wrap(err, "creating denom")
 	}
@@ -118,6 +128,36 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 	err = b.SendCoins(ctx, contractAddr, rcpt, sdk.NewCoins(coin))
 	if err != nil {
 		return sdkerrors.Wrap(err, "sending newly minted coins from message")
+	}
+	return nil
+}
+
+func (m *CustomMessenger) changeAdmin(ctx sdk.Context, contractAddr sdk.AccAddress, changeAdmin *wasmbindings.ChangeAdmin) ([]sdk.Event, [][]byte, error) {
+	err := ChangeAdmin(m.tokenFactory, ctx, contractAddr, changeAdmin)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "change admin")
+	}
+	return nil, nil, nil
+}
+
+func ChangeAdmin(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, changeAdmin *wasmbindings.ChangeAdmin) error {
+	if changeAdmin == nil {
+		return wasmvmtypes.InvalidRequest{Err: "changeAdmin was nil"}
+	}
+	newAdminAddr, err := parseAddress(changeAdmin.NewAdminAddress)
+	if err != nil {
+		return err
+	}
+
+	changeAdminMsg := tokenfactorytypes.NewMsgChangeAdmin(contractAddr.String(), changeAdmin.Denom, newAdminAddr.String())
+	if err := changeAdminMsg.ValidateBasic(); err != nil {
+		return err
+	}
+
+	msgServer := tokenfactorykeeper.NewMsgServerImpl(*f)
+	_, err = msgServer.ChangeAdmin(sdk.WrapSDKContext(ctx), changeAdminMsg)
+	if err != nil {
+		return sdkerrors.Wrap(err, "failed changing admin from message")
 	}
 	return nil
 }
