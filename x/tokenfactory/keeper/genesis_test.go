@@ -1,4 +1,4 @@
-package tokenfactory_test
+package keeper_test
 
 import (
 	"testing"
@@ -9,7 +9,6 @@ import (
 	simapp "github.com/osmosis-labs/osmosis/v7/app"
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
@@ -35,8 +34,8 @@ func TestGenesis(t *testing.T) {
 	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	tokenfactory.InitGenesis(ctx, *app.TokenFactoryKeeper, genesisState)
-	exportedGenesis := tokenfactory.ExportGenesis(ctx, *app.TokenFactoryKeeper)
+	app.TokenFactoryKeeper.InitGenesis(ctx, genesisState)
+	exportedGenesis := app.TokenFactoryKeeper.ExportGenesis(ctx)
 	require.NotNil(t, exportedGenesis)
 	require.Equal(t, genesisState, *exportedGenesis)
 }

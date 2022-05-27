@@ -19,10 +19,10 @@ func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.R
 		}
 
 		if contractQuery.FullDenom != nil {
-			contract := contractQuery.FullDenom.Contract
-			subDenom := contractQuery.FullDenom.SubDenom
+			creator := contractQuery.FullDenom.CreatorAddr
+			subdenom := contractQuery.FullDenom.Subdenom
 
-			fullDenom, err := GetFullDenom(contract, subDenom)
+			fullDenom, err := GetFullDenom(creator, subdenom)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo full denom query")
 			}
