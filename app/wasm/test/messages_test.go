@@ -595,7 +595,7 @@ func TestSwapMultiHop(t *testing.T) {
 	}
 }
 
-func TestJoinPool(t *testing.T) {
+func TestJoinPoolNoSwap(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
 
