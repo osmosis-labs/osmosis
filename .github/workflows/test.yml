@@ -116,7 +116,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-          BASE_IMG_TAG=debug
+            BASE_IMG_TAG=debug
         if: env.GIT_DIFF
       -
         name: Test E2E and Upgrade
