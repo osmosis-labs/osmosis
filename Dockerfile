@@ -1,4 +1,3 @@
-
 # syntax=docker/dockerfile:1
 
 ARG BASE_IMG_TAG=nonroot
