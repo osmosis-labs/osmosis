@@ -135,7 +135,7 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 func (m *CustomMessenger) changeAdmin(ctx sdk.Context, contractAddr sdk.AccAddress, changeAdmin *wasmbindings.ChangeAdmin) ([]sdk.Event, [][]byte, error) {
 	err := ChangeAdmin(m.tokenFactory, ctx, contractAddr, changeAdmin)
 	if err != nil {
-		return nil, nil, sdkerrors.Wrap(err, "change admin")
+		return nil, nil, sdkerrors.Wrap(err, "failed to change admin")
 	}
 	return nil, nil, nil
 }
