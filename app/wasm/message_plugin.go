@@ -142,7 +142,7 @@ func (m *CustomMessenger) changeAdmin(ctx sdk.Context, contractAddr sdk.AccAddre
 
 func ChangeAdmin(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, changeAdmin *wasmbindings.ChangeAdmin) error {
 	if changeAdmin == nil {
-		return wasmvmtypes.InvalidRequest{Err: "changeAdmin was nil"}
+		return wasmvmtypes.InvalidRequest{Err: "changeAdmin is nil"}
 	}
 	newAdminAddr, err := parseAddress(changeAdmin.NewAdminAddress)
 	if err != nil {
