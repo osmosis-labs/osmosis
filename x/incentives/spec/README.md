@@ -16,17 +16,19 @@ There are two kinds of `gauges`, perpetual and non-perpetual ones.
 
 ## Contents
 
-1. **[Concept](01_concepts.md)**
-2. **[State](02_state.md)**
-3. **[Messages](03_messages.md)**
-4. **[Events](04_events.md)**
-5. **[Hooks](05_hooks.md)**
-6. **[Queries](06_queries.md)**
-7. **[Params](07_params.md)**
+1. **[Concept](#concepts)**
+2. **[State](#state)**
+3. **[Messages](#messages)**
+4. **[Events](#events)**
+5. **[Hooks](#hooks)**
+7. **[Params](#params)**
+8. **[Transactions](#transactions)**
+9. **[Queries](#queries)**
 
-## Overview
+## Concepts
 
-The purpose of incentives module is to provide incentives to users who lock certain tokens for specified periods of time.
+The purpose of `incentives` module is to provide incentives to the users
+who lock specific token for specific period of time.
 
 Locked tokens can be of any denomination, including LP tokens (gamm/pool/x), IBC tokens (tokens sent through IBC such as ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2), and native tokens (such as ATOM or LUNA).
 
@@ -40,6 +42,196 @@ There are two kinds of gauges: **`perpetual`** and **`non-perpetual`**:
 
 - **`Perpetual gauges`** distribute all their tokens at a single time and only distribute their tokens again once the gauge is refilled (this is mainly used to distribute minted OSMO tokens to LP token stakers). Perpetual gauges persist and will re-disburse tokens when refilled (there is no "active" period)
 
+## State
+
+### Incentives management
+
+All the incentives that are going to be provided are locked into
+`IncentivePool` until released to the appropriate recipients after a
+specific period of time.
+
+### Gauge
+
+Rewards to be distributed are organized by `Gauge`. The `Gauge`
+describes how users can get reward, stores the amount of coins in the
+gauge, the cadence at which rewards are to be distributed, and the
+number of epochs to distribute the reward over.
+
+``` protobuf
+enum LockQueryType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  ByDuration = 0; // locks which has more than specific duration
+  ByTime = 1; // locks which are started before specific time
+}
+
+message QueryCondition {
+  LockQueryType lock_query_type = 1; // type of lock, ByLockDuration | ByLockTime
+  string denom = 2; // lock denom
+  google.protobuf.Duration duration = 3; // condition for lock duration, only valid if positive
+  google.protobuf.Timestamp timestamp = 4; // condition for lock start time, not valid if unset value
+}
+
+message Gauge {
+  uint64 id = 1; // unique ID of a Gauge
+  QueryCondition distribute_to = 2; // distribute condition of a lock which meet one of these conditions
+  repeated cosmos.base.v1beta1.Coin coins = 3; // can distribute multiple coins
+  google.protobuf.Timestamp start_time = 4; // condition for lock start time, not valid if unset value
+  uint64 num_epochs_paid_over = 5; // number of epochs distribution will be done 
+}
+```
+
+### Gauge queues
+
+#### Upcoming queue
+
+To start release `Gauges` at a specific time, we schedule distribution
+start time with time key queue.
+
+#### Active queue
+
+Active queue has all the `Gauges` that are distributing and after
+distribution period finish, it's removed from the queue.
+
+#### Active by Denom queue
+
+To speed up the distribution process, module introduces the active
+`Gauges` by denom.
+
+#### Finished queue
+
+Finished queue saves the `Gauges` that has finished distribution to keep
+in track.
+
+#### Module state
+
+The state of the module is expressed by `params`, `lockable_durations`
+and `gauges`.
+
+``` protobuf
+// GenesisState defines the incentives module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated Gauge gauges = 2 [ (gogoproto.nullable) = false ];
+  repeated google.protobuf.Duration lockable_durations = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"lockable_durations\""
+  ];
+}
+```
+## Messages
+
+### Create Gauge
+
+`MsgCreateGauge` can be submitted by any account to create a `Gauge`.
+
+``` go
+type MsgCreateGauge struct {
+ Owner             sdk.AccAddress
+  DistributeTo      QueryCondition
+  Rewards           sdk.Coins
+  StartTime         time.Time // start time to start distribution
+  NumEpochsPaidOver uint64 // number of epochs distribution will be done
+}
+```
+
+**State modifications:**
+
+- Validate `Owner` has enough tokens for rewards
+- Generate new `Gauge` record
+- Save the record inside the keeper's time basis unlock queue
+- Transfer the tokens from the `Owner` to incentives `ModuleAccount`.
+
+### Adding balance to Gauge
+
+`MsgAddToGauge` can be submitted by any account to add more incentives
+to a `Gauge`.
+
+``` go
+type MsgAddToGauge struct {
+ GaugeID uint64
+  Rewards sdk.Coins
+}
+```
+
+**State modifications:**
+
+- Validate `Owner` has enough tokens for rewards
+- Check if `Gauge` with specified `msg.GaugeID` is available
+- Modify the `Gauge` record by adding `msg.Rewards`
+- Transfer the tokens from the `Owner` to incentives `ModuleAccount`.
+
+## Events
+
+The incentives module emits the following events:
+
+### Handlers
+
+#### MsgCreateGauge
+
+|  Type           |Attribute Key             | Attribute Value      |
+|  ---------------| -------------------------| ---------------------|
+|  create\_gauge  | gauge\_id                | {gaugeID}            |
+|  create\_gauge  | distribute\_to           | {owner}              |
+|  create\_gauge  | rewards                  | {rewards}            |
+|  create\_gauge  | start\_time              | {startTime}          |
+|  create\_gauge  | num\_epochs\_paid\_over  | {numEpochsPaidOver}  |
+|  message        | action                   | create\_gauge        |
+|  message        | sender                   | {owner}              |
+|  transfer       | recipient                | {moduleAccount}      |
+|  transfer       | sender                   | {owner}              |
+|  transfer       | amount                   | {amount}             |
+
+#### MsgAddToGauge
+
+|  Type            | Attribute Key  | Attribute Value  |
+|  ----------------| ---------------| -----------------|
+|  add\_to\_gauge  | gauge\_id      | {gaugeID}        |
+|  create\_gauge   | rewards        | {rewards}        |
+|  message         | action         | create\_gauge    |
+|  message         | sender         | {owner}          |
+|  transfer        | recipient      | {moduleAccount}  |
+|  transfer        | sender         | {owner}          |
+|  transfer        | amount         | {amount}         |
+
+### EndBlockers
+
+#### Incentives distribution
+
+|  Type          |Attribute Key   |Attribute Value   |
+|  --------------| ---------------| -----------------|
+|  transfer\[\]  | recipient      | {receiver}       |
+|  transfer\[\]  | sender         | {moduleAccount}  |
+|  transfer\[\]  | amount         | {distrAmount}    |
+
+## Hooks
+
+In this section we describe the "hooks" that `incentives` module provide
+for other modules.
+
+If there's no usecase for this, we could ignore this.
+
+``` go
+ AfterCreateGauge(ctx sdk.Context, gaugeId uint64)
+ AfterAddToGauge(ctx sdk.Context, gaugeId uint64)
+ AfterStartDistribution(ctx sdk.Context, gaugeId uint64)
+ AfterFinishDistribution(ctx sdk.Context, gaugeId uint64)
+ AfterDistribute(ctx sdk.Context, gaugeId uint64)
+```
+## Parameters
+
+The incentives module contains the following parameters:
+
+|  Key                   | Type    | Example   |
+|  ----------------------| --------| ----------|
+|  DistrEpochIdentifier  | string  | "weekly"  |
+
+Note: DistrEpochIdentifier is a epoch identifier, and module distribute
+rewards at the end of epochs. As `epochs` module is handling multiple
+epochs, the identifier is required to check if distribution should be
+done at `AfterEpochEnd` hook
 
 </br>
 </br>
@@ -100,6 +292,32 @@ osmosisd tx incentives add-to-gauge 1914 500000000ibc/46B44899322F3CD854D2D46DEE
 
 
 ## Queries
+
+In this section we describe the queries required on grpc server.
+
+```protobuf
+// Query defines the gRPC querier service.
+service Query {
+  // returns coins that is going to be distributed
+  rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest) returns (ModuleToDistributeCoinsResponse) {}
+  // returns coins that are distributed by module so far
+  rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest) returns (ModuleDistributedCoinsResponse) {}
+  // returns Gauge by id
+  rpc GaugeByID(GaugeByIDRequest) returns (GaugeByIDResponse) {}
+  // returns gauges both upcoming and active
+  rpc Gauges(GaugesRequest) returns (GaugesResponse) {}
+  // returns active gauges
+  rpc ActiveGauges(ActiveGaugesRequest) returns (ActiveGaugesResponse) {}
+  // returns scheduled gauges
+  rpc UpcomingGauges(UpcomingGaugesRequest) returns (UpcomingGaugesResponse) {}
+  // RewardsEst returns an estimate of the rewards at a future specific time.
+  // The querier either provides an address or a set of locks
+  // for which they want to find the associated rewards.
+  rpc RewardsEst(RewardsEstRequest) returns (RewardsEstResponse) {}
+  // returns lockable durations that are valid to give incentives
+  rpc LockableDurations(QueryLockableDurationsRequest) returns (QueryLockableDurationsResponse) {}
+}
+```
 
 ### active-gauges
 
