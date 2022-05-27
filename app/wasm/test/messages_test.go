@@ -1,6 +1,7 @@
 package wasm
 
 import (
+	"errors"
 	"math"
 	"testing"
 
@@ -612,48 +613,40 @@ func TestJoinPoolNoSwap(t *testing.T) {
 		sdk.NewInt64Coin("ustar", 240_000))
 
 	specs := map[string]struct {
-		join_pool_no_swap *wasmbindings.JoinPoolNoSwap
-		expErr            bool
+		JoinPoolNoSwap *wasmbindings.JoinPoolNoSwap
+		expErr         error
 	}{
-		"empty share out amount": {
-			join_pool_no_swap: &wasmbindings.JoinPoolNoSwap{
+		"zero share out amount": {
+			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool,
-				ShareOutAmount: sdk.NewInt(1),
+				ShareOutAmount: sdk.NewInt(0),
 				TokenInMaxs:    osmoStarLiquidity,
 			},
-			expErr: true,
+			expErr: errors.New("share ratio is zero or negative: invalid calculated result"),
 		},
 		"incorrect pool id": {
-			join_pool_no_swap: &wasmbindings.JoinPoolNoSwap{
+			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool + uint64(10),
-				ShareOutAmount: sdk.NewInt(1),
+				ShareOutAmount: sdk.NewInt(1000000),
 				TokenInMaxs:    osmoStarLiquidity,
 			},
-			expErr: true,
-		},
-		"empty coins array": {
-			join_pool_no_swap: &wasmbindings.JoinPoolNoSwap{
-				PoolId:         starPool,
-				ShareOutAmount: sdk.NewInt(1),
-				TokenInMaxs:    sdk.NewCoins(),
-			},
-			expErr: true,
+			expErr: errors.New("pool with ID 11 does not exist"),
 		},
 		"sending one coin": {
-			join_pool_no_swap: &wasmbindings.JoinPoolNoSwap{
+			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool,
-				ShareOutAmount: sdk.NewInt(1),
+				ShareOutAmount: sdk.NewInt(1000000),
 				TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("osmo", sdk.NewInt(10))),
 			},
-			expErr: true,
+			expErr: errors.New("TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap, upperbound: 10osmo, needed 1uosmo,1ustar: calculated amount is larger than max amount"),
 		},
 		"valid join pool": {
-			join_pool_no_swap: &wasmbindings.JoinPoolNoSwap{
+			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
 				PoolId:         starPool,
 				ShareOutAmount: sdk.NewInt(1000000),
 				TokenInMaxs:    osmoStarLiquidity,
 			},
-			expErr: false,
+			expErr: nil,
 		},
 	}
 	for name, spec := range specs {
@@ -661,10 +654,10 @@ func TestJoinPoolNoSwap(t *testing.T) {
 			// use scratch context to avoid interference between tests
 			subCtx, _ := ctx.CacheContext()
 			// when
-			gotErr := wasm.PerformJoin(osmosis.GAMMKeeper, subCtx, actor, spec.join_pool_no_swap)
+			gotErr := wasm.PerformJoinPoolNoSwap(osmosis.GAMMKeeper, subCtx, actor, spec.JoinPoolNoSwap)
 			// then
-			if spec.expErr {
-				require.Error(t, gotErr)
+			if spec.expErr != nil {
+				require.EqualError(t, gotErr, spec.expErr.Error())
 				return
 			}
 			require.NoError(t, gotErr)

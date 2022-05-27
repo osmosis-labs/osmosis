@@ -566,7 +566,7 @@ func TestJoinPoolMsg(t *testing.T) {
 	}}
 	expectedErr := executeCustom(t, ctx, osmosis, reflect, provider, invalidMsg, osmoStarLiquidity)
 	require.Error(t, expectedErr)
-	require.Equal(t, "dispatch: submessages: join pool: TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap, upperbound: 10random, needed 12000uosmo,240000ustar: calculated amount is larger than max amount", expectedErr.Error())
+	require.Equal(t, "dispatch: submessages: join pool no swap: TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap, upperbound: 10random, needed 12000uosmo,240000ustar: calculated amount is larger than max amount", expectedErr.Error())
 
 	//ShareOutAmount = TotalShares * tokenInAmount / poolAsset.amount
 	//Either asset can be used for tokenInAmount and poolAsset.amount can be used to calculate this amount
@@ -586,12 +586,9 @@ func TestJoinPoolMsg(t *testing.T) {
 
 	require.NoError(t, err)
 
-	//Simualate sending share tokens to user
-	err = osmosis.BankKeeper.SendCoins(ctx, reflect, provider, sdk.NewCoins(sdk.NewCoin(poolDenom, sdk.NewInt(100000000000000000))))
+	reflectBalanceAfterJoining := osmosis.BankKeeper.GetBalance(ctx, reflect, poolDenom)
 
-	providerBalanceAfterJoining := osmosis.BankKeeper.GetBalance(ctx, provider, poolDenom)
-
-	require.Equal(t, "100000000000000000", providerBalanceAfterJoining.Amount.String())
+	require.Equal(t, "100000000000000000", reflectBalanceAfterJoining.Amount.String())
 
 	poolInfoAfterDeposit, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
 
