@@ -139,7 +139,6 @@ type IntegrationTestSuite struct {
 	dkrPool        *dockertest.Pool
 	dkrNet         *dockertest.Network
 	hermesResource *dockertest.Resource
-	initResource   *dockertest.Resource
 	valResources   map[string][]*dockertest.Resource
 	dockerImages   dockerconfig.ImageConfig
 }
@@ -404,7 +403,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 
 	votingPeriodDuration := time.Duration(int(newChainConfig.votingPeriod) * 1000000000)
 
-	s.initResource, err = s.dkrPool.RunWithOptions(
+	initResource, err := s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
 			Repository: s.dockerImages.InitRepository,
@@ -445,7 +444,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 			time.Sleep(1 * time.Second)
 		}
 	}
-	s.Require().NoError(s.dkrPool.Purge(s.initResource))
+	s.Require().NoError(s.dkrPool.Purge(initResource))
 
 	s.chainConfigs = append(s.chainConfigs, &newChainConfig)
 }
