@@ -166,7 +166,6 @@ func TestChangeAdmin(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
-
 }
 
 func TestMint(t *testing.T) {
