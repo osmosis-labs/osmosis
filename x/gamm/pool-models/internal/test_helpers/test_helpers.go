@@ -14,6 +14,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+// CfmmCommonTestSuite is the common test suite struct of Constant Function Market Maker,
+// that pool-models can inherit from.
 type CfmmCommonTestSuite struct {
 	suite.Suite
 }

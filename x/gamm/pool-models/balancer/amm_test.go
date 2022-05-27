@@ -90,7 +90,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 
 // TestCalculateAmountOutAndIn_InverseRelationship tests that the same amount of token is guaranteed upon
 // sequential operation of CalcInAmtGivenOut and CalcOutAmtGivenIn.
-func (suite *BalancerTestSuite) Test_Balancer_CalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
+func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 	type testcase struct {
 		denomOut         string
 		initialPoolOut   int64
