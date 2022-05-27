@@ -1,7 +1,7 @@
 package v4
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v8/app/upgrades"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )

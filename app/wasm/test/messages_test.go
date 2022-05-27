@@ -7,9 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/wasm"
-	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v8/app/wasm"
+	wasmbindings "github.com/osmosis-labs/osmosis/v8/app/wasm/bindings"
+	"github.com/osmosis-labs/osmosis/v8/x/tokenfactory/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

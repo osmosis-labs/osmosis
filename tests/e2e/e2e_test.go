@@ -1,7 +1,7 @@
 package e2e
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v8/tests/e2e/chain"
 )
 
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {

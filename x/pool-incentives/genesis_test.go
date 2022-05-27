@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	pool_incentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	simapp "github.com/osmosis-labs/osmosis/v8/app"
+	pool_incentives "github.com/osmosis-labs/osmosis/v8/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v8/x/pool-incentives/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"

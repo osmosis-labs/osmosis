@@ -13,8 +13,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ory/dockertest/v3/docker"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v8/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v8/tests/e2e/util"
 )
 
 func (s *IntegrationTestSuite) connectIBCChains(chainA *chain.Chain, chainB *chain.Chain) {

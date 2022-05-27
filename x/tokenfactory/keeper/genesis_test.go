@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+	simapp "github.com/osmosis-labs/osmosis/v8/app"
+	appparams "github.com/osmosis-labs/osmosis/v8/app/params"
 
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v8/x/tokenfactory/types"
 )
 
 func TestGenesis(t *testing.T) {

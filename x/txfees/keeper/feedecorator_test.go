@@ -9,8 +9,8 @@ import (
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v8/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v8/x/txfees/types"
 )
 
 func (suite *KeeperTestSuite) TestFeeDecorator() {
