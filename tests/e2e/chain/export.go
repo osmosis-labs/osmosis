@@ -20,7 +20,6 @@ type Validator struct {
 type Chain struct {
 	ChainMeta  ChainMeta    `json:"chainMeta"`
 	Validators []*Validator `json:"validators"`
-	PropNumber int          `json:"propNumber"`
 }
 
 func (c *ChainMeta) configDir() string {
