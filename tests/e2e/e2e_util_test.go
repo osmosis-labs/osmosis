@@ -57,8 +57,6 @@ func (s *IntegrationTestSuite) ExecTx(chainId string, validatorIndex int, comman
 				OutputStream: &outBuf,
 				ErrorStream:  &errBuf,
 			})
-			fmt.Printf("OUTBUFF %s", outBuf.String())
-			fmt.Printf("ERRBUFF %s", errBuf.String())
 			if err != nil {
 				return false
 			}
@@ -348,9 +346,7 @@ func (s *IntegrationTestSuite) queryIntermediaryAccount(c *chain.Chain, endpoint
 
 func (s *IntegrationTestSuite) createWallet(c *chain.Chain, index int, walletName string) string {
 	cmd := []string{"osmosisd", "keys", "add", walletName, "--keyring-backend=test"}
-	outBuf, errBuf, err := s.ExecTx(c.ChainMeta.Id, index, cmd, "")
-	fmt.Printf("OUTBUF %s\n", outBuf.String())
-	fmt.Printf("ERRBUF %s\n", errBuf.String())
+	outBuf, _, err := s.ExecTx(c.ChainMeta.Id, index, cmd, "")
 	s.Require().NoError(err)
 	re := regexp.MustCompile("osmo1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
