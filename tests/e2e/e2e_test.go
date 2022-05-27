@@ -22,10 +22,9 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	s.submitSuperfluidProposal(chainA, "gamm/pool/1")
 	s.depositProposal(chainA)
 	s.voteProposal(chainA)
-	s.ExecTx(chainA.chain.ChainMeta.Id, 0, []string{"chmod", "+x", "./add_account.sh"}, "")
-	s.ExecTx(chainA.chain.ChainMeta.Id, 0, []string{"./add_account.sh"}, "")
+	walletAddr := s.createWallet(chainA.chain, 0, "wallet")
 	// send gamm tokens to validator's other wallet (non self-delegation wallet)
-	s.sendTx(chainA.chain, 0, "100000000000000000000gamm/pool/1", chainA.chain.Validators[0].PublicAddress, "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj")
+	s.sendTx(chainA.chain, 0, "100000000000000000000gamm/pool/1", chainA.chain.Validators[0].PublicAddress, walletAddr)
 	// lock tokens from validator 0 on chain A
 	s.lockTokens(chainA, 0, "100000000000000000000gamm/pool/1", "240s", "wallet")
 	// superfluid delegate from validator 0 non self-delegation wallet to validator 1 on chain A

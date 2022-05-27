@@ -302,7 +302,7 @@ func (s *IntegrationTestSuite) superfluidDelegate(config *chainConfig, valAddres
 func (s *IntegrationTestSuite) sendTx(c *chain.Chain, i int, amount string, sendAddress string, receiveAddress string) {
 	s.T().Logf("sending %s from %s to %s on chain-id: %s", amount, sendAddress, receiveAddress, c.ChainMeta.Id)
 	cmd := []string{"osmosisd", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test"}
-	s.ExecTx(c.ChainMeta.Id, 0, cmd, "code: 0")
+	s.ExecTx(c.ChainMeta.Id, i, cmd, "code: 0")
 	s.T().Logf("successfully sent tx from %s container: %s", s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
 
 }
@@ -344,4 +344,17 @@ func (s *IntegrationTestSuite) queryIntermediaryAccount(c *chain.Chain, endpoint
 	s.Require().NoError(err)
 	return intAccountBalance, err
 
+}
+
+func (s *IntegrationTestSuite) createWallet(c *chain.Chain, index int, walletName string) string {
+	cmd := []string{"osmosisd", "keys", "add", walletName, "--keyring-backend=test"}
+	outBuf, errBuf, err := s.ExecTx(c.ChainMeta.Id, index, cmd, "")
+	fmt.Printf("OUTBUF %s\n", outBuf.String())
+	fmt.Printf("ERRBUF %s\n", errBuf.String())
+	s.Require().NoError(err)
+	re := regexp.MustCompile("osmo1(.{38})")
+	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
+	walletAddr = strings.TrimSuffix(walletAddr, "\n")
+	fmt.Printf("WALADDR %s\n", walletAddr)
+	return walletAddr
 }
