@@ -18,40 +18,40 @@ func TestFullDenom(t *testing.T) {
 
 	specs := map[string]struct {
 		addr         string
-		subDenom     string
+		subdenom     string
 		expFullDenom string
 		expErr       bool
 	}{
 		"valid address": {
 			addr:         actor.String(),
-			subDenom:     "subDenom1",
+			subdenom:     "subDenom1",
 			expFullDenom: fmt.Sprintf("factory/%s/subDenom1", actor.String()),
 		},
 		"empty address": {
 			addr:     "",
-			subDenom: "subDenom1",
+			subdenom: "subDenom1",
 			expErr:   true,
 		},
 		"invalid address": {
 			addr:     "invalid",
-			subDenom: "subDenom1",
+			subdenom: "subDenom1",
 			expErr:   true,
 		},
 		"empty sub-denom": {
 			addr:         actor.String(),
-			subDenom:     "",
+			subdenom:     "",
 			expFullDenom: fmt.Sprintf("factory/%s/", actor.String()),
 		},
 		"invalid sub-denom (contains underscore)": {
 			addr:     actor.String(),
-			subDenom: "sub_denom",
+			subdenom: "sub_denom",
 			expErr:   true,
 		},
 	}
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotFullDenom, gotErr := wasm.GetFullDenom(spec.addr, spec.subDenom)
+			gotFullDenom, gotErr := wasm.GetFullDenom(spec.addr, spec.subdenom)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
