@@ -12,21 +12,30 @@ import (
 
 func main() {
 	var (
-		valConfig    []*chain.NodeConfig
-		dataDir      string
-		chainId      string
-		config       string
-		votingPeriod time.Duration
+		valConfig       []*chain.NodeConfig
+		dataDir         string
+		chainId         string
+		validatorConfig string
+		votingPeriod    time.Duration
 	)
 
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
-	flag.StringVar(&config, "config", "", "serialized config")
+	flag.StringVar(&validatorConfig, "config", "", "serialized config")
 	flag.DurationVar(&votingPeriod, "voting-period", 30000000000, "voting period")
 
 	flag.Parse()
 
-	err := json.Unmarshal([]byte(config), &valConfig)
+	fmt.Printf("--data-dir=%s\n", dataDir)
+	fmt.Printf("--chain-id=%s\n", chainId)
+	fmt.Printf("--config=%s\n", validatorConfig)
+	fmt.Printf("--voting-period=%d\n", votingPeriod)
+
+	if len(validatorConfig) == 0 {
+		panic("validator config is required")
+	}
+
+	err := json.Unmarshal([]byte(validatorConfig), &valConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +53,10 @@ func main() {
 		panic(err)
 	}
 
-	b, _ := json.Marshal(createdChain)
+	b, err := json.Marshal(createdChain)
+	if err != nil {
+		panic(err)
+	}
 	fileName := fmt.Sprintf("%v/%v-encode", dataDir, chainId)
 	if err = os.WriteFile(fileName, b, 0o777); err != nil {
 		panic(err)
