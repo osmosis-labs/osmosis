@@ -29,10 +29,12 @@ ARG E2E_SCRIPT_NAME
 
 COPY --from=build /osmosis/build/${E2E_SCRIPT_NAME} /bin/${E2E_SCRIPT_NAME}
 
-# ARGs are not expanded in ENTRYPOINT - use ENV
-ENV ENTER_SCRIPT=$E2E_SCRIPT_NAME
-
 ENV HOME /osmosis
 WORKDIR $HOME
 
-ENTRYPOINT $ENTER_SCRIPT
+# Docker ARGs are not expanded in ENTRYPOINT in the exec mode while in the shell mode
+# it is impossible to add CMD arguments when running a container. As a workaround,
+# we create the entrypoint.sh script to bypass these issues.
+RUN echo "#!/bin/bash\n${E2E_SCRIPT_NAME} \"\$@\"" >> entrypoint.sh && chmod +x entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
