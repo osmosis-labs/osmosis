@@ -114,7 +114,6 @@ type IntegrationTestSuite struct {
 	dkrPool        *dockertest.Pool
 	dkrNet         *dockertest.Network
 	hermesResource *dockertest.Resource
-	initResource   *dockertest.Resource
 	valResources   map[string][]*dockertest.Resource
 }
 
@@ -341,7 +340,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	}
 	votingPeriod := time.Duration(int(votingPeriodNum) * 1000000000)
 
-	s.initResource, err = s.dkrPool.RunWithOptions(
+	initResource, err := s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
 			Repository: "osmolabs/osmosis-init",
