@@ -10,6 +10,7 @@ import "osmosis/superfluid/superfluid.proto";
 import "osmosis/superfluid/params.proto";
 import "osmosis/lockup/lock.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/staking/v1beta1/staking.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 
@@ -112,6 +113,11 @@ service Query {
   //   option (google.api.http).get =
   //       "/osmosis/superfluid/v1beta1/superfluid_unbondings_by_validator_denom";
   // }
+
+  rpc Delegation (QueryDelegationRequest) returns (QueryDelegationResponse) {
+     option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
+                                    "delegation/{delegator_address}";
+  }
 }
 
 message QueryParamsRequest {}
@@ -253,3 +259,20 @@ message EstimateSuperfluidDelegatedAmountByValidatorDenomResponse {
 //     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
 //   ];
 // }
+
+message QueryDelegationRequest {
+  string delegator_address = 1;
+}
+
+message QueryDelegationResponse {
+  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
+      [ (gogoproto.nullable) = false ];
+
+  repeated cosmos.staking.v1beta1.DelegationResponse delegation_response = 2 [
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin total_delegated_coins = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
