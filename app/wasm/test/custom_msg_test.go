@@ -211,10 +211,24 @@ func TestBurnMsg(t *testing.T) {
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
 
+	// can't burn from different address
 	msg = wasmbindings.OsmosisMsg{BurnTokens: &wasmbindings.BurnTokens{
 		Denom:           sunDenom,
 		Amount:          amount,
 		BurnFromAddress: lucky.String(),
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.Error(t, err)
+
+	// lucky needs to send balance to reflect contract to burn it
+	luckyBalance := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	err = osmosis.BankKeeper.SendCoins(ctx, lucky, reflect, luckyBalance)
+	require.NoError(t, err)
+
+	msg = wasmbindings.OsmosisMsg{BurnTokens: &wasmbindings.BurnTokens{
+		Denom:           sunDenom,
+		Amount:          amount,
+		BurnFromAddress: reflect.String(),
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
