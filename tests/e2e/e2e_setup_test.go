@@ -136,9 +136,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 4. Execute various e2e tests, including IBC.
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 
-	for _, chainConfig := range s.chainConfigs {
-		s.runValidators(chainConfig, s.dockerImages.OsmosisRepository, s.dockerImages.OsmosisTag)
-	}
+	s.configureChain(chain.ChainAID, validatorConfigsChainA)
+	s.configureChain(chain.ChainBID, validatorConfigsChainB)
 
 	s.runValidators(s.chains[0], 0)
 	s.runValidators(s.chains[1], 10)
@@ -179,8 +178,8 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 	s.T().Logf("starting Osmosis %s validator containers...", c.ChainMeta.Id)
 
-	s.valResources[c.ChainMeta.Id] = make([]*dockertest.Resource, len(c.Validators))
-	for i, val := range c.Validators {
+	s.valResources[c.ChainMeta.Id] = make([]*dockertest.Resource, len(c.Nodes))
+	for i, val := range c.Nodes {
 		runOpts := &dockertest.RunOptions{
 			Name:      val.Name,
 			NetworkID: s.dkrNet.Network.ID,
@@ -191,6 +190,22 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 			Tag:        "debug",
 		}
 
+		// expose the first validator for debugging and communication
+		if i == 0 {
+			runOpts.PortBindings = map[docker.Port][]docker.PortBinding{
+				"1317/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}},
+				"6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}},
+				"6061/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6061+portOffset)}},
+				"6062/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6062+portOffset)}},
+				"6063/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6063+portOffset)}},
+				"6064/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6064+portOffset)}},
+				"6065/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6065+portOffset)}},
+				"9090/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 9090+portOffset)}},
+				"26656/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26656+portOffset)}},
+				"26657/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26657+portOffset)}},
+			}
+		}
+
 		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
 		s.Require().NoError(err)
 
@@ -198,9 +213,7 @@ func (s *IntegrationTestSuite) runValidators(c *chain.Chain, portOffset int) {
 		s.T().Logf("started Osmosis %s validator container: %s", c.ChainMeta.Id, resource.Container.ID)
 	}
 
-	hostPortVal0 := s.valResources[chain.ChainMeta.Id][0].GetHostPort("26657/tcp")
-
-	rpcClient, err := rpchttp.New(fmt.Sprintf("tcp://%s", hostPortVal0), "/websocket")
+	rpcClient, err := rpchttp.New("tcp://localhost:26657", "/websocket")
 	s.Require().NoError(err)
 
 	s.Require().Eventually(
@@ -233,8 +246,8 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.Require().NoError(err)
 	s.tmpDirs = append(s.tmpDirs, tmpDir)
 
-	osmoAVal := chainA.Nodes[0]
-	osmoBVal := chainB.Nodes[0]
+	osmoAVal := s.chains[0].Nodes[0]
+	osmoBVal := s.chains[1].Nodes[0]
 	hermesCfgPath := path.Join(tmpDir, "hermes")
 
 	s.Require().NoError(os.MkdirAll(hermesCfgPath, 0o755))
@@ -321,7 +334,7 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	s.connectIBCChains()
 }
 
-func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig) {
+func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.NodeConfig) {
 
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
@@ -386,7 +399,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 		}
 	}
 	s.chains = append(s.chains, &newChain)
-	s.Require().NoError(s.dkrPool.Purge(s.initResource))
+	s.Require().NoError(s.dkrPool.Purge(initResource))
 }
 
 func (s *IntegrationTestSuite) configureDockerResources(chainIDOne, chainIDTwo string) {

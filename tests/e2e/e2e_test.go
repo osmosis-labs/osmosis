@@ -23,13 +23,13 @@ func (s *IntegrationTestSuite) TestQueryBalances() {
 	)
 
 	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[0].ChainMeta.Id][0].GetHostPort("1317/tcp"))
-	balancesA, err := queryBalances(chainAAPIEndpoint, s.chains[0].Validators[0].PublicAddress)
+	balancesA, err := queryBalances(chainAAPIEndpoint, s.chains[0].Nodes[0].PublicAddress)
 	s.Require().NoError(err)
 	s.Require().NotNil(balancesA)
 	s.Require().Equal(2, len(balancesA))
 
 	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chains[1].ChainMeta.Id][0].GetHostPort("1317/tcp"))
-	balancesB, err := queryBalances(chainBAPIEndpoint, s.chains[1].Validators[0].PublicAddress)
+	balancesB, err := queryBalances(chainBAPIEndpoint, s.chains[1].Nodes[0].PublicAddress)
 	s.Require().NoError(err)
 	s.Require().NotNil(balancesB)
 	s.Require().Equal(3, len(balancesB))
@@ -101,7 +101,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	var ibcStakeDenom string
 
 	s.Run("send_uosmo_to_chainB", func() {
-		recipient := s.chains[1].Validators[0].PublicAddress
+		recipient := s.chains[1].Nodes[0].PublicAddress
 		token := sdk.NewInt64Coin(chain.OsmoDenom, chain.IbcSendAmount) // 3,300uosmo
 		s.sendIBC(s.chains[0].ChainMeta.Id, s.chains[1].ChainMeta.Id, recipient, token)
 
