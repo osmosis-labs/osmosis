@@ -55,6 +55,9 @@ func InitSingleNode(chainId, dataDir string, existingGenesisDir string, nodeConf
 	}
 
 	newNode, err := newNode(chain, nodeConfig)
+	if err != nil {
+		return nil, err
+	}
 
 	_, err = util.CopyFile(
 		existingGenesisDir,
