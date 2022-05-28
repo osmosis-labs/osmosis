@@ -289,7 +289,7 @@ func newNode(chain *internalChain, nodeConfig *NodeConfig) (*internalNode, error
 		return nil, err
 	}
 	// create keys
-	if err := node.createKey(nodeConfig.Name); err != nil {
+	if err := node.createKey("node"); err != nil {
 		return nil, err
 	}
 	if err := node.createNodeKey(); err != nil {
