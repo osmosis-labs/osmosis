@@ -184,13 +184,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 				exitFeeDec, err := sdk.NewDecFromStr("0")
 				require.NoError(t, err)
 
-				pool := createTestPool(t, []balancer.PoolAsset{
-					poolAssetOut,
-					poolAssetIn,
-				},
-					swapFeeDec,
-					exitFeeDec,
-				)
+				pool := createTestPool(t, swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 				require.NotNil(t, pool)
 
 				initialOut := sdk.NewInt64Coin(poolAssetOut.Token.Denom, tc.initialCalcOut)
@@ -322,5 +316,109 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 				require.True(osmoutils.DecApproxEq(t, initialCalcTokenOut.ToDec(), inverseCalcTokenOut, tol))
 			})
 		}
+	}
+}
+
+func TestCalcJoinPoolShares(t *testing.T) {
+	testCases := []struct {
+		name         string
+		swapFee      sdk.Dec
+		poolAssets   []balancer.PoolAsset
+		tokensIn     sdk.Coins
+		expectErr    bool
+		expectShares sdk.Int
+		expectLiq    sdk.Coins
+	}{
+		{
+			name:    "equal weights with zero swap fee",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(2499999968800),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
+		{
+			name:    "equal weights with 0.001 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.001"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(2498749968800),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
+		{
+			name:    "equal weights with 0.1 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.1"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(2374999971800),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
+		{
+			name:    "equal weights with 0.99 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.99"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(1262499992100),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			pool := createTestPool(t, tc.swapFee, sdk.MustNewDecFromStr("0"), tc.poolAssets...)
+
+			shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Equal(t, sdk.ZeroInt(), shares)
+				require.Equal(t, sdk.NewCoins(), liquidity)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectShares, shares)
+				require.Equal(t, tc.expectLiq, liquidity)
+			}
+		})
 	}
 }
