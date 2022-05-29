@@ -15,18 +15,16 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-type (
-	Keeper struct {
-		cdc      codec.Codec
-		storeKey sdk.StoreKey
+type Keeper struct {
+	cdc      codec.Codec
+	storeKey sdk.StoreKey
 
-		paramSpace paramtypes.Subspace
+	paramSpace paramtypes.Subspace
 
-		accountKeeper types.AccountKeeper
-		bankKeeper    types.BankKeeper
-		distrKeeper   types.DistrKeeper
-	}
-)
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	distrKeeper   types.DistrKeeper
+}
 
 func permContains(perms []string, perm string) bool {
 	for _, v := range perms {

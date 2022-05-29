@@ -1,14 +1,15 @@
-package epochs_test
+package keeper_test
 
 import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	simapp "github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
