@@ -10,16 +10,16 @@ option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/api";
 option (gogoproto.goproto_getters_all) = false;
 // option (gogoproto.goproto_stringer_all) = false;
 
-message LBP {
+message Sale {
   // Destination for the earned token_in
   string treasury = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 id = 2;
 
-  // token_out a token denom to be bootstraped. May be referred as base
-  // currency.
+  // token_out is a token denom to be bootstraped. May be referred as base
+  // currency, or a sale token.
   string token_out = 3;
-  // token_in a denom used to buy LB tokens (`token_out`). May be referred as
-  // quote_currency.
+  // token_in is a token denom used to buy sale tokens (`token_out`). May be
+  // referred as quote_currency or payment token.
   string token_in = 4;
 
   // start time when the token emission starts.
@@ -33,7 +33,7 @@ message LBP {
   // Round number when the pool was last time updated.
   int64 round = 7;
 
-  // Last round of the LBP;
+  // Last round of the Sale;
   int64 end_round = 8;
 
   string out_remaining = 10 [

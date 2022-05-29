@@ -13,9 +13,9 @@ option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/api";
 
 // Params holds parameters for the launchpad module
 message Params {
-  repeated cosmos.base.v1beta1.Coin lbp_creation_fee = 1 [
+  repeated cosmos.base.v1beta1.Coin sale_creation_fee = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags) = "yaml:\"lbp_creation_fee\"",
+    (gogoproto.moretags) = "yaml:\"sale_creation_fee\"",
     (gogoproto.nullable) = false
   ];
 

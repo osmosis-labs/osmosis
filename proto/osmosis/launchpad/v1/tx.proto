@@ -13,8 +13,10 @@ option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/api";
 option (gogoproto.goproto_getters_all) = false;
 
 service Msg {
-  // CreateLBP creates new liquidity bootstraping pool.
-  rpc CreateLBP(MsgCreateLBP) returns (MsgCreateLBPResponse);
+  // CreateSale creates new token sale.
+  // The sale follows the launchpad functionality explained in the
+  // x/launchapd/spec
+  rpc CreateSale(MsgCreateSale) returns (MsgCreateSaleResponse);
 
   // Subscribe to a token sale. Any use any time before the sale end can join
   // the sale by adding `token_in`. During the sale his `token_in` will be
@@ -25,17 +27,17 @@ service Msg {
   // User can do it any time unless his deposit is empty.
   rpc Withdraw(MsgWithdraw) returns (google.protobuf.Empty);
 
-  // ExitLBP withdraws purchased tokens_out from the pool and remained
+  // ExitSale withdraws purchased tokens_out from the pool and remained
   // tokens_in. Returns error if the LBP is still active.
-  rpc ExitLBP(MsgExitLBP) returns (MsgExitLBPResponse);
+  rpc ExitSale(MsgExitSale) returns (MsgExitSaleResponse);
 
-  // FinalizeLBP sends income (earned tokens_in) to the LBP treasury.
+  // FinalizeSale sends income (earned tokens_in) to the LBP treasury.
   // Returns error if called before the LBP finishes. Anyone can call this
   // method.
-  rpc FinalizeLBP(MsgFinalizeLBP) returns (MsgFinalizeLBPResponse);
+  rpc FinalizeSale(MsgFinalizeSale) returns (MsgFinalizeSaleResponse);
 }
 
-message MsgCreateLBP {
+message MsgCreateSale {
   // Pool creator
   string creator = 1;
   // token_in a denom used to buy LB tokens (`token_out`). May be referred as
@@ -65,7 +67,7 @@ message MsgCreateLBP {
   string treasury = 7;
 }
 
-message MsgCreateLBPResponse {
+message MsgCreateSaleResponse {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 
@@ -93,13 +95,13 @@ message MsgWithdraw {
   ];
 }
 
-message MsgExitLBP {
+message MsgExitSale {
   // sender is an account address exiting a pool
   string sender = 1;
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 
-message MsgExitLBPResponse {
+message MsgExitSaleResponse {
   // Purchased amount of "out" tokens withdrawn to the user.
   string purchased = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -107,13 +109,13 @@ message MsgExitLBPResponse {
   ];
 }
 
-message MsgFinalizeLBP {
+message MsgFinalizeSale {
   // sender is an account address triggering the finalization.
   string sender = 1;
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 
-message MsgFinalizeLBPResponse {
+message MsgFinalizeSaleResponse {
   // Income amount of token_in sent to the treasury.
   string income = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",

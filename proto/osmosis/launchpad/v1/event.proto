@@ -8,7 +8,7 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/api";
 option (gogoproto.goproto_getters_all) = false;
 
-message EventCreateLBP {
+message EventCreateSale {
   uint64 id = 1;
   string creator = 2;
   string token_in = 3;
@@ -35,7 +35,7 @@ message EventExit {
   string purchased = 3;
 }
 
-message EventFinalizeLBP {
+message EventFinalizeSale {
   uint64 pool_id = 1;
   // amount of earned tokens_in
   string income = 3;

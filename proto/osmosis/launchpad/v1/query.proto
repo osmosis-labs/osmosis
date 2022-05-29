@@ -13,45 +13,46 @@ option (gogoproto.goproto_getters_all) = false;
 
 // Query defines the gRPC querier service.
 service Query {
-  // Returns list of LBPs ordered by the creation time
-  rpc LBPs(QueryLBPs) returns (QueryLBPsResponse) {
-    option (google.api.http).get = "/cosmos/launchpad/v1/lbps";
+  // Returns list of Sales ordered by the creation time
+  rpc Sales(QuerySales) returns (QuerySalesResponse) {
+    option (google.api.http).get = "/cosmos/launchpad/v1/sales";
   }
 
-  // Returns the specific LBP object
-  rpc LBP(QueryLBP) returns (QueryLBPResponse) {
-    option (google.api.http).get = "/cosmos/launchpad/v1/lbps/{lbp_id}";
+  // Returns the specific Sale object
+  rpc Sale(QuerySale) returns (QuerySaleResponse) {
+    option (google.api.http).get = "/cosmos/launchpad/v1/sales/{sale_id}";
   }
 
   rpc UserPosition(QueryUserPosition) returns (QueryUserPositionResponse) {
-    option (google.api.http).get = "/cosmos/launchpad/v1/lbps/{lbp_id}/{user}";
+    option (google.api.http).get =
+        "/cosmos/launchpad/v1/sales/{sale_id}/{user}";
   }
 }
 
-message QueryLBPs {
+message QuerySales {
   // pagination defines an pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 
-message QueryLBPsResponse {
-  repeated osmosis.launchpad.v1.LBP lbps = 1 [ (gogoproto.nullable) = false ];
+message QuerySalesResponse {
+  repeated osmosis.launchpad.v1.Sale sales = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// Request type for Query/LBP
-message QueryLBP {
-  // LBP ID
-  uint64 lbp_id = 1;
+// Request type for Query/Sale
+message QuerySale {
+  // Sale ID
+  uint64 sale_id = 1;
 }
 
-message QueryLBPResponse {
-  osmosis.launchpad.v1.LBP lbp = 1 [ (gogoproto.nullable) = false ];
+message QuerySaleResponse {
+  osmosis.launchpad.v1.Sale sale = 1 [ (gogoproto.nullable) = false ];
 }
 
-// Request type for Query/LBP
+// Request type for Query/Sale
 message QueryUserPosition {
-  // ID of the LBP
-  uint64 lbp_id = 1;
+  // ID of the Sale
+  uint64 sale_id = 1;
   // user account address
   string user = 2;
 }
