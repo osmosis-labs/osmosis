@@ -3,8 +3,9 @@ package gamm
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
@@ -25,9 +26,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 			panic(err)
 		}
 
-		poolAssets := pool.GetAllPoolAssets()
+		poolAssets := pool.GetTotalPoolLiquidity(ctx)
 		for _, asset := range poolAssets {
-			liquidity = liquidity.Add(asset.Token)
+			liquidity = liquidity.Add(asset)
 		}
 	}
 
@@ -36,7 +37,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	pools, err := k.GetPools(ctx)
+	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
 		panic(err)
 	}

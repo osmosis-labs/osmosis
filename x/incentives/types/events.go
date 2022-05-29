@@ -1,6 +1,6 @@
 package types
 
-// event types
+// event types.
 const (
 	TypeEvtCreateGauge  = "create_gauge"
 	TypeEvtAddToGauge   = "add_to_gauge"

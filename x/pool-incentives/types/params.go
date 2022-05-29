@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"gopkg.in/yaml.v2"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-var (
-	KeyMintedDenom = []byte("MintedDenom")
-)
+var KeyMintedDenom = []byte("MintedDenom")
 
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
@@ -25,7 +24,7 @@ func NewParams(mintedDenom string) Params {
 	}
 }
 
-// DefaultParams is the default parameter configuration for the pool-incentives module
+// DefaultParams is the default parameter configuration for the pool-incentives module.
 func DefaultParams() Params {
 	return NewParams(sdk.DefaultBondDenom)
 }

@@ -7,15 +7,19 @@ type SwapMsgRoute interface {
 	TokenDenomsOnPath() []string
 }
 
-var _ SwapMsgRoute = MsgSwapExactAmountOut{}
-var _ SwapMsgRoute = MsgSwapExactAmountIn{}
+var (
+	_ SwapMsgRoute = MsgSwapExactAmountOut{}
+	_ SwapMsgRoute = MsgSwapExactAmountIn{}
+)
 
 func (msg MsgSwapExactAmountOut) TokenInDenom() string {
 	return msg.Routes[0].GetTokenInDenom()
 }
+
 func (msg MsgSwapExactAmountOut) TokenOutDenom() string {
 	return msg.TokenOut.Denom
 }
+
 func (msg MsgSwapExactAmountOut) TokenDenomsOnPath() []string {
 	denoms := make([]string, 0, len(msg.Routes)+1)
 	for i := 0; i < len(msg.Routes); i++ {
@@ -28,10 +32,12 @@ func (msg MsgSwapExactAmountOut) TokenDenomsOnPath() []string {
 func (msg MsgSwapExactAmountIn) TokenInDenom() string {
 	return msg.TokenIn.Denom
 }
+
 func (msg MsgSwapExactAmountIn) TokenOutDenom() string {
 	lastRouteIndex := len(msg.Routes) - 1
 	return msg.Routes[lastRouteIndex].GetTokenOutDenom()
 }
+
 func (msg MsgSwapExactAmountIn) TokenDenomsOnPath() []string {
 	denoms := make([]string, 0, len(msg.Routes)+1)
 	denoms = append(denoms, msg.TokenInDenom())

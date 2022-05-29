@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tendermint/tendermint/libs/log"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 type Keeper struct {
@@ -148,9 +150,4 @@ func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 func (k Keeper) GetAllGauges(ctx sdk.Context) []incentivestypes.Gauge {
 	gauges := k.incentivesKeeper.GetGauges(ctx)
 	return gauges
-}
-
-func (k Keeper) ExportGenesis(ctx sdk.Context) interface{} {
-	fmt.Println("you have hit a very silly placeholder, smartly suggested by the IDE")
-	return nil
 }

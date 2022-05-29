@@ -5,8 +5,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/osmosis-labs/osmosis/app/params"
+	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/osmosis-labs/osmosis/v7/app/params"
+
+	"github.com/spf13/cast"
+	"github.com/spf13/cobra"
+	tmcmds "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -20,20 +28,19 @@ import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	"github.com/spf13/cast"
-	"github.com/spf13/cobra"
-	tmcmds "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
-	osmosis "github.com/osmosis-labs/osmosis/app"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+
+	osmosis "github.com/osmosis-labs/osmosis/v7/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -81,7 +88,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 // initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
-
 	type OsmosisMempoolConfig struct {
 		ArbitrageMinGasPrice string `mapstructure:"arbitrage-min-gas-fee"`
 	}
@@ -99,6 +105,9 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.StateSync.SnapshotInterval = 1500
 	srvCfg.StateSync.SnapshotKeepRecent = 2
 	srvCfg.MinGasPrices = "0uosmo"
+
+	// 128MB IAVL cache
+	srvCfg.IAVLCacheSize = 781250
 
 	memCfg := OsmosisMempoolConfig{ArbitrageMinGasPrice: "0.01"}
 
@@ -127,7 +136,6 @@ min-gas-price-for-high-gas-tx = ".0025"
 }
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
-
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
@@ -136,13 +144,15 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	rootCmd.AddCommand(
 		// genutilcli.InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),
+		forceprune(),
 		InitCmd(osmosis.ModuleBasics, osmosis.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
+		ExportDeriveBalancesCmd(),
 		AddGenesisAccountCmd(osmosis.DefaultNodeHome),
+		AddGenesisWasmMsgCmd(osmosis.DefaultNodeHome),
 		genutilcli.GenTxCmd(osmosis.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(osmosis.ModuleBasics),
-		ExportDeriveBalancesCmd(),
 		PrepareGenesisCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		testnetCmd(osmosis.ModuleBasics, banktypes.GenesisBalancesIterator{}),
@@ -166,6 +176,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
+	wasm.AddModuleInitFlags(startCmd)
 }
 
 func queryCommand() *cobra.Command {
@@ -245,12 +256,19 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		panic(err)
 	}
 
+	var wasmOpts []wasm.Option
+	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
+		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
+	}
+
 	return osmosis.NewOsmosisApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		osmosis.MakeEncodingConfig(), // Ideally, we would reuse the one created by NewRootCmd.
 		appOpts,
+		osmosis.GetWasmEnabledProposals(),
+		wasmOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
@@ -260,27 +278,25 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		baseapp.SetInterBlockCache(cache),
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-		baseapp.SetSnapshotStore(snapshotStore),
-		baseapp.SetSnapshotInterval(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval))),
-		baseapp.SetSnapshotKeepRecent(cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent))),
+		baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)), cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)))),
 	)
 }
 
 func createOsmosisAppAndExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
-	appOpts servertypes.AppOptions) (servertypes.ExportedApp, error) {
-
+	appOpts servertypes.AppOptions,
+) (servertypes.ExportedApp, error) {
 	encCfg := osmosis.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var app *osmosis.OsmosisApp
 	if height != -1 {
-		app = osmosis.NewOsmosisApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), encCfg, appOpts)
+		app = osmosis.NewOsmosisApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), encCfg, appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
 
 		if err := app.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		app = osmosis.NewOsmosisApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), encCfg, appOpts)
+		app = osmosis.NewOsmosisApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), encCfg, appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
 	}
 
 	return app.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)

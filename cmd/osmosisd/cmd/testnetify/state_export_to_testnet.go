@@ -1,7 +1,7 @@
 package testnetify
 
 import (
-	"github.com/osmosis-labs/osmosis/app"
+	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +10,7 @@ var (
 	valConsBech32     = "osmovalcons"
 )
 
-// TODO: Add params for min num validators for consensus
+// TODO: Add params for min num validators for consensus.
 type TestnetParams struct {
 	ValidatorConsensusPubkeys []string
 	ValidatorOperatorPubkeys  []string
@@ -27,6 +27,7 @@ type ValidatorDetails struct {
 	OperatorAddress string
 }
 
+//nolint:ineffassign
 func defaultTestnetParams() TestnetParams {
 	/* priv_validator_key.json file
 	{

@@ -7,7 +7,6 @@ LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-TEST_DOCKER_REPO=osmosis-labs/osmosisdnode
 
 export GO111MODULE = on
 
@@ -66,6 +65,9 @@ endif
 ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
+ifeq ($(LINK_STATICALLY),true)
+	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
+endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
@@ -97,12 +99,12 @@ $(BUILDDIR)/:
 build-reproducible: go.sum
 	$(DOCKER) rm latest-build || true
 	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_PLATFORMS='linux/amd64 darwin/amd64 linux/arm64 windows/amd64' \
-        --env APP=osmosisd \
-        --env VERSION=$(VERSION) \
-        --env COMMIT=$(COMMIT) \
-        --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-        --name latest-build cosmossdk/rbuilder:latest
+	--env TARGET_PLATFORMS='linux/amd64' \
+	--env APP=osmosisd \
+	--env VERSION=$(VERSION) \
+	--env COMMIT=$(COMMIT) \
+	--env LEDGER_ENABLED=$(LEDGER_ENABLED) \
+	--name latest-build osmolabs/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
 build-linux: go.sum
@@ -111,6 +113,10 @@ build-linux: go.sum
 build-contract-tests-hooks:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/contract_tests
+
+build-e2e-chain-init:
+	mkdir -p $(BUILDDIR)
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/chain_init
 
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
@@ -126,7 +132,7 @@ draw-deps:
 	@goviz -i ./cmd/osmosisd -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -rf $(BUILDDIR)/ artifacts/
+	rm -rf $(CURDIR)/artifacts/
 
 distclean: clean
 	rm -rf vendor/
@@ -207,6 +213,11 @@ sync-docs:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
+PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'simapp|e2e')
+PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
+PACKAGES_SIM=$(shell go list ./... | grep '/simapp')
+TEST_PACKAGES=./...
+
 include sims.mk
 
 test: test-unit test-build
@@ -214,66 +225,60 @@ test: test-unit test-build
 test-all: check test-race test-cover
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' $(PACKAGES_UNIT)
 
 test-cover:
-	@go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
+
+test-sim:
+	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
+
+test-e2e:
+	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+
+test-e2e-skip-upgrade:
+	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 benchmark:
-	@go test -mod=readonly -bench=. ./...
+	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
+docker-build-debug:
+	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+
+docker-build-e2e-chain-init:
+	@docker build -t osmosis-e2e-chain-init:debug -f tests/e2e/chain_init/chain-init.Dockerfile .
 
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
 
 lint:
-	golangci-lint run --disable-all -E errcheck
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
+	@echo "--> Running linter"
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
+	@go run mvdan.cc/gofumpt -l -w .
 
 ###############################################################################
 ###                                Localnet                                 ###
 ###############################################################################
 
-build-docker-osmosisdnode:
-	$(MAKE) -C contrib/localtestnet
+localnet-keys:
+	. tests/localosmosis/keys.sh
 
-# Run a 4-node testnet locally
-localnet-start: build-linux build-docker-osmosisdnode # localnet-stop
-	@if ! [ -f $(BUILDDIR)/node0/osmosisd/config/genesis.json ]; \
-	then docker run --rm -v $(BUILDDIR):/osmosisd:Z osmosis-labs/osmosisdnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; \
-	fi
-	docker-compose up -d
+localnet-build:
+	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
 
-# Stop testnet
-localnet-stop:
-	docker-compose down
+localnet-start:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up
 
-clean-localnet: localnet-stop
-	rm -rf $(BUILDDIR)/node* $(BUILDDIR)/gentxs
-
-test-docker:
-	@docker build -f contrib/Dockerfile.test -t ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) .
-	@docker tag ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) ${TEST_DOCKER_REPO}:$(shell git rev-parse --abbrev-ref HEAD | sed 's#/#_#g')
-	@docker tag ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) ${TEST_DOCKER_REPO}:latest
-
-test-docker-push: test-docker
-	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD)
-	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --abbrev-ref HEAD | sed 's#/#_#g')
-	@docker push ${TEST_DOCKER_REPO}:latest
+localnet-remove:
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
 .PHONY: all build-linux install format lint \
-	go-mod-cache draw-deps clean build \
-	setup-transactions setup-contract-tests-data start-osmosis run-lcd-contract-tests contract-tests \
-	test test-all test-build test-cover test-unit test-race \
-	benchmark \
-	build-docker-osmosisdnode localnet-start localnet-stop \
-	docker-single-node
+	go-mod-cache draw-deps clean build build-contract-tests-hooks \
+	test test-all test-build test-cover test-unit test-race benchmark

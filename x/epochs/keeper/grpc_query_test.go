@@ -4,14 +4,32 @@ import (
 	gocontext "context"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryEpochInfos() {
 	suite.SetupTest()
 	queryClient := suite.queryClient
 
-	chainStartTime := suite.ctx.BlockTime()
+	chainStartTime := suite.Ctx.BlockHeader().Time
+	epochInfo := types.EpochInfo{
+		Identifier:            "day",
+		StartTime:             chainStartTime,
+		Duration:              time.Hour * 24,
+		CurrentEpoch:          0,
+		CurrentEpochStartTime: chainStartTime,
+		EpochCountingStarted:  false,
+	}
+	suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochInfo)
+	epochInfo = types.EpochInfo{
+		Identifier:            "week",
+		StartTime:             chainStartTime,
+		Duration:              time.Hour * 24 * 7,
+		CurrentEpoch:          0,
+		CurrentEpochStartTime: chainStartTime,
+		EpochCountingStarted:  false,
+	}
+	suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochInfo)
 
 	// Invalid param
 	epochInfosResponse, err := queryClient.EpochInfos(gocontext.Background(), &types.QueryEpochsInfoRequest{})

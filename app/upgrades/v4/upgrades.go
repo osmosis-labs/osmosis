@@ -3,38 +3,28 @@ package v4
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	gammkeeper "github.com/osmosis-labs/osmosis/x/gamm/keeper"
-
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
+
+	"github.com/osmosis-labs/osmosis/v7/app/keepers"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator,
-	bank bankkeeper.Keeper,
-	distr *distrkeeper.Keeper,
-	gamm *gammkeeper.Keeper) upgradetypes.UpgradeHandler {
+// CreateUpgradeHandler returns an x/upgrade handler for the Osmosis v4 on-chain
+// upgrade. Namely, it executes:
+//
+// 1. Setting x/gamm parameters for pool creation
+// 2. Executing prop 12
+func CreateUpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	keepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		// // Upgrade all of the lock storages
-		// locks, err := app.LockupKeeper.GetLegacyPeriodLocks(ctx)
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// // clear all lockup module locking / unlocking queue items
-		// app.LockupKeeper.ClearAllLockRefKeys(ctx)
-		// app.LockupKeeper.ClearAllAccumulationStores(ctx)
+		// configure upgrade for x/gamm module pool creation fee param
+		keepers.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 
-		// // reset all lock and references
-		// if err := app.LockupKeeper.ResetAllLocks(ctx, locks); err != nil {
-		// 	panic(err)
-		// }
+		Prop12(ctx, keepers.BankKeeper, keepers.DistrKeeper)
 
-		// configure upgrade for gamm module's pool creation fee param add
-		gamm.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
-		// execute prop12. See implementation in
-		Prop12(ctx, bank, distr)
 		return vm, nil
 	}
 }

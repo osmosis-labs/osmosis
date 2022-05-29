@@ -1,8 +1,11 @@
 package keeper
 
 import (
+	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
@@ -15,7 +18,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		gauges := k.GetUpcomingGauges(ctx)
 		for _, gauge := range gauges {
 			if !ctx.BlockTime().Before(gauge.StartTime) {
-				if err := k.BeginDistribution(ctx, gauge); err != nil {
+				if err := k.moveUpcomingGaugeToActiveGauge(ctx, gauge); err != nil {
 					panic(err)
 				}
 			}
@@ -24,36 +27,39 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// distribute due to epoch event
 		ctx.EventManager().IncreaseCapacity(2e6)
 		gauges = k.GetActiveGauges(ctx)
-		_, err := k.Distribute(ctx, gauges)
+		// only distribute to active gauges that are for native denoms
+		// or non-perpetual and for synthetic denoms.
+		// We distribute to perpetual synthetic denoms elsewhere in superfluid.
+		// TODO: This method of doing is a bit of hack, should clean this up later.
+		distrGauges := []types.Gauge{}
+		for _, gauge := range gauges {
+			isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
+			if !(isSynthetic && gauge.IsPerpetual) {
+				distrGauges = append(distrGauges, gauge)
+			}
+		}
+		_, err := k.Distribute(ctx, distrGauges)
 		if err != nil {
 			panic(err)
-		}
-		for _, gauge := range gauges {
-			// filled epoch is increased in this step and we compare with +1
-			if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
-				if err := k.FinishDistribution(ctx, gauge); err != nil {
-					panic(err)
-				}
-			}
 		}
 	}
 }
 
 // ___________________________________________________________________________________________________
 
-// Hooks wrapper struct for incentives keeper
+// Hooks wrapper struct for incentives keeper.
 type Hooks struct {
 	k Keeper
 }
 
 var _ epochstypes.EpochHooks = Hooks{}
 
-// Return the wrapper struct
+// Return the wrapper struct.
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-// epochs hooks
+// epochs hooks.
 func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }

@@ -3,7 +3,6 @@ package osmosis.gamm.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/v1beta1/tx.proto";
-import "osmosis/gamm/v1beta1/pool.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -11,15 +10,17 @@ import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/gamm/types";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/types";
 
 service Query {
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools";
   }
+
   rpc NumPools(QueryNumPoolsRequest) returns (QueryNumPoolsResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/num_pools";
   }
+
   rpc TotalLiquidity(QueryTotalLiquidityRequest)
       returns (QueryTotalLiquidityResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/total_liquidity";
@@ -29,19 +30,25 @@ service Query {
   rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{poolId}";
   }
+
   rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/params";
+  }
+
+  rpc TotalPoolLiquidity(QueryTotalPoolLiquidityRequest)
+      returns (QueryTotalPoolLiquidityResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/pools/{poolId}/total_pool_liquidity";
   }
 
   rpc TotalShares(QueryTotalSharesRequest) returns (QueryTotalSharesResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/total_shares";
   }
-  rpc PoolAssets(QueryPoolAssetsRequest) returns (QueryPoolAssetsResponse) {
-    option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/pools/{poolId}/tokens";
-  }
+
+  // SpotPrice defines a gRPC query handler that returns the spot price given
+  // a base denomination and a quote denomination.
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{poolId}/prices";
@@ -53,6 +60,7 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_in";
   }
+
   rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
       returns (QuerySwapExactAmountOutResponse) {
     option (google.api.http).get =
@@ -93,6 +101,19 @@ message QueryPoolParamsRequest {
 }
 message QueryPoolParamsResponse { google.protobuf.Any params = 1; }
 
+//=============================== PoolLiquidity
+message QueryTotalPoolLiquidityRequest {
+  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message QueryTotalPoolLiquidityResponse {
+  repeated cosmos.base.v1beta1.Coin liquidity = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
 //=============================== TotalShares
 message QueryTotalSharesRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
@@ -104,22 +125,20 @@ message QueryTotalSharesResponse {
   ];
 }
 
-//=============================== PoolAssets
-message QueryPoolAssetsRequest {
-  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-}
-message QueryPoolAssetsResponse {
-  repeated PoolAsset poolAssets = 1 [ (gogoproto.nullable) = false ];
-}
-
-//=============================== SpotPrice
+// QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice
+// query.
 message QuerySpotPriceRequest {
   uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string tokenInDenom = 2 [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
-  string tokenOutDenom = 3
-      [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
-  bool withSwapFee = 4 [ (gogoproto.moretags) = "yaml:\"with_swap_fee\"" ];
+  string base_asset_denom = 2
+      [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
+  string quote_asset_denom = 3
+      [ (gogoproto.moretags) = "yaml:\"quote_asset_denom\"" ];
+  reserved 4;
+  reserved "withSwapFee";
 }
+
+// QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
+// query.
 message QuerySpotPriceResponse {
   // String of the Dec. Ex) 10.203uatom
   string spotPrice = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];

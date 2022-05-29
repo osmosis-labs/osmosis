@@ -18,7 +18,7 @@ func NewGenesisState(params Params, lockableDurations []time.Duration, distrInfo
 	}
 }
 
-// DefaultGenesisState gets the raw genesis raw message for testing
+// DefaultGenesisState gets the raw genesis raw message for testing.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		Params: DefaultParams(),
@@ -47,7 +47,7 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 }
 
 // ValidateGenesis validates the provided pool-yield genesis state to ensure the
-// expected invariants holds. (i.e. params in correct bounds)
+// expected invariants holds. (i.e. params in correct bounds).
 func ValidateGenesis(data *GenesisState) error {
 	if err := data.Params.Validate(); err != nil {
 		return err

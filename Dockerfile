@@ -1,32 +1,46 @@
-FROM faddat/archlinux AS build
+# syntax=docker/dockerfile:1
 
-ENV GOPATH=/go
-ENV PATH=$PATH:/go/bin
+ARG BASE_IMG_TAG=nonroot
 
-# Set up dependencies
-RUN pacman -Syyu --noconfirm curl make git go gcc linux-headers python base-devel protobuf wget && \
-    wget -O /genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
+# --------------------------------------------------------
+# Build 
+# --------------------------------------------------------
 
+FROM golang:1.18.2-alpine3.15 as build
 
-# Add source files
+RUN set -eux; apk add --no-cache ca-certificates build-base;
+RUN apk add git
+# Needed by github.com/zondax/hid
+RUN apk add linux-headers
+
+WORKDIR /osmosis
 COPY . /osmosis
 
-# Install minimum necessary dependencies, build Cosmos SDK, remove packages
-RUN cd /osmosis && \
-    make install
+# CosmWasm: see https://github.com/CosmWasm/wasmvm/releases
+ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
+ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
+RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep 7d2239e9f25e96d0d4daba982ce92367aacf0cbd95d2facb8442268f2b1cc1fc
+RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep f6282df732a13dec836cda1f399dd874b1e3163504dbd9607c6af915b2740479
 
-# Final image
-FROM faddat/archlinux
+# CosmWasm: copy the right library according to architecture. The final location will be found by the linker flag `-lwasmvm_muslc`
+RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 
-RUN pacman -Syyu --noconfirm 
+RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 
-# Copy over binaries from the build-env
-COPY --from=build /go/bin/osmosisd /usr/bin/osmosisd
-COPY --from=build /genesis.json /genesis.json
+# --------------------------------------------------------
+# Runner
+# --------------------------------------------------------
 
-# Run osmosisd by default, omit entrypoint to ease using container with osmosiscli
+FROM gcr.io/distroless/base-debian11:${BASE_IMG_TAG}
+
+COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
+
+ENV HOME /osmosis
+WORKDIR $HOME
+
 EXPOSE 26656
 EXPOSE 26657
 EXPOSE 1317
-EXPOSE 9090
 
+ENTRYPOINT ["osmosisd"]
+CMD [ "start" ]

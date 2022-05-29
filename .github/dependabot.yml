@@ -4,4 +4,7 @@ updates:
   directory: "/"
   schedule:
     interval: daily
+  ignore:
+    - dependency-name: "github.com/tendermint/tendermint"
+      update-types: ["version-update:semver-major", "version-update:semver-minor"]
   open-pull-requests-limit: 10

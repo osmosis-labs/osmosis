@@ -6,7 +6,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/lockup/types";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/lockup/types";
 
 // PeriodLock is a single unit of lock by period. It's a record of locked coin
 // at a specific time. It stores owner, duration, unlock time and the amount of
@@ -34,13 +34,17 @@ message PeriodLock {
 enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  ByDuration = 0; // Queries for locks that are longer than a certain duration
-  ByTime = 1;     // Queries for lockups that started before a specific time
+  // Queries for locks that are longer than a certain duration
+  ByDuration = 0;
+  // Queries for lockups that started before a specific time
+  ByTime = 1;
 }
 
 message QueryCondition {
-  LockQueryType lock_query_type = 1; // type of lock query, ByLockDuration | ByLockTime
-  string denom = 2; // What token denomination are we looking for lockups of
+  // type of lock query, ByLockDuration | ByLockTime
+  LockQueryType lock_query_type = 1;
+  // What token denomination are we looking for lockups of
+  string denom = 2;
   // valid when query condition is ByDuration
   google.protobuf.Duration duration = 3 [
     (gogoproto.stdduration) = true,
@@ -56,13 +60,34 @@ message QueryCondition {
 }
 
 // SyntheticLock is a single unit of synthetic lockup
+// TODO: Change this to have
+// * underlying_lock_id
+// * synthetic_coin
+// * end_time
+// * duration
+// * owner
+// We then index synthetic locks by the denom, just like we do with normal
+// locks. Ideally we even get an interface, so we can re-use that same logic.
+// I currently have no idea how reward distribution is supposed to be working...
+// EVENTUALLY
+// we make a "constrained_coin" field, which is what the current "coins" field
+// is. Constrained coin field can be a #post-v7 feature, since we aren't
+// allowing partial unlocks of synthetic lockups.
 message SyntheticLock {
-  uint64 underlying_lock_id = 1; // underlying native lockup id for this synthetic lockup
-  string suffix = 2; // synthetic suffix comes after native denom - used for querying
-  // used for unbonding synthetic lockups, for active synthetic lockups, this value is set to uninitialized value
+  // underlying native lockup id for this synthetic lockup
+  uint64 underlying_lock_id = 1;
+  string synth_denom = 2;
+  // used for unbonding synthetic lockups, for active synthetic lockups, this
+  // value is set to uninitialized value
   google.protobuf.Timestamp end_time = 3 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"end_time\""
+  ];
+  google.protobuf.Duration duration = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"duration\""
   ];
 }

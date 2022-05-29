@@ -7,16 +7,17 @@ import (
 	"os"
 	"testing"
 
+	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/osmosis-labs/osmosis/app"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 )
 
 // Profile with:
@@ -51,6 +52,9 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
+	// This file is needed to provide the correct path
+	// to reflect.wasm test file needed for wasmd simulation testing.
+	config.ParamsFile = "params.json"
 
 	defer func() {
 		db.Close()
@@ -78,6 +82,8 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		sdkSimapp.FlagPeriodValue,
 		app.MakeEncodingConfig(),
 		sdkSimapp.EmptyAppOptions{},
+		app.GetWasmEnabledProposals(),
+		app.EmptyWasmOpts,
 		interBlockCacheOpt(),
 		fauxMerkleModeOpt)
 
@@ -128,6 +134,10 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
 
+	// This file is needed to provide the correct path
+	// to reflect.wasm test file needed for wasmd simulation testing.
+	config.ParamsFile = "params.json"
+
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
@@ -154,6 +164,8 @@ func TestAppStateDeterminism(t *testing.T) {
 				sdkSimapp.FlagPeriodValue,
 				app.MakeEncodingConfig(),
 				sdkSimapp.EmptyAppOptions{},
+				app.GetWasmEnabledProposals(),
+				app.EmptyWasmOpts,
 				interBlockCacheOpt())
 
 			fmt.Printf(

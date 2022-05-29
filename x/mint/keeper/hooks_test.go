@@ -4,14 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	osmoapp "github.com/osmosis-labs/osmosis/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/x/mint/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
@@ -47,6 +48,11 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
 		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
+
+		// get pre-epoch osmo supply and supplyWithOffset
+		presupply := app.BankKeeper.GetSupply(ctx, mintParams.MintDenom)
+		presupplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, mintParams.MintDenom)
+
 		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
@@ -54,6 +60,13 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
 		expectedRewardsAmount := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking).Amount
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsAmount)
+
+		// ensure post-epoch supply with offset changed by exactly the minted coins amount
+		// ensure post-epoch supply with offset changed by less than the minted coins amount (because of developer vesting account)
+		postsupply := app.BankKeeper.GetSupply(ctx, mintParams.MintDenom)
+		postsupplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, mintParams.MintDenom)
+		require.False(t, postsupply.IsEqual(presupply.Add(mintedCoin)))
+		require.True(t, postsupplyWithOffset.IsEqual(presupplyWithOffset.Add(mintedCoin)))
 
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
@@ -216,6 +229,12 @@ func setupGaugeForLPIncentives(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Co
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
+
+	// mints coins so supply exists on chain
+	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	err = simapp.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
+	require.NoError(t, err)
+
 	_, err = app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 }

@@ -13,20 +13,26 @@ type LiquidityChangeMsg interface {
 	LiquidityChangeType() LiquidityChangeType
 }
 
-var _ LiquidityChangeMsg = MsgExitPool{}
-var _ LiquidityChangeMsg = MsgExitSwapShareAmountIn{}
-var _ LiquidityChangeMsg = MsgExitSwapExternAmountOut{}
+var (
+	_ LiquidityChangeMsg = MsgExitPool{}
+	_ LiquidityChangeMsg = MsgExitSwapShareAmountIn{}
+	_ LiquidityChangeMsg = MsgExitSwapExternAmountOut{}
+)
 
-var _ LiquidityChangeMsg = MsgJoinPool{}
-var _ LiquidityChangeMsg = MsgJoinSwapExternAmountIn{}
-var _ LiquidityChangeMsg = MsgJoinSwapShareAmountOut{}
+var (
+	_ LiquidityChangeMsg = MsgJoinPool{}
+	_ LiquidityChangeMsg = MsgJoinSwapExternAmountIn{}
+	_ LiquidityChangeMsg = MsgJoinSwapShareAmountOut{}
+)
 
 func (msg MsgExitPool) LiquidityChangeType() LiquidityChangeType {
 	return RemoveLiquidity
 }
+
 func (msg MsgExitSwapShareAmountIn) LiquidityChangeType() LiquidityChangeType {
 	return RemoveLiquidity
 }
+
 func (msg MsgExitSwapExternAmountOut) LiquidityChangeType() LiquidityChangeType {
 	return RemoveLiquidity
 }
@@ -34,9 +40,11 @@ func (msg MsgExitSwapExternAmountOut) LiquidityChangeType() LiquidityChangeType 
 func (msg MsgJoinPool) LiquidityChangeType() LiquidityChangeType {
 	return AddLiquidity
 }
+
 func (msg MsgJoinSwapExternAmountIn) LiquidityChangeType() LiquidityChangeType {
 	return AddLiquidity
 }
+
 func (msg MsgJoinSwapShareAmountOut) LiquidityChangeType() LiquidityChangeType {
 	return AddLiquidity
 }

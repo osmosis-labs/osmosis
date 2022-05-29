@@ -172,7 +172,7 @@ func (ptr *ptr) pull(key []byte) {
 	}
 
 	node = node.delete(idx)
-	// For sake of efficienty on our use case, we pull only when a ptr gets
+	// For sake of efficiently on our use case, we pull only when a ptr gets
 	// empty.
 	// if len(data.Index) >= int(ptr.tree.m/2) {
 	if len(node.Children) > 0 {
@@ -218,7 +218,7 @@ func NewNode(cs ...*Child) *Node {
 
 // find returns the appropriate position that key should be inserted
 // if match is true, idx is the exact position for the key
-// if match is false, idx is the position where the key should be inserted
+// if match is false, idx is the position where the key should be inserted.
 func (node Node) find(key []byte) (idx int, match bool) {
 	for idx, child := range node.Children {
 		if bytes.Equal(child.Index, key) {

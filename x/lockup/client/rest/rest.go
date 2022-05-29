@@ -19,14 +19,14 @@ const (
 	RestDuration     = "duration"
 )
 
-// RegisterRoutes register query and tx rest routes
+// RegisterRoutes register query and tx rest routes.
 func RegisterRoutes(clientCtx client.Context, rtr *mux.Router) {
 	r := clientrest.WithHTTPDeprecationHeaders(rtr)
 	registerQueryRoutes(clientCtx, r)
 	registerTxHandlers(clientCtx, r)
 }
 
-// LockTokensReq defines the properties of a MsgLockTokens request
+// LockTokensReq defines the properties of a MsgLockTokens request.
 type LockTokensReq struct {
 	BaseReq  rest.BaseReq   `json:"base_req" yaml:"base_req"`
 	Owner    sdk.AccAddress `json:"owner,omitempty" yaml:"owner"`

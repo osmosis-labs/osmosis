@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.gamm.poolmodels;
+package osmosis.gamm.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
@@ -10,9 +10,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-import "osmosis/gamm/v1beta1/pool.proto";
-
-option go_package = "github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer";
 
 // Parameters for changing the weights in a balancer pool smoothly from
 // a start weight and end weight over a period of time.
@@ -67,11 +65,11 @@ message SmoothWeightChangeParams {
   // ];
 }
 
-// BalancerPoolParams defined the parameters that will be managed by the pool
+// PoolParams defined the parameters that will be managed by the pool
 // governance in the future. This params are not managed by the chain
 // governance. Instead they will be managed by the token holders of the pool.
 // The pool's token holders are specified in future_pool_governor.
-message BalancerPoolParams {
+message PoolParams {
   string swapFee = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
@@ -88,7 +86,24 @@ message BalancerPoolParams {
   ];
 }
 
-message BalancerPool {
+// Pool asset is an internal struct that combines the amount of the
+// token in the pool, and its balancer weight.
+// This is an awkward packaging of data,
+// and should be revisited in a future state migration.
+message PoolAsset {
+  // Coins we are talking about,
+  // the denomination must be unique amongst all PoolAssets for this pool.
+  cosmos.base.v1beta1.Coin token = 1
+      [ (gogoproto.moretags) = "yaml:\"token\"", (gogoproto.nullable) = false ];
+  // Weight that is not normalized. This weight must be less than 2^50
+  string weight = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"weight\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message Pool {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
   option (cosmos_proto.implements_interface) = "PoolI";
@@ -96,7 +111,7 @@ message BalancerPool {
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 id = 2;
 
-  BalancerPoolParams poolParams = 3 [
+  PoolParams poolParams = 3 [
     (gogoproto.moretags) = "yaml:\"balancer_pool_params\"",
     (gogoproto.nullable) = false
   ];

@@ -6,20 +6,21 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/spf13/cobra"
+	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmtypes "github.com/tendermint/tendermint/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	appparams "github.com/osmosis-labs/osmosis/app/params"
-	"github.com/osmosis-labs/osmosis/osmotestutils"
-	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	"github.com/spf13/cobra"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const FlagSelectPoolIds = "breakdown-by-pool-ids"
@@ -39,18 +40,16 @@ type DerivedAccount struct {
 	UnbondingStake      sdk.Int              `json:"unbonding_stake"`
 	Bonded              sdk.Coins            `json:"bonded"`
 	BondedBySelectPools map[uint64]sdk.Coins `json:"bonded_by_select_pools"`
-	UnclaimedAirdrop    sdk.Coins            `json:"unclaimed_airdrop"`
 	TotalBalances       sdk.Coins            `json:"total_balances"`
 }
 
 func newDerivedAccount(address string) DerivedAccount {
 	return DerivedAccount{
-		Address:          address,
-		LiquidBalances:   sdk.Coins{},
-		Staked:           sdk.ZeroInt(),
-		UnbondingStake:   sdk.ZeroInt(),
-		Bonded:           sdk.Coins{},
-		UnclaimedAirdrop: sdk.Coins{},
+		Address:        address,
+		LiquidBalances: sdk.Coins{},
+		Staked:         sdk.ZeroInt(),
+		UnbondingStake: sdk.ZeroInt(),
+		Bonded:         sdk.Coins{},
 	}
 }
 
@@ -60,10 +59,10 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 	for _, coin := range originCoins {
 		if pools[coin.Denom] != nil {
 			pool := pools[coin.Denom]
-			assets := pool.GetAllPoolAssets()
+			assets := pool.GetTotalPoolLiquidity(sdk.Context{})
 			for _, asset := range assets {
-				balances = balances.Add(sdk.NewCoin(asset.Token.Denom, asset.Token.Amount.Mul(coin.Amount).Quo(pool.GetTotalShares().Amount)))
-				if pools[asset.Token.Denom] != nil { // this happens when there's a pool for LP token swap
+				balances = balances.Add(sdk.NewCoin(asset.Denom, asset.Amount.Mul(coin.Amount).Quo(pool.GetTotalShares())))
+				if pools[asset.Denom] != nil { // this happens when there's a pool for LP token swap
 					convertAgain = true
 				}
 			}
@@ -79,12 +78,12 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 }
 
 // pools is a map from LP share string -> pool.
-// TODO: Make a separate type for this
+// TODO: Make a separate type for this.
 func underlyingCoinsForSelectPools(
 	originCoins sdk.Coins,
 	pools map[string]gammtypes.PoolI,
-	selectPoolIDs []uint64) map[uint64]sdk.Coins {
-
+	selectPoolIDs []uint64,
+) map[uint64]sdk.Coins {
 	balancesByPool := make(map[uint64]sdk.Coins)
 
 	for _, coin := range originCoins {
@@ -140,7 +139,8 @@ func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, er
 	return genState, nil
 }
 
-// ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json
+// ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json.
+//nolint:ineffassign // because of  accounts = authtypes.SanitizeGenesisAccounts(accounts)
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-derive-balances [input-genesis-file] [output-snapshot-json]",
@@ -170,14 +170,14 @@ Example:
 			}
 			selectBondedPoolIDs := []uint64{}
 			if selectPoolIdsStr != "" {
-				selectBondedPoolIDs, err = osmotestutils.ParseUint64SliceFromString(selectPoolIdsStr, ",")
+				selectBondedPoolIDs, err = osmoutils.ParseUint64SliceFromString(selectPoolIdsStr, ",")
 				if err != nil {
 					return err
 				}
 			}
 
 			authGenesis := authtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["auth"], &authGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["auth"], &authGenesis)
 			accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
 			if err != nil {
 				panic(err)
@@ -188,7 +188,7 @@ Example:
 			snapshotAccs := make(map[string]DerivedAccount)
 
 			bankGenesis := banktypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["bank"], &bankGenesis)
 			for _, balance := range bankGenesis.Balances {
 				address := balance.Address
 				acc, ok := snapshotAccs[address]
@@ -201,7 +201,7 @@ Example:
 			}
 
 			stakingGenesis := stakingtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["staking"], &stakingGenesis)
 			for _, unbonding := range stakingGenesis.UnbondingDelegations {
 				address := unbonding.DelegatorAddress
 				acc, ok := snapshotAccs[address]
@@ -242,7 +242,7 @@ Example:
 			}
 
 			lockupGenesis := lockuptypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["lockup"], &lockupGenesis)
 			for _, lock := range lockupGenesis.Locks {
 				address := lock.Owner
 
@@ -255,36 +255,8 @@ Example:
 				snapshotAccs[address] = acc
 			}
 
-			claimGenesis := claimtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["claim"], &claimGenesis)
-			for _, record := range claimGenesis.ClaimRecords {
-				address := record.Address
-
-				acc, ok := snapshotAccs[address]
-				if !ok {
-					acc = newDerivedAccount(address)
-				}
-
-				claimablePerAction := sdk.Coins{}
-				for _, coin := range record.InitialClaimableAmount {
-					claimablePerAction = claimablePerAction.Add(
-						sdk.NewCoin(coin.Denom,
-							coin.Amount.QuoRaw(int64(len(claimtypes.Action_name))),
-						),
-					)
-				}
-
-				for action := range claimtypes.Action_name {
-					if record.ActionCompleted[action] == false {
-						acc.UnclaimedAirdrop = acc.UnclaimedAirdrop.Add(claimablePerAction...)
-					}
-				}
-
-				snapshotAccs[address] = acc
-			}
-
 			gammGenesis := gammtypes.GenesisState{}
-			clientCtx.JSONCodec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
+			clientCtx.Codec.MustUnmarshalJSON(genState["gamm"], &gammGenesis)
 
 			// collect gamm pools
 			pools := make(map[string]gammtypes.PoolI)
@@ -294,11 +266,11 @@ Example:
 				if err != nil {
 					panic(err)
 				}
-				pools[pool.GetTotalShares().Denom] = pool
+				pools[gammtypes.GetPoolShareDenom(pool.GetId())] = pool
 			}
 
 			// convert balances to underlying coins and sum up balances to total balance
-			for addr, account := range snapshotAccs {
+			for _, account := range snapshotAccs {
 				// All pool shares are in liquid balances OR bonded balances (locked),
 				// therefore underlyingCoinsForSelectPools on liquidBalances + bondedBalances
 				// will include everything that is in one of those two pools.
@@ -310,9 +282,7 @@ Example:
 					Add(account.LiquidBalances...).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Staked)).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.UnbondingStake)).
-					Add(account.Bonded...).
-					Add(account.UnclaimedAirdrop...)
-				snapshotAccs[addr] = account
+					Add(account.Bonded...)
 			}
 
 			snapshot := DeriveSnapshot{
@@ -328,7 +298,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}

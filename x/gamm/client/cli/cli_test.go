@@ -7,6 +7,13 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
+	gammtestutil "github.com/osmosis-labs/osmosis/v7/x/gamm/client/testutil"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -15,12 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/osmosis-labs/osmosis/app"
-	"github.com/osmosis-labs/osmosis/osmotestutils"
-	"github.com/osmosis-labs/osmosis/x/gamm/client/cli"
-	gammtestutil "github.com/osmosis-labs/osmosis/x/gamm/client/testutil"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
@@ -79,7 +80,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 200000000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		osmotestutils.DefaultFeeString(s.cfg),
+		osmoutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -151,45 +152,47 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 0,
 		},
-		{
-			"future governor time",
-			fmt.Sprintf(`
-			{
-			  "%s": "1node0token,3stake",
-			  "%s": "100node0token,100stake",
-			  "%s": "0.001",
-			  "%s": "0.001",
-			  "%s": "2h"
-			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"future governor token + time",
-			fmt.Sprintf(`
-			{
-			  "%s": "1node0token,3stake",
-			  "%s": "100node0token,100stake",
-			  "%s": "0.001",
-			  "%s": "0.001",
-			  "%s": "token,1000h"
-			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"invalid future governor",
-			fmt.Sprintf(`
-			{
-			  "%s": "1node0token,3stake",
-			  "%s": "100node0token,100stake",
-			  "%s": "0.001",
-			  "%s": "0.001",
-			  "%s": "validdenom,invalidtime"
-			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-			true, &sdk.TxResponse{}, 7,
-		},
+		// Due to CI time concerns, we leave these CLI tests commented out, and instead guaranteed via
+		// the logic tests.
+		// {
+		// 	"future governor time",
+		// 	fmt.Sprintf(`
+		// 	{
+		// 	  "%s": "1node0token,3stake",
+		// 	  "%s": "100node0token,100stake",
+		// 	  "%s": "0.001",
+		// 	  "%s": "0.001",
+		// 	  "%s": "2h"
+		// 	}
+		// 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
+		// 	false, &sdk.TxResponse{}, 0,
+		// },
+		// {
+		// 	"future governor token + time",
+		// 	fmt.Sprintf(`
+		// 	{
+		// 	  "%s": "1node0token,3stake",
+		// 	  "%s": "100node0token,100stake",
+		// 	  "%s": "0.001",
+		// 	  "%s": "0.001",
+		// 	  "%s": "token,1000h"
+		// 	}
+		// 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
+		// 	false, &sdk.TxResponse{}, 0,
+		// },
+		// {
+		// 	"invalid future governor",
+		// 	fmt.Sprintf(`
+		// 	{
+		// 	  "%s": "1node0token,3stake",
+		// 	  "%s": "100node0token,100stake",
+		// 	  "%s": "0.001",
+		// 	  "%s": "0.001",
+		// 	  "%s": "validdenom,invalidtime"
+		// 	}
+		// 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
+		// 	true, &sdk.TxResponse{}, 7,
+		// },
 		{
 			"not valid json",
 			"bad json",
@@ -325,7 +328,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-				osmotestutils.DefaultFeeString(s.cfg),
+				osmoutils.DefaultFeeString(s.cfg),
 				fmt.Sprintf("--%s=%s", flags.FlagGas, fmt.Sprint(300000)),
 			}
 
@@ -334,7 +337,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				err = clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType)
+				err = clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType)
 				s.Require().NoError(err, out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
@@ -358,7 +361,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 20000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		osmotestutils.DefaultFeeString(s.cfg),
+		osmoutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -373,7 +376,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			"join pool with insufficient balance",
 			[]string{
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake,100node0token"),
 				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "1000000000000000000000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
@@ -387,7 +390,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 			"join pool with sufficient balance",
 			[]string{ // join-pool --pool-id=1 --max-amounts-in=100stake --share-amount-out=100 --from=validator --keyring-backend=test --chain-id=testing --yes
 				fmt.Sprintf("--%s=%d", cli.FlagPoolId, 1),
-				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake"),
+				fmt.Sprintf("--%s=%s", cli.FlagMaxAmountsIn, "100stake,100node0token"),
 				fmt.Sprintf("--%s=%s", cli.FlagShareAmountOut, "10000000000000000000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
@@ -411,7 +414,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -472,7 +475,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -496,7 +499,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 20000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		osmotestutils.DefaultFeeString(s.cfg),
+		osmoutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -536,7 +539,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -560,7 +563,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		osmotestutils.DefaultFeeString(s.cfg),
+		osmoutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -598,7 +601,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -644,7 +647,7 @@ func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -668,7 +671,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		osmotestutils.DefaultFeeString(s.cfg),
+		osmoutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -706,7 +709,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -752,7 +755,7 @@ func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
@@ -791,7 +794,7 @@ func (s *IntegrationTestSuite) TestGetCmdPools() {
 			} else {
 				resp := types.QueryPoolsResponse{}
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
 				s.Require().Greater(len(resp.Pools), 0, out.String())
 			}
@@ -829,7 +832,7 @@ func (s *IntegrationTestSuite) TestGetCmdNumPools() {
 			} else {
 				resp := types.QueryNumPoolsResponse{}
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
 				s.Require().Greater(resp.NumPools, uint64(0), out.String())
 			}
@@ -869,44 +872,7 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 				s.Require().NoError(err, out.String())
 
 				resp := types.QueryPoolResponse{}
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGetCmdPoolAssets() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name      string
-		args      []string
-		expectErr bool
-	}{
-		{
-			"query pool assets by pool id", // osmosisd query gamm pool-assets 1
-			[]string{
-				"1",
-				fmt.Sprintf("--%s=%s", tmcli.OutputFlag, "json"),
-			},
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdPoolAssets()
-			clientCtx := val.ClientCtx
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				resp := types.QueryPoolAssetsResponse{}
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}
@@ -943,7 +909,7 @@ func (s *IntegrationTestSuite) TestGetCmdTotalShares() {
 			} else {
 				resp := types.QueryTotalSharesResponse{}
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}
@@ -979,7 +945,7 @@ func (s *IntegrationTestSuite) TestGetCmdTotalLiquidity() {
 			} else {
 				resp := types.QueryTotalLiquidityResponse{}
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}
@@ -1016,7 +982,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 			} else {
 				resp := types.QuerySpotPriceResponse{}
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
 	}
@@ -1057,7 +1023,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 // 			} else {
 // 				resp := types.QuerySwapExactAmountInResponse{}
 // 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 // 			}
 // 		})
 // 	}
@@ -1098,7 +1064,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 // 			} else {
 // 				resp := types.QuerySwapExactAmountOutResponse{}
 // 				s.Require().NoError(err, out.String())
-// 				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), &resp), out.String())
+// 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 // 			}
 // 		})
 // 	}
@@ -1119,7 +1085,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
 		newAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 20000), sdk.NewInt64Coin("node0token", 20000)), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
-		osmotestutils.DefaultFeeString(s.cfg),
+		osmoutils.DefaultFeeString(s.cfg),
 	)
 	s.Require().NoError(err)
 
@@ -1159,7 +1125,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.JSONCodec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
+				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
 				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())

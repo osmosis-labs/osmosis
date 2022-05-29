@@ -4,8 +4,13 @@ import (
 	"math/rand"
 	"time"
 
+	osmo_simulation "github.com/osmosis-labs/osmosis/v7/x/simulation"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	osmo_simulation "github.com/osmosis-labs/osmosis/x/simulation"
+
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -13,12 +18,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 )
 
-// Simulation operation weights constants
+// Simulation operation weights constants.
 const (
 	DefaultWeightMsgCreateGauge int = 10
 	DefaultWeightMsgAddToGauge  int = 10
@@ -26,7 +28,7 @@ const (
 	OpWeightMsgAddToGauge           = "op_weight_msg_add_to_gauge"
 )
 
-// WeightedOperations returns all the operations from the module with their respective weights
+// WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
 	bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper,
@@ -107,7 +109,7 @@ func Max(x, y int) int {
 	return y
 }
 
-// SimulateMsgCreateGauge generates a MsgCreateGauge with random values
+// SimulateMsgCreateGauge generates a MsgCreateGauge with random values.
 func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,

@@ -6,13 +6,16 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gammkeeper "github.com/osmosis-labs/osmosis/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/x/txfees/types"
+
+	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
 // Every asset with a liquid osmo pairing pool on Osmosis, as of 12/01/21
 // Notably, Tick is not on this list because the osmo pool has $76 of liquidity.
 // Cheq'd and KRT are also not on this, due to neither having osmo pairings.
+// We nolint because these are strings of whitelisted ibc denoms.
+//nolint:gosec
 var feetoken_whitelist_data = `
 ion,uion,2
 atom,ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2,1
@@ -55,16 +58,9 @@ func InitialWhitelistedFeetokens(ctx sdk.Context, gamm *gammkeeper.Keeper) []typ
 			panic(err)
 		}
 
-		pool, poolExistsErr := gamm.GetPool(ctx, poolId)
+		pool, poolExistsErr := gamm.GetPoolAndPoke(ctx, poolId)
+		_ = pool
 		if poolExistsErr != nil {
-			continue
-		}
-		_, assetExistsErr := pool.GetPoolAsset(asset[1])
-		if assetExistsErr != nil {
-			continue
-		}
-		_, osmoExistsErr := pool.GetPoolAsset("uosmo")
-		if osmoExistsErr != nil {
 			continue
 		}
 
@@ -75,5 +71,6 @@ func InitialWhitelistedFeetokens(ctx sdk.Context, gamm *gammkeeper.Keeper) []typ
 
 		feeTokens = append(feeTokens, feeToken)
 	}
+
 	return feeTokens
 }

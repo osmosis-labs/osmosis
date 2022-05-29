@@ -4,23 +4,34 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/mint/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = Querier{}
+
+// Querier defines a wrapper around the x/mint keeper providing gRPC method
+// handlers.
+type Querier struct {
+	Keeper
+}
+
+func NewQuerier(k Keeper) Querier {
+	return Querier{Keeper: k}
+}
 
 // Params returns params of the mint module.
-func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (q Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	params := k.GetParams(ctx)
+	params := q.Keeper.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
 // EpochProvisions returns minter.EpochProvisions of the mint module.
-func (k Keeper) EpochProvisions(c context.Context, _ *types.QueryEpochProvisionsRequest) (*types.QueryEpochProvisionsResponse, error) {
+func (q Querier) EpochProvisions(c context.Context, _ *types.QueryEpochProvisionsRequest) (*types.QueryEpochProvisionsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	minter := k.GetMinter(ctx)
+	minter := q.Keeper.GetMinter(ctx)
 
 	return &types.QueryEpochProvisionsResponse{EpochProvisions: minter.EpochProvisions}, nil
 }

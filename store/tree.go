@@ -72,7 +72,7 @@ func (t Tree) Clear() {
 	}
 }
 
-// ptr is pointer to a specific node inside the tree
+// ptr is pointer to a specific node inside the tree.
 type ptr struct {
 	tree  Tree
 	level uint16
@@ -236,10 +236,10 @@ func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, righ
 	left, exact, right = ptr.tree.ptrGet(ptr.level-1, node.Children[idx].Index).accumulationSplit(key)
 	left = left.Add(NewNode(node.Children[:idx]...).accumulate())
 	right = right.Add(NewNode(node.Children[idx+1:]...).accumulate())
-	return
+	return left, exact, right
 }
 
-// TotalAccumulatedValue returns the sum of the weights for all leaves
+// TotalAccumulatedValue returns the sum of the weights for all leaves.
 func (t Tree) TotalAccumulatedValue() sdk.Int {
 	return t.SubsetAccumulation(nil, nil)
 }
@@ -286,7 +286,7 @@ func (ptr *ptr) visualize(depth int, acc sdk.Int) {
 	}
 }
 
-// DebugVisualize prints the entire tree to stdout
+// DebugVisualize prints the entire tree to stdout.
 func (t Tree) DebugVisualize() {
 	t.root().visualize(0, sdk.Int{})
 }

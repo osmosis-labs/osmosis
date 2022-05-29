@@ -1,43 +1,57 @@
 package app
 
 import (
+	wasm "github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	channelkeeper "github.com/cosmos/ibc-go/v2/modules/core/04-channel/keeper"
-	ibcante "github.com/cosmos/ibc-go/v2/modules/core/ante"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/x/txfees/types"
+	osmoante "github.com/osmosis-labs/osmosis/v7/ante"
+	v9 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v9"
+
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
 // Link to default ante handler used by cosmos sdk:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.43.0/x/auth/ante/ante.go#L41
 func NewAnteHandler(
 	appOpts servertypes.AppOptions,
-	ak ante.AccountKeeper, bankKeeper authtypes.BankKeeper,
-	txFeesKeeper *txfeeskeeper.Keeper, spotPriceCalculator txfeestypes.SpotPriceCalculator,
+	wasmConfig wasm.Config,
+	txCounterStoreKey sdk.StoreKey,
+	ak ante.AccountKeeper,
+	bankKeeper txfeestypes.BankKeeper,
+	txFeesKeeper *txfeeskeeper.Keeper,
+	spotPriceCalculator txfeestypes.SpotPriceCalculator,
 	sigGasConsumer ante.SignatureVerificationGasConsumer,
 	signModeHandler signing.SignModeHandler,
-	channelKeeper channelkeeper.Keeper,
+	channelKeeper *ibckeeper.Keeper,
 ) sdk.AnteHandler {
 	mempoolFeeOptions := txfeestypes.NewMempoolFeeOptions(appOpts)
 	mempoolFeeDecorator := txfeeskeeper.NewMempoolFeeDecorator(*txFeesKeeper, mempoolFeeOptions)
+	sendblockOptions := osmoante.NewSendBlockOptions(appOpts)
+	sendblockDecorator := osmoante.NewSendBlockDecorator(sendblockOptions)
+	deductFeeDecorator := txfeeskeeper.NewDeductFeeDecorator(*txFeesKeeper, ak, bankKeeper, nil)
 	return sdk.ChainAnteDecorators(
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
+		wasmkeeper.NewLimitSimulationGasDecorator(wasmConfig.SimulationGasLimit),
+		wasmkeeper.NewCountTXDecorator(txCounterStoreKey),
 		ante.NewRejectExtensionOptionsDecorator(),
+		v9.MsgFilterDecorator{},
 		// Use Mempool Fee Decorator from our txfees module instead of default one from auth
 		// https://github.com/cosmos/cosmos-sdk/blob/master/x/auth/middleware/fee.go#L34
 		mempoolFeeDecorator,
+		sendblockDecorator,
 		ante.NewValidateBasicDecorator(),
 		ante.TxTimeoutHeightDecorator{},
 		ante.NewValidateMemoDecorator(ak),
 		ante.NewConsumeGasForTxSizeDecorator(ak),
-		ante.NewDeductFeeDecorator(ak, bankKeeper, nil),
+		deductFeeDecorator,
 		ante.NewSetPubKeyDecorator(ak), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(ak),
 		ante.NewSigGasConsumeDecorator(ak, sigGasConsumer),

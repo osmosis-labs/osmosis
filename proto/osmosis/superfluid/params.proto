@@ -2,18 +2,17 @@ syntax = "proto3";
 package osmosis.superfluid;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 
 // Params holds parameters for the superfluid module
 message Params {
-  // refresh epoch identifier for staked amount
-  string refresh_epoch_identifier = 1
-      [ (gogoproto.moretags) = "yaml:\"refresh_epoch_identifier\"" ];
-  // the risk_factor is to be cut on OSMO equivalent value of lp tokens for superfluid staking, default: 5%
-  string minimum_risk_factor = 2 [
-     (gogoproto.moretags) = "yaml:\"minimum_risk_factor\"",
-     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-     (gogoproto.nullable) = false
-    ];
+  // the risk_factor is to be cut on OSMO equivalent value of lp tokens for
+  // superfluid staking, default: 5%
+  string minimum_risk_factor = 1 [
+    (gogoproto.moretags) = "yaml:\"minimum_risk_factor\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

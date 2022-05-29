@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
-	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string) *cobra.Command {
+// GetQueryCmd returns the cli query commands for this module.
+func GetQueryCmd() *cobra.Command {
 	// Group epochs queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -30,7 +32,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	return cmd
 }
 
-// GetCmdEpochsInfos provide running epochInfos
+// GetCmdEpochsInfos provide running epochInfos.
 func GetCmdEpochsInfos() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "epoch-infos",
@@ -66,7 +68,7 @@ $ %s query epochs epoch-infos
 	return cmd
 }
 
-// GetCmdCurrentEpoch provides current epoch by specified identifier
+// GetCmdCurrentEpoch provides current epoch by specified identifier.
 func GetCmdCurrentEpoch() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "current-epoch",
@@ -75,7 +77,7 @@ func GetCmdCurrentEpoch() *cobra.Command {
 			fmt.Sprintf(`Query current epoch by specified identifier.
 
 Example:
-$ %s query epochs current-epoch weekly
+$ %s query epochs current-epoch day
 `,
 				version.AppName,
 			),

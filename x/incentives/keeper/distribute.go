@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	db "github.com/tendermint/tm-db"
+
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) getDistributedCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
@@ -33,8 +35,8 @@ func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Ite
 	return k.getDistributedCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
-// BeginDistribution is a utility to begin distribution for a specific gauge
-func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
+// moveUpcomingGaugeToActiveGauge is a utility to begin distribution for a specific gauge.
+func (k Keeper) moveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gauge) error {
 	// validation for current time and distribution start time
 	if ctx.BlockTime().Before(gauge.StartTime) {
 		return fmt.Errorf("gauge is not able to start distribution yet: %s >= %s", ctx.BlockTime().String(), gauge.StartTime.String())
@@ -50,8 +52,8 @@ func (k Keeper) BeginDistribution(ctx sdk.Context, gauge types.Gauge) error {
 	return nil
 }
 
-// FinishDistribution is a utility to finish distribution for a specific gauge
-func (k Keeper) FinishDistribution(ctx sdk.Context, gauge types.Gauge) error {
+// moveActiveGaugeToFinishedGauge is a utility to finish distribution for a specific gauge.
+func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gauge) error {
 	timeKey := getTimeKey(gauge.StartTime)
 	if err := k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
 		return err
@@ -66,7 +68,7 @@ func (k Keeper) FinishDistribution(ctx sdk.Context, gauge types.Gauge) error {
 	return nil
 }
 
-// GetLocksToDistribution get locks that are associated to a condition
+// GetLocksToDistribution get locks that are associated to a condition.
 func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.QueryCondition) []lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
 	case lockuptypes.ByDuration:
@@ -79,12 +81,16 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 }
 
 // getLocksToDistributionWithMaxDuration get locks that are associated to a condition
-// and if its by duration, then use the min Duration
+// and if its by duration, then use the min Duration.
 func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo lockuptypes.QueryCondition, minDuration time.Duration) []lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
 	case lockuptypes.ByDuration:
+		// TODO: FIX ME!!!!
+		// Confusingly, synthetic lockups aren't indexed by denom as expected.
+		// Thus you have to do this as a hack
+		denom := lockuptypes.NativeDenom(distrTo.Denom)
 		if distrTo.Duration > minDuration {
-			return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, minDuration)
+			return k.lk.GetLocksLongerThanDurationDenom(ctx, denom, minDuration)
 		}
 		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
 	case lockuptypes.ByTime:
@@ -152,7 +158,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 }
 
 // distributionInfo stores all of the information for pent up sends for rewards distributions.
-// This enables us to lower the number of events and calls to back
+// This enables us to lower the number of events and calls to back.
 type distributionInfo struct {
 	nextID            int
 	lockOwnerAddrToID map[string]int
@@ -171,19 +177,19 @@ func newDistributionInfo() distributionInfo {
 	}
 }
 
-func (d *distributionInfo) addLockRewards(lock lockuptypes.PeriodLock, rewards sdk.Coins) error {
-	if id, ok := d.lockOwnerAddrToID[lock.Owner]; ok {
+func (d *distributionInfo) addLockRewards(owner string, rewards sdk.Coins) error {
+	if id, ok := d.lockOwnerAddrToID[owner]; ok {
 		oldDistrCoins := d.idToDistrCoins[id]
 		d.idToDistrCoins[id] = rewards.Add(oldDistrCoins...)
 	} else {
 		id := d.nextID
 		d.nextID += 1
-		d.lockOwnerAddrToID[lock.Owner] = id
-		decodedOwnerAddr, err := sdk.AccAddressFromBech32(lock.Owner)
+		d.lockOwnerAddrToID[owner] = id
+		decodedOwnerAddr, err := sdk.AccAddressFromBech32(owner)
 		if err != nil {
 			return err
 		}
-		d.idToBech32Addr = append(d.idToBech32Addr, lock.Owner)
+		d.idToBech32Addr = append(d.idToBech32Addr, owner)
 		d.idToDecodedAddr = append(d.idToDecodedAddr, decodedOwnerAddr)
 		d.idToDistrCoins = append(d.idToDistrCoins, rewards)
 	}
@@ -215,13 +221,82 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 	return nil
 }
 
+// distributeSyntheticInternal runs the distribution logic for a synthetic rewards distribution gauge, and adds the sends to
+// the distrInfo computed. It also updates the gauge for the distribution.
+// locks is expected to be the correct set of lock recipients for this gauge.
+// TODO: Make this code have way more re-use with distribute internal (post-v7).
+func (k Keeper) distributeSyntheticInternal(
+	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+) (sdk.Coins, error) {
+	totalDistrCoins := sdk.NewCoins()
+	denom := gauge.DistributeTo.Denom
+
+	qualifiedLocks := make([]lockuptypes.PeriodLock, 0, len(locks))
+	for _, lock := range locks {
+		// See if this lock has a synthetic lockup. If so, err == nil, and we add to qualifiedLocks
+		// otherwise it does not, and we continue.
+		_, err := k.lk.GetSyntheticLockup(ctx, lock.ID, denom)
+		if err != nil {
+			continue
+		}
+		qualifiedLocks = append(qualifiedLocks, lock)
+	}
+
+	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, lockuptypes.NativeDenom(denom))
+
+	if lockSum.IsZero() {
+		return nil, nil
+	}
+
+	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
+	remainEpochs := uint64(1)
+	if !gauge.IsPerpetual { // set remain epochs when it's not perpetual gauge
+		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
+	}
+
+	for _, lock := range qualifiedLocks {
+		distrCoins := sdk.Coins{}
+		for _, coin := range remainCoins {
+			lockedCoin, err := lock.SingleCoin()
+			if err != nil {
+				k.Logger(ctx).Error(err.Error())
+				continue
+			}
+			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
+			// check if the synthlock is qualified for GetLocksToDistribution
+			amt := coin.Amount.Mul(lockedCoin.Amount).Quo(lockSum.Mul(sdk.NewIntFromUint64(remainEpochs)))
+			if amt.IsPositive() {
+				newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
+				distrCoins = distrCoins.Add(newlyDistributedCoin)
+			}
+		}
+		distrCoins = distrCoins.Sort()
+		if distrCoins.Empty() {
+			continue
+		}
+		// Update the amount for that address
+		err := distrInfo.addLockRewards(lock.Owner, distrCoins)
+		if err != nil {
+			return nil, err
+		}
+
+		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
+	}
+
+	// increase filled epochs after distribution
+	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+	return totalDistrCoins, err
+}
+
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo computed. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeInternal(
-	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo) (sdk.Coins, error) {
+	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
+) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
-	lockSum := lockuptypes.SumLocksByDenom(locks, gauge.DistributeTo.Denom)
+	denom := gauge.DistributeTo.Denom
+	lockSum := lockuptypes.SumLocksByDenom(locks, denom)
 
 	if lockSum.IsZero() {
 		return nil, nil
@@ -237,7 +312,7 @@ func (k Keeper) distributeInternal(
 		distrCoins := sdk.Coins{}
 		for _, coin := range remainCoins {
 			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-			denomLockAmt := lock.Coins.AmountOfNoDenomValidation(gauge.DistributeTo.Denom)
+			denomLockAmt := lock.Coins.AmountOfNoDenomValidation(denom)
 			amt := coin.Amount.Mul(denomLockAmt).Quo(lockSum.Mul(sdk.NewInt(int64(remainEpochs))))
 			if amt.IsPositive() {
 				newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
@@ -249,7 +324,7 @@ func (k Keeper) distributeInternal(
 			continue
 		}
 		// Update the amount for that address
-		err := distrInfo.addLockRewards(lock, distrCoins)
+		err := distrInfo.addLockRewards(lock.Owner, distrCoins)
 		if err != nil {
 			return nil, err
 		}
@@ -257,34 +332,55 @@ func (k Keeper) distributeInternal(
 		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
 	}
 
-	// increase filled epochs after distribution
-	gauge.FilledEpochs += 1
-	gauge.DistributedCoins = gauge.DistributedCoins.Add(totalDistrCoins...)
-	if err := k.setGauge(ctx, &gauge); err != nil {
-		return nil, err
-	}
-
-	return totalDistrCoins, nil
+	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
+	return totalDistrCoins, err
 }
 
-// Distribute coins from gauge according to its conditions
+func (k Keeper) updateGaugePostDistribute(ctx sdk.Context, gauge types.Gauge, newlyDistributedCoins sdk.Coins) error {
+	// increase filled epochs after distribution
+	gauge.FilledEpochs += 1
+	gauge.DistributedCoins = gauge.DistributedCoins.Add(newlyDistributedCoins...)
+	if err := k.setGauge(ctx, &gauge); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock) []lockuptypes.PeriodLock {
+	// if gauge is empty, don't get the locks
+	if gauge.Coins.Empty() {
+		return []lockuptypes.PeriodLock{}
+	}
+	// TODO: FIXME!!!
+	// Confusingly, there is no way to get all synthetic lockups. Thus we use a separate method `distributeSyntheticInternal` to separately get lockSum for synthetic lockups.
+	// All gauges have a precondition of being ByDuration.
+	distributeBaseDenom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
+	if _, ok := cache[distributeBaseDenom]; !ok {
+		cache[distributeBaseDenom] = k.getLocksToDistributionWithMaxDuration(
+			ctx, gauge.DistributeTo, time.Millisecond)
+	}
+	// get this from memory instead of hitting iterators / underlying stores.
+	// due to many details of cacheKVStore, iteration will still cause expensive IAVL reads.
+	allLocks := cache[distributeBaseDenom]
+	return FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
+}
+
+// Distribute coins from gauge according to its conditions.
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
 
 	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
-
 	totalDistributedCoins := sdk.Coins{}
 	for _, gauge := range gauges {
-		// All gauges have a precondition of being ByDuration
-		if _, ok := locksByDenomCache[gauge.DistributeTo.Denom]; !ok {
-			locksByDenomCache[gauge.DistributeTo.Denom] = k.getLocksToDistributionWithMaxDuration(
-				ctx, gauge.DistributeTo, time.Millisecond)
+		filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
+		// send based on synthetic lockup coins if it's distributing to synthetic lockups
+		var gaugeDistributedCoins sdk.Coins
+		var err error
+		if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
+			gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
+		} else {
+			gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 		}
-		// get this from memory instead of hitting iterators / underlying stores.
-		// due to many details of cacheKVStore, iteration will still cause expensive IAVL reads.
-		allLocks := locksByDenomCache[gauge.DistributeTo.Denom]
-		filteredLocks := FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
-		gaugeDistributedCoins, err := k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 		if err != nil {
 			return nil, err
 		}
@@ -295,19 +391,33 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	if err != nil {
 		return nil, err
 	}
-
 	k.hooks.AfterEpochDistribution(ctx)
+
+	k.checkFinishDistribution(ctx, gauges)
 	return totalDistributedCoins, nil
 }
 
-// GetModuleToDistributeCoins returns sum of to distribute coins for all of the module
+func (k Keeper) checkFinishDistribution(ctx sdk.Context, gauges []types.Gauge) {
+	for _, gauge := range gauges {
+		// filled epoch is increased in this step and we compare with +1
+		// TODO: Wat? we increment filled epochs earlier, this looks wrong and like
+		// were not paying out the last epoch of rewards...
+		if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
+			if err := k.moveActiveGaugeToFinishedGauge(ctx, gauge); err != nil {
+				panic(err)
+			}
+		}
+	}
+}
+
+// GetModuleToDistributeCoins returns sum of to distribute coins for all of the module.
 func (k Keeper) GetModuleToDistributeCoins(ctx sdk.Context) sdk.Coins {
 	activeGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.ActiveGaugesIterator(ctx))
 	upcomingGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.UpcomingGaugesIteratorAfterTime(ctx, ctx.BlockTime()))
 	return activeGaugesDistr.Add(upcomingGaugesDistr...)
 }
 
-// GetModuleDistributedCoins returns sum of distributed coins so far
+// GetModuleDistributedCoins returns sum of distributed coins so far.
 func (k Keeper) GetModuleDistributedCoins(ctx sdk.Context) sdk.Coins {
 	activeGaugesDistr := k.getDistributedCoinsFromIterator(ctx, k.ActiveGaugesIterator(ctx))
 	finishedGaugesDistr := k.getDistributedCoinsFromIterator(ctx, k.FinishedGaugesIterator(ctx))

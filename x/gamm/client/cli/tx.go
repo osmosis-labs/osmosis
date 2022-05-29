@@ -4,19 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -47,14 +46,8 @@ func NewCreatePoolCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-pool [flags]",
 		Short: "create a new pool and provide the liquidity to it",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`create a new pool and provide the liquidity to it.
-Pool initialization parameters must be provided through a pool JSON file.
-
-Example:
-$ %s tx gamm create-pool --pool-file="path/to/pool.json" --from mykey
-
-Where pool.json contains:
+		Long:  `Must provide path to a pool JSON file (--pool-file) describing the pool to be created`,
+		Example: `Sample pool JSON file contents:
 {
 	"weights": "4uatom,4osmo,2uakt",
 	"initial-deposit": "100uatom,5osmo,20uakt",
@@ -63,9 +56,6 @@ Where pool.json contains:
 	"future-governor": "168h"
 }
 `,
-				version.AppName,
-			),
-		),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -333,7 +323,6 @@ func NewExitSwapShareAmountIn() *cobra.Command {
 }
 
 func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-
 	pool, err := parseCreatePoolFlags(fs)
 	if err != nil {
 		return txf, nil, fmt.Errorf("failed to parse pool: %w", err)
@@ -363,20 +352,19 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		return txf, nil, err
 	}
 
-	var poolAssets []types.PoolAsset
+	var poolAssets []balancer.PoolAsset
 	for i := 0; i < len(poolAssetCoins); i++ {
-
 		if poolAssetCoins[i].Denom != deposit[i].Denom {
 			return txf, nil, errors.New("deposit tokens and token weights should have same denom order")
 		}
 
-		poolAssets = append(poolAssets, types.PoolAsset{
+		poolAssets = append(poolAssets, balancer.PoolAsset{
 			Weight: poolAssetCoins[i].Amount.RoundInt(),
 			Token:  deposit[i],
 		})
 	}
 
-	poolParams := &balancer.BalancerPoolParams{
+	poolParams := &balancer.PoolParams{
 		SwapFee: swapFee,
 		ExitFee: exitFee,
 	}
@@ -399,14 +387,13 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 			return txf, nil, err
 		}
 
-		var targetPoolAssets []types.PoolAsset
+		var targetPoolAssets []balancer.PoolAsset
 		for i := 0; i < len(targetPoolAssetCoins); i++ {
-
 			if targetPoolAssetCoins[i].Denom != poolAssetCoins[i].Denom {
 				return txf, nil, errors.New("initial pool weights and target pool weights should have same denom order")
 			}
 
-			targetPoolAssets = append(targetPoolAssets, types.PoolAsset{
+			targetPoolAssets = append(targetPoolAssets, balancer.PoolAsset{
 				Weight: targetPoolAssetCoins[i].Amount.RoundInt(),
 				Token:  deposit[i],
 				// TODO: This doesn't make sense. Should only use denom, not an sdk.Coin
@@ -457,11 +444,11 @@ func NewBuildJoinPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 
 	maxAmountsIn := sdk.Coins{}
 	for i := 0; i < len(maxAmountsInStrs); i++ {
-		parsed, err := sdk.ParseCoinNormalized(maxAmountsInStrs[i])
+		parsed, err := sdk.ParseCoinsNormalized(maxAmountsInStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
-		maxAmountsIn = append(maxAmountsIn, parsed)
+		maxAmountsIn = maxAmountsIn.Add(parsed...)
 	}
 
 	msg := &types.MsgJoinPool{
@@ -497,11 +484,11 @@ func NewBuildExitPoolMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 
 	minAmountsOut := sdk.Coins{}
 	for i := 0; i < len(minAmountsOutStrs); i++ {
-		parsed, err := sdk.ParseCoinNormalized(minAmountsOutStrs[i])
+		parsed, err := sdk.ParseCoinsNormalized(minAmountsOutStrs[i])
 		if err != nil {
 			return txf, nil, err
 		}
-		minAmountsOut = append(minAmountsOut, parsed)
+		minAmountsOut = minAmountsOut.Add(parsed...)
 	}
 
 	msg := &types.MsgExitPool{

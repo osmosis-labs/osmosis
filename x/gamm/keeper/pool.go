@@ -3,14 +3,14 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogotypes "github.com/gogo/protobuf/types"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
@@ -22,8 +22,9 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-
+// GetPoolAndPoke returns a PoolI based on it's identifier if one exists. Prior
+// to returning the pool, the weights of the pool are updated via PokePool.
+func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
@@ -37,8 +38,21 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 		return nil, err
 	}
 
-	pool.PokeTokenWeights(ctx.BlockTime())
+	pool.PokePool(ctx.BlockTime())
 
+	return pool, nil
+}
+
+// Get pool, and check if the pool is active / allowed to be swapped against
+func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return &balancer.Pool{}, err
+	}
+
+	if !pool.IsActive(ctx) {
+		return &balancer.Pool{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
+	}
 	return pool, nil
 }
 
@@ -47,7 +61,7 @@ func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	return sdk.KVStorePrefixIterator(store, prefix)
 }
 
-func (k Keeper) GetPools(ctx sdk.Context) (res []types.PoolI, err error) {
+func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.PoolI, err error) {
 	iter := k.iterator(ctx, types.KeyPrefixPools)
 	defer iter.Close()
 
@@ -59,12 +73,11 @@ func (k Keeper) GetPools(ctx sdk.Context) (res []types.PoolI, err error) {
 			return nil, err
 		}
 
-		pool.PokeTokenWeights(ctx.BlockTime())
-
+		pool.PokePool(ctx.BlockTime())
 		res = append(res, pool)
 	}
 
-	return
+	return res, nil
 }
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
@@ -98,131 +111,99 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 //
 // All locks on this pool share must be unlocked prior to execution. Use LockupKeeper.ForceUnlock
 // on remaining locks before calling this function.
-func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedModules []string) (err error) {
-	pools := make(map[string]types.PoolI)
-	totalShares := make(map[string]sdk.Int)
-	for _, poolId := range poolIds {
-		pool, err := k.GetPool(ctx, poolId)
-		if err != nil {
-			return err
-		}
-		shareDenom := pool.GetTotalShares().Denom
-		pools[shareDenom] = pool
-		totalShares[shareDenom] = pool.GetTotalShares().Amount
-	}
+// func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedModules []string) (err error) {
+// 	pools := make(map[string]types.PoolI)
+// 	totalShares := make(map[string]sdk.Int)
+// 	for _, poolId := range poolIds {
+// 		pool, err := k.GetPool(ctx, poolId)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		shareDenom := pool.GetTotalShares().Denom
+// 		pools[shareDenom] = pool
+// 		totalShares[shareDenom] = pool.GetTotalShares().Amount
+// 	}
 
-	moduleAccounts := make(map[string]string)
-	for _, module := range excludedModules {
-		moduleAccounts[string(authtypes.NewModuleAddress(module))] = module
-	}
+// 	moduleAccounts := make(map[string]string)
+// 	for _, module := range excludedModules {
+// 		moduleAccounts[string(authtypes.NewModuleAddress(module))] = module
+// 	}
 
-	// first iterate through the share holders and burn them
-	k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
-		if coin.Amount.IsZero() {
-			return
-		}
+// 	// first iterate through the share holders and burn them
+// 	k.bankKeeper.IterateAllBalances(ctx, func(addr sdk.AccAddress, coin sdk.Coin) (stop bool) {
+// 		if coin.Amount.IsZero() {
+// 			return
+// 		}
 
-		pool, ok := pools[coin.Denom]
-		if !ok {
-			return
-		}
+// 		pool, ok := pools[coin.Denom]
+// 		if !ok {
+// 			return
+// 		}
 
-		// track the iterated shares
-		pool.SubTotalShares(coin.Amount)
-		pools[coin.Denom] = pool
+// 		// track the iterated shares
+// 		pool.SubTotalShares(coin.Amount)
+// 		pools[coin.Denom] = pool
 
-		// check if the shareholder is a module
-		if _, ok = moduleAccounts[coin.Denom]; ok {
-			return
-		}
+// 		// check if the shareholder is a module
+// 		if _, ok = moduleAccounts[coin.Denom]; ok {
+// 			return
+// 		}
 
-		// Burn the share tokens
-		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.Coins{coin})
-		if err != nil {
-			return true
-		}
+// 		// Burn the share tokens
+// 		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.Coins{coin})
+// 		if err != nil {
+// 			return true
+// 		}
 
-		err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{coin})
-		if err != nil {
-			return true
-		}
+// 		err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{coin})
+// 		if err != nil {
+// 			return true
+// 		}
 
-		// Refund assets
-		for _, asset := range pool.GetAllPoolAssets() {
-			// lpShareEquivalentTokens = (amount in pool) * (your shares) / (total shares)
-			lpShareEquivalentTokens := asset.Token.Amount.Mul(coin.Amount).Quo(totalShares[coin.Denom])
-			if lpShareEquivalentTokens.IsZero() {
-				continue
-			}
-			err = k.bankKeeper.SendCoins(
-				ctx, pool.GetAddress(), addr, sdk.Coins{{asset.Token.Denom, lpShareEquivalentTokens}})
-			if err != nil {
-				return true
-			}
-		}
+// 		// Refund assets
+// 		for _, asset := range pool.GetAllPoolAssets() {
+// 			// lpShareEquivalentTokens = (amount in pool) * (your shares) / (total shares)
+// 			lpShareEquivalentTokens := asset.Token.Amount.Mul(coin.Amount).Quo(totalShares[coin.Denom])
+// 			if lpShareEquivalentTokens.IsZero() {
+// 				continue
+// 			}
+// 			err = k.bankKeeper.SendCoins(
+// 				ctx, pool.GetAddress(), addr, sdk.Coins{{asset.Token.Denom, lpShareEquivalentTokens}})
+// 			if err != nil {
+// 				return true
+// 			}
+// 		}
 
-		return false
-	})
+// 		return false
+// 	})
 
-	if err != nil {
-		return err
-	}
+// 	if err != nil {
+// 		return err
+// 	}
 
-	for _, pool := range pools {
-		// sanity check
-		if !pool.GetTotalShares().IsZero() {
-			panic("pool total share should be zero after cleanup")
-		}
+// 	for _, pool := range pools {
+// 		// sanity check
+// 		if !pool.GetTotalShares().IsZero() {
+// 			panic("pool total share should be zero after cleanup")
+// 		}
 
-		err = k.DeletePool(ctx, pool.GetId())
-		if err != nil {
-			return err
-		}
-	}
+// 		err = k.DeletePool(ctx, pool.GetId())
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-// newBalancerPool is an internal function that creates a new Balancer Pool object with the provided
-// parameters, initial assets, and future governor.
-func (k Keeper) newBalancerPool(ctx sdk.Context, balancerPoolParams balancer.BalancerPoolParams, assets []types.PoolAsset, futureGovernor string) (types.PoolI, error) {
-	poolId := k.GetNextPoolNumberAndIncrement(ctx)
-
-	pool, err := balancer.NewBalancerPool(poolId, balancerPoolParams, assets, futureGovernor, ctx.BlockTime())
-	if err != nil {
-		return nil, err
-	}
-
-	acc := k.accountKeeper.GetAccount(ctx, pool.GetAddress())
-	if acc != nil {
-		return nil, sdkerrors.Wrapf(types.ErrPoolAlreadyExist, "pool %d already exist", poolId)
-	}
-
-	err = k.SetPool(ctx, &pool)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create and save corresponding module account to the account keeper
-	acc = k.accountKeeper.NewAccount(ctx, authtypes.NewModuleAccount(
-		authtypes.NewBaseAccountWithAddress(
-			pool.GetAddress(),
-		),
-		pool.GetAddress().String(),
-	))
-	k.accountKeeper.SetAccount(ctx, acc)
-
-	return &pool, nil
-}
-
-// SetNextPoolNumber sets next pool number
+// SetNextPoolNumber sets next pool number.
 func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolNumber})
 	store.Set(types.KeyNextGlobalPoolNumber, bz)
 }
 
-// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry
+// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
 func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	var poolNumber uint64
 	store := ctx.KVStore(k.storeKey)
@@ -245,25 +226,30 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	return poolNumber
 }
 
-func (k Keeper) getPoolAndInOutAssets(
-	ctx sdk.Context, poolId uint64,
-	tokenInDenom string,
-	tokenOutDenom string) (
-	pool types.PoolI,
-	inAsset types.PoolAsset,
-	outAsset types.PoolAsset,
-	err error,
-) {
-	pool, err = k.GetPool(ctx, poolId)
+// set ScalingFactors in stable stableswap pools
+func (k *Keeper) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, poolId uint64, scalingFactorGovernor string) error {
+	poolI, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
-		return
+		return err
 	}
 
-	inAsset, err = pool.GetPoolAsset(tokenInDenom)
-	if err != nil {
-		return
+	stableswapPool, ok := poolI.(*stableswap.Pool)
+	if !ok {
+		return types.ErrNotStableSwapPool
 	}
 
-	outAsset, err = pool.GetPoolAsset(tokenOutDenom)
-	return
+	if scalingFactorGovernor != stableswapPool.ScalingFactorGovernor {
+		return types.ErrNotScalingFactorGovernor
+	}
+
+	if len(scalingFactors) != stableswapPool.PoolLiquidity.Len() {
+		return types.ErrInvalidStableswapScalingFactors
+	}
+
+	stableswapPool.ScalingFactor = scalingFactors
+
+	if err = k.SetPool(ctx, stableswapPool); err != nil {
+		return err
+	}
+	return nil
 }

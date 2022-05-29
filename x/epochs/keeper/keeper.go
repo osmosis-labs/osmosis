@@ -3,10 +3,11 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 type (
@@ -24,7 +25,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey) *Keeper {
 	}
 }
 
-// Set the gamm hooks
+// Set the gamm hooks.
 func (k *Keeper) SetHooks(eh types.EpochHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set epochs hooks twice")

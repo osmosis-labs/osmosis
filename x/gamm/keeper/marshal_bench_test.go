@@ -5,27 +5,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/osmosis-labs/osmosis/app"
-	"github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 )
 
-func genPoolAssets(r *rand.Rand) []gammtypes.PoolAsset {
+func genPoolAssets(r *rand.Rand) []balancertypes.PoolAsset {
 	denoms := []string{"IBC/0123456789ABCDEF012346789ABCDEF", "IBC/denom56789ABCDEF012346789ABCDEF"}
-	assets := []gammtypes.PoolAsset{}
+	assets := []balancertypes.PoolAsset{}
 	for _, denom := range denoms {
 		amt, _ := simtypes.RandPositiveInt(r, sdk.NewIntWithDecimal(1, 40))
 		reserveAmt := sdk.NewCoin(denom, amt)
 		weight := sdk.NewInt(r.Int63n(9) + 1)
-		assets = append(assets, gammtypes.PoolAsset{Token: reserveAmt, Weight: weight})
+		assets = append(assets, balancertypes.PoolAsset{Token: reserveAmt, Weight: weight})
 	}
 
 	return assets
 }
 
-func genPoolParams(r *rand.Rand) balancer.BalancerPoolParams {
+func genPoolParams(r *rand.Rand) balancer.PoolParams {
 	swapFeeInt := int64(r.Intn(1e5))
 	swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
@@ -33,7 +35,7 @@ func genPoolParams(r *rand.Rand) balancer.BalancerPoolParams {
 	exitFee := sdk.NewDecWithPrec(exitFeeInt, 6)
 
 	// TODO: Randomly generate LBP params
-	return balancer.BalancerPoolParams{
+	return balancer.PoolParams{
 		SwapFee:                  swapFee,
 		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: nil,

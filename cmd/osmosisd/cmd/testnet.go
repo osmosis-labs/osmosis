@@ -42,7 +42,7 @@ var (
 	flagStartingIPAddress = "starting-ip-address"
 )
 
-// get cmd to initialize all files for tendermint testnet and application
+// get cmd to initialize all files for tendermint testnet and application.
 func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
@@ -100,9 +100,9 @@ Example:
 	return cmd
 }
 
-const nodeDirPerm = 0755
+const nodeDirPerm = 0o755
 
-// Initialize the testnet
+// Initialize the testnet.
 func InitTestnet(
 	clientCtx client.Context,
 	cmd *cobra.Command,
@@ -120,7 +120,6 @@ func InitTestnet(
 	algoStr string,
 	numValidators int,
 ) error {
-
 	nodeIDs := make([]string, numValidators)
 	valPubKeys := make([]cryptotypes.PubKey, numValidators)
 
@@ -273,7 +272,6 @@ func initGenFiles(
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
-
 	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
 
 	// set the accounts in the genesis state
@@ -325,7 +323,6 @@ func collectGenFiles(
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
 	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
 ) error {
-
 	var appState json.RawMessage
 	genTime := tmtime.Now()
 
@@ -394,12 +391,12 @@ func writeFile(name string, dir string, contents []byte) error {
 	writePath := filepath.Join(dir)
 	file := filepath.Join(writePath, name)
 
-	err := tmos.EnsureDir(writePath, 0755)
+	err := tmos.EnsureDir(writePath, 0o755)
 	if err != nil {
 		return err
 	}
 
-	err = tmos.WriteFile(file, contents, 0644)
+	err = tmos.WriteFile(file, contents, 0o644)
 	if err != nil {
 		return err
 	}

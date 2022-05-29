@@ -57,7 +57,7 @@ type BankKeeper interface {
 	IterateAllBalances(ctx sdk.Context, callback func(addr sdk.AccAddress, coin sdk.Coin) (stop bool))
 }
 
-// DistrKeeper defines the contract needed to be fulfilled for distribution keeper
+// DistrKeeper defines the contract needed to be fulfilled for distribution keeper.
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

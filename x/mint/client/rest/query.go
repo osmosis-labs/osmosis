@@ -6,9 +6,10 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/osmosis-labs/osmosis/x/mint/types"
 )
 
 func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {

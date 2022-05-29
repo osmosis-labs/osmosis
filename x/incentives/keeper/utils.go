@@ -3,8 +3,9 @@ package keeper
 import (
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
 )
 
 func findIndex(IDs []uint64, ID uint64) int {
@@ -25,7 +26,7 @@ func removeValue(IDs []uint64, ID uint64) ([]uint64, int) {
 	return IDs[:len(IDs)-1], index
 }
 
-// getTimeKey returns the key used for getting a set of gauges
+// getTimeKey returns the key used for getting a set of gauges.
 func getTimeKey(timestamp time.Time) []byte {
 	timeBz := sdk.FormatTimeBytes(timestamp)
 	timeBzL := len(timeBz)
@@ -44,7 +45,7 @@ func getTimeKey(timestamp time.Time) []byte {
 	return bz
 }
 
-// combineKeys combine bytes array into a single bytes
+// combineKeys combine bytes array into a single bytes.
 func combineKeys(keys ...[]byte) []byte {
 	combined := []byte{}
 	for i, key := range keys {

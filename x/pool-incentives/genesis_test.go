@@ -4,35 +4,38 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simapp "github.com/osmosis-labs/osmosis/app"
-	pool_incentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	simapp "github.com/osmosis-labs/osmosis/v7/app"
+	pool_incentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var now = time.Now().UTC()
-var testGenesis = types.GenesisState{
-	Params: types.Params{
-		MintedDenom: "uosmo",
-	},
-	LockableDurations: []time.Duration{
-		time.Second,
-		time.Minute,
-		time.Hour,
-	},
-	DistrInfo: &types.DistrInfo{
-		TotalWeight: sdk.NewInt(1),
-		Records: []types.DistrRecord{
-			{
-				GaugeId: 1,
-				Weight:  sdk.NewInt(1),
+var (
+	now         = time.Now().UTC()
+	testGenesis = types.GenesisState{
+		Params: types.Params{
+			MintedDenom: "uosmo",
+		},
+		LockableDurations: []time.Duration{
+			time.Second,
+			time.Minute,
+			time.Hour,
+		},
+		DistrInfo: &types.DistrInfo{
+			TotalWeight: sdk.NewInt(1),
+			Records: []types.DistrRecord{
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(1),
+				},
 			},
 		},
-	},
-}
+	}
+)
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
 	app := simapp.Setup(false)
@@ -45,6 +48,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	genesis := testGenesis
 	pool_incentives.InitGenesis(ctx, *app.PoolIncentivesKeeper, &genesis)
+	assert.Equal(t, app.PoolIncentivesKeeper.GetDistrInfo(ctx), *testGenesis.DistrInfo)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {

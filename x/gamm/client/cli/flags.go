@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	// Will be parsed to string
+	// Will be parsed to string.
 	FlagPoolFile = "pool-file"
 
-	// Names of fields in pool json file
+	// Names of fields in pool json file.
 	PoolFileWeights        = "weights"
 	PoolFileInitialDeposit = "initial-deposit"
 	PoolFileSwapFee        = "swap-fee"
@@ -21,21 +21,21 @@ const (
 	PoolFileTargetPoolWeights        = "target-pool-weights"
 
 	FlagPoolId = "pool-id"
-	// Will be parsed to sdk.Int
+	// Will be parsed to sdk.Int.
 	FlagShareAmountOut = "share-amount-out"
-	// Will be parsed to []sdk.Coin
+	// Will be parsed to []sdk.Coin.
 	FlagMaxAmountsIn = "max-amounts-in"
 
-	// Will be parsed to sdk.Int
+	// Will be parsed to sdk.Int.
 	FlagShareAmountIn = "share-amount-in"
-	// Will be parsed to []sdk.Coin
+	// Will be parsed to []sdk.Coin.
 	FlagMinAmountsOut = "min-amounts-out"
 
-	// Will be parsed to uint64
+	// Will be parsed to uint64.
 	FlagSwapRoutePoolIds = "swap-route-pool-ids"
-	// Will be parsed to []sdk.Coin
+	// Will be parsed to []sdk.Coin.
 	FlagSwapRouteAmounts = "swap-route-amounts"
-	// Will be parsed to []string
+	// Will be parsed to []string.
 	FlagSwapRouteDenoms = "swap-route-denoms"
 )
 

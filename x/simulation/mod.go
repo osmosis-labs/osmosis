@@ -43,7 +43,8 @@ func GenAndDeliverTxWithRandFees(
 	simAccount simtypes.Account,
 	ak stakingTypes.AccountKeeper,
 	bk stakingTypes.BankKeeper,
-	moduleName string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+	moduleName string,
+) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
@@ -73,7 +74,8 @@ func GenAndDeliverTx(
 	ctx sdk.Context,
 	simAccount simtypes.Account,
 	ak stakingTypes.AccountKeeper,
-	moduleName string) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+	moduleName string,
+) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
 	tx, err := helpers.GenTx(
 		txGen,
@@ -85,7 +87,6 @@ func GenAndDeliverTx(
 		[]uint64{account.GetSequence()},
 		simAccount.PrivKey,
 	)
-
 	if err != nil {
 		return simtypes.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
 	}
@@ -96,5 +97,4 @@ func GenAndDeliverTx(
 	}
 
 	return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
-
 }

@@ -1,42 +1,24 @@
 package keeper_test
 
 import (
-	"time"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
-	"github.com/osmosis-labs/osmosis/x/superfluid/keeper"
 )
-
-func (suite *KeeperTestSuite) allocateRewardsToValidator(valAddr sdk.ValAddress) {
-	validator, found := suite.app.StakingKeeper.GetValidator(suite.ctx, valAddr)
-	suite.Require().True(found)
-
-	// allocate reward tokens to distribution module
-	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000))}
-	suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-	suite.app.BankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, distrtypes.ModuleName, coins)
-
-	// allocate rewards to validator
-	suite.ctx = suite.ctx.WithBlockHeight(suite.ctx.BlockHeight() + 1)
-	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(20000)}}
-	suite.app.DistrKeeper.AllocateTokensToValidator(suite.ctx, validator, decTokens)
-	suite.app.DistrKeeper.IncrementValidatorPeriod(suite.ctx, validator)
-}
 
 func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 	type gaugeChecker struct {
-		gaugeId  uint64
-		valIndex int64
-		lpDenom  string
-		rewarded bool
+		intermediaryAccIndex uint64
+		valIndex             int64
+		lpIndex              int64
+		rewarded             bool
 	}
 	testCases := []struct {
 		name             string
 		validatorStats   []stakingtypes.BondStatus
+		delegatorNumber  int
 		superDelegations []superfluidDelegation
 		rewardedVals     []int64
 		gaugeChecks      []gaugeChecker
@@ -44,30 +26,34 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 		{
 			"happy path with single validator and delegator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]int64{0},
-			[]gaugeChecker{{1, 0, "gamm/pool/1", true}},
+			[]gaugeChecker{{0, 0, 0, true}},
 		},
 		{
 			"two LP tokens delegation to a single validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/2"}},
+			2,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 1, 1000000}},
 			[]int64{0},
-			[]gaugeChecker{{1, 0, "gamm/pool/1", true}, {2, 0, "gamm/pool/2", true}},
+			[]gaugeChecker{{0, 0, 0, true}, {1, 0, 1, true}},
 		},
 		{
 			"one LP token with two locks to a single validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {0, "gamm/pool/1"}},
+			2,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 0, 0, 1000000}},
 			[]int64{0},
-			[]gaugeChecker{{1, 0, "gamm/pool/1", true}},
+			[]gaugeChecker{{0, 0, 0, true}},
 		},
 		{
 			"add unbonded validator case",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
-			[]superfluidDelegation{{0, "gamm/pool/1"}, {1, "gamm/pool/1"}},
+			2,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]int64{0},
-			[]gaugeChecker{{1, 0, "gamm/pool/1", true}, {2, 1, "gamm/pool/1", false}},
+			[]gaugeChecker{{0, 0, 0, true}, {1, 1, 0, false}},
 		},
 	}
 
@@ -77,37 +63,48 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
+			// Generate delegator addresses
+			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
+
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
 			// setup superfluid delegations
-			suite.SetupSuperfluidDelegations(valAddrs, tc.superDelegations)
+			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
+			unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 
 			// allocate rewards to first validator
 			for _, valIndex := range tc.rewardedVals {
-				suite.allocateRewardsToValidator(valAddrs[valIndex])
+				suite.AllocateRewardsToValidator(valAddrs[valIndex], sdk.NewInt(20000))
 			}
 
 			// move intermediary account delegation rewards to gauges
-			suite.app.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(suite.ctx)
+			suite.App.SuperfluidKeeper.MoveSuperfluidDelegationRewardToGauges(suite.Ctx)
+
+			// check invariant is fine
+			reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
+			suite.Require().False(broken, reason)
 
 			// check gauge balance
 			for _, gaugeCheck := range tc.gaugeChecks {
-				gauge, err := suite.app.IncentivesKeeper.GetGaugeByID(suite.ctx, gaugeCheck.gaugeId)
+				gaugeId := intermediaryAccs[gaugeCheck.intermediaryAccIndex].GaugeId
+				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeId)
 				suite.Require().NoError(err)
-				suite.Require().Equal(gauge.Id, gaugeCheck.gaugeId)
+				suite.Require().Equal(gauge.Id, gaugeId)
 				suite.Require().Equal(gauge.IsPerpetual, true)
-				suite.Require().Equal(gauge.DistributeTo, lockuptypes.QueryCondition{
+				suite.Require().Equal(lockuptypes.QueryCondition{
 					LockQueryType: lockuptypes.ByDuration,
-					Denom:         gaugeCheck.lpDenom + keeper.StakingSuffix(valAddrs[gaugeCheck.valIndex].String()),
-					Duration:      time.Hour * 24 * 14,
-				})
+					Denom:         keeper.StakingSyntheticDenom(denoms[gaugeCheck.lpIndex], valAddrs[gaugeCheck.valIndex].String()),
+					Duration:      unbondingDuration,
+				}, gauge.DistributeTo)
 				if gaugeCheck.rewarded {
 					suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsPositive())
 				} else {
 					suite.Require().True(gauge.Coins.AmountOf(sdk.DefaultBondDenom).IsZero())
 				}
-				suite.Require().Equal(gauge.StartTime, suite.ctx.BlockTime())
+				suite.Require().Equal(gauge.StartTime, suite.Ctx.BlockTime())
 				suite.Require().Equal(gauge.NumEpochsPaidOver, uint64(1))
 				suite.Require().Equal(gauge.FilledEpochs, uint64(0))
 				suite.Require().Equal(gauge.DistributedCoins, sdk.Coins(nil))

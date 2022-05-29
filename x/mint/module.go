@@ -17,11 +17,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/osmosis-labs/osmosis/x/mint/client/cli"
-	"github.com/osmosis-labs/osmosis/x/mint/client/rest"
-	"github.com/osmosis-labs/osmosis/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/x/mint/simulation"
-	"github.com/osmosis-labs/osmosis/x/mint/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/mint/client/cli"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
 var (
@@ -45,7 +46,7 @@ func (AppModuleBasic) Name() string {
 // RegisterLegacyAminoCodec registers the mint module's types on the given LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the module's interface types.
 func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the mint
@@ -74,7 +75,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		return
 	}
-
 }
 
 // GetTxCmd returns no root tx command for the mint module.
@@ -93,14 +93,16 @@ type AppModule struct {
 
 	keeper     keeper.Keeper
 	authKeeper types.AccountKeeper
+	bankKeeper types.BankKeeper
 }
 
-// NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper) AppModule {
+// NewAppModule creates a new AppModule object.
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		authKeeper:     ak,
+		bankKeeper:     bk,
 	}
 }
 
@@ -120,15 +122,17 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-// LegacyQuerierHandler returns the mint module sdk.Querier.
+// LegacyQuerierHandler returns the x/mint module's sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
+	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
+		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
+	}
 }
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 }
 
 // InitGenesis performs genesis initialization for the mint module. It returns
@@ -137,7 +141,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	InitGenesis(ctx, am.keeper, am.authKeeper, &genesisState)
+	InitGenesis(ctx, am.keeper, am.authKeeper, am.bankKeeper, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 

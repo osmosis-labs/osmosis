@@ -1,11 +1,10 @@
 syntax = "proto3";
-package osmosis.gamm.poolmodels;
+package osmosis.gamm.poolmodels.balancer.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
-import "osmosis/gamm/v1beta1/pool.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/gamm/pool-models/balancer";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer";
 
 service Msg {
   rpc CreateBalancerPool(MsgCreateBalancerPool)
@@ -16,7 +15,7 @@ service Msg {
 message MsgCreateBalancerPool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
-  BalancerPoolParams poolParams = 2
+  osmosis.gamm.v1beta1.PoolParams poolParams = 2
       [ (gogoproto.moretags) = "yaml:\"pool_params\"" ];
 
   repeated osmosis.gamm.v1beta1.PoolAsset poolAssets = 3
@@ -26,4 +25,6 @@ message MsgCreateBalancerPool {
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
 }
 
-message MsgCreateBalancerPoolResponse {}
+message MsgCreateBalancerPoolResponse {
+  uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
+}

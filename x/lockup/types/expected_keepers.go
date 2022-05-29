@@ -6,6 +6,7 @@ import (
 )
 
 type AccountKeeper interface {
+	GetAllAccounts(ctx sdk.Context) []authtypes.AccountI
 	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
 	GetModuleAddress(moduleName string) sdk.AccAddress
 }

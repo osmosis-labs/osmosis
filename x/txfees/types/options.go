@@ -2,19 +2,24 @@ package types
 
 import (
 	"fmt"
+
+	"github.com/spf13/cast"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/cast"
 )
 
 // If Options are not set in a config somewhere,
 // use defaults to preserve functionality with old node software
 
-// TODO: Bump after next minor version. (in 6.2+)
+// TODO: Bump after next minor version. (in 6.2+).
 var DefaultMinGasPriceForArbitrageTx = sdk.ZeroDec()
-var DefaultMinGasPriceForHighGasTx = sdk.ZeroDec()
-var DefaultMaxGasWantedPerTx = uint64(25 * 1000 * 1000)
-var DefaultHighGasTxThreshold = uint64(1 * 1000 * 1000)
+
+var (
+	DefaultMinGasPriceForHighGasTx = sdk.ZeroDec()
+	DefaultMaxGasWantedPerTx       = uint64(25 * 1000 * 1000)
+	DefaultHighGasTxThreshold      = uint64(1 * 1000 * 1000)
+)
 
 type MempoolFeeOptions struct {
 	MaxGasWantedPerTx         uint64

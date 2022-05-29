@@ -5,15 +5,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/osmosis-labs/osmosis/x/pool-incentives/types"
-	"github.com/spf13/cobra"
 )
 
-// GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string) *cobra.Command {
+// GetQueryCmd returns the cli query commands for this module.
+func GetQueryCmd() *cobra.Command {
 	// Group queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -35,7 +37,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	return cmd
 }
 
-// GetCmdGaugeIds takes the pool id and returns the matching gauge ids and durations
+// GetCmdGaugeIds takes the pool id and returns the matching gauge ids and durations.
 func GetCmdGaugeIds() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gauge-ids [pool-id]",
@@ -78,7 +80,7 @@ $ %s query pool-incentives gauge-ids 1
 	return cmd
 }
 
-// GetCmdDistrInfo takes the pool id and returns the matching gauge ids and weights
+// GetCmdDistrInfo takes the pool id and returns the matching gauge ids and weights.
 func GetCmdDistrInfo() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "distr-info",
@@ -114,7 +116,7 @@ $ %s query pool-incentives distr-info
 	return cmd
 }
 
-// GetCmdParams returns module params
+// GetCmdParams returns module params.
 func GetCmdParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",
@@ -150,7 +152,7 @@ $ %s query pool-incentives params
 	return cmd
 }
 
-// GetCmdLockableDurations returns lockable durations
+// GetCmdLockableDurations returns lockable durations.
 func GetCmdLockableDurations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "lockable-durations",
@@ -186,7 +188,7 @@ $ %s query pool-incentives lockable-durations
 	return cmd
 }
 
-// GetCmdIncentivizedPools returns incentivized pools
+// GetCmdIncentivizedPools returns incentivized pools.
 func GetCmdIncentivizedPools() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "incentivized-pools",
@@ -222,7 +224,7 @@ $ %s query pool-incentives incentivized-pools
 	return cmd
 }
 
-// GetCmdIncentivizedPools returns incentivized pools
+// GetCmdIncentivizedPools returns incentivized pools.
 func GetCmdExternalIncentiveGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "external-incentivized-gauges",

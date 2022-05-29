@@ -1,6 +1,6 @@
 package types
 
-// event types
+// event types.
 const (
 	TypeEvtLockTokens      = "lock_tokens"
 	TypeEvtAddTokensToLock = "add_tokens_to_lock"

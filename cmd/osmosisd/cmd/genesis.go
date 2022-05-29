@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -26,15 +25,15 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	appParams "github.com/osmosis-labs/osmosis/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v7/app/params"
 
-	claimtypes "github.com/osmosis-labs/osmosis/x/claim/types"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
+//nolint:ineffassign
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare-genesis",
@@ -52,7 +51,7 @@ Example:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			depCdc := clientCtx.Codec
-			cdc := depCdc.(codec.Codec)
+			cdc := depCdc
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
@@ -105,9 +104,10 @@ Example:
 
 func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessage, genDoc *tmtypes.GenesisDoc, genesisParams GenesisParams, chainID string) (map[string]json.RawMessage, *tmtypes.GenesisDoc, error) {
 	depCdc := clientCtx.Codec
-	cdc := depCdc.(codec.Codec)
+	cdc := depCdc
 
 	// chain params genesis
+	genDoc.ChainID = chainID
 	genDoc.GenesisTime = genesisParams.GenesisTime
 
 	genDoc.ConsensusParams = genesisParams.ConsensusParams
@@ -193,15 +193,6 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	}
 	appState[epochstypes.ModuleName] = epochsGenStateBz
 
-	// claim module genesis
-	claimGenState := claimtypes.GetGenesisStateFromAppState(depCdc, appState)
-	claimGenState.Params = genesisParams.ClaimParams
-	claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal claim genesis state: %w", err)
-	}
-	appState[claimtypes.ModuleName] = claimGenStateBz
-
 	// poolincentives module genesis
 	poolincentivesGenState := &genesisParams.PoolIncentivesGenesis
 	poolincentivesGenStateBz, err := cdc.MarshalJSON(poolincentivesGenState)
@@ -237,8 +228,6 @@ type GenesisParams struct {
 	PoolIncentivesGenesis poolincentivestypes.GenesisState
 
 	Epochs []epochstypes.EpochInfo
-
-	ClaimParams claimtypes.Params
 }
 
 func MainnetGenesisParams() GenesisParams {
@@ -249,7 +238,7 @@ func MainnetGenesisParams() GenesisParams {
 
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{
-			Description: fmt.Sprintf("The native token of Osmosis"),
+			Description: "The native token of Osmosis",
 			DenomUnits: []*banktypes.DenomUnit{
 				{
 					Denom:    appParams.BaseCoinUnit,
@@ -496,13 +485,6 @@ func MainnetGenesisParams() GenesisParams {
 		time.Hour * 24 * 14, // 14 days
 	}
 
-	genParams.ClaimParams = claimtypes.Params{
-		AirdropStartTime:   genParams.GenesisTime,
-		DurationUntilDecay: time.Hour * 24 * 60,  // 60 days = ~2 months
-		DurationOfDecay:    time.Hour * 24 * 120, // 120 days = ~4 months
-		ClaimDenom:         genParams.NativeCoinMetadatas[0].Base,
-	}
-
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
 	genParams.ConsensusParams.Block.MaxBytes = 5 * 1024 * 1024
 	genParams.ConsensusParams.Block.MaxGas = 6_000_000
@@ -527,7 +509,6 @@ func MainnetGenesisParams() GenesisParams {
 }
 
 func TestnetGenesisParams() GenesisParams {
-
 	genParams := MainnetGenesisParams()
 
 	genParams.GenesisTime = time.Now()
@@ -564,10 +545,6 @@ func TestnetGenesisParams() GenesisParams {
 		time.Hour * 1,    // 1 hour
 		time.Hour * 2,    // 2 hours
 	}
-
-	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime
-	genParams.ClaimParams.DurationUntilDecay = time.Hour * 48 // 2 days
-	genParams.ClaimParams.DurationOfDecay = time.Hour * 48    // 2 days
 
 	genParams.PoolIncentivesGenesis.LockableDurations = genParams.IncentivesGenesis.LockableDurations
 

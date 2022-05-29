@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/osmosis-labs/osmosis/x/incentives/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 type Keeper struct {
@@ -36,7 +37,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Sub
 	}
 }
 
-// Set the gamm hooks
+// Set the gamm hooks.
 func (k *Keeper) SetHooks(ih types.IncentiveHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set incentive hooks twice")
