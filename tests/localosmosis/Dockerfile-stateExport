@@ -47,7 +47,7 @@ WORKDIR $HOME
 # RUN apt-get update && apt-get install -y software-properties-common gcc && \
 #     add-apt-repository -y ppa:deadsnakes/ppa
 # RUN apt-get update && apt-get install -y python3.6 python3-distutils python3-pip python3-apt
-RUN apt-get install -y python3
+RUN apt-get update && apt-get install -y python3
 RUN chmod +x /osmosis/statesync.sh
 RUN /osmosis/statesync.sh
 EXPOSE 26656
