@@ -14,10 +14,10 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/x/launchpad"
-	"github.com/osmosis-labs/osmosis/x/launchpad/api"
-	"github.com/osmosis-labs/osmosis/x/launchpad/client/cli"
-	"github.com/osmosis-labs/osmosis/x/launchpad/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/client/cli"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/keeper"
 )
 
 var (

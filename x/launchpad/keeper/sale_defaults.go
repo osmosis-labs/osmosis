@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
 )
 
 func newSale(treasury string, id uint64, tokenIn, tokenOut string, start, end time.Time, totalOut sdk.Int) api.Sale {

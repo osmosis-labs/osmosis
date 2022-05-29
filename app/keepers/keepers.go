@@ -75,8 +75,8 @@ import (
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
-	launchpadkeeper "github.com/osmosis-labs/osmosis/x/launchpad/keeper"
-	launchpadmodule "github.com/osmosis-labs/osmosis/x/launchpad/module"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
+	launchpadkeeper "github.com/osmosis-labs/osmosis/v7/x/launchpad/keeper"
 )
 
 type AppKeepers struct {
@@ -314,6 +314,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authtypes.FeeCollectorName,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
+
+	launchpadKeeper := launchpadkeeper.NewKeeper(appKeepers.keys[launchpadkeeper.StoreKey], appCodec, bankKeeper, appKeepers.GetSubspace(launchpad.ModuleName))
+	appKeepers.LaunchpadKeeper = &launchpadKeeper
 
 	txFeesKeeper := txfeeskeeper.NewKeeper(
 		appCodec,

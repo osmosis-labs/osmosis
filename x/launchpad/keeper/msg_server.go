@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/osmosis-labs/osmosis/x/launchpad"
-	"github.com/osmosis-labs/osmosis/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
 )
 
 var _ api.MsgServer = Keeper{}

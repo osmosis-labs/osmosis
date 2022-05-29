@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
 )
 
 // TODO: verify if this is enough!

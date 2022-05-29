@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
 )
 
 func TestCurrentRound(t *testing.T) {

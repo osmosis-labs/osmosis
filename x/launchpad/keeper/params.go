@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
 )
 
 // GetParams returns the total set params

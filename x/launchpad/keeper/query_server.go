@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
 )
 
 func (k Keeper) Sales(goCtx context.Context, q *api.QuerySales) (*api.QuerySalesResponse, error) {

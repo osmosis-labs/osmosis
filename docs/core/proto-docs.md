@@ -115,6 +115,45 @@
   
     - [Msg](#osmosis.incentives.Msg)
   
+- [osmosis/launchpad/v1/event.proto](#osmosis/launchpad/v1/event.proto)
+    - [EventCreateSale](#osmosis.launchpad.v1.EventCreateSale)
+    - [EventExit](#osmosis.launchpad.v1.EventExit)
+    - [EventFinalizeSale](#osmosis.launchpad.v1.EventFinalizeSale)
+    - [EventSubscribe](#osmosis.launchpad.v1.EventSubscribe)
+    - [EventWithdraw](#osmosis.launchpad.v1.EventWithdraw)
+  
+- [osmosis/launchpad/v1/state.proto](#osmosis/launchpad/v1/state.proto)
+    - [Sale](#osmosis.launchpad.v1.Sale)
+    - [UserPosition](#osmosis.launchpad.v1.UserPosition)
+  
+- [osmosis/launchpad/v1/params.proto](#osmosis/launchpad/v1/params.proto)
+    - [Params](#osmosis.launchpad.v1.Params)
+  
+- [osmosis/launchpad/v1/genesis.proto](#osmosis/launchpad/v1/genesis.proto)
+    - [GenesisState](#osmosis.launchpad.v1.GenesisState)
+  
+- [osmosis/launchpad/v1/query.proto](#osmosis/launchpad/v1/query.proto)
+    - [QuerySale](#osmosis.launchpad.v1.QuerySale)
+    - [QuerySaleResponse](#osmosis.launchpad.v1.QuerySaleResponse)
+    - [QuerySales](#osmosis.launchpad.v1.QuerySales)
+    - [QuerySalesResponse](#osmosis.launchpad.v1.QuerySalesResponse)
+    - [QueryUserPosition](#osmosis.launchpad.v1.QueryUserPosition)
+    - [QueryUserPositionResponse](#osmosis.launchpad.v1.QueryUserPositionResponse)
+  
+    - [Query](#osmosis.launchpad.v1.Query)
+  
+- [osmosis/launchpad/v1/tx.proto](#osmosis/launchpad/v1/tx.proto)
+    - [MsgCreateSale](#osmosis.launchpad.v1.MsgCreateSale)
+    - [MsgCreateSaleResponse](#osmosis.launchpad.v1.MsgCreateSaleResponse)
+    - [MsgExitSale](#osmosis.launchpad.v1.MsgExitSale)
+    - [MsgExitSaleResponse](#osmosis.launchpad.v1.MsgExitSaleResponse)
+    - [MsgFinalizeSale](#osmosis.launchpad.v1.MsgFinalizeSale)
+    - [MsgFinalizeSaleResponse](#osmosis.launchpad.v1.MsgFinalizeSaleResponse)
+    - [MsgSubscribe](#osmosis.launchpad.v1.MsgSubscribe)
+    - [MsgWithdraw](#osmosis.launchpad.v1.MsgWithdraw)
+  
+    - [Msg](#osmosis.launchpad.v1.Msg)
+  
 - [osmosis/lockup/genesis.proto](#osmosis/lockup/genesis.proto)
     - [GenesisState](#osmosis.lockup.GenesisState)
   
@@ -1804,6 +1843,519 @@ Query defines the gRPC querier service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `CreateGauge` | [MsgCreateGauge](#osmosis.incentives.MsgCreateGauge) | [MsgCreateGaugeResponse](#osmosis.incentives.MsgCreateGaugeResponse) |  | |
 | `AddToGauge` | [MsgAddToGauge](#osmosis.incentives.MsgAddToGauge) | [MsgAddToGaugeResponse](#osmosis.incentives.MsgAddToGaugeResponse) |  | |
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/launchpad/v1/event.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/launchpad/v1/event.proto
+Since: cosmos-sdk 0.43
+
+
+<a name="osmosis.launchpad.v1.EventCreateSale"></a>
+
+### EventCreateSale
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [uint64](#uint64) |  |  |
+| `creator` | [string](#string) |  |  |
+| `token_in` | [string](#string) |  |  |
+| `token_out` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.EventExit"></a>
+
+### EventExit
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `sale_id` | [uint64](#uint64) |  |  |
+| `purchased` | [string](#string) |  | amount of purchased tokens |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.EventFinalizeSale"></a>
+
+### EventFinalizeSale
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sale_id` | [uint64](#uint64) |  |  |
+| `income` | [string](#string) |  | amount of earned tokens_in |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.EventSubscribe"></a>
+
+### EventSubscribe
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `sale_id` | [uint64](#uint64) |  |  |
+| `amount` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.EventWithdraw"></a>
+
+### EventWithdraw
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `sale_id` | [uint64](#uint64) |  |  |
+| `amount` | [string](#string) |  | amount of staked tokens withdrawn by user. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/launchpad/v1/state.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/launchpad/v1/state.proto
+Since: cosmos-sdk 0.43
+
+
+<a name="osmosis.launchpad.v1.Sale"></a>
+
+### Sale
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `treasury` | [string](#string) |  | Destination for the earned token_in |
+| `id` | [uint64](#uint64) |  |  |
+| `token_out` | [string](#string) |  | token_out is a token denom to be bootstraped. May be referred as base currency, or a sale token. |
+| `token_in` | [string](#string) |  | token_in is a token denom used to buy sale tokens (`token_out`). May be referred as quote_currency or payment token. |
+| `start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | start time when the token emission starts. |
+| `end_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | end time when the token emission ends. Can't be bigger than start + 139years (to avoid round overflow) |
+| `round` | [int64](#int64) |  | Round number when the sale was last time updated. |
+| `end_round` | [int64](#int64) |  | Last round of the Sale; |
+| `out_remaining` | [string](#string) |  |  |
+| `out_sold` | [string](#string) |  |  |
+| `out_per_share` | [string](#string) |  | out token per share |
+| `staked` | [string](#string) |  | total amount of currently staked coins (token_in) but not spent coins. |
+| `income` | [string](#string) |  | total amount of earned coins (token_in) |
+| `shares` | [string](#string) |  | total amount of shares |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.UserPosition"></a>
+
+### UserPosition
+UserPosition represents user account in a sale
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `shares` | [string](#string) |  |  |
+| `staked` | [string](#string) |  | total number of currently staked tokens |
+| `out_per_share` | [string](#string) |  | last token/share ratio |
+| `spent` | [string](#string) |  | amount of token_in spent |
+| `purchased` | [string](#string) |  | Amount of accumulated, not withdrawn, purchased tokens (token_out) |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/launchpad/v1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/launchpad/v1/params.proto
+
+
+
+<a name="osmosis.launchpad.v1.Params"></a>
+
+### Params
+Params holds parameters for the launchpad module
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sale_creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `minimumDurationUntilStartTime` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+| `minimumSaleDuration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/launchpad/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/launchpad/v1/genesis.proto
+
+
+
+<a name="osmosis.launchpad.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the launchpad module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sales` | [Sale](#osmosis.launchpad.v1.Sale) | repeated |  |
+| `user_positions` | [UserPosition](#osmosis.launchpad.v1.UserPosition) | repeated |  |
+| `next_sale_id` | [uint64](#uint64) |  |  |
+| `params` | [Params](#osmosis.launchpad.v1.Params) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/launchpad/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/launchpad/v1/query.proto
+
+
+
+<a name="osmosis.launchpad.v1.QuerySale"></a>
+
+### QuerySale
+Request type for Query/Sale
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sale_id` | [uint64](#uint64) |  | Sale ID |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.QuerySaleResponse"></a>
+
+### QuerySaleResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sale` | [Sale](#osmosis.launchpad.v1.Sale) |  |  |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.QuerySales"></a>
+
+### QuerySales
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  | pagination defines an pagination for the request. |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.QuerySalesResponse"></a>
+
+### QuerySalesResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sales` | [Sale](#osmosis.launchpad.v1.Sale) | repeated |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageResponse](#cosmos.base.query.v1beta1.PageResponse) |  |  |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.QueryUserPosition"></a>
+
+### QueryUserPosition
+Request type for Query/Sale
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sale_id` | [uint64](#uint64) |  | ID of the Sale |
+| `user` | [string](#string) |  | user account address |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.QueryUserPositionResponse"></a>
+
+### QueryUserPositionResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `user_position` | [UserPosition](#osmosis.launchpad.v1.UserPosition) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.launchpad.v1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Sales` | [QuerySales](#osmosis.launchpad.v1.QuerySales) | [QuerySalesResponse](#osmosis.launchpad.v1.QuerySalesResponse) | Returns list of Sales ordered by the creation time | GET|/cosmos/launchpad/v1/sales|
+| `Sale` | [QuerySale](#osmosis.launchpad.v1.QuerySale) | [QuerySaleResponse](#osmosis.launchpad.v1.QuerySaleResponse) | Returns the specific Sale object | GET|/cosmos/launchpad/v1/sales/{sale_id}|
+| `UserPosition` | [QueryUserPosition](#osmosis.launchpad.v1.QueryUserPosition) | [QueryUserPositionResponse](#osmosis.launchpad.v1.QueryUserPositionResponse) |  | GET|/cosmos/launchpad/v1/sales/{sale_id}/{user}|
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/launchpad/v1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/launchpad/v1/tx.proto
+
+
+
+<a name="osmosis.launchpad.v1.MsgCreateSale"></a>
+
+### MsgCreateSale
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `creator` | [string](#string) |  | Sale creator |
+| `token_in` | [string](#string) |  | token_in a denom used to buy LB tokens (`token_out`). May be referred as quote_currency. |
+| `token_out` | [string](#string) |  | token_out a token denom to be bootstraped. May be referred as base currency. |
+| `start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | start time when the token sale starts. |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  | duration time that the sale takes place over |
+| `initial_deposit` | [string](#string) |  | total number of `tokens_out` to be sold during the continous sale. tokens are deposited from the treasury account. TODO: change to `creator` |
+| `treasury` | [string](#string) |  | Treasury is the account which provides the tokens to sale and receives earned money. |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.MsgCreateSaleResponse"></a>
+
+### MsgCreateSaleResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sale_id` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.MsgExitSale"></a>
+
+### MsgExitSale
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  | sender is an account address exiting a sale |
+| `sale_id` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.MsgExitSaleResponse"></a>
+
+### MsgExitSaleResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `purchased` | [string](#string) |  | Purchased amount of "out" tokens withdrawn to the user. |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.MsgFinalizeSale"></a>
+
+### MsgFinalizeSale
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  | sender is an account address triggering the finalization. |
+| `sale_id` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.MsgFinalizeSaleResponse"></a>
+
+### MsgFinalizeSaleResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `income` | [string](#string) |  | Income amount of token_in sent to the treasury. |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.MsgSubscribe"></a>
+
+### MsgSubscribe
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  | sender is an account address adding a deposit |
+| `sale_id` | [uint64](#uint64) |  | sale_id is a valid ID of this module Sale |
+| `amount` | [string](#string) |  | number of sale.token_in staked by a user. |
+
+
+
+
+
+
+<a name="osmosis.launchpad.v1.MsgWithdraw"></a>
+
+### MsgWithdraw
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  | sender is an account address subscribed to the sale_id |
+| `sale_id` | [uint64](#uint64) |  |  |
+| `amount` | [string](#string) |  | amount of in_tokens to withdraw, must be at most the amount of not spent tokens, unless set to null - then all remaining balance will be withdrawn |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.launchpad.v1.Msg"></a>
+
+### Msg
+
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateSale` | [MsgCreateSale](#osmosis.launchpad.v1.MsgCreateSale) | [MsgCreateSaleResponse](#osmosis.launchpad.v1.MsgCreateSaleResponse) | CreateSale creates new token sale. The sale follows the launchpad functionality explained in the x/launchapd/spec | |
+| `Subscribe` | [MsgSubscribe](#osmosis.launchpad.v1.MsgSubscribe) | [.google.protobuf.Empty](#google.protobuf.Empty) | Subscribe to a token sale. Any use any time before the sale end can join the sale by adding `token_in`. During the sale his `token_in` will be automatically charged every epoch to purchase `token_out`. | |
+| `Withdraw` | [MsgWithdraw](#osmosis.launchpad.v1.MsgWithdraw) | [.google.protobuf.Empty](#google.protobuf.Empty) | Withdraw sends back `amount` of unspent tokens_in back to the user. User can do it any time unless his deposit is empty. | |
+| `ExitSale` | [MsgExitSale](#osmosis.launchpad.v1.MsgExitSale) | [MsgExitSaleResponse](#osmosis.launchpad.v1.MsgExitSaleResponse) | ExitSale withdraws purchased tokens_out from the pool and remained tokens_in. Returns error if the Sale is still active. | |
+| `FinalizeSale` | [MsgFinalizeSale](#osmosis.launchpad.v1.MsgFinalizeSale) | [MsgFinalizeSaleResponse](#osmosis.launchpad.v1.MsgFinalizeSaleResponse) | FinalizeSale sends income (earned tokens_in) to the Sale treasury. Returns error if called before the Sale finishes. Anyone can call this method. | |
 
  <!-- end services -->
 
