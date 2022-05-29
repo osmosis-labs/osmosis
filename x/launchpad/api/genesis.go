@@ -3,10 +3,10 @@ package api
 // DefaultGenesis creates a default GenesisState object
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Lbps:          []*LBP{},
+		Sales:         []*Sale{},
 		UserPositions: []*UserPosition{},
-		NextLbpNumber: 1,
-		Params:         DefaultParams(),
+		NextSaleId:    1,
+		Params:        DefaultParams(),
 	}
 }
 

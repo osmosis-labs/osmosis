@@ -12,11 +12,11 @@ import (
 )
 
 func TestSuites(t *testing.T) {
-	suite.Run(t, new(LBPSuite))
+	suite.Run(t, new(SaleSuite))
 	suite.Run(t, new(TwoBuyersSuite))
 }
 
-type LBPSuite struct {
+type SaleSuite struct {
 	suite.Suite
 	treasury sdk.AccAddress
 	accs     []sdk.AccAddress
@@ -24,7 +24,7 @@ type LBPSuite struct {
 	before, before2, start, end, after time.Time
 }
 
-func (s *LBPSuite) SetupSuite() {
+func (s *SaleSuite) SetupSuite() {
 	s.treasury = sdk.AccAddress([]byte("treasury"))
 	s.accs = []sdk.AccAddress{
 		[]byte("acc1"),
@@ -39,12 +39,12 @@ func (s *LBPSuite) SetupSuite() {
 	s.after = t0.Add(api.ROUND * 25)
 }
 
-func (s *LBPSuite) createLBP() *api.LBP {
-	p := newLBP(s.treasury.String(), 1, "t_in", "t_out", s.start, s.end, sdk.NewInt(12_000))
+func (s *SaleSuite) createSale() *api.Sale {
+	p := newSale(s.treasury.String(), 1, "t_in", "t_out", s.start, s.end, sdk.NewInt(12_000))
 	return &p
 }
 
-func (s *LBPSuite) TestNBuyers() {
+func (s *SaleSuite) TestNBuyers() {
 	tcs := []struct {
 		n int
 	}{
@@ -58,9 +58,9 @@ func (s *LBPSuite) TestNBuyers() {
 	}
 }
 
-func (s *LBPSuite) testNBuyers(n int) {
+func (s *SaleSuite) testNBuyers(n int) {
 	// require := s.Require()
-	p := s.createLBP()
+	p := s.createSale()
 	users := make([]*api.UserPosition, n)
 	stakedAmount := sdk.NewInt(24_000)
 	// zero := sdk.ZeroInt()

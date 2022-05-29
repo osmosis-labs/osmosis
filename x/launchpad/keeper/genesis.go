@@ -8,12 +8,12 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k Keeper, genState api.GenesisState) {
-	// TODO setLBPs, setNextLBPNumber
+	// TODO setSales, setNextSaleNumber
 	//TODO  k.SetParams(ctx, genState.Params)
 }
 
 // ExportGenesis returns the launchpad module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k Keeper) *api.GenesisState {
-	// TODO export genesis -- GetLBPs, GetUserPositions, GetNextLBPNumber, GetParams
+	// TODO export genesis -- GetSales, GetUserPositions, GetNextSaleNumber, GetParams
 	return &api.GenesisState{}
 }

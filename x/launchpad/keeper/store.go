@@ -17,22 +17,22 @@ import (
 const StoreKey = launchpad.ModuleName
 
 var (
-	lbpSeqStoreKey = []byte{0} // lbp id sequence
-	lbpStoreKey    = []byte{1} // lbp objects
-	userStoreKey   = byte(2)   // userPosition objects
+	storeSeqStoreKey = []byte{0} // sale id sequence
+	storeStoreKey    = []byte{1} // sale objects
+	userStoreKey     = byte(2)   // userPosition objects
 )
 
-func (k *Keeper) saveLBP(modulestore storetypes.KVStore, id []byte, p *api.LBP) {
-	store := k.lbpStore(modulestore)
+func (k *Keeper) saveSale(modulestore storetypes.KVStore, id []byte, p *api.Sale) {
+	store := k.saleStore(modulestore)
 	store.Set(id, k.cdc.MustMarshal(p))
 }
 
 // returns pool, pool bytes id, error
-func (k *Keeper) getLBP(modulestore storetypes.KVStore, id uint64) (api.LBP, []byte, error) {
-	store := k.lbpStore(modulestore)
+func (k *Keeper) getSale(modulestore storetypes.KVStore, id uint64) (api.Sale, []byte, error) {
+	store := k.saleStore(modulestore)
 	idBz := storeIntIdKey(id)
 	bz := store.Get(idBz)
-	var p api.LBP
+	var p api.Sale
 	if bz == nil {
 		return p, idBz, errors.Wrap(errors.ErrKeyNotFound, "pool doesn't exist")
 	}
@@ -49,7 +49,7 @@ func (k *Keeper) getUserPosition(modulestore storetypes.KVStore, poolId []byte, 
 	var v api.UserPosition
 	if bz == nil {
 		if create == false {
-			return v, errors.ErrNotFound.Wrap("user position for given LBP is not found")
+			return v, errors.ErrNotFound.Wrap("user position for given Sale is not found")
 		}
 		return newUserPosition(), nil
 	}
@@ -69,8 +69,8 @@ func (k *Keeper) delUserPosition(modulestore storetypes.KVStore, poolId []byte, 
 	store.Delete(addr)
 }
 
-func (k Keeper) lbpStore(moduleStore storetypes.KVStore) prefix.Store {
-	return prefix.NewStore(moduleStore, lbpStoreKey)
+func (k Keeper) saleStore(moduleStore storetypes.KVStore) prefix.Store {
+	return prefix.NewStore(moduleStore, storeStoreKey)
 }
 
 func (k Keeper) userPositionStore(moduleStore storetypes.KVStore, poolId []byte) prefix.Store {
@@ -108,13 +108,13 @@ func lengthPrefix(bz []byte) ([]byte, error) {
 }
 
 // user: bech32 user address
-func (k Keeper) getUserAndLBP(modulestore storetypes.KVStore, poolId uint64, user string, create bool) (sdk.AccAddress, *api.LBP, []byte, *api.UserPosition, error) {
+func (k Keeper) getUserAndSale(modulestore storetypes.KVStore, poolId uint64, user string, create bool) (sdk.AccAddress, *api.Sale, []byte, *api.UserPosition, error) {
 	userAddr, err := sdk.AccAddressFromBech32(user)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
 
-	p, poolIdBz, err := k.getLBP(modulestore, poolId)
+	p, poolIdBz, err := k.getSale(modulestore, poolId)
 	if err != nil {
 		return userAddr, &p, poolIdBz, nil, err
 	}

@@ -28,11 +28,11 @@ service Msg {
   rpc Withdraw(MsgWithdraw) returns (google.protobuf.Empty);
 
   // ExitSale withdraws purchased tokens_out from the pool and remained
-  // tokens_in. Returns error if the LBP is still active.
+  // tokens_in. Returns error if the Sale is still active.
   rpc ExitSale(MsgExitSale) returns (MsgExitSaleResponse);
 
-  // FinalizeSale sends income (earned tokens_in) to the LBP treasury.
-  // Returns error if called before the LBP finishes. Anyone can call this
+  // FinalizeSale sends income (earned tokens_in) to the Sale treasury.
+  // Returns error if called before the Sale finishes. Anyone can call this
   // method.
   rpc FinalizeSale(MsgFinalizeSale) returns (MsgFinalizeSaleResponse);
 }
@@ -74,8 +74,8 @@ message MsgCreateSaleResponse {
 message MsgSubscribe {
   // sender is an account address adding a deposit
   string sender = 1;
-  // pool_id is a valid ID of this module LBP
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  // sale_id is a valid ID of this module Sale
+  uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   // number of pool.token_in staked by a user.
   string amount = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",

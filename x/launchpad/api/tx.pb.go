@@ -37,7 +37,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type MsgCreateLBP struct {
+type MsgCreateSale struct {
 	// Pool creator
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	// token_in a denom used to buy LB tokens (`token_out`). May be referred as
@@ -59,18 +59,18 @@ type MsgCreateLBP struct {
 	Treasury string `protobuf:"bytes,7,opt,name=treasury,proto3" json:"treasury,omitempty"`
 }
 
-func (m *MsgCreateLBP) Reset()         { *m = MsgCreateLBP{} }
-func (m *MsgCreateLBP) String() string { return proto.CompactTextString(m) }
-func (*MsgCreateLBP) ProtoMessage()    {}
-func (*MsgCreateLBP) Descriptor() ([]byte, []int) {
+func (m *MsgCreateSale) Reset()         { *m = MsgCreateSale{} }
+func (m *MsgCreateSale) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateSale) ProtoMessage()    {}
+func (*MsgCreateSale) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b69259538a820560, []int{0}
 }
-func (m *MsgCreateLBP) XXX_Unmarshal(b []byte) error {
+func (m *MsgCreateSale) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgCreateLBP) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgCreateSale) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgCreateLBP.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgCreateSale.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -80,34 +80,34 @@ func (m *MsgCreateLBP) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *MsgCreateLBP) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCreateLBP.Merge(m, src)
+func (m *MsgCreateSale) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateSale.Merge(m, src)
 }
-func (m *MsgCreateLBP) XXX_Size() int {
+func (m *MsgCreateSale) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgCreateLBP) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCreateLBP.DiscardUnknown(m)
+func (m *MsgCreateSale) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateSale.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgCreateLBP proto.InternalMessageInfo
+var xxx_messageInfo_MsgCreateSale proto.InternalMessageInfo
 
-type MsgCreateLBPResponse struct {
+type MsgCreateSaleResponse struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
 
-func (m *MsgCreateLBPResponse) Reset()         { *m = MsgCreateLBPResponse{} }
-func (m *MsgCreateLBPResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgCreateLBPResponse) ProtoMessage()    {}
-func (*MsgCreateLBPResponse) Descriptor() ([]byte, []int) {
+func (m *MsgCreateSaleResponse) Reset()         { *m = MsgCreateSaleResponse{} }
+func (m *MsgCreateSaleResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateSaleResponse) ProtoMessage()    {}
+func (*MsgCreateSaleResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b69259538a820560, []int{1}
 }
-func (m *MsgCreateLBPResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgCreateSaleResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgCreateLBPResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgCreateSaleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgCreateLBPResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgCreateSaleResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -117,23 +117,23 @@ func (m *MsgCreateLBPResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *MsgCreateLBPResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgCreateLBPResponse.Merge(m, src)
+func (m *MsgCreateSaleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateSaleResponse.Merge(m, src)
 }
-func (m *MsgCreateLBPResponse) XXX_Size() int {
+func (m *MsgCreateSaleResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgCreateLBPResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgCreateLBPResponse.DiscardUnknown(m)
+func (m *MsgCreateSaleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateSaleResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgCreateLBPResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgCreateSaleResponse proto.InternalMessageInfo
 
 type MsgSubscribe struct {
 	// sender is an account address adding a deposit
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-	// pool_id is a valid ID of this module LBP
-	PoolId uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	// sale_id is a valid ID of this module Sale
+	SaleId uint64 `protobuf:"varint,2,opt,name=sale_id,json=saleId,proto3" json:"sale_id,omitempty" yaml:"pool_id"`
 	// number of pool.token_in staked by a user.
 	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
 }
@@ -213,24 +213,24 @@ func (m *MsgWithdraw) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdraw proto.InternalMessageInfo
 
-type MsgExitLBP struct {
+type MsgExitSale struct {
 	// sender is an account address exiting a pool
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	PoolId uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
 
-func (m *MsgExitLBP) Reset()         { *m = MsgExitLBP{} }
-func (m *MsgExitLBP) String() string { return proto.CompactTextString(m) }
-func (*MsgExitLBP) ProtoMessage()    {}
-func (*MsgExitLBP) Descriptor() ([]byte, []int) {
+func (m *MsgExitSale) Reset()         { *m = MsgExitSale{} }
+func (m *MsgExitSale) String() string { return proto.CompactTextString(m) }
+func (*MsgExitSale) ProtoMessage()    {}
+func (*MsgExitSale) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b69259538a820560, []int{4}
 }
-func (m *MsgExitLBP) XXX_Unmarshal(b []byte) error {
+func (m *MsgExitSale) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgExitLBP) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgExitSale) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgExitLBP.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgExitSale.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -240,35 +240,35 @@ func (m *MsgExitLBP) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *MsgExitLBP) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExitLBP.Merge(m, src)
+func (m *MsgExitSale) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitSale.Merge(m, src)
 }
-func (m *MsgExitLBP) XXX_Size() int {
+func (m *MsgExitSale) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgExitLBP) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExitLBP.DiscardUnknown(m)
+func (m *MsgExitSale) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitSale.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgExitLBP proto.InternalMessageInfo
+var xxx_messageInfo_MsgExitSale proto.InternalMessageInfo
 
-type MsgExitLBPResponse struct {
+type MsgExitSaleResponse struct {
 	// Purchased amount of "out" tokens withdrawn to the user.
 	Purchased github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=purchased,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"purchased"`
 }
 
-func (m *MsgExitLBPResponse) Reset()         { *m = MsgExitLBPResponse{} }
-func (m *MsgExitLBPResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgExitLBPResponse) ProtoMessage()    {}
-func (*MsgExitLBPResponse) Descriptor() ([]byte, []int) {
+func (m *MsgExitSaleResponse) Reset()         { *m = MsgExitSaleResponse{} }
+func (m *MsgExitSaleResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExitSaleResponse) ProtoMessage()    {}
+func (*MsgExitSaleResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b69259538a820560, []int{5}
 }
-func (m *MsgExitLBPResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgExitSaleResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgExitLBPResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgExitSaleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgExitLBPResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgExitSaleResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -278,36 +278,36 @@ func (m *MsgExitLBPResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *MsgExitLBPResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgExitLBPResponse.Merge(m, src)
+func (m *MsgExitSaleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitSaleResponse.Merge(m, src)
 }
-func (m *MsgExitLBPResponse) XXX_Size() int {
+func (m *MsgExitSaleResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgExitLBPResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgExitLBPResponse.DiscardUnknown(m)
+func (m *MsgExitSaleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitSaleResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgExitLBPResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgExitSaleResponse proto.InternalMessageInfo
 
-type MsgFinalizeLBP struct {
+type MsgFinalizeSale struct {
 	// sender is an account address triggering the finalization.
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	PoolId uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
 
-func (m *MsgFinalizeLBP) Reset()         { *m = MsgFinalizeLBP{} }
-func (m *MsgFinalizeLBP) String() string { return proto.CompactTextString(m) }
-func (*MsgFinalizeLBP) ProtoMessage()    {}
-func (*MsgFinalizeLBP) Descriptor() ([]byte, []int) {
+func (m *MsgFinalizeSale) Reset()         { *m = MsgFinalizeSale{} }
+func (m *MsgFinalizeSale) String() string { return proto.CompactTextString(m) }
+func (*MsgFinalizeSale) ProtoMessage()    {}
+func (*MsgFinalizeSale) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b69259538a820560, []int{6}
 }
-func (m *MsgFinalizeLBP) XXX_Unmarshal(b []byte) error {
+func (m *MsgFinalizeSale) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgFinalizeLBP) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgFinalizeSale) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgFinalizeLBP.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgFinalizeSale.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -317,35 +317,35 @@ func (m *MsgFinalizeLBP) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *MsgFinalizeLBP) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgFinalizeLBP.Merge(m, src)
+func (m *MsgFinalizeSale) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgFinalizeSale.Merge(m, src)
 }
-func (m *MsgFinalizeLBP) XXX_Size() int {
+func (m *MsgFinalizeSale) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgFinalizeLBP) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgFinalizeLBP.DiscardUnknown(m)
+func (m *MsgFinalizeSale) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgFinalizeSale.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgFinalizeLBP proto.InternalMessageInfo
+var xxx_messageInfo_MsgFinalizeSale proto.InternalMessageInfo
 
-type MsgFinalizeLBPResponse struct {
+type MsgFinalizeSaleResponse struct {
 	// Income amount of token_in sent to the treasury.
 	Income github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=income,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"income"`
 }
 
-func (m *MsgFinalizeLBPResponse) Reset()         { *m = MsgFinalizeLBPResponse{} }
-func (m *MsgFinalizeLBPResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgFinalizeLBPResponse) ProtoMessage()    {}
-func (*MsgFinalizeLBPResponse) Descriptor() ([]byte, []int) {
+func (m *MsgFinalizeSaleResponse) Reset()         { *m = MsgFinalizeSaleResponse{} }
+func (m *MsgFinalizeSaleResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgFinalizeSaleResponse) ProtoMessage()    {}
+func (*MsgFinalizeSaleResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_b69259538a820560, []int{7}
 }
-func (m *MsgFinalizeLBPResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgFinalizeSaleResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgFinalizeLBPResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgFinalizeSaleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgFinalizeLBPResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgFinalizeSaleResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -355,77 +355,78 @@ func (m *MsgFinalizeLBPResponse) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *MsgFinalizeLBPResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgFinalizeLBPResponse.Merge(m, src)
+func (m *MsgFinalizeSaleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgFinalizeSaleResponse.Merge(m, src)
 }
-func (m *MsgFinalizeLBPResponse) XXX_Size() int {
+func (m *MsgFinalizeSaleResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgFinalizeLBPResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgFinalizeLBPResponse.DiscardUnknown(m)
+func (m *MsgFinalizeSaleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgFinalizeSaleResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgFinalizeLBPResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgFinalizeSaleResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgCreateLBP)(nil), "osmosis.launchpad.v1.MsgCreateLBP")
-	proto.RegisterType((*MsgCreateLBPResponse)(nil), "osmosis.launchpad.v1.MsgCreateLBPResponse")
+	proto.RegisterType((*MsgCreateSale)(nil), "osmosis.launchpad.v1.MsgCreateSale")
+	proto.RegisterType((*MsgCreateSaleResponse)(nil), "osmosis.launchpad.v1.MsgCreateSaleResponse")
 	proto.RegisterType((*MsgSubscribe)(nil), "osmosis.launchpad.v1.MsgSubscribe")
 	proto.RegisterType((*MsgWithdraw)(nil), "osmosis.launchpad.v1.MsgWithdraw")
-	proto.RegisterType((*MsgExitLBP)(nil), "osmosis.launchpad.v1.MsgExitLBP")
-	proto.RegisterType((*MsgExitLBPResponse)(nil), "osmosis.launchpad.v1.MsgExitLBPResponse")
-	proto.RegisterType((*MsgFinalizeLBP)(nil), "osmosis.launchpad.v1.MsgFinalizeLBP")
-	proto.RegisterType((*MsgFinalizeLBPResponse)(nil), "osmosis.launchpad.v1.MsgFinalizeLBPResponse")
+	proto.RegisterType((*MsgExitSale)(nil), "osmosis.launchpad.v1.MsgExitSale")
+	proto.RegisterType((*MsgExitSaleResponse)(nil), "osmosis.launchpad.v1.MsgExitSaleResponse")
+	proto.RegisterType((*MsgFinalizeSale)(nil), "osmosis.launchpad.v1.MsgFinalizeSale")
+	proto.RegisterType((*MsgFinalizeSaleResponse)(nil), "osmosis.launchpad.v1.MsgFinalizeSaleResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/launchpad/v1/tx.proto", fileDescriptor_b69259538a820560) }
 
 var fileDescriptor_b69259538a820560 = []byte{
-	// 702 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x95, 0xdd, 0x4e, 0xd4, 0x40,
-	0x14, 0xc7, 0xb7, 0x80, 0xfb, 0x71, 0x30, 0x98, 0x4c, 0x08, 0x29, 0x25, 0x76, 0xb1, 0x31, 0x4a,
-	0x54, 0xda, 0x2c, 0xde, 0x79, 0x63, 0xb2, 0x0b, 0x18, 0x12, 0x36, 0xea, 0x2a, 0xd1, 0xe8, 0xc5,
-	0x3a, 0x6d, 0xc7, 0xee, 0x84, 0x6d, 0xa7, 0xe9, 0x4c, 0x91, 0xf5, 0x29, 0xb8, 0x34, 0xfa, 0x0a,
-	0x3e, 0x08, 0x97, 0x5c, 0x1a, 0x63, 0x50, 0xe1, 0x0d, 0x7c, 0x02, 0xd3, 0x76, 0xda, 0x5d, 0xc1,
-	0x0d, 0x48, 0xf0, 0x6a, 0x7b, 0xf2, 0xff, 0x9f, 0xdf, 0x9e, 0x8f, 0xe9, 0x14, 0xae, 0x33, 0xee,
-	0x33, 0x4e, 0xb9, 0xd5, 0xc7, 0x71, 0xe0, 0xf4, 0x42, 0xec, 0x5a, 0x3b, 0x0d, 0x4b, 0xec, 0x9a,
-	0x61, 0xc4, 0x04, 0x43, 0xb3, 0x52, 0x36, 0x0b, 0xd9, 0xdc, 0x69, 0x68, 0xb3, 0x1e, 0xf3, 0x58,
-	0x6a, 0xb0, 0x92, 0xa7, 0xcc, 0xab, 0xe9, 0x1e, 0x63, 0x5e, 0x9f, 0x58, 0x69, 0x64, 0xc7, 0x6f,
-	0x2d, 0x37, 0x8e, 0xb0, 0xa0, 0x2c, 0x90, 0x7a, 0xfd, 0xa4, 0x2e, 0xa8, 0x4f, 0xb8, 0xc0, 0x7e,
-	0x28, 0x0d, 0x0b, 0x27, 0x0d, 0xc4, 0x0f, 0xc5, 0x20, 0xa7, 0x3b, 0x69, 0x29, 0x96, 0x8d, 0x39,
-	0xb1, 0x76, 0x1a, 0x36, 0x11, 0xb8, 0x61, 0x39, 0x8c, 0xe6, 0xf4, 0xf9, 0x4c, 0xef, 0x66, 0x65,
-	0x65, 0x41, 0x26, 0x19, 0xdf, 0x26, 0xe0, 0x6a, 0x9b, 0x7b, 0xad, 0x88, 0x60, 0x41, 0x36, 0x9b,
-	0x4f, 0x90, 0x0a, 0x15, 0x27, 0x09, 0x58, 0xa4, 0x2a, 0x8b, 0xca, 0x52, 0xad, 0x93, 0x87, 0x68,
-	0x1e, 0xaa, 0x82, 0x6d, 0x93, 0xa0, 0x4b, 0x03, 0x75, 0x22, 0x93, 0xd2, 0x78, 0x23, 0x40, 0x0b,
-	0x50, 0xcb, 0x24, 0x16, 0x0b, 0x75, 0x32, 0xd5, 0x32, 0xef, 0xe3, 0x58, 0xa0, 0x16, 0x00, 0x17,
-	0x38, 0x12, 0xdd, 0xa4, 0x27, 0x75, 0x6a, 0x51, 0x59, 0x9a, 0x5e, 0xd1, 0xcc, 0xac, 0x1f, 0x33,
-	0xef, 0xc7, 0x7c, 0x9e, 0x37, 0xdc, 0xac, 0xee, 0x1f, 0xd6, 0x4b, 0x7b, 0xdf, 0xeb, 0x4a, 0xa7,
-	0x96, 0xe6, 0x25, 0x0a, 0x7a, 0x08, 0xd5, 0x7c, 0x64, 0xea, 0x95, 0x14, 0x31, 0x7f, 0x0a, 0xb1,
-	0x2a, 0x0d, 0x19, 0xe1, 0x43, 0x42, 0x28, 0x92, 0xd0, 0x4b, 0xb8, 0x46, 0x03, 0x2a, 0x28, 0xee,
-	0x77, 0x5d, 0x12, 0x32, 0x4e, 0x85, 0x5a, 0x4e, 0x0a, 0x6d, 0x5a, 0x89, 0xf9, 0xeb, 0x61, 0xfd,
-	0xb6, 0x47, 0x45, 0x2f, 0xb6, 0x4d, 0x87, 0xf9, 0x72, 0x44, 0xf2, 0x67, 0x99, 0xbb, 0xdb, 0x96,
-	0x18, 0x84, 0x84, 0x9b, 0x2d, 0x46, 0x83, 0xce, 0x8c, 0xe4, 0xac, 0x66, 0x18, 0xa4, 0x41, 0x55,
-	0x44, 0x04, 0xf3, 0x38, 0x1a, 0xa8, 0x15, 0xd9, 0xbb, 0x8c, 0x8d, 0x16, 0xcc, 0x8e, 0x4e, 0xb7,
-	0x43, 0x78, 0xc8, 0x02, 0x4e, 0xd0, 0x5d, 0xa8, 0x84, 0x8c, 0xf5, 0xbb, 0xd4, 0x4d, 0xa7, 0x3c,
-	0xd5, 0x44, 0xbf, 0x0e, 0xeb, 0x33, 0x03, 0xec, 0xf7, 0x1f, 0x18, 0x52, 0x30, 0x3a, 0xe5, 0xe4,
-	0x69, 0xc3, 0x35, 0x3e, 0x29, 0xe9, 0x8e, 0x9e, 0xc5, 0x36, 0x77, 0x22, 0x6a, 0x13, 0x34, 0x07,
-	0x65, 0x4e, 0x02, 0x97, 0xe4, 0x2b, 0x92, 0xd1, 0x28, 0x75, 0xe2, 0x2c, 0x2a, 0x5a, 0x87, 0x32,
-	0xf6, 0x59, 0x1c, 0xc8, 0x85, 0x35, 0x4d, 0x39, 0x87, 0x5b, 0xe7, 0x98, 0xc3, 0x46, 0x20, 0x3a,
-	0x32, 0xdb, 0xf8, 0xa8, 0xc0, 0x74, 0x9b, 0x7b, 0x2f, 0xa8, 0xe8, 0xb9, 0x11, 0x7e, 0xf7, 0xff,
-	0x8a, 0x53, 0x2e, 0x50, 0xdc, 0x53, 0x80, 0x36, 0xf7, 0xd6, 0x76, 0xa9, 0x48, 0xce, 0xf6, 0x65,
-	0x94, 0x66, 0xd8, 0x80, 0x86, 0xc8, 0x62, 0xa1, 0x9b, 0x50, 0x0b, 0xe3, 0xc8, 0xe9, 0x61, 0x4e,
-	0xb2, 0x95, 0xfe, 0xfb, 0x40, 0x87, 0x00, 0x63, 0x0b, 0x66, 0xda, 0xdc, 0x5b, 0xa7, 0x01, 0xee,
-	0xd3, 0xf7, 0xe4, 0xd2, 0x4a, 0x7f, 0x03, 0x73, 0x7f, 0x62, 0x8b, 0xf2, 0xd7, 0xa1, 0x4c, 0x03,
-	0x87, 0xf9, 0xe4, 0x82, 0xb5, 0xcb, 0xec, 0x95, 0xcf, 0x93, 0x30, 0xd9, 0xe6, 0x1e, 0x7a, 0x0d,
-	0xb5, 0xe1, 0x95, 0x62, 0x98, 0x7f, 0xbb, 0x29, 0xcd, 0xd1, 0x17, 0x43, 0xbb, 0x73, 0xb6, 0xa7,
-	0x28, 0xf6, 0x11, 0xd4, 0x86, 0xef, 0xc2, 0x78, 0x78, 0xe1, 0xd1, 0xe6, 0x4e, 0x5d, 0x15, 0x6b,
-	0xc9, 0xed, 0x89, 0xd6, 0xa0, 0x5a, 0x1c, 0xdb, 0x1b, 0x63, 0x39, 0xb9, 0x65, 0x2c, 0x66, 0x0b,
-	0x2a, 0xf9, 0x09, 0x5b, 0x1c, 0x4b, 0x91, 0x0e, 0x6d, 0xe9, 0x2c, 0x47, 0xd1, 0x26, 0x86, 0xe9,
-	0xd1, 0x13, 0x70, 0x73, 0x6c, 0xe2, 0x88, 0x4b, 0xbb, 0x77, 0x1e, 0x57, 0xfe, 0x17, 0xcd, 0xf6,
-	0xfe, 0x4f, 0xbd, 0xb4, 0x7f, 0xa4, 0x2b, 0x07, 0x47, 0xba, 0xf2, 0xe3, 0x48, 0x57, 0xf6, 0x8e,
-	0xf5, 0xd2, 0xc1, 0xb1, 0x5e, 0xfa, 0x72, 0xac, 0x97, 0x5e, 0x59, 0x23, 0xcb, 0x97, 0xd4, 0xe5,
-	0x3e, 0xb6, 0x79, 0x1e, 0x58, 0xbb, 0x23, 0x5f, 0x46, 0x1c, 0x52, 0xbb, 0x9c, 0x0e, 0xe6, 0xfe,
-	0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0xc9, 0x89, 0x6a, 0x30, 0x39, 0x07, 0x00, 0x00,
+	// 718 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xdd, 0x4e, 0xd4, 0x40,
+	0x14, 0xde, 0x2e, 0xb8, 0xec, 0x1e, 0x10, 0x92, 0x8a, 0x58, 0x4a, 0xec, 0x62, 0x8d, 0x8a, 0x21,
+	0xb4, 0x59, 0xbc, 0xf3, 0xc6, 0x64, 0xf9, 0x31, 0x9b, 0xb8, 0x31, 0x59, 0x8c, 0x12, 0x2f, 0xdc,
+	0x4c, 0xdb, 0xb1, 0x3b, 0xa1, 0xed, 0x34, 0x9d, 0x29, 0xb2, 0x3e, 0x05, 0x97, 0x46, 0x9f, 0xc3,
+	0x77, 0xe0, 0x92, 0x4b, 0x63, 0x22, 0x2a, 0xbc, 0x81, 0x4f, 0x60, 0xda, 0x4e, 0xcb, 0xf2, 0xb3,
+	0x82, 0x84, 0xab, 0xed, 0xc9, 0xf7, 0x9d, 0x6f, 0xbf, 0xef, 0xcc, 0xe9, 0x14, 0xee, 0x52, 0xe6,
+	0x53, 0x46, 0x98, 0xe9, 0xa1, 0x38, 0xb0, 0x7b, 0x21, 0x72, 0xcc, 0xed, 0x86, 0xc9, 0x77, 0x8c,
+	0x30, 0xa2, 0x9c, 0xca, 0xd3, 0x02, 0x36, 0x0a, 0xd8, 0xd8, 0x6e, 0xa8, 0xd3, 0x2e, 0x75, 0x69,
+	0x4a, 0x30, 0x93, 0xa7, 0x8c, 0xab, 0x6a, 0x2e, 0xa5, 0xae, 0x87, 0xcd, 0xb4, 0xb2, 0xe2, 0xf7,
+	0xa6, 0x13, 0x47, 0x88, 0x13, 0x1a, 0x08, 0xbc, 0x7e, 0x1a, 0xe7, 0xc4, 0xc7, 0x8c, 0x23, 0x3f,
+	0x14, 0x84, 0xb9, 0xd3, 0x04, 0xec, 0x87, 0xbc, 0x9f, 0xab, 0xdb, 0xa9, 0x15, 0xd3, 0x42, 0x0c,
+	0x9b, 0xdb, 0x0d, 0x0b, 0x73, 0xd4, 0x30, 0x6d, 0x4a, 0x72, 0xf5, 0xd9, 0x0c, 0xef, 0x66, 0xb6,
+	0xb2, 0x22, 0x83, 0xf4, 0x1f, 0x65, 0xb8, 0xd9, 0x66, 0xee, 0x4a, 0x84, 0x11, 0xc7, 0x1b, 0xc8,
+	0xc3, 0xb2, 0x02, 0x63, 0x76, 0x52, 0xd1, 0x48, 0x91, 0xe6, 0xa5, 0x85, 0x5a, 0x27, 0x2f, 0xe5,
+	0x59, 0xa8, 0x72, 0xba, 0x85, 0x83, 0x2e, 0x09, 0x94, 0x72, 0x06, 0xa5, 0x75, 0x2b, 0x90, 0xe7,
+	0xa0, 0x96, 0x41, 0x34, 0xe6, 0xca, 0x48, 0x8a, 0x65, 0xdc, 0x97, 0x31, 0x97, 0x57, 0x00, 0x18,
+	0x47, 0x11, 0xef, 0x26, 0xa1, 0x94, 0xd1, 0x79, 0x69, 0x61, 0x7c, 0x59, 0x35, 0xb2, 0x40, 0x46,
+	0x1e, 0xc8, 0x78, 0x95, 0x27, 0x6e, 0x56, 0xf7, 0x0e, 0xea, 0xa5, 0xdd, 0x9f, 0x75, 0xa9, 0x53,
+	0x4b, 0xfb, 0x12, 0x44, 0x7e, 0x06, 0xd5, 0x7c, 0x66, 0xca, 0x8d, 0x54, 0x62, 0xf6, 0x8c, 0xc4,
+	0xaa, 0x20, 0x64, 0x0a, 0x9f, 0x12, 0x85, 0xa2, 0x49, 0xde, 0x84, 0x29, 0x12, 0x10, 0x4e, 0x90,
+	0xd7, 0x75, 0x70, 0x48, 0x19, 0xe1, 0x4a, 0x25, 0x31, 0xda, 0x34, 0x13, 0xf2, 0xf7, 0x83, 0xfa,
+	0x23, 0x97, 0xf0, 0x5e, 0x6c, 0x19, 0x36, 0xf5, 0xc5, 0x8c, 0xc4, 0xcf, 0x12, 0x73, 0xb6, 0x4c,
+	0xde, 0x0f, 0x31, 0x33, 0x56, 0x28, 0x09, 0x3a, 0x93, 0x42, 0x67, 0x35, 0x93, 0x91, 0x55, 0xa8,
+	0xf2, 0x08, 0x23, 0x16, 0x47, 0x7d, 0x65, 0x4c, 0x64, 0x17, 0xb5, 0xbe, 0x0a, 0xb7, 0x4f, 0x8c,
+	0xb7, 0x83, 0x59, 0x48, 0x03, 0x86, 0xe5, 0x45, 0x18, 0x0b, 0x29, 0xf5, 0xba, 0xc4, 0x49, 0xc7,
+	0x3c, 0xda, 0x94, 0xff, 0x1c, 0xd4, 0x27, 0xfb, 0xc8, 0xf7, 0x9e, 0xea, 0x02, 0xd0, 0x3b, 0x95,
+	0xe4, 0xa9, 0xe5, 0xe8, 0x5f, 0x24, 0x98, 0x68, 0x33, 0x77, 0x23, 0xb6, 0x98, 0x1d, 0x11, 0x0b,
+	0xcb, 0x33, 0x50, 0x61, 0x38, 0x70, 0x70, 0x7e, 0x46, 0xa2, 0x4a, 0x54, 0x19, 0xf2, 0x70, 0xa2,
+	0x5a, 0x1e, 0xae, 0x9a, 0x50, 0x5a, 0x8e, 0xbc, 0x0e, 0x15, 0xe4, 0xd3, 0x38, 0x10, 0x27, 0xd6,
+	0x34, 0xc4, 0x20, 0x1e, 0x5e, 0x62, 0x10, 0xad, 0x80, 0x77, 0x44, 0xb7, 0xfe, 0x59, 0x82, 0xf1,
+	0x36, 0x73, 0xdf, 0x10, 0xde, 0x73, 0x22, 0xf4, 0xe1, 0x5f, 0xe6, 0xf2, 0xc8, 0xe5, 0x8b, 0x22,
+	0x9f, 0x6b, 0x4e, 0xba, 0x82, 0xb9, 0x4e, 0xea, 0x6d, 0x6d, 0x87, 0xf0, 0x74, 0xbb, 0xaf, 0xc3,
+	0x9b, 0x6e, 0xc3, 0xad, 0x01, 0xcd, 0xe2, 0x48, 0x5f, 0x40, 0x2d, 0x8c, 0x23, 0xbb, 0x87, 0x18,
+	0xce, 0x0e, 0xf5, 0xff, 0x47, 0x7a, 0x2c, 0xa0, 0xbf, 0x86, 0xa9, 0x36, 0x73, 0xd7, 0x49, 0x80,
+	0x3c, 0xf2, 0x11, 0x5f, 0x9f, 0x79, 0x04, 0x77, 0x4e, 0xe9, 0x16, 0x01, 0xd6, 0xa1, 0x42, 0x02,
+	0x9b, 0xfa, 0xf8, 0x8a, 0xee, 0x45, 0xf7, 0xf2, 0xd7, 0x11, 0x18, 0x69, 0x33, 0x57, 0x7e, 0x07,
+	0x30, 0x70, 0xb1, 0xdc, 0x37, 0xce, 0xbb, 0x30, 0x8d, 0x13, 0xaf, 0x87, 0xba, 0x78, 0x09, 0x52,
+	0xe1, 0xf7, 0x39, 0xd4, 0x8e, 0x5f, 0x09, 0x7d, 0x68, 0x67, 0xc1, 0x51, 0x67, 0xce, 0x5c, 0x19,
+	0x6b, 0xc9, 0x35, 0x2a, 0xaf, 0x41, 0xb5, 0xd8, 0xde, 0x7b, 0x43, 0x75, 0x72, 0xca, 0x50, 0x99,
+	0x4d, 0xa8, 0x16, 0x8b, 0x36, 0x5c, 0x26, 0xa7, 0xa8, 0x8f, 0x2f, 0xa4, 0x14, 0x49, 0x1d, 0x98,
+	0x38, 0xb1, 0x09, 0x0f, 0x86, 0xb6, 0x0e, 0xd2, 0xd4, 0xa5, 0x4b, 0xd1, 0xf2, 0x7f, 0x69, 0xb6,
+	0xf7, 0x7e, 0x6b, 0xa5, 0xbd, 0x43, 0x4d, 0xda, 0x3f, 0xd4, 0xa4, 0x5f, 0x87, 0x9a, 0xb4, 0x7b,
+	0xa4, 0x95, 0xf6, 0x8f, 0xb4, 0xd2, 0xb7, 0x23, 0xad, 0xf4, 0xd6, 0x1c, 0xd8, 0x02, 0x21, 0xbb,
+	0xe4, 0x21, 0x8b, 0xe5, 0x85, 0xb9, 0x33, 0xf0, 0xa1, 0x44, 0x21, 0xb1, 0x2a, 0xe9, 0x78, 0x9e,
+	0xfc, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x64, 0x96, 0x46, 0x6e, 0x48, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -440,8 +441,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// CreateLBP creates new liquidity bootstraping pool.
-	CreateLBP(ctx context.Context, in *MsgCreateLBP, opts ...grpc.CallOption) (*MsgCreateLBPResponse, error)
+	// CreateSale creates new token sale.
+	// The sale follows the launchpad functionality explained in the
+	// x/launchapd/spec
+	CreateSale(ctx context.Context, in *MsgCreateSale, opts ...grpc.CallOption) (*MsgCreateSaleResponse, error)
 	// Subscribe to a token sale. Any use any time before the sale end can join
 	// the sale by adding `token_in`. During the sale his `token_in` will be
 	// automatically charged every epoch to purchase `token_out`.
@@ -449,13 +452,13 @@ type MsgClient interface {
 	// Withdraw sends back `amount` of unspent tokens_in back to the user.
 	// User can do it any time unless his deposit is empty.
 	Withdraw(ctx context.Context, in *MsgWithdraw, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// ExitLBP withdraws purchased tokens_out from the pool and remained
-	// tokens_in. Returns error if the LBP is still active.
-	ExitLBP(ctx context.Context, in *MsgExitLBP, opts ...grpc.CallOption) (*MsgExitLBPResponse, error)
-	// FinalizeLBP sends income (earned tokens_in) to the LBP treasury.
-	// Returns error if called before the LBP finishes. Anyone can call this
+	// ExitSale withdraws purchased tokens_out from the pool and remained
+	// tokens_in. Returns error if the Sale is still active.
+	ExitSale(ctx context.Context, in *MsgExitSale, opts ...grpc.CallOption) (*MsgExitSaleResponse, error)
+	// FinalizeSale sends income (earned tokens_in) to the Sale treasury.
+	// Returns error if called before the Sale finishes. Anyone can call this
 	// method.
-	FinalizeLBP(ctx context.Context, in *MsgFinalizeLBP, opts ...grpc.CallOption) (*MsgFinalizeLBPResponse, error)
+	FinalizeSale(ctx context.Context, in *MsgFinalizeSale, opts ...grpc.CallOption) (*MsgFinalizeSaleResponse, error)
 }
 
 type msgClient struct {
@@ -466,9 +469,9 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
-func (c *msgClient) CreateLBP(ctx context.Context, in *MsgCreateLBP, opts ...grpc.CallOption) (*MsgCreateLBPResponse, error) {
-	out := new(MsgCreateLBPResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.launchpad.v1.Msg/CreateLBP", in, out, opts...)
+func (c *msgClient) CreateSale(ctx context.Context, in *MsgCreateSale, opts ...grpc.CallOption) (*MsgCreateSaleResponse, error) {
+	out := new(MsgCreateSaleResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.launchpad.v1.Msg/CreateSale", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -493,18 +496,18 @@ func (c *msgClient) Withdraw(ctx context.Context, in *MsgWithdraw, opts ...grpc.
 	return out, nil
 }
 
-func (c *msgClient) ExitLBP(ctx context.Context, in *MsgExitLBP, opts ...grpc.CallOption) (*MsgExitLBPResponse, error) {
-	out := new(MsgExitLBPResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.launchpad.v1.Msg/ExitLBP", in, out, opts...)
+func (c *msgClient) ExitSale(ctx context.Context, in *MsgExitSale, opts ...grpc.CallOption) (*MsgExitSaleResponse, error) {
+	out := new(MsgExitSaleResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.launchpad.v1.Msg/ExitSale", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) FinalizeLBP(ctx context.Context, in *MsgFinalizeLBP, opts ...grpc.CallOption) (*MsgFinalizeLBPResponse, error) {
-	out := new(MsgFinalizeLBPResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.launchpad.v1.Msg/FinalizeLBP", in, out, opts...)
+func (c *msgClient) FinalizeSale(ctx context.Context, in *MsgFinalizeSale, opts ...grpc.CallOption) (*MsgFinalizeSaleResponse, error) {
+	out := new(MsgFinalizeSaleResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.launchpad.v1.Msg/FinalizeSale", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -513,8 +516,10 @@ func (c *msgClient) FinalizeLBP(ctx context.Context, in *MsgFinalizeLBP, opts ..
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// CreateLBP creates new liquidity bootstraping pool.
-	CreateLBP(context.Context, *MsgCreateLBP) (*MsgCreateLBPResponse, error)
+	// CreateSale creates new token sale.
+	// The sale follows the launchpad functionality explained in the
+	// x/launchapd/spec
+	CreateSale(context.Context, *MsgCreateSale) (*MsgCreateSaleResponse, error)
 	// Subscribe to a token sale. Any use any time before the sale end can join
 	// the sale by adding `token_in`. During the sale his `token_in` will be
 	// automatically charged every epoch to purchase `token_out`.
@@ -522,21 +527,21 @@ type MsgServer interface {
 	// Withdraw sends back `amount` of unspent tokens_in back to the user.
 	// User can do it any time unless his deposit is empty.
 	Withdraw(context.Context, *MsgWithdraw) (*emptypb.Empty, error)
-	// ExitLBP withdraws purchased tokens_out from the pool and remained
-	// tokens_in. Returns error if the LBP is still active.
-	ExitLBP(context.Context, *MsgExitLBP) (*MsgExitLBPResponse, error)
-	// FinalizeLBP sends income (earned tokens_in) to the LBP treasury.
-	// Returns error if called before the LBP finishes. Anyone can call this
+	// ExitSale withdraws purchased tokens_out from the pool and remained
+	// tokens_in. Returns error if the Sale is still active.
+	ExitSale(context.Context, *MsgExitSale) (*MsgExitSaleResponse, error)
+	// FinalizeSale sends income (earned tokens_in) to the Sale treasury.
+	// Returns error if called before the Sale finishes. Anyone can call this
 	// method.
-	FinalizeLBP(context.Context, *MsgFinalizeLBP) (*MsgFinalizeLBPResponse, error)
+	FinalizeSale(context.Context, *MsgFinalizeSale) (*MsgFinalizeSaleResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) CreateLBP(ctx context.Context, req *MsgCreateLBP) (*MsgCreateLBPResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateLBP not implemented")
+func (*UnimplementedMsgServer) CreateSale(ctx context.Context, req *MsgCreateSale) (*MsgCreateSaleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSale not implemented")
 }
 func (*UnimplementedMsgServer) Subscribe(ctx context.Context, req *MsgSubscribe) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
@@ -544,31 +549,31 @@ func (*UnimplementedMsgServer) Subscribe(ctx context.Context, req *MsgSubscribe)
 func (*UnimplementedMsgServer) Withdraw(ctx context.Context, req *MsgWithdraw) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
 }
-func (*UnimplementedMsgServer) ExitLBP(ctx context.Context, req *MsgExitLBP) (*MsgExitLBPResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExitLBP not implemented")
+func (*UnimplementedMsgServer) ExitSale(ctx context.Context, req *MsgExitSale) (*MsgExitSaleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExitSale not implemented")
 }
-func (*UnimplementedMsgServer) FinalizeLBP(ctx context.Context, req *MsgFinalizeLBP) (*MsgFinalizeLBPResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FinalizeLBP not implemented")
+func (*UnimplementedMsgServer) FinalizeSale(ctx context.Context, req *MsgFinalizeSale) (*MsgFinalizeSaleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FinalizeSale not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_CreateLBP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateLBP)
+func _Msg_CreateSale_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateSale)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).CreateLBP(ctx, in)
+		return srv.(MsgServer).CreateSale(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.launchpad.v1.Msg/CreateLBP",
+		FullMethod: "/osmosis.launchpad.v1.Msg/CreateSale",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateLBP(ctx, req.(*MsgCreateLBP))
+		return srv.(MsgServer).CreateSale(ctx, req.(*MsgCreateSale))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -609,38 +614,38 @@ func _Msg_Withdraw_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ExitLBP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgExitLBP)
+func _Msg_ExitSale_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExitSale)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).ExitLBP(ctx, in)
+		return srv.(MsgServer).ExitSale(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.launchpad.v1.Msg/ExitLBP",
+		FullMethod: "/osmosis.launchpad.v1.Msg/ExitSale",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ExitLBP(ctx, req.(*MsgExitLBP))
+		return srv.(MsgServer).ExitSale(ctx, req.(*MsgExitSale))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_FinalizeLBP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgFinalizeLBP)
+func _Msg_FinalizeSale_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgFinalizeSale)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).FinalizeLBP(ctx, in)
+		return srv.(MsgServer).FinalizeSale(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.launchpad.v1.Msg/FinalizeLBP",
+		FullMethod: "/osmosis.launchpad.v1.Msg/FinalizeSale",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).FinalizeLBP(ctx, req.(*MsgFinalizeLBP))
+		return srv.(MsgServer).FinalizeSale(ctx, req.(*MsgFinalizeSale))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -650,8 +655,8 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateLBP",
-			Handler:    _Msg_CreateLBP_Handler,
+			MethodName: "CreateSale",
+			Handler:    _Msg_CreateSale_Handler,
 		},
 		{
 			MethodName: "Subscribe",
@@ -662,19 +667,19 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_Withdraw_Handler,
 		},
 		{
-			MethodName: "ExitLBP",
-			Handler:    _Msg_ExitLBP_Handler,
+			MethodName: "ExitSale",
+			Handler:    _Msg_ExitSale_Handler,
 		},
 		{
-			MethodName: "FinalizeLBP",
-			Handler:    _Msg_FinalizeLBP_Handler,
+			MethodName: "FinalizeSale",
+			Handler:    _Msg_FinalizeSale_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "osmosis/launchpad/v1/tx.proto",
 }
 
-func (m *MsgCreateLBP) Marshal() (dAtA []byte, err error) {
+func (m *MsgCreateSale) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -684,12 +689,12 @@ func (m *MsgCreateLBP) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgCreateLBP) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgCreateSale) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgCreateLBP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgCreateSale) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -751,7 +756,7 @@ func (m *MsgCreateLBP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgCreateLBPResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgCreateSaleResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -761,12 +766,12 @@ func (m *MsgCreateLBPResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgCreateLBPResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgCreateSaleResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgCreateLBPResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgCreateSaleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -809,8 +814,8 @@ func (m *MsgSubscribe) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x1a
-	if m.PoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
+	if m.SaleId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.SaleId))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -871,7 +876,7 @@ func (m *MsgWithdraw) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgExitLBP) Marshal() (dAtA []byte, err error) {
+func (m *MsgExitSale) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -881,12 +886,12 @@ func (m *MsgExitLBP) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgExitLBP) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgExitSale) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgExitLBP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgExitSale) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -906,7 +911,7 @@ func (m *MsgExitLBP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgExitLBPResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgExitSaleResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -916,12 +921,12 @@ func (m *MsgExitLBPResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgExitLBPResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgExitSaleResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgExitLBPResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgExitSaleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -939,7 +944,7 @@ func (m *MsgExitLBPResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgFinalizeLBP) Marshal() (dAtA []byte, err error) {
+func (m *MsgFinalizeSale) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -949,12 +954,12 @@ func (m *MsgFinalizeLBP) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgFinalizeLBP) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgFinalizeSale) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgFinalizeLBP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgFinalizeSale) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -974,7 +979,7 @@ func (m *MsgFinalizeLBP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgFinalizeLBPResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgFinalizeSaleResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -984,12 +989,12 @@ func (m *MsgFinalizeLBPResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgFinalizeLBPResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgFinalizeSaleResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgFinalizeLBPResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgFinalizeSaleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1018,7 +1023,7 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgCreateLBP) Size() (n int) {
+func (m *MsgCreateSale) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1049,7 +1054,7 @@ func (m *MsgCreateLBP) Size() (n int) {
 	return n
 }
 
-func (m *MsgCreateLBPResponse) Size() (n int) {
+func (m *MsgCreateSaleResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1071,8 +1076,8 @@ func (m *MsgSubscribe) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.PoolId != 0 {
-		n += 1 + sovTx(uint64(m.PoolId))
+	if m.SaleId != 0 {
+		n += 1 + sovTx(uint64(m.SaleId))
 	}
 	l = m.Amount.Size()
 	n += 1 + l + sovTx(uint64(l))
@@ -1099,7 +1104,7 @@ func (m *MsgWithdraw) Size() (n int) {
 	return n
 }
 
-func (m *MsgExitLBP) Size() (n int) {
+func (m *MsgExitSale) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1115,7 +1120,7 @@ func (m *MsgExitLBP) Size() (n int) {
 	return n
 }
 
-func (m *MsgExitLBPResponse) Size() (n int) {
+func (m *MsgExitSaleResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1126,7 +1131,7 @@ func (m *MsgExitLBPResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgFinalizeLBP) Size() (n int) {
+func (m *MsgFinalizeSale) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1142,7 +1147,7 @@ func (m *MsgFinalizeLBP) Size() (n int) {
 	return n
 }
 
-func (m *MsgFinalizeLBPResponse) Size() (n int) {
+func (m *MsgFinalizeSaleResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1159,7 +1164,7 @@ func sovTx(x uint64) (n int) {
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *MsgCreateLBP) Unmarshal(dAtA []byte) error {
+func (m *MsgCreateSale) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1182,10 +1187,10 @@ func (m *MsgCreateLBP) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCreateLBP: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgCreateSale: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCreateLBP: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgCreateSale: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1437,7 +1442,7 @@ func (m *MsgCreateLBP) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgCreateLBPResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgCreateSaleResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1460,10 +1465,10 @@ func (m *MsgCreateLBPResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgCreateLBPResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgCreateSaleResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgCreateLBPResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgCreateSaleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1569,9 +1574,9 @@ func (m *MsgSubscribe) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SaleId", wireType)
 			}
-			m.PoolId = 0
+			m.SaleId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1581,7 +1586,7 @@ func (m *MsgSubscribe) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
+				m.SaleId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1778,7 +1783,7 @@ func (m *MsgWithdraw) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgExitLBP) Unmarshal(dAtA []byte) error {
+func (m *MsgExitSale) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1801,10 +1806,10 @@ func (m *MsgExitLBP) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExitLBP: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgExitSale: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExitLBP: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgExitSale: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1879,7 +1884,7 @@ func (m *MsgExitLBP) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgExitLBPResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgExitSaleResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1902,10 +1907,10 @@ func (m *MsgExitLBPResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgExitLBPResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgExitSaleResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgExitLBPResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgExitSaleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1963,7 +1968,7 @@ func (m *MsgExitLBPResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgFinalizeLBP) Unmarshal(dAtA []byte) error {
+func (m *MsgFinalizeSale) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1986,10 +1991,10 @@ func (m *MsgFinalizeLBP) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgFinalizeLBP: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgFinalizeSale: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgFinalizeLBP: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgFinalizeSale: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2064,7 +2069,7 @@ func (m *MsgFinalizeLBP) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgFinalizeLBPResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgFinalizeSaleResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2087,10 +2092,10 @@ func (m *MsgFinalizeLBPResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgFinalizeLBPResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgFinalizeSaleResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgFinalizeLBPResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgFinalizeSaleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

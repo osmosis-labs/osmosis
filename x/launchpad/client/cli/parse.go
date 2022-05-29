@@ -9,41 +9,40 @@ import (
 	"github.com/spf13/pflag"
 )
 
-type CreateLBPInputs createLBPInputs
-
+type CreateSaleInputs createSaleInputs
 
 // UnmarshalJSON should error if there are fields unexpected.
-func (inputs *createLBPInputs) UnmarshalJSON(data []byte) error {
-	var lbpInputs CreateLBPInputs
+func (inputs *createSaleInputs) UnmarshalJSON(data []byte) error {
+	var saleInputs CreateSaleInputs
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields() // Force
 
-	if err := dec.Decode(&lbpInputs); err != nil {
+	if err := dec.Decode(&saleInputs); err != nil {
 		return err
 	}
 
-	*inputs = createLBPInputs(lbpInputs)
+	*inputs = createSaleInputs(saleInputs)
 	return nil
 }
 
-func parseCreateLBPFlags(fs *pflag.FlagSet) (*createLBPInputs, error) {
-	lbp := &createLBPInputs{}
-	lbpFile, _ := fs.GetString(FlagLBPFile)
+func parseCreateSaleFlags(fs *pflag.FlagSet) (*createSaleInputs, error) {
+	sale := &createSaleInputs{}
+	saleFile, _ := fs.GetString(FlagSaleFile)
 
-	if lbpFile == "" {
-		return nil, fmt.Errorf("must pass in a lbp json using the --%s flag", FlagLBPFile)
+	if saleFile == "" {
+		return nil, fmt.Errorf("must pass in a sale json using the --%s flag", FlagSaleFile)
 	}
 
-	contents, err := ioutil.ReadFile(lbpFile)
+	contents, err := ioutil.ReadFile(saleFile)
 	if err != nil {
 		return nil, err
 	}
 
 	// make exception if unknown field exists
-	err = lbp.UnmarshalJSON(contents)
+	err = sale.UnmarshalJSON(contents)
 	if err != nil {
 		return nil, err
 	}
 
-	return lbp, nil
+	return sale, nil
 }

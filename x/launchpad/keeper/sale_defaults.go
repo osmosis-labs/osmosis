@@ -8,9 +8,9 @@ import (
 	"github.com/osmosis-labs/osmosis/x/launchpad/api"
 )
 
-func newLBP(treasury string, id uint64, tokenIn, tokenOut string, start, end time.Time, totalOut sdk.Int) api.LBP {
+func newSale(treasury string, id uint64, tokenIn, tokenOut string, start, end time.Time, totalOut sdk.Int) api.Sale {
 	zero := sdk.ZeroInt()
-	return api.LBP{
+	return api.Sale{
 		Treasury:  treasury,
 		Id:        id,
 		TokenOut:  tokenOut,

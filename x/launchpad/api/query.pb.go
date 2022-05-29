@@ -30,23 +30,23 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type QueryLBPs struct {
+type QuerySales struct {
 	// pagination defines an pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryLBPs) Reset()         { *m = QueryLBPs{} }
-func (m *QueryLBPs) String() string { return proto.CompactTextString(m) }
-func (*QueryLBPs) ProtoMessage()    {}
-func (*QueryLBPs) Descriptor() ([]byte, []int) {
+func (m *QuerySales) Reset()         { *m = QuerySales{} }
+func (m *QuerySales) String() string { return proto.CompactTextString(m) }
+func (*QuerySales) ProtoMessage()    {}
+func (*QuerySales) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f314f7af9cee0862, []int{0}
 }
-func (m *QueryLBPs) XXX_Unmarshal(b []byte) error {
+func (m *QuerySales) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryLBPs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QuerySales) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryLBPs.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QuerySales.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -56,35 +56,35 @@ func (m *QueryLBPs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *QueryLBPs) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLBPs.Merge(m, src)
+func (m *QuerySales) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySales.Merge(m, src)
 }
-func (m *QueryLBPs) XXX_Size() int {
+func (m *QuerySales) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryLBPs) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLBPs.DiscardUnknown(m)
+func (m *QuerySales) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySales.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryLBPs proto.InternalMessageInfo
+var xxx_messageInfo_QuerySales proto.InternalMessageInfo
 
-type QueryLBPsResponse struct {
-	Lbps       []LBP               `protobuf:"bytes,1,rep,name=lbps,proto3" json:"lbps"`
+type QuerySalesResponse struct {
+	Sales      []Sale              `protobuf:"bytes,1,rep,name=sales,proto3" json:"sales"`
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryLBPsResponse) Reset()         { *m = QueryLBPsResponse{} }
-func (m *QueryLBPsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryLBPsResponse) ProtoMessage()    {}
-func (*QueryLBPsResponse) Descriptor() ([]byte, []int) {
+func (m *QuerySalesResponse) Reset()         { *m = QuerySalesResponse{} }
+func (m *QuerySalesResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySalesResponse) ProtoMessage()    {}
+func (*QuerySalesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f314f7af9cee0862, []int{1}
 }
-func (m *QueryLBPsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QuerySalesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryLBPsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QuerySalesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryLBPsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QuerySalesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -94,36 +94,36 @@ func (m *QueryLBPsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *QueryLBPsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLBPsResponse.Merge(m, src)
+func (m *QuerySalesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySalesResponse.Merge(m, src)
 }
-func (m *QueryLBPsResponse) XXX_Size() int {
+func (m *QuerySalesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryLBPsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLBPsResponse.DiscardUnknown(m)
+func (m *QuerySalesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySalesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryLBPsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QuerySalesResponse proto.InternalMessageInfo
 
-// Request type for Query/LBP
-type QueryLBP struct {
-	// LBP ID
-	LbpId uint64 `protobuf:"varint,1,opt,name=lbp_id,json=lbpId,proto3" json:"lbp_id,omitempty"`
+// Request type for Query/Sale
+type QuerySale struct {
+	// Sale ID
+	SaleId uint64 `protobuf:"varint,1,opt,name=sale_id,json=saleId,proto3" json:"sale_id,omitempty"`
 }
 
-func (m *QueryLBP) Reset()         { *m = QueryLBP{} }
-func (m *QueryLBP) String() string { return proto.CompactTextString(m) }
-func (*QueryLBP) ProtoMessage()    {}
-func (*QueryLBP) Descriptor() ([]byte, []int) {
+func (m *QuerySale) Reset()         { *m = QuerySale{} }
+func (m *QuerySale) String() string { return proto.CompactTextString(m) }
+func (*QuerySale) ProtoMessage()    {}
+func (*QuerySale) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f314f7af9cee0862, []int{2}
 }
-func (m *QueryLBP) XXX_Unmarshal(b []byte) error {
+func (m *QuerySale) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryLBP) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QuerySale) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryLBP.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QuerySale.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -133,34 +133,34 @@ func (m *QueryLBP) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *QueryLBP) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLBP.Merge(m, src)
+func (m *QuerySale) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySale.Merge(m, src)
 }
-func (m *QueryLBP) XXX_Size() int {
+func (m *QuerySale) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryLBP) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLBP.DiscardUnknown(m)
+func (m *QuerySale) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySale.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryLBP proto.InternalMessageInfo
+var xxx_messageInfo_QuerySale proto.InternalMessageInfo
 
-type QueryLBPResponse struct {
-	Lbp LBP `protobuf:"bytes,1,opt,name=lbp,proto3" json:"lbp"`
+type QuerySaleResponse struct {
+	Sale Sale `protobuf:"bytes,1,opt,name=sale,proto3" json:"sale"`
 }
 
-func (m *QueryLBPResponse) Reset()         { *m = QueryLBPResponse{} }
-func (m *QueryLBPResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryLBPResponse) ProtoMessage()    {}
-func (*QueryLBPResponse) Descriptor() ([]byte, []int) {
+func (m *QuerySaleResponse) Reset()         { *m = QuerySaleResponse{} }
+func (m *QuerySaleResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySaleResponse) ProtoMessage()    {}
+func (*QuerySaleResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f314f7af9cee0862, []int{3}
 }
-func (m *QueryLBPResponse) XXX_Unmarshal(b []byte) error {
+func (m *QuerySaleResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryLBPResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QuerySaleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryLBPResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QuerySaleResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -170,22 +170,22 @@ func (m *QueryLBPResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
-func (m *QueryLBPResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryLBPResponse.Merge(m, src)
+func (m *QuerySaleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySaleResponse.Merge(m, src)
 }
-func (m *QueryLBPResponse) XXX_Size() int {
+func (m *QuerySaleResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryLBPResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryLBPResponse.DiscardUnknown(m)
+func (m *QuerySaleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySaleResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryLBPResponse proto.InternalMessageInfo
+var xxx_messageInfo_QuerySaleResponse proto.InternalMessageInfo
 
-// Request type for Query/LBP
+// Request type for Query/Sale
 type QueryUserPosition struct {
-	// ID of the LBP
-	LbpId uint64 `protobuf:"varint,1,opt,name=lbp_id,json=lbpId,proto3" json:"lbp_id,omitempty"`
+	// ID of the Sale
+	SaleId uint64 `protobuf:"varint,1,opt,name=sale_id,json=saleId,proto3" json:"sale_id,omitempty"`
 	// user account address
 	User string `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 }
@@ -261,10 +261,10 @@ func (m *QueryUserPositionResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryUserPositionResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*QueryLBPs)(nil), "osmosis.launchpad.v1.QueryLBPs")
-	proto.RegisterType((*QueryLBPsResponse)(nil), "osmosis.launchpad.v1.QueryLBPsResponse")
-	proto.RegisterType((*QueryLBP)(nil), "osmosis.launchpad.v1.QueryLBP")
-	proto.RegisterType((*QueryLBPResponse)(nil), "osmosis.launchpad.v1.QueryLBPResponse")
+	proto.RegisterType((*QuerySales)(nil), "osmosis.launchpad.v1.QuerySales")
+	proto.RegisterType((*QuerySalesResponse)(nil), "osmosis.launchpad.v1.QuerySalesResponse")
+	proto.RegisterType((*QuerySale)(nil), "osmosis.launchpad.v1.QuerySale")
+	proto.RegisterType((*QuerySaleResponse)(nil), "osmosis.launchpad.v1.QuerySaleResponse")
 	proto.RegisterType((*QueryUserPosition)(nil), "osmosis.launchpad.v1.QueryUserPosition")
 	proto.RegisterType((*QueryUserPositionResponse)(nil), "osmosis.launchpad.v1.QueryUserPositionResponse")
 }
@@ -272,40 +272,40 @@ func init() {
 func init() { proto.RegisterFile("osmosis/launchpad/v1/query.proto", fileDescriptor_f314f7af9cee0862) }
 
 var fileDescriptor_f314f7af9cee0862 = []byte{
-	// 522 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x93, 0xc1, 0x6e, 0xd3, 0x30,
-	0x18, 0xc7, 0xe3, 0x35, 0x9b, 0x98, 0x37, 0x24, 0xb0, 0x86, 0xd4, 0x06, 0x94, 0x75, 0x11, 0xda,
-	0xca, 0x10, 0xb6, 0xd2, 0xdd, 0x39, 0x54, 0x02, 0x84, 0xb4, 0x49, 0x25, 0x88, 0x0b, 0x97, 0xc9,
-	0x6e, 0xad, 0x2c, 0x28, 0x8b, 0xbd, 0x3a, 0xa9, 0x98, 0xa6, 0x5d, 0x78, 0x02, 0x10, 0xe2, 0xc4,
-	0x0b, 0xf5, 0x38, 0x89, 0x0b, 0x27, 0x04, 0x2d, 0x0f, 0x82, 0xe2, 0xb8, 0x21, 0xd5, 0xba, 0x76,
-	0x37, 0x27, 0xfe, 0xf9, 0xfb, 0xff, 0xbe, 0x7c, 0x0e, 0x6c, 0x0a, 0x75, 0x2a, 0x54, 0xa4, 0x48,
-	0x4c, 0xb3, 0xa4, 0x77, 0x22, 0x69, 0x9f, 0x0c, 0x7d, 0x72, 0x96, 0xf1, 0xc1, 0x39, 0x96, 0x03,
-	0x91, 0x0a, 0xb4, 0x65, 0x08, 0x5c, 0x12, 0x78, 0xe8, 0x3b, 0x5b, 0xa1, 0x08, 0x85, 0x06, 0x48,
-	0xbe, 0x2a, 0x58, 0xe7, 0x51, 0x28, 0x44, 0x18, 0x73, 0x42, 0x65, 0x44, 0x68, 0x92, 0x88, 0x94,
-	0xa6, 0x91, 0x48, 0x94, 0xd9, 0xdd, 0xef, 0xe9, 0x52, 0x84, 0x51, 0xc5, 0x8b, 0x08, 0x32, 0xf4,
-	0x19, 0x4f, 0xa9, 0x4f, 0x24, 0x0d, 0xa3, 0x44, 0xc3, 0x86, 0x9d, 0xef, 0xa5, 0x52, 0x9a, 0xf2,
-	0x82, 0xf0, 0xde, 0xc2, 0xf5, 0x37, 0x79, 0x8d, 0xc3, 0x4e, 0x57, 0xa1, 0x97, 0x10, 0xfe, 0x2f,
-	0x51, 0xb7, 0x9b, 0xa0, 0xb5, 0xd1, 0xde, 0xc5, 0x45, 0x1e, 0xce, 0xf3, 0x70, 0xd1, 0x92, 0xc9,
-	0xc3, 0x5d, 0x1a, 0xf2, 0x80, 0x9f, 0x65, 0x5c, 0xa5, 0x41, 0xe5, 0xa4, 0xf7, 0x05, 0xc0, 0xfb,
-	0x65, 0xd5, 0x80, 0x2b, 0x29, 0x12, 0xc5, 0xd1, 0x01, 0xb4, 0x63, 0x26, 0x55, 0x1d, 0x34, 0x6b,
-	0xad, 0x8d, 0x76, 0x03, 0xcf, 0xfb, 0x22, 0xf8, 0xb0, 0xd3, 0xed, 0xd8, 0xa3, 0x5f, 0xdb, 0x56,
-	0xa0, 0x61, 0xf4, 0x6a, 0x46, 0x69, 0x45, 0x2b, 0xed, 0x2d, 0x55, 0x2a, 0x12, 0x67, 0x9c, 0x76,
-	0xe0, 0x9d, 0xa9, 0x12, 0x7a, 0x00, 0xd7, 0x62, 0x26, 0x8f, 0xa3, 0x7e, 0x1d, 0x34, 0x41, 0xcb,
-	0x0e, 0x56, 0x63, 0x26, 0x5f, 0xf7, 0xbd, 0x17, 0xf0, 0xde, 0x14, 0x29, 0xa5, 0x7d, 0x58, 0x8b,
-	0x99, 0xd4, 0xdc, 0x2d, 0x9c, 0x73, 0xd6, 0x7b, 0x6e, 0x9a, 0x7f, 0xa7, 0xf8, 0xa0, 0x2b, 0x54,
-	0x94, 0xc7, 0xdf, 0x10, 0x89, 0x10, 0xb4, 0x33, 0xc5, 0x07, 0xba, 0xb1, 0xf5, 0x40, 0xaf, 0xbd,
-	0x0f, 0xb0, 0x71, 0xed, 0x7c, 0xe9, 0x73, 0x04, 0xef, 0xe6, 0xd0, 0xb1, 0x34, 0x1b, 0xc6, 0xcc,
-	0x9b, 0x6f, 0x56, 0x2d, 0x61, 0x14, 0x37, 0xb3, 0xca, 0xbb, 0xf6, 0xb7, 0x1a, 0x5c, 0xd5, 0x61,
-	0x48, 0x41, 0x5b, 0xdf, 0x81, 0xed, 0xf9, 0x95, 0xca, 0x71, 0x3a, 0x7b, 0x4b, 0x80, 0xa9, 0xaa,
-	0xb7, 0xf3, 0xe9, 0xc7, 0xdf, 0xaf, 0x2b, 0x0f, 0x51, 0x83, 0x98, 0x1b, 0x3b, 0x73, 0x09, 0xf5,
-	0x74, 0xcf, 0x61, 0x2d, 0x9f, 0x87, 0xbb, 0xb8, 0xa4, 0xb3, 0xbb, 0x78, 0xbf, 0x4c, 0xdc, 0xd7,
-	0x89, 0x8f, 0x91, 0x77, 0x63, 0x22, 0xb9, 0x28, 0xa6, 0x70, 0x89, 0xbe, 0x03, 0xb8, 0x39, 0x33,
-	0xa1, 0x45, 0x7d, 0x55, 0x41, 0x87, 0xdc, 0x12, 0x2c, 0xb5, 0x7c, 0xad, 0xf5, 0x14, 0x3d, 0x59,
-	0xae, 0x45, 0x2e, 0xf2, 0xf1, 0x5c, 0x76, 0x8e, 0x46, 0x7f, 0x5c, 0x6b, 0x34, 0x76, 0xc1, 0xd5,
-	0xd8, 0x05, 0xbf, 0xc7, 0x2e, 0xf8, 0x3c, 0x71, 0xad, 0xab, 0x89, 0x6b, 0xfd, 0x9c, 0xb8, 0xd6,
-	0x7b, 0x12, 0x46, 0xe9, 0x49, 0xc6, 0x70, 0x4f, 0x9c, 0x12, 0xe3, 0xf2, 0x2c, 0xa6, 0x4c, 0x4d,
-	0x1f, 0xc8, 0xc7, 0x4a, 0x04, 0x95, 0x11, 0x5b, 0xd3, 0x3f, 0xfb, 0xc1, 0xbf, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xcb, 0x63, 0x1d, 0x79, 0xa8, 0x04, 0x00, 0x00,
+	// 519 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x94, 0x41, 0x6f, 0xd3, 0x30,
+	0x18, 0x86, 0xe3, 0x2d, 0x1d, 0xda, 0xb7, 0x71, 0xc0, 0x9a, 0x44, 0x89, 0xa6, 0x2c, 0x8a, 0xa6,
+	0xad, 0x02, 0x66, 0xab, 0x1d, 0xe2, 0x8c, 0x76, 0x00, 0xed, 0x30, 0x69, 0x04, 0xb8, 0x70, 0x99,
+	0x9c, 0xd6, 0xca, 0x82, 0xba, 0x38, 0xab, 0x93, 0x02, 0x9a, 0xc6, 0x81, 0x5f, 0x80, 0x84, 0x38,
+	0x22, 0xf1, 0x73, 0x7a, 0x9c, 0xc4, 0x85, 0x13, 0x82, 0x96, 0x1f, 0x82, 0xec, 0x78, 0x69, 0x2a,
+	0x3a, 0xd2, 0x5b, 0x12, 0x3f, 0x7e, 0xdf, 0xc7, 0xfd, 0xac, 0x82, 0x27, 0xe4, 0x99, 0x90, 0xb1,
+	0xa4, 0x7d, 0x96, 0x27, 0xdd, 0xd3, 0x94, 0xf5, 0xe8, 0xb0, 0x4d, 0xcf, 0x73, 0x3e, 0x78, 0x4f,
+	0xd2, 0x81, 0xc8, 0x04, 0xde, 0x30, 0x04, 0x29, 0x09, 0x32, 0x6c, 0x3b, 0x1b, 0x91, 0x88, 0x84,
+	0x06, 0xa8, 0x7a, 0x2a, 0x58, 0x67, 0x33, 0x12, 0x22, 0xea, 0x73, 0xca, 0xd2, 0x98, 0xb2, 0x24,
+	0x11, 0x19, 0xcb, 0x62, 0x91, 0x48, 0xb3, 0x7a, 0xbf, 0xab, 0xa3, 0x68, 0xc8, 0x24, 0x2f, 0x2a,
+	0xe8, 0xb0, 0x1d, 0xf2, 0x8c, 0xb5, 0x69, 0xca, 0xa2, 0x38, 0xd1, 0xb0, 0x61, 0xe7, 0x7b, 0xc9,
+	0x8c, 0x65, 0xbc, 0x20, 0xfc, 0x97, 0x00, 0xcf, 0x55, 0xc6, 0x0b, 0xd6, 0xe7, 0x12, 0x3f, 0x05,
+	0x98, 0x66, 0x34, 0x6d, 0x0f, 0xb5, 0xd6, 0x3a, 0x3b, 0xa4, 0x28, 0x24, 0xaa, 0x90, 0x14, 0x67,
+	0x32, 0x85, 0xe4, 0x98, 0x45, 0x3c, 0xe0, 0xe7, 0x39, 0x97, 0x59, 0x50, 0xd9, 0xe9, 0x7f, 0x41,
+	0x80, 0xa7, 0xb1, 0x01, 0x97, 0xa9, 0x48, 0x24, 0xc7, 0x8f, 0xa1, 0x21, 0xd5, 0x87, 0x26, 0xf2,
+	0x96, 0x5b, 0x6b, 0x1d, 0x87, 0xcc, 0xfb, 0x51, 0x88, 0xda, 0x73, 0x60, 0x8f, 0x7e, 0x6e, 0x59,
+	0x41, 0x81, 0xe3, 0x67, 0x33, 0x5a, 0x4b, 0x5a, 0x6b, 0xb7, 0x56, 0xab, 0x28, 0x9d, 0xf1, 0xda,
+	0x86, 0xd5, 0x52, 0x0b, 0xdf, 0x85, 0x5b, 0x2a, 0xfe, 0x24, 0xee, 0x35, 0x91, 0x87, 0x5a, 0x76,
+	0xb0, 0xa2, 0x5e, 0x0f, 0x7b, 0xfe, 0x21, 0xdc, 0x29, 0xa9, 0xd2, 0xfd, 0x11, 0xd8, 0x6a, 0x59,
+	0xa3, 0x8b, 0xa8, 0x6b, 0xda, 0x7f, 0x62, 0xa2, 0x5e, 0x49, 0x3e, 0x38, 0x16, 0x32, 0x56, 0x16,
+	0x37, 0x16, 0x63, 0x0c, 0x76, 0x2e, 0xf9, 0x40, 0x9f, 0x70, 0x35, 0xd0, 0xcf, 0xfe, 0x1b, 0xb8,
+	0xf7, 0x4f, 0x42, 0x29, 0x75, 0x04, 0xb7, 0x15, 0x74, 0x92, 0x9a, 0x05, 0x63, 0xe7, 0xcf, 0xb7,
+	0xab, 0x46, 0x18, 0xcb, 0xf5, 0xbc, 0xf2, 0xad, 0xf3, 0x6d, 0x19, 0x1a, 0xba, 0x0c, 0xbf, 0x85,
+	0x46, 0x71, 0x23, 0xbc, 0xf9, 0x51, 0xd3, 0xe1, 0x3a, 0xad, 0x3a, 0xe2, 0xda, 0xd6, 0xf7, 0x3f,
+	0x7e, 0xff, 0xf3, 0x79, 0x69, 0x13, 0x3b, 0xd4, 0x5c, 0xe1, 0xd9, 0x5b, 0xa9, 0xfb, 0x3e, 0x80,
+	0xad, 0x87, 0xb3, 0x55, 0x93, 0xea, 0xec, 0xd6, 0x00, 0x65, 0xeb, 0x43, 0xdd, 0xba, 0x83, 0xb7,
+	0x6f, 0x6e, 0xa5, 0x17, 0x66, 0x1e, 0x97, 0xf8, 0x2b, 0x82, 0xf5, 0x99, 0x61, 0xfd, 0xaf, 0xa7,
+	0x0a, 0x3a, 0x74, 0x41, 0xb0, 0x14, 0xdb, 0xd7, 0x62, 0x7b, 0xf8, 0xc1, 0x22, 0x62, 0xf4, 0x42,
+	0x4d, 0xea, 0xf2, 0xe0, 0x68, 0xf4, 0xdb, 0xb5, 0x46, 0x63, 0x17, 0x5d, 0x8d, 0x5d, 0xf4, 0x6b,
+	0xec, 0xa2, 0x4f, 0x13, 0xd7, 0xba, 0x9a, 0xb8, 0xd6, 0x8f, 0x89, 0x6b, 0xbd, 0xa6, 0x51, 0x9c,
+	0x9d, 0xe6, 0x21, 0xe9, 0x8a, 0x33, 0x6a, 0x6c, 0xf6, 0xfa, 0x2c, 0x94, 0xd7, 0x2f, 0xf4, 0x5d,
+	0xa5, 0x84, 0xa5, 0x71, 0xb8, 0xa2, 0xff, 0x05, 0xf6, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0xba,
+	0xa2, 0x8c, 0xec, 0xc1, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -320,10 +320,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Returns list of LBPs ordered by the creation time
-	LBPs(ctx context.Context, in *QueryLBPs, opts ...grpc.CallOption) (*QueryLBPsResponse, error)
-	// Returns the specific LBP object
-	LBP(ctx context.Context, in *QueryLBP, opts ...grpc.CallOption) (*QueryLBPResponse, error)
+	// Returns list of Sales ordered by the creation time
+	Sales(ctx context.Context, in *QuerySales, opts ...grpc.CallOption) (*QuerySalesResponse, error)
+	// Returns the specific Sale object
+	Sale(ctx context.Context, in *QuerySale, opts ...grpc.CallOption) (*QuerySaleResponse, error)
 	UserPosition(ctx context.Context, in *QueryUserPosition, opts ...grpc.CallOption) (*QueryUserPositionResponse, error)
 }
 
@@ -335,18 +335,18 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) LBPs(ctx context.Context, in *QueryLBPs, opts ...grpc.CallOption) (*QueryLBPsResponse, error) {
-	out := new(QueryLBPsResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.launchpad.v1.Query/LBPs", in, out, opts...)
+func (c *queryClient) Sales(ctx context.Context, in *QuerySales, opts ...grpc.CallOption) (*QuerySalesResponse, error) {
+	out := new(QuerySalesResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.launchpad.v1.Query/Sales", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) LBP(ctx context.Context, in *QueryLBP, opts ...grpc.CallOption) (*QueryLBPResponse, error) {
-	out := new(QueryLBPResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.launchpad.v1.Query/LBP", in, out, opts...)
+func (c *queryClient) Sale(ctx context.Context, in *QuerySale, opts ...grpc.CallOption) (*QuerySaleResponse, error) {
+	out := new(QuerySaleResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.launchpad.v1.Query/Sale", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -364,10 +364,10 @@ func (c *queryClient) UserPosition(ctx context.Context, in *QueryUserPosition, o
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Returns list of LBPs ordered by the creation time
-	LBPs(context.Context, *QueryLBPs) (*QueryLBPsResponse, error)
-	// Returns the specific LBP object
-	LBP(context.Context, *QueryLBP) (*QueryLBPResponse, error)
+	// Returns list of Sales ordered by the creation time
+	Sales(context.Context, *QuerySales) (*QuerySalesResponse, error)
+	// Returns the specific Sale object
+	Sale(context.Context, *QuerySale) (*QuerySaleResponse, error)
 	UserPosition(context.Context, *QueryUserPosition) (*QueryUserPositionResponse, error)
 }
 
@@ -375,11 +375,11 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) LBPs(ctx context.Context, req *QueryLBPs) (*QueryLBPsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LBPs not implemented")
+func (*UnimplementedQueryServer) Sales(ctx context.Context, req *QuerySales) (*QuerySalesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Sales not implemented")
 }
-func (*UnimplementedQueryServer) LBP(ctx context.Context, req *QueryLBP) (*QueryLBPResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LBP not implemented")
+func (*UnimplementedQueryServer) Sale(ctx context.Context, req *QuerySale) (*QuerySaleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Sale not implemented")
 }
 func (*UnimplementedQueryServer) UserPosition(ctx context.Context, req *QueryUserPosition) (*QueryUserPositionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserPosition not implemented")
@@ -389,38 +389,38 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_LBPs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryLBPs)
+func _Query_Sales_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySales)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).LBPs(ctx, in)
+		return srv.(QueryServer).Sales(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.launchpad.v1.Query/LBPs",
+		FullMethod: "/osmosis.launchpad.v1.Query/Sales",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).LBPs(ctx, req.(*QueryLBPs))
+		return srv.(QueryServer).Sales(ctx, req.(*QuerySales))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_LBP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryLBP)
+func _Query_Sale_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySale)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).LBP(ctx, in)
+		return srv.(QueryServer).Sale(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.launchpad.v1.Query/LBP",
+		FullMethod: "/osmosis.launchpad.v1.Query/Sale",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).LBP(ctx, req.(*QueryLBP))
+		return srv.(QueryServer).Sale(ctx, req.(*QuerySale))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -448,12 +448,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "LBPs",
-			Handler:    _Query_LBPs_Handler,
+			MethodName: "Sales",
+			Handler:    _Query_Sales_Handler,
 		},
 		{
-			MethodName: "LBP",
-			Handler:    _Query_LBP_Handler,
+			MethodName: "Sale",
+			Handler:    _Query_Sale_Handler,
 		},
 		{
 			MethodName: "UserPosition",
@@ -464,7 +464,7 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	Metadata: "osmosis/launchpad/v1/query.proto",
 }
 
-func (m *QueryLBPs) Marshal() (dAtA []byte, err error) {
+func (m *QuerySales) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -474,12 +474,12 @@ func (m *QueryLBPs) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryLBPs) MarshalTo(dAtA []byte) (int, error) {
+func (m *QuerySales) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryLBPs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QuerySales) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -499,7 +499,7 @@ func (m *QueryLBPs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryLBPsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QuerySalesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -509,12 +509,12 @@ func (m *QueryLBPsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryLBPsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QuerySalesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryLBPsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QuerySalesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -531,10 +531,10 @@ func (m *QueryLBPsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Lbps) > 0 {
-		for iNdEx := len(m.Lbps) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Sales) > 0 {
+		for iNdEx := len(m.Sales) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.Lbps[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Sales[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -548,7 +548,7 @@ func (m *QueryLBPsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryLBP) Marshal() (dAtA []byte, err error) {
+func (m *QuerySale) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -558,25 +558,25 @@ func (m *QueryLBP) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryLBP) MarshalTo(dAtA []byte) (int, error) {
+func (m *QuerySale) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryLBP) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QuerySale) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.LbpId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.LbpId))
+	if m.SaleId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.SaleId))
 		i--
 		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryLBPResponse) Marshal() (dAtA []byte, err error) {
+func (m *QuerySaleResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -586,18 +586,18 @@ func (m *QueryLBPResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryLBPResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QuerySaleResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryLBPResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QuerySaleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size, err := m.Lbp.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Sale.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -636,8 +636,8 @@ func (m *QueryUserPosition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.LbpId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.LbpId))
+	if m.SaleId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.SaleId))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -688,7 +688,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryLBPs) Size() (n int) {
+func (m *QuerySales) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -701,14 +701,14 @@ func (m *QueryLBPs) Size() (n int) {
 	return n
 }
 
-func (m *QueryLBPsResponse) Size() (n int) {
+func (m *QuerySalesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.Lbps) > 0 {
-		for _, e := range m.Lbps {
+	if len(m.Sales) > 0 {
+		for _, e := range m.Sales {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -720,25 +720,25 @@ func (m *QueryLBPsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryLBP) Size() (n int) {
+func (m *QuerySale) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.LbpId != 0 {
-		n += 1 + sovQuery(uint64(m.LbpId))
+	if m.SaleId != 0 {
+		n += 1 + sovQuery(uint64(m.SaleId))
 	}
 	return n
 }
 
-func (m *QueryLBPResponse) Size() (n int) {
+func (m *QuerySaleResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.Lbp.Size()
+	l = m.Sale.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -749,8 +749,8 @@ func (m *QueryUserPosition) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.LbpId != 0 {
-		n += 1 + sovQuery(uint64(m.LbpId))
+	if m.SaleId != 0 {
+		n += 1 + sovQuery(uint64(m.SaleId))
 	}
 	l = len(m.User)
 	if l > 0 {
@@ -776,7 +776,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryLBPs) Unmarshal(dAtA []byte) error {
+func (m *QuerySales) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -799,10 +799,10 @@ func (m *QueryLBPs) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLBPs: wiretype end group for non-group")
+			return fmt.Errorf("proto: QuerySales: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLBPs: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QuerySales: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 4:
@@ -862,7 +862,7 @@ func (m *QueryLBPs) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryLBPsResponse) Unmarshal(dAtA []byte) error {
+func (m *QuerySalesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -885,15 +885,15 @@ func (m *QueryLBPsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLBPsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QuerySalesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLBPsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QuerySalesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Lbps", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Sales", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -920,8 +920,8 @@ func (m *QueryLBPsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Lbps = append(m.Lbps, LBP{})
-			if err := m.Lbps[len(m.Lbps)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Sales = append(m.Sales, Sale{})
+			if err := m.Sales[len(m.Sales)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -982,7 +982,7 @@ func (m *QueryLBPsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryLBP) Unmarshal(dAtA []byte) error {
+func (m *QuerySale) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1005,17 +1005,17 @@ func (m *QueryLBP) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLBP: wiretype end group for non-group")
+			return fmt.Errorf("proto: QuerySale: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLBP: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QuerySale: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LbpId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SaleId", wireType)
 			}
-			m.LbpId = 0
+			m.SaleId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -1025,7 +1025,7 @@ func (m *QueryLBP) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LbpId |= uint64(b&0x7F) << shift
+				m.SaleId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1051,7 +1051,7 @@ func (m *QueryLBP) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryLBPResponse) Unmarshal(dAtA []byte) error {
+func (m *QuerySaleResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1074,15 +1074,15 @@ func (m *QueryLBPResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryLBPResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QuerySaleResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryLBPResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QuerySaleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Lbp", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Sale", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1109,7 +1109,7 @@ func (m *QueryLBPResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.Lbp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Sale.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1165,9 +1165,9 @@ func (m *QueryUserPosition) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LbpId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SaleId", wireType)
 			}
-			m.LbpId = 0
+			m.SaleId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -1177,7 +1177,7 @@ func (m *QueryUserPosition) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LbpId |= uint64(b&0x7F) << shift
+				m.SaleId |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

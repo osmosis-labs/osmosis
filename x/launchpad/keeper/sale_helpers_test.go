@@ -46,7 +46,7 @@ func checkUser(require *require.Assertions, u *api.UserPosition, shares, staked,
 	require.Equal(purchased.String(), u.Purchased.String(), msg, "purchased")
 }
 
-func checkLBP(require *require.Assertions, p *api.LBP, round int64, outRemainig, outSold, outPerShare, staked, income, shares sdk.Int) {
+func checkSale(require *require.Assertions, p *api.Sale, round int64, outRemainig, outSold, outPerShare, staked, income, shares sdk.Int) {
 	require.Equal(round, p.Round, "round")
 	require.Equal(outRemainig.String(), p.OutRemaining.String(), "outRemaining")
 	require.Equal(outSold.String(), p.OutSold.String(), "outSold")

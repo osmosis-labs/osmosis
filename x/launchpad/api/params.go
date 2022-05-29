@@ -11,9 +11,9 @@ import (
 
 // Parameter store keys
 var (
-	KeyLBPCreationFee = []byte("LBPCreationFee")
+	KeySaleCreationFee               = []byte("SaleCreationFee")
 	KeyMinimumDurationUntilStartTime = []byte("MinimumDurationUntilStartTime")
-	KeyMinimumSaleDuration = []byte("MinimumSaleDuration")
+	KeyMinimumSaleDuration           = []byte("MinimumSaleDuration")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -23,26 +23,26 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(poolCreationFee sdk.Coins, minimumDurationUntilStartTime, minimumSaleDuration time.Duration) Params {
+func NewParams(saleCreationFee sdk.Coins, minimumDurationUntilStartTime, minimumSaleDuration time.Duration) Params {
 	return Params{
-		LbpCreationFee: poolCreationFee,
+		SaleCreationFee:               saleCreationFee,
 		MinimumDurationUntilStartTime: minimumDurationUntilStartTime,
-		MinimumSaleDuration: minimumSaleDuration,
+		MinimumSaleDuration:           minimumSaleDuration,
 	}
 }
 
 // default launchpad module parameters
 func DefaultParams() Params {
 	return Params{
-		LbpCreationFee: sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
-		MinimumDurationUntilStartTime: time.Hour*24, // 1 Day
-		MinimumSaleDuration: time.Hour*72, // 3 Days
+		SaleCreationFee:               sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
+		MinimumDurationUntilStartTime: time.Hour * 24,                                                    // 1 Day
+		MinimumSaleDuration:           time.Hour * 72,                                                    // 3 Days
 	}
 }
 
 // validate params
 func (p Params) Validate() error {
-	if err := validatePoolCreationFee(p.LbpCreationFee); err != nil {
+	if err := validatePoolCreationFee(p.SaleCreationFee); err != nil {
 		return err
 	}
 	if err := validateDuration(p.MinimumDurationUntilStartTime); err != nil {
@@ -58,7 +58,7 @@ func (p Params) Validate() error {
 // Implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyLBPCreationFee, &p.LbpCreationFee, validatePoolCreationFee),
+		paramtypes.NewParamSetPair(KeySaleCreationFee, &p.SaleCreationFee, validatePoolCreationFee),
 		paramtypes.NewParamSetPair(KeyMinimumDurationUntilStartTime, &p.MinimumDurationUntilStartTime, validateDuration),
 		paramtypes.NewParamSetPair(KeyMinimumSaleDuration, &p.MinimumSaleDuration, validateDuration),
 	}

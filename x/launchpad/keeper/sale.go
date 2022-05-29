@@ -12,7 +12,7 @@ import (
 // TODO: verify if this is enough!
 var multiplayer = sdk.NewInt(1_000_000) // sdk.NewInt(2 << 61)
 
-// Returns the round number since lbp `start`.
+// Returns the round number since sale `start`.
 // if now < start  return 0.
 // If now == start return 0.
 // if now == start + ROUND return 1
@@ -30,7 +30,7 @@ func currentRound(start, end, now time.Time) int64 {
 	return int64(now.Sub(start) / api.ROUND)
 }
 
-func lbpRemainigBalance(p *api.LBP, userShares sdk.Int) sdk.Int {
+func saleRemainigBalance(p *api.Sale, userShares sdk.Int) sdk.Int {
 	if userShares.IsZero() {
 		return sdk.ZeroInt()
 	}
@@ -40,7 +40,7 @@ func lbpRemainigBalance(p *api.LBP, userShares sdk.Int) sdk.Int {
 // compute amount of shares that should be minted for a new subscription amount
 // TODO: caller must assert that the sale didn't finish:
 //     inRemaining >0 and not ended
-func computeSharesAmount(p *api.LBP, amountIn sdk.Int, roundUp bool) sdk.Int {
+func computeSharesAmount(p *api.Sale, amountIn sdk.Int, roundUp bool) sdk.Int {
 	if p.Shares.IsZero() {
 		return amountIn
 	}
@@ -53,26 +53,24 @@ func computeSharesAmount(p *api.LBP, amountIn sdk.Int, roundUp bool) sdk.Int {
 	return shares
 }
 
-func lbpHasEnded(p *api.LBP, round int64) bool {
+func saleHasEnded(p *api.Sale, round int64) bool {
 	return p.EndRound >= round
 }
 
-func subscribe(p *api.LBP, u *api.UserPosition, amount sdk.Int, now time.Time) {
-	pingLBP(p, now)
+func subscribe(p *api.Sale, u *api.UserPosition, amount sdk.Int, now time.Time) {
+	pingSale(p, now)
 	remaining := triggerUserPurchase(p, u)
-	// remaining := lbpRemainigBalance(p, u.Shares)
 	u.Spent = u.Spent.Add(u.Staked).Sub(remaining)
 	shares := computeSharesAmount(p, amount, false)
 	u.Shares = u.Shares.Add(shares)
 	p.Shares = p.Shares.Add(shares)
 	p.Staked = p.Staked.Add(amount)
-	u.Staked = lbpRemainigBalance(p, u.Shares)
+	u.Staked = saleRemainigBalance(p, u.Shares)
 }
 
-func withdraw(p *api.LBP, u *api.UserPosition, amount *sdk.Int, now time.Time) error {
-	pingLBP(p, now)
+func withdraw(p *api.Sale, u *api.UserPosition, amount *sdk.Int, now time.Time) error {
+	pingSale(p, now)
 	remaining := triggerUserPurchase(p, u)
-	// remaining := lbpRemainigBalance(p, u.Shares)
 	if amount == nil {
 		*amount = remaining
 	} else if remaining.GT(*amount) {
@@ -88,7 +86,7 @@ func withdraw(p *api.LBP, u *api.UserPosition, amount *sdk.Int, now time.Time) e
 	return nil
 }
 
-func pingLBP(p *api.LBP, now time.Time) {
+func pingSale(p *api.Sale, now time.Time) {
 	// Need to use round for the end check to assure we have the final distribution
 	if now.Before(p.StartTime) || p.Round >= p.EndRound {
 		return
@@ -123,7 +121,7 @@ func pingLBP(p *api.LBP, now time.Time) {
 }
 
 // returns remaining user token_in balance
-func triggerUserPurchase(p *api.LBP, u *api.UserPosition) sdk.Int {
+func triggerUserPurchase(p *api.Sale, u *api.UserPosition) sdk.Int {
 	// TODO: reorder and optimize - we can early return
 	if !p.OutPerShare.IsZero() && !u.Shares.IsZero() {
 		diff := p.OutPerShare.Sub(u.OutPerShare)
@@ -135,7 +133,7 @@ func triggerUserPurchase(p *api.LBP, u *api.UserPosition) sdk.Int {
 		}
 	}
 	u.OutPerShare = p.OutPerShare
-	remaining := lbpRemainigBalance(p, u.Shares)
+	remaining := saleRemainigBalance(p, u.Shares)
 	if u.Shares.IsPositive() {
 		if remaining.IsZero() {
 			p.Shares = p.Shares.Sub(u.Shares)

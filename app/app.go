@@ -102,13 +102,13 @@ import (
 	"github.com/osmosis-labs/osmosis/x/incentives"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/x/incentives/keeper"
 	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/x/launchpad"
 	"github.com/osmosis-labs/osmosis/x/lockup"
 	lockupkeeper "github.com/osmosis-labs/osmosis/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/x/mint"
 	mintkeeper "github.com/osmosis-labs/osmosis/x/mint/keeper"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
-	"github.com/osmosis-labs/osmosis/x/osmolbp"
 	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
 	poolincentivesclient "github.com/osmosis-labs/osmosis/x/pool-incentives/client"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
@@ -126,8 +126,8 @@ import (
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
 	bech32ics20keeper "github.com/osmosis-labs/bech32-ibc/x/bech32ics20/keeper"
 
-	osmolbpkeeper "github.com/osmosis-labs/osmosis/x/osmolbp/keeper"
-	osmolbpmodule "github.com/osmosis-labs/osmosis/x/osmolbp/module"
+	launchpadkeeper "github.com/osmosis-labs/osmosis/x/launchpad/keeper"
+	launchpadmodule "github.com/osmosis-labs/osmosis/x/launchpad/module"
 )
 
 const appName = "OsmosisApp"
@@ -170,7 +170,7 @@ var (
 		claim.AppModuleBasic{},
 		superfluid.AppModuleBasic{},
 		bech32ibc.AppModuleBasic{},
-		osmolbpmodule.AppModuleBasic{},
+		launchpadmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -190,7 +190,7 @@ var (
 		poolincentivestypes.ModuleName:           nil,
 		superfluidtypes.ModuleName:               nil,
 		txfeestypes.ModuleName:                   nil,
-		osmolbp.ModuleName:                       nil,
+		launchpad.ModuleName:                     nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -250,7 +250,7 @@ type OsmosisApp struct {
 	TxFeesKeeper         *txfeeskeeper.Keeper
 	SuperfluidKeeper     superfluidkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
-	OsmolbpKeeper        osmolbpkeeper.Keeper
+	LaunchpadKeeper      launchpadkeeper.Keeper
 
 	transferModule transfer.AppModule
 	// the module manager
@@ -296,7 +296,7 @@ func NewOsmosisApp(
 		epochstypes.StoreKey, poolincentivestypes.StoreKey, authzkeeper.StoreKey, txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
 		bech32ibctypes.StoreKey,
-		osmolbpkeeper.StoreKey,
+		launchpadkeeper.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
@@ -363,7 +363,7 @@ func NewOsmosisApp(
 		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
 		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
-		osmolbpmodule.NewAppModule(appCodec, app.OsmolbpKeeper, *app.BankKeeper, app.interfaceRegistry),
+		launchpadmodule.NewAppModule(appCodec, app.LaunchpadKeeper, *app.BankKeeper, app.interfaceRegistry),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -406,7 +406,7 @@ func NewOsmosisApp(
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
-		osmolbp.ModuleName,
+		launchpad.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -726,7 +726,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
 	paramsKeeper.Subspace(gammtypes.ModuleName)
-	paramsKeeper.Subspace(osmolbp.ModuleName)
+	paramsKeeper.Subspace(launchpad.ModuleName)
 
 	return paramsKeeper
 }

@@ -15,30 +15,30 @@ import (
 
 var _ api.MsgServer = Keeper{}
 
-func (k Keeper) CreateLBP(goCtx context.Context, msg *api.MsgCreateLBP) (*api.MsgCreateLBPResponse, error) {
+func (k Keeper) CreateSale(goCtx context.Context, msg *api.MsgCreateSale) (*api.MsgCreateSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
-	id, err := k.createLBP(msg, ctx.BlockTime(), store)
+	id, err := k.createSale(msg, ctx.BlockTime(), store)
 	if err != nil {
 		return nil, err
 	}
-	err = ctx.EventManager().EmitTypedEvent(&api.EventCreateLBP{
+	err = ctx.EventManager().EmitTypedEvent(&api.EventCreateSale{
 		Id:       id,
 		Creator:  msg.Creator,
 		TokenIn:  msg.TokenIn,
 		TokenOut: msg.TokenOut,
 	})
-	return &api.MsgCreateLBPResponse{PoolId: id}, err
+	return &api.MsgCreateSaleResponse{PoolId: id}, err
 }
 
-func (k Keeper) createLBP(msg *api.MsgCreateLBP, now time.Time, store storetypes.KVStore) (uint64, error) {
-	if err := msg.Validate(now); err != nil { // handle.ValidateMsgCreateLBP(msg)
+func (k Keeper) createSale(msg *api.MsgCreateSale, now time.Time, store storetypes.KVStore) (uint64, error) {
+	if err := msg.Validate(now); err != nil { // handle.ValidateMsgCreateSale(msg)
 		return 0, err
 	}
 	id, idBz := k.nextPoolID(store)
 	end := msg.StartTime.Add(msg.Duration)
-	p := newLBP(msg.Treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.InitialDeposit.Amount)
-	k.saveLBP(store, idBz, &p)
+	p := newSale(msg.Treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.InitialDeposit.Amount)
+	k.saveSale(store, idBz, &p)
 	// TODO:
 	// + send initial deposit from sender to the pool
 	// + use ADR-28 addresses?
@@ -63,7 +63,7 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 	if !msg.Amount.IsPositive() {
 		return errors.ErrInvalidRequest.Wrap("amount of tokens must be positive")
 	}
-	sender, p, poolIdBz, u, err := k.getUserAndLBP(store, msg.PoolId, msg.Sender, false)
+	sender, p, poolIdBz, u, err := k.getUserAndSale(store, msg.PoolId, msg.Sender, false)
 	if err != nil {
 		return err
 	}
@@ -71,11 +71,11 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 	coin := sdk.NewCoin(p.TokenIn, msg.Amount)
 	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, launchpad.ModuleName, sdk.NewCoins(coin))
 	if err != nil {
-		return errors.Wrap(err, "user doesn't have enough tokens to subscribe for a LBP")
+		return errors.Wrap(err, "user doesn't have enough tokens to subscribe for a Sale")
 	}
 	subscribe(p, u, msg.Amount, ctx.BlockTime())
 
-	k.saveLBP(store, poolIdBz, p)
+	k.saveSale(store, poolIdBz, p)
 	k.saveUserPosition(store, poolIdBz, sender, u)
 	// TODO: event
 	return nil
@@ -99,7 +99,7 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes
 	if err := msg.Validate(); err != nil {
 		return err
 	}
-	sender, p, poolIdBz, u, err := k.getUserAndLBP(store, msg.PoolId, msg.Sender, false)
+	sender, p, poolIdBz, u, err := k.getUserAndSale(store, msg.PoolId, msg.Sender, false)
 	if err != nil {
 		return err
 	}
@@ -114,15 +114,15 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes
 		return err
 	}
 
-	k.saveLBP(store, poolIdBz, p)
+	k.saveSale(store, poolIdBz, p)
 	k.saveUserPosition(store, poolIdBz, sender, u)
 	return nil
 }
 
-func (k Keeper) ExitLBP(goCtx context.Context, msg *api.MsgExitLBP) (*api.MsgExitLBPResponse, error) {
+func (k Keeper) ExitSale(goCtx context.Context, msg *api.MsgExitSale) (*api.MsgExitSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
-	purchased, err := k.exitLBP(ctx, msg, store)
+	purchased, err := k.exitSale(ctx, msg, store)
 	if err != nil {
 		return nil, err
 	}
@@ -131,12 +131,12 @@ func (k Keeper) ExitLBP(goCtx context.Context, msg *api.MsgExitLBP) (*api.MsgExi
 		PoolId:    msg.PoolId,
 		Purchased: purchased.String(),
 	})
-	return &api.MsgExitLBPResponse{Purchased: purchased}, err
+	return &api.MsgExitSaleResponse{Purchased: purchased}, err
 }
 
 // returns amount of tokens purchased
-func (k Keeper) exitLBP(ctx sdk.Context, msg *api.MsgExitLBP, store storetypes.KVStore) (sdk.Int, error) {
-	sender, p, poolIdBz, u, err := k.getUserAndLBP(store, msg.PoolId, msg.Sender, false)
+func (k Keeper) exitSale(ctx sdk.Context, msg *api.MsgExitSale, store storetypes.KVStore) (sdk.Int, error) {
+	sender, p, poolIdBz, u, err := k.getUserAndSale(store, msg.PoolId, msg.Sender, false)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -144,7 +144,7 @@ func (k Keeper) exitLBP(ctx sdk.Context, msg *api.MsgExitLBP, store storetypes.K
 		return sdk.Int{}, err
 	}
 
-	pingLBP(p, ctx.BlockTime())
+	pingSale(p, ctx.BlockTime())
 	triggerUserPurchase(p, u)
 	// we don't need to update u.Spent, because we delete user record
 
@@ -168,23 +168,23 @@ func (k Keeper) exitLBP(ctx sdk.Context, msg *api.MsgExitLBP, store storetypes.K
 	return u.Purchased, nil
 }
 
-func (k Keeper) FinalizeLBP(goCtx context.Context, msg *api.MsgFinalizeLBP) (*api.MsgFinalizeLBPResponse, error) {
+func (k Keeper) FinalizeSale(goCtx context.Context, msg *api.MsgFinalizeSale) (*api.MsgFinalizeSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
-	income, err := k.finalizeLBP(ctx, msg, store)
+	income, err := k.finalizeSale(ctx, msg, store)
 	if err != nil {
 		return nil, err
 	}
-	err = ctx.EventManager().EmitTypedEvent(&api.EventFinalizeLBP{
+	err = ctx.EventManager().EmitTypedEvent(&api.EventFinalizeSale{
 		PoolId: msg.PoolId,
 		Income: income.String(),
 	})
-	return &api.MsgFinalizeLBPResponse{Income: income}, err
+	return &api.MsgFinalizeSaleResponse{Income: income}, err
 }
 
-// returns LBP income
-func (k Keeper) finalizeLBP(ctx sdk.Context, msg *api.MsgFinalizeLBP, store storetypes.KVStore) (sdk.Int, error) {
-	p, poolIdBz, err := k.getLBP(store, msg.PoolId)
+// returns Sale income
+func (k Keeper) finalizeSale(ctx sdk.Context, msg *api.MsgFinalizeSale, store storetypes.KVStore) (sdk.Int, error) {
+	p, poolIdBz, err := k.getSale(store, msg.PoolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -192,7 +192,7 @@ func (k Keeper) finalizeLBP(ctx sdk.Context, msg *api.MsgFinalizeLBP, store stor
 		return sdk.Int{}, err
 	}
 	if p.Income.IsZero() {
-		return sdk.Int{}, errors.ErrInvalidRequest.Wrap("LBP already finalized")
+		return sdk.Int{}, errors.ErrInvalidRequest.Wrap("Sale already finalized")
 	}
 
 	treasury, err := sdk.AccAddressFromBech32(p.Treasury)
@@ -200,7 +200,7 @@ func (k Keeper) finalizeLBP(ctx sdk.Context, msg *api.MsgFinalizeLBP, store stor
 		return sdk.Int{}, err
 	}
 
-	pingLBP(&p, ctx.BlockTime())
+	pingSale(&p, ctx.BlockTime())
 	coin := sdk.NewCoin(p.TokenOut, p.Income)
 	err = k.bank.SendCoinsFromModuleToAccount(ctx, launchpad.ModuleName, treasury, sdk.NewCoins(coin))
 	if err != nil {
@@ -208,6 +208,6 @@ func (k Keeper) finalizeLBP(ctx sdk.Context, msg *api.MsgFinalizeLBP, store stor
 	}
 	income := p.Income
 	p.Income = sdk.ZeroInt()
-	k.saveLBP(store, poolIdBz, &p)
+	k.saveSale(store, poolIdBz, &p)
 	return income, nil
 }

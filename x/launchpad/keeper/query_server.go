@@ -9,31 +9,31 @@ import (
 	"github.com/osmosis-labs/osmosis/x/launchpad/api"
 )
 
-func (k Keeper) LBPs(goCtx context.Context, q *api.QueryLBPs) (*api.QueryLBPsResponse, error) {
+func (k Keeper) Sales(goCtx context.Context, q *api.QuerySales) (*api.QuerySalesResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
-	store := k.lbpStore(sdkCtx.KVStore(k.storeKey))
+	store := k.saleStore(sdkCtx.KVStore(k.storeKey))
 
-	var lbps []api.LBP
+	var sales []api.Sale
 	pageRes, err := query.Paginate(store, q.Pagination, func(_, value []byte) error {
-		var p api.LBP
+		var p api.Sale
 		err := k.cdc.Unmarshal(value, &p)
 		if err != nil {
 			return err
 		}
-		lbps = append(lbps, p)
+		sales = append(sales, p)
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &api.QueryLBPsResponse{lbps, pageRes}, nil
+	return &api.QuerySalesResponse{sales, pageRes}, nil
 }
 
-func (k Keeper) LBP(ctx context.Context, q *api.QueryLBP) (*api.QueryLBPResponse, error) {
+func (k Keeper) Sale(ctx context.Context, q *api.QuerySale) (*api.QuerySaleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(k.storeKey)
-	lbp, _, err := k.getLBP(store, q.LbpId)
-	return &api.QueryLBPResponse{lbp}, err
+	s, _, err := k.getSale(store, q.SaleId)
+	return &api.QuerySaleResponse{s}, err
 }
 
 func (k Keeper) UserPosition(ctx context.Context, q *api.QueryUserPosition) (*api.QueryUserPositionResponse, error) {
@@ -43,8 +43,8 @@ func (k Keeper) UserPosition(ctx context.Context, q *api.QueryUserPosition) (*ap
 	if err != nil {
 		return nil, err
 	}
-	poolId := storeIntIdKey(q.LbpId)
-	up, err := k.getUserPosition(store, poolId, user, false)
+	saleId := storeIntIdKey(q.SaleId)
+	up, err := k.getUserPosition(store, saleId, user, false)
 	if err != nil {
 		return nil, err
 	}

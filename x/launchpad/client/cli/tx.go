@@ -26,28 +26,28 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		CreateLBPCmd(),
-		FinalizeLBPCmd(),
+		CreateSaleCmd(),
+		FinalizeSaleCmd(),
 		SubscribeCmd(),
 		WithdrawCmd(),
-		ExitLBPCmd(),
+		ExitSaleCmd(),
 	)
 
 	return cmd
 }
 
-// CreateLBPCmd broadcast MsgCreateLBP.
-func CreateLBPCmd() *cobra.Command {
+// CreateSaleCmd broadcast MsgCreateSale.
+func CreateSaleCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [flags]",
-		Short: "Create or Setup LBP",
+		Short: "Create or Setup Sale",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`create a new LBP.
+			fmt.Sprintf(`create a new Sale.
 
 Example:
-$ %s tx launchpad create --lbp-file="path/to/lbp.json" --from mykey
+$ %s tx launchpad create --sale-file="path/to/sale.json" --from mykey
 
-Where lbp.json contains:
+Where sale.json contains:
 {
 	"token-in": "token1",
 	"token-out": "token2",
@@ -69,7 +69,7 @@ Where lbp.json contains:
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildCreateLBPMsg(clientCtx, txf, cmd.Flags())
+			txf, msg, err := NewBuildCreateSaleMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -77,19 +77,19 @@ Where lbp.json contains:
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetCreateLBP())
+	cmd.Flags().AddFlagSet(FlagSetCreateSale())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagLBPFile)
+	_ = cmd.MarkFlagRequired(FlagSaleFile)
 
 	return cmd
 }
 
-// finalizeLBP broadcasts MsgFinalizeLBP
-func FinalizeLBPCmd() *cobra.Command {
+// finalizeSale broadcasts MsgFinalizeSale
+func FinalizeSaleCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "finalize [flags]",
-		Short: "Finalize LBP",
+		Short: "Finalize sale",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -99,7 +99,7 @@ func FinalizeLBPCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildFinalizeLBPMsg(clientCtx, txf, cmd.Flags())
+			txf, msg, err := NewBuildFinalizeSaleMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -107,10 +107,10 @@ func FinalizeLBPCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetFinalizeLBP())
+	cmd.Flags().AddFlagSet(FlagSetFinalizeSale())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagSaleId)
 
 	return cmd
 }
@@ -119,7 +119,7 @@ func FinalizeLBPCmd() *cobra.Command {
 func SubscribeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "subscribe [flags]",
-		Short: "Subscribe or Join LBP",
+		Short: "Subscribe or Join Sale",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -140,17 +140,17 @@ func SubscribeCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetSubscribe())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagSaleId)
 	_ = cmd.MarkFlagRequired(FlagAmount)
 
 	return cmd
 }
 
-// SubscribeLBP broadcast MsgSubscribe.
+// SubscribeSale broadcast MsgSubscribe.
 func WithdrawCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw [flags]",
-		Short: "Withdraw amount from LBP",
+		Short: "Withdraw amount from Sale",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -171,16 +171,16 @@ func WithdrawCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetWithdraw())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagSaleId)
 
 	return cmd
 }
 
-// ExitLBPCmd broadcast MsgExitLBP.
-func ExitLBPCmd() *cobra.Command {
+// ExitSaleCmd broadcast MsgExitSale.
+func ExitSaleCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exit [flags]",
-		Short: "Exit from LBP",
+		Short: "Exit from a Sale",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -190,7 +190,7 @@ func ExitLBPCmd() *cobra.Command {
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
 
-			txf, msg, err := NewBuildExitLBPMsg(clientCtx, txf, cmd.Flags())
+			txf, msg, err := NewBuildExitSaleMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -201,34 +201,34 @@ func ExitLBPCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(FlagSetExit())
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(FlagPoolId)
+	_ = cmd.MarkFlagRequired(FlagSaleId)
 
 	return cmd
 }
 
-func NewBuildCreateLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	lbp, err := parseCreateLBPFlags(fs)
+func NewBuildCreateSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	s, err := parseCreateSaleFlags(fs)
 	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse lbp: %w", err)
+		return txf, nil, fmt.Errorf("failed to parse sale: %w", err)
 	}
 
-	InitialDeposit, err := sdk.ParseCoinNormalized(lbp.InitialDeposit)
+	InitialDeposit, err := sdk.ParseCoinNormalized(s.InitialDeposit)
 	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse Initial-deposit amount: %s", lbp.InitialDeposit)
+		return txf, nil, fmt.Errorf("failed to parse Initial-deposit amount: %s", s.InitialDeposit)
 	}
-	treasury, err := sdk.AccAddressFromBech32(lbp.Treasury)
+	treasury, err := sdk.AccAddressFromBech32(s.Treasury)
 	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse treasury address: %s", lbp.Treasury)
+		return txf, nil, fmt.Errorf("failed to parse treasury address: %s", s.Treasury)
 	}
-	duration, err := time.ParseDuration(lbp.Duration)
+	duration, err := time.ParseDuration(s.Duration)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	msg := &api.MsgCreateLBP{
-		TokenIn:        lbp.TokenIn,
-		TokenOut:       lbp.TokenOut,
-		StartTime:      lbp.StartTime,
+	msg := &api.MsgCreateSale{
+		TokenIn:        s.TokenIn,
+		TokenOut:       s.TokenOut,
+		StartTime:      s.StartTime,
 		Duration:       duration,
 		InitialDeposit: InitialDeposit,
 		Treasury:       treasury.String(),
@@ -241,13 +241,13 @@ func NewBuildCreateLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 	return txf, msg, nil
 }
 
-func NewBuildFinalizeLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
+func NewBuildFinalizeSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolId, err := fs.GetUint64(FlagSaleId)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	msg := &api.MsgFinalizeLBP{
+	msg := &api.MsgFinalizeSale{
 		Sender: clientCtx.GetFromAddress().String(),
 		PoolId: poolId,
 	}
@@ -258,7 +258,7 @@ func NewBuildFinalizeLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.F
 }
 
 func NewBuildSubscribeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
+	poolId, err := fs.GetUint64(FlagSaleId)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -279,7 +279,7 @@ func NewBuildSubscribeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 }
 
 func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
+	poolId, err := fs.GetUint64(FlagSaleId)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -295,13 +295,13 @@ func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 	return txf, msg, nil
 }
 
-func NewBuildExitLBPMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagPoolId)
+func NewBuildExitSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
+	poolId, err := fs.GetUint64(FlagSaleId)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	msg := &api.MsgExitLBP{
+	msg := &api.MsgExitSale{
 		Sender: clientCtx.GetFromAddress().String(),
 		PoolId: poolId,
 	}

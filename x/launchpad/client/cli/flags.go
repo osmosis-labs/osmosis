@@ -6,12 +6,12 @@ import (
 )
 
 const (
-	FlagPoolId  = "pool-id"
-	FlagAmount  = "amount"
-	FlagLBPFile = "lbp-file"
+	FlagSaleId   = "sale-id"
+	FlagAmount   = "amount"
+	FlagSaleFile = "sale-file"
 )
 
-type createLBPInputs struct {
+type createSaleInputs struct {
 	TokenIn        string    `json:"token-in"`
 	TokenOut       string    `json:"token-out"`
 	StartTime      time.Time `json:"start-time"`
@@ -20,16 +20,16 @@ type createLBPInputs struct {
 	Treasury       string    `json:"treasury"`
 }
 
-func FlagSetCreateLBP() *flag.FlagSet {
+func FlagSetCreateSale() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagLBPFile, "", "LBP json file path (if this path is given, other create lbp flags should not be used)")
+	fs.String(FlagSaleFile, "", "Sale json file path")
 	return fs
 }
 
-func FlagSetFinalizeLBP() *flag.FlagSet {
+func FlagSetFinalizeSale() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.Uint64(FlagPoolId, 0, "id of the pool.")
+	fs.Uint64(FlagSaleId, 0, "id of the pool.")
 
 	return fs
 }
@@ -37,7 +37,7 @@ func FlagSetFinalizeLBP() *flag.FlagSet {
 func FlagSetSubscribe() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Uint64(FlagPoolId, 0, "id of the pool.")
+	fs.Uint64(FlagSaleId, 0, "id of the pool.")
 	fs.Int64(FlagAmount, 0, "amount to pool.")
 
 	return fs
@@ -46,7 +46,7 @@ func FlagSetSubscribe() *flag.FlagSet {
 func FlagSetWithdraw() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Uint64(FlagPoolId, 0, "id of the pool.")
+	fs.Uint64(FlagSaleId, 0, "id of the pool.")
 	fs.Int64(FlagAmount, 0, "amount to pool.")
 
 	return fs
@@ -55,7 +55,7 @@ func FlagSetWithdraw() *flag.FlagSet {
 func FlagSetExit() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Uint64(FlagPoolId, 0, "id of the pool.")
+	fs.Uint64(FlagSaleId, 0, "id of the pool.")
 
 	return fs
 }

@@ -9,13 +9,13 @@ import (
 
 const ROUND = time.Second
 
-var _ sdk.Msg = &MsgCreateLBP{}
+var _ sdk.Msg = &MsgCreateSale{}
 
-func (msg *MsgCreateLBP) ValidateBasic() error {
+func (msg *MsgCreateSale) ValidateBasic() error {
 	return errorStringsToError(msg.validate())
 }
 
-func (msg *MsgCreateLBP) validate() []string {
+func (msg *MsgCreateSale) validate() []string {
 	var errmsgs []string
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		errmsgs = append(errmsgs, fmt.Sprintf("Invalid creator address (%s)", err))
@@ -51,7 +51,7 @@ func (msg *MsgCreateLBP) validate() []string {
 	return errmsgs
 }
 
-func (msg *MsgCreateLBP) Validate(now time.Time) error {
+func (msg *MsgCreateSale) Validate(now time.Time) error {
 	errmsgs := msg.validate()
 	if msg.StartTime.Before(now) {
 		errmsgs = append(errmsgs, fmt.Sprint("`start` must be after ", now))
@@ -60,7 +60,7 @@ func (msg *MsgCreateLBP) Validate(now time.Time) error {
 	return errorStringsToError(errmsgs)
 }
 
-func (msg *MsgCreateLBP) GetSigners() []sdk.AccAddress {
+func (msg *MsgCreateSale) GetSigners() []sdk.AccAddress {
 	a, _ := sdk.AccAddressFromBech32(msg.Creator)
 	return []sdk.AccAddress{a}
 }

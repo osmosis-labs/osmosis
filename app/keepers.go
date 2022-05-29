@@ -49,12 +49,12 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/x/incentives/keeper"
 	incentivestypes "github.com/osmosis-labs/osmosis/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/x/launchpad"
+	launchpadkeeper "github.com/osmosis-labs/osmosis/x/launchpad/keeper"
 	lockupkeeper "github.com/osmosis-labs/osmosis/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/x/lockup/types"
 	mintkeeper "github.com/osmosis-labs/osmosis/x/mint/keeper"
 	minttypes "github.com/osmosis-labs/osmosis/x/mint/types"
-	"github.com/osmosis-labs/osmosis/x/osmolbp"
-	osmolbpkeeper "github.com/osmosis-labs/osmosis/x/osmolbp/keeper"
 	poolincentives "github.com/osmosis-labs/osmosis/x/pool-incentives"
 	poolincentiveskeeper "github.com/osmosis-labs/osmosis/x/pool-incentives/keeper"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/x/pool-incentives/types"
@@ -259,7 +259,7 @@ func (app *OsmosisApp) InitNormalKeepers() {
 	)
 	app.TxFeesKeeper = &txFeesKeeper
 
-	app.OsmolbpKeeper = osmolbpkeeper.NewKeeper(keys[osmolbpkeeper.StoreKey], appCodec, bankKeeper, app.GetSubspace(osmolbp.ModuleName))
+	app.LaunchpadKeeper = launchpadkeeper.NewKeeper(keys[launchpadkeeper.StoreKey], appCodec, bankKeeper, app.GetSubspace(launchpad.ModuleName))
 
 	// register the proposal types
 	// TODO: This appears to be missing tx fees proposal type
