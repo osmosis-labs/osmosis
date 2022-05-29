@@ -13,7 +13,6 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
