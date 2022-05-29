@@ -15,9 +15,9 @@ import (
 
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
-	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/types"
+
+	_ "github.com/osmosis-labs/osmosis/v7/networks/osmosis-1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -46,11 +46,10 @@ type printInfo struct {
 
 func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.RawMessage) printInfo {
 	return printInfo{
-		Moniker:    moniker,
-		ChainID:    chainID,
-		NodeID:     nodeID,
-		GenTxsDir:  genTxsDir,
-		AppMessage: appMessage,
+		Moniker:   moniker,
+		ChainID:   chainID,
+		NodeID:    nodeID,
+		GenTxsDir: genTxsDir,
 	}
 }
 
@@ -75,13 +74,13 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			cdc := clientCtx.Codec
-
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
+			// This is a slice of SEED nodes, not peers.  They must be configured in seed mode.
 			// An easy way to run a lightweight seed node is to use tenderseed: github.com/binaryholdings/tenderseed
-
+			// Another easy way to run a seed node is tinyseed: https://github.com/notional-labs/tinyseed
+			// Tinyseed is made for Akash!
 			seeds := []string{
 				"21d7539792ee2e0d650b199bf742c56ae0cf499e@162.55.132.230:2000",                             // Notional
 				"44ff091135ef2c69421eacfa136860472ac26e60@65.21.141.212:2000",                              // Notional
@@ -96,6 +95,9 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				"7c66126b64cd66bafd9ccfc721f068df451d31a3@osmosis-seed.sunshinevalidation.io:9393",         // Sunshine Validation
 			}
 			config.P2P.Seeds = strings.Join(seeds, ",")
+
+			// Override default settings in config.toml
+			config.P2P.Seeds = strings.Join(seeds[:], ",")
 			config.P2P.MaxNumInboundPeers = 320
 			config.P2P.MaxNumOutboundPeers = 40
 			config.Mempool.Size = 10000
@@ -131,37 +133,40 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			config.Moniker = args[0]
 
-			genFile := config.GenesisFile()
+			genFile := "genesis.json"
 			overwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
 
-			if !overwrite && tmos.FileExists(genFile) {
-				return fmt.Errorf("genesis.json file already exists: %v", genFile)
-			}
-			appState, err := json.MarshalIndent(mbm.DefaultGenesis(cdc), "", " ")
-			if err != nil {
-				return errors.Wrap(err, "Failed to marshall default genesis state")
-			}
-
-			genDoc := &types.GenesisDoc{}
-			if _, err := os.Stat(genFile); err != nil {
-				if !os.IsNotExist(err) {
-					return err
+			// this can be moved to another file for when we want to play with empty chains and the like.
+			/*
+				if !overwrite && tmos.FileExists(genFile) {
+					return fmt.Errorf("genesis.json file already exists: %v", genFile)
 				}
-			} else {
-				genDoc, err = types.GenesisDocFromFile(genFile)
+				appState, err := json.MarshalIndent(mbm.DefaultGenesis(cdc), "", " ")
 				if err != nil {
-					return errors.Wrap(err, "Failed to read genesis doc from file")
+					return errors.Wrap(err, "Failed to marshall default genesis state")
 				}
-			}
 
-			genDoc.ChainID = chainID
-			genDoc.Validators = nil
-			genDoc.AppState = appState
-			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
-				return errors.Wrap(err, "Failed to export genesis file")
-			}
+				genDoc := &types.GenesisDoc{}
+				if _, err := os.Stat(genFile); err != nil {
+					if !os.IsNotExist(err) {
+						return err
+					}
+				} else {
+					genDoc, err = types.GenesisDocFromFile(genFile)
+					if err != nil {
+						return errors.Wrap(err, "Failed to read genesis doc from file")
+					}
+				}
 
-			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
+				genDoc.ChainID = chainID
+				genDoc.Validators = nil
+				genDoc.AppState = appState
+				if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
+					return errors.Wrap(err, "Failed to export genesis file")
+				}
+			*/
+
+			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "")
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
