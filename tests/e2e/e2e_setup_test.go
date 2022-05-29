@@ -46,8 +46,8 @@ type chainConfig struct {
 	// This is needed for testing functionality like state-sync where we would
 	// like to start a node during tests post-initialization.
 	skipRunValidatorIndexes map[int]struct{}
-	latestProposalNumber              int
-	latestLockNumber              int
+	latestProposalNumber    int
+	latestLockNumber        int
 	chain                   *chain.Chain
 }
 
@@ -173,7 +173,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	for i, chainConfig := range s.chainConfigs {
 		s.runValidators(chainConfig, s.dockerImages.OsmosisRepository, s.dockerImages.OsmosisTag, i*10)
-		s.extractValidatorOperatorAddress(chainConfig)
+		s.extractValidatorOperatorAddresses(chainConfig)
 	}
 
 	// Run a relayer between every possible pair of chains.

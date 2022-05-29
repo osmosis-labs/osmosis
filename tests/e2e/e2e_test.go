@@ -37,7 +37,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	s.voteNoProposal(chainA, 0, "wallet")
 
 	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[chainA.chain.ChainMeta.Id][0].GetHostPort("1317/tcp"))
-	sfProposalNumber := strconv.Itoa(chainA.propNumber)
+	sfProposalNumber := strconv.Itoa(chainA.latestProposalNumber)
 	s.Require().Eventually(
 		func() bool {
 			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := s.queryPropTally(chainAAPIEndpoint, sfProposalNumber)

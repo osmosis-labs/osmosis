@@ -155,7 +155,7 @@ func (s *IntegrationTestSuite) submitUpgradeProposal(config *chainConfig) {
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
 	s.ExecTx(c.ChainMeta.Id, 0, cmd, "code: 0")
 	s.T().Log("successfully submitted upgrade proposal")
-	config.propNumber = config.propNumber + 1
+	config.latestProposalNumber = config.latestProposalNumber + 1
 }
 
 func (s *IntegrationTestSuite) submitSuperfluidProposal(config *chainConfig, asset string) {
@@ -164,7 +164,7 @@ func (s *IntegrationTestSuite) submitSuperfluidProposal(config *chainConfig, ass
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id)}
 	s.ExecTx(c.ChainMeta.Id, 0, cmd, "code: 0")
 	s.T().Log("successfully submitted superfluid proposal")
-	config.propNumber = config.propNumber + 1
+	config.latestProposalNumber = config.latestProposalNumber + 1
 }
 
 func (s *IntegrationTestSuite) submitTextProposal(config *chainConfig, text string) {
@@ -173,12 +173,12 @@ func (s *IntegrationTestSuite) submitTextProposal(config *chainConfig, text stri
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id)}
 	s.ExecTx(c.ChainMeta.Id, 0, cmd, "code: 0")
 	s.T().Log("successfully submitted text proposal")
-	config.propNumber = config.propNumber + 1
+	config.latestProposalNumber = config.latestProposalNumber + 1
 }
 
 func (s *IntegrationTestSuite) depositProposal(config *chainConfig) {
 	c := config.chain
-	propStr := strconv.Itoa(config.propNumber)
+	propStr := strconv.Itoa(config.latestProposalNumber)
 	s.T().Logf("depositing to proposal from %s container: %s", s.valResources[c.ChainMeta.Id][0].Container.Name[1:], s.valResources[c.ChainMeta.Id][0].Container.ID)
 	cmd := []string{"osmosisd", "tx", "gov", "deposit", propStr, "500000000uosmo", "--from=val", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test"}
 	s.ExecTx(c.ChainMeta.Id, 0, cmd, "code: 0")
@@ -187,7 +187,7 @@ func (s *IntegrationTestSuite) depositProposal(config *chainConfig) {
 
 func (s *IntegrationTestSuite) voteProposal(config *chainConfig) {
 	c := config.chain
-	propStr := strconv.Itoa(config.propNumber)
+	propStr := strconv.Itoa(config.latestProposalNumber)
 	s.T().Logf("voting yes on proposal for chain-id: %s", c.ChainMeta.Id)
 	cmd := []string{"osmosisd", "tx", "gov", "vote", propStr, "yes", "--from=val", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test"}
 	for i := range c.Validators {
@@ -201,7 +201,7 @@ func (s *IntegrationTestSuite) voteProposal(config *chainConfig) {
 
 func (s *IntegrationTestSuite) voteNoProposal(config *chainConfig, i int, from string) {
 	c := config.chain
-	propStr := strconv.Itoa(config.propNumber)
+	propStr := strconv.Itoa(config.latestProposalNumber)
 	s.T().Logf("voting no on proposal for chain-id: %s", c.ChainMeta.Id)
 	cmd := []string{"osmosisd", "tx", "gov", "vote", propStr, "no", fmt.Sprintf("--from=%s", from), fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test"}
 	s.ExecTx(c.ChainMeta.Id, i, cmd, "code: 0")
@@ -242,9 +242,8 @@ func (s *IntegrationTestSuite) queryBalances(c *chain.Chain, i int, addr string)
 	s.Require().NoError(err)
 
 	var balancesResp banktypes.QueryAllBalancesResponse
-	if err := util.Cdc.UnmarshalJSON(outBuf.Bytes(), &balancesResp); err != nil {
-		return nil, err
-	}
+	err = util.Cdc.UnmarshalJSON(outBuf.Bytes(), &balancesResp)
+	s.Require().NoError(err)
 
 	return balancesResp.GetBalances(), nil
 
@@ -282,14 +281,14 @@ func (s *IntegrationTestSuite) lockTokens(config *chainConfig, i int, tokens str
 	s.T().Logf("locking %s for %s on chain-id: %s", tokens, duration, c.ChainMeta.Id)
 	cmd := []string{"osmosisd", "tx", "lockup", "lock-tokens", tokens, fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from), "-b=block", "--yes", "--keyring-backend=test"}
 	s.ExecTx(c.ChainMeta.Id, i, cmd, "code: 0")
-	s.T().Logf("successfully created lock %v from %s container: %s", config.lockNumber, s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
-	config.lockNumber = config.lockNumber + 1
+	s.T().Logf("successfully created lock %v from %s container: %s", config.latestLockNumber, s.valResources[c.ChainMeta.Id][i].Container.Name[1:], s.valResources[c.ChainMeta.Id][i].Container.ID)
+	config.latestLockNumber = config.latestLockNumber + 1
 
 }
 
 func (s *IntegrationTestSuite) superfluidDelegate(config *chainConfig, valAddress string, from string) {
 	c := config.chain
-	lockStr := strconv.Itoa(config.lockNumber)
+	lockStr := strconv.Itoa(config.latestLockNumber)
 	s.T().Logf("superfluid delegating lock %s to %s on chain-id: %s", lockStr, valAddress, c.ChainMeta.Id)
 	cmd := []string{"osmosisd", "tx", "superfluid", "delegate", lockStr, valAddress, fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), fmt.Sprintf("--from=%s", from), "-b=block", "--yes", "--keyring-backend=test"}
 	s.ExecTx(c.ChainMeta.Id, 0, cmd, "code: 0")
@@ -305,7 +304,7 @@ func (s *IntegrationTestSuite) sendTx(c *chain.Chain, i int, amount string, send
 
 }
 
-func (s *IntegrationTestSuite) extractValidatorOperatorAddress(chainConfig *chainConfig) {
+func (s *IntegrationTestSuite) extractValidatorOperatorAddresses(chainConfig *chainConfig) {
 	chain := chainConfig.chain
 
 	for i, val := range chain.Validators {
@@ -333,9 +332,8 @@ func (s *IntegrationTestSuite) queryIntermediaryAccount(c *chain.Chain, endpoint
 	s.Require().NoError(err)
 
 	var stakingResp stakingtypes.QueryDelegationResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &stakingResp); err != nil {
-		return 0, err
-	}
+	err = util.Cdc.UnmarshalJSON(bz, &stakingResp)
+	s.Require().NoError(err)
 
 	intAccBalance := stakingResp.DelegationResponse.Balance.Amount.String()
 	intAccountBalance, err := strconv.Atoi(intAccBalance)
@@ -351,6 +349,5 @@ func (s *IntegrationTestSuite) createWallet(c *chain.Chain, index int, walletNam
 	re := regexp.MustCompile("osmo1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
 	walletAddr = strings.TrimSuffix(walletAddr, "\n")
-	fmt.Printf("WALADDR %s\n", walletAddr)
 	return walletAddr
 }
