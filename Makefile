@@ -274,7 +274,7 @@ localnet-build:
 	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
 
 localnet-build-state-export:
-	@docker build -t local:osmosis/stateExport -f tests/localosmosis/Dockerfile-stateExport .
+	@docker build -t local:osmosis-se -f tests/localosmosis/Dockerfile-stateExport .
 
 localnet-start:
 	@docker-compose -f tests/localosmosis/docker-compose.yml up

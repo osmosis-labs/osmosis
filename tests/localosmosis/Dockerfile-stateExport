@@ -30,22 +30,26 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 # Runner
 # --------------------------------------------------------
 
-FROM alpine
+FROM ubuntu
 
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
-COPY /tests/localosmosis/statesync.sh /statesync.sh
-COPY /tests/localosmosis/testnetify.py /testnetify.py
-COPY /tests/localosmosis/testnet_genesis.json /testnet_genesis.json
+COPY /tests/localosmosis/statesync.sh /osmosis/statesync.sh
+COPY /tests/localosmosis/testnetify.py /osmosis/testnetify.py
+COPY /tests/localosmosis/testnet_genesis.json /osmosis/testnet_genesis.json
 
 ENV HOME /osmosis
 WORKDIR $HOME
-RUN apk update
-RUN apk add jq
-RUN apk add moreutils
-RUN rm -rf /var/cache/apk/*
+# RUN apk update
+# RUN apk add jq
+# RUN apk add moreutils
+# RUN rm -rf /var/cache/apk/*
 # RUN apk add --no-cache python3 py3-pip
-RUN chmod +x /statesync.sh
-RUN /statesync.sh
+# RUN apt-get update && apt-get install -y software-properties-common gcc && \
+#     add-apt-repository -y ppa:deadsnakes/ppa
+# RUN apt-get update && apt-get install -y python3.6 python3-distutils python3-pip python3-apt
+RUN apt-get install -y python3
+RUN chmod +x /osmosis/statesync.sh
+RUN /osmosis/statesync.sh
 EXPOSE 26656
 EXPOSE 26657
 EXPOSE 1317
