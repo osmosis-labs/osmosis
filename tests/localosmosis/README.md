@@ -18,6 +18,58 @@ You can now quickly test your changes to Osmosis with just a few commands:
 
 5. To remove all block history and start from scratch, run `make localnet-remove`
 
+
+# LocalOsmosis with Mainnet State
+
+Running LocalOsmosis with mainnet state is resource intensive and can take a bit of time. It is recommmended to only use this method if you are testing a new feature that must be throughly tested before pushing to production.
+
+1. Set up a node on mainnet (easiest to use the https://get.osmosis.zone tool)
+```
+curl -sL https://get.osmosis.zone/install > i.py && python3 i.py
+```
+
+2. Ensure your node is hitting blocks. Once it does, stop your Osmosis daemon
+```
+systemctl stop osmosisd.service
+```
+
+3. Take a state export snapshot with the following command:
+```
+cd $HOME
+osmosisd export 2> testnet_genesis.json
+```
+After a while, this will create a file called `testnet_genesis.json` which is a snapshot of the current mainnet state.
+
+
+4. Move `testnet_genesis.json` to the localosmosis folder within the osmosis repo
+```
+mv $HOME/testnet_genesis.json $HOME/osmosis/tests/localosmosis
+```
+
+5. Ensure you have docker and docker compose installed/running:
+Docker
+```
+sudo apt-get remove docker docker-engine docker.io
+sudo apt-get update
+sudo apt install docker.io -y
+```
+
+Docker Compose
+```
+sudo apt install docker-compose -y
+```
+
+6. Compile to local:osmosis/stateExport docker image
+```
+make localnet-build-state-export
+```
+
+7. Start the docker image
+```
+localnet-start-state-export
+```
+
+
 ## Accounts
 
 LocalOsmosis is pre-configured with one validator and 9 accounts with ION and OSMO balances.

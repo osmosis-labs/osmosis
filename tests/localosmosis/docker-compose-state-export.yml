@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  osmosisd:
+    image: local:osmosis/stateExport
+    user: "root:root"
+    command:
+      - start
+      - --rpc.laddr=tcp://0.0.0.0:26657
+    ports:
+      - "26657:26657"
+      - "1317:1317"
+      - "9090:9090"
+      - "9091:9091"

@@ -35,6 +35,7 @@ FROM alpine
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 COPY /tests/localosmosis/statesync.sh /statesync.sh
 COPY /tests/localosmosis/testnetify.py /testnetify.py
+COPY /tests/localosmosis/testnet_genesis.json /testnet_genesis.json
 
 ENV HOME /osmosis
 WORKDIR $HOME
