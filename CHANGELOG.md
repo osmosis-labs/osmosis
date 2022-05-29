@@ -47,7 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1435] `x/tokenfactory` create denom fee for spam resistance 
 * [#1429] solver for multi-asset CFMM
 * [#1253] Add lockup duration edit method
-* [#1253] Add lockup duration edit method 
 * [#1312] Stableswap: Createpool logic 
 * [#1230] Stableswap CFMM equations
 * [#1541] Add arm64 support to Docker
