@@ -1,0 +1,62 @@
+syntax = "proto3";
+package osmosis.launchpad.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+import "osmosis/launchpad/v1/state.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/api";
+option (gogoproto.goproto_getters_all) = false;
+
+// Query defines the gRPC querier service.
+service Query {
+  // Returns list of LBPs ordered by the creation time
+  rpc LBPs(QueryLBPs) returns (QueryLBPsResponse) {
+    option (google.api.http).get = "/cosmos/launchpad/v1/lbps";
+  }
+
+  // Returns the specific LBP object
+  rpc LBP(QueryLBP) returns (QueryLBPResponse) {
+    option (google.api.http).get = "/cosmos/launchpad/v1/lbps/{lbp_id}";
+  }
+
+  rpc UserPosition(QueryUserPosition) returns (QueryUserPositionResponse) {
+    option (google.api.http).get = "/cosmos/launchpad/v1/lbps/{lbp_id}/{user}";
+  }
+}
+
+message QueryLBPs {
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+
+message QueryLBPsResponse {
+  repeated osmosis.launchpad.v1.LBP lbps = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// Request type for Query/LBP
+message QueryLBP {
+  // LBP ID
+  uint64 lbp_id = 1;
+}
+
+message QueryLBPResponse {
+  osmosis.launchpad.v1.LBP lbp = 1 [ (gogoproto.nullable) = false ];
+}
+
+// Request type for Query/LBP
+message QueryUserPosition {
+  // ID of the LBP
+  uint64 lbp_id = 1;
+  // user account address
+  string user = 2;
+}
+
+message QueryUserPositionResponse {
+  osmosis.launchpad.v1.UserPosition user_position = 1
+      [ (gogoproto.nullable) = false ];
+}
