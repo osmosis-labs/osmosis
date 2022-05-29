@@ -29,7 +29,7 @@ func FlagSetCreateSale() *flag.FlagSet {
 
 func FlagSetFinalizeSale() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.Uint64(FlagSaleId, 0, "id of the pool.")
+	fs.Uint64(FlagSaleId, 0, "id of the sale.")
 
 	return fs
 }
@@ -37,8 +37,8 @@ func FlagSetFinalizeSale() *flag.FlagSet {
 func FlagSetSubscribe() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Uint64(FlagSaleId, 0, "id of the pool.")
-	fs.Int64(FlagAmount, 0, "amount to pool.")
+	fs.Uint64(FlagSaleId, 0, "id of the sale.")
+	fs.Int64(FlagAmount, 0, "amount of sale token_in to deposit for sale.")
 
 	return fs
 }
@@ -46,8 +46,8 @@ func FlagSetSubscribe() *flag.FlagSet {
 func FlagSetWithdraw() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Uint64(FlagSaleId, 0, "id of the pool.")
-	fs.Int64(FlagAmount, 0, "amount to pool.")
+	fs.Uint64(FlagSaleId, 0, "id of the sale.")
+	fs.Int64(FlagAmount, 0, "amount of sale unspent token_in to withdraw.")
 
 	return fs
 }
@@ -55,7 +55,7 @@ func FlagSetWithdraw() *flag.FlagSet {
 func FlagSetExit() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.Uint64(FlagSaleId, 0, "id of the pool.")
+	fs.Uint64(FlagSaleId, 0, "id of the sale.")
 
 	return fs
 }

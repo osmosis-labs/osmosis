@@ -38,7 +38,7 @@ service Msg {
 }
 
 message MsgCreateSale {
-  // Pool creator
+  // Sale creator
   string creator = 1;
   // token_in a denom used to buy LB tokens (`token_out`). May be referred as
   // quote_currency.
@@ -68,15 +68,15 @@ message MsgCreateSale {
 }
 
 message MsgCreateSaleResponse {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 sale_id = 1 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
 }
 
 message MsgSubscribe {
   // sender is an account address adding a deposit
   string sender = 1;
   // sale_id is a valid ID of this module Sale
-  uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  // number of pool.token_in staked by a user.
+  uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
+  // number of sale.token_in staked by a user.
   string amount = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
@@ -84,9 +84,9 @@ message MsgSubscribe {
 }
 
 message MsgWithdraw {
-  // sender is an account address exiting a pool
+  // sender is an account address subscribed to the sale_id
   string sender = 1;
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
   // amount of in_tokens to withdraw, must be at most the amount of not spent
   // tokens, unless set to null - then all remaining balance will be withdrawn
   string amount = 3 [
@@ -96,9 +96,9 @@ message MsgWithdraw {
 }
 
 message MsgExitSale {
-  // sender is an account address exiting a pool
+  // sender is an account address exiting a sale
   string sender = 1;
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
 }
 
 message MsgExitSaleResponse {
@@ -112,7 +112,7 @@ message MsgExitSaleResponse {
 message MsgFinalizeSale {
   // sender is an account address triggering the finalization.
   string sender = 1;
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
 }
 
 message MsgFinalizeSaleResponse {

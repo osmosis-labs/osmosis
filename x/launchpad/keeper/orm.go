@@ -12,8 +12,8 @@ var (
 )
 
 // Takes a module store, returns an ID (uint64 and it's store bytes representation) for
-// the next Pool and updates the pool ID counter.
-func (k Keeper) nextPoolID(store storetypes.KVStore) (uint64, []byte) {
+// the next Pool and updates the sale ID counter.
+func (k Keeper) nextSaleID(store storetypes.KVStore) (uint64, []byte) {
 	store = prefix.NewStore(store, storeSeqStoreKey)
 	bz := store.Get(ormPoolID)
 	if bz == nil {

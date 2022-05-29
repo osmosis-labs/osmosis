@@ -17,26 +17,26 @@ message EventCreateSale {
 
 message EventSubscribe {
   string sender = 1;
-  uint64 pool_id = 2;
+  uint64 sale_id = 2;
   string amount = 3;
 }
 
 message EventWithdraw {
   string sender = 1;
-  uint64 pool_id = 2;
+  uint64 sale_id = 2;
   // amount of staked tokens withdrawn by user.
   string amount = 3;
 }
 
 message EventExit {
   string sender = 1;
-  uint64 pool_id = 2;
+  uint64 sale_id = 2;
   // amount of purchased tokens
   string purchased = 3;
 }
 
 message EventFinalizeSale {
-  uint64 pool_id = 1;
+  uint64 sale_id = 1;
   // amount of earned tokens_in
   string income = 3;
 }

@@ -44,7 +44,7 @@ type Sale struct {
 	// end time when the token emission ends. Can't be bigger than start +
 	// 139years (to avoid round overflow)
 	EndTime time.Time `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`
-	// Round number when the pool was last time updated.
+	// Round number when the sale was last time updated.
 	Round int64 `protobuf:"varint,7,opt,name=round,proto3" json:"round,omitempty"`
 	// Last round of the Sale;
 	EndRound     int64                                  `protobuf:"varint,8,opt,name=end_round,json=endRound,proto3" json:"end_round,omitempty"`
@@ -93,7 +93,7 @@ func (m *Sale) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Sale proto.InternalMessageInfo
 
-// UserPosition represents user account in a pool
+// UserPosition represents user account in a sale
 type UserPosition struct {
 	Shares github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=shares,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"shares"`
 	// total number of currently staked tokens

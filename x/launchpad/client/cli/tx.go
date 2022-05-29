@@ -242,14 +242,14 @@ func NewBuildCreateSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 }
 
 func NewBuildFinalizeSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagSaleId)
+	saleId, err := fs.GetUint64(FlagSaleId)
 	if err != nil {
 		return txf, nil, err
 	}
 
 	msg := &api.MsgFinalizeSale{
 		Sender: clientCtx.GetFromAddress().String(),
-		PoolId: poolId,
+		SaleId: saleId,
 	}
 	if err = msg.ValidateBasic(); err != nil {
 		return txf, nil, err
@@ -258,7 +258,7 @@ func NewBuildFinalizeSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.
 }
 
 func NewBuildSubscribeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagSaleId)
+	saleId, err := fs.GetUint64(FlagSaleId)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -269,7 +269,7 @@ func NewBuildSubscribeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 	}
 	msg := &api.MsgSubscribe{
 		Sender: clientCtx.GetFromAddress().String(),
-		PoolId: poolId,
+		SaleId: saleId,
 		Amount: sdk.NewInt(amount),
 	}
 	if err = msg.ValidateBasic(); err != nil {
@@ -279,14 +279,14 @@ func NewBuildSubscribeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 }
 
 func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagSaleId)
+	saleId, err := fs.GetUint64(FlagSaleId)
 	if err != nil {
 		return txf, nil, err
 	}
 
 	msg := &api.MsgWithdraw{
 		Sender: clientCtx.GetFromAddress().String(),
-		PoolId: poolId,
+		SaleId: saleId,
 		Amount: nil,
 	}
 	if err = msg.ValidateBasic(); err != nil {
@@ -296,14 +296,14 @@ func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 }
 
 func NewBuildExitSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {
-	poolId, err := fs.GetUint64(FlagSaleId)
+	saleId, err := fs.GetUint64(FlagSaleId)
 	if err != nil {
 		return txf, nil, err
 	}
 
 	msg := &api.MsgExitSale{
 		Sender: clientCtx.GetFromAddress().String(),
-		PoolId: poolId,
+		SaleId: saleId,
 	}
 	if err = msg.ValidateBasic(); err != nil {
 		return txf, nil, err

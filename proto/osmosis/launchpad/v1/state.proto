@@ -30,7 +30,7 @@ message Sale {
   google.protobuf.Timestamp end_time = 6
       [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
 
-  // Round number when the pool was last time updated.
+  // Round number when the sale was last time updated.
   int64 round = 7;
 
   // Last round of the Sale;
@@ -73,7 +73,7 @@ message Sale {
   // string url = 21 [ (gogoproto.nullable) = false ];
 }
 
-// UserPosition represents user account in a pool
+// UserPosition represents user account in a sale
 message UserPosition {
 
   string shares = 1 [

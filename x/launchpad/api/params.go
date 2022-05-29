@@ -42,7 +42,7 @@ func DefaultParams() Params {
 
 // validate params
 func (p Params) Validate() error {
-	if err := validatePoolCreationFee(p.SaleCreationFee); err != nil {
+	if err := validateSaleCreationFee(p.SaleCreationFee); err != nil {
 		return err
 	}
 	if err := validateDuration(p.MinimumDurationUntilStartTime); err != nil {
@@ -58,20 +58,20 @@ func (p Params) Validate() error {
 // Implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeySaleCreationFee, &p.SaleCreationFee, validatePoolCreationFee),
+		paramtypes.NewParamSetPair(KeySaleCreationFee, &p.SaleCreationFee, validateSaleCreationFee),
 		paramtypes.NewParamSetPair(KeyMinimumDurationUntilStartTime, &p.MinimumDurationUntilStartTime, validateDuration),
 		paramtypes.NewParamSetPair(KeyMinimumSaleDuration, &p.MinimumSaleDuration, validateDuration),
 	}
 }
 
-func validatePoolCreationFee(i interface{}) error {
+func validateSaleCreationFee(i interface{}) error {
 	v, ok := i.(sdk.Coins)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if v.Validate() != nil {
-		return fmt.Errorf("invalid pool creation fee: %+v", i)
+		return fmt.Errorf("invalid sale creation fee: %+v", i)
 	}
 
 	return nil

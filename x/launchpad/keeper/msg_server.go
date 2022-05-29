@@ -28,14 +28,14 @@ func (k Keeper) CreateSale(goCtx context.Context, msg *api.MsgCreateSale) (*api.
 		TokenIn:  msg.TokenIn,
 		TokenOut: msg.TokenOut,
 	})
-	return &api.MsgCreateSaleResponse{PoolId: id}, err
+	return &api.MsgCreateSaleResponse{SaleId: id}, err
 }
 
 func (k Keeper) createSale(msg *api.MsgCreateSale, now time.Time, store storetypes.KVStore) (uint64, error) {
 	if err := msg.Validate(now); err != nil { // handle.ValidateMsgCreateSale(msg)
 		return 0, err
 	}
-	id, idBz := k.nextPoolID(store)
+	id, idBz := k.nextSaleID(store)
 	end := msg.StartTime.Add(msg.Duration)
 	p := newSale(msg.Treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.InitialDeposit.Amount)
 	k.saveSale(store, idBz, &p)
@@ -53,7 +53,7 @@ func (k Keeper) Subscribe(goCtx context.Context, msg *api.MsgSubscribe) (*emptyp
 	}
 	err := ctx.EventManager().EmitTypedEvent(&api.EventSubscribe{
 		Sender: msg.Sender,
-		PoolId: msg.PoolId,
+		SaleId: msg.SaleId,
 		Amount: msg.Amount.String(),
 	})
 	return &emptypb.Empty{}, err
@@ -63,7 +63,7 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 	if !msg.Amount.IsPositive() {
 		return errors.ErrInvalidRequest.Wrap("amount of tokens must be positive")
 	}
-	sender, p, poolIdBz, u, err := k.getUserAndSale(store, msg.PoolId, msg.Sender, false)
+	sender, p, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, false)
 	if err != nil {
 		return err
 	}
@@ -75,8 +75,8 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 	}
 	subscribe(p, u, msg.Amount, ctx.BlockTime())
 
-	k.saveSale(store, poolIdBz, p)
-	k.saveUserPosition(store, poolIdBz, sender, u)
+	k.saveSale(store, saleIdBz, p)
+	k.saveUserPosition(store, saleIdBz, sender, u)
 	// TODO: event
 	return nil
 }
@@ -89,7 +89,7 @@ func (k Keeper) Withdraw(goCtx context.Context, msg *api.MsgWithdraw) (*emptypb.
 	}
 	err := ctx.EventManager().EmitTypedEvent(&api.EventWithdraw{
 		Sender: msg.Sender,
-		PoolId: msg.PoolId,
+		SaleId: msg.SaleId,
 		Amount: msg.Amount.String(),
 	})
 	return &emptypb.Empty{}, err
@@ -99,7 +99,7 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes
 	if err := msg.Validate(); err != nil {
 		return err
 	}
-	sender, p, poolIdBz, u, err := k.getUserAndSale(store, msg.PoolId, msg.Sender, false)
+	sender, p, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, false)
 	if err != nil {
 		return err
 	}
@@ -114,8 +114,8 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes
 		return err
 	}
 
-	k.saveSale(store, poolIdBz, p)
-	k.saveUserPosition(store, poolIdBz, sender, u)
+	k.saveSale(store, saleIdBz, p)
+	k.saveUserPosition(store, saleIdBz, sender, u)
 	return nil
 }
 
@@ -128,7 +128,7 @@ func (k Keeper) ExitSale(goCtx context.Context, msg *api.MsgExitSale) (*api.MsgE
 	}
 	err = ctx.EventManager().EmitTypedEvent(&api.EventExit{
 		Sender:    msg.Sender,
-		PoolId:    msg.PoolId,
+		SaleId:    msg.SaleId,
 		Purchased: purchased.String(),
 	})
 	return &api.MsgExitSaleResponse{Purchased: purchased}, err
@@ -136,7 +136,7 @@ func (k Keeper) ExitSale(goCtx context.Context, msg *api.MsgExitSale) (*api.MsgE
 
 // returns amount of tokens purchased
 func (k Keeper) exitSale(ctx sdk.Context, msg *api.MsgExitSale, store storetypes.KVStore) (sdk.Int, error) {
-	sender, p, poolIdBz, u, err := k.getUserAndSale(store, msg.PoolId, msg.Sender, false)
+	sender, p, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, false)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -164,7 +164,7 @@ func (k Keeper) exitSale(ctx sdk.Context, msg *api.MsgExitSale, store storetypes
 		}
 	}
 
-	k.delUserPosition(store, poolIdBz, sender)
+	k.delUserPosition(store, saleIdBz, sender)
 	return u.Purchased, nil
 }
 
@@ -176,7 +176,7 @@ func (k Keeper) FinalizeSale(goCtx context.Context, msg *api.MsgFinalizeSale) (*
 		return nil, err
 	}
 	err = ctx.EventManager().EmitTypedEvent(&api.EventFinalizeSale{
-		PoolId: msg.PoolId,
+		SaleId: msg.SaleId,
 		Income: income.String(),
 	})
 	return &api.MsgFinalizeSaleResponse{Income: income}, err
@@ -184,7 +184,7 @@ func (k Keeper) FinalizeSale(goCtx context.Context, msg *api.MsgFinalizeSale) (*
 
 // returns Sale income
 func (k Keeper) finalizeSale(ctx sdk.Context, msg *api.MsgFinalizeSale, store storetypes.KVStore) (sdk.Int, error) {
-	p, poolIdBz, err := k.getSale(store, msg.PoolId)
+	p, saleIdBz, err := k.getSale(store, msg.SaleId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -208,6 +208,6 @@ func (k Keeper) finalizeSale(ctx sdk.Context, msg *api.MsgFinalizeSale, store st
 	}
 	income := p.Income
 	p.Income = sdk.ZeroInt()
-	k.saveSale(store, poolIdBz, &p)
+	k.saveSale(store, saleIdBz, &p)
 	return income, nil
 }
