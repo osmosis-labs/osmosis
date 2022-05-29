@@ -182,6 +182,7 @@ func (v *internalValidator) export() *Validator {
 		Index:         v.index,
 		Mnemonic:      v.mnemonic,
 		PublicAddress: v.keyInfo.GetAddress().String(),
+		PublicKey:     v.keyInfo.GetPubKey().Address().String(),
 	}
 }
 
