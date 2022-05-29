@@ -33,7 +33,7 @@ type syncInfo struct {
 	SyncInfo status `json:"SyncInfo"`
 }
 
-type operInfo struct {
+type validatorOperatorInfo struct {
 	Bech32Val string `json:"bech32_val"`
 }
 
@@ -46,8 +46,8 @@ type chainConfig struct {
 	// This is needed for testing functionality like state-sync where we would
 	// like to start a node during tests post-initialization.
 	skipRunValidatorIndexes map[int]struct{}
-	propNumber              int
-	lockNumber              int
+	latestProposalNumber              int
+	latestLockNumber              int
 	chain                   *chain.Chain
 }
 
