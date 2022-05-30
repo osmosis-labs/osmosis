@@ -14,7 +14,6 @@ type Validator struct {
 	Mnemonic      string `json:"mnemonic"`
 	PublicAddress string `json:"publicAddress"`
 	PublicKey     string `json:"publicKey"`
-	OperAddress   string `json:"operAddress"`
 }
 
 type Chain struct {
