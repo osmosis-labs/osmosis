@@ -23,7 +23,11 @@ You can now quickly test your changes to Osmosis with just a few commands:
 
 Running LocalOsmosis with mainnet state is resource intensive and can take a bit of time. It is recommmended to only use this method if you are testing a new feature that must be throughly tested before pushing to production.
 
-1. Set up a node on mainnet (easiest to use the https://get.osmosis.zone tool)
+A few things to note before getting started. The below method will only work if you are using the same version as mainnet. In other words, if mainnet is on v8.0.1 and you try to do this on a v9.0.0 tag, you will run into an error when initializing the genesis. (yes, it is possible to create a state exported testnet on a upcoming release, but that is out of the scope of this tutorial)
+
+Additionally, this process requires 64GB of RAM. If you do not have 64GB of RAM, you will get an OOM error.
+
+1. Set up a node on mainnet (easiest to use the https://get.osmosis.zone tool). This will be the node you use to run the state exported testnet, so ensure it has at least 64GB of RAM.
 ```
 curl -sL https://get.osmosis.zone/install > i.py && python3 i.py
 ```
@@ -33,7 +37,7 @@ curl -sL https://get.osmosis.zone/install > i.py && python3 i.py
 systemctl stop osmosisd.service
 ```
 
-3. Take a state export snapshot with the following command (ensure you are on the same version that mainnet is currently on):
+3. Take a state export snapshot with the following command:
 ```
 cd $HOME
 osmosisd export 2> testnet_genesis.json
@@ -41,20 +45,12 @@ osmosisd export 2> testnet_genesis.json
 After a while, this will create a file called `testnet_genesis.json` which is a snapshot of the current mainnet state.
 
 
-4. Now, move to the version of Osmosis you intend to run your testnet on. In other words, if you are currently on v8.0.0 but want to run a testnet off main, switch to that branch now
-```
-cd $HOME/osmosis
-git pull
-git checkout main
-make install
-```
-
-5. Copy `testnet_genesis.json` to the localosmosis folder within the osmosis repo
+4. Copy the `testnet_genesis.json` to the localosmosis folder within the osmosis repo
 ```
 cp -r $HOME/testnet_genesis.json $HOME/osmosis/tests/localosmosis
 ```
 
-6. Ensure you have docker and docker compose installed/running:
+5. Ensure you have docker and docker compose installed/running:
 Docker
 ```
 sudo apt-get remove docker docker-engine docker.io
@@ -67,15 +63,37 @@ Docker Compose
 sudo apt install docker-compose -y
 ```
 
-7. Compile the local:osmosis-se docker image (~15 minutes, since this process modifies the testnet genesis you provided above).
+6. Compile the local:osmosis-se docker image (~15 minutes, since this process modifies the testnet genesis you provided above).
 ```
+cd $HOME/osmosis
 make localnet-build-state-export
 ```
 
-8. Start the local:osmosis-se docker image
+7. Start the local:osmosis-se docker image
 ```
 make localnet-start-state-export
 ```
+
+You will then go through the genesis intialization process. This will take ~20 minutes. You will then hit the first block (not block 1, but the block number after your snapshot was taken), and then you will just see a bunch of p2p error logs. This will happen for about 1 hour, and then you will finally hit blocks at a normal pace.
+
+8. On your host machine, add this specific wallet which holds a large amount of osmo funds
+```
+echo "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort" | osmosisd keys add wallet --recover --keyring-backend test
+```
+
+You now are running a validator with a majority of the voting power with the same mainnet state as when you took the snapshot.
+
+9. On your host machine, you can now query the state export testnet like so:
+```
+osmosisd status
+```
+
+10. Here is an example command to ensure complete understanding:
+```
+
+```
+
+Note: At some point, all the validators (except yours) will get jailed at the same block due to them being offline. When this happens, it make take a little bit of time to process. Once all validators are jailed, you will continue to hit blocks as you did before. If you are only running the validator for a short period of time (< 24 hours) you will not experience this.
 
 
 ## Accounts
