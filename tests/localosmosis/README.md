@@ -32,12 +32,18 @@ Additionally, this process requires 64GB of RAM. If you do not have 64GB of RAM,
 curl -sL https://get.osmosis.zone/install > i.py && python3 i.py
 ```
 
-2. Ensure your node is hitting blocks. Once it does, stop your Osmosis daemon
+2. Once the installer is done, ensure your node is hitting blocks.
+```
+source ~/.profile
+journalctl -u osmosisd.service -f
+```
+
+3. Stop your Osmosis daemon
 ```
 systemctl stop osmosisd.service
 ```
 
-3. Take a state export snapshot with the following command:
+4. Take a state export snapshot with the following command:
 ```
 cd $HOME
 osmosisd export 2> testnet_genesis.json
@@ -45,12 +51,12 @@ osmosisd export 2> testnet_genesis.json
 After a while, this will create a file called `testnet_genesis.json` which is a snapshot of the current mainnet state.
 
 
-4. Copy the `testnet_genesis.json` to the localosmosis folder within the osmosis repo
+5. Copy the `testnet_genesis.json` to the localosmosis folder within the osmosis repo
 ```
 cp -r $HOME/testnet_genesis.json $HOME/osmosis/tests/localosmosis
 ```
 
-5. Ensure you have docker and docker compose installed/running:
+6. Ensure you have docker and docker compose installed/running:
 Docker
 ```
 sudo apt-get remove docker docker-engine docker.io
@@ -63,32 +69,33 @@ Docker Compose
 sudo apt install docker-compose -y
 ```
 
-6. Compile the local:osmosis-se docker image (~15 minutes, since this process modifies the testnet genesis you provided above).
+7. Compile the local:osmosis-se docker image (~15 minutes, since this process modifies the testnet genesis you provided above).
 ```
 cd $HOME/osmosis
 make localnet-build-state-export
 ```
+docker build -t local:osmosis-se -f tests/localosmosis/Dockerfile-stateExport . --build-arg ID="testing"
 
-7. Start the local:osmosis-se docker image
+8. Start the local:osmosis-se docker image
 ```
 make localnet-start-state-export
 ```
 
 You will then go through the genesis intialization process. This will take ~20 minutes. You will then hit the first block (not block 1, but the block number after your snapshot was taken), and then you will just see a bunch of p2p error logs. This will happen for about 1 hour, and then you will finally hit blocks at a normal pace.
 
-8. On your host machine, add this specific wallet which holds a large amount of osmo funds
+9. On your host machine, add this specific wallet which holds a large amount of osmo funds
 ```
 echo "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort" | osmosisd keys add wallet --recover --keyring-backend test
 ```
 
 You now are running a validator with a majority of the voting power with the same mainnet state as when you took the snapshot.
 
-9. On your host machine, you can now query the state export testnet like so:
+10. On your host machine, you can now query the state export testnet like so:
 ```
 osmosisd status
 ```
 
-10. Here is an example command to ensure complete understanding:
+11. Here is an example command to ensure complete understanding:
 ```
 
 ```

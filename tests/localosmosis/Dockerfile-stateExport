@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+ARG ID="localosmosis"
 
 # --------------------------------------------------------
 # Build
@@ -50,6 +51,8 @@ WORKDIR $HOME
 RUN apt-get update && apt-get install -y python3
 RUN chmod +x /osmosis/statesync.sh
 RUN /osmosis/statesync.sh
+RUN python3 /osmosis/testnetify.py --chain-id $ID
+RUN cp testnet_genesis.json .osmosisd/config/genesis.json
 EXPOSE 26656
 EXPOSE 26657
 EXPOSE 1317
