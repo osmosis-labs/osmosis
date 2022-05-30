@@ -285,7 +285,7 @@ func (m *CustomMessenger) joinPoolNoSwap(ctx sdk.Context, contractAddr sdk.AccAd
 
 func PerformExit(g *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, exitPool *wasmbindings.ExitPool) error {
 	if exitPool == nil {
-		return wasmvmtypes.InvalidRequest{Err: "join pool null"}
+		return wasmvmtypes.InvalidRequest{Err: "exit pool null"}
 	}
 
 	_, err := g.ExitPool(ctx, contractAddr, exitPool.PoolId, exitPool.ShareInAmount, exitPool.TokenOutMins)

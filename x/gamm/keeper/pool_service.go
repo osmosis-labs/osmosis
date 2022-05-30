@@ -337,9 +337,12 @@ func (k Keeper) ExitPool(
 	}
 	exitFee := pool.GetExitFee(ctx)
 	exitCoins, err = pool.ExitPool(ctx, shareInAmount, exitFee)
+	fmt.Println("existing Coins in exit pool larger: ", exitCoins)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
+	fmt.Println("!tokenOutMins.DenomsSubsetOf(exitCoins): ", !tokenOutMins.DenomsSubsetOf(exitCoins))
+	fmt.Println("tokenOutMins.IsAnyGT(exitCoins): ", tokenOutMins.IsAnyGT(exitCoins))
 	if !tokenOutMins.DenomsSubsetOf(exitCoins) || tokenOutMins.IsAnyGT(exitCoins) {
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMinAmount,
 			"Exit pool returned %s , minimum tokens out specified as %s",
