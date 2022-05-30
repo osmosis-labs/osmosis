@@ -4,6 +4,9 @@ services:
   osmosisd:
     image: local:osmosis-se
     user: "root:root"
+    volumes:
+      - ./config:/osmosis/.osmosisd/config
+      - ./data:/osmosis/.osmosisd/data
     command:
       - start
       - --x-crisis-skip-assert-invariants

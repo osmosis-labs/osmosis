@@ -33,7 +33,7 @@ curl -sL https://get.osmosis.zone/install > i.py && python3 i.py
 systemctl stop osmosisd.service
 ```
 
-3. Take a state export snapshot with the following command:
+3. Take a state export snapshot with the following command (ensure you are on the same version that mainnet is currently on):
 ```
 cd $HOME
 osmosisd export 2> testnet_genesis.json
@@ -41,12 +41,20 @@ osmosisd export 2> testnet_genesis.json
 After a while, this will create a file called `testnet_genesis.json` which is a snapshot of the current mainnet state.
 
 
-4. Move `testnet_genesis.json` to the localosmosis folder within the osmosis repo
+4. Now, move to the version of Osmosis you intend to run your testnet on. In other words, if you are currently on v8.0.0 but want to run a testnet off main, switch to that branch now
 ```
-mv $HOME/testnet_genesis.json $HOME/osmosis/tests/localosmosis
+cd $HOME/osmosis
+git pull
+git checkout main
+make install
 ```
 
-5. Ensure you have docker and docker compose installed/running:
+5. Copy `testnet_genesis.json` to the localosmosis folder within the osmosis repo
+```
+cp -r $HOME/testnet_genesis.json $HOME/osmosis/tests/localosmosis
+```
+
+6. Ensure you have docker and docker compose installed/running:
 Docker
 ```
 sudo apt-get remove docker docker-engine docker.io
@@ -59,14 +67,14 @@ Docker Compose
 sudo apt install docker-compose -y
 ```
 
-6. Compile to local:osmosis/stateExport docker image
+7. Compile the local:osmosis-se docker image (~15 minutes, since this process modifies the testnet genesis you provided above).
 ```
 make localnet-build-state-export
 ```
 
-7. Start the docker image
+8. Start the local:osmosis-se docker image
 ```
-localnet-start-state-export
+make localnet-start-state-export
 ```
 
 
