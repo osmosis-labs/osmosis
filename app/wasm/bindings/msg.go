@@ -17,6 +17,8 @@ type OsmosisMsg struct {
 	BurnTokens *BurnTokens `json:"burn_tokens,omitempty"`
 	/// Swap over one or more pools
 	Swap *SwapMsg `json:"swap,omitempty"`
+	/// Add liquidity to a specified pool with only one of the required assets (i.e. Join pool 1 (50/50 ATOM-OSMO) with just ATOM).
+	JoinSwapExactAmountIn *JoinSwapExactAmountIn `json:"join_swap_exact_amount_in,omitempty"`
 }
 
 /// CreateDenom creates a new factory denom, of denomination:
@@ -53,4 +55,10 @@ type SwapMsg struct {
 	First  Swap                `json:"first"`
 	Route  []Step              `json:"route"`
 	Amount SwapAmountWithLimit `json:"amount"`
+}
+
+type JoinSwapExactAmountIn struct {
+	PoolId            uint64   `json:"pool_id"`
+	ShareOutMinAmount sdk.Int  `json:"share_out_min_amount"`
+	TokenIn           sdk.Coin `json:"token_in"`
 }
