@@ -7,10 +7,10 @@ Osmosis implements the following custom modules:
 * `lockup` - 
 * `mint` - Controls token supply emissions, and what modules they are directed to.
 * `pool-incentives` - Controls how incentives allocated towards "Liquidity Providing" are directed
-    * These go towards gauges defined by the `incentives` module
+  * These go towards gauges defined by the `incentives` module
 * `superfluid`
 * `tokenfactory` - Allows minting of new tokens of the form `factory/{creator address}/{subdenom}` for user-defined subdenoms.
-    * 
+  * 
 * `txfees`
 
 TODO: Make visual diagram of the dependency graph between these modules.

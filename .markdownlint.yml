@@ -3,6 +3,7 @@ default: true
 MD003: 
   # Heading style
   style: "atx"
-MD007: false
+# Can't disable MD007 :/
+# MD007: false
 MD009: false
 MD024: false
