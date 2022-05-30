@@ -201,7 +201,6 @@ func PerformBurn(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk
 
 func (m *CustomMessenger) lockTokens(ctx sdk.Context, contractAddr sdk.AccAddress, lock *wasmbindings.LockTokensMsg) ([]sdk.Event, [][]byte, error) {
 	coins := []sdk.Coin{sdk.NewCoin(lock.Denom, lock.Amount)}
-
 	_, err := m.lockupKeeper.CreateLock(ctx, contractAddr, coins, time.Duration(lock.Duration))
 
 	if err != nil {
