@@ -261,6 +261,8 @@
     - [SuperfluidDelegationsByValidatorDenomRequest](#osmosis.superfluid.SuperfluidDelegationsByValidatorDenomRequest)
     - [SuperfluidDelegationsByValidatorDenomResponse](#osmosis.superfluid.SuperfluidDelegationsByValidatorDenomResponse)
     - [SuperfluidIntermediaryAccountInfo](#osmosis.superfluid.SuperfluidIntermediaryAccountInfo)
+    - [SuperfluidOSMODelegationsByDelegatorRequest](#osmosis.superfluid.SuperfluidOSMODelegationsByDelegatorRequest)
+    - [SuperfluidOSMODelegationsByDelegatorResponse](#osmosis.superfluid.SuperfluidOSMODelegationsByDelegatorResponse)
     - [SuperfluidUndelegationsByDelegatorRequest](#osmosis.superfluid.SuperfluidUndelegationsByDelegatorRequest)
     - [SuperfluidUndelegationsByDelegatorResponse](#osmosis.superfluid.SuperfluidUndelegationsByDelegatorResponse)
     - [TotalSuperfluidDelegationsRequest](#osmosis.superfluid.TotalSuperfluidDelegationsRequest)
@@ -3746,6 +3748,37 @@ assets
 
 
 
+<a name="osmosis.superfluid.SuperfluidOSMODelegationsByDelegatorRequest"></a>
+
+### SuperfluidOSMODelegationsByDelegatorRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.superfluid.SuperfluidOSMODelegationsByDelegatorResponse"></a>
+
+### SuperfluidOSMODelegationsByDelegatorResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `superfluid_delegation_records` | [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord) | repeated |  |
+| `total_delegated_osmo` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
 <a name="osmosis.superfluid.SuperfluidUndelegationsByDelegatorRequest"></a>
 
 ### SuperfluidUndelegationsByDelegatorRequest
@@ -3826,6 +3859,7 @@ Query defines the gRPC querier service.
 | `TotalSuperfluidDelegations` | [TotalSuperfluidDelegationsRequest](#osmosis.superfluid.TotalSuperfluidDelegationsRequest) | [TotalSuperfluidDelegationsResponse](#osmosis.superfluid.TotalSuperfluidDelegationsResponse) | Returns the total amount of osmo superfluidly staked response denominated in uosmo | GET|/osmosis/superfluid/v1beta1/all_superfluid_delegations|
 | `SuperfluidDelegationAmount` | [SuperfluidDelegationAmountRequest](#osmosis.superfluid.SuperfluidDelegationAmountRequest) | [SuperfluidDelegationAmountResponse](#osmosis.superfluid.SuperfluidDelegationAmountResponse) | Returns the coins superfluid delegated for a delegator, validator, denom triplet | GET|/osmosis/superfluid/v1beta1/superfluid_delegation_amount|
 | `SuperfluidDelegationsByDelegator` | [SuperfluidDelegationsByDelegatorRequest](#osmosis.superfluid.SuperfluidDelegationsByDelegatorRequest) | [SuperfluidDelegationsByDelegatorResponse](#osmosis.superfluid.SuperfluidDelegationsByDelegatorResponse) | Returns all the superfluid poistions for a specific delegator | GET|/osmosis/superfluid/v1beta1/superfluid_delegations/{delegator_address}|
+| `SuperfluidOSMODelegationsByDelegator` | [SuperfluidOSMODelegationsByDelegatorRequest](#osmosis.superfluid.SuperfluidOSMODelegationsByDelegatorRequest) | [SuperfluidOSMODelegationsByDelegatorResponse](#osmosis.superfluid.SuperfluidOSMODelegationsByDelegatorResponse) | Returns all the superfluid poistions for a specific delegator | GET|/osmosis/superfluid/v1beta1/superfluid_osmo_delegations/{delegator_address}|
 | `SuperfluidUndelegationsByDelegator` | [SuperfluidUndelegationsByDelegatorRequest](#osmosis.superfluid.SuperfluidUndelegationsByDelegatorRequest) | [SuperfluidUndelegationsByDelegatorResponse](#osmosis.superfluid.SuperfluidUndelegationsByDelegatorResponse) |  | GET|/osmosis/superfluid/v1beta1/superfluid_undelegations_by_delegator/{delegator_address}|
 | `SuperfluidDelegationsByValidatorDenom` | [SuperfluidDelegationsByValidatorDenomRequest](#osmosis.superfluid.SuperfluidDelegationsByValidatorDenomRequest) | [SuperfluidDelegationsByValidatorDenomResponse](#osmosis.superfluid.SuperfluidDelegationsByValidatorDenomResponse) | Returns all the superfluid positions of a specific denom delegated to one validator | GET|/osmosis/superfluid/v1beta1/superfluid_delegations_by_validator_denom|
 | `EstimateSuperfluidDelegatedAmountByValidatorDenom` | [EstimateSuperfluidDelegatedAmountByValidatorDenomRequest](#osmosis.superfluid.EstimateSuperfluidDelegatedAmountByValidatorDenomRequest) | [EstimateSuperfluidDelegatedAmountByValidatorDenomResponse](#osmosis.superfluid.EstimateSuperfluidDelegatedAmountByValidatorDenomResponse) | Returns the amount of a specific denom delegated to a specific validator This is labeled an estimate, because the way it calculates the amount can lead rounding errors from the true delegated amount | GET|/osmosis/superfluid/v1beta1/estimate_superfluid_delegation_amount_by_validator_denom|
