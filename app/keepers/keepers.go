@@ -459,6 +459,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
+	paramsKeeper.Subspace(launchpad.ModuleName)
 
 	return paramsKeeper
 }
@@ -549,5 +550,6 @@ func KVStoreKeys() []string {
 		bech32ibctypes.StoreKey,
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
+		launchpadkeeper.StoreKey,
 	}
 }

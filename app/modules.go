@@ -64,6 +64,9 @@ import (
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
+	launchpadmodule "github.com/osmosis-labs/osmosis/v7/x/launchpad/module"
 )
 
 // moduleAccountPermissions defines module account permissions
@@ -141,6 +144,7 @@ func appModules(
 		),
 		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
+		launchpadmodule.NewAppModule(appCodec, app.LaunchpadKeeper, *app.BankKeeper, app.interfaceRegistry),
 	}
 }
 
@@ -227,6 +231,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		authz.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
+		launchpad.ModuleName,
 	}
 }
 

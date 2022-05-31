@@ -64,46 +64,7 @@ var (
 	ModuleBasics = module.NewBasicManager(keepers.AppModuleBasics...)
 
 	// module account permissions
-<<<<<<< HEAD
-	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:               nil,
-		distrtypes.ModuleName:                    nil,
-		minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-		minttypes.DeveloperVestingModuleAcctName: nil,
-		stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:           {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                      {authtypes.Burner},
-		ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
-		claimtypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
-		gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
-		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
-		poolincentivestypes.ModuleName:           nil,
-		superfluidtypes.ModuleName:               nil,
-		txfeestypes.ModuleName:                   nil,
-		launchpad.ModuleName:                     nil,
-	}
-||||||| f0842b9b
-	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:               nil,
-		distrtypes.ModuleName:                    nil,
-		minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-		minttypes.DeveloperVestingModuleAcctName: nil,
-		stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:           {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                      {authtypes.Burner},
-		ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
-		claimtypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
-		gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-		incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
-		lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
-		poolincentivestypes.ModuleName:           nil,
-		superfluidtypes.ModuleName:               nil,
-		txfeestypes.ModuleName:                   nil,
-	}
-=======
 	maccPerms = moduleAccountPermissions
->>>>>>> origin/main
 
 	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{}
@@ -163,111 +124,8 @@ type OsmosisApp struct {
 	interfaceRegistry types.InterfaceRegistry
 	invCheckPeriod    uint
 
-<<<<<<< HEAD
-	invCheckPeriod uint
-
-	// keys to access the substores
-	keys    map[string]*sdk.KVStoreKey
-	tkeys   map[string]*sdk.TransientStoreKey
-	memKeys map[string]*sdk.MemoryStoreKey
-
-	// keepers, by order of initialization
-	// "Special" keepers
-	ParamsKeeper     *paramskeeper.Keeper
-	CapabilityKeeper *capabilitykeeper.Keeper
-	CrisisKeeper     *crisiskeeper.Keeper
-	UpgradeKeeper    *upgradekeeper.Keeper
-
-	// make scoped keepers public for test purposes
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-
-	// "Normal" keepers
-	AccountKeeper        *authkeeper.AccountKeeper
-	BankKeeper           *bankkeeper.BaseKeeper
-	AuthzKeeper          *authzkeeper.Keeper
-	StakingKeeper        *stakingkeeper.Keeper
-	DistrKeeper          *distrkeeper.Keeper
-	SlashingKeeper       *slashingkeeper.Keeper
-	IBCKeeper            *ibckeeper.Keeper
-	TransferKeeper       *ibctransferkeeper.Keeper
-	Bech32IBCKeeper      *bech32ibckeeper.Keeper
-	Bech32ICS20Keeper    *bech32ics20keeper.Keeper
-	EvidenceKeeper       *evidencekeeper.Keeper
-	ClaimKeeper          *claimkeeper.Keeper
-	GAMMKeeper           *gammkeeper.Keeper
-	LockupKeeper         *lockupkeeper.Keeper
-	EpochsKeeper         *epochskeeper.Keeper
-	IncentivesKeeper     *incentiveskeeper.Keeper
-	MintKeeper           *mintkeeper.Keeper
-	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
-	TxFeesKeeper         *txfeeskeeper.Keeper
-	SuperfluidKeeper     superfluidkeeper.Keeper
-	GovKeeper            *govkeeper.Keeper
-	LaunchpadKeeper      launchpadkeeper.Keeper
-
-	transferModule transfer.AppModule
-	// the module manager
-	mm *module.Manager
-
-	// simulation manager
-	sm *module.SimulationManager
-
-	// module migration manager
-||||||| f0842b9b
-	invCheckPeriod uint
-
-	// keys to access the substores
-	keys    map[string]*sdk.KVStoreKey
-	tkeys   map[string]*sdk.TransientStoreKey
-	memKeys map[string]*sdk.MemoryStoreKey
-
-	// keepers, by order of initialization
-	// "Special" keepers
-	ParamsKeeper     *paramskeeper.Keeper
-	CapabilityKeeper *capabilitykeeper.Keeper
-	CrisisKeeper     *crisiskeeper.Keeper
-	UpgradeKeeper    *upgradekeeper.Keeper
-
-	// make scoped keepers public for test purposes
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-
-	// "Normal" keepers
-	AccountKeeper        *authkeeper.AccountKeeper
-	BankKeeper           *bankkeeper.BaseKeeper
-	AuthzKeeper          *authzkeeper.Keeper
-	StakingKeeper        *stakingkeeper.Keeper
-	DistrKeeper          *distrkeeper.Keeper
-	SlashingKeeper       *slashingkeeper.Keeper
-	IBCKeeper            *ibckeeper.Keeper
-	TransferKeeper       *ibctransferkeeper.Keeper
-	Bech32IBCKeeper      *bech32ibckeeper.Keeper
-	Bech32ICS20Keeper    *bech32ics20keeper.Keeper
-	EvidenceKeeper       *evidencekeeper.Keeper
-	ClaimKeeper          *claimkeeper.Keeper
-	GAMMKeeper           *gammkeeper.Keeper
-	LockupKeeper         *lockupkeeper.Keeper
-	EpochsKeeper         *epochskeeper.Keeper
-	IncentivesKeeper     *incentiveskeeper.Keeper
-	MintKeeper           *mintkeeper.Keeper
-	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
-	TxFeesKeeper         *txfeeskeeper.Keeper
-	SuperfluidKeeper     superfluidkeeper.Keeper
-	GovKeeper            *govkeeper.Keeper
-
-	transferModule transfer.AppModule
-	// the module manager
-	mm *module.Manager
-
-	// simulation manager
-	sm *module.SimulationManager
-
-	// module migration manager
-=======
 	mm           *module.Manager
 	sm           *module.SimulationManager
->>>>>>> origin/main
 	configurator module.Configurator
 }
 
@@ -304,37 +162,6 @@ func NewOsmosisApp(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
-<<<<<<< HEAD
-	keys := sdk.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
-		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
-		epochstypes.StoreKey, poolincentivestypes.StoreKey, authzkeeper.StoreKey, txfeestypes.StoreKey,
-		superfluidtypes.StoreKey,
-		bech32ibctypes.StoreKey,
-		launchpadkeeper.StoreKey,
-	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
-
-||||||| f0842b9b
-	keys := sdk.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
-		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		gammtypes.StoreKey, lockuptypes.StoreKey, claimtypes.StoreKey, incentivestypes.StoreKey,
-		epochstypes.StoreKey, poolincentivestypes.StoreKey, authzkeeper.StoreKey, txfeestypes.StoreKey,
-		superfluidtypes.StoreKey,
-		bech32ibctypes.StoreKey,
-	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
-
-=======
->>>>>>> origin/main
 	app := &OsmosisApp{
 		AppKeepers:        keepers.AppKeepers{},
 		BaseApp:           bApp,
@@ -387,74 +214,7 @@ func NewOsmosisApp(
 	//
 	// Any time a module requires a keeper de-ref'd thats not its native one,
 	// its code-smell and should probably change. We should get the staking keeper dependencies fixed.
-<<<<<<< HEAD
-	app.mm = module.NewManager(
-		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
-			encodingConfig.TxConfig,
-		),
-		auth.NewAppModule(appCodec, *app.AccountKeeper, nil),
-		vesting.NewAppModule(*app.AccountKeeper, app.BankKeeper),
-		bech32ics20.NewAppModule(appCodec, *app.Bech32ICS20Keeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants),
-		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper),
-		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		upgrade.NewAppModule(*app.UpgradeKeeper),
-		evidence.NewAppModule(*app.EvidenceKeeper),
-		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		ibc.NewAppModule(app.IBCKeeper),
-		params.NewAppModule(*app.ParamsKeeper),
-		app.transferModule,
-		claim.NewAppModule(appCodec, *app.ClaimKeeper),
-		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
-		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
-		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
-		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
-		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
-		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
-		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper),
-		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
-		launchpadmodule.NewAppModule(appCodec, app.LaunchpadKeeper, *app.BankKeeper, app.interfaceRegistry),
-	)
-||||||| f0842b9b
-	app.mm = module.NewManager(
-		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
-			encodingConfig.TxConfig,
-		),
-		auth.NewAppModule(appCodec, *app.AccountKeeper, nil),
-		vesting.NewAppModule(*app.AccountKeeper, app.BankKeeper),
-		bech32ics20.NewAppModule(appCodec, *app.Bech32ICS20Keeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants),
-		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper),
-		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		upgrade.NewAppModule(*app.UpgradeKeeper),
-		evidence.NewAppModule(*app.EvidenceKeeper),
-		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		ibc.NewAppModule(app.IBCKeeper),
-		params.NewAppModule(*app.ParamsKeeper),
-		app.transferModule,
-		claim.NewAppModule(appCodec, *app.ClaimKeeper),
-		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
-		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
-		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
-		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
-		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
-		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
-		superfluid.NewAppModule(appCodec, app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper),
-		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
-	)
-=======
 	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
->>>>>>> origin/main
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -473,44 +233,7 @@ func NewOsmosisApp(
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
-<<<<<<< HEAD
-	app.mm.SetOrderInitGenesis(
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
-		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
-		ibchost.ModuleName,
-		gammtypes.ModuleName,
-		txfeestypes.ModuleName,
-		genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
-		bech32ibctypes.ModuleName, // comes after ibctransfertypes
-		poolincentivestypes.ModuleName,
-		superfluidtypes.ModuleName,
-		claimtypes.ModuleName,
-		incentivestypes.ModuleName,
-		epochstypes.ModuleName,
-		lockuptypes.ModuleName,
-		authz.ModuleName,
-		launchpad.ModuleName,
-	)
-||||||| f0842b9b
-	app.mm.SetOrderInitGenesis(
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, stakingtypes.ModuleName,
-		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, crisistypes.ModuleName,
-		ibchost.ModuleName,
-		gammtypes.ModuleName,
-		txfeestypes.ModuleName,
-		genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
-		bech32ibctypes.ModuleName, // comes after ibctransfertypes
-		poolincentivestypes.ModuleName,
-		superfluidtypes.ModuleName,
-		claimtypes.ModuleName,
-		incentivestypes.ModuleName,
-		epochstypes.ModuleName,
-		lockuptypes.ModuleName,
-		authz.ModuleName,
-	)
-=======
 	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
->>>>>>> origin/main
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
@@ -726,52 +449,3 @@ func GetMaccPerms() map[string][]string {
 
 	return dupMaccPerms
 }
-<<<<<<< HEAD
-
-// initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
-	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
-
-	paramsKeeper.Subspace(authtypes.ModuleName)
-	paramsKeeper.Subspace(banktypes.ModuleName)
-	paramsKeeper.Subspace(stakingtypes.ModuleName)
-	paramsKeeper.Subspace(minttypes.ModuleName)
-	paramsKeeper.Subspace(distrtypes.ModuleName)
-	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
-	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
-	paramsKeeper.Subspace(incentivestypes.ModuleName)
-	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
-	paramsKeeper.Subspace(superfluidtypes.ModuleName)
-	paramsKeeper.Subspace(gammtypes.ModuleName)
-	paramsKeeper.Subspace(launchpad.ModuleName)
-
-	return paramsKeeper
-}
-||||||| f0842b9b
-
-// initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey) paramskeeper.Keeper {
-	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
-
-	paramsKeeper.Subspace(authtypes.ModuleName)
-	paramsKeeper.Subspace(banktypes.ModuleName)
-	paramsKeeper.Subspace(stakingtypes.ModuleName)
-	paramsKeeper.Subspace(minttypes.ModuleName)
-	paramsKeeper.Subspace(distrtypes.ModuleName)
-	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
-	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
-	paramsKeeper.Subspace(incentivestypes.ModuleName)
-	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
-	paramsKeeper.Subspace(superfluidtypes.ModuleName)
-	paramsKeeper.Subspace(gammtypes.ModuleName)
-
-	return paramsKeeper
-}
-=======
->>>>>>> origin/main
