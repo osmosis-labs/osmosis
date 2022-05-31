@@ -143,11 +143,12 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
-func updateGenesisArg[V proto.Message](appGenState map[string]json.RawMessage, moduleName string, protoVal V, updateGenesis func(V) V) error {
+func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage, moduleName string, protoVal V, updateGenesis func(V)) error {
 	if err := util.Cdc.UnmarshalJSON(appGenState[moduleName], protoVal); err != nil {
 		return err
 	}
-	newGenState := updateGenesis(protoVal)
+	updateGenesis(protoVal)
+	newGenState := protoVal
 
 	bz, err := util.Cdc.MarshalJSON(newGenState)
 	if err != nil {
@@ -171,44 +172,16 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 
 	var bankGenState banktypes.GenesisState
-	updateGenesisArg[*banktypes.GenesisState](appGenState, banktypes.ModuleName, &bankGenState,
-		func(bankGenState *banktypes.GenesisState) *banktypes.GenesisState {
-			bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
-				Description: "An example stable token",
-				Display:     OsmoDenom,
-				Base:        OsmoDenom,
-				Symbol:      OsmoDenom,
-				Name:        OsmoDenom,
-				DenomUnits: []*banktypes.DenomUnit{
-					{
-						Denom:    OsmoDenom,
-						Exponent: 0,
-					},
-				},
-			})
-			return bankGenState
-		})
-
-	// modify stake module genesis params
-	var stakeGenState staketypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[staketypes.ModuleName], &stakeGenState); err != nil {
-		return err
-	}
-
-	stakeGenState.Params = staketypes.Params{
-		BondDenom:         OsmoDenom,
-		MaxValidators:     100,
-		MaxEntries:        7,
-		HistoricalEntries: 10000,
-		UnbondingTime:     240000000000,
-		MinCommissionRate: sdk.ZeroDec(),
-	}
-
-	sz, err := util.Cdc.MarshalJSON(&stakeGenState)
+	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &bankGenState, updateBankGenesis)
 	if err != nil {
 		return err
 	}
-	appGenState[staketypes.ModuleName] = sz
+
+	var stakeGenState staketypes.GenesisState
+	err = updateModuleGenesis(appGenState, staketypes.ModuleName, &stakeGenState, updateStakeGenesis)
+	if err != nil {
+		return err
+	}
 
 	// modify pool incentives module genesis params
 	var pooliGenState poolitypes.GenesisState
@@ -423,6 +396,33 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 		}
 	}
 	return nil
+}
+
+func updateBankGenesis(bankGenState *banktypes.GenesisState) {
+	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
+		Description: "An example stable token",
+		Display:     OsmoDenom,
+		Base:        OsmoDenom,
+		Symbol:      OsmoDenom,
+		Name:        OsmoDenom,
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    OsmoDenom,
+				Exponent: 0,
+			},
+		},
+	})
+}
+
+func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
+	stakeGenState.Params = staketypes.Params{
+		BondDenom:         OsmoDenom,
+		MaxValidators:     100,
+		MaxEntries:        7,
+		HistoricalEntries: 10000,
+		UnbondingTime:     240000000000,
+		MinCommissionRate: sdk.ZeroDec(),
+	}
 }
 
 func initNodes(c *internalChain, numVal int) error {
