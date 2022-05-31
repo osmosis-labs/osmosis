@@ -17,6 +17,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -142,6 +143,20 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
+func updateGenesisArg[V proto.Message](appGenState map[string]json.RawMessage, moduleName string, protoVal V, updateGenesis func(V) V) error {
+	if err := util.Cdc.UnmarshalJSON(appGenState[moduleName], protoVal); err != nil {
+		return err
+	}
+	newGenState := updateGenesis(protoVal)
+
+	bz, err := util.Cdc.MarshalJSON(newGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[moduleName] = bz
+	return nil
+}
+
 func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
@@ -156,29 +171,23 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 
 	var bankGenState banktypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState); err != nil {
-		return err
-	}
-
-	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
-		Description: "An example stable token",
-		Display:     OsmoDenom,
-		Base:        OsmoDenom,
-		Symbol:      OsmoDenom,
-		Name:        OsmoDenom,
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    OsmoDenom,
-				Exponent: 0,
-			},
-		},
-	})
-
-	bz, err := util.Cdc.MarshalJSON(&bankGenState)
-	if err != nil {
-		return err
-	}
-	appGenState[banktypes.ModuleName] = bz
+	updateGenesisArg[*banktypes.GenesisState](appGenState, banktypes.ModuleName, &bankGenState,
+		func(bankGenState *banktypes.GenesisState) *banktypes.GenesisState {
+			bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
+				Description: "An example stable token",
+				Display:     OsmoDenom,
+				Base:        OsmoDenom,
+				Symbol:      OsmoDenom,
+				Name:        OsmoDenom,
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    OsmoDenom,
+						Exponent: 0,
+					},
+				},
+			})
+			return bankGenState
+		})
 
 	// modify stake module genesis params
 	var stakeGenState staketypes.GenesisState
@@ -389,7 +398,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 
 	genUtilGenState.GenTxs = genTxs
 
-	bz, err = util.Cdc.MarshalJSON(&genUtilGenState)
+	bz, err := util.Cdc.MarshalJSON(&genUtilGenState)
 	if err != nil {
 		return err
 	}
