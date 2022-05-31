@@ -310,13 +310,8 @@ Example:
 					Add(account.LiquidBalances...).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Staked)).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.UnbondingStake)).
-<<<<<<< HEAD:cmd/osmosisd/cmd/balances_from_state_export.go
-					Add(account.Bonded...).
-					Add(account.UnclaimedAirdrop...)
-				snapshotAccs[addr] = account
-=======
 					Add(account.Bonded...)
->>>>>>> 74c9bd5 (Add back balances_from_state_export_command (#1594)):cmd/osmosisd/cmd/balances_from_state_export.go.history
+				snapshotAccs[addr] = account
 			}
 
 			snapshot := DeriveSnapshot{
