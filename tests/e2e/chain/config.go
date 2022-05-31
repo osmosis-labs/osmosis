@@ -171,14 +171,12 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 		return err
 	}
 
-	var bankGenState banktypes.GenesisState
-	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &bankGenState, updateBankGenesis)
+	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis)
 	if err != nil {
 		return err
 	}
 
-	var stakeGenState staketypes.GenesisState
-	err = updateModuleGenesis(appGenState, staketypes.ModuleName, &stakeGenState, updateStakeGenesis)
+	err = updateModuleGenesis(appGenState, staketypes.ModuleName, &staketypes.GenesisState{}, updateStakeGenesis)
 	if err != nil {
 		return err
 	}
