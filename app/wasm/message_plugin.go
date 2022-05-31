@@ -2,12 +2,13 @@ package wasm
 
 import (
 	"encoding/json"
+	"time"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"time"
 
 	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
@@ -202,7 +203,6 @@ func PerformBurn(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk
 func (m *CustomMessenger) lockTokens(ctx sdk.Context, contractAddr sdk.AccAddress, lock *wasmbindings.LockTokensMsg) ([]sdk.Event, [][]byte, error) {
 	coins := []sdk.Coin{sdk.NewCoin(lock.Denom, lock.Amount)}
 	_, err := m.lockupKeeper.CreateLock(ctx, contractAddr, coins, time.Duration(lock.Duration))
-
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(err, "perform lock")
 	}

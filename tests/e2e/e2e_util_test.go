@@ -222,7 +222,6 @@ func (s *IntegrationTestSuite) depositProposal(c *chain.Chain) {
 	)
 
 	s.T().Log("successfully deposited to proposal")
-
 }
 
 func (s *IntegrationTestSuite) voteProposal(chainConfig *chainConfig) {
@@ -307,7 +306,6 @@ func (s *IntegrationTestSuite) chainStatus(containerId string) []byte {
 
 	errBufByte := errBuf.Bytes()
 	return errBufByte
-
 }
 
 func (s *IntegrationTestSuite) getCurrentChainHeight(containerId string) int {
@@ -360,7 +358,6 @@ func (s *IntegrationTestSuite) queryBalances(containerId string, addr string) (s
 	}
 
 	return balancesResp.GetBalances(), nil
-
 }
 
 func (s *IntegrationTestSuite) createPool(c *chain.Chain, poolFile string) {
@@ -399,5 +396,4 @@ func (s *IntegrationTestSuite) createPool(c *chain.Chain, poolFile string) {
 	)
 
 	s.T().Logf("successfully created pool from %s container: %s", s.valResources[c.ChainMeta.Id][0].Container.Name[1:], s.valResources[c.ChainMeta.Id][0].Container.ID)
-
 }

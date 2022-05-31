@@ -2,9 +2,10 @@ package wasmbindings
 
 import (
 	"encoding/json"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"time"
 )
 
 type OsmosisMsg struct {

@@ -28,7 +28,8 @@ func TestSendBlockDecorator(t *testing.T) {
 	for _, testCase := range testCases {
 		err := decorator.CheckIfBlocked(
 			[]sdk.Msg{
-				bank.NewMsgSend(testCase.from, testCase.to, sdk.NewCoins(sdk.NewInt64Coin("test", 1)))})
+				bank.NewMsgSend(testCase.from, testCase.to, sdk.NewCoins(sdk.NewInt64Coin("test", 1))),
+			})
 		if testCase.expectPass {
 			require.NoError(t, err)
 		} else {

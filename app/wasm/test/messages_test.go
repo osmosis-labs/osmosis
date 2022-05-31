@@ -61,7 +61,6 @@ func TestCreateDenom(t *testing.T) {
 			require.NoError(t, gotErr)
 		})
 	}
-
 }
 
 func TestChangeAdmin(t *testing.T) {
@@ -285,7 +284,6 @@ func TestMint(t *testing.T) {
 			require.NoError(t, gotErr)
 		})
 	}
-
 }
 
 func TestSwap(t *testing.T) {

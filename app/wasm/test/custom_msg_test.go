@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 
 	"github.com/stretchr/testify/require"
-	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
