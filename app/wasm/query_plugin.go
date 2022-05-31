@@ -18,25 +18,24 @@ func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.R
 			return nil, sdkerrors.Wrap(err, "osmosis query")
 		}
 
-		// if contractQuery.FullDenom != nil {
-		// 	contract := contractQuery.FullDenom.Contract
-		// 	subDenom := contractQuery.FullDenom.SubDenom
+		if contractQuery.FullDenom != nil {
+			creator := contractQuery.FullDenom.CreatorAddr
+			subdenom := contractQuery.FullDenom.Subdenom
 
-		// 	fullDenom, err := GetFullDenom(contract, subDenom)
-		// 	if err != nil {
-		// 		return nil, sdkerrors.Wrap(err, "osmo full denom query")
-		// 	}
+			fullDenom, err := GetFullDenom(creator, subdenom)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo full denom query")
+			}
 
-		// 	res := bindings.FullDenomResponse{
-		// 		Denom: fullDenom,
-		// 	}
-		// 	bz, err := json.Marshal(res)
-		// 	if err != nil {
-		// 		return nil, sdkerrors.Wrap(err, "osmo full denom query response")
-		// 	}
-		// 	return bz, nil
-		// } else if contractQuery.PoolState != nil {
-		if contractQuery.PoolState != nil {
+			res := bindings.FullDenomResponse{
+				Denom: fullDenom,
+			}
+			bz, err := json.Marshal(res)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo full denom query response")
+			}
+			return bz, nil
+		} else if contractQuery.PoolState != nil {
 			poolId := contractQuery.PoolState.PoolId
 
 			state, err := osmoKeeper.GetPoolState(ctx, poolId)

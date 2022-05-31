@@ -39,13 +39,13 @@ grpc_addr = 'http://$OSMO_A_E2E_VAL_HOST:9090'
 websocket_addr = 'ws://$OSMO_A_E2E_VAL_HOST:26657/websocket'
 rpc_timeout = '10s'
 account_prefix = 'osmo'
-key_name = 'val01-gaia-a'
+key_name = 'val01-osmosis-a'
 store_prefix = 'ibc'
 max_gas = 6000000
-gas_price = { price = 0.000, denom = 'stake' }
+gas_price = { price = 0.000, denom = 'uosmo' }
 gas_adjustment = 1.0
 clock_drift = '1m' # to accomdate docker containers
-trusting_period = '14days'
+trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }
 [[chains]]
 id = '$OSMO_B_E2E_CHAIN_ID'
@@ -54,19 +54,19 @@ grpc_addr = 'http://$OSMO_B_E2E_VAL_HOST:9090'
 websocket_addr = 'ws://$OSMO_B_E2E_VAL_HOST:26657/websocket'
 rpc_timeout = '10s'
 account_prefix = 'osmo'
-key_name = 'val01-gaia-b'
+key_name = 'val01-osmosis-b'
 store_prefix = 'ibc'
 max_gas = 6000000
-gas_price = { price = 0.000, denom = 'stake' }
+gas_price = { price = 0.000, denom = 'uosmo' }
 gas_adjustment = 1.0
 clock_drift = '1m' # to accomdate docker containers
-trusting_period = '14days'
+trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }
 EOF
 
 # import keys
-hermes keys restore ${OSMO_B_E2E_CHAIN_ID} -n "val01-gaia-b" -m "${OSMO_B_E2E_VAL_MNEMONIC}"
-hermes keys restore ${OSMO_A_E2E_CHAIN_ID} -n "val01-gaia-a" -m "${OSMO_A_E2E_VAL_MNEMONIC}"
+hermes keys restore ${OSMO_B_E2E_CHAIN_ID} -n "val01-osmosis-b" -m "${OSMO_B_E2E_VAL_MNEMONIC}"
+hermes keys restore ${OSMO_A_E2E_CHAIN_ID} -n "val01-osmosis-a" -m "${OSMO_A_E2E_VAL_MNEMONIC}"
 
 # start Hermes relayer
 hermes start

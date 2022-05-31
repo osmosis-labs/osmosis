@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
@@ -224,6 +226,67 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 			},
 		)
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
+	}
+
+	return &res, nil
+}
+
+// SuperfluidOSMODelegationsByDelegator returns all osmo equivilent is staked via superfluid poistions for a specific delegator.
+func (q Querier) SuperfluidOSMODelegationsByDelegator(goCtx context.Context, req *types.SuperfluidOSMODelegationsByDelegatorRequest) (*types.SuperfluidOSMODelegationsByDelegatorResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if len(req.DelegatorAddress) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	res := types.SuperfluidOSMODelegationsByDelegatorResponse{
+		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
+		TotalDelegatedOsmo:          sdk.NewCoin(appparams.BaseCoinUnit, sdk.ZeroInt()),
+	}
+
+	syntheticLocks := q.Keeper.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
+
+	for _, syntheticLock := range syntheticLocks {
+		// don't include unbonding delegations
+		if strings.Contains(syntheticLock.SynthDenom, "superunbonding") {
+			continue
+		}
+
+		periodLock, err := q.Keeper.lk.GetLockByID(ctx, syntheticLock.UnderlyingLockId)
+		if err != nil {
+			return nil, err
+		}
+
+		lockedDenom := periodLock.Coins.GetDenomByIndex(0)
+		lockedAmount := periodLock.GetCoins().AmountOf(lockedDenom)
+
+		// lockedCoins := sdk.NewCoin(baseDenom, periodLock.GetCoins().AmountOf(baseDenom))
+		valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
+		if err != nil {
+			return nil, err
+		}
+
+		// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
+		// and twap of the denom.
+		osmoAmount := q.Keeper.GetSuperfluidOSMOTokens(ctx, lockedDenom, lockedAmount)
+		coin := sdk.NewCoin(appparams.BaseCoinUnit, osmoAmount)
+
+		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
+			types.SuperfluidDelegationRecord{
+				DelegatorAddress: req.DelegatorAddress,
+				ValidatorAddress: valAddr,
+				DelegationAmount: coin,
+			},
+		)
+		res.TotalDelegatedOsmo = res.TotalDelegatedOsmo.Add(coin)
 	}
 
 	return &res, nil

@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 	// create a gauge
 	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
-	err = suite.querier.BeginDistribution(suite.Ctx, *gauge)
+	err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// final check
@@ -120,7 +120,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	// create a gauge
 	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
-	err = suite.App.IncentivesKeeper.BeginDistribution(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	// final check
 	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &types.ActiveGaugesPerDenomRequest{Denom: "lptoken", Pagination: nil})
 	suite.Require().NoError(err)
@@ -140,7 +140,6 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 		StartTime:         startTime,
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
-
 }
 
 func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
@@ -207,7 +206,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 
 	// final check when gauge is moved from upcoming to active
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
-	err = suite.App.IncentivesKeeper.BeginDistribution(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &upcomingGaugeRequest)
 	suite.Require().NoError(err)
 	suite.Require().Len(res.UpcomingGauges, 0)
@@ -319,7 +318,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 
 	// start distribution
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
-	err = suite.querier.BeginDistribution(suite.Ctx, *gauge)
+	err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// check after distribution
@@ -366,7 +365,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 
 	// start distribution
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
-	err = suite.querier.BeginDistribution(suite.Ctx, *gauge)
+	err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers

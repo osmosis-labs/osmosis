@@ -27,35 +27,18 @@ var _ types.MsgServer = msgServer{}
 func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockTokens) (*types.MsgLockTokensResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// we only allow locks with one denom for now
-	if msg.Coins.Len() != 1 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,
-			fmt.Sprintf("Lockups can only have one denom per lockID, got %v", msg.Coins))
-	}
-
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, err
 	}
 
+	// if there is an existing lock
 	if len(msg.Coins) == 1 {
-		locks := server.keeper.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, msg.Coins[0].Denom, msg.Duration)
-		// if existing lock with same duration and denom exists, just add there
+		locks, err := server.keeper.AddToExistingLock(ctx, owner, msg.Coins[0], msg.Duration)
+		if err != nil {
+			return nil, err
+		}
 		if len(locks) > 0 {
-			lock := locks[0]
-			if lock.Coins.Len() != 1 {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-			}
-
-			if lock.Owner != owner.String() {
-				return nil, types.ErrNotLockOwner
-			}
-
-			_, err = server.keeper.AddTokensToLockByID(ctx, lock.ID, msg.Coins)
-			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-			}
-
 			ctx.EventManager().EmitEvents(sdk.Events{
 				sdk.NewEvent(
 					types.TypeEvtAddTokensToLock,
@@ -68,7 +51,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 		}
 	}
 
-	lock, err := server.keeper.LockTokens(ctx, owner, msg.Coins, msg.Duration)
+	lock, err := server.keeper.CreateLock(ctx, owner, msg.Coins, msg.Duration)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
@@ -154,4 +137,33 @@ func createBeginUnlockEvent(lock *types.PeriodLock) sdk.Event {
 		sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
 		sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
 	)
+}
+
+func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtendLockup) (*types.MsgExtendLockupResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	if msg.Owner != lock.Owner {
+		return nil, sdkerrors.Wrapf(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
+	}
+
+	err = server.keeper.ExtendLockup(ctx, *lock, msg.Duration)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtLockTokens,
+			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
+			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
+		),
+	})
+
+	return &types.MsgExtendLockupResponse{}, nil
 }
