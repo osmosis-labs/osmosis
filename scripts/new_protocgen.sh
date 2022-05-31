@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
+set -eox pipefail
 
 # get protoc executions
-go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos 2>/dev/null
+go get github.com/cosmos/gogoproto/protoc-gen-gocosmos 2>/dev/null
 
 cd proto
 buf mod update
 cd ..
+
+echo "generating"
 buf generate
 
 cp -r ./github.com/osmosis-labs/osmosis/v*/x/* x/

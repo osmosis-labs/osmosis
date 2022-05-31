@@ -5,13 +5,13 @@ package balancer
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/types"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
-	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	_ "github.com/regen-network/cosmos-proto"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
@@ -298,7 +298,7 @@ var fileDescriptor_7e991f749f68c2a4 = []byte{
 	0x14, 0xc7, 0xe3, 0x24, 0x6d, 0xe9, 0x14, 0x16, 0x75, 0xc8, 0xc1, 0xcd, 0x8a, 0xb8, 0x1a, 0x24,
 	0xb4, 0x42, 0x1b, 0x5b, 0x5d, 0x90, 0x90, 0xf6, 0x00, 0xda, 0x6c, 0x0b, 0xea, 0xad, 0xb8, 0x48,
 	0xad, 0xe8, 0xc1, 0x9a, 0x24, 0x53, 0xc7, 0xaa, 0xed, 0x31, 0x9e, 0x49, 0x7f, 0xfc, 0x07, 0x1c,
-	0x7b, 0x42, 0x3d, 0xf6, 0xce, 0x09, 0x89, 0xff, 0x81, 0x1e, 0x2b, 0x4e, 0x88, 0x83, 0x8b, 0xda,
+	0x7b, 0x42, 0x3d, 0xf6, 0xce, 0x09, 0x89, 0xff, 0x81, 0x8a, 0x53, 0x8f, 0x88, 0x83, 0x8b, 0xda,
 	0x1b, 0xc7, 0xfc, 0x05, 0x68, 0x66, 0x9e, 0xd3, 0x90, 0x26, 0xa2, 0xd5, 0x9e, 0x9a, 0x99, 0x79,
 	0xef, 0xf3, 0xbe, 0xf3, 0xde, 0x77, 0x5c, 0xf4, 0x05, 0x17, 0x09, 0x17, 0x91, 0xf0, 0x42, 0x9a,
 	0x24, 0x5e, 0xc6, 0x79, 0xdc, 0x4e, 0x78, 0x9f, 0xc5, 0xc2, 0xeb, 0xd2, 0x98, 0xa6, 0x3d, 0x96,
@@ -344,8 +344,8 @@ var fileDescriptor_7e991f749f68c2a4 = []byte{
 	0xf6, 0x82, 0xd2, 0xb9, 0xdd, 0xd9, 0xbf, 0xba, 0x6d, 0x59, 0xd7, 0xb7, 0x2d, 0xeb, 0xef, 0xdb,
 	0x96, 0x75, 0x7e, 0xd7, 0xaa, 0x5c, 0xdf, 0xb5, 0x2a, 0x7f, 0xde, 0xb5, 0x2a, 0x3f, 0x7c, 0x35,
 	0x51, 0x18, 0x2e, 0xda, 0x8e, 0x69, 0x57, 0x94, 0x0b, 0xef, 0xf8, 0x4b, 0xef, 0x74, 0xfe, 0xbf,
-	0xd0, 0xee, 0xa2, 0xfe, 0xac, 0x7f, 0xfe, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe8, 0x95, 0xe6,
-	0x20, 0x6e, 0x07, 0x00, 0x00,
+	0xd0, 0xee, 0xa2, 0xfe, 0xac, 0x7f, 0xfe, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xdd, 0x78, 0x0b,
+	0xc7, 0x6e, 0x07, 0x00, 0x00,
 }
 
 func (m *SmoothWeightChangeParams) Marshal() (dAtA []byte, err error) {
@@ -396,7 +396,7 @@ func (m *SmoothWeightChangeParams) MarshalToSizedBuffer(dAtA []byte) (int, error
 			dAtA[i] = 0x1a
 		}
 	}
-	n1, err1 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration):])
+	n1, err1 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Duration):])
 	if err1 != nil {
 		return 0, err1
 	}
@@ -404,7 +404,7 @@ func (m *SmoothWeightChangeParams) MarshalToSizedBuffer(dAtA []byte) (int, error
 	i = encodeVarintBalancerPool(dAtA, i, uint64(n1))
 	i--
 	dAtA[i] = 0x12
-	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime):])
 	if err2 != nil {
 		return 0, err2
 	}
@@ -616,9 +616,9 @@ func (m *SmoothWeightChangeParams) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.StartTime)
 	n += 1 + l + sovBalancerPool(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration)
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.Duration)
 	n += 1 + l + sovBalancerPool(uint64(l))
 	if len(m.InitialPoolWeights) > 0 {
 		for _, e := range m.InitialPoolWeights {
@@ -761,7 +761,7 @@ func (m *SmoothWeightChangeParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -794,7 +794,7 @@ func (m *SmoothWeightChangeParams) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

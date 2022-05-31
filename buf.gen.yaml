@@ -10,3 +10,4 @@ plugins:
     out: ./docs/core
     opt: 
       - ./docs/protodoc-markdown.tmpl,proto-docs.md
+    strategy: all

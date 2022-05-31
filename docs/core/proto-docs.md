@@ -16,6 +16,30 @@
   
     - [Query](#osmosis.epochs.v1beta1.Query)
   
+- [osmosis/gamm/pool-models/balancer/balancerPool.proto](#osmosis/gamm/pool-models/balancer/balancerPool.proto)
+    - [Pool](#osmosis.gamm.v1beta1.Pool)
+    - [PoolAsset](#osmosis.gamm.v1beta1.PoolAsset)
+    - [PoolParams](#osmosis.gamm.v1beta1.PoolParams)
+    - [SmoothWeightChangeParams](#osmosis.gamm.v1beta1.SmoothWeightChangeParams)
+  
+- [osmosis/gamm/pool-models/balancer/tx.proto](#osmosis/gamm/pool-models/balancer/tx.proto)
+    - [MsgCreateBalancerPool](#osmosis.gamm.poolmodels.balancer.v1beta1.MsgCreateBalancerPool)
+    - [MsgCreateBalancerPoolResponse](#osmosis.gamm.poolmodels.balancer.v1beta1.MsgCreateBalancerPoolResponse)
+  
+    - [Msg](#osmosis.gamm.poolmodels.balancer.v1beta1.Msg)
+  
+- [osmosis/gamm/pool-models/stableswap/stableswap_pool.proto](#osmosis/gamm/pool-models/stableswap/stableswap_pool.proto)
+    - [Pool](#osmosis.gamm.poolmodels.stableswap.v1beta1.Pool)
+    - [PoolParams](#osmosis.gamm.poolmodels.stableswap.v1beta1.PoolParams)
+  
+- [osmosis/gamm/pool-models/stableswap/tx.proto](#osmosis/gamm/pool-models/stableswap/tx.proto)
+    - [MsgCreateStableswapPool](#osmosis.gamm.poolmodels.stableswap.v1beta1.MsgCreateStableswapPool)
+    - [MsgCreateStableswapPoolResponse](#osmosis.gamm.poolmodels.stableswap.v1beta1.MsgCreateStableswapPoolResponse)
+    - [MsgStableSwapAdjustScalingFactors](#osmosis.gamm.poolmodels.stableswap.v1beta1.MsgStableSwapAdjustScalingFactors)
+    - [MsgStableSwapAdjustScalingFactorsResponse](#osmosis.gamm.poolmodels.stableswap.v1beta1.MsgStableSwapAdjustScalingFactorsResponse)
+  
+    - [Msg](#osmosis.gamm.poolmodels.stableswap.v1beta1.Msg)
+  
 - [osmosis/gamm/v1beta1/genesis.proto](#osmosis/gamm/v1beta1/genesis.proto)
     - [GenesisState](#osmosis.gamm.v1beta1.GenesisState)
     - [Params](#osmosis.gamm.v1beta1.Params)
@@ -468,6 +492,315 @@ Query defines the gRPC querier service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `EpochInfos` | [QueryEpochsInfoRequest](#osmosis.epochs.v1beta1.QueryEpochsInfoRequest) | [QueryEpochsInfoResponse](#osmosis.epochs.v1beta1.QueryEpochsInfoResponse) | EpochInfos provide running epochInfos | GET|/osmosis/epochs/v1beta1/epochs|
 | `CurrentEpoch` | [QueryCurrentEpochRequest](#osmosis.epochs.v1beta1.QueryCurrentEpochRequest) | [QueryCurrentEpochResponse](#osmosis.epochs.v1beta1.QueryCurrentEpochResponse) | CurrentEpoch provide current epoch of specified identifier | GET|/osmosis/epochs/v1beta1/current_epoch|
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/gamm/pool-models/balancer/balancerPool.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/gamm/pool-models/balancer/balancerPool.proto
+
+
+
+<a name="osmosis.gamm.v1beta1.Pool"></a>
+
+### Pool
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `id` | [uint64](#uint64) |  |  |
+| `poolParams` | [PoolParams](#osmosis.gamm.v1beta1.PoolParams) |  |  |
+| `future_pool_governor` | [string](#string) |  | This string specifies who will govern the pool in the future. Valid forms of this are: {token name},{duration} {duration} where {token name} if specified is the token which determines the governor, and if not specified is the LP token for this pool.duration is a time specified as 0w,1w,2w, etc. which specifies how long the token would need to be locked up to count in governance. 0w means no lockup. TODO: Further improve these docs |
+| `totalShares` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | sum of all LP tokens sent out |
+| `poolAssets` | [PoolAsset](#osmosis.gamm.v1beta1.PoolAsset) | repeated | These are assumed to be sorted by denomiation. They contain the pool asset and the information about the weight |
+| `totalWeight` | [string](#string) |  | sum of all non-normalized pool weights |
+
+
+
+
+
+
+<a name="osmosis.gamm.v1beta1.PoolAsset"></a>
+
+### PoolAsset
+Pool asset is an internal struct that combines the amount of the
+token in the pool, and its balancer weight.
+This is an awkward packaging of data,
+and should be revisited in a future state migration.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `token` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | Coins we are talking about, the denomination must be unique amongst all PoolAssets for this pool. |
+| `weight` | [string](#string) |  | Weight that is not normalized. This weight must be less than 2^50 |
+
+
+
+
+
+
+<a name="osmosis.gamm.v1beta1.PoolParams"></a>
+
+### PoolParams
+PoolParams defined the parameters that will be managed by the pool
+governance in the future. This params are not managed by the chain
+governance. Instead they will be managed by the token holders of the pool.
+The pool's token holders are specified in future_pool_governor.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `swapFee` | [string](#string) |  |  |
+| `exitFee` | [string](#string) |  |  |
+| `smoothWeightChangeParams` | [SmoothWeightChangeParams](#osmosis.gamm.v1beta1.SmoothWeightChangeParams) |  |  |
+
+
+
+
+
+
+<a name="osmosis.gamm.v1beta1.SmoothWeightChangeParams"></a>
+
+### SmoothWeightChangeParams
+Parameters for changing the weights in a balancer pool smoothly from
+a start weight and end weight over a period of time.
+Currently, the only smooth change supported is linear changing between
+the two weights, but more types may be added in the future.
+When these parameters are set, the weight w(t) for pool time `t` is the
+following:
+  t <= start_time: w(t) = initial_pool_weights
+  start_time < t <= start_time + duration:
+    w(t) = initial_pool_weights + (t - start_time) *
+      (target_pool_weights - initial_pool_weights) / (duration)
+  t > start_time + duration: w(t) = target_pool_weights
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | The start time for beginning the weight change. If a parameter change / pool instantiation leaves this blank, it should be generated by the state_machine as the current time. |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  | Duration for the weights to change over |
+| `initialPoolWeights` | [PoolAsset](#osmosis.gamm.v1beta1.PoolAsset) | repeated | The initial pool weights. These are copied from the pool's settings at the time of weight change instantiation. The amount PoolAsset.token.amount field is ignored if present, future type refactorings should just have a type with the denom & weight here. |
+| `targetPoolWeights` | [PoolAsset](#osmosis.gamm.v1beta1.PoolAsset) | repeated | The target pool weights. The pool weights will change linearly with respect to time between start_time, and start_time + duration. The amount PoolAsset.token.amount field is ignored if present, future type refactorings should just have a type with the denom & weight here.
+
+Intermediate variable for the 'slope' of pool weights. This is equal to (target_pool_weights - initial_pool_weights) / (duration) TODO: Work out precision, and decide if this is good to add repeated PoolAsset poolWeightSlope = 5 [ (gogoproto.moretags) = "yaml:\"pool_weight_slope\"", (gogoproto.nullable) = false ]; |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/gamm/pool-models/balancer/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/gamm/pool-models/balancer/tx.proto
+
+
+
+<a name="osmosis.gamm.poolmodels.balancer.v1beta1.MsgCreateBalancerPool"></a>
+
+### MsgCreateBalancerPool
+===================== MsgCreatePool
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `poolParams` | [osmosis.gamm.v1beta1.PoolParams](#osmosis.gamm.v1beta1.PoolParams) |  |  |
+| `poolAssets` | [osmosis.gamm.v1beta1.PoolAsset](#osmosis.gamm.v1beta1.PoolAsset) | repeated |  |
+| `future_pool_governor` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.gamm.poolmodels.balancer.v1beta1.MsgCreateBalancerPoolResponse"></a>
+
+### MsgCreateBalancerPoolResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool_id` | [uint64](#uint64) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.gamm.poolmodels.balancer.v1beta1.Msg"></a>
+
+### Msg
+
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateBalancerPool` | [MsgCreateBalancerPool](#osmosis.gamm.poolmodels.balancer.v1beta1.MsgCreateBalancerPool) | [MsgCreateBalancerPoolResponse](#osmosis.gamm.poolmodels.balancer.v1beta1.MsgCreateBalancerPoolResponse) |  | |
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/gamm/pool-models/stableswap/stableswap_pool.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/gamm/pool-models/stableswap/stableswap_pool.proto
+
+
+
+<a name="osmosis.gamm.poolmodels.stableswap.v1beta1.Pool"></a>
+
+### Pool
+Pool is the stableswap Pool struct
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `id` | [uint64](#uint64) |  |  |
+| `poolParams` | [PoolParams](#osmosis.gamm.poolmodels.stableswap.v1beta1.PoolParams) |  |  |
+| `future_pool_governor` | [string](#string) |  | This string specifies who will govern the pool in the future. Valid forms of this are: {token name},{duration} {duration} where {token name} if specified is the token which determines the governor, and if not specified is the LP token for this pool.duration is a time specified as 0w,1w,2w, etc. which specifies how long the token would need to be locked up to count in governance. 0w means no lockup. |
+| `totalShares` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | sum of all LP shares |
+| `poolLiquidity` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | assets in the pool |
+| `scaling_factor` | [uint64](#uint64) | repeated | for calculation amognst assets with different precisions |
+| `scaling_factor_governor` | [string](#string) |  | scaling_factor_governor is the address can adjust pool scaling factors |
+
+
+
+
+
+
+<a name="osmosis.gamm.poolmodels.stableswap.v1beta1.PoolParams"></a>
+
+### PoolParams
+PoolParams defined the parameters that will be managed by the pool
+governance in the future. This params are not managed by the chain
+governance. Instead they will be managed by the token holders of the pool.
+The pool's token holders are specified in future_pool_governor.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `swapFee` | [string](#string) |  |  |
+| `exitFee` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/gamm/pool-models/stableswap/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/gamm/pool-models/stableswap/tx.proto
+
+
+
+<a name="osmosis.gamm.poolmodels.stableswap.v1beta1.MsgCreateStableswapPool"></a>
+
+### MsgCreateStableswapPool
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `poolParams` | [PoolParams](#osmosis.gamm.poolmodels.stableswap.v1beta1.PoolParams) |  |  |
+| `initial_pool_liquidity` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `future_pool_governor` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.gamm.poolmodels.stableswap.v1beta1.MsgCreateStableswapPoolResponse"></a>
+
+### MsgCreateStableswapPoolResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `pool_id` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="osmosis.gamm.poolmodels.stableswap.v1beta1.MsgStableSwapAdjustScalingFactors"></a>
+
+### MsgStableSwapAdjustScalingFactors
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  | Sender must be the pool's scaling_factor_governor in order for the tx to succeed |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `scaling_factors` | [uint64](#uint64) | repeated |  |
+
+
+
+
+
+
+<a name="osmosis.gamm.poolmodels.stableswap.v1beta1.MsgStableSwapAdjustScalingFactorsResponse"></a>
+
+### MsgStableSwapAdjustScalingFactorsResponse
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.gamm.poolmodels.stableswap.v1beta1.Msg"></a>
+
+### Msg
+
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateStableswapPool` | [MsgCreateStableswapPool](#osmosis.gamm.poolmodels.stableswap.v1beta1.MsgCreateStableswapPool) | [MsgCreateStableswapPoolResponse](#osmosis.gamm.poolmodels.stableswap.v1beta1.MsgCreateStableswapPoolResponse) |  | |
+| `StableSwapAdjustScalingFactors` | [MsgStableSwapAdjustScalingFactors](#osmosis.gamm.poolmodels.stableswap.v1beta1.MsgStableSwapAdjustScalingFactors) | [MsgStableSwapAdjustScalingFactorsResponse](#osmosis.gamm.poolmodels.stableswap.v1beta1.MsgStableSwapAdjustScalingFactorsResponse) |  | |
 
  <!-- end services -->
 
