@@ -8,7 +8,7 @@ import (
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
-	bindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	bindings "github.com/osmosis-labs/osmosis/v9/app/wasm/bindings"
 )
 
 func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {

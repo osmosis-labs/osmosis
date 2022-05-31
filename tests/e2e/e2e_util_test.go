@@ -18,10 +18,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ory/dockertest/v3/docker"
 
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v9/x/superfluid/types"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v9/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v9/tests/e2e/util"
 )
 
 func (s *IntegrationTestSuite) ExecTx(chainId string, validatorIndex int, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v9/x/tokenfactory/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -13,8 +13,8 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	"github.com/osmosis-labs/osmosis/v9/app"
+	wasmbindings "github.com/osmosis-labs/osmosis/v9/app/wasm/bindings"
 )
 
 func TestCreateDenomMsg(t *testing.T) {
