@@ -286,6 +286,135 @@ func TestMint(t *testing.T) {
 	}
 }
 
+func TestBurn(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	// Fund actor with 100 base denom creation fees
+	tokenCreationFeeAmt := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
+
+	// Create denoms for valid burn tests
+	validDenom := wasmbindings.CreateDenom{
+		Subdenom: "MOON",
+	}
+	err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
+	require.NoError(t, err)
+
+	emptyDenom := wasmbindings.CreateDenom{
+		Subdenom: "",
+	}
+	err = wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &emptyDenom)
+	require.NoError(t, err)
+
+	lucky := RandomAccountAddress()
+
+	// lucky was broke
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Empty(t, balances)
+
+	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
+	emptyDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), emptyDenom.Subdenom)
+	mintAmount, ok := sdk.NewIntFromString("8080")
+	require.True(t, ok)
+
+	specs := map[string]struct {
+		burn   *wasmbindings.BurnTokens
+		expErr bool
+	}{
+		"valid burn": {
+			burn: &wasmbindings.BurnTokens{
+				Denom:           validDenomStr,
+				Amount:          mintAmount,
+				BurnFromAddress: creator.String(),
+			},
+			expErr: false,
+		},
+		"non admin address": {
+			burn: &wasmbindings.BurnTokens{
+				Denom:           validDenomStr,
+				Amount:          mintAmount,
+				BurnFromAddress: lucky.String(),
+			},
+			expErr: true,
+		},
+		"empty sub-denom": {
+			burn: &wasmbindings.BurnTokens{
+				Denom:           emptyDenomStr,
+				Amount:          mintAmount,
+				BurnFromAddress: creator.String(),
+			},
+			expErr: false,
+		},
+		"invalid sub-denom": {
+			burn: &wasmbindings.BurnTokens{
+				Denom:           "sub-denom_2",
+				Amount:          mintAmount,
+				BurnFromAddress: creator.String(),
+			},
+			expErr: true,
+		},
+		"non-minted denom": {
+			burn: &wasmbindings.BurnTokens{
+				Denom:           fmt.Sprintf("factory/%s/%s", creator.String(), "SUN"),
+				Amount:          mintAmount,
+				BurnFromAddress: creator.String(),
+			},
+			expErr: true,
+		},
+		"zero amount": {
+			burn: &wasmbindings.BurnTokens{
+				Denom:           validDenomStr,
+				Amount:          sdk.ZeroInt(),
+				BurnFromAddress: creator.String(),
+			},
+			expErr: true,
+		},
+		"negative amount": {
+			burn:   nil,
+			expErr: true,
+		},
+		"null burn": {
+			burn: &wasmbindings.BurnTokens{
+				Denom:           validDenomStr,
+				Amount:          mintAmount.Neg(),
+				BurnFromAddress: creator.String(),
+			},
+			expErr: true,
+		},
+	}
+
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// Mint valid denom str and empty denom string for burn test
+			mintBinding := &wasmbindings.MintTokens{
+				Denom:         validDenomStr,
+				Amount:        mintAmount,
+				MintToAddress: creator.String(),
+			}
+			err := wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, mintBinding)
+			require.NoError(t, err)
+
+			emptyDenomMintBinding := &wasmbindings.MintTokens{
+				Denom:         emptyDenomStr,
+				Amount:        mintAmount,
+				MintToAddress: creator.String(),
+			}
+			err = wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, emptyDenomMintBinding)
+			require.NoError(t, err)
+
+			// when
+			gotErr := wasm.PerformBurn(osmosis.TokenFactoryKeeper, ctx, creator, spec.burn)
+			// then
+			if spec.expErr {
+				require.Error(t, gotErr)
+				return
+			}
+			require.NoError(t, gotErr)
+		})
+	}
+}
+
 func TestSwap(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
