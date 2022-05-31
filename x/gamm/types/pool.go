@@ -5,7 +5,7 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v7/v043_temp/address"
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
