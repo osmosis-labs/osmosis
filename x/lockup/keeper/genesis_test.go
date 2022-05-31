@@ -1,4 +1,4 @@
-package lockup_test
+package keeper_test
 
 import (
 	"testing"
@@ -8,9 +8,15 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+<<<<<<< HEAD:x/lockup/genesis_test.go
 	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+=======
+	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/x/lockup"
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+>>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631)):x/lockup/keeper/genesis_test.go
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,7 +59,7 @@ func TestInitGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	lockup.InitGenesis(ctx, *app.LockupKeeper, genesis)
+	app.LockupKeeper.InitGenesis(ctx, genesis)
 
 	coins := app.LockupKeeper.GetAccountLockedCoins(ctx, acc1)
 	require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 25000000).String())
@@ -76,7 +82,7 @@ func TestExportGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	lockup.InitGenesis(ctx, *app.LockupKeeper, genesis)
+	app.LockupKeeper.InitGenesis(ctx, genesis)
 
 	err := simapp.FundAccount(app.BankKeeper, ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
 	require.NoError(t, err)
@@ -86,7 +92,7 @@ func TestExportGenesis(t *testing.T) {
 	coins := app.LockupKeeper.GetAccountLockedCoins(ctx, acc2)
 	require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 10000000).String())
 
-	genesisExported := lockup.ExportGenesis(ctx, *app.LockupKeeper)
+	genesisExported := app.LockupKeeper.ExportGenesis(ctx)
 	require.Equal(t, genesisExported.LastLockId, uint64(11))
 	require.Equal(t, genesisExported.Locks, []types.PeriodLock{
 		{

@@ -1,15 +1,19 @@
-package lockup
+package keeper
 
 import (
+<<<<<<< HEAD:x/lockup/genesis.go
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+=======
+	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+>>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631)):x/lockup/keeper/genesis.go
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetLastLockID(ctx, genState.LastLockId)
 	if err := k.InitializeAllLocks(ctx, genState.Locks); err != nil {
 		return
@@ -20,7 +24,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 }
 
 // ExportGenesis returns the capability module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	locks, err := k.GetPeriodLocks(ctx)
 	if err != nil {
 		panic(err)

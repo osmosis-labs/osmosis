@@ -6,6 +6,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+<<<<<<< HEAD
+=======
+
+	simapp "github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v7/x/epochs"
+	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+>>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631))
 
 	simapp "github.com/osmosis-labs/osmosis/v10/app"
 	"github.com/osmosis-labs/osmosis/v10/x/epochs"
@@ -126,9 +133,8 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 		}
 
 		ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
-
 		// check init genesis
-		epochs.InitGenesis(ctx, *app.EpochsKeeper, types.GenesisState{
+		app.EpochsKeeper.InitGenesis(ctx, types.GenesisState{
 			Epochs: []types.EpochInfo{
 				{
 					Identifier:              "monthly",
@@ -171,7 +177,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	initialBlockHeight := int64(1)
 	ctx = ctx.WithBlockHeight(initialBlockHeight).WithBlockTime(now)
 
-	epochs.InitGenesis(ctx, *app.EpochsKeeper, types.GenesisState{
+	app.EpochsKeeper.InitGenesis(ctx, types.GenesisState{
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:              "monthly",
@@ -241,7 +247,7 @@ func TestLegacyEpochSerialization(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
 
 	// check init genesis
-	epochs.InitGenesis(ctx, *app.EpochsKeeper, types.GenesisState{
+	app.EpochsKeeper.InitGenesis(ctx, types.GenesisState{
 		Epochs: []types.EpochInfo{legacyEpochInfo},
 	})
 
