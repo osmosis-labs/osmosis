@@ -274,7 +274,7 @@ localnet-build:
 	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
 
 localnet-build-state-export:
-	@docker build -t local:osmosis-se -f tests/localosmosis/Dockerfile-stateExport .
+	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/Dockerfile-stateExport .
 
 localnet-start:
 	@docker-compose -f tests/localosmosis/docker-compose.yml up
@@ -284,6 +284,9 @@ localnet-start-state-export:
 
 localnet-remove:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
+
+localnet-remove-state-export:
+	@docker-compose -f tests/localosmosis/docker-compose-state-export.yml down
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
