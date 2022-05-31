@@ -311,7 +311,6 @@ Example:
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Staked)).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.UnbondingStake)).
 					Add(account.Bonded...)
-				snapshotAccs[addr] = account
 			}
 
 			snapshot := DeriveSnapshot{
