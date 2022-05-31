@@ -298,7 +298,7 @@ Example:
 			}
 
 			// convert balances to underlying coins and sum up balances to total balance
-			for _, account := range snapshotAccs {
+			for addr, account := range snapshotAccs {
 				// All pool shares are in liquid balances OR bonded balances (locked),
 				// therefore underlyingCoinsForSelectPools on liquidBalances + bondedBalances
 				// will include everything that is in one of those two pools.
@@ -311,6 +311,8 @@ Example:
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Staked)).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.UnbondingStake)).
 					Add(account.Bonded...)
+
+				snapshotAccs[addr] = account
 			}
 
 			snapshot := DeriveSnapshot{
