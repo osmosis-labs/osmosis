@@ -84,6 +84,7 @@ Cosmwasm bindings have been added, to make swapping and creating these new token
 
 ### Other Features
 
+* [#1629](https://github.com/osmosis-labs/osmosis/pull/1629) Fix bug in the airdrop claim script
 * [#1570](https://github.com/osmosis-labs/osmosis/pull/1570) upgrade sdk with app version fix for state-sync
 * [#1554](https://github.com/osmosis-labs/osmosis/pull/1554) local dev environment
 * [#1541](https://github.com/osmosis-labs/osmosis/pull/1541) Add arm64 support to Docker
