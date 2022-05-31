@@ -2,7 +2,7 @@
 
 Osmosis implements the following custom modules:
 * `epochs` - Makes on-chain timers which other modules can execute code during.
-* `gamm` - Generalized AMM infrastructure, which includes
+* `gamm` - Generalized AMM infrastructure, which includes balancer and stableswap
 * `incentives` - Controls specification and distribution of rewards to lockups
 * `lockup` - Enables time-lock escrowing of tokens. (Often called Locking or Bonding)
 * `mint` - Controls token supply emissions, and what modules they are directed to.
