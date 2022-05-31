@@ -144,7 +144,7 @@ func appModules(
 		),
 		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
-		launchpadmodule.NewAppModule(appCodec, app.LaunchpadKeeper, *app.BankKeeper, app.interfaceRegistry),
+		launchpadmodule.NewAppModule(appCodec, *app.LaunchpadKeeper, *app.BankKeeper, app.interfaceRegistry),
 	}
 }
 
