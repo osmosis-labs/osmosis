@@ -145,7 +145,7 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
-// nolint: typecheck
+//nolint:typecheck
 func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage, moduleName string, protoVal V, updateGenesis func(V)) error {
 	if err := util.Cdc.UnmarshalJSON(appGenState[moduleName], protoVal); err != nil {
 		return err
@@ -200,84 +200,30 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 		return err
 	}
 
-	// modify txfees module genesis params
-	var txfeesGenState txfeestypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[txfeestypes.ModuleName], &txfeesGenState); err != nil {
-		return err
-	}
-
-	txfeesGenState.Basedenom = OsmoDenom
-
-	tz, err := util.Cdc.MarshalJSON(&txfeesGenState)
+	err = updateModuleGenesis(appGenState, txfeestypes.ModuleName, &txfeestypes.GenesisState{}, updateTxfeesGenesis)
 	if err != nil {
 		return err
 	}
-	appGenState[txfeestypes.ModuleName] = tz
 
-	// modify gamm module genesis params
-	var gammGenState gammtypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[gammtypes.ModuleName], &gammGenState); err != nil {
-		return err
-	}
-
-	gammGenState.Params.PoolCreationFee = tenOsmo
-
-	gaz, err := util.Cdc.MarshalJSON(&gammGenState)
+	err = updateModuleGenesis(appGenState, gammtypes.ModuleName, &gammtypes.GenesisState{}, updateGammGenesis)
 	if err != nil {
 		return err
 	}
-	appGenState[gammtypes.ModuleName] = gaz
 
-	// modify epoch module genesis params
-	var epochGenState epochtypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[epochtypes.ModuleName], &epochGenState); err != nil {
-		return err
-	}
-
-	epochGenState.Epochs =
-		[]epochtypes.EpochInfo{
-			epochtypes.NewGenesisEpochInfo("week", time.Hour*24*7),
-			// override day epochs which are in default integrations, to be 1min
-			epochtypes.NewGenesisEpochInfo("day", time.Second*60),
-		}
-
-	ez, err := util.Cdc.MarshalJSON(&epochGenState)
+	err = updateModuleGenesis(appGenState, epochtypes.ModuleName, &epochtypes.GenesisState{}, updateEpochGenesis)
 	if err != nil {
 		return err
 	}
-	appGenState[epochtypes.ModuleName] = ez
 
-	// modify crisis module genesis params
-	var crisisGenState crisistypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState); err != nil {
-		return err
-	}
-
-	crisisGenState.ConstantFee.Denom = OsmoDenom
-
-	cz, err := util.Cdc.MarshalJSON(&crisisGenState)
+	err = updateModuleGenesis(appGenState, crisistypes.ModuleName, &crisistypes.GenesisState{}, updateCrisisGenesis)
 	if err != nil {
 		return err
 	}
-	appGenState[crisistypes.ModuleName] = cz
 
-	// modify gov module genesis params
-	var govGenState govtypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState); err != nil {
-		return err
-	}
-
-	govGenState.VotingParams = govtypes.VotingParams{
-		VotingPeriod: votingPeriod,
-	}
-
-	govGenState.DepositParams.MinDeposit = tenOsmo
-
-	gz, err := util.Cdc.MarshalJSON(&govGenState)
+	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govtypes.GenesisState{}, updateGovGenesis(votingPeriod))
 	if err != nil {
 		return err
 	}
-	appGenState[govtypes.ModuleName] = gz
 
 	err = updateModuleGenesis(appGenState, genutiltypes.ModuleName, &genutiltypes.GenesisState{}, updateGenUtilGenesis(c))
 	if err != nil {
@@ -358,6 +304,35 @@ func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
 func updateMintGenesis(mintGenState *minttypes.GenesisState) {
 	mintGenState.Params.MintDenom = OsmoDenom
 	mintGenState.Params.EpochIdentifier = "day"
+}
+
+func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
+	txfeesGenState.Basedenom = OsmoDenom
+}
+
+func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
+	gammGenState.Params.PoolCreationFee = tenOsmo
+}
+
+func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {
+	epochGenState.Epochs = []epochtypes.EpochInfo{
+		epochtypes.NewGenesisEpochInfo("week", time.Hour*24*7),
+		// override day epochs which are in default integrations, to be 1min
+		epochtypes.NewGenesisEpochInfo("day", time.Second*60),
+	}
+}
+
+func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
+	crisisGenState.ConstantFee.Denom = OsmoDenom
+}
+
+func updateGovGenesis(votingPeriod time.Duration) func(*govtypes.GenesisState) {
+	return func(govGenState *govtypes.GenesisState) {
+		govGenState.VotingParams = govtypes.VotingParams{
+			VotingPeriod: votingPeriod,
+		}
+		govGenState.DepositParams.MinDeposit = tenOsmo
+	}
 }
 
 func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
