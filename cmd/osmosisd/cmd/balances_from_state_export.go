@@ -310,8 +310,8 @@ Example:
 					Add(account.LiquidBalances...).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Staked)).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.UnbondingStake)).
-					Add(account.Bonded...).
-					Add(account.UnclaimedAirdrop...)
+					Add(account.Bonded...)
+
 				snapshotAccs[addr] = account
 			}
 
