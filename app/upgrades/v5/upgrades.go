@@ -11,7 +11,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
@@ -55,7 +54,7 @@ func CreateUpgradeHandler(
 		// Override txfees genesis here
 		ctx.Logger().Info("Setting txfees module genesis with actual v5 desired genesis")
 		feeTokens := InitialWhitelistedFeetokens(ctx, keepers.GAMMKeeper)
-		txfees.InitGenesis(ctx, *keepers.TxFeesKeeper, txfeestypes.GenesisState{
+		keepers.TxFeesKeeper.InitGenesis(ctx, txfeestypes.GenesisState{
 			Basedenom: keepers.StakingKeeper.BondDenom(ctx),
 			Feetokens: feeTokens,
 		})
