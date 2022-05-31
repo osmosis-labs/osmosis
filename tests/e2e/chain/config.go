@@ -70,6 +70,7 @@ var (
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom)
 	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)  // 3,300uosmo
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
+	tenOsmo         = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10_000_000)}
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
@@ -87,6 +88,7 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
 	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
 
+	// TODO: Make the SDK make it far cleaner to add an account to GenesisState
 	genFile := config.GenesisFile()
 	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 	if err != nil {
@@ -218,7 +220,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 		return err
 	}
 
-	gammGenState.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10000000)}
+	gammGenState.Params.PoolCreationFee = tenOsmo
 
 	gaz, err := util.Cdc.MarshalJSON(&gammGenState)
 	if err != nil {
@@ -234,24 +236,9 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 
 	epochGenState.Epochs =
 		[]epochtypes.EpochInfo{
-			{
-				Identifier:              "week",
-				StartTime:               time.Time{},
-				Duration:                time.Hour * 24 * 7,
-				CurrentEpoch:            0,
-				CurrentEpochStartHeight: 0,
-				CurrentEpochStartTime:   time.Time{},
-				EpochCountingStarted:    false,
-			},
-			{
-				Identifier:              "day",
-				StartTime:               time.Time{},
-				Duration:                time.Second * 60,
-				CurrentEpoch:            0,
-				CurrentEpochStartHeight: 0,
-				CurrentEpochStartTime:   time.Time{},
-				EpochCountingStarted:    false,
-			},
+			epochtypes.NewGenesisEpochInfo("week", time.Hour*24*7),
+			// override day epochs which are in default integrations, to be 1min
+			epochtypes.NewGenesisEpochInfo("day", time.Second*60),
 		}
 
 	ez, err := util.Cdc.MarshalJSON(&epochGenState)
@@ -284,7 +271,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 		VotingPeriod: votingPeriod,
 	}
 
-	govGenState.DepositParams.MinDeposit = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10000000)}
+	govGenState.DepositParams.MinDeposit = tenOsmo
 
 	gz, err := util.Cdc.MarshalJSON(&govGenState)
 	if err != nil {
