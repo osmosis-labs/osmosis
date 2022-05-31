@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -83,6 +84,24 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
 		)))
+	}
+
+	// for each delegator, query all their superfluid osmo delegations and make sure they have 2 delegations
+	for _, delegator := range delAddrs {
+		res, err := suite.queryClient.SuperfluidOSMODelegationsByDelegator(sdk.WrapSDKContext(suite.Ctx), &types.SuperfluidOSMODelegationsByDelegatorRequest{
+			DelegatorAddress: delegator.String(),
+		})
+		multiplier0 := suite.querier.Keeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[0])
+		multiplier1 := suite.querier.Keeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[1])
+		minRiskFactor := suite.querier.Keeper.GetParams(suite.Ctx).MinimumRiskFactor
+
+		expectAmount0 := multiplier0.Mul(sdk.NewDec(1000000)).Sub(multiplier0.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
+		expectAmount1 := multiplier1.Mul(sdk.NewDec(1000000)).Sub(multiplier1.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
+
+		suite.Require().NoError(err)
+		suite.Require().Len(res.SuperfluidDelegationRecords, 2)
+		suite.Require().True(res.SuperfluidDelegationRecords[0].DelegationAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount0.RoundInt())))
+		suite.Require().True(res.SuperfluidDelegationRecords[1].DelegationAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount1.RoundInt())))
 	}
 
 	// for each validator denom pair, make sure they have 1 delegations

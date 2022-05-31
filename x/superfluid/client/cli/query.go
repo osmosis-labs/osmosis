@@ -35,6 +35,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdSuperfluidDelegationsByDelegator(),
 		GetCmdSuperfluidUndelegationsByDelegator(),
 		GetCmdTotalSuperfluidDelegations(),
+		GetCmdSuperfluidOSMODelegationsByDelegator(),
 	)
 
 	return cmd
@@ -279,6 +280,35 @@ func GetCmdSuperfluidDelegationsByDelegator() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.SuperfluidDelegationsByDelegator(cmd.Context(), &types.SuperfluidDelegationsByDelegatorRequest{
+				DelegatorAddress: args[0],
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdSuperfluidDelegationsByDelegator returns osmo equivilent is staked via superfluid poistions for a specific delegator.
+func GetCmdSuperfluidOSMODelegationsByDelegator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "superfluid-osmo-delegation-by-delegator [delegator_address]",
+		Short: "Query osmo equivilent is staked via superfluid for the specified delegator",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.SuperfluidOSMODelegationsByDelegator(cmd.Context(), &types.SuperfluidOSMODelegationsByDelegatorRequest{
 				DelegatorAddress: args[0],
 			})
 			if err != nil {
