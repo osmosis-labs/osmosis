@@ -295,11 +295,11 @@ func GetCmdSuperfluidDelegationsByDelegator() *cobra.Command {
 	return cmd
 }
 
-// GetCmdSuperfluidDelegationsByDelegator returns osmo equivilent is staked via superfluid poistions for a specific delegator.
+// GetCmdSuperfluidDelegationsByDelegator returns osmo equivalent is staked via superfluid poistions for a specific delegator.
 func GetCmdSuperfluidOSMODelegationsByDelegator() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "superfluid-osmo-delegation-by-delegator [delegator_address]",
-		Short: "Query osmo equivilent is staked via superfluid for the specified delegator",
+		Short: "Query osmo equivalent is staked via superfluid for the specified delegator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

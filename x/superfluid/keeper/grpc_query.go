@@ -231,7 +231,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	return &res, nil
 }
 
-// SuperfluidOSMODelegationsByDelegator returns all osmo equivilent is staked via superfluid poistions for a specific delegator.
+// SuperfluidOSMODelegationsByDelegator returns all osmo equivalent is staked via superfluid poistions for a specific delegator.
 func (q Querier) SuperfluidOSMODelegationsByDelegator(goCtx context.Context, req *types.SuperfluidOSMODelegationsByDelegatorRequest) (*types.SuperfluidOSMODelegationsByDelegatorResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
