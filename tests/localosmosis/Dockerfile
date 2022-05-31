@@ -30,7 +30,7 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 # Runner
 # --------------------------------------------------------
 
-FROM alpine
+FROM ubuntu
 
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 COPY /tests/localosmosis/setup.sh /setup.sh

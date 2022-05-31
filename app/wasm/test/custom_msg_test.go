@@ -176,6 +176,64 @@ func TestMintMsg(t *testing.T) {
 	require.Equal(t, resp.Denom, coin.Denom)
 }
 
+func TestBurnMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	lucky := RandomAccountAddress()
+	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
+	require.NotEmpty(t, reflect)
+
+	// Fund reflect contract with 100 base denom creation fees
+	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
+
+	// lucky was broke
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Empty(t, balances)
+
+	// Create denom for minting
+	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		Subdenom: "SUN",
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
+
+	amount, ok := sdk.NewIntFromString("808010808")
+	require.True(t, ok)
+
+	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+		Denom:         sunDenom,
+		Amount:        amount,
+		MintToAddress: lucky.String(),
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	// can't burn from different address
+	msg = wasmbindings.OsmosisMsg{BurnTokens: &wasmbindings.BurnTokens{
+		Denom:           sunDenom,
+		Amount:          amount,
+		BurnFromAddress: lucky.String(),
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.Error(t, err)
+
+	// lucky needs to send balance to reflect contract to burn it
+	luckyBalance := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	err = osmosis.BankKeeper.SendCoins(ctx, lucky, reflect, luckyBalance)
+	require.NoError(t, err)
+
+	msg = wasmbindings.OsmosisMsg{BurnTokens: &wasmbindings.BurnTokens{
+		Denom:           sunDenom,
+		Amount:          amount,
+		BurnFromAddress: reflect.String(),
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+}
+
 type BaseState struct {
 	StarPool  uint64
 	AtomPool  uint64

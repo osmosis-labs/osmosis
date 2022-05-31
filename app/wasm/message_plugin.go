@@ -165,7 +165,7 @@ func ChangeAdmin(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk
 func (m *CustomMessenger) burnTokens(ctx sdk.Context, contractAddr sdk.AccAddress, burn *wasmbindings.BurnTokens) ([]sdk.Event, [][]byte, error) {
 	err := PerformBurn(m.tokenFactory, ctx, contractAddr, burn)
 	if err != nil {
-		return nil, nil, sdkerrors.Wrap(err, "perform mint")
+		return nil, nil, sdkerrors.Wrap(err, "perform burn")
 	}
 	return nil, nil, nil
 }
