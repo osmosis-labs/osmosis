@@ -237,14 +237,14 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 
 	genDoc.AppState = bz
 
-	bz, err = tmjson.MarshalIndent(genDoc, "", "  ")
+	genesisJson, err := tmjson.MarshalIndent(genDoc, "", "  ")
 	if err != nil {
 		return err
 	}
 
 	// write the updated genesis file to each validator
 	for _, val := range c.validators {
-		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), bz); err != nil {
+		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), genesisJson); err != nil {
 			return err
 		}
 	}
@@ -421,6 +421,7 @@ func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig)
 		var peers []string
 
 		for j := 0; j < len(c.validators); j++ {
+			// skip adding a peer to yourself
 			if i == j {
 				continue
 			}
