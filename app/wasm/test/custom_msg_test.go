@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -784,6 +785,68 @@ func TestExitPoolMsg(t *testing.T) {
 	providerUstarBalanceAfter := osmosis.BankKeeper.GetBalance(ctx, reflect, "ustar")
 
 	require.Equal(t, "239999", providerUstarBalanceAfter.Amount.String())
+
+}
+
+func TestJoinSwapExactAmountInMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	provider := RandomAccountAddress()
+	reflect := instantiateReflectContract(t, ctx, osmosis, provider)
+	require.NotEmpty(t, reflect)
+
+	providerFunds := sdk.NewCoins(
+		sdk.NewInt64Coin("uatom", 333000000),
+		sdk.NewInt64Coin("uosmo", 555000000+3*poolFee),
+		sdk.NewInt64Coin("uregen", 777000000),
+		sdk.NewInt64Coin("ustar", 999000000),
+	)
+
+	fundAccount(t, ctx, osmosis, provider, providerFunds)
+
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, provider)
+	require.NotEmpty(t, balances)
+
+	state := prepareSwapState(t, ctx, osmosis)
+
+	starPool := state.StarPool
+
+	poolInfoBeforeJoinSwap, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
+
+	poolSharesBeforeJoinSwap := poolInfoBeforeJoinSwap.GetTotalShares()
+
+	require.Equal(t, poolSharesBeforeJoinSwap.String(), "100000000000000000000")
+
+	msg := wasmbindings.OsmosisMsg{JoinSwapExactAmountIn: &wasmbindings.JoinSwapExactAmountIn{
+		PoolId:            starPool,
+		ShareOutMinAmount: sdk.NewInt(100000000000000000),
+		TokenIn:           sdk.NewCoin("ustar", sdk.NewInt(1000000)),
+	}}
+
+	err = executeCustom(t, ctx, osmosis, reflect, provider, msg, sdk.NewCoins(sdk.NewCoin("ustar", sdk.NewInt(1000000))))
+	require.NoError(t, err)
+
+	poolDenom := "gamm/pool/1"
+
+	poolInfoAfterJoinSwap, err := osmosis.GAMMKeeper.GetPoolAndPoke(ctx, starPool)
+
+	poolSharesAfterJoinSwap := poolInfoAfterJoinSwap.GetTotalShares()
+
+	providerShares := poolSharesAfterJoinSwap.Sub(poolSharesBeforeJoinSwap)
+
+	fmt.Println("provider shares", providerShares)
+
+	poolLiq := poolInfoAfterJoinSwap.GetTotalPoolLiquidity(ctx)
+
+	// Pool was composed of 12000000 uosmo and 240000000 ustar before swap
+	// 1000000 ustar was added to the pool
+
+	require.Equal(t, poolLiq, sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(12000000)), sdk.NewCoin("ustar", sdk.NewInt(241000000))))
+
+	reflectBalanceAfterJoining := osmosis.BankKeeper.GetBalance(ctx, reflect, poolDenom)
+
+	require.Equal(t, providerShares, reflectBalanceAfterJoining.Amount)
 
 }
 

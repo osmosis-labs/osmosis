@@ -22,6 +22,8 @@ type OsmosisMsg struct {
 	/// Add liquidity to a specified pool to get an exact amount of LP shares while specifying a maximum number tokens
 	/// willing to swap to receive said LP shares.
 	JoinPoolNoSwap *JoinPoolNoSwap `json:"join_pool_no_swap,omitempty"`
+	/// Add liquidity to a specified pool with only one of the required assets (i.e. Join pool 1 (50/50 ATOM-OSMO) with just ATOM).
+	JoinSwapExactAmountIn *JoinSwapExactAmountIn `json:"join_swap_exact_amount_in,omitempty"`
 }
 
 /// CreateDenom creates a new factory denom, of denomination:
@@ -67,7 +69,14 @@ type ExitPool struct {
 }
 
 type JoinPoolNoSwap struct {
-	PoolId         uint64    `json:"pool_id"`
-	ShareOutAmount sdk.Int   `json:"share_out_amount"`
-	TokenInMaxs    sdk.Coins `json:"token_in_maxs"`
+	PoolId            uint64    `json:"pool_id"`
+	ShareOutAmount    sdk.Int   `json:"share_out_amount"`
+	TokenInMaxs       sdk.Coins `json:"token_in_maxs"`
+	ShareOutMinAmount sdk.Int   `json:"share_out_min_amount"`
+}
+
+type JoinSwapExactAmountIn struct {
+	PoolId            uint64   `json:"pool_id"`
+	ShareOutMinAmount sdk.Int  `json:"share_out_min_amount"`
+	TokenIn           sdk.Coin `json:"token_in"`
 }
