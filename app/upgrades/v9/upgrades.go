@@ -76,7 +76,22 @@ func CreateUpgradeHandler(
 		if !correctTypecast {
 			panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
 		}
+
 		icamodule.InitModule(ctx, controllerParams, hostParams)
+
+		// Set the max_age_num_blocks in the evidence params to reflect the 14 day
+		// unbonding period.
+		//
+		// Ref: https://github.com/osmosis-labs/osmosis/issues/1160
+		// TODO: We need to pass BaseApp to the CreateUpgradeHandler call.
+		cp := baseapp.StoreConsensusParams(ctx)
+		if cp != nil && cp.Evidence != nil {
+			evParams := cp.Evidence
+			evParams.MaxAgeNumBlocks = 186_092
+
+			baseapp.StoreConsensusParams(ctx, cp)
+		}
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
