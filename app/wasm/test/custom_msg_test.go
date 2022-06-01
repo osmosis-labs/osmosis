@@ -196,7 +196,7 @@ func TestBurnMsg(t *testing.T) {
 	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
 		Subdenom: "SUN",
 	}}
-	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
 	sunDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
@@ -208,7 +208,7 @@ func TestBurnMsg(t *testing.T) {
 		Amount:        amount,
 		MintToAddress: lucky.String(),
 	}}
-	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
 
 	// can't burn from different address
@@ -217,7 +217,7 @@ func TestBurnMsg(t *testing.T) {
 		Amount:          amount,
 		BurnFromAddress: lucky.String(),
 	}}
-	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.Error(t, err)
 
 	// lucky needs to send balance to reflect contract to burn it
@@ -230,7 +230,7 @@ func TestBurnMsg(t *testing.T) {
 		Amount:          amount,
 		BurnFromAddress: reflect.String(),
 	}}
-	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, []sdk.Coin{})
 	require.NoError(t, err)
 }
 
