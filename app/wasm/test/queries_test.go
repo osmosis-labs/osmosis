@@ -80,7 +80,7 @@ func TestPoolState(t *testing.T) {
 	starSharesDenom := fmt.Sprintf("gamm/pool/%d", starPool)
 	starSharedAmount, _ := sdk.NewIntFromString("100_000_000_000_000_000_000")
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper)
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
 		poolId       uint64
@@ -140,7 +140,7 @@ func TestSpotPrice(t *testing.T) {
 	starFee := sdk.MustNewDecFromStr(fmt.Sprintf("%f", swapFee))
 	starPriceWithFee := starPrice.Add(starFee)
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper)
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
 		spotPrice *wasmbindings.SpotPrice
@@ -283,7 +283,7 @@ func TestEstimateSwap(t *testing.T) {
 
 	starSwapAmount := wasmbindings.SwapAmount{Out: &starAmount}
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper)
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
 		estimateSwap *wasmbindings.EstimateSwap
