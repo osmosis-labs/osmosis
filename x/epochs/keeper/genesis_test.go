@@ -1,14 +1,15 @@
-package epochs_test
+package keeper_test
 
 import (
 	"testing"
 	"time"
 
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	simapp "github.com/osmosis-labs/osmosis/v7/app"
+
+	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 )
 
 func TestEpochsExportGenesis(t *testing.T) {
@@ -18,7 +19,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 	chainStartTime := ctx.BlockTime()
 	chainStartHeight := ctx.BlockHeight()
 
-	genesis := epochs.ExportGenesis(ctx, *app.EpochsKeeper)
+	genesis := app.EpochsKeeper.ExportGenesis(ctx)
 	require.Len(t, genesis.Epochs, 2)
 
 	require.Equal(t, genesis.Epochs[0].Identifier, "day")
@@ -91,7 +92,7 @@ func TestEpochsInitGenesis(t *testing.T) {
 		},
 	}
 
-	epochs.InitGenesis(ctx, *app.EpochsKeeper, genesisState)
+	app.EpochsKeeper.InitGenesis(ctx, genesisState)
 	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.Identifier, "monthly")
 	require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())
