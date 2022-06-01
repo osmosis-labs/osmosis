@@ -47,7 +47,7 @@ func (server msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.
 	// pay some extra gas cost to give a better error here.
 	_, denomExists := server.bankKeeper.GetDenomMetaData(ctx, msg.Amount.Denom)
 	if !denomExists {
-		return nil, types.ErrDenomDoesNotExist
+		return nil, types.ErrDenomDoesNotExist.Wrap("denom is " + msg.Amount.Denom)
 	}
 
 	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Amount.GetDenom())
