@@ -702,3 +702,58 @@ func TestSwapMultiHop(t *testing.T) {
 		})
 	}
 }
+
+func TestJoinSwapExactAmountIn(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12_000_000),
+		sdk.NewInt64Coin("ustar", 240_000_000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	specs := map[string]struct {
+		swap   *wasmbindings.JoinSwapExactAmountIn
+		expErr bool
+	}{
+		"valid join swap exact amount in": {
+			swap: &wasmbindings.JoinSwapExactAmountIn{
+				PoolId:            starPool,
+				ShareOutMinAmount: sdk.NewInt(1000000000),
+				TokenIn:           sdk.NewCoin("ustar", sdk.NewInt(1000000)),
+			},
+		},
+		"invalid pool id": {
+			swap: &wasmbindings.JoinSwapExactAmountIn{
+				PoolId:            starPool + 10,
+				ShareOutMinAmount: sdk.NewInt(1000000000),
+				TokenIn:           sdk.NewCoin("ustar", sdk.NewInt(1000000)),
+			},
+			expErr: true,
+		},
+		"max share out min amount": {
+			swap: &wasmbindings.JoinSwapExactAmountIn{
+				PoolId:            starPool,
+				ShareOutMinAmount: sdk.NewInt(999999999999999999),
+				TokenIn:           sdk.NewCoin("ustar", sdk.NewInt(1000000)),
+			},
+			expErr: true,
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// when
+			_, gotErr := wasm.PerformJoinSwapExactAmountIn(osmosis.GAMMKeeper, ctx, actor, spec.swap)
+			// then
+			if spec.expErr {
+				require.Error(t, gotErr)
+				return
+			}
+			require.NoError(t, gotErr)
+		})
+	}
+}

@@ -2,6 +2,7 @@ package wasm
 
 import (
 	"encoding/json"
+	"fmt"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -276,6 +277,12 @@ func PerformJoinSwapExactAmountIn(g *gammkeeper.Keeper, ctx sdk.Context, contrac
 	if joinSwapExactAmountIn == nil {
 		return sdk.ZeroInt(), wasmvmtypes.InvalidRequest{Err: "join pool extern amount in null"}
 	}
+
+	poolInfo, err := g.GetPoolAndPoke(ctx, joinSwapExactAmountIn.PoolId)
+
+	coins := poolInfo.GetTotalPoolLiquidity(ctx)
+
+	fmt.Println(coins.DenomsSubsetOf(sdk.NewCoins(joinSwapExactAmountIn.TokenIn)))
 
 	shareOutAmount, err := g.JoinSwapExactAmountIn(ctx, contractAddr, joinSwapExactAmountIn.PoolId, sdk.NewCoins(joinSwapExactAmountIn.TokenIn), joinSwapExactAmountIn.ShareOutMinAmount)
 

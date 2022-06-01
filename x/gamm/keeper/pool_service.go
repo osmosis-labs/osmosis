@@ -259,7 +259,16 @@ func (k Keeper) JoinSwapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
+	fmt.Println("got to after getPoolForSwap")
+
+	fmt.Println("tokensIn: ", tokensIn)
+
+	fmt.Println("pool.GetSwapFee(ctx): ", pool.GetSwapFee(ctx))
+
 	sharesOut, err := pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
+
+	fmt.Println("got after sharesOut")
+
 	switch {
 	case err != nil:
 		return sdk.ZeroInt(), err
