@@ -4,16 +4,28 @@ deps:
   - remote: buf.build
     owner: cosmos
     repository: cosmos-proto
+    branch: main
     commit: 1935555c206d4afb9e94615dfd0fad31
+    digest: b1-TNqW6xj2Pjha5Uoj9a-5uOeRo4mwswKfyqMcN3I_gZ0=
+    create_time: 2021-12-02T22:04:00.31049Z
   - remote: buf.build
     owner: cosmos
     repository: cosmos-sdk
+    branch: main
     commit: 74cff46ab36540a98443bff100c0af81
+    digest: b1-pryyGQKBB_HF_lpNC5lpmv1-XYAOhw_p26Z4KTrbjRY=
+    create_time: 2022-05-27T20:55:12.092241Z
   - remote: buf.build
     owner: cosmos
     repository: gogo-proto
+    branch: main
     commit: bee5511075b7499da6178d9e4aaa628b
+    digest: b1-rrBIustouD-S80cVoZ_rM0qJsmei9AgbXy9GPQu6vxg=
+    create_time: 2021-12-02T20:01:17.069307Z
   - remote: buf.build
     owner: googleapis
     repository: googleapis
+    branch: main
     commit: 7529bb85c9cd4c489dba05e04769c547
+    digest: b1-5tZD5ql0WCRobr0GllKks7_VsZT_ZHc35rOILfvWAcQ=
+    create_time: 2022-05-30T15:03:32.604495Z
