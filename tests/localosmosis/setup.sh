@@ -42,5 +42,10 @@ cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["mint"]["params"]["mint
 cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["mint"]["params"]["epoch_identifier"]="day"' | sponge $HOME/.osmosisd/config/genesis.json
 # update gamm genesis
 cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["gamm"]["params"]["pool_creation_fee"][0]["denom"]="uosmo"' | sponge $HOME/.osmosisd/config/genesis.json
-# remove seeds
+# update txfee basedenom
+cat $HOME/.osmosisd/config/genesis.json | jq '.app_state["txfees"]["basedenom"]="uosmo"' | sponge $HOME/.osmosisd/config/genesis.json
+remove seeds
+
 sed -i.bak -E 's#^(seeds[[:space:]]+=[[:space:]]+).*$#\1""#' ~/.osmosisd/config/config.toml
+
+osmosisd start
