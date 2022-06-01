@@ -48,4 +48,4 @@ remove seeds
 
 sed -i.bak -E 's#^(seeds[[:space:]]+=[[:space:]]+).*$#\1""#' ~/.osmosisd/config/config.toml
 
-osmosisd start
+osmosisd start --rpc.laddr=tcp://0.0.0.0:26657
