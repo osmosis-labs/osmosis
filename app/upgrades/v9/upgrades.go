@@ -84,7 +84,7 @@ func CreateUpgradeHandler(
 		//
 		// Ref: https://github.com/osmosis-labs/osmosis/issues/1160
 		// TODO: We need to pass BaseApp to the CreateUpgradeHandler call.
-		cp := baseapp.StoreConsensusParams(ctx)
+		cp := baseapp.GetConsensusParams(ctx)
 		if cp != nil && cp.Evidence != nil {
 			evParams := cp.Evidence
 			evParams.MaxAgeNumBlocks = 186_092
