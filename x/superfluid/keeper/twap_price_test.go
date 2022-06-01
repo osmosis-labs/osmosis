@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v9/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v9/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

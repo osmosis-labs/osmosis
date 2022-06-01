@@ -20,11 +20,11 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v9/app"
+	"github.com/osmosis-labs/osmosis/v9/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v9/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
 )
 
 type KeeperTestHelper struct {

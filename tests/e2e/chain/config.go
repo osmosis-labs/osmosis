@@ -22,14 +22,14 @@ import (
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v9/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v9/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v9/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v9/x/pool-incentives/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v9/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v9/tests/e2e/util"
 )
 
 type ValidatorConfig struct {

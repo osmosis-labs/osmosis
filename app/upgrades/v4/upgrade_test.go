@@ -7,11 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/v9/app"
+	v4 "github.com/osmosis-labs/osmosis/v9/app/upgrades/v4"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"

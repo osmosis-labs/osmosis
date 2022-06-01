@@ -5,8 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v9/app"
 )
 
 // get cmd to convert any bech32 address to an osmo prefix.
