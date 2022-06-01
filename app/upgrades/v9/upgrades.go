@@ -18,6 +18,7 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
+	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
 )
 
 const preUpgradeAppVersion = 8
@@ -25,6 +26,7 @@ const preUpgradeAppVersion = 8
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
+	bpm upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
@@ -83,13 +85,12 @@ func CreateUpgradeHandler(
 		// unbonding period.
 		//
 		// Ref: https://github.com/osmosis-labs/osmosis/issues/1160
-		// TODO: We need to pass BaseApp to the CreateUpgradeHandler call.
-		cp := baseapp.GetConsensusParams(ctx)
+		cp := bpm.GetConsensusParams(ctx)
 		if cp != nil && cp.Evidence != nil {
 			evParams := cp.Evidence
 			evParams.MaxAgeNumBlocks = 186_092
 
-			baseapp.StoreConsensusParams(ctx, cp)
+			bpm.StoreConsensusParams(ctx, cp)
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
