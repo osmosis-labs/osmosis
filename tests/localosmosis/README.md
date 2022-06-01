@@ -9,6 +9,9 @@ You can now quickly test your changes to Osmosis with just a few commands:
 
 3. Once complete, run `make localnet-start`
     - You will now be running a local network with your changes!
+    - The files in `tests/e2e/localosmosis/.osmosisd` that are produced
+    by this command can only be removed by running `make localnet-remove`
+    - That will reset the chain to genesis
 
 4. To add your validator wallet and 9 other preloaded wallets automatically, run `make localnet-keys`
     - These keys are added to your --keyring-backend test
@@ -17,6 +20,8 @@ You can now quickly test your changes to Osmosis with just a few commands:
         - Example: `osmosisd tx bank send lo-test2 osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks --keyring-backend test --chain-id localosmosis`
 
 5. To remove all block history and start from scratch, run `make localnet-remove`
+
+6. To stop the chain but keep the state, run `make localnet-stop`
 
 ## Accounts
 
