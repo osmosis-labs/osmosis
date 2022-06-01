@@ -60,6 +60,9 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		if contractMsg.Swap != nil {
 			return m.swapTokens(ctx, contractAddr, contractMsg.Swap)
 		}
+		if contractMsg.ExitSwapShareAmountIn != nil {
+			return m.swapTokens(ctx, contractAddr, contractMsg.Swap)
+		}
 	}
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
 }
@@ -259,6 +262,27 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 	} else {
 		return nil, wasmvmtypes.UnsupportedRequest{Kind: "must support either Swap.ExactIn or Swap.ExactOut"}
 	}
+}
+
+func (m *CustomMessenger) exitSwapShareAmountIn(ctx sdk.Context, contractAddr sdk.AccAddress, exitSwapShareAmountIn *wasmbindings.ExitSwapShareAmountIn) ([]sdk.Event, [][]byte, error) {
+	_, err := PerformExitSwapShareAmountIn(m.gammKeeper, ctx, contractAddr, exitSwapShareAmountIn)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "exit swap share amount in")
+	}
+	return nil, nil, nil
+}
+
+func PerformExitSwapShareAmountIn(g *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, exitSwapShareAmountIn *wasmbindings.ExitSwapShareAmountIn) (*wasmbindings.SwapAmount, error) {
+	if exitSwapShareAmountIn == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "exit swap share amount in null"}
+	}
+	tokenOutAmount, err := g.ExitSwapShareAmountIn(ctx, contractAddr, exitSwapShareAmountIn.PoolId, exitSwapShareAmountIn.TokenOutDenom, exitSwapShareAmountIn.ShareInAmount, exitSwapShareAmountIn.TokenOutMinAmount)
+
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "exit swap share amount in message")
+	}
+
+	return &wasmbindings.SwapAmount{Out: &tokenOutAmount}, nil
 }
 
 // GetFullDenom is a function, not method, so the message_plugin can use it
