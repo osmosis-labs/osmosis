@@ -10,6 +10,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
 )
 
+// BaseAppParamManager defines an interrace that BaseApp is expected to fullfil
+// that allows upgrade handlers to modify BaseApp parameters.
 type BaseAppParamManager interface {
 	GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams
 	StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusParams)
