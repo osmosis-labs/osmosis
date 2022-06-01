@@ -17,6 +17,8 @@ type OsmosisMsg struct {
 	BurnTokens *BurnTokens `json:"burn_tokens,omitempty"`
 	/// Swap over one or more pools
 	Swap *SwapMsg `json:"swap,omitempty"`
+	/// Remove liquidity from a specified pool with an **exact** amount of LP shares while specifying the **minimum** number of tokens willing to receive for said LP shares.
+	ExitPool *ExitPool `json:"exit_pool,omitempty"`
 	/// Add liquidity to a specified pool to get an exact amount of LP shares while specifying a maximum number tokens
 	/// willing to swap to receive said LP shares.
 	JoinPoolNoSwap *JoinPoolNoSwap `json:"join_pool_no_swap,omitempty"`
@@ -56,6 +58,12 @@ type SwapMsg struct {
 	First  Swap                `json:"first"`
 	Route  []Step              `json:"route"`
 	Amount SwapAmountWithLimit `json:"amount"`
+}
+
+type ExitPool struct {
+	PoolId        uint64    `json:"pool_id"`
+	ShareInAmount sdk.Int   `json:"share_in_amount"`
+	TokenOutMins  sdk.Coins `json:"token_out_mins"`
 }
 
 type JoinPoolNoSwap struct {
