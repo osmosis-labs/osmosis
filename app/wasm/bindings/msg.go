@@ -24,6 +24,9 @@ type OsmosisMsg struct {
 	JoinPoolNoSwap *JoinPoolNoSwap `json:"join_pool_no_swap,omitempty"`
 	/// Add liquidity to a specified pool with only one of the required assets (i.e. Join pool 1 (50/50 ATOM-OSMO) with just ATOM).
 	JoinSwapExactAmountIn *JoinSwapExactAmountIn `json:"join_swap_exact_amount_in,omitempty"`
+	/// Remove an **exact** amount of LP shares from a specified pool, swap the LP shares to
+	/// one of the token pairs to receive a **minimum** of the specified token amount.
+	ExitSwapShareAmountIn *ExitSwapShareAmountIn `json:"exit_swap_share_amount_in,omitempty"`
 }
 
 /// CreateDenom creates a new factory denom, of denomination:
@@ -79,4 +82,11 @@ type JoinSwapExactAmountIn struct {
 	PoolId            uint64   `json:"pool_id"`
 	ShareOutMinAmount sdk.Int  `json:"share_out_min_amount"`
 	TokenIn           sdk.Coin `json:"token_in"`
+}
+
+type ExitSwapShareAmountIn struct {
+	PoolId            uint64  `json:"pool_id"`
+	TokenOutDenom     string  `json:"token_out_denom"`
+	ShareInAmount     sdk.Int `json:"share_in_amount"`
+	TokenOutMinAmount sdk.Int `json:"token_out_min_amount"`
 }

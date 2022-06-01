@@ -2,7 +2,6 @@ package wasm
 
 import (
 	"encoding/json"
-	"fmt"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
@@ -69,6 +68,9 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		}
 		if contractMsg.JoinSwapExactAmountIn != nil {
 			return m.joinSwapExactAmountIn(ctx, contractAddr, contractMsg.JoinSwapExactAmountIn)
+		}
+		if contractMsg.ExitSwapShareAmountIn != nil {
+			return m.exitSwapShareAmountIn(ctx, contractAddr, contractMsg.ExitSwapShareAmountIn)
 		}
 	}
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
@@ -279,6 +281,14 @@ func (m *CustomMessenger) exitPool(ctx sdk.Context, contractAddr sdk.AccAddress,
 	return nil, nil, nil
 }
 
+func (m *CustomMessenger) exitSwapShareAmountIn(ctx sdk.Context, contractAddr sdk.AccAddress, exitSwapShareAmountIn *wasmbindings.ExitSwapShareAmountIn) ([]sdk.Event, [][]byte, error) {
+	_, err := PerformExitSwapShareAmountIn(m.gammKeeper, ctx, contractAddr, exitSwapShareAmountIn)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(err, "exit swap share amount in")
+	}
+	return nil, nil, nil
+}
+
 func (m *CustomMessenger) joinPoolNoSwap(ctx sdk.Context, contractAddr sdk.AccAddress, joinPool *wasmbindings.JoinPoolNoSwap) ([]sdk.Event, [][]byte, error) {
 	err := PerformJoinPoolNoSwap(m.gammKeeper, ctx, contractAddr, joinPool)
 	if err != nil {
@@ -328,12 +338,6 @@ func PerformJoinSwapExactAmountIn(g *gammkeeper.Keeper, ctx sdk.Context, contrac
 		return sdk.ZeroInt(), wasmvmtypes.InvalidRequest{Err: "join pool extern amount in null"}
 	}
 
-	poolInfo, err := g.GetPoolAndPoke(ctx, joinSwapExactAmountIn.PoolId)
-
-	coins := poolInfo.GetTotalPoolLiquidity(ctx)
-
-	fmt.Println(coins.DenomsSubsetOf(sdk.NewCoins(joinSwapExactAmountIn.TokenIn)))
-
 	shareOutAmount, err := g.JoinSwapExactAmountIn(ctx, contractAddr, joinSwapExactAmountIn.PoolId, sdk.NewCoins(joinSwapExactAmountIn.TokenIn), joinSwapExactAmountIn.ShareOutMinAmount)
 
 	if err != nil {
@@ -341,6 +345,18 @@ func PerformJoinSwapExactAmountIn(g *gammkeeper.Keeper, ctx sdk.Context, contrac
 	}
 
 	return shareOutAmount, nil
+}
+func PerformExitSwapShareAmountIn(g *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, exitSwapShareAmountIn *wasmbindings.ExitSwapShareAmountIn) (*wasmbindings.SwapAmount, error) {
+	if exitSwapShareAmountIn == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "exit swap share amount in null"}
+	}
+	tokenOutAmount, err := g.ExitSwapShareAmountIn(ctx, contractAddr, exitSwapShareAmountIn.PoolId, exitSwapShareAmountIn.TokenOutDenom, exitSwapShareAmountIn.ShareInAmount, exitSwapShareAmountIn.TokenOutMinAmount)
+
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "exit swap share amount in message")
+	}
+
+	return &wasmbindings.SwapAmount{Out: &tokenOutAmount}, nil
 }
 
 // GetFullDenom is a function, not method, so the message_plugin can use it

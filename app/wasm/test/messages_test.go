@@ -929,7 +929,7 @@ func TestExitPool(t *testing.T) {
 		"valid exit pool": {
 			ExitPool: &wasmbindings.ExitPool{
 				PoolId:        starPool,
-				ShareInAmount: sdk.NewInt(1000000),
+				ShareInAmount: sdk.NewInt(100000000000000000),
 				TokenOutMins:  sdk.NewCoins(sdk.NewInt64Coin("uosmo", 11999), sdk.NewInt64Coin("ustar", 239999)),
 			}},
 		"zero share in amount": {
@@ -963,14 +963,75 @@ func TestExitPool(t *testing.T) {
 			// use scratch context to avoid interference between tests
 			subCtx, _ := ctx.CacheContext()
 			// when
-			err := wasm.PerformJoinPoolNoSwap(osmosis.GAMMKeeper, subCtx, actor, &wasmbindings.JoinPoolNoSwap{
-				PoolId:         starPool,
-				ShareOutAmount: sdk.NewInt(100000000000000),
-				TokenInMaxs:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 48000_000), sdk.NewInt64Coin("ustar", 9600000_000)),
-			})
-			require.NoError(t, err)
-			fmt.Println("name: ", name)
 			gotErr := wasm.PerformExit(osmosis.GAMMKeeper, subCtx, actor, spec.ExitPool)
+			// then
+			if spec.expErr != nil {
+				require.EqualError(t, gotErr, spec.expErr.Error())
+				return
+			}
+			require.NoError(t, gotErr)
+		})
+	}
+}
+
+func TestExitSwapShareAmountIn(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12_000_000),
+		sdk.NewInt64Coin("ustar", 240_000_000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	err := osmosis.GAMMKeeper.JoinPoolNoSwap(ctx, actor, starPool, sdk.NewInt(100000000000000), sdk.NewCoins(sdk.NewInt64Coin("uosmo", 48000_000), sdk.NewInt64Coin("ustar", 9600000_000)))
+
+	require.NoError(t, err)
+
+	// osmoStarLiquidity := sdk.NewCoins(sdk.NewInt64Coin("uosmo", 12_000),
+	// 	sdk.NewInt64Coin("ustar", 240_000))
+
+	specs := map[string]struct {
+		ExitSwapShareAmountIn *wasmbindings.ExitSwapShareAmountIn
+		expErr                error
+	}{
+		"zero share in amount": {
+			ExitSwapShareAmountIn: &wasmbindings.ExitSwapShareAmountIn{
+				PoolId:            starPool,
+				TokenOutDenom:     "ustar",
+				ShareInAmount:     sdk.NewInt(0),
+				TokenOutMinAmount: sdk.NewInt(479000),
+			},
+			expErr: errors.New("exit swap share amount in message: share ratio is zero or negative: invalid calculated result"),
+		},
+		"incorrect pool id": {
+			ExitSwapShareAmountIn: &wasmbindings.ExitSwapShareAmountIn{
+				PoolId:            starPool + 10,
+				TokenOutDenom:     "ustar",
+				ShareInAmount:     sdk.NewInt(100000000000000000),
+				TokenOutMinAmount: sdk.NewInt(479000),
+			},
+			expErr: errors.New("exit swap share amount in message: pool with ID 11 does not exist"),
+		},
+		"valid exit swap share amount in": {
+			ExitSwapShareAmountIn: &wasmbindings.ExitSwapShareAmountIn{
+				PoolId:            starPool,
+				TokenOutDenom:     "ustar",
+				ShareInAmount:     sdk.NewInt(100000000000000000),
+				TokenOutMinAmount: sdk.NewInt(479000),
+			},
+		},
+	}
+
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// use scratch context to avoid interference between tests
+			subCtx, _ := ctx.CacheContext()
+			// when
+			_, gotErr := wasm.PerformExitSwapShareAmountIn(osmosis.GAMMKeeper, subCtx, actor, spec.ExitSwapShareAmountIn)
 			// then
 			if spec.expErr != nil {
 				require.EqualError(t, gotErr, spec.expErr.Error())

@@ -259,15 +259,7 @@ func (k Keeper) JoinSwapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
-	fmt.Println("got to after getPoolForSwap")
-
-	fmt.Println("tokensIn: ", tokensIn)
-
-	fmt.Println("pool.GetSwapFee(ctx): ", pool.GetSwapFee(ctx))
-
 	sharesOut, err := pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
-
-	fmt.Println("got after sharesOut")
 
 	switch {
 	case err != nil:
@@ -346,12 +338,9 @@ func (k Keeper) ExitPool(
 	}
 	exitFee := pool.GetExitFee(ctx)
 	exitCoins, err = pool.ExitPool(ctx, shareInAmount, exitFee)
-	fmt.Println("existing Coins in exit pool larger: ", exitCoins)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	fmt.Println("!tokenOutMins.DenomsSubsetOf(exitCoins): ", !tokenOutMins.DenomsSubsetOf(exitCoins))
-	fmt.Println("tokenOutMins.IsAnyGT(exitCoins): ", tokenOutMins.IsAnyGT(exitCoins))
 	if !tokenOutMins.DenomsSubsetOf(exitCoins) || tokenOutMins.IsAnyGT(exitCoins) {
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMinAmount,
 			"Exit pool returned %s , minimum tokens out specified as %s",

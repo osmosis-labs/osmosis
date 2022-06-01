@@ -2,7 +2,6 @@ package balancer
 
 import (
 	"errors"
-	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -314,17 +313,13 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
 	exitingCoins, err = p.CalcExitPoolShares(ctx, exitingShares, exitFee)
-	fmt.Println("existing Coins in exitpool: ", exitingCoins)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	fmt.Println("got past err: ")
 
 	if err := p.exitPool(ctx, exitingCoins, exitingShares); err != nil {
 		return sdk.Coins{}, err
 	}
-
-	fmt.Println("got past exitPool: ")
 
 	return exitingCoins, nil
 }
