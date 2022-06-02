@@ -24,11 +24,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-// BaseConfigurer is the base implementation for the
+// baseConfigurer is the base implementation for the
 // other 2 types of configurers. It is not meant to be used
 // on its own. Instead, it is meant to be embedded
 // by composition into more concrete configurers.
-type BaseConfigurer struct {
+type baseConfigurer struct {
 	chainConfigs   []*ChainConfig
 	dockerImages   *dockerImages.ImageConfig
 	dockerPool     *dockertest.Pool
@@ -39,11 +39,11 @@ type BaseConfigurer struct {
 	t              *testing.T
 }
 
-func (bc *BaseConfigurer) GetChainConfig(chainIndex int) ChainConfig {
+func (bc *baseConfigurer) GetChainConfig(chainIndex int) ChainConfig {
 	return *bc.chainConfigs[chainIndex]
 }
 
-func (bc *BaseConfigurer) RunValidators() error {
+func (bc *baseConfigurer) RunValidators() error {
 	for i, chainConfig := range bc.chainConfigs {
 		if err := bc.runValidators(chainConfig, bc.dockerImages.OsmosisRepository, bc.dockerImages.OsmosisTag, i*10); err != nil {
 			return err
@@ -52,7 +52,7 @@ func (bc *BaseConfigurer) RunValidators() error {
 	return nil
 }
 
-func (bc *BaseConfigurer) runValidators(chainConfig *ChainConfig, dockerRepository, dockerTag string, portOffset int) error {
+func (bc *baseConfigurer) runValidators(chainConfig *ChainConfig, dockerRepository, dockerTag string, portOffset int) error {
 	chain := chainConfig.chain
 	bc.t.Logf("starting %s validator containers...", chain.ChainMeta.Id)
 	bc.valResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.skipRunValidatorIndexes))
@@ -138,7 +138,7 @@ func (bc *BaseConfigurer) runValidators(chainConfig *ChainConfig, dockerReposito
 	return nil
 }
 
-func (bc *BaseConfigurer) RunIBC() error {
+func (bc *baseConfigurer) RunIBC() error {
 	// Run a relayer between every possible pair of chains.
 	for i := 0; i < len(bc.chainConfigs); i++ {
 		for j := i + 1; j < len(bc.chainConfigs); j++ {
@@ -150,7 +150,7 @@ func (bc *BaseConfigurer) RunIBC() error {
 	return nil
 }
 
-func (bc *BaseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain) error {
+func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain) error {
 	bc.t.Log("starting Hermes relayer container...")
 
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-hermes-")
@@ -257,7 +257,7 @@ func (bc *BaseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 	return bc.connectIBCChains(chainA, chainB)
 }
 
-func (bc *BaseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Chain) error {
+func (bc *baseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Chain) error {
 	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -315,7 +315,7 @@ func (bc *BaseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Ch
 	return nil
 }
 
-func (bc *BaseConfigurer) ClearResources() error {
+func (bc *baseConfigurer) ClearResources() error {
 	bc.t.Log("tearing down e2e integration test suite...")
 
 	require.NoError(bc.t, bc.dockerPool.Purge(bc.hermesResource))

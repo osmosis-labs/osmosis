@@ -18,14 +18,14 @@ import (
 )
 
 type UpgradeConfigurer struct {
-	BaseConfigurer
+	baseConfigurer
 }
 
 var _ Configurer = (*UpgradeConfigurer)(nil)
 
 func NewUpgradeConfigurer(t *testing.T, chainConfigs []*ChainConfig, setupTests setupFn, dockerImages *dockerImages.ImageConfig, dockerPool *dockertest.Pool, dockerNetwork *dockertest.Network) Configurer {
 	return &UpgradeConfigurer{
-		BaseConfigurer: BaseConfigurer{
+		baseConfigurer: baseConfigurer{
 			chainConfigs:  chainConfigs,
 			dockerImages:  dockerImages,
 			dockerPool:    dockerPool,

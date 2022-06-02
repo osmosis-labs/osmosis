@@ -26,7 +26,7 @@ type syncInfo struct {
 	SyncInfo status `json:"SyncInfo"`
 }
 
-func (bc *BaseConfigurer) CreatePool(chainId string, valIdx int, poolFile string) {
+func (bc *baseConfigurer) CreatePool(chainId string, valIdx int, poolFile string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -69,7 +69,7 @@ func (bc *BaseConfigurer) CreatePool(chainId string, valIdx int, poolFile string
 	bc.t.Logf("successfully created pool on chain id: %s with container: %s", chainId, containerId)
 }
 
-func (bc *BaseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, recipient string, token sdk.Coin) {
+func (bc *baseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, recipient string, token sdk.Coin) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -146,7 +146,7 @@ func (bc *BaseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, 
 	bc.t.Log("successfully sent IBC tokens")
 }
 
-func (bc *BaseConfigurer) queryBalances(containerId string, addr string) (sdk.Coins, error) {
+func (bc *baseConfigurer) queryBalances(containerId string, addr string) (sdk.Coins, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -189,7 +189,7 @@ func (bc *BaseConfigurer) queryBalances(containerId string, addr string) (sdk.Co
 	return balancesResp.GetBalances(), nil
 }
 
-func (bc *BaseConfigurer) getCurrentChainHeight(containerId string) int {
+func (bc *baseConfigurer) getCurrentChainHeight(containerId string) int {
 	var block syncInfo
 	out := bc.chainStatus(containerId)
 	err := json.Unmarshal(out, &block)
@@ -199,7 +199,7 @@ func (bc *BaseConfigurer) getCurrentChainHeight(containerId string) int {
 	return currentHeight
 }
 
-func (bc *BaseConfigurer) chainStatus(containerId string) []byte {
+func (bc *baseConfigurer) chainStatus(containerId string) []byte {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -236,7 +236,7 @@ func (bc *BaseConfigurer) chainStatus(containerId string) []byte {
 	return errBufByte
 }
 
-func (bc *BaseConfigurer) submitProposal(c *chain.Chain, upgradeHeight int) {
+func (bc *baseConfigurer) submitProposal(c *chain.Chain, upgradeHeight int) {
 	upgradeHeightStr := strconv.Itoa(upgradeHeight)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -280,7 +280,7 @@ func (bc *BaseConfigurer) submitProposal(c *chain.Chain, upgradeHeight int) {
 	bc.t.Log("successfully submitted proposal")
 }
 
-func (bc *BaseConfigurer) depositProposal(c *chain.Chain) {
+func (bc *baseConfigurer) depositProposal(c *chain.Chain) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -323,7 +323,7 @@ func (bc *BaseConfigurer) depositProposal(c *chain.Chain) {
 	bc.t.Log("successfully deposited to proposal")
 }
 
-func (bc *BaseConfigurer) voteProposal(chainConfig *ChainConfig) {
+func (bc *baseConfigurer) voteProposal(chainConfig *ChainConfig) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	chain := chainConfig.chain
