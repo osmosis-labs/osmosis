@@ -28,12 +28,12 @@ service Msg {
 message MsgJoinPool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string pool_amount_out = 3 [
+  string share_out_amount = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"pool_amount_out\"",
     (gogoproto.nullable) = false
   ];
-  repeated cosmos.base.v1beta1.Coin token_in_max = 4 [
+  repeated cosmos.base.v1beta1.Coin token_in_maxs = 4 [
     (gogoproto.moretags) = "yaml:\"token_in_max_amounts\"",
     (gogoproto.nullable) = false
   ];
@@ -91,7 +91,7 @@ message MsgSwapExactAmountInResponse {
 // ===================== MsgSwapExactAmountOut
 message SwapAmountOutRoute {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string token_out_denom = 2
+  string token_in_denom = 2
       [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
 }
 

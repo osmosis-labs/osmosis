@@ -634,8 +634,8 @@ This is really MsgJoinPoolNoSwap
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `pool_id` | [uint64](#uint64) |  |  |
-| `pool_amount_out` | [string](#string) |  |  |
-| `token_in_max` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `share_out_amount` | [string](#string) |  |  |
+| `token_in_maxs` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -811,7 +811,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `pool_id` | [uint64](#uint64) |  |  |
-| `token_out_denom` | [string](#string) |  |  |
+| `token_in_denom` | [string](#string) |  |  |
 
 
 
