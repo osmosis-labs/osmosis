@@ -82,6 +82,8 @@ Upgrade from wasmd v0.23.x to [v0.27.0](https://github.com/CosmWasm/wasmd/releas
 The TokenFactory module is added to the chain, making it possible for users and contracts to make new native tokens.
 Cosmwasm bindings have been added, to make swapping and creating these new tokens easier within the contract ecosystem.
 
+* [#1640](https://github.com/osmosis-labs/osmosis/pull/1640) fix: localosmosis to work for testing cosmwasm contracts
+
 ### Other Features
 
 * [#1629](https://github.com/osmosis-labs/osmosis/pull/1629) Fix bug in the airdrop claim script

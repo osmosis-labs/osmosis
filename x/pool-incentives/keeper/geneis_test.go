@@ -1,17 +1,19 @@
-package pool_incentives_test
+package keeper_test
 
 import (
 	"testing"
 	"time"
 
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	pool_incentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	pool_incentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
+
+	simapp "github.com/osmosis-labs/osmosis/v7/app"
+
+	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
 var (
@@ -47,7 +49,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	am := pool_incentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper)
 
 	genesis := testGenesis
-	pool_incentives.InitGenesis(ctx, *app.PoolIncentivesKeeper, &genesis)
+	app.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
 	assert.Equal(t, app.PoolIncentivesKeeper.GetDistrInfo(ctx), *testGenesis.DistrInfo)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
@@ -65,7 +67,7 @@ func TestInitGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	pool_incentives.InitGenesis(ctx, *app.PoolIncentivesKeeper, &genesis)
+	app.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
 
 	params := app.PoolIncentivesKeeper.GetParams(ctx)
 	require.Equal(t, params, genesis.Params)
@@ -82,7 +84,7 @@ func TestExportGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	pool_incentives.InitGenesis(ctx, *app.PoolIncentivesKeeper, &genesis)
+	app.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
 
 	durations := []time.Duration{
 		time.Second,
@@ -94,7 +96,7 @@ func TestExportGenesis(t *testing.T) {
 	savedDurations := app.PoolIncentivesKeeper.GetLockableDurations(ctx)
 	require.Equal(t, savedDurations, durations)
 
-	genesisExported := pool_incentives.ExportGenesis(ctx, *app.PoolIncentivesKeeper)
+	genesisExported := app.PoolIncentivesKeeper.ExportGenesis(ctx)
 	require.Equal(t, genesisExported.Params, genesis.Params)
 	require.Equal(t, genesisExported.LockableDurations, durations)
 	require.Equal(t, genesisExported.DistrInfo, genesis.DistrInfo)
