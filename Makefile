@@ -282,8 +282,12 @@ localnet-start:
 localnet-start-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
 
-localnet-remove:
+localnet-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
+
+localnet-remove: localnet-stop
+	PWD=$(shell pwd)
+	@docker run --user root -v ${PWD}/tests/localosmosis/.osmosisd:/root/osmosis ubuntu /bin/sh -c "rm -rf /root/osmosis/*"
 
 localnet-remove-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
