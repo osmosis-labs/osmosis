@@ -174,7 +174,7 @@ func (app *OsmosisApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 
 	err := iter.Close()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
