@@ -84,19 +84,20 @@ Conceptually, we can split the e2e setup into 2 parts:
     Currently, there exist the following components:
 
     - Base logic
-    - This is the most basic type of setup where a single chain is created
-    - It simply spins up the desired number of validators on a chain.
+        - This is the most basic type of setup where a single chain is created
+        - It simply spins up the desired number of validators on a chain.
     - IBC testing
-    - 2 chains are created connected by Hermes relayer
-    - Upgrade Testing
-    - 2 chains of the older Osmosis version are created, and
-    connected by Hermes relayer
-    - CLI commands are run to create an upgrade proposal and approve it
-    - Old version containers are stopped and the upgrade binary is added
-    - Current branch Osmosis version is spun up to continue with testing
+        - 2 chains are created connected by Hermes relayer
+        - Upgrade Testing
+        - 2 chains of the older Osmosis version are created, and
+        connected by Hermes relayer
+    - Upgrade testing
+        - CLI commands are run to create an upgrade proposal and approve it
+        - Old version containers are stopped and the upgrade binary is added
+        - Current branch Osmosis version is spun up to continue with testing
     - State Sync Testing (WIP)
-    - An additional full node is created after a chain has started.
-    This node is meant to state sync with the rest of the system.
+        - An additional full node is created after a chain has started.
+        - This node is meant to state sync with the rest of the system.
 
     This is done in `configurer/setup_runner.go` via function decorator design pattern
     where we chain the desired setup components during configurer creation.
