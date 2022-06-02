@@ -70,15 +70,6 @@ service Query {
                                    "superfluid_delegations/{delegator_address}";
   }
 
-  // Returns all the superfluid poistions for a specific delegator
-  rpc SuperfluidOSMODelegationsByDelegator(
-      SuperfluidOSMODelegationsByDelegatorRequest)
-      returns (SuperfluidOSMODelegationsByDelegatorResponse) {
-    option (google.api.http).get =
-        "/osmosis/superfluid/v1beta1/"
-        "superfluid_osmo_delegations/{delegator_address}";
-  }
-
   rpc SuperfluidUndelegationsByDelegator(
       SuperfluidUndelegationsByDelegatorRequest)
       returns (SuperfluidUndelegationsByDelegatorResponse) {
@@ -196,16 +187,7 @@ message SuperfluidDelegationsByDelegatorResponse {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-}
-
-message SuperfluidOSMODelegationsByDelegatorRequest {
-  string delegator_address = 1;
-}
-
-message SuperfluidOSMODelegationsByDelegatorResponse {
-  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
-      [ (gogoproto.nullable) = false ];
-  cosmos.base.v1beta1.Coin total_delegated_osmo = 2 [
+  cosmos.base.v1beta1.Coin total_equivilent_staked_amount = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
