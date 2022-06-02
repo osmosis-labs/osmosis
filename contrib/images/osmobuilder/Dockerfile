@@ -31,7 +31,7 @@ RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 RUN go build \
     -mod=readonly \
     -tags "$BUILD_TAGS" \
-    -ldflags "-X github.com/osmosis-labs/osmosis/version.Name=$NAME -X github.com/osmosis-labs/osmosis/version.AppName=$APP_NAME -X github.com/osmosis-labs/osmosis/version.Version=$VERSION -X github.com/osmosis-labs/osmosis/version.Commit=$COMMIT -X github.com/osmosis-labs/osmosis/version.BuildTags='netgo,ledger,muslc' -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
+    -ldflags "-X github.com/cosmos/cosmos-sdk/version.Name=$NAME -X github.com/cosmos/cosmos-sdk/version.AppName=$APP_NAME -X github.com/cosmos/cosmos-sdk/version.Version=$VERSION -X github.com/cosmos/cosmos-sdk/version.Commit=$COMMIT -X github.com/cosmos/cosmos-sdk/version.BuildTags='netgo,ledger,muslc' -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
     -trimpath \
     -o /osmosis/build/ \
     ./...

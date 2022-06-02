@@ -17,6 +17,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -144,6 +145,22 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
+//nolint:typecheck
+func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage, moduleName string, protoVal V, updateGenesis func(V)) error {
+	if err := util.Cdc.UnmarshalJSON(appGenState[moduleName], protoVal); err != nil {
+		return err
+	}
+	updateGenesis(protoVal)
+	newGenState := protoVal
+
+	bz, err := util.Cdc.MarshalJSON(newGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[moduleName] = bz
+	return nil
+}
+
 func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
@@ -157,11 +174,84 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 		return err
 	}
 
-	var bankGenState banktypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState); err != nil {
+	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis)
+	if err != nil {
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, staketypes.ModuleName, &staketypes.GenesisState{}, updateStakeGenesis)
+	if err != nil {
+		return err
+	}
+
+	// pool incentives
+	err = updateModuleGenesis(appGenState, poolitypes.ModuleName, &poolitypes.GenesisState{}, updatePoolIncentiveGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, incentivestypes.ModuleName, &incentivestypes.GenesisState{}, updateIncentivesGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, minttypes.ModuleName, &minttypes.GenesisState{}, updateMintGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, txfeestypes.ModuleName, &txfeestypes.GenesisState{}, updateTxfeesGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, gammtypes.ModuleName, &gammtypes.GenesisState{}, updateGammGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, epochtypes.ModuleName, &epochtypes.GenesisState{}, updateEpochGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, crisistypes.ModuleName, &crisistypes.GenesisState{}, updateCrisisGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govtypes.GenesisState{}, updateGovGenesis(votingPeriod))
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, genutiltypes.ModuleName, &genutiltypes.GenesisState{}, updateGenUtilGenesis(c))
+	if err != nil {
+		return err
+	}
+
+	bz, err := json.MarshalIndent(appGenState, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	genDoc.AppState = bz
+
+	genesisJson, err := tmjson.MarshalIndent(genDoc, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	// write the updated genesis file to each validator
+	for _, val := range c.validators {
+		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), genesisJson); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func updateBankGenesis(bankGenState *banktypes.GenesisState) {
 	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
 		Description: "An example stable token",
 		Display:     OsmoDenom,
@@ -175,19 +265,9 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 			},
 		},
 	})
+}
 
-	bz, err := util.Cdc.MarshalJSON(&bankGenState)
-	if err != nil {
-		return err
-	}
-	appGenState[banktypes.ModuleName] = bz
-
-	// modify stake module genesis params
-	var stakeGenState staketypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[staketypes.ModuleName], &stakeGenState); err != nil {
-		return err
-	}
-
+func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
 	stakeGenState.Params = staketypes.Params{
 		BondDenom:         OsmoDenom,
 		MaxValidators:     100,
@@ -196,211 +276,92 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 		UnbondingTime:     240000000000,
 		MinCommissionRate: sdk.ZeroDec(),
 	}
+}
 
-	sz, err := util.Cdc.MarshalJSON(&stakeGenState)
-	if err != nil {
-		return err
+func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
+	pooliGenState.LockableDurations = []time.Duration{
+		time.Second * 120,
+		time.Second * 180,
+		time.Second * 240,
 	}
-	appGenState[staketypes.ModuleName] = sz
-
-	// modify pool incentives module genesis params
-	var pooliGenState poolitypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[poolitypes.ModuleName], &pooliGenState); err != nil {
-		return err
-	}
-
-	pooliGenState.LockableDurations =
-		[]time.Duration{
-			time.Second * 120,
-			time.Second * 180,
-			time.Second * 240,
-		}
-
 	pooliGenState.Params = poolitypes.Params{
 		MintedDenom: OsmoDenom,
 	}
+}
 
-	pz, err := util.Cdc.MarshalJSON(&pooliGenState)
-	if err != nil {
-		return err
+func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
+	incentivesGenState.LockableDurations = []time.Duration{
+		time.Second,
+		time.Second * 120,
+		time.Second * 180,
+		time.Second * 240,
 	}
-	appGenState[poolitypes.ModuleName] = pz
-
-	// modify incentives module genesis params
-	var incentivesGenState incentivestypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[incentivestypes.ModuleName], &incentivesGenState); err != nil {
-		return err
-	}
-
-	incentivesGenState.LockableDurations =
-		[]time.Duration{
-			time.Second,
-			time.Second * 120,
-			time.Second * 180,
-			time.Second * 240,
-		}
-
 	incentivesGenState.Params = incentivestypes.Params{
 		DistrEpochIdentifier: "day",
 	}
+}
 
-	iz, err := util.Cdc.MarshalJSON(&incentivesGenState)
-	if err != nil {
-		return err
-	}
-	appGenState[incentivestypes.ModuleName] = iz
-
-	// modify mint module genesis params
-	var mintGenState minttypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[minttypes.ModuleName], &mintGenState); err != nil {
-		return err
-	}
-
+func updateMintGenesis(mintGenState *minttypes.GenesisState) {
 	mintGenState.Params.MintDenom = OsmoDenom
 	mintGenState.Params.EpochIdentifier = "day"
+}
 
-	mz, err := util.Cdc.MarshalJSON(&mintGenState)
-	if err != nil {
-		return err
-	}
-	appGenState[minttypes.ModuleName] = mz
-
-	// modify txfees module genesis params
-	var txfeesGenState txfeestypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[txfeestypes.ModuleName], &txfeesGenState); err != nil {
-		return err
-	}
-
+func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 	txfeesGenState.Basedenom = OsmoDenom
+}
 
-	tz, err := util.Cdc.MarshalJSON(&txfeesGenState)
-	if err != nil {
-		return err
-	}
-	appGenState[txfeestypes.ModuleName] = tz
-
-	// modify gamm module genesis params
-	var gammGenState gammtypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[gammtypes.ModuleName], &gammGenState); err != nil {
-		return err
-	}
-
+func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
+}
 
-	gaz, err := util.Cdc.MarshalJSON(&gammGenState)
-	if err != nil {
-		return err
+func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {
+	epochGenState.Epochs = []epochtypes.EpochInfo{
+		epochtypes.NewGenesisEpochInfo("week", time.Hour*24*7),
+		// override day epochs which are in default integrations, to be 1min
+		epochtypes.NewGenesisEpochInfo("day", time.Second*60),
 	}
-	appGenState[gammtypes.ModuleName] = gaz
+}
 
-	// modify epoch module genesis params
-	var epochGenState epochtypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[epochtypes.ModuleName], &epochGenState); err != nil {
-		return err
-	}
-
-	epochGenState.Epochs =
-		[]epochtypes.EpochInfo{
-			epochtypes.NewGenesisEpochInfo("week", time.Hour*24*7),
-			// override day epochs which are in default integrations, to be 1min
-			epochtypes.NewGenesisEpochInfo("day", time.Second*60),
-		}
-
-	ez, err := util.Cdc.MarshalJSON(&epochGenState)
-	if err != nil {
-		return err
-	}
-	appGenState[epochtypes.ModuleName] = ez
-
-	// modify crisis module genesis params
-	var crisisGenState crisistypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[crisistypes.ModuleName], &crisisGenState); err != nil {
-		return err
-	}
-
+func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
 	crisisGenState.ConstantFee.Denom = OsmoDenom
+}
 
-	cz, err := util.Cdc.MarshalJSON(&crisisGenState)
-	if err != nil {
-		return err
-	}
-	appGenState[crisistypes.ModuleName] = cz
-
-	// modify gov module genesis params
-	var govGenState govtypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState); err != nil {
-		return err
-	}
-
-	govGenState.VotingParams = govtypes.VotingParams{
-		VotingPeriod: votingPeriod,
-	}
-
-	govGenState.DepositParams.MinDeposit = tenOsmo
-
-	gz, err := util.Cdc.MarshalJSON(&govGenState)
-	if err != nil {
-		return err
-	}
-	appGenState[govtypes.ModuleName] = gz
-
-	var genUtilGenState genutiltypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[genutiltypes.ModuleName], &genUtilGenState); err != nil {
-		return err
-	}
-
-	// generate genesis txs
-	genTxs := make([]json.RawMessage, len(c.validators))
-	for i, val := range c.validators {
-		stakeAmountCoin := StakeAmountCoinA
-		if c.chainMeta.Id != ChainAID {
-			stakeAmountCoin = StakeAmountCoinB
+func updateGovGenesis(votingPeriod time.Duration) func(*govtypes.GenesisState) {
+	return func(govGenState *govtypes.GenesisState) {
+		govGenState.VotingParams = govtypes.VotingParams{
+			VotingPeriod: votingPeriod,
 		}
-		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
-		if err != nil {
-			return err
+		govGenState.DepositParams.MinDeposit = tenOsmo
+	}
+}
+
+func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
+	return func(genUtilGenState *genutiltypes.GenesisState) {
+		// generate genesis txs
+		genTxs := make([]json.RawMessage, len(c.validators))
+		for i, val := range c.validators {
+			stakeAmountCoin := StakeAmountCoinA
+			if c.chainMeta.Id != ChainAID {
+				stakeAmountCoin = StakeAmountCoinB
+			}
+			createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
+			if err != nil {
+				panic("genutil genesis setup failed: " + err.Error())
+			}
+
+			signedTx, err := val.signMsg(createValmsg)
+			if err != nil {
+				panic("genutil genesis setup failed: " + err.Error())
+			}
+
+			txRaw, err := util.Cdc.MarshalJSON(signedTx)
+			if err != nil {
+				panic("genutil genesis setup failed: " + err.Error())
+			}
+			genTxs[i] = txRaw
 		}
-
-		signedTx, err := val.signMsg(createValmsg)
-		if err != nil {
-			return err
-		}
-
-		txRaw, err := util.Cdc.MarshalJSON(signedTx)
-		if err != nil {
-			return err
-		}
-
-		genTxs[i] = txRaw
+		genUtilGenState.GenTxs = genTxs
 	}
-
-	genUtilGenState.GenTxs = genTxs
-
-	bz, err = util.Cdc.MarshalJSON(&genUtilGenState)
-	if err != nil {
-		return err
-	}
-	appGenState[genutiltypes.ModuleName] = bz
-
-	bz, err = json.MarshalIndent(appGenState, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	genDoc.AppState = bz
-
-	bz, err = tmjson.MarshalIndent(genDoc, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	// write the updated genesis file to each validator
-	for _, val := range c.validators {
-		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), bz); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func initNodes(c *internalChain, numVal int) error {
@@ -460,6 +421,7 @@ func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig)
 		var peers []string
 
 		for j := 0; j < len(c.validators); j++ {
+			// skip adding a peer to yourself
 			if i == j {
 				continue
 			}
