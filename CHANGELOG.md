@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v7.3.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.3.0)
+
 ### Bug Fixes
 
 * [1390](https://github.com/osmosis-labs/osmosis/pull/1390) Upgrade sdk to v0.45.0x-osmo-v7.9, fixing data races with GRPC
