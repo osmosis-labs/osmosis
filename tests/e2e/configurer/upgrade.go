@@ -203,8 +203,8 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *ChainConfig, propHei
 
 		runOpts := &dockertest.RunOptions{
 			Name:       val.Name,
-			Repository: dockerconfig.LocalOsmoRepository,
-			Tag:        dockerconfig.LocalOsmoTag,
+			Repository: dockerconfig.CurrentBranchOsmoRepository,
+			Tag:        dockerconfig.CurrentBranchOsmoTag,
 			NetworkID:  uc.dockerNetwork.Network.ID,
 			User:       "root:root",
 			Mounts: []string{

@@ -86,12 +86,14 @@ var (
 	}
 )
 
-// New a returns a new Configurer depending on the values of its parameters.
-// if only isIBCEnabled, we want to have 2 chains initialized at the local version of Osmosis codebase
-// If only isUpgradeEnabled, that is invalid and an error is returned.
-// if both isIBCEnabled and isUpgradeEnabled, we want 2 chains with IBC initialized
-// at the previous Osmosis version
-// if !isIBCEnabled and !isUpgradeEnabled, we only need one chain at the local version of Osmosis code
+// New returns a new Configurer depending on the values of its parameters.
+// - If only isIBCEnabled, we want to have 2 chains initialized at the current
+// Git branch version of Osmosis codebase.
+// - If only isUpgradeEnabled, that is invalid and an error is returned.
+// - If both isIBCEnabled and isUpgradeEnabled, we want 2 chains with IBC initialized
+// at the previous Osmosis version.
+// - If !isIBCEnabled and !isUpgradeEnabled, we only need one chain at the current
+// Git branch version of the Osmosis code.
 func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) {
 	dockerImages := dockerImages.NewImageConfig(isUpgradeEnabled)
 	dkrPool, err := dockertest.NewPool("")
@@ -126,7 +128,7 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 			dockerNetwork,
 		), nil
 	} else if isIBCEnabled {
-		// configure two chains locally
+		// configure two chains from current Git branch
 		return NewCurrentBranchConfigurer(t,
 			[]*ChainConfig{
 				{
@@ -151,7 +153,7 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 		// to function
 		return nil, errors.New("IBC tests must be enabled for upgrade to work")
 	} else {
-		// configure one chain locally
+		// configure one chain from current Git branch
 		return NewCurrentBranchConfigurer(t,
 			[]*ChainConfig{
 				{

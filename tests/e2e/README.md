@@ -35,25 +35,49 @@ Conceptually, we can split the e2e setup into 2 parts:
 
     The chain can either be initailized off of the current branch, or off the prior mainnet release and then upgraded to the current branch.
 
-    If current, we run chain initialization off of the current branch
-    by calling `chain.Init(...)` method in the `local_configurer.go`
+    If current, we run chain initialization off of the current Git branch
+    by calling `chain.Init(...)` method in the `configurer/current.go`.
 
-    If with the upgrade, the same `chain.Init(...)` function is run on a Docker container
-    of the previous Osmosis version, inside `upgrade_configurer.go`. This is
+    If with the upgrade, the same `chain.Init(...)` function is run inside a Docker container
+    of the previous Osmosis version, inside `configurer/upgrade.go`. This is
     needed to initialize chain configs and the genesis of the previous version that
     we are upgrading from.
 
     The decision of what configuration type to use is decided by the `Configurer`.
-    This is an interface that has `LocalConfigurer` and `UpgradeConfigurer` implementations.
+    This is an interface that has `CurrentBranchConfigurer` abd `UpgradeConfigurer` implementations.
+    There is also a `BaseConfigurer` which is shared by the concrete implementations. However,
+    The user of the `configurer` package does not need to know about this detail.
 
     When the desired configurer is created, the caller may
     configure the chain in the desired way as follows:
 
     ```go
-    conf, _ := configurer.New(...)
+    conf, _ := configurer.New(..., < isIBCEnabled bool >, < isUpgradeEnabled bool >)
 
     conf.ConfigureChains()
     ```
+
+    The caller (e2e setup logic), does not need to be concerned about what type of
+    configurations is hapenning in the background. The approporiate logic is selected
+    depending on what the values of the arguments to `configurer.New(...)` are.
+
+    To dive into the details, the configurer constructor is using a factory design pattern
+    to decide on what kind of configurer to return.
+
+    At the time of this writing, the rules for deciding on the configurer type 
+    are as follows:
+    
+    - If only `isIBCEnabled`, we want to have 2 chains initialized at the
+    current branch version of Osmosis codebase
+
+    - If only `isUpgradeEnabled`, that's invalid (we can decouple upgrade
+     testing from IBC in a future PR)
+
+    - If both `isIBCEnabled` and `isUpgradeEnabled`, we want 2 chain
+    with IBC initialized at the previous Osmosis version
+
+    - If none are true, we only need one chain at the current branch version
+    of the Osmosis code
 
 2. Setting up e2e components
 
@@ -97,7 +121,7 @@ The decoupling between chain initialization and start-up allows to
 minimize the differences between our test suite and the production
 environment.
 
-## Running From Current Branch (Locally)
+## Running From Current Branch
 
 ### To build the binary that initializes the chain
 

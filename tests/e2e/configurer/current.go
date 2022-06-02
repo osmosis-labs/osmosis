@@ -41,7 +41,7 @@ func (cb *CurrentBranchConfigurer) ConfigureChains() error {
 }
 
 func (cb *CurrentBranchConfigurer) ConfigureChain(chainConfig *ChainConfig) error {
-	cb.t.Logf("starting local e2e infrastructure for chain-id: %s", chainConfig.chainId)
+	cb.t.Logf("starting e2e infrastructure from current branch for chain-id: %s", chainConfig.chainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 	if err != nil {
 		return err
