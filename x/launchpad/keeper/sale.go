@@ -73,7 +73,7 @@ func withdraw(p *api.Sale, u *api.UserPosition, amount *sdk.Int, now time.Time) 
 	remaining := triggerUserPurchase(p, u)
 	if amount == nil {
 		*amount = remaining
-	} else if remaining.GT(*amount) {
+	} else if remaining.LT(*amount) {
 		return errors.ErrInvalidRequest.Wrapf("Not enough balance, available balance: %s", remaining)
 	}
 

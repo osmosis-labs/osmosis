@@ -283,12 +283,21 @@ func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 	if err != nil {
 		return txf, nil, err
 	}
-
+	amount, err := fs.GetInt64(FlagAmount)
+	if err != nil {
+		return txf, nil, err
+	}
 	msg := &api.MsgWithdraw{
 		Sender: clientCtx.GetFromAddress().String(),
 		SaleId: saleId,
-		Amount: nil,
 	}
+	if amount > 0 {
+		amt := sdk.NewInt(amount)
+		msg.Amount = &amt
+	} else {
+		msg.Amount = nil
+	}
+	
 	if err = msg.ValidateBasic(); err != nil {
 		return txf, nil, err
 	}
