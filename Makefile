@@ -266,32 +266,17 @@ format:
 ###                                Localnet                                 ###
 ###############################################################################
 
-build-docker-osmosisdnode:
-	$(MAKE) -C contrib/localtestnet
+localnet-keys:
+	. tests/localosmosis/keys.sh
 
-# Run a 4-node testnet locally
-localnet-start: build-linux build-docker-osmosisdnode # localnet-stop
-	@if ! [ -f $(BUILDDIR)/node0/osmosisd/config/genesis.json ]; \
-	then docker run --rm -v $(BUILDDIR):/osmosisd:Z osmosis-labs/osmosisdnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; \
-	fi
-	docker-compose up -d
+localnet-build:
+	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
 
-# Stop testnet
-localnet-stop:
-	docker-compose down
+localnet-start:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up
 
-clean-localnet: localnet-stop
-	rm -rf $(BUILDDIR)/node* $(BUILDDIR)/gentxs
-
-test-docker:
-	@docker build -f contrib/Dockerfile.test -t ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) .
-	@docker tag ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) ${TEST_DOCKER_REPO}:$(shell git rev-parse --abbrev-ref HEAD | sed 's#/#_#g')
-	@docker tag ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) ${TEST_DOCKER_REPO}:latest
-
-test-docker-push: test-docker
-	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD)
-	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --abbrev-ref HEAD | sed 's#/#_#g')
-	@docker push ${TEST_DOCKER_REPO}:latest
+localnet-remove:
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build \

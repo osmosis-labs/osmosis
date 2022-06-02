@@ -23,7 +23,7 @@ COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 ENV HOME /osmosis
 WORKDIR $HOME
 
-EXPOSE 26656 
+EXPOSE 26656
 EXPOSE 26657
 EXPOSE 1317
 
