@@ -47,7 +47,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			bz, err := json.Marshal(res)
 			if err != nil {
-				return nil, fmt.Errorf("failed to JSON marshal DenomAdminResponse response")
+				return nil, fmt.Errorf("failed to JSON marshal DenomAdminResponse response: %w", err)
 			}
 
 			return bz, nil
