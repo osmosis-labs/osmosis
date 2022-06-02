@@ -64,10 +64,7 @@ jobs:
             ${{ runner.os }}-go-${{ matrix.go-version }}-
       -
         name: Run all tests
-        run: make test-cover
-      -
-        name: Codecov
-        uses: codecov/codecov-action@v1.5.2
+        run: make test-unit
   
   e2e_test:
     runs-on: ubuntu-latest

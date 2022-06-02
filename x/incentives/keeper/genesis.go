@@ -1,15 +1,14 @@
-package incentives
+package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 	k.SetLockableDurations(ctx, genState.LockableDurations)
 	for _, gauge := range genState.Gauges {
@@ -21,7 +20,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 }
 
 // ExportGenesis returns the capability module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		Params:            k.GetParams(ctx),
 		LockableDurations: k.GetLockableDurations(ctx),

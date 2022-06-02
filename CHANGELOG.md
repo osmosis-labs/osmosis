@@ -28,7 +28,8 @@ Types of changes (Stanzas):
 "Bug Fixes" for any bug fixes.
 "Client Breaking" for breaking CLI commands and REST routes used by end-users.
 "API Breaking" for breaking exported APIs used by developers building on SDK.
-"State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
+"State Machine Breaking" for any changes that result in a different AppState 
+given same genesisState and txList.
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
@@ -41,16 +42,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-* [#1570](https://github.com/osmosis-labs/osmosis/pull/1570) upgrade sdk with app version fix for state-sync
-* [#1554](https://github.com/osmosis-labs/osmosis/pull/1554) local dev environment
-* [#1535](https://github.com/osmosis-labs/osmosis/pull/1535) upgrade wasmd to v0.27.0.rc3-osmo and ibc-go to v3
-* [#1435] `x/tokenfactory` create denom fee for spam resistance 
-* [#1429] solver for multi-asset CFMM
-* [#1253] Add lockup duration edit method
-* [#1253] Add lockup duration edit method 
 * [#1312] Stableswap: Createpool logic 
 * [#1230] Stableswap CFMM equations
-* [#1541] Add arm64 support to Docker
+* [#1429] solver for multi-asset CFMM
+* [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
+
+## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
+
+The Nitrogen release brings with it a number of features enabling further cosmwasm development work in Osmosis.
+It including breaking changes to the GAMM API's, many developer and node operator improvements for Cosmwasm & IBC, along with new txfee and governance features. In addition to various bug fixes and code quality improvements.
+
+#### GAMM API changes
+
+API changes were done to enable more CFMM's to be implemented within the existing framework.
+Integrators will have to update their messages and queries to adapt, please see https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/breaking_changes_notes.md
+
+#### Governance Changes
+
+* [#1191](https://github.com/osmosis-labs/osmosis/pull/1191), [#1555](https://github.com/osmosis-labs/osmosis/pull/1555) Superfluid stakers now have their votes override their validators votes
+* [sdk #239](https://github.com/osmosis-labs/cosmos-sdk/pull/239) Governance can set a distinct voting period for every proposal type.
+
+#### IBC
+
+* [#1535](https://github.com/osmosis-labs/osmosis/pull/1535) Upgrade to [IBC v3](https://github.com/cosmos/ibc-go/releases/tag/v3.0.0)
+* [#1564](https://github.com/osmosis-labs/osmosis/pull/1564) Enable Interchain account host module
+  * See [here](https://github.com/osmosis-labs/osmosis/blob/main/app/upgrades/v9/upgrades.go#L49-L71) for the supported messages
+
+#### Txfees
+
+[#1145](https://github.com/osmosis-labs/osmosis/pull/1145) Non-osmo txfees now get swapped into osmo everyday at epoch, and then distributed to stakers.
+
+#### Cosmwasm
+
+Upgrade from wasmd v0.23.x to [v0.27.0](https://github.com/CosmWasm/wasmd/releases/tag/v0.27.0). This has the following features:
+  * State sync now works for cosmwasm state
+  * Cosmwasm builds on M1 macs
+  * Many security fixes
+
+The TokenFactory module is added to the chain, making it possible for users and contracts to make new native tokens.
+Cosmwasm bindings have been added, to make swapping and creating these new tokens easier within the contract ecosystem.
+
+* [#1640](https://github.com/osmosis-labs/osmosis/pull/1640) fix: localosmosis to work for testing cosmwasm contracts
+
+### Other Features
+
+* [#1629](https://github.com/osmosis-labs/osmosis/pull/1629) Fix bug in the airdrop claim script
+* [#1570](https://github.com/osmosis-labs/osmosis/pull/1570) upgrade sdk with app version fix for state-sync
+* [#1554](https://github.com/osmosis-labs/osmosis/pull/1554) local dev environment
+* [#1541](https://github.com/osmosis-labs/osmosis/pull/1541) Add arm64 support to Docker
+* [#1535](https://github.com/osmosis-labs/osmosis/pull/1535) upgrade wasmd to v0.27.0.rc3-osmo and ibc-go to v3
+  * State sync now works for cosmwasm state
+  * Cosmwasm builds on M1 macs
+* [#1435](https://github.com/osmosis-labs/osmosis/pull/1435) `x/tokenfactory` create denom fee for spam resistance 
+* [#1253](https://github.com/osmosis-labs/osmosis/pull/1253) Add a message to increase the duration of a bonded lock.
 
 ## [v8.0.0 - Emergency proposals upgrade](https://github.com/osmosis-labs/osmosis/releases/tag/v8.0.0)
 

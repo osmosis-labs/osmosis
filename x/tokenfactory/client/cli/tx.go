@@ -38,7 +38,7 @@ func GetTxCmd() *cobra.Command {
 // NewCreateDenomCmd broadcast MsgCreateDenom
 func NewCreateDenomCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-denom [nonce] [flags]",
+		Use:   "create-denom [subdenom] [flags]",
 		Short: "create a new denom from an account",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
