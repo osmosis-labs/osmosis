@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
@@ -26,24 +24,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-type Configurer interface {
-	ConfigureChains() error
-
-	ClearResources() error
-
-	GetChainConfig(chainIndex int) ChainConfig
-
-	RunSetup() error
-
-	RunValidators() error
-
-	RunIBC() error
-
-	SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, recipient string, token sdk.Coin)
-
-	CreatePool(chainId string, valIdx int, poolFile string)
-}
-
+// BaseConfigurer is the base implementation for the
+// other 2 types of configurers. It is not meant to be used
+// on its own. Instead, it is meant to be embedded
+// by composition into more concrete configurers.
 type BaseConfigurer struct {
 	chainConfigs   []*ChainConfig
 	dockerImages   *dockerImages.ImageConfig
@@ -53,161 +37,6 @@ type BaseConfigurer struct {
 	hermesResource *dockertest.Resource
 	setupTests     setupFn
 	t              *testing.T
-}
-
-type status struct {
-	LatestHeight string `json:"latest_block_height"`
-}
-
-type syncInfo struct {
-	SyncInfo status `json:"SyncInfo"`
-}
-
-const (
-	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
-	UpgradeVersion = "v9"
-	// estimated number of blocks it takes to submit for a proposal
-	PropSubmitBlocks float32 = 10
-	// estimated number of blocks it takes to deposit for a proposal
-	PropDepositBlocks float32 = 10
-	// number of blocks it takes to vote for a single validator to vote for a proposal
-	PropVoteBlocks float32 = 1.2
-	// number of blocks used as a calculation buffer
-	PropBufferBlocks float32 = 5
-	// max retries for json unmarshalling
-	MaxRetries = 60
-)
-
-var (
-	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
-	validatorConfigsChainA = []*chain.ValidatorConfig{
-		{
-			Pruning:            "default",
-			PruningKeepRecent:  "0",
-			PruningInterval:    "0",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-		},
-		{
-			Pruning:            "nothing",
-			PruningKeepRecent:  "0",
-			PruningInterval:    "0",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-		},
-		{
-			Pruning:            "custom",
-			PruningKeepRecent:  "10000",
-			PruningInterval:    "13",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-		},
-		{
-			Pruning:            "everything",
-			PruningKeepRecent:  "0",
-			PruningInterval:    "0",
-			SnapshotInterval:   0,
-			SnapshotKeepRecent: 0,
-		},
-	}
-	validatorConfigsChainB = []*chain.ValidatorConfig{
-		{
-			Pruning:            "default",
-			PruningKeepRecent:  "0",
-			PruningInterval:    "0",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-		},
-		{
-			Pruning:            "nothing",
-			PruningKeepRecent:  "0",
-			PruningInterval:    "0",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-		},
-		{
-			Pruning:            "custom",
-			PruningKeepRecent:  "10000",
-			PruningInterval:    "13",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
-		},
-	}
-)
-
-func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) {
-	dockerImages := dockerImages.NewImageConfig(isUpgradeEnabled)
-	dkrPool, err := dockertest.NewPool("")
-	if err != nil {
-		return nil, err
-	}
-	dockerNetwork, err := dkrPool.CreateNetwork("osmosis-testnet")
-	if err != nil {
-		return nil, err
-	}
-
-	if isIBCEnabled && isUpgradeEnabled {
-		// skip none - configure two chains via Docker
-		// to utilize the older version of osmosis to upgrade from
-		return NewUpgradeConfigurer(t,
-			[]*ChainConfig{
-				{
-					chainId:         chain.ChainAID,
-					validatorConfig: validatorConfigsChainA,
-					skipRunValidatorIndexes: map[int]struct{}{
-						3: {}, // skip validator at index 3
-					},
-				},
-				{
-					chainId:         chain.ChainBID,
-					validatorConfig: validatorConfigsChainB,
-				},
-			},
-			withUpgrade(withIBC(baseSetup)), // base set up with IBC and upgrade
-			dockerImages,
-			dkrPool,
-			dockerNetwork,
-		), nil
-	} else if isIBCEnabled {
-		// configure two chains locally
-		return NewLocalConfigurer(t,
-			[]*ChainConfig{
-				{
-					chainId:         chain.ChainAID,
-					validatorConfig: validatorConfigsChainA,
-					skipRunValidatorIndexes: map[int]struct{}{
-						3: {}, // skip validator at index 3
-					},
-				},
-				{
-					chainId:         chain.ChainBID,
-					validatorConfig: validatorConfigsChainB,
-				},
-			},
-			withIBC(baseSetup), // base set up with IBC
-			dockerImages,
-			dkrPool,
-			dockerNetwork,
-		), nil
-	} else if isUpgradeEnabled {
-		// invalid - IBC tests must be enabled for upgrade
-		// to function
-		return nil, errors.New("IBC tests must be enabled for upgrade to work")
-	} else {
-		// configure one chain locally
-		return NewLocalConfigurer(t,
-			[]*ChainConfig{
-				{
-					chainId:         chain.ChainAID,
-					validatorConfig: validatorConfigsChainA,
-				},
-			},
-			baseSetup, // base set up only
-			dockerImages,
-			dkrPool,
-			dockerNetwork,
-		), nil
-	}
 }
 
 func (bc *BaseConfigurer) GetChainConfig(chainIndex int) ChainConfig {

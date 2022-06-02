@@ -18,6 +18,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
+type status struct {
+	LatestHeight string `json:"latest_block_height"`
+}
+
+type syncInfo struct {
+	SyncInfo status `json:"SyncInfo"`
+}
+
 func (bc *BaseConfigurer) CreatePool(chainId string, valIdx int, poolFile string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
