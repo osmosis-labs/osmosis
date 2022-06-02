@@ -172,7 +172,7 @@ docs:
 	@echo "=========== Generate Complete ============"
 	@echo
 
-protoVer=v0.2
+protoVer=v0.7
 protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
 containerProtoGen=osmosis-proto-gen-$(protoVer)
 containerProtoFmt=osmosis-proto-fmt-$(protoVer)
@@ -273,8 +273,14 @@ localnet-keys:
 localnet-build:
 	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
 
+localnet-build-state-export:
+	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
+
 localnet-start:
 	@docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-start-state-export:
+	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
 
 localnet-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
@@ -282,6 +288,9 @@ localnet-stop:
 localnet-remove: localnet-stop
 	PWD=$(shell pwd)
 	@docker run --user root -v ${PWD}/tests/localosmosis/.osmosisd:/root/osmosis ubuntu /bin/sh -c "rm -rf /root/osmosis/*"
+
+localnet-remove-state-export:
+	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
