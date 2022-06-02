@@ -75,7 +75,7 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 
 // GetQueryCmd returns the cli query commands for the launchpad module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil // TODO cli.GetQueryCmd()
+	return cli.GetQueryCmd()
 }
 
 // GetTxCmd returns the transaction commands for the launchpad module
