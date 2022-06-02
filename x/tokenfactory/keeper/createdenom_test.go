@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 	suite.Require().NoError(err)
 	suite.Require().Len(queryRes2.Denoms, 2)
 
-	// Make sure that a second account can create a denom with the same nonce
+	// Make sure that a second account can create a denom with the same subdenom
 	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[1].String(), "bitcoin"))
 	suite.Require().NoError(err)
 	suite.Require().NotEmpty(res.GetNewTokenDenom())

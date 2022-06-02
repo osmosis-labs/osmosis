@@ -32,6 +32,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/v3/modules/core/02-client"
@@ -82,6 +86,7 @@ type AppKeepers struct {
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ScopedWasmKeeper     capabilitykeeper.ScopedKeeper
 
@@ -93,6 +98,7 @@ type AppKeepers struct {
 	DistrKeeper          *distrkeeper.Keeper
 	SlashingKeeper       *slashingkeeper.Keeper
 	IBCKeeper            *ibckeeper.Keeper
+	ICAHostKeeper        *icahostkeeper.Keeper
 	TransferKeeper       *ibctransferkeeper.Keeper
 	Bech32IBCKeeper      *bech32ibckeeper.Keeper
 	Bech32ICS20Keeper    *bech32ics20keeper.Keeper
@@ -108,6 +114,7 @@ type AppKeepers struct {
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
 	TokenFactoryKeeper   *tokenfactorykeeper.Keeper
+	// IBC modules
 	// transfer module
 	TransferModule transfer.AppModule
 
@@ -206,9 +213,22 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
 
+	icaHostKeeper := icahostkeeper.NewKeeper(
+		appCodec, appKeepers.keys[icahosttypes.StoreKey],
+		appKeepers.GetSubspace(icahosttypes.SubModuleName),
+		appKeepers.IBCKeeper.ChannelKeeper,
+		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.AccountKeeper,
+		appKeepers.ScopedICAHostKeeper,
+		bApp.MsgServiceRouter(),
+	)
+	appKeepers.ICAHostKeeper = &icaHostKeeper
+
+	icaHostIBCModule := icahost.NewIBCModule(*appKeepers.ICAHostKeeper)
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
+	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
+		AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	appKeepers.Bech32IBCKeeper = bech32ibckeeper.NewKeeper(
@@ -366,7 +386,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, appKeepers.keys[govtypes.StoreKey],
 		appKeepers.GetSubspace(govtypes.ModuleName), appKeepers.AccountKeeper, appKeepers.BankKeeper,
-		appKeepers.StakingKeeper, govRouter)
+		appKeepers.SuperfluidKeeper, govRouter)
 	appKeepers.GovKeeper = &govKeeper
 }
 
@@ -389,6 +409,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	// add capability keeper and ScopeToModule for ibc module
 	appKeepers.CapabilityKeeper = capabilitykeeper.NewKeeper(appCodec, appKeepers.keys[capabilitytypes.StoreKey], appKeepers.memKeys[capabilitytypes.MemStoreKey])
 	appKeepers.ScopedIBCKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
+	appKeepers.ScopedICAHostKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	appKeepers.ScopedTransferKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	appKeepers.ScopedWasmKeeper = appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	appKeepers.CapabilityKeeper.Seal()
@@ -424,6 +445,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(incentivestypes.ModuleName)
 	paramsKeeper.Subspace(poolincentivestypes.ModuleName)
 	paramsKeeper.Subspace(superfluidtypes.ModuleName)
@@ -492,6 +514,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	)
 }
 
+// TODO: We need to automate this, by bundling with a module struct...
 func KVStoreKeys() []string {
 	return []string{
 		authtypes.StoreKey,
@@ -503,6 +526,7 @@ func KVStoreKeys() []string {
 		govtypes.StoreKey,
 		paramstypes.StoreKey,
 		ibchost.StoreKey,
+		icahosttypes.StoreKey,
 		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
 		ibctransfertypes.StoreKey,

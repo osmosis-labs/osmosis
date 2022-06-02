@@ -267,6 +267,21 @@ format:
 ###                                Localnet                                 ###
 ###############################################################################
 
+localnet-keys:
+	. tests/localosmosis/keys.sh
+
+localnet-build:
+	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
+
+localnet-start:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-stop:
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
+
+localnet-remove: localnet-stop
+	PWD=$(shell pwd)
+	@docker run --user root -v ${PWD}/tests/localosmosis/.osmosisd:/root/osmosis ubuntu /bin/sh -c "rm -rf /root/osmosis/*"
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

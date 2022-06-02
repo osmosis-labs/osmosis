@@ -5,7 +5,7 @@ import (
 )
 
 // OsmosisQuery contains osmosis custom queries.
-// See https://github.com/confio/osmosis-bindings/blob/main/packages/bindings/src/query.rs
+// See https://github.com/osmosis-labs/osmosis-bindings/blob/main/packages/bindings/src/query.rs
 type OsmosisQuery struct {
 	/// Given a subdenom minted by a contract via `OsmosisMsg::MintTokens`,
 	/// returns the full denom as used by `BankMsg::Send`.
@@ -22,8 +22,8 @@ type OsmosisQuery struct {
 }
 
 type FullDenom struct {
-	Contract string `json:"contract"`
-	SubDenom string `json:"sub_denom"`
+	CreatorAddr string `json:"creator_addr"`
+	Subdenom    string `json:"subdenom"`
 }
 
 type PoolState struct {

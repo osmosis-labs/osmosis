@@ -13,6 +13,7 @@ type Validator struct {
 	Index         int    `json:"index"`
 	Mnemonic      string `json:"mnemonic"`
 	PublicAddress string `json:"publicAddress"`
+	PublicKey     string `json:"publicKey"`
 }
 
 type Chain struct {
