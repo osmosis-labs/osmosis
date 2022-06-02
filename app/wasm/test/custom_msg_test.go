@@ -572,7 +572,7 @@ func TestSwapMsg(t *testing.T) {
 	}
 }
 
-func TestJoinPoolMsg(t *testing.T) {
+func TestJoinPoolNoSwapMsg(t *testing.T) {
 	creator := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, creator)
 
