@@ -2,6 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -11,8 +14,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"strings"
-	"time"
 )
 
 // GetTxCmd returns the transaction commands for this module.
@@ -49,12 +50,12 @@ $ %s tx launchpad create --sale-file="path/to/sale.json" --from mykey
 
 Where sale.json contains:
 {
-	"token-in": "token1",
-	"token-out": "token2",
-	"initial-deposit": "1000token2",
-	"start-time": "2022-05-23T11:17:36.755Z",
-	"duration": 432000s,
-	"treasury": "osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6"
+    "token-in": "token1",
+    "token-out": "token2",
+    "initial-deposit": "1000token2",
+    "start-time": "2022-06-02T11:18:11.000Z",
+    "duration": "432000s",
+    "treasury": "osmo1035wxcnr3llcmqrrms93kmjly0003uprq384se"
 }
 `,
 				version.AppName,
@@ -297,7 +298,7 @@ func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 	} else {
 		msg.Amount = nil
 	}
-	
+
 	if err = msg.ValidateBasic(); err != nil {
 		return txf, nil, err
 	}
