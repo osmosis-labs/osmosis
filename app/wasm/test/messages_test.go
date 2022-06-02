@@ -974,6 +974,68 @@ func TestExitPool(t *testing.T) {
 	}
 }
 
+func TestJoinSwapExactAmountIn(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12_000_000),
+		sdk.NewInt64Coin("ustar", 240_000_000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	err := osmosis.GAMMKeeper.JoinPoolNoSwap(ctx, actor, starPool, sdk.NewInt(100000000000000), sdk.NewCoins(sdk.NewInt64Coin("uosmo", 48000_000), sdk.NewInt64Coin("ustar", 9600000_000)))
+
+	require.NoError(t, err)
+
+	// osmoStarLiquidity := sdk.NewCoins(sdk.NewInt64Coin("uosmo", 12_000),
+	// 	sdk.NewInt64Coin("ustar", 240_000))
+
+	specs := map[string]struct {
+		JoinSwapExactAmountIn *wasmbindings.JoinSwapExactAmountIn
+		expErr                error
+	}{
+		"excessive share out min amount": {
+			JoinSwapExactAmountIn: &wasmbindings.JoinSwapExactAmountIn{
+				PoolId:            starPool,
+				ShareOutMinAmount: sdk.NewInt(math.MaxInt64),
+				TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(1_000_000))},
+			expErr: errors.New("too much slippage; needed a minimum of 9223372036854775807 shares to pass, got 4083300053402688006: calculated amount is lesser than min amount"),
+		},
+		"incorrect pool id": {
+			JoinSwapExactAmountIn: &wasmbindings.JoinSwapExactAmountIn{
+				PoolId:            starPool + 10,
+				ShareOutMinAmount: sdk.NewInt(0),
+				TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(1_000_000))},
+			expErr: errors.New("pool with ID 11 does not exist"),
+		},
+		"valid join swap exact amount in": {
+			JoinSwapExactAmountIn: &wasmbindings.JoinSwapExactAmountIn{
+				PoolId:            starPool,
+				ShareOutMinAmount: sdk.NewInt(0),
+				TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(1_000_000))},
+		},
+	}
+
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// use scratch context to avoid interference between tests
+			subCtx, _ := ctx.CacheContext()
+			// when
+			_, gotErr := wasm.PerformJoinSwapExactAmountIn(osmosis.GAMMKeeper, subCtx, actor, spec.JoinSwapExactAmountIn)
+			// then
+			if spec.expErr != nil {
+				require.EqualError(t, gotErr, spec.expErr.Error())
+				return
+			}
+			require.NoError(t, gotErr)
+		})
+	}
+}
+
 func TestExitSwapShareAmountIn(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
