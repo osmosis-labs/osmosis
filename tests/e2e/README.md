@@ -35,7 +35,7 @@ Conceptually, we can split the e2e setup into 2 parts:
 
     The chain can either be initailized off of the current branch, or off the prior mainnet release and then upgraded to the current branch.
 
-    If local, we run chain initialization locally
+    If current, we run chain initialization off of the current branch
     by calling `chain.Init(...)` method in the `local_configurer.go`
 
     If with the upgrade, the same `chain.Init(...)` function is run on a Docker container
@@ -69,7 +69,7 @@ Conceptually, we can split the e2e setup into 2 parts:
     connected by Hermes relayer
     - CLI commands are run to create an upgrade proposal and approve it
     - Old version containers are stopped and the upgrade binary is added
-    - Local codebase Osmosis version is spun up to continue with testing
+    - Current branch Osmosis version is spun up to continue with testing
     - State Sync Testing (WIP)
     - An additional full node is created after a chain has started.
     This node is meant to state sync with the rest of the system.
@@ -97,7 +97,7 @@ The decoupling between chain initialization and start-up allows to
 minimize the differences between our test suite and the production
 environment.
 
-## Running Locally
+## Running From Current Branch (Locally)
 
 ### To build the binary that initializes the chain
 
@@ -115,7 +115,7 @@ environment.
     make docker-build-e2e-chain-init
 ```
 
-### To run the chain initialization container locally
+### To run the chain initialization container off of current branch
 
 ```sh
     mkdir < path >
