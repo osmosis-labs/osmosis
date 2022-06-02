@@ -18,6 +18,7 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
+	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
 )
 
 const preUpgradeAppVersion = 8
@@ -25,6 +26,7 @@ const preUpgradeAppVersion = 8
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
+	bpm upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
@@ -76,7 +78,9 @@ func CreateUpgradeHandler(
 		if !correctTypecast {
 			panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
 		}
+
 		icamodule.InitModule(ctx, controllerParams, hostParams)
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }

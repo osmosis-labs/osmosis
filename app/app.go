@@ -422,6 +422,7 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 			upgrade.CreateUpgradeHandler(
 				app.mm,
 				app.configurator,
+				app.BaseApp,
 				&app.AppKeepers,
 			),
 		)
