@@ -87,8 +87,6 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 		expectAmount0 := multiplier0.Mul(sdk.NewDec(1000000)).Sub(multiplier0.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
 		expectAmount1 := multiplier1.Mul(sdk.NewDec(1000000)).Sub(multiplier1.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
 
-		fmt.Println(res)
-
 		suite.Require().NoError(err)
 		suite.Require().Len(res.SuperfluidDelegationRecords, 2)
 		suite.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
