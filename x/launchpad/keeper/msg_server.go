@@ -63,7 +63,7 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 	if !msg.Amount.IsPositive() {
 		return errors.ErrInvalidRequest.Wrap("amount of tokens must be positive")
 	}
-	sender, p, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, false)
+	sender, p, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, true)
 	if err != nil {
 		return err
 	}
