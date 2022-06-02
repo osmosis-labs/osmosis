@@ -6,45 +6,38 @@ from datetime import datetime
 
 #get values from your priv_validator_key.json to later switch with high power validator
 
+daemon_name = "osmosisd"
+
 #get bas64
-result = subprocess.run(["osmosisd","tendermint","show-validator"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+result = subprocess.run([daemon_name,"tendermint","show-validator"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 base64 = result.stdout.strip()
 ##base64 = '{"@type":"/cosmos.crypto.ed25519.PubKey","key":"3QVAkiUIkKR3B6kkbd+QqzWDdcExoggbZV5fwH4jKDs="}'
-##bash64_wal = '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A2MR6q+pOpLtdxh0tHHe2JrEY2KOcvRogtLxHDHzJvOh"}'
 
 #get validator cons pubkey
 val_pubkey = base64[base64.find('key":') +6 :-2]
 ##val_pubkey = "3QVAkiUIkKR3B6kkbd+QqzWDdcExoggbZV5fwH4jKDs="
-#CAN MODIFY
-val_pubkey_wal = "A2MR6q+pOpLtdxh0tHHe2JrEY2KOcvRogtLxHDHzJvOh"
 
 #osmosisd debug pubkey {base64} to get address
-debug_pubkey = subprocess.run(["osmosisd","debug", "pubkey", base64], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+debug_pubkey = subprocess.run([daemon_name,"debug", "pubkey", base64], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 #address
 address = debug_pubkey.stderr[9: debug_pubkey.stderr.find("\n")]
 ##based on show-valdiator
 ##address = "214D831D6F49A75F9104BDC3F2E12A6CC1FC5669"
-##address_wal = "54366539BF22D6C20982452A4532607014097579"
 
 #feed address into osmosisd debug addr {address} to get bech32 validator address (osmovaloper)
-bech32 = subprocess.run(["osmosisd","debug", "addr", address], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+bech32 = subprocess.run([daemon_name,"debug", "addr", address], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 #osmovaloper
 bech32_val = bech32.stderr[bech32.stderr.find("Val: ") + 5: -1]
 ##operator address
 ##bech32_val = "osmovaloper1y9xcx8t0fxn4lygyhhpl9cf2dnqlc4nf4pymm4"
-#CAN MODIFY
-bech32_val_wal = "osmovaloper12smx2wdlyttvyzvzg54y2vnqwq2qjatex7kgq4"
 
 #pass osmovaloper address into osmosisd debug bech32-convert -p osmovalcons
-bech32_convert = subprocess.run(["osmosisd","debug", "bech32-convert", bech32_val, "-p", "osmovalcons"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+bech32_convert = subprocess.run([daemon_name,"debug", "bech32-convert", bech32_val, "-p", "osmovalcons"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 #osmovalcons
-#CAN MODIFY
 final_address = bech32_convert.stderr[:bech32_convert.stderr.find("\n")]
 ##osmovalcons is taken from show-validator
 ##final_address = "osmovalcons1y9xcx8t0fxn4lygyhhpl9cf2dnqlc4nfpjh8h5"
-##final_address_wal = "osmovalcons12smx2wdlyttvyzvzg54y2vnqwq2qjatejd95v5"
-
 
 #own opp address
 #exchange the op_address and op_pubkey with own address and pubkey or use above mnemonic for following address
@@ -58,15 +51,12 @@ op_address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"
 #CAN MODIFY
 op_pubkey = "A2MR6q+pOpLtdxh0tHHe2JrEY2KOcvRogtLxHDHzJvOh"
 
-<<<<<<< HEAD
-=======
 #feed address into osmosisd debug addr {address} to get bech32 validator op address (osmovaloper)
 # bech32_op = subprocess.run([daemon_name,"debug", "addr", op_address], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 #osmovaloper
 # bech32_valoper = bech32_op.stderr[bech32_op.stderr.find("Val: ") + 5: -1]
 # osmovaloper12smx2wdlyttvyzvzg54y2vnqwq2qjatex7kgq4
 
->>>>>>> 8043e65 (tests: add mainnet state to localosmosis (#1627))
 def sed_inplace(filename, pattern, repl):
     '''
     Perform the pure-Python equivalent of in-place `sed` substitution: e.g.,
@@ -91,7 +81,7 @@ def sed_inplace(filename, pattern, repl):
 #validator cons pubkey:     val_pubkey
 #osmovalcons:               final_address
 #validator hex address:     address
-#osmovaloper:               bech32_val
+#osmovaloper:               bech32_valoper
 #actual account:            op_address
 #accounts pubkey:           op_pubkey
 
@@ -109,13 +99,8 @@ print("Replacing 16A169951A878247DBE258FDDC71638F6606D156 with " + address)
 sed_inplace("testnet_genesis.json", "16A169951A878247DBE258FDDC71638F6606D156", address)
 
 #replace validator osmovaloper
-<<<<<<< HEAD
-print("Replacing osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n with " + bech32_val_wal)
-sed_inplace("testnet_genesis.json", "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n", bech32_val_wal)
-=======
 #print("Replacing osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n with " + bech32_valoper)
 #sed_inplace("testnet_genesis.json", "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n", bech32_valoper)
->>>>>>> 8043e65 (tests: add mainnet state to localosmosis (#1627))
 
 #replace actual account
 print("Replacing osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5 with " + op_address)
@@ -215,14 +200,10 @@ print("Current validator power is " + str(current_power))
 new_power = str(current_power + 1000000000)
 print("New validator power is " + new_power)
 val_power_list[val_power_index]['power'] = new_power
-#get index of val power in app state (osmovaloper) (bech32_val_wal)
+#get index of val power in app state (osmovaloper) (bech32_valoper)
 last_val_power_list = read_test_gen['app_state']['staking']['last_validator_powers']
-<<<<<<< HEAD
-last_val_power_index = [i for i, elem in enumerate(last_val_power_list) if bech32_val_wal in elem['address']][0]
-=======
 #last_val_power_index = [i for i, elem in enumerate(last_val_power_list) if bech32_valoper in elem['address']][0]
 last_val_power_index = [i for i, elem in enumerate(last_val_power_list) if 'osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n' in elem['address']][0]
->>>>>>> 8043e65 (tests: add mainnet state to localosmosis (#1627))
 val_power = int(read_test_gen['app_state']['staking']['last_validator_powers'][last_val_power_index]['power'])
 print("Current validator power in second location is " + str(val_power))
 new_val_power = str(val_power + 1000000000)
