@@ -34,8 +34,8 @@ RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 FROM ubuntu
 
 COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
-COPY /tests/localosmosis/statesync.sh /osmosis/statesync.sh
-COPY /tests/localosmosis/testnetify.py /osmosis/testnetify.py
+COPY /tests/localosmosis/mainnet_state/statesync.sh /osmosis/statesync.sh
+COPY /tests/localosmosis/mainnet_state/testnetify.py /osmosis/testnetify.py
 COPY /tests/localosmosis/testnet_genesis.json /osmosis/testnet_genesis.json
 
 ENV HOME /osmosis
