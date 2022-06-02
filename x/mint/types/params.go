@@ -32,7 +32,6 @@ func NewParams(
 	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
 	weightedDevRewardsReceivers []WeightedAddress, mintingRewardsDistributionStartEpoch int64,
 ) Params {
-
 	return Params{
 		MintDenom:                            mintDenom,
 		GenesisEpochProvisions:               genesisEpochProvisions,

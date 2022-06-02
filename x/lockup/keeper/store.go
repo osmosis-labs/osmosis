@@ -64,8 +64,9 @@ func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 }
 
 // deleteLockRefByKey removes lock ID from an array associated to provided key
+//nolint:ineffassign
 func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
-	var index = -1
+	index := -1
 	store := ctx.KVStore(k.storeKey)
 	lockIDs := k.getLockRefs(ctx, key)
 	lockIDs, index = removeValue(lockIDs, lockID)
@@ -86,6 +87,7 @@ func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) e
 	return nil
 }
 
+//nolint:makezero
 func accumulationStorePrefix(denom string) (res []byte) {
 	res = make([]byte, len(types.KeyPrefixLockAccumulation))
 	copy(res, types.KeyPrefixLockAccumulation)

@@ -1,7 +1,6 @@
 package keeper_test
 
 func (suite *KeeperTestSuite) TestLockReferencesManagement() {
-
 	key1 := []byte{0x11}
 	key2 := []byte{0x12}
 

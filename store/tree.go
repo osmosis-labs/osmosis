@@ -51,7 +51,7 @@ func (t Tree) Remove(key []byte) {
 type node struct {
 	tree  Tree
 	level uint16
-	key []byte
+	key   []byte
 	// XXX: cache stored value?
 }
 
@@ -211,7 +211,7 @@ func (node *node) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, ri
 	left, exact, right = node.tree.nodeGet(node.level-1, children[idx].Index).accumulationSplit(key)
 	left = left.Add(children[:idx].accumulate())
 	right = right.Add(children[idx+1:].accumulate())
-	return
+	return left, exact, right
 }
 
 // TotalAccumulatedValue returns the sum of the weights for all leaves

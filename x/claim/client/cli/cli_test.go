@@ -19,16 +19,18 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/osmosis-labs/osmosis/v3/app"
 	"github.com/osmosis-labs/osmosis/v3/app/params"
+	"github.com/osmosis-labs/osmosis/v3/x/claim/client/cli"
 	"github.com/osmosis-labs/osmosis/v3/x/claim/types"
 	claimtypes "github.com/osmosis-labs/osmosis/v3/x/claim/types"
-	"github.com/osmosis-labs/osmosis/v3/x/claim/client/cli"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tm-db"
 )
 
-var addr1 sdk.AccAddress
-var addr2 sdk.AccAddress
+var (
+	addr1 sdk.AccAddress
+	addr2 sdk.AccAddress
+)
 
 func init() {
 	params.SetAddressPrefixes()
@@ -44,7 +46,6 @@ type IntegrationTestSuite struct {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
-
 	s.T().Log("setting up integration test suite")
 	encCfg := app.MakeEncodingConfig()
 

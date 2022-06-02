@@ -1,0 +1,15 @@
+name: Fmt
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  gofmt:
+    name: gofmt
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Check code formatting using gofmt
+      uses: Jerome1337/gofmt-action@v1.0.4

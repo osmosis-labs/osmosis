@@ -113,9 +113,7 @@ func constantChange(p1, p2 types.PoolI) sdk.Dec {
 	return product
 }
 
-var (
-	errorMargin, _ = sdk.NewDecFromStr("0.0001") // 0.01%
-)
+var errorMargin, _ = sdk.NewDecFromStr("0.0001") // 0.01%
 
 // PoolProductContantInvariant chekcs that the pool constant invariant V where
 // V = product([asset_balance_n^asset_weight_n]) holds.

@@ -7,7 +7,6 @@ import (
 
 // EndBlocker called every block, process inflation, update validator set.
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
-
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		panic(err)

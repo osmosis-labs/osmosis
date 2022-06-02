@@ -74,6 +74,7 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 }
 
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json
+//nolint:ineffassign
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-derive-balances [input-genesis-file] [output-snapshot-json]",
@@ -262,7 +263,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}

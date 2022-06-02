@@ -237,13 +237,13 @@ $ %s query lockup account-locked-coins <address>
 // GetCmdAccountLockedPastTime returns locked records of an account with unlock time beyond timestamp
 func GetCmdAccountLockedPastTime() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "account-locked-pasttime <address> <timestamp>",
+		Use:   "account-locked-pastime <address> <timestamp>",
 		Short: "Query locked records of an account with unlock time beyond timestamp",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query locked records of an account with unlock time beyond timestamp.
 
 Example:
-$ %s query lockup account-locked-pasttime <address> <timestamp>
+$ %s query lockup account-locked-pastime <address> <timestamp>
 `,
 				version.AppName,
 			),
@@ -280,13 +280,13 @@ $ %s query lockup account-locked-pasttime <address> <timestamp>
 // GetCmdAccountLockedPastTimeNotUnlockingOnly returns locked records of an account with unlock time beyond timestamp within not unlocking queue
 func GetCmdAccountLockedPastTimeNotUnlockingOnly() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "account-locked-pasttime-not-unlocking <address> <timestamp>",
+		Use:   "account-locked-pastime-not-unlocking <address> <timestamp>",
 		Short: "Query locked records of an account with unlock time beyond timestamp within not unlocking queue",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query locked records of an account with unlock time beyond timestamp within not unlocking queue.
 
 Example:
-$ %s query lockup account-locked-pasttime-not-unlocking <address> <timestamp>
+$ %s query lockup account-locked-pastime-not-unlocking <address> <timestamp>
 `,
 				version.AppName,
 			),
@@ -329,7 +329,7 @@ func GetCmdAccountUnlockedBeforeTime() *cobra.Command {
 			fmt.Sprintf(`Query account's the total unlocked records with unlock time before timestamp.
 
 Example:
-$ %s query lockup account-locked-pasttime <address> <timestamp>
+$ %s query lockup account-locked-pastime <address> <timestamp>
 `,
 				version.AppName,
 			),
@@ -366,13 +366,13 @@ $ %s query lockup account-locked-pasttime <address> <timestamp>
 // GetCmdAccountLockedPastTimeDenom returns lock records by address, timestamp, denom
 func GetCmdAccountLockedPastTimeDenom() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "account-locked-pasttime-denom <address> <timestamp> <denom>",
+		Use:   "account-locked-pastime-denom <address> <timestamp> <denom>",
 		Short: "Query account's lock records by address, timestamp, denom",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query account's lock records by address, timestamp, denom.
 
 Example:
-$ %s query lockup account-locked-pasttime-denom <address> <timestamp> <denom>
+$ %s query lockup account-locked-pastime-denom <address> <timestamp> <denom>
 `,
 				version.AppName,
 			),
@@ -543,7 +543,7 @@ func GetCmdAccountLockedLongerDurationDenom() *cobra.Command {
 			fmt.Sprintf(`Query account's locked records for a denom with longer duration.
 
 Example:
-$ %s query lockup account-locked-pasttime <address> <duration> <denom>
+$ %s query lockup account-locked-pastime <address> <duration> <denom>
 `,
 				version.AppName,
 			),
@@ -694,7 +694,7 @@ $ %s query lockup output-all-locks <max lock ID>
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile("lock_export.json", []byte(bz), 0777)
+			err = ioutil.WriteFile("lock_export.json", (bz), 0o777)
 			if err != nil {
 				return err
 			}

@@ -43,9 +43,11 @@ type Hooks struct {
 	k Keeper
 }
 
-var _ gammtypes.GammHooks = Hooks{}
-var _ govtypes.GovHooks = Hooks{}
-var _ stakingtypes.StakingHooks = Hooks{}
+var (
+	_ gammtypes.GammHooks       = Hooks{}
+	_ govtypes.GovHooks         = Hooks{}
+	_ stakingtypes.StakingHooks = Hooks{}
+)
 
 // Return the wrapper struct
 func (k Keeper) Hooks() Hooks {
@@ -56,17 +58,21 @@ func (k Keeper) Hooks() Hooks {
 func (h Hooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
 	h.k.AfterAddLiquidity(ctx, sender)
 }
+
 func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
 	h.k.AfterAddLiquidity(ctx, sender)
 }
+
 func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
 }
+
 func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	h.k.AfterSwap(ctx, sender)
 }
 
 // governance hooks
 func (h Hooks) AfterProposalSubmission(ctx sdk.Context, proposalID uint64) {}
+
 func (h Hooks) AfterProposalDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) {
 }
 
@@ -82,16 +88,22 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)   
 func (h Hooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {}
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 }
+
 func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 }
+
 func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 }
+
 func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 }
+
 func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 }
+
 func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 }
+
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.k.AfterDelegationModified(ctx, delAddr, valAddr)
 }

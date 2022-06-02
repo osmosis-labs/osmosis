@@ -34,6 +34,7 @@ func GetTxCmd() *cobra.Command {
 }
 
 // NewCreateGaugeCmd broadcast MsgCreateGauge
+//nolint:ineffassign
 func NewCreateGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-gauge [lockup_denom] [reward] [flags]",

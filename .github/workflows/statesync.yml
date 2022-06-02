@@ -1,0 +1,23 @@
+# This is a basic workflow that is manually triggered
+
+name: State Sync
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on: [workflow_dispatch]
+
+# This workflow tests state sync against the Notional archive server.
+# To decentralize this workflow, add additional nodes to scripts/statesync.sh
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: osmosis state sync
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2.1.3
+        with:
+          go-version: '^1.17'
+
+      - name: state sync
+        run: bash scripts/statesync.sh

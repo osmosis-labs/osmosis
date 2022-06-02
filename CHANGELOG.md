@@ -34,6 +34,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [v3.x](https://github.com/osmosis-labs/osmosis/tree/v3.x)
+* linting
+* go 1.18
+* new CI 
+
 ## [v1.0.1](https://github.com/osmosis/osmosis-labs/releases/tag/v1.0.1) - 2021-06-17
 
 This release fixes a bug in `osmosisd version` always displaying 0.0.1.
