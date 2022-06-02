@@ -61,10 +61,6 @@ func (s *IntegrationTestSuite) ExecTx(chainId string, validatorIndex int, comman
 				return false
 			}
 
-			if err != nil {
-				return false
-			}
-
 			if success != "" {
 				return strings.Contains(outBuf.String(), success) || strings.Contains(errBuf.String(), success)
 			}
@@ -292,11 +288,9 @@ func (s *IntegrationTestSuite) sendTx(c *chainConfig, i int, amount string, send
 	cmd := []string{"osmosisd", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--chain-id=%s", c.meta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test"}
 	s.ExecTx(c.meta.Id, i, cmd, "code: 0")
 	s.T().Logf("successfully sent tx from %s container: %s", s.valResources[c.meta.Id][i].Container.Name[1:], s.valResources[c.meta.Id][i].Container.ID)
-
 }
 
 func (s *IntegrationTestSuite) extractValidatorOperatorAddresses(config *chainConfig) {
-
 	for i, val := range config.validators {
 		if _, ok := config.skipRunValidatorIndexes[i]; ok {
 			s.T().Logf("skipping %s validator with index %d from running...", val.validator.Name, i)
