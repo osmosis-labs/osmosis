@@ -1024,19 +1024,19 @@ var (
 
 	pattern_Query_TotalLiquidity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "gamm", "v1beta1", "total_liquidity"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Pool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "gamm", "v1beta1", "pools", "poolId"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Pool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "gamm", "v1beta1", "pools", "pool_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PoolParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "poolId", "params"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_PoolParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "pool_id", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TotalPoolLiquidity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "poolId", "total_pool_liquidity"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TotalPoolLiquidity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "pool_id", "total_pool_liquidity"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TotalShares_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "poolId", "total_shares"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TotalShares_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "pool_id", "total_shares"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SpotPrice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "poolId", "prices"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_SpotPrice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pools", "pool_id", "prices"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_EstimateSwapExactAmountIn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "poolId", "estimate", "swap_exact_amount_in"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_EstimateSwapExactAmountIn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pool_id", "estimate", "swap_exact_amount_in"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_EstimateSwapExactAmountOut_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "poolId", "estimate", "swap_exact_amount_out"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_EstimateSwapExactAmountOut_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"osmosis", "gamm", "v1beta1", "pool_id", "estimate", "swap_exact_amount_out"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
