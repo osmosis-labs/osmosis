@@ -43,41 +43,30 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 			},
 			expectPass: false,
 		},
-		{
-			name: "try creating multiple coin lockup",
-			param: param{
-				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("take", 10)}, // setup wallet
-				lockOwner:           sdk.AccAddress([]byte("addr1---------------")),                         // setup wallet
-				duration:            time.Second,
-				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("take", 10)},
-			},
-			expectPass: false,
-		},
 	}
 
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-		suite.Require().NoError(err)
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.ctx)
-		_, err = msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
+		c := sdk.WrapSDKContext(suite.Ctx)
+		_, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
 		if test.expectPass {
 			// creation of lock via LockTokens
-			msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
-			_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+			msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
+			_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
 			// Check Locks
-			locks, err := suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+			locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
 			suite.Require().NoError(err)
 			suite.Require().Len(locks, 1)
 			suite.Require().Equal(locks[0].Coins, test.param.coinsToLock)
 
 			// check accumulation store is correctly updated
-			accum := suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+			accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
 				LockQueryType: types.ByDuration,
 				Denom:         "stake",
 				Duration:      test.param.duration,
@@ -85,20 +74,19 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 			suite.Require().Equal(accum.String(), "10")
 
 			// add more tokens to lock via LockTokens
-			err = simapp.FundAccount(suite.app.BankKeeper, suite.ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-			suite.Require().NoError(err)
+			suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-			_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.ctx), types.NewMsgLockTokens(test.param.lockOwner, locks[0].Duration, test.param.coinsToLock))
+			_, err = msgServer.LockTokens(sdk.WrapSDKContext(suite.Ctx), types.NewMsgLockTokens(test.param.lockOwner, locks[0].Duration, test.param.coinsToLock))
 			suite.Require().NoError(err)
 
 			// check locks after adding tokens to lock
-			locks, err = suite.app.LockupKeeper.GetPeriodLocks(suite.ctx)
+			locks, err = suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
 			suite.Require().NoError(err)
 			suite.Require().Len(locks, 1)
 			suite.Require().Equal(locks[0].Coins, test.param.coinsToLock.Add(test.param.coinsToLock...))
 
 			// check accumulation store is correctly updated
-			accum = suite.app.LockupKeeper.GetPeriodLocksAccumulation(suite.ctx, types.QueryCondition{
+			accum = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
 				LockQueryType: types.ByDuration,
 				Denom:         "stake",
 				Duration:      test.param.duration,
@@ -180,16 +168,15 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-		suite.Require().NoError(err)
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.ctx)
+		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
+		c := sdk.WrapSDKContext(suite.Ctx)
 		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		suite.Require().NoError(err)
 
 		if test.param.isSyntheticLockup {
-			err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, resp.ID, "synthetic", time.Second, false)
+			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
 			suite.Require().NoError(err)
 		}
 
@@ -244,16 +231,15 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 	for _, test := range tests {
 		suite.SetupTest()
 
-		err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, test.param.lockOwner, test.param.coinsInOwnerAddress)
-		suite.Require().NoError(err)
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
 
-		msgServer := keeper.NewMsgServerImpl(suite.app.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.ctx)
+		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
+		c := sdk.WrapSDKContext(suite.Ctx)
 		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 		suite.Require().NoError(err)
 
 		if test.param.isSyntheticLockup {
-			err = suite.app.LockupKeeper.CreateSyntheticLockup(suite.ctx, resp.ID, "synthetic", time.Second, false)
+			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
 			suite.Require().NoError(err)
 		}
 
@@ -263,6 +249,81 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 			suite.Require().NoError(err)
 		} else {
 			suite.Require().Error(err)
+		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestMsgEditLockup() {
+	type param struct {
+		coinsToLock       sdk.Coins
+		isSyntheticLockup bool
+		lockOwner         sdk.AccAddress
+		duration          time.Duration
+		newDuration       time.Duration
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "edit lockups by duration",
+			param: param{
+				coinsToLock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
+				isSyntheticLockup: false,
+				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:          time.Second,
+				newDuration:       time.Second * 2,
+			},
+			expectPass: true,
+		},
+		{
+			name: "edit lockups by lesser duration",
+			param: param{
+				coinsToLock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
+				isSyntheticLockup: false,
+				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:          time.Second,
+				newDuration:       time.Second / 2,
+			},
+			expectPass: false,
+		},
+		{
+			name: "disallow edit when synthetic lockup exists",
+			param: param{
+				coinsToLock:       sdk.Coins{sdk.NewInt64Coin("stake", 10)}, // setup wallet
+				isSyntheticLockup: true,
+				lockOwner:         sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:          time.Second,
+				newDuration:       time.Second * 2,
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.SetupTest()
+
+		err := simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, test.param.lockOwner, test.param.coinsToLock)
+		suite.Require().NoError(err)
+
+		msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
+		c := sdk.WrapSDKContext(suite.Ctx)
+		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+		suite.Require().NoError(err)
+
+		if test.param.isSyntheticLockup {
+			err = suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, resp.ID, "synthetic", time.Second, false)
+			suite.Require().NoError(err)
+		}
+
+		_, err = msgServer.ExtendLockup(c, types.NewMsgExtendLockup(test.param.lockOwner, resp.ID, test.param.newDuration))
+
+		if test.expectPass {
+			suite.Require().NoError(err, test.name)
+		} else {
+			suite.Require().Error(err, test.name)
 		}
 	}
 }

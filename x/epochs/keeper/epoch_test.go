@@ -17,11 +17,11 @@ func (suite *KeeperTestSuite) TestEpochLifeCycle() {
 		CurrentEpochStartTime: time.Time{},
 		EpochCountingStarted:  false,
 	}
-	suite.app.EpochsKeeper.SetEpochInfo(suite.ctx, epochInfo)
-	epochInfoSaved := suite.app.EpochsKeeper.GetEpochInfo(suite.ctx, "monthly")
+	suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochInfo)
+	epochInfoSaved := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, "monthly")
 	suite.Require().Equal(epochInfo, epochInfoSaved)
 
-	allEpochs := suite.app.EpochsKeeper.AllEpochInfos(suite.ctx)
+	allEpochs := suite.App.EpochsKeeper.AllEpochInfos(suite.Ctx)
 	suite.Require().Len(allEpochs, 3)
 	suite.Require().Equal(allEpochs[0].Identifier, "day") // alphabetical order
 	suite.Require().Equal(allEpochs[1].Identifier, "monthly")

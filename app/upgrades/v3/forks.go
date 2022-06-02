@@ -4,16 +4,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+
+	"github.com/osmosis-labs/osmosis/v7/app/keepers"
 )
 
 // RunForkLogic executes height-gated on-chain fork logic for the Osmosis v3
 // upgrade.
-func RunForkLogic(ctx sdk.Context, gov *govkeeper.Keeper, staking *stakingkeeper.Keeper) {
+func RunForkLogic(ctx sdk.Context, keepers *keepers.AppKeepers) {
 	ctx.Logger().Info("Applying Osmosis v3 upgrade." +
 		" Fixing governance deposit so proposals can be voted upon," +
 		" and fixing validator min commission rate.")
-	FixMinDepositDenom(ctx, gov)
-	FixMinCommisionRate(ctx, staking)
+	FixMinDepositDenom(ctx, keepers.GovKeeper)
+	FixMinCommisionRate(ctx, keepers.StakingKeeper)
 }
 
 // Fixes an error where minimum deposit was set to "500 osmo". This denom does

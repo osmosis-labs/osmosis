@@ -38,7 +38,7 @@ linters:
     #    - godox <- detects TODO/BUG/FIXME and we may wantnthis later but isn't appropriate now
     #    - goerr113 <- disabled due to lack of comprehension
     - gofmt
-    - gofumpt
+    # - gofumpt <- disabled https://github.com/osmosis-labs/osmosis/issues/1309
     - goheader
     - goimports
     #    - gomoddirectives <- disables replaces

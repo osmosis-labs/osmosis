@@ -23,13 +23,13 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 	suite.Require().Error(err)
 
 	for i := 0; i < 10; i++ {
-		poolId := suite.prepareBalancerPool()
+		poolId := suite.PrepareBalancerPool()
 		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
 		var pool types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
+		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
 		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
@@ -40,13 +40,13 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	queryClient := suite.queryClient
 
 	for i := 0; i < 10; i++ {
-		poolId := suite.prepareBalancerPool()
+		poolId := suite.PrepareBalancerPool()
 		poolRes, err := queryClient.Pool(gocontext.Background(), &types.QueryPoolRequest{
 			PoolId: poolId,
 		})
 		suite.Require().NoError(err)
 		var pool types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
+		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
 		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().Equal(1, len(res.Pools))
 	for _, r := range res.Pools {
 		var pool types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
+		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(types.NewPoolAddress(uint64(1)).String(), pool.GetAddress().String())
 		suite.Require().Equal(uint64(1), pool.GetId())
@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 	suite.Require().Equal(5, len(res.Pools))
 	for i, r := range res.Pools {
 		var pool types.PoolI
-		err = suite.app.InterfaceRegistry().UnpackAny(r, &pool)
+		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
 		suite.Require().Equal(uint64(i+1), pool.GetId())
@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestQueryNumPools1() {
 
 func (suite *KeeperTestSuite) TestQueryNumPools2() {
 	for i := 0; i < 10; i++ {
-		suite.prepareBalancerPool()
+		suite.PrepareBalancerPool()
 	}
 
 	res, err := suite.queryClient.NumPools(gocontext.Background(), &types.QueryNumPoolsRequest{})
@@ -110,7 +110,7 @@ func (suite *KeeperTestSuite) TestQueryTotalPoolLiquidity() {
 	_, err := queryClient.TotalPoolLiquidity(gocontext.Background(), &types.QueryTotalPoolLiquidityRequest{PoolId: 1})
 	suite.Require().Error(err)
 
-	poolId := suite.prepareBalancerPool()
+	poolId := suite.PrepareBalancerPool()
 
 	res, err := queryClient.TotalPoolLiquidity(gocontext.Background(), &types.QueryTotalPoolLiquidityRequest{PoolId: poolId})
 	suite.Require().NoError(err)
@@ -125,7 +125,7 @@ func (suite *KeeperTestSuite) TestQueryTotalShares() {
 	_, err := queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: 1})
 	suite.Require().Error(err)
 
-	poolId := suite.prepareBalancerPool()
+	poolId := suite.PrepareBalancerPool()
 
 	// Share Token would be minted as 100.000000000000000000 share token initially.
 	res, err := queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolId})
@@ -134,11 +134,11 @@ func (suite *KeeperTestSuite) TestQueryTotalShares() {
 
 	// Mint more share token.
 	// TODO: Change this test structure. perhaps JoinPoolExactShareAmountOut can be used once written
-	// pool, err := suite.app.GAMMKeeper.GetPool(suite.ctx, poolId)
+	// pool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolId)
 	// suite.Require().NoError(err)
-	// err = suite.app.GAMMKeeper.MintPoolShareToAccount(suite.ctx, pool, acc1, types.OneShare.MulRaw(10))
+	// err = suite.App.GAMMKeeper.MintPoolShareToAccount(suite.Ctx, pool, acc1, types.OneShare.MulRaw(10))
 	// suite.Require().NoError(err)
-	// suite.Require().NoError(suite.app.GAMMKeeper.SetPool(suite.ctx, pool))
+	// suite.Require().NoError(suite.App.GAMMKeeper.SetPool(suite.Ctx, pool))
 
 	// res, err = queryClient.TotalShares(gocontext.Background(), &types.QueryTotalSharesRequest{PoolId: poolId})
 	// suite.Require().NoError(err)
@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 	suite.Require().NoError(err)
 	suite.Require().Equal("", sdk.Coins(res.Liquidity).String())
 
-	_ = suite.prepareBalancerPool()
+	_ = suite.PrepareBalancerPool()
 
 	// create pool
 	res, err = queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 // 	_, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: 1})
 // 	suite.Require().Error(err)
 
-// 	poolId := suite.prepareBalancerPool()
+// 	poolId := suite.PrepareBalancerPool()
 
 // 	res, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: poolId})
 // 	suite.Require().NoError(err)
@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 
 func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 	queryClient := suite.queryClient
-	poolID := suite.prepareBalancerPool()
+	poolID := suite.PrepareBalancerPool()
 
 	testCases := []struct {
 		name      string

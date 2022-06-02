@@ -16,7 +16,7 @@ for contract in hackatom reflect; do
 done
 
 tag="$1"
-url="https://github.com/confio/osmosis-bindings/releases/download/$tag/osmo_reflect.wasm"
+url="https://github.com/osmosis-labs/osmosis-bindings/releases/download/$tag/osmo_reflect.wasm"
 echo "Downloading $url ..."
 wget -O "osmo_reflect.wasm" "$url"
 

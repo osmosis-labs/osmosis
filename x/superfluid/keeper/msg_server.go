@@ -2,12 +2,18 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
-
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	v8constants "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8/constants"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
 type msgServer struct {
@@ -96,4 +102,43 @@ func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *ty
 	return &types.MsgLockAndSuperfluidDelegateResponse{
 		ID: lockupRes.ID,
 	}, err
+}
+
+func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.MsgUnPoolWhitelistedPool) (*types.MsgUnPoolWhitelistedPoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if ctx.BlockHeight() < v8constants.UpgradeHeight {
+		return nil, errors.New("message not activated")
+	}
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	// We get all the lockIDs to unpool
+	lpShareDenom := gammtypes.GetPoolShareDenom(msg.PoolId)
+	minimalDuration := time.Millisecond
+	unpoolLocks := server.keeper.lk.GetAccountLockedLongerDurationDenom(ctx, sender, lpShareDenom, minimalDuration)
+
+	allExitedLockIDs := []uint64{}
+	for _, lock := range unpoolLocks {
+		exitedLockIDs, err := server.keeper.UnpoolAllowedPools(ctx, sender, msg.PoolId, lock.ID)
+		if err != nil {
+			return nil, err
+		}
+		allExitedLockIDs = append(allExitedLockIDs, exitedLockIDs...)
+	}
+
+	allExitedLockIDsSerialized, _ := json.Marshal(allExitedLockIDs)
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtUnpoolId,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeDenom, lpShareDenom),
+			sdk.NewAttribute(types.AttributeNewLockIds, string(allExitedLockIDsSerialized)),
+		),
+	})
+
+	return &types.MsgUnPoolWhitelistedPoolResponse{ExitedLockIds: allExitedLockIDs}, nil
 }
