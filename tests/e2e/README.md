@@ -33,7 +33,7 @@ Conceptually, we can split the e2e setup into 2 parts:
 
 1. Chain Initialization
 
-    This part can either be local or with the upgrade.
+    The chain can either be initailized off of the current branch, or off the prior mainnet release and then upgraded to the current branch.
 
     If local, we run chain initialization locally
     by calling `chain.Init(...)` method in the `local_configurer.go`
