@@ -45,10 +45,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 		suite.SetupTest()
 
 		// Prepare 2 pools
-		suite.prepareBalancerPool()
-		suite.prepareBalancerPool()
+		suite.PrepareBalancerPool()
+		suite.PrepareBalancerPool()
 
-		keeper := suite.app.GAMMKeeper
+		keeper := suite.App.GAMMKeeper
 
 		if test.expectPass {
 			// Calculate the chained spot price.
@@ -59,17 +59,17 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 					if i != 0 {
 						tokenInDenom = test.param.routes[i-1].TokenOutDenom
 					}
-					pool, err := keeper.GetPoolAndPoke(suite.ctx, route.PoolId)
+					pool, err := keeper.GetPoolAndPoke(suite.Ctx, route.PoolId)
 					suite.NoError(err, "test: %v", test.name)
 
-					sp, err := pool.SpotPrice(suite.ctx, tokenInDenom, route.TokenOutDenom)
+					sp, err := pool.SpotPrice(suite.Ctx, tokenInDenom, route.TokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
 				return dec
 			}()
 
-			tokenOutAmount, err := keeper.MultihopSwapExactAmountIn(suite.ctx, acc1, test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
+			tokenOutAmount, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
 			suite.NoError(err, "test: %v", test.name)
 
 			// Calculate the chained spot price.
@@ -81,10 +81,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 						tokenInDenom = test.param.routes[i-1].TokenOutDenom
 					}
 
-					pool, err := keeper.GetPoolAndPoke(suite.ctx, route.PoolId)
+					pool, err := keeper.GetPoolAndPoke(suite.Ctx, route.PoolId)
 					suite.NoError(err, "test: %v", test.name)
 
-					sp, err := pool.SpotPrice(suite.ctx, tokenInDenom, route.TokenOutDenom)
+					sp, err := pool.SpotPrice(suite.Ctx, tokenInDenom, route.TokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 			sp := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
 			suite.True(sp.GT(spotPriceBefore) && sp.LT(spotPriceAfter), "test: %v", test.name)
 		} else {
-			_, err := keeper.MultihopSwapExactAmountIn(suite.ctx, acc1, test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
+			_, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
 			suite.Error(err, "test: %v", test.name)
 		}
 	}
@@ -138,10 +138,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 		suite.SetupTest()
 
 		// Prepare 2 pools
-		suite.prepareBalancerPool()
-		suite.prepareBalancerPool()
+		suite.PrepareBalancerPool()
+		suite.PrepareBalancerPool()
 
-		keeper := suite.app.GAMMKeeper
+		keeper := suite.App.GAMMKeeper
 
 		if test.expectPass {
 			// Calculate the chained spot price.
@@ -153,18 +153,18 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 						tokenOutDenom = test.param.routes[i+1].TokenInDenom
 					}
 
-					pool, err := keeper.GetPoolAndPoke(suite.ctx, route.PoolId)
+					pool, err := keeper.GetPoolAndPoke(suite.Ctx, route.PoolId)
 					suite.NoError(err, "test: %v", test.name)
 
-					sp, err := pool.SpotPrice(suite.ctx, route.TokenInDenom, tokenOutDenom)
+					sp, err := pool.SpotPrice(suite.Ctx, route.TokenInDenom, tokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
 				return dec
 			}()
 
-			tokenInAmount, err := keeper.MultihopSwapExactAmountOut(suite.ctx, acc1, test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
-			suite.NoError(err, "test: %v", test.name)
+			tokenInAmount, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
+			suite.Require().NoError(err, "test: %v", test.name)
 
 			// Calculate the chained spot price.
 			spotPriceAfter := func() sdk.Dec {
@@ -175,10 +175,10 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 						tokenOutDenom = test.param.routes[i+1].TokenInDenom
 					}
 
-					pool, err := keeper.GetPoolAndPoke(suite.ctx, route.PoolId)
+					pool, err := keeper.GetPoolAndPoke(suite.Ctx, route.PoolId)
 					suite.NoError(err, "test: %v", test.name)
 
-					sp, err := pool.SpotPrice(suite.ctx, route.TokenInDenom, tokenOutDenom)
+					sp, err := pool.SpotPrice(suite.Ctx, route.TokenInDenom, tokenOutDenom)
 					suite.NoError(err, "test: %v", test.name)
 					dec = dec.Mul(sp)
 				}
@@ -191,7 +191,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 			fmt.Printf("spBefore %s, spAfter %s, sp actual %s\n", spotPriceBefore, spotPriceAfter, sp)
 			suite.True(sp.GT(spotPriceBefore) && sp.LT(spotPriceAfter), "multi-hop spot price wrong, test: %v", test.name)
 		} else {
-			_, err := keeper.MultihopSwapExactAmountOut(suite.ctx, acc1, test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
+			_, err := keeper.MultihopSwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenInMaxAmount, test.param.tokenOut)
 			suite.Error(err, "test: %v", test.name)
 		}
 	}

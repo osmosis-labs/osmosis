@@ -2,131 +2,76 @@ package e2e
 
 import (
 	"fmt"
-	"io"
-	"net/http"
-	"strings"
+	"strconv"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 )
 
-func (s *IntegrationTestSuite) TestQueryBalances() {
-	var (
-		expectedDenomsA   = []string{osmoDenom, stakeDenom}
-		expectedDenomsB   = []string{osmoDenom, stakeDenom, ibcDenom}
-		expectedBalancesA = []uint64{osmoBalanceA - ibcSendAmount, stakeBalanceA - stakeAmountA}
-		expectedBalancesB = []uint64{osmoBalanceB, stakeBalanceB - stakeAmountB, ibcSendAmount}
-	)
-
-	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainA.id][0].GetHostPort("1317/tcp"))
-	balancesA, err := queryBalances(chainAAPIEndpoint, s.chainA.validators[0].keyInfo.GetAddress().String())
-	s.Require().NoError(err)
-	s.Require().NotNil(balancesA)
-	s.Require().Equal(2, len(balancesA))
-
-	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
-	balancesB, err := queryBalances(chainBAPIEndpoint, s.chainB.validators[0].keyInfo.GetAddress().String())
-	s.Require().NoError(err)
-	s.Require().NotNil(balancesB)
-	s.Require().Equal(3, len(balancesB))
-
-	actualDenomsA := make([]string, 0, 2)
-	actualBalancesA := make([]uint64, 0, 2)
-	actualDenomsB := make([]string, 0, 2)
-	actualBalancesB := make([]uint64, 0, 2)
-
-	for _, balanceA := range balancesA {
-		actualDenomsA = append(actualDenomsA, balanceA.GetDenom())
-		actualBalancesA = append(actualBalancesA, balanceA.Amount.Uint64())
-	}
-
-	for _, balanceB := range balancesB {
-		actualDenomsB = append(actualDenomsB, balanceB.GetDenom())
-		actualBalancesB = append(actualBalancesB, balanceB.Amount.Uint64())
-	}
-
-	s.Require().ElementsMatch(expectedDenomsA, actualDenomsA)
-	s.Require().ElementsMatch(expectedBalancesA, actualBalancesA)
-	s.Require().ElementsMatch(expectedDenomsB, actualDenomsB)
-	s.Require().ElementsMatch(expectedBalancesB, actualBalancesB)
-}
-
-func queryBalances(endpoint, addr string) (sdk.Coins, error) {
-	path := fmt.Sprintf(
-		"%s/cosmos/bank/v1beta1/balances/%s",
-		endpoint, addr,
-	)
-	var err error
-	var resp *http.Response
-	retriesLeft := 5
-	for {
-		resp, err = http.Get(path)
-
-		if resp.StatusCode == http.StatusServiceUnavailable {
-			retriesLeft--
-			if retriesLeft == 0 {
-				return nil, fmt.Errorf("exceeded retry limit of %d with %d", retriesLeft, http.StatusServiceUnavailable)
-			}
-			time.Sleep(10 * time.Second)
-		} else {
-			break
-		}
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	bz, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var balancesResp banktypes.QueryAllBalancesResponse
-	if err := cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
-		return nil, err
-	}
-
-	return balancesResp.GetBalances(), nil
-}
-
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
-	var ibcStakeDenom string
+	chainA := s.chainConfigs[0]
+	chainB := s.chainConfigs[1]
+	// compare coins of receiver pre and post IBC send
+	// diff should only be the amount sent
+	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, chain.OsmoToken)
+}
 
-	s.Run("send_uosmo_to_chainB", func() {
-		recipient := s.chainB.validators[0].keyInfo.GetAddress().String()
-		token := sdk.NewInt64Coin(osmoDenom, ibcSendAmount) // 3,300uosmo
-		s.sendIBC(s.chainA.id, s.chainB.id, recipient, token)
+func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+	chainA := s.chainConfigs[0]
+	s.submitSuperfluidProposal(chainA, "gamm/pool/1")
+	s.depositProposal(chainA)
+	s.voteProposal(chainA)
+	walletAddr := s.createWallet(chainA, 0, "wallet")
+	// send gamm tokens to validator's other wallet (non self-delegation wallet)
+	s.sendTx(chainA, 0, "100000000000000000000gamm/pool/1", chainA.validators[0].validator.PublicAddress, walletAddr)
+	// lock tokens from validator 0 on chain A
+	s.lockTokens(chainA, 0, "100000000000000000000gamm/pool/1", "240s", "wallet")
+	// superfluid delegate from validator 0 non self-delegation wallet to validator 1 on chain A
+	s.superfluidDelegate(chainA, chainA.validators[1].operatorAddress, "wallet")
+	// create a text prop, deposit and vote yes
+	s.submitTextProposal(chainA, "superfluid vote overwrite test")
+	s.depositProposal(chainA)
+	s.voteProposal(chainA)
+	// set delegator vote to no
+	s.voteNoProposal(chainA, 0, "wallet")
 
-		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
-
-		// require the recipient account receives the IBC tokens (IBC packets ACKd)
-		var (
-			balances sdk.Coins
-			err      error
-		)
-		s.Require().Eventually(
-			func() bool {
-				balances, err = queryBalances(chainBAPIEndpoint, recipient)
-				s.Require().NoError(err)
-
-				return balances.Len() == 3
-			},
-			time.Minute,
-			5*time.Second,
-		)
-
-		for _, c := range balances {
-			if strings.Contains(c.Denom, "ibc/") {
-				ibcStakeDenom = c.Denom
-				s.Require().Equal(token.Amount.Int64(), c.Amount.Int64())
-				break
+	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[chainA.meta.Id][0].GetHostPort("1317/tcp"))
+	sfProposalNumber := strconv.Itoa(chainA.latestProposalNumber)
+	s.Require().Eventually(
+		func() bool {
+			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := s.queryPropTally(chainAAPIEndpoint, sfProposalNumber)
+			if err != nil {
+				return false
 			}
-		}
+			if abstainTotal.Int64()+noTotal.Int64()+noWithVetoTotal.Int64()+yesTotal.Int64() <= 0 {
+				return false
+			}
+			return true
+		},
+		1*time.Minute,
+		time.Second,
+		"Osmosis node failed to retrieve prop tally",
+	)
+	noTotal, _, _, _, _ := s.queryPropTally(chainAAPIEndpoint, sfProposalNumber)
+	noTotalFinal, err := strconv.Atoi(noTotal.String())
+	s.Require().NoError(err)
 
-		s.Require().NotEmpty(ibcStakeDenom)
-	})
+	s.Require().Eventually(
+		func() bool {
+			intAccountBalance, err := s.queryIntermediaryAccount(chainA, chainAAPIEndpoint, "gamm/pool/1", chainA.validators[1].operatorAddress)
+			s.Require().NoError(err)
+			if err != nil {
+				return false
+			}
+			if noTotalFinal != intAccountBalance {
+				fmt.Printf("noTotalFinal %v does not match intAccountBalance %v", noTotalFinal, intAccountBalance)
+				return false
+			}
+			return true
+		},
+		1*time.Minute,
+		time.Second,
+		"superfluid delegation vote overwrite not working as expected",
+	)
+
 }

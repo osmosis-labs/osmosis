@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	_ types.PoolI                               = &Pool{}
-	_ types.PoolExitSwapExactAmountOutExtension = &Pool{}
+	_ types.PoolI                  = &Pool{}
+	_ types.PoolAmountOutExtension = &Pool{}
 )
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
@@ -272,12 +272,12 @@ func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
 	return Aasset, Basset, err
 }
 
-func (p *Pool) updateLiquidity(numShares sdk.Int, newLiquidity sdk.Coins) {
-	err := p.addToPoolAssetBalances(newLiquidity)
+func (p *Pool) IncreaseLiquidity(sharesOut sdk.Int, coinsIn sdk.Coins) {
+	err := p.addToPoolAssetBalances(coinsIn)
 	if err != nil {
 		panic(err)
 	}
-	p.AddTotalShares(numShares)
+	p.AddTotalShares(sharesOut)
 }
 
 func (pa *Pool) UpdatePoolAssetBalance(coin sdk.Coin) error {
@@ -468,6 +468,14 @@ func (pa Pool) NumAssets() int {
 
 func (pa Pool) IsActive(ctx sdk.Context) bool {
 	return true
+}
+
+func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
+	return PoolParams{
+		SwapFee:                  swapFee,
+		ExitFee:                  exitFee,
+		SmoothWeightChangeParams: params,
+	}
 }
 
 func (params PoolParams) Validate(poolWeights []PoolAsset) error {

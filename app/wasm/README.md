@@ -4,23 +4,23 @@ This package contains CosmWasm integration points.
 
 This package provides first class support for:
 
-* Queries
-  * Denoms
-  * Pools
-  * Prices
-* Messages / Execution
-  * Mint
-  * Swap
+- Queries
+  - Denoms
+  - Pools
+  - Prices
+- Messages / Execution
+  - Mint
+  - Swap
 
 ### Command line interface (CLI)
 
-* Commands
+- Commands
 
 ```sh
   osmosisd tx wasm -h
 ```
 
-* Query
+- Query
 
 ```sh
   osmosisd query wasm -h
@@ -28,7 +28,9 @@ This package provides first class support for:
 
 ### Tests
 
-This contains a few high level tests that `x/wasm` is properly integrated.
+This contains a few high level tests that `x/wasm` is properly
+integrated.
 
-Since the code tested is not in this repo, and we are just testing the application
-integration (app.go), I figured this is the most suitable location for it.
+Since the code tested is not in this repo, and we are just testing the
+application integration (app.go), I figured this is the most suitable
+location for it.
