@@ -269,6 +269,7 @@ format:
 build-docker-osmosisdnode:
 	$(MAKE) -C contrib/localtestnet
 
+<<<<<<< HEAD
 # Run a 4-node testnet locally
 localnet-start: build-linux build-docker-osmosisdnode # localnet-stop
 	@if ! [ -f $(BUILDDIR)/node0/osmosisd/config/genesis.json ]; \
@@ -277,6 +278,17 @@ localnet-start: build-linux build-docker-osmosisdnode # localnet-stop
 	docker-compose up -d
 
 # Stop testnet
+=======
+localnet-build-state-export:
+	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
+
+localnet-start:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-start-state-export:
+	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
+
+>>>>>>> 8043e65 (tests: add mainnet state to localosmosis (#1627))
 localnet-stop:
 	docker-compose down
 
@@ -292,6 +304,9 @@ test-docker-push: test-docker
 	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD)
 	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --abbrev-ref HEAD | sed 's#/#_#g')
 	@docker push ${TEST_DOCKER_REPO}:latest
+
+localnet-remove-state-export:
+	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build \
