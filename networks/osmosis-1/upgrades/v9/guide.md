@@ -1,8 +1,8 @@
 # v8 to v9 Upgrade Guide
 
-Osmosis v9 Gov Prop: https://www.mintscan.io/osmosis/proposals/252
+Osmosis v9 Gov Prop: <https://www.mintscan.io/osmosis/proposals/252>
 
-Countdown: https://www.mintscan.io/osmosis/blocks/4707300
+Countdown: <https://www.mintscan.io/osmosis/blocks/4707300>
 
 Height: 4707300
 
