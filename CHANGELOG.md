@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM
 * [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
+* [#1647](https://github.com/osmosis-labs/osmosis/pull/1647) Add WASM bindings for symmetrically and asymmetrically joining and exiting liqudity pools 
 
 ## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
 
