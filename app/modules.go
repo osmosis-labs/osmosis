@@ -184,6 +184,7 @@ func orderBeginBlockers() []string {
 		bech32ibctypes.ModuleName,
 		txfeestypes.ModuleName,
 		wasm.ModuleName,
+		launchpad.ModuleName,
 	}
 }
 
