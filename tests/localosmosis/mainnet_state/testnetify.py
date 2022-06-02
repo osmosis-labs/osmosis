@@ -2,7 +2,38 @@ import json
 import subprocess
 import re, shutil, tempfile
 from datetime import datetime
+import argparse
+import sys
+from sys import argv
 
+class CustomHelpFormatter(argparse.HelpFormatter):
+    def _format_action_invocation(self, action):
+        if not action.option_strings or action.nargs == 0:
+            return super()._format_action_invocation(action)
+        return ', '.join(action.option_strings)
+    def _split_lines(self, text, width):
+        if text.startswith('R|'):
+            return text[2:].splitlines()
+        # this is the RawTextHelpFormatter._split_lines
+        return argparse.HelpFormatter._split_lines(self, text, width)
+
+fmt = lambda prog: CustomHelpFormatter(prog,max_help_position=30)
+parser = argparse.ArgumentParser(description="Osmosis Installer",formatter_class=fmt)
+
+choice = parser.add_argument_group('Choices')
+
+choice.add_argument(
+    '-c',
+    '--chain-id',
+    type = str,
+    default="localosmosis",
+    help='R|Chain ID for newly created testnet \nDefault: localosmosis\n ',
+    dest="chainID")
+
+if not len(sys.argv) > 1:
+    parser.set_defaults(chainID="localosmosis")
+
+args = parser.parse_args()
 
 #get values from your priv_validator_key.json to later switch with high power validator
 
@@ -121,7 +152,10 @@ read_test_gen = json.loads(test_gen.read())
 #change chain-id
 print("Current chain-id is " + read_test_gen['chain_id'])
 #CAN MODIFY
-new_chain_id = "osmo-test-2"
+if args.chainID:
+    new_chain_id = args.chainID
+else:
+    new_chain_id = "localosmosis"
 read_test_gen['chain_id'] = new_chain_id
 print("New chain-id is " + read_test_gen['chain_id'])
 
