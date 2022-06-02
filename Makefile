@@ -266,19 +266,12 @@ format:
 ###                                Localnet                                 ###
 ###############################################################################
 
-build-docker-osmosisdnode:
-	$(MAKE) -C contrib/localtestnet
+localnet-keys:
+	. tests/localosmosis/keys.sh
 
-<<<<<<< HEAD
-# Run a 4-node testnet locally
-localnet-start: build-linux build-docker-osmosisdnode # localnet-stop
-	@if ! [ -f $(BUILDDIR)/node0/osmosisd/config/genesis.json ]; \
-	then docker run --rm -v $(BUILDDIR):/osmosisd:Z osmosis-labs/osmosisdnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; \
-	fi
-	docker-compose up -d
+localnet-build:
+	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
 
-# Stop testnet
-=======
 localnet-build-state-export:
 	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
 
@@ -288,30 +281,16 @@ localnet-start:
 localnet-start-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
 
->>>>>>> 8043e65 (tests: add mainnet state to localosmosis (#1627))
 localnet-stop:
-	docker-compose down
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
-clean-localnet: localnet-stop
-	rm -rf $(BUILDDIR)/node* $(BUILDDIR)/gentxs
-
-test-docker:
-	@docker build -f contrib/Dockerfile.test -t ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) .
-	@docker tag ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) ${TEST_DOCKER_REPO}:$(shell git rev-parse --abbrev-ref HEAD | sed 's#/#_#g')
-	@docker tag ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD) ${TEST_DOCKER_REPO}:latest
-
-test-docker-push: test-docker
-	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --short HEAD)
-	@docker push ${TEST_DOCKER_REPO}:$(shell git rev-parse --abbrev-ref HEAD | sed 's#/#_#g')
-	@docker push ${TEST_DOCKER_REPO}:latest
+localnet-remove: localnet-stop
+	PWD=$(shell pwd)
+	@docker run --user root -v ${PWD}/tests/localosmosis/.osmosisd:/root/osmosis ubuntu /bin/sh -c "rm -rf /root/osmosis/*"
 
 localnet-remove-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
 
 .PHONY: all build-linux install format lint \
-	go-mod-cache draw-deps clean build \
-	setup-transactions setup-contract-tests-data start-osmosis run-lcd-contract-tests contract-tests \
-	test test-all test-build test-cover test-unit test-race \
-	benchmark \
-	build-docker-osmosisdnode localnet-start localnet-stop \
-	docker-single-node
+	go-mod-cache draw-deps clean build build-contract-tests-hooks \
+	test test-all test-build test-cover test-unit test-race benchmark
