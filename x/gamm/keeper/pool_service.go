@@ -260,7 +260,6 @@ func (k Keeper) JoinSwapExactAmountIn(
 	}
 
 	sharesOut, err := pool.JoinPool(ctx, tokensIn, pool.GetSwapFee(ctx))
-
 	switch {
 	case err != nil:
 		return sdk.ZeroInt(), err
