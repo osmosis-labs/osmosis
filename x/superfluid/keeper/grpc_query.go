@@ -227,9 +227,9 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		}
 		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
 			types.SuperfluidDelegationRecord{
-				DelegatorAddress: req.DelegatorAddress,
-				ValidatorAddress: valAddr,
-				DelegationAmount: lockedCoins,
+				DelegatorAddress:       req.DelegatorAddress,
+				ValidatorAddress:       valAddr,
+				DelegationAmount:       lockedCoins,
 				EquivilentStakedAmount: &coin,
 			},
 		)
