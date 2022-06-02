@@ -27,7 +27,7 @@ cd ..
 cp -r github.com/osmosis-labs/osmosis/v7/* ./
 rm -rf github.com
 
-go mod tidy
+go mod tidy -compat=1.18
 
 # TODO: Uncomment once ORM/Pulsar support is needed.
 #
