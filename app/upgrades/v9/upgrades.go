@@ -81,18 +81,6 @@ func CreateUpgradeHandler(
 
 		icamodule.InitModule(ctx, controllerParams, hostParams)
 
-		// Set the max_age_num_blocks in the evidence params to reflect the 14 day
-		// unbonding period.
-		//
-		// Ref: https://github.com/osmosis-labs/osmosis/issues/1160
-		cp := bpm.GetConsensusParams(ctx)
-		if cp != nil && cp.Evidence != nil {
-			evParams := cp.Evidence
-			evParams.MaxAgeNumBlocks = 186_092
-
-			bpm.StoreConsensusParams(ctx, cp)
-		}
-
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
