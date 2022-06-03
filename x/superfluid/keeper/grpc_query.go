@@ -197,7 +197,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	res := types.SuperfluidDelegationsByDelegatorResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
 		TotalDelegatedCoins:         sdk.NewCoins(),
-		TotalEquivilentStakedAmount: sdk.NewCoin(appparams.BaseCoinUnit, sdk.ZeroInt()),
+		TotalEquivalentStakedAmount: sdk.NewCoin(appparams.BaseCoinUnit, sdk.ZeroInt()),
 	}
 
 	syntheticLocks := q.Keeper.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
@@ -230,11 +230,11 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 				DelegatorAddress:       req.DelegatorAddress,
 				ValidatorAddress:       valAddr,
 				DelegationAmount:       lockedCoins,
-				EquivilentStakedAmount: &coin,
+				EquivalentStakedAmount: &coin,
 			},
 		)
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
-		res.TotalEquivilentStakedAmount = res.TotalEquivilentStakedAmount.Add(coin)
+		res.TotalEquivalentStakedAmount = res.TotalEquivalentStakedAmount.Add(coin)
 	}
 
 	return &res, nil

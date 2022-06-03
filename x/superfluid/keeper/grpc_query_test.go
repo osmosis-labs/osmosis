@@ -91,8 +91,8 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
 		)))
-		suite.Require().True(res.SuperfluidDelegationRecords[0].EquivilentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount0.RoundInt())))
-		suite.Require().True(res.SuperfluidDelegationRecords[1].EquivilentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount1.RoundInt())))
+		suite.Require().True(res.SuperfluidDelegationRecords[0].EquivalentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount0.RoundInt())))
+		suite.Require().True(res.SuperfluidDelegationRecords[1].EquivalentStakedAmount.IsEqual(sdk.NewCoin("uosmo", expectAmount1.RoundInt())))
 	}
 
 	// for each validator denom pair, make sure they have 1 delegations

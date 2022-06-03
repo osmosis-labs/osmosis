@@ -187,7 +187,7 @@ message SuperfluidDelegationsByDelegatorResponse {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-  cosmos.base.v1beta1.Coin total_equivilent_staked_amount = 3 [
+  cosmos.base.v1beta1.Coin total_equivalent_staked_amount = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
