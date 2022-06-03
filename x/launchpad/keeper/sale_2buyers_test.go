@@ -154,6 +154,10 @@ func (s *TwoBuyersSuite) Test2BuyersEnd1() {
 	triggerUserPurchase(s.p, s.u1)
 	checkUser(require, s.u1, zero, s.staked1, s.u1.OutPerShare, s.totalOut.QuoRaw(3), "user1 @ end")
 
+	// withdraw everything - which is zero because we are at the end of the sale
+	amount, err := withdraw(s.p, s.u1, nil, s.after)
+	require.NoError(err)
+	require.True(amount.IsZero())
 }
 
 func (s *TwoBuyersSuite) Test2BuyersEnd2() {
@@ -178,7 +182,7 @@ func (s *TwoBuyersSuite) Test2BuyersEnd3() {
 
 func (s *TwoBuyersSuite) Test2BuyersEnd_mid1() {
 	require := s.Require()
-	end := s.end.Add(api.ROUND / 2) // half round after norrmal end
+	end := s.end.Add(api.ROUND / 2) // half round after normal end
 	s.p.EndRound = currentRound(s.start, end, end)
 	subscribe(s.p, s.u1, s.staked1, s.before)
 	subscribe(s.p, s.u2, s.staked2, s.before)
@@ -194,8 +198,14 @@ func (s *TwoBuyersSuite) Test2BuyersEnd_mid1() {
 	pingSale(s.p, end)
 	triggerUserPurchase(s.p, s.u1)
 	checkUser(require, s.u1, zero, s.staked1, s.u1.OutPerShare, s.totalOut.QuoRaw(3), "user1 @ end")
+
+	// withdraw everything - which is zero because we are at the end of the sale
+	amount, err := withdraw(s.p, s.u1, nil, end)
+	require.NoError(err)
+	require.True(amount.IsZero())
 }
 
+// subscribe at the beginning and trigger purchase after the end
 func (s *TwoBuyersSuite) Test2BuyersEnd_mid2() {
 	require := s.Require()
 	end := s.end.Add(api.ROUND / 2) // half round after normal end
@@ -206,4 +216,29 @@ func (s *TwoBuyersSuite) Test2BuyersEnd_mid2() {
 	pingSale(s.p, s.after)
 	triggerUserPurchase(s.p, s.u1)
 	checkUser(require, s.u1, zero, s.staked1, s.u1.OutPerShare, s.totalOut.QuoRaw(3), "user1 @ end")
+}
+
+// subscribe before the beginning and withdraw user 1 after 2 rounds
+func (s *TwoBuyersSuite) Test2Buyers_withdraw1() {
+	require := s.Require()
+	subscribe(s.p, s.u1, s.staked1, s.before)
+	subscribe(s.p, s.u2, s.staked2, s.before)
+
+	r2 := s.start.Add(api.ROUND * 2)
+	amount, err := withdraw(s.p, s.u1, nil, r2)
+	require.NoError(err)
+	expectedU1Spent := s.staked1.MulRaw(8).QuoRaw(10)
+	expectedU1TokenOut := s.totalOut.QuoRaw(3).MulRaw(2).QuoRaw(10)
+	require.Equal(amount, expectedU1Spent, "we should withdraw 8/10 of our initial stake")
+	checkUser(require, s.u1, zero, s.staked1, s.u1.OutPerShare, expectedU1TokenOut, "user1 should receive 1/3*2/10 of total purchase")
+	pingSale(s.p, r2)
+	// expectedU2TokenOut := s.totalOut.QuoRaw(3).MulRaw(4).QuoRaw(10)
+	// // TODO: fix
+	// checkUser(require, s.u2, s.staked2, s.staked2, s.u2.OutPerShare, s.totalOut.QuoRaw(3).MulRaw(4).QuoRaw(10),
+	// "user2 purchase")
+
+	pingSale(s.p, s.after)
+	checkUser(require, s.u1, zero, s.staked1, s.u1.OutPerShare, expectedU1TokenOut, "no new purchase for u1")
+	// expectedU2TokenOut = expectedU2TokenOut.Add(s.totalOut.MulRaw(8).QuoRaw(10))
+	// checkUser(require, s.u2, s.staked2, s.staked2, s.u2.OutPerShare, expectedU2TokenOut, "total purchase of u2")
 }
