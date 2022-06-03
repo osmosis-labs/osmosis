@@ -40,22 +40,21 @@ func GetTxCmd() *cobra.Command {
 // CreateSaleCmd broadcast MsgCreateSale.
 func CreateSaleCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [flags]",
-		Short: "Create or Setup Sale",
+		Use:   `create [flags]`,
+		Short: "Create or Setup a sale",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`create a new Sale.
-
+			fmt.Sprintf(`Create or Setup a launchpad sale:
 Example:
-$ %s tx launchpad create --sale-file="path/to/sale.json" --from mykey
+$ %s create --sale-file="path/to/sale.json [flags]
 
-Where sale.json contains:
+Sample sale.json file contents:
 {
-    "token-in": "token1",
-    "token-out": "token2",
-    "initial-deposit": "1000token2",
-    "start-time": "2022-06-02T11:18:11.000Z",
-    "duration": "432000s",
-    "treasury": "osmo1035wxcnr3llcmqrrms93kmjly0003uprq384se"
+	"token-in": "token1",
+	"token-out": "token2",
+	"initial-deposit": "1000token2",
+	"start-time": "2022-06-02T11:18:11.000Z",
+	"duration": "432000s",
+	"treasury": "osmo16phc92xevvcvswdew....cr46tn8pneshtsl8"
 }
 `,
 				version.AppName,
@@ -90,8 +89,17 @@ Where sale.json contains:
 func FinalizeSaleCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "finalize [flags]",
-		Short: "Finalize sale",
-		Args:  cobra.ExactArgs(0),
+		Short: "Finalize a sale",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Finalize a launchpad sale :
+Example:
+$ %s finalize --sale-id=sale-id [flags]
+$ %s finalize --sale-id=1 [flags]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -119,9 +127,19 @@ func FinalizeSaleCmd() *cobra.Command {
 // Subscribe broadcast MsgSubscribe.
 func SubscribeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "subscribe [flags]",
-		Short: "Subscribe or Join Sale",
-		Args:  cobra.ExactArgs(0),
+		Use:     "subscribe [flags]",
+		Short:   "Subscribe or Join a sale",
+		Example: "subscribe --sale-id=1 --amount=10 [flags]",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Subscribe or Join a launchpad sale :
+Example:
+$ %s subscribe --sale-id=sale-id --amount=tokenamount [flags]
+$ %s subscribe --sale-id=1 --amount=10 [flags]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -150,9 +168,19 @@ func SubscribeCmd() *cobra.Command {
 // SubscribeSale broadcast MsgSubscribe.
 func WithdrawCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw [flags]",
-		Short: "Withdraw amount from Sale",
-		Args:  cobra.ExactArgs(0),
+		Use:     "withdraw [flags]",
+		Short:   "Withdraw amount from a sale",
+		Example: "withdraw --sale-id=1 --amount=10 [flags]",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Withdraw amount from a launchpad sale :
+Example:
+$ %s withdraw --sale-id=sale-id --amount=tokenamount [flags]
+$ %s withdraw --sale-id=1 --amount=10 [flags]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -180,9 +208,19 @@ func WithdrawCmd() *cobra.Command {
 // ExitSaleCmd broadcast MsgExitSale.
 func ExitSaleCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "exit [flags]",
-		Short: "Exit from a Sale",
-		Args:  cobra.ExactArgs(0),
+		Use:     "exit --sale-id=sale-id [flags]",
+		Short:   "Exit from a launchpad sale",
+		Example: "exit --sale-id=1 [flags]",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Exit from a launchpad sale :
+Example:
+$ %s exit --sale-id=sale-id [flags]
+$ %s exit --sale-id=1 [flags]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

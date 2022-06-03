@@ -2,9 +2,11 @@ package cli
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
 	"strings"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 
 	"github.com/spf13/cobra"
 
@@ -39,12 +41,16 @@ func GetQueryCmd() *cobra.Command {
 func GetCmdQuerySales() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sales",
-		Short: "Query the current launchpad sales list",
+		Short: "Query launchpad sales list",
 		Args:  cobra.NoArgs,
-		Long: strings.TrimSpace(`Query sales list :
-
-$ <appd> query launchpad sales
-`),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query sales list :
+Example:
+$ %s query launchpad sales
+`,
+				version.AppName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -77,12 +83,17 @@ $ <appd> query launchpad sales
 func GetCmdQuerySale() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sale <sale-id>",
-		Short: "Query sale by it's id",
+		Short: "Query a launchpad sale by it's id",
 		Args:  cobra.ExactArgs(1),
-		Long: strings.TrimSpace(`Query sale :
-
-$ <appd> query launchpad sale <sale-id>
-`),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query sale :
+Example:
+$ %s query launchpad sale <sale-id>
+$ %s query launchpad sale 1
+`,
+				version.AppName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -115,12 +126,17 @@ $ <appd> query launchpad sale <sale-id>
 func GetCmdUserPosition() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "user-position <sale-id> <address>",
-		Short: "Query user position",
+		Short: "Query user position from a launchpad sale",
 		Args:  cobra.ExactArgs(2),
-		Long: strings.TrimSpace(`Query user position :
-
-$ <appd> query launchpad user-position <sale-id> <address>
-`),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query user position :
+Example:
+$ %s query launchpad user-position <sale-id> <address>
+$ %s query launchpad user-position 1 osmo16phc92xevvcvswdew....cr46tn8pneshtsl8
+`,
+				version.AppName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
