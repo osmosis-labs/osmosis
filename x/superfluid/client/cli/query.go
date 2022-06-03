@@ -353,7 +353,7 @@ func GetCmdTotalSuperfluidDelegations() *cobra.Command {
 
 func GetCmdDelegation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegation [delegator_address]",
+		Use:   "total-delegation [delegator_address]",
 		Short: "Query both superfluid delegation and normal delegation",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -363,7 +363,7 @@ func GetCmdDelegation() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.Delegation(cmd.Context(), &types.QueryDelegationRequest{
+			res, err := queryClient.TotalDelegation(cmd.Context(), &types.QueryTotalDelegationRequest{
 				DelegatorAddress: args[0],
 			})
 
