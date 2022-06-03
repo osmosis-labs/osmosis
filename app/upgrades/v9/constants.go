@@ -5,6 +5,8 @@ import (
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 
+	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
+
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
@@ -19,7 +21,7 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{tokenfactorytypes.ModuleName},
+		Added:   []string{tokenfactorytypes.ModuleName, icahosttypes.StoreKey},
 		Deleted: []string{ClaimsModuleName},
 	},
 }

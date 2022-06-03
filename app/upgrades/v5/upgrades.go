@@ -1,7 +1,7 @@
 package v5
 
 import (
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v3/modules/core/03-connection/types"
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,13 +11,14 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees"
+	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
+	_ upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -55,7 +56,7 @@ func CreateUpgradeHandler(
 		// Override txfees genesis here
 		ctx.Logger().Info("Setting txfees module genesis with actual v5 desired genesis")
 		feeTokens := InitialWhitelistedFeetokens(ctx, keepers.GAMMKeeper)
-		txfees.InitGenesis(ctx, *keepers.TxFeesKeeper, txfeestypes.GenesisState{
+		keepers.TxFeesKeeper.InitGenesis(ctx, txfeestypes.GenesisState{
 			Basedenom: keepers.StakingKeeper.BondDenom(ctx),
 			Feetokens: feeTokens,
 		})

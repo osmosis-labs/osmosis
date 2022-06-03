@@ -874,25 +874,25 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_ModuleToDistributeCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "module_to_distribute_coins"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ModuleToDistributeCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "module_to_distribute_coins"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ModuleDistributedCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "module_distributed_coins"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ModuleDistributedCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "module_distributed_coins"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GaugeByID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "incentives", "v1beta1", "gauge_by_id", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GaugeByID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "incentives", "v1beta1", "gauge_by_id", "id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Gauges_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "gauges"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Gauges_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "gauges"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ActiveGauges_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "active_gauges"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ActiveGauges_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "active_gauges"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ActiveGaugesPerDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "active_gauges_per_denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ActiveGaugesPerDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "active_gauges_per_denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UpcomingGauges_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "upcoming_gauges"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UpcomingGauges_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "upcoming_gauges"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UpcomingGaugesPerDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "upcoming_gauges_per_denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UpcomingGaugesPerDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "upcoming_gauges_per_denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_RewardsEst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "incentives", "v1beta1", "rewards_est", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_RewardsEst_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "incentives", "v1beta1", "rewards_est", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_LockableDurations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "lockable_durations"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_LockableDurations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "incentives", "v1beta1", "lockable_durations"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

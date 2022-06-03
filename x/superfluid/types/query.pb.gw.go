@@ -1147,31 +1147,31 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AssetType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "asset_type"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AssetType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "asset_type"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AllAssets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "all_assets"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllAssets_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "all_assets"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AssetMultiplier_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "asset_multiplier"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AssetMultiplier_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "asset_multiplier"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AllIntermediaryAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "all_intermediary_accounts"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllIntermediaryAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "all_intermediary_accounts"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ConnectedIntermediaryAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "superfluid", "v1beta1", "connected_intermediary_account", "lock_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ConnectedIntermediaryAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "superfluid", "v1beta1", "connected_intermediary_account", "lock_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TotalSuperfluidDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "all_superfluid_delegations"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_TotalSuperfluidDelegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "all_superfluid_delegations"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SuperfluidDelegationAmount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "superfluid_delegation_amount"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_SuperfluidDelegationAmount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "superfluid_delegation_amount"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SuperfluidDelegationsByDelegator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "superfluid", "v1beta1", "superfluid_delegations", "delegator_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_SuperfluidDelegationsByDelegator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "superfluid", "v1beta1", "superfluid_delegations", "delegator_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SuperfluidUndelegationsByDelegator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "superfluid", "v1beta1", "superfluid_undelegations_by_delegator", "delegator_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_SuperfluidUndelegationsByDelegator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "superfluid", "v1beta1", "superfluid_undelegations_by_delegator", "delegator_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SuperfluidDelegationsByValidatorDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "superfluid_delegations_by_validator_denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_SuperfluidDelegationsByValidatorDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "superfluid_delegations_by_validator_denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_EstimateSuperfluidDelegatedAmountByValidatorDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "estimate_superfluid_delegation_amount_by_validator_denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_EstimateSuperfluidDelegatedAmountByValidatorDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "superfluid", "v1beta1", "estimate_superfluid_delegation_amount_by_validator_denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Delegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "superfluid", "v1beta1", "delegation", "delegator_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Delegation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "superfluid", "v1beta1", "delegation", "delegator_address"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

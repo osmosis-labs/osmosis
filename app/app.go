@@ -47,6 +47,7 @@ import (
 	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
 	v6 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v6"
 	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 )
@@ -86,7 +87,7 @@ var (
 	_ App = (*OsmosisApp)(nil)
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade}
-	Forks    = []upgrades.Fork{v3.Fork, v6.Fork}
+	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork}
 )
 
 // GetWasmEnabledProposals parses the WasmProposalsEnabled and
@@ -232,7 +233,7 @@ func NewOsmosisApp(
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
-	app.mm.SetOrderInitGenesis(modulesOrderInitGenesis...)
+	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
@@ -271,7 +272,7 @@ func NewOsmosisApp(
 			app.GAMMKeeper,
 			ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
-			app.IBCKeeper.ChannelKeeper,
+			app.IBCKeeper,
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)
@@ -421,6 +422,7 @@ func (app *OsmosisApp) setupUpgradeHandlers() {
 			upgrade.CreateUpgradeHandler(
 				app.mm,
 				app.configurator,
+				app.BaseApp,
 				&app.AppKeepers,
 			),
 		)

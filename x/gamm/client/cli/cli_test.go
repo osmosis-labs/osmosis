@@ -152,45 +152,47 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 0,
 		},
-		{
-			"future governor time",
-			fmt.Sprintf(`
-			{
-			  "%s": "1node0token,3stake",
-			  "%s": "100node0token,100stake",
-			  "%s": "0.001",
-			  "%s": "0.001",
-			  "%s": "2h"
-			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"future governor token + time",
-			fmt.Sprintf(`
-			{
-			  "%s": "1node0token,3stake",
-			  "%s": "100node0token,100stake",
-			  "%s": "0.001",
-			  "%s": "0.001",
-			  "%s": "token,1000h"
-			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-			false, &sdk.TxResponse{}, 0,
-		},
-		{
-			"invalid future governor",
-			fmt.Sprintf(`
-			{
-			  "%s": "1node0token,3stake",
-			  "%s": "100node0token,100stake",
-			  "%s": "0.001",
-			  "%s": "0.001",
-			  "%s": "validdenom,invalidtime"
-			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
-			true, &sdk.TxResponse{}, 7,
-		},
+		// Due to CI time concerns, we leave these CLI tests commented out, and instead guaranteed via
+		// the logic tests.
+		// {
+		// 	"future governor time",
+		// 	fmt.Sprintf(`
+		// 	{
+		// 	  "%s": "1node0token,3stake",
+		// 	  "%s": "100node0token,100stake",
+		// 	  "%s": "0.001",
+		// 	  "%s": "0.001",
+		// 	  "%s": "2h"
+		// 	}
+		// 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
+		// 	false, &sdk.TxResponse{}, 0,
+		// },
+		// {
+		// 	"future governor token + time",
+		// 	fmt.Sprintf(`
+		// 	{
+		// 	  "%s": "1node0token,3stake",
+		// 	  "%s": "100node0token,100stake",
+		// 	  "%s": "0.001",
+		// 	  "%s": "0.001",
+		// 	  "%s": "token,1000h"
+		// 	}
+		// 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
+		// 	false, &sdk.TxResponse{}, 0,
+		// },
+		// {
+		// 	"invalid future governor",
+		// 	fmt.Sprintf(`
+		// 	{
+		// 	  "%s": "1node0token,3stake",
+		// 	  "%s": "100node0token,100stake",
+		// 	  "%s": "0.001",
+		// 	  "%s": "0.001",
+		// 	  "%s": "validdenom,invalidtime"
+		// 	}
+		// 	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
+		// 	true, &sdk.TxResponse{}, 7,
+		// },
 		{
 			"not valid json",
 			"bad json",

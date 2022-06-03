@@ -225,6 +225,7 @@
     - [SuperfluidAsset](#osmosis.superfluid.SuperfluidAsset)
     - [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord)
     - [SuperfluidIntermediaryAccount](#osmosis.superfluid.SuperfluidIntermediaryAccount)
+    - [UnpoolWhitelistedPools](#osmosis.superfluid.UnpoolWhitelistedPools)
   
     - [SuperfluidAssetType](#osmosis.superfluid.SuperfluidAssetType)
   
@@ -278,6 +279,8 @@
     - [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse)
     - [MsgSuperfluidUndelegate](#osmosis.superfluid.MsgSuperfluidUndelegate)
     - [MsgSuperfluidUndelegateResponse](#osmosis.superfluid.MsgSuperfluidUndelegateResponse)
+    - [MsgUnPoolWhitelistedPool](#osmosis.superfluid.MsgUnPoolWhitelistedPool)
+    - [MsgUnPoolWhitelistedPoolResponse](#osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse)
   
     - [Msg](#osmosis.superfluid.Msg)
   
@@ -3269,6 +3272,21 @@ and OSMO tokens for superfluid staking
 
 
 
+
+<a name="osmosis.superfluid.UnpoolWhitelistedPools"></a>
+
+### UnpoolWhitelistedPools
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ids` | [uint64](#uint64) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
 
@@ -3970,6 +3988,44 @@ specified validator addr.
 
 
 
+
+<a name="osmosis.superfluid.MsgUnPoolWhitelistedPool"></a>
+
+### MsgUnPoolWhitelistedPool
+MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is
+associated with pool pool_id. If pool_id is not approved for unpooling by
+governance, this is a no-op. Unpooling takes the locked gamm shares, and runs
+"ExitPool" on it, to get the constituent tokens. e.g. z gamm/pool/1 tokens
+ExitPools into constituent tokens x uatom, y uosmo. Then it creates a new
+lock for every constituent token, with the duration associated with the lock.
+If the lock was unbonding, the new lockup durations should be the time left
+until unbond completion.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse"></a>
+
+### MsgUnPoolWhitelistedPoolResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `exitedLockIds` | [uint64](#uint64) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -3990,6 +4046,7 @@ Msg defines the Msg service.
 Execute superfluid redelegation for a lockup rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns (MsgSuperfluidRedelegateResponse); | |
 | `SuperfluidUnbondLock` | [MsgSuperfluidUnbondLock](#osmosis.superfluid.MsgSuperfluidUnbondLock) | [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse) | For a given lock that is being superfluidly undelegated, also unbond the underlying lock. | |
 | `LockAndSuperfluidDelegate` | [MsgLockAndSuperfluidDelegate](#osmosis.superfluid.MsgLockAndSuperfluidDelegate) | [MsgLockAndSuperfluidDelegateResponse](#osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse) | Execute lockup lock and superfluid delegation in a single msg | |
+| `UnPoolWhitelistedPool` | [MsgUnPoolWhitelistedPool](#osmosis.superfluid.MsgUnPoolWhitelistedPool) | [MsgUnPoolWhitelistedPoolResponse](#osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse) |  | |
 
  <!-- end services -->
 
@@ -4286,14 +4343,18 @@ adminship of a denom to a new account
 
 ### MsgCreateDenom
 MsgCreateDenom is the sdk.Msg type for allowing an account to create
-a new denom.  It requires a sender address and a unique nonce
-(to allow accounts to create multiple denoms)
+a new denom. It requires a sender address and a subdenomination.
+The (sender_address, sub_denomination) pair must be unique and cannot be
+re-used. The resulting denom created is `factory/{creator
+address}/{subdenom}`. The resultant denom's admin is originally set to be the
+creator, but this can be changed later. The token denom does not indicate the
+current admin.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `nonce` | [string](#string) |  |  |
+| `subdenom` | [string](#string) |  | subdenom can be up to 44 "alphanumeric" characters long. |
 
 
 

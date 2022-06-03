@@ -52,9 +52,9 @@ op_address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"
 op_pubkey = "A2MR6q+pOpLtdxh0tHHe2JrEY2KOcvRogtLxHDHzJvOh"
 
 #feed address into osmosisd debug addr {address} to get bech32 validator op address (osmovaloper)
-bech32_op = subprocess.run([daemon_name,"debug", "addr", op_address], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+# bech32_op = subprocess.run([daemon_name,"debug", "addr", op_address], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 #osmovaloper
-bech32_valoper = bech32_op.stderr[bech32_op.stderr.find("Val: ") + 5: -1]
+# bech32_valoper = bech32_op.stderr[bech32_op.stderr.find("Val: ") + 5: -1]
 # osmovaloper12smx2wdlyttvyzvzg54y2vnqwq2qjatex7kgq4
 
 def sed_inplace(filename, pattern, repl):
@@ -99,8 +99,8 @@ print("Replacing 16A169951A878247DBE258FDDC71638F6606D156 with " + address)
 sed_inplace("testnet_genesis.json", "16A169951A878247DBE258FDDC71638F6606D156", address)
 
 #replace validator osmovaloper
-print("Replacing osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n with " + bech32_valoper)
-sed_inplace("testnet_genesis.json", "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n", bech32_valoper)
+#print("Replacing osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n with " + bech32_valoper)
+#sed_inplace("testnet_genesis.json", "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n", bech32_valoper)
 
 #replace actual account
 print("Replacing osmo1cyw4vw20el8e7ez8080md0r8psg25n0c6j07j5 with " + op_address)
@@ -202,7 +202,8 @@ print("New validator power is " + new_power)
 val_power_list[val_power_index]['power'] = new_power
 #get index of val power in app state (osmovaloper) (bech32_valoper)
 last_val_power_list = read_test_gen['app_state']['staking']['last_validator_powers']
-last_val_power_index = [i for i, elem in enumerate(last_val_power_list) if bech32_valoper in elem['address']][0]
+#last_val_power_index = [i for i, elem in enumerate(last_val_power_list) if bech32_valoper in elem['address']][0]
+last_val_power_index = [i for i, elem in enumerate(last_val_power_list) if 'osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n' in elem['address']][0]
 val_power = int(read_test_gen['app_state']['staking']['last_validator_powers'][last_val_power_index]['power'])
 print("Current validator power in second location is " + str(val_power))
 new_val_power = str(val_power + 1000000000)

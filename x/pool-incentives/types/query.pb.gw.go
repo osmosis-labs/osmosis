@@ -486,17 +486,17 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_GaugeIds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "pool-incentives", "v1beta1", "gauge-ids", "pool_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GaugeIds_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "pool-incentives", "v1beta1", "gauge-ids", "pool_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DistrInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "distr_info"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DistrInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "distr_info"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_LockableDurations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "lockable_durations"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_LockableDurations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "lockable_durations"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_IncentivizedPools_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "incentivized_pools"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_IncentivizedPools_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "incentivized_pools"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ExternalIncentiveGauges_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "external_incentive_gauges"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ExternalIncentiveGauges_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "pool-incentives", "v1beta1", "external_incentive_gauges"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

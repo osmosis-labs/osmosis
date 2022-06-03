@@ -1690,37 +1690,37 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_ModuleBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "lockup", "v1beta1", "module_balance"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ModuleBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "lockup", "v1beta1", "module_balance"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ModuleLockedAmount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "lockup", "v1beta1", "module_locked_amount"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ModuleLockedAmount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "lockup", "v1beta1", "module_locked_amount"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountUnlockableCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_unlockable_coins", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountUnlockableCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_unlockable_coins", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountUnlockingCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_unlocking_coins", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountUnlockingCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_unlocking_coins", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountLockedCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_coins", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountLockedCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_coins", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountLockedPastTime_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_pasttime", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountLockedPastTime_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_pasttime", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountLockedPastTimeNotUnlockingOnly_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_pasttime_not_unlocking_only", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountLockedPastTimeNotUnlockingOnly_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_pasttime_not_unlocking_only", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountUnlockedBeforeTime_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_unlocked_before_time", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountUnlockedBeforeTime_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_unlocked_before_time", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountLockedPastTimeDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_pasttime_denom", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountLockedPastTimeDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_pasttime_denom", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_LockedDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "lockup", "v1beta1", "locked_denom"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_LockedDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "lockup", "v1beta1", "locked_denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_LockedByID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "locked_by_id", "lock_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_LockedByID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "locked_by_id", "lock_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SyntheticLockupsByLockupID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "synthetic_lockups_by_lock_id", "lock_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_SyntheticLockupsByLockupID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "synthetic_lockups_by_lock_id", "lock_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountLockedLongerDuration_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_longer_duration", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountLockedLongerDuration_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_longer_duration", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountLockedDuration_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_duration", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountLockedDuration_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_duration", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountLockedLongerDurationNotUnlockingOnly_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_longer_duration_not_unlocking_only", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountLockedLongerDurationNotUnlockingOnly_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_longer_duration_not_unlocking_only", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AccountLockedLongerDurationDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_longer_duration_denom", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AccountLockedLongerDurationDenom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"osmosis", "lockup", "v1beta1", "account_locked_longer_duration_denom", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
