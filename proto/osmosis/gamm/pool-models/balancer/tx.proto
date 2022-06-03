@@ -15,10 +15,10 @@ service Msg {
 message MsgCreateBalancerPool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
-  osmosis.gamm.v1beta1.PoolParams poolParams = 2
+  osmosis.gamm.poolmodels.balancer.v1beta1.PoolParams poolParams = 2
       [ (gogoproto.moretags) = "yaml:\"pool_params\"" ];
 
-  repeated osmosis.gamm.v1beta1.PoolAsset poolAssets = 3
+  repeated osmosis.gamm.poolmodels.balancer.v1beta1.PoolAsset poolAssets = 3
       [ (gogoproto.nullable) = false ];
 
   string future_pool_governor = 4

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package osmosis.superfluid.v1beta1;
+package osmosis.superfluid;
 
 import "gogoproto/gogo.proto";
 import "osmosis/superfluid/superfluid.proto";
@@ -17,7 +17,7 @@ message SetSuperfluidAssetsProposal {
   string description = 2;
   repeated SuperfluidAsset assets = 3 [ (gogoproto.nullable) = false ];
 }
-
+ 
 // RemoveSuperfluidAssetsProposal is a gov Content type to remove the superfluid
 // assets by denom
 message RemoveSuperfluidAssetsProposal {
