@@ -1,0 +1,35 @@
+# Create a release folder with the osmosis binaries
+# This workflow runs on every new tag or when manually triggered
+# It will create a release folder that it's served as an workflow artifact
+
+name: Release Osmosis
+
+on:
+  push:
+    tags:
+    - 'v*' 
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - 
+        name: Check out the repo
+        uses: actions/checkout@v2
+      - 
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - 
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - 
+        name: Launch release process
+        run: |
+          make -f contrib/images/osmobuilder/Makefile release
+      - 
+        name: Upload release folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: release
