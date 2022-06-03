@@ -83,8 +83,6 @@ var (
 	// EmptyWasmOpts defines a type alias for a list of wasm options.
 	EmptyWasmOpts []wasm.Option
 
-	_ App = (*OsmosisApp)(nil)
-
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork}
 )
