@@ -23,11 +23,5 @@
   "[proto3]": {
     "editor.defaultFormatter": "xaver.clang-format"
   },
-  "protoc": {
-    "path": "/usr/local/bin/protoc",
-    "options": [
-        "--proto_path=$HOME/go/pkg/mod/go.buf.build/protocolbuffers",
-    ]
-  },
   "clang-format.style": "{BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 120, AlignConsecutiveAssignments: true, AlignConsecutiveDeclarations: true, SpacesInSquareBrackets: true}"
 }
