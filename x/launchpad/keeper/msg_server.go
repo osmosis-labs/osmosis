@@ -95,6 +95,7 @@ func (k Keeper) Withdraw(goCtx context.Context, msg *api.MsgWithdraw) (*emptypb.
 	return &emptypb.Empty{}, err
 }
 
+// it will update msg.Amount to the withdrawn amount (this changes only when msg.Amount == nil)
 func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes.KVStore) error {
 	if err := msg.Validate(); err != nil {
 		return err
@@ -104,10 +105,11 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes
 		return err
 	}
 	// withdraw updates msg.Amount
-	err = withdraw(p, u, msg.Amount, ctx.BlockTime())
+	amount, err := withdraw(p, u, msg.Amount, ctx.BlockTime())
 	if err != nil {
 		return err
 	}
+	msg.Amount = &amount
 	coin := sdk.NewCoin(p.TokenIn, *msg.Amount)
 	err = k.bank.SendCoinsFromModuleToAccount(ctx, launchpad.ModuleName, sender, sdk.NewCoins(coin))
 	if err != nil {

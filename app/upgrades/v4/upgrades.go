@@ -6,6 +6,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
+	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -17,6 +18,7 @@ import (
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
+	_ upgrades.BaseAppParamManager,
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {

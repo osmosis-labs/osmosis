@@ -41,7 +41,7 @@ func saleRemainigBalance(p *api.Sale, userShares sdk.Int) sdk.Int {
 // TODO: caller must assert that the sale didn't finish:
 //     inRemaining >0 and not ended
 func computeSharesAmount(p *api.Sale, amountIn sdk.Int, roundUp bool) sdk.Int {
-	if p.Shares.IsZero() {
+	if p.Shares.IsZero() || amountIn.IsZero() {
 		return amountIn
 	}
 	shares := amountIn.Mul(p.Shares)
@@ -68,13 +68,16 @@ func subscribe(p *api.Sale, u *api.UserPosition, amount sdk.Int, now time.Time) 
 	u.Staked = saleRemainigBalance(p, u.Shares)
 }
 
-func withdraw(p *api.Sale, u *api.UserPosition, amount *sdk.Int, now time.Time) error {
+// withdraw applies withdraw requests and updates sell state.
+// If amount == nil then it withdrawns all the remaining deposit.
+// Returns withdrawn amount.
+func withdraw(p *api.Sale, u *api.UserPosition, amount *sdk.Int, now time.Time) (sdk.Int, error) {
 	pingSale(p, now)
 	remaining := triggerUserPurchase(p, u)
 	if amount == nil {
-		*amount = remaining
-	} else if remaining.LT(*amount) {
-		return errors.ErrInvalidRequest.Wrapf("Not enough balance, available balance: %s", remaining)
+		amount = &remaining
+	} else if amount.GT(remaining) {
+		return sdk.ZeroInt(), errors.ErrInvalidRequest.Wrapf("Not enough balance, available balance: %s", remaining)
 	}
 
 	shares := computeSharesAmount(p, *amount, true)
@@ -83,7 +86,7 @@ func withdraw(p *api.Sale, u *api.UserPosition, amount *sdk.Int, now time.Time) 
 	p.Shares = p.Shares.Sub(shares)
 	p.Staked = p.Staked.Sub(*amount)
 
-	return nil
+	return *amount, nil
 }
 
 func pingSale(p *api.Sale, now time.Time) {
@@ -107,7 +110,6 @@ func pingSale(p *api.Sale, now time.Time) {
 	}
 
 	sold := p.OutRemaining.MulRaw(diff).QuoRaw(remainingRounds)
-	// fmt.Println("sold", sold)
 	if sold.IsPositive() {
 		p.OutSold = p.OutSold.Add(sold)
 		p.OutRemaining = p.OutRemaining.Sub(sold)

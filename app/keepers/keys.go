@@ -9,7 +9,6 @@ import (
 func (appKeepers *AppKeepers) GenerateKeys() {
 	// Define what keys will be used in the cosmos-sdk key/value store.
 	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain.
-	// Keys are in keys.go to kep app.go as brief as possible.
 	appKeepers.keys = sdk.NewKVStoreKeys(KVStoreKeys()...)
 
 	// Define transient store keys
