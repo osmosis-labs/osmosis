@@ -296,7 +296,6 @@ func solveCFMMBinarySearch(constantFunction func(sdk.Dec, sdk.Dec) sdk.Dec) func
 	}
 }
 
-
 func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	return solveCFMMBinarySearch(cfmmConstant)(xReserve, yReserve, yIn)
 }
