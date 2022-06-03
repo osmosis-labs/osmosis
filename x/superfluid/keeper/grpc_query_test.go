@@ -236,7 +236,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsWithNormalStakin
 	// for each delegator, query all their superfluid delegations and normal delegations. Making sure they have 4 delegations
 	// Making sure TotalEquivalentStakedAmount is equal to converted amount + normal delegations
 	for _, delegator := range delAddrs {
-		res, err := suite.queryClient.TotalDelegation(sdk.WrapSDKContext(suite.Ctx), &types.QueryTotalDelegationRequest{
+		res, err := suite.queryClient.TotalDelegationByDelegator(sdk.WrapSDKContext(suite.Ctx), &types.QueryTotalDelegationByDelegatorRequest{
 			DelegatorAddress: delegator.String(),
 		})
 

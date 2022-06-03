@@ -114,9 +114,9 @@ service Query {
   //       "/osmosis/superfluid/v1beta1/superfluid_unbondings_by_validator_denom";
   // }
 
-  rpc TotalDelegation (QueryTotalDelegationRequest) returns (QueryTotalDelegationResponse) {
+  rpc TotalDelegationByDelegator (QueryTotalDelegationByDelegatorRequest) returns (QueryTotalDelegationByDelegatorResponse) {
      option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
-                                    "total_delegation/{delegator_address}";
+                                    "total_delegation_by_delegator/{delegator_address}";
   }
 }
 
@@ -260,11 +260,11 @@ message EstimateSuperfluidDelegatedAmountByValidatorDenomResponse {
 //   ];
 // }
 
-message QueryTotalDelegationRequest {
+message QueryTotalDelegationByDelegatorRequest {
   string delegator_address = 1;
 }
 
-message QueryTotalDelegationResponse {
+message QueryTotalDelegationByDelegatorResponse {
   repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
       [ (gogoproto.nullable) = false ];
 

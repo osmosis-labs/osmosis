@@ -15,7 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func (q Querier) TotalDelegation(goCtx context.Context, req *types.QueryTotalDelegationRequest) (*types.QueryTotalDelegationResponse, error) {
+func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.QueryTotalDelegationByDelegatorRequest) (*types.QueryTotalDelegationByDelegatorResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -30,7 +30,7 @@ func (q Querier) TotalDelegation(goCtx context.Context, req *types.QueryTotalDel
 		return nil, err
 	}
 
-	res := types.QueryTotalDelegationResponse{
+	res := types.QueryTotalDelegationByDelegatorResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
 		DelegationResponse:          []stakingtypes.DelegationResponse{},
 		TotalDelegatedCoins:         sdk.NewCoins(),
