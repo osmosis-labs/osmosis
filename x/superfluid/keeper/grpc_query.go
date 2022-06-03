@@ -199,7 +199,6 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 
 	syntheticLocks := q.Keeper.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
 
-	// this if for getting superfluid staking
 	for _, syntheticLock := range syntheticLocks {
 		// don't include unbonding delegations
 		if strings.Contains(syntheticLock.SynthDenom, "superunbonding") {
