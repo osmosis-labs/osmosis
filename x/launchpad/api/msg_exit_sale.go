@@ -10,8 +10,10 @@ import (
 var _ sdk.Msg = &MsgExitSale{}
 
 func (msg *MsgExitSale) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	return errors.ErrInvalidRequest.Wrapf("Invalid sender address (%s)", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return errors.ErrInvalidRequest.Wrapf("Invalid sender address (%s)", msg.Sender)
+	}
+	return nil
 }
 
 func (msg *MsgExitSale) Validate(now, end time.Time) error {

@@ -2,6 +2,9 @@ package cli
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -11,8 +14,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"strings"
-	"time"
 )
 
 // GetTxCmd returns the transaction commands for this module.
@@ -39,21 +40,20 @@ func GetTxCmd() *cobra.Command {
 // CreateSaleCmd broadcast MsgCreateSale.
 func CreateSaleCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [flags]",
-		Short: "Create or Setup Sale",
+		Use:   `create [flags]`,
+		Short: "Create or Setup a sale",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`create a new Sale.
-
+			fmt.Sprintf(`Create or Setup a launchpad sale.
 Example:
-$ %s tx launchpad create --sale-file="path/to/sale.json" --from mykey
+$ %s tx launchpad create --sale-file="path/to/sale.json [flags]
 
-Where sale.json contains:
+Sample sale.json file contents:
 {
 	"token-in": "token1",
 	"token-out": "token2",
 	"initial-deposit": "1000token2",
-	"start-time": "2022-05-23T11:17:36.755Z",
-	"duration": 432000s,
+	"start-time": "2022-06-02T11:18:11.000Z",
+	"duration": "432000s",
 	"treasury": "osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6"
 }
 `,
@@ -89,8 +89,16 @@ Where sale.json contains:
 func FinalizeSaleCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "finalize [flags]",
-		Short: "Finalize sale",
-		Args:  cobra.ExactArgs(0),
+		Short: "Finalize a sale",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Finalize a launchpad sale.
+Example:
+$ %s tx launchpad finalize --sale-id=1 [flags]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -118,9 +126,18 @@ func FinalizeSaleCmd() *cobra.Command {
 // Subscribe broadcast MsgSubscribe.
 func SubscribeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "subscribe [flags]",
-		Short: "Subscribe or Join Sale",
-		Args:  cobra.ExactArgs(0),
+		Use:     "subscribe [flags]",
+		Short:   "Subscribe or Join a sale",
+		Example: "subscribe --sale-id=1 --amount=10 [flags]",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Subscribe or Join a launchpad sale.
+Example:
+$ %s tx launchpad subscribe --sale-id=1 --amount=10 (in the smallest denominator) [flags]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -149,9 +166,18 @@ func SubscribeCmd() *cobra.Command {
 // SubscribeSale broadcast MsgSubscribe.
 func WithdrawCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw [flags]",
-		Short: "Withdraw amount from Sale",
-		Args:  cobra.ExactArgs(0),
+		Use:     "withdraw [flags]",
+		Short:   "Withdraw amount from a sale",
+		Example: "withdraw --sale-id=1 --amount=10 [flags]",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Withdraw amount from a launchpad sale.
+Example:
+$ %s tx launchpad withdraw --sale-id=1 --amount=10 (in the smallest denominator) [flags]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -179,9 +205,18 @@ func WithdrawCmd() *cobra.Command {
 // ExitSaleCmd broadcast MsgExitSale.
 func ExitSaleCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "exit [flags]",
-		Short: "Exit from a Sale",
-		Args:  cobra.ExactArgs(0),
+		Use:     "exit --sale-id=sale-id [flags]",
+		Short:   "Exit from a launchpad sale",
+		Example: "exit --sale-id=1 [flags]",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Exit from a launchpad sale.
+Example:
+$ %s tx launchpad exit --sale-id=1 [flags]
+`,
+				version.AppName,
+			),
+		),
+		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -283,12 +318,21 @@ func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 	if err != nil {
 		return txf, nil, err
 	}
-
+	amount, err := fs.GetInt64(FlagAmount)
+	if err != nil {
+		return txf, nil, err
+	}
 	msg := &api.MsgWithdraw{
 		Sender: clientCtx.GetFromAddress().String(),
 		SaleId: saleId,
-		Amount: nil,
 	}
+	if amount > 0 {
+		amt := sdk.NewInt(amount)
+		msg.Amount = &amt
+	} else {
+		msg.Amount = nil
+	}
+
 	if err = msg.ValidateBasic(); err != nil {
 		return txf, nil, err
 	}

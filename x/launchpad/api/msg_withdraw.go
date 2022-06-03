@@ -8,8 +8,10 @@ import (
 var _ sdk.Msg = &MsgWithdraw{}
 
 func (msg *MsgWithdraw) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	return errors.ErrInvalidRequest.Wrapf("Invalid sender address (%s)", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return errors.ErrInvalidRequest.Wrapf("Invalid sender address (%s)", msg.Sender)
+	}
+	return nil
 }
 
 func (msg *MsgWithdraw) Validate() error {
