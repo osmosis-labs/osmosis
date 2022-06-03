@@ -1,6 +1,6 @@
 "C:app-wiring":
   # Match all of app folder except wasm sub-folder
-  - app/*.go'
+  - app/*.go
   - app/apptesting/**/*
   - app/keepers/**/*
   - app/params/**/*
