@@ -10,10 +10,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func (q Querier) Delegation(goCtx context.Context, req *types.QueryDelegationRequest) (*types.QueryDelegationResponse, error) {
+func (q Querier) TotalDelegation(goCtx context.Context, req *types.QueryTotalDelegationRequest) (*types.QueryTotalDelegationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -28,10 +30,11 @@ func (q Querier) Delegation(goCtx context.Context, req *types.QueryDelegationReq
 		return nil, err
 	}
 
-	res := types.QueryDelegationResponse{
+	res := types.QueryTotalDelegationResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
 		DelegationResponse:          []stakingtypes.DelegationResponse{},
 		TotalDelegatedCoins:         sdk.NewCoins(),
+		TotalEquivalentStakedAmount: sdk.NewCoin(appparams.BaseCoinUnit, sdk.ZeroInt()),
 	}
 
 	syntheticLocks := q.Keeper.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
@@ -54,6 +57,12 @@ func (q Querier) Delegation(goCtx context.Context, req *types.QueryDelegationReq
 		if err != nil {
 			return nil, err
 		}
+
+		// Find how many osmo tokens this delegation is worth at superfluids current risk adjustment
+		// and twap of the denom.
+		equivalentAmount := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		equivalentOsmoCoin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
+
 		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
 			types.SuperfluidDelegationRecord{
 				DelegatorAddress: req.DelegatorAddress,
@@ -62,6 +71,7 @@ func (q Querier) Delegation(goCtx context.Context, req *types.QueryDelegationReq
 			},
 		)
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
+		res.TotalEquivalentStakedAmount = res.TotalEquivalentStakedAmount.Add(equivalentOsmoCoin)
 	}
 
 	//this is for getting normal staking
@@ -71,7 +81,7 @@ func (q Querier) Delegation(goCtx context.Context, req *types.QueryDelegationReq
 			return true
 		}
 
-		lockedCoins := sdk.NewCoin(q.sk.BondDenom(ctx), val.TokensFromShares(del.GetShares()).TruncateInt())
+		lockedCoins := sdk.NewCoin(appparams.BaseCoinUnit, val.TokensFromShares(del.GetShares()).TruncateInt().Mul(sdk.NewInt(1000000)))
 
 		res.DelegationResponse = append(res.DelegationResponse,
 			stakingtypes.DelegationResponse{
@@ -85,6 +95,7 @@ func (q Querier) Delegation(goCtx context.Context, req *types.QueryDelegationReq
 		)
 
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
+		res.TotalEquivalentStakedAmount = res.TotalEquivalentStakedAmount.Add(lockedCoins)
 
 		return false
 	})

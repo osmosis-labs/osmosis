@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -228,20 +226,31 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsWithNormalStakin
 	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond1to0)
 	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond1to1)
 
+	multiplier0 := suite.querier.Keeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[0])
+	multiplier1 := suite.querier.Keeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[1])
+	minRiskFactor := suite.querier.Keeper.GetParams(suite.Ctx).MinimumRiskFactor
+
+	expectAmount0 := multiplier0.Mul(sdk.NewDec(1000000)).Sub(multiplier0.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
+	expectAmount1 := multiplier1.Mul(sdk.NewDec(1000000)).Sub(multiplier1.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
+
 	// for each delegator, query all their superfluid delegations and normal delegations. Making sure they have 4 delegations
+	// Making sure TotalEquivalentStakedAmount is equal to converted amount + normal delegations
 	for _, delegator := range delAddrs {
-		res, err := suite.queryClient.SuperfluidDelegationsByDelegator(sdk.WrapSDKContext(suite.Ctx), &types.SuperfluidDelegationsByDelegatorRequest{
+		res, err := suite.queryClient.TotalDelegation(sdk.WrapSDKContext(suite.Ctx), &types.QueryTotalDelegationRequest{
 			DelegatorAddress: delegator.String(),
 		})
 
-		fmt.Printf("res = %v", res)
-
 		suite.Require().NoError(err)
-		suite.Require().Len(res.SuperfluidDelegationRecords, 4)
+		suite.Require().Len(res.SuperfluidDelegationRecords, 2)
+		suite.Require().Len(res.DelegationResponse, 2)
 		suite.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
 			sdk.NewInt64Coin(denoms[0], 1000000),
 			sdk.NewInt64Coin(denoms[1], 1000000),
-			sdk.NewInt64Coin(suite.App.StakingKeeper.BondDenom(suite.Ctx), 18),
+			sdk.NewInt64Coin("uosmo", 18000000),
 		)))
+
+		total_osmo_equivalent := sdk.NewCoin("uosmo", expectAmount0.RoundInt().Add(expectAmount1.RoundInt()).Add(sdk.NewInt(18000000)))
+
+		suite.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_osmo_equivalent))
 	}
 }
