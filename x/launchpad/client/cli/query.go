@@ -44,7 +44,7 @@ func GetCmdQuerySales() *cobra.Command {
 		Short: "Query launchpad sales list",
 		Args:  cobra.NoArgs,
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query sales list :
+			fmt.Sprintf(`Query sales.
 Example:
 $ %s query launchpad sales
 `,
@@ -86,9 +86,8 @@ func GetCmdQuerySale() *cobra.Command {
 		Short: "Query a launchpad sale by it's id",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query sale :
+			fmt.Sprintf(`Query sale.
 Example:
-$ %s query launchpad sale <sale-id>
 $ %s query launchpad sale 1
 `,
 				version.AppName,
@@ -129,10 +128,9 @@ func GetCmdUserPosition() *cobra.Command {
 		Short: "Query user position from a launchpad sale",
 		Args:  cobra.ExactArgs(2),
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query user position :
+			fmt.Sprintf(`Query user position.
 Example:
-$ %s query launchpad user-position <sale-id> <address>
-$ %s query launchpad user-position 1 osmo16phc92xevvcvswdew....cr46tn8pneshtsl8
+$ %s query launchpad user-position 1 osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6
 `,
 				version.AppName,
 			),

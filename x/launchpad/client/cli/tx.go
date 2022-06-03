@@ -43,9 +43,9 @@ func CreateSaleCmd() *cobra.Command {
 		Use:   `create [flags]`,
 		Short: "Create or Setup a sale",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Create or Setup a launchpad sale:
+			fmt.Sprintf(`Create or Setup a launchpad sale.
 Example:
-$ %s create --sale-file="path/to/sale.json [flags]
+$ %s tx launchpad create --sale-file="path/to/sale.json [flags]
 
 Sample sale.json file contents:
 {
@@ -54,7 +54,7 @@ Sample sale.json file contents:
 	"initial-deposit": "1000token2",
 	"start-time": "2022-06-02T11:18:11.000Z",
 	"duration": "432000s",
-	"treasury": "osmo16phc92xevvcvswdew....cr46tn8pneshtsl8"
+	"treasury": "osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6"
 }
 `,
 				version.AppName,
@@ -91,10 +91,9 @@ func FinalizeSaleCmd() *cobra.Command {
 		Use:   "finalize [flags]",
 		Short: "Finalize a sale",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Finalize a launchpad sale :
+			fmt.Sprintf(`Finalize a launchpad sale.
 Example:
-$ %s finalize --sale-id=sale-id [flags]
-$ %s finalize --sale-id=1 [flags]
+$ %s tx launchpad finalize --sale-id=1 [flags]
 `,
 				version.AppName,
 			),
@@ -131,10 +130,9 @@ func SubscribeCmd() *cobra.Command {
 		Short:   "Subscribe or Join a sale",
 		Example: "subscribe --sale-id=1 --amount=10 [flags]",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Subscribe or Join a launchpad sale :
+			fmt.Sprintf(`Subscribe or Join a launchpad sale.
 Example:
-$ %s subscribe --sale-id=sale-id --amount=tokenamount [flags]
-$ %s subscribe --sale-id=1 --amount=10 [flags]
+$ %s tx launchpad subscribe --sale-id=1 --amount=10 (in the smallest denominator) [flags]
 `,
 				version.AppName,
 			),
@@ -172,10 +170,9 @@ func WithdrawCmd() *cobra.Command {
 		Short:   "Withdraw amount from a sale",
 		Example: "withdraw --sale-id=1 --amount=10 [flags]",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Withdraw amount from a launchpad sale :
+			fmt.Sprintf(`Withdraw amount from a launchpad sale.
 Example:
-$ %s withdraw --sale-id=sale-id --amount=tokenamount [flags]
-$ %s withdraw --sale-id=1 --amount=10 [flags]
+$ %s tx launchpad withdraw --sale-id=1 --amount=10 (in the smallest denominator) [flags]
 `,
 				version.AppName,
 			),
@@ -212,10 +209,9 @@ func ExitSaleCmd() *cobra.Command {
 		Short:   "Exit from a launchpad sale",
 		Example: "exit --sale-id=1 [flags]",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Exit from a launchpad sale :
+			fmt.Sprintf(`Exit from a launchpad sale.
 Example:
-$ %s exit --sale-id=sale-id [flags]
-$ %s exit --sale-id=1 [flags]
+$ %s tx launchpad exit --sale-id=1 [flags]
 `,
 				version.AppName,
 			),
