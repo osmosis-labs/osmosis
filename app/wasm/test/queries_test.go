@@ -63,6 +63,58 @@ func TestFullDenom(t *testing.T) {
 	}
 }
 
+func TestDenomAdmin(t *testing.T) {
+	addr := RandomAccountAddress()
+	app, ctx := SetupCustomApp(t, addr)
+
+	// set token creation fee to zero to make testing easier
+	tfParams := app.TokenFactoryKeeper.GetParams(ctx)
+	tfParams.DenomCreationFee = sdk.NewCoins()
+	app.TokenFactoryKeeper.SetParams(ctx, tfParams)
+
+	// create a subdenom via the token factory
+	admin := sdk.AccAddress([]byte("addr1_______________"))
+	tfDenom, err := app.TokenFactoryKeeper.CreateDenom(ctx, admin.String(), "subdenom")
+	require.NoError(t, err)
+	require.NotEmpty(t, tfDenom)
+
+	queryPlugin := wasm.NewQueryPlugin(app.GAMMKeeper, app.TokenFactoryKeeper)
+
+	testCases := []struct {
+		name        string
+		denom       string
+		expectErr   bool
+		expectAdmin string
+	}{
+		{
+			name:        "valid token factory denom",
+			denom:       tfDenom,
+			expectAdmin: admin.String(),
+		},
+		{
+			name:        "invalid token factory denom",
+			denom:       "uosmo",
+			expectErr:   false,
+			expectAdmin: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := queryPlugin.GetDenomAdmin(ctx, tc.denom)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Equal(t, tc.expectAdmin, resp.Admin)
+			}
+		})
+	}
+}
+
 func TestPoolState(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
@@ -80,7 +132,7 @@ func TestPoolState(t *testing.T) {
 	starSharesDenom := fmt.Sprintf("gamm/pool/%d", starPool)
 	starSharedAmount, _ := sdk.NewIntFromString("100_000_000_000_000_000_000")
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper)
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
 		poolId       uint64
@@ -140,7 +192,7 @@ func TestSpotPrice(t *testing.T) {
 	starFee := sdk.MustNewDecFromStr(fmt.Sprintf("%f", swapFee))
 	starPriceWithFee := starPrice.Add(starFee)
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper)
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
 		spotPrice *wasmbindings.SpotPrice
@@ -283,7 +335,7 @@ func TestEstimateSwap(t *testing.T) {
 
 	starSwapAmount := wasmbindings.SwapAmount{Out: &starAmount}
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper)
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
 		estimateSwap *wasmbindings.EstimateSwap
