@@ -1,12 +1,7 @@
 "C:app-wiring":
   # Match all of app folder except wasm sub-folder
-  - 'app/*.go'
-  - 'app/apptesting/**/*'
-  - 'app/keepers/**/*'
-  - 'app/params/**/*'
-  - 'app/upgrades/**/*'
   # Also match any module.go update
-  - '**/module.go'
+  - any: ['app/*.go', 'app/apptesting/**/*', 'app/keepers/**/*', 'app/params/**/*', 'app/upgrades/**/*', '**/module.go']
 "C:wasm":
   - app/wasm/**/*
 "C:x/claim":
