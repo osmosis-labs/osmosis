@@ -4,7 +4,7 @@ package osmosis.store.v1beta1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/store";
+option go_package = "github.com/osmosis-labs/osmosis/store";
 
 message Node { repeated Child children = 1; }
 

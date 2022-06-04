@@ -24,7 +24,7 @@ cd ..
 # move proto files to the right places
 #
 # Note: Proto files are suffixed with the current binary version.
-cp -r github.com/osmosis-labs/osmosis/v7/* ./
+cp -r github.com/osmosis-labs/osmosis/* ./
 rm -rf github.com
 
 go mod tidy -compat=1.18

@@ -9,7 +9,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/x/incentives/types";
 
 // Query defines the gRPC querier service.
 service Query {

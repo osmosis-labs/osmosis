@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap";
+option go_package = "github.com/osmosis-labs/osmosis/x/gamm/pool-models/stableswap";
 
 // PoolParams defined the parameters that will be managed by the pool
 // governance in the future. This params are not managed by the chain
