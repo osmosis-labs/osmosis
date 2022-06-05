@@ -83,7 +83,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			if len(feeCoins) != 1 {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
 			}
-			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
+			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0], tx.GetMsgs()[0])
 			if err != nil {
 				return ctx, err
 			}
@@ -93,14 +93,75 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
+// getFeeTokenAmountFromSwapMsg determines which tryp of swap message is passed and returns the token amount in/out
+func getFeeTokenAmountFromSwapMsg(msg gammtypes.SwapMsgRoute, firstDenom string) (sdk.Coin, error) {
+	if _, ok := msg.(gammtypes.SwapMsgRoute); !ok {
+		return sdk.Coin{}, errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn")
+	}
+
+	msgIn, ok := (msg.(gammtypes.SwapExactIn))
+	if !ok {
+		msgOut, ok := (msg.(gammtypes.SwapExactOut))
+		if !ok {
+			return sdk.Coin{}, errors.New("SwapMsgRoute msg neither MsgSwapExactAmount nor  MsgSwapExactAmountIn")
+		} else {
+			// MsgSwapExactAmountOut ==> fee is paid in the amount in
+			amount := msgOut.GetTokenAmountIn()
+			return sdk.NewCoin(msg.TokenInDenom(), amount), nil
+		}
+	} else {
+		amount := msgIn.GetTokenAmountOut()
+		return sdk.NewCoin(msg.TokenOutDenom(), amount), nil
+	}
+}
+
+// get swapFeesSybilResistantlySpent returns the amount
+func (k Keeper) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.SwapMsgRoute) sdk.Int {
+	// msgs is a SwapMsgRoute. Get PoolIds on the route
+	denoms, poolIds := msg.TokenDenomsOnPath()
+	var swapFees sdk.Dec
+	for i := 0; i < len(poolIds); i++ {
+		swapFee, err := k.gammKeeper.GetSwapFeeForSybilResistance(ctx, poolIds[i])
+		if err != nil {
+			// TODO: handle err - right now GetMinBaseGasPriceForTx does not return an error
+			return sdk.Int{}
+		}
+
+		swapFees.Add(swapFee)
+	}
+	if swapFees.IsZero() {
+		return swapFees.RoundInt()
+	}
+
+	msgCoin, err := getFeeTokenAmountFromSwapMsg(msg, denoms[0])
+	if err != nil {
+		// SwapMsgRoute incorrectly cast - no fee reduction
+		return sdk.ZeroInt()
+	}
+	swapFeesResistantlySpent := swapFees.MulInt(msgCoin.Amount)
+	feesPaid, _ := k.ConvertToBaseToken(ctx, sdk.NewCoin(msgCoin.Denom, swapFeesResistantlySpent.RoundInt()))
+	//if err != nil {
+	// TODO: handle error
+	//	return sdk.Dec{}
+	//}
+	return feesPaid.Amount
+}
+
 // IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
 // to pay the gas cost of this tx.
-func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
+func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin, msg sdk.Msg) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
 		return err
 	}
-
+	// get sybil resitantly spent fees
+	var feesSybilResistantlySpent sdk.Coin
+	msgSwap, ok := msg.(gammtypes.SwapMsgRoute)
+	if !ok {
+		feesSybilResistantlySpent.Amount = sdk.ZeroInt()
+	} else {
+		feesSybilResistantlySpent.Amount = k.getSwapFeesSybilResitantlySpent(ctx, msgSwap)
+	}
 	// Determine the required fees by multiplying the required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 	glDec := sdk.NewDec(int64(gasRequested))
@@ -117,66 +178,8 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	return nil
 }
 
-func getFeeTokenAmountFromSwapMsg(msg gammtypes.SwapMsgRoute, firstDenom string) sdk.Coin {
-	if _, ok := msg.(gammtypes.SwapMsgRoute); !ok {
-		panic(errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn"))
-	}
-
-	if _, ok := msg.(gammtypes.MsgSwapExactAmountIn); ok {
-		amount := msg.(gammtypes.MsgSwapExactAmountIn).TokenOutMinAmount
-		return sdk.NewCoin(msg.TokenOutDenom(), amount)
-	} else {
-		if _, ok := msg.(gammtypes.MsgSwapExactAmountOut); ok {
-			// MsgSwapExactAmountOut ==> fee is paid in the amount in
-			amount := msg.(gammtypes.MsgSwapExactAmountOut).TokenInMaxAmount
-			return sdk.NewCoin(msg.TokenInDenom(), amount)
-		} else {
-			// should never happen - panic
-			panic(errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn"))
-		}
-	}
-
-}
-
-func (mfd MempoolFeeDecorator) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.SwapMsgRoute) sdk.Int {
-	// msgs is a SwapMsgRoute. Get PoolIds on the route
-	denoms, poolIds := msg.TokenDenomsOnPath()
-	var swapFees sdk.Dec
-	for i := 0; i < len(poolIds); i++ {
-		swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFeeForSybilResistance(ctx, poolIds[i])
-		if err != nil {
-			// TODO: handle err - right now GetMinBaseGasPriceForTx does not return an error
-			return sdk.Int{}
-		}
-
-		swapFees.Add(swapFee)
-	}
-	if swapFees.IsZero() {
-		return swapFees.RoundInt()
-	}
-
-	msgCoin := getFeeTokenAmountFromSwapMsg(msg, denoms[0])
-	swapFeesResistantlySpent := swapFees.MulInt(msgCoin.Amount)
-	feesPaid, _ := mfd.TxFeesKeeper.ConvertToBaseToken(ctx, sdk.NewCoin(msgCoin.Denom, swapFeesResistantlySpent.RoundInt()))
-	//if err != nil {
-	// TODO: handle error
-	//	return sdk.Dec{}
-	//}
-	return feesPaid.Amount
-}
-
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) sdk.Dec {
-	msgs := tx.GetMsgs()
-	var feesSybilResistantlySpent sdk.Coin
-	_, ok := msgs[0].(gammtypes.SwapMsgRoute)
-	if !ok {
-		feesSybilResistantlySpent.Amount = sdk.ZeroInt()
-	} else {
-		feesSybilResistantlySpent.Amount = mfd.getSwapFeesSybilResitantlySpent(ctx, (msgs[0].(gammtypes.SwapMsgRoute)))
-	}
-
-	// Subtract sybil resistantly spent fees from min gas price
-	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom).Sub(sdk.NewDecFromInt(feesSybilResistantlySpent.Amount))
+	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
 
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)

@@ -10,11 +10,15 @@ type SwapMsgRoute interface {
 }
 
 type SwapExactIn interface {
-	GetTokenAmountOut() string
+	SwapMsgRoute
+
+	GetTokenAmountOut() sdk.Int
 }
 
 type SwapExactOut interface {
-	GetTokenAmountIn() string
+	SwapMsgRoute
+
+	GetTokenAmountIn() sdk.Int
 }
 
 var (
