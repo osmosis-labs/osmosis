@@ -93,24 +93,25 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
-// getFeeTokenAmountFromSwapMsg determines which tryp of swap message is passed and returns the token amount in/out
+// getFeeTokenAmountFromSwapMsg determines which type of swap message is passed and returns the token amount in/out
 func getFeeTokenAmountFromSwapMsg(msg gammtypes.SwapMsgRoute, firstDenom string) (sdk.Coin, error) {
 	if _, ok := msg.(gammtypes.SwapMsgRoute); !ok {
-		return sdk.Coin{}, errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn")
+		panic(errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn"))
 	}
 
+	// This logic has to change if another SwapMsgRoute another type of SwapMsgRoute message is created
 	msgIn, ok := (msg.(gammtypes.SwapExactIn))
 	if !ok {
 		msgOut, ok := (msg.(gammtypes.SwapExactOut))
 		if !ok {
-			return sdk.Coin{}, errors.New("SwapMsgRoute msg neither MsgSwapExactAmount nor  MsgSwapExactAmountIn")
+			panic(errors.New("SwapMsgRoute msg neither MsgSwapExactAmount nor  MsgSwapExactAmountIn"))
 		} else {
 			// MsgSwapExactAmountOut ==> fee is paid in the amount in
 			amount := msgOut.GetTokenAmountIn()
 			return sdk.NewCoin(msg.TokenInDenom(), amount), nil
 		}
 	} else {
-		// MsgSwapExactAmountIn ==> fee is pain the amount out
+		// MsgSwapExactAmountIn ==> fee is paid the amount out
 		amount := msgIn.GetTokenAmountOut()
 		return sdk.NewCoin(msg.TokenOutDenom(), amount), nil
 	}
@@ -130,6 +131,7 @@ func (k Keeper) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.S
 
 		swapFees.Add(swapFee)
 	}
+
 	if swapFees.IsZero() {
 		return sdk.Coin{}
 	}
@@ -182,11 +184,14 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	if err != nil {
 		return err
 	}
+
 	convertedFeeSybilReduced := convertedFee.Sub(feesSybilResistantlySpent)
-	// instead of using the subtracted converted fee, we reduce the requiredBaseFee.
-	// This prevents the converted fee from being made lower than the required base fee when it otherwise isn't.
-	// However, the error will still return the feesSybilResistantlySpent reduced converted fee if the error occurs
-	if !(convertedFee.IsGTE(requiredBaseFee.Sub(feesSybilResistantlySpent))) {
+	// Logic assumes that swap fees are enough to overide the requiredBaseFee
+	if convertedFeeSybilReduced.Amount.IsNegative() && feesSybilResistantlySpent.IsGTE(requiredBaseFee) {
+		convertedFeeSybilReduced = requiredBaseFee
+	}
+	//
+	if !(convertedFee.IsGTE(requiredBaseFee)) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFeeSybilReduced, requiredBaseFee)
 	}
 
