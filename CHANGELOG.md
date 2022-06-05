@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM
 * [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
+* [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Remove methods that constitute the AppModuleSimulation API for several modules' AppModule.
+* [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Add hourly epochs to `x/epochs` DefaultGenesis.
 
 ## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
 
