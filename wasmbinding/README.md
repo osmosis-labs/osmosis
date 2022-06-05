@@ -1,4 +1,4 @@
-# CosmWasm support
+## CosmWasm support
 
 This package contains CosmWasm integration points.
 
