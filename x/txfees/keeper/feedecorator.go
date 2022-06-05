@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
-	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -117,58 +117,62 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	return nil
 }
 
+func getFeeTokenAmountFromMsg(msg gammtypes.SwapMsgRoute, firstDenom string) sdk.Coin {
+	if _, ok := msg.(gammtypes.SwapMsgRoute); !ok {
+		panic(errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn"))
+	}
+
+	if _, ok := msg.(gammtypes.MsgSwapExactAmountIn); ok {
+		amount := msg.(gammtypes.MsgSwapExactAmountIn).TokenOutMinAmount
+		return sdk.NewCoin(msg.TokenOutDenom(), amount)
+	}
+
+	if _, ok := msg.(gammtypes.MsgSwapExactAmountOut); ok {
+		// MsgSwapExactAmountOut ==> fee is paid in the amount in
+		amount := msg.(gammtypes.MsgSwapExactAmountOut).TokenInMaxAmount
+		return sdk.NewCoin(msg.TokenInDenom(), amount)
+	}
+	// should never happen - panic
+	panic(errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn"))
+}
+
+func (mfd MempoolFeeDecorator) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.SwapMsgRoute) sdk.Int {
+	// msgs is a SwapMsgRoute. Get PoolIds on the route
+	denoms, poolIds := msg.TokenDenomsOnPath()
+	var swapFees sdk.Dec
+	for i := 0; i < len(poolIds); i++ {
+		swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFeeForSybilResistance(ctx, poolIds[i])
+		if err != nil {
+			// TODO: handle err - right now GetMinBaseGasPriceForTx does not return an error
+			return sdk.Int{}
+		}
+
+		swapFees.Add(swapFee)
+	}
+	if swapFees.IsZero() {
+		return swapFees.RoundInt()
+	}
+
+	msgCoin := getFeeTokenAmountFromMsg(msg, denoms[0])
+	swapFeesResistantlySpent := swapFees.MulInt(msgCoin.Amount)
+	feesPaid, _ := mfd.TxFeesKeeper.ConvertToBaseToken(ctx, sdk.NewCoin(msgCoin.Denom, swapFeesResistantlySpent.RoundInt()))
+	//if err != nil {
+	// TODO: handle error
+	//	return sdk.Dec{}
+	//}
+	return feesPaid.Amount
+}
+
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) sdk.Dec {
 	msgs := tx.GetMsgs()
 	var feesSybilResistantlySpent sdk.Coin
-	if len(msgs) == 1 {
-		swapMsg := reflect.TypeOf((*gammtypes.SwapMsgRoute)(nil))
-		swapTypes := reflect.TypeOf(msgs[0])
-		if swapTypes.Implements(swapMsg) {
-			// msgs is a SwapMsgRoute. Get PoolIds on the route
-			denoms, poolIds := (msgs[0].(gammtypes.SwapMsgRoute)).TokenDenomsOnPath()
-			var swapFees sdk.Dec
-			for i := 0; i < len(poolIds); i++ {
-				swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFeeForSybilResistance(ctx, poolIds[i])
-				if err != nil {
-					// TODO: handle err - right now GetMinBaseGasPriceForTx does not return an error
-					return sdk.Dec{}
-				}
-
-				swapFees.Add(swapFee)
-			}
-
-			// if the first element in the list is the token in ==> MsgSwapExactAmountsOut
-			// and the fee is paid in the amount in
-			// if the first element in the list is the token out ==> MsgSwapExactAmountsIn
-			// and the fee is paid in the amount out
-			// if not either do what?
-			if denoms[0] == (msgs[0].(gammtypes.SwapMsgRoute)).TokenInDenom() {
-				// Fees Paid = (sum of pool fees) * msg token in
-				swapFeesAmountPaid := swapFees.MulInt((msgs[0].(*gammtypes.MsgSwapExactAmountOut)).TokenInMaxAmount)
-				// create coin to convert to fee token
-				coin := sdk.NewCoin((msgs[0].(gammtypes.SwapMsgRoute)).TokenInDenom(), swapFeesAmountPaid.RoundInt())
-
-				feesSybilResistantlySpent, _ = mfd.TxFeesKeeper.ConvertToBaseToken(ctx, coin)
-				//if err != nil {
-				// TODO: handle error
-				//	return sdk.Dec{}
-				//}
-			} else if denoms[0] == (msgs[0].(gammtypes.SwapMsgRoute)).TokenOutDenom() {
-				// Fees Paid = (sum of pool fees) * msg token out
-				swapFeesAmountPaid := swapFees.MulInt((msgs[0].(*gammtypes.MsgSwapExactAmountIn)).TokenOutMinAmount)
-				// create coin to convert to fee token
-				coin := sdk.NewCoin((msgs[0].(gammtypes.SwapMsgRoute)).TokenInDenom(), swapFeesAmountPaid.RoundInt())
-
-				feesSybilResistantlySpent, _ = mfd.TxFeesKeeper.ConvertToBaseToken(ctx, coin)
-				//if err != nil {
-				// TODO: handle error
-				//	return sdk.Dec{}
-				//
-			}
-		}
+	_, ok := msgs[0].(gammtypes.SwapMsgRoute)
+	if !ok {
+		feesSybilResistantlySpent.Amount = mfd.getSwapFeesSybilResitantlySpent(ctx, (msgs[0].(gammtypes.SwapMsgRoute)))
 	}
+
 	// Subtract sybil resistantly spent fees from min gas price
-	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom).Sub(sdk.Dec(feesSybilResistantlySpent.Amount))
+	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom).Sub(sdk.NewDecFromInt(feesSybilResistantlySpent.Amount))
 
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)

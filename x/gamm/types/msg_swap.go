@@ -7,6 +7,14 @@ type SwapMsgRoute interface {
 	TokenDenomsOnPath() ([]string, []uint64)
 }
 
+type SwapExactIn interface {
+	TokenInDenom() string
+}
+
+type SwapExactOut interface {
+	TokenOutDenom() string
+}
+
 var (
 	_ SwapMsgRoute = MsgSwapExactAmountOut{}
 	_ SwapMsgRoute = MsgSwapExactAmountIn{}
