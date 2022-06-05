@@ -125,15 +125,17 @@ func getFeeTokenAmountFromSwapMsg(msg gammtypes.SwapMsgRoute, firstDenom string)
 	if _, ok := msg.(gammtypes.MsgSwapExactAmountIn); ok {
 		amount := msg.(gammtypes.MsgSwapExactAmountIn).TokenOutMinAmount
 		return sdk.NewCoin(msg.TokenOutDenom(), amount)
+	} else {
+		if _, ok := msg.(gammtypes.MsgSwapExactAmountOut); ok {
+			// MsgSwapExactAmountOut ==> fee is paid in the amount in
+			amount := msg.(gammtypes.MsgSwapExactAmountOut).TokenInMaxAmount
+			return sdk.NewCoin(msg.TokenInDenom(), amount)
+		} else {
+			// should never happen - panic
+			panic(errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn"))
+		}
 	}
 
-	if _, ok := msg.(gammtypes.MsgSwapExactAmountOut); ok {
-		// MsgSwapExactAmountOut ==> fee is paid in the amount in
-		amount := msg.(gammtypes.MsgSwapExactAmountOut).TokenInMaxAmount
-		return sdk.NewCoin(msg.TokenInDenom(), amount)
-	}
-	// should never happen - panic
-	panic(errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn"))
 }
 
 func (mfd MempoolFeeDecorator) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.SwapMsgRoute) sdk.Int {
@@ -168,6 +170,8 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	var feesSybilResistantlySpent sdk.Coin
 	_, ok := msgs[0].(gammtypes.SwapMsgRoute)
 	if !ok {
+		feesSybilResistantlySpent.Amount = sdk.ZeroInt()
+	} else {
 		feesSybilResistantlySpent.Amount = mfd.getSwapFeesSybilResitantlySpent(ctx, (msgs[0].(gammtypes.SwapMsgRoute)))
 	}
 
