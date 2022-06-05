@@ -1,4 +1,4 @@
-package wasm
+package wasmbinding
 
 import (
 	"encoding/json"
@@ -14,7 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
-	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 )
 
 func TestCreateDenomMsg(t *testing.T) {
