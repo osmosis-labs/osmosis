@@ -17,6 +17,7 @@ func DefaultGenesis() *GenesisState {
 	epochs := []EpochInfo{
 		NewGenesisEpochInfo("week", time.Hour*24*7),
 		NewGenesisEpochInfo("day", time.Hour*24),
+		NewGenesisEpochInfo("hour", time.Hour),
 	}
 	return NewGenesisState(epochs)
 }
