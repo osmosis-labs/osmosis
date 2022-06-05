@@ -117,7 +117,7 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	return nil
 }
 
-func getFeeTokenAmountFromMsg(msg gammtypes.SwapMsgRoute, firstDenom string) sdk.Coin {
+func getFeeTokenAmountFromSwapMsg(msg gammtypes.SwapMsgRoute, firstDenom string) sdk.Coin {
 	if _, ok := msg.(gammtypes.SwapMsgRoute); !ok {
 		panic(errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn"))
 	}
@@ -153,7 +153,7 @@ func (mfd MempoolFeeDecorator) getSwapFeesSybilResitantlySpent(ctx sdk.Context, 
 		return swapFees.RoundInt()
 	}
 
-	msgCoin := getFeeTokenAmountFromMsg(msg, denoms[0])
+	msgCoin := getFeeTokenAmountFromSwapMsg(msg, denoms[0])
 	swapFeesResistantlySpent := swapFees.MulInt(msgCoin.Amount)
 	feesPaid, _ := mfd.TxFeesKeeper.ConvertToBaseToken(ctx, sdk.NewCoin(msgCoin.Denom, swapFeesResistantlySpent.RoundInt()))
 	//if err != nil {
