@@ -110,13 +110,14 @@ func getFeeTokenAmountFromSwapMsg(msg gammtypes.SwapMsgRoute, firstDenom string)
 			return sdk.NewCoin(msg.TokenInDenom(), amount), nil
 		}
 	} else {
+		// MsgSwapExactAmountIn ==> fee is pain the amount out
 		amount := msgIn.GetTokenAmountOut()
 		return sdk.NewCoin(msg.TokenOutDenom(), amount), nil
 	}
 }
 
 // get swapFeesSybilResistantlySpent returns the amount
-func (k Keeper) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.SwapMsgRoute) sdk.Int {
+func (k Keeper) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.SwapMsgRoute) sdk.Coin {
 	// msgs is a SwapMsgRoute. Get PoolIds on the route
 	denoms, poolIds := msg.TokenDenomsOnPath()
 	var swapFees sdk.Dec
@@ -124,19 +125,19 @@ func (k Keeper) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.S
 		swapFee, err := k.gammKeeper.GetSwapFeeForSybilResistance(ctx, poolIds[i])
 		if err != nil {
 			// TODO: handle err - right now GetMinBaseGasPriceForTx does not return an error
-			return sdk.Int{}
+			return sdk.Coin{}
 		}
 
 		swapFees.Add(swapFee)
 	}
 	if swapFees.IsZero() {
-		return swapFees.RoundInt()
+		return sdk.Coin{}
 	}
 
 	msgCoin, err := getFeeTokenAmountFromSwapMsg(msg, denoms[0])
 	if err != nil {
 		// SwapMsgRoute incorrectly cast - no fee reduction
-		return sdk.ZeroInt()
+		return sdk.Coin{}
 	}
 	swapFeesResistantlySpent := swapFees.MulInt(msgCoin.Amount)
 	feesPaid, _ := k.ConvertToBaseToken(ctx, sdk.NewCoin(msgCoin.Denom, swapFeesResistantlySpent.RoundInt()))
@@ -144,7 +145,7 @@ func (k Keeper) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.S
 	// TODO: handle error
 	//	return sdk.Dec{}
 	//}
-	return feesPaid.Amount
+	return feesPaid
 }
 
 // IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
@@ -159,20 +160,31 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	msgSwap, ok := msg.(gammtypes.SwapMsgRoute)
 	if !ok {
 		feesSybilResistantlySpent.Amount = sdk.ZeroInt()
+		feesSybilResistantlySpent.Denom = baseDenom
 	} else {
-		feesSybilResistantlySpent.Amount = k.getSwapFeesSybilResitantlySpent(ctx, msgSwap)
+		feesSybilResistantlySpent = k.getSwapFeesSybilResitantlySpent(ctx, msgSwap)
+		if !feesSybilResistantlySpent.Amount.GTE(sdk.ZeroInt()) {
+			feesSybilResistantlySpent.Amount = sdk.ZeroInt()
+		} else {
+			feesSybilResistantlySpent, err = k.ConvertToBaseToken(ctx, feesSybilResistantlySpent)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	// Determine the required fees by multiplying the required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 	glDec := sdk.NewDec(int64(gasRequested))
 	requiredBaseFee := sdk.NewCoin(baseDenom, minBaseGasPrice.Mul(glDec).Ceil().RoundInt())
 
-	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
+	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin.Sub(feesSybilResistantlySpent))
 	if err != nil {
 		return err
 	}
-	if !(convertedFee.IsGTE(requiredBaseFee)) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
+	convertedFeeSybilReduced := convertedFee.Sub(feesSybilResistantlySpent)
+	if !(convertedFeeSybilReduced.IsGTE(requiredBaseFee)) {
+		// TODO: what if the converted fee was gte required base fee but sybil resistantly spent reduced it below?
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFeeSybilReduced, requiredBaseFee)
 	}
 
 	return nil
