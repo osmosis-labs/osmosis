@@ -1,6 +1,6 @@
 package types
 
-// SwapMsg defines a simple interface for getting the token denoms on a swap message route and the swap fee.
+// SwapMsg defines a simple interface for getting the token denoms on a swap message route and the poolId.
 type SwapMsgRoute interface {
 	TokenInDenom() string
 	TokenOutDenom() string
