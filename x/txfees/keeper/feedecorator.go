@@ -25,10 +25,22 @@ type MempoolFeeDecorator struct {
 	Opts         types.MempoolFeeOptions
 }
 
+type SybilResistanceGuarantee struct {
+	SybilFee sdk.Dec
+	GasFee   sdk.Dec
+}
+
 func NewMempoolFeeDecorator(txFeesKeeper Keeper, opts types.MempoolFeeOptions) MempoolFeeDecorator {
 	return MempoolFeeDecorator{
 		TxFeesKeeper: txFeesKeeper,
 		Opts:         opts,
+	}
+}
+
+func NewSybilResistanceGuarantee(sybilFee sdk.Dec, gasFee sdk.Dec) SybilResistanceGuarantee {
+	return SybilResistanceGuarantee{
+		SybilFee: sybilFee,
+		GasFee:   gasFee,
 	}
 }
 
@@ -63,8 +75,9 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	// If there is a fee attached to the tx, make sure the fee denom is a denom accepted by the chain
+	var feeDenom string
 	if len(feeCoins) == 1 {
-		feeDenom := feeCoins.GetDenomByIndex(0)
+		feeDenom = feeCoins.GetDenomByIndex(0)
 		if feeDenom != baseDenom {
 			_, err := mfd.TxFeesKeeper.GetFeeToken(ctx, feeDenom)
 			if err != nil {
@@ -78,12 +91,9 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	// So we ensure that the provided fees meet a minimum threshold for the validator,
 	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx)
-		if !(minBaseGasPrice.IsZero()) {
-			if len(feeCoins) != 1 {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
-			}
-			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0], tx.GetMsgs()[0])
+		srg := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx)
+		if !(srg.GasFee.IsZero()) {
+			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, srg, feeTx.GetGas(), feeCoins[0], tx.GetMsgs()[0])
 			if err != nil {
 				return ctx, err
 			}
@@ -152,7 +162,7 @@ func (k Keeper) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.S
 
 // IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
 // to pay the gas cost of this tx.
-func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin, msg sdk.Msg) error {
+func (k Keeper) IsSufficientFee(ctx sdk.Context, srg SybilResistanceGuarantee, gasRequested uint64, feeCoin sdk.Coin, msg sdk.Msg) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
 		return err
@@ -177,37 +187,36 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	}
 	// Determine the required fees by multiplying the required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-	glDec := sdk.NewDec(int64(gasRequested))
-	requiredBaseFee := sdk.NewCoin(baseDenom, minBaseGasPrice.Mul(glDec).Ceil().RoundInt())
+	glDec := sdk.NewDec(int64(gasRequested)).Mul(feesSybilResistantlySpent)
+	
+	requiredBaseFee := srg.GasFee.Mul(glDec).Ceil().RoundInt())
 
-	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin.Sub(feesSybilResistantlySpent))
+	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
 	if err != nil {
 		return err
 	}
 
-	convertedFeeSybilReduced := convertedFee.Sub(feesSybilResistantlySpent)
-	// Logic assumes that swap fees are enough to overide the requiredBaseFee
-	if convertedFeeSybilReduced.Amount.IsNegative() && feesSybilResistantlySpent.IsGTE(requiredBaseFee) {
-		convertedFeeSybilReduced = requiredBaseFee
+	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
+	if err != nil {
+		return err
 	}
-
-	if !(convertedFeeSybilReduced.IsGTE(requiredBaseFee)) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFeeSybilReduced, requiredBaseFee)
+	if !(convertedFee.IsGTE(requiredBaseFee)) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
 	}
 
 	return nil
 }
 
-func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) sdk.Dec {
-	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
+func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) SybilResistanceGuarantee {
+	srg := NewSybilResistanceGuarantee(sdk.Dec(tx.GetFee().AmountOf(tx.GetFee().GetDenomByIndex(0))), ctx.MinGasPrices().AmountOf(baseDenom))
 
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
-		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
+		srg.GasFee = sdk.MaxDec(srg.GasFee, mfd.Opts.MinGasPriceForHighGasTx)
 	}
 	if txfee_filters.IsArbTxLoose(tx) {
-		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
+		srg.GasFee = sdk.MaxDec(srg.GasFee, mfd.Opts.MinGasPriceForArbitrageTx)
 	}
-	return cfgMinGasPrice
+	return srg
 }
 
 // DeductFeeDecorator deducts fees from the first signer of the tx.
