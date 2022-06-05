@@ -93,8 +93,8 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
-// getFeeTokenAmountFromSwapMsg determines which type of swap message is passed and returns the token amount in/out
-func getFeeTokenAmountFromSwapMsg(msg gammtypes.SwapMsgRoute, firstDenom string) (sdk.Coin, error) {
+// GetFeeTokenAmountFromSwapMsg determines which type of swap message is passed and returns the token amount in/out
+func GetFeeTokenAmountFromSwapMsg(msg gammtypes.SwapMsgRoute, firstDenom string) (sdk.Coin, error) {
 	if _, ok := msg.(gammtypes.SwapMsgRoute); !ok {
 		panic(errors.New("SwapMsgRoute msg neither MsgSwapExactAmountOut nor MsgSwapExactAmountIn"))
 	}
@@ -136,7 +136,7 @@ func (k Keeper) getSwapFeesSybilResitantlySpent(ctx sdk.Context, msg gammtypes.S
 		return sdk.Coin{}
 	}
 
-	msgCoin, err := getFeeTokenAmountFromSwapMsg(msg, denoms[0])
+	msgCoin, err := GetFeeTokenAmountFromSwapMsg(msg, denoms[0])
 	if err != nil {
 		// SwapMsgRoute incorrectly cast - no fee reduction
 		return sdk.Coin{}
@@ -190,8 +190,8 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	if convertedFeeSybilReduced.Amount.IsNegative() && feesSybilResistantlySpent.IsGTE(requiredBaseFee) {
 		convertedFeeSybilReduced = requiredBaseFee
 	}
-	//
-	if !(convertedFee.IsGTE(requiredBaseFee)) {
+
+	if !(convertedFeeSybilReduced.IsGTE(requiredBaseFee)) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFeeSybilReduced, requiredBaseFee)
 	}
 

@@ -178,6 +178,16 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			expectPass:   true,
 			baseDenomGas: false,
 		},
+		{
+			name:  "tx with too low fee but swap fees cover the sybil resistant amount should pass",
+			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 1)),
+			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
+				sdk.MustNewDecFromStr("0.1"))),
+			gasRequested: 10000,
+			isCheckTx:    true,
+			expectPass:   false,
+			baseDenomGas: false,
+		},
 	}
 
 	for _, tc := range tests {
