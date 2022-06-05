@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -118,7 +119,7 @@ func underlyingCoinsForSelectPools(
 func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, error) {
 	genState := make(map[string]json.RawMessage)
 
-	genesisFile, err := os.Open(genesisFilePath)
+	genesisFile, err := os.Open(filepath.Clean(genesisFilePath))
 	if err != nil {
 		return genState, err
 	}

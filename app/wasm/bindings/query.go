@@ -19,11 +19,21 @@ type OsmosisQuery struct {
 	SpotPrice *SpotPrice `json:"spot_price,omitempty"`
 	/// Return current spot price swapping In for Out on given pool ID.
 	EstimateSwap *EstimateSwap `json:"estimate_swap,omitempty"`
+	/// Returns the admin of a denom, if the denom is a Token Factory denom.
+	DenomAdmin *DenomAdmin `json:"denom_admin,omitempty"`
 }
 
 type FullDenom struct {
 	CreatorAddr string `json:"creator_addr"`
 	Subdenom    string `json:"subdenom"`
+}
+
+type DenomAdmin struct {
+	Subdenom string `json:"subdenom"`
+}
+
+type DenomAdminResponse struct {
+	Admin string `json:"admin"`
 }
 
 type PoolState struct {

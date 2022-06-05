@@ -98,7 +98,10 @@ func (iter ptrIterator) ptr() *ptr {
 		key:   iter.Key()[7:],
 	}
 	// ptrIterator becomes invalid once retrieve ptr
-	iter.Close()
+	err := iter.Close()
+	if err != nil {
+		panic(err)
+	}
 	return &res
 }
 
