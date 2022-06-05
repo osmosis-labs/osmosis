@@ -157,19 +157,20 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	}
 	// get sybil resitantly spent fees
 	var feesSybilResistantlySpent sdk.Coin
+	// force type check the msg to be a swap msg
 	msgSwap, ok := msg.(gammtypes.SwapMsgRoute)
 	if !ok {
+		// not a swap - feesSybilResistantlySpent is zero at the base denom
 		feesSybilResistantlySpent.Amount = sdk.ZeroInt()
 		feesSybilResistantlySpent.Denom = baseDenom
 	} else {
+		// is a swap - feesSybilResistantlySpent is determed as the
+		// (sum of the fees)*(amountIn/Out) converted to the base denom
 		feesSybilResistantlySpent = k.getSwapFeesSybilResitantlySpent(ctx, msgSwap)
-		if !feesSybilResistantlySpent.Amount.GTE(sdk.ZeroInt()) {
+		if !feesSybilResistantlySpent.Amount.GT(sdk.ZeroInt()) {
+			// In the case of a erroneous swap casting, the coin needs to be 0 of baseDenom
 			feesSybilResistantlySpent.Amount = sdk.ZeroInt()
-		} else {
-			feesSybilResistantlySpent, err = k.ConvertToBaseToken(ctx, feesSybilResistantlySpent)
-			if err != nil {
-				return err
-			}
+			feesSybilResistantlySpent.Denom = baseDenom
 		}
 	}
 	// Determine the required fees by multiplying the required minimum gas
@@ -182,8 +183,10 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 		return err
 	}
 	convertedFeeSybilReduced := convertedFee.Sub(feesSybilResistantlySpent)
-	if !(convertedFeeSybilReduced.IsGTE(requiredBaseFee)) {
-		// TODO: what if the converted fee was gte required base fee but sybil resistantly spent reduced it below?
+	// instead of using the subtracted converted fee, we reduce the requiredBaseFee.
+	// This prevents the converted fee from being made lower than the required base fee when it otherwise isn't.
+	// However, the error will still return the feesSybilResistantlySpent reduced converted fee if the error occurs
+	if !(convertedFee.IsGTE(requiredBaseFee.Sub(feesSybilResistantlySpent))) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFeeSybilReduced, requiredBaseFee)
 	}
 
