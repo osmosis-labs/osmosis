@@ -125,10 +125,10 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 		swapTypes := reflect.TypeOf(msgs[0])
 		if swapTypes.Implements(swapMsg) {
 			// msgs is a SwapMsgRoute. Get PoolIds on the route
-			denoms, poolIds := msgs[0].TokenDenomsOnPath()
+			denoms, poolIds := (msgs[0].(gammtypes.SwapMsgRoute)).TokenDenomsOnPath()
 			var swapFees sdk.Dec
 			for i := 0; i < len(poolIds); i++ {
-				swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFeeForSybilResistance(poolIds[i])
+				swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFeeForSybilResistance(ctx, poolIds[i])
 				if err != nil {
 					// TODO: handle err - right now GetMinBaseGasPriceForTx does not return an error
 					return sdk.Dec{}
@@ -142,22 +142,22 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 			// if the first element in the list is the token out ==> MsgSwapExactAmountsIn
 			// and the fee is paid in the amount out
 			// if not either ?
-			if denoms[0] == msgs[0].TokenInDenom() {
+			if denoms[0] == (msgs[0].(gammtypes.SwapMsgRoute)).TokenInDenom() {
 				// Fees Paid = (sum of pool fees) * msg token in
-				swapFeesAmountPaid := swapFees.MulInt(msgs[0].TokenInMaxAmount)
+				swapFeesAmountPaid := swapFees.MulInt((msgs[0].(*gammtypes.MsgSwapExactAmountOut)).TokenInMaxAmount)
 				// create coin to convert to fee token
-				coin := sdk.NewCoin(msgs[0].TokenInDenom(), swapFeesAmountPaid)
+				coin := sdk.NewCoin((msgs[0].(gammtypes.SwapMsgRoute)).TokenInDenom(), swapFeesAmountPaid.RoundInt())
 
 				feesSybilResistantlySpent, _ = mfd.TxFeesKeeper.ConvertToBaseToken(ctx, coin)
 				//if err != nil {
 				// TODO: handle error
 				//	return sdk.Dec{}
 				//}
-			} else if denoms[0] == msgs[0].TokenOutDenom() {
+			} else if denoms[0] == (msgs[0].(gammtypes.SwapMsgRoute)).TokenOutDenom() {
 				// Fees Paid = (sum of pool fees) * msg token out
-				swapFeesAmountPaid := swapFees.MulInt(msgs[0].TokenOutMinAmount)
+				swapFeesAmountPaid := swapFees.MulInt((msgs[0].(*gammtypes.MsgSwapExactAmountIn)).TokenOutMinAmount)
 				// create coin to convert to fee token
-				coin := sdk.NewCoin(msgs[0].TokenInDenom(), swapFeesAmountPaid)
+				coin := sdk.NewCoin((msgs[0].(gammtypes.SwapMsgRoute)).TokenInDenom(), swapFeesAmountPaid.RoundInt())
 
 				feesSybilResistantlySpent, _ = mfd.TxFeesKeeper.ConvertToBaseToken(ctx, coin)
 				//if err != nil {

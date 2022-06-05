@@ -4,7 +4,7 @@ package types
 type SwapMsgRoute interface {
 	TokenInDenom() string
 	TokenOutDenom() string
-	TokenDenomsOnPath() []string
+	TokenDenomsOnPath() ([]string, []uint64)
 }
 
 var (
