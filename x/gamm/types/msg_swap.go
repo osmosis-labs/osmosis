@@ -1,6 +1,6 @@
 package types
 
-// SwapMsg defines a simple interface for getting the token denoms on a swap message route.
+// SwapMsg defines a simple interface for getting the token denoms on a swap message route and the swap fee.
 type SwapMsgRoute interface {
 	TokenInDenom() string
 	TokenOutDenom() string
@@ -20,13 +20,15 @@ func (msg MsgSwapExactAmountOut) TokenOutDenom() string {
 	return msg.TokenOut.Denom
 }
 
-func (msg MsgSwapExactAmountOut) TokenDenomsOnPath() []string {
+func (msg MsgSwapExactAmountOut) TokenDenomsOnPath() ([]string, []uint64) {
 	denoms := make([]string, 0, len(msg.Routes)+1)
+	poolId := make([]uint64, 0, len(msg.Routes)+1)
 	for i := 0; i < len(msg.Routes); i++ {
 		denoms = append(denoms, msg.Routes[i].TokenInDenom)
+		poolId = append(poolId, msg.Routes[i].PoolId)
 	}
 	denoms = append(denoms, msg.TokenOutDenom())
-	return denoms
+	return denoms, poolId
 }
 
 func (msg MsgSwapExactAmountIn) TokenInDenom() string {
@@ -38,11 +40,15 @@ func (msg MsgSwapExactAmountIn) TokenOutDenom() string {
 	return msg.Routes[lastRouteIndex].GetTokenOutDenom()
 }
 
-func (msg MsgSwapExactAmountIn) TokenDenomsOnPath() []string {
+func (msg MsgSwapExactAmountIn) TokenDenomsOnPath() ([]string, []uint64) {
 	denoms := make([]string, 0, len(msg.Routes)+1)
 	denoms = append(denoms, msg.TokenInDenom())
+
+	poolIds := make([]uint64, 0, len(msg.Routes)+1)
+
 	for i := 0; i < len(msg.Routes); i++ {
 		denoms = append(denoms, msg.Routes[i].TokenOutDenom)
+		poolIds = append(poolIds, msg.Routes[i].PoolId)
 	}
-	return denoms
+	return denoms, poolIds
 }

@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"fmt"
+	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper/txfee_filters"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
@@ -116,7 +118,58 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 }
 
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) sdk.Dec {
-	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
+	msgs := tx.GetMsgs()
+	var feesSybilResistantlySpent sdk.Coin
+	if len(msgs) == 1 {
+		swapMsg := reflect.TypeOf((*gammtypes.SwapMsgRoute)(nil))
+		swapTypes := reflect.TypeOf(msgs[0])
+		if swapTypes.Implements(swapMsg) {
+			// msgs is a SwapMsgRoute. Get PoolIds on the route
+			denoms, poolIds := msgs[0].TokenDenomsOnPath()
+			var swapFees sdk.Dec
+			for i := 0; i < len(poolIds); i++ {
+				swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFeeForSybilResistance(poolIds[i])
+				if err != nil {
+					// TODO: handle err - right now GetMinBaseGasPriceForTx does not return an error
+					return sdk.Dec{}
+				}
+
+				swapFees.Add(swapFee)
+			}
+
+			// if the first element in the list is the token in ==> MsgSwapExactAmountsOut
+			// and the fee is paid in the amount in
+			// if the first element in the list is the token out ==> MsgSwapExactAmountsIn
+			// and the fee is paid in the amount out
+			// if not either ?
+			if denoms[0] == msgs[0].TokenInDenom() {
+				// Fees Paid = (sum of pool fees) * msg token in
+				swapFeesAmountPaid := swapFees.MulInt(msgs[0].TokenInMaxAmount)
+				// create coin to convert to fee token
+				coin := sdk.NewCoin(msgs[0].TokenInDenom(), swapFeesAmountPaid)
+
+				feesSybilResistantlySpent, _ = mfd.TxFeesKeeper.ConvertToBaseToken(ctx, coin)
+				//if err != nil {
+				// TODO: handle error
+				//	return sdk.Dec{}
+				//}
+			} else if denoms[0] == msgs[0].TokenOutDenom() {
+				// Fees Paid = (sum of pool fees) * msg token out
+				swapFeesAmountPaid := swapFees.MulInt(msgs[0].TokenOutMinAmount)
+				// create coin to convert to fee token
+				coin := sdk.NewCoin(msgs[0].TokenInDenom(), swapFeesAmountPaid)
+
+				feesSybilResistantlySpent, _ = mfd.TxFeesKeeper.ConvertToBaseToken(ctx, coin)
+				//if err != nil {
+				// TODO: handle error
+				//	return sdk.Dec{}
+				//
+			}
+		}
+	}
+	// Subtract sybil resistantly spent fees from min gas price
+	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom).Sub(sdk.Dec(feesSybilResistantlySpent.Amount))
+
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
 	}

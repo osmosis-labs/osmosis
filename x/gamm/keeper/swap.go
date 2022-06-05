@@ -9,6 +9,19 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+// GetSwapFee returns the swap fee for pool with poolId
+func (k Keeper) GetSwapFeeForSybilResistance(
+	ctx sdk.Context,
+	poolId uint64,
+) (swapFee sdk.Dec, err error) {
+	pool, err := k.getPoolForSwap(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	return pool.GetSwapFee(ctx), nil
+}
+
 // SwapExactAmountIn attempts to swap one asset, tokenIn, for another asset
 // denominated via tokenOutDenom through a pool denoted by poolId specifying that
 // tokenOutMinAmount must be returned in the resulting asset returning an error
