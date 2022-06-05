@@ -141,7 +141,7 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 			// and the fee is paid in the amount in
 			// if the first element in the list is the token out ==> MsgSwapExactAmountsIn
 			// and the fee is paid in the amount out
-			// if not either ?
+			// if not either do what?
 			if denoms[0] == (msgs[0].(gammtypes.SwapMsgRoute)).TokenInDenom() {
 				// Fees Paid = (sum of pool fees) * msg token in
 				swapFeesAmountPaid := swapFees.MulInt((msgs[0].(*gammtypes.MsgSwapExactAmountOut)).TokenInMaxAmount)
