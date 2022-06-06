@@ -125,7 +125,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 						return ctx, err
 					}
 					// add to existing swap fees
-					swapFees.Add(swapFee)
+					swapFees = swapFees.Add(swapFee)
 				}
 				// Get token to pay fee
 				token := swapOut.GetExactTokenOut()
@@ -155,7 +155,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 					if err != nil {
 						return ctx, err
 					}
-					swapFees.Add(swapFee)
+					swapFees = swapFees.Add(swapFee)
 				}
 				// Get token to pay fee
 				token := swapIn.GetExactTokenIn()
@@ -199,6 +199,9 @@ func (k Keeper) IsSufficientFeeWithSwap(ctx sdk.Context, sybil Sybil, gasRequest
 	if err != nil {
 		return err
 	}
+	// Add sybil fees paid to the converted fee
+	convertedFee.Amount = convertedFee.Amount.Add(sybil.SwapFeesPaid)
+	// Converted fee now is including the swap fee paid for in the msg
 	if !(convertedFee.IsGTE(requiredBaseFee)) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
 	}
