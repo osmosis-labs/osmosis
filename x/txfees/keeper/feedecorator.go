@@ -87,11 +87,11 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 
 		// no gas price, go on
-		// *** Sybil swap fees can make gas price 0
 		if sybil.GasPrice.IsZero() {
 			return next(ctx, tx, simulate)
 		}
 
+		// *** Sybil swap fees cannot pay for a tx entirely w/ this
 		// no fee attached, and non-zero gas price -> reject tx
 		if len(feeCoins) != 1 {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached with non-zero gas")
