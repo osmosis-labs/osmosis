@@ -103,6 +103,24 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			return bz, nil
 
+		case contractQuery.JoinPoolShares != nil:
+			shareInfo, err := qp.GetJoinPoolShares(ctx, contractQuery.JoinPoolShares)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo join pool shares query")
+			}
+
+			res := bindings.JoinPoolSharesResponse{
+				Shares: shareInfo.Shares,
+				Assets: shareInfo.Assets,
+			}
+
+			bz, err := json.Marshal(res)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo join pool shares query response")
+			}
+
+			return bz, nil
+
 		default:
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown osmosis query variant"}
 		}

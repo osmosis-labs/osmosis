@@ -1,6 +1,7 @@
 package wasm
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -536,6 +537,73 @@ func TestEstimateSwap(t *testing.T) {
 			}
 			require.NoError(t, gotErr)
 			assert.InEpsilonf(t, (*spec.expCost.Out).ToDec().MustFloat64(), (*gotCost.Out).ToDec().MustFloat64(), epsilon, "exp %s but got %s", spec.expCost.Out.String(), gotCost.Out.String())
+		})
+	}
+}
+
+func TestJoinPoolShares(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12000000),
+		sdk.NewInt64Coin("ustar", 240000000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
+
+	specs := map[string]struct {
+		joinPoolShares *wasmbindings.JoinPoolShares
+		err            error
+	}{
+		"valid join pool shares one coin": {
+			joinPoolShares: &wasmbindings.JoinPoolShares{
+				PoolId: starPool,
+				Coins:  sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
+			},
+		},
+		"valid join pool shares two coin": {
+			joinPoolShares: &wasmbindings.JoinPoolShares{
+				PoolId: starPool,
+				Coins:  sdk.NewCoins(sdk.NewCoin("ustar", sdk.NewInt(2_400_000)), sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
+			},
+		},
+		"non-existent pool id": {
+			joinPoolShares: &wasmbindings.JoinPoolShares{
+				PoolId: starPool + 10,
+				Coins:  sdk.NewCoins(sdk.NewCoin("ustar", sdk.NewInt(2_400_000)), sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
+			},
+			err: errors.New("Invalid pool"),
+		},
+		"zero pool id": {
+			joinPoolShares: &wasmbindings.JoinPoolShares{
+				PoolId: 0,
+				Coins:  sdk.NewCoins(sdk.NewCoin("ustar", sdk.NewInt(2_400_000)), sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
+			},
+			err: errors.New("Invalid pool"),
+		},
+		"empty coins in": {
+			joinPoolShares: &wasmbindings.JoinPoolShares{
+				PoolId: starPool,
+				Coins:  sdk.NewCoins(),
+			},
+			err: errors.New("balancer pool only supports LP'ing with one asset or all assets in pool"),
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// when
+			_, gotErr := queryPlugin.GetJoinPoolShares(ctx, spec.joinPoolShares)
+			// then
+			if spec.err != nil {
+				require.EqualError(t, gotErr, spec.err.Error())
+				return
+			}
+			require.NoError(t, gotErr)
 		})
 	}
 }

@@ -257,6 +257,55 @@ func TestQueryEstimateSwap(t *testing.T) {
 	require.InEpsilonf(t, expected, cost, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
 }
 
+func TestJoinPoolSharesQuery(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12000000),
+		sdk.NewInt64Coin("ustar", 240000000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	require.NotEmpty(t, reflect)
+
+	// query pool state
+	query := wasmbindings.OsmosisQuery{
+		PoolState: &wasmbindings.PoolState{PoolId: starPool},
+	}
+	resp := wasmbindings.PoolStateResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	expected := wasm.ConvertSdkCoinsToWasmCoins(poolFunds)
+	require.EqualValues(t, expected, resp.Assets)
+	assertValidShares(t, resp.Shares, starPool)
+
+	// query second pool state
+	query = wasmbindings.OsmosisQuery{
+		PoolState: &wasmbindings.PoolState{PoolId: starPool},
+	}
+	resp = wasmbindings.PoolStateResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	expected = wasm.ConvertSdkCoinsToWasmCoins(poolFunds)
+	require.EqualValues(t, expected, resp.Assets)
+	assertValidShares(t, resp.Shares, starPool)
+
+	shares, _ := sdk.NewIntFromString(resp.Shares.Amount)
+
+	// Simulate adding 10% of assets to liquidity pool
+	query = wasmbindings.OsmosisQuery{
+		JoinPoolShares: &wasmbindings.JoinPoolShares{PoolId: starPool, Coins: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1_200_000)), sdk.NewCoin("ustar", sdk.NewInt(24_000_000)))},
+	}
+	joinPoolSharesResp := wasmbindings.JoinPoolSharesResponse{}
+
+	queryCustom(t, ctx, osmosis, reflect, query, &joinPoolSharesResp)
+
+	require.Equal(t, shares.Quo(sdk.NewInt(10)), joinPoolSharesResp.Shares)
+}
+
 type ReflectQuery struct {
 	Chain *ChainRequest `json:"chain,omitempty"`
 }

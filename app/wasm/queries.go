@@ -99,3 +99,21 @@ func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *wasmbindings.E
 	estimate, err := PerformSwap(qp.gammKeeper, ctx, senderAddr, estimateSwap.ToSwapMsg())
 	return estimate, err
 }
+
+func (qp QueryPlugin) GetJoinPoolShares(ctx sdk.Context, joinPoolShares *wasmbindings.JoinPoolShares) (*wasmbindings.JoinPoolSharesResponse, error) {
+	if joinPoolShares == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "join pool shares null"}
+	}
+
+	poolI, err := qp.gammKeeper.GetPoolAndPoke(ctx, joinPoolShares.PoolId)
+
+	if err != nil {
+		return nil, fmt.Errorf("Invalid pool")
+	}
+
+	shares, assets, err := poolI.CalcJoinPoolShares(ctx, joinPoolShares.Coins, poolI.GetSwapFee(ctx))
+
+	coins := ConvertSdkCoinsToWasmCoins(assets)
+
+	return &wasmbindings.JoinPoolSharesResponse{Shares: shares, Assets: coins}, err
+}
