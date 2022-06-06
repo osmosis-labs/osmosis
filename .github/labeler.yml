@@ -1,3 +1,14 @@
+"C:app-wiring":
+  # Match all of app folder except wasm sub-folder
+  - app/*.go
+  - app/apptesting/**/*
+  - app/keepers/**/*
+  - app/params/**/*
+  - app/upgrades/**/*
+  # Also match any module.go update
+  - x/**/module.go
+"C:wasm":
+  - app/wasm/**/*
 "C:x/claim":
   - x/claim/**/*
 "C:x/epochs":

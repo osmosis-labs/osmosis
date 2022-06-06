@@ -188,18 +188,17 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents doesn't return any content functions for governance
 // proposals.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil // TODO
+	return nil
 }
 
 // RandomizedParams creates randomized pool-incentives param changes for the
 // simulator.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return nil // TODO
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types.
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	// TODO
 }
 
 // WeightedOperations returns the all the incentive module operations with their

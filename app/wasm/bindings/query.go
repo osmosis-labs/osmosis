@@ -2,6 +2,7 @@ package wasmbindings
 
 import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // OsmosisQuery contains osmosis custom queries.
@@ -19,11 +20,23 @@ type OsmosisQuery struct {
 	SpotPrice *SpotPrice `json:"spot_price,omitempty"`
 	/// Return current spot price swapping In for Out on given pool ID.
 	EstimateSwap *EstimateSwap `json:"estimate_swap,omitempty"`
+	/// Returns the admin of a denom, if the denom is a Token Factory denom.
+	DenomAdmin *DenomAdmin `json:"denom_admin,omitempty"`
+	/// Returns the minimum amount of shares given when joining a pool
+	JoinPoolShares *JoinPoolShares `json:"join_pool_shares,omitempty"`
 }
 
 type FullDenom struct {
 	CreatorAddr string `json:"creator_addr"`
 	Subdenom    string `json:"subdenom"`
+}
+
+type DenomAdmin struct {
+	Subdenom string `json:"subdenom"`
+}
+
+type DenomAdminResponse struct {
+	Admin string `json:"admin"`
 }
 
 type PoolState struct {
@@ -70,4 +83,14 @@ type EstimatePriceResponse struct {
 	// If you query with SwapAmount::Input, this is SwapAmount::Output.
 	// If you query with SwapAmount::Output, this is SwapAmount::Input.
 	Amount SwapAmount `json:"swap_amount"`
+}
+
+type JoinPoolSharesResponse struct {
+	Shares sdk.Int           `json:"shares"`
+	Assets wasmvmtypes.Coins `json:"assets"`
+}
+
+type JoinPoolShares struct {
+	PoolId uint64    `json:"pool_id"`
+	Coins  sdk.Coins `json:"coins"`
 }

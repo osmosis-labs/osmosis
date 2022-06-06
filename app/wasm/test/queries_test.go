@@ -1,6 +1,7 @@
 package wasm
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -63,6 +64,58 @@ func TestFullDenom(t *testing.T) {
 	}
 }
 
+func TestDenomAdmin(t *testing.T) {
+	addr := RandomAccountAddress()
+	app, ctx := SetupCustomApp(t, addr)
+
+	// set token creation fee to zero to make testing easier
+	tfParams := app.TokenFactoryKeeper.GetParams(ctx)
+	tfParams.DenomCreationFee = sdk.NewCoins()
+	app.TokenFactoryKeeper.SetParams(ctx, tfParams)
+
+	// create a subdenom via the token factory
+	admin := sdk.AccAddress([]byte("addr1_______________"))
+	tfDenom, err := app.TokenFactoryKeeper.CreateDenom(ctx, admin.String(), "subdenom")
+	require.NoError(t, err)
+	require.NotEmpty(t, tfDenom)
+
+	queryPlugin := wasm.NewQueryPlugin(app.GAMMKeeper, app.TokenFactoryKeeper)
+
+	testCases := []struct {
+		name        string
+		denom       string
+		expectErr   bool
+		expectAdmin string
+	}{
+		{
+			name:        "valid token factory denom",
+			denom:       tfDenom,
+			expectAdmin: admin.String(),
+		},
+		{
+			name:        "invalid token factory denom",
+			denom:       "uosmo",
+			expectErr:   false,
+			expectAdmin: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := queryPlugin.GetDenomAdmin(ctx, tc.denom)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Equal(t, tc.expectAdmin, resp.Admin)
+			}
+		})
+	}
+}
+
 func TestPoolState(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
@@ -80,7 +133,7 @@ func TestPoolState(t *testing.T) {
 	starSharesDenom := fmt.Sprintf("gamm/pool/%d", starPool)
 	starSharedAmount, _ := sdk.NewIntFromString("100_000_000_000_000_000_000")
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper)
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
 		poolId       uint64
@@ -140,7 +193,7 @@ func TestSpotPrice(t *testing.T) {
 	starFee := sdk.MustNewDecFromStr(fmt.Sprintf("%f", swapFee))
 	starPriceWithFee := starPrice.Add(starFee)
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper)
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
 		spotPrice *wasmbindings.SpotPrice
@@ -283,7 +336,7 @@ func TestEstimateSwap(t *testing.T) {
 
 	starSwapAmount := wasmbindings.SwapAmount{Out: &starAmount}
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper)
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
 		estimateSwap *wasmbindings.EstimateSwap
@@ -484,6 +537,73 @@ func TestEstimateSwap(t *testing.T) {
 			}
 			require.NoError(t, gotErr)
 			assert.InEpsilonf(t, (*spec.expCost.Out).ToDec().MustFloat64(), (*gotCost.Out).ToDec().MustFloat64(), epsilon, "exp %s but got %s", spec.expCost.Out.String(), gotCost.Out.String())
+		})
+	}
+}
+
+func TestJoinPoolShares(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12000000),
+		sdk.NewInt64Coin("ustar", 240000000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
+
+	specs := map[string]struct {
+		joinPoolShares *wasmbindings.JoinPoolShares
+		err            error
+	}{
+		"valid join pool shares one coin": {
+			joinPoolShares: &wasmbindings.JoinPoolShares{
+				PoolId: starPool,
+				Coins:  sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
+			},
+		},
+		"valid join pool shares two coin": {
+			joinPoolShares: &wasmbindings.JoinPoolShares{
+				PoolId: starPool,
+				Coins:  sdk.NewCoins(sdk.NewCoin("ustar", sdk.NewInt(2_400_000)), sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
+			},
+		},
+		"non-existent pool id": {
+			joinPoolShares: &wasmbindings.JoinPoolShares{
+				PoolId: starPool + 10,
+				Coins:  sdk.NewCoins(sdk.NewCoin("ustar", sdk.NewInt(2_400_000)), sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
+			},
+			err: errors.New("Invalid pool"),
+		},
+		"zero pool id": {
+			joinPoolShares: &wasmbindings.JoinPoolShares{
+				PoolId: 0,
+				Coins:  sdk.NewCoins(sdk.NewCoin("ustar", sdk.NewInt(2_400_000)), sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
+			},
+			err: errors.New("Invalid pool"),
+		},
+		"empty coins in": {
+			joinPoolShares: &wasmbindings.JoinPoolShares{
+				PoolId: starPool,
+				Coins:  sdk.NewCoins(),
+			},
+			err: errors.New("balancer pool only supports LP'ing with one asset or all assets in pool"),
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			// when
+			_, gotErr := queryPlugin.GetJoinPoolShares(ctx, spec.joinPoolShares)
+			// then
+			if spec.err != nil {
+				require.EqualError(t, gotErr, spec.err.Error())
+				return
+			}
+			require.NoError(t, gotErr)
 		})
 	}
 }

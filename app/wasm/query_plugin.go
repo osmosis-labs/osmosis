@@ -2,23 +2,24 @@ package wasm
 
 import (
 	"encoding/json"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"fmt"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	bindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 )
 
-func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
+func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 		var contractQuery bindings.OsmosisQuery
 		if err := json.Unmarshal(request, &contractQuery); err != nil {
 			return nil, sdkerrors.Wrap(err, "osmosis query")
 		}
 
-		if contractQuery.FullDenom != nil {
+		switch {
+		case contractQuery.FullDenom != nil:
 			creator := contractQuery.FullDenom.CreatorAddr
 			subdenom := contractQuery.FullDenom.Subdenom
 
@@ -30,15 +31,31 @@ func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.R
 			res := bindings.FullDenomResponse{
 				Denom: fullDenom,
 			}
+
 			bz, err := json.Marshal(res)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo full denom query response")
 			}
+
 			return bz, nil
-		} else if contractQuery.PoolState != nil {
+
+		case contractQuery.DenomAdmin != nil:
+			res, err := qp.GetDenomAdmin(ctx, contractQuery.DenomAdmin.Subdenom)
+			if err != nil {
+				return nil, err
+			}
+
+			bz, err := json.Marshal(res)
+			if err != nil {
+				return nil, fmt.Errorf("failed to JSON marshal DenomAdminResponse response: %w", err)
+			}
+
+			return bz, nil
+
+		case contractQuery.PoolState != nil:
 			poolId := contractQuery.PoolState.PoolId
 
-			state, err := osmoKeeper.GetPoolState(ctx, poolId)
+			state, err := qp.GetPoolState(ctx, poolId)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo pool state query")
 			}
@@ -50,13 +67,16 @@ func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.R
 				Assets: assets,
 				Shares: shares,
 			}
+
 			bz, err := json.Marshal(res)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo pool state query response")
 			}
+
 			return bz, nil
-		} else if contractQuery.SpotPrice != nil {
-			spotPrice, err := osmoKeeper.GetSpotPrice(ctx, contractQuery.SpotPrice)
+
+		case contractQuery.SpotPrice != nil:
+			spotPrice, err := qp.GetSpotPrice(ctx, contractQuery.SpotPrice)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo spot price query")
 			}
@@ -66,9 +86,11 @@ func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.R
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo spot price query response")
 			}
+
 			return bz, nil
-		} else if contractQuery.EstimateSwap != nil {
-			swapAmount, err := osmoKeeper.EstimateSwap(ctx, contractQuery.EstimateSwap)
+
+		case contractQuery.EstimateSwap != nil:
+			swapAmount, err := qp.EstimateSwap(ctx, contractQuery.EstimateSwap)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo estimate swap query")
 			}
@@ -78,9 +100,30 @@ func CustomQuerier(osmoKeeper *QueryPlugin) func(ctx sdk.Context, request json.R
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo estimate swap query response")
 			}
+
 			return bz, nil
+
+		case contractQuery.JoinPoolShares != nil:
+			shareInfo, err := qp.GetJoinPoolShares(ctx, contractQuery.JoinPoolShares)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo join pool shares query")
+			}
+
+			res := bindings.JoinPoolSharesResponse{
+				Shares: shareInfo.Shares,
+				Assets: shareInfo.Assets,
+			}
+
+			bz, err := json.Marshal(res)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo join pool shares query response")
+			}
+
+			return bz, nil
+
+		default:
+			return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown osmosis query variant"}
 		}
-		return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown osmosis query variant"}
 	}
 }
 
