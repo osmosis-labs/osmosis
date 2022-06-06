@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
@@ -57,4 +59,72 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 	// Make sure that an address with a "/" in it can't create denoms
 	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
 	suite.Require().Error(err)
+}
+
+func (suite *KeeperTestSuite) TestCreateDenom() {
+	suite.SetupTest()
+	var (
+		msgServer types.MsgServer
+	)
+
+	for _, tc := range []struct {
+		desc     string
+		malleate func()
+		subdenom string
+		valid    bool
+	}{
+		{
+			desc: "subdenom too long",
+			malleate: func() {
+
+			},
+			subdenom: "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
+			valid:    false,
+		},
+		{
+			desc: "subdenom and creator pair already exists",
+			malleate: func() {
+				_, err := msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
+				suite.Require().NoError(err)
+
+			},
+			subdenom: "bitcoin",
+			valid:    false,
+		},
+		{
+			desc: "success case",
+			malleate: func() {
+			},
+			subdenom: "evmos",
+			valid:    true,
+		},
+		{
+			desc:     "subdenom having invalid characters",
+			malleate: func() {},
+			subdenom: "bit/***///&&&/coin",
+			valid:    false,
+		},
+	} {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			msgServer = keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)
+			// Create a denom
+			tc.malleate()
+			res, err := msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
+			if tc.valid {
+				suite.Require().NoError(err)
+
+				// Make sure that the admin is set correctly
+				queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
+					Denom: res.GetNewTokenDenom(),
+				})
+
+				suite.Require().NoError(err)
+				suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
+
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+
 }
