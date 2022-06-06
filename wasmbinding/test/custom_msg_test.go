@@ -1,4 +1,4 @@
-package wasm
+package wasmbinding
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
-	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	"github.com/osmosis-labs/osmosis/v7/wasmbinding/bindings"
 )
 
 func TestCreateDenomMsg(t *testing.T) {
@@ -29,20 +29,20 @@ func TestCreateDenomMsg(t *testing.T) {
 	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
 	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
 
-	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+	msg := bindings.OsmosisMsg{CreateDenom: &bindings.CreateDenom{
 		Subdenom: "SUN",
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
 	require.NoError(t, err)
 
 	// query the denom and see if it matches
-	query := wasmbindings.OsmosisQuery{
-		FullDenom: &wasmbindings.FullDenom{
+	query := bindings.OsmosisQuery{
+		FullDenom: &bindings.FullDenom{
 			CreatorAddr: reflect.String(),
 			Subdenom:    "SUN",
 		},
 	}
-	resp := wasmbindings.FullDenomResponse{}
+	resp := bindings.FullDenomResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	require.Equal(t, resp.Denom, fmt.Sprintf("factory/%s/SUN", reflect.String()))
@@ -65,7 +65,7 @@ func TestMintMsg(t *testing.T) {
 	require.Empty(t, balances)
 
 	// Create denom for minting
-	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+	msg := bindings.OsmosisMsg{CreateDenom: &bindings.CreateDenom{
 		Subdenom: "SUN",
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
@@ -74,7 +74,7 @@ func TestMintMsg(t *testing.T) {
 
 	amount, ok := sdk.NewIntFromString("808010808")
 	require.True(t, ok)
-	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+	msg = bindings.OsmosisMsg{MintTokens: &bindings.MintTokens{
 		Denom:         sunDenom,
 		Amount:        amount,
 		MintToAddress: lucky.String(),
@@ -89,13 +89,13 @@ func TestMintMsg(t *testing.T) {
 	require.Contains(t, coin.Denom, "factory/")
 
 	// query the denom and see if it matches
-	query := wasmbindings.OsmosisQuery{
-		FullDenom: &wasmbindings.FullDenom{
+	query := bindings.OsmosisQuery{
+		FullDenom: &bindings.FullDenom{
 			CreatorAddr: reflect.String(),
 			Subdenom:    "SUN",
 		},
 	}
-	resp := wasmbindings.FullDenomResponse{}
+	resp := bindings.FullDenomResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	require.Equal(t, resp.Denom, coin.Denom)
@@ -111,20 +111,20 @@ func TestMintMsg(t *testing.T) {
 	require.Contains(t, coin.Denom, "factory/")
 
 	// query the denom and see if it matches
-	query = wasmbindings.OsmosisQuery{
-		FullDenom: &wasmbindings.FullDenom{
+	query = bindings.OsmosisQuery{
+		FullDenom: &bindings.FullDenom{
 			CreatorAddr: reflect.String(),
 			Subdenom:    "SUN",
 		},
 	}
-	resp = wasmbindings.FullDenomResponse{}
+	resp = bindings.FullDenomResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	require.Equal(t, resp.Denom, coin.Denom)
 
 	// now mint another amount / denom
 	// create it first
-	msg = wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+	msg = bindings.OsmosisMsg{CreateDenom: &bindings.CreateDenom{
 		Subdenom: "MOON",
 	}}
 	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
@@ -132,7 +132,7 @@ func TestMintMsg(t *testing.T) {
 	moonDenom := fmt.Sprintf("factory/%s/%s", reflect.String(), msg.CreateDenom.Subdenom)
 
 	amount = amount.SubRaw(1)
-	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+	msg = bindings.OsmosisMsg{MintTokens: &bindings.MintTokens{
 		Denom:         moonDenom,
 		Amount:        amount,
 		MintToAddress: lucky.String(),
@@ -147,13 +147,13 @@ func TestMintMsg(t *testing.T) {
 	require.Contains(t, coin.Denom, "factory/")
 
 	// query the denom and see if it matches
-	query = wasmbindings.OsmosisQuery{
-		FullDenom: &wasmbindings.FullDenom{
+	query = bindings.OsmosisQuery{
+		FullDenom: &bindings.FullDenom{
 			CreatorAddr: reflect.String(),
 			Subdenom:    "MOON",
 		},
 	}
-	resp = wasmbindings.FullDenomResponse{}
+	resp = bindings.FullDenomResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	require.Equal(t, resp.Denom, coin.Denom)
@@ -164,13 +164,13 @@ func TestMintMsg(t *testing.T) {
 	require.Contains(t, coin.Denom, "factory/")
 
 	// query the denom and see if it matches
-	query = wasmbindings.OsmosisQuery{
-		FullDenom: &wasmbindings.FullDenom{
+	query = bindings.OsmosisQuery{
+		FullDenom: &bindings.FullDenom{
 			CreatorAddr: reflect.String(),
 			Subdenom:    "SUN",
 		},
 	}
-	resp = wasmbindings.FullDenomResponse{}
+	resp = bindings.FullDenomResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	require.Equal(t, resp.Denom, coin.Denom)
@@ -193,7 +193,7 @@ func TestBurnMsg(t *testing.T) {
 	require.Empty(t, balances)
 
 	// Create denom for minting
-	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+	msg := bindings.OsmosisMsg{CreateDenom: &bindings.CreateDenom{
 		Subdenom: "SUN",
 	}}
 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
@@ -203,7 +203,7 @@ func TestBurnMsg(t *testing.T) {
 	amount, ok := sdk.NewIntFromString("808010808")
 	require.True(t, ok)
 
-	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+	msg = bindings.OsmosisMsg{MintTokens: &bindings.MintTokens{
 		Denom:         sunDenom,
 		Amount:        amount,
 		MintToAddress: lucky.String(),
@@ -212,7 +212,7 @@ func TestBurnMsg(t *testing.T) {
 	require.NoError(t, err)
 
 	// can't burn from different address
-	msg = wasmbindings.OsmosisMsg{BurnTokens: &wasmbindings.BurnTokens{
+	msg = bindings.OsmosisMsg{BurnTokens: &bindings.BurnTokens{
 		Denom:           sunDenom,
 		Amount:          amount,
 		BurnFromAddress: lucky.String(),
@@ -225,7 +225,7 @@ func TestBurnMsg(t *testing.T) {
 	err = osmosis.BankKeeper.SendCoins(ctx, lucky, reflect, luckyBalance)
 	require.NoError(t, err)
 
-	msg = wasmbindings.OsmosisMsg{BurnTokens: &wasmbindings.BurnTokens{
+	msg = bindings.OsmosisMsg{BurnTokens: &bindings.BurnTokens{
 		Denom:           sunDenom,
 		Amount:          amount,
 		BurnFromAddress: reflect.String(),
@@ -244,24 +244,24 @@ func TestSwapMsg(t *testing.T) {
 	// table tests with this setup
 	cases := []struct {
 		name       string
-		msg        func(BaseState) *wasmbindings.SwapMsg
+		msg        func(BaseState) *bindings.SwapMsg
 		expectErr  bool
 		initFunds  sdk.Coin
 		finalFunds []sdk.Coin
 	}{
 		{
 			name: "exact in: simple swap works",
-			msg: func(state BaseState) *wasmbindings.SwapMsg {
-				return &wasmbindings.SwapMsg{
-					First: wasmbindings.Swap{
+			msg: func(state BaseState) *bindings.SwapMsg {
+				return &bindings.SwapMsg{
+					First: bindings.Swap{
 						PoolId:   state.StarPool,
 						DenomIn:  "uosmo",
 						DenomOut: "ustar",
 					},
 					// Note: you must use empty array, not nil, for valid Rust JSON
-					Route: []wasmbindings.Step{},
-					Amount: wasmbindings.SwapAmountWithLimit{
-						ExactIn: &wasmbindings.ExactIn{
+					Route: []bindings.Step{},
+					Amount: bindings.SwapAmountWithLimit{
+						ExactIn: &bindings.ExactIn{
 							Input:     sdk.NewInt(12000000),
 							MinOutput: sdk.NewInt(5000000),
 						},
@@ -276,17 +276,17 @@ func TestSwapMsg(t *testing.T) {
 		},
 		{
 			name: "exact in: price too low",
-			msg: func(state BaseState) *wasmbindings.SwapMsg {
-				return &wasmbindings.SwapMsg{
-					First: wasmbindings.Swap{
+			msg: func(state BaseState) *bindings.SwapMsg {
+				return &bindings.SwapMsg{
+					First: bindings.Swap{
 						PoolId:   state.StarPool,
 						DenomIn:  "uosmo",
 						DenomOut: "ustar",
 					},
 					// Note: you must use empty array, not nil, for valid Rust JSON
-					Route: []wasmbindings.Step{},
-					Amount: wasmbindings.SwapAmountWithLimit{
-						ExactIn: &wasmbindings.ExactIn{
+					Route: []bindings.Step{},
+					Amount: bindings.SwapAmountWithLimit{
+						ExactIn: &bindings.ExactIn{
 							Input:     sdk.NewInt(12000000),
 							MinOutput: sdk.NewInt(555000000),
 						},
@@ -298,17 +298,17 @@ func TestSwapMsg(t *testing.T) {
 		},
 		{
 			name: "exact in: not enough funds to swap",
-			msg: func(state BaseState) *wasmbindings.SwapMsg {
-				return &wasmbindings.SwapMsg{
-					First: wasmbindings.Swap{
+			msg: func(state BaseState) *bindings.SwapMsg {
+				return &bindings.SwapMsg{
+					First: bindings.Swap{
 						PoolId:   state.StarPool,
 						DenomIn:  "uosmo",
 						DenomOut: "ustar",
 					},
 					// Note: you must use empty array, not nil, for valid Rust JSON
-					Route: []wasmbindings.Step{},
-					Amount: wasmbindings.SwapAmountWithLimit{
-						ExactIn: &wasmbindings.ExactIn{
+					Route: []bindings.Step{},
+					Amount: bindings.SwapAmountWithLimit{
+						ExactIn: &bindings.ExactIn{
 							Input:     sdk.NewInt(12000000),
 							MinOutput: sdk.NewInt(5000000),
 						},
@@ -320,17 +320,17 @@ func TestSwapMsg(t *testing.T) {
 		},
 		{
 			name: "exact in: invalidPool",
-			msg: func(state BaseState) *wasmbindings.SwapMsg {
-				return &wasmbindings.SwapMsg{
-					First: wasmbindings.Swap{
+			msg: func(state BaseState) *bindings.SwapMsg {
+				return &bindings.SwapMsg{
+					First: bindings.Swap{
 						PoolId:   state.StarPool,
 						DenomIn:  "uosmo",
 						DenomOut: "uatom",
 					},
 					// Note: you must use empty array, not nil, for valid Rust JSON
-					Route: []wasmbindings.Step{},
-					Amount: wasmbindings.SwapAmountWithLimit{
-						ExactIn: &wasmbindings.ExactIn{
+					Route: []bindings.Step{},
+					Amount: bindings.SwapAmountWithLimit{
+						ExactIn: &bindings.ExactIn{
 							Input:     sdk.NewInt(12000000),
 							MinOutput: sdk.NewInt(100000),
 						},
@@ -344,17 +344,17 @@ func TestSwapMsg(t *testing.T) {
 		// FIXME: this panics in GAMM module !?! hits a known TODO
 		// https://github.com/osmosis-labs/osmosis/blob/a380ab2fcd39fb94c2b10411e07daf664911257a/osmomath/math.go#L47-L51
 		//"exact out: panics if too much swapped": {
-		//	msg: func(state BaseState) *wasmbindings.SwapMsg {
-		//		return &wasmbindings.SwapMsg{
-		//			First: wasmbindings.Swap{
+		//	msg: func(state BaseState) *bindings.SwapMsg {
+		//		return &bindings.SwapMsg{
+		//			First: bindings.Swap{
 		//				PoolId:   state.StarPool,
 		//				DenomIn:  "uosmo",
 		//				DenomOut: "ustar",
 		//			},
 		//			// Note: you must use empty array, not nil, for valid Rust JSON
-		//			Route: []wasmbindings.Step{},
-		//			Amount: wasmbindings.SwapAmountWithLimit{
-		//				ExactOut: &wasmbindings.ExactOut{
+		//			Route: []bindings.Step{},
+		//			Amount: bindings.SwapAmountWithLimit{
+		//				ExactOut: &bindings.ExactOut{
 		//					MaxInput: sdk.NewInt(22000000),
 		//					Output:   sdk.NewInt(120000000),
 		//				},
@@ -369,17 +369,17 @@ func TestSwapMsg(t *testing.T) {
 		//},
 		{
 			name: "exact out: simple swap works",
-			msg: func(state BaseState) *wasmbindings.SwapMsg {
-				return &wasmbindings.SwapMsg{
-					First: wasmbindings.Swap{
+			msg: func(state BaseState) *bindings.SwapMsg {
+				return &bindings.SwapMsg{
+					First: bindings.Swap{
 						PoolId:   state.AtomPool,
 						DenomIn:  "uosmo",
 						DenomOut: "uatom",
 					},
 					// Note: you must use empty array, not nil, for valid Rust JSON
-					Route: []wasmbindings.Step{},
-					Amount: wasmbindings.SwapAmountWithLimit{
-						ExactOut: &wasmbindings.ExactOut{
+					Route: []bindings.Step{},
+					Amount: bindings.SwapAmountWithLimit{
+						ExactOut: &bindings.ExactOut{
 							// 12 OSMO * 6 ATOM == 18 OSMO * 4 ATOM (+6 OSMO, -2 ATOM)
 							MaxInput: sdk.NewInt(7000000),
 							Output:   sdk.NewInt(2000000),
@@ -395,19 +395,19 @@ func TestSwapMsg(t *testing.T) {
 		},
 		{
 			name: "exact in: 2 step multi-hop",
-			msg: func(state BaseState) *wasmbindings.SwapMsg {
-				return &wasmbindings.SwapMsg{
-					First: wasmbindings.Swap{
+			msg: func(state BaseState) *bindings.SwapMsg {
+				return &bindings.SwapMsg{
+					First: bindings.Swap{
 						PoolId:   state.StarPool,
 						DenomIn:  "ustar",
 						DenomOut: "uosmo",
 					},
-					Route: []wasmbindings.Step{{
+					Route: []bindings.Step{{
 						PoolId:   state.AtomPool,
 						DenomOut: "uatom",
 					}},
-					Amount: wasmbindings.SwapAmountWithLimit{
-						ExactIn: &wasmbindings.ExactIn{
+					Amount: bindings.SwapAmountWithLimit{
+						ExactIn: &bindings.ExactIn{
 							Input:     sdk.NewInt(240000000),
 							MinOutput: sdk.NewInt(1999000),
 						},
@@ -423,19 +423,19 @@ func TestSwapMsg(t *testing.T) {
 		},
 		{
 			name: "exact out: 2 step multi-hop",
-			msg: func(state BaseState) *wasmbindings.SwapMsg {
-				return &wasmbindings.SwapMsg{
-					First: wasmbindings.Swap{
+			msg: func(state BaseState) *bindings.SwapMsg {
+				return &bindings.SwapMsg{
+					First: bindings.Swap{
 						PoolId:   state.AtomPool,
 						DenomIn:  "uosmo",
 						DenomOut: "uatom",
 					},
-					Route: []wasmbindings.Step{{
+					Route: []bindings.Step{{
 						PoolId:   state.RegenPool,
 						DenomOut: "uregen",
 					}},
-					Amount: wasmbindings.SwapAmountWithLimit{
-						ExactOut: &wasmbindings.ExactOut{
+					Amount: bindings.SwapAmountWithLimit{
+						ExactOut: &bindings.ExactOut{
 							MaxInput: sdk.NewInt(2000000),
 							Output:   sdk.NewInt(12000000 - 12),
 						},
@@ -454,19 +454,19 @@ func TestSwapMsg(t *testing.T) {
 		// https://github.com/osmosis-labs/osmosis/blob/a380ab2fcd39fb94c2b10411e07daf664911257a/osmomath/math.go#L47-L51
 		// {
 		// 	name: "exact out: panics on math power stuff",
-		// 	msg: func(state BaseState) *wasmbindings.SwapMsg {
-		// 		return &wasmbindings.SwapMsg{
-		// 			First: wasmbindings.Swap{
+		// 	msg: func(state BaseState) *bindings.SwapMsg {
+		// 		return &bindings.SwapMsg{
+		// 			First: bindings.Swap{
 		// 				PoolId:   state.StarPool,
 		// 				DenomIn:  "ustar",
 		// 				DenomOut: "uosmo",
 		// 			},
-		// 			Route: []wasmbindings.Step{{
+		// 			Route: []bindings.Step{{
 		// 				PoolId:   state.AtomPool,
 		// 				DenomOut: "uatom",
 		// 			}},
-		// 			Amount: wasmbindings.SwapAmountWithLimit{
-		// 				ExactOut: &wasmbindings.ExactOut{
+		// 			Amount: bindings.SwapAmountWithLimit{
+		// 				ExactOut: &bindings.ExactOut{
 		// 					MaxInput: sdk.NewInt(240005000),
 		// 					Output:   sdk.NewInt(2000000),
 		// 				},
@@ -483,22 +483,22 @@ func TestSwapMsg(t *testing.T) {
 		// },
 		{
 			name: "exact in: 3 step multi-hop",
-			msg: func(state BaseState) *wasmbindings.SwapMsg {
-				return &wasmbindings.SwapMsg{
-					First: wasmbindings.Swap{
+			msg: func(state BaseState) *bindings.SwapMsg {
+				return &bindings.SwapMsg{
+					First: bindings.Swap{
 						PoolId:   state.StarPool,
 						DenomIn:  "ustar",
 						DenomOut: "uosmo",
 					},
-					Route: []wasmbindings.Step{{
+					Route: []bindings.Step{{
 						PoolId:   state.AtomPool,
 						DenomOut: "uatom",
 					}, {
 						PoolId:   state.RegenPool,
 						DenomOut: "uregen",
 					}},
-					Amount: wasmbindings.SwapAmountWithLimit{
-						ExactIn: &wasmbindings.ExactIn{
+					Amount: bindings.SwapAmountWithLimit{
+						ExactIn: &bindings.ExactIn{
 							Input:     sdk.NewInt(240000000),
 							MinOutput: sdk.NewInt(23900000),
 						},
@@ -515,22 +515,22 @@ func TestSwapMsg(t *testing.T) {
 		},
 		{
 			name: "exact out: 3 step multi-hop",
-			msg: func(state BaseState) *wasmbindings.SwapMsg {
-				return &wasmbindings.SwapMsg{
-					First: wasmbindings.Swap{
+			msg: func(state BaseState) *bindings.SwapMsg {
+				return &bindings.SwapMsg{
+					First: bindings.Swap{
 						PoolId:   state.StarPool,
 						DenomIn:  "ustar",
 						DenomOut: "uosmo",
 					},
-					Route: []wasmbindings.Step{{
+					Route: []bindings.Step{{
 						PoolId:   state.AtomPool,
 						DenomOut: "uatom",
 					}, {
 						PoolId:   state.RegenPool,
 						DenomOut: "uregen",
 					}},
-					Amount: wasmbindings.SwapAmountWithLimit{
-						ExactOut: &wasmbindings.ExactOut{
+					Amount: bindings.SwapAmountWithLimit{
+						ExactOut: &bindings.ExactOut{
 							MaxInput: sdk.NewInt(50000000),
 							Output:   sdk.NewInt(12000000),
 						},
@@ -559,7 +559,7 @@ func TestSwapMsg(t *testing.T) {
 			reflect := instantiateReflectContract(t, ctx, osmosis, trader)
 			require.NotEmpty(t, reflect)
 
-			msg := wasmbindings.OsmosisMsg{Swap: tc.msg(state)}
+			msg := bindings.OsmosisMsg{Swap: tc.msg(state)}
 			err := executeCustom(t, ctx, osmosis, reflect, trader, msg, tc.initFunds)
 			if tc.expectErr {
 				require.Error(t, err)
@@ -628,7 +628,7 @@ type ReflectSubMsgs struct {
 	Msgs []wasmvmtypes.SubMsg `json:"msgs"`
 }
 
-func executeCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, sender sdk.AccAddress, msg wasmbindings.OsmosisMsg, funds sdk.Coin) error {
+func executeCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, sender sdk.AccAddress, msg bindings.OsmosisMsg, funds sdk.Coin) error {
 	customBz, err := json.Marshal(msg)
 	require.NoError(t, err)
 	reflectMsg := ReflectExec{
