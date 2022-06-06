@@ -3247,7 +3247,7 @@ and OSMO tokens for superfluid staking
 | `delegator_address` | [string](#string) |  |  |
 | `validator_address` | [string](#string) |  |  |
 | `delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `equivilent_staked_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `equivalent_staked_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -3692,7 +3692,7 @@ assets
 | ----- | ---- | ----- | ----------- |
 | `superfluid_delegation_records` | [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord) | repeated |  |
 | `total_delegated_coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `total_equivilent_staked_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `total_equivalent_staked_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
