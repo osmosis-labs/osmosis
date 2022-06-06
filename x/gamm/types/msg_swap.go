@@ -11,18 +11,11 @@ type SwapMsgRoute interface {
 	TokenDenomsOnPath() []string
 }
 
-type SwapMsgAmountOut interface {
+type SybilResistantFees interface {
 	SwapMsgRoute
 
 	PoolIdOnPath() []uint64
-	GetExactTokenOut() sdk.Coin
-}
-
-type SwapMsgAmountIn interface {
-	SwapMsgRoute
-
-	PoolIdOnPath() []uint64
-	GetExactTokenIn() sdk.Coin
+	GetTokenToFee() sdk.Coin
 }
 
 var (
@@ -55,7 +48,7 @@ func (msg MsgSwapExactAmountOut) PoolIdOnPath() []uint64 {
 	return ids
 }
 
-func (msg MsgSwapExactAmountOut) GetExactTokenOut() sdk.Coin {
+func (msg MsgSwapExactAmountOut) GetTokenForSybilFees() sdk.Coin {
 	return msg.GetTokenOut()
 }
 
@@ -85,6 +78,6 @@ func (msg MsgSwapExactAmountIn) PoolIdOnPath() []uint64 {
 	return ids
 }
 
-func (msg MsgSwapExactAmountIn) GetExactTokenIn() sdk.Coin {
+func (msg MsgSwapExactAmountIn) GetTokenForSybilFees() sdk.Coin {
 	return msg.GetTokenIn()
 }

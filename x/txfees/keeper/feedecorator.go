@@ -114,18 +114,11 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			swapIn, isSwapIn := swapMsg.(gammtypes.SwapMsgAmountIn)
 			if isSwapOut {
 				// Message is swap exact amount out msg
-				// Get pool path
 				poolIds := swapOut.PoolIdOnPath()
-				swapFees := sdk.ZeroDec()
-				// Get swap fees from pools
-				for i := range poolIds {
-					// Get swap fee
-					swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFee(ctx, poolIds[i])
-					if err != nil {
-						return ctx, err
-					}
-					// add to existing swap fees
-					swapFees = swapFees.Add(swapFee)
+				// Get swap fees
+				swapFees, err := mfd.TxFeesKeeper.getSwapFeeFromPoolIdPath(ctx, poolIds)
+				if err != nil {
+					return ctx, err
 				}
 				// Get token to pay fee
 				token := swapOut.GetExactTokenOut()
@@ -139,7 +132,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				// Multiply token by swap fee to get sybil fees paid
 				sybil.SwapFeesPaid = token.Amount.ToDec().Mul(swapFees).Ceil().RoundInt()
 				// Check if the sybil fees are sufficient for the tx
-				if err = mfd.TxFeesKeeper.IsSufficientFeeWithSwap(ctx, sybil, feeTx.GetGas(), feeCoins[0]); err != nil {
+				if err = mfd.TxFeesKeeper.IsSufficientSybilFee(ctx, sybil, feeTx.GetGas(), feeCoins[0]); err != nil {
 					return ctx, err
 				}
 				// Tx gas price can be paid for with swap fees + tx fee
@@ -169,7 +162,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				// Multiply token by swap fee to get sybil fees paid
 				sybil.SwapFeesPaid = token.Amount.ToDec().Mul(swapFees).Ceil().RoundInt()
 				// Check if the sybil fees are sufficient for the tx
-				if err = mfd.TxFeesKeeper.IsSufficientFeeWithSwap(ctx, sybil, feeTx.GetGas(), feeCoins[0]); err != nil {
+				if err = mfd.TxFeesKeeper.IsSufficientSybilFee(ctx, sybil, feeTx.GetGas(), feeCoins[0]); err != nil {
 					return ctx, err
 				}
 				// Tx gas price can be paid for with swap fees + tx fee
@@ -182,9 +175,26 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
-// IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
+// getSwapFeesFromPath gets the total swap fee for a swap message along a
+func (k Keeper) getSwapFeeFromPoolIdPath(ctx sdk.Context, poolIds []uint64) (sdk.Dec, error) {
+	swapFees := sdk.ZeroDec()
+	// Get swap fees from pools
+	for i := range poolIds {
+		// Get swap fee
+		swapFee, err := k.gammKeeper.GetSwapFee(ctx, poolIds[i])
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+		// add to existing swap fees
+		swapFees = swapFees.Add(swapFee)
+	}
+
+	return swapFees, nil
+}
+
+// IsSufficientSybilFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
 // to pay the gas cost of this tx.
-func (k Keeper) IsSufficientFeeWithSwap(ctx sdk.Context, sybil Sybil, gasRequested uint64, feeCoin sdk.Coin) error {
+func (k Keeper) IsSufficientSybilFee(ctx sdk.Context, sybil Sybil, gasRequested uint64, feeCoin sdk.Coin) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
 		return err
