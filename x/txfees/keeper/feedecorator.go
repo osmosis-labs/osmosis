@@ -126,10 +126,10 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, sybil Sybil, gasRequested uint6
 	}
 
 	// Add converted fee from tx to sybil fees paid
-	sybil = sybil.AddToFeesPaid(convertedFee)
+	totalFee := sybil.AddToFeesPaid(convertedFee)
 
-	// Converted fee now is including the swap fee paid for in the msg
-	if !(sybil.FeesPaid.IsGTE(requiredBaseFee)) {
+	// now including the swap fees paid for in the msg
+	if !(totalFee.FeesPaid.IsGTE(requiredBaseFee)) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
 	}
 
@@ -159,8 +159,16 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 		return sybil, nil
 	}
 
+	// Get token for swap fee amounts
+	token := msg.GetTokenToFee()
+
+	// Check if token to apply swap fees to is a feetoken
+	if !mfd.TxFeesKeeper.feeTokenExists(ctx, token.Denom) {
+		return sybil, nil
+	}
+
 	// Get fees paid in swap fees
-	feesPaid, err := mfd.TxFeesKeeper.GetFeesPaid(ctx, msg.PoolIdOnPath(), msg.GetTokenToFee())
+	feesPaid, err := mfd.TxFeesKeeper.getFeesPaid(ctx, msg.PoolIdOnPath(), msg.TokenDenomsOnPath(), token)
 	if err != nil {
 		return Sybil{}, err
 	}

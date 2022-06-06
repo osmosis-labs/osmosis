@@ -51,7 +51,8 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, e
 }
 
 // GetTotalSwapFee gets the total swap fee for a swap message along a route of pool ids
-func (k Keeper) getTotalSwapFee(ctx sdk.Context, poolIds []uint64) (sdk.Dec, error) {
+func (k Keeper) getTotalSwapFee(ctx sdk.Context, poolIds []uint64, denomPath []string) (sdk.Dec, error) {
+	prefixStore := k.GetFeeTokensStore(ctx)
 	swapFees := sdk.ZeroDec()
 
 	// Get swap fees from pools
@@ -62,17 +63,31 @@ func (k Keeper) getTotalSwapFee(ctx sdk.Context, poolIds []uint64) (sdk.Dec, err
 			return sdk.Dec{}, err
 		}
 
-		// add to existing swap fees
-		swapFees = swapFees.Add(swapFee)
+		// if either of the denoms for the pool is a fee token, swap fee can be added
+		if prefixStore.Has([]byte(denomPath[i])) || prefixStore.Has([]byte(denomPath[i+1])) {
+			// add to existing swap fees
+			swapFees = swapFees.Add(swapFee)
+		}
+
 	}
 
 	return swapFees, nil
 }
 
-// GetFeesPaid returns a token representing the fees paid along the route of swaps identified by the pool Ids
-func (k Keeper) GetFeesPaid(ctx sdk.Context, poolIds []uint64, token sdk.Coin) (sdk.Coin, error) {
+func (k Keeper) feeTokenExists(ctx sdk.Context, denom string) bool {
+	return k.GetFeeTokensStore(ctx).Has([]byte(denom))
+}
+
+// getFeesPaid returns a token representing the fees paid along the route of swaps identified by the pool Ids
+func (k Keeper) getFeesPaid(ctx sdk.Context, poolIds []uint64, denomPath []string, token sdk.Coin) (sdk.Coin, error) {
+	// Only tokens with fee record can pay swap fees
+	prefixStore := k.GetFeeTokensStore(ctx)
+	if !prefixStore.Has([]byte(token.Denom)) {
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidFeeToken, "%s", token.Denom)
+	}
+
 	// Get total swap fees
-	swapFees, err := k.getTotalSwapFee(ctx, poolIds)
+	swapFees, err := k.getTotalSwapFee(ctx, poolIds, denomPath)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
