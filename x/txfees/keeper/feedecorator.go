@@ -84,7 +84,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			}
 		}
 	}
-
+	// TODO: Break this up
 	// If we are in CheckTx, this function is ran locally to determine if these fees are sufficient
 	// to enter our mempool
 	// Ensure that the provided fees meet a minimum threshold for the validator.
