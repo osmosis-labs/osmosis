@@ -11,8 +11,15 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+<<<<<<< HEAD
 	lockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v9/x/superfluid/types"
+=======
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+>>>>>>> 19fedeb (Query osmo equivilent is staked via superfluid (#1632))
 )
 
 var _ types.QueryServer = Querier{}
@@ -195,6 +202,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	res := types.SuperfluidDelegationsByDelegatorResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
 		TotalDelegatedCoins:         sdk.NewCoins(),
+		TotalEquivalentStakedAmount: sdk.NewCoin(appparams.BaseCoinUnit, sdk.ZeroInt()),
 	}
 
 	syntheticLocks := q.Keeper.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
@@ -213,17 +221,25 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		baseDenom := periodLock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, periodLock.GetCoins().AmountOf(baseDenom))
 		valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
+
+		// Find how many osmo tokens this delegation is worth at superfluids current risk adjustment
+		// and twap of the denom.
+		equivalentAmount := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
+
 		if err != nil {
 			return nil, err
 		}
 		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
 			types.SuperfluidDelegationRecord{
-				DelegatorAddress: req.DelegatorAddress,
-				ValidatorAddress: valAddr,
-				DelegationAmount: lockedCoins,
+				DelegatorAddress:       req.DelegatorAddress,
+				ValidatorAddress:       valAddr,
+				DelegationAmount:       lockedCoins,
+				EquivalentStakedAmount: &coin,
 			},
 		)
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
+		res.TotalEquivalentStakedAmount = res.TotalEquivalentStakedAmount.Add(coin)
 	}
 
 	return &res, nil
