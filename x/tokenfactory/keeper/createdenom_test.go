@@ -126,5 +126,4 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			}
 		})
 	}
-
 }
