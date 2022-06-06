@@ -1,21 +1,10 @@
 package types
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
 // SwapMsg defines a simple interface for getting the token denoms on a swap message route.
 type SwapMsgRoute interface {
 	TokenInDenom() string
 	TokenOutDenom() string
 	TokenDenomsOnPath() []string
-}
-
-type SybilResistantFees interface {
-	SwapMsgRoute
-
-	PoolIdOnPath() []uint64
-	GetTokenToFee() sdk.Coin
 }
 
 var (
@@ -40,18 +29,6 @@ func (msg MsgSwapExactAmountOut) TokenDenomsOnPath() []string {
 	return denoms
 }
 
-func (msg MsgSwapExactAmountOut) PoolIdOnPath() []uint64 {
-	ids := make([]uint64, 0, len(msg.Routes))
-	for i := 0; i < len(msg.Routes); i++ {
-		ids = append(ids, msg.Routes[i].PoolId)
-	}
-	return ids
-}
-
-func (msg MsgSwapExactAmountOut) GetTokenForSybilFees() sdk.Coin {
-	return msg.GetTokenOut()
-}
-
 func (msg MsgSwapExactAmountIn) TokenInDenom() string {
 	return msg.TokenIn.Denom
 }
@@ -68,16 +45,4 @@ func (msg MsgSwapExactAmountIn) TokenDenomsOnPath() []string {
 		denoms = append(denoms, msg.Routes[i].TokenOutDenom)
 	}
 	return denoms
-}
-
-func (msg MsgSwapExactAmountIn) PoolIdOnPath() []uint64 {
-	ids := make([]uint64, 0, len(msg.Routes))
-	for i := 0; i < len(msg.Routes); i++ {
-		ids = append(ids, msg.Routes[i].PoolId)
-	}
-	return ids
-}
-
-func (msg MsgSwapExactAmountIn) GetTokenForSybilFees() sdk.Coin {
-	return msg.GetTokenIn()
 }

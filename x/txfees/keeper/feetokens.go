@@ -50,6 +50,46 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, e
 	return spotPrice, nil
 }
 
+// GetTotalSwapFee gets the total swap fee for a swap message along a route of pool ids
+func (k Keeper) getTotalSwapFee(ctx sdk.Context, poolIds []uint64) (sdk.Dec, error) {
+	swapFees := sdk.ZeroDec()
+
+	// Get swap fees from pools
+	for i := range poolIds {
+		// Get swap fee
+		swapFee, err := k.gammKeeper.GetSwapFee(ctx, poolIds[i])
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+
+		// add to existing swap fees
+		swapFees = swapFees.Add(swapFee)
+	}
+
+	return swapFees, nil
+}
+
+// GetFeesPaid returns a token representing the fees paid along the route of swaps identified by the pool Ids
+func (k Keeper) GetFeesPaid(ctx sdk.Context, poolIds []uint64, token sdk.Coin) (sdk.Coin, error) {
+	// Get total swap fees
+	swapFees, err := k.getTotalSwapFee(ctx, poolIds)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// Convert token to baseDenom
+	token, err = k.ConvertToBaseToken(ctx, token)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// Appy swap fee to token amount = ceil(swapFees * token.Amount)
+	feedAmount := swapFees.Mul(token.Amount.ToDec()).Ceil().RoundInt()
+
+	// return coin of fee amount in base denom
+	return sdk.NewCoin(token.Denom, feedAmount), nil
+}
+
 // GetFeeToken returns the fee token record for a specific denom
 func (k Keeper) GetBaseDenom(ctx sdk.Context) (denom string, err error) {
 	store := ctx.KVStore(k.storeKey)
