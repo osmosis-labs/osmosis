@@ -11,10 +11,10 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/gogo/protobuf/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	_ "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -410,6 +410,110 @@ func (m *MsgLockAndSuperfluidDelegateResponse) GetID() uint64 {
 	return 0
 }
 
+// MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is
+// associated with pool pool_id. If pool_id is not approved for unpooling by
+// governance, this is a no-op. Unpooling takes the locked gamm shares, and runs
+// "ExitPool" on it, to get the constituent tokens. e.g. z gamm/pool/1 tokens
+// ExitPools into constituent tokens x uatom, y uosmo. Then it creates a new
+// lock for every constituent token, with the duration associated with the lock.
+// If the lock was unbonding, the new lockup durations should be the time left
+// until unbond completion.
+type MsgUnPoolWhitelistedPool struct {
+	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	PoolId uint64 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+}
+
+func (m *MsgUnPoolWhitelistedPool) Reset()         { *m = MsgUnPoolWhitelistedPool{} }
+func (m *MsgUnPoolWhitelistedPool) String() string { return proto.CompactTextString(m) }
+func (*MsgUnPoolWhitelistedPool) ProtoMessage()    {}
+func (*MsgUnPoolWhitelistedPool) Descriptor() ([]byte, []int) {
+	return fileDescriptor_55b645f187d22814, []int{8}
+}
+func (m *MsgUnPoolWhitelistedPool) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUnPoolWhitelistedPool) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUnPoolWhitelistedPool.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUnPoolWhitelistedPool) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUnPoolWhitelistedPool.Merge(m, src)
+}
+func (m *MsgUnPoolWhitelistedPool) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUnPoolWhitelistedPool) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUnPoolWhitelistedPool.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUnPoolWhitelistedPool proto.InternalMessageInfo
+
+func (m *MsgUnPoolWhitelistedPool) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *MsgUnPoolWhitelistedPool) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+type MsgUnPoolWhitelistedPoolResponse struct {
+	ExitedLockIds []uint64 `protobuf:"varint,1,rep,packed,name=exitedLockIds,proto3" json:"exitedLockIds,omitempty"`
+}
+
+func (m *MsgUnPoolWhitelistedPoolResponse) Reset()         { *m = MsgUnPoolWhitelistedPoolResponse{} }
+func (m *MsgUnPoolWhitelistedPoolResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUnPoolWhitelistedPoolResponse) ProtoMessage()    {}
+func (*MsgUnPoolWhitelistedPoolResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_55b645f187d22814, []int{9}
+}
+func (m *MsgUnPoolWhitelistedPoolResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUnPoolWhitelistedPoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUnPoolWhitelistedPoolResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUnPoolWhitelistedPoolResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUnPoolWhitelistedPoolResponse.Merge(m, src)
+}
+func (m *MsgUnPoolWhitelistedPoolResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUnPoolWhitelistedPoolResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUnPoolWhitelistedPoolResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUnPoolWhitelistedPoolResponse proto.InternalMessageInfo
+
+func (m *MsgUnPoolWhitelistedPoolResponse) GetExitedLockIds() []uint64 {
+	if m != nil {
+		return m.ExitedLockIds
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*MsgSuperfluidDelegate)(nil), "osmosis.superfluid.MsgSuperfluidDelegate")
 	proto.RegisterType((*MsgSuperfluidDelegateResponse)(nil), "osmosis.superfluid.MsgSuperfluidDelegateResponse")
@@ -419,44 +523,52 @@ func init() {
 	proto.RegisterType((*MsgSuperfluidUnbondLockResponse)(nil), "osmosis.superfluid.MsgSuperfluidUnbondLockResponse")
 	proto.RegisterType((*MsgLockAndSuperfluidDelegate)(nil), "osmosis.superfluid.MsgLockAndSuperfluidDelegate")
 	proto.RegisterType((*MsgLockAndSuperfluidDelegateResponse)(nil), "osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse")
+	proto.RegisterType((*MsgUnPoolWhitelistedPool)(nil), "osmosis.superfluid.MsgUnPoolWhitelistedPool")
+	proto.RegisterType((*MsgUnPoolWhitelistedPoolResponse)(nil), "osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/superfluid/tx.proto", fileDescriptor_55b645f187d22814) }
 
 var fileDescriptor_55b645f187d22814 = []byte{
-	// 512 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0xcd, 0x6e, 0xd3, 0x40,
-	0x10, 0x8e, 0x93, 0x92, 0xc2, 0x22, 0x90, 0x58, 0x15, 0x35, 0x31, 0x60, 0x07, 0xc3, 0x21, 0x08,
-	0x75, 0xb7, 0x69, 0xc5, 0x8f, 0xb8, 0x35, 0xe4, 0x12, 0x89, 0x08, 0xc9, 0x88, 0x0b, 0x12, 0xaa,
-	0xd6, 0xde, 0xed, 0x62, 0xc5, 0xf1, 0x46, 0x5e, 0xdb, 0x4a, 0x9f, 0x80, 0x2b, 0xcf, 0xc1, 0x8b,
-	0xd0, 0x63, 0x8f, 0x9c, 0x0a, 0x4a, 0xde, 0x80, 0x0b, 0x57, 0xe4, 0xdf, 0x50, 0xb0, 0x43, 0x2a,
-	0xe0, 0xe4, 0x9d, 0x99, 0x6f, 0xbe, 0xf9, 0x46, 0xfb, 0x79, 0xc1, 0x2d, 0x21, 0x27, 0x42, 0x3a,
-	0x12, 0xcb, 0x70, 0xca, 0xfc, 0x23, 0x37, 0x74, 0x28, 0x0e, 0x66, 0x68, 0xea, 0x8b, 0x40, 0x40,
-	0x98, 0x15, 0xd1, 0xb2, 0xa8, 0x6e, 0x71, 0xc1, 0x45, 0x52, 0xc6, 0xf1, 0x29, 0x45, 0xaa, 0x1a,
-	0x17, 0x82, 0xbb, 0x0c, 0x27, 0x91, 0x15, 0x1e, 0x61, 0x1a, 0xfa, 0x24, 0x70, 0x84, 0x97, 0xd7,
-	0xed, 0x84, 0x0a, 0x5b, 0x44, 0x32, 0x1c, 0xf5, 0x2c, 0x16, 0x90, 0x1e, 0xb6, 0x85, 0x93, 0xd7,
-	0xef, 0x95, 0xc8, 0x58, 0x1e, 0x53, 0x90, 0x11, 0x81, 0x9b, 0x23, 0xc9, 0x5f, 0x15, 0xe9, 0x01,
-	0x73, 0x19, 0x27, 0x01, 0x83, 0x0f, 0x40, 0x53, 0x32, 0x8f, 0x32, 0xbf, 0xa5, 0x74, 0x94, 0xee,
-	0x95, 0xfe, 0x8d, 0x6f, 0x67, 0xfa, 0xb5, 0x63, 0x32, 0x71, 0x9f, 0x19, 0x69, 0xde, 0x30, 0x33,
-	0x00, 0xdc, 0x06, 0x9b, 0xae, 0xb0, 0xc7, 0x87, 0x0e, 0x6d, 0xd5, 0x3b, 0x4a, 0x77, 0xc3, 0x6c,
-	0xc6, 0xe1, 0x90, 0xc2, 0x36, 0xb8, 0x1c, 0x11, 0xf7, 0x90, 0x50, 0xea, 0xb7, 0x1a, 0x31, 0x8b,
-	0xb9, 0x19, 0x11, 0xf7, 0x80, 0x52, 0xdf, 0xd0, 0xc1, 0x9d, 0xd2, 0xb9, 0x26, 0x93, 0x53, 0xe1,
-	0x49, 0x66, 0xbc, 0x05, 0xdb, 0xe7, 0x00, 0xaf, 0x3d, 0xfa, 0x0f, 0xa5, 0x19, 0x77, 0x81, 0x5e,
-	0x41, 0xbf, 0x42, 0x81, 0x25, 0x3c, 0xfa, 0x42, 0xd8, 0xe3, 0xff, 0xa4, 0x20, 0xa7, 0x2f, 0x14,
-	0x7c, 0x52, 0xc0, 0xed, 0x91, 0xe4, 0x71, 0xee, 0xc0, 0xa3, 0x7f, 0x77, 0x49, 0x04, 0x5c, 0x8a,
-	0xbd, 0x21, 0x5b, 0xf5, 0x4e, 0xa3, 0x7b, 0x75, 0xaf, 0x8d, 0x52, 0xf7, 0xa0, 0xd8, 0x3d, 0x28,
-	0x73, 0x0f, 0x7a, 0x2e, 0x1c, 0xaf, 0xbf, 0x7b, 0x72, 0xa6, 0xd7, 0x3e, 0x7e, 0xd1, 0xbb, 0xdc,
-	0x09, 0xde, 0x85, 0x16, 0xb2, 0xc5, 0x04, 0x67, 0x56, 0x4b, 0x3f, 0x3b, 0x92, 0x8e, 0x71, 0x70,
-	0x3c, 0x65, 0x32, 0x69, 0x90, 0x66, 0xca, 0xbc, 0xea, 0xba, 0x1f, 0x83, 0xfb, 0xab, 0x16, 0xc9,
-	0x37, 0x86, 0xd7, 0x41, 0x7d, 0x38, 0x48, 0x96, 0xd9, 0x30, 0xeb, 0xc3, 0xc1, 0xde, 0xf7, 0x06,
-	0x68, 0x8c, 0x24, 0x87, 0x3e, 0x80, 0x65, 0xeb, 0xa3, 0xdf, 0x7f, 0x26, 0x54, 0x6a, 0x2b, 0xb5,
-	0xb7, 0x36, 0xb4, 0xd0, 0x32, 0x03, 0x5b, 0xa5, 0xf6, 0x7b, 0xf8, 0x47, 0xaa, 0x25, 0x58, 0xdd,
-	0xbf, 0x00, 0xb8, 0x6a, 0x72, 0x61, 0xbb, 0x75, 0x26, 0xe7, 0xe0, 0xb5, 0x26, 0xff, 0xea, 0x38,
-	0xf8, 0x5e, 0x01, 0xed, 0x6a, 0xbb, 0xed, 0x56, 0x50, 0x56, 0x76, 0xa8, 0x4f, 0x2f, 0xda, 0x91,
-	0x2b, 0xe9, 0xbf, 0x3c, 0x99, 0x6b, 0xca, 0xe9, 0x5c, 0x53, 0xbe, 0xce, 0x35, 0xe5, 0xc3, 0x42,
-	0xab, 0x9d, 0x2e, 0xb4, 0xda, 0xe7, 0x85, 0x56, 0x7b, 0xf3, 0xe8, 0x27, 0x5f, 0x66, 0xec, 0x3b,
-	0x2e, 0xb1, 0x64, 0x1e, 0xe0, 0xe8, 0x09, 0x9e, 0x9d, 0x7b, 0x7b, 0x63, 0xab, 0x5a, 0xcd, 0xe4,
-	0xc1, 0xdb, 0xff, 0x11, 0x00, 0x00, 0xff, 0xff, 0x01, 0x37, 0xd6, 0x6a, 0x9e, 0x05, 0x00, 0x00,
+	// 602 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0xcd, 0x6e, 0xd3, 0x40,
+	0x10, 0x8e, 0x93, 0x90, 0xc0, 0xa0, 0x56, 0xc2, 0x6a, 0x55, 0xc7, 0x80, 0x1d, 0x4c, 0x0f, 0x41,
+	0xa5, 0xde, 0xa6, 0xe5, 0x4f, 0xdc, 0x1a, 0x72, 0x20, 0x12, 0x11, 0xc8, 0xa8, 0x42, 0x42, 0x42,
+	0x95, 0x9d, 0xdd, 0xba, 0x56, 0x1c, 0x6f, 0xe4, 0x75, 0xa2, 0x54, 0x3c, 0x00, 0x57, 0x9e, 0x83,
+	0x17, 0xa1, 0xc7, 0x1e, 0x39, 0x05, 0x94, 0xbc, 0x41, 0xc5, 0x03, 0x20, 0xff, 0x86, 0x80, 0x1d,
+	0x12, 0x01, 0x27, 0xef, 0xcc, 0x7c, 0xfb, 0xcd, 0x37, 0x9a, 0x19, 0x2f, 0xdc, 0xa4, 0xac, 0x47,
+	0x99, 0xc5, 0x10, 0x1b, 0xf4, 0x89, 0x7b, 0x62, 0x0f, 0x2c, 0x8c, 0xbc, 0x91, 0xda, 0x77, 0xa9,
+	0x47, 0x79, 0x3e, 0x0a, 0xaa, 0xb3, 0xa0, 0xb8, 0x61, 0x52, 0x93, 0x06, 0x61, 0xe4, 0x9f, 0x42,
+	0xa4, 0x28, 0x99, 0x94, 0x9a, 0x36, 0x41, 0x81, 0x65, 0x0c, 0x4e, 0x10, 0x1e, 0xb8, 0xba, 0x67,
+	0x51, 0x27, 0x8e, 0x77, 0x02, 0x2a, 0x64, 0xe8, 0x8c, 0xa0, 0x61, 0xdd, 0x20, 0x9e, 0x5e, 0x47,
+	0x1d, 0x6a, 0xc5, 0xf1, 0xbb, 0x29, 0x32, 0x66, 0xc7, 0x10, 0xa4, 0x0c, 0x61, 0xb3, 0xcd, 0xcc,
+	0xd7, 0x89, 0xbb, 0x49, 0x6c, 0x62, 0xea, 0x1e, 0xe1, 0xef, 0x41, 0x89, 0x11, 0x07, 0x13, 0x57,
+	0xe0, 0xaa, 0x5c, 0xed, 0x5a, 0xe3, 0xc6, 0xe5, 0x58, 0x5e, 0x3b, 0xd3, 0x7b, 0xf6, 0x53, 0x25,
+	0xf4, 0x2b, 0x5a, 0x04, 0xe0, 0xb7, 0xa0, 0x6c, 0xd3, 0x4e, 0xf7, 0xd8, 0xc2, 0x42, 0xbe, 0xca,
+	0xd5, 0x8a, 0x5a, 0xc9, 0x37, 0x5b, 0x98, 0xaf, 0xc0, 0xd5, 0xa1, 0x6e, 0x1f, 0xeb, 0x18, 0xbb,
+	0x42, 0xc1, 0x67, 0xd1, 0xca, 0x43, 0xdd, 0x3e, 0xc4, 0xd8, 0x55, 0x64, 0xb8, 0x9d, 0x9a, 0x57,
+	0x23, 0xac, 0x4f, 0x1d, 0x46, 0x94, 0x77, 0xb0, 0x35, 0x07, 0x38, 0x72, 0xf0, 0x3f, 0x94, 0xa6,
+	0xdc, 0x01, 0x39, 0x83, 0x7e, 0x81, 0x02, 0x83, 0x3a, 0xf8, 0x05, 0xed, 0x74, 0xff, 0x93, 0x82,
+	0x98, 0x3e, 0x51, 0xf0, 0x99, 0x83, 0x5b, 0x6d, 0x66, 0xfa, 0xbe, 0x43, 0x07, 0xff, 0x5d, 0x93,
+	0x74, 0xb8, 0xe2, 0xcf, 0x06, 0x13, 0xf2, 0xd5, 0x42, 0xed, 0xfa, 0x7e, 0x45, 0x0d, 0xa7, 0x47,
+	0xf5, 0xa7, 0x47, 0x8d, 0xa6, 0x47, 0x7d, 0x46, 0x2d, 0xa7, 0xb1, 0x77, 0x3e, 0x96, 0x73, 0x9f,
+	0xbe, 0xca, 0x35, 0xd3, 0xf2, 0x4e, 0x07, 0x86, 0xda, 0xa1, 0x3d, 0x14, 0x8d, 0x5a, 0xf8, 0xd9,
+	0x65, 0xb8, 0x8b, 0xbc, 0xb3, 0x3e, 0x61, 0xc1, 0x05, 0xa6, 0x85, 0xcc, 0x8b, 0xda, 0xfd, 0x08,
+	0xb6, 0x17, 0x15, 0x12, 0x57, 0xcc, 0xaf, 0x43, 0xbe, 0xd5, 0x0c, 0x8a, 0x29, 0x6a, 0xf9, 0x56,
+	0x53, 0x71, 0x41, 0x68, 0x33, 0xf3, 0xc8, 0x79, 0x45, 0xa9, 0xfd, 0xe6, 0xd4, 0xf2, 0x88, 0x6d,
+	0x31, 0x8f, 0x60, 0xdf, 0x5c, 0xa5, 0xf8, 0x1d, 0x28, 0xf7, 0x29, 0xb5, 0x93, 0x26, 0x34, 0xf8,
+	0xcb, 0xb1, 0xbc, 0x1e, 0x62, 0xa3, 0x80, 0xa2, 0x95, 0xfc, 0x53, 0x0b, 0x2b, 0xcf, 0xa1, 0x9a,
+	0x95, 0x33, 0xd1, 0xb9, 0x0d, 0x6b, 0x64, 0x64, 0x79, 0x24, 0xe8, 0x57, 0x0b, 0x33, 0x81, 0xab,
+	0x16, 0x6a, 0x45, 0x6d, 0xde, 0xb9, 0xff, 0xbd, 0x08, 0x85, 0x36, 0x33, 0x79, 0x17, 0xf8, 0xb4,
+	0xe6, 0xa9, 0xbf, 0xff, 0x0a, 0xd4, 0xd4, 0xa5, 0x10, 0xeb, 0x4b, 0x43, 0x13, 0x85, 0x23, 0xd8,
+	0x48, 0x5d, 0x9e, 0x9d, 0x3f, 0x52, 0xcd, 0xc0, 0xe2, 0xc1, 0x0a, 0xe0, 0xac, 0xcc, 0xc9, 0xd2,
+	0x2c, 0x93, 0x39, 0x06, 0x2f, 0x95, 0xf9, 0xd7, 0x7d, 0xe1, 0x3f, 0x70, 0x50, 0xc9, 0x5e, 0x96,
+	0xbd, 0x0c, 0xca, 0xcc, 0x1b, 0xe2, 0x93, 0x55, 0x6f, 0x24, 0x4a, 0xde, 0xc3, 0x66, 0xfa, 0xd0,
+	0xde, 0xcf, 0xa0, 0x4c, 0x45, 0x8b, 0x0f, 0x56, 0x41, 0xc7, 0xc9, 0x1b, 0x2f, 0xcf, 0x27, 0x12,
+	0x77, 0x31, 0x91, 0xb8, 0x6f, 0x13, 0x89, 0xfb, 0x38, 0x95, 0x72, 0x17, 0x53, 0x29, 0xf7, 0x65,
+	0x2a, 0xe5, 0xde, 0x3e, 0xfc, 0x69, 0xa5, 0x23, 0xe6, 0x5d, 0x5b, 0x37, 0x58, 0x6c, 0xa0, 0xe1,
+	0x63, 0x34, 0x9a, 0x7b, 0xb6, 0xfc, 0x2d, 0x37, 0x4a, 0xc1, 0x5b, 0x71, 0xf0, 0x23, 0x00, 0x00,
+	0xff, 0xff, 0x08, 0xfb, 0x92, 0x0e, 0xd9, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -480,6 +592,7 @@ type MsgClient interface {
 	SuperfluidUnbondLock(ctx context.Context, in *MsgSuperfluidUnbondLock, opts ...grpc.CallOption) (*MsgSuperfluidUnbondLockResponse, error)
 	// Execute lockup lock and superfluid delegation in a single msg
 	LockAndSuperfluidDelegate(ctx context.Context, in *MsgLockAndSuperfluidDelegate, opts ...grpc.CallOption) (*MsgLockAndSuperfluidDelegateResponse, error)
+	UnPoolWhitelistedPool(ctx context.Context, in *MsgUnPoolWhitelistedPool, opts ...grpc.CallOption) (*MsgUnPoolWhitelistedPoolResponse, error)
 }
 
 type msgClient struct {
@@ -526,6 +639,15 @@ func (c *msgClient) LockAndSuperfluidDelegate(ctx context.Context, in *MsgLockAn
 	return out, nil
 }
 
+func (c *msgClient) UnPoolWhitelistedPool(ctx context.Context, in *MsgUnPoolWhitelistedPool, opts ...grpc.CallOption) (*MsgUnPoolWhitelistedPoolResponse, error) {
+	out := new(MsgUnPoolWhitelistedPoolResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.superfluid.Msg/UnPoolWhitelistedPool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// Execute superfluid delegation for a lockup
@@ -537,6 +659,7 @@ type MsgServer interface {
 	SuperfluidUnbondLock(context.Context, *MsgSuperfluidUnbondLock) (*MsgSuperfluidUnbondLockResponse, error)
 	// Execute lockup lock and superfluid delegation in a single msg
 	LockAndSuperfluidDelegate(context.Context, *MsgLockAndSuperfluidDelegate) (*MsgLockAndSuperfluidDelegateResponse, error)
+	UnPoolWhitelistedPool(context.Context, *MsgUnPoolWhitelistedPool) (*MsgUnPoolWhitelistedPoolResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -554,6 +677,9 @@ func (*UnimplementedMsgServer) SuperfluidUnbondLock(ctx context.Context, req *Ms
 }
 func (*UnimplementedMsgServer) LockAndSuperfluidDelegate(ctx context.Context, req *MsgLockAndSuperfluidDelegate) (*MsgLockAndSuperfluidDelegateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LockAndSuperfluidDelegate not implemented")
+}
+func (*UnimplementedMsgServer) UnPoolWhitelistedPool(ctx context.Context, req *MsgUnPoolWhitelistedPool) (*MsgUnPoolWhitelistedPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnPoolWhitelistedPool not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -632,6 +758,24 @@ func _Msg_LockAndSuperfluidDelegate_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UnPoolWhitelistedPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnPoolWhitelistedPool)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnPoolWhitelistedPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.superfluid.Msg/UnPoolWhitelistedPool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnPoolWhitelistedPool(ctx, req.(*MsgUnPoolWhitelistedPool))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.superfluid.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -651,6 +795,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LockAndSuperfluidDelegate",
 			Handler:    _Msg_LockAndSuperfluidDelegate_Handler,
+		},
+		{
+			MethodName: "UnPoolWhitelistedPool",
+			Handler:    _Msg_UnPoolWhitelistedPool_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -917,6 +1065,82 @@ func (m *MsgLockAndSuperfluidDelegateResponse) MarshalToSizedBuffer(dAtA []byte)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgUnPoolWhitelistedPool) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUnPoolWhitelistedPool) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUnPoolWhitelistedPool) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUnPoolWhitelistedPoolResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUnPoolWhitelistedPoolResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUnPoolWhitelistedPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ExitedLockIds) > 0 {
+		dAtA2 := make([]byte, len(m.ExitedLockIds)*10)
+		var j1 int
+		for _, num := range m.ExitedLockIds {
+			for num >= 1<<7 {
+				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j1++
+			}
+			dAtA2[j1] = uint8(num)
+			j1++
+		}
+		i -= j1
+		copy(dAtA[i:], dAtA2[:j1])
+		i = encodeVarintTx(dAtA, i, uint64(j1))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1038,6 +1262,38 @@ func (m *MsgLockAndSuperfluidDelegateResponse) Size() (n int) {
 	_ = l
 	if m.ID != 0 {
 		n += 1 + sovTx(uint64(m.ID))
+	}
+	return n
+}
+
+func (m *MsgUnPoolWhitelistedPool) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.PoolId != 0 {
+		n += 1 + sovTx(uint64(m.PoolId))
+	}
+	return n
+}
+
+func (m *MsgUnPoolWhitelistedPoolResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ExitedLockIds) > 0 {
+		l = 0
+		for _, e := range m.ExitedLockIds {
+			l += sovTx(uint64(e))
+		}
+		n += 1 + sovTx(uint64(l)) + l
 	}
 	return n
 }
@@ -1728,6 +1984,233 @@ func (m *MsgLockAndSuperfluidDelegateResponse) Unmarshal(dAtA []byte) error {
 				if b < 0x80 {
 					break
 				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUnPoolWhitelistedPool) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUnPoolWhitelistedPool: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUnPoolWhitelistedPool: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUnPoolWhitelistedPoolResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUnPoolWhitelistedPoolResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUnPoolWhitelistedPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.ExitedLockIds = append(m.ExitedLockIds, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTx
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTx
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.ExitedLockIds) == 0 {
+					m.ExitedLockIds = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTx
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.ExitedLockIds = append(m.ExitedLockIds, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExitedLockIds", wireType)
 			}
 		default:
 			iNdEx = preIndex

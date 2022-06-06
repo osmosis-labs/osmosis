@@ -8,6 +8,14 @@ import (
 	types "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
+	return PoolParams{
+		SwapFee:                  swapFee,
+		ExitFee:                  exitFee,
+		SmoothWeightChangeParams: params,
+	}
+}
+
 func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 	if params.ExitFee.IsNegative() {
 		return types.ErrNegativeExitFee

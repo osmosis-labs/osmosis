@@ -11,6 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v7/osmomath"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -645,48 +646,6 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoo
 	).TruncateInt(), nil
 }
 
-func (p *Pool) maximalExactRatioJoin(tokensIn sdk.Coins) (numShares sdk.Int, remCoins sdk.Coins, err error) {
-	coinShareRatios := make([]sdk.Dec, len(tokensIn), len(tokensIn))
-	minShareRatio := sdk.MaxSortableDec
-	maxShareRatio := sdk.ZeroDec()
-
-	poolLiquidity := p.GetTotalPoolLiquidity(sdk.Context{})
-
-	for i, coin := range tokensIn {
-		shareRatio := coin.Amount.ToDec().QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
-		if shareRatio.LT(minShareRatio) {
-			minShareRatio = shareRatio
-		}
-		if shareRatio.GT(maxShareRatio) {
-			maxShareRatio = shareRatio
-		}
-		coinShareRatios[i] = shareRatio
-	}
-
-	remCoins = sdk.Coins{}
-	if minShareRatio.Equal(sdk.MaxSortableDec) {
-		return numShares, remCoins, errors.New("unexpected error in balancer maximalExactRatioJoin")
-	}
-	numShares = minShareRatio.MulInt(p.TotalShares.Amount).TruncateInt()
-
-	// if we have multiple shares, calculate remCoins
-	if !minShareRatio.Equal(maxShareRatio) {
-		// we have to calculate remCoins
-		for i, coin := range tokensIn {
-			if !coinShareRatios[i].Equal(minShareRatio) {
-				usedAmount := minShareRatio.MulInt(coin.Amount).Ceil().TruncateInt()
-				newAmt := coin.Amount.Sub(usedAmount)
-				// add to RemCoins
-				if !newAmt.IsZero() {
-					remCoins = remCoins.Add(sdk.Coin{Denom: coin.Denom, Amount: newAmt})
-				}
-			}
-		}
-	}
-
-	return numShares, remCoins, nil
-}
-
 func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
 	numShares, newLiquidity, err := p.CalcJoinPoolShares(_ctx, tokensIn, swapFee)
 	if err != nil {
@@ -696,27 +655,34 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 	return numShares, nil
 }
 
-func (p *Pool) CalcJoinPoolShares(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
 	poolAssets := p.GetAllPoolAssets()
 	poolAssetsByDenom := make(map[string]PoolAsset)
 	for _, poolAsset := range poolAssets {
 		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
 	}
+
 	totalShares := p.GetTotalShares()
 
 	if tokensIn.Len() == 1 {
 		numShares, err = p.calcSingleAssetJoin(tokensIn[0], swapFee, poolAssetsByDenom[tokensIn[0].Denom], totalShares)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
 		newLiquidity = tokensIn
-		return numShares, newLiquidity, err
+
+		return numShares, newLiquidity, nil
 	} else if tokensIn.Len() != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
-			"balancer pool only supports LP'ing with one asset, or all assets in pool")
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
 	}
-	// Add all exact coins we can (no swap)
-	numShares, remCoins, err := p.maximalExactRatioJoin(tokensIn)
+
+	// Add all exact coins we can (no swap). ctx arg doesn't matter for Balancer.
+	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
+
 	// update liquidity for accurate calcSingleAssetJoin calculation
 	newLiquidity = tokensIn.Sub(remCoins)
 	for _, coin := range newLiquidity {
@@ -724,19 +690,23 @@ func (p *Pool) CalcJoinPoolShares(_ctx sdk.Context, tokensIn sdk.Coins, swapFee 
 		poolAsset.Token.Amount = poolAssetsByDenom[coin.Denom].Token.Amount.Add(coin.Amount)
 		poolAssetsByDenom[coin.Denom] = poolAsset
 	}
+
 	totalShares = totalShares.Add(numShares)
 
-	// if there are coins that couldn't be perfectly joined, do single asset joins for each of them.
+	// If there are coins that couldn't be perfectly joined, do single asset joins
+	// for each of them.
 	if !remCoins.Empty() {
 		for _, coin := range remCoins {
 			newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], totalShares)
 			if err != nil {
 				return sdk.ZeroInt(), sdk.NewCoins(), err
 			}
+
 			newLiquidity = newLiquidity.Add(coin)
 			numShares = numShares.Add(newShares)
 		}
 	}
+
 	return numShares, newLiquidity, nil
 }
 
@@ -768,31 +738,7 @@ func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares s
 }
 
 func (p *Pool) CalcExitPoolShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	totalShares := p.GetTotalShares()
-	if exitingShares.GTE(totalShares) {
-		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares.Int64(), totalShares.Uint64())
-	}
-
-	refundedShares := exitingShares
-	if !exitFee.IsZero() {
-		// exitingShares * (1 - exit fee)
-		// Todo: make a -1 constant
-		oneSubExitFee := sdk.OneDec().Sub(exitFee)
-		refundedShares = oneSubExitFee.MulInt(exitingShares).TruncateInt()
-	}
-
-	shareOutRatio := refundedShares.ToDec().QuoInt(totalShares)
-	// Make it shareOutRatio * pool LP balances
-	exitedCoins = sdk.Coins{}
-	balances := p.GetTotalPoolLiquidity(ctx)
-	for _, asset := range balances {
-		exitAmt := shareOutRatio.MulInt(asset.Amount).TruncateInt()
-		if exitAmt.LTE(sdk.ZeroInt()) {
-			continue
-		}
-		exitedCoins = exitedCoins.Add(sdk.NewCoin(asset.Denom, exitAmt))
-	}
-	return exitedCoins, nil
+	return cfmm_common.CalcExitPool(ctx, p, exitingShares, exitFee)
 }
 
 func (p *Pool) CalcTokenInShareAmountOut(

@@ -14,12 +14,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-func createTestPool(t *testing.T, poolAssets []PoolAsset, swapFee, exitFee sdk.Dec) types.PoolI {
-	pool, err := NewBalancerPool(1, PoolParams{
-		SwapFee: swapFee,
-		ExitFee: exitFee,
-	}, poolAssets, "", time.Now())
-
+func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...PoolAsset) types.PoolI {
+	pool, err := NewBalancerPool(
+		1,
+		NewPoolParams(swapFee, exitFee, nil),
+		poolAssets,
+		"",
+		time.Now(),
+	)
 	require.NoError(t, err)
 
 	return &pool

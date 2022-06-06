@@ -5,7 +5,7 @@ import (
 )
 
 // OsmosisQuery contains osmosis custom queries.
-// See https://github.com/confio/osmosis-bindings/blob/main/packages/bindings/src/query.rs
+// See https://github.com/osmosis-labs/osmosis-bindings/blob/main/packages/bindings/src/query.rs
 type OsmosisQuery struct {
 	/// Given a subdenom minted by a contract via `OsmosisMsg::MintTokens`,
 	/// returns the full denom as used by `BankMsg::Send`.
@@ -19,11 +19,21 @@ type OsmosisQuery struct {
 	SpotPrice *SpotPrice `json:"spot_price,omitempty"`
 	/// Return current spot price swapping In for Out on given pool ID.
 	EstimateSwap *EstimateSwap `json:"estimate_swap,omitempty"`
+	/// Returns the admin of a denom, if the denom is a Token Factory denom.
+	DenomAdmin *DenomAdmin `json:"denom_admin,omitempty"`
 }
 
 type FullDenom struct {
-	Contract string `json:"contract"`
-	SubDenom string `json:"sub_denom"`
+	CreatorAddr string `json:"creator_addr"`
+	Subdenom    string `json:"subdenom"`
+}
+
+type DenomAdmin struct {
+	Subdenom string `json:"subdenom"`
+}
+
+type DenomAdminResponse struct {
+	Admin string `json:"admin"`
 }
 
 type PoolState struct {

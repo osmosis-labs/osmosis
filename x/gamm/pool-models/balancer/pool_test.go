@@ -1,4 +1,4 @@
-package balancer
+package balancer_test
 
 import (
 	"fmt"
@@ -9,28 +9,29 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	types "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 var (
 	defaultSwapFee            = sdk.MustNewDecFromStr("0.025")
 	defaultExitFee            = sdk.MustNewDecFromStr("0.025")
 	defaultPoolId             = uint64(10)
-	defaultBalancerPoolParams = PoolParams{
+	defaultBalancerPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
 	defaultFutureGovernor = ""
 	defaultCurBlockTime   = time.Unix(1618700000, 0)
 
-	dummyPoolAssets = []PoolAsset{}
+	dummyPoolAssets = []balancer.PoolAsset{}
 	wantErr         = true
 	noErr           = false
 )
 
 // Expected is un-scaled
-func testTotalWeight(t *testing.T, expected sdk.Int, pool Pool) {
-	scaledExpected := expected.MulRaw(GuaranteedWeightPrecision)
+func testTotalWeight(t *testing.T, expected sdk.Int, pool balancer.Pool) {
+	scaledExpected := expected.MulRaw(balancer.GuaranteedWeightPrecision)
 	require.Equal(t,
 		scaledExpected.String(),
 		pool.GetTotalWeight().String())
@@ -62,15 +63,12 @@ func TestBalancerPoolParams(t *testing.T) {
 	}
 
 	for i, params := range tests {
-		PoolParams := PoolParams{
-			SwapFee: params.SwapFee,
-			ExitFee: params.ExitFee,
-		}
+		PoolParams := balancer.NewPoolParams(params.SwapFee, params.ExitFee, nil)
 		err := PoolParams.Validate(dummyPoolAssets)
 		if params.shouldErr {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
 			// Check that these are also caught if passed to the underlying pool creation func
-			_, err = NewBalancerPool(1, PoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
+			_, err = balancer.NewBalancerPool(1, PoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 			require.Error(t, err)
 		} else {
 			require.NoError(t, err, "unexpected error, tc %v", i)
@@ -82,7 +80,7 @@ func TestBalancerPoolParams(t *testing.T) {
 func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 	var poolId uint64 = 10
 
-	initialAssets := []PoolAsset{
+	initialAssets := []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),
 			Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -93,7 +91,7 @@ func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 		},
 	}
 
-	pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, initialAssets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := balancer.NewBalancerPool(poolId, defaultBalancerPoolParams, initialAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	_, err = pacc.GetPoolAsset("unknown")
@@ -107,14 +105,14 @@ func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 	// TODO: This test actually just needs to be refactored to not be doing this, and just
 	// create a different pool each time.
 
-	err = pacc.setInitialPoolAssets([]PoolAsset{{
+	err = pacc.setInitialPoolAssets([]balancer.PoolAsset{{
 		Weight: sdk.NewInt(-1),
 		Token:  sdk.NewCoin("negativeWeight", sdk.NewInt(50000)),
 	}})
 
 	require.Error(t, err)
 
-	err = pacc.setInitialPoolAssets([]PoolAsset{{
+	err = pacc.setInitialPoolAssets([]balancer.PoolAsset{{
 		Weight: sdk.NewInt(0),
 		Token:  sdk.NewCoin("zeroWeight", sdk.NewInt(50000)),
 	}})
@@ -144,12 +142,12 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	// TODO: Add more cases
 	// asset names should be i ascending order, starting from test1
 	tests := []struct {
-		assets    []PoolAsset
+		assets    []balancer.PoolAsset
 		shouldErr bool
 	}{
 		// weight 0
 		{
-			[]PoolAsset{
+			[]balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(0),
 					Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -159,7 +157,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// negative weight
 		{
-			[]PoolAsset{
+			[]balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(-1),
 					Token:  sdk.NewCoin("test1", sdk.NewInt(50000)),
@@ -169,7 +167,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// 0 token amount
 		{
-			[]PoolAsset{
+			[]balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token:  sdk.NewCoin("test1", sdk.NewInt(0)),
@@ -179,7 +177,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// negative token amount
 		{
-			[]PoolAsset{
+			[]balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
 					Token: sdk.Coin{
@@ -192,7 +190,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// total weight 300
 		{
-			[]PoolAsset{
+			[]balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(200),
 					Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -206,7 +204,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// two of the same token
 		{
-			[]PoolAsset{
+			[]balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(200),
 					Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -224,7 +222,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 		},
 		// total weight 7300
 		{
-			[]PoolAsset{
+			[]balancer.PoolAsset{
 				{
 					Weight: sdk.NewInt(200),
 					Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -245,7 +243,7 @@ func TestBalancerPoolAssetsWeightAndTokenBalance(t *testing.T) {
 	var poolId uint64 = 10
 
 	for i, tc := range tests {
-		pacc, err := NewBalancerPool(poolId, defaultBalancerPoolParams, tc.assets, defaultFutureGovernor, defaultCurBlockTime)
+		pacc, err := balancer.NewBalancerPool(poolId, defaultBalancerPoolParams, tc.assets, defaultFutureGovernor, defaultCurBlockTime)
 		if tc.shouldErr {
 			require.Error(t, err, "unexpected lack of error, tc %v", i)
 		} else {
@@ -272,7 +270,7 @@ func TestGetBalancerPoolAssets(t *testing.T) {
 	// and fails for things not in it.
 	denomNotInPool := "xyzCoin"
 
-	assets := []PoolAsset{
+	assets := []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(200),
 			Token:  sdk.NewCoin("test2", sdk.NewInt(50000)),
@@ -292,7 +290,7 @@ func TestGetBalancerPoolAssets(t *testing.T) {
 	}
 
 	// TODO: We need way more robust test cases here, and should table drive these cases
-	pacc, err := NewBalancerPool(defaultPoolId, defaultBalancerPoolParams, assets, defaultFutureGovernor, defaultCurBlockTime)
+	pacc, err := balancer.NewBalancerPool(defaultPoolId, defaultBalancerPoolParams, assets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
 	// Hardcoded GetPoolAssets tests.
@@ -319,7 +317,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 	// sets its start time to be the first start time it is called on
 	defaultDuration := 100 * time.Second
 
-	initialPoolAssets := []PoolAsset{
+	initialPoolAssets := []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(1),
 			Token:  sdk.NewCoin("asset1", sdk.NewInt(1000)),
@@ -330,9 +328,9 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 		},
 	}
 
-	params := SmoothWeightChangeParams{
+	params := balancer.SmoothWeightChangeParams{
 		Duration: defaultDuration,
-		TargetPoolWeights: []PoolAsset{
+		TargetPoolWeights: []balancer.PoolAsset{
 			{
 				Weight: sdk.NewInt(1),
 				Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
@@ -344,7 +342,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 		},
 	}
 
-	pacc, err := NewBalancerPool(defaultPoolId, PoolParams{
+	pacc, err := balancer.NewBalancerPool(defaultPoolId, balancer.PoolParams{
 		SmoothWeightChangeParams: &params,
 		SwapFee:                  defaultSwapFee,
 		ExitFee:                  defaultExitFee,
@@ -362,7 +360,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 	defaultStartTime := time.Unix(1618703511, 0)
 	defaultStartTimeUnix := defaultStartTime.Unix()
 	defaultDuration := 100 * time.Second
-	floatGuaranteedPrecision := float64(GuaranteedWeightPrecision)
+	floatGuaranteedPrecision := float64(balancer.GuaranteedWeightPrecision)
 
 	// testCases don't need to be ordered by time. but the blockTime should be
 	// less than the end time of the SmoothWeightChange. Testing past the end time
@@ -378,16 +376,16 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 	// test the behavior at times in-between.
 	tests := []struct {
 		// We take the initial weights from here
-		params SmoothWeightChangeParams
+		params balancer.SmoothWeightChangeParams
 		cases  []testCase
 	}{
 		{
 			// 1:1 pool, between asset1 and asset2
 			// transitioning to a 1:2 pool
-			params: SmoothWeightChangeParams{
+			params: balancer.SmoothWeightChangeParams{
 				StartTime: defaultStartTime,
 				Duration:  defaultDuration,
-				InitialPoolWeights: []PoolAsset{
+				InitialPoolWeights: []balancer.PoolAsset{
 					{
 						Weight: sdk.NewInt(1),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
@@ -397,7 +395,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
-				TargetPoolWeights: []PoolAsset{
+				TargetPoolWeights: []balancer.PoolAsset{
 					{
 						Weight: sdk.NewInt(1),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
@@ -413,16 +411,16 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 					// Halfway through at 50 seconds elapsed
 					blockTime: time.Unix(defaultStartTimeUnix+50, 0),
 					expectedWeights: []sdk.Int{
-						sdk.NewInt(1 * GuaranteedWeightPrecision),
+						sdk.NewInt(1 * balancer.GuaranteedWeightPrecision),
 						// Halfway between 1 & 2
-						sdk.NewInt(3 * GuaranteedWeightPrecision / 2),
+						sdk.NewInt(3 * balancer.GuaranteedWeightPrecision / 2),
 					},
 				},
 				{
 					// Quarter way through at 25 seconds elapsed
 					blockTime: time.Unix(defaultStartTimeUnix+25, 0),
 					expectedWeights: []sdk.Int{
-						sdk.NewInt(1 * GuaranteedWeightPrecision),
+						sdk.NewInt(1 * balancer.GuaranteedWeightPrecision),
 						// Quarter way between 1 & 2 = 1.25
 						sdk.NewInt(int64(1.25 * floatGuaranteedPrecision)),
 					},
@@ -432,10 +430,10 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		{
 			// 2:2 pool, between asset1 and asset2
 			// transitioning to a 4:1 pool
-			params: SmoothWeightChangeParams{
+			params: balancer.SmoothWeightChangeParams{
 				StartTime: defaultStartTime,
 				Duration:  defaultDuration,
-				InitialPoolWeights: []PoolAsset{
+				InitialPoolWeights: []balancer.PoolAsset{
 					{
 						Weight: sdk.NewInt(2),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
@@ -445,7 +443,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 						Token:  sdk.NewCoin("asset2", sdk.NewInt(0)),
 					},
 				},
-				TargetPoolWeights: []PoolAsset{
+				TargetPoolWeights: []balancer.PoolAsset{
 					{
 						Weight: sdk.NewInt(4),
 						Token:  sdk.NewCoin("asset1", sdk.NewInt(0)),
@@ -462,9 +460,9 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 					blockTime: time.Unix(defaultStartTimeUnix+50, 0),
 					expectedWeights: []sdk.Int{
 						// Halfway between 2 & 4
-						sdk.NewInt(6 * GuaranteedWeightPrecision / 2),
+						sdk.NewInt(6 * balancer.GuaranteedWeightPrecision / 2),
 						// Halfway between 1 & 2
-						sdk.NewInt(3 * GuaranteedWeightPrecision / 2),
+						sdk.NewInt(3 * balancer.GuaranteedWeightPrecision / 2),
 					},
 				},
 				{
@@ -482,7 +480,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 	}
 
 	// Add test cases at a time before the start, the start, the end, and a time after the end.
-	addDefaultCases := func(params SmoothWeightChangeParams, cases []testCase) []testCase {
+	addDefaultCases := func(params balancer.SmoothWeightChangeParams, cases []testCase) []testCase {
 		// Set times one second before the start, and one second after the end
 		timeBeforeWeightChangeStart := time.Unix(params.StartTime.Unix()-1, 0)
 		timeAtWeightChangeEnd := params.StartTime.Add(params.Duration)
@@ -490,7 +488,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		initialWeights := make([]sdk.Int, len(params.InitialPoolWeights))
 		finalWeights := make([]sdk.Int, len(params.TargetPoolWeights))
 		for i, v := range params.InitialPoolWeights {
-			initialWeights[i] = v.Weight.MulRaw(GuaranteedWeightPrecision)
+			initialWeights[i] = v.Weight.MulRaw(balancer.GuaranteedWeightPrecision)
 		}
 		for i, v := range params.TargetPoolWeights {
 			// Doesn't need to be scaled, due to this being done already in param initialization,
@@ -528,16 +526,16 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 	for poolNum, tc := range tests {
 		paramsCopy := tc.params
 		// First we create the initial pool assets we will use
-		initialPoolAssets := make([]PoolAsset, len(paramsCopy.InitialPoolWeights))
+		initialPoolAssets := make([]balancer.PoolAsset, len(paramsCopy.InitialPoolWeights))
 		for i, asset := range paramsCopy.InitialPoolWeights {
-			assetCopy := PoolAsset{
+			assetCopy := balancer.PoolAsset{
 				Weight: asset.Weight,
 				Token:  sdk.NewInt64Coin(asset.Token.Denom, 10000),
 			}
 			initialPoolAssets[i] = assetCopy
 		}
 		// Initialize the pool
-		pacc, err := NewBalancerPool(uint64(poolNum), PoolParams{
+		pacc, err := balancer.NewBalancerPool(uint64(poolNum), balancer.PoolParams{
 			SwapFee:                  defaultSwapFee,
 			ExitFee:                  defaultExitFee,
 			SmoothWeightChangeParams: &tc.params,
@@ -652,12 +650,12 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
 				ctx := createTestContext(t)
 
-				poolAssetOut := PoolAsset{
+				poolAssetOut := balancer.PoolAsset{
 					Token:  sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut),
 					Weight: sdk.NewInt(tc.initialWeightOut),
 				}
 
-				poolAssetIn := PoolAsset{
+				poolAssetIn := balancer.PoolAsset{
 					Token:  sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn),
 					Weight: sdk.NewInt(tc.initialWeightIn),
 				}
@@ -668,13 +666,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 				exitFeeDec, err := sdk.NewDecFromStr("0")
 				require.NoError(t, err)
 
-				pool := createTestPool(t, []PoolAsset{
-					poolAssetOut,
-					poolAssetIn,
-				},
-					swapFeeDec,
-					exitFeeDec,
-				)
+				pool := createTestPool(t, swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 				require.NotNil(t, pool)
 
 				initialOut := sdk.NewInt64Coin(poolAssetOut.Token.Denom, tc.initialCalcOut)
@@ -786,7 +778,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 				initialTotalShares := types.InitPoolSharesSupply.ToDec()
 				initialCalcTokenOut := sdk.NewInt(tc.tokenOut)
 
-				actualSharesOut := CalcPoolSharesOutGivenSingleAssetIn(
+				actualSharesOut := balancer.CalcPoolSharesOutGivenSingleAssetIn(
 					initialPoolBalanceOut.ToDec(),
 					initialWeightOut.ToDec().Quo(initialWeightOut.Add(initialWeightIn).ToDec()),
 					initialTotalShares,
@@ -794,7 +786,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 					swapFeeDec,
 				)
 
-				inverseCalcTokenOut := CalcSingleAssetInGivenPoolSharesOut(
+				inverseCalcTokenOut := balancer.CalcSingleAssetInGivenPoolSharesOut(
 					initialPoolBalanceOut.Add(initialCalcTokenOut).ToDec(),
 					initialWeightOut.ToDec().Quo(initialWeightOut.Add(initialWeightIn).ToDec()),
 					initialTotalShares.Add(actualSharesOut),
@@ -806,5 +798,109 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 				require.True(osmoutils.DecApproxEq(t, initialCalcTokenOut.ToDec(), inverseCalcTokenOut, tol))
 			})
 		}
+	}
+}
+
+func TestCalcJoinPoolShares(t *testing.T) {
+	testCases := []struct {
+		name         string
+		swapFee      sdk.Dec
+		poolAssets   []balancer.PoolAsset
+		tokensIn     sdk.Coins
+		expectErr    bool
+		expectShares sdk.Int
+		expectLiq    sdk.Coins
+	}{
+		{
+			name:    "equal weights with zero swap fee",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(2499999968800),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
+		{
+			name:    "equal weights with 0.001 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.001"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(2498749968800),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
+		{
+			name:    "equal weights with 0.1 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.1"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(2374999971800),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
+		{
+			name:    "equal weights with 0.99 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.99"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr:    false,
+			expectShares: sdk.NewInt(1262499992100),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			pool := createTestPool(t, tc.swapFee, sdk.MustNewDecFromStr("0"), tc.poolAssets...)
+
+			shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Equal(t, sdk.ZeroInt(), shares)
+				require.Equal(t, sdk.NewCoins(), liquidity)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectShares, shares)
+				require.Equal(t, tc.expectLiq, liquidity)
+			}
+		})
 	}
 }

@@ -2,9 +2,12 @@ package app
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v2/modules/core"
-	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v3/modules/core"
+	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+
+	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
@@ -64,9 +67,11 @@ import (
 )
 
 // moduleAccountPermissions defines module account permissions
+// TODO: Having to input nil's here is unacceptable, we need a way to automatically derive this.
 var moduleAccountPermissions = map[string][]string{
 	authtypes.FeeCollectorName:               nil,
 	distrtypes.ModuleName:                    nil,
+	icatypes.ModuleName:                      nil,
 	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	minttypes.DeveloperVestingModuleAcctName: nil,
 	stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
@@ -110,10 +115,11 @@ func appModules(
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(*app.UpgradeKeeper),
-		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
+		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
@@ -154,6 +160,7 @@ func orderBeginBlockers() []string {
 		stakingtypes.ModuleName,
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
+		icatypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -187,36 +194,39 @@ func OrderEndBlockers(allModuleNames []string) []string {
 	return ord.TotalOrdering()
 }
 
-// modulesOrderInitGenesis returns module names in order for init genesis calls.
-var modulesOrderInitGenesis = []string{
-	capabilitytypes.ModuleName,
-	authtypes.ModuleName,
-	banktypes.ModuleName,
-	distrtypes.ModuleName,
-	stakingtypes.ModuleName,
-	slashingtypes.ModuleName,
-	govtypes.ModuleName,
-	minttypes.ModuleName,
-	crisistypes.ModuleName,
-	ibchost.ModuleName,
-	gammtypes.ModuleName,
-	txfeestypes.ModuleName,
-	genutiltypes.ModuleName,
-	evidencetypes.ModuleName,
-	paramstypes.ModuleName,
-	upgradetypes.ModuleName,
-	vestingtypes.ModuleName,
-	ibctransfertypes.ModuleName,
-	bech32ibctypes.ModuleName, // comes after ibctransfertypes
-	poolincentivestypes.ModuleName,
-	superfluidtypes.ModuleName,
-	tokenfactorytypes.ModuleName,
-	incentivestypes.ModuleName,
-	epochstypes.ModuleName,
-	lockuptypes.ModuleName,
-	authz.ModuleName,
-	// wasm after ibc transfer
-	wasm.ModuleName,
+// OrderInitGenesis returns module names in order for init genesis calls.
+func OrderInitGenesis(allModuleNames []string) []string {
+	return []string{
+		capabilitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		stakingtypes.ModuleName,
+		slashingtypes.ModuleName,
+		govtypes.ModuleName,
+		minttypes.ModuleName,
+		crisistypes.ModuleName,
+		ibchost.ModuleName,
+		icatypes.ModuleName,
+		gammtypes.ModuleName,
+		txfeestypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		ibctransfertypes.ModuleName,
+		bech32ibctypes.ModuleName, // comes after ibctransfertypes
+		poolincentivestypes.ModuleName,
+		superfluidtypes.ModuleName,
+		tokenfactorytypes.ModuleName,
+		incentivestypes.ModuleName,
+		epochstypes.ModuleName,
+		lockuptypes.ModuleName,
+		authz.ModuleName,
+		// wasm after ibc transfer
+		wasm.ModuleName,
+	}
 }
 
 // simulationModules returns modules for simulation manager
@@ -241,7 +251,7 @@ func simulationModules(
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
-		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),

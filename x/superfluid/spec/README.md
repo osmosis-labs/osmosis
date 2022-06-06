@@ -17,40 +17,40 @@ All of the below methods are found under the [Superfluid
 modules](https://github.com/osmosis-labs/osmosis/tree/main/x/superfluid).
 
 - The `SuperfluidDelegate` method stores your share of bonded
-    liquidity pool tokens, with `validateLock` as a verifier for lockup
-    time.
+  liquidity pool tokens, with `validateLock` as a verifier for lockup
+  time.
 - `GetSuperfluidOsmo` mints OSMO tokens each day for delegation as a
-    representative of the value of your pool share. This amount is
-    minted because the staking module at the moment requires staked
-    tokens to be in OSMO. This amount is burned each day and re-minted
-    to keep the representative amount of the value of your pool share
-    accurate. The lockup duration is guaranteed from the underlying
-    lockup module.
+  representative of the value of your pool share. This amount is
+  minted because the staking module at the moment requires staked
+  tokens to be in OSMO. This amount is burned each day and re-minted
+  to keep the representative amount of the value of your pool share
+  accurate. The lockup duration is guaranteed from the underlying
+  lockup module.
 - `GetExpectedDelegationAmount` iterates over each (denom, delegate)
-    pair and checks for how much OSMO we have delegated. The difference
-    from the current balance to what is expected is burned / minted to
-    match with the expected.
+  pair and checks for how much OSMO we have delegated. The difference
+  from the current balance to what is expected is burned / minted to
+  match with the expected.
 - A `messageServer` method executes the Superfluid delegate message.
 - `syntheticLockup` is used to index bond holders and tracking their
-    addresses for reward distribution or potentially slashing purposes.
-    These track whether if your Superfluid stake is currently bonding or
-    unbonding.
+  addresses for reward distribution or potentially slashing purposes.
+  These track whether if your Superfluid stake is currently bonding or
+  unbonding.
 - An `IntermediaryAccount` is mostly used for the actual reward
-    distribution or slashing events, and are responsible for
-    establishing the connection between each superfluid staked lock and
-    their delegation to the validator. These work by transferring the
-    superfluid OSMO to their respective delegators. Rewards are linearly
-    scaled based on how much you have locked for a given (validator,
-    denom) pair. Rewards are first moved to the incentive gauges, then
-    distributed from the gauges. In this way, we're using the existing
-    gauge reward system for paying out superfluid staking rewards and
-    tracking the amount you have superfluidly staked using the lockup
-    module.
+  distribution or slashing events, and are responsible for
+  establishing the connection between each superfluid staked lock and
+  their delegation to the validator. These work by transferring the
+  superfluid OSMO to their respective delegators. Rewards are linearly
+  scaled based on how much you have locked for a given (validator,
+  denom) pair. Rewards are first moved to the incentive gauges, then
+  distributed from the gauges. In this way, we're using the existing
+  gauge reward system for paying out superfluid staking rewards and
+  tracking the amount you have superfluidly staked using the lockup
+  module.
 - Rewards are distributed per epoch, which is currently a day.
-    `abci.go` checks whether or not the current block is at the
-    beginning of the epoch using `BeginBlock`.
+  `abci.go` checks whether or not the current block is at the
+  beginning of the epoch using `BeginBlock`.
 - Superfluid staking will continue to expand to other Osmosis pools
-    based on governance proposals and vote turnouts.
+  based on governance proposals and vote turnouts.
 
 ### Example
 
@@ -245,7 +245,7 @@ Owners of superfluid asset locks can submit `MsgSuperfluidDelegate`
 transactions to delegate the Osmo in their locks to a selected
 validator.
 
-``` {.go}
+```{.go}
 type MsgSuperfluidDelegate struct {
  Sender  string
  LockId  uint64
@@ -263,25 +263,25 @@ type MsgSuperfluidDelegate struct {
   - Check that this `LockID` is not already superfluided
   - Check that the same lock isn't being unbonded
 - Get the `IntermediaryAccount` for this lock's `Denom` and `ValAddr`
-    pair.
+  pair.
   - Create it + a new gauge for the synthetic denom, if it does not
-        yet exist.
+    yet exist.
 - Create a SyntheticLockup.
 - Calculate `Osmo` to delegate on behalf of this `lock`, as
-    `Osmo Equivalent Multiplier` \* `# LP Shares` \*
-    `Risk Adjustment Factor`
+  `Osmo Equivalent Multiplier` \* `# LP Shares` \*
+  `Risk Adjustment Factor`
   - If this amount is less than 0.000001 `Osmo` (`1 uosmo`) reject
-        the transaction, as it would be delegating `0 uosmo`
+    the transaction, as it would be delegating `0 uosmo`
 - Mint `Osmo` to match this amount and send to `IntermediaryAccount`
 - Create a delegation from `IntermediaryAccount` to `Validator`
 - Create a new perpetual `Gauge` for distributing staking payouts to
-    locks of a synethic asset based on this `Validator` / `Denom` pair.
+  locks of a synethic asset based on this `Validator` / `Denom` pair.
 - Create a connection between this `lockID` and this
-    `IntermediaryAccount`
+  `IntermediaryAccount`
 
 ### Superfluid Undelegate
 
-``` {.go}
+```{.go}
 type MsgSuperfluidUndelegate struct {
  Sender string
  LockId uint64
@@ -294,21 +294,21 @@ type MsgSuperfluidUndelegate struct {
 - Check that `Sender` is the owner of `lock`
 - Get the `IntermediaryAccount` for this `lockID`
 - Delete the `SyntheticLockup` associated to this `lockID` + `ValAddr`
-    pair
+  pair
 - Create a new `SyntheticLockup` which is unbonding
 - Calculate the amount of `Osmo` delegated on behalf of this `lock` as
-    `Osmo Equivalent Multipler` \* `# LP Shares` \*
-    `Risk Adjustment Factor`
+  `Osmo Equivalent Multipler` \* `# LP Shares` \*
+  `Risk Adjustment Factor`
   - If this amount is less than 0.000001 `Osmo`, there is no
-        delegated `Osmo` to undelegate and burn
+    delegated `Osmo` to undelegate and burn
 - Use `InstantUndelegate` to instantly remove delegation from
-    `IntermediaryAccount` to `Validator`
+  `IntermediaryAccount` to `Validator`
 - Immediately burn undelegated `Osmo`
 - Delete the connection between `lockID` and `IntermediaryAccount`
 
 ### Lock and Superfluid Delegate
 
-``` {.go}
+```{.go}
 type MsgLockAndSuperfluidDelegate struct {
  Sender string
  Coins sdk.Coins
@@ -325,17 +325,17 @@ outputted by `MsgLockTokens` as an input into the
 **State Modifications:**
 
 - Ensures that Coins has a length of only 1 (we use sdk.Coins instead
-    of sdk.Coin in order to allow more flexibility in the future)
+  of sdk.Coin in order to allow more flexibility in the future)
 - Creates a lockup with Coins of a lock duration equivalent to the
-    unstaking period from the staking module
+  unstaking period from the staking module
   - Uses the lockup module's MsgServer
 - Gets the lock id of the created lock, and uses it generate and
-    execute a MsgSuperfluidDelegate message
+  execute a MsgSuperfluidDelegate message
   - Uses the SuperfluidDelegate function on this msg server
 
 ### Superfluid Unbond Lock
 
-``` {.go}
+```{.go}
 type MsgSuperfluidUnbondLock struct {
  Sender string
  LockId uint64
@@ -361,31 +361,31 @@ Overall Epoch sequence
   - Distribute gauge rewards for all non-superfluid gauges
   - Mint new tokens
     - Issue new Osmo, and send to various modules (distribution,
-            incentives, etc.)
+      incentives, etc.)
     - 25% currently goes to `x/distribution` which funds `Staking`
-            and `Superfluid` rewards
+      and `Superfluid` rewards
     - Rewards for `Superfluid` are based on the just updated
-            delegation amounts, and queued for payout in the next epoch
+      delegation amounts, and queued for payout in the next epoch
 - BeginBlock for Distribution
   - Distribute staking rewards to all of the 'lazy accounting'
-        accumulators. (F1)
+    accumulators. (F1)
 - Epoch N ends, during BeginBlock for superfluid **After**
-    AfterEpochEnd:
+  AfterEpochEnd:
   - Claim staking rewards for every `Intermediary Account`, put them
-        into gauges.
+    into gauges.
   - Distribute Superfluid staking rewards from gauges to bonded
-        Synthetic Lock owners
+    Synthetic Lock owners
   - Update `Osmo Equivalent Multiplier` value for each LP token
     - (Currently spot price at epoch)
   - Refresh delegation amounts for all `Intermediary Accounts`
     - Calculate the expected delegation for this account as
-            `Osmo Equivalent Multipler` *`# LP Shares`*
-            `Risk adjustment`
+      `Osmo Equivalent Multipler` _`# LP Shares`_
+      `Risk adjustment`
       - If this is less than 0.000001 `Osmo` it will be rounded
-                to 0
+        to 0
     - Lookup current delegation amount for `Intermediary Account`
       - If there is no delegation, treat the current delegation
-                as 0
+        as 0
     - If expected amount \> current delegation:
       - Mint new `Osmo` and `Delegate` to `Validator`
     - If expected amount \< current delegation:
@@ -410,11 +410,10 @@ amplification factor on this workload.
 - Intermediary accounts are not created on SetSuperfluidAsset
 - They are created at-time-of-need on MsgSuperfluidDelegate
 - Concerns: What happens if you delegate to an unbonding or jailed
-    validator. Note: Isn't it same as normal delegation for unbonding
-    validator?
+  validator. Note: Isn't it same as normal delegation for unbonding
+  validator?
 
-Other Module Hooks
-------------------
+## Other Module Hooks
 
 -----;
 
@@ -443,8 +442,7 @@ logic to add delegation via intermediary account.
 Slashes the synthetic lockups and native lockups that is connected to
 the to be slashed validator.
 
-Proposal Hooks
---------------
+## Proposal Hooks
 
 -----;
 
@@ -459,8 +457,7 @@ Enable multiple superfluid assets to be used for superfluid staking.
 
 Disable multiple assets from being used for superfluid staking.
 
-Events
-------
+## Events
 
 -----;
 
@@ -538,16 +535,16 @@ The params query returns the params for the superfluid module. This
 currently contains:
 
 - `MinimumRiskFactor` which is an sdk.Dec that represents the discount
-    to apply to all superfluid staked modules when calcultating their
-    staking power. For example, if a specific denom has an OSMO
-    equivalent value of 100 OSMO, but the the `MinimumRiskFactor` param
-    is 0.05, then the denom will only get 95 OSMO worth of staking power
-    when staked.
+  to apply to all superfluid staked modules when calcultating their
+  staking power. For example, if a specific denom has an OSMO
+  equivalent value of 100 OSMO, but the the `MinimumRiskFactor` param
+  is 0.05, then the denom will only get 95 OSMO worth of staking power
+  when staked.
 
 ### AssetType
 
 ```protobuf
-message AssetTypeRequest { 
+message AssetTypeRequest {
     string denom = 1;
 };
 
@@ -661,7 +658,7 @@ intermediary account.
 
 ### AllIntermediaryAccounts
 
-``` {.protobuf}
+```{.protobuf}
 message AllIntermediaryAccountsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 };
@@ -677,7 +674,7 @@ supports pagination.
 
 ### SuperfluidDelegationAmount
 
-``` {.protobuf}
+```{.protobuf}
 message SuperfluidDelegationAmountRequest {
   string delegator_address = 1;
   string validator_address = 2;
@@ -694,7 +691,7 @@ triplet of delegator, validator, and denom.
 
 ### SuperfluidDelegationsByDelegator
 
-``` {.protobuf}
+```{.protobuf}
 message SuperfluidDelegationsByDelegatorRequest {
   string delegator_address = 1;
 }
@@ -725,7 +722,7 @@ will need to support pagination.
 
 ### SuperfluidDelegationsByValidatorDenom
 
-``` {.protobuf}
+```{.protobuf}
 message SuperfluidDelegationsByValidatorDenomRequest {
   string validator_address = 1;
   string denom = 2;
@@ -743,7 +740,7 @@ to make this usable.
 
 ### EstimateSuperfluidDelegatedAmountByValidatorDenom
 
-``` {.protobuf}
+```{.protobuf}
 message EstimateSuperfluidDelegatedAmountByValidatorDenomRequest {
   string validator_address = 1;
   string denom = 2;
@@ -766,7 +763,9 @@ the results of the previous query.
 
 The superfluid module contains the following parameters:
 
-Key Type Example -----; -----; -----; minimum\_risk\_factor decimal 0.01
+| Key                 | Type    | Example |
+| ------------------- | ------- | ------- |
+| minimum_risk_factor | decimal | 0.01    |
 
 ## Slashing
 
@@ -788,7 +787,7 @@ which will handle slashing the delegation from every intermediary
 account. However, it is up to the superfluid module to then:
 
 - Slash every constituent superfluid staking position for this
-    validator.
+  validator.
 - Slash every unbonding superfluid staking position to this validator.
 
 We do this by:
@@ -803,12 +802,12 @@ We do this by:
 ### Nuances
 
 - Slashed tokens go to the community pool, rather than being burned as
-    in staking.
+  in staking.
 - We slash every unbonding, rather than just unbondings that started
-    after the infraction height.
+  after the infraction height.
 - We can "overslash" relative to the staking module. (For a slash
-    factor of 5%, the staking module can often burn \<5% of active
-    delegation, but superfluid will always slash 5%)
+  factor of 5%, the staking module can often burn \<5% of active
+  delegation, but superfluid will always slash 5%)
 
 We slash every unbonding, purely because lockup module tracks things by
 unbonding start time, whereas staking/slashing tracks things by height
