@@ -203,7 +203,6 @@ func (s *IntegrationTestSuite) chainStatus(c *chainConfig, i int) []byte {
 	_, errBuf, err := s.ExecTx(c.meta.Id, i, cmd, "")
 	s.Require().NoError(err)
 	return errBuf.Bytes()
-
 }
 
 func (s *IntegrationTestSuite) getCurrentChainHeight(c *chainConfig, i int) int {
@@ -236,7 +235,6 @@ func (s *IntegrationTestSuite) queryBalances(c *chainConfig, i int, addr string)
 	s.Require().NoError(err)
 
 	return balancesResp.GetBalances(), nil
-
 }
 
 func (s *IntegrationTestSuite) queryPropTally(endpoint, addr string) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
@@ -272,7 +270,6 @@ func (s *IntegrationTestSuite) lockTokens(config *chainConfig, i int, tokens str
 	s.ExecTx(config.meta.Id, i, cmd, "code: 0")
 	s.T().Logf("successfully created lock %v from %s container: %s", config.latestLockNumber, s.valResources[config.meta.Id][i].Container.Name[1:], s.valResources[config.meta.Id][i].Container.ID)
 	config.latestLockNumber = config.latestLockNumber + 1
-
 }
 
 func (s *IntegrationTestSuite) superfluidDelegate(config *chainConfig, valAddress string, from string) {
@@ -281,7 +278,6 @@ func (s *IntegrationTestSuite) superfluidDelegate(config *chainConfig, valAddres
 	cmd := []string{"osmosisd", "tx", "superfluid", "delegate", lockStr, valAddress, fmt.Sprintf("--chain-id=%s", config.meta.Id), fmt.Sprintf("--from=%s", from), "-b=block", "--yes", "--keyring-backend=test"}
 	s.ExecTx(config.meta.Id, 0, cmd, "code: 0")
 	s.T().Logf("successfully superfluid delegated from %s container: %s", s.valResources[config.meta.Id][0].Container.Name[1:], s.valResources[config.meta.Id][0].Container.ID)
-
 }
 
 func (s *IntegrationTestSuite) sendTx(c *chainConfig, i int, amount string, sendAddress string, receiveAddress string) {
@@ -324,7 +320,6 @@ func (s *IntegrationTestSuite) queryIntermediaryAccount(c *chainConfig, endpoint
 	intAccountBalance, err := strconv.Atoi(intAccBalance)
 	s.Require().NoError(err)
 	return intAccountBalance, err
-
 }
 
 func (s *IntegrationTestSuite) createWallet(c *chainConfig, index int, walletName string) string {
