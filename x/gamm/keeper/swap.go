@@ -31,6 +31,15 @@ func (k Keeper) SwapExactAmountIn(
 	return k.swapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 }
 
+func (k Keeper) GetSwapFee(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
+	pool, err := k.getPoolForSwap(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	swapFee := pool.GetSwapFee(ctx)
+	return swapFee, nil
+}
+
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
 // as input to a pool, using the provided swapFee. This is intended to allow
 // different swap fees as determined by multi-hops, or when recovering from

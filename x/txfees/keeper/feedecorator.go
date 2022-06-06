@@ -27,13 +27,20 @@ type MempoolFeeDecorator struct {
 
 type Sybil struct {
 	GasPrice     sdk.Dec
-	SwapFeesPaid sdk.Dec
+	SwapFeesPaid sdk.Int
 }
 
 func NewMempoolFeeDecorator(txFeesKeeper Keeper, opts types.MempoolFeeOptions) MempoolFeeDecorator {
 	return MempoolFeeDecorator{
 		TxFeesKeeper: txFeesKeeper,
 		Opts:         opts,
+	}
+}
+
+func NewSybil(gasPrice sdk.Dec, feesPaid sdk.Int) Sybil {
+	return Sybil{
+		GasPrice:     gasPrice,
+		SwapFeesPaid: feesPaid,
 	}
 }
 
@@ -95,8 +102,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				if len(feeCoins) != 1 {
 					return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
 				}
-				err := mfd.TxFeesKeeper.IsSufficientFeeNoSwapFee(ctx, sybil.GasPrice, feeTx.GetGas(), feeCoins[0])
-				if err != nil { 
+				if err := mfd.TxFeesKeeper.IsSufficientFee(ctx, sybil.GasPrice, feeTx.GetGas(), feeCoins[0]); err != nil {
 					return ctx, err
 				}
 				// The Cosmos SDK docs say to reset the gas meter - should be?
@@ -104,37 +110,102 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				return next(ctx, tx, simulate)
 			}
 			// The message is a swap message
-			if swapMsg.(gammtypes.SwapEx)
-		}
-
-	}
-
-	// If we are in CheckTx, this function is ran locally to determine if these fees are sufficient
-	// to enter our mempool.
-	// So we ensure that the provided fees meet a minimum threshold for the validator,
-	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
-	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx)
-		if !(minBaseGasPrice.IsZero()) {
-			if len(feeCoins) != 1 {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
+			swapOut, isSwapOut := swapMsg.(gammtypes.SwapMsgAmountOut)
+			swapIn, isSwapIn := swapMsg.(gammtypes.SwapMsgAmountIn)
+			if isSwapOut {
+				// Message is swap exact amount out msg
+				// Get pool path
+				poolIds := swapOut.PoolIdOnPath()
+				swapFees := sdk.ZeroDec()
+				// Get swap fees from pools
+				for i, _ := range poolIds {
+					// Get swap fee
+					swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFee(ctx, poolIds[i])
+					if err != nil {
+						return ctx, err
+					}
+					// add to existing swap fees
+					swapFees.Add(swapFee)
+				}
+				// Get token to pay fee
+				token := swapOut.GetExactTokenOut()
+				// Convert token to baseDenom if not already in base denom
+				if token.Denom != baseDenom {
+					token, err = mfd.TxFeesKeeper.ConvertToBaseToken(ctx, token)
+					if err != nil {
+						return ctx, err
+					}
+				}
+				// Multiply token by swap fee to get sybil fees paid
+				sybil.SwapFeesPaid = token.Amount.ToDec().Mul(swapFees).Ceil().RoundInt()
+				// Check if the sybil fees are sufficient for the tx
+				if err = mfd.TxFeesKeeper.IsSufficientFeeWithSwap(ctx, sybil, feeTx.GetGas(), feeCoins[0]); err != nil {
+					return ctx, err
+				}
+				// Tx gas price can be paid for with swap fees + tx fee
+				return next(ctx, tx, simulate)
+			} else if isSwapIn {
+				// Message is swap exact amount out msg
+				poolIds := swapIn.PoolIdOnPath()
+				swapFees := sdk.ZeroDec()
+				// Get swap fees from pools
+				for i, _ := range poolIds {
+					// Get swap fee
+					swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFee(ctx, poolIds[i])
+					if err != nil {
+						return ctx, err
+					}
+					swapFees.Add(swapFee)
+				}
+				// Get token to pay fee
+				token := swapIn.GetExactTokenIn()
+				// Convert token to baseDenom if not already in base denom
+				if token.Denom != baseDenom {
+					token, err = mfd.TxFeesKeeper.ConvertToBaseToken(ctx, token)
+					if err != nil {
+						return ctx, err
+					}
+				}
+				// Multiply token by swap fee to get sybil fees paid
+				sybil.SwapFeesPaid = token.Amount.ToDec().Mul(swapFees).Ceil().RoundInt()
+				// Check if the sybil fees are sufficient for the tx
+				if err = mfd.TxFeesKeeper.IsSufficientFeeWithSwap(ctx, sybil, feeTx.GetGas(), feeCoins[0]); err != nil {
+					return ctx, err
+				}
+				// Tx gas price can be paid for with swap fees + tx fee
+				return next(ctx, tx, simulate)
+			} else {
+				return ctx, sdkerrors.Wrapf(sdkerrors.ErrTxDecode, "swap msg neither in or out")
 			}
-			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
-			if err != nil {
-				return ctx, err
-			}
 		}
 	}
-
 	return next(ctx, tx, simulate)
-}
-
-func (k Keeper) IsSufficientFeeNoSwapFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
-
 }
 
 // IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
 // to pay the gas cost of this tx.
+func (k Keeper) IsSufficientFeeWithSwap(ctx sdk.Context, sybil Sybil, gasRequested uint64, feeCoin sdk.Coin) error {
+	baseDenom, err := k.GetBaseDenom(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Determine the required fees by multiplying the required minimum gas
+	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+	glDec := sdk.NewDec(int64(gasRequested))
+	requiredBaseFee := sdk.NewCoin(baseDenom, sybil.GasPrice.Mul(glDec).Ceil().RoundInt())
+
+	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
+	if err != nil {
+		return err
+	}
+	if !(convertedFee.IsGTE(requiredBaseFee)) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
+	}
+
+	return nil
+}
+
 func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
@@ -157,13 +228,6 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	return nil
 }
 
-func NewSybil(gasPrice, feesPaid sdk.Dec) Sybil {
-	return Sybil{
-		GasPrice: gasPrice,
-		FeesPaid: feesPaid,
-	}
-}
-
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) Sybil {
 	// Get min gas price
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
@@ -174,7 +238,7 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
 	}
 
-	sybil := NewSybil(cfgMinGasPrice, sdk.ZeroDec())
+	sybil := NewSybil(cfgMinGasPrice, sdk.ZeroInt())
 	return sybil
 }
 

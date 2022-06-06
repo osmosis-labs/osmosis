@@ -14,12 +14,14 @@ type SwapMsgRoute interface {
 type SwapMsgAmountOut interface {
 	SwapMsgRoute
 
+	PoolIdOnPath() []uint64
 	GetExactTokenOut() sdk.Coin
 }
 
 type SwapMsgAmountIn interface {
 	SwapMsgRoute
 
+	PoolIdOnPath() []uint64
 	GetExactTokenIn() sdk.Coin
 }
 
@@ -45,6 +47,14 @@ func (msg MsgSwapExactAmountOut) TokenDenomsOnPath() []string {
 	return denoms
 }
 
+func (msg MsgSwapExactAmountOut) PoolIdOnPath() []uint64 {
+	ids := make([]uint64, 0, len(msg.Routes))
+	for i := 0; i < len(msg.Routes); i++ {
+		ids = append(ids, msg.Routes[i].PoolId)
+	}
+	return ids
+}
+
 func (msg MsgSwapExactAmountOut) GetExactTokenOut() sdk.Coin {
 	return msg.GetTokenOut()
 }
@@ -65,6 +75,14 @@ func (msg MsgSwapExactAmountIn) TokenDenomsOnPath() []string {
 		denoms = append(denoms, msg.Routes[i].TokenOutDenom)
 	}
 	return denoms
+}
+
+func (msg MsgSwapExactAmountIn) PoolIdOnPath() []uint64 {
+	ids := make([]uint64, 0, len(msg.Routes))
+	for i := 0; i < len(msg.Routes); i++ {
+		ids = append(ids, msg.Routes[i].PoolId)
+	}
+	return ids
 }
 
 func (msg MsgSwapExactAmountIn) GetExactTokenIn() sdk.Coin {
