@@ -1,4 +1,4 @@
-package balancer
+package balancer_test
 
 import (
 	"testing"
@@ -11,13 +11,14 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...PoolAsset) types.PoolI {
-	pool, err := NewBalancerPool(
+func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...balancer.PoolAsset) types.PoolI {
+	pool, err := balancer.NewBalancerPool(
 		1,
-		NewPoolParams(swapFee, exitFee, nil),
+		balancer.NewPoolParams(swapFee, exitFee, nil),
 		poolAssets,
 		"",
 		time.Now(),
