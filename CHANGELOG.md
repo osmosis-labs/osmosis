@@ -50,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Add hourly epochs to `x/epochs` DefaultGenesis.
 * [#1665](https://github.com/osmosis-labs/osmosis/pull/1665) Delete app/App interface, instead use simapp.App
 * [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
-
+* [#1667] (https://github.com/osmosis-labs/osmosis/pull/1673) Move wasm-bindings code out of app .
 
 ### Features
 
