@@ -68,9 +68,7 @@ func (k Keeper) getTotalSwapFee(ctx sdk.Context, poolIds []uint64, denomPath []s
 			// add to existing swap fees
 			swapFees = swapFees.Add(swapFee)
 		}
-
 	}
-
 	return swapFees, nil
 }
 
