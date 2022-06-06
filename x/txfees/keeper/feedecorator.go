@@ -118,7 +118,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				poolIds := swapOut.PoolIdOnPath()
 				swapFees := sdk.ZeroDec()
 				// Get swap fees from pools
-				for i, _ := range poolIds {
+				for i := range poolIds {
 					// Get swap fee
 					swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFee(ctx, poolIds[i])
 					if err != nil {
@@ -149,7 +149,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 				poolIds := swapIn.PoolIdOnPath()
 				swapFees := sdk.ZeroDec()
 				// Get swap fees from pools
-				for i, _ := range poolIds {
+				for i := range poolIds {
 					// Get swap fee
 					swapFee, err := mfd.TxFeesKeeper.gammKeeper.GetSwapFee(ctx, poolIds[i])
 					if err != nil {
