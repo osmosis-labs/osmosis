@@ -1,4 +1,4 @@
-## CosmWasm support
+# CosmWasm support
 
 This package contains CosmWasm integration points.
 
@@ -12,7 +12,7 @@ This package provides first class support for:
   - Minting / controlling of new native tokens
   - Swap
 
-### Command line interface (CLI)
+## Command line interface (CLI)
 
 - Commands
 
@@ -26,7 +26,7 @@ This package provides first class support for:
   osmosisd query wasm -h
 ```
 
-### Tests
+## Tests
 
 This contains a few high level tests that `x/wasm` is properly
 integrated.
