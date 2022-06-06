@@ -1,4 +1,4 @@
-package wasm
+package wasmbinding
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
