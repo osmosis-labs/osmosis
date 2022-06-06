@@ -1,10 +1,26 @@
 package types
 
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 // SwapMsg defines a simple interface for getting the token denoms on a swap message route.
 type SwapMsgRoute interface {
 	TokenInDenom() string
 	TokenOutDenom() string
 	TokenDenomsOnPath() []string
+}
+
+type SwapMsgAmountOut interface {
+	SwapMsgRoute
+
+	GetExactTokenOut() sdk.Coin
+}
+
+type SwapMsgAmountIn interface {
+	SwapMsgRoute
+
+	GetExactTokenIn() sdk.Coin
 }
 
 var (
@@ -29,6 +45,10 @@ func (msg MsgSwapExactAmountOut) TokenDenomsOnPath() []string {
 	return denoms
 }
 
+func (msg MsgSwapExactAmountOut) GetExactTokenOut() sdk.Coin {
+	return msg.GetTokenOut()
+}
+
 func (msg MsgSwapExactAmountIn) TokenInDenom() string {
 	return msg.TokenIn.Denom
 }
@@ -45,4 +65,8 @@ func (msg MsgSwapExactAmountIn) TokenDenomsOnPath() []string {
 		denoms = append(denoms, msg.Routes[i].TokenOutDenom)
 	}
 	return denoms
+}
+
+func (msg MsgSwapExactAmountIn) GetExactTokenIn() sdk.Coin {
+	return msg.GetTokenIn()
 }
