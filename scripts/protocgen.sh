@@ -29,7 +29,4 @@ rm -rf github.com
 
 go mod tidy -compat=1.18
 
-# TODO: Uncomment once ORM/Pulsar support is needed.
-#
-# Ref: https://github.com/osmosis-labs/osmosis/pull/1589
-# ./scripts/protocgen2.sh
+./scripts/protocgen2.sh
