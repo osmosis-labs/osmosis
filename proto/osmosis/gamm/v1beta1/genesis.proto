@@ -10,8 +10,8 @@ import "cosmos/base/v1beta1/coin.proto";
 message Params {
   repeated cosmos.base.v1beta1.Coin pool_creation_fee = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (gogoproto.moretags)     = "yaml:\"pool_creation_fee\"",
-    (gogoproto.nullable)     = false
+    (gogoproto.moretags) = "yaml:\"pool_creation_fee\"",
+    (gogoproto.nullable) = false
   ];
 }
 
@@ -19,7 +19,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/types";
 
 // GenesisState defines the gamm module's genesis state.
 message GenesisState {
-  repeated google.protobuf.Any pools            = 1 [(cosmos_proto.accepts_interface) = "PoolI"];
-  uint64                       next_pool_number = 2;
-  Params                       params           = 3 [(gogoproto.nullable) = false];
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
+  uint64 next_pool_number = 2;
+  Params params = 3 [ (gogoproto.nullable) = false ];
 }
