@@ -65,10 +65,8 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 		valid    bool
 	}{
 		{
-			desc: "subdenom too long",
-			malleate: func() {
-
-			},
+			desc:     "subdenom too long",
+			malleate: func() {},
 			subdenom: "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
 			valid:    false,
 		},
@@ -83,9 +81,8 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			valid:    false,
 		},
 		{
-			desc: "success case",
-			malleate: func() {
-			},
+			desc:     "success case",
+			malleate: func() {},
 			subdenom: "evmos",
 			valid:    true,
 		},
