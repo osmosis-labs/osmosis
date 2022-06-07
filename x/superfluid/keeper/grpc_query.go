@@ -11,15 +11,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-<<<<<<< HEAD
 	lockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v9/x/superfluid/types"
-=======
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
->>>>>>> 19fedeb (Query osmo equivilent is staked via superfluid (#1632))
+	appparams "github.com/osmosis-labs/osmosis/v9/app/params"
 )
 
 var _ types.QueryServer = Querier{}
