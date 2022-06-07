@@ -17,6 +17,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 
+	// import genesis state
 	_ "github.com/osmosis-labs/osmosis/v8/networks/osmosis-1"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -44,7 +45,7 @@ type printInfo struct {
 	AppMessage json.RawMessage `json:"app_message" yaml:"app_message"`
 }
 
-func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.RawMessage) printInfo {
+func newPrintInfo(moniker, chainID, nodeID, genTxsDir string) printInfo {
 	return printInfo{
 		Moniker:   moniker,
 		ChainID:   chainID,
@@ -127,11 +128,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			config.Moniker = args[0]
 
-			genFile := "genesis.json"
-			overwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
+			config.Genesis = "genesis.json"
 
 			// this can be moved to another file for when we want to play with empty chains and the like.
 			/*
+				overwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
+
 				if !overwrite && tmos.FileExists(genFile) {
 					return fmt.Errorf("genesis.json file already exists: %v", genFile)
 				}

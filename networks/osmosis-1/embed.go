@@ -1,4 +1,3 @@
-import "embed"
+package osmosis
 
 //go:embed genesis.json
-
