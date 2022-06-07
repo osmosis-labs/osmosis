@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,6 +56,10 @@ func (k Keeper) getTotalSwapFee(ctx sdk.Context, poolIds []uint64, denomPath []s
 	prefixStore := k.GetFeeTokensStore(ctx)
 	swapFees := sdk.ZeroDec()
 
+	// Join/Exit pool support
+	if len(denomPath) == 1 {
+		return k.gammKeeper.GetSwapFee(ctx, poolIds[0])
+	}
 	// Get swap fees from pools
 	for i := range poolIds {
 		// Get swap fee

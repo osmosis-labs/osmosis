@@ -72,10 +72,8 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			}
 		}
 	}
-
-	// TODO: Break this up
-	// If we are in CheckTx, this function is ran locally to determine if these fees are sufficient
-	// to enter our mempool.
+	// If we are in CheckTx, this function is ran locally to determine
+	// if these fees are sufficient to enter our mempool.
 	// So we ensure that the provided fees meet a minimum threshold for the validator,
 	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
 	// If the msg is applicable for sybil resistant fees, add the swap fees paid to the tx fee when considering
@@ -93,9 +91,9 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 		// *** Sybil swap fees cannot pay for a tx entirely w/o a tx fee attached.
 		//     	The entire tx.Fee() will be deducted in the DeductFeeDecorator
-		//     	regardless of the gas. Therefore, a tx fee with sufficient swap fees
-		// 	 	can be short on the gas cost and the swap fees can make up the
-		//		differencee so long as a fee is attached.
+		//     	regardless of the gas. A tx fee with sufficient swap fees can therefore
+		// 	 	be short on the gas cost but have the swap fees make up the differencee
+		// 		so long as the attached feeCoin + swap fees are sufficient.
 		// no fee attached, and non-zero gas price -> reject tx
 		if len(feeCoins) != 1 {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached with non-zero gas")
