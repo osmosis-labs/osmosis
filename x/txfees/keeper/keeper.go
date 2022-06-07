@@ -21,7 +21,7 @@ type Keeper struct {
 	epochKeeper               types.EpochKeeper
 	gammKeeper                types.GammKeeper
 	spotPriceCalculator       types.SpotPriceCalculator
-	IncentivesKeeper          types.IncentivesKeeper
+	incentivesKeeper          types.IncentivesKeeper
 	feeCollectorName          string
 	nonNativeFeeCollectorName string
 }
@@ -34,6 +34,7 @@ func NewKeeper(
 	storeKey sdk.StoreKey,
 	gammKeeper types.GammKeeper,
 	spotPriceCalculator types.SpotPriceCalculator,
+	incentivesKeeper types.IncentivesKeeper,
 	feeCollectorName string,
 	nonNativeFeeCollectorName string,
 ) Keeper {

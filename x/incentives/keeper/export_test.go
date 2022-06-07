@@ -18,9 +18,9 @@ func (k Keeper) GetGaugeRefs(ctx sdk.Context, key []byte) []uint64 {
 	return k.getGaugeRefs(ctx, key)
 }
 
-func (k Keeper) GetAllGaugeIDsByDenom(ctx sdk.Context, denom string) []uint64 {
-	return k.getAllGaugeIDsByDenom(ctx, denom)
-}
+// func (k Keeper) GetAllGaugeIDsByDenom(ctx sdk.Context, denom string) []uint64 {
+// 	return k.getAllGaugeIDsByDenom(ctx, denom)
+// }
 
 func (k Keeper) MoveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gauge) error {
 	return k.moveUpcomingGaugeToActiveGauge(ctx, gauge)
