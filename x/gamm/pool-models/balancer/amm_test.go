@@ -53,6 +53,20 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("1.913043480000000000"), // ans is 1.913043478260869565, rounded is 1.91304348
 		},
+		{
+			name:                "check number of sig figs",
+			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
+			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 100000),
+			expectError:         false,
+			expectedOutput:      sdk.MustNewDecFromStr("0.001000000000000000"),
+		},
+		{
+			name:                "check number of sig figs high sizes",
+			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 343569192534),
+			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.MustNewDecFromStr("186633424395479094888742").TruncateInt()),
+			expectError:         false,
+			expectedOutput:      sdk.MustNewDecFromStr("0.000000000001840877"),
+		},
 	}
 
 	for _, tc := range tests {
