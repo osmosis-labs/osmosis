@@ -22,19 +22,11 @@ var (
 	_ SybilResistantFee = MsgExitSwapExternAmountOut{}
 )
 
-func (msg MsgSwapExactAmountOut) PoolIdOnPath() []uint64 {
-	ids := make([]uint64, 0, len(msg.Routes))
-	for i := 0; i < len(msg.Routes); i++ {
-		ids = append(ids, msg.Routes[i].PoolId)
-	}
-	return ids
-}
-
 func (msg MsgSwapExactAmountOut) GetTokenToFee() sdk.Coin {
 	return msg.GetTokenOut()
 }
 
-func (msg MsgSwapExactAmountIn) PoolIdOnPath() []uint64 {
+func (msg MsgSwapExactAmountOut) PoolIdOnPath() []uint64 {
 	ids := make([]uint64, 0, len(msg.Routes))
 	for i := 0; i < len(msg.Routes); i++ {
 		ids = append(ids, msg.Routes[i].PoolId)
@@ -44,6 +36,14 @@ func (msg MsgSwapExactAmountIn) PoolIdOnPath() []uint64 {
 
 func (msg MsgSwapExactAmountIn) GetTokenToFee() sdk.Coin {
 	return msg.GetTokenIn()
+}
+
+func (msg MsgSwapExactAmountIn) PoolIdOnPath() []uint64 {
+	ids := make([]uint64, 0, len(msg.Routes))
+	for i := 0; i < len(msg.Routes); i++ {
+		ids = append(ids, msg.Routes[i].PoolId)
+	}
+	return ids
 }
 
 func (msg MsgJoinSwapExternAmountIn) PoolIdOnPath() (path []uint64) {
@@ -60,9 +60,8 @@ func (msg MsgJoinSwapExternAmountIn) TokenDenomsOnPath() (denom []string) {
 	return denom
 }
 
-// *** Assumes 50/50 pool
 func (msg MsgJoinSwapShareAmountOut) GetTokenToFee() sdk.Coin {
-	return sdk.NewCoin(msg.TokenInDenom, msg.TokenInMaxAmount.QuoRaw(2))
+	return sdk.NewCoin(msg.TokenInDenom, msg.TokenInMaxAmount)
 }
 
 func (msg MsgJoinSwapShareAmountOut) PoolIdOnPath() (path []uint64) {
@@ -75,9 +74,8 @@ func (msg MsgJoinSwapShareAmountOut) TokenDenomsOnPath() (denom []string) {
 	return denom
 }
 
-// *** Assumes 50/50 pool
 func (msg MsgExitSwapShareAmountIn) GetTokenToFee() sdk.Coin {
-	return sdk.NewCoin(msg.TokenOutDenom, msg.TokenOutMinAmount.QuoRaw(2))
+	return sdk.NewCoin(msg.TokenOutDenom, msg.TokenOutMinAmount)
 }
 
 func (msg MsgExitSwapShareAmountIn) PoolIdOnPath() (path []uint64) {
@@ -90,9 +88,8 @@ func (msg MsgExitSwapShareAmountIn) TokenDenomsOnPath() (denom []string) {
 	return denom
 }
 
-// *** Assumes 50/50 pool
 func (msg MsgExitSwapExternAmountOut) GetTokenToFee() sdk.Coin {
-	return sdk.NewCoin(msg.TokenOut.Denom, msg.TokenOut.Amount.QuoRaw(2))
+	return sdk.NewCoin(msg.TokenOut.Denom, msg.TokenOut.Amount)
 }
 
 func (msg MsgExitSwapExternAmountOut) PoolIdOnPath() (path []uint64) {

@@ -21,6 +21,7 @@ type Keeper struct {
 	epochKeeper               types.EpochKeeper
 	gammKeeper                types.GammKeeper
 	spotPriceCalculator       types.SpotPriceCalculator
+	IncentivesKeeper          types.IncentivesKeeper
 	feeCollectorName          string
 	nonNativeFeeCollectorName string
 }
