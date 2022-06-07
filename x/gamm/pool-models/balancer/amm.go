@@ -195,7 +195,8 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 	invWeightRatio := quote.Weight.ToDec().Quo(base.Weight.ToDec())
 	supplyRatio := base.Token.Amount.ToDec().Quo(quote.Token.Amount.ToDec())
 	fullRatio := supplyRatio.Mul(invWeightRatio)
-	ratio := (fullRatio.Mul(types.SigFigs).RoundInt()).ToDec().Quo(types.SigFigs)
+	// we want to round this to `SigFigs` of precision
+	ratio := osmomath.SigFigRound(fullRatio, types.SigFigs)
 	return ratio, nil
 }
 
