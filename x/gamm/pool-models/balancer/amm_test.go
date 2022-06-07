@@ -56,9 +56,9 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 		{
 			name:                "check number of sig figs",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 100000),
+			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 300),
 			expectError:         false,
-			expectedOutput:      sdk.MustNewDecFromStr("0.001000000000000000"),
+			expectedOutput:      sdk.MustNewDecFromStr("0.333333330000000000"),
 		},
 		{
 			name:                "check number of sig figs high sizes",
