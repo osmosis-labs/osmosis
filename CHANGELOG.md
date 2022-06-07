@@ -40,25 +40,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v9.0.1
 
-<<<<<<< HEAD
-=======
 ### Breaking Changes
 
 * [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
 
-#### golang API breaks
-
-* [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Remove methods that constitute AppModuleSimulation APIs for several modules' AppModules, which implemented no-ops
-* [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Add hourly epochs to `x/epochs` DefaultGenesis.
-* [#1665](https://github.com/osmosis-labs/osmosis/pull/1665) Delete app/App interface, instead use simapp.App
-* [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
-* [#1667](https://github.com/osmosis-labs/osmosis/pull/1673) Move wasm-bindings code out of app .
-
-### Features
-
->>>>>>> c211999 (Fix spotprice sigfig rounding for small spot prices (#1699))
 * [#1312] Stableswap: Createpool logic 
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM
