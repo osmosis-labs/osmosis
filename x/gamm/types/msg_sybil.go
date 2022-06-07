@@ -7,19 +7,19 @@ import (
 // Sybil Resistant Fee Swap Msg defines a simple interface for getting
 // - poolIds on a swap msg route
 // - token to apply the sybil resistant fees to
-type SybilResistantFeeSwap interface {
+type SybilResistantFee interface {
 	TokenDenomsOnPath() []string
 	PoolIdOnPath() []uint64
 	GetTokenToFee() sdk.Coin
 }
 
 var (
-	_ SybilResistantFeeSwap = MsgSwapExactAmountOut{}
-	_ SybilResistantFeeSwap = MsgSwapExactAmountIn{}
-	_ SybilResistantFeeSwap = MsgJoinSwapExternAmountIn{}
-	_ SybilResistantFeeSwap = MsgJoinSwapShareAmountOut{}
-	_ SybilResistantFeeSwap = MsgExitSwapShareAmountIn{}
-	_ SybilResistantFeeSwap = MsgExitSwapExternAmountOut{}
+	_ SybilResistantFee = MsgSwapExactAmountOut{}
+	_ SybilResistantFee = MsgSwapExactAmountIn{}
+	_ SybilResistantFee = MsgJoinSwapExternAmountIn{}
+	_ SybilResistantFee = MsgJoinSwapShareAmountOut{}
+	_ SybilResistantFee = MsgExitSwapShareAmountIn{}
+	_ SybilResistantFee = MsgExitSwapExternAmountOut{}
 )
 
 func (msg MsgSwapExactAmountOut) PoolIdOnPath() []uint64 {
