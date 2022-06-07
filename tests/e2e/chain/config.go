@@ -300,6 +300,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 				CurrentEpochStartTime:   time.Time{},
 				EpochCountingStarted:    false,
 			},
+<<<<<<< HEAD
 			{
 				Identifier:              "day",
 				StartTime:               time.Time{},
@@ -310,6 +311,14 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 				EpochCountingStarted:    false,
 			},
 		}
+=======
+		},
+	})
+	if len(bankGenState.SupplyOffsets) == 0 {
+		bankGenState.SupplyOffsets = []banktypes.GenesisSupplyOffset{}
+	}
+}
+>>>>>>> 9165ac2 (chore: upgrade sdk with snapshot manager fix (#1700))
 
 	ez, err := util.Cdc.MarshalJSON(&epochGenState)
 	if err != nil {
