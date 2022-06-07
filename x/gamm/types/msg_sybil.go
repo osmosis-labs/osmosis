@@ -62,7 +62,7 @@ func (msg MsgJoinSwapExternAmountIn) TokenDenomsOnPath() (denom []string) {
 
 // *** Assumes 50/50 pool
 func (msg MsgJoinSwapShareAmountOut) GetTokenToFee() sdk.Coin {
-	return sdk.NewCoin(msg.TokenInDenom, msg.TokenInMaxAmount.Quo(2))
+	return sdk.NewCoin(msg.TokenInDenom, msg.TokenInMaxAmount.QuoRaw(2))
 }
 
 func (msg MsgJoinSwapShareAmountOut) PoolIdOnPath() (path []uint64) {
@@ -77,7 +77,7 @@ func (msg MsgJoinSwapShareAmountOut) TokenDenomsOnPath() (denom []string) {
 
 // *** Assumes 50/50 pool
 func (msg MsgExitSwapShareAmountIn) GetTokenToFee() sdk.Coin {
-	return sdk.NewCoin(msg.TokenOutDenom, msg.TokenOutMinAmount.Quo(2))
+	return sdk.NewCoin(msg.TokenOutDenom, msg.TokenOutMinAmount.QuoRaw(2))
 }
 
 func (msg MsgExitSwapShareAmountIn) PoolIdOnPath() (path []uint64) {
@@ -92,7 +92,7 @@ func (msg MsgExitSwapShareAmountIn) TokenDenomsOnPath() (denom []string) {
 
 // *** Assumes 50/50 pool
 func (msg MsgExitSwapExternAmountOut) GetTokenToFee() sdk.Coin {
-	return sdk.NewCoin(msg.TokenOut.Denom, msg.TokenOut.Amount.Quo(2))
+	return sdk.NewCoin(msg.TokenOut.Denom, msg.TokenOut.Amount.QuoRaw(2))
 }
 
 func (msg MsgExitSwapExternAmountOut) PoolIdOnPath() (path []uint64) {
