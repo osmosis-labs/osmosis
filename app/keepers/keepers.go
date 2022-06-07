@@ -51,8 +51,8 @@ import (
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 	bech32ics20keeper "github.com/osmosis-labs/bech32-ibc/x/bech32ics20/keeper"
 
-	owasm "github.com/osmosis-labs/osmosis/v7/app/wasm"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
+	owasm "github.com/osmosis-labs/osmosis/v7/wasmbinding"
 	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
