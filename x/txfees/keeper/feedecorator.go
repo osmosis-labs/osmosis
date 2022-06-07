@@ -104,7 +104,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			return ctx, err
 		}
 	}
-	// gas price can be paid for by tx using resistant swap fees
+	// gas wanted can be paid for by tx using resistant swap fees
 	return next(ctx, tx, simulate)
 }
 
@@ -156,8 +156,8 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	sybil := NewSybil(cfgMinGasPrice, sdk.NewCoin(baseDenom, sdk.ZeroInt()))
 
 	// Check if message qualifies for sybil resistant fees
-	msg, isSybilSwap := tx.GetMsgs()[0].(gammtypes.SybilResistantFee)
-	if !isSybilSwap {
+	msg, hasSwap := tx.GetMsgs()[0].(gammtypes.SybilResistantFee)
+	if !hasSwap {
 		return sybil, nil
 	}
 
