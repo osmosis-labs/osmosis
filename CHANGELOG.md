@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM
 
+### Bug Fixes
+* [#XXXX] Upgrade sdk fork with missing snapshot manager fix.
 
 ## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
 
