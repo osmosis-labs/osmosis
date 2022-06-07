@@ -156,7 +156,7 @@ message ConnectedIntermediaryAccountResponse {
 message TotalSuperfluidDelegationsRequest {}
 
 message TotalSuperfluidDelegationsResponse {
-  string totalDelegations = 1 [
+  string total_delegations = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"total_superfluid_delegations\"",
     (gogoproto.nullable) = false
