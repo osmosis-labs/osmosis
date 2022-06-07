@@ -660,7 +660,7 @@ func (m *TotalSuperfluidDelegationsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_TotalSuperfluidDelegationsRequest proto.InternalMessageInfo
 
 type TotalSuperfluidDelegationsResponse struct {
-	TotalDelegations github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=totalDelegations,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"totalDelegations" yaml:"total_superfluid_delegations"`
+	TotalDelegations github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=total_delegations,json=totalDelegations,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"total_delegations" yaml:"total_superfluid_delegations"`
 }
 
 func (m *TotalSuperfluidDelegationsResponse) Reset()         { *m = TotalSuperfluidDelegationsResponse{} }
