@@ -40,7 +40,6 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				})
 			},
 			func() {
-
 			},
 			true,
 		},

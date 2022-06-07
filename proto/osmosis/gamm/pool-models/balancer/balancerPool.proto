@@ -1,4 +1,8 @@
 syntax = "proto3";
+// this is a legacy package that requires additional migration logic
+// in order to use the correct packge. Decision made to use legacy package path
+// until clear steps for migration logic and the unknowns for state breaking are
+// investigated for changing proto package.
 package osmosis.gamm.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
