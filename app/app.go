@@ -234,6 +234,7 @@ func NewOsmosisApp(
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
 	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
+	
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
@@ -276,6 +277,19 @@ func NewOsmosisApp(
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)
+	
+	// must be before Loading version
+	// requires the snapshot store to be created and registered as a BaseAppOption
+	// see cmd/wasmd/root.go: 206 - 214 approx
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(
+			wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), &app.wasmKeeper),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
+
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
