@@ -91,10 +91,11 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			return next(ctx, tx, simulate)
 		}
 
-		// *** Sybil swap fees cannot pay for a tx entirely w/o a tx fee.
+		// *** Sybil swap fees cannot pay for a tx entirely w/o a tx fee attached.
 		//     	The entire tx.Fee() will be deducted in the DeductFeeDecorator
-		//     	but the amount is not compared to the gas. Therefore, a tx fee
-		// 	 	can be short on the gas cost and the swap fees can make up the differencee.
+		//     	regardless of the gas. Therefore, a tx fee with sufficient swap fees
+		// 	 	can be short on the gas cost and the swap fees can make up the
+		//		differencee so long as a fee is attached.
 		// no fee attached, and non-zero gas price -> reject tx
 		if len(feeCoins) != 1 {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached with non-zero gas")
