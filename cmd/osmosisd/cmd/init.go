@@ -17,12 +17,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 
-<<<<<<< HEAD
 	_ "github.com/osmosis-labs/osmosis/v7/networks/osmosis-1"
-=======
-	// import genesis state
-	_ "github.com/osmosis-labs/osmosis/v8/networks/osmosis-1"
->>>>>>> 9eeece98 (test)
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
