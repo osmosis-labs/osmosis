@@ -17,6 +17,7 @@ var (
 	_ SybilResistantFeeSwap = MsgSwapExactAmountOut{}
 	_ SybilResistantFeeSwap = MsgSwapExactAmountIn{}
 	_ SybilResistantFeeSwap = MsgJoinSwapExternAmountIn{}
+	_ SybilResistantFeeSwap = MsgJoinSwapShareAmountOut{}
 )
 
 func (msg MsgSwapExactAmountOut) PoolIdOnPath() []uint64 {
