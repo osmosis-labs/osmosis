@@ -49,7 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1312] Stableswap: Createpool logic 
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM
+<<<<<<< HEAD
 * [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
+=======
+
+### Bug Fixes
+* [1700](https://github.com/osmosis-labs/osmosis/pull/1700) Upgrade sdk fork with missing snapshot manager fix.
+>>>>>>> 9165ac2 (chore: upgrade sdk with snapshot manager fix (#1700))
 
 ## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
 
