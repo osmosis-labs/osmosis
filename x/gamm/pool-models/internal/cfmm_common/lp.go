@@ -87,7 +87,7 @@ func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (
 				continue
 			}
 
-			usedAmount := minShareRatio.MulInt(coin.Amount).Ceil().TruncateInt()
+			usedAmount := minShareRatio.MulInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom)).Ceil().TruncateInt()
 			newAmt := coin.Amount.Sub(usedAmount)
 			// if newAmt is non-zero, add to RemCoins. (It could be zero due to rounding)
 			if !newAmt.IsZero() {
