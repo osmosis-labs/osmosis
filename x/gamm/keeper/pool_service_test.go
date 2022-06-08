@@ -291,7 +291,7 @@ func (suite *KeeperTestSuite) TestMainnetBehavior() {
 		sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000))))
 
 	PoolPreAttackMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-		SwapFee: sdk.NewDecWithPrec(1, 2),
+		SwapFee: sdk.MustNewDecFromStr("0.002"),
 		ExitFee: sdk.ZeroDec(),
 	}, []balancertypes.PoolAsset{
 		{
