@@ -293,8 +293,6 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 		poolAssetsByDenom[coin.Denom] = poolAsset
 	}
 
-	totalShares = totalShares.Add(numShares)
-
 	// If there are coins that couldn't be perfectly joined, do single asset joins
 	// for each of them.
 	if !remCoins.Empty() {
@@ -308,6 +306,8 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 			numShares = numShares.Add(newShares)
 		}
 	}
+
+	totalShares = totalShares.Add(numShares)
 
 	return numShares, newLiquidity, nil
 }
