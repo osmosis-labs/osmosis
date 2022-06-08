@@ -360,8 +360,8 @@ func TestCalcJoinPoolShares(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-			expectErr:    false,
+			tokensIn:  sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr: false,
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 			// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
 			//
@@ -391,8 +391,8 @@ func TestCalcJoinPoolShares(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-			expectErr:    false,
+			tokensIn:  sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr: false,
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
 			//
@@ -441,8 +441,8 @@ func TestCalcJoinPoolShares(t *testing.T) {
 					Weight: sdk.NewInt(300),
 				},
 			},
-			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-			expectErr:    false,
+			tokensIn:  sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectErr: false,
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
 			//
