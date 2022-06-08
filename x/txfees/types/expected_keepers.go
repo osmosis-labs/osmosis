@@ -59,8 +59,3 @@ type TxFeesKeeper interface {
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
 }
-
-// IncentivesKeeper defines the contract needed to be fulfilled for incentives keeper
-type IncentivesKeeper interface {
-	GetAllGaugeIDsByDenom(ctx sdk.Context, denom string) []uint64
-}
