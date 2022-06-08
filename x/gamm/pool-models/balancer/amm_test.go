@@ -505,30 +505,19 @@ func TestRandomizedPoolInvariants(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// two coins are equal within rounding error margin of 1
-	equalWithinErrorMargin := func(a, b sdk.Coins) bool {
-		diff, _ := a.SafeSub(b)
-		for _, coin := range diff {
-			amount := coin.Amount.Int64()
-			if amount < -1 || amount > 1 {
-				return false
-			}
-		}
-		return true
-	}
-
 	invariantJoinExitInversePreserve := func(
 		beforeCoins, afterCoins sdk.Coins,
 		beforeShares, afterShares sdk.Int,
 	) {
 		// test token amount has been preserved
 		require.True(t,
-			equalWithinErrorMargin(beforeCoins, afterCoins),
+			!beforeCoins.IsAnyGT(afterCoins),
 			"Coins has not been preserved before and after join-exit\nbefore:\t%s\nafter:\t%s",
 			beforeCoins, afterCoins,
 		)
 		// test share amount has been preserved
-		require.True(t, beforeShares.Equal(afterShares),
+		require.True(t,
+			beforeShares.Equal(afterShares),
 			"Shares has not been preserved before and after join-exit\nbefore:\t%s\nafter:\t%s",
 			beforeShares, afterShares,
 		)
