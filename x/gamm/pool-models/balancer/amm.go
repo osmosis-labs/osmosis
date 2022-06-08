@@ -223,6 +223,9 @@ func calcPoolSharesOutGivenSingleAssetIn(
 	// The number of new shares we need to make is then `old_shares * ((k'/k) - 1)`
 	// Whats very cool, is that this turns out to be the exact same `solveConstantFunctionInvariant` code
 	// with the answer's sign reversed.
+	
+	// Here, balanceXBefore is tokenBalanceIn, balanceXAfter is tokenBalanceIn.Add(tokenAmountInAfterFee)
+	// balanceY is poolShares, and since they're same weights on the unit tests, weightA/weightB == sdk.OneDec()
 	poolAmountOut := solveConstantFunctionInvariant(
 		tokenBalanceIn.Add(tokenAmountInAfterFee),
 		tokenBalanceIn,
@@ -240,10 +243,10 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoo
 	}
 	normalizedWeight := tokenInPoolAsset.Weight.ToDec().Quo(totalWeight.ToDec())
 	return calcPoolSharesOutGivenSingleAssetIn(
-		tokenInPoolAsset.Token.Amount.ToDec(),
+		tokenInPoolAsset.Token.Amount.ToDec(), //pool balance
 		normalizedWeight,
 		totalShares.ToDec(),
-		tokenIn.Amount.ToDec(),
+		tokenIn.Amount.ToDec(), //token balance individually
 		swapFee,
 	).TruncateInt(), nil
 }
