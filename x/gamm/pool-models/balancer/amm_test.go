@@ -347,7 +347,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 		expectShares sdk.Int
 		expectLiq    sdk.Coins
 	}{
-	// full calculation for this case: https://www.wolframalpha.com/input?i=1%2C000%2C000%2C000%2C000+*+%281+-+%281%2C000%2C00[…]000%2C000%2C000+%2B+50%2C000%281-%281-.5+%29*0%29%29%29%29
 		{
 			name:    "equal weights with zero swap fee",
 			swapFee: sdk.MustNewDecFromStr("0"),
@@ -366,7 +365,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			expectShares: sdk.NewInt(2499999968800),
 			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		},
-	// full calculation for this case: https://www.wolframalpha.com/input?i=1%2C000%2C000%2C000%2C000+*+%281+-+%281%2C000%2C000%2C000%2C000+%2F+%281%2C000%2C000%2C000%2C000+%2B+50%2C000%281-%281-.5+%29*.001%29%29%29%29
 		{
 			name:    "equal weights with 0.001 swap fee",
 			swapFee: sdk.MustNewDecFromStr("0.001"),
@@ -385,7 +383,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			expectShares: sdk.NewInt(2498749968800),
 			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		},
-	// full calculation for this case: https://www.wolframalpha.com/input?i=1%2C000%2C000%2C000%2C000+*+%281+-+%281%2C000%2C000%2C000%2C000+%2F+%281%2C000%2C000%2C000%2C000+%2B+50%2C000%281-%281-.5+%29*.1%29%29%29%29
 		{
 			name:    "equal weights with 0.1 swap fee",
 			swapFee: sdk.MustNewDecFromStr("0.1"),
@@ -404,7 +401,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			expectShares: sdk.NewInt(2374999971800),
 			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		},
-	// full calculation for this case: https://www.wolframalpha.com/input?i=1%2C000%2C000%2C000%2C000+*+%281+-+%281%2C000%2C000%2C000%2C000+%2F+%281%2C000%2C000%2C000%2C000+%2B+50%2C000%281-%281-.5+%29*.99%29%29%29%29
 		{
 			name:    "equal weights with 0.99 swap fee",
 			swapFee: sdk.MustNewDecFromStr("0.99"),
