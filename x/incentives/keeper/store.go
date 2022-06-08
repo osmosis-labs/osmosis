@@ -86,8 +86,8 @@ func (k Keeper) deleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64)
 	return nil
 }
 
-// GetAllGaugeIDsByDenom returns all active gauge-IDs associated with lockups of denomination `denom`.
-func (k Keeper) GetAllGaugeIDsByDenom(ctx sdk.Context, denom string) []uint64 {
+// getAllGaugeIDsByDenom returns all active gauge-IDs associated with lockups of denomination `denom`.
+func (k Keeper) getAllGaugeIDsByDenom(ctx sdk.Context, denom string) []uint64 {
 	return k.getGaugeRefs(ctx, gaugeDenomStoreKey(denom))
 }
 
