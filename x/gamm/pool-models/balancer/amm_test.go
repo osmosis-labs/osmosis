@@ -362,6 +362,60 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		},
 		{
+			name:    "swap equal weights with zero swap fee",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 25_000),
+			),
+			expectErr: false,
+			// TODO: Verify expectShares value using manual calculation using the
+			// following as reference:
+			// https://github.com/osmosis-labs/osmosis/blob/6125f81d1ad95c73e03d86c3d5e96ceef3f8c12f/x/gamm/pool-models/balancer/amm_test.go#L348-L357
+			expectShares: sdk.NewInt(2500000000000),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 25_000),
+			),
+		},
+		{
+			name:    "swap equal weights with 0.001 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.001"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 25_000),
+			),
+			expectErr: false,
+			// TODO: Verify expectShares value using manual calculation using the
+			// following as reference:
+			// https://github.com/osmosis-labs/osmosis/blob/6125f81d1ad95c73e03d86c3d5e96ceef3f8c12f/x/gamm/pool-models/balancer/amm_test.go#L348-L357
+			expectShares: sdk.NewInt(2500000000000),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 25_000),
+			),
+		},
+		{
 			name:    "equal weights with 0.001 swap fee",
 			swapFee: sdk.MustNewDecFromStr("0.001"),
 			poolAssets: []balancer.PoolAsset{
