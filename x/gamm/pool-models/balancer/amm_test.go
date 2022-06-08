@@ -455,8 +455,8 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			//	W_t = normalized weight of deposited asset in pool = 0.25 (asset A, uosmo, has weight 1/4 of uatom)
 			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee) (TODO: needs to be futher validated)
 			// Plugging all of this in, we get:
-			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
-			// 	Simplified:  P_issued = 2_487_500_000_000
+			// 	Full solution: https://www.wolframalpha.com/input?i=%28100+*+10%5E18+%29*+%28%28+1+%2B+%2850%2C000+*+%281+-+%281+-+0.25%29+*+0.01%29+%2F+1000000000000%29%29%5E0.25+-+1%29
+			// 	Simplified:  P_issued = 1_240_624_976_912
 			expectShares: sdk.NewInt(1_240_624_976_912),
 			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		},
