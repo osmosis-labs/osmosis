@@ -34,7 +34,6 @@ func NewKeeper(
 	storeKey sdk.StoreKey,
 	gammKeeper types.GammKeeper,
 	spotPriceCalculator types.SpotPriceCalculator,
-	incentivesKeeper types.IncentivesKeeper,
 	feeCollectorName string,
 	nonNativeFeeCollectorName string,
 ) Keeper {

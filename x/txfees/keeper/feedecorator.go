@@ -156,8 +156,8 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	sybil := NewSybil(cfgMinGasPrice, sdk.NewCoin(baseDenom, sdk.ZeroInt()))
 
 	// Check if message qualifies for sybil resistant fees
-	msg, hasSwap := tx.GetMsgs()[0].(gammtypes.SybilResistantFee)
-	if !hasSwap {
+	msg, canSybil := tx.GetMsgs()[0].(gammtypes.SybilResistantFee)
+	if !canSybil {
 		return sybil, nil
 	}
 

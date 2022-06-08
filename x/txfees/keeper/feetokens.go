@@ -106,7 +106,7 @@ func (k Keeper) getFeesPaid(ctx sdk.Context, poolIds []uint64, denomPath []strin
 		return sdk.Coin{}, err
 	}
 
-	// Appy swap fee to token amount = ceil(swapFees * token.Amount)
+	// Apply swap fee to token amount = ceil(swapFees * token.Amount)
 	feedAmount := swapFees.Mul(token.Amount.ToDec()).Ceil().RoundInt()
 
 	// return coin of fee amount in base denom
