@@ -296,19 +296,51 @@ func (suite *KeeperTestSuite) TestMainnetBehavior() {
 	}, []balancertypes.PoolAsset{
 		{
 			Token:  sdk.NewCoin("uosmo", sdk.NewInt(42005594684906)),
-			Weight: sdk.NewInt(1)},
+			Weight: sdk.NewInt(500000)},
 		{
 			Token:  sdk.NewCoin("uatom", sdk.NewInt(4985126127657)),
-			Weight: sdk.NewInt(1)},
+			Weight: sdk.NewInt(500000)},
 	}, defaultFutureGovernor)
 	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, PoolPreAttackMsg)
 	suite.Require().NoError(err)
 	pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 	suite.Require().NoError(err)
-	balPool := pool.(*balancertypes.Pool)
+	balPool, ok := pool.(*balancertypes.Pool)
+	suite.Require().True(ok)
 	balPool.TotalShares.Amount = sdk.MustNewDecFromStr("393436171777535084009257242").RoundInt()
 	suite.App.GAMMKeeper.SetPool(suite.Ctx, balPool)
 	// Now test if we setup the pool correctly
+	// expectedPoolAssets := []balancertypes.PoolAsset{
+	// 	{
+	// 		Token:  sdk.NewCoin("uosmo", sdk.NewInt(42005594684906)),
+	// 		Weight: sdk.NewInt(536870912000000)},
+	// 	{
+	// 		Token:  sdk.NewCoin("uatom", sdk.NewInt(4985126127657)),
+	// 		Weight: sdk.NewInt(536870912000000)},
+	// }
+	// suite.Require().Equal(expectedPoolAssets, balPool.PoolAssets)
+
+	// JoinPool attack message (https://www.mintscan.io/osmosis/txs/A6C65962C430AF0798E85DC6D64BE8EDAC4C18AF7A24F1FE7BA2876989339E58)
+	// 	Sender
+	// Pool Id
+	// 1
+	// Token In
+	//     9,359.399003atom
+	//     78,864.026889OSMO
+	// share out amount: sdk.NewIntFromString("737970842002392415063600")
+	// Token Out
+	// 1,106,411.990449234499142059gamm-1
+	shareOutAmount, _ := sdk.NewIntFromString("737970842002392415063600")
+	tokenInMaxs := sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(9605100944)), sdk.NewCoin("uosmo", sdk.NewInt(80736553903)))
+	suite.FundAcc(suite.TestAccs[1], tokenInMaxs)
+	joinPoolMsg := types.MsgJoinPool{Sender: suite.TestAccs[1].String(), PoolId: 1, ShareOutAmount: shareOutAmount, TokenInMaxs: tokenInMaxs}
+	_, err = suite.App.MsgServiceRouter().Handler(&joinPoolMsg)(suite.Ctx, &joinPoolMsg)
+	suite.Require().NoError(err)
+	tokenOut := suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[1], types.GetPoolShareDenom(1))
+	expectedTokenOutAmount, _ := sdk.NewIntFromString("1106411990449234499142059")
+	expectedTokenOut := sdk.NewCoin(types.GetPoolShareDenom(1), expectedTokenOutAmount)
+	fmt.Println(tokenOut)
+	suite.Require().Equal(expectedTokenOut, tokenOut)
 }
 
 // TODO: Add more edge cases around TokenInMaxs not containing every token in pool.
