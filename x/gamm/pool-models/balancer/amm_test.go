@@ -436,3 +436,227 @@ func TestCalcJoinPoolShares(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPoolAssetsByDenom(t *testing.T) {
+	testCases := []struct {
+		name                      string
+		poolAssets                []balancer.PoolAsset
+		expectedPoolAssetsByDenom map[string]balancer.PoolAsset
+
+		err error
+	}{
+		{
+			name:                      "zero pool assets",
+			poolAssets:                []balancer.PoolAsset{},
+			expectedPoolAssetsByDenom: make(map[string]balancer.PoolAsset),
+		},
+		{
+			name: "one pool asset",
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			expectedPoolAssetsByDenom: map[string]balancer.PoolAsset{
+				"uosmo": {
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+		},
+		{
+			name: "two pool assets",
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("atom", 123),
+					Weight: sdk.NewInt(400),
+				},
+			},
+			expectedPoolAssetsByDenom: map[string]balancer.PoolAsset{
+				"uosmo": {
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				"atom": {
+					Token:  sdk.NewInt64Coin("atom", 123),
+					Weight: sdk.NewInt(400),
+				},
+			},
+		},
+		{
+			name: "duplicate pool assets",
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 123),
+					Weight: sdk.NewInt(400),
+				},
+			},
+			err: fmt.Errorf(balancer.ErrMsgFormatRepeatingPoolAssetsNotAllowed, "uosmo"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actualPoolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
+
+			require.Equal(t, tc.err, err)
+
+			if tc.err != nil {
+				return
+			}
+
+			require.Equal(t, tc.expectedPoolAssetsByDenom, actualPoolAssetsByDenom)
+		})
+	}
+}
+
+func TestUpdateIntermediaryLiquidity(t *testing.T) {
+	testCases := []struct {
+		name string
+
+		// returns newLiquidity, originalPoolAssetsByDenom, expectedPoolAssetsByDenom
+		setup func() (sdk.Coins, map[string]balancer.PoolAsset, map[string]balancer.PoolAsset)
+
+		err error
+	}{
+		{
+			name: "regular case with multiple pool assets and a subset of newLqiduity to update",
+
+			setup: func() (sdk.Coins, map[string]balancer.PoolAsset, map[string]balancer.PoolAsset) {
+				const (
+					uosmoValueOriginal = 1_000_000_000_000
+					atomValueOriginal  = 123
+					ionValueOriginal   = 657
+
+					uosmoValueUpdate = 1_000
+					atomValueUpdate  = 2_000
+					ionValueUpdate   = 3_000
+
+					// Weight does not affect calculations so it is shared
+					weight = 100
+				)
+
+				newLiquidity := sdk.NewCoins(
+					sdk.NewInt64Coin("uosmo", uosmoValueUpdate),
+					sdk.NewInt64Coin("atom", atomValueUpdate),
+					sdk.NewInt64Coin("ion", ionValueUpdate))
+
+				originalPoolAssetsByDenom := map[string]balancer.PoolAsset{
+					"uosmo": {
+						Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
+						Weight: sdk.NewInt(weight),
+					},
+					"atom": {
+						Token:  sdk.NewInt64Coin("atom", atomValueOriginal),
+						Weight: sdk.NewInt(weight),
+					},
+					"ion": {
+						Token:  sdk.NewInt64Coin("ion", ionValueOriginal),
+						Weight: sdk.NewInt(weight),
+					},
+				}
+
+				expectedPoolAssetsByDenom := map[string]balancer.PoolAsset{
+					"uosmo": {
+						Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal+uosmoValueUpdate),
+						Weight: sdk.NewInt(weight),
+					},
+					"atom": {
+						Token:  sdk.NewInt64Coin("atom", atomValueOriginal+atomValueUpdate),
+						Weight: sdk.NewInt(weight),
+					},
+					"ion": {
+						Token:  sdk.NewInt64Coin("ion", ionValueOriginal+ionValueUpdate),
+						Weight: sdk.NewInt(weight),
+					},
+				}
+
+				return newLiquidity, originalPoolAssetsByDenom, expectedPoolAssetsByDenom
+			},
+		},
+		{
+			name: "new liquidity has no coins",
+
+			setup: func() (sdk.Coins, map[string]balancer.PoolAsset, map[string]balancer.PoolAsset) {
+				const (
+					uosmoValueOriginal = 1_000_000_000_000
+					atomValueOriginal  = 123
+					ionValueOriginal   = 657
+
+					// Weight does not affect calculations so it is shared
+					weight = 100
+				)
+
+				newLiquidity := sdk.NewCoins()
+
+				originalPoolAssetsByDenom := map[string]balancer.PoolAsset{
+					"uosmo": {
+						Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
+						Weight: sdk.NewInt(weight),
+					},
+					"atom": {
+						Token:  sdk.NewInt64Coin("atom", atomValueOriginal),
+						Weight: sdk.NewInt(weight),
+					},
+					"ion": {
+						Token:  sdk.NewInt64Coin("ion", ionValueOriginal),
+						Weight: sdk.NewInt(weight),
+					},
+				}
+
+				return newLiquidity, originalPoolAssetsByDenom, originalPoolAssetsByDenom
+			},
+		},
+		{
+			name: "newLiquidity has a coin that poolAssets don't",
+
+			setup: func() (sdk.Coins, map[string]balancer.PoolAsset, map[string]balancer.PoolAsset) {
+				const (
+					uosmoValueOriginal = 1_000_000_000_000
+
+					// Weight does not affect calculations so it is shared
+					weight = 100
+				)
+
+				newLiquidity := sdk.NewCoins(
+					sdk.NewInt64Coin("juno", 1_000))
+
+				originalPoolAssetsByDenom := map[string]balancer.PoolAsset{
+					"uosmo": {
+						Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
+						Weight: sdk.NewInt(weight),
+					},
+				}
+
+				return newLiquidity, originalPoolAssetsByDenom, originalPoolAssetsByDenom
+			},
+
+			err: fmt.Errorf(balancer.ErrMsgFormatFailedInterimLiquidityUpdate, "juno"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			newLiquidity, originalPoolAssetsByDenom, expectedPoolAssetsByDenom := tc.setup()
+
+			err := balancer.UpdateIntermediaryLiquidity(newLiquidity, originalPoolAssetsByDenom)
+
+			require.Equal(t, tc.err, err)
+
+			if tc.err != nil {
+				return
+			}
+
+			require.Equal(t, expectedPoolAssetsByDenom, originalPoolAssetsByDenom)
+		})
+	}
+}

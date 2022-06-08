@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -12,10 +13,12 @@ import (
 )
 
 const (
-	errMsgFormatSharesAmountNotPositive = "shares amount must be positive, was %d"
-	errMsgFormatTokenAmountNotPositive  = "token amount must be positive, was %d"
-	errMsgFormatTokensLargerThanMax     = "%d resulted tokens is larger than the max amount of %d"
-	errMsgFormatSharesLargerThanMax     = "%d resulted shares is larger than the max amount of %d"
+	errMsgFormatSharesAmountNotPositive       = "shares amount must be positive, was %d"
+	errMsgFormatTokenAmountNotPositive        = "token amount must be positive, was %d"
+	errMsgFormatTokensLargerThanMax           = "%d resulted tokens is larger than the max amount of %d"
+	errMsgFormatSharesLargerThanMax           = "%d resulted shares is larger than the max amount of %d"
+	errMsgFormatFailedInterimLiquidityUpdate  = "failed to update interim liquidity - pool asset %s does not exist"
+	errMsgFormatRepeatingPoolAssetsNotAllowed = "repeating pool assets not allowed, found %s"
 )
 
 // solveConstantFunctionInvariant solves the constant function of an AMM
@@ -259,10 +262,9 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 
 // CalcJoinPoolShares
 func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	poolAssets := p.GetAllPoolAssets()
-	poolAssetsByDenom := make(map[string]PoolAsset)
-	for _, poolAsset := range poolAssets {
-		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
+	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	totalShares := p.GetTotalShares()
@@ -286,32 +288,88 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
-	// update liquidity for accurate calcSingleAssetJoin calculation
-	newLiquidity = tokensIn.Sub(remCoins)
-	for _, coin := range newLiquidity {
-		poolAsset := poolAssetsByDenom[coin.Denom]
-		poolAsset.Token.Amount = poolAssetsByDenom[coin.Denom].Token.Amount.Add(coin.Amount)
-		poolAssetsByDenom[coin.Denom] = poolAsset
-	}
-
-	newTotalShares := totalShares.Add(numShares)
-
 	// If there are coins that couldn't be perfectly joined, do single asset joins
 	// for each of them.
 	if !remCoins.Empty() {
-		for _, coin := range remCoins {
-			newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], newTotalShares)
-			if err != nil {
-				return sdk.ZeroInt(), sdk.NewCoins(), err
-			}
-
-			newLiquidity = newLiquidity.Add(coin)
-			newTotalShares = newTotalShares.Add(newShares)
-			numShares = numShares.Add(newShares)
+		// update liquidity for accurate calcSingleAssetJoin calculation
+		if err := updateIntermediaryLiquidity(newLiquidity, poolAssetsByDenom); err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
+
+		// update total shares for accurate calcSingleAssetJoin calculation
+		newTotalShares := totalShares.Add(numShares)
+
+		newNumSharesFromRemaining, newLiquidityFromRemaining, err := p.calcJoinMultipleSingleAssetTokensIn(remCoins, newTotalShares, poolAssetsByDenom, swapFee)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+		numShares.Add(newNumSharesFromRemaining)
+		newLiquidity.Add(newLiquidityFromRemaining...)
 	}
 
 	return numShares, newLiquidity, nil
+}
+
+// getPoolAssetsByDenom return a mapping from pool asset
+// denom to the pool asset itself. There must be no duplicates.
+// Returns error, if any found.
+func getPoolAssetsByDenom(poolAssets []PoolAsset) (map[string]PoolAsset, error) {
+	poolAssetsByDenom := make(map[string]PoolAsset)
+	for _, poolAsset := range poolAssets {
+		_, ok := poolAssetsByDenom[poolAsset.Token.Denom]
+		if ok {
+			return nil, fmt.Errorf(errMsgFormatRepeatingPoolAssetsNotAllowed, poolAsset.Token.Denom)
+		}
+
+		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
+	}
+	return poolAssetsByDenom, nil
+}
+
+// updateIntermediaryLiquidity updates poolAssetsByDenom with newLiquidity.
+//
+// all liqidity coins must exist in poolAssetsByDenom. Returns error, if not.
+//
+// This is a helper function that is useful for updating the pool asset amounts
+// as an intermediary step in a multi-join methods such as CalcJoinPoolShares.
+// In CalcJoinPoolShares with multi-asset joins, we first attempt to do
+// a MaximalExactRatioJoin that might leave out some tokens in.
+// Then, for every remaining tokens in, we attempt to do a single asset join.
+// Since the first step (MaximalExactRatioJoin) affects the pool liqudity due to slippage,
+// we would like to account for that in the subsequent steps of single asset join
+func updateIntermediaryLiquidity(liquidity sdk.Coins, poolAssetsByDenom map[string]PoolAsset) error {
+	for _, coin := range liquidity {
+		poolAsset, ok := poolAssetsByDenom[coin.Denom]
+		if !ok {
+			return fmt.Errorf(errMsgFormatFailedInterimLiquidityUpdate, coin.Denom)
+		}
+
+		poolAsset.Token.Amount = poolAssetsByDenom[coin.Denom].Token.Amount.Add(coin.Amount)
+		poolAssetsByDenom[coin.Denom] = poolAsset
+	}
+	return nil
+}
+
+// calcJoinMultipleSingleAssetTokensIn attemps to calculate single
+// asset join for all tokensIn given totalSharesSoFar,
+// poolAssetsByDenom and swapFee.
+//
+// Returns totalNumShares and totalNewLiquidity from joining all tokensIn
+// or error if fails to calculate join for any of the tokensIn.
+func (p *Pool) calcJoinMultipleSingleAssetTokensIn(tokensIn sdk.Coins, totalSharesSoFar sdk.Int, poolAssetsByDenom map[string]PoolAsset, swapFee sdk.Dec) (sdk.Int, sdk.Coins, error) {
+	totalNumShares := sdk.ZeroInt()
+	totalNewLiquidity := sdk.NewCoins()
+	for _, coin := range tokensIn {
+		newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], totalSharesSoFar)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.Coins{}, err
+		}
+
+		totalNewLiquidity = totalNewLiquidity.Add(coin)
+		totalSharesSoFar = totalSharesSoFar.Add(newShares)
+		totalNumShares.Add(newShares)
+	}
+	return totalNumShares, totalNewLiquidity, nil
 }
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
