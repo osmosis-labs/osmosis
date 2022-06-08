@@ -253,6 +253,64 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestMainnetBehavior() {
+	suite.SetupTest()
+	// Attack pair
+	// https://www.mintscan.io/osmosis/txs/A6C65962C430AF0798E85DC6D64BE8EDAC4C18AF7A24F1FE7BA2876989339E58
+	// https://www.mintscan.io/osmosis/txs/1456AA552ECBDE8506C1D73E2485183554B443ADDC4827C132D3275F39D5279C
+	// osmosisd q gamm pool 1 --height=4713055
+	// 	pool:
+	//   '@type': /osmosis.gamm.v1beta1.Pool
+	//   address: osmo1mw0ac6rwlp5r8wapwk3zs6g29h8fcscxqakdzw9emkne6c8wjp9q0t3v8t
+	//   future_pool_governor: 24h
+	//   id: "1"
+	//   poolAssets:
+	//   - token:
+	//       amount: "4985126127657"
+	//       denom: ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+	//     weight: "536870912000000"
+	//   - token:
+	//       amount: "42005594684906"
+	//       denom: uosmo
+	//     weight: "536870912000000"
+	//   poolParams:
+	//     exitFee: "0.000000000000000000"
+	//     smoothWeightChangeParams: null
+	//     swapFee: "0.002000000000000000"
+	//   totalShares:
+	//     amount: "393436171777535084009257242"
+	//     denom: gamm/pool/1
+	//   totalWeight: "1073741824000000"
+
+	poolLiquidity := sdk.NewCoins(
+		sdk.NewCoin("uosmo", sdk.NewInt(42005594684906)),
+		sdk.NewCoin("uatom", sdk.NewInt(4985126127657)))
+	suite.FundAcc(suite.TestAccs[0], poolLiquidity)
+	// pool creation fee
+	suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(
+		sdk.NewCoin("uosmo", sdk.NewInt(1_000_000_000))))
+
+	PoolPreAttackMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
+		SwapFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
+	}, []balancertypes.PoolAsset{
+		{
+			Token:  sdk.NewCoin("uosmo", sdk.NewInt(42005594684906)),
+			Weight: sdk.NewInt(1)},
+		{
+			Token:  sdk.NewCoin("uatom", sdk.NewInt(4985126127657)),
+			Weight: sdk.NewInt(1)},
+	}, defaultFutureGovernor)
+	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, PoolPreAttackMsg)
+	suite.Require().NoError(err)
+	pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+	suite.Require().NoError(err)
+	balPool := pool.(*balancertypes.Pool)
+	balPool.TotalShares.Amount = sdk.MustNewDecFromStr("393436171777535084009257242").RoundInt()
+	suite.App.GAMMKeeper.SetPool(suite.Ctx, balPool)
+	// Now test if we setup the pool correctly
+}
+
 // TODO: Add more edge cases around TokenInMaxs not containing every token in pool.
 func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 	tests := []struct {
@@ -314,6 +372,9 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 				liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.Ctx)
 				suite.Require().Equal("15000bar,15000foo", liquidity.String())
+				// pool, _ := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+				// totalShares := pool.GetTotalShares()
+				// suite.Require().Equal(types.OneShare.MulRaw(50), totalShares)
 			},
 		},
 	}
