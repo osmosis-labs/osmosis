@@ -83,11 +83,6 @@ func (k Keeper) feeTokenExists(ctx sdk.Context, denom string) bool {
 
 // getFeesPaid returns a token representing the fees paid along the route of swaps identified by the pool Ids
 func (k Keeper) getFeesPaid(ctx sdk.Context, poolIds []uint64, denomPath []string, token sdk.Coin) (sdk.Coin, error) {
-	// Only tokens with an associated incentivized pool are eligible for sybil resistant fees
-	if incentivePools := k.incentivesKeeper.GetAllGaugeIDsByDenom(ctx, token.Denom); len(incentivePools) < 1 {
-		return sdk.Coin{}, nil
-	}
-
 	// Only tokens with fee record can pay swap fees
 	prefixStore := k.GetFeeTokensStore(ctx)
 	if !prefixStore.Has([]byte(token.Denom)) {
