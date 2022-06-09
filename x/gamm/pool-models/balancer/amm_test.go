@@ -869,7 +869,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 	}
 }
 
-func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
+func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 	testCases := []struct {
 		name           string
 		swapFee        sdk.Dec
@@ -1083,7 +1083,7 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 				expectedNewLiquidity = expectedNewLiquidity.Add(tokenIn)
 			}
 
-			totalNumShares, totalNewLiquidity, err := balancerPool.CalcJoinMultipleSingleAssetTokensIn(tc.tokensIn, pool.GetTotalShares(), poolAssetsByDenom, tc.swapFee)
+			totalNumShares, totalNewLiquidity, err := balancerPool.CalcJoinSingleAssetTokensIn(tc.tokensIn, pool.GetTotalShares(), poolAssetsByDenom, tc.swapFee)
 			// It is impossible to set up a test case with error here so we omit it.
 			require.NoError(t, err)
 
