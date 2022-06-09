@@ -261,9 +261,9 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 	return numShares, nil
 }
 
-// CalcJoinPoolShares calculate the number of shares created to join pool with the provieded amount of `tokenIn`.
-// When a single token is provided as an argument, we simply perform single asset join to the token.
-// If not tokenIn provided as an argument isn't a sinlge token, it must contain all the tokens in the pool.
+// CalcJoinPoolShares calculates the number of shares created to join pool with the provided amount of `tokenIn`.
+// When a single token is provided as an argument, we simply perform single asset join with the token.
+// If tokenIn provided as an argument isn't a sinlge token, it must contain all the tokens in the pool.
 // For the case of multi-asset join for a pool, we first calculate the maximum amount we can join a pool without swap, then
 // perform single asset join for the remaining coins.
 // CalcJoinPoolShares does not directly alter the state of the pool, but only does the calculation for shares for joining the pool.

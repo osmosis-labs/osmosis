@@ -88,7 +88,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMs
 // amount of share for the pool. (This is done by taking the number of shares we want and then using total number of shares
 // to get the ratio of the pool it accounts for. Using this ratio, we iterate through all pool assets to get how much tokens we need
 // to get the specified number of shares).
-// Using the number of tokens needed to actaully join the pool, we do a basic sanity check on wether the token does not exceed
+// Using the number of tokens needed to actaully join the pool, we do a basic sanity check on whether the token does not exceed
 // `TokenInMaxs`. Then we hit the actual implementation of `JoinPool` defined by each pool model.
 // `JoinPool` takes in the tokensIn calculated above as the parameter rather than using the number of shares provided in the msg.
 // This can result in negotiable difference between the number of shares provided within the msg
@@ -97,7 +97,7 @@ func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMs
 // Balancer: TokensIn provided as the argument must be either a single token or tokens containing all assets in the pool.
 // 			 For the case of a single token, we simply perform single asset join (balancer notation: pAo, pool shares amount out,
 // 			 given single asset in).
-//			 For the case of multi-asset join, we first calculate the maximal amount of tokens that can be joined whilst maintaing
+//			 For the case of multi-asset join, we first calculate the maximal amount of tokens that can be joined whilst maintaining
 // 			 pool asset's ratio without swap. We then iterate through the remaining coins that couldn't be joined
 // 			 and perform single asset join on each token.
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {
