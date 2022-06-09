@@ -257,6 +257,7 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 	return numShares, nil
 }
 
+// CalcJoinPoolShares
 func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
 	poolAssets := p.GetAllPoolAssets()
 	poolAssetsByDenom := make(map[string]PoolAsset)
@@ -293,18 +294,19 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 		poolAssetsByDenom[coin.Denom] = poolAsset
 	}
 
-	totalShares = totalShares.Add(numShares)
+	newTotalShares := totalShares.Add(numShares)
 
 	// If there are coins that couldn't be perfectly joined, do single asset joins
 	// for each of them.
 	if !remCoins.Empty() {
 		for _, coin := range remCoins {
-			newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], totalShares)
+			newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], newTotalShares)
 			if err != nil {
 				return sdk.ZeroInt(), sdk.NewCoins(), err
 			}
 
 			newLiquidity = newLiquidity.Add(coin)
+			newTotalShares = newTotalShares.Add(newShares)
 			numShares = numShares.Add(newShares)
 		}
 	}
