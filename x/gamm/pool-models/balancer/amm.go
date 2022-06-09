@@ -260,7 +260,8 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 	return numShares, nil
 }
 
-// CalcJoinPoolShares
+// CalcJoinPoolShares returns how many LP shares JoinPool would return on these arguments.
+// This does not mutate the pool, or state.
 func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
