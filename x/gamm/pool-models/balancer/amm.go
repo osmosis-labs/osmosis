@@ -223,13 +223,6 @@ func calcPoolSharesOutGivenSingleAssetIn(
 	// The number of new shares we need to make is then `old_shares * ((k'/k) - 1)`
 	// Whats very cool, is that this turns out to be the exact same `solveConstantFunctionInvariant` code
 	// with the answer's sign reversed.
-
-	// Here, balanceXBefore is tokenBalanceIn, balanceXAfter is tokenBalanceIn.Add(tokenAmountInAfterFee)
-	// balanceY is poolShares, and since they're same weights on the unit tests, weightA/weightB == sdk.OneDec()
-	// full calculation for case "equal weights with 0 swap fee": https://www.wolframalpha.com/input?i=1%2C000%2C000%2C000%2C000+*+%281+-+%281%2C000%2C00[…]000%2C000%2C000+%2B+50%2C000%281-%281-.5+%29*0%29%29%29%29
-	// full calculation for case "equal weights with 0.001 swap fee": https://www.wolframalpha.com/input?i=1%2C000%2C000%2C000%2C000+*+%281+-+%281%2C000%2C000%2C000%2C000+%2F+%281%2C000%2C000%2C000%2C000+%2B+50%2C000%281-%281-.5+%29*.001%29%29%29%29
-	// full calculation for case "equal weights with 0.1 swap fee": https://www.wolframalpha.com/input?i=1%2C000%2C000%2C000%2C000+*+%281+-+%281%2C000%2C000%2C000%2C000+%2F+%281%2C000%2C000%2C000%2C000+%2B+50%2C000%281-%281-.5+%29*.1%29%29%29%29
-	// full calculation for case "equal weights with 0.99 swap fee": https://www.wolframalpha.com/input?i=1%2C000%2C000%2C000%2C000+*+%281+-+%281%2C000%2C000%2C000%2C000+%2F+%281%2C000%2C000%2C000%2C000+%2B+50%2C000%281-%281-.5+%29*.99%29%29%29%29
 	poolAmountOut := solveConstantFunctionInvariant(
 		tokenBalanceIn.Add(tokenAmountInAfterFee),
 		tokenBalanceIn,
@@ -247,10 +240,10 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoo
 	}
 	normalizedWeight := tokenInPoolAsset.Weight.ToDec().Quo(totalWeight.ToDec())
 	return calcPoolSharesOutGivenSingleAssetIn(
-		tokenInPoolAsset.Token.Amount.ToDec(), //pool balance
+		tokenInPoolAsset.Token.Amount.ToDec(),
 		normalizedWeight,
 		totalShares.ToDec(),
-		tokenIn.Amount.ToDec(), //token balance individually
+		tokenIn.Amount.ToDec(),
 		swapFee,
 	).TruncateInt(), nil
 }
