@@ -55,6 +55,7 @@ import (
 	owasm "github.com/osmosis-labs/osmosis/v7/wasmbinding"
 	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm"
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
@@ -376,7 +377,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
 		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*appKeepers.Bech32IBCKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
-		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper))
+		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper)).
+		AddRoute(gammtypes.RouterKey, gamm.NewGAMMProposalHandler(*appKeepers.GAMMKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
