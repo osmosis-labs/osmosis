@@ -36,7 +36,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 		return nil, err
 	}
 	return pool, nil
-} 
+}
 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. Prior
 // to returning the pool, the weights of the pool are updated via PokePool.

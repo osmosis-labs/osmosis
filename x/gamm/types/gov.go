@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	ProposalTypeSetSwapFee    = "SetSwapFee"
-	ProposalTypeSetExitFee 	  = "SetExitFee"
+	ProposalTypeSetSwapFee = "SetSwapFee"
+	ProposalTypeSetExitFee = "SetExitFee"
 )
 
 func init() {
@@ -27,14 +27,14 @@ var (
 
 func NewSetSwapFeeProposal(title, description string, poolId uint64, newSwapFee sdk.Dec) govtypes.Content {
 	content := SetSwapFeeContent{
-		PoolId: poolId,
+		PoolId:  poolId,
 		SwapFee: newSwapFee,
 	}
 
 	return &SetSwapFeeProposal{
 		Title:       title,
 		Description: description,
-		Content:      content,
+		Content:     content,
 	}
 }
 
@@ -67,13 +67,13 @@ func (p SetSwapFeeProposal) String() string {
 
 func NewSetExitFeeProposal(title, description string, poolId uint64, newExitFee sdk.Dec) govtypes.Content {
 	content := SetExitFeeContent{
-		PoolId: poolId,
+		PoolId:  poolId,
 		ExitFee: newExitFee,
 	}
 	return &SetExitFeeProposal{
-		Title:                 title,
-		Description:           description,
-		Content: content,
+		Title:       title,
+		Description: description,
+		Content:     content,
 	}
 }
 

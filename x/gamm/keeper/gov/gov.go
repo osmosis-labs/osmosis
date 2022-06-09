@@ -1,7 +1,6 @@
 package gov
 
 import (
-
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 
@@ -18,7 +17,10 @@ func HandleSetSwapFeeProposal(ctx sdk.Context, k keeper.Keeper, p *types.SetSwap
 	if err != nil {
 		return err
 	}
-	k.SetPool(ctx, pool)
+	err = k.SetPool(ctx, pool)
+	if err != nil {
+		return err
+	}
 
 	event := sdk.NewEvent(
 		types.TypeEvtSetSwapFee,
@@ -38,7 +40,10 @@ func HandleSetExitFeeProposal(ctx sdk.Context, k keeper.Keeper, p *types.SetExit
 	if err != nil {
 		return err
 	}
-	k.SetPool(ctx, pool)
+	err = k.SetPool(ctx, pool)
+	if err != nil {
+		return err
+	}
 
 	event := sdk.NewEvent(
 		types.TypeEvtSetExitFee,

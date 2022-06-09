@@ -11,8 +11,8 @@ const (
 	TypeEvtPoolExited   = "pool_exited"
 	TypeEvtPoolCreated  = "pool_created"
 	TypeEvtTokenSwapped = "token_swapped"
-	TypeEvtSetSwapFee	= "set_swap_fee"
-	TypeEvtSetExitFee	= "set_exit_fee"
+	TypeEvtSetSwapFee   = "set_swap_fee"
+	TypeEvtSetExitFee   = "set_exit_fee"
 
 	AttributeValueCategory = ModuleName
 	AttributeKeyPoolId     = "pool_id"

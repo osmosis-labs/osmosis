@@ -3,16 +3,16 @@ package client
 import (
 	"net/http"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )
 
 var (
-	SetSwapFeeProposalHandler    = govclient.NewProposalHandler(cli.NewSetSwapFeeProposalCmd, ProposalSetSwapFeeRESTHandler)
-	SetExitFeeProposalHandler 	 = govclient.NewProposalHandler(cli.NewSetExitFeeProposalCmd, ProposalSetExitFeeRESTHandler)
+	SetSwapFeeProposalHandler = govclient.NewProposalHandler(cli.NewSetSwapFeeProposalCmd, ProposalSetSwapFeeRESTHandler)
+	SetExitFeeProposalHandler = govclient.NewProposalHandler(cli.NewSetExitFeeProposalCmd, ProposalSetExitFeeRESTHandler)
 )
 
 func ProposalSetSwapFeeRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
