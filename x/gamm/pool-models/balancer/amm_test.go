@@ -439,7 +439,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 	}
 }
 
-func TestRandomizedPoolInvariants(t *testing.T) {
+func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 	type testCase struct {
 		initialTokensDenomIn  int64
 		initialTokensDenomOut int64
