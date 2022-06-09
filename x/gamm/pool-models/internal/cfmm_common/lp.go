@@ -50,7 +50,7 @@ func CalcExitPool(ctx sdk.Context, pool types.PoolI, exitingShares sdk.Int, exit
 	return exitedCoins, nil
 }
 
-// MaximalExactRatioJoin calculates the maximal amount of tokens that can be joined whilst maintaing pool asset's ratio
+// MaximalExactRatioJoin calculates the maximal amount of tokens that can be joined whilst maintaining pool asset's ratio
 // returning the number of shares that'd be and how many coins would be left over.
 // 		e.g) suppose we have a pool of 10 foo tokens and 10 bar tokens, with the total amount of 100 shares.
 //			 if `tokensIn` provided is 1 foo token and 2 bar tokens, `MaximalExactRatioJoin`
