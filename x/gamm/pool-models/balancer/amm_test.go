@@ -667,7 +667,6 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 		swapFee      sdk.Dec
 		poolAssets   []balancer.PoolAsset
 		tokenIn      sdk.Coin
-		expectErr    bool
 		expectShares sdk.Int
 	}{
 		{
@@ -697,7 +696,6 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 				},
 			},
 			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
-			expectErr:    false,
 			expectShares: sdk.NewInt(2_499_999_968_750),
 		},
 		{
@@ -728,7 +726,6 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 				},
 			},
 			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
-			expectErr:    false,
 			expectShares: sdk.NewInt(2_487_500_000_000),
 		},
 		{
@@ -758,7 +755,6 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 				},
 			},
 			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
-			expectErr:    false,
 			expectShares: sdk.NewInt(4_166_666_649_306),
 		},
 		{
@@ -788,7 +784,6 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 				},
 			},
 			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
-			expectErr:    false,
 			expectShares: sdk.NewInt(4_159_722_200_000),
 		},
 		{
@@ -818,7 +813,6 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 				},
 			},
 			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
-			expectErr:    false,
 			expectShares: sdk.NewInt(833_333_315_972),
 		},
 		{
@@ -848,7 +842,6 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 				},
 			},
 			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
-			expectErr:    false,
 			expectShares: sdk.NewInt(819_444_430_000),
 		},
 	}
@@ -869,13 +862,9 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			require.NoError(t, err)
 
 			shares, err := balancerPool.CalcSingleAssetJoin(tc.tokenIn, tc.swapFee, poolAssetIn, pool.GetTotalShares())
-			if tc.expectErr {
-				require.Error(t, err)
-				require.Equal(t, sdk.ZeroInt(), shares)
-			} else {
-				require.NoError(t, err)
-				assertExpectedSharesErrRatio(t, tc.expectShares, shares)
-			}
+			// It is impossible to set up a test case with error here so we omit it.
+			require.NoError(t, err)
+			assertExpectedSharesErrRatio(t, tc.expectShares, shares)
 		})
 	}
 }
