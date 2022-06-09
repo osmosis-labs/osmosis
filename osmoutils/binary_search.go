@@ -32,17 +32,17 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 		comparisonSign = -1
 	}
 
-	// if no error accepted, do a direct compare.
-	if e.AdditiveTolerance.IsZero() {
-		if expected.Equal(actual) {
-			return 0
-		} else {
-			return comparisonSign
-		}
-	}
-
 	// Check additive tolerance equations
 	if !e.AdditiveTolerance.IsNil() {
+		// if no error accepted, do a direct compare.
+		if e.AdditiveTolerance.IsZero() {
+			if expected.Equal(actual) {
+				return 0
+			} else {
+				return comparisonSign
+			}
+		}
+
 		if diff.GT(e.AdditiveTolerance) {
 			return comparisonSign
 		}
