@@ -445,90 +445,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 	}
 }
 
-// TestGetPoolAssetsByDenom tests if `GetPoolAssetsByDenom` succesfully creates a map of denom to pool asset
-// given pool asset as parameter
-func TestGetPoolAssetsByDenom(t *testing.T) {
-	testCases := []struct {
-		name                      string
-		poolAssets                []balancer.PoolAsset
-		expectedPoolAssetsByDenom map[string]balancer.PoolAsset
-
-		err error
-	}{
-		{
-			name:                      "zero pool assets",
-			poolAssets:                []balancer.PoolAsset{},
-			expectedPoolAssetsByDenom: make(map[string]balancer.PoolAsset),
-		},
-		{
-			name: "one pool asset",
-			poolAssets: []balancer.PoolAsset{
-				{
-					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-			},
-			expectedPoolAssetsByDenom: map[string]balancer.PoolAsset{
-				"uosmo": {
-					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-			},
-		},
-		{
-			name: "two pool assets",
-			poolAssets: []balancer.PoolAsset{
-				{
-					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-				{
-					Token:  sdk.NewInt64Coin("atom", 123),
-					Weight: sdk.NewInt(400),
-				},
-			},
-			expectedPoolAssetsByDenom: map[string]balancer.PoolAsset{
-				"uosmo": {
-					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-				"atom": {
-					Token:  sdk.NewInt64Coin("atom", 123),
-					Weight: sdk.NewInt(400),
-				},
-			},
-		},
-		{
-			name: "duplicate pool assets",
-			poolAssets: []balancer.PoolAsset{
-				{
-					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-				{
-					Token:  sdk.NewInt64Coin("uosmo", 123),
-					Weight: sdk.NewInt(400),
-				},
-			},
-			err: fmt.Errorf(balancer.ErrMsgFormatRepeatingPoolAssetsNotAllowed, "uosmo"),
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			actualPoolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
-
-			require.Equal(t, tc.err, err)
-
-			if tc.err != nil {
-				return
-			}
-
-			require.Equal(t, tc.expectedPoolAssetsByDenom, actualPoolAssetsByDenom)
-		})
-	}
-}
-
 // TestUpdateIntermediaryPoolAssets tests if `updateIntermediaryPoolAssets` returns poolAssetsByDenom map
 // with the updated liquidity given by the parameter
 func TestUpdateIntermediaryPoolAssets(t *testing.T) {
@@ -1085,9 +1001,11 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			balancerPool, ok := pool.(*balancer.Pool)
 			require.True(t, ok)
 
-			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(balancerPool.GetAllPoolAssets())
-			// It is impossible to set up a test case with error here so we omit it.
-			require.NoError(t, err)
+			poolAssets := balancerPool.GetAllPoolAssets()
+			poolAssetsByDenom := make(map[string]balancer.PoolAsset)
+			for _, poolAsset := range poolAssets {
+				poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
+			}
 
 			// estimate expected liquidity
 			expectedNewLiquidity := sdk.NewCoins()

@@ -13,12 +13,11 @@ import (
 )
 
 const (
-	errMsgFormatSharesAmountNotPositive       = "shares amount must be positive, was %d"
-	errMsgFormatTokenAmountNotPositive        = "token amount must be positive, was %d"
-	errMsgFormatTokensLargerThanMax           = "%d resulted tokens is larger than the max amount of %d"
-	errMsgFormatSharesLargerThanMax           = "%d resulted shares is larger than the max amount of %d"
-	errMsgFormatFailedInterimLiquidityUpdate  = "failed to update interim liquidity - pool asset %s does not exist"
-	errMsgFormatRepeatingPoolAssetsNotAllowed = "repeating pool assets not allowed, found %s"
+	errMsgFormatSharesAmountNotPositive      = "shares amount must be positive, was %d"
+	errMsgFormatTokenAmountNotPositive       = "token amount must be positive, was %d"
+	errMsgFormatTokensLargerThanMax          = "%d resulted tokens is larger than the max amount of %d"
+	errMsgFormatSharesLargerThanMax          = "%d resulted shares is larger than the max amount of %d"
+	errMsgFormatFailedInterimLiquidityUpdate = "failed to update interim liquidity - pool asset %s does not exist"
 )
 
 // solveConstantFunctionInvariant solves the constant function of an AMM
@@ -263,9 +262,10 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 // CalcJoinPoolShares returns how many LP shares JoinPool would return on these arguments.
 // This does not mutate the pool, or state.
 func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
-	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
+	poolAssets := p.GetAllPoolAssets()
+	poolAssetsByDenom := make(map[string]PoolAsset)
+	for _, poolAsset := range poolAssets {
+		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
 	}
 
 	totalShares := p.GetTotalShares()
@@ -315,22 +315,6 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	}
 
 	return numShares, newLiquidity, nil
-}
-
-// getPoolAssetsByDenom return a mapping from pool asset
-// denom to the pool asset itself. There must be no duplicates.
-// Returns error, if any found.
-func getPoolAssetsByDenom(poolAssets []PoolAsset) (map[string]PoolAsset, error) {
-	poolAssetsByDenom := make(map[string]PoolAsset)
-	for _, poolAsset := range poolAssets {
-		_, ok := poolAssetsByDenom[poolAsset.Token.Denom]
-		if ok {
-			return nil, fmt.Errorf(errMsgFormatRepeatingPoolAssetsNotAllowed, poolAsset.Token.Denom)
-		}
-
-		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
-	}
-	return poolAssetsByDenom, nil
 }
 
 // updateIntermediaryPoolAssets updates poolAssetsByDenom with liquidity.
