@@ -74,6 +74,12 @@ type PoolI interface {
 	// PokePool determines if a pool's weights need to be updated and updates
 	// them if so.
 	PokePool(blockTime time.Time)
+
+	// Update Pool swap fee via proposal
+	SetSwapFee(ctx sdk.Context, newSwapFee sdk.Dec) (err error)
+
+	// Update Pool exit fee via proposal
+	SetExitFee(ctx sdk.Context, newExitFee sdk.Dec) (err error)
 }
 
 // PoolAmountOutExtension is an extension of the PoolI
