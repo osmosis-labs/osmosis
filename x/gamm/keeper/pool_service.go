@@ -177,6 +177,9 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 // JoinPoolNoSwap determines the maximum amount that can be LP'd without any swap,
 // by looking at the ratio of the total LP'd assets. (e.g. 2 osmo : 1 atom)
 // It then finds the maximal amount that can be LP'd.
+//
+// All pool interfaces handled within this method are pointer references, `JoinPool` directly updates the pool interface.
+//
 func (k Keeper) JoinPoolNoSwap(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -189,12 +192,13 @@ func (k Keeper) JoinPoolNoSwap(
 		return err
 	}
 
+	// we do an abstract calculation on the lp liquidity coins needed to have the designated amount of given shares of the pool
 	neededLpLiquidity, err := getMaximalNoSwapLPAmount(ctx, pool, shareOutAmount)
 	if err != nil {
 		return err
 	}
 
-	// if neededLPLiquidity >= tokenInMaxs, return err
+	// check that needed lp liquidity does not exceed `tokenInMaxs`. Return error if so.
 	// if tokenInMaxs == 0, don't do this check.
 	if tokenInMaxs.Len() != 0 {
 		if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs) && tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
@@ -217,11 +221,15 @@ func (k Keeper) JoinPoolNoSwap(
 	return err
 }
 
+// getMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of share of the pool.
+// Steps to getting the needed lp liquidity coins needed for the share of the pools are
+// 		1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
+// 		2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
+// 	  	   each pool asset.
 func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
 	totalSharesAmount := pool.GetTotalShares()
 	// shareRatio is the desired number of shares, divided by the total number of
 	// shares currently in the pool. It is intended to be used in scenarios where you want
-	// (tokens per share) * number of shares out = # tokens * (# shares out / cur total shares)
 	shareRatio := shareOutAmount.ToDec().QuoInt(totalSharesAmount)
 	if shareRatio.LTE(sdk.ZeroDec()) {
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
