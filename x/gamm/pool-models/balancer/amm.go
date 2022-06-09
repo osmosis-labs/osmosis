@@ -355,7 +355,7 @@ func updateIntermediaryPoolAssets(liquidity sdk.Coins, poolAssetsByDenom map[str
 	return nil
 }
 
-// calcJoinMultipleSingleAssetTokensIn attemps to calculate single
+// calcJoinMultipleSingleAssetTokensIn attempts to calculate single
 // asset join for all tokensIn given totalSharesSoFar,
 // poolAssetsByDenom and swapFee.
 //
