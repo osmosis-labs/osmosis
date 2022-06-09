@@ -103,6 +103,7 @@ Cosmwasm bindings have been added, to make swapping and creating these new token
 * [#1435](https://github.com/osmosis-labs/osmosis/pull/1435) `x/tokenfactory` create denom fee for spam resistance 
 * [#1253](https://github.com/osmosis-labs/osmosis/pull/1253) Add a message to increase the duration of a bonded lock.
 * [#1632](https://github.com/osmosis-labs/osmosis/pull/1632) augment SuperfluidDelegationsByDelegator query, return osmo equivilent is staked via superfluid
+* [#1723](https://github.com/osmosis-labs/osmosis/pull/1723) fix number of LP shares returned from stableswap pool
 
 ## [v8.0.0 - Emergency proposals upgrade](https://github.com/osmosis-labs/osmosis/releases/tag/v8.0.0)
 
