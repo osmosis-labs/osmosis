@@ -283,19 +283,19 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	}
 
 	// Add all exact coins we can (no swap). ctx arg doesn't matter for Balancer.
-	numShares, remainingLiquidity, err := cfmm_common.MaximalExactRatioJoin(p, ctx, tokensIn)
+	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(p, ctx, tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	// This is new liquidity that to be added to the pool from exact ratio join.
-	// If there is remainingLiqudity, we will add it to newLiquidity by
-	// performing single asset join on each coin in remainingLiquidity.
-	newLiquidity = tokensIn.Sub(remainingLiquidity)
+	// If there are remainingTokensIn, we will add it to newLiquidity by
+	// performing single asset join on each token in remainingTokensIn.
+	newLiquidity = tokensIn.Sub(remainingTokensIn)
 
-	// If there are coins that couldn't be perfectly joined, do single asset joins
+	// If there are tokens that couldn't be perfectly joined, do single asset joins
 	// for each of them.
-	if !remainingLiquidity.Empty() {
+	if !remainingTokensIn.Empty() {
 		// update pool assets for accurate calcSingleAssetJoin calculation
 		if err := updateIntermediaryPoolAssets(newLiquidity, poolAssetsByDenom); err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
@@ -304,7 +304,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 		// update total shares for accurate calcSingleAssetJoin calculation
 		newTotalShares := totalShares.Add(numShares)
 
-		newNumSharesFromRemaining, newLiquidityFromRemaining, err := p.calcJoinSingleAssetTokensIn(remainingLiquidity, newTotalShares, poolAssetsByDenom, swapFee)
+		newNumSharesFromRemaining, newLiquidityFromRemaining, err := p.calcJoinSingleAssetTokensIn(remainingTokensIn, newTotalShares, poolAssetsByDenom, swapFee)
 		if err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
