@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"errors"
+	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -12,10 +13,11 @@ import (
 )
 
 const (
-	errMsgFormatSharesAmountNotPositive = "shares amount must be positive, was %d"
-	errMsgFormatTokenAmountNotPositive  = "token amount must be positive, was %d"
-	errMsgFormatTokensLargerThanMax     = "%d resulted tokens is larger than the max amount of %d"
-	errMsgFormatSharesLargerThanMax     = "%d resulted shares is larger than the max amount of %d"
+	errMsgFormatSharesAmountNotPositive       = "shares amount must be positive, was %d"
+	errMsgFormatTokenAmountNotPositive        = "token amount must be positive, was %d"
+	errMsgFormatTokensLargerThanMax           = "%d resulted tokens is larger than the max amount of %d"
+	errMsgFormatSharesLargerThanMax           = "%d resulted shares is larger than the max amount of %d"
+	errMsgFormatRepeatingPoolAssetsNotAllowed = "repeating pool assets not allowed, found %s"
 )
 
 // solveConstantFunctionInvariant solves the constant function of an AMM
@@ -259,10 +261,9 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 
 // CalcJoinPoolShares
 func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	poolAssets := p.GetAllPoolAssets()
-	poolAssetsByDenom := make(map[string]PoolAsset)
-	for _, poolAsset := range poolAssets {
-		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
+	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	totalShares := p.GetTotalShares()
@@ -312,6 +313,22 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 	}
 
 	return numShares, newLiquidity, nil
+}
+
+// getPoolAssetsByDenom return a mapping from pool asset
+// denom to the pool asset itself. There must be no duplicates.
+// Returns error, if any found.
+func getPoolAssetsByDenom(poolAssets []PoolAsset) (map[string]PoolAsset, error) {
+	poolAssetsByDenom := make(map[string]PoolAsset)
+	for _, poolAsset := range poolAssets {
+		_, ok := poolAssetsByDenom[poolAsset.Token.Denom]
+		if ok {
+			return nil, fmt.Errorf(errMsgFormatRepeatingPoolAssetsNotAllowed, poolAsset.Token.Denom)
+		}
+
+		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
+	}
+	return poolAssetsByDenom, nil
 }
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
