@@ -1001,11 +1001,8 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			balancerPool, ok := pool.(*balancer.Pool)
 			require.True(t, ok)
 
-			poolAssets := balancerPool.GetAllPoolAssets()
-			poolAssetsByDenom := make(map[string]balancer.PoolAsset)
-			for _, poolAsset := range poolAssets {
-				poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
-			}
+			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(balancerPool.GetAllPoolAssets())
+			require.NoError(t, err)
 
 			// estimate expected liquidity
 			expectedNewLiquidity := sdk.NewCoins()
