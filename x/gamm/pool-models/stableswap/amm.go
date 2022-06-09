@@ -378,7 +378,11 @@ func (pa *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sd
 func (pa *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
 	if len(tokensIn) == 1 {
 		numShares, err = pa.calcSingleAssetJoinShares(tokensIn[0], swapFee)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
 		newLiquidity = tokensIn
+		pa.updatePoolForJoin(tokensIn, numShares)
 		return numShares, newLiquidity, err
 	} else if len(tokensIn) != pa.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
