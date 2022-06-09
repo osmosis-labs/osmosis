@@ -521,6 +521,8 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 	}
 }
 
+// TestUpdateIntermediaryPoolAssets tests if `updateIntermediaryPoolAssets` returns poolAssetsByDenom map
+// with the updated liquidity given by the parameter
 func TestUpdateIntermediaryPoolAssets(t *testing.T) {
 	testCases := []struct {
 		name string
