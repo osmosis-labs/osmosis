@@ -731,6 +731,36 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			expectErr:    false,
 			expectShares: sdk.NewInt(2_487_500_000_000),
 		},
+		{
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
+			//
+			// 4_159_722_200_000 = 100 * 10^18 * (( 1 + (50,000 / 1_000_000_000_000))^0.83 - 1)
+			//
+			// where:
+			// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+			//	A_t = amount of deposited asset = 50,000
+			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
+			//	W_t = normalized weight of deposited asset in pool = 500 / (500 + 100) approx = 0.83
+			// Plugging all of this in, we get:
+			// 	Full solution: https://www.wolframalpha.com/input?i=100000000000000000000*%28%281+%2B+%2850000%2F1000000000000%29%29%5E0.5+-+1%29
+			// 	Simplified:  P_issued = 4_159_722_200_000
+			name:    "token in weight is greater than the other token, with zero swap fee",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(500),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
+			expectErr:    false,
+			expectShares: sdk.NewInt(4_166_666_649_306),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -761,7 +791,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 }
 
 func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) {
-	const allowedErrRatio = "0.000001"
+	const allowedErrRatio = "0.0000001"
 
 	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)
