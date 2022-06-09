@@ -9,7 +9,7 @@ var (
 	CalcPoolSharesOutGivenSingleAssetIn = calcPoolSharesOutGivenSingleAssetIn
 	CalcSingleAssetInGivenPoolSharesOut = calcSingleAssetInGivenPoolSharesOut
 	GetPoolAssetsByDenom                = getPoolAssetsByDenom
-	UpdateIntermediaryLiquidity         = updateIntermediaryLiquidity
+	UpdateIntermediaryPoolAssets        = updateIntermediaryPoolAssets
 )
 
 func (p *Pool) CalcJoinMultipleSingleAssetTokensIn(tokensIn sdk.Coins, totalSharesSoFar sdk.Int, poolAssetsByDenom map[string]PoolAsset, swapFee sdk.Dec) (sdk.Int, sdk.Coins, error) {

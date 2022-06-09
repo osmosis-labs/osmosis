@@ -519,7 +519,7 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 	}
 }
 
-func TestUpdateIntermediaryLiquidity(t *testing.T) {
+func TestUpdateIntermediaryPoolAssets(t *testing.T) {
 	testCases := []struct {
 		name string
 
@@ -648,7 +648,7 @@ func TestUpdateIntermediaryLiquidity(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			newLiquidity, originalPoolAssetsByDenom, expectedPoolAssetsByDenom := tc.setup()
 
-			err := balancer.UpdateIntermediaryLiquidity(newLiquidity, originalPoolAssetsByDenom)
+			err := balancer.UpdateIntermediaryPoolAssets(newLiquidity, originalPoolAssetsByDenom)
 
 			require.Equal(t, tc.err, err)
 
