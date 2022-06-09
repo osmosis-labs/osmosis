@@ -449,8 +449,10 @@ func TestRandomizedPoolInvariants(t *testing.T) {
 		numShares sdk.Int
 	}
 
-	const denomOut = "denomOut"
-	const denomIn = "denomIn"
+	const (
+	  denomOut = "denomOut"
+	  denomIn = "denomIn"
+	)
 
 	now := time.Now().Unix()
 	rng := rand.NewSource(now)
