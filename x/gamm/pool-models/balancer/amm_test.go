@@ -14,6 +14,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+// allowedErrRatio is the maximal multiplicative difference in either
+// direction (positive or negative) that we accept to tolerate in
+// unit tests for calcuating the number of shares to be returned by
+// joining a pool. The comparison is done between Wolfram estimates and our AMM logic.
+const allowedErrRatio = "0.0000001"
+
 // This test sets up 2 asset pools, and then checks the spot price on them.
 // It uses the pools spot price method, rather than the Gamm keepers spot price method.
 func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
@@ -1215,8 +1221,6 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 }
 
 func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) {
-	const allowedErrRatio = "0.0000001"
-
 	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)
 
