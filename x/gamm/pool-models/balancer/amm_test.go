@@ -456,7 +456,7 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 
 	now := time.Now().Unix()
 	rng := rand.NewSource(now)
-	fmt.Printf("Using random source of %d\n", now)
+	t.Logf("Using random source of %d\n", now)
 
 	// generate test case with randomized initial assets and join/exit ratio
 	newCase := func() (tc *testCase) {
