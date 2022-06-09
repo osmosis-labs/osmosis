@@ -39,8 +39,32 @@ func (pa Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
 	return pa.PoolParams.SwapFee
 }
 
+func (pa *Pool) SetSwapFee(_ sdk.Context, newSwapFee sdk.Dec) (err error) {
+	if newSwapFee.IsNegative() {
+		return types.ErrNegativeSwapFee
+	}
+
+	if newSwapFee.GTE(sdk.OneDec()) {
+		return types.ErrTooMuchSwapFee
+	}
+	pa.PoolParams.SwapFee = newSwapFee
+	return nil
+}
+
 func (pa Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
 	return pa.PoolParams.ExitFee
+}
+
+func (pa *Pool) SetExitFee(_ sdk.Context, newExitFee sdk.Dec) (err error) {
+	if newExitFee.IsNegative() {
+		return types.ErrNegativeExitFee
+	}
+
+	if newExitFee.GTE(sdk.OneDec()) {
+		return types.ErrTooMuchExitFee
+	}
+	pa.PoolParams.ExitFee = newExitFee
+	return nil
 }
 
 func (pa Pool) IsActive(ctx sdk.Context) bool {

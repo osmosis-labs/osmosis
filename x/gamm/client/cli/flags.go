@@ -37,6 +37,11 @@ const (
 	FlagSwapRouteAmounts = "swap-route-amounts"
 	// Will be parsed to []string.
 	FlagSwapRouteDenoms = "swap-route-denoms"
+
+	//Will be parsed to sdk.Dec
+	FlagSwapFee = "swap-fee"
+	//Will be parsed to sdk.Dec
+	FlagExitFee = "exit-fee"
 )
 
 type createPoolInputs struct {

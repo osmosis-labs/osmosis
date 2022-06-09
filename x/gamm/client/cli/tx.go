@@ -16,6 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -37,6 +40,8 @@ func NewTxCmd() *cobra.Command {
 		NewJoinSwapShareAmountOut(),
 		NewExitSwapExternAmountOut(),
 		NewExitSwapShareAmountIn(),
+		NewSetSwapFeeProposalCmd(),
+		NewSetExitFeeProposalCmd(),
 	)
 
 	return txCmd
@@ -204,6 +209,152 @@ func NewSwapExactAmountOutCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
 
 	return cmd
+}
+
+func NewSetSwapFeeProposalCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-swap-fee [pool-id] [swap-fee] [flags]",
+		Short: "update pool swap fee via proposal",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			poolId, err := sdk.ParseUint(args[0])
+			if err != nil {
+				return err
+			}
+
+			swapFee := sdk.MustNewDecFromStr(args[1])
+			if err != nil {
+				return err
+			}
+
+			content, err := parseSetSwapFeeArgsToContent(cmd, poolId.Uint64(), swapFee)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+
+	return cmd
+}
+
+func parseSetSwapFeeArgsToContent(cmd *cobra.Command, poolId uint64, swapFee sdk.Dec) (govtypes.Content, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	content := types.NewSetSwapFeeProposal(title, description, poolId, swapFee)
+
+	return content, nil
+}
+
+func NewSetExitFeeProposalCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-exit-fee [pool-id] [exit-fee] [flags]",
+		Short: "update pool exit fee via proposal",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			poolId, err := sdk.ParseUint(args[0])
+			if err != nil {
+				return err
+			}
+
+			exitFee := sdk.MustNewDecFromStr(args[1])
+			if err != nil {
+				return err
+			}
+
+			content, err := parseSetExitFeeArgsToContent(cmd, poolId.Uint64(), exitFee)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+
+	return cmd
+}
+
+func parseSetExitFeeArgsToContent(cmd *cobra.Command, poolId uint64, exitFee sdk.Dec) (govtypes.Content, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	content := types.NewSetExitFeeProposal(title, description, poolId, exitFee)
+
+	return content, nil
 }
 
 func NewJoinSwapExternAmountIn() *cobra.Command {

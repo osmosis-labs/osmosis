@@ -30,6 +30,7 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm"
+	gammclient "github.com/osmosis-labs/osmosis/v7/x/gamm/client"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup"
 	"github.com/osmosis-labs/osmosis/v7/x/mint"
@@ -62,6 +63,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 			ibcclientclient.UpgradeProposalHandler,
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
 			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
+			gammclient.SetSwapFeeProposalHandler,
+			gammclient.SetExitFeeProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},

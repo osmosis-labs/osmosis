@@ -1,0 +1,46 @@
+syntax = "proto3";
+package osmosis.gamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/types";
+
+// SetSuperfluidAssetsProposal is a gov Content type to update the superfluid
+// assets
+message SetSwapFeeProposal {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  SetSwapFeeContent content = 3 [ (gogoproto.nullable) = false ];
+}
+
+message SetSwapFeeContent {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string swap_fee = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// RemoveSuperfluidAssetsProposal is a gov Content type to remove the superfluid
+// assets by denom
+message SetExitFeeProposal {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  SetExitFeeContent content = 3 [ (gogoproto.nullable) = false ];
+}
+
+message SetExitFeeContent {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string exit_fee = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"exit_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
