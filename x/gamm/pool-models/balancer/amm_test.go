@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -451,14 +452,18 @@ func TestRandomizedPoolInvariants(t *testing.T) {
 	const denomOut = "denomOut"
 	const denomIn = "denomIn"
 
+	now := time.Now().Unix()
+	rng := rand.NewSource(now)
+	fmt.Printf("Using random source of %d\n", now)
+
 	// generate test case with randomized initial assets and join/exit ratio
 	newCase := func() (tc *testCase) {
 		tc = new(testCase)
-		tc.initialTokensDenomIn = rand.Int63n(1_000_000)
-		tc.initialTokensDenomOut = rand.Int63n(1_000_000)
+		tc.initialTokensDenomIn = rng.Int63() % 1_000_000
+		tc.initialTokensDenomOut = rng.Int63() % 1_000_000
 
 		// 1%~100% of initial assets
-		tc.percentRatio = rand.Int63n(100) + 1
+		tc.percentRatio = rng.Int63()%100 + 1
 
 		return tc
 	}
