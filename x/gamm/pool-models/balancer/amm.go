@@ -356,25 +356,26 @@ func updateIntermediaryPoolAssets(liquidity sdk.Coins, poolAssetsByDenom map[str
 }
 
 // calcJoinSingleAssetTokensIn attempts to calculate single
-// asset join for all tokensIn given currTotalShares,
-// poolAssetsByDenom and swapFee.
+// asset join for all tokensIn given totalShares in pool,
+// poolAssetsByDenom and swapFee. totalShares is the number
+// of shares in pool before beginnning to join any of the tokensIn.
 //
-// Returns totalNumShares and totalNewLiquidity from joining all tokensIn
+// Returns totalNewShares and totalNewLiquidity from joining all tokensIn
+// by mimicking individually single asset joining each.
 // or error if fails to calculate join for any of the tokensIn.
-func (p *Pool) calcJoinSingleAssetTokensIn(tokensIn sdk.Coins, currTotalShares sdk.Int, poolAssetsByDenom map[string]PoolAsset, swapFee sdk.Dec) (sdk.Int, sdk.Coins, error) {
-	totalNumShares := sdk.ZeroInt()
+func (p *Pool) calcJoinSingleAssetTokensIn(tokensIn sdk.Coins, totalShares sdk.Int, poolAssetsByDenom map[string]PoolAsset, swapFee sdk.Dec) (sdk.Int, sdk.Coins, error) {
+	totalNewShares := sdk.ZeroInt()
 	totalNewLiquidity := sdk.NewCoins()
 	for _, coin := range tokensIn {
-		newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], currTotalShares)
+		newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], totalShares.Add(totalNewShares))
 		if err != nil {
 			return sdk.ZeroInt(), sdk.Coins{}, err
 		}
 
 		totalNewLiquidity = totalNewLiquidity.Add(coin)
-		currTotalShares = currTotalShares.Add(newShares)
-		totalNumShares = totalNumShares.Add(newShares)
+		totalNewShares = totalNewShares.Add(newShares)
 	}
-	return totalNumShares, totalNewLiquidity, nil
+	return totalNewShares, totalNewLiquidity, nil
 }
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
