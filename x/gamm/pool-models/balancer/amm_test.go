@@ -1046,6 +1046,22 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 100_000)),
 			expectShares: sdk.NewInt(2_072_912_400_000_000 + 1_624_999_900_000),
 		},
+		{
+			name:    "no tokens in",
+			swapFee: sdk.MustNewDecFromStr("0.03"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 2_000_000_000),
+					Weight: sdk.NewInt(500),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(),
+			expectShares: sdk.NewInt(0),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1058,6 +1074,7 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 			require.True(t, ok)
 
 			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(balancerPool.GetAllPoolAssets())
+			// It is impossible to set up a test case with error here so we omit it.
 			require.NoError(t, err)
 
 			// estimate expected liquidity
@@ -1069,8 +1086,16 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 			totalNumShares, totalNewLiquidity, err := balancerPool.CalcJoinMultipleSingleAssetTokensIn(tc.tokensIn, pool.GetTotalShares(), poolAssetsByDenom, tc.swapFee)
 			// It is impossible to set up a test case with error here so we omit it.
 			require.NoError(t, err)
-			assertExpectedSharesErrRatio(t, tc.expectShares, totalNumShares)
+
 			require.Equal(t, expectedNewLiquidity, totalNewLiquidity)
+
+			if tc.expectShares.Int64() == 0 {
+				require.Equal(t, tc.expectShares, totalNumShares)
+				return
+			}
+
+			assertExpectedSharesErrRatio(t, tc.expectShares, totalNumShares)
+
 		})
 	}
 }
