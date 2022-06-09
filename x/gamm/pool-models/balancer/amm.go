@@ -261,7 +261,7 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 }
 
 // CalcJoinPoolShares
-func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
@@ -283,7 +283,7 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 	}
 
 	// Add all exact coins we can (no swap). ctx arg doesn't matter for Balancer.
-	numShares, remainingLiquidity, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+	numShares, remainingLiquidity, err := cfmm_common.MaximalExactRatioJoin(p, ctx, tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
@@ -341,7 +341,7 @@ func getPoolAssetsByDenom(poolAssets []PoolAsset) (map[string]PoolAsset, error) 
 // a MaximalExactRatioJoin that might leave out some tokens in.
 // Then, for every remaining tokens in, we attempt to do a single asset join.
 // Since the first step (MaximalExactRatioJoin) affects the pool liqudity due to slippage,
-// we would like to account for that in the subsequent steps of single asset join
+// we would like to account for that in the subsequent steps of single asset join.
 func updateIntermediaryPoolAssets(liquidity sdk.Coins, poolAssetsByDenom map[string]PoolAsset) error {
 	for _, coin := range liquidity {
 		poolAsset, ok := poolAssetsByDenom[coin.Denom]
