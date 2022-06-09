@@ -372,7 +372,7 @@ func (p *Pool) calcJoinMultipleSingleAssetTokensIn(tokensIn sdk.Coins, totalShar
 
 		totalNewLiquidity = totalNewLiquidity.Add(coin)
 		totalSharesSoFar = totalSharesSoFar.Add(newShares)
-		totalNumShares.Add(newShares)
+		totalNumShares = totalNumShares.Add(newShares)
 	}
 	return totalNumShares, totalNewLiquidity, nil
 }
