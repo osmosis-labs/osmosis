@@ -874,7 +874,7 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 		name           string
 		swapFee        sdk.Dec
 		poolAssets     []balancer.PoolAsset
-		tokenIn        sdk.Coins
+		tokensIn       sdk.Coins
 		expectShares   sdk.Int
 		expectLiqudity sdk.Coins
 	}{
@@ -904,7 +904,7 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokenIn:      sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 			expectShares: sdk.NewInt(2_499_999_968_750),
 		},
 		{
@@ -933,7 +933,7 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokenIn:      sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
 			expectShares: sdk.NewInt(2_499_999_968_750 * 2),
 		},
 		{
@@ -963,7 +963,7 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokenIn:      sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 			expectShares: sdk.NewInt(2_487_500_000_000),
 		},
 		{
@@ -993,7 +993,7 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokenIn:      sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
 			expectShares: sdk.NewInt(2_487_500_000_000 * 2),
 		},
 		{
@@ -1043,7 +1043,7 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokenIn:      sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 100_000)),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 100_000)),
 			expectShares: sdk.NewInt(2_072_912_400_000_000 + 1_624_999_900_000),
 		},
 	}
@@ -1060,11 +1060,17 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(balancerPool.GetAllPoolAssets())
 			require.NoError(t, err)
 
-			totalNumShares, _, err := balancerPool.CalcJoinMultipleSingleAssetTokensIn(tc.tokenIn, pool.GetTotalShares(), poolAssetsByDenom, tc.swapFee)
+			// estimate expected liquidity
+			expectedNewLiquidity := sdk.NewCoins()
+			for _, tokenIn := range tc.tokensIn {
+				expectedNewLiquidity = expectedNewLiquidity.Add(tokenIn)
+			}
+
+			totalNumShares, totalNewLiquidity, err := balancerPool.CalcJoinMultipleSingleAssetTokensIn(tc.tokensIn, pool.GetTotalShares(), poolAssetsByDenom, tc.swapFee)
 			// It is impossible to set up a test case with error here so we omit it.
 			require.NoError(t, err)
 			assertExpectedSharesErrRatio(t, tc.expectShares, totalNumShares)
-			// assertExpectedSharesErrRatio(t, tc.expectLiqudity, totalNewLiquidity)
+			require.Equal(t, expectedNewLiquidity, totalNewLiquidity)
 		})
 	}
 }
