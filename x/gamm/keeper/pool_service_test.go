@@ -430,6 +430,86 @@ func (suite *KeeperTestSuite) TestExitPool() {
 	}
 }
 
+// TestJoinPoolExitPool_InverseRelationship tests that joining pool and exiting pool
+// guarantees same amount in and out
+func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
+	testCases := []struct {
+		name             string
+		pool             balancertypes.MsgCreateBalancerPool
+		joinPoolShareAmt sdk.Int
+	}{
+		{
+			name: "pool with same token ratio",
+			pool: balancer.NewMsgCreateBalancerPool(nil, balancer.PoolParams{
+				SwapFee: sdk.ZeroDec(),
+				ExitFee: sdk.ZeroDec(),
+			}, []balancertypes.PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
+				},
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+				},
+			}, defaultFutureGovernor),
+			joinPoolShareAmt: types.OneShare.MulRaw(50),
+		},
+		{
+			name: "pool with different token ratio",
+			pool: balancer.NewMsgCreateBalancerPool(nil, balancer.PoolParams{
+				SwapFee: sdk.ZeroDec(),
+				ExitFee: sdk.ZeroDec(),
+			}, []balancertypes.PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("foo", sdk.NewInt(7000)),
+				},
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
+				},
+			}, defaultFutureGovernor),
+			joinPoolShareAmt: types.OneShare.MulRaw(50),
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.SetupTest()
+
+		for _, acc := range suite.TestAccs {
+			suite.FundAcc(acc, defaultAcctFunds)
+		}
+
+		createPoolAcc := suite.TestAccs[0]
+		joinPoolAcc := suite.TestAccs[1]
+
+		// test account is set on every test case iteration, we need to manually update address for pool creator
+		tc.pool.Sender = createPoolAcc.String()
+
+		poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, tc.pool)
+		suite.Require().NoError(err)
+
+		balanceBeforeJoin := suite.App.BankKeeper.GetAllBalances(suite.Ctx, joinPoolAcc)
+		fmt.Println(balanceBeforeJoin.String())
+
+		err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+		suite.Require().NoError(err)
+
+		_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+
+		balanceAfterExit := suite.App.BankKeeper.GetAllBalances(suite.Ctx, joinPoolAcc)
+		deltaBalance, _ := balanceBeforeJoin.SafeSub(balanceAfterExit)
+
+		// due to rounding, `balanceBeforeJoin` and `balanceAfterExit` have neglectable difference
+		// coming from rounding in exitPool.Here we test if the difference is within rounding tolerance range
+		roundingToleranceCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1)), sdk.NewCoin("bar", sdk.NewInt(1)))
+		suite.Require().True(deltaBalance.AmountOf("foo").LTE(roundingToleranceCoins.AmountOf("foo")))
+		suite.Require().True(deltaBalance.AmountOf("bar").LTE(roundingToleranceCoins.AmountOf("bar")))
+	}
+
+}
+
 func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 	type testCase struct {
 		blockTime  time.Time
