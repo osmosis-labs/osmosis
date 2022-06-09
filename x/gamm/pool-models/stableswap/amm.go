@@ -384,6 +384,7 @@ func (pa *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swap
 
 		newLiquidity = tokensIn
 		pa.updatePoolForJoin(tokensIn, numShares)
+
 		return numShares, newLiquidity, err
 	} else if len(tokensIn) != pa.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
