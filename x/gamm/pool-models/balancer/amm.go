@@ -308,7 +308,7 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 		if err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
-		numShares.Add(newNumSharesFromRemaining)
+		numShares = numShares.Add(newNumSharesFromRemaining)
 		newLiquidity = newLiquidity.Add(newLiquidityFromRemaining...)
 	}
 
