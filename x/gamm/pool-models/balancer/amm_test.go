@@ -14,6 +14,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+const allowedErrRatio = "0.0000001"
+
 // This test sets up 2 asset pools, and then checks the spot price on them.
 // It uses the pools spot price method, rather than the Gamm keepers spot price method.
 func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
@@ -450,8 +452,8 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 	}
 
 	const (
-	  denomOut = "denomOut"
-	  denomIn = "denomIn"
+		denomOut = "denomOut"
+		denomIn  = "denomIn"
 	)
 
 	now := time.Now().Unix()
@@ -545,4 +547,19 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		testPoolInvariants()
 	}
+}
+
+func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) {
+	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
+	require.NoError(t, err)
+
+	errTolerance := osmoutils.ErrTolerance{
+		MultiplicativeTolerance: allowedErrRatioDec,
+	}
+
+	require.Equal(
+		t,
+		0,
+		errTolerance.Compare(expectedShares, actualShares),
+		fmt.Sprintf("expectedShares: %d, actualShares: %d", expectedShares.Int64(), actualShares.Int64()))
 }
