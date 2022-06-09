@@ -1020,7 +1020,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
 			//
-			// 812483500000000 = 100 * 10^18 * (( 1 + (100_000 * (1 - (1 - 0.167) * 0.03) / 1_000_000_000_000))^0.167 - 1)
+			// 1_624_999_900_000 = 100 * 10^18 * (( 1 + (100_000 * (1 - (1 - 0.167) * 0.03) / 1_000_000_000_000))^0.167 - 1)
 			//
 			// where:
 			// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
@@ -1030,7 +1030,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee)
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%28100000*%281+-+%281-%28100+%2F+%28500+%2B+100%29%29%29+*+0.03%29%2F1000000000000%29%29%5E%28100+%2F+%28500+%2B+100%29%29+-+1%29
-			// 	Simplified:  P_issued = 812483500000000
+			// 	Simplified:  P_issued = 1_624_999_900_000
 			name:    "two varying tokens in, varying weights, with swap fee of 0.03",
 			swapFee: sdk.MustNewDecFromStr("0.03"),
 			poolAssets: []balancer.PoolAsset{
