@@ -709,7 +709,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			//	A_t = amount of deposited asset = 50,000
 			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
 			//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
-			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee) (TODO: needs to be futher validated)
+			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee)
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
 			// 	Simplified:  P_issued = 2_487_500_000_000
@@ -947,7 +947,7 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 			//	A_t = amount of deposited asset = 50,000
 			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
 			//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
-			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee) (TODO: needs to be futher validated)
+			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee)
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
 			// 	Simplified:  P_issued = 2_487_500_000_000
@@ -977,7 +977,7 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 			//	A_t = amount of deposited asset = 50,000
 			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
 			//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
-			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee) (TODO: needs to be futher validated)
+			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee)
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
 			// 	Simplified:  P_issued = 2_487_500_000_000
@@ -995,6 +995,56 @@ func TestCalcJoinMultipleSingleAssetTokensIn(t *testing.T) {
 			},
 			tokenIn:      sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
 			expectShares: sdk.NewInt(2_487_500_000_000 * 2),
+		},
+		{
+			// For uosmo:
+			//
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+			//
+			// 2_072_912_400_000_000 = 100 * 10^18 * (( 1 + (50,000 * (1 - (1 - 0.83) * 0.03) / 2_000_000_000))^0.83 - 1)
+			//
+			// where:
+			// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+			//	A_t = amount of deposited asset = 50,000
+			//	B_t = existing balance of deposited asset in the pool prior to deposit = 2_000_000_000
+			//	W_t = normalized weight of deposited asset in pool = 500 / 500 + 100 = 0.83
+			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee)
+			// Plugging all of this in, we get:
+			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-%28500+%2F+%28500+%2B+100%29%29%29+*+0.03%29%2F2000000000%29%29%5E%28500+%2F+%28500+%2B+100%29%29+-+1%29
+			// 	Simplified:  P_issued = 2_072_912_400_000_000
+			//
+			//
+			// For uatom:
+			//
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+			//
+			// 812483500000000 = 100 * 10^18 * (( 1 + (100_000 * (1 - (1 - 0.167) * 0.03) / 1_000_000_000_000))^0.167 - 1)
+			//
+			// where:
+			// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+			//	A_t = amount of deposited asset = 50,000
+			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
+			//	W_t = normalized weight of deposited asset in pool = 100 / 500 + 100 = 0.167
+			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee)
+			// Plugging all of this in, we get:
+			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%28100000*%281+-+%281-%28100+%2F+%28500+%2B+100%29%29%29+*+0.03%29%2F1000000000000%29%29%5E%28100+%2F+%28500+%2B+100%29%29+-+1%29
+			// 	Simplified:  P_issued = 812483500000000
+			name:    "two varying tokens in, varying weights, with swap fee of 0.03",
+			swapFee: sdk.MustNewDecFromStr("0.03"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 2_000_000_000),
+					Weight: sdk.NewInt(500),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokenIn:      sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 100_000)),
+			expectShares: sdk.NewInt(2_072_912_400_000_000 + 1_624_999_900_000),
 		},
 	}
 
