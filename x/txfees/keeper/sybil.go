@@ -4,24 +4,24 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type Sybil struct {
+type SybilResistantGas struct {
 	GasPrice sdk.Dec
 	FeesPaid sdk.Coin
 }
 
-func NewSybil(gasPrice sdk.Dec, feesPaid sdk.Coin) Sybil {
-	return Sybil{
+func NewSybilResistantGas(gasPrice sdk.Dec, feesPaid sdk.Coin) SybilResistantGas {
+	return SybilResistantGas{
 		GasPrice: gasPrice,
 		FeesPaid: feesPaid,
 	}
 }
 
-func (s Sybil) SetGasPrice(gasPrice sdk.Dec) Sybil {
-	return Sybil{GasPrice: gasPrice, FeesPaid: s.FeesPaid}
+func (s SybilResistantGas) SetGasPrice(gasPrice sdk.Dec) SybilResistantGas {
+	return SybilResistantGas{GasPrice: gasPrice, FeesPaid: s.FeesPaid}
 }
-func (s Sybil) SetFeesPaid(feesPaid sdk.Coin) Sybil {
-	return Sybil{GasPrice: s.GasPrice, FeesPaid: feesPaid}
+func (s SybilResistantGas) SetFeesPaid(feesPaid sdk.Coin) SybilResistantGas {
+	return SybilResistantGas{GasPrice: s.GasPrice, FeesPaid: feesPaid}
 }
-func (s Sybil) AddToFeesPaid(feesPaid sdk.Coin) Sybil {
-	return Sybil{GasPrice: s.GasPrice, FeesPaid: s.FeesPaid.Add(feesPaid)}
+func (s SybilResistantGas) AddToFeesPaid(feesPaid sdk.Coin) SybilResistantGas {
+	return SybilResistantGas{GasPrice: s.GasPrice, FeesPaid: s.FeesPaid.Add(feesPaid)}
 }
