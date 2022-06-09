@@ -439,6 +439,8 @@ func TestCalcJoinPoolShares(t *testing.T) {
 	}
 }
 
+// TestGetPoolAssetsByDenom tests if `GetPoolAssetsByDenom` succesfully creates a map of denom to pool asset
+// given pool asset as parameter
 func TestGetPoolAssetsByDenom(t *testing.T) {
 	testCases := []struct {
 		name                      string
