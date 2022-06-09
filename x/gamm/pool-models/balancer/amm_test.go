@@ -14,6 +14,16 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+type calcJoinSharesTestCase struct {
+	name         string
+	swapFee      sdk.Dec
+	poolAssets   []balancer.PoolAsset
+	tokensIn     sdk.Coins
+	expectErr    bool
+	expectShares sdk.Int
+	expectLiq    sdk.Coins
+}
+
 // allowedErrRatio is the maximal multiplicative difference in either
 // direction (positive or negative) that we accept to tolerate in
 // unit tests for calcuating the number of shares to be returned by
@@ -342,15 +352,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 }
 
 func TestCalcJoinPoolShares(t *testing.T) {
-	testCases := []struct {
-		name         string
-		swapFee      sdk.Dec
-		poolAssets   []balancer.PoolAsset
-		tokensIn     sdk.Coins
-		expectErr    bool
-		expectShares sdk.Int
-		expectLiq    sdk.Coins
-	}{
+	testCases := []calcJoinSharesTestCase{
 		{
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 			// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
@@ -501,13 +503,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 }
 
 func TestCalcSingleAssetJoin(t *testing.T) {
-	testCases := []struct {
-		name         string
-		swapFee      sdk.Dec
-		poolAssets   []balancer.PoolAsset
-		tokenIn      sdk.Coin
-		expectShares sdk.Int
-	}{
+	testCases := []calcJoinSharesTestCase{
 		{
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 			// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
@@ -534,7 +530,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 			expectShares: sdk.NewInt(2_499_999_968_750),
 		},
 		{
@@ -564,7 +560,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 			expectShares: sdk.NewInt(2_487_500_000_000),
 		},
 		{
@@ -593,7 +589,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 			expectShares: sdk.NewInt(4_166_666_649_306),
 		},
 		{
@@ -622,7 +618,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 			expectShares: sdk.NewInt(4_159_722_200_000),
 		},
 		{
@@ -651,7 +647,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 					Weight: sdk.NewInt(1000),
 				},
 			},
-			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 			expectShares: sdk.NewInt(833_333_315_972),
 		},
 		{
@@ -680,7 +676,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 					Weight: sdk.NewInt(1000),
 				},
 			},
-			tokenIn:      sdk.NewInt64Coin("uosmo", 50_000),
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 			expectShares: sdk.NewInt(819_444_430_000),
 		},
 	}
@@ -694,13 +690,15 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			balancerPool, ok := pool.(*balancer.Pool)
 			require.True(t, ok)
 
+			tokenIn := tc.tokensIn[0]
+
 			// find pool asset in pool
 			// must be in pool since weights get scaled in Balancer pool
 			// constructor
-			poolAssetIn, err := balancerPool.GetPoolAsset(tc.tokenIn.Denom)
+			poolAssetIn, err := balancerPool.GetPoolAsset(tokenIn.Denom)
 			require.NoError(t, err)
 
-			shares, err := balancerPool.CalcSingleAssetJoin(tc.tokenIn, tc.swapFee, poolAssetIn, pool.GetTotalShares())
+			shares, err := balancerPool.CalcSingleAssetJoin(tokenIn, tc.swapFee, poolAssetIn, pool.GetTotalShares())
 			// It is impossible to set up a test case with error here so we omit it.
 			require.NoError(t, err)
 			assertExpectedSharesErrRatio(t, tc.expectShares, shares)
