@@ -448,8 +448,10 @@ func TestRandomizedPoolInvariants(t *testing.T) {
 		numShares sdk.Int
 	}
 
-	const denomOut = "denomOut"
-	const denomIn = "denomIn"
+	const (
+	  denomOut = "denomOut"
+	  denomIn = "denomIn"
+	)
 
 	// generate test case with randomized initial assets and join/exit ratio
 	newCase := func() (tc *testCase) {
