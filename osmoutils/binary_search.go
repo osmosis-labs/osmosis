@@ -38,8 +38,6 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 		if e.AdditiveTolerance.IsZero() {
 			if expected.Equal(actual) {
 				return 0
-			} else {
-				return comparisonSign
 			}
 		}
 
