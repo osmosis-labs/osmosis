@@ -206,7 +206,7 @@ func (k Keeper) JoinPoolNoSwap(
 		}
 	}
 
-	sharesOut, err := pool.JoinPool(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
+	sharesOut, err := pool.JoinPoolNoSwap(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
 	if err != nil {
 		return err
 	}
