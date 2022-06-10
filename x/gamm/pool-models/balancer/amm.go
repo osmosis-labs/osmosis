@@ -320,18 +320,16 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
-	// 4)
-	// This is new liquidity that to be added to the pool from exact ratio join.
-	// If there are remainingTokensIn, we will add it to newLiquidity by
-	// performing single asset join on each token in remainingTokensIn.
+	// 4) This is the new liquidity that has been added to the pool from exact ratio join.
 	tokensJoined = tokensIn.Sub(remainingTokensIn)
 	if remainingTokensIn.Empty() {
 		return numShares, tokensJoined, nil
 	}
 
-	// 5)
+	// If there are remainingTokensIn, we will single asset join each of them.
 	// If there are tokens that couldn't be perfectly joined, do single asset joins
 	// for each of them.
+	// so first we update the pool state for this.
 	// update pool assets with newLiquidity for accurate calcSingleAssetJoin calculation.
 	if err := updateIntermediaryPoolAssetsLiquidity(tokensJoined, poolAssetsByDenom); err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
@@ -345,6 +343,10 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 	}
 	numShares = numShares.Add(newNumSharesFromRemaining)
 	tokensJoined = tokensJoined.Add(newLiquidityFromRemaining...)
+
+	if tokensJoined.IsAnyGT(tokensIn) {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("An error has occurred, more coins joined than token In")
+	}
 
 	return numShares, tokensJoined, nil
 }
