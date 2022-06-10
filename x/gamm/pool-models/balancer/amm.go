@@ -301,6 +301,9 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 	// that has to be joined via single asset join
 	// ctx arg doesn't matter for balancer
 	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+	fmt.Println("================================================================")
+	fmt.Println(numShares.String())
+	fmt.Println(remCoins)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
@@ -310,6 +313,8 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 	for _, coin := range newLiquidity {
 		poolAsset := poolAssetsByDenom[coin.Denom]
 		poolAsset.Token.Amount = poolAssetsByDenom[coin.Denom].Token.Amount.Add(coin.Amount)
+		fmt.Println("++=")
+		fmt.Println(poolAsset.Token.Amount.String())
 		poolAssetsByDenom[coin.Denom] = poolAsset
 	}
 
