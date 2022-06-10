@@ -3,8 +3,6 @@ package v10
 import (
 	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,8 +16,8 @@ const ForkHeight = 4713065
 const UpgradeName = "v10"
 
 // RecoveryAddress that the irregular state change transfers to.
-// TODO: Derive it, currently set to 'distribution' module account.
-var RecoveryAddress, recoveryAddressErr = sdk.AccAddressFromBech32("osmo1jv65s3grqf6v6jl3dp4t6c9t9rk99cd80yhvld")
+// TODO: Include derivation of this
+var RecoveryAddress, recoveryAddressErr = sdk.AccAddressFromBech32("osmo1rdkpu0tfnp3vx7vg4gxhjr0gt9rtydtv4fsrd0")
 
 func init() {
 	if recoveryAddressErr != nil {
@@ -27,11 +25,12 @@ func init() {
 	}
 }
 
-var Upgrade = upgrades.Upgrade{
-	UpgradeName:          UpgradeName,
-	CreateUpgradeHandler: CreateUpgradeHandler,
-	StoreUpgrades:        store.StoreUpgrades{},
-}
+// Created synthetically via fork
+// var Upgrade = upgrades.Upgrade{
+// 	UpgradeName:          UpgradeName,
+// 	CreateUpgradeHandler: CreateUpgradeHandler,
+// 	StoreUpgrades:        store.StoreUpgrades{},
+// }
 
 var Fork = upgrades.Fork{
 	UpgradeName:    UpgradeName,

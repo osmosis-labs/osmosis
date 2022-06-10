@@ -22,5 +22,5 @@ func RunForkLogic(ctx sdk.Context, appKeepers *keepers.AppKeepers) {
 	if err != nil {
 		panic(err)
 	}
-	// appKeepers.UpgradeKeeper.
+	appKeepers.UpgradeKeeper.SetUpgradeHandler(plan.Name, CreateUpgradeHandler(appKeepers))
 }

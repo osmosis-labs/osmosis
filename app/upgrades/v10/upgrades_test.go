@@ -34,11 +34,13 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 		{
 			"Test that upgrade does a token transfer",
 			func() {
-				for _, addr := range v10.TransferFromAddresses {
+				for i, addr := range v10.TransferFromAddresses {
 					suite.FundAcc(addr.Addr, sdk.NewCoins(
-						sdk.NewInt64Coin("uosmo", 1),
-						sdk.NewInt64Coin(fmt.Sprintf("coin-%d", 1), 1)))
+						sdk.NewInt64Coin(fmt.Sprintf("coin-%d", i), 1),
+						sdk.NewInt64Coin("uosmo", 1)))
 				}
+				balances := suite.App.AppKeepers.BankKeeper.GetAllBalances(suite.Ctx, v10.RecoveryAddress)
+				suite.Require().True(balances.Empty())
 			},
 			func() {
 				// run upgrade
@@ -54,6 +56,16 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				})
 			},
 			func() {
+				expectedBalance := sdk.NewCoins()
+				for i, addr := range v10.TransferFromAddresses {
+					expectedBalance = expectedBalance.Add(
+						sdk.NewInt64Coin(fmt.Sprintf("coin-%d", i), 1),
+						sdk.NewInt64Coin("uosmo", 1))
+					balances := suite.App.AppKeepers.BankKeeper.GetAllBalances(suite.Ctx, addr.Addr)
+					suite.Require().True(balances.Empty())
+				}
+				balances := suite.App.AppKeepers.BankKeeper.GetAllBalances(suite.Ctx, v10.RecoveryAddress)
+				suite.Require().Equal(expectedBalance, balances)
 			},
 			true,
 		},
