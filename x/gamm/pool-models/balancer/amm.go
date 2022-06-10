@@ -250,7 +250,8 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoo
 	).TruncateInt(), nil
 }
 
-// JoinPool calculates the number of shares needed and the updated liquidity for joining pool
+// JoinPool calculates the number of shares needed given tokensIn with swapFee applied.
+// It updates the liquidity if the pool is joined successfully. If not, returns error.
 // and updates pool accordingly.
 func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
 	numShares, newLiquidity, err := p.CalcJoinPoolShares(_ctx, tokensIn, swapFee)
