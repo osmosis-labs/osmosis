@@ -786,23 +786,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uatom", 100_000),
 			),
 		},
-		{
-			name:    "equal weights with 0.001 swap fee",
-			swapFee: sdk.MustNewDecFromStr("0.001"),
-			poolAssets: []balancer.PoolAsset{
-				{
-					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-				{
-					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-			},
-			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-			expectShares: sdk.NewInt(2498749968800),
-			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-		},
 	}
 	testCases = append(testCases, calcSingleAssetJoinTestCases...)
 
