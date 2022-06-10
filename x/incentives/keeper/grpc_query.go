@@ -135,7 +135,7 @@ func (q Querier) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGa
 				return false, nil
 			}
 			if accumulate {
-				gauges = append(gauges, newGauges...)
+				gauges = append(gauges, newGauges[i])
 			}
 		}
 		return true, nil
@@ -200,7 +200,7 @@ func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.Upcomi
 				return false, nil
 			}
 			if accumulate {
-				gauges = append(gauges, newGauges...)
+				gauges = append(gauges, newGauges[i])
 			}
 		}
 		return true, nil
