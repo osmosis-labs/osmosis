@@ -3,6 +3,7 @@ package balancer_test
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 
@@ -25,16 +26,21 @@ type calcJoinSharesTestCase struct {
 	swapFee      sdk.Dec
 	poolAssets   []balancer.PoolAsset
 	tokensIn     sdk.Coins
-	expectErr    bool
 	expectShares sdk.Int
 	expectLiq    sdk.Coins
+	expErr       error
 }
 
-// allowedErrRatio is the maximal multiplicative difference in either
-// direction (positive or negative) that we accept to tolerate in
-// unit tests for calcuating the number of shares to be returned by
-// joining a pool. The comparison is done between Wolfram estimates and our AMM logic.
-const allowedErrRatio = "0.0000001"
+const (
+	// allowedErrRatio is the maximal multiplicative difference in either
+	// direction (positive or negative) that we accept to tolerate in
+	// unit tests for calcuating the number of shares to be returned by
+	// joining a pool. The comparison is done between Wolfram estimates and our AMM logic.
+	allowedErrRatio = "0.0000001"
+	// doesNotExistDenom denom name assummed to be used in test cases where the provided
+	// denom does not exist in pool
+	doesNotExistDenom = "doesnotexist"
+)
 
 // see calcJoinSharesTestCase struct definition.
 var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
@@ -280,6 +286,23 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(819_444_430_000),
 		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+	},
+	{
+		name:    "tokenIn asset does not exist in pool",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+				Weight: sdk.NewInt(100),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(100),
+			},
+		},
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(doesNotExistDenom, 50_000)),
+		expectShares: sdk.ZeroInt(),
+		expErr:       fmt.Errorf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom),
 	},
 }
 
@@ -616,8 +639,9 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.MustNewDecFromStr("0"), tc.poolAssets...)
 
 			shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
-			if tc.expectErr {
+			if tc.expErr != nil {
 				require.Error(t, err)
+				require.Equal(t, tc.expErr, err)
 				require.Equal(t, sdk.ZeroInt(), shares)
 				require.Equal(t, sdk.NewCoins(), liquidity)
 			} else {
@@ -640,14 +664,28 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 
 			tokenIn := tc.tokensIn[0]
 
+			poolAssetInDenom := tokenIn.Denom
+			// when testing a case with tokenIn that does not exist in pool, we just want
+			// to provide any pool asset.
+			if tc.expErr != nil && strings.Contains(tc.expErr.Error(), doesNotExistDenom) {
+				poolAssetInDenom = tc.poolAssets[0].Token.Denom
+			}
+
 			// find pool asset in pool
 			// must be in pool since weights get scaled in Balancer pool
 			// constructor
-			poolAssetIn, err := balancerPool.GetPoolAsset(tokenIn.Denom)
+			poolAssetIn, err := balancerPool.GetPoolAsset(poolAssetInDenom)
 			require.NoError(t, err)
 
 			shares, err := balancerPool.CalcSingleAssetJoin(tokenIn, tc.swapFee, poolAssetIn, pool.GetTotalShares())
-			// It is impossible to set up a test case with error here so we omit it.
+
+			if tc.expErr != nil {
+				require.Error(t, err)
+				require.Equal(t, tc.expErr, err)
+				require.Equal(t, sdk.ZeroInt(), shares)
+				return
+			}
+
 			require.NoError(t, err)
 			assertExpectedSharesErrRatio(t, tc.expectShares, shares)
 		})
