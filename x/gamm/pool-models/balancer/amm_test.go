@@ -42,6 +42,17 @@ type calcJoinSharesTestCase struct {
 	expErr       error
 }
 
+const (
+	// allowedErrRatio is the maximal multiplicative difference in either
+	// direction (positive or negative) that we accept to tolerate in
+	// unit tests for calcuating the number of shares to be returned by
+	// joining a pool. The comparison is done between Wolfram estimates and our AMM logic.
+	allowedErrRatio = "0.0000001"
+	// doesNotExistDenom denom name assummed to be used in test cases where the provided
+	// denom does not exist in pool
+	doesNotExistDenom = "doesnotexist"
+)
+
 // see calcJoinSharesTestCase struct definition.
 var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 	{
@@ -641,6 +652,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
 			if tc.expErr != nil {
 				require.Error(t, err)
+				require.Equal(t, tc.expErr, err)
 				require.Equal(t, sdk.ZeroInt(), shares)
 				require.Equal(t, sdk.NewCoins(), liquidity)
 			} else {
