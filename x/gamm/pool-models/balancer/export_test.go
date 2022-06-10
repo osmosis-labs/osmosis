@@ -9,9 +9,9 @@ const (
 var (
 	ErrMsgFormatFailedInterimLiquidityUpdate = errMsgFormatFailedInterimLiquidityUpdate
 
-	CalcPoolSharesOutGivenSingleAssetIn = calcPoolSharesOutGivenSingleAssetIn
-	CalcSingleAssetInGivenPoolSharesOut = calcSingleAssetInGivenPoolSharesOut
-	UpdateIntermediaryPoolAssets        = updateIntermediaryPoolAssets
+	CalcPoolSharesOutGivenSingleAssetIn   = calcPoolSharesOutGivenSingleAssetIn
+	CalcSingleAssetInGivenPoolSharesOut   = calcSingleAssetInGivenPoolSharesOut
+	UpdateIntermediaryPoolAssetsLiquidity = updateIntermediaryPoolAssetsLiquidity
 
 	GetPoolAssetsByDenom = getPoolAssetsByDenom
 )

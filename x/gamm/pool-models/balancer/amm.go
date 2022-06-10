@@ -297,12 +297,12 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	// If there are tokens that couldn't be perfectly joined, do single asset joins
 	// for each of them.
 	if !remainingTokensIn.Empty() {
-		// update pool assets for accurate calcSingleAssetJoin calculation
-		if err := updateIntermediaryPoolAssets(newLiquidity, poolAssetsByDenom); err != nil {
+		// update pool assets with newLiquidity for accurate calcSingleAssetJoin calculation.
+		if err := updateIntermediaryPoolAssetsLiquidity(newLiquidity, poolAssetsByDenom); err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
 
-		// update total shares for accurate calcSingleAssetJoin calculation
+		// update total shares for accurate calcSingleAssetJoin calculation.
 		newTotalShares := totalShares.Add(numShares)
 
 		newNumSharesFromRemaining, newLiquidityFromRemaining, err := p.calcJoinSingleAssetTokensIn(remainingTokensIn, newTotalShares, poolAssetsByDenom, swapFee)
@@ -333,7 +333,7 @@ func getPoolAssetsByDenom(poolAssets []PoolAsset) (map[string]PoolAsset, error) 
 	return poolAssetsByDenom, nil
 }
 
-// updateIntermediaryPoolAssets updates poolAssetsByDenom with liquidity.
+// updateIntermediaryPoolAssetsLiquidity updates poolAssetsByDenom with liquidity.
 //
 // all liqidity coins must exist in poolAssetsByDenom. Returns error, if not.
 //
@@ -344,7 +344,7 @@ func getPoolAssetsByDenom(poolAssets []PoolAsset) (map[string]PoolAsset, error) 
 // Then, for every remaining tokens in, we attempt to do a single asset join.
 // Since the first step (MaximalExactRatioJoin) affects the pool liqudity due to slippage,
 // we would like to account for that in the subsequent steps of single asset join.
-func updateIntermediaryPoolAssets(liquidity sdk.Coins, poolAssetsByDenom map[string]PoolAsset) error {
+func updateIntermediaryPoolAssetsLiquidity(liquidity sdk.Coins, poolAssetsByDenom map[string]PoolAsset) error {
 	for _, coin := range liquidity {
 		poolAsset, ok := poolAssetsByDenom[coin.Denom]
 		if !ok {

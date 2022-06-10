@@ -445,9 +445,9 @@ func TestCalcJoinPoolShares(t *testing.T) {
 	}
 }
 
-// TestUpdateIntermediaryPoolAssets tests if `updateIntermediaryPoolAssets` returns poolAssetsByDenom map
+// TestUpdateIntermediaryPoolAssetsLiquidity tests if `updateIntermediaryPoolAssetsLiquidity` returns poolAssetsByDenom map
 // with the updated liquidity given by the parameter
-func TestUpdateIntermediaryPoolAssets(t *testing.T) {
+func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 	testCases := []struct {
 		name string
 
@@ -576,7 +576,7 @@ func TestUpdateIntermediaryPoolAssets(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			newLiquidity, originalPoolAssetsByDenom, expectedPoolAssetsByDenom := tc.setup()
 
-			err := balancer.UpdateIntermediaryPoolAssets(newLiquidity, originalPoolAssetsByDenom)
+			err := balancer.UpdateIntermediaryPoolAssetsLiquidity(newLiquidity, originalPoolAssetsByDenom)
 
 			require.Equal(t, tc.err, err)
 
