@@ -629,6 +629,31 @@ func TestCalcJoinPoolShares(t *testing.T) {
 	}
 }
 
+func TestCalcJoinPoolSharesNoSwap(t *testing.T) {
+	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge test cases.
+	// See calcJoinSharesTestCase struct definition for explanation why the sharing is needed.
+	testCases := append([]calcJoinSharesTestCase{}, calcSingleAssetJoinTestCases...)
+
+	for _, tc := range testCases {
+		tc := tc
+
+		t.Run(tc.name, func(t *testing.T) {
+			pool := createTestPool(t, tc.swapFee, sdk.MustNewDecFromStr("0"), tc.poolAssets...)
+
+			shares, liquidity, err := pool.CalcJoinPoolSharesNoSwap(sdk.Context{}, tc.tokensIn, tc.swapFee)
+			if tc.expectErr {
+				require.Error(t, err)
+				require.Equal(t, sdk.ZeroInt(), shares)
+				require.Equal(t, sdk.NewCoins(), liquidity)
+			} else {
+				require.NoError(t, err)
+				assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+				require.Equal(t, tc.expectLiq, liquidity)
+			}
+		})
+	}
+}
+
 func TestCalcSingleAssetJoin(t *testing.T) {
 	for _, tc := range calcSingleAssetJoinTestCases {
 		tc := tc
