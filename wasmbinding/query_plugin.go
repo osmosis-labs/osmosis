@@ -1,4 +1,4 @@
-package wasm
+package wasmbinding
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	bindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	"github.com/osmosis-labs/osmosis/v7/wasmbinding/bindings"
 )
 
 func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {

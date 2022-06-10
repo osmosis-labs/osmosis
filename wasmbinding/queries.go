@@ -1,4 +1,4 @@
-package wasm
+package wasmbinding
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	"github.com/osmosis-labs/osmosis/v7/wasmbinding/bindings"
 	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
@@ -26,22 +26,22 @@ func NewQueryPlugin(gk *gammkeeper.Keeper, tfk *tokenfactorykeeper.Keeper) *Quer
 	}
 }
 
-func (qp QueryPlugin) GetDenomAdmin(ctx sdk.Context, denom string) (*wasmbindings.DenomAdminResponse, error) {
+func (qp QueryPlugin) GetDenomAdmin(ctx sdk.Context, denom string) (*bindings.DenomAdminResponse, error) {
 	metadata, err := qp.tokenFactoryKeeper.GetAuthorityMetadata(ctx, denom)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get admin for denom: %s", denom)
 	}
 
-	return &wasmbindings.DenomAdminResponse{Admin: metadata.Admin}, nil
+	return &bindings.DenomAdminResponse{Admin: metadata.Admin}, nil
 }
 
-func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolID uint64) (*wasmbindings.PoolAssets, error) {
+func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolID uint64) (*bindings.PoolAssets, error) {
 	poolData, err := qp.gammKeeper.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "gamm get pool")
 	}
 
-	return &wasmbindings.PoolAssets{
+	return &bindings.PoolAssets{
 		Assets: poolData.GetTotalPoolLiquidity(ctx),
 		Shares: sdk.Coin{
 			Denom:  gammtypes.GetPoolShareDenom(poolID),
@@ -50,7 +50,7 @@ func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolID uint64) (*wasmbinding
 	}, nil
 }
 
-func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *wasmbindings.SpotPrice) (*sdk.Dec, error) {
+func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *bindings.SpotPrice) (*sdk.Dec, error) {
 	if spotPrice == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm spot price null"}
 	}
@@ -77,7 +77,7 @@ func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *wasmbindings.Spot
 	return &price, nil
 }
 
-func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *wasmbindings.EstimateSwap) (*wasmbindings.SwapAmount, error) {
+func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *bindings.EstimateSwap) (*bindings.SwapAmount, error) {
 	if estimateSwap == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate swap null"}
 	}
@@ -92,7 +92,7 @@ func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *wasmbindings.E
 		return nil, sdkerrors.Wrap(err, "gamm estimate swap sender address")
 	}
 
-	if estimateSwap.Amount == (wasmbindings.SwapAmount{}) {
+	if estimateSwap.Amount == (bindings.SwapAmount{}) {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate swap empty swap"}
 	}
 
@@ -100,7 +100,7 @@ func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *wasmbindings.E
 	return estimate, err
 }
 
-func (qp QueryPlugin) GetJoinPoolShares(ctx sdk.Context, joinPoolShares *wasmbindings.JoinPoolShares) (*wasmbindings.JoinPoolSharesResponse, error) {
+func (qp QueryPlugin) GetJoinPoolShares(ctx sdk.Context, joinPoolShares *bindings.JoinPoolShares) (*bindings.JoinPoolSharesResponse, error) {
 	if joinPoolShares == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "join pool shares null"}
 	}
@@ -115,5 +115,5 @@ func (qp QueryPlugin) GetJoinPoolShares(ctx sdk.Context, joinPoolShares *wasmbin
 
 	coins := ConvertSdkCoinsToWasmCoins(assets)
 
-	return &wasmbindings.JoinPoolSharesResponse{Shares: shares, Assets: coins}, err
+	return &bindings.JoinPoolSharesResponse{Shares: shares, Assets: coins}, err
 }

@@ -1,4 +1,4 @@
-package wasm
+package wasmbinding
 
 import (
 	"errors"
@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/wasm"
-	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	"github.com/osmosis-labs/osmosis/v7/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v7/wasmbinding/bindings"
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 
 	"github.com/stretchr/testify/assert"
@@ -25,22 +25,22 @@ func TestCreateDenom(t *testing.T) {
 	fundAccount(t, ctx, osmosis, actor, actorAmount)
 
 	specs := map[string]struct {
-		createDenom *wasmbindings.CreateDenom
+		createDenom *bindings.CreateDenom
 		expErr      bool
 	}{
 		"valid sub-denom": {
-			createDenom: &wasmbindings.CreateDenom{
+			createDenom: &bindings.CreateDenom{
 				Subdenom: "MOON",
 			},
 		},
 		"empty sub-denom": {
-			createDenom: &wasmbindings.CreateDenom{
+			createDenom: &bindings.CreateDenom{
 				Subdenom: "",
 			},
 			expErr: false,
 		},
 		"invalid sub-denom": {
-			createDenom: &wasmbindings.CreateDenom{
+			createDenom: &bindings.CreateDenom{
 				Subdenom: "sub-denom_2",
 			},
 			expErr: true,
@@ -53,7 +53,7 @@ func TestCreateDenom(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.createDenom)
+			gotErr := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.createDenom)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -62,7 +62,6 @@ func TestCreateDenom(t *testing.T) {
 			require.NoError(t, gotErr)
 		})
 	}
-
 }
 
 func TestChangeAdmin(t *testing.T) {
@@ -72,19 +71,19 @@ func TestChangeAdmin(t *testing.T) {
 
 	specs := map[string]struct {
 		actor       sdk.AccAddress
-		changeAdmin *wasmbindings.ChangeAdmin
+		changeAdmin *bindings.ChangeAdmin
 
 		expErrMsg string
 	}{
 		"valid": {
-			changeAdmin: &wasmbindings.ChangeAdmin{
+			changeAdmin: &bindings.ChangeAdmin{
 				Denom:           fmt.Sprintf("factory/%s/%s", tokenCreator.String(), validDenom),
 				NewAdminAddress: RandomBech32AccountAddress(),
 			},
 			actor: tokenCreator,
 		},
 		"typo in factory in denom name": {
-			changeAdmin: &wasmbindings.ChangeAdmin{
+			changeAdmin: &bindings.ChangeAdmin{
 				Denom:           fmt.Sprintf("facory/%s/%s", tokenCreator.String(), validDenom),
 				NewAdminAddress: RandomBech32AccountAddress(),
 			},
@@ -92,7 +91,7 @@ func TestChangeAdmin(t *testing.T) {
 			expErrMsg: "denom prefix is incorrect. Is: facory.  Should be: factory: invalid denom",
 		},
 		"invalid address in denom": {
-			changeAdmin: &wasmbindings.ChangeAdmin{
+			changeAdmin: &bindings.ChangeAdmin{
 				Denom:           fmt.Sprintf("factory/%s/%s", RandomBech32AccountAddress(), validDenom),
 				NewAdminAddress: RandomBech32AccountAddress(),
 			},
@@ -100,7 +99,7 @@ func TestChangeAdmin(t *testing.T) {
 			expErrMsg: "failed changing admin from message: unauthorized account",
 		},
 		"other denom name in 3 part name": {
-			changeAdmin: &wasmbindings.ChangeAdmin{
+			changeAdmin: &bindings.ChangeAdmin{
 				Denom:           fmt.Sprintf("factory/%s/%s", tokenCreator.String(), "invalid denom"),
 				NewAdminAddress: RandomBech32AccountAddress(),
 			},
@@ -108,7 +107,7 @@ func TestChangeAdmin(t *testing.T) {
 			expErrMsg: fmt.Sprintf("invalid denom: factory/%s/invalid denom", tokenCreator.String()),
 		},
 		"empty denom": {
-			changeAdmin: &wasmbindings.ChangeAdmin{
+			changeAdmin: &bindings.ChangeAdmin{
 				Denom:           "",
 				NewAdminAddress: RandomBech32AccountAddress(),
 			},
@@ -116,7 +115,7 @@ func TestChangeAdmin(t *testing.T) {
 			expErrMsg: "invalid denom: ",
 		},
 		"empty address": {
-			changeAdmin: &wasmbindings.ChangeAdmin{
+			changeAdmin: &bindings.ChangeAdmin{
 				Denom:           fmt.Sprintf("factory/%s/%s", tokenCreator.String(), validDenom),
 				NewAdminAddress: "",
 			},
@@ -124,7 +123,7 @@ func TestChangeAdmin(t *testing.T) {
 			expErrMsg: "address from bech32: empty address string is not allowed",
 		},
 		"creator is a different address": {
-			changeAdmin: &wasmbindings.ChangeAdmin{
+			changeAdmin: &bindings.ChangeAdmin{
 				Denom:           fmt.Sprintf("factory/%s/%s", tokenCreator.String(), validDenom),
 				NewAdminAddress: RandomBech32AccountAddress(),
 			},
@@ -132,7 +131,7 @@ func TestChangeAdmin(t *testing.T) {
 			expErrMsg: "failed changing admin from message: unauthorized account",
 		},
 		"change to the same address": {
-			changeAdmin: &wasmbindings.ChangeAdmin{
+			changeAdmin: &bindings.ChangeAdmin{
 				Denom:           fmt.Sprintf("factory/%s/%s", tokenCreator.String(), validDenom),
 				NewAdminAddress: tokenCreator.String(),
 			},
@@ -152,12 +151,12 @@ func TestChangeAdmin(t *testing.T) {
 			actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
 			fundAccount(t, ctx, osmosis, tokenCreator, actorAmount)
 
-			err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &wasmbindings.CreateDenom{
+			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
 				Subdenom: validDenom,
 			})
 			require.NoError(t, err)
 
-			err = wasm.ChangeAdmin(osmosis.TokenFactoryKeeper, ctx, spec.actor, spec.changeAdmin)
+			err = wasmbinding.ChangeAdmin(osmosis.TokenFactoryKeeper, ctx, spec.actor, spec.changeAdmin)
 			if len(spec.expErrMsg) > 0 {
 				require.Error(t, err)
 				actualErrMsg := err.Error()
@@ -178,16 +177,16 @@ func TestMint(t *testing.T) {
 	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
 
 	// Create denoms for valid mint tests
-	validDenom := wasmbindings.CreateDenom{
+	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
 	}
-	err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
+	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
-	emptyDenom := wasmbindings.CreateDenom{
+	emptyDenom := bindings.CreateDenom{
 		Subdenom: "",
 	}
-	err = wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &emptyDenom)
+	err = wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &emptyDenom)
 	require.NoError(t, err)
 
 	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
@@ -203,18 +202,18 @@ func TestMint(t *testing.T) {
 	require.True(t, ok)
 
 	specs := map[string]struct {
-		mint   *wasmbindings.MintTokens
+		mint   *bindings.MintTokens
 		expErr bool
 	}{
 		"valid mint": {
-			mint: &wasmbindings.MintTokens{
+			mint: &bindings.MintTokens{
 				Denom:         validDenomStr,
 				Amount:        amount,
 				MintToAddress: lucky.String(),
 			},
 		},
 		"empty sub-denom": {
-			mint: &wasmbindings.MintTokens{
+			mint: &bindings.MintTokens{
 				Denom:         emptyDenomStr,
 				Amount:        amount,
 				MintToAddress: lucky.String(),
@@ -222,7 +221,7 @@ func TestMint(t *testing.T) {
 			expErr: false,
 		},
 		"nonexistent sub-denom": {
-			mint: &wasmbindings.MintTokens{
+			mint: &bindings.MintTokens{
 				Denom:         fmt.Sprintf("factory/%s/%s", creator.String(), "SUN"),
 				Amount:        amount,
 				MintToAddress: lucky.String(),
@@ -230,7 +229,7 @@ func TestMint(t *testing.T) {
 			expErr: true,
 		},
 		"invalid sub-denom": {
-			mint: &wasmbindings.MintTokens{
+			mint: &bindings.MintTokens{
 				Denom:         "sub-denom_2",
 				Amount:        amount,
 				MintToAddress: lucky.String(),
@@ -238,7 +237,7 @@ func TestMint(t *testing.T) {
 			expErr: true,
 		},
 		"zero amount": {
-			mint: &wasmbindings.MintTokens{
+			mint: &bindings.MintTokens{
 				Denom:         validDenomStr,
 				Amount:        sdk.ZeroInt(),
 				MintToAddress: lucky.String(),
@@ -246,7 +245,7 @@ func TestMint(t *testing.T) {
 			expErr: true,
 		},
 		"negative amount": {
-			mint: &wasmbindings.MintTokens{
+			mint: &bindings.MintTokens{
 				Denom:         validDenomStr,
 				Amount:        amount.Neg(),
 				MintToAddress: lucky.String(),
@@ -254,7 +253,7 @@ func TestMint(t *testing.T) {
 			expErr: true,
 		},
 		"empty recipient": {
-			mint: &wasmbindings.MintTokens{
+			mint: &bindings.MintTokens{
 				Denom:         validDenomStr,
 				Amount:        amount,
 				MintToAddress: "",
@@ -262,7 +261,7 @@ func TestMint(t *testing.T) {
 			expErr: true,
 		},
 		"invalid recipient": {
-			mint: &wasmbindings.MintTokens{
+			mint: &bindings.MintTokens{
 				Denom:         validDenomStr,
 				Amount:        amount,
 				MintToAddress: "invalid",
@@ -277,7 +276,7 @@ func TestMint(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, spec.mint)
+			gotErr := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, spec.mint)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -286,7 +285,6 @@ func TestMint(t *testing.T) {
 			require.NoError(t, gotErr)
 		})
 	}
-
 }
 
 func TestBurn(t *testing.T) {
@@ -298,16 +296,16 @@ func TestBurn(t *testing.T) {
 	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
 
 	// Create denoms for valid burn tests
-	validDenom := wasmbindings.CreateDenom{
+	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
 	}
-	err := wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
+	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
-	emptyDenom := wasmbindings.CreateDenom{
+	emptyDenom := bindings.CreateDenom{
 		Subdenom: "",
 	}
-	err = wasm.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &emptyDenom)
+	err = wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &emptyDenom)
 	require.NoError(t, err)
 
 	lucky := RandomAccountAddress()
@@ -322,11 +320,11 @@ func TestBurn(t *testing.T) {
 	require.True(t, ok)
 
 	specs := map[string]struct {
-		burn   *wasmbindings.BurnTokens
+		burn   *bindings.BurnTokens
 		expErr bool
 	}{
 		"valid burn": {
-			burn: &wasmbindings.BurnTokens{
+			burn: &bindings.BurnTokens{
 				Denom:           validDenomStr,
 				Amount:          mintAmount,
 				BurnFromAddress: creator.String(),
@@ -334,7 +332,7 @@ func TestBurn(t *testing.T) {
 			expErr: false,
 		},
 		"non admin address": {
-			burn: &wasmbindings.BurnTokens{
+			burn: &bindings.BurnTokens{
 				Denom:           validDenomStr,
 				Amount:          mintAmount,
 				BurnFromAddress: lucky.String(),
@@ -342,7 +340,7 @@ func TestBurn(t *testing.T) {
 			expErr: true,
 		},
 		"empty sub-denom": {
-			burn: &wasmbindings.BurnTokens{
+			burn: &bindings.BurnTokens{
 				Denom:           emptyDenomStr,
 				Amount:          mintAmount,
 				BurnFromAddress: creator.String(),
@@ -350,7 +348,7 @@ func TestBurn(t *testing.T) {
 			expErr: false,
 		},
 		"invalid sub-denom": {
-			burn: &wasmbindings.BurnTokens{
+			burn: &bindings.BurnTokens{
 				Denom:           "sub-denom_2",
 				Amount:          mintAmount,
 				BurnFromAddress: creator.String(),
@@ -358,7 +356,7 @@ func TestBurn(t *testing.T) {
 			expErr: true,
 		},
 		"non-minted denom": {
-			burn: &wasmbindings.BurnTokens{
+			burn: &bindings.BurnTokens{
 				Denom:           fmt.Sprintf("factory/%s/%s", creator.String(), "SUN"),
 				Amount:          mintAmount,
 				BurnFromAddress: creator.String(),
@@ -366,7 +364,7 @@ func TestBurn(t *testing.T) {
 			expErr: true,
 		},
 		"zero amount": {
-			burn: &wasmbindings.BurnTokens{
+			burn: &bindings.BurnTokens{
 				Denom:           validDenomStr,
 				Amount:          sdk.ZeroInt(),
 				BurnFromAddress: creator.String(),
@@ -378,7 +376,7 @@ func TestBurn(t *testing.T) {
 			expErr: true,
 		},
 		"null burn": {
-			burn: &wasmbindings.BurnTokens{
+			burn: &bindings.BurnTokens{
 				Denom:           validDenomStr,
 				Amount:          mintAmount.Neg(),
 				BurnFromAddress: creator.String(),
@@ -390,24 +388,24 @@ func TestBurn(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// Mint valid denom str and empty denom string for burn test
-			mintBinding := &wasmbindings.MintTokens{
+			mintBinding := &bindings.MintTokens{
 				Denom:         validDenomStr,
 				Amount:        mintAmount,
 				MintToAddress: creator.String(),
 			}
-			err := wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, mintBinding)
+			err := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, mintBinding)
 			require.NoError(t, err)
 
-			emptyDenomMintBinding := &wasmbindings.MintTokens{
+			emptyDenomMintBinding := &bindings.MintTokens{
 				Denom:         emptyDenomStr,
 				Amount:        mintAmount,
 				MintToAddress: creator.String(),
 			}
-			err = wasm.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, emptyDenomMintBinding)
+			err = wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, emptyDenomMintBinding)
 			require.NoError(t, err)
 
 			// when
-			gotErr := wasm.PerformBurn(osmosis.TokenFactoryKeeper, ctx, creator, spec.burn)
+			gotErr := wasmbinding.PerformBurn(osmosis.TokenFactoryKeeper, ctx, creator, spec.burn)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -437,7 +435,7 @@ func TestSwap(t *testing.T) {
 	ustar := poolFunds[1].Amount.ToDec().MustFloat64()
 	swapRate := ustar / uosmo
 
-	amountIn := wasmbindings.ExactIn{
+	amountIn := bindings.ExactIn{
 		Input:     sdk.NewInt(10000),
 		MinOutput: sdk.OneInt(),
 	}
@@ -446,7 +444,7 @@ func TestSwap(t *testing.T) {
 	negativeAmountIn := amountIn
 	negativeAmountIn.Input = negativeAmountIn.Input.Neg()
 
-	amountOut := wasmbindings.ExactOut{
+	amountOut := bindings.ExactOut{
 		MaxInput: sdk.NewInt(math.MaxInt64),
 		Output:   sdk.NewInt(10000),
 	}
@@ -458,106 +456,106 @@ func TestSwap(t *testing.T) {
 	amount := amountIn.Input.ToDec().MustFloat64()
 	starAmount := sdk.NewInt(int64(amount * swapRate))
 
-	starSwapAmount := wasmbindings.SwapAmount{Out: &starAmount}
+	starSwapAmount := bindings.SwapAmount{Out: &starAmount}
 
 	specs := map[string]struct {
-		swap    *wasmbindings.SwapMsg
-		expCost *wasmbindings.SwapAmount
+		swap    *bindings.SwapMsg
+		expCost *bindings.SwapAmount
 		expErr  bool
 	}{
 		"valid swap (exact in)": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expCost: &starSwapAmount,
 		},
 		"non-existent pool id": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool + 4,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"zero pool id": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   0,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"invalid denom in": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "invalid",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"empty denom in": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"invalid denom out": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "invalid",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"empty denom out": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
@@ -568,68 +566,68 @@ func TestSwap(t *testing.T) {
 			expErr: true,
 		},
 		"empty swap amount": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "",
 				},
 				Route:  nil,
-				Amount: wasmbindings.SwapAmountWithLimit{},
+				Amount: bindings.SwapAmountWithLimit{},
 			},
 			expErr: true,
 		},
 		"zero amount in": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &zeroAmountIn,
 				},
 			},
 			expErr: true,
 		},
 		"zero amount out": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactOut: &zeroAmountOut,
 				},
 			},
 			expErr: true,
 		},
 		"negative amount in": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &negativeAmountIn,
 				},
 			},
 			expErr: true,
 		},
 		"negative amount out": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactOut: &negativeAmountOut,
 				},
 			},
@@ -639,7 +637,7 @@ func TestSwap(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotAmount, gotErr := wasm.PerformSwap(osmosis.GAMMKeeper, ctx, actor, spec.swap)
+			gotAmount, gotErr := wasmbinding.PerformSwap(osmosis.GAMMKeeper, ctx, actor, spec.swap)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -672,7 +670,7 @@ func TestSwapMultiHop(t *testing.T) {
 	}
 	atomPool := preparePool(t, ctx, osmosis, actor, poolFunds2)
 
-	amountIn := wasmbindings.ExactIn{
+	amountIn := bindings.ExactIn{
 		Input:     sdk.NewInt(1_000_000),
 		MinOutput: sdk.NewInt(20_000),
 	}
@@ -689,127 +687,127 @@ func TestSwapMultiHop(t *testing.T) {
 	expectedOut2 := uatom2 - uosmo2*uatom2/(uosmo2+expectedOut1)
 
 	atomAmount := sdk.NewInt(int64(expectedOut2))
-	atomSwapAmount := wasmbindings.SwapAmount{Out: &atomAmount}
+	atomSwapAmount := bindings.SwapAmount{Out: &atomAmount}
 
 	specs := map[string]struct {
-		swap    *wasmbindings.SwapMsg
-		expCost *wasmbindings.SwapAmount
+		swap    *bindings.SwapMsg
+		expCost *bindings.SwapAmount
 		expErr  bool
 	}{
 		"valid swap (exact in, 2 step multi-hop)": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "uosmo",
 				},
-				Route: []wasmbindings.Step{{
+				Route: []bindings.Step{{
 					PoolId:   atomPool,
 					DenomOut: "uatom",
 				}},
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expCost: &atomSwapAmount,
 		},
 		"non-existent step pool id": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "uosmo",
 				},
-				Route: []wasmbindings.Step{{
+				Route: []bindings.Step{{
 					PoolId:   atomPool + 2,
 					DenomOut: "uatom",
 				}},
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"zero step pool id": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "uosmo",
 				},
-				Route: []wasmbindings.Step{{
+				Route: []bindings.Step{{
 					PoolId:   0,
 					DenomOut: "uatom",
 				}},
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"wrong step denom out": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "uosmo",
 				},
-				Route: []wasmbindings.Step{{
+				Route: []bindings.Step{{
 					PoolId:   atomPool,
 					DenomOut: "ATOM",
 				}},
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"self-swap not allowed": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "uosmo",
 				},
-				Route: []wasmbindings.Step{{
+				Route: []bindings.Step{{
 					PoolId:   atomPool,
 					DenomOut: "uosmo", // this is same as the input (output of first swap)
 				}},
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"invalid step denom out": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "uosmo",
 				},
-				Route: []wasmbindings.Step{{
+				Route: []bindings.Step{{
 					PoolId:   atomPool,
 					DenomOut: "invalid",
 				}},
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"empty step denom out": {
-			swap: &wasmbindings.SwapMsg{
-				First: wasmbindings.Swap{
+			swap: &bindings.SwapMsg{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "uosmo",
 				},
-				Route: []wasmbindings.Step{{
+				Route: []bindings.Step{{
 					PoolId:   atomPool,
 					DenomOut: "",
 				}},
-				Amount: wasmbindings.SwapAmountWithLimit{
+				Amount: bindings.SwapAmountWithLimit{
 					ExactIn: &amountIn,
 				},
 			},
@@ -821,7 +819,7 @@ func TestSwapMultiHop(t *testing.T) {
 			// use scratch context to avoid interference between tests
 			subCtx, _ := ctx.CacheContext()
 			// when
-			gotAmount, gotErr := wasm.PerformSwap(osmosis.GAMMKeeper, subCtx, actor, spec.swap)
+			gotAmount, gotErr := wasmbinding.PerformSwap(osmosis.GAMMKeeper, subCtx, actor, spec.swap)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -850,11 +848,11 @@ func TestJoinPoolNoSwap(t *testing.T) {
 		sdk.NewInt64Coin("ustar", 240_000))
 
 	specs := map[string]struct {
-		JoinPoolNoSwap *wasmbindings.JoinPoolNoSwap
+		JoinPoolNoSwap *bindings.JoinPoolNoSwap
 		expErr         error
 	}{
 		"zero share out amount": {
-			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
+			JoinPoolNoSwap: &bindings.JoinPoolNoSwap{
 				PoolId:         starPool,
 				ShareOutAmount: sdk.NewInt(0),
 				TokenInMaxs:    osmoStarLiquidity,
@@ -862,7 +860,7 @@ func TestJoinPoolNoSwap(t *testing.T) {
 			expErr: errors.New("share ratio is zero or negative: invalid calculated result"),
 		},
 		"incorrect pool id": {
-			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
+			JoinPoolNoSwap: &bindings.JoinPoolNoSwap{
 				PoolId:         starPool + uint64(10),
 				ShareOutAmount: sdk.NewInt(1000000),
 				TokenInMaxs:    osmoStarLiquidity,
@@ -870,7 +868,7 @@ func TestJoinPoolNoSwap(t *testing.T) {
 			expErr: errors.New("pool with ID 11 does not exist"),
 		},
 		"sending one coin": {
-			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
+			JoinPoolNoSwap: &bindings.JoinPoolNoSwap{
 				PoolId:         starPool,
 				ShareOutAmount: sdk.NewInt(1000000),
 				TokenInMaxs:    sdk.NewCoins(sdk.NewCoin("osmo", sdk.NewInt(10))),
@@ -878,7 +876,7 @@ func TestJoinPoolNoSwap(t *testing.T) {
 			expErr: errors.New("TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap, upperbound: 10osmo, needed 1uosmo,1ustar: calculated amount is larger than max amount"),
 		},
 		"valid join pool": {
-			JoinPoolNoSwap: &wasmbindings.JoinPoolNoSwap{
+			JoinPoolNoSwap: &bindings.JoinPoolNoSwap{
 				PoolId:         starPool,
 				ShareOutAmount: sdk.NewInt(1000000),
 				TokenInMaxs:    osmoStarLiquidity,
@@ -891,7 +889,7 @@ func TestJoinPoolNoSwap(t *testing.T) {
 			// use scratch context to avoid interference between tests
 			subCtx, _ := ctx.CacheContext()
 			// when
-			gotErr := wasm.PerformJoinPoolNoSwap(osmosis.GAMMKeeper, subCtx, actor, spec.JoinPoolNoSwap)
+			gotErr := wasmbinding.PerformJoinPoolNoSwap(osmosis.GAMMKeeper, subCtx, actor, spec.JoinPoolNoSwap)
 			// then
 			if spec.expErr != nil {
 				require.EqualError(t, gotErr, spec.expErr.Error())
@@ -923,17 +921,17 @@ func TestExitPool(t *testing.T) {
 		sdk.NewInt64Coin("ustar", 240_000))
 
 	specs := map[string]struct {
-		ExitPool *wasmbindings.ExitPool
+		ExitPool *bindings.ExitPool
 		expErr   error
 	}{
 		"valid exit pool": {
-			ExitPool: &wasmbindings.ExitPool{
+			ExitPool: &bindings.ExitPool{
 				PoolId:        starPool,
 				ShareInAmount: sdk.NewInt(100000000000000000),
 				TokenOutMins:  sdk.NewCoins(sdk.NewInt64Coin("uosmo", 11999), sdk.NewInt64Coin("ustar", 239999)),
 			}},
 		"zero share in amount": {
-			ExitPool: &wasmbindings.ExitPool{
+			ExitPool: &bindings.ExitPool{
 				PoolId:        starPool,
 				ShareInAmount: sdk.NewInt(0),
 				TokenOutMins:  osmoStarLiquidity,
@@ -941,7 +939,7 @@ func TestExitPool(t *testing.T) {
 			expErr: errors.New("share ratio is zero or negative: invalid calculated result"),
 		},
 		"incorrect pool id": {
-			ExitPool: &wasmbindings.ExitPool{
+			ExitPool: &bindings.ExitPool{
 				PoolId:        starPool + uint64(10),
 				ShareInAmount: sdk.NewInt(1000000),
 				TokenOutMins:  osmoStarLiquidity,
@@ -949,7 +947,7 @@ func TestExitPool(t *testing.T) {
 			expErr: errors.New("pool with ID 11 does not exist"),
 		},
 		"sending one coin": {
-			ExitPool: &wasmbindings.ExitPool{
+			ExitPool: &bindings.ExitPool{
 				PoolId:        starPool,
 				ShareInAmount: sdk.NewInt(1000000),
 				TokenOutMins:  sdk.NewCoins(sdk.NewCoin("osmo", sdk.NewInt(10))),
@@ -963,7 +961,7 @@ func TestExitPool(t *testing.T) {
 			// use scratch context to avoid interference between tests
 			subCtx, _ := ctx.CacheContext()
 			// when
-			gotErr := wasm.PerformExit(osmosis.GAMMKeeper, subCtx, actor, spec.ExitPool)
+			gotErr := wasmbinding.PerformExit(osmosis.GAMMKeeper, subCtx, actor, spec.ExitPool)
 			// then
 			if spec.expErr != nil {
 				require.EqualError(t, gotErr, spec.expErr.Error())
@@ -995,25 +993,25 @@ func TestJoinSwapExactAmountIn(t *testing.T) {
 	// 	sdk.NewInt64Coin("ustar", 240_000))
 
 	specs := map[string]struct {
-		JoinSwapExactAmountIn *wasmbindings.JoinSwapExactAmountIn
+		JoinSwapExactAmountIn *bindings.JoinSwapExactAmountIn
 		expErr                error
 	}{
 		"excessive share out min amount": {
-			JoinSwapExactAmountIn: &wasmbindings.JoinSwapExactAmountIn{
+			JoinSwapExactAmountIn: &bindings.JoinSwapExactAmountIn{
 				PoolId:            starPool,
 				ShareOutMinAmount: sdk.NewInt(math.MaxInt64),
 				TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(1_000_000))},
 			expErr: errors.New("too much slippage; needed a minimum of 9223372036854775807 shares to pass, got 4083300053402688006: calculated amount is lesser than min amount"),
 		},
 		"incorrect pool id": {
-			JoinSwapExactAmountIn: &wasmbindings.JoinSwapExactAmountIn{
+			JoinSwapExactAmountIn: &bindings.JoinSwapExactAmountIn{
 				PoolId:            starPool + 10,
 				ShareOutMinAmount: sdk.NewInt(0),
 				TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(1_000_000))},
 			expErr: errors.New("pool with ID 11 does not exist"),
 		},
 		"valid join swap exact amount in": {
-			JoinSwapExactAmountIn: &wasmbindings.JoinSwapExactAmountIn{
+			JoinSwapExactAmountIn: &bindings.JoinSwapExactAmountIn{
 				PoolId:            starPool,
 				ShareOutMinAmount: sdk.NewInt(0),
 				TokenIn:           sdk.NewCoin("uosmo", sdk.NewInt(1_000_000))},
@@ -1025,7 +1023,7 @@ func TestJoinSwapExactAmountIn(t *testing.T) {
 			// use scratch context to avoid interference between tests
 			subCtx, _ := ctx.CacheContext()
 			// when
-			_, gotErr := wasm.PerformJoinSwapExactAmountIn(osmosis.GAMMKeeper, subCtx, actor, spec.JoinSwapExactAmountIn)
+			_, gotErr := wasmbinding.PerformJoinSwapExactAmountIn(osmosis.GAMMKeeper, subCtx, actor, spec.JoinSwapExactAmountIn)
 			// then
 			if spec.expErr != nil {
 				require.EqualError(t, gotErr, spec.expErr.Error())
@@ -1057,11 +1055,11 @@ func TestExitSwapShareAmountIn(t *testing.T) {
 	// 	sdk.NewInt64Coin("ustar", 240_000))
 
 	specs := map[string]struct {
-		ExitSwapShareAmountIn *wasmbindings.ExitSwapShareAmountIn
+		ExitSwapShareAmountIn *bindings.ExitSwapShareAmountIn
 		expErr                error
 	}{
 		"zero share in amount": {
-			ExitSwapShareAmountIn: &wasmbindings.ExitSwapShareAmountIn{
+			ExitSwapShareAmountIn: &bindings.ExitSwapShareAmountIn{
 				PoolId:            starPool,
 				TokenOutDenom:     "ustar",
 				ShareInAmount:     sdk.NewInt(0),
@@ -1070,7 +1068,7 @@ func TestExitSwapShareAmountIn(t *testing.T) {
 			expErr: errors.New("exit swap share amount in message: share ratio is zero or negative: invalid calculated result"),
 		},
 		"incorrect pool id": {
-			ExitSwapShareAmountIn: &wasmbindings.ExitSwapShareAmountIn{
+			ExitSwapShareAmountIn: &bindings.ExitSwapShareAmountIn{
 				PoolId:            starPool + 10,
 				TokenOutDenom:     "ustar",
 				ShareInAmount:     sdk.NewInt(100000000000000000),
@@ -1079,7 +1077,7 @@ func TestExitSwapShareAmountIn(t *testing.T) {
 			expErr: errors.New("exit swap share amount in message: pool with ID 11 does not exist"),
 		},
 		"valid exit swap share amount in": {
-			ExitSwapShareAmountIn: &wasmbindings.ExitSwapShareAmountIn{
+			ExitSwapShareAmountIn: &bindings.ExitSwapShareAmountIn{
 				PoolId:            starPool,
 				TokenOutDenom:     "ustar",
 				ShareInAmount:     sdk.NewInt(100000000000000000),
@@ -1093,7 +1091,7 @@ func TestExitSwapShareAmountIn(t *testing.T) {
 			// use scratch context to avoid interference between tests
 			subCtx, _ := ctx.CacheContext()
 			// when
-			_, gotErr := wasm.PerformExitSwapShareAmountIn(osmosis.GAMMKeeper, subCtx, actor, spec.ExitSwapShareAmountIn)
+			_, gotErr := wasmbinding.PerformExitSwapShareAmountIn(osmosis.GAMMKeeper, subCtx, actor, spec.ExitSwapShareAmountIn)
 			// then
 			if spec.expErr != nil {
 				require.EqualError(t, gotErr, spec.expErr.Error())

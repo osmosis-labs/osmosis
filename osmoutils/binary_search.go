@@ -32,17 +32,15 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 		comparisonSign = -1
 	}
 
-	// if no error accepted, do a direct compare.
-	if e.AdditiveTolerance.IsZero() {
-		if expected.Equal(actual) {
-			return 0
-		} else {
-			return comparisonSign
-		}
-	}
-
 	// Check additive tolerance equations
 	if !e.AdditiveTolerance.IsNil() {
+		// if no error accepted, do a direct compare.
+		if e.AdditiveTolerance.IsZero() {
+			if expected.Equal(actual) {
+				return 0
+			}
+		}
+
 		if diff.GT(e.AdditiveTolerance) {
 			return comparisonSign
 		}
@@ -66,7 +64,8 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 	upperbound sdk.Int,
 	targetOutput sdk.Int,
 	errTolerance ErrTolerance,
-	maxIterations int) (sdk.Int, error) {
+	maxIterations int,
+) (sdk.Int, error) {
 	// Setup base case of loop
 	curEstimate := lowerbound.Add(upperbound).QuoRaw(2)
 	curOutput, err := f(curEstimate)

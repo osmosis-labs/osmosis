@@ -1,4 +1,4 @@
-package wasm
+package wasmbinding
 
 import (
 	"errors"
@@ -10,8 +10,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/wasm"
-	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	"github.com/osmosis-labs/osmosis/v7/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v7/wasmbinding/bindings"
 )
 
 func TestFullDenom(t *testing.T) {
@@ -52,7 +52,7 @@ func TestFullDenom(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotFullDenom, gotErr := wasm.GetFullDenom(spec.addr, spec.subdenom)
+			gotFullDenom, gotErr := wasmbinding.GetFullDenom(spec.addr, spec.subdenom)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -79,7 +79,7 @@ func TestDenomAdmin(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, tfDenom)
 
-	queryPlugin := wasm.NewQueryPlugin(app.GAMMKeeper, app.TokenFactoryKeeper)
+	queryPlugin := wasmbinding.NewQueryPlugin(app.GAMMKeeper, app.TokenFactoryKeeper)
 
 	testCases := []struct {
 		name        string
@@ -133,16 +133,16 @@ func TestPoolState(t *testing.T) {
 	starSharesDenom := fmt.Sprintf("gamm/pool/%d", starPool)
 	starSharedAmount, _ := sdk.NewIntFromString("100_000_000_000_000_000_000")
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
+	queryPlugin := wasmbinding.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
 		poolId       uint64
-		expPoolState *wasmbindings.PoolAssets
+		expPoolState *bindings.PoolAssets
 		expErr       bool
 	}{
 		"existent pool id": {
 			poolId: starPool,
-			expPoolState: &wasmbindings.PoolAssets{
+			expPoolState: &bindings.PoolAssets{
 				Assets: poolFunds,
 				Shares: sdk.NewCoin(starSharesDenom, starSharedAmount),
 			},
@@ -193,16 +193,16 @@ func TestSpotPrice(t *testing.T) {
 	starFee := sdk.MustNewDecFromStr(fmt.Sprintf("%f", swapFee))
 	starPriceWithFee := starPrice.Add(starFee)
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
+	queryPlugin := wasmbinding.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
-		spotPrice *wasmbindings.SpotPrice
+		spotPrice *bindings.SpotPrice
 		expPrice  *sdk.Dec
 		expErr    bool
 	}{
 		"valid spot price": {
-			spotPrice: &wasmbindings.SpotPrice{
-				Swap: wasmbindings.Swap{
+			spotPrice: &bindings.SpotPrice{
+				Swap: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
@@ -212,8 +212,8 @@ func TestSpotPrice(t *testing.T) {
 			expPrice: &starPrice,
 		},
 		"valid spot price with fee": {
-			spotPrice: &wasmbindings.SpotPrice{
-				Swap: wasmbindings.Swap{
+			spotPrice: &bindings.SpotPrice{
+				Swap: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
@@ -223,8 +223,8 @@ func TestSpotPrice(t *testing.T) {
 			expPrice: &starPriceWithFee,
 		},
 		"non-existent pool id": {
-			spotPrice: &wasmbindings.SpotPrice{
-				Swap: wasmbindings.Swap{
+			spotPrice: &bindings.SpotPrice{
+				Swap: bindings.Swap{
 					PoolId:   starPool + 2,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
@@ -234,8 +234,8 @@ func TestSpotPrice(t *testing.T) {
 			expErr: true,
 		},
 		"zero pool id": {
-			spotPrice: &wasmbindings.SpotPrice{
-				Swap: wasmbindings.Swap{
+			spotPrice: &bindings.SpotPrice{
+				Swap: bindings.Swap{
 					PoolId:   0,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
@@ -245,8 +245,8 @@ func TestSpotPrice(t *testing.T) {
 			expErr: true,
 		},
 		"invalid denom in": {
-			spotPrice: &wasmbindings.SpotPrice{
-				Swap: wasmbindings.Swap{
+			spotPrice: &bindings.SpotPrice{
+				Swap: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "invalid",
 					DenomOut: "ustar",
@@ -256,8 +256,8 @@ func TestSpotPrice(t *testing.T) {
 			expErr: true,
 		},
 		"empty denom in": {
-			spotPrice: &wasmbindings.SpotPrice{
-				Swap: wasmbindings.Swap{
+			spotPrice: &bindings.SpotPrice{
+				Swap: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "",
 					DenomOut: "ustar",
@@ -267,8 +267,8 @@ func TestSpotPrice(t *testing.T) {
 			expErr: true,
 		},
 		"invalid denom out": {
-			spotPrice: &wasmbindings.SpotPrice{
-				Swap: wasmbindings.Swap{
+			spotPrice: &bindings.SpotPrice{
+				Swap: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "invalid",
@@ -278,8 +278,8 @@ func TestSpotPrice(t *testing.T) {
 			expErr: true,
 		},
 		"empty denom out": {
-			spotPrice: &wasmbindings.SpotPrice{
-				Swap: wasmbindings.Swap{
+			spotPrice: &bindings.SpotPrice{
+				Swap: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "",
@@ -334,115 +334,115 @@ func TestEstimateSwap(t *testing.T) {
 	amount := amountIn.ToDec().MustFloat64()
 	starAmount := sdk.NewInt(int64(amount * swapRate))
 
-	starSwapAmount := wasmbindings.SwapAmount{Out: &starAmount}
+	starSwapAmount := bindings.SwapAmount{Out: &starAmount}
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
+	queryPlugin := wasmbinding.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
-		estimateSwap *wasmbindings.EstimateSwap
-		expCost      *wasmbindings.SwapAmount
+		estimateSwap *bindings.EstimateSwap
+		expCost      *bindings.SwapAmount
 		expErr       bool
 	}{
 		"valid estimate swap (exact in)": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					In: &amountIn,
 				},
 			},
 			expCost: &starSwapAmount,
 		},
 		"non-existent pool id": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool + 3,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					In: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"zero pool id": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   0,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					In: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"invalid denom in": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "invalid",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					In: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"empty denom in": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					In: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"invalid denom out": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "invalid",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					In: &amountIn,
 				},
 			},
 			expErr: true,
 		},
 		"empty denom out": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "ustar",
 					DenomOut: "",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					In: &amountIn,
 				},
 			},
@@ -453,73 +453,73 @@ func TestEstimateSwap(t *testing.T) {
 			expErr:       true,
 		},
 		"empty swap amount": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route:  nil,
-				Amount: wasmbindings.SwapAmount{},
+				Amount: bindings.SwapAmount{},
 			},
 			expErr: true,
 		},
 		"zero amount in": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					In: &zeroAmount,
 				},
 			},
 			expErr: true,
 		},
 		"zero amount out": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					Out: &zeroAmount,
 				},
 			},
 			expErr: true,
 		},
 		"negative amount in": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					In: &negativeAmount,
 				},
 			},
 			expErr: true,
 		},
 		"negative amount out": {
-			estimateSwap: &wasmbindings.EstimateSwap{
+			estimateSwap: &bindings.EstimateSwap{
 				Sender: actor.String(),
-				First: wasmbindings.Swap{
+				First: bindings.Swap{
 					PoolId:   starPool,
 					DenomIn:  "uosmo",
 					DenomOut: "ustar",
 				},
 				Route: nil,
-				Amount: wasmbindings.SwapAmount{
+				Amount: bindings.SwapAmount{
 					Out: &negativeAmount,
 				},
 			},
@@ -554,40 +554,40 @@ func TestJoinPoolShares(t *testing.T) {
 	// 20 star to 1 osmo
 	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
 
-	queryPlugin := wasm.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
+	queryPlugin := wasmbinding.NewQueryPlugin(osmosis.GAMMKeeper, osmosis.TokenFactoryKeeper)
 
 	specs := map[string]struct {
-		joinPoolShares *wasmbindings.JoinPoolShares
+		joinPoolShares *bindings.JoinPoolShares
 		err            error
 	}{
 		"valid join pool shares one coin": {
-			joinPoolShares: &wasmbindings.JoinPoolShares{
+			joinPoolShares: &bindings.JoinPoolShares{
 				PoolId: starPool,
 				Coins:  sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
 			},
 		},
 		"valid join pool shares two coin": {
-			joinPoolShares: &wasmbindings.JoinPoolShares{
+			joinPoolShares: &bindings.JoinPoolShares{
 				PoolId: starPool,
 				Coins:  sdk.NewCoins(sdk.NewCoin("ustar", sdk.NewInt(2_400_000)), sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
 			},
 		},
 		"non-existent pool id": {
-			joinPoolShares: &wasmbindings.JoinPoolShares{
+			joinPoolShares: &bindings.JoinPoolShares{
 				PoolId: starPool + 10,
 				Coins:  sdk.NewCoins(sdk.NewCoin("ustar", sdk.NewInt(2_400_000)), sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
 			},
 			err: errors.New("Invalid pool"),
 		},
 		"zero pool id": {
-			joinPoolShares: &wasmbindings.JoinPoolShares{
+			joinPoolShares: &bindings.JoinPoolShares{
 				PoolId: 0,
 				Coins:  sdk.NewCoins(sdk.NewCoin("ustar", sdk.NewInt(2_400_000)), sdk.NewCoin("uosmo", sdk.NewInt(120_000))),
 			},
 			err: errors.New("Invalid pool"),
 		},
 		"empty coins in": {
-			joinPoolShares: &wasmbindings.JoinPoolShares{
+			joinPoolShares: &bindings.JoinPoolShares{
 				PoolId: starPool,
 				Coins:  sdk.NewCoins(),
 			},
