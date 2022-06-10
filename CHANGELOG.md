@@ -40,6 +40,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v9.1.0
+
+Adds logic to make the binary automatically halt at the v10 upgrade height, in a cosmovisor compatible manner.
+
 ## v9.0.1
 
 ### Breaking Changes
