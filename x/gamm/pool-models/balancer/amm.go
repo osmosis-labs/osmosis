@@ -328,6 +328,53 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 	return numShares, newLiquidity, nil
 }
 
+// JoinPoolNoSwap TODO: JoinPoolNoSwap
+func (p *Pool) JoinPoolNoSwap(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
+	numShares, newLiquidity, err := p.CalcJoinPoolSharesNoSwap(_ctx, tokensIn, swapFee)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// update pool with the calculated share and liquidity needed to join pool
+	p.IncreaseLiquidity(numShares, newLiquidity)
+	return numShares, nil
+}
+
+// CalcJoinPoolSharesNoSwap TODO: JoinPoolNoSwap
+func (p *Pool) CalcJoinPoolSharesNoSwap(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	totalShares := p.GetTotalShares()
+
+	if tokensIn.Len() == 1 {
+		numShares, err = p.calcSingleAssetJoin(tokensIn[0], swapFee, poolAssetsByDenom[tokensIn[0].Denom], totalShares)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
+		newLiquidity = tokensIn
+
+		return numShares, newLiquidity, nil
+	} else if tokensIn.Len() != p.NumAssets() {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
+	}
+
+	// Add all exact coins we can join pool with without swap. ctx arg doesn't matter for Balancer.
+	// calculate the number of shares we can join pool with without swap, and the remaining tokens
+	// that has to be joined via single asset join
+	// ctx arg doesn't matter for balancer
+	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
+	}
+	newLiquidity = tokensIn.Sub(remCoins)
+
+	return numShares, newLiquidity, nil
+}
+
 // getPoolAssetsByDenom return a mapping from pool asset
 // denom to the pool asset itself. There must be no duplicates.
 // Returns error, if any found.

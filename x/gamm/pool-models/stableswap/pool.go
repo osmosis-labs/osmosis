@@ -234,6 +234,14 @@ func (pa *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 	return numShares, err
 }
 
+func (pa *Pool) CalcJoinPoolSharesNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+	return sdk.ZeroInt(), sdk.Coins{}, errors.New("not implemented")
+}
+
+func (pa *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
+	return sdk.ZeroInt(), errors.New("not implemented")
+}
+
 func (pa *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
 	exitingCoins, err = pa.CalcExitPoolShares(ctx, exitingShares, exitFee)
 	if err != nil {
