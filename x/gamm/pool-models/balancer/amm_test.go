@@ -15,7 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-// calcJoinSharesTestCase defines a testcase for TestCalcSingleAssetJoin and
+// calcJoinSharesTestCase defines a test case for TestCalcSingleAssetJoin and
 // TestCalcJoinPoolShares.
 //
 // CalcJoinPoolShares calls calcSingleAssetJoin. As a result, we can reuse
