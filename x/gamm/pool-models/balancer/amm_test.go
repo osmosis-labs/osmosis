@@ -42,17 +42,6 @@ type calcJoinSharesTestCase struct {
 	expErr       error
 }
 
-const (
-	// allowedErrRatio is the maximal multiplicative difference in either
-	// direction (positive or negative) that we accept to tolerate in
-	// unit tests for calcuating the number of shares to be returned by
-	// joining a pool. The comparison is done between Wolfram estimates and our AMM logic.
-	allowedErrRatio = "0.0000001"
-	// doesNotExistDenom denom name assummed to be used in test cases where the provided
-	// denom does not exist in pool
-	doesNotExistDenom = "doesnotexist"
-)
-
 // see calcJoinSharesTestCase struct definition.
 var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 	{

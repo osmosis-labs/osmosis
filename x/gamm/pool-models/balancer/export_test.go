@@ -9,7 +9,6 @@ const (
 
 var (
 	ErrMsgFormatFailedInterimLiquidityUpdate = errMsgFormatFailedInterimLiquidityUpdate
-	ErrMsgFormatNoPoolAssetFound             = errMsgFormatNoPoolAssetFound
 
 	CalcPoolSharesOutGivenSingleAssetIn   = calcPoolSharesOutGivenSingleAssetIn
 	CalcSingleAssetInGivenPoolSharesOut   = calcSingleAssetInGivenPoolSharesOut
