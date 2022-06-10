@@ -4,6 +4,7 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 const (
 	ErrMsgFormatRepeatingPoolAssetsNotAllowed = errMsgFormatRepeatingPoolAssetsNotAllowed
+	ErrMsgFormatNoPoolAssetFound              = errMsgFormatNoPoolAssetFound
 )
 
 var (
