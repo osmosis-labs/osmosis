@@ -1,8 +1,6 @@
 package gov_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper/gov"
@@ -47,10 +45,10 @@ func (suite *KeeperTestSuite) TestHandleSetSwapFeeProposal() {
 				keeper := suite.app.GAMMKeeper
 
 				err := gov.HandleSetSwapFeeProposal(suite.ctx, *keeper, &types.SetSwapFeeProposal{
-					Title: "tittle",
+					Title:       "tittle",
 					Description: "des",
 					Content: types.SetSwapFeeContent{
-						PoolId: 1,
+						PoolId:  1,
 						SwapFee: sdk.MustNewDecFromStr("1.1"),
 					},
 				})
@@ -63,10 +61,10 @@ func (suite *KeeperTestSuite) TestHandleSetSwapFeeProposal() {
 				keeper := suite.app.GAMMKeeper
 
 				err := gov.HandleSetSwapFeeProposal(suite.ctx, *keeper, &types.SetSwapFeeProposal{
-					Title: "tittle",
+					Title:       "tittle",
 					Description: "des",
 					Content: types.SetSwapFeeContent{
-						PoolId: 1,
+						PoolId:  1,
 						SwapFee: sdk.MustNewDecFromStr("-0.01"),
 					},
 				})
@@ -79,10 +77,10 @@ func (suite *KeeperTestSuite) TestHandleSetSwapFeeProposal() {
 				keeper := suite.app.GAMMKeeper
 
 				err := gov.HandleSetSwapFeeProposal(suite.ctx, *keeper, &types.SetSwapFeeProposal{
-					Title: "tittle",
+					Title:       "tittle",
 					Description: "des",
 					Content: types.SetSwapFeeContent{
-						PoolId: 1,
+						PoolId:  1,
 						SwapFee: sdk.MustNewDecFromStr("0.03"),
 					},
 				})
@@ -124,10 +122,10 @@ func (suite *KeeperTestSuite) TestHandleSetExitFeeProposal() {
 				keeper := suite.app.GAMMKeeper
 
 				err := gov.HandleSetExitFeeProposal(suite.ctx, *keeper, &types.SetExitFeeProposal{
-					Title: "tittle",
+					Title:       "tittle",
 					Description: "des",
 					Content: types.SetExitFeeContent{
-						PoolId: 1,
+						PoolId:  1,
 						ExitFee: sdk.MustNewDecFromStr("1.1"),
 					},
 				})
@@ -140,10 +138,10 @@ func (suite *KeeperTestSuite) TestHandleSetExitFeeProposal() {
 				keeper := suite.app.GAMMKeeper
 
 				err := gov.HandleSetExitFeeProposal(suite.ctx, *keeper, &types.SetExitFeeProposal{
-					Title: "tittle",
+					Title:       "tittle",
 					Description: "des",
 					Content: types.SetExitFeeContent{
-						PoolId: 1,
+						PoolId:  1,
 						ExitFee: sdk.MustNewDecFromStr("-0.01"),
 					},
 				})
@@ -156,10 +154,10 @@ func (suite *KeeperTestSuite) TestHandleSetExitFeeProposal() {
 				keeper := suite.app.GAMMKeeper
 
 				err := gov.HandleSetExitFeeProposal(suite.ctx, *keeper, &types.SetExitFeeProposal{
-					Title: "tittle",
+					Title:       "tittle",
 					Description: "des",
 					Content: types.SetExitFeeContent{
-						PoolId: 1,
+						PoolId:  1,
 						ExitFee: sdk.MustNewDecFromStr("0.03"),
 					},
 				})
@@ -191,5 +189,3 @@ func (suite *KeeperTestSuite) TestHandleSetExitFeeProposal() {
 		test.fn(poolId)
 	}
 }
-
-

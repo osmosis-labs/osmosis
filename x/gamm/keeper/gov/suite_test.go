@@ -9,19 +9,19 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx     sdk.Context
-	querier keeper.Querier
-	app     *app.OsmosisApp
-	TestAccs    []sdk.AccAddress
+	ctx      sdk.Context
+	querier  keeper.Querier
+	app      *app.OsmosisApp
+	TestAccs []sdk.AccAddress
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
