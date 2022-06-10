@@ -28,6 +28,7 @@ type calcJoinSharesTestCase struct {
 	expectErr    bool
 	expectShares sdk.Int
 	expectLiq    sdk.Coins
+	expectPanic  bool
 }
 
 // allowedErrRatio is the maximal multiplicative difference in either
@@ -342,6 +343,58 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
 		expectShares: sdk.NewIntFromUint64(9_644_655_900_000_000_000),
 		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
+	},
+	{
+		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+		// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
+		//
+		// 6_504_099_261_800_144_638 = 100 * 10^18 * (( 1 + (499_000 / 500_000))^0.09 - 1)
+		//
+		// where:
+		// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+		//	A_t = amount of deposited asset = 195920
+		//	B_t = existing balance of deposited asset in the pool prior to deposit = 156_736
+		//	W_t = normalized weight of deposited asset in pool = 100 / (100 + 1000) approx = 0.09
+		// Plugging all of this in, we get:
+		// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%28499999*%281+-+%281-%28100+%2F+%28100+%2B+1000%29%29%29+*+0%29%2F500000%29%29%5E%28100+%2F+%28100+%2B+1000%29%29+-+1%29
+		// 	Simplified:  P_issued = 6_504_099_261_800_144_638
+		name:    "single asset - (almost 1 == tokenIn / liquidity ratio), token in weight is smaller than the other token, with zero swap fee",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 500_000),
+				Weight: sdk.NewInt(100),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(1000),
+			},
+		},
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
+		expectShares: sdk.NewIntFromUint64(6_504_099_261_800_144_638),
+		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
+	},
+	{
+		// Currently, our Pow approximation function does not work correctly when one tries
+		// to add liquidity that is larger than the existing liquidity.
+		// The ratio of tokenIn / existing liquidity that is larger than or equal to 1 causes a panic.
+		// We deem this as temporarily acceptable.
+		name:    "single asset - (exactly 1 == tokenIn / liquidity ratio - failure), token in weight is smaller than the other token, with zero swap fee",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 500_000),
+				Weight: sdk.NewInt(100),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(1000),
+			},
+		},
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 500_000)),
+		expectShares: sdk.NewIntFromUint64(6_504_099_261_800_144_638),
+		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
+		expectPanic:  true,
 	},
 }
 
@@ -677,6 +730,16 @@ func TestCalcJoinPoolShares(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.MustNewDecFromStr("0"), tc.poolAssets...)
 
+			defer func() {
+				r := recover()
+
+				didPanic := r != nil
+
+				if didPanic != tc.expectPanic {
+					t.Errorf("didPanic: %t, expectPanic: %t", didPanic, tc.expectPanic)
+				}
+			}()
+
 			shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
 			if tc.expectErr {
 				require.Error(t, err)
@@ -707,6 +770,16 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			// constructor
 			poolAssetIn, err := balancerPool.GetPoolAsset(tokenIn.Denom)
 			require.NoError(t, err)
+
+			defer func() {
+				r := recover()
+
+				didPanic := r != nil
+
+				if didPanic != tc.expectPanic {
+					t.Errorf("didPanic: %t, expectPanic: %t", didPanic, tc.expectPanic)
+				}
+			}()
 
 			shares, err := balancerPool.CalcSingleAssetJoin(tokenIn, tc.swapFee, poolAssetIn, pool.GetTotalShares())
 			// It is impossible to set up a test case with error here so we omit it.
