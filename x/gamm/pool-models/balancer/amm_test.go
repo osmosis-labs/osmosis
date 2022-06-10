@@ -281,6 +281,38 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		expectShares: sdk.NewInt(819_444_430_000),
 		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 	},
+
+	{
+		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+		// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
+		//
+		// 9_775_731_930_496_140_648 = 100 * 10^18 * (( 1 + (117552 / 156_736))^0.167 - 1)
+		//
+		// where:
+		// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+		//	A_t = amount of deposited asset = 117552
+		//	B_t = existing balance of deposited asset in the pool prior to deposit = 156_736
+		//	W_t = normalized weight of deposited asset in pool = 200 / (200 + 1000) approx = 0.167
+		// Plugging all of this in, we get:
+		// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%28117552*%281+-+%281-%28200+%2F+%28200+%2B+1000%29%29%29+*+0%29%2F156736%29%29%5E%28200+%2F+%28200+%2B+1000%29%29+-+1%29
+		// 	Simplified:  P_issued = 9_775_731_930_496_140_648
+		name:    "single asset - tokenIn is large relative to liquidity, token in weight is smaller than the other token, with zero swap fee",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 156_736),
+				Weight: sdk.NewInt(200),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(1000),
+			},
+		},
+		// 156_736 / 4 * 3 = 117552
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
+		expectShares: sdk.NewIntFromUint64(9_775_731_930_496_140_648),
+		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
+	},
 }
 
 // This test sets up 2 asset pools, and then checks the spot price on them.
@@ -858,5 +890,5 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 		t,
 		0,
 		errTolerance.Compare(expectedShares, actualShares),
-		fmt.Sprintf("expectedShares: %d, actualShares: %d", expectedShares.Int64(), actualShares.Int64()))
+		fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String()))
 }
