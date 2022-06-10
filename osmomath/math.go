@@ -81,7 +81,7 @@ func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 }
 
 // Contract: 0 < base <= 2
-// 0 < exp < 1.
+// 0 <= exp < 1.
 func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	if exp.IsZero() {
 		return sdk.OneDec()
