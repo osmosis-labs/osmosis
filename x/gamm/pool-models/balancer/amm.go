@@ -297,6 +297,10 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	// If there are tokens that couldn't be perfectly joined, do single asset joins
 	// for each of them.
 	if !remainingTokensIn.Empty() {
+		if remainingTokensIn.Len() >= len(poolAssetsByDenom) {
+			return sdk.ZeroInt(), sdk.NewCoins(), fmt.Errorf("number of remainingTokensIn %d should be less that number of assets in pool %d", remainingTokensIn.Len(), len(poolAssetsByDenom))
+		}
+
 		// update pool assets for accurate calcSingleAssetJoin calculation
 		if err := updateIntermediaryPoolAssets(newLiquidity, poolAssetsByDenom); err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
