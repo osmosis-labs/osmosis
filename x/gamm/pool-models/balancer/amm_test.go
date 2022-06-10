@@ -384,7 +384,8 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		// Currently, our Pow approximation function does not work correctly when one tries
 		// to add liquidity that is larger than the existing liquidity.
 		// The ratio of tokenIn / existing liquidity that is larger than or equal to 1 causes a panic.
-		// We deem this as temporarily acceptable.
+		// This has been deemed as acceptable since it causes code complexity to fix
+		// & only affects UX in an edge case (user has to split up single asset joins)
 		name:    "single asset - (exactly 1 == tokenIn / liquidity ratio - failure), token in weight is smaller than the other token, with zero swap fee",
 		swapFee: sdk.MustNewDecFromStr("0"),
 		poolAssets: []balancer.PoolAsset{
