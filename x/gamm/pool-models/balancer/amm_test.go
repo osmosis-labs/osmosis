@@ -457,7 +457,7 @@ func TestUpdateIntermediaryPoolAssets(t *testing.T) {
 		err error
 	}{
 		{
-			name: "regular case with multiple pool assets and a subset of newLqiduity to update",
+			name: "regular case with multiple pool assets and a subset of newLiquidity to update",
 
 			setup: func() (sdk.Coins, map[string]balancer.PoolAsset, map[string]balancer.PoolAsset) {
 				const (
