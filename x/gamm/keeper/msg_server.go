@@ -85,8 +85,8 @@ func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMs
 }
 
 // JoinPool routes `JoinPoolNoSwap` where we do an abstract calculation on needed lp liquidity coins to get the designated
-// amount of share for the pool. (This is done by taking the number of shares we want and then using total number of shares
-// to get the ratio of the pool it accounts for. Using this ratio, we iterate through all pool assets to get how much tokens we need
+// amount of shares for the pool. (This is done by taking the number of shares we want and then using the total number of shares
+// to get the ratio of the pool it accounts for. Using this ratio, we iterate over all pool assets to get the number of tokens we need
 // to get the specified number of shares).
 // Using the number of tokens needed to actually join the pool, we do a basic sanity check on whether the token does not exceed
 // `TokenInMaxs`. Then we hit the actual implementation of `JoinPool` defined by each pool model.
