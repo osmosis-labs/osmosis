@@ -683,6 +683,126 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
 		},
+		{
+			// For uosmos and uatom
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+			// 625_000_000_000 = 100 * 10^18 * (( 1 + (25000 * (1 - (1 - 0.5)) / 1000000000000))^0.5 - 1) (without fee)
+			// 621_874_980_000 = 100 * 10^18 *  (( 1 + (12500 * (1 - (1 - 0.5) * 0.01) / 1000000025000))^0.5 - 1)  (with fee)
+			//
+			// where:
+			// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+			//	A_t = amount of deposited asset = 50,000
+			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
+			//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
+			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee)
+			// Plugging all of this in, we get:
+			// 	Full solution with fees: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%282500*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
+			// 	Full Solution without fees: https://www.wolframalpha.com/input?i=100+*+10%5E18+*+%28%28+1+%2B+%2825000+*+%281+-+%281+-+0.5%29%29+%2F+1000000000000%29%29%5E0.5+-+1%29
+			// 	Simplified:  P_issued = 625_000_000_000 * 2 + 621_874_980_000 * 2
+
+			name:    "Multi-tokens In: unequal amounts, equal weights with 0.01 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.01"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 50_000),
+			),
+
+			expectShares: sdk.NewInt((625_000_000_000 * 2) + (621_874_980_000 * 2)),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 50_000),
+			),
+		},
+		{
+			// For uosmo:
+			//
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+			//
+			// 1_722_250_000_000_000 = 100 * 10^18 * (( 1 + (50_000 * (1 - (1 - 0.83)) / 2_000_000_000))^0.83 - 1) (without swap Fee)
+			// 1_032_180_000_000_000 = 100 * 10^18 * (( 1 + (25_000 * (1 - (1 - 0.83) * 0.03) / 2_000_050_000))^0.83 - 1) (with swap fee)
+			//
+			// where:
+			// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+			//	A_t = amount of deposited asset = 50,000
+			//	B_t = existing balance of deposited asset in the pool prior to deposit = 2_000_000_000
+			//	W_t = normalized weight of deposited asset in pool = 500 / 500 + 100 = 0.83
+			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee)
+			// Plugging all of this in, we get:
+			//  Full Solution without Swap Fee: https://www.wolframalpha.com/input?i=100+*+10%5E18+*+%28%28+1+%2B+%2850000+*+%281+-+%281+-+0.83%29%29+%2F+2000000000%29%29%5E0.83+-+1%29
+			// 	Full solution with Swap Fee: https://www.wolframalpha.com/input?i=100+*+10%5E18+*+%28%28+1+%2B+%2825000+*+%281+-+%281+-+0.83%29+*+0.03%29+%2F+2000050000%29%29%5E0.83+-+1%29
+			// 	Simplified:  P_issued = 1_722_250_000_000_000 + 1_032_180_000_000_000
+			//
+			//
+			// For uatom:
+			//
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
+			//
+			// 139_445_000_000 = 100 * 10^18 * (( 1 + (50_000 * (1 - (1 - 0.167)) / 1_000_000_000_000))^0.167 - 1) (without swap Fee)
+			// 407_067_000_000 = 100 * 10^18 * (( 1 + (25_000 * (1 - (1 - 0.167) * 0.03) / 1_000_000_050_000))^0.167 - 1) (with swap fee)
+			//
+			// where:
+			// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+			//	A_t = amount of deposited asset = 50,000
+			//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
+			//	W_t = normalized weight of deposited asset in pool = 100 / 500 + 100 = 0.167
+			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee)
+			// Plugging all of this in, we get:
+			//  Full Solution without fee: https://www.wolframalpha.com/input?i=100+*+10%5E18+*+%28%28+1+%2B+%2850000+*+%281+-+%281+-+0.167%29%29+%2F+1000000000000%29%29%5E0.167+-+1%29
+			// 	Full solution with Fee: https://www.wolframalpha.com/input?i=100+*+10%5E18+*+%28%28+1+%2B+%2825000+*+%281+-+%281+-+0.167%29+*+0.03%29+%2F+1000000050000%29%29%5E0.167+-+1%29
+			// 	Simplified:  P_issued = 139_445_000_000 + 407_067_000_000
+			name:    "Multi-tokens In: unequal amounts, with unequal weights with 0.03 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.03"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 2_000_000_000_000),
+					Weight: sdk.NewInt(500),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 50_000),
+				sdk.NewInt64Coin("uatom", 100_000),
+			),
+
+			expectShares: sdk.NewInt(1_722_250_000_000_000 + 1_032_180_000_000_000 + 139_445_000_000 + 407_067_000_000),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 50_000),
+				sdk.NewInt64Coin("uatom", 100_000),
+			),
+		},
+		{
+			name:    "equal weights with 0.001 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.001"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectShares: sdk.NewInt(2498749968800),
+			expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		},
 	}
 	testCases = append(testCases, calcSingleAssetJoinTestCases...)
 
