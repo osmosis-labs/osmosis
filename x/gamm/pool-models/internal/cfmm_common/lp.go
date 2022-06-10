@@ -50,8 +50,16 @@ func CalcExitPool(ctx sdk.Context, pool types.PoolI, exitingShares sdk.Int, exit
 	return exitedCoins, nil
 }
 
-// MaximalExactRatioJoin LP's the maximal amount of tokens in possible, and returns the number of shares that'd be
-// and how many coins would be left over.
+// MaximalExactRatioJoin calculates the maximal amount of tokens that can be joined whilst maintaining pool asset's ratio
+// returning the number of shares that'd be and how many coins would be left over.
+// 		e.g) suppose we have a pool of 10 foo tokens and 10 bar tokens, with the total amount of 100 shares.
+//			 if `tokensIn` provided is 1 foo token and 2 bar tokens, `MaximalExactRatioJoin`
+//			 would be returning (10 shares, 1 bar token, nil)
+// This can be used when `tokensIn` are not guaranteed the same ratio as assets in the pool.
+// Calculation for this is done in the following steps.
+//		1. iterate through all the tokens provided as an argument, calculate how much ratio it accounts for the asset in the pool
+//		2. get the minimal share ratio that would work as the benchmark for all tokens.
+//		3. calculate the number of shares that could be joined (total share * min share ratio), return the remaining coins
 func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares sdk.Int, remCoins sdk.Coins, err error) {
 	coinShareRatios := make([]sdk.Dec, len(tokensIn))
 	minShareRatio := sdk.MaxSortableDec
@@ -87,7 +95,7 @@ func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (
 				continue
 			}
 
-			usedAmount := minShareRatio.MulInt(coin.Amount).Ceil().TruncateInt()
+			usedAmount := minShareRatio.MulInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom)).Ceil().TruncateInt()
 			newAmt := coin.Amount.Sub(usedAmount)
 			// if newAmt is non-zero, add to RemCoins. (It could be zero due to rounding)
 			if !newAmt.IsZero() {
