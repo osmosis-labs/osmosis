@@ -651,7 +651,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
-			expErr: false,
 			// Raises liquidity perfectly by 25_000 / 1_000_000_000_000.
 			// Initial number of pool shares = 100 * 10**18 = 10**20
 			// Expected increase = liquidity_increase_ratio * initial number of pool shares = (25_000 / 1_000_000_000_000) * 10**20 = 2500000000000.0 = 2.5 * 10**12
@@ -678,7 +677,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
-			expErr:       false,
 			expectShares: sdk.NewInt(2500000000000),
 			expectLiq: sdk.NewCoins(
 				sdk.NewInt64Coin("uosmo", 25_000),
