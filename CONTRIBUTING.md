@@ -41,14 +41,18 @@ Vendor is a folder that go automatically makes if you run go mod vendor, which c
 
 Commit & push to the Cosmos-SDK fork in a new branch (see above steps for more details), and then you can grab the commit hash to do:
 
-`go get github.com/osmosis-labs/cosmos-sdk@{my commit hash}`
+```sh
+go get github.com/osmosis-labs/cosmos-sdk@{my commit hash}
+```
 
 You get something like:
 
-`go get: github.com/osmosis-labs/cosmos-sdk@v0.33.2 updating to
+```sh
+go get: github.com/osmosis-labs/cosmos-sdk@v0.33.2 updating to
 	github.com/osmosis-labs/cosmos-sdk@v0.42.10-0.20210829064313-2c87644925da: parsing go.mod:
 	module declares its path as: github.com/cosmos/cosmos-sdk
-	        but was required as: github.com/osmosis-labs/cosmos-sdk`
+	        but was required as: github.com/osmosis-labs/cosmos-sdk
+```
 
 Then you can copy paste the `v0.42.10-0.20210829064313-2c87644925da` part and replace the corresponding section of go.mod
 
@@ -76,4 +80,8 @@ For v6.x, and v4.x, most PRs to them should go to main and get a "backport" labe
 
 ### How to build proto files. (rm -rf vendor/ && make build-reproducible once docker is installed)
 
-You can do rm -rf vendor and make build-reproducible to redownload all dependencies - this should pull the latest docker image of Osmo. You should also make sure to do make proto-all to auto-generate your protobuf files. Makes ure you have docker installed. If you get something like `W0503 22:16:30.068560 158 services.go:38] No HttpRule found for method: Msg.CreateBalancerPool` feel free to ignore that. Make sure to also do make all to run all the linting tests before you commit and push, as well as `gofmt`-ing the file you've modified or added to make sure everything still abides by the standards. 
+You can do rm -rf vendor and make build-reproducible to redownload all dependencies - this should pull the latest docker image of Osmo. You should also make sure to do make proto-all to auto-generate your protobuf files. Makes ure you have docker installed. 
+
+If you get something like `W0503 22:16:30.068560 158 services.go:38] No HttpRule found for method: Msg.CreateBalancerPool` feel free to ignore that. 
+
+Make sure to also do make all to run all the linting tests before you commit and push, as well as `gofmt`-ing the file you've modified or added to make sure everything still abides by the standards. 
