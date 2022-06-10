@@ -15,7 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v9/x/gamm/types"
 )
 
-// calcJoinSharesTestCase defines a testcase for TestCalcSingleAssetJoin and
+// calcJoinSharesTestCase defines a test case for TestCalcSingleAssetJoin and
 // TestCalcJoinPoolShares.
 //
 // CalcJoinPoolShares calls calcSingleAssetJoin. As a result, we can reuse
@@ -628,9 +628,63 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 }
 
 func TestCalcJoinPoolShares(t *testing.T) {
-	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge test cases.
-	// See calcJoinSharesTestCase struct definition for explanation why the sharing is needed.
-	testCases := append([]calcJoinSharesTestCase{}, calcSingleAssetJoinTestCases...)
+	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
+	// test cases.
+	//
+	// See calcJoinSharesTestCase struct definition for explanation why the
+	// sharing is needed.
+	testCases := []calcJoinSharesTestCase{
+		{
+			name:    "swap equal weights with zero swap fee",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 25_000),
+			),
+			// Raises liquidity perfectly by 25_000 / 1_000_000_000_000.
+			// Initial number of pool shares = 100 * 10**18 = 10**20
+			// Expected increase = liquidity_increase_ratio * initial number of pool shares = (25_000 / 1_000_000_000_000) * 10**20 = 2500000000000.0 = 2.5 * 10**12
+			expectShares: sdk.NewInt(2.5e12),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 25_000),
+			),
+		},
+		{
+			name:    "swap equal weights with 0.001 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.001"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 25_000),
+			),
+			expectShares: sdk.NewInt(2500000000000),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 25_000),
+			),
+		},
+	}
+	testCases = append(testCases, calcSingleAssetJoinTestCases...)
 
 	for _, tc := range testCases {
 		tc := tc
