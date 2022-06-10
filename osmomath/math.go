@@ -84,7 +84,7 @@ func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 // 0 < exp < 1.
 func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
 	if exp.IsZero() {
-		return sdk.ZeroDec()
+		return sdk.OneDec()
 	}
 
 	// Common case optimization
