@@ -72,7 +72,9 @@ func (q Querier) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types
 		if err != nil {
 			panic(err)
 		}
-		gauges = append(gauges, newGauges...)
+		if accumulate {
+			gauges = append(gauges, newGauges...)
+		}
 
 		return true, nil
 	})
@@ -99,7 +101,9 @@ func (q Querier) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesRequ
 		if err != nil {
 			panic(err)
 		}
-		gauges = append(gauges, newGauges...)
+		if accumulate {
+			gauges = append(gauges, newGauges...)
+		}
 
 		return true, nil
 	})
@@ -122,10 +126,16 @@ func (q Querier) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGa
 	valStore := prefix.NewStore(store, types.KeyPrefixActiveGauges)
 
 	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		activeGauges := q.Keeper.GetActiveGauges(ctx)
-		for _, gauge := range activeGauges {
-			if gauge.DistributeTo.Denom == req.Denom {
-				gauges = append(gauges, gauge)
+		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
+		if err != nil {
+			panic(err)
+		}
+		for i := 0; i < len(newGauges); i++ {
+			if newGauges[i].DistributeTo.Denom != req.Denom {
+				return false, nil
+			}
+			if accumulate {
+				gauges = append(gauges, newGauges...)
 			}
 		}
 		return true, nil
@@ -153,7 +163,9 @@ func (q Querier) UpcomingGauges(goCtx context.Context, req *types.UpcomingGauges
 		if err != nil {
 			panic(err)
 		}
-		gauges = append(gauges, newGauges...)
+		if accumulate {
+			gauges = append(gauges, newGauges...)
+		}
 
 		return true, nil
 	})
@@ -179,10 +191,16 @@ func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.Upcomi
 	prefixStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
 
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		upcomingGauges := q.Keeper.GetUpcomingGauges(ctx)
-		for _, gauge := range upcomingGauges {
-			if gauge.DistributeTo.Denom == req.Denom {
-				gauges = append(gauges, gauge)
+		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
+		if err != nil {
+			panic(err)
+		}
+		for i := 0; i < len(newGauges); i++ {
+			if newGauges[i].DistributeTo.Denom != req.Denom {
+				return false, nil
+			}
+			if accumulate {
+				gauges = append(gauges, newGauges...)
 			}
 		}
 		return true, nil
