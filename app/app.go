@@ -39,6 +39,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v9/app/keepers"
 	appparams "github.com/osmosis-labs/osmosis/v9/app/params"
 	"github.com/osmosis-labs/osmosis/v9/app/upgrades"
@@ -50,6 +51,20 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v9/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v9/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v9/client/docs/statik"
+=======
+	"github.com/osmosis-labs/osmosis/v7/app/keepers"
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v10"
+	v3 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
+>>>>>>> 2bf34dd (Add v10 forking logic (#1741))
 )
 
 const appName = "OsmosisApp"
@@ -87,7 +102,7 @@ var (
 	_ App = (*OsmosisApp)(nil)
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade}
-	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork}
+	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
 // GetWasmEnabledProposals parses the WasmProposalsEnabled and
