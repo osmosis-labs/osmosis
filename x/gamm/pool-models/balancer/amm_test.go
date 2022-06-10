@@ -634,7 +634,8 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			expectShares: sdk.NewInt(2_499_999_968_750),
 		},
 		{
-			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
+			// with swapFeeRatio added:
 			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
 			//
 			// 2_487_500_000_000 = 100 * 10^18 * (( 1 + (50,000 * (1 - (1 - 0.5) * 0.01) / 1_000_000_000_000))^0.5 - 1)
@@ -693,7 +694,8 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			expectShares: sdk.NewInt(4_166_666_649_306),
 		},
 		{
-			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
+			// with swapFeeRatio added:
 			// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
 			//
 			// 4_159_722_200_000 = 100 * 10^18 * (( 1 + (50,000 * (1 - (1 - 0.83) * 0.01) / 1_000_000_000_000))^0.83 - 1)
@@ -751,7 +753,8 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			expectShares: sdk.NewInt(833_333_315_972),
 		},
 		{
-			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
+			// with swapFeeRatio added:
 			// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
 			//
 			// 819_444_430_000 = 100 * 10^18 * (( 1 + (50,000 * (1 - (1 - 0.167) * 0.02) / 1_000_000_000_000))^0.167 - 1)
@@ -905,7 +908,8 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			expectShares: sdk.NewInt(2_499_999_968_750 * 2),
 		},
 		{
-			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
+			// with swapFeeRatio added:
 			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
 			//
 			// 2_487_500_000_000 = 100 * 10^18 * (( 1 + (50,000 * (1 - (1 - 0.5) * 0.01) / 1_000_000_000_000))^0.5 - 1)
@@ -935,7 +939,8 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			expectShares: sdk.NewInt(2_487_500_000_000),
 		},
 		{
-			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
+			// with swapFeeRatio added:
 			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
 			//
 			// 2_487_500_000_000 = 100 * 10^18 * (( 1 + (50,000 * (1 - (1 - 0.5) * 0.01) / 1_000_000_000_000))^0.5 - 1)
@@ -967,7 +972,8 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 		{
 			// For uosmo:
 			//
-			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
+			// with swapFeeRatio added:
 			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
 			//
 			// 2_072_912_400_000_000 = 100 * 10^18 * (( 1 + (50,000 * (1 - (1 - 0.83) * 0.03) / 2_000_000_000))^0.83 - 1)
@@ -985,7 +991,8 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			//
 			// For uatom:
 			//
-			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
+			// with swapFeeRatio added:
 			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
 			//
 			// 1_624_999_900_000 = 100 * 10^18 * (( 1 + (100_000 * (1 - (1 - 0.167) * 0.03) / 1_000_000_000_000))^0.167 - 1)
