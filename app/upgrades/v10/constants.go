@@ -1,7 +1,7 @@
 package v10
 
 import (
-	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v9/app/upgrades"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
