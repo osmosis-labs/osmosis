@@ -748,10 +748,11 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 
 func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 	type testCase struct {
-		initialTokensDenomIn  int64
-		initialTokensDenomOut int64
+		initialTokensDenomOne int64
+		initialTokensDenomTwo int64
 
-		percentRatio int64
+		percentRatioOne int64
+		percentRatioTwo int64
 
 		numShares sdk.Int
 	}
@@ -765,15 +766,32 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 	rng := rand.NewSource(now)
 	t.Logf("Using random source of %d\n", now)
 
-	// generate test case with randomized initial assets and join/exit ratio
-	newCase := func() (tc *testCase) {
+	newBaseCase := func() (tc *testCase) {
 		tc = new(testCase)
-		tc.initialTokensDenomIn = rng.Int63() % 1_000_000
-		tc.initialTokensDenomOut = rng.Int63() % 1_000_000
+		tc.initialTokensDenomOne = rng.Int63() % 1_000_000
+		tc.initialTokensDenomTwo = rng.Int63() % 1_000_000
+		return tc
+	}
+
+	// generate test case with randomized initial assets and join/exit ratio
+	// where ratios of tokensIn to liquidity in pool is the same.
+	newEqualRatioCase := func() (tc *testCase) {
+		tc = newBaseCase()
 
 		// 1%~100% of initial assets
-		tc.percentRatio = rng.Int63()%100 + 1
+		tc.percentRatioOne = rng.Int63()%100 + 1
+		tc.percentRatioTwo = tc.initialTokensDenomOne
+		return tc
+	}
 
+	// generate test case with randomized initial assets and join/exit ratio
+	// where ratios of tokensIn to liquidity in pool is not the same.
+	newNotEqualRatioCase := func() (tc *testCase) {
+		tc = newBaseCase()
+
+		// 1%~100% of initial assets
+		tc.percentRatioOne = rng.Int63()%100 + 1
+		tc.percentRatioTwo = tc.initialTokensDenomOne
 		return tc
 	}
 
@@ -787,12 +805,12 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 	// and randomized ratio of join/exit
 	createPool := func(tc *testCase) (pool *balancer.Pool) {
 		poolAssetOut := balancer.PoolAsset{
-			Token:  sdk.NewInt64Coin(denomOut, tc.initialTokensDenomOut),
+			Token:  sdk.NewInt64Coin(denomOut, tc.initialTokensDenomTwo),
 			Weight: sdk.NewInt(5),
 		}
 
 		poolAssetIn := balancer.PoolAsset{
-			Token:  sdk.NewInt64Coin(denomIn, tc.initialTokensDenomIn),
+			Token:  sdk.NewInt64Coin(denomIn, tc.initialTokensDenomOne),
 			Weight: sdk.NewInt(5),
 		}
 
@@ -805,8 +823,8 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 	// joins with predetermined ratio
 	joinPool := func(pool types.PoolI, tc *testCase) {
 		tokensIn := sdk.Coins{
-			sdk.NewInt64Coin(denomIn, tc.initialTokensDenomIn*tc.percentRatio/100),
-			sdk.NewInt64Coin(denomOut, tc.initialTokensDenomOut*tc.percentRatio/100),
+			sdk.NewInt64Coin(denomIn, tc.initialTokensDenomOne*tc.percentRatioOne/100),
+			sdk.NewInt64Coin(denomOut, tc.initialTokensDenomTwo*tc.percentRatioTwo/100),
 		}
 		numShares, err := pool.JoinPool(sdk.Context{}, tokensIn, swapFeeDec)
 		require.NoError(t, err)
@@ -837,8 +855,14 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 		)
 	}
 
-	testPoolInvariants := func() {
-		tc := newCase()
+	testPoolInvariants := func(repeatCount int) {
+		var tc *testCase
+		if repeatCount%2 == 0 {
+			tc = newEqualRatioCase()
+		} else {
+			tc = newNotEqualRatioCase()
+		}
+
 		pool := createPool(tc)
 		originalCoins, originalShares := pool.GetTotalPoolLiquidity(sdk.Context{}), pool.GetTotalShares()
 		joinPool(pool, tc)
@@ -850,7 +874,7 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 	}
 
 	for i := 0; i < 1000; i++ {
-		testPoolInvariants()
+		testPoolInvariants(i)
 	}
 }
 
