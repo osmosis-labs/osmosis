@@ -37,6 +37,21 @@ func TestPowApprox(t *testing.T) {
 		expectedDec.Sub(s).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
+
+	base, err = sdk.NewDecFromStr("0.8")
+	require.NoError(t, err)
+	exp = sdk.ZeroDec()
+	require.NoError(t, err)
+
+	s = PowApprox(base, exp, powPrecision)
+	expectedDec = sdk.OneDec()
+	require.NoError(t, err)
+
+	require.True(
+		t,
+		expectedDec.Sub(s).Abs().LTE(powPrecision),
+		"expected value & actual value's difference should less than precision",
+	)
 }
 
 func TestPow(t *testing.T) {
