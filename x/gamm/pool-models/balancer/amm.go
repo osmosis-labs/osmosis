@@ -283,7 +283,8 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 	// 3) If multi-asset join, first do as much of a join as we can with no swaps.
 	// 4) Update pool shares / liquidity / remaining tokens to join accordingly
 	// 5) For every remaining token to LP, do a single asset join, and update pool shares / liquidity.
-	// When a single token is provided as an argument, we simply perform single asset join with the token.
+	//
+	// Note that all single asset joins do incur swap fee.
 	//
 	// Since CalcJoinPoolShares is non-mutative, the steps for updating pool shares / liquidity are
 	// more complex / don't just alter the state.
