@@ -387,10 +387,9 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
 			expectErr: false,
-			// TODO: Verify expectShares value using manual calculation using the
-			// following as reference:
-			// https://github.com/osmosis-labs/osmosis/blob/6125f81d1ad95c73e03d86c3d5e96ceef3f8c12f/x/gamm/pool-models/balancer/amm_test.go#L348-L357
-			expectShares: sdk.NewInt(2500000000000),
+// Raises liquidity perfectly by 25_000 / 1_000_000_000_000. Initial number of pool shares = 100 * 10**18 = 10**20
+// Expected increase = liquidity_increase_ratio * initial number of pool shares = (25_000 / 1_000_000_000_000) * 10**20 = 2500000000000.0 = 2.5 * 10**12
+			expectShares: sdk.NewInt(2.5e12),
 			expectLiq: sdk.NewCoins(
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 25_000),
