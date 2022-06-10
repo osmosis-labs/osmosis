@@ -330,7 +330,7 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 	// If there are remainingTokensIn, we will single asset join each of them.
 	// If there are tokens that couldn't be perfectly joined, do single asset joins
 	// for each of them.
-	// so first we update the pool state for this.
+	// So first we update the pool state for this, then we
 	// update pool assets with newLiquidity for accurate calcSingleAssetJoin calculation.
 	if err := updateIntermediaryPoolAssetsLiquidity(tokensJoined, poolAssetsByDenom); err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
