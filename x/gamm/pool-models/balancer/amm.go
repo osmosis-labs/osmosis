@@ -237,6 +237,11 @@ func calcPoolSharesOutGivenSingleAssetIn(
 
 // calcPoolOutGivenSingleIn - balance pAo.
 func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoolAsset PoolAsset, totalShares sdk.Int) (numShares sdk.Int, err error) {
+	_, err = p.GetPoolAsset(tokenIn.Denom)
+	if err != nil {
+		return sdk.ZeroInt(), err
+	}
+
 	totalWeight := p.GetTotalWeight()
 	if totalWeight.IsZero() {
 		return sdk.ZeroInt(), errors.New("pool misconfigured, total weight = 0")
