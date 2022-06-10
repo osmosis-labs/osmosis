@@ -6,10 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	pooltypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
-	query "github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
@@ -120,7 +120,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
 
-	// filtering check 
+	// filtering check
 	for i := 0; i < 20; i++ {
 		_, gauge, _, _ := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
@@ -170,7 +170,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
 
-	// filtering check 
+	// filtering check
 	for i := 0; i < 20; i++ {
 		_, gauge, _, _ := suite.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool")
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
@@ -222,7 +222,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
 
-	// filtering check 
+	// filtering check
 	for i := 0; i < 20; i++ {
 		_, gauge, _, _ := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
@@ -277,7 +277,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.Require().NoError(err)
 	suite.Require().Len(res.UpcomingGauges, 0)
 
-	// filtering check 
+	// filtering check
 	for i := 0; i < 20; i++ {
 		_, gauge, _, _ := suite.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool")
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
