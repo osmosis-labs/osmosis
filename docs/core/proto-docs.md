@@ -4,31 +4,6 @@
 
 ## Table of Contents
 
-- [osmosis/claim/v1beta1/claim.proto](#osmosis/claim/v1beta1/claim.proto)
-    - [ClaimRecord](#osmosis.claim.v1beta1.ClaimRecord)
-  
-    - [Action](#osmosis.claim.v1beta1.Action)
-  
-- [osmosis/claim/v1beta1/params.proto](#osmosis/claim/v1beta1/params.proto)
-    - [Params](#osmosis.claim.v1beta1.Params)
-  
-- [osmosis/claim/v1beta1/genesis.proto](#osmosis/claim/v1beta1/genesis.proto)
-    - [GenesisState](#osmosis.claim.v1beta1.GenesisState)
-  
-- [osmosis/claim/v1beta1/query.proto](#osmosis/claim/v1beta1/query.proto)
-    - [QueryClaimRecordRequest](#osmosis.claim.v1beta1.QueryClaimRecordRequest)
-    - [QueryClaimRecordResponse](#osmosis.claim.v1beta1.QueryClaimRecordResponse)
-    - [QueryClaimableForActionRequest](#osmosis.claim.v1beta1.QueryClaimableForActionRequest)
-    - [QueryClaimableForActionResponse](#osmosis.claim.v1beta1.QueryClaimableForActionResponse)
-    - [QueryModuleAccountBalanceRequest](#osmosis.claim.v1beta1.QueryModuleAccountBalanceRequest)
-    - [QueryModuleAccountBalanceResponse](#osmosis.claim.v1beta1.QueryModuleAccountBalanceResponse)
-    - [QueryParamsRequest](#osmosis.claim.v1beta1.QueryParamsRequest)
-    - [QueryParamsResponse](#osmosis.claim.v1beta1.QueryParamsResponse)
-    - [QueryTotalClaimableRequest](#osmosis.claim.v1beta1.QueryTotalClaimableRequest)
-    - [QueryTotalClaimableResponse](#osmosis.claim.v1beta1.QueryTotalClaimableResponse)
-  
-    - [Query](#osmosis.claim.v1beta1.Query)
-  
 - [osmosis/epochs/genesis.proto](#osmosis/epochs/genesis.proto)
     - [EpochInfo](#osmosis.epochs.v1beta1.EpochInfo)
     - [GenesisState](#osmosis.epochs.v1beta1.GenesisState)
@@ -146,6 +121,8 @@
 - [osmosis/lockup/query.proto](#osmosis/lockup/query.proto)
     - [AccountLockedCoinsRequest](#osmosis.lockup.AccountLockedCoinsRequest)
     - [AccountLockedCoinsResponse](#osmosis.lockup.AccountLockedCoinsResponse)
+    - [AccountLockedDurationRequest](#osmosis.lockup.AccountLockedDurationRequest)
+    - [AccountLockedDurationResponse](#osmosis.lockup.AccountLockedDurationResponse)
     - [AccountLockedLongerDurationDenomRequest](#osmosis.lockup.AccountLockedLongerDurationDenomRequest)
     - [AccountLockedLongerDurationDenomResponse](#osmosis.lockup.AccountLockedLongerDurationDenomResponse)
     - [AccountLockedLongerDurationNotUnlockingOnlyRequest](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyRequest)
@@ -182,6 +159,8 @@
     - [MsgBeginUnlockingAll](#osmosis.lockup.MsgBeginUnlockingAll)
     - [MsgBeginUnlockingAllResponse](#osmosis.lockup.MsgBeginUnlockingAllResponse)
     - [MsgBeginUnlockingResponse](#osmosis.lockup.MsgBeginUnlockingResponse)
+    - [MsgExtendLockup](#osmosis.lockup.MsgExtendLockup)
+    - [MsgExtendLockupResponse](#osmosis.lockup.MsgExtendLockupResponse)
     - [MsgLockTokens](#osmosis.lockup.MsgLockTokens)
     - [MsgLockTokensResponse](#osmosis.lockup.MsgLockTokensResponse)
   
@@ -246,6 +225,7 @@
     - [SuperfluidAsset](#osmosis.superfluid.SuperfluidAsset)
     - [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord)
     - [SuperfluidIntermediaryAccount](#osmosis.superfluid.SuperfluidIntermediaryAccount)
+    - [UnpoolWhitelistedPools](#osmosis.superfluid.UnpoolWhitelistedPools)
   
     - [SuperfluidAssetType](#osmosis.superfluid.SuperfluidAssetType)
   
@@ -297,8 +277,42 @@
     - [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse)
     - [MsgSuperfluidUndelegate](#osmosis.superfluid.MsgSuperfluidUndelegate)
     - [MsgSuperfluidUndelegateResponse](#osmosis.superfluid.MsgSuperfluidUndelegateResponse)
+    - [MsgUnPoolWhitelistedPool](#osmosis.superfluid.MsgUnPoolWhitelistedPool)
+    - [MsgUnPoolWhitelistedPoolResponse](#osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse)
   
     - [Msg](#osmosis.superfluid.Msg)
+  
+- [osmosis/tokenfactory/v1beta1/authorityMetadata.proto](#osmosis/tokenfactory/v1beta1/authorityMetadata.proto)
+    - [DenomAuthorityMetadata](#osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata)
+  
+- [osmosis/tokenfactory/v1beta1/params.proto](#osmosis/tokenfactory/v1beta1/params.proto)
+    - [Params](#osmosis.tokenfactory.v1beta1.Params)
+  
+- [osmosis/tokenfactory/v1beta1/genesis.proto](#osmosis/tokenfactory/v1beta1/genesis.proto)
+    - [GenesisDenom](#osmosis.tokenfactory.v1beta1.GenesisDenom)
+    - [GenesisState](#osmosis.tokenfactory.v1beta1.GenesisState)
+  
+- [osmosis/tokenfactory/v1beta1/query.proto](#osmosis/tokenfactory/v1beta1/query.proto)
+    - [QueryDenomAuthorityMetadataRequest](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest)
+    - [QueryDenomAuthorityMetadataResponse](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse)
+    - [QueryDenomsFromCreatorRequest](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest)
+    - [QueryDenomsFromCreatorResponse](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse)
+    - [QueryParamsRequest](#osmosis.tokenfactory.v1beta1.QueryParamsRequest)
+    - [QueryParamsResponse](#osmosis.tokenfactory.v1beta1.QueryParamsResponse)
+  
+    - [Query](#osmosis.tokenfactory.v1beta1.Query)
+  
+- [osmosis/tokenfactory/v1beta1/tx.proto](#osmosis/tokenfactory/v1beta1/tx.proto)
+    - [MsgBurn](#osmosis.tokenfactory.v1beta1.MsgBurn)
+    - [MsgBurnResponse](#osmosis.tokenfactory.v1beta1.MsgBurnResponse)
+    - [MsgChangeAdmin](#osmosis.tokenfactory.v1beta1.MsgChangeAdmin)
+    - [MsgChangeAdminResponse](#osmosis.tokenfactory.v1beta1.MsgChangeAdminResponse)
+    - [MsgCreateDenom](#osmosis.tokenfactory.v1beta1.MsgCreateDenom)
+    - [MsgCreateDenomResponse](#osmosis.tokenfactory.v1beta1.MsgCreateDenomResponse)
+    - [MsgMint](#osmosis.tokenfactory.v1beta1.MsgMint)
+    - [MsgMintResponse](#osmosis.tokenfactory.v1beta1.MsgMintResponse)
+  
+    - [Msg](#osmosis.tokenfactory.v1beta1.Msg)
   
 - [osmosis/txfees/v1beta1/feetoken.proto](#osmosis/txfees/v1beta1/feetoken.proto)
     - [FeeToken](#osmosis.txfees.v1beta1.FeeToken)
@@ -322,291 +336,6 @@
     - [Query](#osmosis.txfees.v1beta1.Query)
   
 - [Scalar Value Types](#scalar-value-types)
-
-
-
-<a name="osmosis/claim/v1beta1/claim.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## osmosis/claim/v1beta1/claim.proto
-
-
-
-<a name="osmosis.claim.v1beta1.ClaimRecord"></a>
-
-### ClaimRecord
-A Claim Records is the metadata of claim data per address
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  | address of claim user |
-| `initial_claimable_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | total initial claimable amount for the user |
-| `action_completed` | [bool](#bool) | repeated | true if action is completed index of bool in array refers to action enum # |
-
-
-
-
-
- <!-- end messages -->
-
-
-<a name="osmosis.claim.v1beta1.Action"></a>
-
-### Action
-
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| ActionAddLiquidity | 0 |  |
-| ActionSwap | 1 |  |
-| ActionVote | 2 |  |
-| ActionDelegateStake | 3 |  |
-
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="osmosis/claim/v1beta1/params.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## osmosis/claim/v1beta1/params.proto
-
-
-
-<a name="osmosis.claim.v1beta1.Params"></a>
-
-### Params
-Params defines the claim module's parameters.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `airdrop_start_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  |  |
-| `duration_until_decay` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `duration_of_decay` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
-| `claim_denom` | [string](#string) |  | denom of claimable asset |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="osmosis/claim/v1beta1/genesis.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## osmosis/claim/v1beta1/genesis.proto
-
-
-
-<a name="osmosis.claim.v1beta1.GenesisState"></a>
-
-### GenesisState
-GenesisState defines the claim module's genesis state.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `module_account_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  | balance of the claim module's account |
-| `params` | [Params](#osmosis.claim.v1beta1.Params) |  | params defines all the parameters of the module. |
-| `claim_records` | [ClaimRecord](#osmosis.claim.v1beta1.ClaimRecord) | repeated | list of claim records, one for every airdrop recipient |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="osmosis/claim/v1beta1/query.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## osmosis/claim/v1beta1/query.proto
-
-
-
-<a name="osmosis.claim.v1beta1.QueryClaimRecordRequest"></a>
-
-### QueryClaimRecordRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryClaimRecordResponse"></a>
-
-### QueryClaimRecordResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `claim_record` | [ClaimRecord](#osmosis.claim.v1beta1.ClaimRecord) |  |  |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryClaimableForActionRequest"></a>
-
-### QueryClaimableForActionRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-| `action` | [Action](#osmosis.claim.v1beta1.Action) |  |  |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryClaimableForActionResponse"></a>
-
-### QueryClaimableForActionResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryModuleAccountBalanceRequest"></a>
-
-### QueryModuleAccountBalanceRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryModuleAccountBalanceResponse"></a>
-
-### QueryModuleAccountBalanceResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `moduleAccountBalance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | params defines the parameters of the module. |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryParamsRequest"></a>
-
-### QueryParamsRequest
-QueryParamsRequest is the request type for the Query/Params RPC method.
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryParamsResponse"></a>
-
-### QueryParamsResponse
-QueryParamsResponse is the response type for the Query/Params RPC method.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `params` | [Params](#osmosis.claim.v1beta1.Params) |  | params defines the parameters of the module. |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryTotalClaimableRequest"></a>
-
-### QueryTotalClaimableRequest
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `address` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="osmosis.claim.v1beta1.QueryTotalClaimableResponse"></a>
-
-### QueryTotalClaimableResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
-
-<a name="osmosis.claim.v1beta1.Query"></a>
-
-### Query
-Query defines the gRPC querier service.
-
-| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
-| ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `ModuleAccountBalance` | [QueryModuleAccountBalanceRequest](#osmosis.claim.v1beta1.QueryModuleAccountBalanceRequest) | [QueryModuleAccountBalanceResponse](#osmosis.claim.v1beta1.QueryModuleAccountBalanceResponse) |  | GET|/osmosis/claim/v1beta1/module_account_balance|
-| `Params` | [QueryParamsRequest](#osmosis.claim.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#osmosis.claim.v1beta1.QueryParamsResponse) |  | GET|/osmosis/claim/v1beta1/params|
-| `ClaimRecord` | [QueryClaimRecordRequest](#osmosis.claim.v1beta1.QueryClaimRecordRequest) | [QueryClaimRecordResponse](#osmosis.claim.v1beta1.QueryClaimRecordResponse) |  | GET|/osmosis/claim/v1beta1/claim_record/{address}|
-| `ClaimableForAction` | [QueryClaimableForActionRequest](#osmosis.claim.v1beta1.QueryClaimableForActionRequest) | [QueryClaimableForActionResponse](#osmosis.claim.v1beta1.QueryClaimableForActionResponse) |  | GET|/osmosis/claim/v1beta1/claimable_for_action/{address}/{action}|
-| `TotalClaimable` | [QueryTotalClaimableRequest](#osmosis.claim.v1beta1.QueryTotalClaimableRequest) | [QueryTotalClaimableResponse](#osmosis.claim.v1beta1.QueryTotalClaimableResponse) |  | GET|/osmosis/claim/v1beta1/total_claimable/{address}|
-
- <!-- end services -->
 
 
 
@@ -808,9 +537,9 @@ Params holds parameters for the incentives module
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `shareInAmount` | [string](#string) |  |  |
-| `tokenOutMins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `share_in_amount` | [string](#string) |  |  |
+| `token_out_mins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -836,9 +565,9 @@ Params holds parameters for the incentives module
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenOut` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `shareInMaxAmount` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_out` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `share_in_max_amount` | [string](#string) |  |  |
 
 
 
@@ -853,7 +582,7 @@ Params holds parameters for the incentives module
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `shareInAmount` | [string](#string) |  |  |
+| `share_in_amount` | [string](#string) |  |  |
 
 
 
@@ -869,10 +598,10 @@ Params holds parameters for the incentives module
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenOutDenom` | [string](#string) |  |  |
-| `shareInAmount` | [string](#string) |  |  |
-| `tokenOutMinAmount` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_out_denom` | [string](#string) |  |  |
+| `share_in_amount` | [string](#string) |  |  |
+| `token_out_min_amount` | [string](#string) |  |  |
 
 
 
@@ -887,7 +616,7 @@ Params holds parameters for the incentives module
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenOutAmount` | [string](#string) |  |  |
+| `token_out_amount` | [string](#string) |  |  |
 
 
 
@@ -904,9 +633,9 @@ This is really MsgJoinPoolNoSwap
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `shareOutAmount` | [string](#string) |  |  |
-| `tokenInMaxs` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `share_out_amount` | [string](#string) |  |  |
+| `token_in_maxs` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -933,9 +662,9 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenIn` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `shareOutMinAmount` | [string](#string) |  | repeated cosmos.base.v1beta1.Coin tokensIn = 5 [ (gogoproto.moretags) = "yaml:\"tokens_in\"", (gogoproto.nullable) = false ]; |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_in` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `share_out_min_amount` | [string](#string) |  | repeated cosmos.base.v1beta1.Coin tokensIn = 5 [ (gogoproto.moretags) = "yaml:\"tokens_in\"", (gogoproto.nullable) = false ]; |
 
 
 
@@ -950,7 +679,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `shareOutAmount` | [string](#string) |  |  |
+| `share_out_amount` | [string](#string) |  |  |
 
 
 
@@ -966,10 +695,10 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenInDenom` | [string](#string) |  |  |
-| `shareOutAmount` | [string](#string) |  |  |
-| `tokenInMaxAmount` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_in_denom` | [string](#string) |  |  |
+| `share_out_amount` | [string](#string) |  |  |
+| `token_in_max_amount` | [string](#string) |  |  |
 
 
 
@@ -984,7 +713,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenInAmount` | [string](#string) |  |  |
+| `token_in_amount` | [string](#string) |  |  |
 
 
 
@@ -1001,8 +730,8 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `routes` | [SwapAmountInRoute](#osmosis.gamm.v1beta1.SwapAmountInRoute) | repeated |  |
-| `tokenIn` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `tokenOutMinAmount` | [string](#string) |  |  |
+| `token_in` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `token_out_min_amount` | [string](#string) |  |  |
 
 
 
@@ -1017,7 +746,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenOutAmount` | [string](#string) |  |  |
+| `token_out_amount` | [string](#string) |  |  |
 
 
 
@@ -1034,8 +763,8 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `routes` | [SwapAmountOutRoute](#osmosis.gamm.v1beta1.SwapAmountOutRoute) | repeated |  |
-| `tokenInMaxAmount` | [string](#string) |  |  |
-| `tokenOut` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `token_in_max_amount` | [string](#string) |  |  |
+| `token_out` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -1050,7 +779,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenInAmount` | [string](#string) |  |  |
+| `token_in_amount` | [string](#string) |  |  |
 
 
 
@@ -1065,8 +794,8 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenOutDenom` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_out_denom` | [string](#string) |  |  |
 
 
 
@@ -1081,8 +810,8 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenInDenom` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_in_denom` | [string](#string) |  |  |
 
 
 
@@ -1140,7 +869,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `numPools` | [uint64](#uint64) |  |  |
+| `num_pools` | [uint64](#uint64) |  |  |
 
 
 
@@ -1155,7 +884,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 
 
 
@@ -1185,7 +914,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 
 
 
@@ -1247,7 +976,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 | `base_asset_denom` | [string](#string) |  |  |
 | `quote_asset_denom` | [string](#string) |  |  |
 
@@ -1265,7 +994,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `spotPrice` | [string](#string) |  | String of the Dec. Ex) 10.203uatom |
+| `spot_price` | [string](#string) |  | String of the Dec. Ex) 10.203uatom |
 
 
 
@@ -1281,8 +1010,8 @@ query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenIn` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_in` | [string](#string) |  |  |
 | `routes` | [SwapAmountInRoute](#osmosis.gamm.v1beta1.SwapAmountInRoute) | repeated |  |
 
 
@@ -1298,7 +1027,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenOutAmount` | [string](#string) |  |  |
+| `token_out_amount` | [string](#string) |  |  |
 
 
 
@@ -1314,9 +1043,9 @@ query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 | `routes` | [SwapAmountOutRoute](#osmosis.gamm.v1beta1.SwapAmountOutRoute) | repeated |  |
-| `tokenOut` | [string](#string) |  |  |
+| `token_out` | [string](#string) |  |  |
 
 
 
@@ -1331,7 +1060,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenInAmount` | [string](#string) |  |  |
+| `token_in_amount` | [string](#string) |  |  |
 
 
 
@@ -1371,7 +1100,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 
 
 
@@ -1401,7 +1130,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 
 
 
@@ -1416,7 +1145,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `totalShares` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `total_shares` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -1439,13 +1168,13 @@ query.
 | `Pools` | [QueryPoolsRequest](#osmosis.gamm.v1beta1.QueryPoolsRequest) | [QueryPoolsResponse](#osmosis.gamm.v1beta1.QueryPoolsResponse) |  | GET|/osmosis/gamm/v1beta1/pools|
 | `NumPools` | [QueryNumPoolsRequest](#osmosis.gamm.v1beta1.QueryNumPoolsRequest) | [QueryNumPoolsResponse](#osmosis.gamm.v1beta1.QueryNumPoolsResponse) |  | GET|/osmosis/gamm/v1beta1/num_pools|
 | `TotalLiquidity` | [QueryTotalLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalLiquidityRequest) | [QueryTotalLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalLiquidityResponse) |  | GET|/osmosis/gamm/v1beta1/total_liquidity|
-| `Pool` | [QueryPoolRequest](#osmosis.gamm.v1beta1.QueryPoolRequest) | [QueryPoolResponse](#osmosis.gamm.v1beta1.QueryPoolResponse) | Per Pool gRPC Endpoints | GET|/osmosis/gamm/v1beta1/pools/{poolId}|
-| `PoolParams` | [QueryPoolParamsRequest](#osmosis.gamm.v1beta1.QueryPoolParamsRequest) | [QueryPoolParamsResponse](#osmosis.gamm.v1beta1.QueryPoolParamsResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{poolId}/params|
-| `TotalPoolLiquidity` | [QueryTotalPoolLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityRequest) | [QueryTotalPoolLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{poolId}/total_pool_liquidity|
-| `TotalShares` | [QueryTotalSharesRequest](#osmosis.gamm.v1beta1.QueryTotalSharesRequest) | [QueryTotalSharesResponse](#osmosis.gamm.v1beta1.QueryTotalSharesResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{poolId}/total_shares|
-| `SpotPrice` | [QuerySpotPriceRequest](#osmosis.gamm.v1beta1.QuerySpotPriceRequest) | [QuerySpotPriceResponse](#osmosis.gamm.v1beta1.QuerySpotPriceResponse) | SpotPrice defines a gRPC query handler that returns the spot price given a base denomination and a quote denomination. | GET|/osmosis/gamm/v1beta1/pools/{poolId}/prices|
-| `EstimateSwapExactAmountIn` | [QuerySwapExactAmountInRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest) | [QuerySwapExactAmountInResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse) | Estimate the swap. | GET|/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_in|
-| `EstimateSwapExactAmountOut` | [QuerySwapExactAmountOutRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutRequest) | [QuerySwapExactAmountOutResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse) |  | GET|/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_out|
+| `Pool` | [QueryPoolRequest](#osmosis.gamm.v1beta1.QueryPoolRequest) | [QueryPoolResponse](#osmosis.gamm.v1beta1.QueryPoolResponse) | Per Pool gRPC Endpoints | GET|/osmosis/gamm/v1beta1/pools/{pool_id}|
+| `PoolParams` | [QueryPoolParamsRequest](#osmosis.gamm.v1beta1.QueryPoolParamsRequest) | [QueryPoolParamsResponse](#osmosis.gamm.v1beta1.QueryPoolParamsResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{pool_id}/params|
+| `TotalPoolLiquidity` | [QueryTotalPoolLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityRequest) | [QueryTotalPoolLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{pool_id}/total_pool_liquidity|
+| `TotalShares` | [QueryTotalSharesRequest](#osmosis.gamm.v1beta1.QueryTotalSharesRequest) | [QueryTotalSharesResponse](#osmosis.gamm.v1beta1.QueryTotalSharesResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{pool_id}/total_shares|
+| `SpotPrice` | [QuerySpotPriceRequest](#osmosis.gamm.v1beta1.QuerySpotPriceRequest) | [QuerySpotPriceResponse](#osmosis.gamm.v1beta1.QuerySpotPriceResponse) | SpotPrice defines a gRPC query handler that returns the spot price given a base denomination and a quote denomination. | GET|/osmosis/gamm/v1beta1/pools/{pool_id}/prices|
+| `EstimateSwapExactAmountIn` | [QuerySwapExactAmountInRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest) | [QuerySwapExactAmountInResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse) | Estimate the swap. | GET|/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in|
+| `EstimateSwapExactAmountOut` | [QuerySwapExactAmountOutRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutRequest) | [QuerySwapExactAmountOutResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse) |  | GET|/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out|
 
  <!-- end services -->
 
@@ -2150,6 +1879,37 @@ GenesisState defines the lockup module's genesis state.
 
 
 
+<a name="osmosis.lockup.AccountLockedDurationRequest"></a>
+
+### AccountLockedDurationRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  |  |
+
+
+
+
+
+
+<a name="osmosis.lockup.AccountLockedDurationResponse"></a>
+
+### AccountLockedDurationResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `locks` | [PeriodLock](#osmosis.lockup.PeriodLock) | repeated |  |
+
+
+
+
+
+
 <a name="osmosis.lockup.AccountLockedLongerDurationDenomRequest"></a>
 
 ### AccountLockedLongerDurationDenomRequest
@@ -2596,6 +2356,7 @@ Query defines the gRPC querier service.
 | `LockedByID` | [LockedRequest](#osmosis.lockup.LockedRequest) | [LockedResponse](#osmosis.lockup.LockedResponse) | Returns lock record by id | GET|/osmosis/lockup/v1beta1/locked_by_id/{lock_id}|
 | `SyntheticLockupsByLockupID` | [SyntheticLockupsByLockupIDRequest](#osmosis.lockup.SyntheticLockupsByLockupIDRequest) | [SyntheticLockupsByLockupIDResponse](#osmosis.lockup.SyntheticLockupsByLockupIDResponse) | Returns synthetic lockups by native lockup id | GET|/osmosis/lockup/v1beta1/synthetic_lockups_by_lock_id/{lock_id}|
 | `AccountLockedLongerDuration` | [AccountLockedLongerDurationRequest](#osmosis.lockup.AccountLockedLongerDurationRequest) | [AccountLockedLongerDurationResponse](#osmosis.lockup.AccountLockedLongerDurationResponse) | Returns account locked records with longer duration | GET|/osmosis/lockup/v1beta1/account_locked_longer_duration/{owner}|
+| `AccountLockedDuration` | [AccountLockedDurationRequest](#osmosis.lockup.AccountLockedDurationRequest) | [AccountLockedDurationResponse](#osmosis.lockup.AccountLockedDurationResponse) | Returns account locked records with a specific duration | GET|/osmosis/lockup/v1beta1/account_locked_duration/{owner}|
 | `AccountLockedLongerDurationNotUnlockingOnly` | [AccountLockedLongerDurationNotUnlockingOnlyRequest](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyRequest) | [AccountLockedLongerDurationNotUnlockingOnlyResponse](#osmosis.lockup.AccountLockedLongerDurationNotUnlockingOnlyResponse) | Returns account locked records with longer duration excluding tokens started unlocking | GET|/osmosis/lockup/v1beta1/account_locked_longer_duration_not_unlocking_only/{owner}|
 | `AccountLockedLongerDurationDenom` | [AccountLockedLongerDurationDenomRequest](#osmosis.lockup.AccountLockedLongerDurationDenomRequest) | [AccountLockedLongerDurationDenomResponse](#osmosis.lockup.AccountLockedLongerDurationDenomResponse) | Returns account's locked records for a denom with longer duration | GET|/osmosis/lockup/v1beta1/account_locked_longer_duration_denom/{owner}|
 
@@ -2672,6 +2433,39 @@ Query defines the gRPC querier service.
 
 
 
+<a name="osmosis.lockup.MsgExtendLockup"></a>
+
+### MsgExtendLockup
+MsgExtendLockup extends the existing lockup's duration.
+The new duration is longer than the original.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `owner` | [string](#string) |  |  |
+| `ID` | [uint64](#uint64) |  |  |
+| `duration` | [google.protobuf.Duration](#google.protobuf.Duration) |  | duration to be set. fails if lower than the current duration, or is unlocking |
+
+
+
+
+
+
+<a name="osmosis.lockup.MsgExtendLockupResponse"></a>
+
+### MsgExtendLockupResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `success` | [bool](#bool) |  |  |
+
+
+
+
+
+
 <a name="osmosis.lockup.MsgLockTokens"></a>
 
 ### MsgLockTokens
@@ -2720,6 +2514,7 @@ Msg defines the Msg service.
 | `LockTokens` | [MsgLockTokens](#osmosis.lockup.MsgLockTokens) | [MsgLockTokensResponse](#osmosis.lockup.MsgLockTokensResponse) | LockTokens lock tokens | |
 | `BeginUnlockingAll` | [MsgBeginUnlockingAll](#osmosis.lockup.MsgBeginUnlockingAll) | [MsgBeginUnlockingAllResponse](#osmosis.lockup.MsgBeginUnlockingAllResponse) | BeginUnlockingAll begin unlocking all tokens | |
 | `BeginUnlocking` | [MsgBeginUnlocking](#osmosis.lockup.MsgBeginUnlocking) | [MsgBeginUnlockingResponse](#osmosis.lockup.MsgBeginUnlockingResponse) | MsgBeginUnlocking begins unlocking tokens by lock ID | |
+| `ExtendLockup` | [MsgExtendLockup](#osmosis.lockup.MsgExtendLockup) | [MsgExtendLockupResponse](#osmosis.lockup.MsgExtendLockupResponse) | MsgEditLockup edits the existing lockups by lock ID | |
 
  <!-- end services -->
 
@@ -3452,6 +3247,7 @@ and OSMO tokens for superfluid staking
 | `delegator_address` | [string](#string) |  |  |
 | `validator_address` | [string](#string) |  |  |
 | `delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `equivalent_staked_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -3470,6 +3266,21 @@ and OSMO tokens for superfluid staking
 | `denom` | [string](#string) |  |  |
 | `val_addr` | [string](#string) |  |  |
 | `gauge_id` | [uint64](#uint64) |  | perpetual gauge for rewards distribution |
+
+
+
+
+
+
+<a name="osmosis.superfluid.UnpoolWhitelistedPools"></a>
+
+### UnpoolWhitelistedPools
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ids` | [uint64](#uint64) | repeated |  |
 
 
 
@@ -3881,6 +3692,7 @@ assets
 | ----- | ---- | ----- | ----------- |
 | `superfluid_delegation_records` | [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord) | repeated |  |
 | `total_delegated_coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `total_equivalent_staked_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -4143,6 +3955,44 @@ specified validator addr.
 
 
 
+
+<a name="osmosis.superfluid.MsgUnPoolWhitelistedPool"></a>
+
+### MsgUnPoolWhitelistedPool
+MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is
+associated with pool pool_id. If pool_id is not approved for unpooling by
+governance, this is a no-op. Unpooling takes the locked gamm shares, and runs
+"ExitPool" on it, to get the constituent tokens. e.g. z gamm/pool/1 tokens
+ExitPools into constituent tokens x uatom, y uosmo. Then it creates a new
+lock for every constituent token, with the duration associated with the lock.
+If the lock was unbonding, the new lockup durations should be the time left
+until unbond completion.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse"></a>
+
+### MsgUnPoolWhitelistedPoolResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `exitedLockIds` | [uint64](#uint64) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -4163,6 +4013,381 @@ Msg defines the Msg service.
 Execute superfluid redelegation for a lockup rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns (MsgSuperfluidRedelegateResponse); | |
 | `SuperfluidUnbondLock` | [MsgSuperfluidUnbondLock](#osmosis.superfluid.MsgSuperfluidUnbondLock) | [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse) | For a given lock that is being superfluidly undelegated, also unbond the underlying lock. | |
 | `LockAndSuperfluidDelegate` | [MsgLockAndSuperfluidDelegate](#osmosis.superfluid.MsgLockAndSuperfluidDelegate) | [MsgLockAndSuperfluidDelegateResponse](#osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse) | Execute lockup lock and superfluid delegation in a single msg | |
+| `UnPoolWhitelistedPool` | [MsgUnPoolWhitelistedPool](#osmosis.superfluid.MsgUnPoolWhitelistedPool) | [MsgUnPoolWhitelistedPoolResponse](#osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse) |  | |
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/authorityMetadata.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/authorityMetadata.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata"></a>
+
+### DenomAuthorityMetadata
+DenomAuthorityMetadata specifies metadata for addresses that have specific
+capabilities over a token factory denom. Right now there is only one Admin
+permission, but is planned to be extended to the future.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `Admin` | [string](#string) |  | Can be empty for no admin, or a valid osmosis address |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/params.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.Params"></a>
+
+### Params
+Params holds parameters for the tokenfactory module
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom_creation_fee` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/genesis.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.GenesisDenom"></a>
+
+### GenesisDenom
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+| `authority_metadata` | [DenomAuthorityMetadata](#osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the tokenfactory module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#osmosis.tokenfactory.v1beta1.Params) |  | params defines the paramaters of the module. |
+| `factory_denoms` | [GenesisDenom](#osmosis.tokenfactory.v1beta1.GenesisDenom) | repeated |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/query.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest"></a>
+
+### QueryDenomAuthorityMetadataRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denom` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse"></a>
+
+### QueryDenomAuthorityMetadataResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `authority_metadata` | [DenomAuthorityMetadata](#osmosis.tokenfactory.v1beta1.DenomAuthorityMetadata) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest"></a>
+
+### QueryDenomsFromCreatorRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `creator` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse"></a>
+
+### QueryDenomsFromCreatorResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `denoms` | [string](#string) | repeated |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#osmosis.tokenfactory.v1beta1.Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.tokenfactory.v1beta1.Query"></a>
+
+### Query
+Query defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#osmosis.tokenfactory.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#osmosis.tokenfactory.v1beta1.QueryParamsResponse) | Params returns the total set of minting parameters. | GET|/osmosis/tokenfactory/v1beta1/params|
+| `DenomAuthorityMetadata` | [QueryDenomAuthorityMetadataRequest](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataRequest) | [QueryDenomAuthorityMetadataResponse](#osmosis.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse) |  | GET|/osmosis/tokenfactory/v1beta1/denoms/{denom}/authority_metadata|
+| `DenomsFromCreator` | [QueryDenomsFromCreatorRequest](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorRequest) | [QueryDenomsFromCreatorResponse](#osmosis.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse) |  | GET|/osmosis/tokenfactory/v1beta1/denoms_from_creator/{creator}|
+
+ <!-- end services -->
+
+
+
+<a name="osmosis/tokenfactory/v1beta1/tx.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## osmosis/tokenfactory/v1beta1/tx.proto
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgBurn"></a>
+
+### MsgBurn
+MsgBurn is the sdk.Msg type for allowing an admin account to burn
+a token.  For now, we only support burning from the sender account.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgBurnResponse"></a>
+
+### MsgBurnResponse
+
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgChangeAdmin"></a>
+
+### MsgChangeAdmin
+MsgChangeAdmin is the sdk.Msg type for allowing an admin account to reassign
+adminship of a denom to a new account
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+| `newAdmin` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgChangeAdminResponse"></a>
+
+### MsgChangeAdminResponse
+
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgCreateDenom"></a>
+
+### MsgCreateDenom
+MsgCreateDenom is the sdk.Msg type for allowing an account to create
+a new denom. It requires a sender address and a subdenomination.
+The (sender_address, sub_denomination) pair must be unique and cannot be
+re-used. The resulting denom created is `factory/{creator
+address}/{subdenom}`. The resultant denom's admin is originally set to be the
+creator, but this can be changed later. The token denom does not indicate the
+current admin.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `subdenom` | [string](#string) |  | subdenom can be up to 44 "alphanumeric" characters long. |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgCreateDenomResponse"></a>
+
+### MsgCreateDenomResponse
+MsgCreateDenomResponse is the return value of MsgCreateDenom
+It returns the full string of the newly created denom
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `new_token_denom` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgMint"></a>
+
+### MsgMint
+MsgMint is the sdk.Msg type for allowing an admin account to mint
+more of a token.  For now, we only support minting to the sender account
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
+<a name="osmosis.tokenfactory.v1beta1.MsgMintResponse"></a>
+
+### MsgMintResponse
+
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="osmosis.tokenfactory.v1beta1.Msg"></a>
+
+### Msg
+Msg defines the Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `CreateDenom` | [MsgCreateDenom](#osmosis.tokenfactory.v1beta1.MsgCreateDenom) | [MsgCreateDenomResponse](#osmosis.tokenfactory.v1beta1.MsgCreateDenomResponse) |  | |
+| `Mint` | [MsgMint](#osmosis.tokenfactory.v1beta1.MsgMint) | [MsgMintResponse](#osmosis.tokenfactory.v1beta1.MsgMintResponse) |  | |
+| `Burn` | [MsgBurn](#osmosis.tokenfactory.v1beta1.MsgBurn) | [MsgBurnResponse](#osmosis.tokenfactory.v1beta1.MsgBurnResponse) |  | |
+| `ChangeAdmin` | [MsgChangeAdmin](#osmosis.tokenfactory.v1beta1.MsgChangeAdmin) | [MsgChangeAdminResponse](#osmosis.tokenfactory.v1beta1.MsgChangeAdminResponse) | ForceTransfer is deactivated for now because we need to think through edge cases rpc ForceTransfer(MsgForceTransfer) returns (MsgForceTransferResponse); | |
 
  <!-- end services -->
 

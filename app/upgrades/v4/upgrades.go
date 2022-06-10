@@ -3,11 +3,10 @@ package v4
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v7/app/keepers"
+	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -19,15 +18,14 @@ import (
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	bank bankkeeper.Keeper,
-	distr *distrkeeper.Keeper,
-	gamm *gammkeeper.Keeper,
+	_ upgrades.BaseAppParamManager,
+	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// configure upgrade for x/gamm module pool creation fee param
-		gamm.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
+		keepers.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 
-		Prop12(ctx, bank, distr)
+		Prop12(ctx, keepers.BankKeeper, keepers.DistrKeeper)
 
 		return vm, nil
 	}

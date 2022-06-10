@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -134,7 +135,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 			lockSecs = r.Intn(1 * 60 * 60 * 8)
 		}
 		duration := time.Duration(lockSecs) * time.Second
-		_, err := app.LockupKeeper.LockTokens(ctx, addr, simCoins, duration)
+		_, err := app.LockupKeeper.CreateLock(ctx, addr, simCoins, duration)
 		if err != nil {
 			fmt.Printf("Lock tokens, %v\n", err)
 			b.FailNow()
@@ -145,7 +146,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	// begin distribution for all gauges
 	for _, gaugeId := range gaugeIds {
 		gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
-		err := app.IncentivesKeeper.BeginDistribution(ctx, *gauge)
+		err := app.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(ctx, *gauge)
 		if err != nil {
 			fmt.Printf("Begin distribution, %v\n", err)
 			b.FailNow()

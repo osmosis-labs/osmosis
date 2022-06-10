@@ -22,5 +22,5 @@ var (
 	InitPoolSharesSupply = OneShare.MulRaw(100)
 
 	// SigFigs is the amount of significant figures used to calculate SpotPrice
-	SigFigs = sdk.NewDec(10).Power(SigFigsExponent)
+	SigFigs = sdk.NewDec(10).Power(SigFigsExponent).TruncateInt()
 )

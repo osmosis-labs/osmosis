@@ -1,10 +1,12 @@
 package keeper_test
 
 import (
+	// "fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	pooltypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
@@ -72,6 +74,16 @@ func (suite *KeeperTestSuite) TestGRPCGauges() {
 		StartTime:         startTime,
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
+
+	// filtering check
+	for i := 0; i < 10; i++ {
+		suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
+		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
+	}
+
+	filter := query.PageRequest{Limit: 10}
+	res, err = suite.querier.Gauges(sdk.WrapSDKContext(suite.Ctx), &types.GaugesRequest{Pagination: &filter})
+	suite.Require().Len(res.Data, 10)
 }
 
 func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
@@ -85,7 +97,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 	// create a gauge
 	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
-	err = suite.querier.BeginDistribution(suite.Ctx, *gauge)
+	err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// final check
@@ -107,6 +119,23 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 		StartTime:         startTime,
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
+
+	// filtering check
+	for i := 0; i < 20; i++ {
+		_, gauge, _, _ := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
+		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
+
+		// set up more 9 active gauges => 10
+		if i < 9 {
+			suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+		}
+	}
+
+	res, err = suite.querier.ActiveGauges(sdk.WrapSDKContext(suite.Ctx), &types.ActiveGaugesRequest{Pagination: &query.PageRequest{Limit: 5}})
+	suite.Require().Len(res.Data, 5)
+
+	res, err = suite.querier.ActiveGauges(sdk.WrapSDKContext(suite.Ctx), &types.ActiveGaugesRequest{Pagination: &query.PageRequest{Limit: 15}})
+	suite.Require().Len(res.Data, 10)
 }
 
 func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
@@ -120,7 +149,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	// create a gauge
 	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
-	err = suite.App.IncentivesKeeper.BeginDistribution(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	// final check
 	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &types.ActiveGaugesPerDenomRequest{Denom: "lptoken", Pagination: nil})
 	suite.Require().NoError(err)
@@ -141,6 +170,25 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
 
+	// filtering check
+	for i := 0; i < 20; i++ {
+		_, gauge, _, _ := suite.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool")
+		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
+
+		// set up 10 active gauges with "pool" denom
+		if i < 10 {
+			suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+		}
+	}
+
+	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &types.ActiveGaugesPerDenomRequest{Denom: "lptoken", Pagination: &query.PageRequest{Limit: 5}})
+	suite.Require().Len(res.Data, 1)
+
+	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &types.ActiveGaugesPerDenomRequest{Denom: "pool", Pagination: &query.PageRequest{Limit: 5}})
+	suite.Require().Len(res.Data, 5)
+
+	res, err = suite.querier.ActiveGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &types.ActiveGaugesPerDenomRequest{Denom: "pool", Pagination: &query.PageRequest{Limit: 15}})
+	suite.Require().Len(res.Data, 10)
 }
 
 func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
@@ -173,6 +221,23 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 		StartTime:         startTime,
 	}
 	suite.Require().Equal(res.Data[0].String(), expectedGauge.String())
+
+	// filtering check
+	for i := 0; i < 20; i++ {
+		_, gauge, _, _ := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
+		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
+
+		// set up more 9 active gauges => Upcoming = 1 + (20 -9) = 12
+		if i < 9 {
+			suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+		}
+	}
+
+	res, err = suite.querier.UpcomingGauges(sdk.WrapSDKContext(suite.Ctx), &types.UpcomingGaugesRequest{Pagination: &query.PageRequest{Limit: 5}})
+	suite.Require().Len(res.Data, 5)
+
+	res, err = suite.querier.UpcomingGauges(sdk.WrapSDKContext(suite.Ctx), &types.UpcomingGaugesRequest{Pagination: &query.PageRequest{Limit: 15}})
+	suite.Require().Len(res.Data, 12)
 }
 
 func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
@@ -207,10 +272,30 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 
 	// final check when gauge is moved from upcoming to active
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
-	err = suite.App.IncentivesKeeper.BeginDistribution(suite.Ctx, *gauge)
+	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &upcomingGaugeRequest)
 	suite.Require().NoError(err)
 	suite.Require().Len(res.UpcomingGauges, 0)
+
+	// filtering check
+	for i := 0; i < 20; i++ {
+		_, gauge, _, _ := suite.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool")
+		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
+
+		// set up 10 active gauges with "pool" denom => 10 upcoming
+		if i < 10 {
+			suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+		}
+	}
+
+	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &types.UpcomingGaugesPerDenomRequest{Denom: "lptoken", Pagination: &query.PageRequest{Limit: 5}})
+	suite.Require().Len(res.UpcomingGauges, 0)
+
+	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &types.UpcomingGaugesPerDenomRequest{Denom: "pool", Pagination: &query.PageRequest{Limit: 5}})
+	suite.Require().Len(res.UpcomingGauges, 5)
+
+	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &types.UpcomingGaugesPerDenomRequest{Denom: "pool", Pagination: &query.PageRequest{Limit: 15}})
+	suite.Require().Len(res.UpcomingGauges, 10)
 }
 
 func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
@@ -319,7 +404,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 
 	// start distribution
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
-	err = suite.querier.BeginDistribution(suite.Ctx, *gauge)
+	err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// check after distribution
@@ -366,7 +451,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 
 	// start distribution
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
-	err = suite.querier.BeginDistribution(suite.Ctx, *gauge)
+	err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers

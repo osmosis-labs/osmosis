@@ -2,12 +2,12 @@ package app
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmclient "github.com/CosmWasm/wasmd/x/wasm/client"
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
-	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v2/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
-	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v3/modules/core"
+	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+
+	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
@@ -27,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -36,20 +35,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v7/x/claim"
-	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm"
@@ -61,77 +57,36 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/mint"
 	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	poolincentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/client"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 	superfluid "github.com/osmosis-labs/osmosis/v7/x/superfluid"
-	superfluidclient "github.com/osmosis-labs/osmosis/v7/x/superfluid/client"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
-// appModuleBasics returns ModuleBasics for the module BasicManager.
-var appModuleBasics = []module.AppModuleBasic{
-	auth.AppModuleBasic{},
-	genutil.AppModuleBasic{},
-	bank.AppModuleBasic{},
-	capability.AppModuleBasic{},
-	staking.AppModuleBasic{},
-	mint.AppModuleBasic{},
-	distr.AppModuleBasic{},
-	gov.NewAppModuleBasic(
-		append(
-			wasmclient.ProposalHandlers,
-			paramsclient.ProposalHandler,
-			distrclient.ProposalHandler,
-			upgradeclient.ProposalHandler,
-			upgradeclient.CancelProposalHandler,
-			poolincentivesclient.UpdatePoolIncentivesHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
-			superfluidclient.SetSuperfluidAssetsProposalHandler,
-			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
-		)...,
-	),
-	params.AppModuleBasic{},
-	crisis.AppModuleBasic{},
-	slashing.AppModuleBasic{},
-	authzmodule.AppModuleBasic{},
-	ibc.AppModuleBasic{},
-	upgrade.AppModuleBasic{},
-	evidence.AppModuleBasic{},
-	transfer.AppModuleBasic{},
-	vesting.AppModuleBasic{},
-	gamm.AppModuleBasic{},
-	txfees.AppModuleBasic{},
-	incentives.AppModuleBasic{},
-	lockup.AppModuleBasic{},
-	poolincentives.AppModuleBasic{},
-	epochs.AppModuleBasic{},
-	claim.AppModuleBasic{},
-	superfluid.AppModuleBasic{},
-	bech32ibc.AppModuleBasic{},
-	wasm.AppModuleBasic{},
-}
-
 // moduleAccountPermissions defines module account permissions
+// TODO: Having to input nil's here is unacceptable, we need a way to automatically derive this.
 var moduleAccountPermissions = map[string][]string{
 	authtypes.FeeCollectorName:               nil,
 	distrtypes.ModuleName:                    nil,
+	icatypes.ModuleName:                      nil,
 	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	minttypes.DeveloperVestingModuleAcctName: nil,
 	stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
 	stakingtypes.NotBondedPoolName:           {authtypes.Burner, authtypes.Staking},
 	govtypes.ModuleName:                      {authtypes.Burner},
 	ibctransfertypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
-	claimtypes.ModuleName:                    {authtypes.Minter, authtypes.Burner},
 	gammtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	incentivestypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	lockuptypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
 	poolincentivestypes.ModuleName:           nil,
 	superfluidtypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	txfeestypes.ModuleName:                   nil,
+	txfeestypes.NonNativeFeeCollectorName:    nil,
 	wasm.ModuleName:                          {authtypes.Burner},
+	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
 }
 
 // appModules return modules to initialize module manager.
@@ -160,13 +115,13 @@ func appModules(
 		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(*app.UpgradeKeeper),
-		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
+		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
-		app.transferModule,
-		claim.NewAppModule(appCodec, *app.ClaimKeeper),
+		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
 		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
@@ -183,6 +138,7 @@ func appModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
+		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 	}
 }
@@ -204,6 +160,7 @@ func orderBeginBlockers() []string {
 		stakingtypes.ModuleName,
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
+		icatypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -215,8 +172,8 @@ func orderBeginBlockers() []string {
 		gammtypes.ModuleName,
 		incentivestypes.ModuleName,
 		lockuptypes.ModuleName,
-		claimtypes.ModuleName,
 		poolincentivestypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 		// superfluid must come after distribution and epochs
 		superfluidtypes.ModuleName,
 		bech32ibctypes.ModuleName,
@@ -225,70 +182,51 @@ func orderBeginBlockers() []string {
 	}
 }
 
-// orderEndBlockers Tell the app's module manager how to set the order of
-// EndBlockers, which are run at the end of every block.
-var orderEndBlockers = []string{
-	lockuptypes.ModuleName,
-	crisistypes.ModuleName,
-	govtypes.ModuleName,
-	stakingtypes.ModuleName,
-	claimtypes.ModuleName,
-	capabilitytypes.ModuleName,
-	authtypes.ModuleName,
-	banktypes.ModuleName,
-	distrtypes.ModuleName,
-	slashingtypes.ModuleName,
-	minttypes.ModuleName,
-	genutiltypes.ModuleName,
-	evidencetypes.ModuleName,
-	authz.ModuleName,
-	paramstypes.ModuleName,
-	upgradetypes.ModuleName,
-	vestingtypes.ModuleName,
-	ibchost.ModuleName,
-	ibctransfertypes.ModuleName,
-	gammtypes.ModuleName,
-	incentivestypes.ModuleName,
-	lockuptypes.ModuleName,
-	poolincentivestypes.ModuleName,
-	superfluidtypes.ModuleName,
-	bech32ibctypes.ModuleName,
-	txfeestypes.ModuleName,
-	// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
-	epochstypes.ModuleName,
-	wasm.ModuleName,
+func OrderEndBlockers(allModuleNames []string) []string {
+	ord := partialord.NewPartialOrdering(allModuleNames)
+	// Epochs must run after all other end blocks
+	ord.LastElements(epochstypes.ModuleName)
+	// txfees auto-swap code should occur before any potential gamm end block code.
+	ord.Before(txfeestypes.ModuleName, gammtypes.ModuleName)
+	// only remaining modules that aren;t no-ops are: crisis & govtypes
+	// we don't care about the relative ordering between them.
+
+	return ord.TotalOrdering()
 }
 
-// modulesOrderInitGenesis returns module names in order for init genesis calls.
-var modulesOrderInitGenesis = []string{
-	capabilitytypes.ModuleName,
-	authtypes.ModuleName,
-	banktypes.ModuleName,
-	distrtypes.ModuleName,
-	stakingtypes.ModuleName,
-	slashingtypes.ModuleName,
-	govtypes.ModuleName,
-	minttypes.ModuleName,
-	crisistypes.ModuleName,
-	ibchost.ModuleName,
-	gammtypes.ModuleName,
-	txfeestypes.ModuleName,
-	genutiltypes.ModuleName,
-	evidencetypes.ModuleName,
-	paramstypes.ModuleName,
-	upgradetypes.ModuleName,
-	vestingtypes.ModuleName,
-	ibctransfertypes.ModuleName,
-	bech32ibctypes.ModuleName, // comes after ibctransfertypes
-	poolincentivestypes.ModuleName,
-	superfluidtypes.ModuleName,
-	claimtypes.ModuleName,
-	incentivestypes.ModuleName,
-	epochstypes.ModuleName,
-	lockuptypes.ModuleName,
-	authz.ModuleName,
-	// wasm after ibc transfer
-	wasm.ModuleName,
+// OrderInitGenesis returns module names in order for init genesis calls.
+func OrderInitGenesis(allModuleNames []string) []string {
+	return []string{
+		capabilitytypes.ModuleName,
+		authtypes.ModuleName,
+		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		stakingtypes.ModuleName,
+		slashingtypes.ModuleName,
+		govtypes.ModuleName,
+		minttypes.ModuleName,
+		crisistypes.ModuleName,
+		ibchost.ModuleName,
+		icatypes.ModuleName,
+		gammtypes.ModuleName,
+		txfeestypes.ModuleName,
+		genutiltypes.ModuleName,
+		evidencetypes.ModuleName,
+		paramstypes.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		ibctransfertypes.ModuleName,
+		bech32ibctypes.ModuleName, // comes after ibctransfertypes
+		poolincentivestypes.ModuleName,
+		superfluidtypes.ModuleName,
+		tokenfactorytypes.ModuleName,
+		incentivestypes.ModuleName,
+		epochstypes.ModuleName,
+		lockuptypes.ModuleName,
+		authz.ModuleName,
+		// wasm after ibc transfer
+		wasm.ModuleName,
+	}
 }
 
 // simulationModules returns modules for simulation manager
@@ -304,8 +242,6 @@ func simulationModules(
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
-		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
 		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
 		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
 		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
@@ -313,12 +249,11 @@ func simulationModules(
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		evidence.NewAppModule(*app.EvidenceKeeper),
-		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper),
+		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
 		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
 		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
-		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
 		superfluid.NewAppModule(
 			appCodec,
 			*app.SuperfluidKeeper,
@@ -329,7 +264,7 @@ func simulationModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
-		app.transferModule,
+		app.TransferModule,
 	}
 }
 

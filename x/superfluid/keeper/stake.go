@@ -350,3 +350,77 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 // Eugen’s point: Only rewards message needs to be updated. Rest of messages are fine
 // Queries need to be updated
 // We can do this at the very end though, since it just relates to queries.
+
+// IterateBondedValidatorsByPower implements govtypes.StakingKeeper
+func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(int64, stakingtypes.ValidatorI) bool) {
+	k.sk.IterateBondedValidatorsByPower(ctx, fn)
+}
+
+// TotalBondedTokens implements govtypes.StakingKeeper
+func (k Keeper) TotalBondedTokens(ctx sdk.Context) sdk.Int {
+	return k.sk.TotalBondedTokens(ctx)
+}
+
+// IterateDelegations implements govtypes.StakingKeeper
+// Iterates through staking keeper's delegations, and then all of the superfluid delegations.
+func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn func(int64, stakingtypes.DelegationI) bool) {
+	// call the callback with the non-superfluid delegations
+	var index int64
+	k.sk.IterateDelegations(ctx, delegator, func(i int64, delegation stakingtypes.DelegationI) (stop bool) {
+		index = i
+		return fn(i, delegation)
+	})
+
+	synthlocks := k.lk.GetAllSyntheticLockupsByAddr(ctx, delegator)
+	for i, lock := range synthlocks {
+		// get locked coin from the lock ID
+		interim, ok := k.GetIntermediaryAccountFromLockId(ctx, lock.UnderlyingLockId)
+		if !ok {
+			continue
+		}
+
+		lock, err := k.lk.GetLockByID(ctx, lock.UnderlyingLockId)
+		if err != nil {
+			ctx.Logger().Error("lockup retrieval failed with underlying lock", "Lock", lock, "Error", err)
+			continue
+		}
+
+		coin, err := lock.SingleCoin()
+		if err != nil {
+			ctx.Logger().Error("lock fails to meet expected invariant, it contains multiple coins", "Lock", lock, "Error", err)
+			continue
+		}
+
+		// get osmo-equivalent token amount
+		amount := k.GetSuperfluidOSMOTokens(ctx, interim.Denom, coin.Amount)
+
+		// get validator shares equivalent to the token amount
+		valAddr, err := sdk.ValAddressFromBech32(interim.ValAddr)
+		if err != nil {
+			ctx.Logger().Error("failed to decode validator address", "Intermediary", interim.ValAddr, "LockID", lock.ID, "Error", err)
+			continue
+		}
+
+		validator, found := k.sk.GetValidator(ctx, valAddr)
+		if !found {
+			ctx.Logger().Error("validator does not exist for lock", "Validator", valAddr, "LockID", lock.ID)
+			continue
+		}
+
+		shares, err := validator.SharesFromTokens(amount)
+		if err != nil {
+			// tokens are not valid. continue.
+			continue
+		}
+
+		// construct delegation and call callback
+		delegation := stakingtypes.Delegation{
+			DelegatorAddress: delegator.String(),
+			ValidatorAddress: interim.ValAddr,
+			Shares:           shares,
+		}
+
+		// if valid delegation has been found, increment delegation index
+		fn(index+int64(i), delegation)
+	}
+}
