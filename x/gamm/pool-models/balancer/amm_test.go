@@ -808,26 +808,25 @@ func TestCalcJoinPoolShares(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.MustNewDecFromStr("0"), tc.poolAssets...)
 
-			defer func() {
-				r := recover()
-
-				didPanic := r != nil
-
-				if didPanic != tc.expectPanic {
-					t.Errorf("didPanic: %t, expectPanic: %t", didPanic, tc.expectPanic)
+			// system under test
+			sut := func() {
+				shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
+				if tc.expErr != nil {
+					require.Error(t, err)
+					require.Equal(t, tc.expErr, err)
+					require.Equal(t, sdk.ZeroInt(), shares)
+					require.Equal(t, sdk.NewCoins(), liquidity)
+				} else {
+					require.NoError(t, err)
+					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+					require.Equal(t, tc.expectLiq, liquidity)
 				}
-			}()
+			}
 
-			shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
-			if tc.expErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.expErr, err)
-				require.Equal(t, sdk.ZeroInt(), shares)
-				require.Equal(t, sdk.NewCoins(), liquidity)
+			if tc.expectPanic {
+				require.Panics(t, sut)
 			} else {
-				require.NoError(t, err)
-				assertExpectedSharesErrRatio(t, tc.expectShares, shares)
-				require.Equal(t, tc.expectLiq, liquidity)
+				require.NotPanics(t, sut)
 			}
 		})
 	}
@@ -857,27 +856,26 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			poolAssetIn, err := balancerPool.GetPoolAsset(poolAssetInDenom)
 			require.NoError(t, err)
 
-			defer func() {
-				r := recover()
+			// system under test
+			sut := func() {
+				shares, err := balancerPool.CalcSingleAssetJoin(tokenIn, tc.swapFee, poolAssetIn, pool.GetTotalShares())
 
-				didPanic := r != nil
-
-				if didPanic != tc.expectPanic {
-					t.Errorf("didPanic: %t, expectPanic: %t", didPanic, tc.expectPanic)
+				if tc.expErr != nil {
+					require.Error(t, err)
+					require.Equal(t, tc.expErr, err)
+					require.Equal(t, sdk.ZeroInt(), shares)
+					return
 				}
-			}()
 
-			shares, err := balancerPool.CalcSingleAssetJoin(tokenIn, tc.swapFee, poolAssetIn, pool.GetTotalShares())
-
-			if tc.expErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.expErr, err)
-				require.Equal(t, sdk.ZeroInt(), shares)
-				return
+				require.NoError(t, err)
+				assertExpectedSharesErrRatio(t, tc.expectShares, shares)
 			}
 
-			require.NoError(t, err)
-			assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+			if tc.expectPanic {
+				require.Panics(t, sut)
+			} else {
+				require.NotPanics(t, sut)
+			}
 		})
 	}
 }
