@@ -673,18 +673,14 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 					atomValueOriginal  = 123
 					ionValueOriginal   = 657
 
-					uosmoValueUpdate = 1_000
-					atomValueUpdate  = 2_000
-					ionValueUpdate   = 3_000
-
 					// Weight does not affect calculations so it is shared
 					weight = 100
 				)
 
 				newLiquidity := sdk.NewCoins(
-					sdk.NewInt64Coin("uosmo", uosmoValueUpdate),
-					sdk.NewInt64Coin("atom", atomValueUpdate),
-					sdk.NewInt64Coin("ion", ionValueUpdate))
+					sdk.NewInt64Coin("uosmo", 1_000),
+					sdk.NewInt64Coin("atom", 2_000),
+					sdk.NewInt64Coin("ion", 3_000))
 
 				originalPoolAssetsByDenom := map[string]balancer.PoolAsset{
 					"uosmo": {
@@ -701,19 +697,11 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 					},
 				}
 
-				expectedPoolAssetsByDenom := map[string]balancer.PoolAsset{
-					"uosmo": {
-						Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal+uosmoValueUpdate),
-						Weight: sdk.NewInt(weight),
-					},
-					"atom": {
-						Token:  sdk.NewInt64Coin("atom", atomValueOriginal+atomValueUpdate),
-						Weight: sdk.NewInt(weight),
-					},
-					"ion": {
-						Token:  sdk.NewInt64Coin("ion", ionValueOriginal+ionValueUpdate),
-						Weight: sdk.NewInt(weight),
-					},
+				expectedPoolAssetsByDenom := map[string]balancer.PoolAsset{}
+				for k, v := range originalPoolAssetsByDenom {
+					expectedValue := balancer.PoolAsset{Token: v.Token, Weight: v.Weight}
+					expectedValue.Token.Amount = expectedValue.Token.Amount.Add(newLiquidity.AmountOf(k))
+					expectedPoolAssetsByDenom[k] = expectedValue
 				}
 
 				return newLiquidity, originalPoolAssetsByDenom, expectedPoolAssetsByDenom
