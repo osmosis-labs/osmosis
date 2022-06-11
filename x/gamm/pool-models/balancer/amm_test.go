@@ -189,7 +189,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 		// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
 		//
-		// 4_159_722_200_000 = 100 * 10^18 * (( 1 + (50,000 * (1 - (1 - 0.83) * 0.01) / 1_000_000_000_000))^0.83 - 1)
+		// 4_159_722_200_000 = 1e20 * (( 1 + (50,000 * (1 - (1 - 0.83) * 0.01) / 1_000_000_000_000))^0.83 - 1)
 		//
 		// where:
 		// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
@@ -214,6 +214,25 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(4_159_722_200_000),
 		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+	},
+	{
+		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+		// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
+		//
+		// 41421320881966026134 = 1e20 * (( 1 + (999_999_000_000 / 1e12))^0.5 - 1
+		//
+		// where:
+		// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+		//	A_t = amount of deposited asset = .999_999 * 1e12 = 999_999_000_000
+		//	B_t = existing balance of deposited asset in the pool prior to deposit = 1e12
+		//	W_t = normalized weight of deposited asset in pool = .5
+		// 	Simplified:  P_issued = 41421320881966026134
+		name:         "single asset - tokenIn is large relative to liquidity, equal token weight, with zero swap fee",
+		swapFee:      sdk.MustNewDecFromStr("0"),
+		poolAssets:   oneTrillionEvenPoolAssets,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 999_999_000_000)),
+		expectShares: sdk.MustNewDecFromStr("41421320881966026134").TruncateInt(),
+		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 999_999_000_000)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -884,7 +903,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 					require.Equal(t, sdk.NewCoins(), liquidity)
 				} else {
 					require.NoError(t, err)
-					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+					assertExpectedSharesErrRatio(t, tc.expectShares, shares, tc.swapFee)
 					require.Equal(t, tc.expectLiq, liquidity)
 				}
 			}
@@ -1066,7 +1085,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+				assertExpectedSharesErrRatio(t, tc.expectShares, shares, tc.swapFee)
 			}
 
 			if tc.expectPanic {
@@ -1288,7 +1307,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 				return
 			}
 
-			assertExpectedSharesErrRatio(t, tc.expectShares, totalNumShares)
+			assertExpectedSharesErrRatio(t, tc.expectShares, totalNumShares, tc.swapFee)
 		})
 	}
 }
@@ -1485,9 +1504,16 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 	}
 }
 
-func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) {
+func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int, swapFee sdk.Dec) {
 	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)
+
+	errDetails := fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String())
+
+	// if non-zero swap fee, actual shares must be <= expected shares
+	if swapFee.GT(sdk.ZeroDec()) {
+		require.True(t, actualShares.LTE(expectedShares), errDetails)
+	}
 
 	errTolerance := osmoutils.ErrTolerance{
 		MultiplicativeTolerance: allowedErrRatioDec,
@@ -1497,5 +1523,5 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 		t,
 		0,
 		errTolerance.Compare(expectedShares, actualShares),
-		fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String()))
+		errDetails)
 }

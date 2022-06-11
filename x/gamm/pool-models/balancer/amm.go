@@ -322,6 +322,11 @@ func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk
 		tokensJoined = tokensIn
 		return numShares, tokensJoined, nil
 	}
+	fmt.Println("-----")
+	fmt.Println(p.GetTotalPoolLiquidity(sdk.Context{}))
+	fmt.Println(tokensIn)
+	fmt.Println(remainingTokensIn)
+	fmt.Println(numShares)
 
 	// 4) Still more coins to join, so we update the effective pool state here to account for
 	// join that just happened.
