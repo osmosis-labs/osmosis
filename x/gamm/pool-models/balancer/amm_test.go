@@ -1,13 +1,14 @@
 package balancer_test
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
-	"strings"
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
@@ -418,7 +419,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		},
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(doesNotExistDenom, 50_000)),
 		expectShares: sdk.ZeroInt(),
-		expErr:       fmt.Errorf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom),
+		expErr:       sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom)),
 	},
 }
 
@@ -911,7 +912,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
 				if tc.expErr != nil {
 					require.Error(t, err)
-					require.Equal(t, tc.expErr, err)
+					require.ErrorAs(t, tc.expErr, &err)
 					require.Equal(t, sdk.ZeroInt(), shares)
 					require.Equal(t, sdk.NewCoins(), liquidity)
 				} else {
@@ -1076,7 +1077,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			poolAssetInDenom := tokenIn.Denom
 			// when testing a case with tokenIn that does not exist in pool, we just want
 			// to provide any pool asset.
-			if tc.expErr != nil && strings.Contains(tc.expErr.Error(), doesNotExistDenom) {
+			if tc.expErr != nil && errors.Is(tc.expErr, types.ErrDenomNotFoundInPool) {
 				poolAssetInDenom = tc.poolAssets[0].Token.Denom
 			}
 
@@ -1092,7 +1093,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 
 				if tc.expErr != nil {
 					require.Error(t, err)
-					require.Equal(t, tc.expErr, err)
+					require.ErrorAs(t, tc.expErr, &err)
 					require.Equal(t, sdk.ZeroInt(), shares)
 					return
 				}
@@ -1350,7 +1351,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 
 			if tc.expErr != nil {
 				require.Error(t, err)
-				require.Equal(t, tc.expErr, err)
+				require.ErrorAs(t, tc.expErr, &err)
 				require.Equal(t, sdk.ZeroInt(), totalNumShares)
 				require.Equal(t, sdk.Coins{}, totalNewLiquidity)
 				return
