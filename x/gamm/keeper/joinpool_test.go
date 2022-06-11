@@ -15,7 +15,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		initialTokensDenomIn  int64
 		initialTokensDenomOut int64
 
-		percentRatioMax int64
+		percentRatioMin int64
 
 		joinDenomInAmt  int64
 		joinDenomOutAmt int64
@@ -48,9 +48,9 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		}
 		tc.joinDenomOutAmt = tc.initialTokensDenomOut * percentRatioOut / 100
 
-		tc.percentRatioMax = percentRatioIn
-		if percentRatioOut > percentRatioIn {
-			tc.percentRatioMax = percentRatioOut
+		tc.percentRatioMin = percentRatioIn
+		if percentRatioOut < percentRatioIn {
+			tc.percentRatioMin = percentRatioOut
 		}
 
 		return tc
@@ -82,10 +82,9 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		suite.FundAcc(sender, tokensIn)
 
 		initShares, _ := sdk.NewIntFromString("100000000000000000000")
-		sharesWanted := initShares.Mul(sdk.NewInt(tc.percentRatioMax)).QuoRaw(100)
+		sharesWanted := initShares.Mul(sdk.NewInt(tc.percentRatioMin)).QuoRaw(100)
 		ctx, writeFn := suite.Ctx.CacheContext()
-		err := suite.App.AppKeepers.GAMMKeeper.JoinPoolNoSwap(ctx, sender, poolId, sharesWanted, sdk.Coins{})
-		fmt.Println(err)
+		err := suite.App.AppKeepers.GAMMKeeper.JoinPoolNoSwap(ctx, sender, poolId, sharesWanted, tokensIn)
 		if err != nil {
 			joinErrCount += 1
 		} else {
@@ -143,7 +142,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	for i := 0; i < 10000; i++ {
 		testPoolInvariants()
 	}
-	suite.Require().Less(joinErrCount, 100)
 
+	suite.Require().Less(joinErrCount, 100)
 	suite.Require().Less(exitErrCount, 100)
 }
