@@ -507,7 +507,6 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 		suite.Require().True(deltaBalance.AmountOf("foo").LTE(roundingToleranceCoins.AmountOf("foo")))
 		suite.Require().True(deltaBalance.AmountOf("bar").LTE(roundingToleranceCoins.AmountOf("bar")))
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestActiveBalancerPool() {
