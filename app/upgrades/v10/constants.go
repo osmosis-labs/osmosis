@@ -1,13 +1,7 @@
 package v10
 
 import (
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v9/app/upgrades"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
->>>>>>> e7993a4 (Delete irregular state change logic (#1769))
 )
 
 // Last executed block on the v9 code was 4713064.
