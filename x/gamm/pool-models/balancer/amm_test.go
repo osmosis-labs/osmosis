@@ -800,7 +800,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uatom", 50_000),
 			),
 
-			expectShares: sdk.NewInt(1250000000000 + 615624990000),
+			expectShares: sdk.NewInt(1250000000000 + 609374990000),
 			expectLiq: sdk.NewCoins(
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 50_000),
