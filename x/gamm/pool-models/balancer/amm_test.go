@@ -421,6 +421,52 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		expectShares: sdk.ZeroInt(),
 		expErr:       sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom)),
 	},
+	{
+		// Pool liquidity is changed by 1e-12 / 2
+		// P_issued = 1e20 * 1e-12 / 2 = 1e8 / 2 = 50_000_000
+		name:    "minimum input single asset equal liquidity",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+				Weight: sdk.NewInt(100),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(100),
+			},
+		},
+		tokensIn: sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 1),
+		),
+		expectShares: sdk.NewInt(50_000_000),
+		expectLiq: sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 1),
+		),
+	},
+	{
+		// P_issued should be 1/10th that of the previous test
+		// p_issued = 50_000_000 / 10 = 5_000_000
+		name:    "minimum input single asset imbalanced liquidity",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 10_000_000_000_000),
+				Weight: sdk.NewInt(100),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(100),
+			},
+		},
+		tokensIn: sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 1),
+		),
+		expectShares: sdk.NewInt(5_000_000),
+		expectLiq: sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 1),
+		),
+	},
 }
 
 // This test sets up 2 asset pools, and then checks the spot price on them.
@@ -801,6 +847,9 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			),
 		},
 		{
+			// This test doubles the liquidity in a fresh pool, so it should generate the base number of LP shares for pool creation as new shares
+			// This is set to 1e20 (or 100 * 10^18) for Osmosis, so we should expect:
+			// P_issued = 1e20
 			name:    "minimum input with two assets and minimum liquidity",
 			swapFee: sdk.MustNewDecFromStr("0"),
 			poolAssets: []balancer.PoolAsset{
@@ -821,48 +870,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			expectLiq: sdk.NewCoins(
 				sdk.NewInt64Coin("uosmo", 1),
 				sdk.NewInt64Coin("uatom", 1),
-			),
-		},
-		{
-			name:    "minimum input single asset equal liquidity",
-			swapFee: sdk.MustNewDecFromStr("0"),
-			poolAssets: []balancer.PoolAsset{
-				{
-					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-				{
-					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-			},
-			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 1),
-			),
-			expectShares: sdk.NewInt(50_000_000),
-			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 1),
-			),
-		},
-		{
-			name:    "minimum input single asset imbalanced liquidity",
-			swapFee: sdk.MustNewDecFromStr("0"),
-			poolAssets: []balancer.PoolAsset{
-				{
-					Token:  sdk.NewInt64Coin("uosmo", 10_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-				{
-					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
-					Weight: sdk.NewInt(100),
-				},
-			},
-			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 1),
-			),
-			expectShares: sdk.NewInt(5_000_000),
-			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 1),
 			),
 		},
 		{
