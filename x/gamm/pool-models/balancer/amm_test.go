@@ -856,11 +856,12 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				}
 			}
 
-			if tc.expectPanic {
-				require.Panics(t, sut)
-			} else {
-				require.NotPanics(t, sut)
-			}
+			balancerPool, ok := pool.(*balancer.Pool)
+			require.True(t, ok)
+
+			assertPoolStateNotModified(t, balancerPool, func() {
+				assertPanic(t, tc.expectPanic, sut)
+			})
 		})
 	}
 }
@@ -1036,11 +1037,9 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 				assertExpectedSharesErrRatio(t, tc.expectShares, shares)
 			}
 
-			if tc.expectPanic {
-				require.Panics(t, sut)
-			} else {
-				require.NotPanics(t, sut)
-			}
+			assertPoolStateNotModified(t, balancerPool, func() {
+				assertPanic(t, tc.expectPanic, sut)
+			})
 		})
 	}
 }
@@ -1236,26 +1235,30 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 				expectedNewLiquidity = expectedNewLiquidity.Add(tokenIn)
 			}
 
-			totalNumShares, totalNewLiquidity, err := balancerPool.CalcJoinSingleAssetTokensIn(tc.tokensIn, pool.GetTotalShares(), poolAssetsByDenom, tc.swapFee)
+			sut := func() {
+				totalNumShares, totalNewLiquidity, err := balancerPool.CalcJoinSingleAssetTokensIn(tc.tokensIn, pool.GetTotalShares(), poolAssetsByDenom, tc.swapFee)
 
-			if tc.expErr != nil {
-				require.Error(t, err)
-				require.ErrorAs(t, tc.expErr, &err)
-				require.Equal(t, sdk.ZeroInt(), totalNumShares)
-				require.Equal(t, sdk.Coins{}, totalNewLiquidity)
-				return
+				if tc.expErr != nil {
+					require.Error(t, err)
+					require.ErrorAs(t, tc.expErr, &err)
+					require.Equal(t, sdk.ZeroInt(), totalNumShares)
+					require.Equal(t, sdk.Coins{}, totalNewLiquidity)
+					return
+				}
+
+				require.NoError(t, err)
+
+				require.Equal(t, expectedNewLiquidity, totalNewLiquidity)
+
+				if tc.expectShares.Int64() == 0 {
+					require.Equal(t, tc.expectShares, totalNumShares)
+					return
+				}
+
+				assertExpectedSharesErrRatio(t, tc.expectShares, totalNumShares)
 			}
 
-			require.NoError(t, err)
-
-			require.Equal(t, expectedNewLiquidity, totalNewLiquidity)
-
-			if tc.expectShares.Int64() == 0 {
-				require.Equal(t, tc.expectShares, totalNumShares)
-				return
-			}
-
-			assertExpectedSharesErrRatio(t, tc.expectShares, totalNumShares)
+			assertPoolStateNotModified(t, balancerPool, sut)
 		})
 	}
 }
@@ -1469,4 +1472,33 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 
 func assertExpectedLiquidity(t *testing.T, tokensJoined, liquidity sdk.Coins) {
 	require.Equal(t, tokensJoined, liquidity)
+}
+
+// assertPoolStateNotModified asserts that sut (system under test) does not modify
+// pool state.
+func assertPoolStateNotModified(t *testing.T, pool *balancer.Pool, sut func()) {
+	// We need to make sure that this method does not mutate state.
+	oldPoolAssets := pool.GetAllPoolAssets()
+	oldLiquidity := pool.GetTotalPoolLiquidity(sdk.Context{})
+	oldShares := pool.GetTotalShares()
+
+	sut()
+
+	newPoolAssets := pool.GetAllPoolAssets()
+	newLiquidity := pool.GetTotalPoolLiquidity(sdk.Context{})
+	newShares := pool.GetTotalShares()
+
+	require.Equal(t, oldPoolAssets, newPoolAssets)
+	require.Equal(t, oldLiquidity, newLiquidity)
+	require.Equal(t, oldShares, newShares)
+}
+
+// assertPanic if expectPanic is true, asserts that sut (system under test)
+// panics. If expectPanic is false, asserts that sut does not panic.
+func assertPanic(t *testing.T, expectPanic bool, sut func()) {
+	if expectPanic {
+		require.Panics(t, sut)
+	} else {
+		require.NotPanics(t, sut)
+	}
 }
