@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -28,7 +29,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	joinErrCount := 0
 	exitErrCount := 0
 
-	now := 1654939942
+	now := time.Now().Unix()
 	rng := rand.NewSource(int64(now))
 	fmt.Printf("Using random source of %d\n", now)
 
