@@ -317,7 +317,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		// 156_736 * 3 / 4 = 117552
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3)/4)),
 		expectShares: sdk.NewIntFromUint64(9_775_731_930_496_140_648),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3) / 4)),
+		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3)/4)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -882,7 +882,8 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			),
 		},
 		{
-			// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 12,500 uatom
+			// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 12,500 uatom.
+			// the minimal total share resulted here would be 1,250,000,000,000 =  2500 / 2,000,000,000,000 * 100,000,000,000,000,000,000
 			// then we perfrom single asset deposit for the remaining 37,500 uatom with the equation below
 			//
 			// For uatom:
