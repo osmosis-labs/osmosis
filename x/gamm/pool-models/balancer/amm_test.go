@@ -755,10 +755,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			),
 		},
 		{
-<<<<<<< HEAD
-			name:    "swap equal weights with 0.001 swap fee",
-			swapFee: sdk.MustNewDecFromStr("0.001"),
-=======
 			name:       "swap equal weights with 0.001 swap fee",
 			swapFee:    sdk.MustNewDecFromStr("0.001"),
 			poolAssets: oneTrillionEvenPoolAssets,
@@ -857,7 +853,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			// 	Simplified:  P_issued = 1,250,000,000,000 + 609,374,990,000
 			name:    "Multi-tokens In: unequal amounts, with unequal weights with 0.03 swap fee",
 			swapFee: sdk.MustNewDecFromStr("0.03"),
->>>>>>> 5f5184a (Clean `amm_test.go` (#1775))
 			poolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
