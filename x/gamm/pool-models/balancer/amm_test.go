@@ -314,10 +314,10 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: sdk.NewInt(1000),
 			},
 		},
-		// 156_736 / 4 * 3 = 117552
-		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
+		// 156_736 * 3 / 4 = 117552
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3)/4)),
 		expectShares: sdk.NewIntFromUint64(9_775_731_930_496_140_648),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
+		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3) / 4)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
