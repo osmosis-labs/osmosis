@@ -3,9 +3,9 @@ package v8
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v9/osmoutils"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v9/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v9/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 )
 
 // This file implements logic for accelerated incentive proposals.

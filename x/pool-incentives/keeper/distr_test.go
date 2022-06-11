@@ -3,8 +3,8 @@ package keeper_test
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	minttypes "github.com/osmosis-labs/osmosis/v9/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v9/x/pool-incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

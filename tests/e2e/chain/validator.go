@@ -26,8 +26,8 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	osmosisApp "github.com/osmosis-labs/osmosis/v9/app"
-	"github.com/osmosis-labs/osmosis/v9/tests/e2e/util"
+	osmosisApp "github.com/osmosis-labs/osmosis/v10/app"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
 )
 
 type internalValidator struct {

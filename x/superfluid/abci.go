@@ -3,8 +3,8 @@ package superfluid
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v9/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v9/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
