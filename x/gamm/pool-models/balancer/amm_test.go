@@ -11,6 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v7/osmomath"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
@@ -1383,6 +1384,17 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 	}
 
 	testPoolInvariants := func(repeatCount int) {
+		// Currently, our Pow approximation function does not work correctly when one tries
+		// to add liquidity that is larger than the existing liquidity.
+		// The ratio of tokenIn / existing liquidity that is larger than or equal to 1 causes a panic.
+		// This has been deemed as acceptable since it causes code complexity to fix
+		// & only affects UX in an edge case (user has to split up single asset joins)
+		defer func() {
+			if e := recover(); e != nil {
+				require.True(t, errors.Is(e.(*sdkerrors.Error), osmomath.ErrInvalidBaseMustBeUnderTwo))
+			}
+		}()
+
 		var tc *testCase
 		if repeatCount%2 == 0 {
 			tc = newEqualRatioCase()

@@ -1,8 +1,6 @@
 package osmomath
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -55,12 +53,12 @@ func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 	// (And would have to implement complex logarithms)
 	// We don't have a need for negative bases, so we don't include any such logic.
 	if !base.IsPositive() {
-		panic(fmt.Errorf("base must be greater than 0"))
+		panic(ErrInvalidBaseMustBePositive)
 	}
 	// TODO: Remove this if we want to generalize the function,
 	// we can adjust the algorithm in this setting.
 	if base.GTE(two) {
-		panic(fmt.Errorf("base must be lesser than two"))
+		panic(ErrInvalidBaseMustBeUnderTwo)
 	}
 
 	// We will use an approximation algorithm to compute the power.
