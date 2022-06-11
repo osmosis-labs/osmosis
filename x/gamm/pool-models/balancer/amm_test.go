@@ -39,6 +39,7 @@ type calcJoinSharesTestCase struct {
 	tokensIn     sdk.Coins
 	expectShares sdk.Int
 	expectLiq    sdk.Coins
+	expectPanic  bool
 	expErr       error
 }
 
@@ -286,6 +287,121 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(819_444_430_000),
 		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+	},
+	{
+		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+		// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
+		//
+		// 9_775_731_930_496_140_648 = 100 * 10^18 * (( 1 + (117552 / 156_736))^0.167 - 1)
+		//
+		// where:
+		// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+		//	A_t = amount of deposited asset = 117552
+		//	B_t = existing balance of deposited asset in the pool prior to deposit = 156_736
+		//	W_t = normalized weight of deposited asset in pool = 200 / (200 + 1000) approx = 0.167
+		// Plugging all of this in, we get:
+		// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%28117552*%281+-+%281-%28200+%2F+%28200+%2B+1000%29%29%29+*+0%29%2F156736%29%29%5E%28200+%2F+%28200+%2B+1000%29%29+-+1%29
+		// 	Simplified:  P_issued = 9_775_731_930_496_140_648
+		name:    "single asset - tokenIn is large relative to liquidity, token in weight is smaller than the other token, with zero swap fee",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 156_736),
+				Weight: sdk.NewInt(200),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(1000),
+			},
+		},
+		// 156_736 * 3 / 4 = 117552
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3)/4)),
+		expectShares: sdk.NewIntFromUint64(9_775_731_930_496_140_648),
+		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3) / 4)),
+	},
+	{
+		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+		// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
+		//
+		// 9_644_655_900_000_000_000 = 100 * 10^18 * (( 1 + (117552 * (1 - (1 - 0.167) * 0.02) / 156_736))^0.167 - 1)
+		//
+		// where:
+		// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+		//	A_t = amount of deposited asset = 50,000
+		//	B_t = existing balance of deposited asset in the pool prior to deposit = 1,000,000,000,000
+		//	W_t = normalized weight of deposited asset in pool = 200 / (200 + 1000) approx = 0.167
+		// Plugging all of this in, we get:
+		// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-%28200+%2F+%28200+%2B+1000%29%29%29+*+0.02%29%2F1000000000000%29%29%5E%28200+%2F+%28200+%2B+1000%29%29+-+1%29
+		// 	Simplified:  P_issued = 9_644_655_900_000_000_000
+		name:    "single asset - tokenIn is large relative to liquidity, token in weight is smaller than the other token, with non-zero swap fee",
+		swapFee: sdk.MustNewDecFromStr("0.02"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 156_736),
+				Weight: sdk.NewInt(200),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(1000),
+			},
+		},
+		// 156_736 / 4 * 3 = 117552
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
+		expectShares: sdk.NewIntFromUint64(9_644_655_900_000_000_000),
+		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
+	},
+	{
+		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+		// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
+		//
+		// 6_504_099_261_800_144_638 = 100 * 10^18 * (( 1 + (499_000 / 500_000))^0.09 - 1)
+		//
+		// where:
+		// 	P_supply = initial pool supply = 100 * 10^18 (set at pool creation, same for all new pools)
+		//	A_t = amount of deposited asset = 195920
+		//	B_t = existing balance of deposited asset in the pool prior to deposit = 156_736
+		//	W_t = normalized weight of deposited asset in pool = 100 / (100 + 1000) approx = 0.09
+		// Plugging all of this in, we get:
+		// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%28499999*%281+-+%281-%28100+%2F+%28100+%2B+1000%29%29%29+*+0%29%2F500000%29%29%5E%28100+%2F+%28100+%2B+1000%29%29+-+1%29
+		// 	Simplified:  P_issued = 6_504_099_261_800_144_638
+		name:    "single asset - (almost 1 == tokenIn / liquidity ratio), token in weight is smaller than the other token, with zero swap fee",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 500_000),
+				Weight: sdk.NewInt(100),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(1000),
+			},
+		},
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
+		expectShares: sdk.NewIntFromUint64(6_504_099_261_800_144_638),
+		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
+	},
+	{
+		// Currently, our Pow approximation function does not work correctly when one tries
+		// to add liquidity that is larger than the existing liquidity.
+		// The ratio of tokenIn / existing liquidity that is larger than or equal to 1 causes a panic.
+		// This has been deemed as acceptable since it causes code complexity to fix
+		// & only affects UX in an edge case (user has to split up single asset joins)
+		name:    "single asset - (exactly 1 == tokenIn / liquidity ratio - failure), token in weight is smaller than the other token, with zero swap fee",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 500_000),
+				Weight: sdk.NewInt(100),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(1000),
+			},
+		},
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 500_000)),
+		expectShares: sdk.NewIntFromUint64(6_504_099_261_800_144_638),
+		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
+		expectPanic:  true,
 	},
 	{
 		name:    "tokenIn asset does not exist in pool",
@@ -692,16 +808,25 @@ func TestCalcJoinPoolShares(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.MustNewDecFromStr("0"), tc.poolAssets...)
 
-			shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
-			if tc.expErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.expErr, err)
-				require.Equal(t, sdk.ZeroInt(), shares)
-				require.Equal(t, sdk.NewCoins(), liquidity)
+			// system under test
+			sut := func() {
+				shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
+				if tc.expErr != nil {
+					require.Error(t, err)
+					require.Equal(t, tc.expErr, err)
+					require.Equal(t, sdk.ZeroInt(), shares)
+					require.Equal(t, sdk.NewCoins(), liquidity)
+				} else {
+					require.NoError(t, err)
+					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+					require.Equal(t, tc.expectLiq, liquidity)
+				}
+			}
+
+			if tc.expectPanic {
+				require.Panics(t, sut)
 			} else {
-				require.NoError(t, err)
-				assertExpectedSharesErrRatio(t, tc.expectShares, shares)
-				require.Equal(t, tc.expectLiq, liquidity)
+				require.NotPanics(t, sut)
 			}
 		})
 	}
@@ -863,18 +988,26 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			poolAssetIn, err := balancerPool.GetPoolAsset(poolAssetInDenom)
 			require.NoError(t, err)
 
-			shares, err := balancerPool.CalcSingleAssetJoin(tokenIn, tc.swapFee, poolAssetIn, pool.GetTotalShares())
+			// system under test
+			sut := func() {
+				shares, err := balancerPool.CalcSingleAssetJoin(tokenIn, tc.swapFee, poolAssetIn, pool.GetTotalShares())
 
-			if tc.expErr != nil {
-				require.Error(t, err)
-				require.Equal(t, tc.expErr, err)
-				require.Equal(t, sdk.ZeroInt(), shares)
-				return
+				if tc.expErr != nil {
+					require.Error(t, err)
+					require.Equal(t, tc.expErr, err)
+					require.Equal(t, sdk.ZeroInt(), shares)
+					return
+				}
+
+				require.NoError(t, err)
+				assertExpectedSharesErrRatio(t, tc.expectShares, shares)
 			}
 
-			// It is impossible to set up a test case with error here so we omit it.
-			require.NoError(t, err)
-			assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+			if tc.expectPanic {
+				require.Panics(t, sut)
+			} else {
+				require.NotPanics(t, sut)
+			}
 		})
 	}
 }
@@ -1343,5 +1476,5 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 		t,
 		0,
 		errTolerance.Compare(expectedShares, actualShares),
-		fmt.Sprintf("expectedShares: %d, actualShares: %d", expectedShares.Int64(), actualShares.Int64()))
+		fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String()))
 }
