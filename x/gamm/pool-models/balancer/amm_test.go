@@ -866,6 +866,8 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			),
 		},
 		{
+			// Pool liquidity is changed by 1e-12
+			// P_issued = 1e20 * 1e-12 = 1e8
 			name:    "minimum input two assets equal liquidity",
 			swapFee: sdk.MustNewDecFromStr("0"),
 			poolAssets: []balancer.PoolAsset{
