@@ -772,7 +772,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			// For uatom:
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 			// P_issued = P_supply * ((1 + (A_t * swapFeeRatio  / B_t))^W_t - 1)
-			// 615_624_990_000 = (100 * 10^18 + 1,250,000,000,000) *  (( 1 + (37,500 * (1 - (1 - 1/6) * 0.03) / 10,000,00,025,000))^1/6 - 1)
+			// 609,374,990,000 = (100 * 10^18 + 1,250,000,000,000) *  (( 1 + (37,500 * (1 - (1 - 1/6) * 0.03) / 10,000,00,025,000))^1/6 - 1)
 			//
 			// where:
 			// 	P_supply = initial pool supply = 100 * 10^18 + 1_250_000_000_000 (from first join pool)
@@ -781,8 +781,8 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			//	W_t = normalized weight of deposited asset in pool = 0.5 (equally weighted two-asset pool)
 			// 	swapFeeRatio = (1 - (1 - W_t) * swapFee)
 			// Plugging all of this in, we get:
-			// 	Full solution with fees: https://www.wolframalpha.com/input?i=%28100+*10%5E18%2B+1250000000000%29*%28%281++%2B+%2837500*%281+-+%281-1%2F6%29+*+0.03%29%2F1000000012500%29%29%5E%281%2F6%29+-+1%29
-			// 	Simplified:  P_issued = 2_500_000_000_000 + 1_243_750_000_000
+			// 	Full solution with fees: https://www.wolframalpha.com/input?i=%28100+*10%5E18+%2B+1250000000000%29*%28%281%2B++++%2837500*%281+-+%281-1%2F6%29+*+0.03%29%2F1000000012500%29%29%5E%281%2F6%29+-+1%29
+			// 	Simplified:  P_issued = 1,250,000,000,000 + 609,374,990,000
 			name:    "Multi-tokens In: unequal amounts, with unequal weights with 0.03 swap fee",
 			swapFee: sdk.MustNewDecFromStr("0.03"),
 			poolAssets: []balancer.PoolAsset{
