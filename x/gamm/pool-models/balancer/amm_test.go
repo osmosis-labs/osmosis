@@ -53,7 +53,6 @@ type calcJoinSharesTestCase struct {
 	poolAssets   []balancer.PoolAsset
 	tokensIn     sdk.Coins
 	expectShares sdk.Int
-	expectLiq    sdk.Coins
 	expectPanic  bool
 	expErr       error
 }
@@ -853,7 +852,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				} else {
 					require.NoError(t, err)
 					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
-					assertExpectedLiquidity(t, tc.expectLiq, tc.tokensIn, liquidity)
+					assertExpectedLiquidity(t, tc.tokensIn, liquidity)
 				}
 			}
 
@@ -1468,10 +1467,6 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 		fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String()))
 }
 
-func assertExpectedLiquidity(t *testing.T, expectLiq, tokensJoined, liquidity sdk.Coins) {
-	if len(expectLiq) != 0 {
-		require.Equal(t, expectLiq, liquidity)
-	} else {
-		require.Equal(t, tokensJoined, liquidity)
-	}
+func assertExpectedLiquidity(t *testing.T, tokensJoined, liquidity sdk.Coins) {
+	require.Equal(t, tokensJoined, liquidity)
 }
