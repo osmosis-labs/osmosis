@@ -1253,7 +1253,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 
 			if tc.expErr != nil {
 				require.Error(t, err)
-				require.Equal(t, tc.expErr, err)
+				require.ErrorAs(t, tc.expErr, &err)
 				require.Equal(t, sdk.ZeroInt(), totalNumShares)
 				require.Equal(t, sdk.Coins{}, totalNewLiquidity)
 				return
