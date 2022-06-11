@@ -130,12 +130,12 @@ func (q Querier) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGa
 		if err != nil {
 			panic(err)
 		}
-		for i := 0; i < len(newGauges); i++ {
-			if newGauges[i].DistributeTo.Denom != req.Denom {
+		for _, gauge := range newGauges {
+			if gauge.DistributeTo.Denom != req.Denom {
 				return false, nil
 			}
 			if accumulate {
-				gauges = append(gauges, newGauges[i])
+				gauges = append(gauges, gauge)
 			}
 		}
 		return true, nil
@@ -195,12 +195,12 @@ func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.Upcomi
 		if err != nil {
 			panic(err)
 		}
-		for i := 0; i < len(newGauges); i++ {
-			if newGauges[i].DistributeTo.Denom != req.Denom {
+		for _, gauge := range newGauges {
+			if gauge.DistributeTo.Denom != req.Denom {
 				return false, nil
 			}
 			if accumulate {
-				gauges = append(gauges, newGauges[i])
+				gauges = append(gauges, gauge)
 			}
 		}
 		return true, nil
