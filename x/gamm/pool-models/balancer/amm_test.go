@@ -1291,7 +1291,7 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 	)
 
 	now := time.Now().Unix()
-	rng := rand.NewSource(now)
+	rng := rand.NewSource(1654915848)
 	t.Logf("Using random source of %d\n", now)
 
 	newBaseCase := func() (tc *testCase) {
@@ -1308,7 +1308,7 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 
 		// 1%~100% of initial assets
 		tc.percentRatioOne = rng.Int63()%100 + 1
-		tc.percentRatioTwo = tc.initialTokensDenomOne
+		tc.percentRatioTwo = tc.percentRatioOne
 		return tc
 	}
 
@@ -1319,7 +1319,7 @@ func TestRandomizedJoinPoolExitPoolInvariants(t *testing.T) {
 
 		// 1%~100% of initial assets
 		tc.percentRatioOne = rng.Int63()%100 + 1
-		tc.percentRatioTwo = tc.initialTokensDenomOne
+		tc.percentRatioTwo = rng.Int63()%100 + 1
 		return tc
 	}
 
