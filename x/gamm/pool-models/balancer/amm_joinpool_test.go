@@ -388,27 +388,27 @@ func TestCalcJoinPoolShares(t *testing.T) {
 	// sharing is needed.
 	testCases := []calcJoinSharesTestCase{
 		{
-			name:       "swap equal weights with zero swap fee",
+			name:       "Multi-tokens In: equal weights with zero swap fee",
 			swapFee:    sdk.MustNewDecFromStr("0"),
 			poolAssets: oneTrillionEvenPoolAssets,
 			tokensIn: sdk.NewCoins(
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
-			// Raises liquidity perfectly by 25_000 / 1_000_000_000_000.
+			// Raises liquidity perfectly by 25_000 / 1e12.
 			// Initial number of pool shares = 100 * 10**18 = 10**20
-			// Expected increase = liquidity_increase_ratio * initial number of pool shares = (25_000 / 1e12) * 10**20 = 2500000000000.0 = 2.5 * 10**12
+			// Expected increase = liquidity_increase_ratio * initial number of pool shares = (25_000 / 1e12) * 10**20 = 2.5e12 = 2.5 * 10**12
 			expectShares: sdk.NewInt(2.5e12),
 		},
 		{
-			name:       "swap equal weights with 0.001 swap fee",
+			name:       "Multi-tokens In: equal weights with 0.001 swap fee",
 			swapFee:    sdk.MustNewDecFromStr("0.001"),
 			poolAssets: oneTrillionEvenPoolAssets,
 			tokensIn: sdk.NewCoins(
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
-			expectShares: sdk.NewInt(2500000000000),
+			expectShares: sdk.NewInt(2.5e12),
 		},
 		{
 			// For uosmos and uatom
@@ -860,6 +860,35 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			expectShares: sdk.NewInt(2_072_912_400_000_000 + 1_624_999_900_000),
 		},
 		{
+			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
+			// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
+			//
+			// 6_504_099_261_800_144_638 = 1e20 * (( 1 + (499_000 / 500_000))^0.09 - 1)
+			//
+			// where:
+			// 	P_supply = initial pool supply = 1e20
+			//	A_t = amount of deposited asset = 195920
+			//	B_t = existing balance of deposited asset in the pool prior to deposit = 156_736
+			//	W_t = normalized weight of deposited asset in pool = 100 / (100 + 1000) approx = 0.09
+			// Plugging all of this in, we get:
+			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%28499999*%281+-+%281-%28100+%2F+%28100+%2B+1000%29%29%29+*+0%29%2F500000%29%29%5E%28100+%2F+%28100+%2B+1000%29%29+-+1%29
+			// 	Simplified:  P_issued = 6_504_099_261_800_144_638
+			name:    "single asset - (almost 1 == tokenIn / liquidity ratio), token in weight is smaller than the other token, with zero swap fee",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 500_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 500_000),
+					Weight: sdk.NewInt(1000),
+				},
+			},
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 490_000), sdk.NewInt64Coin("uatom", 450_000)),
+			expectShares: sdk.NewIntFromUint64(6_504_099_261_800_144_638),
+		},
+		{
 			name:         "no tokens in",
 			swapFee:      sdk.MustNewDecFromStr("0.03"),
 			poolAssets:   oneTrillionEvenPoolAssets,
@@ -1011,11 +1040,14 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 		MultiplicativeTolerance: allowedErrRatioDec,
 	}
 
+	shareComparisonStr := fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String())
+
 	require.Equal(
 		t,
 		0,
 		errTolerance.Compare(expectedShares, actualShares),
-		fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String()))
+		shareComparisonStr)
+	require.True(t, expectedShares.GTE(actualShares), shareComparisonStr)
 }
 
 func assertExpectedLiquidity(t *testing.T, expectLiq, tokensJoined, liquidity sdk.Coins) {
