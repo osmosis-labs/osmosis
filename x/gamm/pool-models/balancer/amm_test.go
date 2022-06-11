@@ -28,13 +28,14 @@ const (
 )
 
 var (
+	oneTrillion               = sdk.NewInt(1e12)
 	oneTrillionEvenPoolAssets = []balancer.PoolAsset{
 		{
-			Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+			Token:  sdk.NewCoin("uosmo", oneTrillion),
 			Weight: sdk.NewInt(100),
 		},
 		{
-			Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+			Token:  sdk.NewCoin("uatom", oneTrillion),
 			Weight: sdk.NewInt(100),
 		},
 	}
@@ -78,7 +79,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		poolAssets:   oneTrillionEvenPoolAssets,
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(2_499_999_968_750),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -100,7 +100,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		poolAssets:   oneTrillionEvenPoolAssets,
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(2_487_500_000_000),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -122,7 +121,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		poolAssets:   oneTrillionEvenPoolAssets,
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(1_262_500_000_000),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -153,7 +151,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		},
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(321_875_000_000),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -183,7 +180,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		},
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(4_166_666_649_306),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -213,7 +209,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		},
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(4_159_722_200_000),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -243,7 +238,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		},
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(833_333_315_972),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -273,7 +267,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		},
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 		expectShares: sdk.NewInt(819_444_430_000),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -304,7 +297,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		// 156_736 * 3 / 4 = 117552
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3)/4)),
 		expectShares: sdk.NewIntFromUint64(9_775_731_930_496_140_648),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3)/4)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -335,7 +327,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		// 156_736 / 4 * 3 = 117552
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
 		expectShares: sdk.NewIntFromUint64(9_644_655_900_000_000_000),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -365,7 +356,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		},
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
 		expectShares: sdk.NewIntFromUint64(6_504_099_261_800_144_638),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
 	},
 	{
 		// Currently, our Pow approximation function does not work correctly when one tries
@@ -387,7 +377,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		},
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 500_000)),
 		expectShares: sdk.NewIntFromUint64(6_504_099_261_800_144_638),
-		expectLiq:    sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
 		expectPanic:  true,
 	},
 	{
@@ -750,10 +739,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 			// Initial number of pool shares = 100 * 10**18 = 10**20
 			// Expected increase = liquidity_increase_ratio * initial number of pool shares = (25_000 / 1_000_000_000_000) * 10**20 = 2500000000000.0 = 2.5 * 10**12
 			expectShares: sdk.NewInt(2.5e12),
-			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 25_000),
-				sdk.NewInt64Coin("uatom", 25_000),
-			),
 		},
 		{
 			name:       "swap equal weights with 0.001 swap fee",
@@ -764,10 +749,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
 			expectShares: sdk.NewInt(2500000000000),
-			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 25_000),
-				sdk.NewInt64Coin("uatom", 25_000),
-			),
 		},
 		{
 			// For uosmos and uatom
@@ -794,12 +775,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 50_000),
 			),
-
-			expectShares: sdk.NewInt(2.5e12 + 1249999960937),
-			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 25_000),
-				sdk.NewInt64Coin("uatom", 50_000),
-			),
+			expectShares: sdk.NewInt(2.5e12 + 1249999992187),
 		},
 		{
 			// For uosmos and uatom
@@ -826,12 +802,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 50_000),
 			),
-
 			expectShares: sdk.NewInt(2.5e12 + 1243749900000),
-			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 25_000),
-				sdk.NewInt64Coin("uatom", 50_000),
-			),
 		},
 		{
 			// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 12,500 uatom.
@@ -868,12 +839,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 50_000),
 			),
-
 			expectShares: sdk.NewInt(1250000000000 + 609374990000),
-			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 25_000),
-				sdk.NewInt64Coin("uatom", 50_000),
-			),
 		},
 	}
 	testCases = append(testCases, calcSingleAssetJoinTestCases...)
@@ -895,7 +861,7 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				} else {
 					require.NoError(t, err)
 					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
-					require.Equal(t, tc.expectLiq, liquidity)
+					assertExpectedLiquidity(t, tc.expectLiq, tc.tokensIn, liquidity)
 				}
 			}
 
@@ -1508,4 +1474,12 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 		0,
 		errTolerance.Compare(expectedShares, actualShares),
 		fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String()))
+}
+
+func assertExpectedLiquidity(t *testing.T, expectLiq, tokensJoined, liquidity sdk.Coins) {
+	if len(expectLiq) != 0 {
+		require.Equal(t, expectLiq, liquidity)
+	} else {
+		require.Equal(t, tokensJoined, liquidity)
+	}
 }
