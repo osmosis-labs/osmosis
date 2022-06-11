@@ -1047,7 +1047,7 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 		0,
 		errTolerance.Compare(expectedShares, actualShares),
 		shareComparisonStr)
-	require.True(t, expectedShares.GTE(actualShares), shareComparisonStr)
+	require.True(t, actualShares.LTE(expectedShares), shareComparisonStr)
 }
 
 func assertExpectedLiquidity(t *testing.T, expectLiq, tokensJoined, liquidity sdk.Coins) {
