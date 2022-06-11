@@ -9,9 +9,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v9/osmoutils"
 	"github.com/osmosis-labs/osmosis/v9/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v9/x/gamm/types"
+=======
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+>>>>>>> b25ad00 (test: add validation that calc methods do not modify state and clean up (#1782))
 )
 
 const (
@@ -520,15 +525,16 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				} else {
 					require.NoError(t, err)
 					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
-					assertExpectedLiquidity(t, tc.expectLiq, tc.tokensIn, liquidity)
+					assertExpectedLiquidity(t, tc.tokensIn, liquidity)
 				}
 			}
 
-			if tc.expectPanic {
-				require.Panics(t, sut)
-			} else {
-				require.NotPanics(t, sut)
-			}
+			balancerPool, ok := pool.(*balancer.Pool)
+			require.True(t, ok)
+
+			assertPoolStateNotModified(t, balancerPool, func() {
+				assertPanic(t, tc.expectPanic, sut)
+			})
 		})
 	}
 }
@@ -704,11 +710,9 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 				assertExpectedSharesErrRatio(t, tc.expectShares, shares)
 			}
 
-			if tc.expectPanic {
-				require.Panics(t, sut)
-			} else {
-				require.NotPanics(t, sut)
-			}
+			assertPoolStateNotModified(t, balancerPool, func() {
+				assertPanic(t, tc.expectPanic, sut)
+			})
 		})
 	}
 }
@@ -895,26 +899,30 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 				expectedNewLiquidity = expectedNewLiquidity.Add(tokenIn)
 			}
 
-			totalNumShares, totalNewLiquidity, err := balancerPool.CalcJoinSingleAssetTokensIn(tc.tokensIn, pool.GetTotalShares(), poolAssetsByDenom, tc.swapFee)
+			sut := func() {
+				totalNumShares, totalNewLiquidity, err := balancerPool.CalcJoinSingleAssetTokensIn(tc.tokensIn, pool.GetTotalShares(), poolAssetsByDenom, tc.swapFee)
 
-			if tc.expErr != nil {
-				require.Error(t, err)
-				require.ErrorAs(t, tc.expErr, &err)
-				require.Equal(t, sdk.ZeroInt(), totalNumShares)
-				require.Equal(t, sdk.Coins{}, totalNewLiquidity)
-				return
+				if tc.expErr != nil {
+					require.Error(t, err)
+					require.ErrorAs(t, tc.expErr, &err)
+					require.Equal(t, sdk.ZeroInt(), totalNumShares)
+					require.Equal(t, sdk.Coins{}, totalNewLiquidity)
+					return
+				}
+
+				require.NoError(t, err)
+
+				require.Equal(t, expectedNewLiquidity, totalNewLiquidity)
+
+				if tc.expectShares.Int64() == 0 {
+					require.Equal(t, tc.expectShares, totalNumShares)
+					return
+				}
+
+				assertExpectedSharesErrRatio(t, tc.expectShares, totalNumShares)
 			}
 
-			require.NoError(t, err)
-
-			require.Equal(t, expectedNewLiquidity, totalNewLiquidity)
-
-			if tc.expectShares.Int64() == 0 {
-				require.Equal(t, tc.expectShares, totalNumShares)
-				return
-			}
-
-			assertExpectedSharesErrRatio(t, tc.expectShares, totalNumShares)
+			assertPoolStateNotModified(t, balancerPool, sut)
 		})
 	}
 }
@@ -1000,28 +1008,5 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 
 			require.Equal(t, tc.expectedPoolAssetsByDenom, actualPoolAssetsByDenom)
 		})
-	}
-}
-
-func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) {
-	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
-	require.NoError(t, err)
-
-	errTolerance := osmoutils.ErrTolerance{
-		MultiplicativeTolerance: allowedErrRatioDec,
-	}
-
-	require.Equal(
-		t,
-		0,
-		errTolerance.Compare(expectedShares, actualShares),
-		fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String()))
-}
-
-func assertExpectedLiquidity(t *testing.T, expectLiq, tokensJoined, liquidity sdk.Coins) {
-	if len(expectLiq) != 0 {
-		require.Equal(t, expectLiq, liquidity)
-	} else {
-		require.Equal(t, tokensJoined, liquidity)
 	}
 }

@@ -82,19 +82,22 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 		balancerPool, isPool := pool.(*balancer.Pool)
 		suite.Require().True(isPool, "test: %s", tc.name)
 
-		spotPrice, err := balancerPool.SpotPrice(
-			suite.Ctx,
-			tc.baseDenomPoolInput.Denom,
-			tc.quoteDenomPoolInput.Denom)
+		sut := func() {
+			spotPrice, err := balancerPool.SpotPrice(
+				suite.Ctx,
+				tc.baseDenomPoolInput.Denom,
+				tc.quoteDenomPoolInput.Denom)
 
-		if tc.expectError {
-			suite.Require().Error(err, "test: %s", tc.name)
-		} else {
-			suite.Require().NoError(err, "test: %s", tc.name)
-			suite.Require().True(spotPrice.Equal(tc.expectedOutput),
-				"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
-				spotPrice, tc.expectedOutput)
+			if tc.expectError {
+				suite.Require().Error(err, "test: %s", tc.name)
+			} else {
+				suite.Require().NoError(err, "test: %s", tc.name)
+				suite.Require().True(spotPrice.Equal(tc.expectedOutput),
+					"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
+					spotPrice, tc.expectedOutput)
+			}
 		}
+		assertPoolStateNotModified(suite.T(), balancerPool, sut)
 	}
 }
 
@@ -204,20 +207,27 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 				initialOut := sdk.NewInt64Coin(poolAssetOut.Token.Denom, tc.initialCalcOut)
 				initialOutCoins := sdk.NewCoins(initialOut)
 
-				actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, poolAssetIn.Token.Denom, swapFeeDec)
-				require.NoError(t, err)
+				sut := func() {
+					actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, poolAssetIn.Token.Denom, swapFeeDec)
+					require.NoError(t, err)
 
-				inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), poolAssetOut.Token.Denom, swapFeeDec)
-				require.NoError(t, err)
+					inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), poolAssetOut.Token.Denom, swapFeeDec)
+					require.NoError(t, err)
 
-				require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
+					require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
 
-				expected := initialOut.Amount.ToDec()
-				actual := inverseTokenOut.Amount.ToDec()
+					expected := initialOut.Amount.ToDec()
+					actual := inverseTokenOut.Amount.ToDec()
 
-				// allow a rounding error of up to 1 for this relation
-				tol := sdk.NewDec(1)
-				require.True(osmoutils.DecApproxEq(t, expected, actual, tol))
+					// allow a rounding error of up to 1 for this relation
+					tol := sdk.NewDec(1)
+					require.True(osmoutils.DecApproxEq(t, expected, actual, tol))
+				}
+
+				balancerPool, ok := pool.(*balancer.Pool)
+				require.True(t, ok)
+
+				assertPoolStateNotModified(t, balancerPool, sut)
 			})
 		}
 	}
