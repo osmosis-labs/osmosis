@@ -800,6 +800,94 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
 		},
+		{
+			name:    "minimum input with two assets and minimum liquidity",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 1),
+				sdk.NewInt64Coin("uatom", 1),
+			),
+			expectShares: sdk.NewInt(1e18).Mul(sdk.NewInt(100)),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 1),
+				sdk.NewInt64Coin("uatom", 1),
+			),
+		},
+		{
+			name:    "minimum input single asset equal liquidity",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 1),
+			),
+			expectShares: sdk.NewInt(50_000_000),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 1),
+			),
+		},
+		{
+			name:    "minimum input single asset imbalanced liquidity",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 10_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 1),
+			),
+			expectShares: sdk.NewInt(5_000_000),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 1),
+			),
+		},
+		{
+			name:    "minimum input two assets equal liquidity",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 1),
+				sdk.NewInt64Coin("uatom", 1),
+			),
+			expectShares: sdk.NewInt(100_000_000),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 1),
+				sdk.NewInt64Coin("uatom", 1),
+			),
+		},
 	}
 	testCases = append(testCases, calcSingleAssetJoinTestCases...)
 
