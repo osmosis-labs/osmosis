@@ -49,9 +49,9 @@ You get something like:
 
 ```sh
 go get: github.com/osmosis-labs/cosmos-sdk@v0.33.2 updating to
-	github.com/osmosis-labs/cosmos-sdk@v0.42.10-0.20210829064313-2c87644925da: parsing go.mod:
-	module declares its path as: github.com/cosmos/cosmos-sdk
-	        but was required as: github.com/osmosis-labs/cosmos-sdk
+github.com/osmosis-labs/cosmos-sdk@v0.42.10-0.20210829064313-2c87644925da: parsing go.mod:
+module declares its path as: github.com/cosmos/cosmos-sdk
+but was required as: github.com/osmosis-labs/cosmos-sdk
 ```
 
 Then you can copy paste the `v0.42.10-0.20210829064313-2c87644925da` part and replace the corresponding section of go.mod
