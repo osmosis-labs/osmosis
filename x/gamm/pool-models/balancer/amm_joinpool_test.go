@@ -1005,7 +1005,6 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 	}
 }
 
-<<<<<<< HEAD
 func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) {
 	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)
@@ -1026,7 +1025,9 @@ func assertExpectedLiquidity(t *testing.T, expectLiq, tokensJoined, liquidity sd
 		require.Equal(t, expectLiq, liquidity)
 	} else {
 		require.Equal(t, tokensJoined, liquidity)
-=======
+	}
+}
+
 // Tests selecting a random amount of coins to LP, and then that ExitPool(JoinPool(tokens))
 // preserves the pools number of LP shares, and returns fewer coins to the acter than they started with.
 func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
@@ -1131,6 +1132,5 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 
 	for i := 0; i < 50000; i++ {
 		testPoolInvariants()
->>>>>>> 97934d4 (Reintroduce #1719 random tests (#1791))
 	}
 }
