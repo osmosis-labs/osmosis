@@ -69,6 +69,9 @@ func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (
 	totalShares := p.GetTotalShares()
 
 	for i, coin := range tokensIn {
+		// Note: QuoInt implements floor division, unlike Quo
+		// This is because it calls the native golang routine big.Int.Quo
+		// https://pkg.go.dev/math/big#Int.Quo
 		shareRatio := coin.Amount.ToDec().QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
 		if shareRatio.LT(minShareRatio) {
 			minShareRatio = shareRatio
@@ -84,6 +87,8 @@ func MaximalExactRatioJoin(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (
 	}
 
 	remCoins = sdk.Coins{}
+	// critically we round down here (TruncateInt), to ensure that the returned LP shares
+	// are always less than or equal to % liquidity added.
 	numShares = minShareRatio.MulInt(totalShares).TruncateInt()
 
 	// if we have multiple share values, calculate remainingCoins

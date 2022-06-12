@@ -1024,15 +1024,15 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		denomIn  = "denomIn"
 	)
 
-	now := time.Now().Unix()
+	now := int64(time.Now().Unix())
 	rng := rand.NewSource(now)
 	suite.T().Logf("Using random source of %d\n", now)
 
 	// generate test case with randomized initial assets and join/exit ratio
 	newCase := func() (tc *testCase) {
 		tc = new(testCase)
-		tc.initialTokensDenomIn = rng.Int63() % 100_000_000
-		tc.initialTokensDenomOut = rng.Int63() % 100_000_000
+		tc.initialTokensDenomIn = rng.Int63() % (1 << 62)
+		tc.initialTokensDenomOut = rng.Int63() % (1 << 62)
 
 		// 1%~100% of initial assets
 		tc.percentRatio = rng.Int63()%100 + 1
@@ -1065,8 +1065,8 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	// joins with predetermined ratio
 	joinPool := func(pool types.PoolI, tc *testCase) {
 		tokensIn := sdk.Coins{
-			sdk.NewInt64Coin(denomIn, tc.initialTokensDenomIn*tc.percentRatio/100),
-			sdk.NewInt64Coin(denomOut, tc.initialTokensDenomOut*tc.percentRatio/100),
+			sdk.NewCoin(denomIn, sdk.NewInt(tc.initialTokensDenomIn).MulRaw(tc.percentRatio).QuoRaw(100)),
+			sdk.NewCoin(denomOut, sdk.NewInt(tc.initialTokensDenomOut).MulRaw(tc.percentRatio).QuoRaw(100)),
 		}
 		numShares, err := pool.JoinPool(suite.Ctx, tokensIn, swapFeeDec)
 		suite.Require().NoError(err)
@@ -1109,7 +1109,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		)
 	}
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 50000; i++ {
 		testPoolInvariants()
 	}
 }
