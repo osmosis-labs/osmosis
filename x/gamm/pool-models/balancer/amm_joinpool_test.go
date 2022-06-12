@@ -3,7 +3,9 @@ package balancer_test
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"testing"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -1003,6 +1005,7 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 	}
 }
 
+<<<<<<< HEAD
 func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) {
 	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)
@@ -1023,5 +1026,111 @@ func assertExpectedLiquidity(t *testing.T, expectLiq, tokensJoined, liquidity sd
 		require.Equal(t, expectLiq, liquidity)
 	} else {
 		require.Equal(t, tokensJoined, liquidity)
+=======
+// Tests selecting a random amount of coins to LP, and then that ExitPool(JoinPool(tokens))
+// preserves the pools number of LP shares, and returns fewer coins to the acter than they started with.
+func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
+	type testCase struct {
+		initialTokensDenomIn  int64
+		initialTokensDenomOut int64
+
+		percentRatio int64
+
+		numShares sdk.Int
+	}
+
+	const (
+		denomOut = "denomOut"
+		denomIn  = "denomIn"
+	)
+
+	now := int64(time.Now().Unix())
+	rng := rand.NewSource(now)
+	suite.T().Logf("Using random source of %d\n", now)
+
+	// generate test case with randomized initial assets and join/exit ratio
+	newCase := func() (tc *testCase) {
+		tc = new(testCase)
+		tc.initialTokensDenomIn = rng.Int63() % (1 << 62)
+		tc.initialTokensDenomOut = rng.Int63() % (1 << 62)
+
+		// 1%~100% of initial assets
+		tc.percentRatio = rng.Int63()%100 + 1
+
+		return tc
+	}
+
+	swapFeeDec := sdk.ZeroDec()
+	exitFeeDec := sdk.ZeroDec()
+
+	// create pool with randomized initial token amounts
+	// and randomized ratio of join/exit
+	createPool := func(tc *testCase) (pool *balancer.Pool) {
+		poolAssetOut := balancer.PoolAsset{
+			Token:  sdk.NewInt64Coin(denomOut, tc.initialTokensDenomOut),
+			Weight: sdk.NewInt(5),
+		}
+
+		poolAssetIn := balancer.PoolAsset{
+			Token:  sdk.NewInt64Coin(denomIn, tc.initialTokensDenomIn),
+			Weight: sdk.NewInt(5),
+		}
+
+		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn).(*balancer.Pool)
+		suite.Require().NotNil(pool)
+
+		return pool
+	}
+
+	// joins with predetermined ratio
+	joinPool := func(pool types.PoolI, tc *testCase) {
+		tokensIn := sdk.Coins{
+			sdk.NewCoin(denomIn, sdk.NewInt(tc.initialTokensDenomIn).MulRaw(tc.percentRatio).QuoRaw(100)),
+			sdk.NewCoin(denomOut, sdk.NewInt(tc.initialTokensDenomOut).MulRaw(tc.percentRatio).QuoRaw(100)),
+		}
+		numShares, err := pool.JoinPool(suite.Ctx, tokensIn, swapFeeDec)
+		suite.Require().NoError(err)
+		tc.numShares = numShares
+	}
+
+	// exits for same amount of shares minted
+	exitPool := func(pool types.PoolI, tc *testCase) {
+		_, err := pool.ExitPool(suite.Ctx, tc.numShares, exitFeeDec)
+		suite.Require().NoError(err)
+	}
+
+	invariantJoinExitInversePreserve := func(
+		beforeCoins, afterCoins sdk.Coins,
+		beforeShares, afterShares sdk.Int,
+	) {
+		// test token amount has been preserved
+		suite.Require().True(
+			!beforeCoins.IsAnyGT(afterCoins),
+			"Coins has not been preserved before and after join-exit\nbefore:\t%s\nafter:\t%s",
+			beforeCoins, afterCoins,
+		)
+		// test share amount has been preserved
+		suite.Require().True(
+			beforeShares.Equal(afterShares),
+			"Shares has not been preserved before and after join-exit\nbefore:\t%s\nafter:\t%s",
+			beforeShares, afterShares,
+		)
+	}
+
+	testPoolInvariants := func() {
+		tc := newCase()
+		pool := createPool(tc)
+		originalCoins, originalShares := pool.GetTotalPoolLiquidity(sdk.Context{}), pool.GetTotalShares()
+		joinPool(pool, tc)
+		exitPool(pool, tc)
+		invariantJoinExitInversePreserve(
+			originalCoins, pool.GetTotalPoolLiquidity(sdk.Context{}),
+			originalShares, pool.GetTotalShares(),
+		)
+	}
+
+	for i := 0; i < 50000; i++ {
+		testPoolInvariants()
+>>>>>>> 97934d4 (Reintroduce #1719 random tests (#1791))
 	}
 }
