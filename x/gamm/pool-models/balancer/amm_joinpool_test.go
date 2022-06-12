@@ -1068,14 +1068,14 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			sdk.NewInt64Coin(denomIn, tc.initialTokensDenomIn*tc.percentRatio/100),
 			sdk.NewInt64Coin(denomOut, tc.initialTokensDenomOut*tc.percentRatio/100),
 		}
-		numShares, err := pool.JoinPool(sdk.Context{}, tokensIn, swapFeeDec)
+		numShares, err := pool.JoinPool(suite.Ctx, tokensIn, swapFeeDec)
 		suite.Require().NoError(err)
 		tc.numShares = numShares
 	}
 
 	// exits for same amount of shares minted
 	exitPool := func(pool types.PoolI, tc *testCase) {
-		_, err := pool.ExitPool(sdk.Context{}, tc.numShares, exitFeeDec)
+		_, err := pool.ExitPool(suite.Ctx, tc.numShares, exitFeeDec)
 		suite.Require().NoError(err)
 	}
 
