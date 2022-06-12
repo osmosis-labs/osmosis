@@ -9,14 +9,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
-<<<<<<< HEAD
-	"github.com/osmosis-labs/osmosis/v9/osmoutils"
 	"github.com/osmosis-labs/osmosis/v9/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v9/x/gamm/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
->>>>>>> b25ad00 (test: add validation that calc methods do not modify state and clean up (#1782))
 )
 
 const (

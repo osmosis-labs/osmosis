@@ -12,14 +12,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-<<<<<<< HEAD
+	"github.com/osmosis-labs/osmosis/v9/osmoutils"
 	"github.com/osmosis-labs/osmosis/v9/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v9/x/gamm/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
->>>>>>> b25ad00 (test: add validation that calc methods do not modify state and clean up (#1782))
 )
 
 func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...balancer.PoolAsset) types.PoolI {
