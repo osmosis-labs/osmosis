@@ -665,10 +665,10 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 	}
 }
 
-func TestCalcSingleAssetJoin(t *testing.T) {
+func (suite *KeeperTestSuite) TestCalcSingleAssetJoin() {
 	for _, tc := range calcSingleAssetJoinTestCases {
 		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
+		suite.T().Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.MustNewDecFromStr("0"), tc.poolAssets...)
 
 			balancerPool, ok := pool.(*balancer.Pool)
@@ -702,11 +702,30 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 
 				require.NoError(t, err)
 				assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+				// if swap fee not 0, consistency check that exitting right after
+				// and swapping to input returns less than input asset.
+				if !tc.swapFee.IsZero() {
+					fmt.Println(suite.Ctx.BlockHeight())
+					shares, err := balancerPool.JoinPool(suite.Ctx, sdk.NewCoins(tokenIn), tc.swapFee)
+					require.NoError(t, err)
+
+					exitCoins, err := balancerPool.ExitPool(suite.Ctx, shares, sdk.ZeroDec())
+					require.NoError(t, err)
+					outCoin := exitCoins.AmountOf(tokenIn.Denom)
+					for _, coin := range exitCoins {
+						if coin.Denom == tokenIn.Denom {
+							continue
+						}
+						out, err := balancerPool.SwapOutAmtGivenIn(suite.Ctx, sdk.Coins{coin}, tokenIn.Denom, tc.swapFee)
+						require.NoError(t, err)
+						outCoin.Add(out.Amount)
+					}
+					require.True(t, outCoin.LT(tokenIn.Amount))
+				}
 			}
 
-			assertPoolStateNotModified(t, balancerPool, func() {
-				assertPanic(t, tc.expectPanic, sut)
-			})
+			assertPanic(t, tc.expectPanic, sut)
+
 		})
 	}
 }
