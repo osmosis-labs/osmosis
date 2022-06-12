@@ -379,7 +379,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 	},
 }
 
-func TestCalcJoinPoolShares(t *testing.T) {
+func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
 	// test cases.
 	//
@@ -505,12 +505,12 @@ func TestCalcJoinPoolShares(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 
-		t.Run(tc.name, func(t *testing.T) {
+		suite.T().Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
 
 			// system under test
 			sut := func() {
-				shares, liquidity, err := pool.CalcJoinPoolShares(sdk.Context{}, tc.tokensIn, tc.swapFee)
+				shares, liquidity, err := pool.CalcJoinPoolShares(suite.Ctx, tc.tokensIn, tc.swapFee)
 				if tc.expErr != nil {
 					require.Error(t, err)
 					require.ErrorAs(t, tc.expErr, &err)
