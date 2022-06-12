@@ -2,7 +2,7 @@
 
 All validator nodes should upgrade to v10 prior to the network restarting. At 4:00PM UTC on June 12th, 2022, we will have a coordinated re-start of the network. The sequence of events will look like to following:
 
-* All validator nodes upgrade to v10 now, but keep their nodes offline. Even if your node is further behind (i.e. you stopped your node first when we corrdinated the shutdown and still have blocks ahead of you before reaching the halt height), you still must upgrade to v10 now.
+* All validator nodes upgrade to v10 now, but keep their nodes offline. Even if your node is further behind (i.e. you stopped your node first when we corrdinated the shutdown and still have blocks ahead of you before reaching the halt height), you still must upgrade to v10 now.  v10 will run the v9 state machine until the predefined "fork block height"
 * At exactly 4:00PM UTC on June 12th, 2022, all validators start their nodes at the same time
 * Once 66% or more of the voting power gets online, block 4713065 will be reached, along with the upgrade at this height. Prior to 66 percent of validator power getting online, you will only see p2p logs. This is also an epoch block, so it will take some time to process
 * After block 4713065, three more epochs will happen back to back, one per block 
