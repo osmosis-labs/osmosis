@@ -294,7 +294,7 @@ func (p *Pool) calcJoinPoolSharesBroken(ctx sdk.Context, tokensIn sdk.Coins, swa
 	}
 
 	// Add all exact coins we can (no swap). ctx arg doesn't matter for Balancer.
-	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoinBroken(p, sdk.Context{}, tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
