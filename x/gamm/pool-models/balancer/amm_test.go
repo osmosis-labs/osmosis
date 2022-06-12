@@ -1,10 +1,14 @@
 package balancer_test
 
 import (
+	"errors"
 	"fmt"
+	"math/rand"
 	"testing"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
@@ -402,9 +406,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			sdk.NewInt64Coin("uosmo", 1),
 		),
 		expectShares: sdk.NewInt(50_000_000),
-		expectLiq: sdk.NewCoins(
-			sdk.NewInt64Coin("uosmo", 1),
-		),
 	},
 	{
 		// P_issued should be 1/10th that of the previous test
@@ -425,9 +426,6 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			sdk.NewInt64Coin("uosmo", 1),
 		),
 		expectShares: sdk.NewInt(5_000_000),
-		expectLiq: sdk.NewCoins(
-			sdk.NewInt64Coin("uosmo", 1),
-		),
 	},
 }
 // This test sets up 2 asset pools, and then checks the spot price on them.
@@ -905,10 +903,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uatom", 1),
 			),
 			expectShares: sdk.NewInt(1e18).Mul(sdk.NewInt(100)),
-			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 1),
-				sdk.NewInt64Coin("uatom", 1),
-			),
 		},
 		{
 			// Pool liquidity is changed by 1e-12
@@ -930,10 +924,6 @@ func TestCalcJoinPoolShares(t *testing.T) {
 				sdk.NewInt64Coin("uatom", 1),
 			),
 			expectShares: sdk.NewInt(100_000_000),
-			expectLiq: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 1),
-				sdk.NewInt64Coin("uatom", 1),
-			),
 		},
 	}
 	testCases = append(testCases, calcSingleAssetJoinTestCases...)
