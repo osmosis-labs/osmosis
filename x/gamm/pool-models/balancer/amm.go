@@ -19,6 +19,7 @@ const (
 	errMsgFormatSharesLargerThanMax           = "%d resulted shares is larger than the max amount of %d"
 	errMsgFormatFailedInterimLiquidityUpdate  = "failed to update interim liquidity - pool asset %s does not exist"
 	errMsgFormatRepeatingPoolAssetsNotAllowed = "repeating pool assets not allowed, found %s"
+	v10Fork                                   = 4713065
 )
 
 // solveConstantFunctionInvariant solves the constant function of an AMM
@@ -259,8 +260,8 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoo
 // JoinPool calculates the number of shares needed given tokensIn with swapFee applied.
 // It updates the liquidity if the pool is joined successfully. If not, returns error.
 // and updates pool accordingly.
-func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	numShares, newLiquidity, err := p.CalcJoinPoolShares(_ctx, tokensIn, swapFee)
+func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
+	numShares, newLiquidity, err := p.CalcJoinPoolShares(ctx, tokensIn, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -270,6 +271,61 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 	return numShares, nil
 }
 
+func (p *Pool) calcJoinPoolSharesBroken(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+	poolAssets := p.GetAllPoolAssets()
+	poolAssetsByDenom := make(map[string]PoolAsset)
+	for _, poolAsset := range poolAssets {
+		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
+	}
+
+	totalShares := p.GetTotalShares()
+
+	if tokensIn.Len() == 1 {
+		numShares, err = p.calcSingleAssetJoin(tokensIn[0], swapFee, poolAssetsByDenom[tokensIn[0].Denom], totalShares)
+		if err != nil {
+			return sdk.ZeroInt(), sdk.NewCoins(), err
+		}
+
+		newLiquidity = tokensIn
+
+		return numShares, newLiquidity, nil
+	} else if tokensIn.Len() != p.NumAssets() {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
+	}
+
+	// Add all exact coins we can (no swap). ctx arg doesn't matter for Balancer.
+	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	// update liquidity for accurate calcSingleAssetJoin calculation
+	newLiquidity = tokensIn.Sub(remCoins)
+	for _, coin := range newLiquidity {
+		poolAsset := poolAssetsByDenom[coin.Denom]
+		poolAsset.Token.Amount = poolAssetsByDenom[coin.Denom].Token.Amount.Add(coin.Amount)
+		poolAssetsByDenom[coin.Denom] = poolAsset
+	}
+
+	totalShares = totalShares.Add(numShares)
+
+	// If there are coins that couldn't be perfectly joined, do single asset joins
+	// for each of them.
+	if !remCoins.Empty() {
+		for _, coin := range remCoins {
+			newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], totalShares)
+			if err != nil {
+				return sdk.ZeroInt(), sdk.NewCoins(), err
+			}
+
+			newLiquidity = newLiquidity.Add(coin)
+			numShares = numShares.Add(newShares)
+		}
+	}
+
+	return numShares, newLiquidity, nil
+}
+
 // CalcJoinPoolShares calculates the number of shares created to join pool with the provided amount of `tokenIn`.
 // The input tokens must either be:
 // - a single token
@@ -277,7 +333,10 @@ func (p *Pool) JoinPool(_ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (
 //
 // It returns the number of shares created, the amount of coins actually joined into the pool
 // (in case of not being able to fully join), or an error.
-func (p *Pool) CalcJoinPoolShares(_ sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+	if ctx.BlockHeight() < v10Fork {
+		return p.calcJoinPoolSharesBroken(ctx, tokensIn, swapFee)
+	}
 	// 1) Get pool current liquidity + and token weights
 	// 2) If single token provided, do single asset join and exit.
 	// 3) If multi-asset join, first do as much of a join as we can with no swaps.
