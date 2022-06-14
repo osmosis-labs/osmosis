@@ -13,6 +13,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+const (
+	errMsgFormatNoPoolAssetFound = "can't find the PoolAsset (%s)"
+)
+
 var (
 	_ types.PoolI                  = &Pool{}
 	_ types.PoolAmountOutExtension = &Pool{}
@@ -220,7 +224,7 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	}
 
 	if len(pa.PoolAssets) == 0 {
-		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(errMsgFormatNoPoolAssetFound, denom))
 	}
 
 	i := sort.Search(len(pa.PoolAssets), func(i int) bool {
@@ -231,11 +235,11 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	})
 
 	if i < 0 || i >= len(pa.PoolAssets) {
-		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(errMsgFormatNoPoolAssetFound, denom))
 	}
 
 	if pa.PoolAssets[i].Token.Denom != denom {
-		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(errMsgFormatNoPoolAssetFound, denom))
 	}
 
 	return i, pa.PoolAssets[i], nil
