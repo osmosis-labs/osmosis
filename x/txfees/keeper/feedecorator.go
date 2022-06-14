@@ -164,15 +164,15 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	// Get token for swap fee amounts
 	token := msg.GetTokenToFee()
 
+	// If token is not a fee token, then return sybil as is
+	if !mfd.TxFeesKeeper.feeTokenExists(ctx, token.Denom) {
+		return sybil, nil
+	}
+
 	// Get fees paid in swap fees
 	feesPaid, err := mfd.TxFeesKeeper.getFeesPaid(ctx, msg.PoolIdOnPath(), msg.TokenDenomsOnPath(), token)
 	if err != nil {
 		return Sybil{}, err
-	}
-
-	// Blank coin returned, not because of error but because it is not applicable for sybil fees due to denom
-	if feesPaid.Denom == "" {
-		return sybil, nil
 	}
 
 	// Add fees paid to sybil
