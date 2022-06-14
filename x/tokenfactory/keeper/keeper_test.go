@@ -16,6 +16,7 @@ type KeeperTestSuite struct {
 
 	queryClient  types.QueryClient
 	msgServer    types.MsgServer
+	// defaultDenom is on the suite, as it depends on the creator test address.
 	defaultDenom string
 }
 
