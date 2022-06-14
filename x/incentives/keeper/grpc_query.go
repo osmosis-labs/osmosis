@@ -63,21 +63,7 @@ func (q Querier) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	gauges := []types.Gauge{}
-	store := ctx.KVStore(q.Keeper.storeKey)
-	valStore := prefix.NewStore(store, types.KeyPrefixGauges)
-
-	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
-		if err != nil {
-			panic(err)
-		}
-		if accumulate {
-			gauges = append(gauges, newGauges...)
-		}
-
-		return true, nil
-	})
+	pageRes, gauges, err := q.filterByPrefixAndDenom(ctx, types.KeyPrefixGauges, "", req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -92,21 +78,8 @@ func (q Querier) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesRequ
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	gauges := []types.Gauge{}
-	store := ctx.KVStore(q.Keeper.storeKey)
-	valStore := prefix.NewStore(store, types.KeyPrefixActiveGauges)
 
-	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
-		if err != nil {
-			panic(err)
-		}
-		if accumulate {
-			gauges = append(gauges, newGauges...)
-		}
-
-		return true, nil
-	})
+	pageRes, gauges, err := q.filterByPrefixAndDenom(ctx, types.KeyPrefixActiveGauges, "", req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -121,25 +94,7 @@ func (q Querier) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGa
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	gauges := []types.Gauge{}
-	store := ctx.KVStore(q.Keeper.storeKey)
-	valStore := prefix.NewStore(store, types.KeyPrefixActiveGauges)
-
-	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
-		if err != nil {
-			panic(err)
-		}
-		for _, gauge := range newGauges {
-			if gauge.DistributeTo.Denom != req.Denom {
-				return false, nil
-			}
-			if accumulate {
-				gauges = append(gauges, gauge)
-			}
-		}
-		return true, nil
-	})
+	pageRes, gauges, err := q.filterByPrefixAndDenom(ctx, types.KeyPrefixActiveGauges, req.Denom, req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -154,21 +109,8 @@ func (q Querier) UpcomingGauges(goCtx context.Context, req *types.UpcomingGauges
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	gauges := []types.Gauge{}
-	store := ctx.KVStore(q.Keeper.storeKey)
-	valStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
 
-	pageRes, err := query.FilteredPaginate(valStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
-		if err != nil {
-			panic(err)
-		}
-		if accumulate {
-			gauges = append(gauges, newGauges...)
-		}
-
-		return true, nil
-	})
+	pageRes, gauges, err := q.filterByPrefixAndDenom(ctx, types.KeyPrefixUpcomingGauges, "", req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -186,25 +128,7 @@ func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.Upcomi
 		return nil, status.Error(codes.InvalidArgument, "invalid denom")
 	}
 
-	gauges := []types.Gauge{}
-	store := ctx.KVStore(q.Keeper.storeKey)
-	prefixStore := prefix.NewStore(store, types.KeyPrefixUpcomingGauges)
-
-	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
-		if err != nil {
-			panic(err)
-		}
-		for _, gauge := range newGauges {
-			if gauge.DistributeTo.Denom != req.Denom {
-				return false, nil
-			}
-			if accumulate {
-				gauges = append(gauges, gauge)
-			}
-		}
-		return true, nil
-	})
+	pageRes, gauges, err := q.filterByPrefixAndDenom(ctx, types.KeyPrefixUpcomingGauges, req.Denom, req.Pagination)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -270,4 +194,34 @@ func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]ty
 	}
 
 	return gauges, nil
+}
+
+// Filter gauges based on given prefix type and denom 
+func (q Querier) filterByPrefixAndDenom(ctx sdk.Context, prefixType []byte, denom string, pagination *query.PageRequest) (*query.PageResponse, []types.Gauge, error) {
+	gauges := []types.Gauge{}
+	store := ctx.KVStore(q.Keeper.storeKey)
+	valStore := prefix.NewStore(store, prefixType)
+
+	pageRes, err := query.FilteredPaginate(valStore, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
+		// This may return multiple gauges at once if two gauges start at the same time. 
+		//For now this is treated as an edge case that is not of importance
+		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
+		if err != nil {
+			panic(err)
+		}
+		if accumulate {
+			if denom != "" {
+				for _, gauge := range newGauges {
+					if gauge.DistributeTo.Denom != denom {
+						return false, nil
+					}
+					gauges = append(gauges, gauge)
+				}
+			} else {
+				gauges = append(gauges, newGauges...)
+			}
+		}
+		return true, nil
+	})
+	return pageRes, gauges, err
 }
