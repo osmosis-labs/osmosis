@@ -218,7 +218,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
 
 		// Find how many osmo tokens this delegation is worth at superfluids current risk adjustment
-		// and twap of the denom.
+		// and swap of the denom.
 		equivalentAmount := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
 		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
 
