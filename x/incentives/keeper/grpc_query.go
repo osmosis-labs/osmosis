@@ -196,15 +196,15 @@ func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]ty
 	return gauges, nil
 }
 
-// Filter gauges based on given prefix type and denom 
+// Filter gauges based on given prefix type and denom
 func (q Querier) filterByPrefixAndDenom(ctx sdk.Context, prefixType []byte, denom string, pagination *query.PageRequest) (*query.PageResponse, []types.Gauge, error) {
 	gauges := []types.Gauge{}
 	store := ctx.KVStore(q.Keeper.storeKey)
 	valStore := prefix.NewStore(store, prefixType)
 
 	pageRes, err := query.FilteredPaginate(valStore, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		// This may return multiple gauges at once if two gauges start at the same time. 
-		//For now this is treated as an edge case that is not of importance
+		// This may return multiple gauges at once if two gauges start at the same time.
+		// For now this is treated as an edge case that is not of importance
 		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
 		if err != nil {
 			panic(err)
