@@ -60,19 +60,18 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 func (suite *KeeperTestSuite) TestCreateDenom() {
 	for _, tc := range []struct {
 		desc     string
-		malleate func()
+		setup    func()
 		subdenom string
 		valid    bool
 	}{
 		{
 			desc:     "subdenom too long",
-			malleate: func() {},
 			subdenom: "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
 			valid:    false,
 		},
 		{
 			desc: "subdenom and creator pair already exists",
-			malleate: func() {
+			setup: func() {
 				_, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
 				suite.Require().NoError(err)
 
@@ -82,21 +81,21 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 		},
 		{
 			desc:     "success case",
-			malleate: func() {},
 			subdenom: "evmos",
 			valid:    true,
 		},
 		{
 			desc:     "subdenom having invalid characters",
-			malleate: func() {},
 			subdenom: "bit/***///&&&/coin",
 			valid:    false,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.msgServer = keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)
+			if tc.setup != nil {
+				tc.setup()
+			}
 			// Create a denom
-			tc.malleate()
 			res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
 			if tc.valid {
 				suite.Require().NoError(err)
