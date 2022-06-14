@@ -122,20 +122,12 @@ func (suite *KeeperTestSuite) TestBurnDenom() {
 		addr0bal = int64(0)
 	)
 
-	// Create a denom and mint
+	// Create a denom.
 	suite.CreateDefaultDenom()
 
-	// Make sure that the admin is set correctly
-	queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
-		Denom: suite.defaultDenom,
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
-
-	_, err = suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 10)))
+	// mint 10 default token for testAcc[0]
+	suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 10)))
 	addr0bal += 10
-	suite.Require().NoError(err)
-	suite.Require().True(suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 
 	for _, tc := range []struct {
 		desc      string
@@ -196,13 +188,13 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 	)
 
 	for _, tc := range []struct {
-		desc     string
-		malleate func()
-		valid    bool
+		desc  string
+		setup func()
+		valid bool
 	}{
 		{
 			desc: "creator admin can't mint after setting to '' ",
-			malleate: func() {
+			setup: func() {
 				_, err := suite.msgServer.ChangeAdmin(sdk.WrapSDKContext(suite.Ctx), types.NewMsgChangeAdmin(suite.TestAccs[0].String(), denom, ""))
 				queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
 					Denom: denom,
@@ -218,7 +210,7 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 		},
 		{
 			desc: "non-admins can't change the existing admin",
-			malleate: func() {
+			setup: func() {
 				// Test Change Admin
 				_, err := suite.msgServer.ChangeAdmin(sdk.WrapSDKContext(suite.Ctx), types.NewMsgChangeAdmin(suite.TestAccs[1].String(), denom, suite.TestAccs[2].String()))
 				queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
@@ -230,7 +222,7 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 		},
 		{
 			desc: "success change admin",
-			malleate: func() {
+			setup: func() {
 				// Test Change Admin
 				_, err := suite.msgServer.ChangeAdmin(sdk.WrapSDKContext(suite.Ctx), types.NewMsgChangeAdmin(suite.TestAccs[0].String(), denom, suite.TestAccs[1].String()))
 				queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
@@ -264,7 +256,7 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 			suite.Require().NoError(err)
 			suite.Require().True(suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], denom).Amount.Int64() == addr0bal, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], denom))
 
-			tc.malleate()
+			tc.setup()
 		})
 	}
 }
