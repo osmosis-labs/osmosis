@@ -153,6 +153,8 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	// Check if arbitration tx
 	if txfee_filters.IsArbTxLoose(tx) {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
+		// arbitration tx are not qualified for sybil resistant fees
+		return NewSybil(cfgMinGasPrice, sdk.NewCoin(baseDenom, sdk.ZeroInt())), nil
 	}
 
 	// Create sybil fee structure
