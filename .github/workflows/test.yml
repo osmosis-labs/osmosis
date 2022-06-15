@@ -127,6 +127,7 @@ jobs:
         with:
           load: true
           context: .
+          file: tests/e2e/chain_init/chain-init.Dockerfile
           tags: osmosis-e2e-chain-init:debug
       -
         name: Test e2e and Upgrade
