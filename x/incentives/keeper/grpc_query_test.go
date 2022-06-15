@@ -6,16 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-<<<<<<< HEAD
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/osmosis-labs/osmosis/v9/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
 	pooltypes "github.com/osmosis-labs/osmosis/v9/x/pool-incentives/types"
-=======
-	query "github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	pooltypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
->>>>>>> b464728 (Fix incentives query filtering (#1759))
 )
 
 func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
