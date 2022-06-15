@@ -128,7 +128,10 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, sybil Sybil, gasRequested uint6
 	}
 
 	// Add converted fee from tx to sybil fees paid
-	totalFee := sybil.AddToFeesPaid(convertedFee)
+	totalFee, err := sybil.AddToFeesPaid(convertedFee)
+	if err != nil {
+		return err
+	}
 
 	// now including the swap fees paid for in the msg
 	if !(totalFee.FeesPaid.IsGTE(requiredBaseFee)) {
@@ -176,7 +179,7 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	}
 
 	// Add fees paid to sybil
-	return sybil.AddToFeesPaid(feesPaid), nil
+	return sybil.AddToFeesPaid(feesPaid)
 }
 
 // DeductFeeDecorator deducts fees from the first signer of the tx.
