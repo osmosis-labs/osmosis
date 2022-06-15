@@ -129,6 +129,9 @@ jobs:
           context: .
           file: tests/e2e/chain_init/chain-init.Dockerfile
           tags: osmosis-e2e-chain-init:debug
+          # Use experimental Cache backend API: https://github.com/docker/build-push-action/blob/master/docs/advanced/cache.md#cache-backend-api
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       -
         name: Test e2e and Upgrade
         run: make test-e2e
