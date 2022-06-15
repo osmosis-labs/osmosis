@@ -207,7 +207,7 @@ func (q Querier) filterByPrefixAndDenom(ctx sdk.Context, prefixType []byte, deno
 		// For now this is treated as an edge case that is not of importance
 		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
 		if err != nil {
-			panic(err)
+			return false, err
 		}
 		if accumulate {
 			if denom != "" {
