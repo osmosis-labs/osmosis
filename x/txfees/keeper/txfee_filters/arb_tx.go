@@ -20,6 +20,7 @@ func IsArbTxLoose(tx sdk.Tx) bool {
 
 	swapInDenom := ""
 	lpTypesSeen := make(map[gammtypes.LiquidityChangeType]bool, 2)
+	denomsSeen := make(map[string]int)
 
 	for _, m := range msgs {
 		// (4) Check that the tx doesn't have both JoinPool & ExitPool msgs
@@ -46,6 +47,18 @@ func IsArbTxLoose(tx sdk.Tx) bool {
 			return true
 		}
 		swapInDenom = swapMsg.TokenInDenom()
+
+		// (3) record all denoms seen across all swaps, and see if any duplicates.
+		// arb if denom has been in 3 or more tx
+		// 2 is fine: A -> B then B -> C
+		// 3 or more is arb: A->B, B->C, C->D, D->B
+		denomPath := swapMsg.TokenDenomsOnPath()
+		for _, denom := range denomPath {
+			denomsSeen[denom]++
+			if denomsSeen[denom] > 2 {
+				return true
+			}
+		}
 	}
 
 	return false
