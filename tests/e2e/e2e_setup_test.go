@@ -43,6 +43,7 @@ type chainConfig struct {
 	votingPeriod float32
 	// upgrade proposal height for chain.
 	propHeight int
+	forkHeight int
 	// Indexes of the validators to skip from running during initialization.
 	// This is needed for testing functionality like state-sync where we would
 	// like to start a node during tests post-initialization.
@@ -55,7 +56,9 @@ type chainConfig struct {
 
 const (
 	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
-	upgradeVersion = "v9"
+	upgradeVersion string = "v10"
+	// is this version a fork
+	isFork bool = true
 	// estimated number of blocks it takes to submit for a proposal
 	propSubmitBlocks float32 = 10
 	// estimated number of blocks it takes to deposit for a proposal
@@ -165,7 +168,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.Require().NoError(err)
 	}
 
-	s.dockerImages = *dockerconfig.NewImageConfig(!skipUpgrade)
+	s.dockerImages = *dockerconfig.NewImageConfig(!skipUpgrade, isFork)
 
 	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
 	s.configureChain(chain.ChainAID, validatorConfigsChainA, map[int]struct{}{
@@ -185,9 +188,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
-	if !skipUpgrade {
+	if !skipUpgrade && !isFork {
 		s.createPreUpgradeState()
 		s.upgrade()
+		s.runPostUpgradeTests()
+	} else if !skipUpgrade && isFork {
+		s.createPreUpgradeState()
+		s.upgradeFork()
+		s.runPostUpgradeTests()
+	} else if skipUpgrade {
 		s.runPostUpgradeTests()
 	}
 }
@@ -547,9 +556,40 @@ func (s *IntegrationTestSuite) upgrade() {
 		}
 	}
 
-	// remove all containers so we can upgrade them to the new version
 	for _, chainConfig := range s.chainConfigs {
 		s.upgradeContainers(chainConfig, chainConfig.propHeight)
+	}
+}
+
+func (s *IntegrationTestSuite) upgradeFork() {
+
+	for _, chainConfig := range s.chainConfigs {
+		curChain := chainConfig
+		chainConfig.forkHeight = 60
+
+		for i := range chainConfig.validators {
+			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+				continue
+			}
+
+			s.T().Logf("waiting to reach fork height on %s validator container: %s", s.valResources[curChain.meta.Id][i].Container.Name[1:], s.valResources[curChain.meta.Id][i].Container.ID)
+			s.Require().Eventually(
+				func() bool {
+					currentHeight := s.getCurrentChainHeight(chainConfig, i)
+					if currentHeight < chainConfig.forkHeight {
+						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", s.valResources[curChain.meta.Id][i].Container.Name[1:], currentHeight, chainConfig.forkHeight, s.valResources[curChain.meta.Id][i].Container.ID)
+						return false
+					}
+					if currentHeight > chainConfig.forkHeight {
+						return true
+					}
+					return true
+				},
+				5*time.Minute,
+				time.Second,
+			)
+			s.T().Logf("successfully got past fork height on %s container: %s", s.valResources[curChain.meta.Id][i].Container.Name[1:], s.valResources[curChain.meta.Id][i].Container.ID)
+		}
 	}
 }
 
