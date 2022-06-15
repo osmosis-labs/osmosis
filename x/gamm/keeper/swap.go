@@ -31,7 +31,7 @@ func (k Keeper) SwapExactAmountIn(
 	return k.swapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 }
 
-func (k Keeper) GetSwapFee(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
+func (k Keeper) GetSwapFeeFromPoolId(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
 	pool, err := k.getPoolForSwap(ctx, poolId)
 	if err != nil {
 		return sdk.Dec{}, err

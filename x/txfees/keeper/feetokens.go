@@ -58,12 +58,12 @@ func (k Keeper) getTotalSwapFee(ctx sdk.Context, poolIds []uint64, denomPath []s
 
 	// Join/Exit pool support
 	if len(denomPath) == 1 {
-		return k.gammKeeper.GetSwapFee(ctx, poolIds[0])
+		return k.gammKeeper.GetSwapFeeFromPoolId(ctx, poolIds[0])
 	}
 	// Get swap fees from pools
 	for i := range poolIds {
 		// Get swap fee
-		swapFee, err := k.gammKeeper.GetSwapFee(ctx, poolIds[i])
+		swapFee, err := k.gammKeeper.GetSwapFeeFromPoolId(ctx, poolIds[i])
 		if err != nil {
 			return sdk.Dec{}, err
 		}
