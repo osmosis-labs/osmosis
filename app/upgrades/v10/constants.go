@@ -13,13 +13,6 @@ const ForkHeight = 4713065
 // This is not called v10, due to this bug that would require a state migration to fix:
 const UpgradeName = "v10"
 
-// Created synthetically via fork
-// var Upgrade = upgrades.Upgrade{
-// 	UpgradeName:          UpgradeName,
-// 	CreateUpgradeHandler: CreateUpgradeHandler,
-// 	StoreUpgrades:        store.StoreUpgrades{},
-// }
-
 var Fork = upgrades.Fork{
 	UpgradeName:    UpgradeName,
 	UpgradeHeight:  ForkHeight,
