@@ -66,7 +66,7 @@ ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
 ifeq ($(LINK_STATICALLY),true)
-	ldflags += -linkmode=external -extldflags "-L/usr/local/lib/ -lwasmvm_muslc -Wl,-z,muldefs -static"
+	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
 endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
@@ -172,10 +172,10 @@ docs:
 	@echo "=========== Generate Complete ============"
 	@echo
 
-protoVer=v0.2
+protoVer=v0.7
 protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
-containerProtoGen=osmosis-proto-gen-$(protoVer)
-containerProtoFmt=osmosis-proto-fmt-$(protoVer)
+containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
+containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
 
 proto-gen:
 	@echo "Generating Protobuf files"
@@ -239,6 +239,9 @@ test-sim:
 test-e2e:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
+test-e2e-skip-upgrade:
+	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
@@ -258,12 +261,36 @@ lint:
 
 format:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
-	@go run mvdan.cc/gofumpt -l -w .
+	@go run mvdan.cc/gofumpt -l -w x/ app/ ante/ tests/
 
 ###############################################################################
 ###                                Localnet                                 ###
 ###############################################################################
 
+localnet-keys:
+	. tests/localosmosis/keys.sh
+
+localnet-build:
+	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
+
+localnet-build-state-export:
+	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
+
+localnet-start:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-start-state-export:
+	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
+
+localnet-stop:
+	@docker-compose -f tests/localosmosis/docker-compose.yml down
+
+localnet-remove: localnet-stop
+	PWD=$(shell pwd)
+	@docker run --user root -v ${PWD}/tests/localosmosis/.osmosisd:/root/osmosis ubuntu /bin/sh -c "rm -rf /root/osmosis/*"
+
+localnet-remove-state-export:
+	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

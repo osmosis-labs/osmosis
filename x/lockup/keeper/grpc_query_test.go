@@ -10,7 +10,7 @@ import (
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
 	suite.FundAcc(addr, coins)
-	_, err := suite.querier.LockTokens(suite.Ctx, addr, coins, duration)
+	_, err := suite.querier.CreateLock(suite.Ctx, addr, coins, duration)
 	suite.Require().NoError(err)
 }
 

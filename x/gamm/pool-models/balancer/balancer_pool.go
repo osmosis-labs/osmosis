@@ -13,9 +13,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+const (
+	errMsgFormatNoPoolAssetFound = "can't find the PoolAsset (%s)"
+)
+
 var (
-	_ types.PoolI                               = &Pool{}
-	_ types.PoolExitSwapExactAmountOutExtension = &Pool{}
+	_ types.PoolI                  = &Pool{}
+	_ types.PoolAmountOutExtension = &Pool{}
 )
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
@@ -220,7 +224,7 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	}
 
 	if len(pa.PoolAssets) == 0 {
-		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(errMsgFormatNoPoolAssetFound, denom))
 	}
 
 	i := sort.Search(len(pa.PoolAssets), func(i int) bool {
@@ -231,11 +235,11 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	})
 
 	if i < 0 || i >= len(pa.PoolAssets) {
-		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(errMsgFormatNoPoolAssetFound, denom))
 	}
 
 	if pa.PoolAssets[i].Token.Denom != denom {
-		return -1, PoolAsset{}, fmt.Errorf("can't find the PoolAsset (%s)", denom)
+		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(errMsgFormatNoPoolAssetFound, denom))
 	}
 
 	return i, pa.PoolAssets[i], nil
@@ -272,12 +276,12 @@ func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
 	return Aasset, Basset, err
 }
 
-func (p *Pool) updateLiquidity(numShares sdk.Int, newLiquidity sdk.Coins) {
-	err := p.addToPoolAssetBalances(newLiquidity)
+func (p *Pool) IncreaseLiquidity(sharesOut sdk.Int, coinsIn sdk.Coins) {
+	err := p.addToPoolAssetBalances(coinsIn)
 	if err != nil {
 		panic(err)
 	}
-	p.AddTotalShares(numShares)
+	p.AddTotalShares(sharesOut)
 }
 
 func (pa *Pool) UpdatePoolAssetBalance(coin sdk.Coin) error {
@@ -468,6 +472,14 @@ func (pa Pool) NumAssets() int {
 
 func (pa Pool) IsActive(ctx sdk.Context) bool {
 	return true
+}
+
+func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
+	return PoolParams{
+		SwapFee:                  swapFee,
+		ExitFee:                  exitFee,
+		SmoothWeightChangeParams: params,
+	}
 }
 
 func (params PoolParams) Validate(poolWeights []PoolAsset) error {

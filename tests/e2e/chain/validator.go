@@ -182,6 +182,7 @@ func (v *internalValidator) export() *Validator {
 		Index:         v.index,
 		Mnemonic:      v.mnemonic,
 		PublicAddress: v.keyInfo.GetAddress().String(),
+		PublicKey:     v.keyInfo.GetPubKey().Address().String(),
 	}
 }
 
@@ -260,6 +261,8 @@ func createMnemonic() (string, error) {
 	return mnemonic, nil
 }
 
+// signMsg returns a signed tx of the provided messages,
+// signed by the validator, using 0 fees, a high gas limit, and a common memo.
 func (v *internalValidator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 	txBuilder := util.EncodingConfig.TxConfig.NewTxBuilder()
 
@@ -269,8 +272,9 @@ func (v *internalValidator) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 
 	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", v.nodeKey.ID(), v.instanceName()))
 	txBuilder.SetFeeAmount(sdk.NewCoins())
-	txBuilder.SetGasLimit(200000)
+	txBuilder.SetGasLimit(uint64(200000 * len(msgs)))
 
+	// TODO: Find a better way to sign this tx with less code.
 	signerData := authsigning.SignerData{
 		ChainID:       v.chain.chainMeta.Id,
 		AccountNumber: 0,

@@ -17,10 +17,10 @@ const (
 var _ sdk.Msg = &MsgCreateDenom{}
 
 // NewMsgCreateDenom creates a msg to create a new denom
-func NewMsgCreateDenom(sender, nonce string) *MsgCreateDenom {
+func NewMsgCreateDenom(sender, subdenom string) *MsgCreateDenom {
 	return &MsgCreateDenom{
-		Sender: sender,
-		Nonce:  nonce,
+		Sender:   sender,
+		Subdenom: subdenom,
 	}
 }
 
@@ -32,7 +32,7 @@ func (m MsgCreateDenom) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	_, err = GetTokenDenom(m.Sender, m.Nonce)
+	_, err = GetTokenDenom(m.Sender, m.Subdenom)
 	if err != nil {
 		return sdkerrors.Wrap(ErrInvalidDenom, err.Error())
 	}
@@ -67,7 +67,7 @@ func (m MsgMint) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if !m.Amount.IsValid() {
+	if !m.Amount.IsValid() || m.Amount.Amount.Equal(sdk.ZeroInt()) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 
@@ -101,7 +101,7 @@ func (m MsgBurn) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	if !m.Amount.IsValid() {
+	if !m.Amount.IsValid() || m.Amount.Amount.Equal(sdk.ZeroInt()) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 

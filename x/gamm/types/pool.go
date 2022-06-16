@@ -5,7 +5,7 @@ import (
 
 	proto "github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v7/v043_temp/address"
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -58,6 +58,7 @@ type PoolI interface {
 	// It is up to pool implementation if they support LP'ing at arbitrary ratios, or a subset of ratios.
 	// Pools are expected to guarantee LP'ing at the exact ratio, and single sided LP'ing.
 	JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
+
 	// CalcJoinPoolShares returns how many LP shares JoinPool would return on these arguments.
 	// This does not mutate the pool, or state.
 	CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error)
@@ -75,20 +76,45 @@ type PoolI interface {
 	PokePool(blockTime time.Time)
 }
 
-// PoolExitSwapExactAmountOutExtension is an extension of the PoolI
+// PoolAmountOutExtension is an extension of the PoolI
 // interface definiting an abstraction for pools that hold tokens.
-// In addition, it supports ExitSwapExactAmountOut method.
-// See definition below.
-type PoolExitSwapExactAmountOutExtension interface {
+// In addition, it supports JoinSwapShareAmountOut and ExitSwapExactAmountOut methods
+// that allow joining with the exact amount of shares to get out, and exiting with exact
+// amount of coins to get out.
+// See definitions below.
+type PoolAmountOutExtension interface {
 	PoolI
 
+	// CalcTokenInShareAmountOut returns the number of tokenInDenom tokens
+	// that would be returned if swapped for an exact number of shares (shareOutAmount).
+	// Returns error if tokenInDenom is not in the pool or if fails to approximate
+	// given the shareOutAmount.
+	// This method does not mutate the pool
+	CalcTokenInShareAmountOut(
+		ctx sdk.Context,
+		tokenInDenom string,
+		shareOutAmount sdk.Int,
+		swapFee sdk.Dec,
+	) (tokenInAmount sdk.Int, err error)
+
+	// JoinPoolTokenInMaxShareAmountOut add liquidity to a specified pool with a maximum amount of tokens in (tokenInMaxAmount)
+	// and swaps to an exact number of shares (shareOutAmount).
+	JoinPoolTokenInMaxShareAmountOut(
+		ctx sdk.Context,
+		tokenInDenom string,
+		shareOutAmount sdk.Int,
+	) (tokenInAmount sdk.Int, err error)
+
 	// ExitSwapExactAmountOut removes liquidity from a specified pool with a maximum amount of LP shares (shareInMaxAmount)
-	// and swaps to an exact amount of one of the token pairs (tokenOut)
+	// and swaps to an exact amount of one of the token pairs (tokenOut).
 	ExitSwapExactAmountOut(
 		ctx sdk.Context,
 		tokenOut sdk.Coin,
 		shareInMaxAmount sdk.Int,
 	) (shareInAmount sdk.Int, err error)
+
+	// IncreaseLiquidity increases the pool's liquidity by the specified sharesOut and coinsIn.
+	IncreaseLiquidity(sharesOut sdk.Int, coinsIn sdk.Coins)
 }
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {

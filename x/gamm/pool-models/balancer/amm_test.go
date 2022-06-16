@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/test_helpers"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
@@ -57,6 +58,20 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("1.913043480000000000"), // ans is 1.913043478260869565, rounded is 1.91304348
 		},
+		{
+			name:                "check number of sig figs",
+			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
+			quoteDenomPoolInput: sdk.NewInt64Coin(quoteDenom, 300),
+			expectError:         false,
+			expectedOutput:      sdk.MustNewDecFromStr("0.333333330000000000"),
+		},
+		{
+			name:                "check number of sig figs high sizes",
+			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 343569192534),
+			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.MustNewDecFromStr("186633424395479094888742").TruncateInt()),
+			expectError:         false,
+			expectedOutput:      sdk.MustNewDecFromStr("0.000000000001840877"),
+		},
 	}
 
 	for _, tc := range tests {
@@ -72,19 +87,22 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 		balancerPool, isPool := pool.(*balancer.Pool)
 		suite.Require().True(isPool, "test: %s", tc.name)
 
-		spotPrice, err := balancerPool.SpotPrice(
-			suite.Ctx,
-			tc.baseDenomPoolInput.Denom,
-			tc.quoteDenomPoolInput.Denom)
+		sut := func() {
+			spotPrice, err := balancerPool.SpotPrice(
+				suite.Ctx,
+				tc.baseDenomPoolInput.Denom,
+				tc.quoteDenomPoolInput.Denom)
 
-		if tc.expectError {
-			suite.Require().Error(err, "test: %s", tc.name)
-		} else {
-			suite.Require().NoError(err, "test: %s", tc.name)
-			suite.Require().True(spotPrice.Equal(tc.expectedOutput),
-				"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
-				spotPrice, tc.expectedOutput)
+			if tc.expectError {
+				suite.Require().Error(err, "test: %s", tc.name)
+			} else {
+				suite.Require().NoError(err, "test: %s", tc.name)
+				suite.Require().True(spotPrice.Equal(tc.expectedOutput),
+					"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
+					spotPrice, tc.expectedOutput)
+			}
 		}
+		assertPoolStateNotModified(suite.T(), balancerPool, sut)
 	}
 }
 
@@ -188,16 +206,18 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 				exitFeeDec, err := sdk.NewDecFromStr("0")
 				require.NoError(t, err)
 
-				pool := createTestPool(t, []balancer.PoolAsset{
-					poolAssetOut,
-					poolAssetIn,
-				},
-					swapFeeDec,
-					exitFeeDec,
-				)
+				pool := createTestPool(t, swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 				require.NotNil(t, pool)
 
-				suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
+				sut := func() {
+					suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
+
+				}
+
+				balancerPool, ok := pool.(*balancer.Pool)
+				require.True(t, ok)
+
+				assertPoolStateNotModified(t, balancerPool, sut)
 			})
 		}
 	}
@@ -256,13 +276,12 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 			initialWeightOut: 100,
 			initialWeightIn:  100,
 		},
-		// TODO: https://github.com/osmosis-labs/osmosis/issues/1359
-		// {
-		// 	initialPoolOut:   1_000,
-		// 	tokenOut:         26,
-		// 	initialWeightOut: 100,
-		// 	initialWeightIn:  100,
-		// },
+		{
+			initialPoolOut:   1_000,
+			tokenOut:         26,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
 	}
 
 	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
@@ -307,7 +326,8 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 					swapFeeDec,
 				)
 
-				require.Equal(t, initialCalcTokenOut, inverseCalcTokenOut.RoundInt())
+				tol := sdk.NewDec(1)
+				require.True(osmoutils.DecApproxEq(t, initialCalcTokenOut.ToDec(), inverseCalcTokenOut, tol))
 			})
 		}
 	}
