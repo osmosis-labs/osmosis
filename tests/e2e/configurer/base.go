@@ -314,15 +314,9 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Ch
 func (bc *baseConfigurer) ClearResources() error {
 	bc.t.Log("tearing down e2e integration test suite...")
 
-	require.NoError(bc.t, bc.containerManager.Pool.Purge(bc.containerManager.HermesResource))
-
-	for _, vr := range bc.containerManager.ValResources {
-		for _, r := range vr {
-			require.NoError(bc.t, bc.containerManager.Pool.Purge(r))
-		}
+	if err := bc.containerManager.ClearResources(); err != nil {
+		return err
 	}
-
-	require.NoError(bc.t, bc.containerManager.Pool.RemoveNetwork(bc.containerManager.Network))
 
 	for _, chainConfig := range bc.chainConfigs {
 		os.RemoveAll(chainConfig.chain.ChainMeta.DataDir)
