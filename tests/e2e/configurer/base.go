@@ -154,8 +154,6 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 		return err
 	}
 
-	osmoAVal := chainA.Validators[0]
-	osmoBVal := chainB.Validators[0]
 	hermesCfgPath := path.Join(tmpDir, "hermes")
 
 	if err := os.MkdirAll(hermesCfgPath, 0o755); err != nil {
@@ -170,46 +168,15 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 		return err
 	}
 
-	bc.containerManager.HermesResource, err = bc.containerManager.Pool.RunWithOptions(
-		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s-%s-relayer", chainA.ChainMeta.Id, chainB.ChainMeta.Id),
-			Repository: bc.containerManager.RelayerRepository,
-			Tag:        bc.containerManager.RelayerTag,
-			NetworkID:  bc.containerManager.Network.Network.ID,
-			Cmd: []string{
-				"start",
-			},
-			User: "root:root",
-			Mounts: []string{
-				fmt.Sprintf("%s/:/root/hermes", hermesCfgPath),
-			},
-			ExposedPorts: []string{
-				"3031",
-			},
-			PortBindings: map[docker.Port][]docker.PortBinding{
-				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
-			},
-			Env: []string{
-				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", chainA.ChainMeta.Id),
-				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", chainB.ChainMeta.Id),
-				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAVal.Mnemonic),
-				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBVal.Mnemonic),
-				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", bc.containerManager.ValResources[chainA.ChainMeta.Id][0].Container.Name[1:]),
-				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", bc.containerManager.ValResources[chainB.ChainMeta.Id][0].Container.Name[1:]),
-			},
-			Entrypoint: []string{
-				"sh",
-				"-c",
-				"chmod +x /root/hermes/hermes_bootstrap.sh && /root/hermes/hermes_bootstrap.sh",
-			},
-		},
-		noRestart,
-	)
+	osmoAValMnemonic := chainA.Validators[0].Mnemonic
+	osmoBValMnemonic := chainB.Validators[0].Mnemonic
+
+	hermesResource, err := bc.containerManager.RunHermesResource(chainA.ChainMeta.Id, osmoAValMnemonic, chainB.ChainMeta.Id, osmoBValMnemonic, hermesCfgPath)
 	if err != nil {
 		return err
 	}
 
-	endpoint := fmt.Sprintf("http://%s/state", bc.containerManager.HermesResource.GetHostPort("3031/tcp"))
+	endpoint := fmt.Sprintf("http://%s/state", hermesResource.GetHostPort("3031/tcp"))
 
 	require.Eventually(bc.t, func() bool {
 		resp, err := http.Get(endpoint)
@@ -243,7 +210,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 		time.Second,
 		"hermes relayer not healthy")
 
-	bc.t.Logf("started Hermes relayer container: %s", bc.containerManager.HermesResource.Container.ID)
+	bc.t.Logf("started Hermes relayer container: %s", bc.containerManager.GetHermesContainerID())
 
 	// XXX: Give time to both networks to start, otherwise we might see gRPC
 	// transport errors.
@@ -263,7 +230,7 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Ch
 		Context:      ctx,
 		AttachStdout: true,
 		AttachStderr: true,
-		Container:    bc.containerManager.HermesResource.Container.ID,
+		Container:    bc.containerManager.GetHermesContainerID(),
 		User:         "root",
 		Cmd: []string{
 			"hermes",
