@@ -16,10 +16,10 @@ type SybilResistantFee interface {
 var (
 	_ SybilResistantFee = MsgSwapExactAmountOut{}
 	_ SybilResistantFee = MsgSwapExactAmountIn{}
-	// _ SybilResistantFee = MsgJoinSwapExternAmountIn{}
-	// _ SybilResistantFee = MsgJoinSwapShareAmountOut{}
-	// _ SybilResistantFee = MsgExitSwapShareAmountIn{}
-	// _ SybilResistantFee = MsgExitSwapExternAmountOut{}
+	_ SybilResistantFee = MsgJoinSwapExternAmountIn{}
+	_ SybilResistantFee = MsgJoinSwapShareAmountOut{}
+	_ SybilResistantFee = MsgExitSwapShareAmountIn{}
+	_ SybilResistantFee = MsgExitSwapExternAmountOut{}
 )
 
 // MsgSwapExactAmountOut implements SybilResistantFee
@@ -72,64 +72,64 @@ func (msg MsgSwapExactAmountIn) PoolIdOnPath() []uint64 {
 //
 // MsgJoinSwapExternAmountIn implements SybilResistantFee
 //
-// func (msg MsgJoinSwapExternAmountIn) PoolIdOnPath() (path []uint64) {
-// 	path[0] = msg.PoolId
-// 	return path
-// }
-//
-// func (msg MsgJoinSwapExternAmountIn) GetTokenToFee() sdk.Coin {
-// 	return msg.TokenIn
-// }
+func (msg MsgJoinSwapExternAmountIn) PoolIdOnPath() (path []uint64) {
+	path[0] = msg.PoolId
+	return path
+}
 
-// func (msg MsgJoinSwapExternAmountIn) TokenDenomsOnPath() (denom []string) {
-// 	denom[0] = msg.TokenIn.Denom
-// 	return denom
-// }
+func (msg MsgJoinSwapExternAmountIn) GetTokenToFee() sdk.Coin {
+	return msg.TokenIn
+}
+
+func (msg MsgJoinSwapExternAmountIn) TokenDenomsOnPath() (denom []string) {
+	denom[0] = msg.TokenIn.Denom
+	return denom
+}
 
 // MsgJoinSwapSharesAmountOut implements SybilResistantFee
-//
-// func (msg MsgJoinSwapShareAmountOut) GetTokenToFee() sdk.Coin {
-// 	return sdk.NewCoin(msg.TokenInDenom, msg.TokenInMaxAmount)
-// }
 
-// func (msg MsgJoinSwapShareAmountOut) PoolIdOnPath() (path []uint64) {
-// 	path[0] = msg.PoolId
-// 	return path
-// }
+func (msg MsgJoinSwapShareAmountOut) GetTokenToFee() sdk.Coin {
+	return sdk.NewCoin(msg.TokenInDenom, msg.TokenInMaxAmount)
+}
 
-// func (msg MsgJoinSwapShareAmountOut) TokenDenomsOnPath() (denom []string) {
-// 	denom[0] = msg.TokenInDenom
-// 	return denom
-// }
+func (msg MsgJoinSwapShareAmountOut) PoolIdOnPath() (path []uint64) {
+	path[0] = msg.PoolId
+	return path
+}
+
+func (msg MsgJoinSwapShareAmountOut) TokenDenomsOnPath() (denom []string) {
+	denom[0] = msg.TokenInDenom
+	return denom
+}
 
 // MsgExitSwapShareAmountIn implements SybilResistantFee
-//
-// func (msg MsgExitSwapShareAmountIn) GetTokenToFee() sdk.Coin {
-// 	return sdk.NewCoin(msg.TokenOutDenom, msg.TokenOutMinAmount)
-// }
 
-// func (msg MsgExitSwapShareAmountIn) PoolIdOnPath() (path []uint64) {
-// 	path[0] = msg.PoolId
-// 	return path
-// }
+func (msg MsgExitSwapShareAmountIn) GetTokenToFee() sdk.Coin {
+	return sdk.NewCoin(msg.TokenOutDenom, msg.TokenOutMinAmount)
+}
 
-// func (msg MsgExitSwapShareAmountIn) TokenDenomsOnPath() (denom []string) {
-// 	denom[0] = msg.TokenOutDenom
-// 	return denom
-// }
+func (msg MsgExitSwapShareAmountIn) PoolIdOnPath() (path []uint64) {
+	path[0] = msg.PoolId
+	return path
+}
+
+func (msg MsgExitSwapShareAmountIn) TokenDenomsOnPath() (denom []string) {
+	denom[0] = msg.TokenOutDenom
+	return denom
+}
 
 // MsgExitSwapExternAmountOut implements SybilResistantFee
 //
-// func (msg MsgExitSwapExternAmountOut) GetTokenToFee() sdk.Coin {
-// 	return sdk.NewCoin(msg.TokenOut.Denom, msg.TokenOut.Amount)
-// }
+func (msg MsgExitSwapExternAmountOut) GetTokenToFee() sdk.Coin {
+	return sdk.NewCoin(msg.TokenOut.Denom, msg.TokenOut.Amount)
+}
 
-// func (msg MsgExitSwapExternAmountOut) PoolIdOnPath() (path []uint64) {
-// 	path[0] = msg.PoolId
-// 	return path
-// }
+func (msg MsgExitSwapExternAmountOut) PoolIdOnPath() (path []uint64) {
+	path[0] = msg.PoolId
+	return path
+}
 
-// func (msg MsgExitSwapExternAmountOut) TokenDenomsOnPath() (denom []string) {
-// 	denom[0] = msg.TokenOut.Denom
-// 	return denom
-// }
+func (msg MsgExitSwapExternAmountOut) TokenDenomsOnPath() (denom []string) {
+	denom[0] = msg.TokenOut.Denom
+	return denom
+}
