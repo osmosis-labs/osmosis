@@ -1,4 +1,4 @@
-package docker
+package containers
 
 // ImageConfig contains all images and their respective tags
 // needed for running e2e tests.
@@ -40,8 +40,8 @@ const (
 // Returns ImageConfig needed for running e2e test.
 // If isUpgrade is true, returns images for running the upgrade
 // Otherwise, returns images for running non-upgrade e2e tests.
-func NewImageConfig(isUpgrade bool) *ImageConfig {
-	config := &ImageConfig{
+func NewImageConfig(isUpgrade bool) ImageConfig {
+	config := ImageConfig{
 		RelayerRepository: relayerRepository,
 		RelayerTag:        relayerTag,
 	}

@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ory/dockertest/v3"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
-	dockerImages "github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/docker"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
 )
 
 type Configurer interface {
@@ -95,12 +94,7 @@ var (
 // - If !isIBCEnabled and !isUpgradeEnabled, we only need one chain at the current
 // Git branch version of the Osmosis code.
 func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) {
-	dockerImages := dockerImages.NewImageConfig(isUpgradeEnabled)
-	dkrPool, err := dockertest.NewPool("")
-	if err != nil {
-		return nil, err
-	}
-	dockerNetwork, err := dkrPool.CreateNetwork("osmosis-testnet")
+	containerManager, err := containers.NewManager(isUpgradeEnabled)
 	if err != nil {
 		return nil, err
 	}
@@ -123,9 +117,7 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 				},
 			},
 			withUpgrade(withIBC(baseSetup)), // base set up with IBC and upgrade
-			dockerImages,
-			dkrPool,
-			dockerNetwork,
+			containerManager,
 		), nil
 	} else if isIBCEnabled {
 		// configure two chains from current Git branch
@@ -144,9 +136,7 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 				},
 			},
 			withIBC(baseSetup), // base set up with IBC
-			dockerImages,
-			dkrPool,
-			dockerNetwork,
+			containerManager,
 		), nil
 	} else if isUpgradeEnabled {
 		// invalid - IBC tests must be enabled for upgrade
@@ -162,9 +152,7 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 				},
 			},
 			baseSetup, // base set up only
-			dockerImages,
-			dkrPool,
-			dockerNetwork,
+			containerManager,
 		), nil
 	}
 }

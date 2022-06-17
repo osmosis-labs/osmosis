@@ -13,8 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
-	dockerImages "github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/docker"
-	dockerconfig "github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/docker"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
 )
 
 type UpgradeConfigurer struct {
@@ -23,16 +22,14 @@ type UpgradeConfigurer struct {
 
 var _ Configurer = (*UpgradeConfigurer)(nil)
 
-func NewUpgradeConfigurer(t *testing.T, chainConfigs []*ChainConfig, setupTests setupFn, dockerImages *dockerImages.ImageConfig, dockerPool *dockertest.Pool, dockerNetwork *dockertest.Network) Configurer {
+func NewUpgradeConfigurer(t *testing.T, chainConfigs []*ChainConfig, setupTests setupFn, containerManager *containers.Manager) Configurer {
 	return &UpgradeConfigurer{
 		baseConfigurer: baseConfigurer{
-			chainConfigs:  chainConfigs,
-			dockerImages:  dockerImages,
-			dockerPool:    dockerPool,
-			dockerNetwork: dockerNetwork,
-			valResources:  make(map[string][]*dockertest.Resource),
-			setupTests:    setupTests,
-			t:             t,
+			chainConfigs:     chainConfigs,
+			containerManager: containerManager,
+			valResources:     make(map[string][]*dockertest.Resource),
+			setupTests:       setupTests,
+			t:                t,
 		},
 	}
 }
@@ -65,12 +62,12 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *ChainConfig) error {
 
 	votingPeriodDuration := time.Duration(int(chainConfig.votingPeriod) * 1000000000)
 
-	initResource, err := uc.dockerPool.RunWithOptions(
+	initResource, err := uc.containerManager.Pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainConfig.chainId),
-			Repository: uc.dockerImages.InitRepository,
-			Tag:        uc.dockerImages.InitTag,
-			NetworkID:  uc.dockerNetwork.Network.ID,
+			Repository: uc.containerManager.ImageConfig.InitRepository,
+			Tag:        uc.containerManager.ImageConfig.InitTag,
+			NetworkID:  uc.containerManager.Network.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
 				fmt.Sprintf("--chain-id=%s", chainConfig.chainId),
@@ -110,7 +107,7 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *ChainConfig) error {
 			time.Sleep(1 * time.Second)
 		}
 	}
-	if err := uc.dockerPool.Purge(initResource); err != nil {
+	if err := uc.containerManager.Pool.Purge(initResource); err != nil {
 		return err
 	}
 	return nil
@@ -176,7 +173,7 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 			var opts docker.RemoveContainerOptions
 			opts.ID = uc.valResources[curChain.ChainMeta.Id][valIdx].Container.ID
 			opts.Force = true
-			if err := uc.dockerPool.Client.RemoveContainer(opts); err != nil {
+			if err := uc.containerManager.Pool.Client.RemoveContainer(opts); err != nil {
 				return err
 			}
 			uc.t.Logf("removed container: %s", uc.valResources[curChain.ChainMeta.Id][valIdx].Container.Name[1:])
@@ -203,16 +200,16 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *ChainConfig, propHei
 
 		runOpts := &dockertest.RunOptions{
 			Name:       val.Name,
-			Repository: dockerconfig.CurrentBranchOsmoRepository,
-			Tag:        dockerconfig.CurrentBranchOsmoTag,
-			NetworkID:  uc.dockerNetwork.Network.ID,
+			Repository: containers.CurrentBranchOsmoRepository,
+			Tag:        containers.CurrentBranchOsmoTag,
+			NetworkID:  uc.containerManager.Network.Network.ID,
 			User:       "root:root",
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
 				fmt.Sprintf("%s/scripts:/osmosis", pwd),
 			},
 		}
-		resource, err := uc.dockerPool.RunWithOptions(runOpts, noRestart)
+		resource, err := uc.containerManager.Pool.RunWithOptions(runOpts, noRestart)
 		require.NoError(uc.t, err)
 
 		uc.valResources[chain.ChainMeta.Id][i] = resource

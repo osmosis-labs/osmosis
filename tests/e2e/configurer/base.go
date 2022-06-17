@@ -20,7 +20,7 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
-	dockerImages "github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/docker"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
@@ -29,14 +29,12 @@ import (
 // on its own. Instead, it is meant to be embedded
 // by composition into more concrete configurers.
 type baseConfigurer struct {
-	chainConfigs   []*ChainConfig
-	dockerImages   *dockerImages.ImageConfig
-	dockerPool     *dockertest.Pool
-	dockerNetwork  *dockertest.Network
-	valResources   map[string][]*dockertest.Resource
-	hermesResource *dockertest.Resource
-	setupTests     setupFn
-	t              *testing.T
+	chainConfigs     []*ChainConfig
+	containerManager *containers.Manager
+	valResources     map[string][]*dockertest.Resource
+	hermesResource   *dockertest.Resource
+	setupTests       setupFn
+	t                *testing.T
 }
 
 func (bc *baseConfigurer) GetChainConfig(chainIndex int) ChainConfig {
@@ -45,7 +43,7 @@ func (bc *baseConfigurer) GetChainConfig(chainIndex int) ChainConfig {
 
 func (bc *baseConfigurer) RunValidators() error {
 	for i, chainConfig := range bc.chainConfigs {
-		if err := bc.runValidators(chainConfig, bc.dockerImages.OsmosisRepository, bc.dockerImages.OsmosisTag, i*10); err != nil {
+		if err := bc.runValidators(chainConfig, bc.containerManager.OsmosisRepository, bc.containerManager.OsmosisTag, i*10); err != nil {
 			return err
 		}
 	}
@@ -71,7 +69,7 @@ func (bc *baseConfigurer) runValidators(chainConfig *ChainConfig, dockerReposito
 
 		runOpts := &dockertest.RunOptions{
 			Name:      val.Name,
-			NetworkID: bc.dockerNetwork.Network.ID,
+			NetworkID: bc.containerManager.Network.Network.ID,
 			Mounts: []string{
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
 				fmt.Sprintf("%s/scripts:/osmosis", pwd),
@@ -99,7 +97,7 @@ func (bc *baseConfigurer) runValidators(chainConfig *ChainConfig, dockerReposito
 			}
 		}
 
-		resource, err := bc.dockerPool.RunWithOptions(runOpts, noRestart)
+		resource, err := bc.containerManager.Pool.RunWithOptions(runOpts, noRestart)
 		if err != nil {
 			return err
 		}
@@ -174,12 +172,12 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 		return err
 	}
 
-	bc.hermesResource, err = bc.dockerPool.RunWithOptions(
+	bc.hermesResource, err = bc.containerManager.Pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s-%s-relayer", chainA.ChainMeta.Id, chainB.ChainMeta.Id),
-			Repository: bc.dockerImages.RelayerRepository,
-			Tag:        bc.dockerImages.RelayerTag,
-			NetworkID:  bc.dockerNetwork.Network.ID,
+			Repository: bc.containerManager.RelayerRepository,
+			Tag:        bc.containerManager.RelayerTag,
+			NetworkID:  bc.containerManager.Network.Network.ID,
 			Cmd: []string{
 				"start",
 			},
@@ -263,7 +261,7 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Ch
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	exec, err := bc.dockerPool.Client.CreateExec(docker.CreateExecOptions{
+	exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
 		Context:      ctx,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -288,7 +286,7 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Ch
 		errBuf bytes.Buffer
 	)
 
-	err = bc.dockerPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+	err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 		Context:      ctx,
 		Detach:       false,
 		OutputStream: &outBuf,
@@ -318,15 +316,15 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Ch
 func (bc *baseConfigurer) ClearResources() error {
 	bc.t.Log("tearing down e2e integration test suite...")
 
-	require.NoError(bc.t, bc.dockerPool.Purge(bc.hermesResource))
+	require.NoError(bc.t, bc.containerManager.Pool.Purge(bc.hermesResource))
 
 	for _, vr := range bc.valResources {
 		for _, r := range vr {
-			require.NoError(bc.t, bc.dockerPool.Purge(r))
+			require.NoError(bc.t, bc.containerManager.Pool.Purge(r))
 		}
 	}
 
-	require.NoError(bc.t, bc.dockerPool.RemoveNetwork(bc.dockerNetwork))
+	require.NoError(bc.t, bc.containerManager.Pool.RemoveNetwork(bc.containerManager.Network))
 
 	for _, chainConfig := range bc.chainConfigs {
 		os.RemoveAll(chainConfig.chain.ChainMeta.DataDir)

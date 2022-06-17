@@ -41,7 +41,7 @@ func (bc *baseConfigurer) CreatePool(chainId string, valIdx int, poolFile string
 	require.Eventually(
 		bc.t,
 		func() bool {
-			exec, err := bc.dockerPool.Client.CreateExec(docker.CreateExecOptions{
+			exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
@@ -52,7 +52,7 @@ func (bc *baseConfigurer) CreatePool(chainId string, valIdx int, poolFile string
 				},
 			})
 			require.NoError(bc.t, err)
-			err = bc.dockerPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 				Context:      ctx,
 				Detach:       false,
 				OutputStream: &outBuf,
@@ -85,7 +85,7 @@ func (bc *baseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, 
 	require.Eventually(
 		bc.t,
 		func() bool {
-			exec, err := bc.dockerPool.Client.CreateExec(docker.CreateExecOptions{
+			exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
@@ -108,7 +108,7 @@ func (bc *baseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, 
 			})
 			require.NoError(bc.t, err)
 
-			err = bc.dockerPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 				Context:      ctx,
 				Detach:       false,
 				OutputStream: &outBuf,
@@ -150,7 +150,7 @@ func (bc *baseConfigurer) queryBalances(containerId string, addr string) (sdk.Co
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	exec, err := bc.dockerPool.Client.CreateExec(docker.CreateExecOptions{
+	exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
 		Context:      ctx,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -167,7 +167,7 @@ func (bc *baseConfigurer) queryBalances(containerId string, addr string) (sdk.Co
 		errBuf bytes.Buffer
 	)
 
-	err = bc.dockerPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+	err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 		Context:      ctx,
 		Detach:       false,
 		OutputStream: &outBuf,
@@ -203,7 +203,7 @@ func (bc *baseConfigurer) chainStatus(containerId string) []byte {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	exec, err := bc.dockerPool.Client.CreateExec(docker.CreateExecOptions{
+	exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
 		Context:      ctx,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -220,7 +220,7 @@ func (bc *baseConfigurer) chainStatus(containerId string) []byte {
 		errBuf bytes.Buffer
 	)
 
-	err = bc.dockerPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+	err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 		Context:      ctx,
 		Detach:       false,
 		OutputStream: &outBuf,
@@ -251,7 +251,7 @@ func (bc *baseConfigurer) submitProposal(c *chain.Chain, upgradeHeight int) {
 	require.Eventually(
 		bc.t,
 		func() bool {
-			exec, err := bc.dockerPool.Client.CreateExec(docker.CreateExecOptions{
+			exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
@@ -263,7 +263,7 @@ func (bc *baseConfigurer) submitProposal(c *chain.Chain, upgradeHeight int) {
 			})
 			require.NoError(bc.t, err)
 
-			err = bc.dockerPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 				Context:      ctx,
 				Detach:       false,
 				OutputStream: &outBuf,
@@ -294,7 +294,7 @@ func (bc *baseConfigurer) depositProposal(c *chain.Chain) {
 	require.Eventually(
 		bc.t,
 		func() bool {
-			exec, err := bc.dockerPool.Client.CreateExec(docker.CreateExecOptions{
+			exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
@@ -306,7 +306,7 @@ func (bc *baseConfigurer) depositProposal(c *chain.Chain) {
 			})
 			require.NoError(bc.t, err)
 
-			err = bc.dockerPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 				Context:      ctx,
 				Detach:       false,
 				OutputStream: &outBuf,
@@ -342,7 +342,7 @@ func (bc *baseConfigurer) voteProposal(chainConfig *ChainConfig) {
 		require.Eventually(
 			bc.t,
 			func() bool {
-				exec, err := bc.dockerPool.Client.CreateExec(docker.CreateExecOptions{
+				exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
 					Context:      ctx,
 					AttachStdout: true,
 					AttachStderr: true,
@@ -354,7 +354,7 @@ func (bc *baseConfigurer) voteProposal(chainConfig *ChainConfig) {
 				})
 				require.NoError(bc.t, err)
 
-				err = bc.dockerPool.Client.StartExec(exec.ID, docker.StartExecOptions{
+				err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 					Context:      ctx,
 					Detach:       false,
 					OutputStream: &outBuf,

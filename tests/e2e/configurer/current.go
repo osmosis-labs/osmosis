@@ -8,7 +8,7 @@ import (
 	"github.com/ory/dockertest/v3"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
-	dockerImages "github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/docker"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
 )
 
 type CurrentBranchConfigurer struct {
@@ -17,16 +17,14 @@ type CurrentBranchConfigurer struct {
 
 var _ Configurer = (*CurrentBranchConfigurer)(nil)
 
-func NewCurrentBranchConfigurer(t *testing.T, chainConfigs []*ChainConfig, setupTests setupFn, dockerImages *dockerImages.ImageConfig, dockerPool *dockertest.Pool, dockerNetwork *dockertest.Network) Configurer {
+func NewCurrentBranchConfigurer(t *testing.T, chainConfigs []*ChainConfig, setupTests setupFn, containerManager *containers.Manager) Configurer {
 	return &CurrentBranchConfigurer{
 		baseConfigurer: baseConfigurer{
-			chainConfigs:  chainConfigs,
-			dockerImages:  dockerImages,
-			dockerPool:    dockerPool,
-			dockerNetwork: dockerNetwork,
-			setupTests:    setupTests,
-			valResources:  make(map[string][]*dockertest.Resource),
-			t:             t,
+			chainConfigs:     chainConfigs,
+			containerManager: containerManager,
+			setupTests:       setupTests,
+			valResources:     make(map[string][]*dockertest.Resource),
+			t:                t,
 		},
 	}
 }
