@@ -23,7 +23,7 @@ type UpgradeConfigurer struct {
 
 var _ Configurer = (*UpgradeConfigurer)(nil)
 
-func NewUpgradeConfigurer(t *testing.T, chainConfigs []*chain.ChainConfig, setupTests setupFn, containerManager *containers.Manager) Configurer {
+func NewUpgradeConfigurer(t *testing.T, chainConfigs []*chain.Config, setupTests setupFn, containerManager *containers.Manager) Configurer {
 	return &UpgradeConfigurer{
 		baseConfigurer: baseConfigurer{
 			chainConfigs:     chainConfigs,
@@ -43,7 +43,7 @@ func (uc *UpgradeConfigurer) ConfigureChains() error {
 	return nil
 }
 
-func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.ChainConfig) error {
+func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	uc.t.Logf("starting upgrade e2e infrastructure for chain-id: %s", chainConfig.ChainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 	if err != nil {
@@ -187,7 +187,7 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 	return nil
 }
 
-func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.ChainConfig, propHeight int) {
+func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int) {
 	// upgrade containers to the locally compiled daemon
 	chain := chainConfig.Chain
 	uc.t.Logf("starting upgrade for chain-id: %s...", chain.ChainMeta.Id)

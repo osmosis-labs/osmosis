@@ -324,7 +324,7 @@ func (bc *baseConfigurer) depositProposal(c *chaininit.Chain) {
 	bc.t.Log("successfully deposited to proposal")
 }
 
-func (bc *baseConfigurer) voteProposal(chainConfig *chain.ChainConfig) {
+func (bc *baseConfigurer) voteProposal(chainConfig *chain.Config) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	chain := chainConfig.Chain

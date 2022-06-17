@@ -16,7 +16,7 @@ type CurrentBranchConfigurer struct {
 
 var _ Configurer = (*CurrentBranchConfigurer)(nil)
 
-func NewCurrentBranchConfigurer(t *testing.T, chainConfigs []*chain.ChainConfig, setupTests setupFn, containerManager *containers.Manager) Configurer {
+func NewCurrentBranchConfigurer(t *testing.T, chainConfigs []*chain.Config, setupTests setupFn, containerManager *containers.Manager) Configurer {
 	return &CurrentBranchConfigurer{
 		baseConfigurer: baseConfigurer{
 			chainConfigs:     chainConfigs,
@@ -36,7 +36,7 @@ func (cb *CurrentBranchConfigurer) ConfigureChains() error {
 	return nil
 }
 
-func (cb *CurrentBranchConfigurer) ConfigureChain(chainConfig *chain.ChainConfig) error {
+func (cb *CurrentBranchConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	cb.t.Logf("starting e2e infrastructure from current branch for chain-id: %s", chainConfig.ChainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 	if err != nil {

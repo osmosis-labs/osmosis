@@ -34,12 +34,12 @@ func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
 	return docker, nil
 }
 
-func (m *Manager) RunHermesResource(chainA, chainB *chain.ChainConfig, hermesCfgPath string) (*dockertest.Resource, error) {
-	chainAID := chainA.ChainId
-	chainBID := chainB.ChainId
+func (m *Manager) RunHermesResource(chainConfigA, chainConfigB *chain.Config, hermesCfgPath string) (*dockertest.Resource, error) {
+	chainAID := chainConfigA.ChainId
+	chainBID := chainConfigB.ChainId
 
-	osmoAValMnemonic := chainA.Chain.Validators[0].Mnemonic
-	osmoBValMnemonic := chainB.Chain.Validators[0].Mnemonic
+	osmoAValMnemonic := chainConfigA.Chain.Validators[0].Mnemonic
+	osmoBValMnemonic := chainConfigB.Chain.Validators[0].Mnemonic
 
 	var err error
 	m.hermesResource, err = m.Pool.RunWithOptions(

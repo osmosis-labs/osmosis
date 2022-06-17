@@ -30,13 +30,13 @@ import (
 // on its own. Instead, it is meant to be embedded
 // by composition into more concrete configurers.
 type baseConfigurer struct {
-	chainConfigs     []*chain.ChainConfig
+	chainConfigs     []*chain.Config
 	containerManager *containers.Manager
 	setupTests       setupFn
 	t                *testing.T
 }
 
-func (bc *baseConfigurer) GetChainConfig(chainIndex int) chain.ChainConfig {
+func (bc *baseConfigurer) GetChainConfig(chainIndex int) chain.Config {
 	return *bc.chainConfigs[chainIndex]
 }
 
@@ -49,7 +49,7 @@ func (bc *baseConfigurer) RunValidators() error {
 	return nil
 }
 
-func (bc *baseConfigurer) runValidators(chainConfig *chain.ChainConfig, dockerRepository, dockerTag string, portOffset int) error {
+func (bc *baseConfigurer) runValidators(chainConfig *chain.Config, dockerRepository, dockerTag string, portOffset int) error {
 	chain := chainConfig.Chain
 	bc.t.Logf("starting %s validator containers...", chain.ChainMeta.Id)
 	bc.containerManager.ValResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.SkipRunValidatorIndexes))
@@ -147,7 +147,7 @@ func (bc *baseConfigurer) RunIBC() error {
 	return nil
 }
 
-func (bc *baseConfigurer) runIBCRelayer(chainA *chain.ChainConfig, chainB *chain.ChainConfig) error {
+func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
 	bc.t.Log("starting Hermes relayer container...")
 
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-hermes-")
@@ -169,7 +169,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.ChainConfig, chainB *chain
 		return err
 	}
 
-	hermesResource, err := bc.containerManager.RunHermesResource(chainA, chainB, hermesCfgPath)
+	hermesResource, err := bc.containerManager.RunHermesResource(chainConfigA, chainConfigB, hermesCfgPath)
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.ChainConfig, chainB *chain
 	time.Sleep(10 * time.Second)
 
 	// create the client, connection and channel between the two Osmosis chains
-	return bc.connectIBCChains(chainA.Chain, chainB.Chain)
+	return bc.connectIBCChains(chainConfigA.Chain, chainConfigB.Chain)
 }
 
 func (bc *baseConfigurer) connectIBCChains(chainA *chaininit.Chain, chainB *chaininit.Chain) error {

@@ -16,7 +16,7 @@ type Configurer interface {
 
 	ClearResources() error
 
-	GetChainConfig(chainIndex int) chain.ChainConfig
+	GetChainConfig(chainIndex int) chain.Config
 
 	RunSetup() error
 
@@ -104,7 +104,7 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 		// skip none - configure two chains via Docker
 		// to utilize the older version of osmosis to upgrade from
 		return NewUpgradeConfigurer(t,
-			[]*chain.ChainConfig{
+			[]*chain.Config{
 				{
 					ChainId:         chaininit.ChainAID,
 					ValidatorConfig: validatorConfigsChainA,
@@ -123,7 +123,7 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 	} else if isIBCEnabled {
 		// configure two chains from current Git branch
 		return NewCurrentBranchConfigurer(t,
-			[]*chain.ChainConfig{
+			[]*chain.Config{
 				{
 					ChainId:         chaininit.ChainAID,
 					ValidatorConfig: validatorConfigsChainA,
@@ -146,7 +146,7 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 	} else {
 		// configure one chain from current Git branch
 		return NewCurrentBranchConfigurer(t,
-			[]*chain.ChainConfig{
+			[]*chain.Config{
 				{
 					ChainId:         chaininit.ChainAID,
 					ValidatorConfig: validatorConfigsChainA,

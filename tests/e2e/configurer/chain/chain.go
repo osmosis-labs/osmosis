@@ -2,7 +2,7 @@ package chain
 
 import "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 
-type ChainConfig struct {
+type Config struct {
 	ChainId         string
 	ValidatorConfig []*chain.ValidatorConfig
 	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, and a buffer.
@@ -16,6 +16,6 @@ type ChainConfig struct {
 	Chain                   *chain.Chain
 }
 
-func (cc ChainConfig) GetChain() *chain.Chain {
+func (cc Config) GetChain() *chain.Chain {
 	return cc.Chain
 }
