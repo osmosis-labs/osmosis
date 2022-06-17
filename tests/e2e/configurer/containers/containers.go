@@ -10,11 +10,13 @@ type Manager struct {
 	Network *dockertest.Network
 
 	HermesResource *dockertest.Resource
+	ValResources   map[string][]*dockertest.Resource
 }
 
 func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
 	docker = &Manager{
-		ImageConfig: NewImageConfig(isUpgradeEnabled),
+		ImageConfig:  NewImageConfig(isUpgradeEnabled),
+		ValResources: make(map[string][]*dockertest.Resource),
 	}
 	docker.Pool, err = dockertest.NewPool("")
 	if err != nil {

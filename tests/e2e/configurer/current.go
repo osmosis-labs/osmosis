@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/dockertest/v3"
-
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
 )
@@ -23,7 +21,6 @@ func NewCurrentBranchConfigurer(t *testing.T, chainConfigs []*ChainConfig, setup
 			chainConfigs:     chainConfigs,
 			containerManager: containerManager,
 			setupTests:       setupTests,
-			valResources:     make(map[string][]*dockertest.Resource),
 			t:                t,
 		},
 	}

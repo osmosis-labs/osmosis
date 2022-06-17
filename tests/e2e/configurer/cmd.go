@@ -30,7 +30,7 @@ func (bc *baseConfigurer) CreatePool(chainId string, valIdx int, poolFile string
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	containerId := bc.valResources[chainId][valIdx].Container.ID
+	containerId := bc.containerManager.ValResources[chainId][valIdx].Container.ID
 
 	bc.t.Logf("running create pool on chain id: %s with container: %s", chainId, containerId)
 	var (
@@ -74,7 +74,7 @@ func (bc *baseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, 
 	defer cancel()
 
 	bc.t.Logf("sending %s from %s to %s (%s)", token, srcChain.ChainMeta.Id, dstChain.ChainMeta.Id, recipient)
-	balancesBPre, err := bc.queryBalances(bc.valResources[dstChain.ChainMeta.Id][0].Container.ID, recipient)
+	balancesBPre, err := bc.queryBalances(bc.containerManager.ValResources[dstChain.ChainMeta.Id][0].Container.ID, recipient)
 	require.NoError(bc.t, err)
 
 	var (
@@ -125,7 +125,7 @@ func (bc *baseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, 
 	require.Eventually(
 		bc.t,
 		func() bool {
-			balancesBPost, err := bc.queryBalances(bc.valResources[dstChain.ChainMeta.Id][0].Container.ID, recipient)
+			balancesBPost, err := bc.queryBalances(bc.containerManager.ValResources[dstChain.ChainMeta.Id][0].Container.ID, recipient)
 			require.NoError(bc.t, err)
 			ibcCoin := balancesBPost.Sub(balancesBPre)
 			if ibcCoin.Len() == 1 {
@@ -241,7 +241,7 @@ func (bc *baseConfigurer) submitProposal(c *chain.Chain, upgradeHeight int) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	bc.t.Logf("submitting upgrade proposal on %s container: %s", bc.valResources[c.ChainMeta.Id][0].Container.Name[1:], bc.valResources[c.ChainMeta.Id][0].Container.ID)
+	bc.t.Logf("submitting upgrade proposal on %s container: %s", bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.Name[1:], bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.ID)
 
 	var (
 		outBuf bytes.Buffer
@@ -255,7 +255,7 @@ func (bc *baseConfigurer) submitProposal(c *chain.Chain, upgradeHeight int) {
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    bc.valResources[c.ChainMeta.Id][0].Container.ID,
+				Container:    bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.ID,
 				User:         "root",
 				Cmd: []string{
 					"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", UpgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", UpgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json",
@@ -284,7 +284,7 @@ func (bc *baseConfigurer) depositProposal(c *chain.Chain) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	bc.t.Logf("depositing to upgrade proposal from %s container: %s", bc.valResources[c.ChainMeta.Id][0].Container.Name[1:], bc.valResources[c.ChainMeta.Id][0].Container.ID)
+	bc.t.Logf("depositing to upgrade proposal from %s container: %s", bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.Name[1:], bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.ID)
 
 	var (
 		outBuf bytes.Buffer
@@ -298,7 +298,7 @@ func (bc *baseConfigurer) depositProposal(c *chain.Chain) {
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    bc.valResources[c.ChainMeta.Id][0].Container.ID,
+				Container:    bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.ID,
 				User:         "root",
 				Cmd: []string{
 					"osmosisd", "tx", "gov", "deposit", "1", "10000000stake", "--from=val", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
@@ -346,7 +346,7 @@ func (bc *baseConfigurer) voteProposal(chainConfig *ChainConfig) {
 					Context:      ctx,
 					AttachStdout: true,
 					AttachStderr: true,
-					Container:    bc.valResources[chain.ChainMeta.Id][i].Container.ID,
+					Container:    bc.containerManager.ValResources[chain.ChainMeta.Id][i].Container.ID,
 					User:         "root",
 					Cmd: []string{
 						"osmosisd", "tx", "gov", "vote", "1", "yes", "--from=val", fmt.Sprintf("--chain-id=%s", chain.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
@@ -368,6 +368,6 @@ func (bc *baseConfigurer) voteProposal(chainConfig *ChainConfig) {
 			"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 		)
 
-		bc.t.Logf("successfully voted for proposal from %s container: %s", bc.valResources[chain.ChainMeta.Id][i].Container.Name[1:], bc.valResources[chain.ChainMeta.Id][i].Container.ID)
+		bc.t.Logf("successfully voted for proposal from %s container: %s", bc.containerManager.ValResources[chain.ChainMeta.Id][i].Container.Name[1:], bc.containerManager.ValResources[chain.ChainMeta.Id][i].Container.ID)
 	}
 }

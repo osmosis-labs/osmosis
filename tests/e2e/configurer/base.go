@@ -31,7 +31,6 @@ import (
 type baseConfigurer struct {
 	chainConfigs     []*ChainConfig
 	containerManager *containers.Manager
-	valResources     map[string][]*dockertest.Resource
 	setupTests       setupFn
 	t                *testing.T
 }
@@ -52,7 +51,7 @@ func (bc *baseConfigurer) RunValidators() error {
 func (bc *baseConfigurer) runValidators(chainConfig *ChainConfig, dockerRepository, dockerTag string, portOffset int) error {
 	chain := chainConfig.chain
 	bc.t.Logf("starting %s validator containers...", chain.ChainMeta.Id)
-	bc.valResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.skipRunValidatorIndexes))
+	bc.containerManager.ValResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.skipRunValidatorIndexes))
 	pwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -101,7 +100,7 @@ func (bc *baseConfigurer) runValidators(chainConfig *ChainConfig, dockerReposito
 			return err
 		}
 
-		bc.valResources[chain.ChainMeta.Id][i] = resource
+		bc.containerManager.ValResources[chain.ChainMeta.Id][i] = resource
 		bc.t.Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	}
 
@@ -195,8 +194,8 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", chainB.ChainMeta.Id),
 				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAVal.Mnemonic),
 				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBVal.Mnemonic),
-				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", bc.valResources[chainA.ChainMeta.Id][0].Container.Name[1:]),
-				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", bc.valResources[chainB.ChainMeta.Id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", bc.containerManager.ValResources[chainA.ChainMeta.Id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", bc.containerManager.ValResources[chainB.ChainMeta.Id][0].Container.Name[1:]),
 			},
 			Entrypoint: []string{
 				"sh",
@@ -317,7 +316,7 @@ func (bc *baseConfigurer) ClearResources() error {
 
 	require.NoError(bc.t, bc.containerManager.Pool.Purge(bc.containerManager.HermesResource))
 
-	for _, vr := range bc.valResources {
+	for _, vr := range bc.containerManager.ValResources {
 		for _, r := range vr {
 			require.NoError(bc.t, bc.containerManager.Pool.Purge(r))
 		}
