@@ -19,7 +19,8 @@ import (
 	"github.com/stretchr/testify/require"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
@@ -29,13 +30,13 @@ import (
 // on its own. Instead, it is meant to be embedded
 // by composition into more concrete configurers.
 type baseConfigurer struct {
-	chainConfigs     []*ChainConfig
+	chainConfigs     []*chain.ChainConfig
 	containerManager *containers.Manager
 	setupTests       setupFn
 	t                *testing.T
 }
 
-func (bc *baseConfigurer) GetChainConfig(chainIndex int) ChainConfig {
+func (bc *baseConfigurer) GetChainConfig(chainIndex int) chain.ChainConfig {
 	return *bc.chainConfigs[chainIndex]
 }
 
@@ -48,10 +49,10 @@ func (bc *baseConfigurer) RunValidators() error {
 	return nil
 }
 
-func (bc *baseConfigurer) runValidators(chainConfig *ChainConfig, dockerRepository, dockerTag string, portOffset int) error {
-	chain := chainConfig.chain
+func (bc *baseConfigurer) runValidators(chainConfig *chain.ChainConfig, dockerRepository, dockerTag string, portOffset int) error {
+	chain := chainConfig.Chain
 	bc.t.Logf("starting %s validator containers...", chain.ChainMeta.Id)
-	bc.containerManager.ValResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.skipRunValidatorIndexes))
+	bc.containerManager.ValResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.SkipRunValidatorIndexes))
 	pwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -60,7 +61,7 @@ func (bc *baseConfigurer) runValidators(chainConfig *ChainConfig, dockerReposito
 		// Skip some validators from running during set up.
 		// This is needed for testing functionality like
 		// state-sunc where we might want to start some validators during tests.
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+		if _, ok := chainConfig.SkipRunValidatorIndexes[i]; ok {
 			bc.t.Logf("skipping %s validator with index %d from running...", val.Name, i)
 			continue
 		}
@@ -138,7 +139,7 @@ func (bc *baseConfigurer) RunIBC() error {
 	// Run a relayer between every possible pair of chains.
 	for i := 0; i < len(bc.chainConfigs); i++ {
 		for j := i + 1; j < len(bc.chainConfigs); j++ {
-			if err := bc.runIBCRelayer(bc.chainConfigs[i].chain, bc.chainConfigs[j].chain); err != nil {
+			if err := bc.runIBCRelayer(bc.chainConfigs[i].Chain, bc.chainConfigs[j].Chain); err != nil {
 				return err
 			}
 		}
@@ -146,7 +147,7 @@ func (bc *baseConfigurer) RunIBC() error {
 	return nil
 }
 
-func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain) error {
+func (bc *baseConfigurer) runIBCRelayer(chainA *chaininit.Chain, chainB *chaininit.Chain) error {
 	bc.t.Log("starting Hermes relayer container...")
 
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-hermes-")
@@ -220,7 +221,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 	return bc.connectIBCChains(chainA, chainB)
 }
 
-func (bc *baseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Chain) error {
+func (bc *baseConfigurer) connectIBCChains(chainA *chaininit.Chain, chainB *chaininit.Chain) error {
 	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -286,7 +287,7 @@ func (bc *baseConfigurer) ClearResources() error {
 	}
 
 	for _, chainConfig := range bc.chainConfigs {
-		os.RemoveAll(chainConfig.chain.ChainMeta.DataDir)
+		os.RemoveAll(chainConfig.Chain.ChainMeta.DataDir)
 	}
 	return nil
 }

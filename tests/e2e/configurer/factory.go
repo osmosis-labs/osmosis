@@ -6,7 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
 )
 
@@ -15,7 +16,7 @@ type Configurer interface {
 
 	ClearResources() error
 
-	GetChainConfig(chainIndex int) ChainConfig
+	GetChainConfig(chainIndex int) chain.ChainConfig
 
 	RunSetup() error
 
@@ -23,14 +24,14 @@ type Configurer interface {
 
 	RunIBC() error
 
-	SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, recipient string, token sdk.Coin)
+	SendIBC(srcChain *chaininit.Chain, dstChain *chaininit.Chain, recipient string, token sdk.Coin)
 
 	CreatePool(chainId string, valIdx int, poolFile string)
 }
 
 var (
 	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
-	validatorConfigsChainA = []*chain.ValidatorConfig{
+	validatorConfigsChainA = []*chaininit.ValidatorConfig{
 		{
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
@@ -60,7 +61,7 @@ var (
 			SnapshotKeepRecent: 0,
 		},
 	}
-	validatorConfigsChainB = []*chain.ValidatorConfig{
+	validatorConfigsChainB = []*chaininit.ValidatorConfig{
 		{
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
@@ -103,17 +104,17 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 		// skip none - configure two chains via Docker
 		// to utilize the older version of osmosis to upgrade from
 		return NewUpgradeConfigurer(t,
-			[]*ChainConfig{
+			[]*chain.ChainConfig{
 				{
-					chainId:         chain.ChainAID,
-					validatorConfig: validatorConfigsChainA,
-					skipRunValidatorIndexes: map[int]struct{}{
+					ChainId:         chaininit.ChainAID,
+					ValidatorConfig: validatorConfigsChainA,
+					SkipRunValidatorIndexes: map[int]struct{}{
 						3: {}, // skip validator at index 3
 					},
 				},
 				{
-					chainId:         chain.ChainBID,
-					validatorConfig: validatorConfigsChainB,
+					ChainId:         chaininit.ChainBID,
+					ValidatorConfig: validatorConfigsChainB,
 				},
 			},
 			withUpgrade(withIBC(baseSetup)), // base set up with IBC and upgrade
@@ -122,17 +123,17 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 	} else if isIBCEnabled {
 		// configure two chains from current Git branch
 		return NewCurrentBranchConfigurer(t,
-			[]*ChainConfig{
+			[]*chain.ChainConfig{
 				{
-					chainId:         chain.ChainAID,
-					validatorConfig: validatorConfigsChainA,
-					skipRunValidatorIndexes: map[int]struct{}{
+					ChainId:         chaininit.ChainAID,
+					ValidatorConfig: validatorConfigsChainA,
+					SkipRunValidatorIndexes: map[int]struct{}{
 						3: {}, // skip validator at index 3
 					},
 				},
 				{
-					chainId:         chain.ChainBID,
-					validatorConfig: validatorConfigsChainB,
+					ChainId:         chaininit.ChainBID,
+					ValidatorConfig: validatorConfigsChainB,
 				},
 			},
 			withIBC(baseSetup), // base set up with IBC
@@ -145,10 +146,10 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 	} else {
 		// configure one chain from current Git branch
 		return NewCurrentBranchConfigurer(t,
-			[]*ChainConfig{
+			[]*chain.ChainConfig{
 				{
-					chainId:         chain.ChainAID,
-					validatorConfig: validatorConfigsChainA,
+					ChainId:         chaininit.ChainAID,
+					ValidatorConfig: validatorConfigsChainA,
 				},
 			},
 			baseSetup, // base set up only

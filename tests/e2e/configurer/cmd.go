@@ -14,7 +14,8 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
@@ -69,7 +70,7 @@ func (bc *baseConfigurer) CreatePool(chainId string, valIdx int, poolFile string
 	bc.t.Logf("successfully created pool on chain id: %s with container: %s", chainId, containerId)
 }
 
-func (bc *baseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, recipient string, token sdk.Coin) {
+func (bc *baseConfigurer) SendIBC(srcChain *chaininit.Chain, dstChain *chaininit.Chain, recipient string, token sdk.Coin) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -131,7 +132,7 @@ func (bc *baseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, 
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesBPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				tokenPost := balancesBPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				resPre := chain.OsmoToken.Amount
+				resPre := chaininit.OsmoToken.Amount
 				resPost := tokenPost.Sub(tokenPre)
 				return resPost.Uint64() == resPre.Uint64()
 			} else {
@@ -236,7 +237,7 @@ func (bc *baseConfigurer) chainStatus(containerId string) []byte {
 	return errBufByte
 }
 
-func (bc *baseConfigurer) submitProposal(c *chain.Chain, upgradeHeight int) {
+func (bc *baseConfigurer) submitProposal(c *chaininit.Chain, upgradeHeight int) {
 	upgradeHeightStr := strconv.Itoa(upgradeHeight)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -280,7 +281,7 @@ func (bc *baseConfigurer) submitProposal(c *chain.Chain, upgradeHeight int) {
 	bc.t.Log("successfully submitted proposal")
 }
 
-func (bc *baseConfigurer) depositProposal(c *chain.Chain) {
+func (bc *baseConfigurer) depositProposal(c *chaininit.Chain) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -323,14 +324,14 @@ func (bc *baseConfigurer) depositProposal(c *chain.Chain) {
 	bc.t.Log("successfully deposited to proposal")
 }
 
-func (bc *baseConfigurer) voteProposal(chainConfig *ChainConfig) {
+func (bc *baseConfigurer) voteProposal(chainConfig *chain.ChainConfig) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	chain := chainConfig.chain
+	chain := chainConfig.Chain
 
 	bc.t.Logf("voting for upgrade proposal for chain-id: %s", chain.ChainMeta.Id)
 	for i := range chain.Validators {
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+		if _, ok := chainConfig.SkipRunValidatorIndexes[i]; ok {
 			continue
 		}
 

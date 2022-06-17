@@ -5,7 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
 )
 
@@ -15,7 +16,7 @@ type CurrentBranchConfigurer struct {
 
 var _ Configurer = (*CurrentBranchConfigurer)(nil)
 
-func NewCurrentBranchConfigurer(t *testing.T, chainConfigs []*ChainConfig, setupTests setupFn, containerManager *containers.Manager) Configurer {
+func NewCurrentBranchConfigurer(t *testing.T, chainConfigs []*chain.ChainConfig, setupTests setupFn, containerManager *containers.Manager) Configurer {
 	return &CurrentBranchConfigurer{
 		baseConfigurer: baseConfigurer{
 			chainConfigs:     chainConfigs,
@@ -35,18 +36,18 @@ func (cb *CurrentBranchConfigurer) ConfigureChains() error {
 	return nil
 }
 
-func (cb *CurrentBranchConfigurer) ConfigureChain(chainConfig *ChainConfig) error {
-	cb.t.Logf("starting e2e infrastructure from current branch for chain-id: %s", chainConfig.chainId)
+func (cb *CurrentBranchConfigurer) ConfigureChain(chainConfig *chain.ChainConfig) error {
+	cb.t.Logf("starting e2e infrastructure from current branch for chain-id: %s", chainConfig.ChainId)
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
 	if err != nil {
 		return err
 	}
-	cb.t.Logf("temp directory for chain-id %v: %v", chainConfig.chainId, tmpDir)
-	initializedChain, err := chain.Init(chainConfig.chainId, tmpDir, chainConfig.validatorConfig, time.Duration(chainConfig.votingPeriod))
+	cb.t.Logf("temp directory for chain-id %v: %v", chainConfig.ChainId, tmpDir)
+	initializedChain, err := chaininit.Init(chainConfig.ChainId, tmpDir, chainConfig.ValidatorConfig, time.Duration(chainConfig.VotingPeriod))
 	if err != nil {
 		return err
 	}
-	chainConfig.chain = initializedChain
+	chainConfig.Chain = initializedChain
 	return nil
 }
 
