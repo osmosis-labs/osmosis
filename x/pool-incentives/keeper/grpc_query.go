@@ -34,8 +34,10 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 	lockableDurations := q.Keeper.GetLockableDurations(sdkCtx)
 	distrInfo := q.Keeper.GetDistrInfo(sdkCtx)
 	gaugeIdsWithDuration := make([]*types.QueryGaugeIdsResponse_GaugeIdWithDuration, len(lockableDurations))
+
 	totalWeightDec := distrInfo.TotalWeight.ToDec()
 	incentivePercentage := sdk.NewDec(0)
+	percentMultiplier := sdk.NewInt(100)
 
 	for i, duration := range lockableDurations {
 		gaugeId, err := q.Keeper.GetPoolGaugeId(sdkCtx, req.PoolId, duration)
@@ -46,7 +48,7 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 		for _, record := range distrInfo.Records {
 			if record.GaugeId == gaugeId {
 				// Pool incentive % = (gauge_id_weight / sum_of_all_pool_gauge_weight) * 100
-				incentivePercentage = record.Weight.ToDec().Quo(totalWeightDec).MulInt(sdk.NewInt(100))
+				incentivePercentage = record.Weight.ToDec().Quo(totalWeightDec).MulInt(percentMultiplier)
 			}
 		}
 
@@ -55,9 +57,7 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 			Duration:                 duration,
 			GaugeIncentivePercentage: incentivePercentage.String(),
 		}
-
 	}
-
 	return &types.QueryGaugeIdsResponse{GaugeIdsWithDuration: gaugeIdsWithDuration}, nil
 }
 
