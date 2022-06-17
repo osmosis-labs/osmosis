@@ -8,6 +8,8 @@ type Manager struct {
 	ImageConfig
 	Pool    *dockertest.Pool
 	Network *dockertest.Network
+
+	HermesResource *dockertest.Resource
 }
 
 func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {

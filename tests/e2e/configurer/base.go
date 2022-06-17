@@ -32,7 +32,6 @@ type baseConfigurer struct {
 	chainConfigs     []*ChainConfig
 	containerManager *containers.Manager
 	valResources     map[string][]*dockertest.Resource
-	hermesResource   *dockertest.Resource
 	setupTests       setupFn
 	t                *testing.T
 }
@@ -172,7 +171,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 		return err
 	}
 
-	bc.hermesResource, err = bc.containerManager.Pool.RunWithOptions(
+	bc.containerManager.HermesResource, err = bc.containerManager.Pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s-%s-relayer", chainA.ChainMeta.Id, chainB.ChainMeta.Id),
 			Repository: bc.containerManager.RelayerRepository,
@@ -211,7 +210,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 		return err
 	}
 
-	endpoint := fmt.Sprintf("http://%s/state", bc.hermesResource.GetHostPort("3031/tcp"))
+	endpoint := fmt.Sprintf("http://%s/state", bc.containerManager.HermesResource.GetHostPort("3031/tcp"))
 
 	require.Eventually(bc.t, func() bool {
 		resp, err := http.Get(endpoint)
@@ -245,7 +244,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain
 		time.Second,
 		"hermes relayer not healthy")
 
-	bc.t.Logf("started Hermes relayer container: %s", bc.hermesResource.Container.ID)
+	bc.t.Logf("started Hermes relayer container: %s", bc.containerManager.HermesResource.Container.ID)
 
 	// XXX: Give time to both networks to start, otherwise we might see gRPC
 	// transport errors.
@@ -265,7 +264,7 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Ch
 		Context:      ctx,
 		AttachStdout: true,
 		AttachStderr: true,
-		Container:    bc.hermesResource.Container.ID,
+		Container:    bc.containerManager.HermesResource.Container.ID,
 		User:         "root",
 		Cmd: []string{
 			"hermes",
@@ -316,7 +315,7 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Chain, chainB *chain.Ch
 func (bc *baseConfigurer) ClearResources() error {
 	bc.t.Log("tearing down e2e integration test suite...")
 
-	require.NoError(bc.t, bc.containerManager.Pool.Purge(bc.hermesResource))
+	require.NoError(bc.t, bc.containerManager.Pool.Purge(bc.containerManager.HermesResource))
 
 	for _, vr := range bc.valResources {
 		for _, r := range vr {

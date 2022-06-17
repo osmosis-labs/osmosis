@@ -89,7 +89,7 @@ func (bc *baseConfigurer) SendIBC(srcChain *chain.Chain, dstChain *chain.Chain, 
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    bc.hermesResource.Container.ID,
+				Container:    bc.containerManager.HermesResource.Container.ID,
 				User:         "root",
 				Cmd: []string{
 					"hermes",
