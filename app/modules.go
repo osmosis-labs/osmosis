@@ -244,7 +244,7 @@ func simulationModules(
 
 	simModules := []module.AppModuleSimulation{}
 	for _, appModule := range modules {
-		// for every module, see if we override it. If so, use override.
+		// For every module, see if we override it. If so, use override.
 		// Else, if we can cast the app module into a simulation module add it.
 		// otherwise no simulation module.
 		if simModule, ok := overrideModules[appModule.Name()]; ok {
