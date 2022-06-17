@@ -1100,15 +1100,16 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	swapFeeDec := sdk.ZeroDec()
 	exitFeeDec := sdk.ZeroDec()
 
-	inverse := func(tokenDenomIn, tokenDenomOut, percentRatio int64) bool {
+	inverse := func(tokenDenomIn, tokenDenomOut, percentRatio uint64) bool {
 		percentRatio = percentRatio%100 + 1
+
 		// first create pool
 		poolAssetOut := balancer.PoolAsset{
-			Token:  sdk.NewInt64Coin(denomOut, tokenDenomOut),
+			Token:  sdk.NewCoin(denomOut, sdk.NewIntFromUint64(tokenDenomIn)),
 			Weight: sdk.NewInt(5),
 		}
 		poolAssetIn := balancer.PoolAsset{
-			Token:  sdk.NewInt64Coin(denomIn, tokenDenomIn),
+			Token:  sdk.NewCoin(denomIn, sdk.NewIntFromUint64(tokenDenomOut)),
 			Weight: sdk.NewInt(5),
 		}
 
@@ -1117,9 +1118,10 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		originalCoins, originalShares := pool.GetTotalPoolLiquidity(sdk.Context{}), pool.GetTotalShares()
 
 		tokensIn := sdk.Coins{
-			sdk.NewCoin(denomIn, sdk.NewInt(tokenDenomIn).MulRaw(percentRatio).QuoRaw(100)),
-			sdk.NewCoin(denomOut, sdk.NewInt(tokenDenomOut).MulRaw(percentRatio).QuoRaw(100)),
+			sdk.NewCoin(denomIn, sdk.NewIntFromUint64(tokenDenomIn).MulRaw(int64(percentRatio)).QuoRaw(100)),
+			sdk.NewCoin(denomOut, sdk.NewIntFromUint64(tokenDenomOut).MulRaw(int64(percentRatio)).QuoRaw(100)),
 		}
+
 		numShares, err := pool.JoinPool(suite.Ctx, tokensIn, swapFeeDec)
 		suite.Require().NoError(err)
 
@@ -1129,6 +1131,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 		if originalCoins.IsAnyGT(pool.GetTotalPoolLiquidity(sdk.Context{})) || !originalShares.Equal(pool.GetTotalShares()) {
 			return false
 		}
+
 		return true
 	}
 	err := quick.Check(inverse, nil)
