@@ -4,12 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Sybil Resistant Fee Swap Msg defines a simple interface for getting
+// SybilResistantFee Swap Msg defines an interface for getting
 // - poolIds on a swap msg route
 // - token to apply the sybil resistant fees to
 type SybilResistantFee interface {
-	TokenDenomsOnPath() []string
-	PoolIdOnPath() []uint64
+	GetTokenDenomsOnPath() []string
+	GetPoolIdOnPath() []uint64
 	GetTokenToFee() sdk.Coin
 }
 
@@ -19,12 +19,15 @@ var (
 )
 
 // MsgSwapExactAmountOut implements SybilResistantFee
+func (msg MsgSwapExactAmountOut) GetTokenDenomsOnPath() []string {
+	return msg.TokenDenomsOnPath()
+}
 
 func (msg MsgSwapExactAmountOut) GetTokenToFee() sdk.Coin {
 	return msg.GetTokenOut()
 }
 
-func (msg MsgSwapExactAmountOut) PoolIdOnPath() []uint64 {
+func (msg MsgSwapExactAmountOut) GetPoolIdOnPath() []uint64 {
 	ids := make([]uint64, 0, len(msg.Routes))
 	for i := 0; i < len(msg.Routes); i++ {
 		ids = append(ids, msg.Routes[i].PoolId)
@@ -38,10 +41,14 @@ func (msg MsgSwapExactAmountIn) GetTokenToFee() sdk.Coin {
 	return msg.GetTokenIn()
 }
 
-func (msg MsgSwapExactAmountIn) PoolIdOnPath() []uint64 {
+func (msg MsgSwapExactAmountIn) GetPoolIdOnPath() []uint64 {
 	ids := make([]uint64, 0, len(msg.Routes))
 	for i := 0; i < len(msg.Routes); i++ {
 		ids = append(ids, msg.Routes[i].PoolId)
 	}
 	return ids
+}
+
+func (msg MsgSwapExactAmountIn) GetTokenDenomsOnPath() []string {
+	return msg.TokenDenomsOnPath()
 }

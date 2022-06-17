@@ -18,13 +18,12 @@ func NewSybil(gasPrice sdk.Dec, feesPaid sdk.Coin) Sybil {
 	}
 }
 
-func (s Sybil) AddToFeesPaid(feesPaid sdk.Coin) (Sybil, error) {
+func (s *Sybil) AddToFeesPaid(feesPaid sdk.Coin) error {
 	// Check same denom
 	if feesPaid.Denom != s.FeesPaid.Denom {
-		return Sybil{}, fmt.Errorf("Cannot add %s denom to sybil's %s fees paid denom", feesPaid.Denom, s.FeesPaid.Denom)
+		return fmt.Errorf("Cannot add %s denom to sybil's %s fees paid denom", feesPaid.Denom, s.FeesPaid.Denom)
 	}
 	// Add tokens
-	fp := s.FeesPaid.Add(feesPaid)
-	// Return new sybil with tokens added together & previous gas price
-	return Sybil{GasPrice: s.GasPrice, FeesPaid: fp}, nil
+	s.FeesPaid.Add(feesPaid)
+	return nil
 }

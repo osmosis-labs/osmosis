@@ -51,7 +51,7 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, e
 	return spotPrice, nil
 }
 
-// GetTotalSwapFee gets the total swap fee for a swap message along a route of pool ids
+// getTotalSwapFee gets the total swap fee for a swap message along a route of pool ids
 func (k Keeper) getTotalSwapFee(ctx sdk.Context, poolIds []uint64, denomPath []string) (sdk.Dec, error) {
 	prefixStore := k.GetFeeTokensStore(ctx)
 	swapFees := sdk.ZeroDec()
