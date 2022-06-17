@@ -35,7 +35,8 @@ func (suite *CfmmCommonTestSuite) TestCalculateAmountOutAndIn_InverseRelationshi
 	assetInDenom string,
 	assetOutDenom string,
 	initialCalcOut int64,
-	swapFee sdk.Dec) {
+	swapFee sdk.Dec,
+) {
 	initialOut := sdk.NewInt64Coin(assetOutDenom, initialCalcOut)
 	initialOutCoins := sdk.NewCoins(initialOut)
 
