@@ -139,7 +139,7 @@ func (bc *baseConfigurer) RunIBC() error {
 	// Run a relayer between every possible pair of chains.
 	for i := 0; i < len(bc.chainConfigs); i++ {
 		for j := i + 1; j < len(bc.chainConfigs); j++ {
-			if err := bc.runIBCRelayer(bc.chainConfigs[i].Chain, bc.chainConfigs[j].Chain); err != nil {
+			if err := bc.runIBCRelayer(bc.chainConfigs[i], bc.chainConfigs[j]); err != nil {
 				return err
 			}
 		}
@@ -147,7 +147,7 @@ func (bc *baseConfigurer) RunIBC() error {
 	return nil
 }
 
-func (bc *baseConfigurer) runIBCRelayer(chainA *chaininit.Chain, chainB *chaininit.Chain) error {
+func (bc *baseConfigurer) runIBCRelayer(chainA *chain.ChainConfig, chainB *chain.ChainConfig) error {
 	bc.t.Log("starting Hermes relayer container...")
 
 	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-hermes-")
@@ -169,10 +169,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chaininit.Chain, chainB *chainin
 		return err
 	}
 
-	osmoAValMnemonic := chainA.Validators[0].Mnemonic
-	osmoBValMnemonic := chainB.Validators[0].Mnemonic
-
-	hermesResource, err := bc.containerManager.RunHermesResource(chainA.ChainMeta.Id, osmoAValMnemonic, chainB.ChainMeta.Id, osmoBValMnemonic, hermesCfgPath)
+	hermesResource, err := bc.containerManager.RunHermesResource(chainA, chainB, hermesCfgPath)
 	if err != nil {
 		return err
 	}
@@ -218,7 +215,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainA *chaininit.Chain, chainB *chainin
 	time.Sleep(10 * time.Second)
 
 	// create the client, connection and channel between the two Osmosis chains
-	return bc.connectIBCChains(chainA, chainB)
+	return bc.connectIBCChains(chainA.Chain, chainB.Chain)
 }
 
 func (bc *baseConfigurer) connectIBCChains(chainA *chaininit.Chain, chainB *chaininit.Chain) error {

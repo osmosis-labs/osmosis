@@ -5,6 +5,8 @@ import (
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 )
 
 type Manager struct {
@@ -32,7 +34,13 @@ func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
 	return docker, nil
 }
 
-func (m *Manager) RunHermesResource(chainAID, osmoAValMnemonic, chainBID, osmoBValMnemonic, hermesCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunHermesResource(chainA, chainB *chain.ChainConfig, hermesCfgPath string) (*dockertest.Resource, error) {
+	chainAID := chainA.ChainId
+	chainBID := chainB.ChainId
+
+	osmoAValMnemonic := chainA.Chain.Validators[0].Mnemonic
+	osmoBValMnemonic := chainB.Chain.Validators[0].Mnemonic
+
 	var err error
 	m.hermesResource, err = m.Pool.RunWithOptions(
 		&dockertest.RunOptions{
