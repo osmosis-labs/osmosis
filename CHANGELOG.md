@@ -59,15 +59,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1312] Stableswap: Createpool logic 
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM
-<<<<<<< HEAD
 * [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
 * [#1647](https://github.com/osmosis-labs/osmosis/pull/1647) Add WASM bindings for symmetrically and asymmetrically joining and exiting liqudity pools 
-=======
 
 ### Bug Fixes
 * [1700](https://github.com/osmosis-labs/osmosis/pull/1700) Upgrade sdk fork with missing snapshot manager fix.
 * [1716](https://github.com/osmosis-labs/osmosis/pull/1716) Fix secondary over-LP shares bug with uneven swap amounts in `CalcJoinPoolShares`.
->>>>>>> main
+* [1759](https://github.com/osmosis-labs/osmosis/pull/1759) Fix pagination filter in incentives query.
 
 ## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
 

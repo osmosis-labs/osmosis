@@ -129,6 +129,33 @@ func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (
 	return suite.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration)
 }
 
+func (suite *KeeperTestSuite) setupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string) (
+	uint64, *types.Gauge, sdk.Coins, time.Time,
+) {
+	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
+	startTime2 := time.Now()
+	distrTo := lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         denom,
+		Duration:      duration,
+	}
+
+	// mints coins so supply exists on chain
+	mintCoins := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	suite.FundAcc(addr, mintCoins)
+
+	numEpochsPaidOver := uint64(2)
+	if isPerpetual {
+		numEpochsPaidOver = uint64(1)
+	}
+	gaugeID, gauge := suite.CreateGauge(isPerpetual, addr, coins, distrTo, startTime2, numEpochsPaidOver)
+	return gaugeID, gauge, coins, startTime2
+}
+
+func (suite *KeeperTestSuite) SetupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, denom string) (uint64, *types.Gauge, sdk.Coins, time.Time) {
+	return suite.setupNewGaugeWithDenom(isPerpetual, coins, defaultLockDuration, denom)
+}
+
 func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coins, coinsPerLock sdk.Coins,
 	lockDuration time.Duration,
 ) []sdk.AccAddress {
