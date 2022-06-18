@@ -24,6 +24,6 @@ func (s *Sybil) AddToFeesPaid(feesPaid sdk.Coin) error {
 		return fmt.Errorf("Cannot add %s denom to sybil's %s fees paid denom", feesPaid.Denom, s.FeesPaid.Denom)
 	}
 	// Add tokens
-	s.FeesPaid.Add(feesPaid)
+	s.FeesPaid = s.FeesPaid.Add(feesPaid)
 	return nil
 }
