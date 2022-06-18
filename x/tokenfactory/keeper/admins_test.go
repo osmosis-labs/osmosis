@@ -66,6 +66,10 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 	suite.Require().Equal("", queryRes.AuthorityMetadata.Admin)
 }
 
+// TestMintDenom ensures the following properties of the MintMessage:
+// * Noone can mint tokens for a denom that doesn't exist
+// * Only the admin of a denom can mint tokens for it
+// * The admin of a denom can mint tokens for it
 func (suite *KeeperTestSuite) TestMintDenom() {
 	var (
 		addr0bal = int64(0)
