@@ -45,10 +45,44 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
 
+	createMultihopMsg := func(after func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+		properMsg := MsgSwapExactAmountIn{
+			Sender: addr1,
+			Routes: []SwapAmountInRoute{{
+				PoolId:        0,
+				TokenOutDenom: "test2",
+			}, {
+				PoolId:        1,
+				TokenOutDenom: "test1",
+			}, {
+				PoolId:        2,
+				TokenOutDenom: "test",
+			}},
+			TokenIn:           sdk.NewCoin("test", sdk.NewInt(100)),
+			TokenOutMinAmount: sdk.NewInt(200),
+		}
+
+		return after(properMsg)
+	}
+
+	msgMultihop := createMultihopMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+		// do nothing
+		return msg
+	})
+
+	require.Equal(t, msgMultihop.Route(), RouterKey)
+	require.Equal(t, msgMultihop.Type(), "swap_exact_amount_in")
+	signersMultOut := msgMultihop.GetSigners()
+	require.Equal(t, len(signersMultOut), 1)
+	require.Equal(t, signersMultOut[0].String(), addr1)
+
 	tests := []struct {
-		name       string
-		msg        MsgSwapExactAmountIn
-		expectPass bool
+		name             string
+		msg              SybilResistantFee
+		expectDenomPath  []string
+		expectPoolIdPath []uint64
+		expectToken      sdk.Coin
+		expectPass       bool
 	}{
 		{
 			name: "proper msg",
@@ -56,7 +90,10 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       true,
 		},
 		{
 			name: "invalid sender",
@@ -64,7 +101,10 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
 		},
 		{
 			name: "empty routes",
@@ -72,7 +112,10 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.Routes = nil
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{},
+			expectPoolIdPath: []uint64{},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
 		},
 		{
 			name: "empty routes2",
@@ -80,7 +123,10 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.Routes = []SwapAmountInRoute{}
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{},
+			expectPoolIdPath: []uint64{},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
 		},
 		{
 			name: "invalid denom",
@@ -88,7 +134,10 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.Routes[1].TokenOutDenom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "1"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
 		},
 		{
 			name: "invalid denom2",
@@ -96,7 +145,10 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.TokenIn.Denom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.Coin{},
+			expectPass:       false,
 		},
 		{
 			name: "zero amount token",
@@ -104,7 +156,10 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.TokenIn.Amount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.ZeroInt()),
+			expectPass:       false,
 		},
 		{
 			name: "negative amount token",
@@ -112,7 +167,10 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.TokenIn.Amount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.Coin{},
+			expectPass:       false,
 		},
 		{
 			name: "zero amount criteria",
@@ -120,7 +178,10 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.TokenOutMinAmount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
 		},
 		{
 			name: "negative amount criteria",
@@ -128,16 +189,41 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.TokenOutMinAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
+		},
+		{
+			name: "proper swap in multihop",
+			msg: createMultihopMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+				// do nothing
+				return msg
+			}),
+			expectDenomPath:  []string{"test", "test1", "test2"},
+			expectPoolIdPath: []uint64{0, 1, 2},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       true,
 		},
 	}
 
 	for _, test := range tests {
+		msg, ok := test.msg.(MsgSwapExactAmountIn)
+		require.True(t, ok)
+
 		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.NoError(t, msg.ValidateBasic(), "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, msg.ValidateBasic(), "test: %v", test.name)
 		}
+
+		denomPath := test.msg.GetTokenDenomsOnPath()
+		poolIdPath := test.msg.GetPoolIdOnPath()
+		token := test.msg.GetTokenToFee()
+
+		require.Equalf(t, test.expectToken, token, "test: %v", test.name)
+		require.ElementsMatchf(t, test.expectDenomPath, denomPath, "test: %v", test.name)
+		require.ElementsMatchf(t, test.expectPoolIdPath, poolIdPath, "test: %v", test.name)
 	}
 }
 
@@ -175,10 +261,44 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 	require.Equal(t, len(signers), 1)
 	require.Equal(t, signers[0].String(), addr1)
 
+	createMultihopMsg := func(after func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+		properMsg := MsgSwapExactAmountOut{
+			Sender: addr1,
+			Routes: []SwapAmountOutRoute{{
+				PoolId:       2,
+				TokenInDenom: "test2",
+			}, {
+				PoolId:       1,
+				TokenInDenom: "test1",
+			}, {
+				PoolId:       0,
+				TokenInDenom: "test",
+			}},
+			TokenOut:         sdk.NewCoin("test", sdk.NewInt(100)),
+			TokenInMaxAmount: sdk.NewInt(200),
+		}
+
+		return after(properMsg)
+	}
+
+	msgMultihop := createMultihopMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+		// do nothing
+		return msg
+	})
+
+	require.Equal(t, msgMultihop.Route(), RouterKey)
+	require.Equal(t, msgMultihop.Type(), "swap_exact_amount_out")
+	signersMultOut := msgMultihop.GetSigners()
+	require.Equal(t, len(signersMultOut), 1)
+	require.Equal(t, signersMultOut[0].String(), addr1)
+
 	tests := []struct {
-		name       string
-		msg        MsgSwapExactAmountOut
-		expectPass bool
+		name             string
+		msg              SybilResistantFee
+		expectDenomPath  []string
+		expectPoolIdPath []uint64
+		expectToken      sdk.Coin
+		expectPass       bool
 	}{
 		{
 			name: "proper msg",
@@ -186,7 +306,10 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				// Do nothing
 				return msg
 			}),
-			expectPass: true,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       true,
 		},
 		{
 			name: "invalid sender",
@@ -194,7 +317,10 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
 		},
 		{
 			name: "empty routes",
@@ -202,7 +328,10 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.Routes = nil
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{},
+			expectPoolIdPath: []uint64{},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
 		},
 		{
 			name: "empty routes2",
@@ -210,7 +339,11 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.Routes = []SwapAmountOutRoute{}
 				return msg
 			}),
-			expectPass: false,
+
+			expectDenomPath:  []string{},
+			expectPoolIdPath: []uint64{},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
 		},
 		{
 			name: "invalid denom",
@@ -218,15 +351,22 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.Routes[1].TokenInDenom = "1"
 				return msg
 			}),
-			expectPass: false,
+
+			expectDenomPath:  []string{"1", "test"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
 		},
 		{
-			name: "invalid denom",
+			name: "invalid denom2",
 			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
 				msg.TokenOut.Denom = "1"
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.Coin{},
+			expectPass:       false,
 		},
 		{
 			name: "zero amount token",
@@ -234,7 +374,10 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.TokenOut.Amount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.ZeroInt()),
+			expectPass:       false,
 		},
 		{
 			name: "negative amount token",
@@ -242,7 +385,10 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.TokenOut.Amount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.Coin{},
+			expectPass:       false,
 		},
 		{
 			name: "zero amount criteria",
@@ -250,7 +396,11 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.TokenInMaxAmount = sdk.NewInt(0)
 				return msg
 			}),
-			expectPass: false,
+
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
 		},
 		{
 			name: "negative amount criteria",
@@ -258,16 +408,42 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.TokenInMaxAmount = sdk.NewInt(-10)
 				return msg
 			}),
-			expectPass: false,
+
+			expectDenomPath:  []string{"test", "test2"},
+			expectPoolIdPath: []uint64{0, 1},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       false,
+		},
+		{
+			name: "proper swap out multihop",
+			msg: createMultihopMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+				// do nothing
+				return msg
+			}),
+			expectDenomPath:  []string{"test", "test2", "test1"},
+			expectPoolIdPath: []uint64{2, 1, 0},
+			expectToken:      sdk.NewCoin("test", sdk.NewInt(100)),
+			expectPass:       true,
 		},
 	}
 
 	for _, test := range tests {
+		msg, ok := test.msg.(MsgSwapExactAmountOut)
+		require.True(t, ok)
+
 		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.NoError(t, msg.ValidateBasic(), "test: %v", test.name)
 		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			require.Error(t, msg.ValidateBasic(), "test: %v", test.name)
 		}
+
+		denomPath := test.msg.GetTokenDenomsOnPath()
+		poolIdPath := test.msg.GetPoolIdOnPath()
+		token := test.msg.GetTokenToFee()
+
+		require.Equalf(t, test.expectToken, token, "test: %v", test.name)
+		require.ElementsMatchf(t, test.expectDenomPath, denomPath, "test: %v", test.name)
+		require.ElementsMatchf(t, test.expectPoolIdPath, poolIdPath, "test: %v", test.name)
 	}
 }
 
