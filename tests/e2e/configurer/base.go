@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -42,66 +41,22 @@ func (bc *baseConfigurer) GetChainConfig(chainIndex int) chain.Config {
 
 func (bc *baseConfigurer) RunValidators() error {
 	for i, chainConfig := range bc.chainConfigs {
-		if err := bc.runValidators(chainConfig, bc.containerManager.OsmosisRepository, bc.containerManager.OsmosisTag, i*10); err != nil {
+		if err := bc.runValidators(chainConfig, i*10); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (bc *baseConfigurer) runValidators(chainConfig *chain.Config, dockerRepository, dockerTag string, portOffset int) error {
+func (bc *baseConfigurer) runValidators(chainConfig *chain.Config, portOffset int) error {
 	chain := chainConfig.Chain
 	bc.t.Logf("starting %s validator containers...", chain.ChainMeta.Id)
-	bc.containerManager.ValResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.SkipRunValidatorIndexes))
-	pwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	for i, val := range chain.Validators {
-		// Skip some validators from running during set up.
-		// This is needed for testing functionality like
-		// state-sunc where we might want to start some validators during tests.
-		if _, ok := chainConfig.SkipRunValidatorIndexes[i]; ok {
-			bc.t.Logf("skipping %s validator with index %d from running...", val.Name, i)
-			continue
-		}
 
-		runOpts := &dockertest.RunOptions{
-			Name:      val.Name,
-			NetworkID: bc.containerManager.Network.Network.ID,
-			Mounts: []string{
-				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
-				fmt.Sprintf("%s/scripts:/osmosis", pwd),
-			},
-			Repository: dockerRepository,
-			Tag:        dockerTag,
-			Cmd: []string{
-				"start",
-			},
-		}
-
-		// expose the first validator for debugging and communication
-		if val.Index == 0 {
-			runOpts.PortBindings = map[docker.Port][]docker.PortBinding{
-				"1317/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}},
-				"6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}},
-				"6061/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6061+portOffset)}},
-				"6062/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6062+portOffset)}},
-				"6063/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6063+portOffset)}},
-				"6064/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6064+portOffset)}},
-				"6065/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6065+portOffset)}},
-				"9090/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 9090+portOffset)}},
-				"26656/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26656+portOffset)}},
-				"26657/tcp": {{HostIP: "", HostPort: fmt.Sprintf("%d", 26657+portOffset)}},
-			}
-		}
-
-		resource, err := bc.containerManager.Pool.RunWithOptions(runOpts, noRestart)
+	for _, val := range chain.Validators {
+		resource, err := bc.containerManager.RunValidatorResource(chainConfig.ChainId, val)
 		if err != nil {
 			return err
 		}
-
-		bc.containerManager.ValResources[chain.ChainMeta.Id][i] = resource
 		bc.t.Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	}
 

@@ -31,9 +31,10 @@ func (bc *baseConfigurer) CreatePool(chainId string, valIdx int, poolFile string
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	containerId := bc.containerManager.ValResources[chainId][valIdx].Container.ID
+	validatorResource, exists := bc.containerManager.GetValidatorResource(chainId, valIdx)
+	require.True(bc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainId, valIdx)
 
-	bc.t.Logf("running create pool on chain id: %s with container: %s", chainId, containerId)
+	bc.t.Logf("running create pool on chain id: %s with container: %s", chainId, validatorResource)
 	var (
 		outBuf bytes.Buffer
 		errBuf bytes.Buffer
@@ -46,7 +47,7 @@ func (bc *baseConfigurer) CreatePool(chainId string, valIdx int, poolFile string
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    containerId,
+				Container:    validatorResource.Container.ID,
 				User:         "root",
 				Cmd: []string{
 					"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", chainId), "--from=val", "-b=block", "--yes", "--keyring-backend=test",
@@ -67,7 +68,7 @@ func (bc *baseConfigurer) CreatePool(chainId string, valIdx int, poolFile string
 		"tx returned non code 0; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 	)
 
-	bc.t.Logf("successfully created pool on chain id: %s with container: %s", chainId, containerId)
+	bc.t.Logf("successfully created pool on chain id: %s with container: %s", chainId, validatorResource)
 }
 
 func (bc *baseConfigurer) SendIBC(srcChain *chaininit.Chain, dstChain *chaininit.Chain, recipient string, token sdk.Coin) {
@@ -75,7 +76,14 @@ func (bc *baseConfigurer) SendIBC(srcChain *chaininit.Chain, dstChain *chaininit
 	defer cancel()
 
 	bc.t.Logf("sending %s from %s to %s (%s)", token, srcChain.ChainMeta.Id, dstChain.ChainMeta.Id, recipient)
-	balancesBPre, err := bc.queryBalances(bc.containerManager.ValResources[dstChain.ChainMeta.Id][0].Container.ID, recipient)
+
+	dstChainId := dstChain.ChainMeta.Id
+	valIdx := 0
+	validatorResource, exists := bc.containerManager.GetValidatorResource(dstChainId, valIdx)
+	require.True(bc.t, exists, "validator container not found: chain id %s, valIdx %d ", dstChainId, valIdx)
+	containerId := validatorResource.Container.ID
+
+	balancesBPre, err := bc.queryBalances(containerId, recipient)
 	require.NoError(bc.t, err)
 
 	var (
@@ -126,7 +134,7 @@ func (bc *baseConfigurer) SendIBC(srcChain *chaininit.Chain, dstChain *chaininit
 	require.Eventually(
 		bc.t,
 		func() bool {
-			balancesBPost, err := bc.queryBalances(bc.containerManager.ValResources[dstChain.ChainMeta.Id][0].Container.ID, recipient)
+			balancesBPost, err := bc.queryBalances(containerId, recipient)
 			require.NoError(bc.t, err)
 			ibcCoin := balancesBPost.Sub(balancesBPre)
 			if ibcCoin.Len() == 1 {
@@ -242,7 +250,13 @@ func (bc *baseConfigurer) submitProposal(c *chaininit.Chain, upgradeHeight int) 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	bc.t.Logf("submitting upgrade proposal on %s container: %s", bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.Name[1:], bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.ID)
+	chainId := c.ChainMeta.Id
+	valIdx := 0
+	validatorResource, exists := bc.containerManager.GetValidatorResource(chainId, 0)
+	require.True(bc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainId, valIdx)
+	containerId := validatorResource.Container.ID
+
+	bc.t.Logf("submitting upgrade proposal on %s container: %s", validatorResource.Container.Name[1:], containerId)
 
 	var (
 		outBuf bytes.Buffer
@@ -256,7 +270,7 @@ func (bc *baseConfigurer) submitProposal(c *chaininit.Chain, upgradeHeight int) 
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.ID,
+				Container:    containerId,
 				User:         "root",
 				Cmd: []string{
 					"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", UpgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", UpgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json",
@@ -285,7 +299,11 @@ func (bc *baseConfigurer) depositProposal(c *chaininit.Chain) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	bc.t.Logf("depositing to upgrade proposal from %s container: %s", bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.Name[1:], bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.ID)
+	validatorResource, exists := bc.containerManager.GetValidatorResource(c.ChainMeta.Id, 0)
+	require.True(bc.t, exists, "validator container not found: chain id %s, valIdx %d ", c.ChainMeta.Id, 0)
+	containerId := validatorResource.Container.ID
+
+	bc.t.Logf("depositing to upgrade proposal from %s container: %s", validatorResource.Container.Name[1:], containerId)
 
 	var (
 		outBuf bytes.Buffer
@@ -299,7 +317,7 @@ func (bc *baseConfigurer) depositProposal(c *chaininit.Chain) {
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
-				Container:    bc.containerManager.ValResources[c.ChainMeta.Id][0].Container.ID,
+				Container:    containerId,
 				User:         "root",
 				Cmd: []string{
 					"osmosisd", "tx", "gov", "deposit", "1", "10000000stake", "--from=val", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
@@ -331,14 +349,14 @@ func (bc *baseConfigurer) voteProposal(chainConfig *chain.Config) {
 
 	bc.t.Logf("voting for upgrade proposal for chain-id: %s", chain.ChainMeta.Id)
 	for i := range chain.Validators {
-		if _, ok := chainConfig.SkipRunValidatorIndexes[i]; ok {
-			continue
-		}
-
 		var (
 			outBuf bytes.Buffer
 			errBuf bytes.Buffer
 		)
+
+		validatorResource, exists := bc.containerManager.GetValidatorResource(chainConfig.ChainId, i)
+		require.True(bc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainConfig.ChainId, i)
+		containerId := validatorResource.Container.ID
 
 		require.Eventually(
 			bc.t,
@@ -347,7 +365,7 @@ func (bc *baseConfigurer) voteProposal(chainConfig *chain.Config) {
 					Context:      ctx,
 					AttachStdout: true,
 					AttachStderr: true,
-					Container:    bc.containerManager.ValResources[chain.ChainMeta.Id][i].Container.ID,
+					Container:    containerId,
 					User:         "root",
 					Cmd: []string{
 						"osmosisd", "tx", "gov", "vote", "1", "yes", "--from=val", fmt.Sprintf("--chain-id=%s", chain.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
@@ -369,6 +387,6 @@ func (bc *baseConfigurer) voteProposal(chainConfig *chain.Config) {
 			"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
 		)
 
-		bc.t.Logf("successfully voted for proposal from %s container: %s", bc.containerManager.ValResources[chain.ChainMeta.Id][i].Container.Name[1:], bc.containerManager.ValResources[chain.ChainMeta.Id][i].Container.ID)
+		bc.t.Logf("successfully voted for proposal from %s container: %s", validatorResource.Container.Name[1:], containerId)
 	}
 }

@@ -9,11 +9,7 @@ type Config struct {
 	VotingPeriod float32
 	// upgrade proposal height for chain.
 	PropHeight int
-	// Indexes of the validators to skip from running during initialization.
-	// This is needed for testing functionality like state-sync where we would
-	// like to start a node during tests post-initialization.
-	SkipRunValidatorIndexes map[int]struct{}
-	Chain                   *chain.Chain
+	Chain      *chain.Chain
 }
 
 func (cc Config) GetChain() *chain.Chain {

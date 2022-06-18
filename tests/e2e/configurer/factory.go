@@ -108,9 +108,6 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 				{
 					ChainId:         chaininit.ChainAID,
 					ValidatorConfig: validatorConfigsChainA,
-					SkipRunValidatorIndexes: map[int]struct{}{
-						3: {}, // skip validator at index 3
-					},
 				},
 				{
 					ChainId:         chaininit.ChainBID,
@@ -127,9 +124,6 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 				{
 					ChainId:         chaininit.ChainAID,
 					ValidatorConfig: validatorConfigsChainA,
-					SkipRunValidatorIndexes: map[int]struct{}{
-						3: {}, // skip validator at index 3
-					},
 				},
 				{
 					ChainId:         chaininit.ChainBID,
