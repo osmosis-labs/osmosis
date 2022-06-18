@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/require"
 
 	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
@@ -48,38 +47,15 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	if err != nil {
 		return err
 	}
-	uc.t.Logf("temp directory for chain-id %v: %v", chainConfig.ChainId, tmpDir)
 
-	validatorConfigBytes, err := json.Marshal(chainConfig.ValidatorConfig)
+	numVal := float32(len(chainConfig.ValidatorConfig))
+	chainConfig.VotingPeriod = PropDepositBlocks + numVal*PropVoteBlocks + PropBufferBlocks
+
+	err = uc.containerManager.RunChainInitResource(chainConfig, tmpDir)
 	if err != nil {
 		return err
 	}
 
-	numVal := float32(len(chainConfig.ValidatorConfig))
-
-	chainConfig.VotingPeriod = PropDepositBlocks + numVal*PropVoteBlocks + PropBufferBlocks
-
-	votingPeriodDuration := time.Duration(int(chainConfig.VotingPeriod) * 1000000000)
-
-	initResource, err := uc.containerManager.Pool.RunWithOptions(
-		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s", chainConfig.ChainId),
-			Repository: uc.containerManager.ImageConfig.InitRepository,
-			Tag:        uc.containerManager.ImageConfig.InitTag,
-			NetworkID:  uc.containerManager.Network.Network.ID,
-			Cmd: []string{
-				fmt.Sprintf("--data-dir=%s", tmpDir),
-				fmt.Sprintf("--chain-id=%s", chainConfig.ChainId),
-				fmt.Sprintf("--config=%s", validatorConfigBytes),
-				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
-			},
-			User: "root:root",
-			Mounts: []string{
-				fmt.Sprintf("%s:%s", tmpDir, tmpDir),
-			},
-		},
-		noRestart,
-	)
 	if err != nil {
 		return err
 	}
@@ -105,9 +81,6 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 		if i > 0 {
 			time.Sleep(1 * time.Second)
 		}
-	}
-	if err := uc.containerManager.Pool.Purge(initResource); err != nil {
-		return err
 	}
 	return nil
 }

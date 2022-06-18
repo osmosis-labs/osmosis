@@ -1,8 +1,10 @@
 package containers
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
@@ -14,7 +16,7 @@ import (
 type Manager struct {
 	ImageConfig
 	Pool    *dockertest.Pool
-	Network *dockertest.Network
+	network *dockertest.Network
 
 	hermesResource *dockertest.Resource
 	valResources   map[string][]*dockertest.Resource
@@ -29,7 +31,7 @@ func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
 	if err != nil {
 		return nil, err
 	}
-	docker.Network, err = docker.Pool.CreateNetwork("osmosis-testnet")
+	docker.network, err = docker.Pool.CreateNetwork("osmosis-testnet")
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +51,7 @@ func (m *Manager) RunHermesResource(chainConfigA, chainConfigB *chain.Config, he
 			Name:       fmt.Sprintf("%s-%s-relayer", chainAID, chainBID),
 			Repository: m.RelayerRepository,
 			Tag:        m.RelayerTag,
-			NetworkID:  m.Network.Network.ID,
+			NetworkID:  m.network.Network.ID,
 			Cmd: []string{
 				"start",
 			},
@@ -97,7 +99,7 @@ func (m *Manager) RunValidatorResource(chainId string, val *chaininit.Validator)
 
 	runOpts := &dockertest.RunOptions{
 		Name:      val.Name,
-		NetworkID: m.Network.Network.ID,
+		NetworkID: m.network.Network.ID,
 		Mounts: []string{
 			fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
 			fmt.Sprintf("%s/scripts:/osmosis", pwd),
@@ -121,6 +123,41 @@ func (m *Manager) RunValidatorResource(chainId string, val *chaininit.Validator)
 	m.valResources[chainId] = append(chainValidatorResources, resource)
 
 	return resource, nil
+}
+
+func (m *Manager) RunChainInitResource(chainConfig *chain.Config, tmpDir string) error {
+	validatorConfigBytes, err := json.Marshal(chainConfig.ValidatorConfig)
+	if err != nil {
+		return err
+	}
+
+	votingPeriodDuration := time.Duration(int(chainConfig.VotingPeriod) * 1000000000)
+
+	initResource, err := m.Pool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       fmt.Sprintf("%s", chainConfig.ChainId),
+			Repository: m.ImageConfig.InitRepository,
+			Tag:        m.ImageConfig.InitTag,
+			NetworkID:  m.network.Network.ID,
+			Cmd: []string{
+				fmt.Sprintf("--data-dir=%s", tmpDir),
+				fmt.Sprintf("--chain-id=%s", chainConfig.ChainId),
+				fmt.Sprintf("--config=%s", validatorConfigBytes),
+				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
+			},
+			User: "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s:%s", tmpDir, tmpDir),
+			},
+		},
+		noRestart,
+	)
+
+	if err := m.Pool.Purge(initResource); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *Manager) GetValidatorResource(chainId string, validatorIndex int) (*dockertest.Resource, bool) {
@@ -163,7 +200,7 @@ func (m *Manager) ClearResources() error {
 		}
 	}
 
-	if err := m.Pool.RemoveNetwork(m.Network); err != nil {
+	if err := m.Pool.RemoveNetwork(m.network); err != nil {
 		return err
 	}
 	return nil
