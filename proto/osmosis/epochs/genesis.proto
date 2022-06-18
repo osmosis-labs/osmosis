@@ -7,27 +7,45 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/epochs/types";
 
+// EpochInfo is a struct that describes the data going into
+// a timer defined by the x/epochs module.
+// Each tim
 message EpochInfo {
+  // Identifier is a unique reference to this particular timer.
   string identifier = 1;
+  // Start time is the time at which the timer first ever ticks.
+  // (When time 0 is measured from)
+  // If start time is in the future, the epoch will not begin until the start time.
   google.protobuf.Timestamp start_time = 2 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"start_time\""
   ];
+  // Duration is the time in between epoch ticks.
+  // In order for intended behavior to be met, duration should
+  // be greater than the chains expected block time.
+  // Duration must be non-zero.
   google.protobuf.Duration duration = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag) = "duration,omitempty",
     (gogoproto.moretags) = "yaml:\"duration\""
   ];
+  // current_epoch is the current epoch number, or in other words,
+  // how many times has the timer 'ticked'.
+  // {TODO: Detail 0 condition, when 1 starts, etc.} 
   int64 current_epoch = 4;
+  // {TODO: Describe}
   google.protobuf.Timestamp current_epoch_start_time = 5 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"current_epoch_start_time\""
   ];
+  // epoch_counting_started is a boolean, that indicates whether this
+  // epoch timer has began yet.
   bool epoch_counting_started = 6;
   reserved 7;
+  // {TODO: Describe}
   int64 current_epoch_start_height = 8;
 }
 
