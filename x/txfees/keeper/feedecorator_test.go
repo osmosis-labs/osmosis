@@ -10,6 +10,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
+	txKeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
@@ -238,4 +239,130 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			suite.Require().Error(err, "test: %s", tc.name)
 		}
 	}
+}
+
+func (suite *KeeperTestSuite) TestIsSufficientFee() {
+	suite.SetupTest(false)
+
+	createSybil := func(after func(s txKeeper.Sybil) txKeeper.Sybil) txKeeper.Sybil {
+		properSybil := txKeeper.Sybil{
+			GasPrice: sdk.MustNewDecFromStr("1"),
+			FeesPaid: sdk.NewCoin("test", sdk.NewInt(1)),
+		}
+
+		return after(properSybil)
+	}
+
+	sybilStruct := createSybil(func(s txKeeper.Sybil) txKeeper.Sybil {
+		// do nothing
+		return s
+	})
+
+	suite.Require().Equal(sdk.MustNewDecFromStr("1"), sybilStruct.GasPrice)
+	suite.Require().Equal(sdk.NewCoin("test", sdk.NewInt(1)), sybilStruct.FeesPaid)
+
+	baseDenom, err := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
+	suite.Require().NoError(err, "base denom error for test is sufficient fee")
+
+	tests := []struct {
+		name         string
+		sybil        txKeeper.Sybil
+		gasRequested uint64
+		feeCoin      sdk.Coin
+		expectPass   bool
+	}{
+		{
+			name: "exactly sufficient fee without feesPaid",
+			sybil: createSybil(func(sybil txKeeper.Sybil) txKeeper.Sybil {
+				sybil.FeesPaid = sdk.NewCoin(baseDenom, sdk.ZeroInt())
+
+				return sybil
+			}),
+			gasRequested: 1,
+			feeCoin:      sdk.NewCoin(baseDenom, sdk.NewInt(1)),
+			expectPass:   true,
+		},
+		{
+			name: "excess fees",
+			sybil: createSybil(func(sybil txKeeper.Sybil) txKeeper.Sybil {
+				sybil.FeesPaid = sdk.NewCoin(baseDenom, sdk.ZeroInt())
+
+				return sybil
+			}),
+			gasRequested: 1,
+			feeCoin:      sdk.NewCoin(baseDenom, sdk.NewInt(1000)),
+			expectPass:   true,
+		},
+		{
+			name: "0 amount fee coin but fees paid cover gas cost",
+			sybil: createSybil(func(sybil txKeeper.Sybil) txKeeper.Sybil {
+				sybil.FeesPaid = sdk.NewCoin(baseDenom, sdk.NewInt(100))
+				sybil.GasPrice = sdk.MustNewDecFromStr("10")
+
+				return sybil
+			}),
+			gasRequested: 1,
+			feeCoin:      sdk.NewCoin(baseDenom, sdk.ZeroInt()),
+			expectPass:   true,
+		},
+		{
+			name: "null fee coin, sufficient swap fees",
+			sybil: createSybil(func(sybil txKeeper.Sybil) txKeeper.Sybil {
+				sybil.FeesPaid = sdk.NewCoin(baseDenom, sdk.NewInt(10))
+				sybil.GasPrice = sdk.MustNewDecFromStr("1")
+
+				return sybil
+			}),
+			gasRequested: 10,
+			feeCoin:      sdk.Coin{},
+			expectPass:   false,
+		},
+		{
+			name: "insufficient fee coin and feees paid",
+			sybil: createSybil(func(sybil txKeeper.Sybil) txKeeper.Sybil {
+				sybil.FeesPaid = sdk.NewCoin(baseDenom, sdk.NewInt(5))
+				sybil.GasPrice = sdk.MustNewDecFromStr("1")
+
+				return sybil
+			}),
+			gasRequested: 10,
+			feeCoin:      sdk.NewCoin(baseDenom, sdk.NewInt(4)),
+			expectPass:   false,
+		},
+		{
+			name: "fee coin not a fee token",
+			sybil: createSybil(func(sybil txKeeper.Sybil) txKeeper.Sybil {
+				sybil.FeesPaid = sdk.NewCoin(baseDenom, sdk.NewInt(1000))
+				sybil.GasPrice = sdk.MustNewDecFromStr("10")
+
+				return sybil
+			}),
+			gasRequested: 10,
+			feeCoin:      sdk.NewCoin("test", sdk.NewInt(10)),
+			expectPass:   false,
+		},
+		{
+			name: "sybil fees paid is not a fee token",
+			sybil: createSybil(func(sybil txKeeper.Sybil) txKeeper.Sybil {
+				sybil.FeesPaid = sdk.NewCoin("test", sdk.NewInt(10))
+				sybil.GasPrice = sdk.MustNewDecFromStr("10")
+
+				return sybil
+			}),
+			gasRequested: 1,
+			feeCoin:      sdk.NewCoin(baseDenom, sdk.NewInt(1)),
+			expectPass:   false,
+		},
+	}
+
+	for _, test := range tests {
+		err := suite.App.TxFeesKeeper.IsSufficientFee(suite.Ctx, test.sybil, test.gasRequested, test.feeCoin)
+
+		if test.expectPass {
+			suite.Require().NoError(err, "test: %s", test.name)
+		} else {
+			suite.Require().Error(err, "test: %s", test.name)
+		}
+	}
+
 }
