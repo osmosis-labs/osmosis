@@ -145,7 +145,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 				msg.TokenIn.Denom = "1"
 				return msg
 			}),
-			expectDenomPath:  []string{"test", "test2", "test"},
+			expectDenomPath:  []string{"1", "test2", "test"},
 			expectPoolIdPath: []uint64{0, 1},
 			expectToken:      sdk.Coin{},
 			expectPass:       false,
@@ -363,7 +363,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 				msg.TokenOut.Denom = "1"
 				return msg
 			}),
-			expectDenomPath:  []string{"test", "test", "test2"},
+			expectDenomPath:  []string{"test", "test2", "1"},
 			expectPoolIdPath: []uint64{0, 1},
 			expectToken:      sdk.Coin{},
 			expectPass:       false,
