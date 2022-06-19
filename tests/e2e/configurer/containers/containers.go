@@ -3,7 +3,6 @@ package containers
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -13,8 +12,6 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
-
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 )
 
 type Manager struct {
@@ -94,13 +91,7 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 	return outBuf, errBuf, nil
 }
 
-func (m *Manager) RunHermesResource(chainConfigA, chainConfigB *chain.Config, hermesCfgPath string) (*dockertest.Resource, error) {
-	chainAID := chainConfigA.Id
-	chainBID := chainConfigB.Id
-
-	osmoAValMnemonic := chainConfigA.ValidatorConfigs[0].Mnemonic
-	osmoBValMnemonic := chainConfigB.ValidatorConfigs[0].Mnemonic
-
+func (m *Manager) RunHermesResource(chainAID, osmoAValMnemonic, chainBID, osmoBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
 	var err error
 	m.hermesResource, err = m.Pool.RunWithOptions(
 		&dockertest.RunOptions{
@@ -147,17 +138,17 @@ func (m *Manager) GetHermesContainerID() string {
 	return m.hermesResource.Container.ID
 }
 
-func (m *Manager) RunValidatorResource(chainId string, val *chain.ValidatorConfig) (*dockertest.Resource, error) {
+func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCondifDir string) (*dockertest.Resource, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
 
 	runOpts := &dockertest.RunOptions{
-		Name:      val.Name,
+		Name:      valContainerName,
 		NetworkID: m.network.Network.ID,
 		Mounts: []string{
-			fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
+			fmt.Sprintf("%s/:/osmosis/.osmosisd", valCondifDir),
 			fmt.Sprintf("%s/scripts:/osmosis", pwd),
 		},
 		Repository: m.OsmosisRepository,
@@ -181,23 +172,18 @@ func (m *Manager) RunValidatorResource(chainId string, val *chain.ValidatorConfi
 	return resource, nil
 }
 
-func (m *Manager) RunChainInitResource(chainConfig *chain.Config, tmpDir string) error {
-	validatorConfigBytes, err := json.Marshal(chainConfig.ValidatorConfigs)
-	if err != nil {
-		return err
-	}
-
-	votingPeriodDuration := time.Duration(int(chainConfig.VotingPeriod) * 1000000000)
+func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, tmpDir string) error {
+	votingPeriodDuration := time.Duration(chainVotingPeriod * 1000000000)
 
 	initResource, err := m.Pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s", chainConfig.Id),
+			Name:       fmt.Sprintf("%s", chainId),
 			Repository: m.ImageConfig.InitRepository,
 			Tag:        m.ImageConfig.InitTag,
 			NetworkID:  m.network.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
-				fmt.Sprintf("--chain-id=%s", chainConfig.Id),
+				fmt.Sprintf("--chain-id=%s", chainId),
 				fmt.Sprintf("--config=%s", validatorConfigBytes),
 				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
 			},
@@ -208,6 +194,10 @@ func (m *Manager) RunChainInitResource(chainConfig *chain.Config, tmpDir string)
 		},
 		noRestart,
 	)
+
+	if err != nil {
+		return err
+	}
 
 	if err := m.Pool.Purge(initResource); err != nil {
 		return err

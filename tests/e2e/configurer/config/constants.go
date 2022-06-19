@@ -1,4 +1,4 @@
-package configurer
+package config
 
 const (
 	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)

@@ -1,7 +1,10 @@
 package chain
 
 import (
+	"testing"
+
 	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
 )
 
 type Config struct {
@@ -15,13 +18,26 @@ type Config struct {
 	LatestProposalNumber int
 	LatestLockNumber     int
 	ValidatorConfigs     []*ValidatorConfig
+
+	t                *testing.T
+	containerManager *containers.Manager
 }
 
-func New(id string, initValidatorConfigs []*chaininit.ValidatorConfig) *Config {
+type status struct {
+	LatestHeight string `json:"latest_block_height"`
+}
+
+type syncInfo struct {
+	SyncInfo status `json:"SyncInfo"`
+}
+
+func New(t *testing.T, containerManager *containers.Manager, id string, initValidatorConfigs []*chaininit.ValidatorConfig) *Config {
 	return &Config{
 		ChainMeta: chaininit.ChainMeta{
 			Id: id,
 		},
 		ValidatorInitConfigs: initValidatorConfigs,
+		t:                    t,
+		containerManager:     containerManager,
 	}
 }

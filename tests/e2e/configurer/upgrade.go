@@ -12,6 +12,7 @@ import (
 
 	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
 )
 
@@ -49,9 +50,14 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	}
 
 	numVal := float32(len(chainConfig.ValidatorConfigs))
-	chainConfig.VotingPeriod = PropDepositBlocks + numVal*PropVoteBlocks + PropBufferBlocks
+	chainConfig.VotingPeriod = config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks
 
-	err = uc.containerManager.RunChainInitResource(chainConfig, tmpDir)
+	validatorConfigBytes, err := json.Marshal(chainConfig.ValidatorConfigs)
+	if err != nil {
+		return err
+	}
+
+	err = uc.containerManager.RunChainInitResource(chainConfig.Id, int(chainConfig.VotingPeriod), validatorConfigBytes, tmpDir)
 	if err != nil {
 		return err
 	}
@@ -66,14 +72,14 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	// loop through the reading and unmarshaling of the init file a total of maxRetries or until error is nil
 	// without this, test attempts to unmarshal file before docker container is finished writing
 	var initializedChain chaininit.Chain
-	for i := 0; i < MaxRetries; i++ {
+	for i := 0; i < config.MaxRetries; i++ {
 		initializedChainBytes, _ := os.ReadFile(fileName)
 		err = json.Unmarshal(initializedChainBytes, &initializedChain)
 		if err == nil {
 			break
 		}
 
-		if i == MaxRetries-1 {
+		if i == config.MaxRetries-1 {
 			if err != nil {
 				return err
 			}
@@ -96,18 +102,19 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 	// prop height = current height + voting period + time it takes to submit proposal + small buffer
 	for _, chainConfig := range uc.chainConfigs {
 
-		currentHeight := uc.QueryCurrentChainHeightFromValidator(chainConfig, 0)
-		chainConfig.PropHeight = currentHeight + int(chainConfig.VotingPeriod) + int(PropSubmitBlocks) + int(PropBufferBlocks)
-		uc.SubmitUpgradeProposal(chainConfig)
-		uc.DepositProposal(chainConfig)
-		uc.VoteYesProposal(chainConfig)
+		currentHeight := chainConfig.QueryCurrentChainHeightFromValidator(0)
+		chainConfig.PropHeight = currentHeight + int(chainConfig.VotingPeriod) + int(config.PropSubmitBlocks) + int(config.PropBufferBlocks)
+
+		chainConfig.SubmitUpgradeProposal()
+		chainConfig.DepositProposal()
+		chainConfig.VoteYesProposal()
 	}
 
 	// wait till all chains halt at upgrade height
 	for _, chainConfig := range uc.chainConfigs {
-		for i := range chainConfig.ValidatorConfigs {
-			validatorResource, exists := uc.containerManager.GetValidatorResource(chainConfig.Id, i)
-			require.True(uc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainConfig.Id, i)
+		for validatorIndex := range chainConfig.ValidatorConfigs {
+			validatorResource, exists := uc.containerManager.GetValidatorResource(chainConfig.Id, validatorIndex)
+			require.True(uc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainConfig.Id, validatorIndex)
 			containerId := validatorResource.Container.ID
 			containerName := validatorResource.Container.Name[1:]
 
@@ -117,7 +124,7 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 			require.Eventually(
 				uc.t,
 				func() bool {
-					currentHeight := uc.QueryCurrentChainHeightFromValidator(chainConfig, i)
+					currentHeight := chainConfig.QueryCurrentChainHeightFromValidator(validatorIndex)
 					if currentHeight != chainConfig.PropHeight {
 						uc.t.Logf("current block height on %s is %v, waiting for block %v container: %s", containerName, currentHeight, chainConfig.PropHeight, containerId)
 					}
@@ -159,22 +166,22 @@ func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHe
 	uc.t.Logf("starting upgrade for chain-id: %s...", chainConfig.Id)
 	for _, val := range chainConfig.ValidatorConfigs {
 		// TODO: make sure repository and tag are correct
-		validatorResource, err := uc.containerManager.RunValidatorResource(chainConfig.Id, val)
+		validatorResource, err := uc.containerManager.RunValidatorResource(chainConfig.Id, val.Name, val.ConfigDir)
 		require.NoError(uc.t, err)
 		uc.t.Logf("started %s validator container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 	}
 
 	// check that we are creating blocks again
-	for i := range chainConfig.ValidatorConfigs {
-		validatorResource, exists := uc.containerManager.GetValidatorResource(chainConfig.Id, i)
-		require.True(uc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainConfig.Id, i)
+	for validatorIndex := range chainConfig.ValidatorConfigs {
+		validatorResource, exists := uc.containerManager.GetValidatorResource(chainConfig.Id, validatorIndex)
+		require.True(uc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainConfig.Id, validatorIndex)
 		containerId := validatorResource.Container.ID
 		containerName := validatorResource.Container.Name[1:]
 
 		require.Eventually(
 			uc.t,
 			func() bool {
-				currentHeight := uc.QueryCurrentChainHeightFromValidator(chainConfig, i)
+				currentHeight := chainConfig.QueryCurrentChainHeightFromValidator(validatorIndex)
 				if currentHeight <= propHeight {
 					uc.t.Logf("current block height on %s is %v, waiting to create blocks container: %s", containerName, currentHeight, containerId)
 				}
@@ -191,10 +198,11 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() {
 	chainA := uc.chainConfigs[0]
 	chainB := uc.chainConfigs[1]
 
-	uc.SendIBC(chainA, chainB, chainB.ValidatorConfigs[0].PublicAddress, chaininit.OsmoToken)
-	uc.SendIBC(chainB, chainA, chainA.ValidatorConfigs[0].PublicAddress, chaininit.OsmoToken)
-	uc.SendIBC(chainA, chainB, chainB.ValidatorConfigs[0].PublicAddress, chaininit.StakeToken)
-	uc.SendIBC(chainB, chainA, chainA.ValidatorConfigs[0].PublicAddress, chaininit.StakeToken)
-	uc.CreatePool(uc.chainConfigs[0], "pool1A.json")
-	uc.CreatePool(uc.chainConfigs[1], "pool1B.json")
+	chainA.SendIBC(chainB, chainB.ValidatorConfigs[0].PublicAddress, chaininit.OsmoToken)
+	chainB.SendIBC(chainA, chainA.ValidatorConfigs[0].PublicAddress, chaininit.OsmoToken)
+	chainA.SendIBC(chainB, chainB.ValidatorConfigs[0].PublicAddress, chaininit.StakeToken)
+	chainB.SendIBC(chainA, chainA.ValidatorConfigs[0].PublicAddress, chaininit.StakeToken)
+
+	chainA.CreatePool("pool1A.json")
+	chainB.CreatePool("pool1A.json")
 }

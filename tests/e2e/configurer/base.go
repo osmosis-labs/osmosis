@@ -64,7 +64,7 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config, portOffset in
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
 
 	for _, val := range chainConfig.ValidatorConfigs {
-		resource, err := bc.containerManager.RunValidatorResource(chainConfig.Id, val)
+		resource, err := bc.containerManager.RunValidatorResource(chainConfig.Id, val.Name, val.ConfigDir)
 		if err != nil {
 			return err
 		}
@@ -135,7 +135,11 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		return err
 	}
 
-	hermesResource, err := bc.containerManager.RunHermesResource(chainConfigA, chainConfigB, hermesCfgPath)
+	hermesResource, err := bc.containerManager.RunHermesResource(
+		chainConfigA.Id,
+		chainConfigA.ValidatorConfigs[0].Mnemonic,
+		chainConfigB.Id, chainConfigB.ValidatorConfigs[0].Mnemonic,
+		hermesCfgPath)
 	if err != nil {
 		return err
 	}

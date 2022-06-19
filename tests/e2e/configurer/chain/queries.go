@@ -1,4 +1,4 @@
-package configurer
+package chain
 
 import (
 	"encoding/json"
@@ -16,12 +16,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func (bc *baseConfigurer) QueryRPC(path string) ([]byte, error) {
+func (c *Config) QueryRPC(path string) ([]byte, error) {
 	var err error
 	var resp *http.Response
 	retriesLeft := 5
@@ -52,19 +51,19 @@ func (bc *baseConfigurer) QueryRPC(path string) ([]byte, error) {
 	return bz, nil
 }
 
-func (bc *baseConfigurer) QueryChainStatus(c *chain.Config, validatorIdx int) []byte {
+func (c *Config) QueryChainStatus(validatorIdx int) []byte {
 	cmd := []string{"osmosisd", "status"}
-	_, errBuf, err := bc.containerManager.ExecCmd(bc.t, c.Id, validatorIdx, cmd, "")
-	require.NoError(bc.t, err)
+	_, errBuf, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIdx, cmd, "")
+	require.NoError(c.t, err)
 	return errBuf.Bytes()
 }
 
-func (bc *baseConfigurer) QueryCurrentChainHeightFromValidator(c *chain.Config, validatorIdx int) int {
+func (c *Config) QueryCurrentChainHeightFromValidator(validatorIdx int) int {
 	var block syncInfo
 	require.Eventually(
-		bc.t,
+		c.t,
 		func() bool {
-			out := bc.QueryChainStatus(c, validatorIdx)
+			out := c.QueryChainStatus(validatorIdx)
 			err := json.Unmarshal(out, &block)
 			if err != nil {
 				return false
@@ -76,25 +75,25 @@ func (bc *baseConfigurer) QueryCurrentChainHeightFromValidator(c *chain.Config, 
 		"Osmosis node failed to retrieve height info",
 	)
 	currentHeight, err := strconv.Atoi(block.SyncInfo.LatestHeight)
-	require.NoError(bc.t, err)
+	require.NoError(c.t, err)
 	return currentHeight
 }
 
-func (bc *baseConfigurer) QueryBalances(c *chain.Config, i int, addr string) (sdk.Coins, error) {
+func (c *Config) QueryBalances(validatorIndex int, addr string) (sdk.Coins, error) {
 	cmd := []string{"osmosisd", "query", "bank", "balances", addr, "--output=json"}
-	outBuf, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, i, cmd, "")
-	require.NoError(bc.t, err)
+	outBuf, _, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIndex, cmd, "")
+	require.NoError(c.t, err)
 
 	var balancesResp banktypes.QueryAllBalancesResponse
 	err = util.Cdc.UnmarshalJSON(outBuf.Bytes(), &balancesResp)
-	require.NoError(bc.t, err)
+	require.NoError(c.t, err)
 
 	return balancesResp.GetBalances(), nil
 }
 
-func (bc *baseConfigurer) QueryPropTally(chainId string, validatorIdx int, addr string) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
-	hostPort, err := bc.containerManager.GetValidatorHostPort(chainId, validatorIdx, "1317/tcp")
-	require.NoError(bc.t, err)
+func (c *Config) QueryPropTally(validatorIdx int, addr string) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
+	hostPort, err := c.containerManager.GetValidatorHostPort(c.Id, validatorIdx, "1317/tcp")
+	require.NoError(c.t, err)
 
 	endpoint := fmt.Sprintf("http://%s", hostPort)
 
@@ -102,8 +101,8 @@ func (bc *baseConfigurer) QueryPropTally(chainId string, validatorIdx int, addr 
 		"%s/cosmos/gov/v1beta1/proposals/%s/tally",
 		endpoint, addr,
 	)
-	bz, err := bc.QueryRPC(path)
-	require.NoError(bc.t, err)
+	bz, err := c.QueryRPC(path)
+	require.NoError(c.t, err)
 
 	var balancesResp govtypes.QueryTallyResultResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
@@ -117,21 +116,21 @@ func (bc *baseConfigurer) QueryPropTally(chainId string, validatorIdx int, addr 
 	return noTotal, yesTotal, noWithVetoTotal, abstainTotal, nil
 }
 
-func (bc *baseConfigurer) QueryValidatorOperatorAddresses(c *chain.Config) {
+func (c *Config) QueryValidatorOperatorAddresses() {
 	for i, val := range c.ValidatorConfigs {
 		cmd := []string{"osmosisd", "debug", "addr", val.PublicKey}
-		bc.t.Logf("extracting validator operator addresses for chain-id: %s", c.Id)
-		_, errBuf, err := bc.containerManager.ExecCmd(bc.t, c.Id, i, cmd, "")
-		require.NoError(bc.t, err)
+		c.t.Logf("extracting validator operator addresses for chain-id: %s", c.Id)
+		_, errBuf, err := c.containerManager.ExecCmd(c.t, c.Id, i, cmd, "")
+		require.NoError(c.t, err)
 		re := regexp.MustCompile("osmovaloper(.{39})")
 		operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
 		c.ValidatorConfigs[i].OperatorAddress = strings.TrimSuffix(operAddr, "\n")
 	}
 }
 
-func (bc *baseConfigurer) QueryIntermediaryAccount(chainId string, validatorIdx int, denom string, valAddr string) (int, error) {
-	hostPort, err := bc.containerManager.GetValidatorHostPort(chainId, validatorIdx, "1317/tcp")
-	require.NoError(bc.t, err)
+func (c *Config) QueryIntermediaryAccount(validatorIdx int, denom string, valAddr string) (int, error) {
+	hostPort, err := c.containerManager.GetValidatorHostPort(c.Id, validatorIdx, "1317/tcp")
+	require.NoError(c.t, err)
 
 	endpoint := fmt.Sprintf("http://%s", hostPort)
 
@@ -140,15 +139,15 @@ func (bc *baseConfigurer) QueryIntermediaryAccount(chainId string, validatorIdx 
 		"%s/cosmos/staking/v1beta1/validators/%s/delegations/%s",
 		endpoint, valAddr, intAccount,
 	)
-	bz, err := bc.QueryRPC(path)
-	require.NoError(bc.t, err)
+	bz, err := c.QueryRPC(path)
+	require.NoError(c.t, err)
 
 	var stakingResp stakingtypes.QueryDelegationResponse
 	err = util.Cdc.UnmarshalJSON(bz, &stakingResp)
-	require.NoError(bc.t, err)
+	require.NoError(c.t, err)
 
 	intAccBalance := stakingResp.DelegationResponse.Balance.Amount.String()
 	intAccountBalance, err := strconv.Atoi(intAccBalance)
-	require.NoError(bc.t, err)
+	require.NoError(c.t, err)
 	return intAccountBalance, err
 }
