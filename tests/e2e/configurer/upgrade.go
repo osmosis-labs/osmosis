@@ -101,7 +101,6 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 	// submit, deposit, and vote for upgrade proposal
 	// prop height = current height + voting period + time it takes to submit proposal + small buffer
 	for _, chainConfig := range uc.chainConfigs {
-
 		currentHeight := chainConfig.QueryCurrentChainHeightFromValidator(0)
 		chainConfig.PropHeight = currentHeight + int(chainConfig.VotingPeriod) + int(config.PropSubmitBlocks) + int(config.PropBufferBlocks)
 
