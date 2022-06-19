@@ -194,7 +194,6 @@ func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, va
 		},
 		noRestart,
 	)
-
 	if err != nil {
 		return err
 	}
