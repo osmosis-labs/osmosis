@@ -1096,23 +1096,23 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			// a = expected shares, b = actual shares
 			// 0.04000000047920000 = abs(2_599_999_968_750-2_499_999_968_800)/2_499_999_968_800
 			// 	Full solution: https://www.wolframalpha.com/input?i=abs%282599999968750-2499999968800%29%2F2499999968800
-			name:                 "Error Tolerance: expected > actual",
+			name:                 "Error Tolerance: One token in, expected > actual",
 			swapFee:              sdk.MustNewDecFromStr("0"),
 			poolAssets:           oneTrillionEvenPoolAssets,
 			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-			expectShares:         sdk.NewInt(2_599_999_968_750),
+			expectShares:         sdk.NewInt(2_599_999_968_750), // ACTUAL: 2_499_999_968_800
 			expectToleranceError: true,
 		},
 		{
 			// |a - b| / min(a, b) <= allowedErrRatio
 			// a = expected shares, b = actual shares
-			// 0.08000000101840001 = abs(2_299_999_968_750-2_499_999_968_800)/2_499_999_968_800
-			// 	Full solution: https://www.wolframalpha.com/input?i=abs%282299999968750-2499999968800%29%2F2499999968800
-			name:                 "Error Tolerance: expected < actual",
+			// 0.0399999874 = abs(5_000_000_000_099-5_199_999_937_500)/5_000_000_000_099
+			// 	https://www.wolframalpha.com/input?i=abs%285000000000099-5199999937500%29%2F5000000000099
+			name:                 "Error Tolerance: Two token in, expected > actual",
 			swapFee:              sdk.MustNewDecFromStr("0"),
 			poolAssets:           oneTrillionEvenPoolAssets,
-			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-			expectShares:         sdk.NewInt(2_299_999_968_750), // ACTUAL: 249_999_996_8800
+			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
+			expectShares:         sdk.NewInt(2_599_999_968_750 * 2), // ACTUAL: 5_000_000_000_099
 			expectToleranceError: true,
 		},
 		{
@@ -1179,7 +1179,6 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 				} else {
 					require.NoError(t, err)
 				}
-
 			}
 
 			assertPoolStateNotModified(t, balancerPool, sut)
