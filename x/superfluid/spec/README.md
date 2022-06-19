@@ -92,19 +92,15 @@ instant undelegations and immediately burn the OSMO. If less, we mint
 OSMO and update the amount delegated. A simplified diagram of this whole
 process is found below:
 
-`<br/>`{=html}
+<br/>
 
-```{=html}
 <p style="text-align:center;">
-```
 
-`<img src="https://raw.githubusercontent.com/osmosis-labs/osmosis/main/x/superfluid/spec/superfluiddiagram.png" height="300"/>`{=html}
+<img src="https://raw.githubusercontent.com/osmosis-labs/osmosis/main/x/superfluid/spec/superfluiddiagram.png" height="300"/>
 
-```{=html}
 </p>
-```
 
-`</br>`{=html}
+</br>
 
 This minting is safe because we strict constrain the permissions of Bank
 (the module that burns and mints OSMO) to do what it's designed to do.
