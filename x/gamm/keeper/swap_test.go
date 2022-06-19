@@ -111,8 +111,6 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			suite.Error(err, "test: %v", test.name)
 			_, err = keeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], poolIdWithSwap, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
 			suite.Error(err, "test: %v", test.name)
-			_, err = keeper.GetSwapFeeFromPoolId(suite.Ctx, poolIdWithSwap)
-			suite.Error(err, "test: %v", test.name)
 		}
 	}
 }

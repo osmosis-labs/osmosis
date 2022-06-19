@@ -94,20 +94,6 @@ func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balance
 	return poolId
 }
 
-func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolParamsAndAssets(poolParams balancer.PoolParams, poolAssets []balancer.PoolAsset) uint64 {
-	// Add coins for pool creation fee + coins needed to mint balances
-	fundCoins := sdk.Coins{sdk.NewCoin("uosmo", sdk.NewInt(10000000000))}
-	for _, a := range poolAssets {
-		fundCoins = fundCoins.Add(a.Token)
-	}
-	suite.FundAcc(suite.TestAccs[0], fundCoins)
-
-	msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], poolParams, poolAssets, "")
-	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
-	suite.NoError(err)
-	return poolId
-}
-
 func (suite *KeeperTestHelper) PrepareBalancerPoolWithSwapFee() uint64 {
 	poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 		SwapFee: sdk.MustNewDecFromStr("0.001"),

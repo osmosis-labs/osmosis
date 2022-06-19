@@ -287,30 +287,6 @@ func (suite *KeeperTestSuite) TestGetTotalSwapFeeForSwapInBalancerPool() {
 	suite.Require().Equal(len(signers), 1)
 	suite.Require().Equal(signers[0].String(), addr1)
 
-	// // create balancer pool msg
-	// createPoolMsg := func(after func(msg balancertypes.MsgCreateBalancerPool) balancertypes.MsgCreateBalancerPool) balancertypes.MsgCreateBalancerPool {
-	// 	properMsg := balancertypes.MsgCreateBalancerPool{
-	// 		Sender:             addr1,
-	// 		PoolParams:         &defaultBalancerPoolParams,
-	// 		PoolAssets:         dummyPoolAssets,
-	// 		FuturePoolGovernor: defaultFutureGovernor,
-	// 	}
-
-	// 	return after(properMsg)
-	// }
-
-	// // create a create balancer pool msg
-	// msgPool := createPoolMsg(func(msg balancertypes.MsgCreateBalancerPool) balancertypes.MsgCreateBalancerPool {
-	// 	// do nothing
-	// 	return msg
-	// })
-
-	// // verify msgPool was created correctly
-	// suite.Require().Equal(msgPool.Type(), "create_balancer_pool")
-	// msgSigners := msgPool.GetSigners()
-	// suite.Require().Equal(len(msgSigners), 1)
-	// suite.Require().Equal(msgSigners[0].String(), addr1)
-
 	// define test cases
 	tests := []struct {
 		name               string
@@ -397,45 +373,8 @@ func (suite *KeeperTestSuite) TestGetTotalSwapFeeForSwapInBalancerPool() {
 				poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
 				suite.NoError(err)
 
+				// update msg's route to reflect to actual pool ID for the newly created pool
 				test.msg.Routes[i].PoolId = poolId
-
-				// // Add extra coin at start, and only add poolAsset[1] after
-				// if i == 0 {
-				// 	baseDenom, err := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
-				// 	suite.Require().NoError(err, "test: %s", test.name)
-				// 	if baseDenom != poolAssets[0].Token.Denom {
-				// 		err := suite.ExecuteUpgradeFeeTokenProposal(poolAssets[0].Token.Denom, poolId)
-				// 		suite.Require().NoError(err, "test: %s", test.name)
-				// 	}
-				// }
-
-				// baseDenom, err := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
-				// suite.Require().NoError(err, "test: %s", test.name)
-				// if baseDenom != poolAssets[1].Token.Denom {
-				// 	err := suite.ExecuteUpgradeFeeTokenProposal(poolAssets[1].Token.Denom, poolId)
-				// 	suite.Require().NoError(err, "test: %s", test.name)
-				// }
-
-				// make the denoms fee tokens
-				// feeTokens := make([]types.FeeToken, 0, len(poolAssets))
-				// for j, poolAssets := range poolAssets {
-				// 	feeToken := types.FeeToken{
-				// 		Denom:  poolAssets[j].Token.Denom,
-				// 		PoolID: poolId,
-				// 	}
-
-				// 	feeTokens = append(feeTokens, feeToken)
-				// }
-				// feeTokens := make([]types.FeeToken, 0, len(poolAssets))
-
-				// if i == 0 {
-				// 	suite.App.TxFeesKeeper.SetFeeTokens(suite.Ctx, []types.FeeToken{
-				// 		{poolAssets[0].Token.Denom, poolId},
-				// 		{poolAssets[1].Token.Denom, poolId},
-				// 	})
-				// } else {
-				// 	suite.App.TxFeesKeeper.SetFeeTokens(suite.Ctx, )
-				// }
 			}
 			// now that all the pools on the route have been created, we can test getTotalSwapFee
 			swapFees, err := suite.App.TxFeesKeeper.GetTotalSwapFee(suite.Ctx, poolIds, denomPath)
