@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
@@ -206,12 +205,5 @@ func (bc *baseConfigurer) initializeChainConfigFromInitChain(initializedChain *c
 		chainConfig.ValidatorConfigs = append(chainConfig.ValidatorConfigs, &chain.ValidatorConfig{
 			Validator: *validator,
 		})
-	}
-}
-
-func noRestart(config *docker.HostConfig) {
-	// in this case we don't want the nodes to restart on failure
-	config.RestartPolicy = docker.RestartPolicy{
-		Name: "no",
 	}
 }
