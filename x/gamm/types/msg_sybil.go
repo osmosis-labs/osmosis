@@ -28,10 +28,13 @@ func (msg MsgSwapExactAmountOut) GetTokenDenomsOnPath() []string {
 		return []string{}
 	}
 
-	denoms := make([]string, 0, len(msg.Routes))
+	denoms := make([]string, 0, len(msg.Routes)+1)
 	for i := 0; i < len(msg.Routes); i++ {
 		denoms = append(denoms, msg.Routes[i].TokenInDenom)
 	}
+
+	denoms = append(denoms, msg.TokenOutDenom())
+
 	return denoms
 }
 
@@ -65,7 +68,8 @@ func (msg MsgSwapExactAmountIn) GetTokenDenomsOnPath() []string {
 		return []string{}
 	}
 
-	denoms := make([]string, 0, len(msg.Routes))
+	denoms := make([]string, 0, len(msg.Routes)+1)
+	denoms = append(denoms, msg.TokenInDenom())
 	for i := 0; i < len(msg.Routes); i++ {
 		denoms = append(denoms, msg.Routes[i].TokenOutDenom)
 	}

@@ -93,3 +93,38 @@ func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balance
 	suite.NoError(err)
 	return poolId
 }
+
+func (suite *KeeperTestHelper) PrepareBalancerPoolWithPoolParamsAndAssets(poolParams balancer.PoolParams, poolAssets []balancer.PoolAsset) uint64 {
+	// Add coins for pool creation fee + coins needed to mint balances
+	fundCoins := sdk.Coins{sdk.NewCoin("uosmo", sdk.NewInt(10000000000))}
+	for _, a := range poolAssets {
+		fundCoins = fundCoins.Add(a.Token)
+	}
+	suite.FundAcc(suite.TestAccs[0], fundCoins)
+
+	msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], poolParams, poolAssets, "")
+	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+	suite.NoError(err)
+	return poolId
+}
+
+func (suite *KeeperTestHelper) PrepareBalancerPoolWithSwapFee() uint64 {
+	poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+		SwapFee: sdk.MustNewDecFromStr("0.001"),
+		ExitFee: sdk.NewDec(0),
+	})
+
+	spotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, "foo", "bar")
+	suite.NoError(err)
+	suite.Equal(sdk.NewDec(2).String(), spotPrice.String())
+	spotPrice, err = suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, "bar", "baz")
+	suite.NoError(err)
+	suite.Equal(sdk.NewDecWithPrec(15, 1).String(), spotPrice.String())
+	spotPrice, err = suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, "baz", "foo")
+	suite.NoError(err)
+	s := sdk.NewDec(1).Quo(sdk.NewDec(3))
+	sp := s.Mul(gammtypes.SigFigs).RoundInt().ToDec().Quo(gammtypes.SigFigs)
+	suite.Equal(sp.String(), spotPrice.String())
+
+	return poolId
+}

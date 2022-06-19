@@ -93,7 +93,8 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		//     	The entire tx.Fee() will be deducted in the DeductFeeDecorator
 		//     	regardless of the gas. A tx fee with sufficient swap fees can therefore
 		// 	 	be short on the gas cost but have the swap fees make up the differencee
-		// 		so long as the attached feeCoin + swap fees are sufficient.
+		// 		so long as the attached feeCoin + swap fees are sufficient in the base denom.
+		//
 		// no fee attached, and non-zero gas price -> reject tx
 		if len(feeCoins) != 1 {
 			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached with non-zero gas")
@@ -154,11 +155,14 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	if txfee_filters.IsArbTxLoose(tx) {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
 		// arbitration tx are not qualified for sybil resistant fees
-		return NewSybil(cfgMinGasPrice, sdk.NewCoin(baseDenom, sdk.ZeroInt())), nil
+		return NewSybil(cfgMinGasPrice, sdk.NewCoin(baseDenom, sdk.ZeroInt()))
 	}
 
 	// Create sybil fee structure
-	sybil := NewSybil(cfgMinGasPrice, sdk.NewCoin(baseDenom, sdk.ZeroInt()))
+	sybil, err := NewSybil(cfgMinGasPrice, sdk.NewCoin(baseDenom, sdk.ZeroInt()))
+	if err != nil {
+		return Sybil{}, err
+	}
 
 	// Check if message qualifies for sybil resistant fees
 	msg, canSybil := tx.GetMsgs()[0].(gammtypes.SybilResistantFee)
@@ -174,8 +178,8 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 		return sybil, nil
 	}
 
-	// Get fees paid in swap fees
-	feesPaid, err := mfd.TxFeesKeeper.getFeesPaid(ctx, msg.GetPoolIdOnPath(), msg.GetTokenDenomsOnPath(), token)
+	// Get fees paid in swap fee
+	feesPaid, err := mfd.TxFeesKeeper.GetFeesPaid(ctx, msg.GetPoolIdOnPath(), msg.GetTokenDenomsOnPath(), token)
 	if err != nil {
 		return Sybil{}, err
 	}

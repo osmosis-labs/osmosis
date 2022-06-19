@@ -13,6 +13,22 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
+func (suite *KeeperTestSuite) TestSybilResistantFeeForSwapOutBalancerPool() {
+	// check tx must be true however SetupTest does not actually use its parameter
+	suite.SetupTest(true)
+
+	// define a create msg function
+
+	// create a msg and verify that it is correct
+
+	// create a balancer pool with a swap fee
+
+	// define test cases
+
+	// check test cases
+
+}
+
 func (suite *KeeperTestSuite) TestFeeDecorator() {
 	suite.SetupTest(false)
 

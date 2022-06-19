@@ -1,4 +1,4 @@
-package types
+package keeper
 
 import (
 	"fmt"
@@ -11,11 +11,16 @@ type Sybil struct {
 	FeesPaid sdk.Coin
 }
 
-func NewSybil(gasPrice sdk.Dec, feesPaid sdk.Coin) Sybil {
+func NewSybil(gasPrice sdk.Dec, feesPaid sdk.Coin) (Sybil, error) {
+	// check amounts are non-negative
+	if gasPrice.LT(sdk.ZeroDec()) || feesPaid.IsLT(sdk.NewCoin(feesPaid.Denom, sdk.ZeroInt())) {
+		return Sybil{}, fmt.Errorf("Cannot create new sybil with gas price %v and fees %v", gasPrice, feesPaid.Amount)
+	}
+
 	return Sybil{
 		GasPrice: gasPrice,
 		FeesPaid: feesPaid,
-	}
+	}, nil
 }
 
 func (s *Sybil) AddToFeesPaid(feesPaid sdk.Coin) error {
