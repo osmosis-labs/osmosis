@@ -1,7 +1,7 @@
 package balancer_test
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -39,7 +39,7 @@ func createTestContext(t *testing.T) sdk.Context {
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
-func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) {
+func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) error {
 	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)
 
@@ -47,11 +47,11 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 		MultiplicativeTolerance: allowedErrRatioDec,
 	}
 
-	require.Equal(
-		t,
-		0,
-		errTolerance.Compare(expectedShares, actualShares),
-		fmt.Sprintf("expectedShares: %s, actualShares: %s", expectedShares.String(), actualShares.String()))
+	if errTolerance.Compare(expectedShares, actualShares) != 0 {
+		return errors.New("shares doesnot fall within the tolerance range")
+	}
+
+	return nil
 }
 
 func assertExpectedLiquidity(t *testing.T, tokensJoined, liquidity sdk.Coins) {
