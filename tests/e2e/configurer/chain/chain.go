@@ -1,17 +1,27 @@
 package chain
 
-import "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+import (
+	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+)
 
 type Config struct {
-	ChainId         string
-	ValidatorConfig []*chain.ValidatorConfig
+	chaininit.ChainMeta
+
+	ValidatorInitConfigs []*chaininit.ValidatorConfig
 	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, and a buffer.
 	VotingPeriod float32
 	// upgrade proposal height for chain.
-	PropHeight int
-	Chain      *chain.Chain
+	PropHeight           int
+	LatestProposalNumber int
+	LatestLockNumber     int
+	ValidatorConfigs     []*ValidatorConfig
 }
 
-func (cc Config) GetChain() *chain.Chain {
-	return cc.Chain
+func New(id string, initValidatorConfigs []*chaininit.ValidatorConfig) *Config {
+	return &Config{
+		ChainMeta: chaininit.ChainMeta{
+			Id: id,
+		},
+		ValidatorInitConfigs: initValidatorConfigs,
+	}
 }

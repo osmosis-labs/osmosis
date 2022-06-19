@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -118,7 +119,7 @@ func underlyingCoinsForSelectPools(
 func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, error) {
 	genState := make(map[string]json.RawMessage)
 
-	genesisFile, err := os.Open(genesisFilePath)
+	genesisFile, err := os.Open(filepath.Clean(genesisFilePath))
 	if err != nil {
 		return genState, err
 	}
@@ -270,7 +271,7 @@ Example:
 			}
 
 			// convert balances to underlying coins and sum up balances to total balance
-			for _, account := range snapshotAccs {
+			for addr, account := range snapshotAccs {
 				// All pool shares are in liquid balances OR bonded balances (locked),
 				// therefore underlyingCoinsForSelectPools on liquidBalances + bondedBalances
 				// will include everything that is in one of those two pools.
@@ -283,6 +284,7 @@ Example:
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.Staked)).
 					Add(sdk.NewCoin(appparams.BaseCoinUnit, account.UnbondingStake)).
 					Add(account.Bonded...)
+				snapshotAccs[addr] = account
 			}
 
 			snapshot := DeriveSnapshot{

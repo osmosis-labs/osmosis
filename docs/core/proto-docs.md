@@ -225,6 +225,7 @@
     - [SuperfluidAsset](#osmosis.superfluid.SuperfluidAsset)
     - [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord)
     - [SuperfluidIntermediaryAccount](#osmosis.superfluid.SuperfluidIntermediaryAccount)
+    - [UnpoolWhitelistedPools](#osmosis.superfluid.UnpoolWhitelistedPools)
   
     - [SuperfluidAssetType](#osmosis.superfluid.SuperfluidAssetType)
   
@@ -276,6 +277,8 @@
     - [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse)
     - [MsgSuperfluidUndelegate](#osmosis.superfluid.MsgSuperfluidUndelegate)
     - [MsgSuperfluidUndelegateResponse](#osmosis.superfluid.MsgSuperfluidUndelegateResponse)
+    - [MsgUnPoolWhitelistedPool](#osmosis.superfluid.MsgUnPoolWhitelistedPool)
+    - [MsgUnPoolWhitelistedPoolResponse](#osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse)
   
     - [Msg](#osmosis.superfluid.Msg)
   
@@ -534,9 +537,9 @@ Params holds parameters for the incentives module
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `shareInAmount` | [string](#string) |  |  |
-| `tokenOutMins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `share_in_amount` | [string](#string) |  |  |
+| `token_out_mins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -562,9 +565,9 @@ Params holds parameters for the incentives module
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenOut` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `shareInMaxAmount` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_out` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `share_in_max_amount` | [string](#string) |  |  |
 
 
 
@@ -579,7 +582,7 @@ Params holds parameters for the incentives module
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `shareInAmount` | [string](#string) |  |  |
+| `share_in_amount` | [string](#string) |  |  |
 
 
 
@@ -595,10 +598,10 @@ Params holds parameters for the incentives module
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenOutDenom` | [string](#string) |  |  |
-| `shareInAmount` | [string](#string) |  |  |
-| `tokenOutMinAmount` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_out_denom` | [string](#string) |  |  |
+| `share_in_amount` | [string](#string) |  |  |
+| `token_out_min_amount` | [string](#string) |  |  |
 
 
 
@@ -613,7 +616,7 @@ Params holds parameters for the incentives module
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenOutAmount` | [string](#string) |  |  |
+| `token_out_amount` | [string](#string) |  |  |
 
 
 
@@ -630,9 +633,9 @@ This is really MsgJoinPoolNoSwap
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `shareOutAmount` | [string](#string) |  |  |
-| `tokenInMaxs` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `share_out_amount` | [string](#string) |  |  |
+| `token_in_maxs` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -659,9 +662,9 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenIn` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `shareOutMinAmount` | [string](#string) |  | repeated cosmos.base.v1beta1.Coin tokensIn = 5 [ (gogoproto.moretags) = "yaml:\"tokens_in\"", (gogoproto.nullable) = false ]; |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_in` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `share_out_min_amount` | [string](#string) |  | repeated cosmos.base.v1beta1.Coin tokensIn = 5 [ (gogoproto.moretags) = "yaml:\"tokens_in\"", (gogoproto.nullable) = false ]; |
 
 
 
@@ -676,7 +679,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `shareOutAmount` | [string](#string) |  |  |
+| `share_out_amount` | [string](#string) |  |  |
 
 
 
@@ -692,10 +695,10 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenInDenom` | [string](#string) |  |  |
-| `shareOutAmount` | [string](#string) |  |  |
-| `tokenInMaxAmount` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_in_denom` | [string](#string) |  |  |
+| `share_out_amount` | [string](#string) |  |  |
+| `token_in_max_amount` | [string](#string) |  |  |
 
 
 
@@ -710,7 +713,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenInAmount` | [string](#string) |  |  |
+| `token_in_amount` | [string](#string) |  |  |
 
 
 
@@ -727,8 +730,8 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `routes` | [SwapAmountInRoute](#osmosis.gamm.v1beta1.SwapAmountInRoute) | repeated |  |
-| `tokenIn` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `tokenOutMinAmount` | [string](#string) |  |  |
+| `token_in` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `token_out_min_amount` | [string](#string) |  |  |
 
 
 
@@ -743,7 +746,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenOutAmount` | [string](#string) |  |  |
+| `token_out_amount` | [string](#string) |  |  |
 
 
 
@@ -760,8 +763,8 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
 | `routes` | [SwapAmountOutRoute](#osmosis.gamm.v1beta1.SwapAmountOutRoute) | repeated |  |
-| `tokenInMaxAmount` | [string](#string) |  |  |
-| `tokenOut` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `token_in_max_amount` | [string](#string) |  |  |
+| `token_out` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -776,7 +779,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenInAmount` | [string](#string) |  |  |
+| `token_in_amount` | [string](#string) |  |  |
 
 
 
@@ -791,8 +794,8 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenOutDenom` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_out_denom` | [string](#string) |  |  |
 
 
 
@@ -807,8 +810,8 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenInDenom` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_in_denom` | [string](#string) |  |  |
 
 
 
@@ -866,7 +869,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `numPools` | [uint64](#uint64) |  |  |
+| `num_pools` | [uint64](#uint64) |  |  |
 
 
 
@@ -881,7 +884,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 
 
 
@@ -911,7 +914,7 @@ TODO: Rename to MsgJoinSwapExactAmountIn
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 
 
 
@@ -973,7 +976,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 | `base_asset_denom` | [string](#string) |  |  |
 | `quote_asset_denom` | [string](#string) |  |  |
 
@@ -991,7 +994,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `spotPrice` | [string](#string) |  | String of the Dec. Ex) 10.203uatom |
+| `spot_price` | [string](#string) |  | String of the Dec. Ex) 10.203uatom |
 
 
 
@@ -1007,8 +1010,8 @@ query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
-| `tokenIn` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+| `token_in` | [string](#string) |  |  |
 | `routes` | [SwapAmountInRoute](#osmosis.gamm.v1beta1.SwapAmountInRoute) | repeated |  |
 
 
@@ -1024,7 +1027,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenOutAmount` | [string](#string) |  |  |
+| `token_out_amount` | [string](#string) |  |  |
 
 
 
@@ -1040,9 +1043,9 @@ query.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 | `routes` | [SwapAmountOutRoute](#osmosis.gamm.v1beta1.SwapAmountOutRoute) | repeated |  |
-| `tokenOut` | [string](#string) |  |  |
+| `token_out` | [string](#string) |  |  |
 
 
 
@@ -1057,7 +1060,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `tokenInAmount` | [string](#string) |  |  |
+| `token_in_amount` | [string](#string) |  |  |
 
 
 
@@ -1097,7 +1100,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 
 
 
@@ -1127,7 +1130,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `poolId` | [uint64](#uint64) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
 
 
 
@@ -1142,7 +1145,7 @@ query.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `totalShares` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `total_shares` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -1165,13 +1168,13 @@ query.
 | `Pools` | [QueryPoolsRequest](#osmosis.gamm.v1beta1.QueryPoolsRequest) | [QueryPoolsResponse](#osmosis.gamm.v1beta1.QueryPoolsResponse) |  | GET|/osmosis/gamm/v1beta1/pools|
 | `NumPools` | [QueryNumPoolsRequest](#osmosis.gamm.v1beta1.QueryNumPoolsRequest) | [QueryNumPoolsResponse](#osmosis.gamm.v1beta1.QueryNumPoolsResponse) |  | GET|/osmosis/gamm/v1beta1/num_pools|
 | `TotalLiquidity` | [QueryTotalLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalLiquidityRequest) | [QueryTotalLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalLiquidityResponse) |  | GET|/osmosis/gamm/v1beta1/total_liquidity|
-| `Pool` | [QueryPoolRequest](#osmosis.gamm.v1beta1.QueryPoolRequest) | [QueryPoolResponse](#osmosis.gamm.v1beta1.QueryPoolResponse) | Per Pool gRPC Endpoints | GET|/osmosis/gamm/v1beta1/pools/{poolId}|
-| `PoolParams` | [QueryPoolParamsRequest](#osmosis.gamm.v1beta1.QueryPoolParamsRequest) | [QueryPoolParamsResponse](#osmosis.gamm.v1beta1.QueryPoolParamsResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{poolId}/params|
-| `TotalPoolLiquidity` | [QueryTotalPoolLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityRequest) | [QueryTotalPoolLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{poolId}/total_pool_liquidity|
-| `TotalShares` | [QueryTotalSharesRequest](#osmosis.gamm.v1beta1.QueryTotalSharesRequest) | [QueryTotalSharesResponse](#osmosis.gamm.v1beta1.QueryTotalSharesResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{poolId}/total_shares|
-| `SpotPrice` | [QuerySpotPriceRequest](#osmosis.gamm.v1beta1.QuerySpotPriceRequest) | [QuerySpotPriceResponse](#osmosis.gamm.v1beta1.QuerySpotPriceResponse) | SpotPrice defines a gRPC query handler that returns the spot price given a base denomination and a quote denomination. | GET|/osmosis/gamm/v1beta1/pools/{poolId}/prices|
-| `EstimateSwapExactAmountIn` | [QuerySwapExactAmountInRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest) | [QuerySwapExactAmountInResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse) | Estimate the swap. | GET|/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_in|
-| `EstimateSwapExactAmountOut` | [QuerySwapExactAmountOutRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutRequest) | [QuerySwapExactAmountOutResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse) |  | GET|/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_out|
+| `Pool` | [QueryPoolRequest](#osmosis.gamm.v1beta1.QueryPoolRequest) | [QueryPoolResponse](#osmosis.gamm.v1beta1.QueryPoolResponse) | Per Pool gRPC Endpoints | GET|/osmosis/gamm/v1beta1/pools/{pool_id}|
+| `PoolParams` | [QueryPoolParamsRequest](#osmosis.gamm.v1beta1.QueryPoolParamsRequest) | [QueryPoolParamsResponse](#osmosis.gamm.v1beta1.QueryPoolParamsResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{pool_id}/params|
+| `TotalPoolLiquidity` | [QueryTotalPoolLiquidityRequest](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityRequest) | [QueryTotalPoolLiquidityResponse](#osmosis.gamm.v1beta1.QueryTotalPoolLiquidityResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{pool_id}/total_pool_liquidity|
+| `TotalShares` | [QueryTotalSharesRequest](#osmosis.gamm.v1beta1.QueryTotalSharesRequest) | [QueryTotalSharesResponse](#osmosis.gamm.v1beta1.QueryTotalSharesResponse) |  | GET|/osmosis/gamm/v1beta1/pools/{pool_id}/total_shares|
+| `SpotPrice` | [QuerySpotPriceRequest](#osmosis.gamm.v1beta1.QuerySpotPriceRequest) | [QuerySpotPriceResponse](#osmosis.gamm.v1beta1.QuerySpotPriceResponse) | SpotPrice defines a gRPC query handler that returns the spot price given a base denomination and a quote denomination. | GET|/osmosis/gamm/v1beta1/pools/{pool_id}/prices|
+| `EstimateSwapExactAmountIn` | [QuerySwapExactAmountInRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountInRequest) | [QuerySwapExactAmountInResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse) | Estimate the swap. | GET|/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in|
+| `EstimateSwapExactAmountOut` | [QuerySwapExactAmountOutRequest](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutRequest) | [QuerySwapExactAmountOutResponse](#osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse) |  | GET|/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out|
 
  <!-- end services -->
 
@@ -3244,6 +3247,7 @@ and OSMO tokens for superfluid staking
 | `delegator_address` | [string](#string) |  |  |
 | `validator_address` | [string](#string) |  |  |
 | `delegation_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `equivalent_staked_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -3262,6 +3266,21 @@ and OSMO tokens for superfluid staking
 | `denom` | [string](#string) |  |  |
 | `val_addr` | [string](#string) |  |  |
 | `gauge_id` | [uint64](#uint64) |  | perpetual gauge for rewards distribution |
+
+
+
+
+
+
+<a name="osmosis.superfluid.UnpoolWhitelistedPools"></a>
+
+### UnpoolWhitelistedPools
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `ids` | [uint64](#uint64) | repeated |  |
 
 
 
@@ -3673,6 +3692,7 @@ assets
 | ----- | ---- | ----- | ----------- |
 | `superfluid_delegation_records` | [SuperfluidDelegationRecord](#osmosis.superfluid.SuperfluidDelegationRecord) | repeated |  |
 | `total_delegated_coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `total_equivalent_staked_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 
 
 
@@ -3935,6 +3955,44 @@ specified validator addr.
 
 
 
+
+<a name="osmosis.superfluid.MsgUnPoolWhitelistedPool"></a>
+
+### MsgUnPoolWhitelistedPool
+MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is
+associated with pool pool_id. If pool_id is not approved for unpooling by
+governance, this is a no-op. Unpooling takes the locked gamm shares, and runs
+"ExitPool" on it, to get the constituent tokens. e.g. z gamm/pool/1 tokens
+ExitPools into constituent tokens x uatom, y uosmo. Then it creates a new
+lock for every constituent token, with the duration associated with the lock.
+If the lock was unbonding, the new lockup durations should be the time left
+until unbond completion.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `pool_id` | [uint64](#uint64) |  |  |
+
+
+
+
+
+
+<a name="osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse"></a>
+
+### MsgUnPoolWhitelistedPoolResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `exitedLockIds` | [uint64](#uint64) | repeated |  |
+
+
+
+
+
  <!-- end messages -->
 
  <!-- end enums -->
@@ -3955,6 +4013,7 @@ Msg defines the Msg service.
 Execute superfluid redelegation for a lockup rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns (MsgSuperfluidRedelegateResponse); | |
 | `SuperfluidUnbondLock` | [MsgSuperfluidUnbondLock](#osmosis.superfluid.MsgSuperfluidUnbondLock) | [MsgSuperfluidUnbondLockResponse](#osmosis.superfluid.MsgSuperfluidUnbondLockResponse) | For a given lock that is being superfluidly undelegated, also unbond the underlying lock. | |
 | `LockAndSuperfluidDelegate` | [MsgLockAndSuperfluidDelegate](#osmosis.superfluid.MsgLockAndSuperfluidDelegate) | [MsgLockAndSuperfluidDelegateResponse](#osmosis.superfluid.MsgLockAndSuperfluidDelegateResponse) | Execute lockup lock and superfluid delegation in a single msg | |
+| `UnPoolWhitelistedPool` | [MsgUnPoolWhitelistedPool](#osmosis.superfluid.MsgUnPoolWhitelistedPool) | [MsgUnPoolWhitelistedPoolResponse](#osmosis.superfluid.MsgUnPoolWhitelistedPoolResponse) |  | |
 
  <!-- end services -->
 
@@ -4251,14 +4310,18 @@ adminship of a denom to a new account
 
 ### MsgCreateDenom
 MsgCreateDenom is the sdk.Msg type for allowing an account to create
-a new denom.  It requires a sender address and a unique nonce
-(to allow accounts to create multiple denoms)
+a new denom. It requires a sender address and a subdenomination.
+The (sender_address, sub_denomination) pair must be unique and cannot be
+re-used. The resulting denom created is `factory/{creator
+address}/{subdenom}`. The resultant denom's admin is originally set to be the
+creator, but this can be changed later. The token denom does not indicate the
+current admin.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `sender` | [string](#string) |  |  |
-| `nonce` | [string](#string) |  |  |
+| `subdenom` | [string](#string) |  | subdenom can be up to 44 "alphanumeric" characters long. |
 
 
 

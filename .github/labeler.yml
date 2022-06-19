@@ -1,3 +1,16 @@
+# Note that any updates to this files will not be applied in CI
+# until this file is merged into main. This is due to oddities of the labeller Github Action.
+"C:app-wiring":
+  # Match all of app folder except wasm sub-folder
+  - app/*.go
+  - app/apptesting/**/*
+  - app/keepers/**/*
+  - app/params/**/*
+  - app/upgrades/**/*
+  # Also match any module.go update
+  - x/**/module.go
+"C:wasm":
+  - app/wasm/**/*
 "C:x/claim":
   - x/claim/**/*
 "C:x/epochs":

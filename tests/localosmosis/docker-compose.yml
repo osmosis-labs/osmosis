@@ -4,9 +4,10 @@ services:
   osmosisd:
     image: local:osmosis
     user: "root:root"
-    command:
-      - start
-      - --rpc.laddr=tcp://0.0.0.0:26657
+    volumes:
+      - ./.osmosisd/config:/osmosis/.osmosisd/config
+      - ./.osmosisd/data:/osmosis/.osmosisd/data
+      - ./.osmosisd/wasm:/osmosis/.osmosisd/wasm
     ports:
       - "26657:26657"
       - "1317:1317"

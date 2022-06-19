@@ -1,9 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# --------------------------------------------------------
-# Build
-# --------------------------------------------------------
-
+# Build stage
 FROM golang:1.18.2-alpine3.15 as build
 
 RUN set -eux; apk add --no-cache ca-certificates build-base;
@@ -13,7 +10,6 @@ RUN apk add linux-headers
 
 WORKDIR /osmosis
 COPY . /osmosis
-
 
 # CosmWasm: see https://github.com/CosmWasm/wasmvm/releases
 ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
@@ -26,26 +22,20 @@ RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 
 RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
 
-# --------------------------------------------------------
-# Runner
-# --------------------------------------------------------
-
-FROM alpine
-
-COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
-COPY /tests/localosmosis/setup.sh /setup.sh
+# Run stage
+FROM ubuntu
 
 ENV HOME /osmosis
 WORKDIR $HOME
-RUN apk update
-RUN apk add jq
-RUN apk add moreutils
-RUN rm -rf /var/cache/apk/*
-RUN chmod +x /setup.sh
-RUN /setup.sh
+
+COPY --from=build ${HOME}/build/osmosisd /bin/osmosisd
+COPY tests/localosmosis/setup.sh ${HOME}/setup.sh
+
+RUN apt-get update -y && apt-get install -y jq moreutils
+RUN chmod +x ${HOME}/setup.sh
+
 EXPOSE 26656
 EXPOSE 26657
 EXPOSE 1317
 
-ENTRYPOINT ["osmosisd"]
-CMD ["start"]
+ENTRYPOINT ${HOME}/setup.sh

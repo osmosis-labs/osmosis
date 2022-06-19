@@ -1,22 +1,17 @@
 package configurer
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 
 	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
 type status struct {
@@ -27,114 +22,30 @@ type syncInfo struct {
 	SyncInfo status `json:"SyncInfo"`
 }
 
-func (bc *baseConfigurer) CreatePool(chainId string, valIdx int, poolFile string) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	validatorResource, exists := bc.containerManager.GetValidatorResource(chainId, valIdx)
-	require.True(bc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainId, valIdx)
-
-	bc.t.Logf("running create pool on chain id: %s with container: %s", chainId, validatorResource)
-	var (
-		outBuf bytes.Buffer
-		errBuf bytes.Buffer
-	)
-
-	require.Eventually(
-		bc.t,
-		func() bool {
-			exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
-				Context:      ctx,
-				AttachStdout: true,
-				AttachStderr: true,
-				Container:    validatorResource.Container.ID,
-				User:         "root",
-				Cmd: []string{
-					"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", chainId), "--from=val", "-b=block", "--yes", "--keyring-backend=test",
-				},
-			})
-			require.NoError(bc.t, err)
-			err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
-				Context:      ctx,
-				Detach:       false,
-				OutputStream: &outBuf,
-				ErrorStream:  &errBuf,
-			})
-			require.NoError(bc.t, err)
-			return strings.Contains(outBuf.String(), "code: 0")
-		},
-		time.Minute,
-		time.Second,
-		"tx returned non code 0; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
-	)
-
-	bc.t.Logf("successfully created pool on chain id: %s with container: %s", chainId, validatorResource)
-}
-
-func (bc *baseConfigurer) SendIBC(srcChain *chaininit.Chain, dstChain *chaininit.Chain, recipient string, token sdk.Coin) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	bc.t.Logf("sending %s from %s to %s (%s)", token, srcChain.ChainMeta.Id, dstChain.ChainMeta.Id, recipient)
-
-	dstChainId := dstChain.ChainMeta.Id
-	valIdx := 0
-	validatorResource, exists := bc.containerManager.GetValidatorResource(dstChainId, valIdx)
-	require.True(bc.t, exists, "validator container not found: chain id %s, valIdx %d ", dstChainId, valIdx)
-	containerId := validatorResource.Container.ID
-
-	balancesBPre, err := bc.queryBalances(containerId, recipient)
+func (bc *baseConfigurer) CreatePool(c *chain.Config, poolFile string) {
+	bc.t.Logf("creating pool for chain-id: %s", c.Id)
+	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", c.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test"}
+	_, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, 0, cmd, "code: 0")
 	require.NoError(bc.t, err)
 
-	var (
-		outBuf bytes.Buffer
-		errBuf bytes.Buffer
-	)
+	validatorResource, exists := bc.containerManager.GetValidatorResource(c.Id, 0)
+	require.True(bc.t, exists)
+	bc.t.Logf("successfully created pool from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
+}
+
+func (bc *baseConfigurer) SendIBC(srcChain *chain.Config, dstChain *chain.Config, recipient string, token sdk.Coin) {
+	cmd := []string{"hermes", "tx", "raw", "ft-transfer", dstChain.Id, srcChain.Id, "transfer", "channel-0", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
+	_, _, err := bc.containerManager.ExecCmd(bc.t, "", 0, cmd, "Success")
+	require.NoError(bc.t, err)
+
+	bc.t.Logf("sending %s from %s to %s (%s)", token, srcChain.Id, dstChain.Id, recipient)
+	balancesBPre, err := bc.QueryBalances(dstChain, 0, recipient)
+	require.NoError(bc.t, err)
 
 	require.Eventually(
 		bc.t,
 		func() bool {
-			exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
-				Context:      ctx,
-				AttachStdout: true,
-				AttachStderr: true,
-				Container:    bc.containerManager.GetHermesContainerID(),
-				User:         "root",
-				Cmd: []string{
-					"hermes",
-					"tx",
-					"raw",
-					"ft-transfer",
-					dstChain.ChainMeta.Id,
-					srcChain.ChainMeta.Id,
-					"transfer",  // source chain port ID
-					"channel-0", // since only one connection/channel exists, assume 0
-					token.Amount.String(),
-					fmt.Sprintf("--denom=%s", token.Denom),
-					fmt.Sprintf("--receiver=%s", recipient),
-					"--timeout-height-offset=1000",
-				},
-			})
-			require.NoError(bc.t, err)
-
-			err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
-				Context:      ctx,
-				Detach:       false,
-				OutputStream: &outBuf,
-				ErrorStream:  &errBuf,
-			})
-			require.NoError(bc.t, err)
-			return strings.Contains(outBuf.String(), "Success")
-		},
-		time.Minute,
-		time.Second,
-		"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
-	)
-
-	require.Eventually(
-		bc.t,
-		func() bool {
-			balancesBPost, err := bc.queryBalances(containerId, recipient)
+			balancesBPost, err := bc.QueryBalances(dstChain, 0, recipient)
 			require.NoError(bc.t, err)
 			ibcCoin := balancesBPost.Sub(balancesBPre)
 			if ibcCoin.Len() == 1 {
@@ -155,238 +66,122 @@ func (bc *baseConfigurer) SendIBC(srcChain *chaininit.Chain, dstChain *chaininit
 	bc.t.Log("successfully sent IBC tokens")
 }
 
-func (bc *baseConfigurer) queryBalances(containerId string, addr string) (sdk.Coins, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+func (bc *baseConfigurer) SubmitUpgradeProposal(c *chain.Config) {
+	validatorResource, exists := bc.containerManager.GetValidatorResource(c.Id, 0)
+	require.True(bc.t, exists)
 
-	exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
-		Context:      ctx,
-		AttachStdout: true,
-		AttachStderr: true,
-		Container:    containerId,
-		User:         "root",
-		Cmd: []string{
-			"osmosisd", "query", "bank", "balances", addr, "--output=json",
-		},
-	})
+	upgradeHeightStr := strconv.Itoa(c.PropHeight)
+	bc.t.Logf("submitting upgrade proposal on %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", UpgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", UpgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+	_, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, 0, cmd, "code: 0")
 	require.NoError(bc.t, err)
-
-	var (
-		outBuf bytes.Buffer
-		errBuf bytes.Buffer
-	)
-
-	err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
-		Context:      ctx,
-		Detach:       false,
-		OutputStream: &outBuf,
-		ErrorStream:  &errBuf,
-	})
-
-	require.NoErrorf(
-		bc.t,
-		err,
-		"failed to query height; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
-	)
-
-	outBufByte := outBuf.Bytes()
-	var balancesResp banktypes.QueryAllBalancesResponse
-	if err := util.Cdc.UnmarshalJSON(outBufByte, &balancesResp); err != nil {
-		return nil, err
-	}
-
-	return balancesResp.GetBalances(), nil
+	bc.t.Log("successfully submitted upgrade proposal")
+	c.LatestProposalNumber = c.LatestProposalNumber + 1
 }
 
-func (bc *baseConfigurer) getCurrentChainHeight(containerId string) int {
-	var block syncInfo
-	out := bc.chainStatus(containerId)
-	err := json.Unmarshal(out, &block)
+func (bc *baseConfigurer) SubmitSuperfluidProposal(c *chain.Config, asset string) {
+	validatorResource, exists := bc.containerManager.GetValidatorResource(c.Id, 0)
+	require.True(bc.t, exists)
+
+	bc.t.Logf("submitting superfluid proposal for asset %s on %s container: %s", asset, validatorResource.Container.Name[1:], validatorResource.Container.ID)
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.Id)}
+	_, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, 0, cmd, "code: 0")
 	require.NoError(bc.t, err)
-	currentHeight, err := strconv.Atoi(block.SyncInfo.LatestHeight)
-	require.NoError(bc.t, err)
-	return currentHeight
+	bc.t.Log("successfully submitted superfluid proposal")
+	c.LatestProposalNumber = c.LatestProposalNumber + 1
 }
 
-func (bc *baseConfigurer) chainStatus(containerId string) []byte {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+func (bc *baseConfigurer) SubmitTextProposal(c *chain.Config, text string) {
+	validatorResource, exists := bc.containerManager.GetValidatorResource(c.Id, 0)
+	require.True(bc.t, exists)
 
-	exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
-		Context:      ctx,
-		AttachStdout: true,
-		AttachStderr: true,
-		Container:    containerId,
-		User:         "root",
-		Cmd: []string{
-			"osmosisd", "status",
-		},
-	})
+	bc.t.Logf("submitting text proposal on %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.Id)}
+	_, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, 0, cmd, "code: 0")
+	bc.t.Log("successfully submitted text proposal")
 	require.NoError(bc.t, err)
-
-	var (
-		outBuf bytes.Buffer
-		errBuf bytes.Buffer
-	)
-
-	err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
-		Context:      ctx,
-		Detach:       false,
-		OutputStream: &outBuf,
-		ErrorStream:  &errBuf,
-	})
-
-	require.NoErrorf(bc.t,
-		err,
-		"failed to query height; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
-	)
-
-	errBufByte := errBuf.Bytes()
-	return errBufByte
+	c.LatestProposalNumber = c.LatestProposalNumber + 1
 }
 
-func (bc *baseConfigurer) submitProposal(c *chaininit.Chain, upgradeHeight int) {
-	upgradeHeightStr := strconv.Itoa(upgradeHeight)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+func (bc *baseConfigurer) DepositProposal(c *chain.Config) {
+	validatorResource, exists := bc.containerManager.GetValidatorResource(c.Id, 0)
+	require.True(bc.t, exists)
 
-	chainId := c.ChainMeta.Id
-	valIdx := 0
-	validatorResource, exists := bc.containerManager.GetValidatorResource(chainId, 0)
-	require.True(bc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainId, valIdx)
-	containerId := validatorResource.Container.ID
-
-	bc.t.Logf("submitting upgrade proposal on %s container: %s", validatorResource.Container.Name[1:], containerId)
-
-	var (
-		outBuf bytes.Buffer
-		errBuf bytes.Buffer
-	)
-
-	require.Eventually(
-		bc.t,
-		func() bool {
-			exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
-				Context:      ctx,
-				AttachStdout: true,
-				AttachStderr: true,
-				Container:    containerId,
-				User:         "root",
-				Cmd: []string{
-					"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", UpgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", UpgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json",
-				},
-			})
-			require.NoError(bc.t, err)
-
-			err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
-				Context:      ctx,
-				Detach:       false,
-				OutputStream: &outBuf,
-				ErrorStream:  &errBuf,
-			})
-			require.NoError(bc.t, err)
-			return strings.Contains(outBuf.String(), "code: 0")
-		},
-		time.Minute,
-		time.Second,
-		"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
-	)
-
-	bc.t.Log("successfully submitted proposal")
-}
-
-func (bc *baseConfigurer) depositProposal(c *chaininit.Chain) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	validatorResource, exists := bc.containerManager.GetValidatorResource(c.ChainMeta.Id, 0)
-	require.True(bc.t, exists, "validator container not found: chain id %s, valIdx %d ", c.ChainMeta.Id, 0)
-	containerId := validatorResource.Container.ID
-
-	bc.t.Logf("depositing to upgrade proposal from %s container: %s", validatorResource.Container.Name[1:], containerId)
-
-	var (
-		outBuf bytes.Buffer
-		errBuf bytes.Buffer
-	)
-
-	require.Eventually(
-		bc.t,
-		func() bool {
-			exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
-				Context:      ctx,
-				AttachStdout: true,
-				AttachStderr: true,
-				Container:    containerId,
-				User:         "root",
-				Cmd: []string{
-					"osmosisd", "tx", "gov", "deposit", "1", "10000000stake", "--from=val", fmt.Sprintf("--chain-id=%s", c.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
-				},
-			})
-			require.NoError(bc.t, err)
-
-			err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
-				Context:      ctx,
-				Detach:       false,
-				OutputStream: &outBuf,
-				ErrorStream:  &errBuf,
-			})
-			require.NoError(bc.t, err)
-			return strings.Contains(outBuf.String(), "code: 0")
-		},
-		time.Minute,
-		time.Second,
-		"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
-	)
-
+	propStr := strconv.Itoa(c.LatestProposalNumber)
+	bc.t.Logf("depositing to proposal from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
+	cmd := []string{"osmosisd", "tx", "gov", "deposit", propStr, "500000000uosmo", "--from=val", fmt.Sprintf("--chain-id=%s", c.Id), "-b=block", "--yes", "--keyring-backend=test"}
+	_, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, 0, cmd, "code: 0")
+	require.NoError(bc.t, err)
 	bc.t.Log("successfully deposited to proposal")
 }
 
-func (bc *baseConfigurer) voteProposal(chainConfig *chain.Config) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	chain := chainConfig.Chain
+func (bc *baseConfigurer) VoteYesProposal(c *chain.Config) {
+	propStr := strconv.Itoa(c.LatestProposalNumber)
+	bc.t.Logf("voting yes on proposal for chain-id: %s", c.Id)
+	cmd := []string{"osmosisd", "tx", "gov", "vote", propStr, "yes", "--from=val", fmt.Sprintf("--chain-id=%s", c.Id), "-b=block", "--yes", "--keyring-backend=test"}
+	for i := range c.ValidatorConfigs {
+		_, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, i, cmd, "code: 0")
+		require.NoError(bc.t, err)
 
-	bc.t.Logf("voting for upgrade proposal for chain-id: %s", chain.ChainMeta.Id)
-	for i := range chain.Validators {
-		var (
-			outBuf bytes.Buffer
-			errBuf bytes.Buffer
-		)
-
-		validatorResource, exists := bc.containerManager.GetValidatorResource(chainConfig.ChainId, i)
-		require.True(bc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainConfig.ChainId, i)
-		containerId := validatorResource.Container.ID
-
-		require.Eventually(
-			bc.t,
-			func() bool {
-				exec, err := bc.containerManager.Pool.Client.CreateExec(docker.CreateExecOptions{
-					Context:      ctx,
-					AttachStdout: true,
-					AttachStderr: true,
-					Container:    containerId,
-					User:         "root",
-					Cmd: []string{
-						"osmosisd", "tx", "gov", "vote", "1", "yes", "--from=val", fmt.Sprintf("--chain-id=%s", chain.ChainMeta.Id), "-b=block", "--yes", "--keyring-backend=test",
-					},
-				})
-				require.NoError(bc.t, err)
-
-				err = bc.containerManager.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
-					Context:      ctx,
-					Detach:       false,
-					OutputStream: &outBuf,
-					ErrorStream:  &errBuf,
-				})
-				require.NoError(bc.t, err)
-				return strings.Contains(outBuf.String(), "code: 0")
-			},
-			time.Minute,
-			time.Second,
-			"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
-		)
-
-		bc.t.Logf("successfully voted for proposal from %s container: %s", validatorResource.Container.Name[1:], containerId)
+		validatorResource, exists := bc.containerManager.GetValidatorResource(c.Id, i)
+		require.True(bc.t, exists)
+		bc.t.Logf("successfully voted yes on proposal from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 	}
+}
+
+func (bc *baseConfigurer) VoteNoProposal(c *chain.Config, validatorIdx int, from string) {
+	propStr := strconv.Itoa(c.LatestProposalNumber)
+	bc.t.Logf("voting no on proposal for chain-id: %s", c.Id)
+	cmd := []string{"osmosisd", "tx", "gov", "vote", propStr, "no", fmt.Sprintf("--from=%s", from), fmt.Sprintf("--chain-id=%s", c.Id), "-b=block", "--yes", "--keyring-backend=test"}
+	_, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, validatorIdx, cmd, "code: 0")
+	require.NoError(bc.t, err)
+
+	validatorResource, exists := bc.containerManager.GetValidatorResource(c.Id, validatorIdx)
+	require.True(bc.t, exists)
+	bc.t.Logf("successfully voted no for proposal from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
+}
+
+func (bc *baseConfigurer) LockTokens(c *chain.Config, validatorIdx int, tokens string, duration string, from string) {
+	bc.t.Logf("locking %s for %s on chain-id: %s", tokens, duration, c.Id)
+	cmd := []string{"osmosisd", "tx", "lockup", "lock-tokens", tokens, fmt.Sprintf("--chain-id=%s", c.Id), fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from), "-b=block", "--yes", "--keyring-backend=test"}
+	_, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, validatorIdx, cmd, "code: 0")
+	require.NoError(bc.t, err)
+
+	validatorResource, exists := bc.containerManager.GetValidatorResource(c.Id, validatorIdx)
+	require.True(bc.t, exists)
+	bc.t.Logf("successfully created lock %v from %s container: %s", c.LatestLockNumber, validatorResource.Container.Name[1:], validatorResource.Container.ID)
+	c.LatestLockNumber = c.LatestLockNumber + 1
+}
+
+func (bc *baseConfigurer) SuperfluidDelegate(c *chain.Config, valAddress string, from string) {
+	lockStr := strconv.Itoa(c.LatestLockNumber)
+	bc.t.Logf("superfluid delegating lock %s to %s on chain-id: %s", lockStr, valAddress, c.Id)
+	cmd := []string{"osmosisd", "tx", "superfluid", "delegate", lockStr, valAddress, fmt.Sprintf("--chain-id=%s", c.Id), fmt.Sprintf("--from=%s", from), "-b=block", "--yes", "--keyring-backend=test"}
+	_, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, 0, cmd, "code: 0")
+	require.NoError(bc.t, err)
+
+	validatorResource, exists := bc.containerManager.GetValidatorResource(c.Id, 0)
+	require.True(bc.t, exists)
+	bc.t.Logf("successfully superfluid delegated from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
+}
+
+func (bc *baseConfigurer) BankSend(c *chain.Config, i int, amount string, sendAddress string, receiveAddress string) {
+	bc.t.Logf("sending %s from %s to %s on chain-id: %s", amount, sendAddress, receiveAddress, c.Id)
+	cmd := []string{"osmosisd", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--chain-id=%s", c.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test"}
+	_, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, i, cmd, "code: 0")
+	require.NoError(bc.t, err)
+
+	validatorResource, exists := bc.containerManager.GetValidatorResource(c.Id, 0)
+	require.True(bc.t, exists)
+	bc.t.Logf("successfully sent tx from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
+}
+
+func (bc *baseConfigurer) CreateWallet(c *chain.Config, index int, walletName string) string {
+	cmd := []string{"osmosisd", "keys", "add", walletName, "--keyring-backend=test"}
+	outBuf, _, err := bc.containerManager.ExecCmd(bc.t, c.Id, index, cmd, "")
+	require.NoError(bc.t, err)
+	re := regexp.MustCompile("osmo1(.{38})")
+	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
+	walletAddr = strings.TrimSuffix(walletAddr, "\n")
+	return walletAddr
 }

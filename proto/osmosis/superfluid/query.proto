@@ -156,7 +156,7 @@ message ConnectedIntermediaryAccountResponse {
 message TotalSuperfluidDelegationsRequest {}
 
 message TotalSuperfluidDelegationsResponse {
-  string totalDelegations = 1 [
+  string total_delegations = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"total_superfluid_delegations\"",
     (gogoproto.nullable) = false
@@ -186,6 +186,10 @@ message SuperfluidDelegationsByDelegatorResponse {
   repeated cosmos.base.v1beta1.Coin total_delegated_coins = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  cosmos.base.v1beta1.Coin total_equivalent_staked_amount = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
 }
 

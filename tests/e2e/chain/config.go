@@ -12,12 +12,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+
+	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
@@ -52,14 +62,15 @@ const (
 
 var (
 	StakeAmountIntA  = sdk.NewInt(StakeAmountA)
-	StakeAmountCoinA = sdk.NewCoin(StakeDenom, StakeAmountIntA)
+	StakeAmountCoinA = sdk.NewCoin(OsmoDenom, StakeAmountIntA)
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
-	StakeAmountCoinB = sdk.NewCoin(StakeDenom, StakeAmountIntB)
+	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom)
 	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)  // 3,300uosmo
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
+	tenOsmo         = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10_000_000)}
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
@@ -77,6 +88,7 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
 	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
 
+	// TODO: Make the SDK make it far cleaner to add an account to GenesisState
 	genFile := config.GenesisFile()
 	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 	if err != nil {
@@ -133,6 +145,22 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	return genutil.ExportGenesisFile(genDoc, genFile)
 }
 
+//nolint:typecheck
+func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage, moduleName string, protoVal V, updateGenesis func(V)) error {
+	if err := util.Cdc.UnmarshalJSON(appGenState[moduleName], protoVal); err != nil {
+		return err
+	}
+	updateGenesis(protoVal)
+	newGenState := protoVal
+
+	bz, err := util.Cdc.MarshalJSON(newGenState)
+	if err != nil {
+		return err
+	}
+	appGenState[moduleName] = bz
+	return nil
+}
+
 func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
@@ -146,11 +174,84 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 		return err
 	}
 
-	var bankGenState banktypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState); err != nil {
+	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis)
+	if err != nil {
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, staketypes.ModuleName, &staketypes.GenesisState{}, updateStakeGenesis)
+	if err != nil {
+		return err
+	}
+
+	// pool incentives
+	err = updateModuleGenesis(appGenState, poolitypes.ModuleName, &poolitypes.GenesisState{}, updatePoolIncentiveGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, incentivestypes.ModuleName, &incentivestypes.GenesisState{}, updateIncentivesGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, minttypes.ModuleName, &minttypes.GenesisState{}, updateMintGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, txfeestypes.ModuleName, &txfeestypes.GenesisState{}, updateTxfeesGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, gammtypes.ModuleName, &gammtypes.GenesisState{}, updateGammGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, epochtypes.ModuleName, &epochtypes.GenesisState{}, updateEpochGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, crisistypes.ModuleName, &crisistypes.GenesisState{}, updateCrisisGenesis)
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, govtypes.ModuleName, &govtypes.GenesisState{}, updateGovGenesis(votingPeriod))
+	if err != nil {
+		return err
+	}
+
+	err = updateModuleGenesis(appGenState, genutiltypes.ModuleName, &genutiltypes.GenesisState{}, updateGenUtilGenesis(c))
+	if err != nil {
+		return err
+	}
+
+	bz, err := json.MarshalIndent(appGenState, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	genDoc.AppState = bz
+
+	genesisJson, err := tmjson.MarshalIndent(genDoc, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	// write the updated genesis file to each validator
+	for _, val := range c.validators {
+		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), genesisJson); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func updateBankGenesis(bankGenState *banktypes.GenesisState) {
 	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
 		Description: "An example stable token",
 		Display:     OsmoDenom,
@@ -164,85 +265,106 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 			},
 		},
 	})
-
-	bz, err := util.Cdc.MarshalJSON(&bankGenState)
-	if err != nil {
-		return err
+	if len(bankGenState.SupplyOffsets) == 0 {
+		bankGenState.SupplyOffsets = []banktypes.GenesisSupplyOffset{}
 	}
-	appGenState[banktypes.ModuleName] = bz
+}
 
-	var govGenState govtypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[govtypes.ModuleName], &govGenState); err != nil {
-		return err
+func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
+	stakeGenState.Params = staketypes.Params{
+		BondDenom:         OsmoDenom,
+		MaxValidators:     100,
+		MaxEntries:        7,
+		HistoricalEntries: 10000,
+		UnbondingTime:     240000000000,
+		MinCommissionRate: sdk.ZeroDec(),
 	}
+}
 
-	govGenState.VotingParams = govtypes.VotingParams{
-		VotingPeriod: votingPeriod,
+func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
+	pooliGenState.LockableDurations = []time.Duration{
+		time.Second * 120,
+		time.Second * 180,
+		time.Second * 240,
 	}
-
-	gz, err := util.Cdc.MarshalJSON(&govGenState)
-	if err != nil {
-		return err
+	pooliGenState.Params = poolitypes.Params{
+		MintedDenom: OsmoDenom,
 	}
-	appGenState[govtypes.ModuleName] = gz
+}
 
-	var genUtilGenState genutiltypes.GenesisState
-	if err := util.Cdc.UnmarshalJSON(appGenState[genutiltypes.ModuleName], &genUtilGenState); err != nil {
-		return err
+func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
+	incentivesGenState.LockableDurations = []time.Duration{
+		time.Second,
+		time.Second * 120,
+		time.Second * 180,
+		time.Second * 240,
 	}
+	incentivesGenState.Params = incentivestypes.Params{
+		DistrEpochIdentifier: "day",
+	}
+}
 
-	// generate genesis txs
-	genTxs := make([]json.RawMessage, len(c.validators))
-	for i, val := range c.validators {
-		stakeAmountCoin := StakeAmountCoinA
-		if c.chainMeta.Id != ChainAID {
-			stakeAmountCoin = StakeAmountCoinB
+func updateMintGenesis(mintGenState *minttypes.GenesisState) {
+	mintGenState.Params.MintDenom = OsmoDenom
+	mintGenState.Params.EpochIdentifier = "day"
+}
+
+func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
+	txfeesGenState.Basedenom = OsmoDenom
+}
+
+func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
+	gammGenState.Params.PoolCreationFee = tenOsmo
+}
+
+func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {
+	epochGenState.Epochs = []epochtypes.EpochInfo{
+		epochtypes.NewGenesisEpochInfo("week", time.Hour*24*7),
+		// override day epochs which are in default integrations, to be 1min
+		epochtypes.NewGenesisEpochInfo("day", time.Second*60),
+	}
+}
+
+func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
+	crisisGenState.ConstantFee.Denom = OsmoDenom
+}
+
+func updateGovGenesis(votingPeriod time.Duration) func(*govtypes.GenesisState) {
+	return func(govGenState *govtypes.GenesisState) {
+		govGenState.VotingParams = govtypes.VotingParams{
+			VotingPeriod: votingPeriod,
 		}
-		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
-		if err != nil {
-			return err
+		govGenState.DepositParams.MinDeposit = tenOsmo
+	}
+}
+
+func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
+	return func(genUtilGenState *genutiltypes.GenesisState) {
+		// generate genesis txs
+		genTxs := make([]json.RawMessage, len(c.validators))
+		for i, val := range c.validators {
+			stakeAmountCoin := StakeAmountCoinA
+			if c.chainMeta.Id != ChainAID {
+				stakeAmountCoin = StakeAmountCoinB
+			}
+			createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
+			if err != nil {
+				panic("genutil genesis setup failed: " + err.Error())
+			}
+
+			signedTx, err := val.signMsg(createValmsg)
+			if err != nil {
+				panic("genutil genesis setup failed: " + err.Error())
+			}
+
+			txRaw, err := util.Cdc.MarshalJSON(signedTx)
+			if err != nil {
+				panic("genutil genesis setup failed: " + err.Error())
+			}
+			genTxs[i] = txRaw
 		}
-
-		signedTx, err := val.signMsg(createValmsg)
-		if err != nil {
-			return err
-		}
-
-		txRaw, err := util.Cdc.MarshalJSON(signedTx)
-		if err != nil {
-			return err
-		}
-
-		genTxs[i] = txRaw
+		genUtilGenState.GenTxs = genTxs
 	}
-
-	genUtilGenState.GenTxs = genTxs
-
-	bz, err = util.Cdc.MarshalJSON(&genUtilGenState)
-	if err != nil {
-		return err
-	}
-	appGenState[genutiltypes.ModuleName] = bz
-
-	bz, err = json.MarshalIndent(appGenState, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	genDoc.AppState = bz
-
-	bz, err = tmjson.MarshalIndent(genDoc, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	// write the updated genesis file to each validator
-	for _, val := range c.validators {
-		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), bz); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func initNodes(c *internalChain, numVal int) error {
@@ -302,6 +424,7 @@ func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig)
 		var peers []string
 
 		for j := 0; j < len(c.validators); j++ {
+			// skip adding a peer to yourself
 			if i == j {
 				continue
 			}

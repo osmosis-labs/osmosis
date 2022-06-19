@@ -201,3 +201,4 @@ $RECYCLE.BIN/
 /scripts/local/
 /x/incentives/keeper/osmosis_testing/
 tools-stamp
+/tests/localosmosis/.osmosisd/*

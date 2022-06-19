@@ -1,15 +1,19 @@
 package containers
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
+	"testing"
 	"time"
 
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	"github.com/stretchr/testify/require"
 
-	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 )
 
@@ -38,12 +42,64 @@ func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
 	return docker, nil
 }
 
-func (m *Manager) RunHermesResource(chainConfigA, chainConfigB *chain.Config, hermesCfgPath string) (*dockertest.Resource, error) {
-	chainAID := chainConfigA.ChainId
-	chainBID := chainConfigB.ChainId
+func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	var containerId string
+	if chainId == "" {
+		containerId = m.hermesResource.Container.ID
+	} else {
+		containerId = m.valResources[chainId][validatorIndex].Container.ID
+	}
 
-	osmoAValMnemonic := chainConfigA.Chain.Validators[0].Mnemonic
-	osmoBValMnemonic := chainConfigB.Chain.Validators[0].Mnemonic
+	var (
+		outBuf bytes.Buffer
+		errBuf bytes.Buffer
+	)
+
+	require.Eventually(
+		t,
+		func() bool {
+			exec, err := m.Pool.Client.CreateExec(docker.CreateExecOptions{
+				Context:      ctx,
+				AttachStdout: true,
+				AttachStderr: true,
+				Container:    containerId,
+				User:         "root",
+				Cmd:          command,
+			})
+			require.NoError(t, err)
+
+			err = m.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
+				Context:      ctx,
+				Detach:       false,
+				OutputStream: &outBuf,
+				ErrorStream:  &errBuf,
+			})
+			if err != nil {
+				return false
+			}
+
+			if success != "" {
+				return strings.Contains(outBuf.String(), success) || strings.Contains(errBuf.String(), success)
+			}
+
+			return true
+		},
+		time.Minute,
+		time.Second,
+		"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
+	)
+
+	return outBuf, errBuf, nil
+}
+
+func (m *Manager) RunHermesResource(chainConfigA, chainConfigB *chain.Config, hermesCfgPath string) (*dockertest.Resource, error) {
+	chainAID := chainConfigA.Id
+	chainBID := chainConfigB.Id
+
+	osmoAValMnemonic := chainConfigA.ValidatorConfigs[0].Mnemonic
+	osmoBValMnemonic := chainConfigB.ValidatorConfigs[0].Mnemonic
 
 	var err error
 	m.hermesResource, err = m.Pool.RunWithOptions(
@@ -91,7 +147,7 @@ func (m *Manager) GetHermesContainerID() string {
 	return m.hermesResource.Container.ID
 }
 
-func (m *Manager) RunValidatorResource(chainId string, val *chaininit.Validator) (*dockertest.Resource, error) {
+func (m *Manager) RunValidatorResource(chainId string, val *chain.ValidatorConfig) (*dockertest.Resource, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -126,7 +182,7 @@ func (m *Manager) RunValidatorResource(chainId string, val *chaininit.Validator)
 }
 
 func (m *Manager) RunChainInitResource(chainConfig *chain.Config, tmpDir string) error {
-	validatorConfigBytes, err := json.Marshal(chainConfig.ValidatorConfig)
+	validatorConfigBytes, err := json.Marshal(chainConfig.ValidatorConfigs)
 	if err != nil {
 		return err
 	}
@@ -135,13 +191,13 @@ func (m *Manager) RunChainInitResource(chainConfig *chain.Config, tmpDir string)
 
 	initResource, err := m.Pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s", chainConfig.ChainId),
+			Name:       fmt.Sprintf("%s", chainConfig.Id),
 			Repository: m.ImageConfig.InitRepository,
 			Tag:        m.ImageConfig.InitTag,
 			NetworkID:  m.network.Network.ID,
 			Cmd: []string{
 				fmt.Sprintf("--data-dir=%s", tmpDir),
-				fmt.Sprintf("--chain-id=%s", chainConfig.ChainId),
+				fmt.Sprintf("--chain-id=%s", chainConfig.Id),
 				fmt.Sprintf("--config=%s", validatorConfigBytes),
 				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
 			},
@@ -166,6 +222,14 @@ func (m *Manager) GetValidatorResource(chainId string, validatorIndex int) (*doc
 		return nil, false
 	}
 	return chainValidators[validatorIndex], true
+}
+
+func (m *Manager) GetValidatorHostPort(chainId string, validatorIndex int, portId string) (string, error) {
+	validatorResource, exists := m.GetValidatorResource(chainId, validatorIndex)
+	if !exists {
+		return "", fmt.Errorf("validator resource not found: chainId: %s, validatorIndex: %d", chainId, validatorIndex)
+	}
+	return validatorResource.GetHostPort(portId), nil
 }
 
 func (m *Manager) RemoveValidatorResource(chainId string, validatorIndex int) (string, error) {
