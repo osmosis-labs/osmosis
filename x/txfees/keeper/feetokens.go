@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -173,4 +174,61 @@ func (k Keeper) SetFeeTokens(ctx sdk.Context, feetokens []types.FeeToken) error 
 		}
 	}
 	return nil
+}
+
+// getTotalSwapFee gets the total swap fee for a swap message along a route of pool ids
+func (k Keeper) GetTotalSwapFee(ctx sdk.Context, poolIds []uint64, denomPath []string) (sdk.Dec, error) {
+	prefixStore := k.GetFeeTokensStore(ctx)
+	swapFees := sdk.ZeroDec()
+
+	// Join/Exit pool support
+	// if len(denomPath) == 1 {
+	// 	return k.gammKeeper.GetSwapFeeFromPoolId(ctx, poolIds[0])
+	// }
+	// Get swap fees from pools
+	for i := range poolIds {
+		// Get swap fee
+		swapFee, err := k.gammKeeper.GetSwapFeeFromPoolId(ctx, poolIds[i])
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+
+		// if either of the denoms for the pool is a fee token, swap fee can be added
+		if prefixStore.Has([]byte(denomPath[i])) || prefixStore.Has([]byte(denomPath[i+1])) {
+			// add to existing swap fees
+			swapFees = swapFees.Add(swapFee)
+		}
+	}
+	return swapFees, nil
+}
+
+func (k Keeper) feeTokenExists(ctx sdk.Context, denom string) bool {
+	return k.GetFeeTokensStore(ctx).Has([]byte(denom))
+}
+
+// GetFeesPaid returns a token representing the fees paid along the route of swaps identified by the pool Ids
+func (k Keeper) GetFeesPaid(ctx sdk.Context, poolIds []uint64, denomPath []string, token sdk.Coin) (sdk.Coin, error) {
+	// Only tokens with fee record can pay swap fees
+	prefixStore := k.GetFeeTokensStore(ctx)
+	if !prefixStore.Has([]byte(token.Denom)) {
+		return sdk.Coin{}, sdkerrors.Wrapf(types.ErrInvalidFeeToken, "%s", token.Denom)
+	}
+
+	// Get total swap fees
+	swapFees, err := k.GetTotalSwapFee(ctx, poolIds, denomPath)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// Convert token to baseDenom
+	token, err = k.ConvertToBaseToken(ctx, token)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// Apply swap fee to token amount = ceil(swapFees * token.Amount)
+	feedAmount := swapFees.Mul(token.Amount.ToDec()).Ceil().RoundInt()
+
+	// return coin of fee amount in base denom
+	return sdk.NewCoin(token.Denom, feedAmount), nil
 }

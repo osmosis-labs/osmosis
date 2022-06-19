@@ -23,6 +23,7 @@ type GammKeeper interface {
 		tokenOutDenom string,
 		tokenOutMinAmount sdk.Int,
 	) (tokenOutAmount sdk.Int, err error)
+	GetSwapFeeFromPoolId(ctx sdk.Context, poolId uint64) (sdk.Dec, error)
 }
 
 // AccountKeeper defines the contract needed for AccountKeeper related APIs.

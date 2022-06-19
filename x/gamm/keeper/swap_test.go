@@ -83,6 +83,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 		// Init suite for each test.
 		suite.SetupTest()
 		poolId := suite.PrepareBalancerPool()
+		poolIdWithSwap := suite.PrepareBalancerPoolWithSwapFee()
 		keeper := suite.App.GAMMKeeper
 
 		if test.expectPass {
@@ -99,6 +100,12 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			// Ratio of the token out should be between the before spot price and after spot price.
 			tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
 			suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
+
+			// swap fee should be 0.001 for pool id with swap
+			swapFee, err := keeper.GetSwapFeeFromPoolId(suite.Ctx, poolIdWithSwap)
+			suite.NoError(err, "test: %v", test.name)
+			// PrepareBalancerPoolWithSwapFee has "0.001" hard coded for the swap fee
+			suite.Equal(sdk.MustNewDecFromStr("0.001"), swapFee, "test: %v", test.name)
 		} else {
 			_, err := keeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
 			suite.Error(err, "test: %v", test.name)

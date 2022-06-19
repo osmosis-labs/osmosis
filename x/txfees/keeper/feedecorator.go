@@ -10,6 +10,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 // MempoolFeeDecorator will check if the transaction's fee is at least as large
@@ -71,59 +73,125 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
-	// If we are in CheckTx, this function is ran locally to determine if these fees are sufficient
-	// to enter our mempool.
+	// If we are in CheckTx, this function is ran locally to determine
+	// if these fees are sufficient to enter our mempool.
 	// So we ensure that the provided fees meet a minimum threshold for the validator,
 	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
+	// If the msg is applicable for sybil resistant fees, add the swap fees paid to the tx fee when considering
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx)
-		if !(minBaseGasPrice.IsZero()) {
-			if len(feeCoins) != 1 {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
-			}
-			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
-			if err != nil {
-				return ctx, err
-			}
+		// create sybil resistant fee structure
+		sybil, err := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx)
+		if err != nil {
+			return ctx, err
+		}
+
+		// no gas price, go on
+		if sybil.GasPrice.IsZero() {
+			return next(ctx, tx, simulate)
+		}
+
+		// *** Sybil swap fees cannot pay for a tx entirely w/o a tx fee attached.
+		//     	The entire tx.Fee() will be deducted in the DeductFeeDecorator
+		//     	regardless of the gas. A tx fee with sufficient swap fees can therefore
+		// 	 	be short on the gas cost but have the swap fees make up the differencee
+		// 		so long as the attached feeCoin + swap fees are sufficient in the base denom.
+		//
+		// no fee attached, and non-zero gas price -> reject tx
+		if len(feeCoins) != 1 {
+			return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached with non-zero gas")
+		}
+
+		// check if sybil resistant fees are sufficient for gas price
+		if err := mfd.TxFeesKeeper.IsSufficientFee(ctx, sybil, feeTx.GetGas(), feeCoins[0]); err != nil {
+			return ctx, err
 		}
 	}
-
+	// gas wanted can be paid for by tx using resistant swap fees
 	return next(ctx, tx, simulate)
 }
 
 // IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
 // to pay the gas cost of this tx.
-func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
+func (k Keeper) IsSufficientFee(ctx sdk.Context, sybil Sybil, gasRequested uint64, feeCoin sdk.Coin) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
 		return err
 	}
-
 	// Determine the required fees by multiplying the required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 	glDec := sdk.NewDec(int64(gasRequested))
-	requiredBaseFee := sdk.NewCoin(baseDenom, minBaseGasPrice.Mul(glDec).Ceil().RoundInt())
+	requiredBaseFee := sdk.NewCoin(baseDenom, sybil.GasPrice.Mul(glDec).Ceil().RoundInt())
 
+	// Convert tx fee to base denom
 	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
 	if err != nil {
 		return err
 	}
-	if !(convertedFee.IsGTE(requiredBaseFee)) {
+
+	// Add converted fee from tx to sybil fees paid
+	err = sybil.AddToFeesPaid(convertedFee)
+	if err != nil {
+		return err
+	}
+
+	// now including the swap fees paid for in the msg
+	if !(sybil.FeesPaid.IsGTE(requiredBaseFee)) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
 	}
 
 	return nil
 }
 
-func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) sdk.Dec {
+func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) (Sybil, error) {
+	// Get min gas price for node
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
+
+	// Check if high gas tx
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
 	}
+
+	// Check if arbitration tx
 	if txfee_filters.IsArbTxLoose(tx) {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
+		// arbitration tx are not qualified for sybil resistant fees
+		return NewSybil(cfgMinGasPrice, sdk.NewCoin(baseDenom, sdk.ZeroInt()))
 	}
-	return cfgMinGasPrice
+
+	// Create sybil fee structure
+	sybil, err := NewSybil(cfgMinGasPrice, sdk.NewCoin(baseDenom, sdk.ZeroInt()))
+	if err != nil {
+		return Sybil{}, err
+	}
+
+	// Check if message qualifies for sybil resistant fees
+	msg, canSybil := tx.GetMsgs()[0].(gammtypes.SybilResistantFee)
+	if !canSybil {
+		return sybil, nil
+	}
+
+	// Get token for swap fee amounts
+	token := msg.GetTokenToFee()
+
+	// If token is not a fee token, then return sybil as is
+	if !mfd.TxFeesKeeper.feeTokenExists(ctx, token.Denom) {
+		return sybil, nil
+	}
+
+	// Get fees paid in swap fee
+	feesPaid, err := mfd.TxFeesKeeper.GetFeesPaid(ctx, msg.GetPoolIdOnPath(), msg.GetTokenDenomsOnPath(), token)
+	if err != nil {
+		return Sybil{}, err
+	}
+
+	// Add fees paid to sybil
+	err = sybil.AddToFeesPaid(feesPaid)
+	if err != nil {
+		return Sybil{}, err
+	}
+
+	// return sybil with fees paid
+	return sybil, nil
 }
 
 // DeductFeeDecorator deducts fees from the first signer of the tx.
@@ -146,7 +214,6 @@ func NewDeductFeeDecorator(tk Keeper, ak types.AccountKeeper, bk types.BankKeepe
 		txFeesKeeper:   tk,
 	}
 }
-
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
@@ -155,7 +222,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	// checks to make sure the module account has been set to collect fees in base token
 	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return ctx, fmt.Errorf("Fee collector module account (%s) has not been set", types.FeeCollectorName)
+		return ctx, fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
 	// checks to make sure a separate module account has been set to collect fees not in base token
