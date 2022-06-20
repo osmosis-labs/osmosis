@@ -7,10 +7,13 @@ import (
 	"testing"
 	time "time"
 
+	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/stretchr/testify/require"
 
+	simapp "github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
@@ -1195,4 +1198,48 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	for i := 0; i < 50000; i++ {
 		testPoolInvariants()
 	}
+}
+
+func FuzzJoinExitPool(f *testing.F) {
+	app := simapp.Setup(false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	const (
+		denomOut = "denomOut"
+		denomIn  = "denomIn"
+	)
+	swapFeeDec := sdk.ZeroDec()
+	exitFeeDec := sdk.ZeroDec()
+
+	f.Fuzz(func(t *testing.T, tokenDenomIn, tokenDenomOut, percentRatio uint64) {
+		percentRatio = percentRatio%100 + 1
+		tokenDenomIn = tokenDenomIn + 1
+		tokenDenomOut = tokenDenomOut + 1
+
+		poolAssetOut := balancer.PoolAsset{
+			Token:  sdk.NewCoin(denomOut, sdk.NewIntFromUint64(tokenDenomIn)),
+			Weight: sdk.NewInt(5),
+		}
+		poolAssetIn := balancer.PoolAsset{
+			Token:  sdk.NewCoin(denomIn, sdk.NewIntFromUint64(tokenDenomOut)),
+			Weight: sdk.NewInt(5),
+		}
+		pool := createTestPool(t, swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
+		originalCoins, originalShares := pool.GetTotalPoolLiquidity(ctx), pool.GetTotalShares()
+
+		tokensIn := sdk.Coins{
+			sdk.NewCoin(denomIn, sdk.NewIntFromUint64(tokenDenomIn).MulRaw(int64(percentRatio)).QuoRaw(100)),
+			sdk.NewCoin(denomOut, sdk.NewIntFromUint64(tokenDenomOut).MulRaw(int64(percentRatio)).QuoRaw(100)),
+		}
+
+		numShares, err := pool.JoinPool(ctx, tokensIn, swapFeeDec)
+		require.NoError(t, err)
+
+		_, err = pool.ExitPool(ctx, numShares, exitFeeDec)
+		require.NoError(t, err)
+
+		if originalCoins.IsAnyGT(pool.GetTotalPoolLiquidity(ctx)) || !originalShares.Equal(pool.GetTotalShares()) {
+			t.Error(err)
+		}
+	})
 }
