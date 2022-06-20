@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Manager is a wrapper around all Docker instances, and the Docker API. 
+// Manager is a wrapper around all Docker instances, and the Docker API.
 // It provides utilities to run and interact with all Docker containers used within e2e testing.
 type Manager struct {
 	ImageConfig
