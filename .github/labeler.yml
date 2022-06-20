@@ -40,3 +40,21 @@
 "C:CLI":
   - client/**/*
   - x/*/client/**/*
+# Add "C:docs" label to documented related files and directories. 
+"C:docs":
+  - x/epochs/specs/*
+  - x/gamm/specs/*
+  - x/incentives/specs/*
+  - x/lockup/specs/*
+  - x/mint/specs/*
+  - x/pool-incentives/specs/*
+  - x/simulation/specs/*
+  - x/superfluid/specs/*
+  - x/tokenfactory/specs/*
+  - x/txfees/specs/*
+  - x/README.md
+  - README.md
+  - CHANGELOG.md
+  - bug.md
+  - issue.md
+  - proto-docs.md
