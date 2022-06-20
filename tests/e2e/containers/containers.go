@@ -184,7 +184,7 @@ func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCond
 
 // RunChainInitResource runs a chain init container to initialize genesis and configs for a chain with chainId.
 // The chain is to be configured with chainVotingPeriod and validators deserialized from validatorConfigBytes.
-// The genesis and configs are to be mounted on the init containers as volume on mountDir.
+// The genesis and configs are to be mounted on the init container as volume on mountDir path.
 // Returns the container resource and error if any. This method does not Purge the container. The caller
 // must deal with removing the resource.
 func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, mountDir string) (*dockertest.Resource, error) {
@@ -215,7 +215,7 @@ func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, va
 	return initResource, nil
 }
 
-// PurgeResource purges a container resource and returns the error if any.
+// PurgeResource purges the container resource and returns an error if any.
 func (m *Manager) PurgeResource(resource *dockertest.Resource) error {
 	return m.pool.Purge(resource)
 }
@@ -231,8 +231,8 @@ func (m *Manager) GetValidatorResource(chainId string, validatorIndex int) (*doc
 
 // GetValidatorHostPort returns the port-forwarding address of the running host
 // necessary to connect to the validator's portId exposed inside the container.
-// The validator container is determied by chainId and validatorIndex.
-// Returns the host-port and error if any.
+// The validator container is determined by chainId and validatorIndex.
+// Returns the host-port or error if any.
 func (m *Manager) GetValidatorHostPort(chainId string, validatorIndex int, portId string) (string, error) {
 	validatorResource, exists := m.GetValidatorResource(chainId, validatorIndex)
 	if !exists {
@@ -265,7 +265,7 @@ func (m *Manager) RemoveValidatorResource(chainId string, containerName string) 
 	return fmt.Errorf("no validator container %s on chain %s", containerName, chainId)
 }
 
-// ClearResources removes all outstanding Docker resources created by the manager.
+// ClearResources removes all outstanding Docker resources created by the Manager.
 func (m *Manager) ClearResources() error {
 	if err := m.pool.Purge(m.hermesResource); err != nil {
 		return err
