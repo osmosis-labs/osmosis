@@ -14,7 +14,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
@@ -149,7 +148,7 @@ func (s *IntegrationTestSuite) voteProposal(c *chainConfig) {
 		_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, i, cmd, "code: 0")
 		s.Require().NoError(err)
 		validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, i)
-		require.True(s.T(), exists)
+		s.Require().True(exists)
 		s.T().Logf("successfully voted yes on proposal from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 	}
 }
@@ -161,7 +160,7 @@ func (s *IntegrationTestSuite) voteNoProposal(c *chainConfig, validatorIndex int
 	_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, validatorIndex, cmd, "code: 0")
 	s.Require().NoError(err)
 	validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, validatorIndex)
-	require.True(s.T(), exists)
+	s.Require().True(exists)
 	s.T().Logf("successfully voted no for proposal from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 }
 
@@ -230,7 +229,7 @@ func (s *IntegrationTestSuite) createPool(c *chainConfig, poolFile string) {
 	_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, 0, cmd, "code: 0")
 	s.Require().NoError(err)
 	validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, 0)
-	require.True(s.T(), exists)
+	s.Require().True(exists)
 	s.T().Logf("successfully created pool from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 }
 
@@ -240,7 +239,7 @@ func (s *IntegrationTestSuite) lockTokens(c *chainConfig, validatorIndex int, to
 	_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, validatorIndex, cmd, "code: 0")
 	s.Require().NoError(err)
 	validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, validatorIndex)
-	require.True(s.T(), exists)
+	s.Require().True(exists)
 	s.T().Logf("successfully created lock %v from %s container: %s", c.latestLockNumber, validatorResource.Container.Name[1:], validatorResource.Container.ID)
 	c.latestLockNumber = c.latestLockNumber + 1
 }
@@ -252,7 +251,7 @@ func (s *IntegrationTestSuite) superfluidDelegate(c *chainConfig, valAddress str
 	_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, 0, cmd, "code: 0")
 	s.Require().NoError(err)
 	validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, 0)
-	require.True(s.T(), exists)
+	s.Require().True(exists)
 	s.T().Logf("successfully superfluid delegated from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 }
 
@@ -262,7 +261,7 @@ func (s *IntegrationTestSuite) sendTx(c *chainConfig, validatorIndex int, amount
 	_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, validatorIndex, cmd, "code: 0")
 	s.Require().NoError(err)
 	validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, validatorIndex)
-	require.True(s.T(), exists)
+	s.Require().True(exists)
 	s.T().Logf("successfully sent tx from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 }
 
