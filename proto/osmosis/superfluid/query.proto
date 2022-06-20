@@ -114,6 +114,7 @@ service Query {
   //       "/osmosis/superfluid/v1beta1/superfluid_unbondings_by_validator_denom";
   // }
 
+// Returns the specified delegations for a specific delegator
   rpc TotalDelegationByDelegator (QueryTotalDelegationByDelegatorRequest) returns (QueryTotalDelegationByDelegatorResponse) {
      option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
                                     "total_delegation_by_delegator/{delegator_address}";

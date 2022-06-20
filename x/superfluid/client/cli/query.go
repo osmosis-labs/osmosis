@@ -35,7 +35,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdSuperfluidDelegationsByDelegator(),
 		GetCmdSuperfluidUndelegationsByDelegator(),
 		GetCmdTotalSuperfluidDelegations(),
-		GetCmdDelegation(),
+		GetCmdTotalDelegationByDelegator(),
 	)
 
 	return cmd
@@ -351,7 +351,7 @@ func GetCmdTotalSuperfluidDelegations() *cobra.Command {
 	return cmd
 }
 
-func GetCmdDelegation() *cobra.Command {
+func GetCmdTotalDelegationByDelegator() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "total-delegation-by-delegator [delegator_address]",
 		Short: "Query both superfluid delegation and normal delegation",

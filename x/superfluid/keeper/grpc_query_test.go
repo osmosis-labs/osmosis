@@ -193,7 +193,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 	suite.Require().Equal(totalSuperfluidDelegationsRes.TotalDelegations, sdk.NewInt(30000000))
 }
 
-func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsWithNormalStaking() {
+func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	suite.SetupTest()
 
 	// Generate delegator addresses
