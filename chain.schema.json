@@ -10,12 +10,14 @@
     }
 =======
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "git_repo": "https://github.com/osmosis-labs/osmosis",
-  "recommended_version": "v10.0.0",
-  "compatible_version": ["v10.0.0"],
-  "binaries": {
-    "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v10.0.0/osmosis-10.0.0-linux-amd64",
-    "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v10.0.0/osmosis-10.0.0-linux-arm64"
+  "codebase":{
+    "git_repo": "https://github.com/osmosis-labs/osmosis",
+    "recommended_version": "v10.0.0",
+    "compatible_version": ["v10.0.0"],
+    "binaries": {
+      "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v10.0.0/osmosis-10.0.0-linux-amd64",
+      "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v10.0.0/osmosis-10.0.0-linux-arm64"
+    }
   }
 >>>>>>> b46472836781dfdaa1c26c42ffa546948920a4e3
 }
