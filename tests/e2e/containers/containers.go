@@ -45,6 +45,7 @@ func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
 
 // ExecCmd executes command on chainId by running it on the validator container (specified by validatorIndex)
 // success is the output of the command that needs to be observed for the command to be deemed successful.
+// It is found by checking if stdout or stderr contains the success string anywhere within it.
 // returns container std out, container std err, and error if any.
 // An error is returned if the command fails to execute or if the success string is not found in the output.
 func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
