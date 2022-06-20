@@ -23,6 +23,8 @@ type Manager struct {
 	valResources   map[string][]*dockertest.Resource
 }
 
+// NewManager creates a new Manager instance and initializes
+// all Docker specific utilies. Returns an error if initialiation fails.
 func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
 	docker = &Manager{
 		ImageConfig:  NewImageConfig(isUpgradeEnabled),
@@ -39,6 +41,10 @@ func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
 	return docker, nil
 }
 
+// ExecCmd executes command on chainId by running it on the validator container (specified by validatorIndex)
+// success is the output of the command that needs to be observed for the command to be deemed successful.
+// returns container std out, container std err, and error if any.
+// An error is returned if the command fails to execute or if the success string is not found in the output.
 func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -91,6 +97,7 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 	return outBuf, errBuf, nil
 }
 
+// RunHermesResource runs a Hermes container. Returns the container resource and error if any.
 func (m *Manager) RunHermesResource(chainAID, osmoAValMnemonic, chainBID, osmoBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
 	var err error
 	m.hermesResource, err = m.Pool.RunWithOptions(
@@ -134,10 +141,13 @@ func (m *Manager) RunHermesResource(chainAID, osmoAValMnemonic, chainBID, osmoBV
 	return m.hermesResource, nil
 }
 
+// GetHermesContainerId returns the Hermes container ID.
 func (m *Manager) GetHermesContainerID() string {
 	return m.hermesResource.Container.ID
 }
 
+// RunValidatorResource runs a validator container. Assings valContainerName to the container.
+// Mounts the container on valConfigDir volume on the running host. Returns the container resource and error if any.
 func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCondifDir string) (*dockertest.Resource, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
