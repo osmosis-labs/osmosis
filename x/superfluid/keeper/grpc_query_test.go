@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -59,8 +61,6 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 
 	// setup superfluid delegations
 	_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
-
-	// setup normal delegations
 
 	// for each superfluid delegation, query the amount and make sure it is 1000000
 	for _, delegation := range superfluidDelegations {
@@ -226,10 +226,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
 
 	// setup normal delegations
-	bond0to0 := stakingtypes.NewDelegation(delAddrs[0], valAddrs[0], sdk.NewDec(9))
-	bond0to1 := stakingtypes.NewDelegation(delAddrs[0], valAddrs[1], sdk.NewDec(9))
-	bond1to0 := stakingtypes.NewDelegation(delAddrs[1], valAddrs[0], sdk.NewDec(9))
-	bond1to1 := stakingtypes.NewDelegation(delAddrs[1], valAddrs[1], sdk.NewDec(9))
+	bond0to0 := stakingtypes.NewDelegation(delAddrs[0], valAddrs[0], sdk.NewDec(9000000))
+	bond0to1 := stakingtypes.NewDelegation(delAddrs[0], valAddrs[1], sdk.NewDec(9000000))
+	bond1to0 := stakingtypes.NewDelegation(delAddrs[1], valAddrs[0], sdk.NewDec(9000000))
+	bond1to1 := stakingtypes.NewDelegation(delAddrs[1], valAddrs[1], sdk.NewDec(9000000))
 
 	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond0to0)
 	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond0to1)
@@ -249,6 +249,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 		res, err := suite.queryClient.TotalDelegationByDelegator(sdk.WrapSDKContext(suite.Ctx), &types.QueryTotalDelegationByDelegatorRequest{
 			DelegatorAddress: delegator.String(),
 		})
+
+		fmt.Printf("res = %v \n", res)
 
 		suite.Require().NoError(err)
 		suite.Require().Len(res.SuperfluidDelegationRecords, 2)
