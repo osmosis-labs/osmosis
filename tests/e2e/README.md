@@ -88,3 +88,44 @@ Example:
 ### To build the debug Osmosis image
 
     make docker-build-e2e-debug
+
+### Environment variables
+
+Some tests take a long time to run. Sometimes, we would like to disable them
+locally or in CI. The following are the environment variables to disable
+certain components of e2e testing.
+
+- `OSMOSIS_E2E_SKIP_UPGRADE` - when true, skips the upgrade tests.
+If OSMOSIS_E2E_SKIP_IBC is true, this must also be set to true because upgrade
+tests require IBC logic.
+
+- `OSMOSIS_E2E_SKIP_IBC` - when true, skips the IBC tests tests.
+
+- `OSMOSIS_E2E_SKIP_CLEANUP` - when true, avoids cleaning up the e2e Docker
+containers.
+
+#### VS Code Debug Configuration
+
+This debug configuration helps to run e2e tests locally and skip the desired tests.
+
+```json
+{
+    "name": "E2E IntegrationTestSuite",
+    "type": "go",
+    "request": "launch",
+    "mode": "test",
+    "program": "${workspaceFolder}/tests/e2e",
+    "args": [
+        "-test.timeout",
+        "30m",
+        "-test.run",
+        "IntegrationTestSuite",
+        "-test.v"
+    ],
+    "env": {
+        "OSMOSIS_E2E_SKIP_IBC": "true",
+        "OSMOSIS_E2E_SKIP_UPGRADE": "true",
+        "OSMOSIS_E2E_SKIP_CLEANUP": "true",
+    }
+}
+```
