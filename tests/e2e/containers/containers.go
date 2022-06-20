@@ -18,7 +18,7 @@ import (
 // necessary to run and manage Docker containers for e2e testing.
 type Manager struct {
 	ImageConfig
-	Pool    *dockertest.Pool
+	pool    *dockertest.Pool
 	network *dockertest.Network
 
 	hermesResource *dockertest.Resource
@@ -32,11 +32,11 @@ func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
 		ImageConfig:  NewImageConfig(isUpgradeEnabled),
 		valResources: make(map[string][]*dockertest.Resource),
 	}
-	docker.Pool, err = dockertest.NewPool("")
+	docker.pool, err = dockertest.NewPool("")
 	if err != nil {
 		return nil, err
 	}
-	docker.network, err = docker.Pool.CreateNetwork("osmosis-testnet")
+	docker.network, err = docker.pool.CreateNetwork("osmosis-testnet")
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 	require.Eventually(
 		t,
 		func() bool {
-			exec, err := m.Pool.Client.CreateExec(docker.CreateExecOptions{
+			exec, err := m.pool.Client.CreateExec(docker.CreateExecOptions{
 				Context:      ctx,
 				AttachStdout: true,
 				AttachStderr: true,
@@ -75,7 +75,7 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 			})
 			require.NoError(t, err)
 
-			err = m.Pool.Client.StartExec(exec.ID, docker.StartExecOptions{
+			err = m.pool.Client.StartExec(exec.ID, docker.StartExecOptions{
 				Context:      ctx,
 				Detach:       false,
 				OutputStream: &outBuf,
@@ -102,7 +102,7 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 // RunHermesResource runs a Hermes container. Returns the container resource and error if any.
 func (m *Manager) RunHermesResource(chainAID, osmoAValMnemonic, chainBID, osmoBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
 	var err error
-	m.hermesResource, err = m.Pool.RunWithOptions(
+	m.hermesResource, err = m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s-%s-relayer", chainAID, chainBID),
 			Repository: m.RelayerRepository,
@@ -168,7 +168,7 @@ func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCond
 		},
 	}
 
-	resource, err := m.Pool.RunWithOptions(runOpts, noRestart)
+	resource, err := m.pool.RunWithOptions(runOpts, noRestart)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +190,7 @@ func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCond
 func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, mountDir string) (*dockertest.Resource, error) {
 	votingPeriodDuration := time.Duration(chainVotingPeriod * 1000000000)
 
-	initResource, err := m.Pool.RunWithOptions(
+	initResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("%s", chainId),
 			Repository: m.ImageConfig.InitRepository,
@@ -217,7 +217,7 @@ func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, va
 
 // PurgeResource purges a container resource and returns the error if any.
 func (m *Manager) PurgeResource(resource *dockertest.Resource) error {
-	return m.Pool.Purge(resource)
+	return m.pool.Purge(resource)
 }
 
 // GetValidatorResource returns the validator resource at validatorIndex for the given chainId.
@@ -254,7 +254,7 @@ func (m *Manager) RemoveValidatorResource(chainId string, containerName string) 
 			var opts docker.RemoveContainerOptions
 			opts.ID = validator.Container.ID
 			opts.Force = true
-			if err := m.Pool.Client.RemoveContainer(opts); err != nil {
+			if err := m.pool.Client.RemoveContainer(opts); err != nil {
 				return err
 			}
 			m.valResources[chainId] = append(chainValidators[:validatorIndex], chainValidators[validatorIndex+1:]...)
@@ -267,19 +267,19 @@ func (m *Manager) RemoveValidatorResource(chainId string, containerName string) 
 
 // ClearResources removes all outstanding Docker resources created by the manager.
 func (m *Manager) ClearResources() error {
-	if err := m.Pool.Purge(m.hermesResource); err != nil {
+	if err := m.pool.Purge(m.hermesResource); err != nil {
 		return err
 	}
 
 	for _, vr := range m.valResources {
 		for _, r := range vr {
-			if err := m.Pool.Purge(r); err != nil {
+			if err := m.pool.Purge(r); err != nil {
 				return err
 			}
 		}
 	}
 
-	if err := m.Pool.RemoveNetwork(m.network); err != nil {
+	if err := m.pool.RemoveNetwork(m.network); err != nil {
 		return err
 	}
 	return nil
