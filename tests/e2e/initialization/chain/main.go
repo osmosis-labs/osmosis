@@ -7,12 +7,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 )
 
 func main() {
 	var (
-		valConfig    []*chain.ValidatorConfig
+		valConfig    []*initialization.ValidatorConfig
 		dataDir      string
 		chainId      string
 		config       string
@@ -39,7 +39,7 @@ func main() {
 		panic(err)
 	}
 
-	createdChain, err := chain.Init(chainId, dataDir, valConfig, votingPeriod)
+	createdChain, err := initialization.Init(chainId, dataDir, valConfig, votingPeriod)
 	if err != nil {
 		panic(err)
 	}
