@@ -215,10 +215,12 @@ func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, va
 	return initResource, nil
 }
 
+// PurgeResource purges a container resource and returns the error if any.
 func (m *Manager) PurgeResource(resource *dockertest.Resource) error {
 	return m.Pool.Purge(resource)
 }
 
+// GetValidatorResource returns the validator resource at validatorIndex for the given chainId.
 func (m *Manager) GetValidatorResource(chainId string, validatorIndex int) (*dockertest.Resource, bool) {
 	chainValidators, exists := m.valResources[chainId]
 	if !exists || validatorIndex >= len(chainValidators) {
