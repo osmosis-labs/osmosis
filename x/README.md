@@ -14,7 +14,8 @@ Osmosis implements the following custom modules:
   * Also contains logic for custom Osmosis mempool logic, though this should perhaps relocate.
 
 See the module dependence graph below for further information:
-![ModDepGraph](https://user-images.githubusercontent.com/76530366/174297484-e97b4a4b-cc02-465f-815d-f4d9767be274.png)
+
+![ModuleDependenceGraph](https://user-images.githubusercontent.com/76530366/174603603-c6793ddd-ac62-469b-8ef7-5af16f3b4816.png)
 
 This is done in addition to updates to several modules within the SDK.
 
