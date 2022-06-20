@@ -336,7 +336,7 @@ func (suite *KeeperTestSuite) TestGetTotalSwapFeeForSwapInBalancerPool() {
 			suite.Require().NotEmpty(poolIds)
 
 			// get denomPath from test msg
-			denomPath := test.msg.GetTokenDenomsOnPath()
+			denomPath := test.msg.TokenDenomsOnPath()
 			suite.Require().NotEmpty(denomPath)
 
 			// check denom path is longer than pool ids by 1

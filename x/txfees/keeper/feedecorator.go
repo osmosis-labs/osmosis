@@ -165,7 +165,7 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	}
 
 	// Check if message qualifies for sybil resistant fees
-	msg, canSybil := tx.GetMsgs()[0].(gammtypes.SybilResistantFee)
+	msg, canSybil := tx.GetMsgs()[0].(gammtypes.SwapMsgRoute)
 	if !canSybil {
 		return sybil, nil
 	}
@@ -179,7 +179,7 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	}
 
 	// Get fees paid in swap fee
-	feesPaid, err := mfd.TxFeesKeeper.GetFeesPaid(ctx, msg.GetPoolIdOnPath(), msg.GetTokenDenomsOnPath(), token)
+	feesPaid, err := mfd.TxFeesKeeper.GetFeesPaid(ctx, msg.GetPoolIdOnPath(), msg.TokenDenomsOnPath(), token)
 	if err != nil {
 		return Sybil{}, err
 	}

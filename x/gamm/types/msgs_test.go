@@ -47,7 +47,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		msg              SybilResistantFee
+		msg              SwapMsgRoute
 		expectDenomPath  []string
 		expectPoolIdPath []uint64
 		expectToken      sdk.Coin
@@ -175,7 +175,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 			require.Error(t, msg.ValidateBasic(), "test: %v", test.name)
 		}
 
-		denomPath := test.msg.GetTokenDenomsOnPath()
+		denomPath := test.msg.TokenDenomsOnPath()
 		poolIdPath := test.msg.GetPoolIdOnPath()
 		token := test.msg.GetTokenToFee()
 
@@ -221,7 +221,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		msg              SybilResistantFee
+		msg              SwapMsgRoute
 		expectDenomPath  []string
 		expectPoolIdPath []uint64
 		expectToken      sdk.Coin
@@ -353,7 +353,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 			require.Error(t, msg.ValidateBasic(), "test: %v", test.name)
 		}
 
-		denomPath := test.msg.GetTokenDenomsOnPath()
+		denomPath := test.msg.TokenDenomsOnPath()
 		poolIdPath := test.msg.GetPoolIdOnPath()
 		token := test.msg.GetTokenToFee()
 
