@@ -1,4 +1,4 @@
-package wasm
+package wasmbinding
 
 import (
 	"encoding/json"
@@ -16,8 +16,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/app/wasm"
-	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	"github.com/osmosis-labs/osmosis/v7/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v7/wasmbinding/bindings"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 )
 
@@ -50,13 +50,13 @@ func TestQueryFullDenom(t *testing.T) {
 	require.NotEmpty(t, reflect)
 
 	// query full denom
-	query := wasmbindings.OsmosisQuery{
-		FullDenom: &wasmbindings.FullDenom{
+	query := bindings.OsmosisQuery{
+		FullDenom: &bindings.FullDenom{
 			CreatorAddr: reflect.String(),
 			Subdenom:    "ustart",
 		},
 	}
-	resp := wasmbindings.FullDenomResponse{}
+	resp := bindings.FullDenomResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	expected := fmt.Sprintf("factory/%s/ustart", reflect.String())
@@ -87,22 +87,22 @@ func TestQueryPool(t *testing.T) {
 	require.NotEmpty(t, reflect)
 
 	// query pool state
-	query := wasmbindings.OsmosisQuery{
-		PoolState: &wasmbindings.PoolState{PoolId: starPool},
+	query := bindings.OsmosisQuery{
+		PoolState: &bindings.PoolState{PoolId: starPool},
 	}
-	resp := wasmbindings.PoolStateResponse{}
+	resp := bindings.PoolStateResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-	expected := wasm.ConvertSdkCoinsToWasmCoins(poolFunds)
+	expected := wasmbinding.ConvertSdkCoinsToWasmCoins(poolFunds)
 	require.EqualValues(t, expected, resp.Assets)
 	assertValidShares(t, resp.Shares, starPool)
 
 	// query second pool state
-	query = wasmbindings.OsmosisQuery{
-		PoolState: &wasmbindings.PoolState{PoolId: atomPool},
+	query = bindings.OsmosisQuery{
+		PoolState: &bindings.PoolState{PoolId: atomPool},
 	}
-	resp = wasmbindings.PoolStateResponse{}
+	resp = bindings.PoolStateResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-	expected = wasm.ConvertSdkCoinsToWasmCoins(pool2Funds)
+	expected = wasmbinding.ConvertSdkCoinsToWasmCoins(pool2Funds)
 	require.EqualValues(t, expected, resp.Assets)
 	assertValidShares(t, resp.Shares, atomPool)
 }
@@ -126,9 +126,9 @@ func TestQuerySpotPrice(t *testing.T) {
 	require.NotEmpty(t, reflect)
 
 	// query spot price
-	query := wasmbindings.OsmosisQuery{
-		SpotPrice: &wasmbindings.SpotPrice{
-			Swap: wasmbindings.Swap{
+	query := bindings.OsmosisQuery{
+		SpotPrice: &bindings.SpotPrice{
+			Swap: bindings.Swap{
 				PoolId:   starPool,
 				DenomIn:  "ustar",
 				DenomOut: "uosmo",
@@ -136,7 +136,7 @@ func TestQuerySpotPrice(t *testing.T) {
 			WithSwapFee: false,
 		},
 	}
-	resp := wasmbindings.SpotPriceResponse{}
+	resp := bindings.SpotPriceResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	price, err := strconv.ParseFloat(resp.Price, 64)
@@ -152,9 +152,9 @@ func TestQuerySpotPrice(t *testing.T) {
 
 	// and the reverse conversion (with swap fee)
 	// query spot price
-	query = wasmbindings.OsmosisQuery{
-		SpotPrice: &wasmbindings.SpotPrice{
-			Swap: wasmbindings.Swap{
+	query = bindings.OsmosisQuery{
+		SpotPrice: &bindings.SpotPrice{
+			Swap: bindings.Swap{
 				PoolId:   starPool,
 				DenomIn:  "uosmo",
 				DenomOut: "ustar",
@@ -162,7 +162,7 @@ func TestQuerySpotPrice(t *testing.T) {
 			WithSwapFee: true,
 		},
 	}
-	resp = wasmbindings.SpotPriceResponse{}
+	resp = bindings.SpotPriceResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
 	price, err = strconv.ParseFloat(resp.Price, 32)
@@ -201,21 +201,21 @@ func TestQueryEstimateSwap(t *testing.T) {
 
 	// Query estimate cost (Exact in. No route)
 	amountIn := sdk.NewInt(10000)
-	query := wasmbindings.OsmosisQuery{
-		EstimateSwap: &wasmbindings.EstimateSwap{
+	query := bindings.OsmosisQuery{
+		EstimateSwap: &bindings.EstimateSwap{
 			Sender: reflect.String(),
-			First: wasmbindings.Swap{
+			First: bindings.Swap{
 				PoolId:   starPool,
 				DenomIn:  "uosmo",
 				DenomOut: "ustar",
 			},
-			Route: []wasmbindings.Step{},
-			Amount: wasmbindings.SwapAmount{
+			Route: []bindings.Step{},
+			Amount: bindings.SwapAmount{
 				In: &amountIn,
 			},
 		},
 	}
-	resp := wasmbindings.EstimatePriceResponse{}
+	resp := bindings.EstimatePriceResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 	require.NotNil(t, resp.Amount.Out)
 	require.Nil(t, resp.Amount.In)
@@ -230,21 +230,21 @@ func TestQueryEstimateSwap(t *testing.T) {
 	// And the other way around
 	// Query estimate cost (Exact out. No route)
 	amountOut := sdk.NewInt(10000)
-	query = wasmbindings.OsmosisQuery{
-		EstimateSwap: &wasmbindings.EstimateSwap{
+	query = bindings.OsmosisQuery{
+		EstimateSwap: &bindings.EstimateSwap{
 			Sender: reflect.String(),
-			First: wasmbindings.Swap{
+			First: bindings.Swap{
 				PoolId:   starPool,
 				DenomIn:  "uosmo",
 				DenomOut: "ustar",
 			},
-			Route: []wasmbindings.Step{},
-			Amount: wasmbindings.SwapAmount{
+			Route: []bindings.Step{},
+			Amount: bindings.SwapAmount{
 				Out: &amountOut,
 			},
 		},
 	}
-	resp = wasmbindings.EstimatePriceResponse{}
+	resp = bindings.EstimatePriceResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 	require.NotNil(t, resp.Amount.In)
 	require.Nil(t, resp.Amount.Out)
@@ -269,7 +269,7 @@ type ChainResponse struct {
 	Data []byte `json:"data"`
 }
 
-func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, request wasmbindings.OsmosisQuery, response interface{}) {
+func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, request bindings.OsmosisQuery, response interface{}) {
 	msgBz, err := json.Marshal(request)
 	require.NoError(t, err)
 

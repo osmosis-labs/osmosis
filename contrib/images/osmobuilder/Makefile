@@ -37,8 +37,6 @@ build-binary-amd64: create-dockerx-builder
 	--build-arg BUILD_TAGS=$(BUILD_TAGS) \
 	-t $(IMAGE)-amd64 \
 	--load \
-	--no-cache \
-	--progress plain \
 	-f contrib/images/osmobuilder/Dockerfile .
 
 # Get binary from image for amd64 architecture
@@ -46,8 +44,8 @@ get-binary-amd64: build-binary-amd64
 	mkdir -p release/
 	docker rm -f osmobinary || true
 	docker create -ti --name osmobinary $(IMAGE)-amd64
-	docker cp osmobinary:/osmosis/build/osmosisd release/osmosis-$(VERSION)-linux-amd64
-	tar -zcvf release/osmosis-$(VERSION)-linux-amd64.tar.gz release/osmosis-$(VERSION)-linux-amd64
+	docker cp osmobinary:/osmosis/build/osmosisd release/osmosisd-$(VERSION)-linux-amd64
+	tar -zcvf release/osmosisd-$(VERSION)-linux-amd64.tar.gz release/osmosisd-$(VERSION)-linux-amd64
 	docker rm -f osmobinary
 
 # Build image for arm64 architecture
@@ -61,8 +59,6 @@ build-binary-arm64: create-dockerx-builder
 	--build-arg BUILD_TAGS=$(BUILD_TAGS) \
 	-t $(IMAGE)-arm64 \
 	--load \
-	--no-cache \
-	--progress plain \
 	-f contrib/images/osmobuilder/Dockerfile .
 
 # Get binary from image for arm64 architecture
@@ -70,8 +66,8 @@ get-binary-arm64: build-binary-arm64
 	mkdir -p release/
 	docker rm -f osmobinary || true
 	docker create -ti --name osmobinary $(IMAGE)-arm64
-	docker cp osmobinary:/osmosis/build/osmosisd release/osmosis-$(VERSION)-linux-arm64
-	tar -zcvf release/osmosis-$(VERSION)-linux-arm64.tar.gz release/osmosis-$(VERSION)-linux-arm64
+	docker cp osmobinary:/osmosis/build/osmosisd release/osmosisd-$(VERSION)-linux-arm64
+	tar -zcvf release/osmosisd-$(VERSION)-linux-arm64.tar.gz release/osmosisd-$(VERSION)-linux-arm64
 	docker rm -f osmobinary
 
 # Calculate sha

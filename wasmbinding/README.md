@@ -9,10 +9,10 @@ This package provides first class support for:
   - Pools
   - Prices
 - Messages / Execution
-  - Mint
+  - Minting / controlling of new native tokens
   - Swap
 
-### Command line interface (CLI)
+## Command line interface (CLI)
 
 - Commands
 
@@ -26,7 +26,7 @@ This package provides first class support for:
   osmosisd query wasm -h
 ```
 
-### Tests
+## Tests
 
 This contains a few high level tests that `x/wasm` is properly
 integrated.

@@ -339,7 +339,6 @@ func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
 // returns outAmt as a decimal
 func (pa *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
 	reserves, err := pa.getScaledPoolAmts(tokenIn.Denom, tokenOutDenom)
-
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -400,6 +399,7 @@ func (pa *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swap
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
 		pa.updatePoolForJoin(sdk.NewCoins(coin), newShare)
+		numShares = numShares.Add(newShare)
 	}
 
 	return numShares, tokensIn, nil
