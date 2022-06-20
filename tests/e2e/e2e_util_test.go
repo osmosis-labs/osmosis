@@ -96,7 +96,7 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chainConfig, dstChain *chainCon
 func (s *IntegrationTestSuite) submitUpgradeProposal(c *chainConfig) {
 	upgradeHeightStr := strconv.Itoa(c.propHeight)
 	validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, 0)
-	require.True(s.T(), exists)
+	s.Require().True(exists)
 	s.T().Logf("submitting upgrade proposal on %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.meta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
 	_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, 0, cmd, "code: 0")
@@ -107,7 +107,7 @@ func (s *IntegrationTestSuite) submitUpgradeProposal(c *chainConfig) {
 
 func (s *IntegrationTestSuite) submitSuperfluidProposal(c *chainConfig, asset string) {
 	validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, 0)
-	require.True(s.T(), exists)
+	s.Require().True(exists)
 	s.T().Logf("submitting superfluid proposal for asset %s on %s container: %s", asset, validatorResource.Container.Name[1:], validatorResource.Container.ID)
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.meta.Id)}
 	_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, 0, cmd, "code: 0")
@@ -118,7 +118,7 @@ func (s *IntegrationTestSuite) submitSuperfluidProposal(c *chainConfig, asset st
 
 func (s *IntegrationTestSuite) submitTextProposal(c *chainConfig, text string) {
 	validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, 0)
-	require.True(s.T(), exists)
+	s.Require().True(exists)
 	s.T().Logf("submitting text proposal on %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.meta.Id)}
 	_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, 0, cmd, "code: 0")
@@ -130,7 +130,7 @@ func (s *IntegrationTestSuite) submitTextProposal(c *chainConfig, text string) {
 func (s *IntegrationTestSuite) depositProposal(c *chainConfig) {
 	propStr := strconv.Itoa(c.latestProposalNumber)
 	validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, 0)
-	require.True(s.T(), exists)
+	s.Require().True(exists)
 	s.T().Logf("depositing to proposal from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 	cmd := []string{"osmosisd", "tx", "gov", "deposit", propStr, "500000000uosmo", "--from=val", fmt.Sprintf("--chain-id=%s", c.meta.Id), "-b=block", "--yes", "--keyring-backend=test"}
 	_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, 0, cmd, "code: 0")
