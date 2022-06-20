@@ -35,7 +35,10 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	// set delegator vote to no
 	s.voteNoProposal(chainA, 0, "wallet")
 
-	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[chainA.meta.Id][0].GetHostPort("1317/tcp"))
+	hostPort, err := s.containerManager.GetValidatorHostPort(chainA.meta.Id, 0, "1317/tcp")
+	s.Require().NoError(err)
+
+	chainAAPIEndpoint := fmt.Sprintf("http://%s", hostPort)
 	sfProposalNumber := strconv.Itoa(chainA.latestProposalNumber)
 	s.Require().Eventually(
 		func() bool {
