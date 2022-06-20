@@ -169,7 +169,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.configureChain(chain.ChainBID, validatorConfigsChainB, map[int]struct{}{})
 
 	for i, chainConfig := range s.chainConfigs {
-		s.runValidators(chainConfig, s.containerManager.ImageConfig.OsmosisRepository, s.containerManager.ImageConfig.OsmosisTag, i*10)
+		s.runValidators(chainConfig, i*10)
 		s.extractValidatorOperatorAddresses(chainConfig)
 	}
 
@@ -211,7 +211,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	}
 }
 
-func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, dockerRepository, dockerTag string, portOffset int) {
+func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffset int) {
 	s.T().Logf("starting %s validator containers...", chainConfig.meta.Id)
 	for i, val := range chainConfig.validators {
 		// Skip some validators from running during set up.
@@ -451,7 +451,7 @@ func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propH
 	s.T().Logf("starting upgrade for chain-id: %s...", chain.meta.Id)
 
 	s.containerManager.OsmosisRepository = containers.CurrentBranchOsmoRepository
-	s.containerManager.OsmosisRepository = containers.CurrentBranchOsmoTag
+	s.containerManager.OsmosisTag = containers.CurrentBranchOsmoTag
 
 	for i, val := range chain.validators {
 		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {

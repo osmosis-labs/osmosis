@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Manager is a wrapper around Docker API. It provides utilities
+// necessary to run and manage Docker containers for e2e testing.
 type Manager struct {
 	ImageConfig
 	Pool    *dockertest.Pool
@@ -155,16 +157,14 @@ func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCond
 	}
 
 	runOpts := &dockertest.RunOptions{
-		Name:      valContainerName,
-		NetworkID: m.network.Network.ID,
+		Name:       valContainerName,
+		Repository: m.OsmosisRepository,
+		Tag:        m.OsmosisTag,
+		NetworkID:  m.network.Network.ID,
+		User:       "root:root",
 		Mounts: []string{
 			fmt.Sprintf("%s/:/osmosis/.osmosisd", valCondifDir),
 			fmt.Sprintf("%s/scripts:/osmosis", pwd),
-		},
-		Repository: m.OsmosisRepository,
-		Tag:        m.OsmosisTag,
-		Cmd: []string{
-			"start",
 		},
 	}
 
@@ -182,7 +182,12 @@ func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCond
 	return resource, nil
 }
 
-func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, tmpDir string) (*dockertest.Resource, error) {
+// RunChainInitResource runs a chain init container to initialize genesis and configs for a chain with chainId.
+// The chain is to be configured with chainVotingPeriod and validators deserialized from validatorConfigBytes.
+// The genesis and configs are to be mounted on the init containers as volume on mountDir.
+// Returns the container resource and error if any. This method does not Purge the container. The caller
+// must deal with removing the resource.
+func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, mountDir string) (*dockertest.Resource, error) {
 	votingPeriodDuration := time.Duration(chainVotingPeriod * 1000000000)
 
 	initResource, err := m.Pool.RunWithOptions(
@@ -192,14 +197,14 @@ func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, va
 			Tag:        m.ImageConfig.InitTag,
 			NetworkID:  m.network.Network.ID,
 			Cmd: []string{
-				fmt.Sprintf("--data-dir=%s", tmpDir),
+				fmt.Sprintf("--data-dir=%s", mountDir),
 				fmt.Sprintf("--chain-id=%s", chainId),
 				fmt.Sprintf("--config=%s", validatorConfigBytes),
 				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
 			},
 			User: "root:root",
 			Mounts: []string{
-				fmt.Sprintf("%s:%s", tmpDir, tmpDir),
+				fmt.Sprintf("%s:%s", mountDir, mountDir),
 			},
 		},
 		noRestart,
@@ -222,6 +227,10 @@ func (m *Manager) GetValidatorResource(chainId string, validatorIndex int) (*doc
 	return chainValidators[validatorIndex], true
 }
 
+// GetValidatorHostPort returns the port-forwarding address of the running host
+// necessary to connect to the validator's portId exposed inside the container.
+// The validator container is determied by chainId and validatorIndex.
+// Returns the host-port and error if any.
 func (m *Manager) GetValidatorHostPort(chainId string, validatorIndex int, portId string) (string, error) {
 	validatorResource, exists := m.GetValidatorResource(chainId, validatorIndex)
 	if !exists {
@@ -230,6 +239,8 @@ func (m *Manager) GetValidatorHostPort(chainId string, validatorIndex int, portI
 	return validatorResource.GetHostPort(portId), nil
 }
 
+// RemoveValidatorResource removes a validator container specified by chainId and containerName.
+// Returns error if any.
 func (m *Manager) RemoveValidatorResource(chainId string, containerName string) error {
 	chainValidators, exists := m.valResources[chainId]
 	if !exists {
@@ -252,6 +263,7 @@ func (m *Manager) RemoveValidatorResource(chainId string, containerName string) 
 	return fmt.Errorf("no validator container %s on chain %s", containerName, chainId)
 }
 
+// ClearResources removes all outstanding Docker resources created by the manager.
 func (m *Manager) ClearResources() error {
 	if err := m.Pool.Purge(m.hermesResource); err != nil {
 		return err
