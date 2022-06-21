@@ -242,8 +242,3 @@ Which in this example outputs:
 ```sh
 current_epoch: "183"
 ```
-
-### Downtime Recovery
-
-When the chain is recovering from downtime, and multiple epochs for a given identifier should have been executed,
-the chain will
