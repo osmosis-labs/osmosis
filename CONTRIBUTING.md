@@ -117,7 +117,6 @@ There are several steps that go into a major release
 
 * Run the [existing binary creation tool](https://github.com/osmosis-labs/osmosis/blob/main/.github/workflows/release.yml). Running `make -f contrib/images/osmobuilder/Makefile release` on the root of the repo will replicate the CI that creates the release folder containing the binaries.
 
-
 * Make a PR to main, with a cosmovisor config, generated in tandem with the binaries from tool.
     * Should be its own PR, as it may get denied for Fork upgrades.
 
