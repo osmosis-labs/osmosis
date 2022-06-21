@@ -80,12 +80,11 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		// Plugging all of this in, we get:
 		// 	Full solution: https://www.wolframalpha.com/input?i=100000000000000000000*%28%281+%2B+%2850000%2F1000000000000%29%29%5E0.5+-+1%29
 		// 	Simplified:  P_issued = 2,499,999,968,750
-		name:                 "single tokensIn - equal weights with zero swap fee",
-		swapFee:              sdk.MustNewDecFromStr("0"),
-		poolAssets:           oneTrillionEvenPoolAssets,
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-		expectShares:         sdk.NewInt(2_499_999_968_750),
-		expectToleranceError: false,
+		name:         "single tokensIn - equal weights with zero swap fee",
+		swapFee:      sdk.MustNewDecFromStr("0"),
+		poolAssets:   oneTrillionEvenPoolAssets,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		expectShares: sdk.NewInt(2_499_999_968_750),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -102,12 +101,11 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		// Plugging all of this in, we get:
 		// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
 		// 	Simplified:  P_issued = 2_487_500_000_000
-		name:                 "single tokensIn - equal weights with 0.01 swap fee",
-		swapFee:              sdk.MustNewDecFromStr("0.01"),
-		poolAssets:           oneTrillionEvenPoolAssets,
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-		expectShares:         sdk.NewInt(2_487_500_000_000),
-		expectToleranceError: false,
+		name:         "single tokensIn - equal weights with 0.01 swap fee",
+		swapFee:      sdk.MustNewDecFromStr("0.01"),
+		poolAssets:   oneTrillionEvenPoolAssets,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		expectShares: sdk.NewInt(2_487_500_000_000),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -124,12 +122,11 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		// Plugging all of this in, we get:
 		// 	Full solution: https://www.wolframalpha.com/input?i=%28100+*+10%5E18+%29*+%28%28+1+%2B+%2850%2C000+*+%281+-+%281+-+0.5%29+*+0.99%29+%2F+1000000000000%29%29%5E0.5+-+1%29
 		// 	Simplified:  P_issued = 1_262_500_000_000
-		name:                 "single tokensIn - equal weights with 0.99 swap fee",
-		swapFee:              sdk.MustNewDecFromStr("0.99"),
-		poolAssets:           oneTrillionEvenPoolAssets,
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-		expectShares:         sdk.NewInt(1_262_500_000_000),
-		expectToleranceError: false,
+		name:         "single tokensIn - equal weights with 0.99 swap fee",
+		swapFee:      sdk.MustNewDecFromStr("0.99"),
+		poolAssets:   oneTrillionEvenPoolAssets,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		expectShares: sdk.NewInt(1_262_500_000_000),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -155,9 +152,8 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: sdk.NewInt(300),
 			},
 		},
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-		expectShares:         sdk.NewInt(321_875_000_000),
-		expectToleranceError: false,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		expectShares: sdk.NewInt(321_875_000_000),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -182,9 +178,8 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			},
 			defaultAtomPoolAsset,
 		},
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-		expectShares:         sdk.NewInt(4_166_666_649_306),
-		expectToleranceError: false,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		expectShares: sdk.NewInt(4_166_666_649_306),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -209,9 +204,8 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			},
 			defaultAtomPoolAsset,
 		},
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-		expectShares:         sdk.NewInt(4_159_722_200_000),
-		expectToleranceError: false,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		expectShares: sdk.NewInt(4_159_722_200_000),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -239,9 +233,8 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: sdk.NewInt(1000),
 			},
 		},
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-		expectShares:         sdk.NewInt(833_333_315_972),
-		expectToleranceError: false,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		expectShares: sdk.NewInt(833_333_315_972),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -269,9 +262,8 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: sdk.NewInt(1000),
 			},
 		},
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-		expectShares:         sdk.NewInt(819_444_430_000),
-		expectToleranceError: false,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+		expectShares: sdk.NewInt(819_444_430_000),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -300,9 +292,8 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			},
 		},
 		// 156_736 * 3 / 4 = 117552
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3)/4)),
-		expectShares:         sdk.NewIntFromUint64(9_775_731_930_496_140_648),
-		expectToleranceError: false,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", (156_736*3)/4)),
+		expectShares: sdk.NewIntFromUint64(9_775_731_930_496_140_648),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -331,9 +322,8 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 			},
 		},
 		// 156_736 / 4 * 3 = 117552
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
-		expectShares:         sdk.NewIntFromUint64(9_644_655_900_000_000_000),
-		expectToleranceError: false,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 156_736/4*3)),
+		expectShares: sdk.NewIntFromUint64(9_644_655_900_000_000_000),
 	},
 	{
 		// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -361,9 +351,8 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: sdk.NewInt(1000),
 			},
 		},
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
-		expectShares:         sdk.NewIntFromUint64(6_504_099_261_800_144_638),
-		expectToleranceError: false,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 499_999)),
+		expectShares: sdk.NewIntFromUint64(6_504_099_261_800_144_638),
 	},
 	{
 		// Currently, our Pow approximation function does not work correctly when one tries
@@ -383,19 +372,17 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 				Weight: sdk.NewInt(1000),
 			},
 		},
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 500_000)),
-		expectShares:         sdk.NewIntFromUint64(6_504_099_261_800_144_638),
-		expectPanic:          true,
-		expectToleranceError: false,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 500_000)),
+		expectShares: sdk.NewIntFromUint64(6_504_099_261_800_144_638),
+		expectPanic:  true,
 	},
 	{
-		name:                 "tokenIn asset does not exist in pool",
-		swapFee:              sdk.MustNewDecFromStr("0"),
-		poolAssets:           oneTrillionEvenPoolAssets,
-		tokensIn:             sdk.NewCoins(sdk.NewInt64Coin(doesNotExistDenom, 50_000)),
-		expectShares:         sdk.ZeroInt(),
-		expErr:               sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom)),
-		expectToleranceError: false,
+		name:         "tokenIn asset does not exist in pool",
+		swapFee:      sdk.MustNewDecFromStr("0"),
+		poolAssets:   oneTrillionEvenPoolAssets,
+		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(doesNotExistDenom, 50_000)),
+		expectShares: sdk.ZeroInt(),
+		expErr:       sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom)),
 	},
 	{
 		// Pool liquidity is changed by 1e-12 / 2
@@ -415,8 +402,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		tokensIn: sdk.NewCoins(
 			sdk.NewInt64Coin("uosmo", 1),
 		),
-		expectShares:         sdk.NewInt(50_000_000),
-		expectToleranceError: false,
+		expectShares: sdk.NewInt(50_000_000),
 	},
 	{
 		// P_issued should be 1/10th that of the previous test
@@ -436,8 +422,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		tokensIn: sdk.NewCoins(
 			sdk.NewInt64Coin("uosmo", 1),
 		),
-		expectShares:         sdk.NewInt(5_000_000),
-		expectToleranceError: false,
+		expectShares: sdk.NewInt(5_000_000),
 	},
 }
 
@@ -565,8 +550,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			// Raises liquidity perfectly by 25_000 / 1_000_000_000_000.
 			// Initial number of pool shares = 100 * 10**18 = 10**20
 			// Expected increase = liquidity_increase_ratio * initial number of pool shares = (25_000 / 1e12) * 10**20 = 2500000000000.0 = 2.5 * 10**12
-			expectShares:         sdk.NewInt(2.5e12),
-			expectToleranceError: false,
+			expectShares: sdk.NewInt(2.5e12),
 		},
 		{
 			name:       "swap equal weights with 0.001 swap fee",
@@ -576,8 +560,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 25_000),
 			),
-			expectShares:         sdk.NewInt(2500000000000),
-			expectToleranceError: false,
+			expectShares: sdk.NewInt(2500000000000),
 		},
 		{
 			// For uosmos and uatom
@@ -605,8 +588,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				sdk.NewInt64Coin("uatom", 50_000),
 			),
 
-			expectShares:         sdk.NewInt(2.5e12 + 1249999992187),
-			expectToleranceError: false,
+			expectShares: sdk.NewInt(2.5e12 + 1249999992187),
 		},
 		{
 			// For uosmos and uatom
@@ -634,8 +616,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				sdk.NewInt64Coin("uatom", 50_000),
 			),
 
-			expectShares:         sdk.NewInt(2.5e12 + 1243750000000),
-			expectToleranceError: false,
+			expectShares: sdk.NewInt(2.5e12 + 1243750000000),
 		},
 		{
 			// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 12,500 uatom.
@@ -669,8 +650,55 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				sdk.NewInt64Coin("uosmo", 25_000),
 				sdk.NewInt64Coin("uatom", 50_000),
 			),
-			expectShares:         sdk.NewInt(1250000000000 + 609374990000),
-			expectToleranceError: false,
+			expectShares: sdk.NewInt(1250000000000 + 609374990000),
+		},
+		{
+			// Compares expected shares and actual shares to make sure the multiplicativeTolerance ratio below is maintained
+			// |a - b| / min(a, b) <= allowedErrRatio
+			// 0.028380636507 = abs(3850000000000-3743749992293)/3743749992293
+			// 0.028380636507 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
+			//
+			// where:
+			// a = expected shares,
+			// b = actual shares
+			// allowedErrRatio = 0.0000001
+			// 	Full solution: https://www.wolframalpha.com/input?i=abs%283850000000000-3743749992293%29%2F3743749992293
+			name:       "Error tolerance: Multi token with unequal amounts, with equal weights and 0.01 swap fee",
+			swapFee:    sdk.MustNewDecFromStr("0.01"),
+			poolAssets: oneTrillionEvenPoolAssets,
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 50_000),
+			),
+			expectShares:         sdk.NewInt(2.5e12 + 1350000000000), // ACTUAL: 3743749992293
+			expectToleranceError: true,
+		},
+		{
+			//	Compares expected shares and actual shares to make sure the multiplicativeTolerance ratio below is maintained
+			//	|a - b| / min(a, b) <= allowedErrRatio
+			//	0.12052731373 = abs(1659374990000-1859375000017)/1659374990000
+			// 	0.12052731373 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
+			//
+			// where:
+			// a = expected shares,
+			// b = actual shares
+			// allowedErrRatio = 0.0000001
+			// 	Full solution: https://www.wolframalpha.com/input?i=abs%281659374990000-1859375000017%29%2F1659374990000
+			name:    "Error tolerance: Multi-tokens In with unequal amounts, with unequal weights with 0.03 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.03"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 2_000_000_000_000),
+					Weight: sdk.NewInt(500),
+				},
+				defaultAtomPoolAsset,
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 50_000),
+			),
+			expectShares:         sdk.NewInt(1250000000000 + 409374990000), // ACTUAL: 1859375000017
+			expectToleranceError: true,
 		},
 		{
 			// This test doubles the liquidity in a fresh pool, so it should generate the base number of LP shares for pool creation as new shares
@@ -692,8 +720,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				sdk.NewInt64Coin("uosmo", 1),
 				sdk.NewInt64Coin("uatom", 1),
 			),
-			expectShares:         sdk.NewInt(1e18).Mul(sdk.NewInt(100)),
-			expectToleranceError: false,
+			expectShares: sdk.NewInt(1e18).Mul(sdk.NewInt(100)),
 		},
 		{
 			// Pool liquidity is changed by 1e-12
@@ -714,8 +741,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				sdk.NewInt64Coin("uosmo", 1),
 				sdk.NewInt64Coin("uatom", 1),
 			),
-			expectShares:         sdk.NewInt(100_000_000),
-			expectToleranceError: false,
+			expectShares: sdk.NewInt(100_000_000),
 		},
 	}
 	testCases = append(testCases, calcSingleAssetJoinTestCases...)
@@ -744,6 +770,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 						require.NoError(t, err)
 					}
 				}
+
 			}
 
 			balancerPool, ok := pool.(*balancer.Pool)
@@ -940,16 +967,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 }
 
 func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
-	testCases := []struct {
-		name                 string
-		swapFee              sdk.Dec
-		poolAssets           []balancer.PoolAsset
-		tokensIn             sdk.Coins
-		expectShares         sdk.Int
-		expectLiqudity       sdk.Coins
-		expErr               error
-		expectToleranceError bool
-	}{
+	testCases := []calcJoinSharesTestCase{
 		{
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
 			// P_issued = P_supply * ((1 + (A_t / B_t))^W_t - 1)
@@ -964,12 +982,11 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100000000000000000000*%28%281+%2B+%2850000%2F1000000000000%29%29%5E0.5+-+1%29
 			// 	Simplified:  P_issued = 2,499,999,968,750
-			name:                 "one token in - equal weights with zero swap fee",
-			swapFee:              sdk.MustNewDecFromStr("0"),
-			poolAssets:           oneTrillionEvenPoolAssets,
-			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-			expectShares:         sdk.NewInt(2_499_999_968_750), // ACTUAL: 249_999_996_8800
-			expectToleranceError: false,
+			name:         "one token in - equal weights with zero swap fee",
+			swapFee:      sdk.MustNewDecFromStr("0"),
+			poolAssets:   oneTrillionEvenPoolAssets,
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectShares: sdk.NewInt(2_499_999_968_750), // ACTUAL: 2_499_999_968_800
 		},
 		{
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) on page 10:
@@ -985,12 +1002,11 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100000000000000000000*%28%281+%2B+%2850000%2F1000000000000%29%29%5E0.5+-+1%29
 			// 	Simplified:  P_issued = 2,499,999,968,750
-			name:                 "two tokens in - equal weights with zero swap fee",
-			swapFee:              sdk.MustNewDecFromStr("0"),
-			poolAssets:           oneTrillionEvenPoolAssets,
-			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
-			expectShares:         sdk.NewInt(2_499_999_968_750 * 2), // ACTUAL: 5_000_000_000_099
-			expectToleranceError: false,
+			name:         "two tokens in - equal weights with zero swap fee",
+			swapFee:      sdk.MustNewDecFromStr("0"),
+			poolAssets:   oneTrillionEvenPoolAssets,
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
+			expectShares: sdk.NewInt(2_499_999_968_750 * 2), // ACTUAL: 5_000_000_000_099
 		},
 		{
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
@@ -1008,12 +1024,11 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
 			// 	Simplified:  P_issued = 2_487_500_000_000
-			name:                 "one token in - equal weights with swap fee of 0.01",
-			swapFee:              sdk.MustNewDecFromStr("0.01"),
-			poolAssets:           oneTrillionEvenPoolAssets,
-			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-			expectShares:         sdk.NewInt(2_487_500_000_000), // ACTUAL: 2_487_499_969_100
-			expectToleranceError: false,
+			name:         "one token in - equal weights with swap fee of 0.01",
+			swapFee:      sdk.MustNewDecFromStr("0.01"),
+			poolAssets:   oneTrillionEvenPoolAssets,
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
+			expectShares: sdk.NewInt(2_487_500_000_000), // ACTUAL: 2_487_499_969_100
 		},
 		{
 			// Expected output from Balancer paper (https://balancer.fi/whitepaper.pdf) using equation (25) with on page 10
@@ -1031,12 +1046,11 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			// Plugging all of this in, we get:
 			// 	Full solution: https://www.wolframalpha.com/input?i=100+*10%5E18*%28%281+%2B+%2850000*%281+-+%281-0.5%29+*+0.01%29%2F1000000000000%29%29%5E0.5+-+1%29
 			// 	Simplified:  P_issued = 2_487_500_000_000
-			name:                 "two tokens in - equal weights with swap fee of 0.01",
-			swapFee:              sdk.MustNewDecFromStr("0.01"),
-			poolAssets:           oneTrillionEvenPoolAssets,
-			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
-			expectShares:         sdk.NewInt(2_487_500_000_000 * 2), // ACTUAL: 497_500_000_0076
-			expectToleranceError: false,
+			name:         "two tokens in - equal weights with swap fee of 0.01",
+			swapFee:      sdk.MustNewDecFromStr("0.01"),
+			poolAssets:   oneTrillionEvenPoolAssets,
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
+			expectShares: sdk.NewInt(2_487_500_000_000 * 2), // ACTUAL: 497_500_000_0076
 		},
 		{
 			// For uosmo:
@@ -1087,14 +1101,19 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 					Weight: sdk.NewInt(100),
 				},
 			},
-			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 100_000)),
-			expectShares:         sdk.NewInt(2_072_912_400_000_000 + 1_624_999_900_000), // ACTUAL: 2_074_537_403_302_024
-			expectToleranceError: false,
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 100_000)),
+			expectShares: sdk.NewInt(2_072_912_400_000_000 + 1_624_999_900_000), // ACTUAL: 2_074_537_403_302_024
 		},
 		{
+			// Compares expected shares and actual shares to make sure the multiplicativeTolerance ratio below is maintained
 			// |a - b| / min(a, b) <= allowedErrRatio
-			// a = expected shares, b = actual shares
 			// 0.04000000047920000 = abs(2_599_999_968_750-2_499_999_968_800)/2_499_999_968_800
+			// 0.04000000047920000 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
+			//
+			// where:
+			// a = expected shares,
+			// b = actual shares
+			// allowedErrRatio = 0.0000001
 			// 	Full solution: https://www.wolframalpha.com/input?i=abs%282599999968750-2499999968800%29%2F2499999968800
 			name:                 "Error Tolerance: One token in, expected > actual",
 			swapFee:              sdk.MustNewDecFromStr("0"),
@@ -1104,10 +1123,16 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			expectToleranceError: true,
 		},
 		{
+			// Compares expected shares and actual shares to make sure the multiplicativeTolerance ratio below is maintained
 			// |a - b| / min(a, b) <= allowedErrRatio
-			// a = expected shares, b = actual shares
 			// 0.0399999874 = abs(5_000_000_000_099-5_199_999_937_500)/5_000_000_000_099
-			// 	https://www.wolframalpha.com/input?i=abs%285000000000099-5199999937500%29%2F5000000000099
+			// 0.0399999874 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
+			//
+			// where:
+			// a = expected shares,
+			// b = actual shares
+			// allowedErrRatio = 0.0000001
+			// Full Solution: https://www.wolframalpha.com/input?i=abs%285000000000099-5199999937500%29%2F5000000000099
 			name:                 "Error Tolerance: Two token in, expected > actual",
 			swapFee:              sdk.MustNewDecFromStr("0"),
 			poolAssets:           oneTrillionEvenPoolAssets,
@@ -1116,22 +1141,20 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 			expectToleranceError: true,
 		},
 		{
-			name:                 "no tokens in",
-			swapFee:              sdk.MustNewDecFromStr("0.03"),
-			poolAssets:           oneTrillionEvenPoolAssets,
-			tokensIn:             sdk.NewCoins(),
-			expectShares:         sdk.NewInt(0),
-			expectToleranceError: false,
+			name:         "no tokens in",
+			swapFee:      sdk.MustNewDecFromStr("0.03"),
+			poolAssets:   oneTrillionEvenPoolAssets,
+			tokensIn:     sdk.NewCoins(),
+			expectShares: sdk.NewInt(0),
 		},
 		{
 			name:       "one of the tokensIn asset does not exist in pool",
 			swapFee:    sdk.ZeroDec(),
 			poolAssets: oneTrillionEvenPoolAssets,
 			// Second tokenIn does not exist.
-			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin(doesNotExistDenom, 50_000)),
-			expectShares:         sdk.ZeroInt(),
-			expErr:               fmt.Errorf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom),
-			expectToleranceError: false,
+			tokensIn:     sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin(doesNotExistDenom, 50_000)),
+			expectShares: sdk.ZeroInt(),
+			expErr:       fmt.Errorf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom),
 		},
 	}
 

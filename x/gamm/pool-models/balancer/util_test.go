@@ -48,7 +48,7 @@ func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk
 	}
 
 	if errTolerance.Compare(expectedShares, actualShares) != 0 {
-		return errors.New("shares doesnot fall within the tolerance range")
+		return errors.New("shares do not fall within the tolerance range")
 	}
 
 	return nil
