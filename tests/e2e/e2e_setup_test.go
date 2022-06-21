@@ -369,7 +369,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	// current branch directly. As a result, there is no need to run this
 	// via Docker.
 	if s.skipUpgrade {
-		initializedChain, err := chain.Init(chainId, tmpDir, validatorConfigs, votingPeriodDuration)
+		initializedChain, err := chain.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod))
 		s.Require().NoError(err)
 		s.initializeChainConfig(&newChainConfig, initializedChain)
 		return
