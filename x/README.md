@@ -15,7 +15,7 @@ Osmosis implements the following custom modules:
 
 See the module dependence graph below for further information:
 
-![ModuleDependenceGraph](https://user-images.githubusercontent.com/76530366/174679956-4f515bb4-fcba-42e1-8ba2-0acb1cc8a203.png)
+![ModuleDependenceGraph](https://user-images.githubusercontent.com/76530366/174864034-dc908f76-93d1-47d6-8474-e1aed2208eed.png)
 
 This is done in addition to updates to several modules within the SDK.
 
