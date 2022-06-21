@@ -9,15 +9,18 @@ import "osmosis/lockup/lock.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/incentives/types";
 
-// Gauge is a struct that works as a unit for each distribution
-// information defined by x/incentives module.
+// Gauge is a struct that works as a single unit for each distribution of
+// incentives defined by x/incentives module.
 message Gauge {
   // ID is the unique id of the gauge.
   // The ID of the gauge is decided upon gauge creation, incrementing by 1 for
   // every gauge.
   uint64 id = 1;
-  // Is Perpetual defines whether the gauge is permanent or multi-epoch
-  // distribution.
+  // IsPerpetual defines whether the gauge is perpetual or not.
+  // A non perpetual gauge distributes the incentive tokens equally per epoch
+  // during the gauge is in an active period.
+  // A perpetual gauge distributes all tokens at a single distribution, mainly
+  // used to distribute minted osmo to lp token stakers.
   bool is_perpetual = 2;
   // Distribute To is the lock query condition that the gauge reward are to be
   // distributed to.
@@ -35,11 +38,12 @@ message Gauge {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"start_time\""
   ];
-  // Num Epochs Paid Over is the number of epochs distribution will be done.
+  // NumEpochsPaidOver is the number of epochs it takes for the distribution to
+  // be done.
   uint64 num_epochs_paid_over = 6;
   // Filled Epoch is the number of epochs distributed already.
   uint64 filled_epochs = 7;
-  // Distributed Coins is the already distributed coins from the gauge.
+  // DistributedCoins are the coins already distributed from the gauge.
   repeated cosmos.base.v1beta1.Coin distributed_coins = 8 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"

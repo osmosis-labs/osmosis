@@ -30,15 +30,18 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Gauge is a struct that works as a unit for each distribution
-// information defined by x/incentives module.
+// Gauge is a struct that works as a single unit for each distribution of
+// incentives defined by x/incentives module.
 type Gauge struct {
 	// ID is the unique id of the gauge.
 	// The ID of the gauge is decided upon gauge creation, incrementing by 1 for
 	// every gauge.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Is Perpetual defines whether the gauge is permanent or multi-epoch
-	// distribution.
+	// IsPerpetual defines whether the gauge is perpetual or not.
+	// A non perpetual gauge distributes the incentive tokens equally per epoch
+	// during the gauge is in an active period.
+	// A perpetual gauge distributes all tokens at a single distribution, mainly
+	// used to distribute minted osmo to lp token stakers.
 	IsPerpetual bool `protobuf:"varint,2,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
 	// Distribute To is the lock query condition that the gauge reward are to be
 	// distributed to.
@@ -48,11 +51,12 @@ type Gauge struct {
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 	// Start Time is the distribution start time for the gauge.
 	StartTime time.Time `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
-	// Num Epochs Paid Over is the number of epochs distribution will be done.
+	// NumEpochsPaidOver is the number of epochs it takes for the distribution to
+	// be done.
 	NumEpochsPaidOver uint64 `protobuf:"varint,6,opt,name=num_epochs_paid_over,json=numEpochsPaidOver,proto3" json:"num_epochs_paid_over,omitempty"`
 	// Filled Epoch is the number of epochs distributed already.
 	FilledEpochs uint64 `protobuf:"varint,7,opt,name=filled_epochs,json=filledEpochs,proto3" json:"filled_epochs,omitempty"`
-	// Distributed Coins is the already distributed coins from the gauge.
+	// DistributedCoins are the coins already distributed from the gauge.
 	DistributedCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,8,rep,name=distributed_coins,json=distributedCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"distributed_coins"`
 }
 

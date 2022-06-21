@@ -8,9 +8,9 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/lockup/types";
 
-// PeriodLock is a single unit of lock by period defined by the x/lockup module.
-// It's a record of locked coin at a specific time. It stores owner, duration,
-// unlock time and the amount of coins locked. A state of a period lock is
+// PeriodLock is a single lock unit by period defined by the x/lockup module.
+// It's a record of a locked coin at a specific time. It stores owner, duration,
+// unlock time and the number of coins locked. A state of a period lock is
 // created upon lock creation, and deleted once the lock has been matured after
 // the `duration` has passed since unbonding started.
 message PeriodLock {
@@ -21,7 +21,7 @@ message PeriodLock {
   // Owner is the account address of the lock owner.
   // Only the owner can modify the state of the lock.
   string owner = 2 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  // Duration is the time needed for a lock to be matured after unlocking has
+  // Duration is the time needed for a lock to mature after unlocking has
   // started.
   google.protobuf.Duration duration = 3 [
     (gogoproto.nullable) = false,
@@ -29,7 +29,7 @@ message PeriodLock {
     (gogoproto.jsontag) = "duration,omitempty",
     (gogoproto.moretags) = "yaml:\"duration\""
   ];
-  // End Time refers to the time lock would be matured and deleted.
+  // EndTime refers to the time at which the lock would mature and get deleted.
   // This value is first initialized when an unlock has started for the lock,
   // end time being block time + duration.
   google.protobuf.Timestamp end_time = 4 [
@@ -44,8 +44,8 @@ message PeriodLock {
   ];
 }
 
-// LockQueryType defines the type of the lock query, query being
-// either by duration or start time of the lock.
+// LockQueryType defines the type of the lock query that can
+// either be by duration or start time of the lock.
 enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
@@ -57,18 +57,21 @@ enum LockQueryType {
 // Duration field and timestamp fields could be optional, depending on the
 // LockQueryType.
 message QueryCondition {
-  // type of lock query, ByLockDuration | ByLockTime
+  // LockQueryType is a type of lock query, ByLockDuration | ByLockTime
   LockQueryType lock_query_type = 1;
-  // What token denomination are we looking for lockups of
+  // Denom represents the token denomination we are looking to lock up
   string denom = 2;
-  // Locks with longer duration than the specified duration would be queried.
-  // Duration field should not be nil when lock query type is by duration.
+  // Duration is used to query lcoks with longer duration than the specified
+  // duration. Duration field must not be nil when the lock query type is
+  // `ByLockDuration`.
   google.protobuf.Duration duration = 3 [
     (gogoproto.stdduration) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"duration\""
   ];
-  // Locks started before specified timestamp would be queried.
+  // Timestamp is used to locks started before the specified duration.
+  // Timestamp field must not be nil when the lock query type is `ByLockTime`.
+  // Querying locks with timestamp is currently not implemented.
   google.protobuf.Timestamp timestamp = 4 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
@@ -82,8 +85,8 @@ message SyntheticLock {
   // Underlying Lock ID is the underlying native lock's id for this synthetic
   // lockup. A synthetic lock MUST have an underlying lock.
   uint64 underlying_lock_id = 1;
-  // Synth Denom is the synthetic denom of which is a combination of
-  // gamm share + bonding status + validator address
+  // SynthDenom is the synthetic denom that is a combination of
+  // gamm share + bonding status + validator address.
   string synth_denom = 2;
   // used for unbonding synthetic lockups, for active synthetic lockups, this
   // value is set to uninitialized value
@@ -92,7 +95,7 @@ message SyntheticLock {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"end_time\""
   ];
-  // Duration is the duration which is needed for a synthetic lock to be mature
+  // Duration is the duration for a synthetic lock to mature
   // at the point of unbonding has started.
   google.protobuf.Duration duration = 4 [
     (gogoproto.nullable) = false,
