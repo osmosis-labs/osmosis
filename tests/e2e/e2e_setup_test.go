@@ -59,6 +59,10 @@ const (
 	upgradeVersion string = "v10"
 	// is this version a fork
 	isFork bool = true
+	// if isFork is true, this is the forkHeight
+	forkHeight int = 4713065
+	// if not skipping upgrade, how many blocks we allow for fork to run pre upgrade state creation
+	forkHeightOffset int = 60
 	// estimated number of blocks it takes to submit for a proposal
 	propSubmitBlocks float32 = 10
 	// estimated number of blocks it takes to deposit for a proposal
@@ -126,6 +130,9 @@ var (
 			SnapshotKeepRecent: 2,
 		},
 	}
+	// is skip upgrade set in env variables
+	skipUpgrade bool
+	err         error
 )
 
 type IntegrationTestSuite struct {
@@ -158,10 +165,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 2. Start both networks.
 	// 3. Run IBC relayer betweeen the two chains.
 	// 4. Execute various e2e tests, including IBC.
-	var (
-		skipUpgrade bool
-		err         error
-	)
 
 	if str := os.Getenv("OSMOSIS_E2E_SKIP_UPGRADE"); len(str) > 0 {
 		skipUpgrade, err = strconv.ParseBool(str)
@@ -188,15 +191,16 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
-	if !skipUpgrade && !isFork {
+	switch {
+	case !skipUpgrade && !isFork:
 		s.createPreUpgradeState()
 		s.upgrade()
 		s.runPostUpgradeTests()
-	} else if !skipUpgrade && isFork {
+	case !skipUpgrade && isFork:
 		s.createPreUpgradeState()
 		s.upgradeFork()
 		s.runPostUpgradeTests()
-	} else if skipUpgrade {
+	case skipUpgrade:
 		s.runPostUpgradeTests()
 	}
 }
@@ -237,6 +241,46 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, dockerRep
 	s.valResources[chainConfig.meta.Id] = make([]*dockertest.Resource, len(chainConfig.validators)-len(chainConfig.skipRunValidatorIndexes))
 	pwd, err := os.Getwd()
 	s.Require().NoError(err)
+	if isFork == true {
+		for i, val := range chainConfig.validators {
+			// Skip some validators from running during set up.
+			// This is needed for testing functionality like
+			// state-sunc where we might want to start some validators during tests.
+			s.T().Logf("changing %s validator genesis with index %d...", val.validator.Name, i)
+			genesis := fmt.Sprintf("%s/config/genesis.json", val.validator.ConfigDir)
+			byteValue, err := ioutil.ReadFile(genesis)
+			if err != nil {
+				panic(err)
+			}
+
+			var result map[string]interface{}
+			var forkHeightStr string
+			err = json.Unmarshal(byteValue, &result)
+			if err != nil {
+				panic(err)
+			}
+
+			if skipUpgrade == true {
+				forkHeightStr = strconv.Itoa(forkHeight)
+			} else {
+				forkHeightStr = strconv.Itoa(forkHeight - forkHeightOffset)
+			}
+
+			result["initial_height"] = forkHeightStr
+
+			byteValue, err = json.Marshal(result)
+			if err != nil {
+				panic(err)
+			}
+
+			// Write back to file
+			err = ioutil.WriteFile(genesis, byteValue, 0644)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
 	for i, val := range chainConfig.validators {
 		// Skip some validators from running during set up.
 		// This is needed for testing functionality like
@@ -523,7 +567,7 @@ func (s *IntegrationTestSuite) upgrade() {
 				func() bool {
 					currentHeight := s.getCurrentChainHeight(chainConfig, i)
 					if currentHeight != chainConfig.propHeight {
-						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", s.valResources[curChain.meta.Id][i].Container.Name[1:], currentHeight, chainConfig.propHeight, s.valResources[curChain.meta.Id][i].Container.ID)
+						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", s.valResources[curChain.meta.Id][i].Container.Name[1:], currentHeight, forkHeight, s.valResources[curChain.meta.Id][i].Container.ID)
 					}
 					if currentHeight > chainConfig.propHeight {
 						panic("chain did not halt at upgrade height")
@@ -565,7 +609,6 @@ func (s *IntegrationTestSuite) upgradeFork() {
 
 	for _, chainConfig := range s.chainConfigs {
 		curChain := chainConfig
-		chainConfig.forkHeight = 60
 
 		for i := range chainConfig.validators {
 			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
@@ -576,11 +619,11 @@ func (s *IntegrationTestSuite) upgradeFork() {
 			s.Require().Eventually(
 				func() bool {
 					currentHeight := s.getCurrentChainHeight(chainConfig, i)
-					if currentHeight < chainConfig.forkHeight {
+					if currentHeight < forkHeight {
 						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", s.valResources[curChain.meta.Id][i].Container.Name[1:], currentHeight, chainConfig.forkHeight, s.valResources[curChain.meta.Id][i].Container.ID)
 						return false
 					}
-					if currentHeight > chainConfig.forkHeight {
+					if currentHeight > forkHeight {
 						return true
 					}
 					return true
