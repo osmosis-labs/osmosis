@@ -158,8 +158,8 @@ modules so that they can be modified by governance.
 This is the standard dev UX of this:
 ```golang
 func (k MyModuleKeeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	params := k.GetParams(ctx)
-	if epochIdentifier == params.DistrEpochIdentifier {
+    params := k.GetParams(ctx)
+    if epochIdentifier == params.DistrEpochIdentifier {
     // my logic
   }
 }
