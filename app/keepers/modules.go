@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
+	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs"
@@ -83,4 +84,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	tokenfactory.AppModuleBasic{},
 	bech32ibc.AppModuleBasic{},
 	wasm.AppModuleBasic{},
+	ica.AppModuleBasic{},
 }
