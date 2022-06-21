@@ -127,9 +127,9 @@ There are several steps that go into a major release
 * Do a PR if that commit has conflicts
 
 * (Eventually) Make a PR that adds a version handler for the next upgrade
-    * Add v10 upgrade boilerplate #1649
+    * (Add v10 upgrade boilerplate #1649)[https://github.com/osmosis-labs/osmosis/pull/1649/files]
 
-* Update chain JSON schema's recommended versions
+* Update chain JSON schema's recommended versions in `chain.schema.json` located in the root directory.
 
 ### Pre-release auditing process
 
@@ -139,15 +139,15 @@ Deliverables of review are:
 
 * PR's with in-line code comments for things they had to figure out (or questions) 
 
-* tests / test comments needed to convince themselves of correctness 
+* Tests / test comments needed to convince themselves of correctness 
 
-* spec updates
+* Spec updates
 
 * Small refactors that helped in understanding / making code conform to consistency stds / improve code signal-to-noise ratio welcome
 
 * (As with all PRs, should not be a monolithic PR that gets PR'd, even though that may be the natural way its first formed)
 
-We will find a tool that lets us statically figure out every message that had something in its code path that changed, and until a tool is found, we must do this manually.
+At the moment, we're looking for a tool that lets us statically figure out every message that had something in its code path that changed. Until a tool is found, we must do this manually.
 
 We test in testnet & e2e testnet behaviors about every message that has changed
 
