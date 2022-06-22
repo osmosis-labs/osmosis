@@ -234,9 +234,7 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 			s.T().Logf("changing %s validator genesis with index %d...", val.validator.Name, i)
 			genesis := fmt.Sprintf("%s/config/genesis.json", val.validator.ConfigDir)
 			byteValue, err := ioutil.ReadFile(genesis)
-			if err != nil {
-				panic(err)
-			}
+                        s.Require().NoError(err)
 
 			var result map[string]interface{}
 			var forkHeightStr string
