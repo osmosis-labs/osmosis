@@ -62,10 +62,6 @@ const (
 	skipCleanupEnv = "OSMOSIS_E2E_SKIP_CLEANUP"
 	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
 	upgradeVersion string = "v10"
-	// is this version a fork
-	isFork bool = true
-	// if isFork is true, this is the forkHeight
-	forkHeight int = 4713065
 	// if not skipping upgrade, how many blocks we allow for fork to run pre upgrade state creation
 	forkHeightPreUpgradeOffset int = 60
 	// estimated number of blocks it takes to submit for a proposal
@@ -138,6 +134,10 @@ var (
 	// is skip upgrade set in env variables
 	skipUpgrade bool
 	err         error
+	// is this version a fork
+	isFork bool = true
+	// if isFork is true, this is the forkHeight
+	forkHeight int = 4713065
 )
 
 type IntegrationTestSuite struct {
@@ -256,38 +256,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffset int) {
-
-	if isFork {
-		for i, val := range chainConfig.validators {
-			s.T().Logf("changing %s validator genesis with index %d...", val.validator.Name, i)
-			genesis := fmt.Sprintf("%s/config/genesis.json", val.validator.ConfigDir)
-			byteValue, err := os.ReadFile(genesis)
-			s.Require().NoError(err)
-
-			os.Remove(genesis)
-			s.Require().NoError(err)
-
-			var result map[string]interface{}
-			var forkHeightStr string
-			err = json.Unmarshal(byteValue, &result)
-			s.Require().NoError(err)
-
-			if skipUpgrade == true {
-				forkHeightStr = strconv.Itoa(forkHeight)
-			} else {
-				forkHeightStr = strconv.Itoa(forkHeight - forkHeightPreUpgradeOffset)
-			}
-
-			result["initial_height"] = forkHeightStr
-
-			byteValue, err = json.Marshal(result)
-			s.Require().NoError(err)
-
-			// Write back to file
-			err = os.WriteFile(genesis, byteValue, 0777)
-			s.Require().NoError(err)
-		}
-	}
 	s.T().Logf("starting %s validator containers...", chainConfig.meta.Id)
 	for i, val := range chainConfig.validators {
 		// Skip some validators from running during set up.
@@ -413,14 +381,18 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	// If upgrade is skipped, we can use the chain initialization logic from
 	// current branch directly. As a result, there is no need to run this
 	// via Docker.
+	if !isFork {
+		forkHeight = 0
+	}
+
 	if s.skipUpgrade {
-		initializedChain, err := chain.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod))
+		initializedChain, err := chain.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), forkHeight)
 		s.Require().NoError(err)
 		s.initializeChainConfig(&newChainConfig, initializedChain)
 		return
 	}
 
-	initResource, err := s.containerManager.RunChainInitResource(chainId, int(newChainConfig.votingPeriod), validatorConfigBytes, tmpDir)
+	initResource, err := s.containerManager.RunChainInitResource(chainId, int(newChainConfig.votingPeriod), validatorConfigBytes, tmpDir, forkHeight)
 	s.Require().NoError(err)
 
 	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
