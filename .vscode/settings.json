@@ -23,5 +23,25 @@
   "[proto3]": {
     "editor.defaultFormatter": "xaver.clang-format"
   },
-  "clang-format.style": "{BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 120, AlignConsecutiveAssignments: true, AlignConsecutiveDeclarations: true, SpacesInSquareBrackets: true}"
+  "clang-format.style": "{BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 120, AlignConsecutiveAssignments: true, AlignConsecutiveDeclarations: true, SpacesInSquareBrackets: true}",
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#403778",
+    "activityBar.activeBorder": "#000000",
+    "activityBar.background": "#403778",
+    "activityBar.foreground": "#e7e7e7",
+    "activityBar.inactiveForeground": "#e7e7e799",
+    "activityBarBadge.background": "#000000",
+    "activityBarBadge.foreground": "#e7e7e7",
+    "sash.hoverBorder": "#403778",
+    "statusBar.background": "#2d2755",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#403778",
+    "statusBarItem.remoteBackground": "#2d2755",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#2d2755",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#2d275599",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.color": "#2d2755"
 }

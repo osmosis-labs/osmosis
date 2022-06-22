@@ -25,6 +25,7 @@ require (
 	github.com/stretchr/testify v1.7.4
 	github.com/tendermint/tendermint v0.34.19
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
+	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
 	google.golang.org/grpc v1.46.2
 	gopkg.in/yaml.v2 v2.4.0
@@ -151,6 +152,7 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/improbable-eng/grpc-web v0.14.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jgautheron/goconst v1.5.1 // indirect
 	github.com/jingyugao/rowserrcheck v1.1.1 // indirect
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
@@ -246,6 +248,8 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/yagipy/maintidx v1.0.0 // indirect
 	github.com/yeya24/promlinter v0.2.0 // indirect
+	github.com/zimmski/go-tool v0.0.0-20150119110811-2dfdc9ac8439 // indirect
+	github.com/zimmski/osutil v0.0.0-20190128123334-0d0b3ca231ac // indirect
 	github.com/zondax/hid v0.9.0 // indirect
 	gitlab.com/bosi/decorder v0.2.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
