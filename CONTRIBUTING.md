@@ -109,7 +109,7 @@ You can do rm -rf vendor and make build-reproducible to redownload all dependenc
 
 If you get something like `W0503 22:16:30.068560 158 services.go:38] No HttpRule found for method: Msg.CreateBalancerPool` feel free to ignore that.
 
-Make sure to also do make all to run all the linting tests before you commit and push, as well as `gofmt`-ing the file you've modified or added to make sure everything still abides by the standards.
+Make sure to also do `make all` to run all the linting tests before you commit and push, as well as `gofmt`-ing the file you've modified or added to make sure everything still abides by the standards.
 
 ## Major Release
 
