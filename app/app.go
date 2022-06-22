@@ -19,6 +19,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -42,6 +43,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v10"
 	v3 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
@@ -87,7 +89,7 @@ var (
 	_ sdksimapp.App = (*OsmosisApp)(nil)
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade}
-	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork}
+	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
 // GetWasmEnabledProposals parses the WasmProposalsEnabled and
@@ -276,6 +278,16 @@ func NewOsmosisApp(
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)
+
+	// Register snapshot extensions to enable state-sync for wasm.
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(
+			wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), app.WasmKeeper),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
