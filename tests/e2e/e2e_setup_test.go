@@ -262,7 +262,7 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 		for i, val := range chainConfig.validators {
 			s.T().Logf("changing %s validator genesis with index %d...", val.validator.Name, i)
 			genesis := fmt.Sprintf("%s/config/genesis.json", val.validator.ConfigDir)
-			byteValue, err := ioutil.ReadFile(genesis)
+			byteValue, err := os.ReadFile(genesis)
 			s.Require().NoError(err)
 
 			var result map[string]interface{}
@@ -282,7 +282,7 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 			s.Require().NoError(err)
 
 			// Write back to file
-			err = ioutil.WriteFile(genesis, byteValue, 0644)
+			err = os.WriteFile(genesis, byteValue, 0777)
 			s.Require().NoError(err)
 		}
 	}
