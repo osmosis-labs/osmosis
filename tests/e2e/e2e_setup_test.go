@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -261,6 +260,7 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 	if isFork {
 		for i, val := range chainConfig.validators {
 			s.T().Logf("changing %s validator genesis with index %d...", val.validator.Name, i)
+			err = os.Chmod(val.validator.ConfigDir, 0777)
 			genesis := fmt.Sprintf("%s/config/genesis.json", val.validator.ConfigDir)
 			byteValue, err := os.ReadFile(genesis)
 			s.Require().NoError(err)
@@ -333,7 +333,7 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 func (s *IntegrationTestSuite) runIBCRelayer(chainA *chainConfig, chainB *chainConfig) {
 	s.T().Log("starting Hermes relayer container...")
 
-	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-hermes-")
+	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-hermes-")
 	s.Require().NoError(err)
 	s.tmpDirs = append(s.tmpDirs, tmpDir)
 
@@ -393,7 +393,7 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chainConfig, chainB *chainC
 
 func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig, skipValidatorIndexes map[int]struct{}) {
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
-	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
+	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-")
 
 	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
 	s.Require().NoError(err)
