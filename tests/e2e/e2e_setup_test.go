@@ -62,7 +62,7 @@ const (
 	// if isFork is true, this is the forkHeight
 	forkHeight int = 4713065
 	// if not skipping upgrade, how many blocks we allow for fork to run pre upgrade state creation
-	forkHeightOffset int = 60
+	forkHeightPreUpgradeOffset int = 60
 	// estimated number of blocks it takes to submit for a proposal
 	propSubmitBlocks float32 = 10
 	// estimated number of blocks it takes to deposit for a proposal
