@@ -48,21 +48,12 @@ message EpochInfo {
   // Start time is the time at which the timer first ever ticks.
   // If start time is in the future, the epoch will not begin until the start
   // time.
-  google.protobuf.Timestamp start_time = 2 [
-    (gogoproto.stdtime) = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"start_time\""
-  ];
+  google.protobuf.Timestamp start_time = 2;
   // Duration is the time in between epoch ticks.
   // In order for intended behavior to be met, duration should
   // be greater than the chains expected block time.
   // Duration must be non-zero.
-  google.protobuf.Duration duration = 3 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "duration,omitempty",
-    (gogoproto.moretags) = "yaml:\"duration\""
-  ];
+  google.protobuf.Duration duration = 3;
   // current_epoch is the current epoch number, or in other words,
   // how many times has the timer 'ticked'.
   // The first tick (current_epoch=1) is defined as
@@ -85,15 +76,10 @@ message EpochInfo {
   // * The t=33 block will start the epoch for (25, 30]
   // * The t=34 block will start the epoch for (30, 35]
   // * The **t=36** block will start the epoch for (35, 40]
-  google.protobuf.Timestamp current_epoch_start_time = 5 [
-    (gogoproto.stdtime) = true,
-    (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"current_epoch_start_time\""
-  ];
+  google.protobuf.Timestamp current_epoch_start_time = 5;
   // epoch_counting_started is a boolean, that indicates whether this
   // epoch timer has began yet.
   bool epoch_counting_started = 6;
-  reserved 7;
   // This is the block height at which the current epoch started. (The block
   // height at which the timer last ticked)
   int64 current_epoch_start_height = 8;
