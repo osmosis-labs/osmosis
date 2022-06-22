@@ -109,7 +109,7 @@ You can do rm -rf vendor and make build-reproducible to redownload all dependenc
 
 If you get something like `W0503 22:16:30.068560 158 services.go:38] No HttpRule found for method: Msg.CreateBalancerPool` feel free to ignore that.
 
-You can also feel free to do `make format` if you're getting errors related to `gofmt`.
+You can also feel free to do `make format` if you're getting errors related to `gofmt`. Setting this up to be [automatic](https://www.jetbrains.com/help/go/reformat-and-rearrange-code.html#reformat-on-save) for yourself is recommended.
 
 ## Major Release
 
