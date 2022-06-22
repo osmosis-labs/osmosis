@@ -228,22 +228,15 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 
 	if isFork == true {
 		for i, val := range chainConfig.validators {
-			// Skip some validators from running during set up.
-			// This is needed for testing functionality like
-			// state-sunc where we might want to start some validators during tests.
 			s.T().Logf("changing %s validator genesis with index %d...", val.validator.Name, i)
 			genesis := fmt.Sprintf("%s/config/genesis.json", val.validator.ConfigDir)
 			byteValue, err := ioutil.ReadFile(genesis)
-			if err != nil {
-				panic(err)
-			}
+			s.Require().NoError(err)
 
 			var result map[string]interface{}
 			var forkHeightStr string
 			err = json.Unmarshal(byteValue, &result)
-			if err != nil {
-				panic(err)
-			}
+			s.Require().NoError(err)
 
 			if skipUpgrade == true {
 				forkHeightStr = strconv.Itoa(forkHeight)
@@ -254,15 +247,11 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 			result["initial_height"] = forkHeightStr
 
 			byteValue, err = json.Marshal(result)
-			if err != nil {
-				panic(err)
-			}
+			s.Require().NoError(err)
 
 			// Write back to file
 			err = ioutil.WriteFile(genesis, byteValue, 0644)
-			if err != nil {
-				panic(err)
-			}
+			s.Require().NoError(err)
 		}
 	}
 	s.T().Logf("starting %s validator containers...", chainConfig.meta.Id)
