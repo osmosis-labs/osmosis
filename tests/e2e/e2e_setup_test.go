@@ -260,9 +260,11 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 	if isFork {
 		for i, val := range chainConfig.validators {
 			s.T().Logf("changing %s validator genesis with index %d...", val.validator.Name, i)
-			err = os.Chmod(val.validator.ConfigDir, 0777)
 			genesis := fmt.Sprintf("%s/config/genesis.json", val.validator.ConfigDir)
 			byteValue, err := os.ReadFile(genesis)
+			s.Require().NoError(err)
+
+			os.Remove(genesis)
 			s.Require().NoError(err)
 
 			var result map[string]interface{}
