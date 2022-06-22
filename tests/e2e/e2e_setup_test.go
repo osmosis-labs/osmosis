@@ -62,7 +62,7 @@ const (
 	// if isFork is true, this is the forkHeight
 	forkHeight int = 4713065
 	// if not skipping upgrade, how many blocks we allow for fork to run pre upgrade state creation
-	forkHeightOffset int = 60
+	forkHeightPreUpgradeOffset int = 60
 	// estimated number of blocks it takes to submit for a proposal
 	propSubmitBlocks float32 = 10
 	// estimated number of blocks it takes to deposit for a proposal
@@ -226,7 +226,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffset int) {
 
-	if isFork == true {
+	if isFork {
 		for i, val := range chainConfig.validators {
 			s.T().Logf("changing %s validator genesis with index %d...", val.validator.Name, i)
 			genesis := fmt.Sprintf("%s/config/genesis.json", val.validator.ConfigDir)
@@ -241,7 +241,7 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 			if skipUpgrade == true {
 				forkHeightStr = strconv.Itoa(forkHeight)
 			} else {
-				forkHeightStr = strconv.Itoa(forkHeight - forkHeightOffset)
+				forkHeightStr = strconv.Itoa(forkHeight - forkHeightPreUpgradeOffset)
 			}
 
 			result["initial_height"] = forkHeightStr
