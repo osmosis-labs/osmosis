@@ -226,7 +226,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffset int) {
 
-	if isFork == true {
+	if isFork {
 		for i, val := range chainConfig.validators {
 			// Skip some validators from running during set up.
 			// This is needed for testing functionality like
