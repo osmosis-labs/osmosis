@@ -359,7 +359,6 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 }
 
 func (p *Pool) calcSingleTokenJoinPoolShare(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
-
 	// 1) get all 'pool assets' (aka current pool liquidity + balancer weight)
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
@@ -379,7 +378,6 @@ func (p *Pool) calcSingleTokenJoinPoolShare(ctx sdk.Context, tokensIn sdk.Coins,
 }
 
 func (p *Pool) calcMultipleTokenPoolShare(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
-
 	// 1) get all 'pool assets' (aka current pool liquidity + balancer weight)
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
@@ -387,7 +385,7 @@ func (p *Pool) calcMultipleTokenPoolShare(ctx sdk.Context, tokensIn sdk.Coins, s
 	}
 
 	totalShares := p.GetTotalShares()
-	
+
 	// 2) JoinPoolNoSwap with as many tokens as we can. (What is in perfect ratio)
 	// * numShares is how many shares are perfectly matched.
 	// * remainingTokensIn is how many coins we have left to join, that have not already been used.
