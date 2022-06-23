@@ -9,10 +9,18 @@ MUTATION_SOURCES=$(find ./x -type f \( -path '*/keeper/*' -or -path '*/types/*' 
 
 # XXX: Filter on a module-by-module basis and expand when we think other modules
 # are ready.
-MUTATION_SOURCES=$(echo "$MUTATION_SOURCES" | grep './x/tokenfactory')
+MUTATION_SOURCES=$(echo "$MUTATION_SOURCES" | grep './x/tokenfactory/types/genesis.go')
 
 # Collect multiple lines into a single line to be fed into go-mutesting
 MUTATION_SOURCES=$(echo $MUTATION_SOURCES | tr '\n' ' ')
 
 OUTPUT=$(go run github.com/zimmski/go-mutesting/cmd/go-mutesting --blacklist=mutation.blacklist $MUTATION_SOURCES)
-echo "$OUTPUT" | grep 'The mutation score'
+RESULT=$(echo "$OUTPUT" | grep 'The mutation score')
+SCORE=$(echo "$RESULT" | grep -Eo '[[:digit:]].[[:digit:]]+')
+
+echo $RESULT
+
+# Return a non-zero exit code if the score is below 75%
+if (( $(echo "$SCORE < 0.75" |bc -l) )); then
+  exit 1
+fi
