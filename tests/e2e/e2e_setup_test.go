@@ -291,7 +291,7 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 	for i, val := range chainConfig.validators {
 		// Skip some validators from running during set up.
 		// This is needed for testing functionality like
-		// state-sunc where we might want to start some validators during tests.
+		// state-sync where we might want to start some validators during tests.
 		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
 			s.T().Logf("skipping %s validator with index %d from running...", val.validator.Name, i)
 			continue
