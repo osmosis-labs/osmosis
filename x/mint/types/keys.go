@@ -4,9 +4,9 @@ package types
 // the Minter and its EpochProvisions are stored.
 var MinterKey = []byte{0x00}
 
-// LastHalvenEpochKey is the key to use for the keeper store
-// for storing the last epoch at which halvening occurred.
-var LastHalvenEpochKey = []byte{0x03}
+// LastReductionEpochKey is the key to use for the keeper store
+// for storing the last epoch at which reduction occurred.
+var LastReductionEpochKey = []byte{0x03}
 
 const (
 	// ModuleName is the module name.

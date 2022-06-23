@@ -1,11 +1,13 @@
 # Mint
 
-The ```mint``` module is responsible for creating tokens in a flexible way to reward 
-validators, incentivize providing pool liquidity, provide funds for Osmosis governance, and pay developers to maintain and improve Osmosis.
+The `mint` module is responsible for creating tokens in a flexible way to reward 
+validators, incentivize providing pool liquidity, provide funds for Osmosis governance,
+and pay developers to maintain and improve Osmosis.
 
-The module is also responsible for reducing the token creation and distribution by a set amount and a set period of time until it reaches its maximum supply (see ```reduction_factor``` and ```reduction_period_in_epochs```)
+The module is also responsible for reducing the token creation and distribution by a set period
+until it reaches its maximum supply (see `reduction_factor` and `reduction_period_in_epochs`)
 
-Module uses time basis epochs supported by ```epochs``` module.
+The module uses time basis epochs supported by the `epochs` module.
 
 ## Contents
 
@@ -28,7 +30,7 @@ tokens within a chain. The design taken within Osmosis is to
     year is 52 epochs. The next period's rewards are 2/3 of the prior
     period's rewards)
 
-### Reductioning factor
+### Reduction factor
 
 This is a generalization over the Bitcoin style halvenings. Every year,
 the amount of rewards issued per week will reduce by a governance
@@ -72,15 +74,10 @@ type Params struct {
 }
 ```
 
-### LastHalvenEpoch
+### LastReductionEpoch
 
-Last halven epoch stores the epoch number when the last reduction of
+Last reduction epoch stores the epoch number when the last reduction of
 coin mint amount per epoch has happened.
-
-**TODO:**
-
-- Update the name to LastReductionEpoch as the reduction amount could
-    be set by governance.
 
 ## Begin-Epoch
 

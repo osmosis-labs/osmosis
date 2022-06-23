@@ -21,20 +21,20 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		if epochNumber < params.MintingRewardsDistributionStartEpoch {
 			return
 		} else if epochNumber == params.MintingRewardsDistributionStartEpoch {
-			k.SetLastHalvenEpochNum(ctx, epochNumber)
+			k.SetLastReductionEpochNum(ctx, epochNumber)
 		}
 		// fetch stored minter & params
 		minter := k.GetMinter(ctx)
 		params := k.GetParams(ctx)
 
 		// Check if we have hit an epoch where we update the inflation parameter.
-		// Since epochs only update based on BFT time data, it is safe to store the "halvening period time"
+		// Since epochs only update based on BFT time data, it is safe to store the "reducing period time"
 		// in terms of the number of epochs that have transpired.
-		if epochNumber >= k.GetParams(ctx).ReductionPeriodInEpochs+k.GetLastHalvenEpochNum(ctx) {
-			// Halven the reward per halven period
+		if epochNumber >= k.GetParams(ctx).ReductionPeriodInEpochs+k.GetLastReductionEpochNum(ctx) {
+			// Reduce the reward per reduction period
 			minter.EpochProvisions = minter.NextEpochProvisions(params)
 			k.SetMinter(ctx, minter)
-			k.SetLastHalvenEpochNum(ctx, epochNumber)
+			k.SetLastReductionEpochNum(ctx, epochNumber)
 		}
 
 		// mint coins, update supply
