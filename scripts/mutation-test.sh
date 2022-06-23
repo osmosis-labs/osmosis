@@ -8,7 +8,8 @@ set -eo pipefail
 MUTATION_SOURCES=$(find ./x -type f \( -path '*/keeper/*' -or -path '*/types/*' \) \( -name '*.go' -and -not -name '*_test.go' -and -not -name '*pb*' \))
 
 # XXX: Filter on a module-by-module basis and expand when we think other modules
-# are ready.
+# are ready. Once all modules are considered stable enough to be tested, remove
+# this filter entirely.
 MUTATION_SOURCES=$(echo "$MUTATION_SOURCES" | grep './x/tokenfactory')
 
 # Collect multiple lines into a single line to be fed into go-mutesting
