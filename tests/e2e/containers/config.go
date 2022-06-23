@@ -59,9 +59,6 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		config.OsmosisRepository = CurrentBranchOsmoRepository
 		config.OsmosisTag = CurrentBranchOsmoTag
 	} else {
-		config.InitRepository = currentBranchInitRepository
-		config.InitTag = currentBranchInitTag
-
 		config.OsmosisRepository = CurrentBranchOsmoRepository
 		config.OsmosisTag = CurrentBranchOsmoTag
 	}
