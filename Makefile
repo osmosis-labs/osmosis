@@ -217,6 +217,7 @@ PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'simapp|e2e')
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/simapp')
 TEST_PACKAGES=./...
+MUTATION_SOURCES=x/tokenfactory/types/genesis.go
 
 include sims.mk
 
@@ -242,6 +243,9 @@ test-e2e:
 test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
+test-mutation:
+	@go run github.com/zimmski/go-mutesting/cmd/go-mutesting --blacklist=mutation.blacklist $(MUTATION_SOURCES)
+
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
@@ -250,6 +254,8 @@ docker-build-debug:
 
 docker-build-e2e-chain-init:
 	@docker build -t osmosis-e2e-chain-init:debug -f tests/e2e/chain_init/chain-init.Dockerfile .
+
+.PHONY: test-mutation
 
 ###############################################################################
 ###                                Linting                                  ###
