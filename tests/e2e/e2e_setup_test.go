@@ -58,6 +58,10 @@ const (
 	skipUpgradeEnv = "OSMOSIS_E2E_SKIP_UPGRADE"
 	// Environment variable name to skip the IBC tests
 	skipIBCEnv = "OSMOSIS_E2E_SKIP_IBC"
+	// Environment variable name to determine if this upgrade is a fork
+	isForkEnv = "OSMOSIS_E2E_IS_FORK"
+	// Environment variable name to determine if this upgrade is a fork
+	forkHeightEnv = "OSMOSIS_E2E_FORK_HEIGHT"
 	// Environment variable name to skip cleaning up Docker resources in teardown.
 	skipCleanupEnv = "OSMOSIS_E2E_SKIP_CLEANUP"
 	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
@@ -131,13 +135,6 @@ var (
 			SnapshotKeepRecent: 2,
 		},
 	}
-	// is skip upgrade set in env variables
-	skipUpgrade bool
-	err         error
-	// is this version a fork
-	isFork bool = true
-	// if isFork is true, this is the forkHeight
-	forkHeight int = 4713065
 )
 
 type IntegrationTestSuite struct {
@@ -148,6 +145,8 @@ type IntegrationTestSuite struct {
 	containerManager *containers.Manager
 	skipUpgrade      bool
 	skipIBC          bool
+	isFork           bool
+	forkHeight       int
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -156,6 +155,8 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
+	var forkHeight64 int64
+	var err error
 
 	s.chainConfigs = make([]*chainConfig, 0, 2)
 
@@ -177,6 +178,25 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
+	if str := os.Getenv(isForkEnv); len(str) > 0 {
+		s.isFork, err = strconv.ParseBool(str)
+		s.Require().NoError(err)
+
+		if s.isFork {
+			s.T().Log(fmt.Sprintf("%s was true, utilizing fork logic for upgrade", isForkEnv))
+		}
+	}
+
+	if str := os.Getenv(forkHeightEnv); len(str) > 0 {
+		forkHeight64, err = strconv.ParseInt(str, 0, 64)
+		s.forkHeight = int(forkHeight64)
+		s.Require().NoError(err)
+
+		if s.forkHeight != 0 {
+			s.T().Log(fmt.Sprintf("%s was set to height %v", forkHeightEnv, s.forkHeight))
+		}
+	}
+
 	if str := os.Getenv(skipIBCEnv); len(str) > 0 {
 		s.skipIBC, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
@@ -190,7 +210,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
-	s.containerManager, err = containers.NewManager(!skipUpgrade, isFork)
+	s.containerManager, err = containers.NewManager(!s.skipUpgrade, s.isFork)
 	require.NoError(s.T(), err)
 
 	s.configureChain(chain.ChainAID, validatorConfigsChainA, map[int]struct{}{
@@ -217,21 +237,21 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	switch {
-	case !skipUpgrade && !isFork:
+	case !s.skipUpgrade && !s.isFork:
 		s.createPreUpgradeState()
 		s.upgrade()
 		s.runPostUpgradeTests()
-	case !skipUpgrade && isFork:
+	case !s.skipUpgrade && s.isFork:
 		s.createPreUpgradeState()
 		s.upgradeFork()
 		s.runPostUpgradeTests()
-	case skipUpgrade:
+	case s.skipUpgrade:
 		s.runPostUpgradeTests()
 	}
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	if str := os.Getenv("OSMOSIS_E2E_SKIP_CLEANUP"); len(str) > 0 {
+	if str := os.Getenv(skipCleanupEnv); len(str) > 0 {
 		skipCleanup, err := strconv.ParseBool(str)
 		s.Require().NoError(err)
 
@@ -381,19 +401,20 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	// If upgrade is skipped, we can use the chain initialization logic from
 	// current branch directly. As a result, there is no need to run this
 	// via Docker.
-	if !isFork {
-		forkHeight = 0
+	if !s.isFork {
+		s.forkHeight = 0
 	}
 
 	if s.skipUpgrade {
-		initializedChain, err := chain.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), forkHeight)
+		initializedChain, err := chain.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
 		s.Require().NoError(err)
 		s.initializeChainConfig(&newChainConfig, initializedChain)
 		return
 	}
 
-	forkHeight = forkHeight - forkHeightPreUpgradeOffset
-	initResource, err := s.containerManager.RunChainInitResource(chainId, int(newChainConfig.votingPeriod), validatorConfigBytes, tmpDir, forkHeight)
+	s.forkHeight = s.forkHeight - forkHeightPreUpgradeOffset
+	fmt.Printf("FORK HEIGHT %v", s.forkHeight)
+	initResource, err := s.containerManager.RunChainInitResource(chainId, int(newChainConfig.votingPeriod), validatorConfigBytes, tmpDir, s.forkHeight)
 	s.Require().NoError(err)
 
 	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
@@ -525,11 +546,11 @@ func (s *IntegrationTestSuite) upgradeFork() {
 			s.Require().Eventually(
 				func() bool {
 					currentHeight := s.getCurrentChainHeight(chainConfig, i)
-					if currentHeight < forkHeight {
-						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", containerName, currentHeight, forkHeight, containerId)
+					if currentHeight < s.forkHeight {
+						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", containerName, currentHeight, s.forkHeight, containerId)
 						return false
 					}
-					if currentHeight > forkHeight {
+					if currentHeight > s.forkHeight {
 						return true
 					}
 					return true
