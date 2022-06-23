@@ -28,10 +28,10 @@ const (
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
 	previousVersionOsmoRepository = "osmolabs/osmosis-dev"
-	previousVersionOsmoTag        = "v9.0.0-debug"
+	previousVersionOsmoTag        = "v9.0.0-1-debug"
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
-	previousVersionInitTag        = "v9.0.0"
+	previousVersionInitTag        = "v9.0.0-e2e"
 	// Hermes repo/version for relayer
 	relayerRepository = "osmolabs/hermes"
 	relayerTag        = "0.13.0"
@@ -52,6 +52,12 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 
 		config.OsmosisRepository = previousVersionOsmoRepository
 		config.OsmosisTag = previousVersionOsmoTag
+	} else if isUpgrade && isFork {
+		config.InitRepository = previousVersionInitRepository
+		config.InitTag = previousVersionInitTag
+
+		config.OsmosisRepository = CurrentBranchOsmoRepository
+		config.OsmosisTag = CurrentBranchOsmoTag
 	} else {
 		config.InitRepository = currentBranchInitRepository
 		config.InitTag = currentBranchInitTag

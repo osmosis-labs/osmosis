@@ -392,6 +392,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 		return
 	}
 
+	forkHeight = forkHeight - forkHeightPreUpgradeOffset
 	initResource, err := s.containerManager.RunChainInitResource(chainId, int(newChainConfig.votingPeriod), validatorConfigBytes, tmpDir, forkHeight)
 	s.Require().NoError(err)
 
