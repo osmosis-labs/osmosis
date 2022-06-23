@@ -59,7 +59,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				types.EventTypeMint,
+				types.ModuleName,
 				sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochNumber)),
 				sdk.NewAttribute(types.AttributeKeyEpochProvisions, minter.EpochProvisions.String()),
 				sdk.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),

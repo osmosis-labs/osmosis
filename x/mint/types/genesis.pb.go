@@ -25,11 +25,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the mint module's genesis state.
 type GenesisState struct {
-	// minter is a space for holding current rewards information.
+	// Minter is an abstraction for holding current rewards information.
 	Minter Minter `protobuf:"bytes,1,opt,name=minter,proto3" json:"minter"`
-	// params defines all the paramaters of the module.
+	// Params defines all the paramaters of the mint module.
 	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
-	// current halven period start epoch
+	// HalvenStartedEpoch current halven period start epoch
 	HalvenStartedEpoch int64 `protobuf:"varint,3,opt,name=halven_started_epoch,json=halvenStartedEpoch,proto3" json:"halven_started_epoch,omitempty" yaml:"halven_started_epoch"`
 }
 

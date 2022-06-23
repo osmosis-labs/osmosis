@@ -69,7 +69,7 @@ var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
-	// params defines the parameters of the module.
+	// Params defines the parameters of the module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
@@ -154,7 +154,7 @@ var xxx_messageInfo_QueryEpochProvisionsRequest proto.InternalMessageInfo
 // QueryEpochProvisionsResponse is the response type for the
 // Query/EpochProvisions RPC method.
 type QueryEpochProvisionsResponse struct {
-	// epoch_provisions is the current minting per epoch provisions value.
+	// EpochProvisions is the current minting per epoch provisions value.
 	EpochProvisions github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=epoch_provisions,json=epochProvisions,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"epoch_provisions"`
 }
 
@@ -243,7 +243,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params returns the total set of minting parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// EpochProvisions current minting epoch provisions value.
+	// EpochProvisions returns the current minting epoch provisions value.
 	EpochProvisions(ctx context.Context, in *QueryEpochProvisionsRequest, opts ...grpc.CallOption) (*QueryEpochProvisionsResponse, error)
 }
 
@@ -277,7 +277,7 @@ func (c *queryClient) EpochProvisions(ctx context.Context, in *QueryEpochProvisi
 type QueryServer interface {
 	// Params returns the total set of minting parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// EpochProvisions current minting epoch provisions value.
+	// EpochProvisions returns the current minting epoch provisions value.
 	EpochProvisions(context.Context, *QueryEpochProvisionsRequest) (*QueryEpochProvisionsResponse, error)
 }
 
