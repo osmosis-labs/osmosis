@@ -62,8 +62,10 @@ const (
 	isForkEnv = "OSMOSIS_E2E_IS_FORK"
 	// Environment variable name to determine if this upgrade is a fork
 	forkHeightEnv = "OSMOSIS_E2E_FORK_HEIGHT"
-	// Environment variable name to skip cleaning up Docker resources in teardown.
+	// Environment variable name to skip cleaning up Docker resources in teardown
 	skipCleanupEnv = "OSMOSIS_E2E_SKIP_CLEANUP"
+	// Environment variable name to determine what version we are upgrading to
+	upgradeVersionEnv = "OSMOSIS_E2E_UPGRADE_VERSION"
 	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
 	upgradeVersion string = "v10"
 	// if not skipping upgrade, how many blocks we allow for fork to run pre upgrade state creation
@@ -147,6 +149,7 @@ type IntegrationTestSuite struct {
 	skipIBC          bool
 	isFork           bool
 	forkHeight       int
+	upgradeVersion   string
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -207,6 +210,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			if !s.skipUpgrade {
 				s.T().Fatal("If upgrade is enabled, IBC must be enabled as well.")
 			}
+		}
+	}
+
+	if str := os.Getenv(upgradeVersionEnv); len(str) > 0 {
+		s.upgradeVersion = str
+
+		if s.upgradeVersion != "" {
+			s.T().Log(fmt.Sprintf("upgrade version set to %s", s.upgradeVersion))
 		}
 	}
 
