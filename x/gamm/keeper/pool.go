@@ -43,7 +43,7 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, err
 	return pool, nil
 }
 
-// Get pool, and check if the pool is active / allowed to be swapped against
+// Get pool, and check if the pool is active (allowed to be swapped against)
 func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {

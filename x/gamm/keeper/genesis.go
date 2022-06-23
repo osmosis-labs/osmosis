@@ -8,11 +8,13 @@ import (
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
-// state.
+// state, which includes the current live pools, global pool parameters (e.g. pool creation fee), next pool number etc.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpacker codectypes.AnyUnpacker) {
 	k.SetParams(ctx, genState.Params)
 	k.SetNextPoolNumber(ctx, genState.NextPoolNumber)
 
+	// Sums up the liquidity in all genesis state pools to find the total liquidity across all pools
+	// Also adds each genesis state pool to the capability module's state
 	liquidity := sdk.Coins{}
 	for _, any := range genState.Pools {
 		var pool types.PoolI
