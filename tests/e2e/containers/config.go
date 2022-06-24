@@ -1,4 +1,4 @@
-package docker
+package containers
 
 // ImageConfig contains all images and their respective tags
 // needed for running e2e tests.
@@ -14,16 +14,16 @@ type ImageConfig struct {
 }
 
 const (
-	// Local osmosis repo/version.
+	// Current Git branch osmosis repo/version. It is meant to be built locally.
 	// It is used when skipping upgrade by setting OSMOSIS_E2E_SKIP_UPGRADE to true).
 	// This image should be pre-built with `make docker-build-debug` either in CI or locally.
-	LocalOsmoRepository = "osmosis"
-	LocalOsmoTag        = "debug"
-	// Local osmosis repo/version for osmosis initialization.
+	CurrentBranchOsmoRepository = "osmosis"
+	CurrentBranchOsmoTag        = "debug"
+	/// Current Git branch repo/version for osmosis initialization. It is meant to be built locally.
 	// It is used when skipping upgrade by setting OSMOSIS_E2E_SKIP_UPGRADE to true).
 	// This image should be pre-built with `make docker-build-e2e-chain-init` either in CI or locally.
-	localInitRepository = "osmosis-e2e-chain-init"
-	localInitTag        = "debug"
+	currentBranchInitRepository = "osmosis-e2e-chain-init"
+	currentBranchInitTag        = "debug"
 	// Pre-upgrade osmosis repo/tag to pull.
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
@@ -40,8 +40,8 @@ const (
 // Returns ImageConfig needed for running e2e test.
 // If isUpgrade is true, returns images for running the upgrade
 // Otherwise, returns images for running non-upgrade e2e tests.
-func NewImageConfig(isUpgrade bool) *ImageConfig {
-	config := &ImageConfig{
+func NewImageConfig(isUpgrade bool) ImageConfig {
+	config := ImageConfig{
 		RelayerRepository: relayerRepository,
 		RelayerTag:        relayerTag,
 	}
@@ -53,11 +53,11 @@ func NewImageConfig(isUpgrade bool) *ImageConfig {
 		config.OsmosisRepository = previousVersionOsmoRepository
 		config.OsmosisTag = previousVersionOsmoTag
 	} else {
-		config.InitRepository = localInitRepository
-		config.InitTag = localInitTag
+		config.InitRepository = currentBranchInitRepository
+		config.InitTag = currentBranchInitTag
 
-		config.OsmosisRepository = LocalOsmoRepository
-		config.OsmosisTag = LocalOsmoTag
+		config.OsmosisRepository = CurrentBranchOsmoRepository
+		config.OsmosisTag = CurrentBranchOsmoTag
 	}
 
 	return config
