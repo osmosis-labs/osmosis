@@ -17,7 +17,7 @@ an upgrade height, ensures the upgrade happens at the desired height, and
 then checks that operations that worked before still work as intended. If
 testing a fork, the test suite instead starts the chain a few blocks before
 the set fork height and ensures the chain continues after the fork triggers
-the upgrade.
+the upgrade. Note that a regular upgrade and a fork upgrade are mutually exclusive. 
 
 The file e2e\_setup\_test.go defines the testing suite and contains the
 core bootstrapping logic that creates a testing environment via Docker
@@ -116,8 +116,6 @@ tests require IBC logic.
 
 - `OSMOSIS_E2E_SKIP_CLEANUP` - when true, avoids cleaning up the e2e Docker
 containers.
-
-- `OSMOSIS_E2E_IS_FORK` - when true, utilizes fork logic over traditional upgrade logic
 
 - `OSMOSIS_E2E_FORK_HEIGHT` - when the above "IS_FORK" env variable is set to true, this is the string
 of the height in which the network should fork. This should match the ForkHeight set in constants.go

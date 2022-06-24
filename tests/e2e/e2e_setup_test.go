@@ -179,13 +179,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	if str := os.Getenv(forkHeightEnv); len(str) > 0 {
 		forkHeight64, err = strconv.ParseInt(str, 0, 64)
-		s.forkHeight = int(forkHeight64)
 		s.Require().NoError(err)
+		s.forkHeight = int(forkHeight64)
 		s.isFork = true
 
-		if s.forkHeight != 0 {
-			s.T().Log(fmt.Sprintf("%s was set to height %v", forkHeightEnv, s.forkHeight))
-		}
+		s.T().Log(fmt.Sprintf("fork upgrade is enabled, %s was set to height %v", forkHeightEnv, s.forkHeight))
 	}
 
 	if str := os.Getenv(skipIBCEnv); len(str) > 0 {
@@ -204,9 +202,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	if str := os.Getenv(upgradeVersionEnv); len(str) > 0 {
 		s.upgradeVersion = str
 
-		if s.upgradeVersion != "" {
-			s.T().Log(fmt.Sprintf("upgrade version set to %s", s.upgradeVersion))
-		}
+		s.T().Log(fmt.Sprintf("upgrade version set to %s", s.upgradeVersion))
 	}
 
 	s.containerManager, err = containers.NewManager(!s.skipUpgrade, s.isFork)
@@ -238,15 +234,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	switch {
 	case !s.skipUpgrade && !s.isFork:
 		s.createPreUpgradeState()
-		s.upgrade()
-		s.runPostUpgradeTests()
-	case !s.skipUpgrade && s.isFork:
-		s.createPreUpgradeState()
-		s.upgradeFork()
-		s.runPostUpgradeTests()
-	case s.skipUpgrade:
-		s.runPostUpgradeTests()
+
+		if s.isFork {
+			s.upgradeFork()
+		} else {
+			s.upgrade()
+		}
 	}
+
+	s.runPostUpgradeTests()
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -547,9 +543,6 @@ func (s *IntegrationTestSuite) upgradeFork() {
 					if currentHeight < s.forkHeight {
 						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", containerName, currentHeight, s.forkHeight, containerId)
 						return false
-					}
-					if currentHeight > s.forkHeight {
-						return true
 					}
 					return true
 				},
