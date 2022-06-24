@@ -65,9 +65,9 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
 )
 
-// moduleAccountPermissions defines module account permissions
+// ModuleAccountPermissions defines module account permissions
 // TODO: Having to input nil's here is unacceptable, we need a way to automatically derive this.
-var moduleAccountPermissions = map[string][]string{
+var ModuleAccountPermissions = map[string][]string{
 	authtypes.FeeCollectorName:               nil,
 	distrtypes.ModuleName:                    nil,
 	icatypes.ModuleName:                      nil,

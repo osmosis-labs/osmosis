@@ -66,7 +66,7 @@ var (
 	ModuleBasics = module.NewBasicManager(keepers.AppModuleBasics...)
 
 	// module account permissions
-	maccPerms = moduleAccountPermissions
+	maccPerms = ModuleAccountPermissions
 
 	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{}

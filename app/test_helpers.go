@@ -14,8 +14,7 @@ import (
 
 // Setup initializes a new OsmosisApp.
 func Setup(isCheckTx bool) *OsmosisApp {
-	db := dbm.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
+	app := SetupNoInitChain()
 	if !isCheckTx {
 		genesisState := NewDefaultGenesisState()
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -32,6 +31,13 @@ func Setup(isCheckTx bool) *OsmosisApp {
 		)
 	}
 
+	return app
+}
+
+// SetupNoInitChain initializes a new raw OsmosisApp without running InitChain.
+func SetupNoInitChain() *OsmosisApp {
+	db := dbm.NewMemDB()
+	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
 	return app
 }
 
