@@ -237,19 +237,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
-	switch {
-	case !s.skipUpgrade && !s.isFork:
-		s.createPreUpgradeState()
-		s.upgrade()
-		s.runPostUpgradeTests()
-	case !s.skipUpgrade && s.isFork:
-		s.createPreUpgradeState()
+if !s.skipUpgrade {
+	s.createPreUpgradeState()
+
+	if s.isFork {
 		s.upgradeFork()
-		s.runPostUpgradeTests()
-	case s.skipUpgrade:
-		s.runPostUpgradeTests()
+	} else {
+		s.upgrade()
 	}
 }
+
+s.runPostUpgradeTests()
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	if str := os.Getenv(skipCleanupEnv); len(str) > 0 {
@@ -546,9 +544,6 @@ func (s *IntegrationTestSuite) upgradeFork() {
 					if currentHeight < s.forkHeight {
 						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", containerName, currentHeight, s.forkHeight, containerId)
 						return false
-					}
-					if currentHeight > s.forkHeight {
-						return true
 					}
 					return true
 				},
