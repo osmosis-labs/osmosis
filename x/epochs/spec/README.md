@@ -36,55 +36,11 @@ until the timer has caught up.
 
 ## State
 
-Epochs module keeps a single [`EpochInfo`](https://github.com/osmosis-labs/osmosis/blob/b4befe4f3eb97ebb477323234b910c4afafab9b7/proto/osmosis/epochs/genesis.proto#L12) per identifier.
+The Epochs module keeps a single [`EpochInfo`](https://github.com/osmosis-labs/osmosis/blob/b4befe4f3eb97ebb477323234b910c4afafab9b7/proto/osmosis/epochs/genesis.proto#L12) per identifier.
+This contains the current state of the timer with the corresponding identifier.
 Its fields are modified at every timer tick. 
 EpochInfos are initialized as part of genesis initialization or upgrade logic,
 and are only modified on begin blockers.
-
-```protobuf
-message EpochInfo {
-  // Identifier is a unique reference to this particular timer.
-  string identifier = 1;
-  // Start time is the time at which the timer first ever ticks.
-  // If start time is in the future, the epoch will not begin until the start
-  // time.
-  google.protobuf.Timestamp start_time = 2;
-  // Duration is the time in between epoch ticks.
-  // In order for intended behavior to be met, duration should
-  // be greater than the chains expected block time.
-  // Duration must be non-zero.
-  google.protobuf.Duration duration = 3;
-  // current_epoch is the current epoch number, or in other words,
-  // how many times has the timer 'ticked'.
-  // The first tick (current_epoch=1) is defined as
-  // the first block whose blocktime is greater than the EpochInfo start_time.
-  int64 current_epoch = 4;
-  // Describes the start time of the current timer interval.
-  // The interval is (current_epoch_start_time, current_epoch_start_time +
-  // duration] When the timer ticks, this is set to current_epoch_start_time =
-  // last_epoch_start_time + duration only one timer tick for a given identifier
-  // can occur per block.
-  //
-  // NOTE! The current_epoch_start_time may diverge significantly from the
-  // wall-clock time the epoch began at. Wall-clock time of epoch start may be
-  // >> current_epoch_start_time. Suppose current_epoch_start_time = 10,
-  // duration = 5. Suppose the chain goes offline at t=14, and comes back online
-  // at t=30, and produces blocks at every successive time. (t=31, 32, etc.)
-  // * The t=30 block will start the epoch for (10, 15]
-  // * The t=31 block will start the epoch for (15, 20]
-  // * The t=32 block will start the epoch for (20, 25]
-  // * The t=33 block will start the epoch for (25, 30]
-  // * The t=34 block will start the epoch for (30, 35]
-  // * The **t=36** block will start the epoch for (35, 40]
-  google.protobuf.Timestamp current_epoch_start_time = 5;
-  // epoch_counting_started is a boolean, that indicates whether this
-  // epoch timer has began yet.
-  bool epoch_counting_started = 6;
-  // This is the block height at which the current epoch started. (The block
-  // height at which the timer last ticked)
-  int64 current_epoch_start_height = 8;
-}
-```
 
 ## Events
 
