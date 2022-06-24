@@ -231,8 +231,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
-	switch {
-	case !s.skipUpgrade && !s.isFork:
+	if !s.skipUpgrade {
 		s.createPreUpgradeState()
 
 		if s.isFork {
