@@ -412,9 +412,6 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	// If upgrade is skipped, we can use the chain initialization logic from
 	// current branch directly. As a result, there is no need to run this
 	// via Docker.
-	if !s.isFork {
-		s.forkHeight = 0
-	}
 
 	if s.skipUpgrade {
 		initializedChain, err := chain.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
