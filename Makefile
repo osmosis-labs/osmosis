@@ -237,7 +237,7 @@ test-sim:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
 
 test-e2e:
-	@VERSION=$(VERSION) OSMOSIS_E2E_IS_FORK=True OSMOSIS_E2E_FORK_HEIGHT="4713065" OSMOSIS_E2E_UPGRADE_VERSION="v10" go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_FORK_HEIGHT="4713065" OSMOSIS_E2E_UPGRADE_VERSION="v10" go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)

@@ -59,8 +59,6 @@ const (
 	// Environment variable name to skip the IBC tests
 	skipIBCEnv = "OSMOSIS_E2E_SKIP_IBC"
 	// Environment variable name to determine if this upgrade is a fork
-	isForkEnv = "OSMOSIS_E2E_IS_FORK"
-	// Environment variable name to determine if this upgrade is a fork
 	forkHeightEnv = "OSMOSIS_E2E_FORK_HEIGHT"
 	// Environment variable name to skip cleaning up Docker resources in teardown
 	skipCleanupEnv = "OSMOSIS_E2E_SKIP_CLEANUP"
@@ -181,19 +179,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
-	if str := os.Getenv(isForkEnv); len(str) > 0 {
-		s.isFork, err = strconv.ParseBool(str)
-		s.Require().NoError(err)
-
-		if s.isFork {
-			s.T().Log(fmt.Sprintf("%s was true, utilizing fork logic for upgrade", isForkEnv))
-		}
-	}
-
 	if str := os.Getenv(forkHeightEnv); len(str) > 0 {
 		forkHeight64, err = strconv.ParseInt(str, 0, 64)
 		s.forkHeight = int(forkHeight64)
 		s.Require().NoError(err)
+		s.isFork = true
 
 		if s.forkHeight != 0 {
 			s.T().Log(fmt.Sprintf("%s was set to height %v", forkHeightEnv, s.forkHeight))
@@ -421,7 +411,6 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	}
 
 	s.forkHeight = s.forkHeight - forkHeightPreUpgradeOffset
-	fmt.Printf("FORK HEIGHT %v", s.forkHeight)
 	initResource, err := s.containerManager.RunChainInitResource(chainId, int(newChainConfig.votingPeriod), validatorConfigBytes, tmpDir, s.forkHeight)
 	s.Require().NoError(err)
 
