@@ -7,7 +7,7 @@ import (
 
 	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
 )
 
 type CurrentBranchConfigurer struct {

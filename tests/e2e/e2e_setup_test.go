@@ -75,6 +75,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 		s.Require().NoError(err)
 
 		if skipCleanup {
+			s.T().Log("skipping e2e resources clean up...")
 			return
 		}
 	}

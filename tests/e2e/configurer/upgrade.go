@@ -13,7 +13,7 @@ import (
 	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
 )
 
 type UpgradeConfigurer struct {
@@ -57,10 +57,7 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 		return err
 	}
 
-	err = uc.containerManager.RunChainInitResource(chainConfig.Id, int(chainConfig.VotingPeriod), validatorConfigBytes, tmpDir)
-	if err != nil {
-		return err
-	}
+	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.Id, int(chainConfig.VotingPeriod), validatorConfigBytes, tmpDir)
 
 	if err != nil {
 		return err
@@ -88,6 +85,9 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 		if i > 0 {
 			time.Sleep(1 * time.Second)
 		}
+	}
+	if err := uc.containerManager.PurgeResource(chainInitResource); err != nil {
+		return err
 	}
 	uc.initializeChainConfigFromInitChain(&initializedChain, chainConfig)
 	return nil
@@ -144,12 +144,11 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 
 	// remove all containers so we can upgrade them to the new version
 	for _, chainConfig := range uc.chainConfigs {
-		for valIdx := range chainConfig.ValidatorConfigs {
-			containerName, err := uc.containerManager.RemoveValidatorResource(chainConfig.Id, valIdx)
+		for _, validatorConfig := range chainConfig.ValidatorConfigs {
+			err := uc.containerManager.RemoveValidatorResource(chainConfig.Id, validatorConfig.Name)
 			if err != nil {
 				return err
 			}
-			uc.t.Logf("removed container: %s", containerName)
 		}
 	}
 
@@ -163,8 +162,9 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int) {
 	// upgrade containers to the locally compiled daemon
 	uc.t.Logf("starting upgrade for chain-id: %s...", chainConfig.Id)
+	uc.containerManager.OsmosisRepository = containers.CurrentBranchOsmoRepository
+	uc.containerManager.OsmosisRepository = containers.CurrentBranchOsmoTag
 	for _, val := range chainConfig.ValidatorConfigs {
-		// TODO: make sure repository and tag are correct
 		validatorResource, err := uc.containerManager.RunValidatorResource(chainConfig.Id, val.Name, val.ConfigDir)
 		require.NoError(uc.t, err)
 		uc.t.Logf("started %s validator container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)

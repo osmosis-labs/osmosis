@@ -18,7 +18,7 @@ import (
 
 	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
@@ -70,7 +70,12 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config, portOffset in
 		bc.t.Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	}
 
-	rpcClient, err := rpchttp.New("tcp://localhost:26657", "/websocket")
+	validatorHostPort, err := bc.containerManager.GetValidatorHostPort(chainConfig.Id, 0, "26657/tcp")
+	if err != nil {
+		return err
+	}
+
+	rpcClient, err := rpchttp.New(fmt.Sprintf("tcp://%s", validatorHostPort), "/websocket")
 	if err != nil {
 		return err
 	}

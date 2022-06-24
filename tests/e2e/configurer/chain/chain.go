@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/containers"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
 )
 
 type Config struct {

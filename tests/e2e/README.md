@@ -122,6 +122,13 @@ The decoupling between chain initialization and start-up allows to
 minimize the differences between our test suite and the production
 environment.
 
+## `containers` Package
+
+Introduces an abstraction necessary for creating and managing
+Docker containers. Currently, validator containers are created
+with a name of the corresponding validator struct that is initialized
+in the `chain` package. 
+
 ## Running From Current Branch
 
 ### To build the binary that initializes the chain
