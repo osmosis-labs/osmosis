@@ -181,13 +181,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	if str := os.Getenv(forkHeightEnv); len(str) > 0 {
 		forkHeight64, err = strconv.ParseInt(str, 0, 64)
-		s.forkHeight = int(forkHeight64)
 		s.Require().NoError(err)
+		s.forkHeight = int(forkHeight64)
 		s.isFork = true
 
-		if s.forkHeight != 0 {
-			s.T().Log(fmt.Sprintf("%s was set to height %v", forkHeightEnv, s.forkHeight))
-		}
+		s.T().Log(fmt.Sprintf("fork upgrade is enabled, %s was set to height %v", forkHeightEnv, s.forkHeight))
 	}
 
 	if str := os.Getenv(skipIBCEnv); len(str) > 0 {
@@ -206,9 +204,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	if str := os.Getenv(upgradeVersionEnv); len(str) > 0 {
 		s.upgradeVersion = str
 
-		if s.upgradeVersion != "" {
-			s.T().Log(fmt.Sprintf("upgrade version set to %s", s.upgradeVersion))
-		}
+		s.T().Log(fmt.Sprintf("upgrade version set to %s", s.upgradeVersion))
 	}
 
 	s.containerManager, err = containers.NewManager(!s.skipUpgrade, s.isFork)
@@ -248,7 +244,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 
 	s.runPostUpgradeTests()
-
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
