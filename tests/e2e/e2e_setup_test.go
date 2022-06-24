@@ -237,17 +237,19 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
-if !s.skipUpgrade {
-	s.createPreUpgradeState()
+	if !s.skipUpgrade {
+		s.createPreUpgradeState()
 
-	if s.isFork {
-		s.upgradeFork()
-	} else {
-		s.upgrade()
+		if s.isFork {
+			s.upgradeFork()
+		} else {
+			s.upgrade()
+		}
 	}
-}
 
-s.runPostUpgradeTests()
+	s.runPostUpgradeTests()
+
+}
 
 func (s *IntegrationTestSuite) TearDownSuite() {
 	if str := os.Getenv(skipCleanupEnv); len(str) > 0 {
