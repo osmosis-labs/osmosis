@@ -28,7 +28,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Minter represents the minting state.
 type Minter struct {
-	// EpochProvisions represent rewards for the current epoch.
+	// epoch_provisions represent rewards for the current epoch.
 	EpochProvisions github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=epoch_provisions,json=epochProvisions,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"epoch_provisions" yaml:"epoch_provisions"`
 }
 
@@ -166,29 +166,28 @@ var xxx_messageInfo_DistributionProportions proto.InternalMessageInfo
 
 // Params holds parameters for the x/mint module.
 type Params struct {
-	// MintDenom the denom of the coin to mint.
+	// mint_denom the denom of the coin to mint.
 	MintDenom string `protobuf:"bytes,1,opt,name=mint_denom,json=mintDenom,proto3" json:"mint_denom,omitempty"`
-	// GenesisEpochProvisions epoch provisions from the first epoch.
+	// genesis_epoch_provisions epoch provisions from the first epoch.
 	GenesisEpochProvisions github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=genesis_epoch_provisions,json=genesisEpochProvisions,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"genesis_epoch_provisions" yaml:"genesis_epoch_provisions"`
-	// EpochIdentifier mint epoch identifier e.g. (day, week).
+	// epoch_identifier mint epoch identifier e.g. (day, week).
 	EpochIdentifier string `protobuf:"bytes,3,opt,name=epoch_identifier,json=epochIdentifier,proto3" json:"epoch_identifier,omitempty" yaml:"epoch_identifier"`
-	// ReductionPeriodInEpochs the number of epochs it takes
+	// reduction_period_in_epochs the number of epochs it takes
 	// to reduce the rewards.
 	ReductionPeriodInEpochs int64 `protobuf:"varint,4,opt,name=reduction_period_in_epochs,json=reductionPeriodInEpochs,proto3" json:"reduction_period_in_epochs,omitempty" yaml:"reduction_period_in_epochs"`
-	// ReductionFactor is the reduction multiplier to execute
+	// reduction_factor is the reduction multiplier to execute
 	// at the end of each period set by ReductionPeriodInEpochs.
 	ReductionFactor github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=reduction_factor,json=reductionFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reduction_factor" yaml:"reduction_factor"`
-	// DistributionProportions defines the distribution proportions of the minted
+	// distribution_proportions defines the distribution proportions of the minted
 	// denom. In other words, defines which stakeholders will receive the minted
 	// denoms and how much.
 	DistributionProportions DistributionProportions `protobuf:"bytes,6,opt,name=distribution_proportions,json=distributionProportions,proto3" json:"distribution_proportions"`
-	// WeightedDeveloperRewardsReceivers the address to receive developer rewards
-	// with weights assignedt to each address. The final amount that each address
-	// receives is:
-	// EpochProvisions * DistributionProportions.DeveloperRewards * Address's
-	// Weight.
+	// weighted_developer_rewards_receivers the address to receive developer
+	// rewards with weights assignedt to each address. The final amount that each
+	// address receives is: epoch_provisions *
+	// distribution_proportions.developer_rewards * Address's Weight.
 	WeightedDeveloperRewardsReceivers []WeightedAddress `protobuf:"bytes,7,rep,name=weighted_developer_rewards_receivers,json=weightedDeveloperRewardsReceivers,proto3" json:"weighted_developer_rewards_receivers" yaml:"developer_rewards_receiver"`
-	// MintingRewardsDistributionStartEpoch start epoch to distribute minting
+	// minting_rewards_distribution_start_epoch start epoch to distribute minting
 	// rewards
 	MintingRewardsDistributionStartEpoch int64 `protobuf:"varint,8,opt,name=minting_rewards_distribution_start_epoch,json=mintingRewardsDistributionStartEpoch,proto3" json:"minting_rewards_distribution_start_epoch,omitempty" yaml:"minting_rewards_distribution_start_epoch"`
 }

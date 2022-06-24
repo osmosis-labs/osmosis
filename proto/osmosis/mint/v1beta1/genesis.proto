@@ -8,13 +8,13 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/mint/types";
 
 // GenesisState defines the mint module's genesis state.
 message GenesisState {
-  // Minter is an abstraction for holding current rewards information.
+  // minter is an abstraction for holding current rewards information.
   Minter minter = 1 [ (gogoproto.nullable) = false ];
 
-  // Params defines all the paramaters of the mint module.
+  // params defines all the paramaters of the mint module.
   Params params = 2 [ (gogoproto.nullable) = false ];
 
-  // ReductionStartedEpoch the first epoch in which the reduction of mint
+  // reduction_started_epoch the first epoch in which the reduction of mint
   // begins.
   int64 reduction_started_epoch = 3
       [ (gogoproto.moretags) = "yaml:\"reduction_started_epoch\"" ];

@@ -10,7 +10,7 @@ import "google/protobuf/duration.proto";
 
 // Minter represents the minting state.
 message Minter {
-  // EpochProvisions represent rewards for the current epoch.
+  // epoch_provisions represent rewards for the current epoch.
   string epoch_provisions = 1 [
     (gogoproto.moretags) = "yaml:\"epoch_provisions\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -68,43 +68,42 @@ message DistributionProportions {
 message Params {
   option (gogoproto.goproto_stringer) = false;
 
-  // MintDenom the denom of the coin to mint.
+  // mint_denom the denom of the coin to mint.
   string mint_denom = 1;
-  // GenesisEpochProvisions epoch provisions from the first epoch.
+  // genesis_epoch_provisions epoch provisions from the first epoch.
   string genesis_epoch_provisions = 2 [
     (gogoproto.moretags) = "yaml:\"genesis_epoch_provisions\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  // EpochIdentifier mint epoch identifier e.g. (day, week).
+  // epoch_identifier mint epoch identifier e.g. (day, week).
   string epoch_identifier = 3
       [ (gogoproto.moretags) = "yaml:\"epoch_identifier\"" ];
-  // ReductionPeriodInEpochs the number of epochs it takes
+  // reduction_period_in_epochs the number of epochs it takes
   // to reduce the rewards.
   int64 reduction_period_in_epochs = 4
       [ (gogoproto.moretags) = "yaml:\"reduction_period_in_epochs\"" ];
-  // ReductionFactor is the reduction multiplier to execute
+  // reduction_factor is the reduction multiplier to execute
   // at the end of each period set by ReductionPeriodInEpochs.
   string reduction_factor = 5 [
     (gogoproto.moretags) = "yaml:\"reduction_factor\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  // DistributionProportions defines the distribution proportions of the minted
+  // distribution_proportions defines the distribution proportions of the minted
   // denom. In other words, defines which stakeholders will receive the minted
   // denoms and how much.
   DistributionProportions distribution_proportions = 6
       [ (gogoproto.nullable) = false ];
-  // WeightedDeveloperRewardsReceivers the address to receive developer rewards
-  // with weights assignedt to each address. The final amount that each address
-  // receives is:
-  // EpochProvisions * DistributionProportions.DeveloperRewards * Address's
-  // Weight.
+  // weighted_developer_rewards_receivers the address to receive developer
+  // rewards with weights assignedt to each address. The final amount that each
+  // address receives is: epoch_provisions *
+  // distribution_proportions.developer_rewards * Address's Weight.
   repeated WeightedAddress weighted_developer_rewards_receivers = 7 [
     (gogoproto.moretags) = "yaml:\"developer_rewards_receiver\"",
     (gogoproto.nullable) = false
   ];
-  // MintingRewardsDistributionStartEpoch start epoch to distribute minting
+  // minting_rewards_distribution_start_epoch start epoch to distribute minting
   // rewards
   int64 minting_rewards_distribution_start_epoch = 8
       [ (gogoproto.moretags) =

@@ -26,7 +26,7 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
-  // Params defines the parameters of the module.
+  // params defines the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
@@ -37,7 +37,7 @@ message QueryEpochProvisionsRequest {}
 // QueryEpochProvisionsResponse is the response type for the
 // Query/EpochProvisions RPC method.
 message QueryEpochProvisionsResponse {
-  // EpochProvisions is the current minting per epoch provisions value.
+  // epoch_provisions is the current minting per epoch provisions value.
   bytes epoch_provisions = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false

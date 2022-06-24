@@ -69,7 +69,7 @@ var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
-	// Params defines the parameters of the module.
+	// params defines the parameters of the module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 }
 
@@ -154,7 +154,7 @@ var xxx_messageInfo_QueryEpochProvisionsRequest proto.InternalMessageInfo
 // QueryEpochProvisionsResponse is the response type for the
 // Query/EpochProvisions RPC method.
 type QueryEpochProvisionsResponse struct {
-	// EpochProvisions is the current minting per epoch provisions value.
+	// epoch_provisions is the current minting per epoch provisions value.
 	EpochProvisions github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=epoch_provisions,json=epochProvisions,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"epoch_provisions"`
 }
 
