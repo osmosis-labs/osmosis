@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -43,6 +42,7 @@ type chainConfig struct {
 	votingPeriod float32
 	// upgrade proposal height for chain.
 	propHeight int
+	forkHeight int
 	// Indexes of the validators to skip from running during initialization.
 	// This is needed for testing functionality like state-sync where we would
 	// like to start a node during tests post-initialization.
@@ -58,10 +58,16 @@ const (
 	skipUpgradeEnv = "OSMOSIS_E2E_SKIP_UPGRADE"
 	// Environment variable name to skip the IBC tests
 	skipIBCEnv = "OSMOSIS_E2E_SKIP_IBC"
-	// Environment variable name to skip cleaning up Docker resources in teardown.
+	// Environment variable name to determine if this upgrade is a fork
+	forkHeightEnv = "OSMOSIS_E2E_FORK_HEIGHT"
+	// Environment variable name to skip cleaning up Docker resources in teardown
 	skipCleanupEnv = "OSMOSIS_E2E_SKIP_CLEANUP"
+	// Environment variable name to determine what version we are upgrading to
+	upgradeVersionEnv = "OSMOSIS_E2E_UPGRADE_VERSION"
 	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
-	upgradeVersion = "v9"
+	upgradeVersion string = "v10"
+	// if not skipping upgrade, how many blocks we allow for fork to run pre upgrade state creation
+	forkHeightPreUpgradeOffset int = 60
 	// estimated number of blocks it takes to submit for a proposal
 	propSubmitBlocks float32 = 10
 	// estimated number of blocks it takes to deposit for a proposal
@@ -139,6 +145,9 @@ type IntegrationTestSuite struct {
 	containerManager *containers.Manager
 	skipUpgrade      bool
 	skipIBC          bool
+	isFork           bool
+	forkHeight       int
+	upgradeVersion   string
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -147,6 +156,8 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
+	var forkHeight64 int64
+	var err error
 
 	s.chainConfigs = make([]*chainConfig, 0, 2)
 
@@ -158,9 +169,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 2. Start both networks.
 	// 3. Run IBC relayer betweeen the two chains.
 	// 4. Execute various e2e tests, including IBC.
-	var (
-		err error
-	)
 
 	if str := os.Getenv(skipUpgradeEnv); len(str) > 0 {
 		s.skipUpgrade, err = strconv.ParseBool(str)
@@ -169,6 +177,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		if s.skipUpgrade {
 			s.T().Log(fmt.Sprintf("%s was true, skipping upgrade tests", skipIBCEnv))
 		}
+	}
+
+	if str := os.Getenv(forkHeightEnv); len(str) > 0 {
+		forkHeight64, err = strconv.ParseInt(str, 0, 64)
+		s.Require().NoError(err)
+		s.forkHeight = int(forkHeight64)
+		s.isFork = true
+
+		s.T().Log(fmt.Sprintf("fork upgrade is enabled, %s was set to height %v", forkHeightEnv, s.forkHeight))
 	}
 
 	if str := os.Getenv(skipIBCEnv); len(str) > 0 {
@@ -184,7 +201,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 	}
 
-	s.containerManager, err = containers.NewManager(!s.skipUpgrade)
+	if str := os.Getenv(upgradeVersionEnv); len(str) > 0 {
+		s.upgradeVersion = str
+
+		s.T().Log(fmt.Sprintf("upgrade version set to %s", s.upgradeVersion))
+	}
+
+	s.containerManager, err = containers.NewManager(!s.skipUpgrade, s.isFork)
 	require.NoError(s.T(), err)
 
 	s.configureChain(chain.ChainAID, validatorConfigsChainA, map[int]struct{}{
@@ -212,13 +235,19 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	if !s.skipUpgrade {
 		s.createPreUpgradeState()
-		s.upgrade()
-		s.runPostUpgradeTests()
+
+		if s.isFork {
+			s.upgradeFork()
+		} else {
+			s.upgrade()
+		}
 	}
+
+	s.runPostUpgradeTests()
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
-	if str := os.Getenv("OSMOSIS_E2E_SKIP_CLEANUP"); len(str) > 0 {
+	if str := os.Getenv(skipCleanupEnv); len(str) > 0 {
 		skipCleanup, err := strconv.ParseBool(str)
 		s.Require().NoError(err)
 
@@ -247,7 +276,7 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 	for i, val := range chainConfig.validators {
 		// Skip some validators from running during set up.
 		// This is needed for testing functionality like
-		// state-sunc where we might want to start some validators during tests.
+		// state-sync where we might want to start some validators during tests.
 		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
 			s.T().Logf("skipping %s validator with index %d from running...", val.validator.Name, i)
 			continue
@@ -290,7 +319,7 @@ func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffse
 func (s *IntegrationTestSuite) runIBCRelayer(chainA *chainConfig, chainB *chainConfig) {
 	s.T().Log("starting Hermes relayer container...")
 
-	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-hermes-")
+	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-hermes-")
 	s.Require().NoError(err)
 	s.tmpDirs = append(s.tmpDirs, tmpDir)
 
@@ -350,7 +379,7 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chainConfig, chainB *chainC
 
 func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig, skipValidatorIndexes map[int]struct{}) {
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
-	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
+	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-")
 
 	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
 	s.Require().NoError(err)
@@ -368,14 +397,16 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	// If upgrade is skipped, we can use the chain initialization logic from
 	// current branch directly. As a result, there is no need to run this
 	// via Docker.
+
 	if s.skipUpgrade {
-		initializedChain, err := chain.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod))
+		initializedChain, err := chain.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
 		s.Require().NoError(err)
 		s.initializeChainConfig(&newChainConfig, initializedChain)
 		return
 	}
 
-	initResource, err := s.containerManager.RunChainInitResource(chainId, int(newChainConfig.votingPeriod), validatorConfigBytes, tmpDir)
+	s.forkHeight = s.forkHeight - forkHeightPreUpgradeOffset
+	initResource, err := s.containerManager.RunChainInitResource(chainId, int(newChainConfig.votingPeriod), validatorConfigBytes, tmpDir, s.forkHeight)
 	s.Require().NoError(err)
 
 	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
@@ -484,9 +515,40 @@ func (s *IntegrationTestSuite) upgrade() {
 		}
 	}
 
-	// remove all containers so we can upgrade them to the new version
 	for _, chainConfig := range s.chainConfigs {
 		s.upgradeContainers(chainConfig, chainConfig.propHeight)
+	}
+}
+
+func (s *IntegrationTestSuite) upgradeFork() {
+
+	for _, chainConfig := range s.chainConfigs {
+
+		for i := range chainConfig.validators {
+			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+				continue
+			}
+
+			validatorResource, exists := s.containerManager.GetValidatorResource(chainConfig.meta.Id, i)
+			require.True(s.T(), exists)
+			containerId := validatorResource.Container.ID
+			containerName := validatorResource.Container.Name[1:]
+
+			s.T().Logf("waiting to reach fork height on %s validator container: %s", containerName, containerId)
+			s.Require().Eventually(
+				func() bool {
+					currentHeight := s.getCurrentChainHeight(chainConfig, i)
+					if currentHeight < s.forkHeight {
+						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", containerName, currentHeight, s.forkHeight, containerId)
+						return false
+					}
+					return true
+				},
+				5*time.Minute,
+				time.Second,
+			)
+			s.T().Logf("successfully got past fork height on %s container: %s", containerName, containerId)
+		}
 	}
 }
 
