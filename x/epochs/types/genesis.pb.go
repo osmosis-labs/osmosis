@@ -30,13 +30,13 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // EpochInfo is a struct that describes the data going into
 // a timer defined by the x/epochs module.
 type EpochInfo struct {
-	// Identifier is a unique reference to this particular timer.
+	// identifier is a unique reference to this particular timer.
 	Identifier string `protobuf:"bytes,1,opt,name=identifier,proto3" json:"identifier,omitempty"`
-	// Start time is the time at which the timer first ever ticks.
-	// If start time is in the future, the epoch will not begin until the start
+	// start_time is the time at which the timer first ever ticks.
+	// If start_time is in the future, the epoch will not begin until the start
 	// time.
 	StartTime time.Time `protobuf:"bytes,2,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
-	// Duration is the time in between epoch ticks.
+	// duration is the time in between epoch ticks.
 	// In order for intended behavior to be met, duration should
 	// be greater than the chains expected block time.
 	// Duration must be non-zero.
@@ -46,11 +46,11 @@ type EpochInfo struct {
 	// The first tick (current_epoch=1) is defined as
 	// the first block whose blocktime is greater than the EpochInfo start_time.
 	CurrentEpoch int64 `protobuf:"varint,4,opt,name=current_epoch,json=currentEpoch,proto3" json:"current_epoch,omitempty"`
-	// Describes the start time of the current timer interval.
-	// The interval is (current_epoch_start_time, current_epoch_start_time +
-	// duration] When the timer ticks, this is set to current_epoch_start_time =
-	// last_epoch_start_time + duration only one timer tick for a given identifier
-	// can occur per block.
+	// current_epoch_start_time describes the start time of the current timer
+	// interval. The interval is (current_epoch_start_time,
+	// current_epoch_start_time + duration] When the timer ticks, this is set to
+	// current_epoch_start_time = last_epoch_start_time + duration only one timer
+	// tick for a given identifier can occur per block.
 	//
 	// NOTE! The current_epoch_start_time may diverge significantly from the
 	// wall-clock time the epoch began at. Wall-clock time of epoch start may be
@@ -67,8 +67,8 @@ type EpochInfo struct {
 	// epoch_counting_started is a boolean, that indicates whether this
 	// epoch timer has began yet.
 	EpochCountingStarted bool `protobuf:"varint,6,opt,name=epoch_counting_started,json=epochCountingStarted,proto3" json:"epoch_counting_started,omitempty"`
-	// This is the block height at which the current epoch started. (The block
-	// height at which the timer last ticked)
+	// current_epoch_start_height is the block height at which the current epoch
+	// started. (The block height at which the timer last ticked)
 	CurrentEpochStartHeight int64 `protobuf:"varint,8,opt,name=current_epoch_start_height,json=currentEpochStartHeight,proto3" json:"current_epoch_start_height,omitempty"`
 }
 
