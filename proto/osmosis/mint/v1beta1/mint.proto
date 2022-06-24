@@ -34,28 +34,28 @@ message WeightedAddress {
 // denom. In other words, defines which stakeholders will receive the minted
 // denoms and how much.
 message DistributionProportions {
-  // Staking defines the proportion of the minted MintedDenom that is to be
+  // staking defines the proportion of the minted mint_denom that is to be
   // allocated as staking rewards.
   string staking = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"staking\"",
     (gogoproto.nullable) = false
   ];
-  // PoolImcentives defines the proportion of the minted MintedDenom that is
+  // pool_incentives defines the proportion of the minted mint_denom that is
   // to be allocated as pool incentives.
   string pool_incentives = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"pool_incentives\"",
     (gogoproto.nullable) = false
   ];
-  // DeveloperRewards defines the proportion of the minted MintedDenom that is
+  // developer_rewards defines the proportion of the minted mint_denom that is
   // to be allocated to developer rewards address.
   string developer_rewards = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"developer_rewards\"",
     (gogoproto.nullable) = false
   ];
-  // CommunityPool defines the proportion of the minted MintedDenom that is
+  // community_pool defines the proportion of the minted mint_denom that is
   // to be allocated to the community pool.
   string community_pool = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -84,7 +84,7 @@ message Params {
   int64 reduction_period_in_epochs = 4
       [ (gogoproto.moretags) = "yaml:\"reduction_period_in_epochs\"" ];
   // reduction_factor is the reduction multiplier to execute
-  // at the end of each period set by ReductionPeriodInEpochs.
+  // at the end of each period set by reduction_period_in_epochs.
   string reduction_factor = 5 [
     (gogoproto.moretags) = "yaml:\"reduction_factor\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

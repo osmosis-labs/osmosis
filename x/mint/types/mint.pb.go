@@ -117,16 +117,16 @@ func (m *WeightedAddress) GetAddress() string {
 // denom. In other words, defines which stakeholders will receive the minted
 // denoms and how much.
 type DistributionProportions struct {
-	// Staking defines the proportion of the minted MintedDenom that is to be
+	// staking defines the proportion of the minted mint_denom that is to be
 	// allocated as staking rewards.
 	Staking github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=staking,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"staking" yaml:"staking"`
-	// PoolImcentives defines the proportion of the minted MintedDenom that is
+	// pool_incentives defines the proportion of the minted mint_denom that is
 	// to be allocated as pool incentives.
 	PoolIncentives github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=pool_incentives,json=poolIncentives,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"pool_incentives" yaml:"pool_incentives"`
-	// DeveloperRewards defines the proportion of the minted MintedDenom that is
+	// developer_rewards defines the proportion of the minted mint_denom that is
 	// to be allocated to developer rewards address.
 	DeveloperRewards github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=developer_rewards,json=developerRewards,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"developer_rewards" yaml:"developer_rewards"`
-	// CommunityPool defines the proportion of the minted MintedDenom that is
+	// community_pool defines the proportion of the minted mint_denom that is
 	// to be allocated to the community pool.
 	CommunityPool github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=community_pool,json=communityPool,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"community_pool" yaml:"community_pool"`
 }
@@ -176,7 +176,7 @@ type Params struct {
 	// to reduce the rewards.
 	ReductionPeriodInEpochs int64 `protobuf:"varint,4,opt,name=reduction_period_in_epochs,json=reductionPeriodInEpochs,proto3" json:"reduction_period_in_epochs,omitempty" yaml:"reduction_period_in_epochs"`
 	// reduction_factor is the reduction multiplier to execute
-	// at the end of each period set by ReductionPeriodInEpochs.
+	// at the end of each period set by reduction_period_in_epochs.
 	ReductionFactor github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=reduction_factor,json=reductionFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"reduction_factor" yaml:"reduction_factor"`
 	// distribution_proportions defines the distribution proportions of the minted
 	// denom. In other words, defines which stakeholders will receive the minted
