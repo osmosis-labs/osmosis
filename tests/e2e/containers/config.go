@@ -28,10 +28,10 @@ const (
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
 	previousVersionOsmoRepository = "osmolabs/osmosis-dev"
-	previousVersionOsmoTag        = "v8.0.0-2-debug"
+	previousVersionOsmoTag        = "v10.0.0-debug"
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
-	previousVersionInitRepository = "osmolabs/osmosis-init"
-	previousVersionInitTag        = "v8.0.0-4-osmo"
+	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
+	previousVersionInitTag        = "v10.0.0"
 	// Hermes repo/version for relayer
 	relayerRepository = "osmolabs/hermes"
 	relayerTag        = "0.13.0"
@@ -39,25 +39,41 @@ const (
 
 // Returns ImageConfig needed for running e2e test.
 // If isUpgrade is true, returns images for running the upgrade
-// Otherwise, returns images for running non-upgrade e2e tests.
-func NewImageConfig(isUpgrade bool) ImageConfig {
+// If isFork is true, utilizes provided fork height to initiate fork logic
+func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 	config := ImageConfig{
 		RelayerRepository: relayerRepository,
 		RelayerTag:        relayerTag,
 	}
 
-	if isUpgrade {
-		config.InitRepository = previousVersionInitRepository
-		config.InitTag = previousVersionInitTag
-
-		config.OsmosisRepository = previousVersionOsmoRepository
-		config.OsmosisTag = previousVersionOsmoTag
-	} else {
-		config.InitRepository = currentBranchInitRepository
-		config.InitTag = currentBranchInitTag
-
+	if !isUpgrade {
+		// If upgrade is not tested, we do not need InitRepository and InitTag
+		// because we directly call the initialization logic without
+		// the need for Docker.
 		config.OsmosisRepository = CurrentBranchOsmoRepository
 		config.OsmosisTag = CurrentBranchOsmoTag
+	}
+
+	// If upgrade is tested, we need to utilize InitRepository and InitTag
+	// to initialize older state with Docker
+	config.InitRepository = previousVersionInitRepository
+	config.InitTag = previousVersionInitTag
+
+	if isFork {
+		// Forks are state compatible with earlier versions before fork height.
+		// Normally, validators switch the binaries pre-fork height
+		// Then, once the fork height is reached, the state breaking-logic
+		// is run.
+		config.OsmosisRepository = CurrentBranchOsmoRepository
+		config.OsmosisTag = CurrentBranchOsmoTag
+	} else {
+		// Upgrades are run at the time when upgrade height is reached
+		// and are submitted via a governance proposal. Thefore, we
+		// must start running the previous Osmosis version. Then, the node
+		// should auto-upgrade, at which point we can restart the updated
+		// Osmosis validator container.
+		config.OsmosisRepository = previousVersionOsmoRepository
+		config.OsmosisTag = previousVersionOsmoTag
 	}
 
 	return config

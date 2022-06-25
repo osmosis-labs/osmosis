@@ -11,9 +11,15 @@ via Docker files. As a result, the test suite may provide the desired
 Osmosis version to Docker containers during the initialization. This
 design allows for the opportunity of testing chain upgrades in the
 future by providing an older Osmosis version to the container,
-performing the chain upgrade, and running the latest test suite.
+performing the chain upgrade, and running the latest test suite. When
+testing a normal upgrade, the e2e test suite submits an upgrade proposal at
+an upgrade height, ensures the upgrade happens at the desired height, and
+then checks that operations that worked before still work as intended. If
+testing a fork, the test suite instead starts the chain a few blocks before
+the set fork height and ensures the chain continues after the fork triggers
+the upgrade. Note that a regular upgrade and a fork upgrade are mutually exclusive. 
 
-The file e2e\_suite\_test.go defines the testing suite and contains the
+The file e2e\_setup\_test.go defines the testing suite and contains the
 core bootstrapping logic that creates a testing environment via Docker
 containers. A testing network is created dynamically with 2 test
 validators.
@@ -48,7 +54,7 @@ environment.
 Introduces an abstraction necessary for creating and managing
 Docker containers. Currently, validator containers are created
 with a name of the corresponding validator struct that is initialized
-in the `chain` package. 
+in the `chain` package.
 
 ## Running Locally
 
@@ -110,6 +116,11 @@ tests require IBC logic.
 
 - `OSMOSIS_E2E_SKIP_CLEANUP` - when true, avoids cleaning up the e2e Docker
 containers.
+
+- `OSMOSIS_E2E_FORK_HEIGHT` - when the above "IS_FORK" env variable is set to true, this is the string
+of the height in which the network should fork. This should match the ForkHeight set in constants.go
+
+- `OSMOSIS_E2E_UPGRADE_VERSION` - string of what version will be upgraded to (for example, "v10")
 
 #### VS Code Debug Configuration
 
