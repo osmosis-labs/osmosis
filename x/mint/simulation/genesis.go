@@ -66,38 +66,13 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var distributionProportions types.DistributionProportions
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, distributionProportionsKey, &distributionProportions, simState.Rand,
-		func(r *rand.Rand) {
-			randomDisitributionProportions := genProportionsAddingUpToOne(simState.Rand, 4)
-			distributionProportions.Staking = randomDisitributionProportions[0]
-			distributionProportions.PoolIncentives = randomDisitributionProportions[1]
-			distributionProportions.DeveloperRewards = randomDisitributionProportions[2]
-			distributionProportions.CommunityPool = randomDisitributionProportions[3]
-		},
+		func(r *rand.Rand) { distributionProportions = genDistributionProportions(r) },
 	)
 
 	var weightedDevRewardReceivers []types.WeightedAddress
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, weightedDevRewardReceiversKey, &weightedDevRewardReceivers, simState.Rand,
-		func(r *rand.Rand) {
-			addressCount := max(1, r.Intn(5))
-			randomDevRewardProportions := genProportionsAddingUpToOne(simState.Rand, addressCount)
-
-			for i := 0; i < addressCount; i++ {
-				addressLength := possibleBech32AddrLengths[r.Intn(len(possibleBech32AddrLengths))]
-				addressRandBytes, err := randBytes(r, int(addressLength))
-				if err != nil {
-					panic(err)
-				}
-				address, err := sdk.Bech32ifyAddressBytes("osmo", addressRandBytes)
-				if err != nil {
-					panic(err)
-				}
-				weightedDevRewardReceivers = append(weightedDevRewardReceivers, types.WeightedAddress{
-					Address: address,
-					Weight:  randomDevRewardProportions[i],
-				})
-			}
-		},
+		func(r *rand.Rand) { weightedDevRewardReceivers = genWeightedDevRewardReceivers(simState.Rand) },
 	)
 
 	var mintintRewardsDistributionStartEpoch int64
@@ -136,7 +111,7 @@ func genEpochProvisions(r *rand.Rand) sdk.Dec {
 }
 
 func genEpochIdentifier(r *rand.Rand) string {
-	return epochIdentifierOptions[rand.Intn(len(epochIdentifierOptions))]
+	return "day"
 }
 
 func genReductionFactor(r *rand.Rand) sdk.Dec {
@@ -168,6 +143,39 @@ func genProportionsAddingUpToOne(r *rand.Rand, numberOfProportions int) []sdk.De
 	}
 	proportions[numberOfProportions-1] = remainingRatio
 	return proportions
+}
+
+func genDistributionProportions(r *rand.Rand) types.DistributionProportions {
+	distributionProportions := types.DistributionProportions{}
+	randomDisitributionProportions := genProportionsAddingUpToOne(r, 4)
+	distributionProportions.Staking = randomDisitributionProportions[0]
+	distributionProportions.PoolIncentives = randomDisitributionProportions[1]
+	distributionProportions.DeveloperRewards = randomDisitributionProportions[2]
+	distributionProportions.CommunityPool = randomDisitributionProportions[3]
+	return distributionProportions
+}
+
+func genWeightedDevRewardReceivers(r *rand.Rand) []types.WeightedAddress {
+	var weightedDevRewardReceivers []types.WeightedAddress
+	addressCount := max(1, r.Intn(5))
+	randomDevRewardProportions := genProportionsAddingUpToOne(r, addressCount)
+
+	for i := 0; i < addressCount; i++ {
+		addressLength := possibleBech32AddrLengths[r.Intn(len(possibleBech32AddrLengths))]
+		addressRandBytes, err := randBytes(r, int(addressLength))
+		if err != nil {
+			panic(err)
+		}
+		address, err := sdk.Bech32ifyAddressBytes("osmo", addressRandBytes)
+		if err != nil {
+			panic(err)
+		}
+		weightedDevRewardReceivers = append(weightedDevRewardReceivers, types.WeightedAddress{
+			Address: address,
+			Weight:  randomDevRewardProportions[i],
+		})
+	}
+	return weightedDevRewardReceivers
 }
 
 func genMintintRewardsDistributionStartEpoch(r *rand.Rand) int64 {
