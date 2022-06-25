@@ -11,35 +11,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-)
-
-const (
-	// allowedErrRatio is the maximal multiplicative difference in either
-	// direction (positive or negative) that we accept to tolerate in
-	// unit tests for calcuating the number of shares to be returned by
-	// joining a pool. The comparison is done between Wolfram estimates and our AMM logic.
-	allowedErrRatio = "0.0000001"
-	// doesNotExistDenom denom name assummed to be used in test cases where the provided
-	// denom does not exist in pool
-	doesNotExistDenom = "doesnotexist"
-)
-
-var (
-	oneTrillion          = sdk.NewInt(1e12)
-	defaultOsmoPoolAsset = balancer.PoolAsset{
-		Token:  sdk.NewCoin("uosmo", oneTrillion),
-		Weight: sdk.NewInt(100),
-	}
-	defaultAtomPoolAsset = balancer.PoolAsset{
-		Token:  sdk.NewCoin("uatom", oneTrillion),
-		Weight: sdk.NewInt(100),
-	}
-	oneTrillionEvenPoolAssets = []balancer.PoolAsset{
-		defaultOsmoPoolAsset,
-		defaultAtomPoolAsset,
-	}
 )
 
 // calcJoinSharesTestCase defines a testcase for TestCalcSingleAssetJoin and
@@ -1194,5 +1168,247 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 
 	for i := 0; i < 50000; i++ {
 		testPoolInvariants()
+	}
+}
+
+// TestCalculateAmountOutAndIn_InverseRelationship tests that the same amount of token is guaranteed upon
+// sequential operation of CalcInAmtGivenOut and CalcOutAmtGivenIn.
+func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
+	type testcase struct {
+		denomOut         string
+		initialPoolOut   int64
+		initialWeightOut int64
+		initialCalcOut   int64
+
+		denomIn         string
+		initialPoolIn   int64
+		initialWeightIn int64
+	}
+
+	// For every test case in testcases, apply a swap fee in swapFeeCases.
+	testcases := []testcase{
+		{
+			denomOut:         "uosmo",
+			initialPoolOut:   1_000_000_000_000,
+			initialWeightOut: 100,
+			initialCalcOut:   100,
+
+			denomIn:         "ion",
+			initialPoolIn:   1_000_000_000_000,
+			initialWeightIn: 100,
+		},
+		{
+			denomOut:         "uosmo",
+			initialPoolOut:   1_000,
+			initialWeightOut: 100,
+			initialCalcOut:   100,
+
+			denomIn:         "ion",
+			initialPoolIn:   1_000_000,
+			initialWeightIn: 100,
+		},
+		{
+			denomOut:         "uosmo",
+			initialPoolOut:   1_000,
+			initialWeightOut: 100,
+			initialCalcOut:   100,
+
+			denomIn:         "ion",
+			initialPoolIn:   1_000_000,
+			initialWeightIn: 100,
+		},
+		{
+			denomOut:         "uosmo",
+			initialPoolOut:   1_000,
+			initialWeightOut: 200,
+			initialCalcOut:   100,
+
+			denomIn:         "ion",
+			initialPoolIn:   1_000_000,
+			initialWeightIn: 50,
+		},
+		{
+			denomOut:         "uosmo",
+			initialPoolOut:   1_000_000,
+			initialWeightOut: 200,
+			initialCalcOut:   100000,
+
+			denomIn:         "ion",
+			initialPoolIn:   1_000_000_000,
+			initialWeightIn: 50,
+		},
+	}
+
+	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
+
+	getTestCaseName := func(tc testcase, swapFeeCase string) string {
+		return fmt.Sprintf("tokenOutInitial: %d, tokenInInitial: %d, initialOut: %d, swapFee: %s",
+			tc.initialPoolOut,
+			tc.initialPoolIn,
+			tc.initialCalcOut,
+			swapFeeCase,
+		)
+	}
+
+	for _, tc := range testcases {
+		for _, swapFee := range swapFeeCases {
+			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+				ctx := createTestContext(t)
+
+				poolAssetOut := balancer.PoolAsset{
+					Token:  sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut),
+					Weight: sdk.NewInt(tc.initialWeightOut),
+				}
+
+				poolAssetIn := balancer.PoolAsset{
+					Token:  sdk.NewInt64Coin(tc.denomIn, tc.initialPoolIn),
+					Weight: sdk.NewInt(tc.initialWeightIn),
+				}
+
+				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
+				require.NoError(t, err)
+
+				exitFeeDec, err := sdk.NewDecFromStr("0")
+				require.NoError(t, err)
+
+				pool := createTestPool(t, swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
+				require.NotNil(t, pool)
+
+				initialOut := sdk.NewInt64Coin(poolAssetOut.Token.Denom, tc.initialCalcOut)
+				initialOutCoins := sdk.NewCoins(initialOut)
+
+				sut := func() {
+					actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, poolAssetIn.Token.Denom, swapFeeDec)
+					require.NoError(t, err)
+
+					inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), poolAssetOut.Token.Denom, swapFeeDec)
+					require.NoError(t, err)
+
+					require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
+
+					expected := initialOut.Amount.ToDec()
+					actual := inverseTokenOut.Amount.ToDec()
+
+					// allow a rounding error of up to 1 for this relation
+					tol := sdk.NewDec(1)
+					require.True(osmoutils.DecApproxEq(t, expected, actual, tol))
+				}
+
+				balancerPool, ok := pool.(*balancer.Pool)
+				require.True(t, ok)
+
+				assertPoolStateNotModified(t, balancerPool, sut)
+			})
+		}
+	}
+}
+
+func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
+	type testcase struct {
+		initialPoolOut   int64
+		initialPoolIn    int64
+		initialWeightOut int64
+		tokenOut         int64
+		initialWeightIn  int64
+	}
+
+	// For every test case in testcases, apply a swap fee in swapFeeCases.
+	testcases := []testcase{
+		{
+			initialPoolOut:   1_000_000_000_000,
+			tokenOut:         100,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
+		{
+			initialPoolOut:   1_000_000_000_000,
+			tokenOut:         100,
+			initialWeightOut: 50,
+			initialWeightIn:  100,
+		},
+		{
+			initialPoolOut:   1_000_000_000_000,
+			tokenOut:         50,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
+		{
+			initialPoolOut:   1_000_000_000_000,
+			tokenOut:         100,
+			initialWeightOut: 100,
+			initialWeightIn:  50,
+		},
+		{
+			initialPoolOut:   1_000_000,
+			tokenOut:         100,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
+		{
+			initialPoolOut:   2_351_333,
+			tokenOut:         7,
+			initialWeightOut: 148,
+			initialWeightIn:  57,
+		},
+		{
+			initialPoolOut:   1_000,
+			tokenOut:         25,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
+		{
+			initialPoolOut:   1_000,
+			tokenOut:         26,
+			initialWeightOut: 100,
+			initialWeightIn:  100,
+		},
+	}
+
+	swapFeeCases := []string{"0", "0.001", "0.1", "0.5", "0.99"}
+
+	getTestCaseName := func(tc testcase, swapFeeCase string) string {
+		return fmt.Sprintf("initialPoolOut: %d, initialCalcOut: %d, initialWeightOut: %d, initialWeightIn: %d, swapFee: %s",
+			tc.initialPoolOut,
+			tc.tokenOut,
+			tc.initialWeightOut,
+			tc.initialWeightIn,
+			swapFeeCase,
+		)
+	}
+
+	for _, tc := range testcases {
+		for _, swapFee := range swapFeeCases {
+			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
+				require.NoError(t, err)
+
+				initialPoolBalanceOut := sdk.NewInt(tc.initialPoolOut)
+
+				initialWeightOut := sdk.NewInt(tc.initialWeightOut)
+				initialWeightIn := sdk.NewInt(tc.initialWeightIn)
+
+				initialTotalShares := types.InitPoolSharesSupply.ToDec()
+				initialCalcTokenOut := sdk.NewInt(tc.tokenOut)
+
+				actualSharesOut := balancer.CalcPoolSharesOutGivenSingleAssetIn(
+					initialPoolBalanceOut.ToDec(),
+					initialWeightOut.ToDec().Quo(initialWeightOut.Add(initialWeightIn).ToDec()),
+					initialTotalShares,
+					initialCalcTokenOut.ToDec(),
+					swapFeeDec,
+				)
+
+				inverseCalcTokenOut := balancer.CalcSingleAssetInGivenPoolSharesOut(
+					initialPoolBalanceOut.Add(initialCalcTokenOut).ToDec(),
+					initialWeightOut.ToDec().Quo(initialWeightOut.Add(initialWeightIn).ToDec()),
+					initialTotalShares.Add(actualSharesOut),
+					actualSharesOut,
+					swapFeeDec,
+				)
+
+				tol := sdk.NewDec(1)
+				require.True(osmoutils.DecApproxEq(t, initialCalcTokenOut.ToDec(), inverseCalcTokenOut, tol))
+			})
+		}
 	}
 }
