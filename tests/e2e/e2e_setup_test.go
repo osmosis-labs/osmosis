@@ -64,8 +64,6 @@ const (
 	skipCleanupEnv = "OSMOSIS_E2E_SKIP_CLEANUP"
 	// Environment variable name to determine what version we are upgrading to
 	upgradeVersionEnv = "OSMOSIS_E2E_UPGRADE_VERSION"
-	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
-	upgradeVersion string = "v10"
 	// if not skipping upgrade, how many blocks we allow for fork to run pre upgrade state creation
 	forkHeightPreUpgradeOffset int = 60
 	// estimated number of blocks it takes to submit for a proposal
@@ -405,7 +403,10 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 		return
 	}
 
-	s.forkHeight = s.forkHeight - forkHeightPreUpgradeOffset
+	if s.isFork {
+		s.forkHeight = s.forkHeight - forkHeightPreUpgradeOffset
+	}
+
 	initResource, err := s.containerManager.RunChainInitResource(chainId, int(newChainConfig.votingPeriod), validatorConfigBytes, tmpDir, s.forkHeight)
 	s.Require().NoError(err)
 
