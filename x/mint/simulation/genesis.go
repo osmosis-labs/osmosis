@@ -79,7 +79,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, weightedDevRewardReceiversKey, &weightedDevRewardReceivers, simState.Rand,
 		func(r *rand.Rand) {
-			addressCount := r.Intn(5)
+			addressCount := max(1, r.Intn(5))
 			randomDevRewardProportions := genProportionsAddingUpToOne(simState.Rand, addressCount)
 
 			for i := 0; i < addressCount; i++ {
@@ -149,6 +149,10 @@ func genReductionPeriodInEpochs(r *rand.Rand) int64 {
 
 // genProportionsAddingUpToOne reurns a slice with numberOfProportions that add up to 1.
 func genProportionsAddingUpToOne(r *rand.Rand, numberOfProportions int) []sdk.Dec {
+	if numberOfProportions < 0 {
+		panic("numberOfProportions must be greater than or equal to 1")
+	}
+
 	proportions := make([]sdk.Dec, numberOfProportions)
 
 	// We start by estimating the first proportion with a limit of 1.
@@ -181,4 +185,11 @@ func randBytes(r *rand.Rand, length int) ([]byte, error) {
 		return nil, fmt.Errorf("did not read enough bytes, read: %d, expected: %d", n, length)
 	}
 	return result, err
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
