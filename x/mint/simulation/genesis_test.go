@@ -44,7 +44,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 	const (
 		expectedEpochProvisionsStr      = "7913048388940673156"
-		expectedEpochIdentifier         = "week"
+		expectedEpochIdentifier         = "day"
 		expectedReductionFactorStr      = "0.6"
 		expectedReductionPeriodInEpochs = int64(9171281239991390334)
 
