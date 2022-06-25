@@ -48,14 +48,14 @@ func TestRandomizedGenState(t *testing.T) {
 		expectedReductionFactorStr      = "0.6"
 		expectedReductionPeriodInEpochs = int64(9171281239991390334)
 
-		expectedStakingDistributionProportion          = "0.8"
-		expectedPoolIncentivesDistributionProportion   = "0"
-		expectedDeveloperRewardsDistributionProportion = "0.1"
-		expectedCommunityPoolDistributionProportion    = "0.1"
+		expectedStakingDistributionProportion          = "0.51"
+		expectedPoolIncentivesDistributionProportion   = "0.01"
+		expectedDeveloperRewardsDistributionProportion = "0.31"
+		expectedCommunityPoolDistributionProportion    = "0.17"
 
-		expectedMintintRewardsDistributionStartEpoch = int64(3800660657951843153)
+		expectedMintintRewardsDistributionStartEpoch = int64(8326275384461735988)
 
-		expectedReductionStartedEpoch = int64(1187669907065521396)
+		expectedReductionStartedEpoch = int64(8272964973000937025)
 
 		expectedNextEpochProvisionsStr = "3956524194470336578"
 		expectedDenom                  = sdk.DefaultBondDenom
@@ -63,20 +63,20 @@ func TestRandomizedGenState(t *testing.T) {
 
 	var expectedWeightedAddresses []types.WeightedAddress = []types.WeightedAddress{
 		{
-			Address: "address_0",
-			Weight:  sdk.NewDecWithPrec(4, 1),
+			Address: "osmo10h0yjph5cs87jlrn0d7g7u4dmftufg57mute7qhn6zla86ha3ems0yhsdm",
+			Weight:  sdk.NewDecWithPrec(21, 2),
 		},
 		{
-			Address: "address_1",
-			Weight:  sdk.NewDecWithPrec(0, 1),
+			Address: "osmo1fcjs4czqdfcm8vpx0835kvxgh30hx8s4p8fk53",
+			Weight:  sdk.NewDecWithPrec(21, 2),
 		},
 		{
-			Address: "address_2",
-			Weight:  sdk.NewDecWithPrec(2, 1),
+			Address: "osmo1npjxgta2789ju4v063ewwuyv6wpz84x8gscg7hx4l9xlxwr0pgdqzzez3k",
+			Weight:  sdk.NewDecWithPrec(31, 2),
 		},
 		{
-			Address: "address_3",
-			Weight:  sdk.NewDecWithPrec(4, 1),
+			Address: "osmo15y8quyqq24d2xlkm6lekg5x3uqxcvf362jlq4yuayy6c4y3e9nysq8gmgg",
+			Weight:  sdk.NewDecWithPrec(27, 2),
 		},
 	}
 

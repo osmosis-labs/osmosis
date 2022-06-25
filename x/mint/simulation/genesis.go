@@ -15,23 +15,26 @@ import (
 
 // Simulation parameter constants.
 const (
-	epochProvisionsKey                        = "epoch_provisions"
-	epochIdentifierKey                        = "epoch_identifier"
-	reductionFactorKey                        = "reduction_factor"
-	reductionPeriodInEpochsKey                = "reduction_period_in_epochs"
+	epochProvisionsKey         = "genesis_epoch_provisions"
+	epochIdentifierKey         = "epoch_identifier"
+	reductionFactorKey         = "reduction_factor"
+	reductionPeriodInEpochsKey = "reduction_period_in_epochs"
+
+	distributionProportionsKey = "distribution_proportions"
+
 	stakingDistributionProportionKey          = "staking_distribution_proportion"
 	poolIncentivesDistributionProportionKey   = "pool_incentives_distribution_proportion"
 	developerRewardsDistributionProportionKey = "developer_rewards_distribution_proportion"
 	communityPoolDistributionProportionKey    = "community_pool_distribution_proportion"
-	weightedDevRewardReceiversKey             = "weighted_dev_reward_receivers"
+	weightedDevRewardReceiversKey             = "weighted_developer_rewards_receivers"
 	mintingRewardsDistributionStartEpochKey   = "minting_rewards_distribution_start_epoch"
-	reductionStartedEpochKey                  = "reduction_started_epoch"
 
 	maxInt64 = int(^uint(0) >> 1)
 )
 
 var (
-	epochIdentifierOptions = []string{"day", "week"}
+	epochIdentifierOptions    = []string{"day", "week"}
+	possibleBech32AddrLengths = []uint8{20, 32}
 )
 
 // RandomizedGenState generates a random GenesisState for mint.
@@ -60,30 +63,16 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { reductionPeriodInEpochs = genReductionPeriodInEpochs(r) },
 	)
 
-	randomDisitributionProportions := genProportionsAddingUpToOne(simState.Rand, 4)
-
-	var stakingDistributionProportion sdk.Dec
+	var distributionProportions types.DistributionProportions
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, stakingDistributionProportionKey, &stakingDistributionProportion, simState.Rand,
-		func(r *rand.Rand) { stakingDistributionProportion = randomDisitributionProportions[0] },
-	)
-
-	var poolIncentivesDistributionProportion sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, poolIncentivesDistributionProportionKey, &poolIncentivesDistributionProportion, simState.Rand,
-		func(r *rand.Rand) { poolIncentivesDistributionProportion = randomDisitributionProportions[1] },
-	)
-
-	var developerRewardsDistributionProportion sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, developerRewardsDistributionProportionKey, &developerRewardsDistributionProportion, simState.Rand,
-		func(r *rand.Rand) { developerRewardsDistributionProportion = randomDisitributionProportions[2] },
-	)
-
-	var communityPoolDistributionProportion sdk.Dec
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, communityPoolDistributionProportionKey, &communityPoolDistributionProportion, simState.Rand,
-		func(r *rand.Rand) { communityPoolDistributionProportion = randomDisitributionProportions[3] },
+		simState.Cdc, distributionProportionsKey, &distributionProportions, simState.Rand,
+		func(r *rand.Rand) {
+			randomDisitributionProportions := genProportionsAddingUpToOne(simState.Rand, 4)
+			distributionProportions.Staking = randomDisitributionProportions[0]
+			distributionProportions.PoolIncentives = randomDisitributionProportions[1]
+			distributionProportions.DeveloperRewards = randomDisitributionProportions[2]
+			distributionProportions.CommunityPool = randomDisitributionProportions[3]
+		},
 	)
 
 	var weightedDevRewardReceivers []types.WeightedAddress
@@ -94,8 +83,17 @@ func RandomizedGenState(simState *module.SimulationState) {
 			randomDevRewardProportions := genProportionsAddingUpToOne(simState.Rand, addressCount)
 
 			for i := 0; i < addressCount; i++ {
+				addressLength := possibleBech32AddrLengths[r.Intn(len(possibleBech32AddrLengths))]
+				addressRandBytes, err := randBytes(r, int(addressLength))
+				if err != nil {
+					panic(err)
+				}
+				address, err := sdk.Bech32ifyAddressBytes("osmo", addressRandBytes)
+				if err != nil {
+					panic(err)
+				}
 				weightedDevRewardReceivers = append(weightedDevRewardReceivers, types.WeightedAddress{
-					Address: fmt.Sprintf("address_%d", i),
+					Address: address,
 					Weight:  randomDevRewardProportions[i],
 				})
 			}
@@ -108,11 +106,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { mintintRewardsDistributionStartEpoch = genMintintRewardsDistributionStartEpoch(r) },
 	)
 
-	var reductionStartedEpoch int64
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, reductionStartedEpochKey, &reductionStartedEpoch, simState.Rand,
-		func(r *rand.Rand) { reductionStartedEpoch = genReductionStartedEpoch(r) },
-	)
+	reductionStartedEpoch := genReductionStartedEpoch(simState.Rand)
 
 	mintDenom := sdk.DefaultBondDenom
 	params := types.NewParams(
@@ -121,12 +115,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		epochIdentifier,
 		reductionFactor,
 		reductionPeriodInEpochs,
-		types.DistributionProportions{
-			Staking:          stakingDistributionProportion,
-			PoolIncentives:   poolIncentivesDistributionProportion,
-			DeveloperRewards: developerRewardsDistributionProportion,
-			CommunityPool:    communityPoolDistributionProportion,
-		},
+		distributionProportions,
 		weightedDevRewardReceivers,
 		mintintRewardsDistributionStartEpoch)
 
@@ -158,18 +147,6 @@ func genReductionPeriodInEpochs(r *rand.Rand) int64 {
 	return int64(r.Intn(maxInt64))
 }
 
-func genStakingDistributionProportion(r *rand.Rand) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(r.Intn(5)), 1)
-}
-
-func genPoolIncentivesDistributionProportion(r *rand.Rand, limitRatio sdk.Dec) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(r.Intn(int(limitRatio.MulInt64(10).TruncateInt64()))), 1)
-}
-
-func genDeveloperRewardsDistributionProportion(r *rand.Rand, limitRatio sdk.Dec) sdk.Dec {
-	return sdk.NewDecWithPrec(int64(r.Intn(int(limitRatio.MulInt64(10).TruncateInt64()))), 1)
-}
-
 // genProportionsAddingUpToOne reurns a slice with numberOfProportions that add up to 1.
 func genProportionsAddingUpToOne(r *rand.Rand, numberOfProportions int) []sdk.Dec {
 	proportions := make([]sdk.Dec, numberOfProportions)
@@ -180,7 +157,8 @@ func genProportionsAddingUpToOne(r *rand.Rand, numberOfProportions int) []sdk.De
 	// Next, repeat the randomization process for the remaining proportions.
 	remainingRatio := sdk.OneDec()
 	for i := 0; i < numberOfProportions-1; i++ {
-		nextProportion := sdk.NewDecWithPrec(int64(r.Intn(int(remainingRatio.MulInt64(10).TruncateInt64()))), 1)
+		// We add 0.01 to make sure that zero is never returned because a proportion of 0 is deemed invalid.
+		nextProportion := sdk.MustNewDecFromStr("0.01").Add(sdk.NewDecWithPrec(int64(r.Intn(int(remainingRatio.MulInt64(9).TruncateInt64()))), 1))
 		proportions[i] = nextProportion
 		remainingRatio = remainingRatio.Sub(nextProportion)
 	}
@@ -194,4 +172,13 @@ func genMintintRewardsDistributionStartEpoch(r *rand.Rand) int64 {
 
 func genReductionStartedEpoch(r *rand.Rand) int64 {
 	return int64(r.Intn(maxInt64))
+}
+
+func randBytes(r *rand.Rand, length int) ([]byte, error) {
+	result := make([]byte, length)
+	n, err := r.Read(result)
+	if n != length {
+		return nil, fmt.Errorf("did not read enough bytes, read: %d, expected: %d", n, length)
+	}
+	return result, err
 }
