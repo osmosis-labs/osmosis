@@ -28,8 +28,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		params := k.GetParams(ctx)
 
 		// Check if we have hit an epoch where we update the inflation parameter.
-		// Since epochs only update based on BFT time data, it is safe to store the "reducing period time"
-		// in terms of the number of epochs that have transpired.
+		// We measure time between reductions in number of epochs.
+		// This avoids issues with measuring in block numbers, as epochs have fixed intervals, with very
+		// low variance at the relevant sizes. As a result, it is safe to store the epoch number
+		// of the last reduction to be later retrieved for comparison.
 		if epochNumber >= k.GetParams(ctx).ReductionPeriodInEpochs+k.GetLastReductionEpochNum(ctx) {
 			// Reduce the reward per reduction period
 			minter.EpochProvisions = minter.NextEpochProvisions(params)
