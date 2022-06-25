@@ -68,7 +68,7 @@ message DistributionProportions {
 message Params {
   option (gogoproto.goproto_stringer) = false;
 
-  // mint_denom the denom of the coin to mint.
+  // mint_denom is the denom of the coin to mint.
   string mint_denom = 1;
   // genesis_epoch_provisions epoch provisions from the first epoch.
   string genesis_epoch_provisions = 2 [
