@@ -261,7 +261,13 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoo
 // It updates the liquidity if the pool is joined successfully. If not, returns error.
 // and updates pool accordingly.
 func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	numShares, newLiquidity, err := p.CalcJoinPoolShares(ctx, tokensIn, swapFee)
+	var newLiquidity sdk.Coins
+	if tokensIn.Len() == 1 {
+		numShares, newLiquidity, err = p.CalcSingleTokenInJoinPoolShares(ctx, tokensIn, swapFee)
+	} else if tokensIn.Len() == p.NumAssets() {
+		numShares, newLiquidity, err = p.CalcMultiTokenInJoinPoolShares(ctx, tokensIn, swapFee)
+	}
+
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -326,22 +332,17 @@ func (p *Pool) calcJoinPoolSharesBroken(ctx sdk.Context, tokensIn sdk.Coins, swa
 	return numShares, newLiquidity, nil
 }
 
-// CalcJoinPoolShares calculates the number of shares created to join pool with the provided amount of `tokenIn`.
-// The input tokens must either be:
-// - a single token
-// - contain exactly the same tokens as the pool contains
+// CalcSingleTokenInJoinPoolShares calculates the number of shares created to join pool with the provided amount of single `tokenIn`.
 //
 // It returns the number of shares created, the amount of coins actually joined into the pool
 // (in case of not being able to fully join), or an error.
-func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+func (p *Pool) CalcSingleTokenInJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
 	if ctx.BlockHeight() < v10Fork {
 		return p.calcJoinPoolSharesBroken(ctx, tokensIn, swapFee)
 	}
 	// 1) Get pool current liquidity + and token weights
-	// 2) If single token provided, do single asset join and exit.
-	// 3) If multi-asset join, first do as much of a join as we can with no swaps.
-	// 4) Update pool shares / liquidity / remaining tokens to join accordingly
-	// 5) For every remaining token to LP, do a single asset join, and update pool shares / liquidity.
+	// 2) Do single asset join and exit.
+	// 3) Update pool shares / liquidity / remaining tokens to join accordingly
 	//
 	// Note that all single asset joins do incur swap fee.
 	//
@@ -349,16 +350,10 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	// more complex / don't just alter the state.
 	// We should simplify this logic further in the future, using balancer multi-join equations.
 
-	if tokensIn.Len() == 1 {
-		return p.calcSingleTokenJoinPoolShare(ctx, tokensIn, swapFee)
-	} else if tokensIn.Len() != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
+	if tokensIn.Len() != 1 {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset in pool for this function")
 	}
 
-	return p.calcMultipleTokenPoolShare(ctx, tokensIn, swapFee)
-}
-
-func (p *Pool) calcSingleTokenJoinPoolShare(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
 	// 1) get all 'pool assets' (aka current pool liquidity + balancer weight)
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
@@ -377,7 +372,31 @@ func (p *Pool) calcSingleTokenJoinPoolShare(ctx sdk.Context, tokensIn sdk.Coins,
 	return numShares, tokensJoined, nil
 }
 
-func (p *Pool) calcMultipleTokenPoolShare(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+// CalcMultiTokenInJoinPoolShares calculates the number of shares created to join pool with the provided amount of `tokenIn`.
+// The input tokens must either be:
+// - contain exactly the same tokens as the pool contains
+//
+// It returns the number of shares created, the amount of coins actually joined into the pool
+// (in case of not being able to fully join), or an error.
+func (p *Pool) CalcMultiTokenInJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+	if ctx.BlockHeight() < v10Fork {
+		return p.calcJoinPoolSharesBroken(ctx, tokensIn, swapFee)
+	}
+	// 1) Get pool current liquidity + and token weights
+	// 2) Multi-asset join, first do as much of a join as we can with no swaps.
+	// 3) Update pool shares / liquidity / remaining tokens to join accordingly
+	// 4) For every remaining token to LP, do a single asset join, and update pool shares / liquidity.
+	//
+	// Note that all single asset joins do incur swap fee.
+	//
+	// Since CalcJoinPoolShares is non-mutative, the steps for updating pool shares / liquidity are
+	// more complex / don't just alter the state.
+	// We should simplify this logic further in the future, using balancer multi-join equations.
+
+	if tokensIn.Len() != p.NumAssets() {
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with all assets in pool for this function")
+	}
+
 	// 1) get all 'pool assets' (aka current pool liquidity + balancer weight)
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
