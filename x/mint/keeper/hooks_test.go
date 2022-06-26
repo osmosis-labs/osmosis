@@ -221,11 +221,15 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 }
 
 func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
+	// Most values in this test are taken from mainnet genesis to mimic real-world behavior:
+	// https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
 	const (
 		reductionPeriodInEpochs                    = 365
 		mintingRewardsDistributionStartEpoch       = 1
 		thirdeningEpoch                      int64 = 365 + 1
 
+		// different from mainnet since the difference is insignificant for testnig purposes.
+		mintDenom              = "stake"
 		genesisEpochProvisions = "821917808219.178082191780821917"
 		epochIdentifier        = "day"
 
@@ -239,10 +243,8 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	genesisEpochProvisionsDec, err := sdk.NewDecFromStr(genesisEpochProvisions)
 	require.NoError(t, err)
 
-	// params := types.DefaultParams()
-	// From: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
 	mintParams := types.Params{
-		MintDenom:               "stake",
+		MintDenom:               mintDenom,
 		GenesisEpochProvisions:  genesisEpochProvisionsDec,
 		EpochIdentifier:         epochIdentifier,
 		ReductionPeriodInEpochs: reductionPeriodInEpochs,
@@ -319,26 +321,38 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	}
 
 	sumOfWeights := sdk.ZeroDec()
-	// Ensure developer reward receivers add up to 1.
+	// As a sanity check, ensure developer reward receivers add up to 1.
 	for _, w := range mintParams.WeightedDeveloperRewardsReceivers {
 		sumOfWeights = sumOfWeights.Add(w.Weight)
 	}
 	require.Equal(t, sdk.OneDec(), sumOfWeights)
 
+	// Test setup parameters are not identical with mainnet.
+	// Therfore, we set them here to the desired mainnet values.
 	app.MintKeeper.SetParams(ctx, mintParams)
 	app.MintKeeper.SetLastHalvenEpochNum(ctx, 0)
-
 	app.MintKeeper.SetMinter(ctx, types.Minter{
 		EpochProvisions: genesisEpochProvisionsDec,
 	})
 
+	expectedSupplyWithOffset := sdk.NewDec(0)
+
+	supplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom)
+	require.Equal(t, expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
+
+	// Actual test for running AfterEpochEnd hook thirdeningEpoch times.
 	for i := int64(0); i < thirdeningEpoch; i++ {
-		app.MintKeeper.AfterEpochEnd(ctx, "day", i)
+		app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, i)
 		require.Equal(t, genesisEpochProvisions, app.MintKeeper.GetMinter(ctx).EpochProvisions.String())
+
+		if i >= mintingRewardsDistributionStartEpoch {
+			expectedSupplyWithOffset = expectedSupplyWithOffset.Add(genesisEpochProvisionsDec)
+			require.Equal(t, expectedSupplyWithOffset.String(), app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount.String())
+		}
 	}
 
 	// This end of epoch should trigger thirderning.
-	app.MintKeeper.AfterEpochEnd(ctx, "day", thirdeningEpoch)
+	app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, thirdeningEpoch)
 
 	require.Equal(t, thirdeningEpoch, app.MintKeeper.GetLastHalvenEpochNum(ctx))
 
