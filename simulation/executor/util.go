@@ -122,5 +122,4 @@ func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMs
 	}
 
 	return simtypes.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil, nil
-
 }

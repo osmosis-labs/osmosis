@@ -184,21 +184,21 @@ func SimulateFromSeed(
 	return false, exportedParams, nil
 }
 
-type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []simulation.Account, header tmproto.Header) (opCount int)
+type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header) (opCount int)
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, ops WeightedOperations,
 	simState *simState, config simulation.Config) blockSimFn {
-
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
 	selectOp := ops.getSelectOpFn()
 
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account, header tmproto.Header,
+		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,
 	) (opCount int) {
+		// TODO: Fix according to the r plans
+		r := simCtx.GetRand()
 		_, _ = fmt.Fprintf(
 			w, "\rSimulating... block %d/%d, operation %d/%d.",
 			header.Height, config.NumBlocks, opCount, blocksize,
@@ -214,6 +214,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, ops Weig
 
 		// Predetermine the blocksize slice so that we can do things like block
 		// out certain operations without changing the ops that follow.
+		// NOTE: This is poor mans seeding, it will improve in our simctx plans =)
 		for i := 0; i < blocksize; i++ {
 			opAndRz = append(opAndRz, opAndR{
 				op:   selectOp(r),
@@ -225,7 +226,8 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, ops Weig
 			// NOTE: the Rand 'r' should not be used here.
 			opAndR := opAndRz[i]
 			op, r2 := opAndR.op, opAndR.rand
-			opMsg, futureOps, err := op(r2, app, ctx, accounts, config.ChainID)
+			// TODO: This will change under our wrapper struct
+			opMsg, futureOps, err := op(r2, simCtx.App, ctx, simCtx.Accounts, simCtx.ChainID)
 			opMsg.LogEvent(simState.eventStats.Tally)
 
 			if !config.Lean || opMsg.OK {
@@ -255,66 +257,65 @@ Comment: %s`,
 }
 
 // nolint: errcheck
-func runQueuedOperations(queueOps map[int][]simulation.Operation,
-	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp,
-	ctx sdk.Context, accounts []simulation.Account, logWriter LogWriter,
-	event func(route, op, evResult string), lean bool, chainID string) (numOpsRan int) {
-
-	queuedOp, ok := queueOps[height]
+func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (numOpsRan int) {
+	height := int(simState.header.Height)
+	queuedOp, ok := simState.operationQueue[height]
 	if !ok {
 		return 0
 	}
 
 	numOpsRan = len(queuedOp)
 	for i := 0; i < numOpsRan; i++ {
+		// TODO: Fix according to the r plans
+		r := simCtx.GetRand()
 
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queuedOp[i](r, app, ctx, accounts, chainID)
-		opMsg.LogEvent(event)
+		opMsg, _, err := queuedOp[i](r, simCtx.App, ctx, simCtx.Accounts, simCtx.ChainID)
+		opMsg.LogEvent(simState.eventStats.Tally)
 
-		if !lean || opMsg.OK {
-			logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
+		if !simState.leanLogs || opMsg.OK {
+			simState.logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
 		}
 
 		if err != nil {
-			logWriter.PrintLogs()
-			tb.FailNow()
+			simState.logWriter.PrintLogs()
+			simState.tb.FailNow()
 		}
 	}
-	delete(queueOps, height)
+	delete(simState.operationQueue, height)
 
 	return numOpsRan
 }
 
-func runQueuedTimeOperations(queueOps []simulation.FutureOperation,
-	height int, currentTime time.Time, tb testing.TB, r *rand.Rand,
-	app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account,
-	logWriter LogWriter, event func(route, op, evResult string),
-	lean bool, chainID string) (numOpsRan int) {
-
+func (simState *simState) runQueuedTimeOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (
+	numOpsRan int) {
+	queueOps := simState.timeOperationQueue
+	currentTime := simState.header.Time
 	numOpsRan = 0
 	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
+		// TODO: Fix according to the r plans
+		r := simCtx.GetRand()
 
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queueOps[0].Op(r, app, ctx, accounts, chainID)
-		opMsg.LogEvent(event)
+		opMsg, _, err := queueOps[0].Op(r, simCtx.App, ctx, simCtx.Accounts, simCtx.ChainID)
+		opMsg.LogEvent(simState.eventStats.Tally)
 
-		if !lean || opMsg.OK {
-			logWriter.AddEntry(QueuedMsgEntry(int64(height), opMsg))
+		if !simState.leanLogs || opMsg.OK {
+			simState.logWriter.AddEntry(QueuedMsgEntry(simState.header.Height, opMsg))
 		}
 
 		if err != nil {
-			logWriter.PrintLogs()
-			tb.FailNow()
+			simState.logWriter.PrintLogs()
+			simState.tb.FailNow()
 		}
 
 		queueOps = queueOps[1:]
 		numOpsRan++
 	}
-
+	simState.timeOperationQueue = queueOps
 	return numOpsRan
 }
