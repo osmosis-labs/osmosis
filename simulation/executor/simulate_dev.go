@@ -98,7 +98,6 @@ func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator 
 func (simState *simState) beginBlock(simCtx *simtypes.SimCtx) abci.RequestBeginBlock {
 	// Generate a random RequestBeginBlock with the current validator set
 	requestBeginBlock := RandomRequestBeginBlock(simCtx.GetRand(), simState.simParams, simState.curValidators, simState.pastTimes, simState.pastVoteInfos, simState.eventStats.Tally, simState.header)
-
 	// Run the BeginBlock handler
 	simState.logWriter.AddEntry(BeginBlockEntry(simState.header.Height))
 	simCtx.App.BeginBlock(requestBeginBlock)

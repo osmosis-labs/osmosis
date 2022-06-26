@@ -82,7 +82,7 @@ func RandomParams(r *rand.Rand) Params {
 	return Params{
 		pastEvidenceFraction:      r.Float64(),
 		numKeys:                   simulation.RandIntBetween(r, 2, 2500), // number of accounts created for the simulation
-		evidenceFraction:          r.Float64(),
+		evidenceFraction:          r.Float64() / 2,
 		initialLivenessWeightings: []int{simulation.RandIntBetween(r, 1, 80), r.Intn(10), r.Intn(10)},
 		livenessTransitionMatrix:  defaultLivenessTransitionMatrix,
 		blockSizeTransitionMatrix: defaultBlockSizeTransitionMatrix,

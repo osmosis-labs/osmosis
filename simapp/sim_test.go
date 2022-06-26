@@ -7,10 +7,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/osmosis-labs/osmosis/v7/app"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
@@ -18,6 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	osmosim "github.com/osmosis-labs/osmosis/v7/simulation/executor"
 )
 
 // Profile with:
@@ -38,7 +41,7 @@ func TestFullAppSimulation(t *testing.T) {
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
 	sdkSimapp.FlagEnabledValue = true
-	sdkSimapp.FlagNumBlocksValue = 20
+	sdkSimapp.FlagNumBlocksValue = 100
 	sdkSimapp.FlagBlockSizeValue = 25
 	sdkSimapp.FlagCommitValue = true
 	sdkSimapp.FlagVerboseValue = true
@@ -88,7 +91,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		fauxMerkleModeOpt)
 
 	// Run randomized simulation:
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, simParams, simErr := osmosim.SimulateFromSeed(
 		tb,
 		os.Stdout,
 		osmosis.BaseApp,

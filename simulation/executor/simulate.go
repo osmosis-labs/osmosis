@@ -84,6 +84,9 @@ func SimulateFromSeed(
 	validators, genesisTimestamp, accs, chainID := initChain(r, simParams, accs, app, appStateFn, config, cdc)
 
 	config.ChainID = chainID
+	if config.InitialBlockHeight == 0 {
+		config.InitialBlockHeight = 1
+	}
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",
@@ -101,7 +104,7 @@ func SimulateFromSeed(
 
 	accs = tmpAccs
 	initialHeader := tmproto.Header{
-		ChainID:         config.ChainID,
+		ChainID:         chainID,
 		Height:          int64(config.InitialBlockHeight),
 		Time:            genesisTimestamp,
 		ProposerAddress: validators.randomProposer(r),
@@ -230,7 +233,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, ops Weig
 			opMsg, futureOps, err := op(r2, simCtx.App, ctx, simCtx.Accounts, simCtx.ChainID)
 			opMsg.LogEvent(simState.eventStats.Tally)
 
-			if !config.Lean || opMsg.OK {
+			if !simState.leanLogs || opMsg.OK {
 				simState.logWriter.AddEntry(MsgEntry(header.Height, int64(i), opMsg))
 			}
 

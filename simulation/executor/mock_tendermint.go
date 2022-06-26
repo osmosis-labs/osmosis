@@ -100,27 +100,28 @@ func updateValidators(
 	params simulation.Params,
 	current map[string]mockValidator,
 	updates []abci.ValidatorUpdate,
+	// logWriter LogWriter,
 	event func(route, op, evResult string),
 ) map[string]mockValidator {
+	nextSet := mockValidators(current).Clone()
 	for _, update := range updates {
 		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
 
 		if update.Power == 0 {
-			if _, ok := current[str]; !ok {
+			if _, ok := nextSet[str]; !ok {
 				tb.Fatalf("tried to delete a nonexistent validator: %s", str)
 			}
 
+			// logWriter.AddEntry(NewOperationEntry())("kicked", str)
 			event("end_block", "validator_updates", "kicked")
-			delete(current, str)
-		} else if _, ok := current[str]; ok {
-			// validator already exists
+			delete(nextSet, str)
+		} else if _, ok := nextSet[str]; ok {
+			// validator already exists, update weight
+			nextSet[str] = mockValidator{update, nextSet[str].livenessState}
 			event("end_block", "validator_updates", "updated")
-			// TODO: This appears to not update its weight?
-			// Is proposer weight / signing amount ignored?
-
 		} else {
 			// Set this new validator
-			current[str] = mockValidator{
+			nextSet[str] = mockValidator{
 				update,
 				markov.GetMemberOfInitialState(r, params.InitialLivenessWeightings()),
 			}
@@ -128,7 +129,7 @@ func updateValidators(
 		}
 	}
 
-	return current
+	return nextSet
 }
 
 // RandomRequestBeginBlock generates a list of signing validators according to
@@ -192,7 +193,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 
 	// TODO: Determine capacity before allocation
 	evidence := make([]abci.Evidence, 0)
-
+	// TODO: Change this to be markov based & clean this up
 	for r.Float64() < params.EvidenceFraction() {
 		height := header.Height
 		time := header.Time
