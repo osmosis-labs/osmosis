@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
@@ -43,6 +44,19 @@ func newMockValidators(r *rand.Rand, abciVals []abci.ValidatorUpdate, params Par
 		}
 	}
 
+	return validators
+}
+
+func (mv mockValidators) Clone() mockValidators {
+	validators := make(mockValidators, len(mv))
+	keys := []string{}
+	for key, _ := range mv {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		validators[k] = mv[k]
+	}
 	return validators
 }
 
@@ -83,7 +97,7 @@ func (vals mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
 func updateValidators(
 	tb testing.TB,
 	r *rand.Rand,
-	params Params,
+	params simulation.Params,
 	current map[string]mockValidator,
 	updates []abci.ValidatorUpdate,
 	event func(route, op, evResult string),
@@ -102,6 +116,8 @@ func updateValidators(
 		} else if _, ok := current[str]; ok {
 			// validator already exists
 			event("end_block", "validator_updates", "updated")
+			// TODO: This appears to not update its weight?
+			// Is proposer weight / signing amount ignored?
 
 		} else {
 			// Set this new validator

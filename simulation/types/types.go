@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 //nolint:structcheck
@@ -12,12 +13,12 @@ type SimCtx struct {
 	//nolint:unused
 	rCounter uint64
 	App      *baseapp.BaseApp
-	Accounts []Account
+	Accounts []simulation.Account
 	ChainID  string
 }
 
-func NewSimCtx(r *rand.Rand, app *baseapp.BaseApp, accounts []Account, chainID string) SimCtx {
-	return SimCtx{
+func NewSimCtx(r *rand.Rand, app *baseapp.BaseApp, accounts []simulation.Account, chainID string) *SimCtx {
+	return &SimCtx{
 		r:        r,
 		rCounter: 0,
 		App:      app,

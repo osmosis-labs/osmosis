@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"testing"
 	"time"
 )
 
@@ -14,8 +15,11 @@ type LogWriter interface {
 }
 
 // LogWriter - return a dummy or standard log writer given the testingmode
-func NewLogWriter(testingmode bool) LogWriter {
-	if !testingmode {
+func NewLogWriter(tb testing.TB) LogWriter {
+	// TODO: Figure out whats going on / why here
+	testingMode, _, _ := getTestingMode(tb)
+
+	if !testingMode {
 		return &DummyLogWriter{}
 	}
 
