@@ -53,7 +53,7 @@ func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []Pool
 		FuturePoolGovernor: futureGovernor,
 	}
 
-	err := pool.setInitialPoolAssets(assets)
+	err := pool.SetInitialPoolAssets(assets)
 	if err != nil {
 		return Pool{}, err
 	}
@@ -118,12 +118,12 @@ func (pa *Pool) SubTotalShares(amt sdk.Int) {
 	pa.TotalShares.Amount = pa.TotalShares.Amount.Sub(amt)
 }
 
-// setInitialPoolAssets sets the PoolAssets in the pool.
+// SetInitialPoolAssets sets the PoolAssets in the pool.
 // It is only designed to be called at the pool's creation.
 // If the same denom's PoolAsset exists, will return error.
 // The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
 // TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic()
-func (pa *Pool) setInitialPoolAssets(PoolAssets []PoolAsset) error {
+func (pa *Pool) SetInitialPoolAssets(PoolAssets []PoolAsset) error {
 	exists := make(map[string]bool)
 	for _, asset := range pa.PoolAssets {
 		exists[asset.Token.Denom] = true

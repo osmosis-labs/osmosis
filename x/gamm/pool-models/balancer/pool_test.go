@@ -823,14 +823,14 @@ func TestBalancerPoolUpdatePoolAssetBalance(t *testing.T) {
 	// TODO: This test actually just needs to be refactored to not be doing this, and just
 	// create a different pool each time.
 
-	err = pacc.setInitialPoolAssets([]balancer.PoolAsset{{
+	err = pacc.SetInitialPoolAssets([]balancer.PoolAsset{{
 		Weight: sdk.NewInt(-1),
 		Token:  sdk.NewCoin("negativeWeight", sdk.NewInt(50000)),
 	}})
 
 	require.Error(t, err)
 
-	err = pacc.setInitialPoolAssets([]balancer.PoolAsset{{
+	err = pacc.SetInitialPoolAssets([]balancer.PoolAsset{{
 		Weight: sdk.NewInt(0),
 		Token:  sdk.NewCoin("zeroWeight", sdk.NewInt(50000)),
 	}})
