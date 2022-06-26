@@ -224,7 +224,12 @@ func (pa Pool) Copy() Pool {
 	return pa2
 }
 
-func (pa *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+func (pa *Pool) CalcSingleTokenInJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+	paCopy := pa.Copy()
+	return paCopy.joinPoolSharesInternal(ctx, tokensIn, swapFee)
+}
+
+func (pa *Pool) CalcMultiTokenInJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
 	paCopy := pa.Copy()
 	return paCopy.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 }
