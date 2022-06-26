@@ -12,12 +12,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.Ba
 	k.SetMinter(ctx, data.Minter)
 	k.SetParams(ctx, data.Params)
 
-	if !ak.HasAccount(ctx, ak.GetModuleAddress(types.ModuleName)) {
-		ak.GetModuleAccount(ctx, types.ModuleName)
-		totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, sdk.NewInt(225_000_000_000_000))
-		k.CreateDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins)
-		bk.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(225_000_000_000_000).Neg())
-	}
+	ak.GetModuleAccount(ctx, types.ModuleName)
+	totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, sdk.NewInt(225_000_000_000_000))
+	k.CreateDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins)
+	bk.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(225_000_000_000_000).Neg())
 
 	k.SetLastHalvenEpochNum(ctx, data.HalvenStartedEpoch)
 }
@@ -26,6 +24,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.Ba
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	minter := k.GetMinter(ctx)
 	params := k.GetParams(ctx)
+
+	if params.WeightedDeveloperRewardsReceivers == nil {
+		params.WeightedDeveloperRewardsReceivers = make([]types.WeightedAddress, 0)
+	}
+
 	lastHalvenEpoch := k.GetLastHalvenEpochNum(ctx)
 	return types.NewGenesisState(minter, params, lastHalvenEpoch)
 }
