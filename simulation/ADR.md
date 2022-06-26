@@ -69,7 +69,10 @@ Weight management should be done globally at the simulator, with a config.
 We should make all logs go into a standard database, have an easy way of seeing the history
 and seeing how many message attempts failed
 
-## Done today
+## What exists in the SDK to date
+
+The SDK to date only has tooling for constructing complex state machines, and memoryless checks (dubbed invariants)
+Moreover, this is done with fairly painful dev UX's.
 
 ## Architecture
 

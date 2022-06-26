@@ -33,7 +33,6 @@ func initChain(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (mockValidators, time.Time, []simulation.Account, string) {
-
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 	consensusParams := randomConsensusParams(r, appState, cdc)
 	req := abci.RequestInitChain{
@@ -77,10 +76,6 @@ func SimulateFromSeed(
 		return true, simParams, fmt.Errorf("must have greater than zero genesis accounts")
 	}
 
-	// Second variable to keep pending validator set
-	// Recall that validator set updates are delayed one block by Tendermint,
-	// e.g. that block validator update in end block of N, only goes into affect begin block of N + 2.
-	// Initially this is the same as the initial validator set
 	validators, genesisTimestamp, accs, chainID := initChain(r, simParams, accs, app, appStateFn, config, cdc)
 
 	config.ChainID = chainID
@@ -145,37 +140,24 @@ func SimulateFromSeed(
 		exportedParams = simParams
 	}
 
-	// TODO: split up the contents of this for loop into new functions
 	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
-		simState.SimulateBlock(simCtx, blockSimulator)
+		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)
+		if stopEarly {
+			break
+		}
 
 		if config.Commit {
 			simCtx.App.Commit()
 		}
-
-		// update the exported params
-		// TODO: wtf is this for, the params don't update?
-		if config.ExportParamsPath != "" && config.ExportParamsHeight == height {
-			exportedParams = simParams
-		}
 	}
 
-	if stopEarly {
-		if config.ExportStatsPath != "" {
-			fmt.Println("Exporting simulation statistics...")
-			simState.eventStats.ExportJSON(config.ExportStatsPath)
-		} else {
-			simState.eventStats.Print(w)
-		}
-
-		return true, exportedParams, err
+	if !stopEarly {
+		fmt.Fprintf(
+			w,
+			"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
+			simState.header.Height, simState.header.Time, simState.opCount,
+		)
 	}
-
-	fmt.Fprintf(
-		w,
-		"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
-		simState.header.Height, simState.header.Time, simState.opCount,
-	)
 
 	if config.ExportStatsPath != "" {
 		fmt.Println("Exporting simulation statistics...")
@@ -184,7 +166,7 @@ func SimulateFromSeed(
 		simState.eventStats.Print(w)
 	}
 
-	return false, exportedParams, nil
+	return stopEarly, exportedParams, nil
 }
 
 type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header) (opCount int)
