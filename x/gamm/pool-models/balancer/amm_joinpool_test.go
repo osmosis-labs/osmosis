@@ -421,9 +421,45 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 	},
 }
 
-func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
-	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
-	// test cases.
+func (suite *KeeperTestSuite) TestCalcSingleTokenInJoinPoolShares() {
+	// We use calcSingleAssetJoinTestCases for CalcSingleTokenInJoinPoolShares test cases
+	//
+	// See calcJoinSharesTestCase struct definition for explanation why the
+	// sharing is needed.
+
+	for _, tc := range calcSingleAssetJoinTestCases {
+		tc := tc
+
+		suite.T().Run(tc.name, func(t *testing.T) {
+			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+
+			// system under test
+			sut := func() {
+				shares, liquidity, err := pool.CalcSingleTokenInJoinPoolShares(suite.Ctx, tc.tokensIn, tc.swapFee)
+				if tc.expErr != nil {
+					require.Error(t, err)
+					require.ErrorAs(t, tc.expErr, &err)
+					require.Equal(t, sdk.ZeroInt(), shares)
+					require.Equal(t, sdk.NewCoins(), liquidity)
+				} else {
+					require.NoError(t, err)
+					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+					assertExpectedLiquidity(t, tc.tokensIn, liquidity)
+				}
+			}
+
+			balancerPool, ok := pool.(*balancer.Pool)
+			require.True(t, ok)
+
+			assertPoolStateNotModified(t, balancerPool, func() {
+				assertPanic(t, tc.expectPanic, sut)
+			})
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCalcMultiTokenInJoinPoolShares() {
+	// Define new test cases for multi asset calc
 	//
 	// See calcJoinSharesTestCase struct definition for explanation why the
 	// sharing is needed.
@@ -585,7 +621,6 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			expectShares: sdk.NewInt(100_000_000),
 		},
 	}
-	testCases = append(testCases, calcSingleAssetJoinTestCases...)
 
 	for _, tc := range testCases {
 		tc := tc
@@ -595,7 +630,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 
 			// system under test
 			sut := func() {
-				shares, liquidity, err := pool.CalcJoinPoolShares(suite.Ctx, tc.tokensIn, tc.swapFee)
+				shares, liquidity, err := pool.CalcMultiTokenInJoinPoolShares(suite.Ctx, tc.tokensIn, tc.swapFee)
 				if tc.expErr != nil {
 					require.Error(t, err)
 					require.ErrorAs(t, tc.expErr, &err)
