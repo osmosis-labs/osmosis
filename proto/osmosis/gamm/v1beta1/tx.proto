@@ -42,11 +42,11 @@ message MsgJoinPool {
 message MsgJoinPoolResponse {
   string share_out_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"pool_amount_out\"",
+    (gogoproto.moretags) = "yaml:\"share_out_amount\"",
     (gogoproto.nullable) = false
   ];
   repeated cosmos.base.v1beta1.Coin token_in = 2 [
-    (gogoproto.moretags) = "yaml:\"token_in_max_amounts\"",
+    (gogoproto.moretags) = "yaml:\"token_in\"",
     (gogoproto.nullable) = false
   ];
 }
