@@ -37,7 +37,7 @@ message PeriodLock {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"end_time\""
   ];
-  // Coins are the coins locked within the lock, kept in the module account.
+  // Coins are the tokens locked within the lock, kept in the module account.
   repeated cosmos.base.v1beta1.Coin coins = 5 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
@@ -61,7 +61,7 @@ message QueryCondition {
   LockQueryType lock_query_type = 1;
   // Denom represents the token denomination we are looking to lock up
   string denom = 2;
-  // Duration is used to query lcoks with longer duration than the specified
+  // Duration is used to query locks with longer duration than the specified
   // duration. Duration field must not be nil when the lock query type is
   // `ByLockDuration`.
   google.protobuf.Duration duration = 3 [
@@ -69,7 +69,7 @@ message QueryCondition {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"duration\""
   ];
-  // Timestamp is used to locks started before the specified duration.
+  // Timestamp is used by locks started before the specified duration.
   // Timestamp field must not be nil when the lock query type is `ByLockTime`.
   // Querying locks with timestamp is currently not implemented.
   google.protobuf.Timestamp timestamp = 4 [
@@ -79,8 +79,10 @@ message QueryCondition {
   ];
 }
 
-// SyntheticLock is a single unit of synthetic lockup that is created upon every
-// superfluid delegation.
+// SyntheticLock is creating virtual lockup where new denom is combination of
+// original denom and synthetic suffix. At the time of synthetic lockup creation
+// and deletion, accumulation store is also being updated and on querier side,
+// they can query as freely as native lockup.
 message SyntheticLock {
   // Underlying Lock ID is the underlying native lock's id for this synthetic
   // lockup. A synthetic lock MUST have an underlying lock.

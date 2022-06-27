@@ -76,7 +76,7 @@ type PeriodLock struct {
 	// This value is first initialized when an unlock has started for the lock,
 	// end time being block time + duration.
 	EndTime time.Time `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
-	// Coins are the coins locked within the lock, kept in the module account.
+	// Coins are the tokens locked within the lock, kept in the module account.
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
 
@@ -156,11 +156,11 @@ type QueryCondition struct {
 	LockQueryType LockQueryType `protobuf:"varint,1,opt,name=lock_query_type,json=lockQueryType,proto3,enum=osmosis.lockup.LockQueryType" json:"lock_query_type,omitempty"`
 	// Denom represents the token denomination we are looking to lock up
 	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
-	// Duration is used to query lcoks with longer duration than the specified
+	// Duration is used to query locks with longer duration than the specified
 	// duration. Duration field must not be nil when the lock query type is
 	// `ByLockDuration`.
 	Duration time.Duration `protobuf:"bytes,3,opt,name=duration,proto3,stdduration" json:"duration" yaml:"duration"`
-	// Timestamp is used to locks started before the specified duration.
+	// Timestamp is used by locks started before the specified duration.
 	// Timestamp field must not be nil when the lock query type is `ByLockTime`.
 	// Querying locks with timestamp is currently not implemented.
 	Timestamp time.Time `protobuf:"bytes,4,opt,name=timestamp,proto3,stdtime" json:"timestamp" yaml:"timestamp"`
@@ -227,8 +227,10 @@ func (m *QueryCondition) GetTimestamp() time.Time {
 	return time.Time{}
 }
 
-// SyntheticLock is a single unit of synthetic lockup that is created upon every
-// superfluid delegation.
+// SyntheticLock is creating virtual lockup where new denom is combination of
+// original denom and synthetic suffix. At the time of synthetic lockup creation
+// and deletion, accumulation store is also being updated and on querier side,
+// they can query as freely as native lockup.
 type SyntheticLock struct {
 	// Underlying Lock ID is the underlying native lock's id for this synthetic
 	// lockup. A synthetic lock MUST have an underlying lock.

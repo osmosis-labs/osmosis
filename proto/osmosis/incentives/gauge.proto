@@ -17,22 +17,22 @@ message Gauge {
   // every gauge.
   uint64 id = 1;
   // IsPerpetual defines whether the gauge is perpetual or not.
-  // A non perpetual gauge distributes the incentive tokens equally per epoch
-  // during the gauge is in an active period.
+  // A non-perpetual gauge distributes the incentive tokens equally per epoch
+  // while the gauge is in an active period.
   // A perpetual gauge distributes all tokens at a single distribution, mainly
   // used to distribute minted osmo to lp token stakers.
   bool is_perpetual = 2;
-  // Distribute To is the lock query condition that the gauge reward are to be
+  // DistributeTo is the lock query condition that the gauge reward are to be
   // distributed to.
   osmosis.lockup.QueryCondition distribute_to = 3
       [ (gogoproto.nullable) = false ];
-  // Coins is the total amount of Coins that has been in the gauge.
+  // Coins is the total amount of tokens in the gauge.
   // Multiple coins can be distributed.
   repeated cosmos.base.v1beta1.Coin coins = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-  // Start Time is the distribution start time for the gauge.
+  // StartTime is the distribution start time for the gauge.
   google.protobuf.Timestamp start_time = 5 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
@@ -41,7 +41,7 @@ message Gauge {
   // NumEpochsPaidOver is the number of epochs it takes for the distribution to
   // be done.
   uint64 num_epochs_paid_over = 6;
-  // Filled Epoch is the number of epochs distributed already.
+  // FilledEpoch is the number of epochs distributed already.
   uint64 filled_epochs = 7;
   // DistributedCoins are the coins already distributed from the gauge.
   repeated cosmos.base.v1beta1.Coin distributed_coins = 8 [

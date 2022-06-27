@@ -38,23 +38,23 @@ type Gauge struct {
 	// every gauge.
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	// IsPerpetual defines whether the gauge is perpetual or not.
-	// A non perpetual gauge distributes the incentive tokens equally per epoch
-	// during the gauge is in an active period.
+	// A non-perpetual gauge distributes the incentive tokens equally per epoch
+	// while the gauge is in an active period.
 	// A perpetual gauge distributes all tokens at a single distribution, mainly
 	// used to distribute minted osmo to lp token stakers.
 	IsPerpetual bool `protobuf:"varint,2,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
-	// Distribute To is the lock query condition that the gauge reward are to be
+	// DistributeTo is the lock query condition that the gauge reward are to be
 	// distributed to.
 	DistributeTo types.QueryCondition `protobuf:"bytes,3,opt,name=distribute_to,json=distributeTo,proto3" json:"distribute_to"`
-	// Coins is the total amount of Coins that has been in the gauge.
+	// Coins is the total amount of tokens in the gauge.
 	// Multiple coins can be distributed.
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
-	// Start Time is the distribution start time for the gauge.
+	// StartTime is the distribution start time for the gauge.
 	StartTime time.Time `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
 	// NumEpochsPaidOver is the number of epochs it takes for the distribution to
 	// be done.
 	NumEpochsPaidOver uint64 `protobuf:"varint,6,opt,name=num_epochs_paid_over,json=numEpochsPaidOver,proto3" json:"num_epochs_paid_over,omitempty"`
-	// Filled Epoch is the number of epochs distributed already.
+	// FilledEpoch is the number of epochs distributed already.
 	FilledEpochs uint64 `protobuf:"varint,7,opt,name=filled_epochs,json=filledEpochs,proto3" json:"filled_epochs,omitempty"`
 	// DistributedCoins are the coins already distributed from the gauge.
 	DistributedCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,8,rep,name=distributed_coins,json=distributedCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"distributed_coins"`
