@@ -226,7 +226,7 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	const (
 		reductionPeriodInEpochs                    = 365
 		mintingRewardsDistributionStartEpoch       = 1
-		thirdeningEpoch                      int64 = 365 + 1
+		thirdeningEpoch                      int64 = reductionPeriodInEpochs + mintingRewardsDistributionStartEpoch
 
 		// different from mainnet since the difference is insignificant for testnig purposes.
 		mintDenom              = "stake"
@@ -235,6 +235,8 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 
 		// Actual value taken from mainnet for sanity checking calculations.
 		mainnetThirdenedProvisions = "547945205479.452055068493150684"
+
+		developerAccountBalance = 225_000_000_000_000
 	)
 
 	app := osmoapp.Setup(false)
@@ -336,22 +338,36 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	})
 
 	expectedSupplyWithOffset := sdk.NewDec(0)
+	expectedSupply := sdk.NewDec(developerAccountBalance)
 
 	supplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom)
 	require.Equal(t, expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
 
+	supply := app.BankKeeper.GetSupply(ctx, mintDenom)
+	require.Equal(t, expectedSupply.TruncateInt64(), supply.Amount.Int64())
+
 	// Actual test for running AfterEpochEnd hook thirdeningEpoch times.
-	for i := int64(0); i < thirdeningEpoch; i++ {
+	for i := int64(1); i < thirdeningEpoch; i++ {
 		app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, i)
 		require.Equal(t, genesisEpochProvisions, app.MintKeeper.GetMinter(ctx).EpochProvisions.String())
 
 		if i >= mintingRewardsDistributionStartEpoch {
-			expectedSupplyWithOffset = expectedSupplyWithOffset.Add(genesisEpochProvisionsDec)
-			require.Equal(t, expectedSupplyWithOffset.String(), app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount.String())
+			// System truncates them in EpochProvisions because bank takes an Int.
+			epochProvisions := genesisEpochProvisionsDec.TruncateInt().ToDec()
+
+			// We do not want supply to include unvested developer rewards
+			// Truncation also happens when subtracting dev rewards.
+			devRewards := epochProvisions.Mul(mintParams.DistributionProportions.DeveloperRewards).TruncateInt().ToDec()
+
+			// TODO: the commented out logic below does not make sense at the moment.
+			// expectedSupplyWithOffset = expectedSupplyWithOffset.Add(epochProvisions)
+			// require.Equal(t, expectedSupplyWithOffset.String(), app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount.String())
+			expectedSupply = expectedSupply.Add(epochProvisions).Sub(devRewards)
+			require.Equal(t, expectedSupply.RoundInt().String(), app.BankKeeper.GetSupply(ctx, mintDenom).Amount.String())
 		}
 	}
 
-	// This end of epoch should trigger thirderning.
+	// This end of epoch should trigger thirdening.
 	app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, thirdeningEpoch)
 
 	require.Equal(t, thirdeningEpoch, app.MintKeeper.GetLastHalvenEpochNum(ctx))
