@@ -7,7 +7,7 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/incentives/types";
 
 // Params holds parameters for the incentives module
 message Params {
-  // distribution epoch identifier
+  // What epoch type will distribution be triggered by (day, week, etc.)
   string distr_epoch_identifier = 1
       [ (gogoproto.moretags) = "yaml:\"distr_epoch_identifier\"" ];
 }

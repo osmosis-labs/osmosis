@@ -74,6 +74,7 @@ func (m *ModuleToDistributeCoinsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_ModuleToDistributeCoinsRequest proto.InternalMessageInfo
 
 type ModuleToDistributeCoinsResponse struct {
+	// Coins that have yet to be distributed
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
 
@@ -154,6 +155,7 @@ func (m *ModuleDistributedCoinsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_ModuleDistributedCoinsRequest proto.InternalMessageInfo
 
 type ModuleDistributedCoinsResponse struct {
+	// Coins that have been distributed already
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
 
@@ -198,6 +200,7 @@ func (m *ModuleDistributedCoinsResponse) GetCoins() github_com_cosmos_cosmos_sdk
 }
 
 type GaugeByIDRequest struct {
+	// Gague ID being queried
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
@@ -242,6 +245,7 @@ func (m *GaugeByIDRequest) GetId() uint64 {
 }
 
 type GaugeByIDResponse struct {
+	// Gauge that corresponds to provided gague ID
 	Gauge *Gauge `protobuf:"bytes,1,opt,name=gauge,proto3" json:"gauge,omitempty"`
 }
 
@@ -286,7 +290,7 @@ func (m *GaugeByIDResponse) GetGauge() *Gauge {
 }
 
 type GaugesRequest struct {
-	// pagination defines an pagination for the request.
+	// Pagination defines a pagination for the request
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -331,8 +335,9 @@ func (m *GaugesRequest) GetPagination() *query.PageRequest {
 }
 
 type GaugesResponse struct {
+	// Upcoming and active gauges
 	Data []Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
-	// pagination defines an pagination for the response.
+	// Pagination defines a pagination for the request
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -384,7 +389,7 @@ func (m *GaugesResponse) GetPagination() *query.PageResponse {
 }
 
 type ActiveGaugesRequest struct {
-	// pagination defines an pagination for the request.
+	// Pagination defines a pagination for the request
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -429,8 +434,9 @@ func (m *ActiveGaugesRequest) GetPagination() *query.PageRequest {
 }
 
 type ActiveGaugesResponse struct {
+	// Active gagues only
 	Data []Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
-	// pagination defines an pagination for the response.
+	// Pagination defines a pagination for the request
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -482,8 +488,9 @@ func (m *ActiveGaugesResponse) GetPagination() *query.PageResponse {
 }
 
 type ActiveGaugesPerDenomRequest struct {
+	// Desired denom when querying active gagues
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
-	// pagination defines an pagination for the request.
+	// Pagination defines a pagination for the request
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -535,8 +542,9 @@ func (m *ActiveGaugesPerDenomRequest) GetPagination() *query.PageRequest {
 }
 
 type ActiveGaugesPerDenomResponse struct {
+	// Active gagues that match denom in query
 	Data []Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
-	// pagination defines an pagination for the response.
+	// Pagination defines a pagination for the request
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -588,7 +596,7 @@ func (m *ActiveGaugesPerDenomResponse) GetPagination() *query.PageResponse {
 }
 
 type UpcomingGaugesRequest struct {
-	// pagination defines an pagination for the request.
+	// Pagination defines a pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -633,8 +641,9 @@ func (m *UpcomingGaugesRequest) GetPagination() *query.PageRequest {
 }
 
 type UpcomingGaugesResponse struct {
+	// Gauges whose distribution is upcoming
 	Data []Gauge `protobuf:"bytes,1,rep,name=data,proto3" json:"data"`
-	// pagination defines an pagination for the response.
+	// Pagination defines a pagination for the request
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -686,7 +695,9 @@ func (m *UpcomingGaugesResponse) GetPagination() *query.PageResponse {
 }
 
 type UpcomingGaugesPerDenomRequest struct {
-	Denom      string             `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// Filter for upcoming gagues that match specific denom
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// Pagination defines a pagination for the request
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -738,8 +749,10 @@ func (m *UpcomingGaugesPerDenomRequest) GetPagination() *query.PageRequest {
 }
 
 type UpcomingGaugesPerDenomResponse struct {
-	UpcomingGauges []Gauge             `protobuf:"bytes,1,rep,name=upcoming_gauges,json=upcomingGauges,proto3" json:"upcoming_gauges"`
-	Pagination     *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// Upcoming gagues that match denom in query
+	UpcomingGauges []Gauge `protobuf:"bytes,1,rep,name=upcoming_gauges,json=upcomingGauges,proto3" json:"upcoming_gauges"`
+	// Pagination defines a pagination for the request
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 func (m *UpcomingGaugesPerDenomResponse) Reset()         { *m = UpcomingGaugesPerDenomResponse{} }
@@ -790,9 +803,13 @@ func (m *UpcomingGaugesPerDenomResponse) GetPagination() *query.PageResponse {
 }
 
 type RewardsEstRequest struct {
-	Owner    string   `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
-	LockIds  []uint64 `protobuf:"varint,2,rep,packed,name=lock_ids,json=lockIds,proto3" json:"lock_ids,omitempty"`
-	EndEpoch int64    `protobuf:"varint,3,opt,name=end_epoch,json=endEpoch,proto3" json:"end_epoch,omitempty"`
+	// Address that is being queried for future estimated rewards
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
+	// Lock IDs included in future reward estimation
+	LockIds []uint64 `protobuf:"varint,2,rep,packed,name=lock_ids,json=lockIds,proto3" json:"lock_ids,omitempty"`
+	// Upper time limit of reward estimation
+	// Lower limit is current epoch
+	EndEpoch int64 `protobuf:"varint,3,opt,name=end_epoch,json=endEpoch,proto3" json:"end_epoch,omitempty"`
 }
 
 func (m *RewardsEstRequest) Reset()         { *m = RewardsEstRequest{} }
@@ -850,6 +867,8 @@ func (m *RewardsEstRequest) GetEndEpoch() int64 {
 }
 
 type RewardsEstResponse struct {
+	// Estimated coin rewards that will be recieved at provided address
+	// from specified locks between current time and end epoch
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
 
@@ -930,6 +949,7 @@ func (m *QueryLockableDurationsRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryLockableDurationsRequest proto.InternalMessageInfo
 
 type QueryLockableDurationsResponse struct {
+	// Time durations that users can lock coins for in order to recieve rewards
 	LockableDurations []time.Duration `protobuf:"bytes,1,rep,name=lockable_durations,json=lockableDurations,proto3,stdduration" json:"lockable_durations" yaml:"lockable_durations"`
 }
 
@@ -1083,27 +1103,27 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// returns coins that is going to be distributed
+	// Returns coins that are going to be distributed
 	ModuleToDistributeCoins(ctx context.Context, in *ModuleToDistributeCoinsRequest, opts ...grpc.CallOption) (*ModuleToDistributeCoinsResponse, error)
-	// returns coins that are distributed by module so far
+	// Returns coins that are distributed by the module so far
 	ModuleDistributedCoins(ctx context.Context, in *ModuleDistributedCoinsRequest, opts ...grpc.CallOption) (*ModuleDistributedCoinsResponse, error)
-	// returns Gauge by id
+	// Returns gauges by their respective ID
 	GaugeByID(ctx context.Context, in *GaugeByIDRequest, opts ...grpc.CallOption) (*GaugeByIDResponse, error)
-	// returns gauges both upcoming and active
+	// Returns both upcoming and active gauges
 	Gauges(ctx context.Context, in *GaugesRequest, opts ...grpc.CallOption) (*GaugesResponse, error)
-	// returns active gauges
+	// Returns active gauges
 	ActiveGauges(ctx context.Context, in *ActiveGaugesRequest, opts ...grpc.CallOption) (*ActiveGaugesResponse, error)
-	// returns active gauges per denom
+	// Returns active gauges by denom
 	ActiveGaugesPerDenom(ctx context.Context, in *ActiveGaugesPerDenomRequest, opts ...grpc.CallOption) (*ActiveGaugesPerDenomResponse, error)
-	// returns scheduled gauges
+	// Returns scheduled gauges that have not yet occured
 	UpcomingGauges(ctx context.Context, in *UpcomingGaugesRequest, opts ...grpc.CallOption) (*UpcomingGaugesResponse, error)
-	// returns scheduled gauges per denom
+	// Returns scheduled gauges that have not yet occured by denom
 	UpcomingGaugesPerDenom(ctx context.Context, in *UpcomingGaugesPerDenomRequest, opts ...grpc.CallOption) (*UpcomingGaugesPerDenomResponse, error)
-	// RewardsEst returns an estimate of the rewards at a future specific time.
-	// The querier either provides an address or a set of locks
-	// for which they want to find the associated rewards.
+	// RewardsEst returns an estimate of the rewards from now until a specified
+	// time in the future The querier either provides an address or a set of locks
+	// for which they want to find the associated rewards
 	RewardsEst(ctx context.Context, in *RewardsEstRequest, opts ...grpc.CallOption) (*RewardsEstResponse, error)
-	// returns lockable durations that are valid to give incentives
+	// Returns lockable durations that are valid to distribute incentives for
 	LockableDurations(ctx context.Context, in *QueryLockableDurationsRequest, opts ...grpc.CallOption) (*QueryLockableDurationsResponse, error)
 }
 
@@ -1207,27 +1227,27 @@ func (c *queryClient) LockableDurations(ctx context.Context, in *QueryLockableDu
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// returns coins that is going to be distributed
+	// Returns coins that are going to be distributed
 	ModuleToDistributeCoins(context.Context, *ModuleToDistributeCoinsRequest) (*ModuleToDistributeCoinsResponse, error)
-	// returns coins that are distributed by module so far
+	// Returns coins that are distributed by the module so far
 	ModuleDistributedCoins(context.Context, *ModuleDistributedCoinsRequest) (*ModuleDistributedCoinsResponse, error)
-	// returns Gauge by id
+	// Returns gauges by their respective ID
 	GaugeByID(context.Context, *GaugeByIDRequest) (*GaugeByIDResponse, error)
-	// returns gauges both upcoming and active
+	// Returns both upcoming and active gauges
 	Gauges(context.Context, *GaugesRequest) (*GaugesResponse, error)
-	// returns active gauges
+	// Returns active gauges
 	ActiveGauges(context.Context, *ActiveGaugesRequest) (*ActiveGaugesResponse, error)
-	// returns active gauges per denom
+	// Returns active gauges by denom
 	ActiveGaugesPerDenom(context.Context, *ActiveGaugesPerDenomRequest) (*ActiveGaugesPerDenomResponse, error)
-	// returns scheduled gauges
+	// Returns scheduled gauges that have not yet occured
 	UpcomingGauges(context.Context, *UpcomingGaugesRequest) (*UpcomingGaugesResponse, error)
-	// returns scheduled gauges per denom
+	// Returns scheduled gauges that have not yet occured by denom
 	UpcomingGaugesPerDenom(context.Context, *UpcomingGaugesPerDenomRequest) (*UpcomingGaugesPerDenomResponse, error)
-	// RewardsEst returns an estimate of the rewards at a future specific time.
-	// The querier either provides an address or a set of locks
-	// for which they want to find the associated rewards.
+	// RewardsEst returns an estimate of the rewards from now until a specified
+	// time in the future The querier either provides an address or a set of locks
+	// for which they want to find the associated rewards
 	RewardsEst(context.Context, *RewardsEstRequest) (*RewardsEstResponse, error)
-	// returns lockable durations that are valid to give incentives
+	// Returns lockable durations that are valid to distribute incentives for
 	LockableDurations(context.Context, *QueryLockableDurationsRequest) (*QueryLockableDurationsResponse, error)
 }
 
