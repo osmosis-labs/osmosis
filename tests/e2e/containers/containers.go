@@ -27,9 +27,9 @@ type Manager struct {
 
 // NewManager creates a new Manager instance and initializes
 // all Docker specific utilies. Returns an error if initialiation fails.
-func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
+func NewManager(isUpgrade bool, isFork bool) (docker *Manager, err error) {
 	docker = &Manager{
-		ImageConfig:  NewImageConfig(isUpgradeEnabled),
+		ImageConfig:  NewImageConfig(isUpgrade, isFork),
 		valResources: make(map[string][]*dockertest.Resource),
 	}
 	docker.pool, err = dockertest.NewPool("")
@@ -190,7 +190,7 @@ func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCond
 // The genesis and configs are to be mounted on the init container as volume on mountDir path.
 // Returns the container resource and error if any. This method does not Purge the container. The caller
 // must deal with removing the resource.
-func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, mountDir string) (*dockertest.Resource, error) {
+func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, mountDir string, forkHeight int) (*dockertest.Resource, error) {
 	votingPeriodDuration := time.Duration(chainVotingPeriod * 1000000000)
 
 	initResource, err := m.pool.RunWithOptions(
@@ -204,6 +204,7 @@ func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, va
 				fmt.Sprintf("--chain-id=%s", chainId),
 				fmt.Sprintf("--config=%s", validatorConfigBytes),
 				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
+				fmt.Sprintf("--fork-height=%v", forkHeight),
 			},
 			User: "root:root",
 			Mounts: []string{
