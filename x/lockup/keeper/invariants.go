@@ -82,7 +82,7 @@ func AccumulationStoreInvariant(keeper Keeper) sdk.Invariant {
 	}
 }
 
-// LocksBalancesInvariant ensure that the module balance and the sum of all 
+// LocksBalancesInvariant ensure that the module balance and the sum of all
 // tokens within all locks have the equivalent amount of tokens.
 func LocksBalancesInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
