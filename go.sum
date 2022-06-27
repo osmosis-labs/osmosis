@@ -1034,8 +1034,6 @@ github.com/ory/dockertest/v3 v3.9.1 h1:v4dkG+dlu76goxMiTT2j8zV7s4oPPEppKT8K8p2f1
 github.com/ory/dockertest/v3 v3.9.1/go.mod h1:42Ir9hmvaAPm0Mgibk6mBPi7SFvTXxEcnztDYOJ//uM=
 github.com/osmosis-labs/bech32-ibc v0.3.0-rc1 h1:frHKHEdPfzoK2iMF2GeWKudLLzUXz+6GJcdZ/TMcs2k=
 github.com/osmosis-labs/bech32-ibc v0.3.0-rc1/go.mod h1:X5/FZHMPL+B3ufuVyY2/koxVjd4hIwyTLjYP1DZwppQ=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220611234148-f59c62f19567 h1:8KQSVRLCp4Mp5c22Cec+XVs3pjMwDpyTYGQOtDAO1F8=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220611234148-f59c62f19567/go.mod h1:pMiEr6WR7drhXAXK1FOdAKPazWCi7b+WOyWOF4O0OXY=
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220623193151-78093c5d2c13 h1:RgNEnc1dzT1e1nFZ0u3jP19VQfOsBF74hcS8Wm9ADHg=
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220623193151-78093c5d2c13/go.mod h1:pMiEr6WR7drhXAXK1FOdAKPazWCi7b+WOyWOF4O0OXY=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v7 h1:6KcADC/WhL7yDmNQxUIJt2XmzNt4FfRmq9gRke45w74=
