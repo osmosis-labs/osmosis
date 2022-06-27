@@ -53,3 +53,12 @@ func (es EventStats) ExportJSON(path string) {
 		panic(err)
 	}
 }
+
+func (es EventStats) exportEvents(ExportStatsPath string, w io.Writer) {
+	if ExportStatsPath != "" {
+		fmt.Println("Exporting simulation statistics...")
+		es.ExportJSON(ExportStatsPath)
+	} else {
+		es.Print(w)
+	}
+}

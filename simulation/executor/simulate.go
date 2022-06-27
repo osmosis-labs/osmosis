@@ -52,6 +52,7 @@ func initChain(
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided config.Seed.
 // TODO: split this monster function up
+// TODO: Remove blockedAddrs as an arg
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
@@ -159,13 +160,7 @@ func SimulateFromSeed(
 		)
 	}
 
-	if config.ExportStatsPath != "" {
-		fmt.Println("Exporting simulation statistics...")
-		simState.eventStats.ExportJSON(config.ExportStatsPath)
-	} else {
-		simState.eventStats.Print(w)
-	}
-
+	simState.eventStats.exportEvents(config.ExportStatsPath, w)
 	return stopEarly, exportedParams, nil
 }
 
@@ -182,21 +177,20 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, ops Weig
 	return func(
 		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,
 	) (opCount int) {
-		// TODO: Fix according to the r plans
-		r := simCtx.GetRand()
 		_, _ = fmt.Fprintf(
 			w, "\rSimulating... block %d/%d, operation %d/%d.",
 			header.Height, config.NumBlocks, opCount, blocksize,
 		)
-		lastBlockSizeState, blocksize = getBlockSize(r, params, lastBlockSizeState, config.BlockSize)
+		lastBlockSizeState, blocksize = getBlockSize(simCtx, params, lastBlockSizeState, config.BlockSize)
 
 		type opAndR struct {
 			op   simulation.Operation
 			rand *rand.Rand
 		}
 
+		// TODO: Fix according to the r plans
+		r := simCtx.GetRand()
 		opAndRz := make([]opAndR, 0, blocksize)
-
 		// Predetermine the blocksize slice so that we can do things like block
 		// out certain operations without changing the ops that follow.
 		// NOTE: This is poor mans seeding, it will improve in our simctx plans =)
