@@ -282,7 +282,6 @@ func (k Keeper) JoinSwapExactAmountIn(
 	return sharesOut, nil
 }
 
-//nolint:deadcode,govet // looks like we have known dead code beneath "panic"
 func (k Keeper) JoinSwapShareAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -296,33 +295,28 @@ func (k Keeper) JoinSwapShareAmountOut(
 		return sdk.Int{}, err
 	}
 
-	panic("implement") // I moved this past return, it caused everything beneath it to be dead code
+	extendedPool, ok := pool.(types.PoolAmountOutExtension)
+	if !ok {
+		return sdk.Int{}, fmt.Errorf("pool with id %d does not support this kind of join", poolId)
+	}
 
-	tokenInAmount = sdk.ZeroInt()
-
-	// normalizedWeight := PoolAsset.Weight.ToDec().Quo(pool.GetTotalWeight().ToDec())
-	// tokenInAmount = calcSingleInGivenPoolOut(
-	// 	PoolAsset.Token.Amount.ToDec(),
-	// 	normalizedWeight,
-	// 	pool.GetTotalShares().Amount.ToDec(),
-	// 	shareOutAmount.ToDec(),
-	// 	pool.GetPoolSwapFee(ctx),
-	// ).TruncateInt()
-
-	if tokenInAmount.LTE(sdk.ZeroInt()) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
+	tokenInAmount, err = extendedPool.CalcTokenInShareAmountOut(ctx, tokenInDenom, shareOutAmount, pool.GetSwapFee(ctx))
+	if err != nil {
+		return sdk.Int{}, err
 	}
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token is larger than max amount", tokenInDenom)
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%d resulted tokens is larger than the max amount of %d", tokenInAmount.Int64(), tokenInMaxAmount.Int64())
 	}
 
-	tokenIn := sdk.Coins{sdk.NewCoin(tokenInDenom, tokenInAmount)}
+	tokenIn := sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInAmount))
+	extendedPool.IncreaseLiquidity(shareOutAmount, tokenIn)
+
 	err = k.applyJoinPoolStateChange(ctx, pool, sender, shareOutAmount, tokenIn)
 	if err != nil {
 		return sdk.ZeroInt(), err
 	}
-	return shareOutAmount, nil
+	return tokenInAmount, nil
 }
 
 func (k Keeper) ExitPool(
@@ -407,7 +401,7 @@ func (k Keeper) ExitSwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
-	extendedPool, ok := pool.(types.PoolExitSwapExactAmountOutExtension)
+	extendedPool, ok := pool.(types.PoolAmountOutExtension)
 	if !ok {
 		return sdk.Int{}, fmt.Errorf("pool with id %d does not support this kind of exit", poolId)
 	}

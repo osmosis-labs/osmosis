@@ -26,15 +26,40 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
+// func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
+// 	return &msgServer{
+// 		keeper: keeper,
+// 	}
+// }
+
 var (
 	_ types.MsgServer    = msgServer{}
 	_ balancer.MsgServer = msgServer{}
+	// _ stableswap.MsgServer = msgServer{}
 )
 
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
 }
+
+// func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
+// 	poolId, err := server.CreatePool(goCtx, msg)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
+// }
+
+// func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
+// 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+// 	if err := server.keeper.SetStableSwapScalingFactors(ctx, msg.ScalingFactors, msg.PoolID, msg.ScalingFactorGovernor); err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+// }
 
 func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

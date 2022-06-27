@@ -11,62 +11,123 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/server"
-	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
-	tmconfig "github.com/tendermint/tendermint/config"
-	tmjson "github.com/tendermint/tendermint/libs/json"
+
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	dockerconfig "github.com/osmosis-labs/osmosis/v7/tests/e2e/docker"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
+type status struct {
+	LatestHeight string `json:"latest_block_height"`
+}
+
+type syncInfo struct {
+	SyncInfo status `json:"SyncInfo"`
+}
+
+type chainConfig struct {
+	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, and a buffer.
+	votingPeriod float32
+	// upgrade proposal height for chain.
+	propHeight int
+	// Indexes of the validators to skip from running during initialization.
+	// This is needed for testing functionality like state-sync where we would
+	// like to start a node during tests post-initialization.
+	skipRunValidatorIndexes map[int]struct{}
+	chain                   *chain.Chain
+}
+
 const (
-	// common
-	osmoDenom     = "uosmo"
-	stakeDenom    = "stake"
-	ibcDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
-	minGasPrice   = "0.000"
-	ibcSendAmount = 3300000000
-	// chainA
-	chainAID      = "osmo-test-a"
-	osmoBalanceA  = 200000000000
-	stakeBalanceA = 110000000000
-	stakeAmountA  = 100000000000
-	// chainB
-	chainBID      = "osmo-test-b"
-	osmoBalanceB  = 500000000000
-	stakeBalanceB = 440000000000
-	stakeAmountB  = 400000000000
+	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
+	upgradeVersion = "v9"
+	// estimated number of blocks it takes to submit for a proposal
+	propSubmitBlocks float32 = 10
+	// estimated number of blocks it takes to deposit for a proposal
+	propDepositBlocks float32 = 10
+	// number of blocks it takes to vote for a single validator to vote for a proposal
+	propVoteBlocks float32 = 1.2
+	// number of blocks used as a calculation buffer
+	propBufferBlocks float32 = 5
+	// max retries for json unmarshalling
+	maxRetries = 60
 )
 
 var (
-	initBalanceStrA  = fmt.Sprintf("%d%s,%d%s", osmoBalanceA, osmoDenom, stakeBalanceA, stakeDenom)
-	initBalanceStrB  = fmt.Sprintf("%d%s,%d%s", osmoBalanceB, osmoDenom, stakeBalanceB, stakeDenom)
-	stakeAmountIntA  = sdk.NewInt(stakeAmountA)
-	stakeAmountCoinA = sdk.NewCoin(stakeDenom, stakeAmountIntA)
-	stakeAmountIntB  = sdk.NewInt(stakeAmountB)
-	stakeAmountCoinB = sdk.NewCoin(stakeDenom, stakeAmountIntB)
+	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
+	validatorConfigsChainA = []*chain.ValidatorConfig{
+		{
+			Pruning:            "default",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "everything",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   0,
+			SnapshotKeepRecent: 0,
+		},
+	}
+	validatorConfigsChainB = []*chain.ValidatorConfig{
+		{
+			Pruning:            "default",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+		{
+			Pruning:            "custom",
+			PruningKeepRecent:  "10000",
+			PruningInterval:    "13",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+		},
+	}
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
 	tmpDirs        []string
-	chainA         *chain
-	chainB         *chain
+	chainConfigs   []*chainConfig
 	dkrPool        *dockertest.Pool
 	dkrNet         *dockertest.Network
 	hermesResource *dockertest.Resource
+	initResource   *dockertest.Resource
 	valResources   map[string][]*dockertest.Resource
+	dockerImages   dockerconfig.ImageConfig
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -76,40 +137,50 @@ func TestIntegrationTestSuite(t *testing.T) {
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
 
-	var err error
-	s.chainA, err = newChain(chainAID)
-	s.Require().NoError(err)
+	s.chainConfigs = make([]*chainConfig, 0, 2)
 
-	s.chainB, err = newChain(chainBID)
-	s.Require().NoError(err)
-
-	s.dkrPool, err = dockertest.NewPool("")
-	s.Require().NoError(err)
-
-	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", s.chainA.id, s.chainB.id))
-	s.Require().NoError(err)
-
-	s.valResources = make(map[string][]*dockertest.Resource)
-
-	// The boostrapping phase is as follows:
+	// The e2e test flow is as follows:
 	//
-	// 1. Initialize Osmosis validator nodes.
-	// 2. Create and initialize Osmosis validator genesis files (both chains)
-	// 3. Start both networks.
+	// 1. Configure two chains - chan A and chain B.
+	//   * For each chain, set up two validators
+	//   * Initialize configs and genesis for all validators.
+	// 2. Start both networks.
+	// 3. Run IBC relayer betweeen the two chains.
+	// 4. Execute various e2e tests, including IBC.
+	var (
+		skipUpgrade bool
+		err         error
+	)
 
-	s.T().Logf("starting e2e infrastructure for chain A; chain-id: %s; datadir: %s", s.chainA.id, s.chainA.dataDir)
-	s.initNodes(s.chainA)
-	s.initGenesis(s.chainA)
-	s.initValidatorConfigs(s.chainA)
-	s.runValidators(s.chainA, 0)
+	if str := os.Getenv("OSMOSIS_E2E_SKIP_UPGRADE"); len(str) > 0 {
+		skipUpgrade, err = strconv.ParseBool(str)
+		s.Require().NoError(err)
+	}
 
-	s.T().Logf("starting e2e infrastructure for chain B; chain-id: %s; datadir: %s", s.chainB.id, s.chainB.dataDir)
-	s.initNodes(s.chainB)
-	s.initGenesis(s.chainB)
-	s.initValidatorConfigs(s.chainB)
-	s.runValidators(s.chainB, 10)
+	s.dockerImages = *dockerconfig.NewImageConfig(!skipUpgrade)
 
-	s.runIBCRelayer()
+	s.configureDockerResources(chain.ChainAID, chain.ChainBID)
+	s.configureChain(chain.ChainAID, validatorConfigsChainA, map[int]struct{}{
+		3: {}, // skip validator at index 3
+	})
+	s.configureChain(chain.ChainBID, validatorConfigsChainB, map[int]struct{}{})
+
+	for i, chainConfig := range s.chainConfigs {
+		s.runValidators(chainConfig, s.dockerImages.OsmosisRepository, s.dockerImages.OsmosisTag, i*10)
+	}
+
+	// Run a relayer between every possible pair of chains.
+	for i := 0; i < len(s.chainConfigs); i++ {
+		for j := i + 1; j < len(s.chainConfigs); j++ {
+			s.runIBCRelayer(s.chainConfigs[i].chain, s.chainConfigs[j].chain)
+		}
+	}
+
+	if !skipUpgrade {
+		s.createPreUpgradeState()
+		s.upgrade()
+		s.runPostUpgradeTests()
+	}
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -134,177 +205,46 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 	s.Require().NoError(s.dkrPool.RemoveNetwork(s.dkrNet))
 
-	os.RemoveAll(s.chainA.dataDir)
-	os.RemoveAll(s.chainB.dataDir)
+	for _, chainConfig := range s.chainConfigs {
+		os.RemoveAll(chainConfig.chain.ChainMeta.DataDir)
+	}
 
 	for _, td := range s.tmpDirs {
 		os.RemoveAll(td)
 	}
 }
 
-func (s *IntegrationTestSuite) initNodes(c *chain) {
-	s.Require().NoError(c.createAndInitValidators(2))
-
-	// initialize a genesis file for the first validator
-	val0ConfigDir := c.validators[0].configDir()
-	for _, val := range c.validators {
-		if c.id == chainAID {
-			s.Require().NoError(
-				addGenesisAccount(val0ConfigDir, "", initBalanceStrA, val.keyInfo.GetAddress()),
-			)
-		} else if c.id == chainBID {
-			s.Require().NoError(
-				addGenesisAccount(val0ConfigDir, "", initBalanceStrB, val.keyInfo.GetAddress()),
-			)
-		}
-	}
-
-	// copy the genesis file to the remaining validators
-	for _, val := range c.validators[1:] {
-		_, err := copyFile(
-			filepath.Join(val0ConfigDir, "config", "genesis.json"),
-			filepath.Join(val.configDir(), "config", "genesis.json"),
-		)
-		s.Require().NoError(err)
-	}
-}
-
-func (s *IntegrationTestSuite) initGenesis(c *chain) {
-	serverCtx := server.NewDefaultContext()
-	config := serverCtx.Config
-
-	config.SetRoot(c.validators[0].configDir())
-	config.Moniker = c.validators[0].moniker
-
-	genFilePath := config.GenesisFile()
-	appGenState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFilePath)
+func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, dockerRepository, dockerTag string, portOffset int) {
+	chain := chainConfig.chain
+	s.T().Logf("starting %s validator containers...", chain.ChainMeta.Id)
+	s.valResources[chain.ChainMeta.Id] = make([]*dockertest.Resource, len(chain.Validators)-len(chainConfig.skipRunValidatorIndexes))
+	pwd, err := os.Getwd()
 	s.Require().NoError(err)
-
-	var bankGenState banktypes.GenesisState
-	s.Require().NoError(cdc.UnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState))
-
-	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
-		Description: "An example stable token",
-		Display:     osmoDenom,
-		Base:        osmoDenom,
-		Symbol:      osmoDenom,
-		Name:        osmoDenom,
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    osmoDenom,
-				Exponent: 0,
-			},
-		},
-	})
-
-	bz, err := cdc.MarshalJSON(&bankGenState)
-	s.Require().NoError(err)
-	appGenState[banktypes.ModuleName] = bz
-
-	var genUtilGenState genutiltypes.GenesisState
-	s.Require().NoError(cdc.UnmarshalJSON(appGenState[genutiltypes.ModuleName], &genUtilGenState))
-
-	// generate genesis txs
-	genTxs := make([]json.RawMessage, len(c.validators))
-	for i, val := range c.validators {
-		stakeAmountCoin := stakeAmountCoinA
-		if c.id != chainAID {
-			stakeAmountCoin = stakeAmountCoinB
-		}
-		createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
-		s.Require().NoError(err)
-
-		signedTx, err := val.signMsg(createValmsg)
-		s.Require().NoError(err)
-
-		txRaw, err := cdc.MarshalJSON(signedTx)
-		s.Require().NoError(err)
-
-		genTxs[i] = txRaw
-	}
-
-	genUtilGenState.GenTxs = genTxs
-
-	bz, err = cdc.MarshalJSON(&genUtilGenState)
-	s.Require().NoError(err)
-	appGenState[genutiltypes.ModuleName] = bz
-
-	bz, err = json.MarshalIndent(appGenState, "", "  ")
-	s.Require().NoError(err)
-
-	genDoc.AppState = bz
-
-	bz, err = tmjson.MarshalIndent(genDoc, "", "  ")
-	s.Require().NoError(err)
-
-	// write the updated genesis file to each validator
-	for _, val := range c.validators {
-		writeFile(filepath.Join(val.configDir(), "config", "genesis.json"), bz)
-	}
-}
-
-func (s *IntegrationTestSuite) initValidatorConfigs(c *chain) {
-	for i, val := range c.validators {
-		tmCfgPath := filepath.Join(val.configDir(), "config", "config.toml")
-
-		vpr := viper.New()
-		vpr.SetConfigFile(tmCfgPath)
-		s.Require().NoError(vpr.ReadInConfig())
-
-		valConfig := &tmconfig.Config{}
-		s.Require().NoError(vpr.Unmarshal(valConfig))
-
-		valConfig.P2P.ListenAddress = "tcp://0.0.0.0:26656"
-		valConfig.P2P.AddrBookStrict = false
-		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.instanceName(), 26656)
-		valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
-		valConfig.StateSync.Enable = false
-		valConfig.LogLevel = "info"
-
-		var peers []string
-
-		for j := 0; j < len(c.validators); j++ {
-			if i == j {
-				continue
-			}
-
-			peer := c.validators[j]
-			peerID := fmt.Sprintf("%s@%s%d:26656", peer.nodeKey.ID(), peer.moniker, j)
-			peers = append(peers, peerID)
+	for i, val := range chain.Validators {
+		// Skip some validators from running during set up.
+		// This is needed for testing functionality like
+		// state-sunc where we might want to start some validators during tests.
+		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+			s.T().Logf("skipping %s validator with index %d from running...", val.Name, i)
+			continue
 		}
 
-		valConfig.P2P.PersistentPeers = strings.Join(peers, ",")
-
-		tmconfig.WriteConfigFile(tmCfgPath, valConfig)
-
-		// set application configuration
-		appCfgPath := filepath.Join(val.configDir(), "config", "app.toml")
-
-		appConfig := srvconfig.DefaultConfig()
-		appConfig.API.Enable = true
-		appConfig.MinGasPrices = fmt.Sprintf("%s%s", minGasPrice, osmoDenom)
-
-		srvconfig.WriteConfigFile(appCfgPath, appConfig)
-	}
-}
-
-func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
-	s.T().Logf("starting Osmosis %s validator containers...", c.id)
-
-	s.valResources[c.id] = make([]*dockertest.Resource, len(c.validators))
-	for i, val := range c.validators {
 		runOpts := &dockertest.RunOptions{
-			Name:      val.instanceName(),
+			Name:      val.Name,
 			NetworkID: s.dkrNet.Network.ID,
 			Mounts: []string{
-				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.configDir()),
+				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
+				fmt.Sprintf("%s/scripts:/osmosis", pwd),
 			},
-			Repository: "osmosis",
-			Tag:        "debug",
+			Repository: dockerRepository,
+			Tag:        dockerTag,
+			Cmd: []string{
+				"start",
+			},
 		}
 
 		// expose the first validator for debugging and communication
-		if val.index == 0 {
+		if val.Index == 0 {
 			runOpts.PortBindings = map[docker.Port][]docker.PortBinding{
 				"1317/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 1317+portOffset)}},
 				"6060/tcp":  {{HostIP: "", HostPort: fmt.Sprintf("%d", 6060+portOffset)}},
@@ -322,8 +262,8 @@ func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
 		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
 		s.Require().NoError(err)
 
-		s.valResources[c.id][i] = resource
-		s.T().Logf("started Osmosis %s validator container: %s", c.id, resource.Container.ID)
+		s.valResources[chain.ChainMeta.Id][i] = resource
+		s.T().Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	}
 
 	rpcClient, err := rpchttp.New("tcp://localhost:26657", "/websocket")
@@ -352,19 +292,19 @@ func (s *IntegrationTestSuite) runValidators(c *chain, portOffset int) {
 	)
 }
 
-func (s *IntegrationTestSuite) runIBCRelayer() {
+func (s *IntegrationTestSuite) runIBCRelayer(chainA *chain.Chain, chainB *chain.Chain) {
 	s.T().Log("starting Hermes relayer container...")
 
-	tmpDir, err := ioutil.TempDir("", "gaia-e2e-testnet-hermes-")
+	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-hermes-")
 	s.Require().NoError(err)
 	s.tmpDirs = append(s.tmpDirs, tmpDir)
 
-	gaiaAVal := s.chainA.validators[0]
-	gaiaBVal := s.chainB.validators[0]
+	osmoAVal := chainA.Validators[0]
+	osmoBVal := chainB.Validators[0]
 	hermesCfgPath := path.Join(tmpDir, "hermes")
 
 	s.Require().NoError(os.MkdirAll(hermesCfgPath, 0o755))
-	_, err = copyFile(
+	_, err = util.CopyFile(
 		filepath.Join("./scripts/", "hermes_bootstrap.sh"),
 		filepath.Join(hermesCfgPath, "hermes_bootstrap.sh"),
 	)
@@ -372,9 +312,9 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 
 	s.hermesResource, err = s.dkrPool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s-%s-relayer", s.chainA.id, s.chainB.id),
-			Repository: "osmolabs/hermes",
-			Tag:        "0.13.0",
+			Name:       fmt.Sprintf("%s-%s-relayer", chainA.ChainMeta.Id, chainB.ChainMeta.Id),
+			Repository: s.dockerImages.RelayerRepository,
+			Tag:        s.dockerImages.RelayerTag,
 			NetworkID:  s.dkrNet.Network.ID,
 			Cmd: []string{
 				"start",
@@ -390,12 +330,12 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
 			},
 			Env: []string{
-				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", s.chainA.id),
-				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", s.chainB.id),
-				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", gaiaAVal.mnemonic),
-				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", gaiaBVal.mnemonic),
-				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[s.chainA.id][0].Container.Name[1:]),
-				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[s.chainB.id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", chainA.ChainMeta.Id),
+				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", chainB.ChainMeta.Id),
+				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAVal.Mnemonic),
+				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBVal.Mnemonic),
+				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", s.valResources[chainA.ChainMeta.Id][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", s.valResources[chainB.ChainMeta.Id][0].Container.Name[1:]),
 			},
 			Entrypoint: []string{
 				"sh",
@@ -443,8 +383,84 @@ func (s *IntegrationTestSuite) runIBCRelayer() {
 	// transport errors.
 	time.Sleep(10 * time.Second)
 
-	// create the client, connection and channel between the two Gaia chains
-	s.connectIBCChains()
+	// create the client, connection and channel between the two Osmosis chains
+	s.connectIBCChains(chainA, chainB)
+}
+
+func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig, skipValidatorIndexes map[int]struct{}) {
+	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
+	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-")
+
+	s.T().Logf("temp directory for chain-id %v: %v", chainId, tmpDir)
+	s.Require().NoError(err)
+
+	validatorConfigBytes, err := json.Marshal(validatorConfigs)
+	s.Require().NoError(err)
+
+	numVal := float32(len(validatorConfigs))
+
+	newChainConfig := chainConfig{
+		votingPeriod:            propDepositBlocks + numVal*propVoteBlocks + propBufferBlocks,
+		skipRunValidatorIndexes: skipValidatorIndexes,
+	}
+
+	votingPeriodDuration := time.Duration(int(newChainConfig.votingPeriod) * 1000000000)
+
+	s.initResource, err = s.dkrPool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       fmt.Sprintf("%s", chainId),
+			Repository: s.dockerImages.InitRepository,
+			Tag:        s.dockerImages.InitTag,
+			NetworkID:  s.dkrNet.Network.ID,
+			Cmd: []string{
+				fmt.Sprintf("--data-dir=%s", tmpDir),
+				fmt.Sprintf("--chain-id=%s", chainId),
+				fmt.Sprintf("--config=%s", validatorConfigBytes),
+				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
+			},
+			User: "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s:%s", tmpDir, tmpDir),
+			},
+		},
+		noRestart,
+	)
+	s.Require().NoError(err)
+
+	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
+	s.T().Logf("serialized init file for chain-id %v: %v", chainId, fileName)
+
+	// loop through the reading and unmarshaling of the init file a total of maxRetries or until error is nil
+	// without this, test attempts to unmarshal file before docker container is finished writing
+	for i := 0; i < maxRetries; i++ {
+		encJson, _ := os.ReadFile(fileName)
+		err = json.Unmarshal(encJson, &newChainConfig.chain)
+		if err == nil {
+			break
+		}
+
+		if i == maxRetries-1 {
+			s.Require().NoError(err)
+		}
+
+		if i > 0 {
+			time.Sleep(1 * time.Second)
+		}
+	}
+	s.Require().NoError(s.dkrPool.Purge(s.initResource))
+
+	s.chainConfigs = append(s.chainConfigs, &newChainConfig)
+}
+
+func (s *IntegrationTestSuite) configureDockerResources(chainIDOne, chainIDTwo string) {
+	var err error
+	s.dkrPool, err = dockertest.NewPool("")
+	s.Require().NoError(err)
+
+	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", chainIDOne, chainIDTwo))
+	s.Require().NoError(err)
+
+	s.valResources = make(map[string][]*dockertest.Resource)
 }
 
 func noRestart(config *docker.HostConfig) {
@@ -452,4 +468,145 @@ func noRestart(config *docker.HostConfig) {
 	config.RestartPolicy = docker.RestartPolicy{
 		Name: "no",
 	}
+}
+
+func (s *IntegrationTestSuite) upgrade() {
+	// submit, deposit, and vote for upgrade proposal
+	// prop height = current height + voting period + time it takes to submit proposal + small buffer
+	for _, chainConfig := range s.chainConfigs {
+		currentHeight := s.getCurrentChainHeight(s.valResources[chainConfig.chain.ChainMeta.Id][0].Container.ID)
+		chainConfig.propHeight = currentHeight + int(chainConfig.votingPeriod) + int(propSubmitBlocks) + int(propBufferBlocks)
+		s.submitProposal(chainConfig.chain, chainConfig.propHeight)
+		s.depositProposal(chainConfig.chain)
+		s.voteProposal(chainConfig)
+	}
+
+	// wait till all chains halt at upgrade height
+	for _, chainConfig := range s.chainConfigs {
+		curChain := chainConfig.chain
+
+		for i := range chainConfig.chain.Validators {
+			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+				continue
+			}
+
+			// use counter to ensure no new blocks are being created
+			counter := 0
+			s.T().Logf("waiting to reach upgrade height on %s validator container: %s", s.valResources[curChain.ChainMeta.Id][i].Container.Name[1:], s.valResources[curChain.ChainMeta.Id][i].Container.ID)
+			s.Require().Eventually(
+				func() bool {
+					currentHeight := s.getCurrentChainHeight(s.valResources[curChain.ChainMeta.Id][i].Container.ID)
+					if currentHeight != chainConfig.propHeight {
+						s.T().Logf("current block height on %s is %v, waiting for block %v container: %s", s.valResources[curChain.ChainMeta.Id][i].Container.Name[1:], currentHeight, chainConfig.propHeight, s.valResources[curChain.ChainMeta.Id][i].Container.ID)
+					}
+					if currentHeight > chainConfig.propHeight {
+						panic("chain did not halt at upgrade height")
+					}
+					if currentHeight == chainConfig.propHeight {
+						counter++
+					}
+					return counter == 3
+				},
+				5*time.Minute,
+				time.Second,
+			)
+			s.T().Logf("reached upgrade height on %s container: %s", s.valResources[curChain.ChainMeta.Id][i].Container.Name[1:], s.valResources[curChain.ChainMeta.Id][i].Container.ID)
+		}
+	}
+
+	// remove all containers so we can upgrade them to the new version
+	for _, chainConfig := range s.chainConfigs {
+		curChain := chainConfig.chain
+		for valIdx := range curChain.Validators {
+			if _, ok := chainConfig.skipRunValidatorIndexes[valIdx]; ok {
+				continue
+			}
+
+			var opts docker.RemoveContainerOptions
+			opts.ID = s.valResources[curChain.ChainMeta.Id][valIdx].Container.ID
+			opts.Force = true
+			s.dkrPool.Client.RemoveContainer(opts)
+			s.T().Logf("removed container: %s", s.valResources[curChain.ChainMeta.Id][valIdx].Container.Name[1:])
+		}
+	}
+
+	// remove all containers so we can upgrade them to the new version
+	for _, chainConfig := range s.chainConfigs {
+		s.upgradeContainers(chainConfig, chainConfig.propHeight)
+	}
+}
+
+func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propHeight int) {
+	// upgrade containers to the locally compiled daemon
+	chain := chainConfig.chain
+	s.T().Logf("starting upgrade for chain-id: %s...", chain.ChainMeta.Id)
+	pwd, err := os.Getwd()
+	s.Require().NoError(err)
+
+	for i, val := range chain.Validators {
+		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+			continue
+		}
+
+		runOpts := &dockertest.RunOptions{
+			Name:       val.Name,
+			Repository: dockerconfig.LocalOsmoRepository,
+			Tag:        dockerconfig.LocalOsmoTag,
+			NetworkID:  s.dkrNet.Network.ID,
+			User:       "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.ConfigDir),
+				fmt.Sprintf("%s/scripts:/osmosis", pwd),
+			},
+		}
+		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
+		s.Require().NoError(err)
+
+		s.valResources[chain.ChainMeta.Id][i] = resource
+		s.T().Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
+	}
+
+	// check that we are creating blocks again
+	for i := range chain.Validators {
+		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
+			continue
+		}
+
+		s.Require().Eventually(
+			func() bool {
+				currentHeight := s.getCurrentChainHeight(s.valResources[chain.ChainMeta.Id][i].Container.ID)
+				if currentHeight <= propHeight {
+					s.T().Logf("current block height on %s is %v, waiting to create blocks container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:], currentHeight, s.valResources[chain.ChainMeta.Id][i].Container.ID)
+				}
+				return currentHeight > propHeight
+			},
+			5*time.Minute,
+			time.Second,
+		)
+		s.T().Logf("upgrade successful on %s validator container: %s", s.valResources[chain.ChainMeta.Id][i].Container.Name[1:], s.valResources[chain.ChainMeta.Id][i].Container.ID)
+	}
+}
+
+func (s *IntegrationTestSuite) createPreUpgradeState() {
+	chainA := s.chainConfigs[0].chain
+	chainB := s.chainConfigs[1].chain
+
+	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(chainB, chainA, chainA.Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.StakeToken)
+	s.sendIBC(chainB, chainA, chainA.Validators[0].PublicAddress, chain.StakeToken)
+	s.createPool(chainA, "pool1A.json")
+	s.createPool(chainB, "pool1B.json")
+}
+
+func (s *IntegrationTestSuite) runPostUpgradeTests() {
+	chainA := s.chainConfigs[0].chain
+	chainB := s.chainConfigs[1].chain
+
+	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(chainB, chainA, chainA.Validators[0].PublicAddress, chain.OsmoToken)
+	s.sendIBC(chainA, chainB, chainB.Validators[0].PublicAddress, chain.StakeToken)
+	s.sendIBC(chainB, chainA, chainA.Validators[0].PublicAddress, chain.StakeToken)
+	s.createPool(chainA, "pool2A.json")
+	s.createPool(chainB, "pool2B.json")
 }

@@ -1,12 +1,9 @@
-<!--
-order: 6
--->
-
 # Queries
 
 Epochs module is providing below queries to check the module's state.
 
-```protobuf
+<!-- markdownlint-disable MD013 -->
+``` {.protobuf}
 service Query {
   // EpochInfos provide running epochInfos
   rpc EpochInfos(QueryEpochsInfoRequest) returns (QueryEpochsInfoResponse) {}

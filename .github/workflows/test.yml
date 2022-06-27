@@ -2,12 +2,15 @@ name: Tests & Code Coverage
 
 on:
   pull_request:
-  push:
     branches:
       - "**"
+  push:
+    branches:
+      - "main"
+      - "v[0-9]**"
 
 jobs:
-  should_run_test:
+  should_run_go_test:
     runs-on: ubuntu-latest
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
@@ -23,8 +26,8 @@ jobs:
       - name: Skipping test
         run: echo Should I skip tests? ${{ steps.skip_check.outputs.should_skip }}
 
-  test:
-    needs: should_run_test
+  go_test:
+    needs: should_run_go_test
     if: ${{ needs.should_run_test.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -41,42 +44,14 @@ jobs:
           make test-cover
       - name: Codecov
         uses: codecov/codecov-action@v1.5.2
-
-  liveness-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
-      - uses: technote-space/get-diff-action@v6.0.1
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - name: Install Ignite CLI
-        run: |
-          curl https://get.ignite.com/cli@v0.20.0! | bash
-        if: env.GIT_DIFF
-      - name: Start Local Network via Ignite CLI
-        run: |
-          ignite chain serve --reset-once -v -c ./ignite.ci.yml > ignite.out 2>&1 &
-        if: env.GIT_DIFF
-      - name: Test Local Network Liveness
-        run: |
-          sleep 3m
-          ./contrib/scripts/test_localnet_liveness.sh 100 5 50 localhost
-        if: env.GIT_DIFF
-  test-e2e:
+  
+  e2e_test:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/setup-go@v2.2.0
         with:
-          go-version: 1.17
+          go-version: 1.18
       - uses: actions/checkout@v2
       - uses: technote-space/get-diff-action@v6.0.1
         with:
@@ -88,7 +63,7 @@ jobs:
         run: |
           make docker-build-debug
         if: env.GIT_DIFF
-      - name: Test E2E
+      - name: Test E2E and Upgrade
         run: |
           make test-e2e
         if: env.GIT_DIFF

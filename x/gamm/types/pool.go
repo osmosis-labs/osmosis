@@ -37,14 +37,14 @@ type PoolI interface {
 	SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
 	// CalcOutAmtGivenIn returns how many coins SwapOutAmtGivenIn would return on these arguments.
 	// This does not mutate the pool, or state.
-	CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.DecCoin, err error)
+	CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDenom string, swapFee sdk.Dec) (tokenOut sdk.Coin, err error)
 
 	// SwapInAmtGivenOut swaps exactly enough tokensIn against the pool, to get the provided tokenOut amount out of the pool.
 	// Balance transfers are done in the keeper, but this method updates the internal pool state.
 	SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
 	// CalcInAmtGivenOut returns how many coins SwapInAmtGivenOut would return on these arguments.
 	// This does not mutate the pool, or state.
-	CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.DecCoin, err error)
+	CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
 
 	// Returns the spot price of the 'base asset' in terms of the 'quote asset' in the pool,
 	// errors if either baseAssetDenom, or quoteAssetDenom does not exist.
@@ -75,20 +75,45 @@ type PoolI interface {
 	PokePool(blockTime time.Time)
 }
 
-// PoolExitSwapExactAmountOutExtension is an extension of the PoolI
+// PoolAmountOutExtension is an extension of the PoolI
 // interface definiting an abstraction for pools that hold tokens.
-// In addition, it supports ExitSwapExactAmountOut method.
-// See definition below.
-type PoolExitSwapExactAmountOutExtension interface {
+// In addition, it supports JoinSwapShareAmountOut and ExitSwapExactAmountOut methods
+// that allow joining with the exact amount of shares to get out, and exiting with exact
+// amount of coins to get out.
+// See definitions below.
+type PoolAmountOutExtension interface {
 	PoolI
 
+	// CalcTokenInShareAmountOut returns the number of tokenInDenom tokens
+	// that would be returned if swapped for an exact number of shares (shareOutAmount).
+	// Returns error if tokenInDenom is not in the pool or if fails to approximate
+	// given the shareOutAmount.
+	// This method does not mutate the pool
+	CalcTokenInShareAmountOut(
+		ctx sdk.Context,
+		tokenInDenom string,
+		shareOutAmount sdk.Int,
+		swapFee sdk.Dec,
+	) (tokenInAmount sdk.Int, err error)
+
+	// JoinPoolTokenInMaxShareAmountOut add liquidity to a specified pool with a maximum amount of tokens in (tokenInMaxAmount)
+	// and swaps to an exact number of shares (shareOutAmount).
+	JoinPoolTokenInMaxShareAmountOut(
+		ctx sdk.Context,
+		tokenInDenom string,
+		shareOutAmount sdk.Int,
+	) (tokenInAmount sdk.Int, err error)
+
 	// ExitSwapExactAmountOut removes liquidity from a specified pool with a maximum amount of LP shares (shareInMaxAmount)
-	// and swaps to an exact amount of one of the token pairs (tokenOut)
+	// and swaps to an exact amount of one of the token pairs (tokenOut).
 	ExitSwapExactAmountOut(
 		ctx sdk.Context,
 		tokenOut sdk.Coin,
 		shareInMaxAmount sdk.Int,
 	) (shareInAmount sdk.Int, err error)
+
+	// IncreaseLiquidity increases the pool's liquidity by the specified sharesOut and coinsIn.
+	IncreaseLiquidity(sharesOut sdk.Int, coinsIn sdk.Coins)
 }
 
 func NewPoolAddress(poolId uint64) sdk.AccAddress {

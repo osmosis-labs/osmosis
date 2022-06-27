@@ -1,16 +1,12 @@
-<!--
-order: 3
--->
-
 # Messages
 
 ## Create Gauge
 
 `MsgCreateGauge` can be submitted by any account to create a `Gauge`.
 
-```go
+``` {.go}
 type MsgCreateGauge struct {
-	Owner             sdk.AccAddress
+ Owner             sdk.AccAddress
   DistributeTo      QueryCondition
   Rewards           sdk.Coins
   StartTime         time.Time // start time to start distribution
@@ -27,11 +23,12 @@ type MsgCreateGauge struct {
 
 ## Adding balance to Gauge
 
-`MsgAddToGauge` can be submitted by any account to add more incentives to a `Gauge`.
+`MsgAddToGauge` can be submitted by any account to add more incentives
+to a `Gauge`.
 
-```go
+``` {.go}
 type MsgAddToGauge struct {
-	GaugeID uint64
+ GaugeID uint64
   Rewards sdk.Coins
 }
 ```

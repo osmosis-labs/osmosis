@@ -26,9 +26,6 @@ func NewDefaultGenesisState() GenesisState {
 		Params: wasmtypes.Params{
 			CodeUploadAccess:             wasmtypes.AllowNobody,
 			InstantiateDefaultPermission: wasmtypes.AccessTypeEverybody,
-			// DefaultMaxWasmCodeSize limit max bytes read to prevent gzip bombs
-			// It is 1200 KB in x/wasm, update it later via governance if really needed
-			MaxWasmCodeSize: wasmtypes.DefaultMaxWasmCodeSize,
 		},
 	}
 	gen[wasm.ModuleName] = encCfg.Marshaler.MustMarshalJSON(&wasmGen)

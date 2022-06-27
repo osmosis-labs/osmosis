@@ -2,6 +2,8 @@ package wasm
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,49 +13,165 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 )
 
-// func TestMintMsg(t *testing.T) {
-// 	creator := RandomAccountAddress()
-// 	osmosis, ctx := SetupCustomApp(t, creator)
+func TestCreateDenomMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
 
-// 	lucky := RandomAccountAddress()
-// 	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
-// 	require.NotEmpty(t, reflect)
+	lucky := RandomAccountAddress()
+	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
+	require.NotEmpty(t, reflect)
 
-// 	// lucky was broke
-// 	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
-// 	require.Empty(t, balances)
+	// Fund reflect contract with 100 base denom creation fees
+	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
 
-// 	amount, ok := sdk.NewIntFromString("808010808")
-// 	require.True(t, ok)
-// 	msg := wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
-// 		SubDenom:  "SUN",
-// 		Amount:    amount,
-// 		Recipient: lucky.String(),
-// 	}}
-// 	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
-// 	require.NoError(t, err)
+	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "SUN",
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
 
-// 	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
-// 	require.Len(t, balances, 1)
-// 	coin := balances[0]
-// 	require.Equal(t, amount, coin.Amount)
-// 	require.Contains(t, coin.Denom, "cw/")
+	// query the denom and see if it matches
+	query := wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp := wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
-// 	// query the denom and see if it matches
-// 	query := wasmbindings.OsmosisQuery{
-// 		FullDenom: &wasmbindings.FullDenom{
-// 			Contract: reflect.String(),
-// 			SubDenom: "SUN",
-// 		},
-// 	}
-// 	resp := wasmbindings.FullDenomResponse{}
-// 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	require.Equal(t, resp.Denom, fmt.Sprintf("factory/%s/SUN", reflect.String()))
+}
 
-// 	require.Equal(t, resp.Denom, coin.Denom)
-// }
+func TestMintMsg(t *testing.T) {
+	creator := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, creator)
+
+	lucky := RandomAccountAddress()
+	reflect := instantiateReflectContract(t, ctx, osmosis, lucky)
+	require.NotEmpty(t, reflect)
+
+	// Fund reflect contract with 100 base denom creation fees
+	reflectAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccount(t, ctx, osmosis, reflect, reflectAmount)
+
+	// lucky was broke
+	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Empty(t, balances)
+
+	// Create denom for minting
+	msg := wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "SUN",
+	}}
+	err := executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	amount, ok := sdk.NewIntFromString("808010808")
+	require.True(t, ok)
+	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+		SubDenom:  "SUN",
+		Amount:    amount,
+		Recipient: lucky.String(),
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Len(t, balances, 1)
+	coin := balances[0]
+	require.Equal(t, amount, coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query := wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp := wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
+
+	// mint the same denom again
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Len(t, balances, 1)
+	coin = balances[0]
+	require.Equal(t, amount.MulRaw(2), coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query = wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp = wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
+
+	// now mint another amount / denom
+	// create it first
+	msg = wasmbindings.OsmosisMsg{CreateDenom: &wasmbindings.CreateDenom{
+		SubDenom: "MOON",
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	amount = amount.SubRaw(1)
+	msg = wasmbindings.OsmosisMsg{MintTokens: &wasmbindings.MintTokens{
+		SubDenom:  "MOON",
+		Amount:    amount,
+		Recipient: lucky.String(),
+	}}
+	err = executeCustom(t, ctx, osmosis, reflect, lucky, msg, sdk.Coin{})
+	require.NoError(t, err)
+
+	balances = osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	require.Len(t, balances, 2)
+	coin = balances[0]
+	require.Equal(t, amount, coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query = wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "MOON",
+		},
+	}
+	resp = wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
+
+	// and check the first denom is unchanged
+	coin = balances[1]
+	require.Equal(t, amount.AddRaw(1).MulRaw(2), coin.Amount)
+	require.Contains(t, coin.Denom, "factory/")
+
+	// query the denom and see if it matches
+	query = wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "SUN",
+		},
+	}
+	resp = wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+
+	require.Equal(t, resp.Denom, coin.Denom)
+}
 
 type BaseState struct {
 	StarPool  uint64
@@ -63,13 +181,15 @@ type BaseState struct {
 
 func TestSwapMsg(t *testing.T) {
 	// table tests with this setup
-	cases := map[string]struct {
+	cases := []struct {
+		name       string
 		msg        func(BaseState) *wasmbindings.SwapMsg
 		expectErr  bool
 		initFunds  sdk.Coin
 		finalFunds []sdk.Coin
 	}{
-		"exact in: simple swap works": {
+		{
+			name: "exact in: simple swap works",
 			msg: func(state BaseState) *wasmbindings.SwapMsg {
 				return &wasmbindings.SwapMsg{
 					First: wasmbindings.Swap{
@@ -93,7 +213,8 @@ func TestSwapMsg(t *testing.T) {
 				sdk.NewInt64Coin("ustar", 120000000),
 			},
 		},
-		"exact in: price too low": {
+		{
+			name: "exact in: price too low",
 			msg: func(state BaseState) *wasmbindings.SwapMsg {
 				return &wasmbindings.SwapMsg{
 					First: wasmbindings.Swap{
@@ -114,7 +235,8 @@ func TestSwapMsg(t *testing.T) {
 			initFunds: sdk.NewInt64Coin("uosmo", 13000000),
 			expectErr: true,
 		},
-		"exact in: not enough funds to swap": {
+		{
+			name: "exact in: not enough funds to swap",
 			msg: func(state BaseState) *wasmbindings.SwapMsg {
 				return &wasmbindings.SwapMsg{
 					First: wasmbindings.Swap{
@@ -135,7 +257,8 @@ func TestSwapMsg(t *testing.T) {
 			initFunds: sdk.NewInt64Coin("uosmo", 7000000),
 			expectErr: true,
 		},
-		"exact in: invalidPool": {
+		{
+			name: "exact in: invalidPool",
 			msg: func(state BaseState) *wasmbindings.SwapMsg {
 				return &wasmbindings.SwapMsg{
 					First: wasmbindings.Swap{
@@ -183,8 +306,8 @@ func TestSwapMsg(t *testing.T) {
 		//		sdk.NewInt64Coin("ustar", 120000000),
 		//	},
 		//},
-
-		"exact out: simple swap works": {
+		{
+			name: "exact out: simple swap works",
 			msg: func(state BaseState) *wasmbindings.SwapMsg {
 				return &wasmbindings.SwapMsg{
 					First: wasmbindings.Swap{
@@ -209,8 +332,8 @@ func TestSwapMsg(t *testing.T) {
 				sdk.NewInt64Coin("uosmo", 2000000),
 			},
 		},
-
-		"exact in: 2 step multi-hop": {
+		{
+			name: "exact in: 2 step multi-hop",
 			msg: func(state BaseState) *wasmbindings.SwapMsg {
 				return &wasmbindings.SwapMsg{
 					First: wasmbindings.Swap{
@@ -237,7 +360,8 @@ func TestSwapMsg(t *testing.T) {
 				sdk.NewInt64Coin("uatom", 1999999),
 			},
 		},
-		"exact out: 2 step multi-hop": {
+		{
+			name: "exact out: 2 step multi-hop",
 			msg: func(state BaseState) *wasmbindings.SwapMsg {
 				return &wasmbindings.SwapMsg{
 					First: wasmbindings.Swap{
@@ -251,24 +375,24 @@ func TestSwapMsg(t *testing.T) {
 					}},
 					Amount: wasmbindings.SwapAmountWithLimit{
 						ExactOut: &wasmbindings.ExactOut{
-							MaxInput: sdk.NewInt(6000000),
-							Output:   sdk.NewInt(24000000),
+							MaxInput: sdk.NewInt(2000000),
+							Output:   sdk.NewInt(12000000 - 12),
 						},
 					},
 				}
 			},
-			initFunds: sdk.NewInt64Coin("uosmo", 6000000),
+			initFunds: sdk.NewInt64Coin("uosmo", 2000000),
 			finalFunds: []sdk.Coin{
-				// 6 OSMO -> 2 ATOM
-				// 2 ATOM -> 24 REGEN (with minor rounding)
-				sdk.NewInt64Coin("uosmo", 5),
-				sdk.NewInt64Coin("uregen", 24000000),
+				// 2 OSMO -> 1.2 ATOM
+				// 1.2 ATOM -> 12 REGEN (with minor rounding)
+				sdk.NewInt64Coin("uosmo", 2),
+				sdk.NewInt64Coin("uregen", 12000000-12),
 			},
 		},
-
 		// FIXME: this panics in GAMM module !?! hits a known TODO
 		// https://github.com/osmosis-labs/osmosis/blob/a380ab2fcd39fb94c2b10411e07daf664911257a/osmomath/math.go#L47-L51
-		// "exact out: panics on math power stuff": {
+		// {
+		// 	name: "exact out: panics on math power stuff",
 		// 	msg: func(state BaseState) *wasmbindings.SwapMsg {
 		// 		return &wasmbindings.SwapMsg{
 		// 			First: wasmbindings.Swap{
@@ -296,8 +420,8 @@ func TestSwapMsg(t *testing.T) {
 		// 		sdk.NewInt64Coin("ustar", 5000),
 		// 	},
 		// },
-
-		"exact in: 3 step multi-hop": {
+		{
+			name: "exact in: 3 step multi-hop",
 			msg: func(state BaseState) *wasmbindings.SwapMsg {
 				return &wasmbindings.SwapMsg{
 					First: wasmbindings.Swap{
@@ -328,8 +452,8 @@ func TestSwapMsg(t *testing.T) {
 				sdk.NewInt64Coin("uregen", 23999990),
 			},
 		},
-
-		"exact out: 3 step multi-hop": {
+		{
+			name: "exact out: 3 step multi-hop",
 			msg: func(state BaseState) *wasmbindings.SwapMsg {
 				return &wasmbindings.SwapMsg{
 					First: wasmbindings.Swap{
@@ -346,26 +470,25 @@ func TestSwapMsg(t *testing.T) {
 					}},
 					Amount: wasmbindings.SwapAmountWithLimit{
 						ExactOut: &wasmbindings.ExactOut{
-							MaxInput: sdk.NewInt(240000000),
-							Output:   sdk.NewInt(24000000),
+							MaxInput: sdk.NewInt(50000000),
+							Output:   sdk.NewInt(12000000),
 						},
 					},
 				}
 			},
-			initFunds: sdk.NewInt64Coin("ustar", 240000000),
+			initFunds: sdk.NewInt64Coin("ustar", 50000000),
 			finalFunds: []sdk.Coin{
-				// 240 STAR -> 6 OSMO
-				// 6 OSMO -> 2 ATOM
-				// 2 ATOM -> 24 REGEN (with minor rounding)
-				sdk.NewInt64Coin("uregen", 24000000),
-				sdk.NewInt64Coin("ustar", 400),
+				// ~48 STAR -> 2 OSMO
+				// 2 OSMO -> .857 ATOM
+				// .857 ATOM -> 12 REGEN (with minor rounding)
+				sdk.NewInt64Coin("uregen", 12000000),
+				sdk.NewInt64Coin("ustar", 1999971),
 			},
 		},
 	}
-
-	for name, tc := range cases {
+	for _, tc := range cases {
 		tc := tc
-		t.Run(name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			creator := RandomAccountAddress()
 			osmosis, ctx := SetupCustomApp(t, creator)
 			state := prepareSwapState(t, ctx, osmosis)

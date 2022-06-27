@@ -17,7 +17,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/app/wasm"
-	"github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
+	wasmbindings "github.com/osmosis-labs/osmosis/v7/app/wasm/bindings"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 )
 
@@ -42,26 +42,26 @@ func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Con
 	return osmosis, ctx
 }
 
-// func TestQueryFullDenom(t *testing.T) {
-// 	actor := RandomAccountAddress()
-// 	osmosis, ctx := SetupCustomApp(t, actor)
+func TestQueryFullDenom(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
 
-// 	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
-// 	require.NotEmpty(t, reflect)
+	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	require.NotEmpty(t, reflect)
 
-// 	// query full denom
-// 	query := wasmbindings.OsmosisQuery{
-// 		FullDenom: &wasmbindings.FullDenom{
-// 			Contract: reflect.String(),
-// 			SubDenom: "ustart",
-// 		},
-// 	}
-// 	resp := wasmbindings.FullDenomResponse{}
-// 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	// query full denom
+	query := wasmbindings.OsmosisQuery{
+		FullDenom: &wasmbindings.FullDenom{
+			Contract: reflect.String(),
+			SubDenom: "ustart",
+		},
+	}
+	resp := wasmbindings.FullDenomResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 
-// 	expected := fmt.Sprintf("cw/%s/ustart", reflect.String())
-// 	require.EqualValues(t, expected, resp.Denom)
-// }
+	expected := fmt.Sprintf("factory/%s/ustart", reflect.String())
+	require.EqualValues(t, expected, resp.Denom)
+}
 
 func TestQueryPool(t *testing.T) {
 	actor := RandomAccountAddress()
@@ -175,7 +175,7 @@ func TestQuerySpotPrice(t *testing.T) {
 func TestQueryEstimateSwap(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
-	epsilon := 1e-3
+	epsilon := 2e-3
 
 	fundAccount(t, ctx, osmosis, actor, defaultFunds)
 
