@@ -39,7 +39,17 @@ message MsgJoinPool {
   ];
 }
 
-message MsgJoinPoolResponse {}
+message MsgJoinPoolResponse {
+  string share_out_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"pool_amount_out\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin token_in = 2 [
+    (gogoproto.moretags) = "yaml:\"token_in_max_amounts\"",
+    (gogoproto.nullable) = false
+  ];
+}
 
 // ===================== MsgExitPool
 message MsgExitPool {
@@ -57,7 +67,17 @@ message MsgExitPool {
   ];
 }
 
-message MsgExitPoolResponse {}
+message MsgExitPoolResponse {
+  string share_in_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"pool_amount_out\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin token_out = 2 [
+    (gogoproto.moretags) = "yaml:\"token_in_max_amounts\"",
+    (gogoproto.nullable) = false
+  ];
+}
 
 // ===================== MsgSwapExactAmountIn
 message SwapAmountInRoute {

@@ -108,7 +108,7 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 		return nil, err
 	}
 
-	err = server.keeper.JoinPoolNoSwap(ctx, sender, msg.PoolId, msg.ShareOutAmount, msg.TokenInMaxs)
+	neededLp, sharesOut, err := server.keeper.JoinPoolNoSwap(ctx, sender, msg.PoolId, msg.ShareOutAmount, msg.TokenInMaxs)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,10 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 		),
 	})
 
-	return &types.MsgJoinPoolResponse{}, nil
+	return &types.MsgJoinPoolResponse{
+		ShareOutAmount: sharesOut,
+		TokenIn:        neededLp,
+	}, nil
 }
 
 func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) (*types.MsgExitPoolResponse, error) {
