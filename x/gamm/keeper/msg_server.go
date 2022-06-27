@@ -139,7 +139,7 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 		return nil, err
 	}
 
-	_, err = server.keeper.ExitPool(ctx, sender, msg.PoolId, msg.ShareInAmount, msg.TokenOutMins)
+	exitCoins, err := server.keeper.ExitPool(ctx, sender, msg.PoolId, msg.ShareInAmount, msg.TokenOutMins)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,9 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 		),
 	})
 
-	return &types.MsgExitPoolResponse{}, nil
+	return &types.MsgExitPoolResponse{
+		TokenOut: exitCoins,
+	}, nil
 }
 
 func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {
