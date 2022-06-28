@@ -11,9 +11,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
@@ -178,4 +180,72 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 	suite.Equal(
 		mintCoins[0].Amount.ToDec().Mul(proportionToCommunity).Mul(sdk.NewDec(2)),
 		feePool.CommunityPool.AmountOf("stake"))
+}
+
+func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccout() {
+	testcases := map[string]struct {
+		blockHeight            int64
+		amount                 sdk.Coin
+		isModuleAccountCreated bool
+
+		expectedError error
+	}{
+		"valid call": {
+			blockHeight: 0,
+			amount:      sdk.NewCoin("stake", sdk.NewInt(100000)),
+		},
+		"nil amount": {
+			blockHeight:   0,
+			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+		},
+		"zero amount": {
+			blockHeight:   0,
+			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
+			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+		},
+		"non-zero height": {
+			blockHeight:   1,
+			amount:        sdk.NewCoin("stake", sdk.NewInt(100000)),
+			expectedError: keeper.ErrUnexpectedHeight{ActualHeight: 1, ExpectedHeight: 0},
+		},
+		"module account is already created": {
+			blockHeight:            0,
+			amount:                 sdk.NewCoin("stake", sdk.NewInt(100000)),
+			isModuleAccountCreated: true,
+			expectedError:          keeper.ErrDevVestingModuleAccountAlreadyCreated,
+		},
+	}
+
+	// Sets up each test case by reverting some default logic added by suite.Setup()
+	// Returns initialized context to be used in tests.
+	testcaseSetup := func(suite *KeeperTestSuite, blockHeight int64, isModuleAccountCreated bool) sdk.Context {
+		suite.Setup()
+		// Reset height to the desired value since test suite setup initialized
+		// it to 1.
+		ctx := suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
+
+		if !isModuleAccountCreated {
+			// Remove the developer vesting account since suite setup creates and initializes it.
+			developerVestingAccount := suite.App.AccountKeeper.GetAccount(ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+			suite.App.AccountKeeper.RemoveAccount(ctx, developerVestingAccount)
+		}
+		return ctx
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			ctx := testcaseSetup(suite, tc.blockHeight, tc.isModuleAccountCreated)
+			mintKeeper := suite.App.MintKeeper
+
+			// Test
+			actualError := mintKeeper.CreateDeveloperVestingModuleAccount(ctx, tc.amount)
+
+			if tc.expectedError != nil {
+				suite.Error(actualError)
+				suite.Equal(actualError, tc.expectedError)
+				return
+			}
+			suite.NoError(actualError)
+		})
+	}
 }

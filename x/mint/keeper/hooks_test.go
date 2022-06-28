@@ -4,12 +4,13 @@ import (
 	"testing"
 	"time"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,8 +39,8 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	app.MintKeeper.SetParams(ctx, mintParams)
 
 	// setup developer rewards account
-	app.MintKeeper.CreateDeveloperVestingModuleAccount(
-		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2)))
+	require.NoError(t, app.MintKeeper.CreateDeveloperVestingModuleAccount(
+		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2))))
 
 	height := int64(1)
 	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
@@ -121,8 +122,8 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
 
 	// setup developer rewards account
-	app.MintKeeper.CreateDeveloperVestingModuleAccount(
-		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2)))
+	require.NoError(t, app.MintKeeper.CreateDeveloperVestingModuleAccount(
+		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2))))
 
 	height := int64(1)
 	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
