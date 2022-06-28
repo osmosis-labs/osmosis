@@ -19,11 +19,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 }
 
-func (suite *KeeperTestSuite) SetupCleanGenesisTest() {
-	suite.Setup()
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
-}
-
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

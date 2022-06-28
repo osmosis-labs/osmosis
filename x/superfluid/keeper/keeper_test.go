@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	// TODO: Revisit if this is needed, it was added due to another bug in testing that is now fixed.
 	epochIdentifier := suite.App.SuperfluidKeeper.GetEpochIdentifier(suite.Ctx)
-	suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochtypes.EpochInfo{
+	suite.App.EpochsKeeper.AddEpochInfo(suite.Ctx, epochtypes.EpochInfo{
 		Identifier:              epochIdentifier,
 		StartTime:               startTime,
 		Duration:                time.Hour,

@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
 	suite.Require().Equal(multipliers, expectedMultipliers)
 
 	epochIdentifier := suite.App.SuperfluidKeeper.GetEpochIdentifier(suite.Ctx)
-	suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochstypes.EpochInfo{
+	suite.App.EpochsKeeper.AddEpochInfo(suite.Ctx, epochstypes.EpochInfo{
 		Identifier:   epochIdentifier,
 		CurrentEpoch: 2,
 	})
