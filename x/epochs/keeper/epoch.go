@@ -26,13 +26,18 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo
 	return epoch
 }
 
-// setEpochInfo set epoch info.
+// AddEpochInfo adds a new epoch info.
 func (k Keeper) AddEpochInfo(ctx sdk.Context, epoch types.EpochInfo) error {
 	err := epoch.Validate()
 	if err != nil {
 		return err
 	}
-	// Initialize empty epoch values via Cosmos SDK
+	// Check if identifier already exists
+	if (k.GetEpochInfo(ctx, epoch.Identifier) != types.EpochInfo{}) {
+		return fmt.Errorf("epoch with identifier %s already exists", epoch.Identifier)
+	}
+
+	// Initialize empty and default epoch values
 	if epoch.StartTime.Equal(time.Time{}) {
 		epoch.StartTime = ctx.BlockTime()
 	}
