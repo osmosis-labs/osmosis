@@ -18,7 +18,7 @@ var _ api.MsgServer = Keeper{}
 func (k Keeper) CreateSale(goCtx context.Context, msg *api.MsgCreateSale) (*api.MsgCreateSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
-	id, err := k.createSale(msg, ctx.BlockTime(), store)
+	id, err := k.createSale(ctx, msg, ctx.BlockTime(), store)
 	if err != nil {
 		return nil, err
 	}
@@ -31,17 +31,24 @@ func (k Keeper) CreateSale(goCtx context.Context, msg *api.MsgCreateSale) (*api.
 	return &api.MsgCreateSaleResponse{SaleId: id}, err
 }
 
-func (k Keeper) createSale(msg *api.MsgCreateSale, now time.Time, store storetypes.KVStore) (uint64, error) {
+func (k Keeper) createSale(ctx sdk.Context, msg *api.MsgCreateSale, now time.Time, store storetypes.KVStore) (uint64, error) {
 	if err := msg.Validate(now); err != nil { // handle.ValidateMsgCreateSale(msg)
 		return 0, err
 	}
 	id, idBz := k.nextSaleID(store)
 	end := msg.StartTime.Add(msg.Duration)
 	p := newSale(msg.Treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.InitialDeposit.Amount)
+	// TODO: Re-Check
+	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return 0, err
+	}
+	err = k.bank.SendCoinsFromAccountToModule(ctx, creator, launchpad.ModuleName, sdk.NewCoins(msg.InitialDeposit))
+	if err != nil {
+		return 0, err
+	}
 	k.saveSale(store, idBz, &p)
-	// TODO:
-	// + send initial deposit from sender to the pool
-	// + use ADR-28 addresses?
+
 	return id, nil
 }
 
@@ -67,6 +74,9 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 	if err != nil {
 		return err
 	}
+	if p.EndTime.Before(ctx.BlockTime()) {
+		return errors.ErrInvalidRequest.Wrap("sale completed")
+	}
 
 	coin := sdk.NewCoin(p.TokenIn, msg.Amount)
 	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, launchpad.ModuleName, sdk.NewCoins(coin))
@@ -77,7 +87,6 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 
 	k.saveSale(store, saleIdBz, p)
 	k.saveUserPosition(store, saleIdBz, sender, u)
-	// TODO: event
 	return nil
 }
 
@@ -203,7 +212,7 @@ func (k Keeper) finalizeSale(ctx sdk.Context, msg *api.MsgFinalizeSale, store st
 	}
 
 	pingSale(&p, ctx.BlockTime())
-	coin := sdk.NewCoin(p.TokenOut, p.Income)
+	coin := sdk.NewCoin(p.TokenIn, p.Income)
 	err = k.bank.SendCoinsFromModuleToAccount(ctx, launchpad.ModuleName, treasury, sdk.NewCoins(coin))
 	if err != nil {
 		return sdk.Int{}, err

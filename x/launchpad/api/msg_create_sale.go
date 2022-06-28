@@ -44,7 +44,7 @@ func (msg *MsgCreateSale) validate() []string {
 	if msg.InitialDeposit.Denom != msg.TokenOut {
 		errmsgs = append(errmsgs, "`initial_deposit` denom must be the same as `token_out`")
 	}
-	if msg.InitialDeposit.Amount.GT(sdk.NewInt(d)) {
+	if msg.InitialDeposit.Amount.LTE(sdk.NewInt(d)) {
 		errmsgs = append(errmsgs, "`initial_deposit` amount must be positive and must be bigger than duration in seconds")
 	}
 
