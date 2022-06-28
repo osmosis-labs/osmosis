@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -27,7 +26,6 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 	defaultDuration := time.Hour
 	eps := time.Nanosecond
 
-	// TODO: Refactor these tests to be well typed / make sense
 	tests := map[string]struct {
 		// if identifier, duration is not set, we make it defaultIdentifier and defaultDuration.
 		// EpochCountingStarted, if unspecified, is inferred by CurrentEpoch == 0
@@ -83,11 +81,8 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 			heights := maps.Keys(test.blockHeightTimePairs)
 			osmoutils.SortSlice(heights)
 			for _, h := range heights {
-				fmt.Println(h)
 				// for each height in order, run begin block
 				suite.Ctx = suite.Ctx.WithBlockHeight(int64(h)).WithBlockTime(test.blockHeightTimePairs[h])
-				fmt.Println(test.blockHeightTimePairs[h])
-
 				suite.App.EpochsKeeper.BeginBlocker(suite.Ctx)
 			}
 			expEpoch := initializeBlankEpochInfoFields(test.expEpochInfo, initialEpoch.Identifier, initialEpoch.Duration)

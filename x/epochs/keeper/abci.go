@@ -17,7 +17,6 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 		logger := k.Logger(ctx)
 
 		// If blocktime < initial epoch start time, return
-		fmt.Printf("Identifier %s, blocktime %s, start time %s\n", epochInfo.Identifier, ctx.BlockTime(), epochInfo.StartTime)
 		if ctx.BlockTime().Before(epochInfo.StartTime) {
 			return
 		}
