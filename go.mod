@@ -31,6 +31,8 @@ require (
 	mvdan.cc/gofumpt v0.3.1
 )
 
+require golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
+
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect

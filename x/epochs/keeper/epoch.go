@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,8 +26,23 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo
 	return epoch
 }
 
-// SetEpochInfo set epoch info.
-func (k Keeper) SetEpochInfo(ctx sdk.Context, epoch types.EpochInfo) {
+// setEpochInfo set epoch info.
+func (k Keeper) AddEpochInfo(ctx sdk.Context, epoch types.EpochInfo) error {
+	err := epoch.Validate()
+	if err != nil {
+		return err
+	}
+	// Initialize empty epoch values via Cosmos SDK
+	if epoch.StartTime.Equal(time.Time{}) {
+		epoch.StartTime = ctx.BlockTime()
+	}
+	epoch.CurrentEpochStartHeight = ctx.BlockHeight()
+	k.setEpochInfo(ctx, epoch)
+	return nil
+}
+
+// setEpochInfo set epoch info.
+func (k Keeper) setEpochInfo(ctx sdk.Context, epoch types.EpochInfo) {
 	store := ctx.KVStore(k.storeKey)
 	value, err := proto.Marshal(&epoch)
 	if err != nil {
