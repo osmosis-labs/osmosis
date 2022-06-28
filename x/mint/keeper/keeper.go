@@ -28,6 +28,7 @@ func (e errUnexpectedHeight) Error() string {
 var (
 	errAmountCannotBeNilOrZero               = errors.New("amount cannot be nil or zero")
 	errDevVestingModuleAccountAlreadyCreated = fmt.Errorf("%s module account already exists", types.DeveloperVestingModuleAcctName)
+	errDevVestingModuleAccountNotCreated     = fmt.Errorf("%s module account does not exist", types.DeveloperVestingModuleAcctName)
 )
 
 // Keeper of the mint store.
@@ -72,13 +73,18 @@ func NewKeeper(
 }
 
 // SetInitialSupplyOffsetDuringMigration sets the supply offset based on the balance of the
-// types.DeveloperVestingModuleAcctName. It should only be called one time during the initial
-// migration to v7. This is done so because we would like to ensure that unvested
-// developer tokens are not returned as part of the supply queries.
-// The method returns an error if current height in ctx is greater than the v7.UpgradeHeight.
+// types.DeveloperVestingModuleAcctName. CreateDeveloperVestingModuleAccount must be called
+// prior to calling this method. That is, developer vesting module account must exist when
+// SetInitialSupplyOffsetDuringMigration is called. Also, SetInitialSupplyOffsetDuringMigration
+//  should only be called one time during the initial migration to v7. This is done so because
+// we would like to ensure that unvested developer tokens are not returned as part of the supply
+// queries. The method returns an error if current height in ctx is greater than the v7.UpgradeHeight.
 func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 	if ctx.BlockHeight() > v7constants.UpgradeHeight {
 		return errUnexpectedHeight{ActualHeight: ctx.BlockHeight(), ExpectedHeight: v7constants.UpgradeHeight}
+	}
+	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
+		return errDevVestingModuleAccountNotCreated
 	}
 
 	moduleAccBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), k.GetParams(ctx).MintDenom)
