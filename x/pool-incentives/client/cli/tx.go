@@ -10,24 +10,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
-// Proposal flags
-const (
-	FlagTitle        = "title"
-	FlagDescription  = "description"
-	FlagIsExpedited  = "is-expedited"
-	FlagProposalType = "type"
-	FlagDeposit      = "deposit"
-	flagVoter        = "voter"
-	flagDepositor    = "depositor"
-	flagStatus       = "status"
-	FlagProposal     = "proposal"
-)
+const flagIsExpedited = "is-expedited"
 
 func NewTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
@@ -57,7 +47,6 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			// TODO: Make a parse uint64 slice function
 			gaugeIds, err := osmoutils.ParseUint64SliceFromString(args[0], ",")
 			if err != nil {
 				return err
@@ -96,7 +85,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			content := types.NewUpdatePoolIncentivesProposal(proposal.Title, proposal.Deposit, records)
+			content := types.NewUpdatePoolIncentivesProposal(proposal.Title, proposal.Description, records)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
@@ -111,12 +100,12 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(FlagTitle, "", "The proposal title")
-	cmd.Flags().String(FlagDescription, "", "The proposal description")
-	cmd.Flags().Bool(FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
-	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
-	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagTitle, "", "The proposal title")
+	cmd.Flags().String(govcli.FlagDescription, "", "The proposal description")
+	cmd.Flags().Bool(flagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposalType, "", "The proposal Type")
+	cmd.Flags().String(govcli.FlagDeposit, "", "The proposal deposit")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -186,12 +175,12 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(FlagTitle, "", "The proposal title")
-	cmd.Flags().String(FlagDescription, "", "The proposal description")
-	cmd.Flags().Bool(FlagIsExpedited, false, "If true, makes the proposal an expedited one")
-	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
-	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
-	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagTitle, "", "The proposal title")
+	cmd.Flags().String(govcli.FlagDescription, "", "The proposal description")
+	cmd.Flags().Bool(flagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposalType, "", "The proposal Type")
+	cmd.Flags().String(govcli.FlagDeposit, "", "The proposal deposit")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
