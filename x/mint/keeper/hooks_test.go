@@ -357,8 +357,8 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	for i := int64(1); i <= reductionPeriodInEpochs; i++ {
 		developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, app.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintDenom)
 
+		// System undert test.
 		app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, i)
-		require.Equal(t, genesisEpochProvisions, app.MintKeeper.GetMinter(ctx).EpochProvisions.String())
 
 		// System truncates EpochProvisions because bank takes an Int.
 		// This causes rounding errors. Let's refer to this source as #1.
@@ -369,15 +369,12 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 		// to expected at the end.
 		truncatedEpochProvisions := genesisEpochProvisionsDec.TruncateInt().ToDec()
 
-		// We do not want supply to include unvested developer rewards
+		// We want supply with offset to exclude unvested developer rewards
 		// Truncation also happens when subtracting dev rewards.
 		// Potential source of minor rounding errors #2.
 		devRewards := truncatedEpochProvisions.Mul(mintParams.DistributionProportions.DeveloperRewards).TruncateInt().ToDec()
 
-		expectedSupply = expectedSupply.Add(truncatedEpochProvisions).Sub(devRewards)
-		require.Equal(t, expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, mintDenom).Amount)
-
-		// We aim to exclude developer account balance from the supply with offset.
+		// We aim to exclude developer account balance from the supply with offset calculation.
 		developerAccountBalance := app.BankKeeper.GetBalance(ctx, app.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintDenom)
 
 		// Make sure developer account balance has decreased by devRewards.
@@ -394,10 +391,15 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 			devRewardsDelta = devRewardsDelta.Add(actualDeveloperAccountBalanceAfterHook.Sub(expectedDeveloperAccountBalanceAfterHook))
 		}
 
+		expectedSupply = expectedSupply.Add(truncatedEpochProvisions).Sub(devRewards)
+		require.Equal(t, expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, mintDenom).Amount)
+
 		expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalance.Amount.ToDec())
 		require.Equal(t, expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount)
 
+		// Validate that the epoch provisions have not been reduced.
 		require.Equal(t, mintingRewardsDistributionStartEpoch, app.MintKeeper.GetLastHalvenEpochNum(ctx))
+		require.Equal(t, genesisEpochProvisions, app.MintKeeper.GetMinter(ctx).EpochProvisions.String())
 	}
 
 	// Validate total supply.
@@ -416,7 +418,7 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	require.Equal(t, expectedTotalProvisionedSupply, actualTotalProvisionedSupply.Add(devRewardsDelta).Add(epochProvisionsDelta))
 
 	// This end of epoch should trigger thirdening. It will utilize the updated
-	// (reduced) thirdening provisions.
+	// (reduced) provisions.
 	app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, thirdeningEpochNum)
 
 	require.Equal(t, thirdeningEpochNum, app.MintKeeper.GetLastHalvenEpochNum(ctx))
