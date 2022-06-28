@@ -225,7 +225,7 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	// https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
 	const (
 		reductionPeriodInEpochs                    = 365
-		mintingRewardsDistributionStartEpoch       = 1
+		mintingRewardsDistributionStartEpoch int64 = 1
 		thirdeningEpoch                      int64 = reductionPeriodInEpochs + mintingRewardsDistributionStartEpoch
 
 		// different from mainnet since the difference is insignificant for testnig purposes.
@@ -239,6 +239,10 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 		developerAccountBalance = 225_000_000_000_000
 	)
 
+	var (
+		reductionFactor = sdk.NewDec(2).Quo(sdk.NewDec(3))
+	)
+
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -250,7 +254,7 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 		GenesisEpochProvisions:  genesisEpochProvisionsDec,
 		EpochIdentifier:         epochIdentifier,
 		ReductionPeriodInEpochs: reductionPeriodInEpochs,
-		ReductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
+		ReductionFactor:         reductionFactor,
 		DistributionProportions: types.DistributionProportions{
 			Staking:          sdk.NewDecWithPrec(25, 2),
 			PoolIncentives:   sdk.NewDecWithPrec(45, 2),
@@ -346,28 +350,65 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	supply := app.BankKeeper.GetSupply(ctx, mintDenom)
 	require.Equal(t, expectedSupply.TruncateInt64(), supply.Amount.Int64())
 
+	devRewardsDelta := sdk.ZeroDec()
+	epochProvisionsDelta := genesisEpochProvisionsDec.Sub(genesisEpochProvisionsDec.TruncateInt().ToDec()).Mul(sdk.NewDec(reductionPeriodInEpochs))
+
 	// Actual test for running AfterEpochEnd hook thirdeningEpoch times.
-	for i := int64(1); i < thirdeningEpoch; i++ {
+	for i := int64(1); i <= reductionPeriodInEpochs; i++ {
+		developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, app.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintDenom)
+
 		app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, i)
 		require.Equal(t, genesisEpochProvisions, app.MintKeeper.GetMinter(ctx).EpochProvisions.String())
 
-		if i >= mintingRewardsDistributionStartEpoch {
-			// System truncates them in EpochProvisions because bank takes an Int.
-			epochProvisions := genesisEpochProvisionsDec.TruncateInt().ToDec()
+		// System truncates EpochProvisions because bank takes an Int.
+		// This causes rounding errors. Let's refer to this source as #1.
+		//
+		// Since this is truncated, our total supply calculation at the end will
+		// be off by reductionPeriodInEpochs * (genesisEpochProvisionsDec - truncatedEpochProvisions)
+		// Therefore, we store this delta in epochProvisionsDelta to add to the actual supply to compare
+		// to expected at the end.
+		truncatedEpochProvisions := genesisEpochProvisionsDec.TruncateInt().ToDec()
 
-			// We do not want supply to include unvested developer rewards
-			// Truncation also happens when subtracting dev rewards.
-			devRewards := epochProvisions.Mul(mintParams.DistributionProportions.DeveloperRewards).TruncateInt().ToDec()
+		// We do not want supply to include unvested developer rewards
+		// Truncation also happens when subtracting dev rewards.
+		// Potential source of minor rounding errors #2.
+		devRewards := truncatedEpochProvisions.Mul(mintParams.DistributionProportions.DeveloperRewards).TruncateInt().ToDec()
 
-			// TODO: the commented out logic below does not make sense at the moment.
-			// expectedSupplyWithOffset = expectedSupplyWithOffset.Add(epochProvisions)
-			// require.Equal(t, expectedSupplyWithOffset.String(), app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount.String())
-			expectedSupply = expectedSupply.Add(epochProvisions).Sub(devRewards)
-			require.Equal(t, expectedSupply.RoundInt().String(), app.BankKeeper.GetSupply(ctx, mintDenom).Amount.String())
+		expectedSupply = expectedSupply.Add(truncatedEpochProvisions).Sub(devRewards)
+		require.Equal(t, expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, mintDenom).Amount)
+
+		// We aim to exclude developer account balance from the supply with offset.
+		developerAccountBalance := app.BankKeeper.GetBalance(ctx, app.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), mintDenom)
+
+		// Make sure developer account balance has decreased by devRewards.
+		// This check is now failing because of rounding errors.
+		// To prove that this is the source of errors, we keep accumulating
+		// the delta and add it to the expected supply validation after the loop.
+		if !developerAccountBalanceBeforeHook.Amount.ToDec().Sub(devRewards).Equal(developerAccountBalance.Amount.ToDec()) {
+			expectedDeveloperAccountBalanceAfterHook := developerAccountBalanceBeforeHook.Amount.ToDec().Sub(devRewards)
+			actualDeveloperAccountBalanceAfterHook := developerAccountBalance.Amount.ToDec()
+
+			// This is supposed to be equal but is failing due to the rounding errors from devRewards.
+			require.NotEqual(t, expectedDeveloperAccountBalanceAfterHook, actualDeveloperAccountBalanceAfterHook)
+
+			devRewardsDelta = devRewardsDelta.Add(actualDeveloperAccountBalanceAfterHook.Sub(expectedDeveloperAccountBalanceAfterHook))
 		}
+
+		expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalance.Amount.ToDec())
+		require.Equal(t, expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount)
+
+		require.Equal(t, mintingRewardsDistributionStartEpoch, app.MintKeeper.GetLastHalvenEpochNum(ctx))
 	}
 
-	// This end of epoch should trigger thirdening.
+	// Validate total supply.
+	// This test check is now failing due to rounding errors.
+	// Every epoch, we accumulate the rounding delta from every problematic component
+	// Here, we add the deltas to the actual supply and compare against expected.
+	totalProvisionedSupply := sdk.NewDec(reductionPeriodInEpochs).Mul(genesisEpochProvisionsDec)
+	require.Equal(t, totalProvisionedSupply, app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount.ToDec().Add(devRewardsDelta).Add(epochProvisionsDelta))
+
+	// This end of epoch should trigger thirdening. It will utilize the updated
+	// (reduced) thirdening provisions.
 	app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, thirdeningEpoch)
 
 	require.Equal(t, thirdeningEpoch, app.MintKeeper.GetLastHalvenEpochNum(ctx))
