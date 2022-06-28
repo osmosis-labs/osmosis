@@ -8,12 +8,25 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+)
+
+// Proposal flags
+const (
+	FlagTitle        = "title"
+	FlagDescription  = "description"
+	FlagIsExpedited  = "is-expedited"
+	FlagProposalType = "type"
+	FlagDeposit      = "deposit"
+	flagVoter        = "voter"
+	flagDepositor    = "depositor"
+	flagStatus       = "status"
+	FlagProposal     = "proposal"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -98,7 +111,13 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagTitle, "", "The proposal title")
+	cmd.Flags().String(FlagDescription, "", "The proposal description")
+	cmd.Flags().Bool(FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
+	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
+	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
@@ -167,7 +186,13 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(FlagTitle, "", "The proposal title")
+	cmd.Flags().String(FlagDescription, "", "The proposal description")
+	cmd.Flags().Bool(FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(FlagProposalType, "", "The proposal Type")
+	cmd.Flags().String(FlagDeposit, "", "The proposal deposit")
+	cmd.Flags().String(FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
