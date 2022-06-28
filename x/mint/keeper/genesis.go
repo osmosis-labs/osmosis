@@ -12,10 +12,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.Ba
 	k.SetMinter(ctx, data.Minter)
 	k.SetParams(ctx, data.Params)
 
-	ak.GetModuleAccount(ctx, types.ModuleName)
-	totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, sdk.NewInt(225_000_000_000_000))
-	k.CreateDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins)
-	bk.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(225_000_000_000_000).Neg())
+	// The account should be exported in the ExportGenesis of the
+	// x/auth SDK module. Therefore, we check for existence here
+	// to avoid overwriting pre-existing genesis account data.
+	if !ak.HasAccount(ctx, ak.GetModuleAddress(types.ModuleName)) {
+		totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, sdk.NewInt(225_000_000_000_000))
+		k.CreateDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins)
+		bk.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(225_000_000_000_000).Neg())
+	}
 
 	k.SetLastHalvenEpochNum(ctx, data.HalvenStartedEpoch)
 }
