@@ -6,9 +6,12 @@
 name: Check generated code
 on:
   workflow_dispatch:
+  push:
+      - xiangan/ci
   pull_request:
     branches:
-      - master
+      - main
+      - xiangan/ci
 
 permissions:
   contents: read
