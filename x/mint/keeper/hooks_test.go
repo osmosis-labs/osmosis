@@ -226,14 +226,14 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	const (
 		reductionPeriodInEpochs                    = 365
 		mintingRewardsDistributionStartEpoch int64 = 1
-		thirdeningEpoch                      int64 = reductionPeriodInEpochs + mintingRewardsDistributionStartEpoch
+		thirdeningEpochNum                   int64 = reductionPeriodInEpochs + mintingRewardsDistributionStartEpoch
 
-		// different from mainnet since the difference is insignificant for testnig purposes.
+		// different from mainnet since the difference is insignificant for testing purposes.
 		mintDenom              = "stake"
 		genesisEpochProvisions = "821917808219.178082191780821917"
 		epochIdentifier        = "day"
 
-		// Actual value taken from mainnet for sanity checking calculations.
+		// actual value taken from mainnet for sanity checking calculations.
 		mainnetThirdenedProvisions = "547945205479.452055068493150684"
 
 		developerAccountBalance = 225_000_000_000_000
@@ -404,14 +404,22 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	// This test check is now failing due to rounding errors.
 	// Every epoch, we accumulate the rounding delta from every problematic component
 	// Here, we add the deltas to the actual supply and compare against expected.
-	totalProvisionedSupply := sdk.NewDec(reductionPeriodInEpochs).Mul(genesisEpochProvisionsDec)
-	require.Equal(t, totalProvisionedSupply, app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount.ToDec().Add(devRewardsDelta).Add(epochProvisionsDelta))
+	//
+	// expectedTotalProvisionedSupply = 365 * 821917808219.178082191780821917 = 299_999_999_999_999.999999999999999705
+	expectedTotalProvisionedSupply := sdk.NewDec(reductionPeriodInEpochs).Mul(genesisEpochProvisionsDec)
+	// actualTotalProvisionedSupply = 299_999_999_997_380 (off by 2619.999999999999999705)
+	// devRewardsDelta = 2555 (hard to estimate but the source is from truncating dev rewards )
+	// epochProvisionsDelta = 0.178082191780821917 * 365 = 64.999999999999999705
+	actualTotalProvisionedSupply := app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount.ToDec()
+
+	// 299_999_999_999_999.999999999999999705 == 299_999_999_997_380 + 2555 + 64.999999999999999705
+	require.Equal(t, expectedTotalProvisionedSupply, actualTotalProvisionedSupply.Add(devRewardsDelta).Add(epochProvisionsDelta))
 
 	// This end of epoch should trigger thirdening. It will utilize the updated
 	// (reduced) thirdening provisions.
-	app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, thirdeningEpoch)
+	app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, thirdeningEpochNum)
 
-	require.Equal(t, thirdeningEpoch, app.MintKeeper.GetLastHalvenEpochNum(ctx))
+	require.Equal(t, thirdeningEpochNum, app.MintKeeper.GetLastHalvenEpochNum(ctx))
 
 	expectedThirdenedProvisions := mintParams.ReductionFactor.Mul(genesisEpochProvisionsDec)
 	// Sanity check with the actual value on mainnet.
