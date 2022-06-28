@@ -43,10 +43,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 		unbondingDuration,
 	})
 
-	// TODO: Revisit if this is needed, it was added due to another bug in testing that is now fixed.
-	epochIdentifier := suite.App.SuperfluidKeeper.GetEpochIdentifier(suite.Ctx)
-	suite.App.EpochsKeeper.AddEpochInfo(suite.Ctx, epochtypes.EpochInfo{
-		Identifier:              epochIdentifier,
+	superfluidEpochIdentifer := "superfluid_epoch"
+	incentiveKeeperParams := suite.App.IncentivesKeeper.GetParams(suite.Ctx)
+	incentiveKeeperParams.DistrEpochIdentifier = superfluidEpochIdentifer
+	suite.App.IncentivesKeeper.SetParams(suite.Ctx, incentiveKeeperParams)
+	err := suite.App.EpochsKeeper.AddEpochInfo(suite.Ctx, epochtypes.EpochInfo{
+		Identifier:              superfluidEpochIdentifer,
 		StartTime:               startTime,
 		Duration:                time.Hour,
 		CurrentEpochStartTime:   startTime,
@@ -54,9 +56,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 		CurrentEpoch:            1,
 		EpochCountingStarted:    true,
 	})
+	suite.Require().NoError(err)
 
 	mintParams := suite.App.MintKeeper.GetParams(suite.Ctx)
-	mintParams.EpochIdentifier = epochIdentifier
+	mintParams.EpochIdentifier = superfluidEpochIdentifer
 	mintParams.DistributionProportions = minttypes.DistributionProportions{
 		Staking:          sdk.OneDec(),
 		PoolIncentives:   sdk.ZeroDec(),
