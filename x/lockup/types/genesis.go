@@ -1,5 +1,7 @@
 package types
 
+import "errors"
+
 // DefaultIndex is the default capability global index.
 const DefaultIndex uint64 = 1
 
@@ -11,5 +13,8 @@ func DefaultGenesis() *GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
+	if gs.LastLockId < 0 {
+		return errors.New("lock last lock id should be non-negative")
+	}
 	return nil
 }

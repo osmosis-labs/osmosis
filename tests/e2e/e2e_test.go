@@ -9,6 +9,10 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
+
 	chainA := s.chainConfigs[0]
 	chainB := s.chainConfigs[1]
 	// compare coins of receiver pre and post IBC send
@@ -17,6 +21,11 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 }
 
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+	if s.skipUpgrade {
+		// TODO: https://github.com/osmosis-labs/osmosis/issues/1843
+		s.T().Skip("Superfluid tests are broken when upgrade is skipped. To be fixed in #1843")
+	}
+
 	chainA := s.chainConfigs[0]
 	s.submitSuperfluidProposal(chainA, "gamm/pool/1")
 	s.depositProposal(chainA)
@@ -35,7 +44,10 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	// set delegator vote to no
 	s.voteNoProposal(chainA, 0, "wallet")
 
-	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[chainA.meta.Id][0].GetHostPort("1317/tcp"))
+	hostPort, err := s.containerManager.GetValidatorHostPort(chainA.meta.Id, 0, "1317/tcp")
+	s.Require().NoError(err)
+
+	chainAAPIEndpoint := fmt.Sprintf("http://%s", hostPort)
 	sfProposalNumber := strconv.Itoa(chainA.latestProposalNumber)
 	s.Require().Eventually(
 		func() bool {
