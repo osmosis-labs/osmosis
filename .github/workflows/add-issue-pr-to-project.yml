@@ -5,6 +5,7 @@ on:
     types:
       - opened
   pull_request:
+    if: ${{ github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
     types:
       - opened
 jobs:
