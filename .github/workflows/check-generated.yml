@@ -33,6 +33,9 @@ jobs:
           readonly tools="$(mktemp -d)"
           export PATH="${PATH}:${tools}/bin"
           export GOBIN="${tools}/bin"
+          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+          
+          make proto-gen
           make proto-all
           if ! git diff --stat --exit-code ; then
             echo ">> ERROR:"
