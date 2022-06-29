@@ -21,10 +21,9 @@ import (
 // TODO: Make a new test for init genesis logic
 func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 	block1Time := time.Unix(1656907200, 0).UTC()
-	// We run all tests with the same identifier and same duration
-	defaultIdentifier := "hourly"
-	defaultDuration := time.Hour
-	eps := time.Nanosecond
+	const defaultIdentifier = "hourly"
+	const defaultDuration = time.Hour
+	const eps = time.Nanosecond
 
 	tests := map[string]struct {
 		// if identifier, duration is not set, we make it defaultIdentifier and defaultDuration.
