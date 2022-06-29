@@ -105,72 +105,74 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 	// Specifically, it removes the module account
 	// from account keeper if isDeveloperModuleAccountCreated is true.
 	// Returns initialized context to be used in tests.
-	testcaseSetup := func(suite *KeeperTestSuite, blockHeight int64, isDeveloperModuleAccountCreated bool) sdk.Context {
+	testcaseSetup := func(suite *KeeperTestSuite, blockHeight int64, isDeveloperModuleAccountCreated bool) {
 		suite.Setup()
 		// Reset height to the desired value since test suite setup initialized
 		// it to 1.
-		ctx := suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
+		suite.Ctx = suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
 
 		// If developer module account is created, the suite.Setup() also correctly sets the offset
 		if !isDeveloperModuleAccountCreated {
 			// Remove the developer vesting account since suite setup creates and initializes it.
 			// This environment w/o the developer vesting account configured is necessary for
 			// testing edge cases of multiple tests.
-			developerVestingAccount := suite.App.AccountKeeper.GetAccount(ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
-			suite.App.AccountKeeper.RemoveAccount(ctx, developerVestingAccount)
-			suite.App.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount))))
+			developerVestingAccount := suite.App.AccountKeeper.GetAccount(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+			suite.App.AccountKeeper.RemoveAccount(suite.Ctx, developerVestingAccount)
+			suite.App.BankKeeper.BurnCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount))))
 
 			// Reset supply offset to 0
-			supplyOffset := suite.App.BankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
-			suite.App.BankKeeper.AddSupplyOffset(ctx, sdk.DefaultBondDenom, supplyOffset.Mul(sdk.NewInt(-1)))
-			suite.Equal(sdk.ZeroInt(), suite.App.BankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
+			supplyOffset := suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom)
+			suite.App.BankKeeper.AddSupplyOffset(suite.Ctx, sdk.DefaultBondDenom, supplyOffset.Mul(sdk.NewInt(-1)))
+			suite.Equal(sdk.ZeroInt(), suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom))
 		}
-
-		return ctx
 	}
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			ctx := testcaseSetup(suite, tc.ctxHeight, tc.isDeveloperModuleAccountCreated)
+			testcaseSetup(suite, tc.ctxHeight, tc.isDeveloperModuleAccountCreated)
+			ctx := suite.Ctx
+			accountKeeper := suite.App.AccountKeeper
+			bankKeeper := suite.App.BankKeeper
+			mintKeeper := suite.App.MintKeeper
 
-			developerAccount := suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
+			developerAccount := accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
 
-			originalSupplyOffset := suite.App.BankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
-			originalSupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom)
-			originalVestingCoins := suite.App.BankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
+			originalSupplyOffset := bankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
+			originalSupplyWithOffset := bankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom)
+			originalVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
 
 			if tc.expectPanic {
 				suite.Panics(func() {
-					suite.App.MintKeeper.InitGenesis(ctx, suite.App.AccountKeeper, suite.App.BankKeeper, tc.mintGenesis)
+					mintKeeper.InitGenesis(ctx, accountKeeper, bankKeeper, tc.mintGenesis)
 				})
 				return
 			}
 
 			suite.NotPanics(func() {
-				suite.App.MintKeeper.InitGenesis(ctx, suite.App.AccountKeeper, suite.App.BankKeeper, tc.mintGenesis)
+				mintKeeper.InitGenesis(ctx, accountKeeper, bankKeeper, tc.mintGenesis)
 			})
 
 			// Epoch provisions are set to genesis epoch provisions from params.
-			actualEpochProvisions := suite.App.MintKeeper.GetMinter(ctx).EpochProvisions
+			actualEpochProvisions := mintKeeper.GetMinter(ctx).EpochProvisions
 			suite.Equal(tc.expectedEpochProvisions, actualEpochProvisions)
 
 			// Supply offset is applied to genesis supply.
-			actualSupplyOffset := suite.App.BankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
+			actualSupplyOffset := bankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
 			expectedSupplyOffset := tc.expectedSupplyOffsetDelta.Add(originalSupplyOffset)
 			suite.Equal(expectedSupplyOffset, actualSupplyOffset)
 
 			// Supply with offset is as expected.
-			actualSupplyWithOffset := suite.App.BankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom).Amount
+			actualSupplyWithOffset := bankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom).Amount
 			expectedSupplyWithOffset := tc.expectedSupplyWithOffsetDelta.Add(originalSupplyWithOffset.Amount)
 			suite.Equal(expectedSupplyWithOffset.Int64(), actualSupplyWithOffset.Int64())
 
 			// Developer vesting account has the desired amount of tokens.
-			actualVestingCoins := suite.App.BankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
+			actualVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
 			expectedDeveloperVestingAmount := tc.expectedDeveloperVestingAmountDelta.Add(originalVestingCoins.Amount)
 			suite.Equal(expectedDeveloperVestingAmount.Int64(), actualVestingCoins.Amount.Int64())
 
 			// Last halven epoch num is set to 0.
-			suite.Equal(tc.expectedHalvenStartedEpoch, suite.App.MintKeeper.GetLastHalvenEpochNum(ctx))
+			suite.Equal(tc.expectedHalvenStartedEpoch, mintKeeper.GetLastHalvenEpochNum(ctx))
 		})
 	}
 }
