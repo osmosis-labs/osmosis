@@ -193,7 +193,7 @@ func (k Keeper) DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom
 	return nil
 }
 
-// DeleteAllMaturedSyntheticLocks deletes all matured syntehtic locks.
+// DeleteAllMaturedSyntheticLocks deletes all matured synthetic locks.
 func (k Keeper) DeleteAllMaturedSyntheticLocks(ctx sdk.Context) {
 	iterator := k.iteratorBeforeTime(ctx, combineKeys(types.KeyPrefixSyntheticLockTimestamp), ctx.BlockTime())
 	defer iterator.Close()

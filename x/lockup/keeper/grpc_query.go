@@ -132,7 +132,7 @@ func (q Querier) AccountUnlockedBeforeTime(goCtx context.Context, req *types.Acc
 }
 
 // AccountLockedPastTimeDenom returns the locks of an account whose unlock time is beyond provided timestamp, limited to locks with
-// the specified denom. Equivilent to `AccountLockedPastTime` but denom specific.
+// the specified denom. Equivalent to `AccountLockedPastTime` but denom specific.
 func (q Querier) AccountLockedPastTimeDenom(goCtx context.Context, req *types.AccountLockedPastTimeDenomRequest) (*types.AccountLockedPastTimeDenomResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
