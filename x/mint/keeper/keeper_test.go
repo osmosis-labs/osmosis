@@ -210,7 +210,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 		feePool.CommunityPool.AmountOf("stake"))
 }
 
-func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccout() {
+func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 	testcases := map[string]struct {
 		blockHeight                     int64
 		amount                          sdk.Coin
@@ -244,31 +244,13 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccout() {
 		},
 	}
 
-	// Sets up each test case by reverting some default logic added by suite.Setup()
-	// Specifically, it removes the module account from account keeper if
-	// isDeveloperModuleAccountCreated is true.
-	// Returns initialized context to be used in tests.
-	testcaseSetup := func(suite *KeeperTestSuite, blockHeight int64, isDeveloperModuleAccountCreated bool) sdk.Context {
-		suite.Setup()
-		// Reset height to the desired value since test suite setup initialized
-		// it to 1.
-		ctx := suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
-
-		if !isDeveloperModuleAccountCreated {
-			// Remove the developer vesting account since suite setup creates and initializes it.
-			developerVestingAccount := suite.App.AccountKeeper.GetAccount(ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
-			suite.App.AccountKeeper.RemoveAccount(ctx, developerVestingAccount)
-		}
-		return ctx
-	}
-
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			ctx := testcaseSetup(suite, tc.blockHeight, tc.isDeveloperModuleAccountCreated)
+			suite.setupDeveloperAccountTestcase(tc.blockHeight, tc.isDeveloperModuleAccountCreated)
 			mintKeeper := suite.App.MintKeeper
 
 			// Test
-			actualError := mintKeeper.CreateDeveloperVestingModuleAccount(ctx, tc.amount)
+			actualError := mintKeeper.CreateDeveloperVestingModuleAccount(suite.Ctx, tc.amount)
 
 			if tc.expectedError != nil {
 				suite.Error(actualError)
