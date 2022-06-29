@@ -1,4 +1,4 @@
-package api
+package types
 
 // DefaultGenesis creates a default GenesisState object
 func DefaultGenesis() *GenesisState {

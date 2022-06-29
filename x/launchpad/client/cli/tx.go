@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
@@ -260,7 +260,7 @@ func NewBuildCreateSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		return txf, nil, err
 	}
 
-	msg := &api.MsgCreateSale{
+	msg := &types.MsgCreateSale{
 		TokenIn:        s.TokenIn,
 		TokenOut:       s.TokenOut,
 		StartTime:      s.StartTime,
@@ -282,7 +282,7 @@ func NewBuildFinalizeSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.
 		return txf, nil, err
 	}
 
-	msg := &api.MsgFinalizeSale{
+	msg := &types.MsgFinalizeSale{
 		Sender: clientCtx.GetFromAddress().String(),
 		SaleId: saleId,
 	}
@@ -302,7 +302,7 @@ func NewBuildSubscribeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 	if err != nil {
 		return txf, nil, err
 	}
-	msg := &api.MsgSubscribe{
+	msg := &types.MsgSubscribe{
 		Sender: clientCtx.GetFromAddress().String(),
 		SaleId: saleId,
 		Amount: sdk.NewInt(amount),
@@ -322,7 +322,7 @@ func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 	if err != nil {
 		return txf, nil, err
 	}
-	msg := &api.MsgWithdraw{
+	msg := &types.MsgWithdraw{
 		Sender: clientCtx.GetFromAddress().String(),
 		SaleId: saleId,
 	}
@@ -345,7 +345,7 @@ func NewBuildExitSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		return txf, nil, err
 	}
 
-	msg := &api.MsgExitSale{
+	msg := &types.MsgExitSale{
 		Sender: clientCtx.GetFromAddress().String(),
 		SaleId: saleId,
 	}

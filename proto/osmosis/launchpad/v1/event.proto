@@ -5,7 +5,7 @@ package osmosis.launchpad.v1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/api";
+option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/types";
 option (gogoproto.goproto_getters_all) = false;
 
 message EventCreateSale {

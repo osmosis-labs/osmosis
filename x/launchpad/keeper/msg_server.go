@@ -10,26 +10,26 @@ import (
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
-func (k Keeper) CreateSale(goCtx context.Context, msg *api.MsgCreateSale) (*api.MsgCreateSaleResponse, error) {
+func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*types.MsgCreateSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	id, err := k.createSale(msg, ctx.BlockTime(), store)
 	if err != nil {
 		return nil, err
 	}
-	err = ctx.EventManager().EmitTypedEvent(&api.EventCreateSale{
+	err = ctx.EventManager().EmitTypedEvent(&types.EventCreateSale{
 		Id:       id,
 		Creator:  msg.Creator,
 		TokenIn:  msg.TokenIn,
 		TokenOut: msg.TokenOut,
 	})
-	return &api.MsgCreateSaleResponse{SaleId: id}, err
+	return &types.MsgCreateSaleResponse{SaleId: id}, err
 }
 
-func (k Keeper) createSale(msg *api.MsgCreateSale, now time.Time, store storetypes.KVStore) (uint64, error) {
+func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, store storetypes.KVStore) (uint64, error) {
 	if err := msg.Validate(now); err != nil { // handle.ValidateMsgCreateSale(msg)
 		return 0, err
 	}
@@ -47,13 +47,13 @@ func (k Keeper) createSale(msg *api.MsgCreateSale, now time.Time, store storetyp
 	return id, nil
 }
 
-func (k Keeper) Subscribe(goCtx context.Context, msg *api.MsgSubscribe) (*emptypb.Empty, error) {
+func (k Keeper) Subscribe(goCtx context.Context, msg *types.MsgSubscribe) (*emptypb.Empty, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	if err := k.subscribe(ctx, msg, store); err != nil {
 		return nil, err
 	}
-	err := ctx.EventManager().EmitTypedEvent(&api.EventSubscribe{
+	err := ctx.EventManager().EmitTypedEvent(&types.EventSubscribe{
 		Sender: msg.Sender,
 		SaleId: msg.SaleId,
 		Amount: msg.Amount.String(),
@@ -61,7 +61,7 @@ func (k Keeper) Subscribe(goCtx context.Context, msg *api.MsgSubscribe) (*emptyp
 	return &emptypb.Empty{}, err
 }
 
-func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetypes.KVStore) error {
+func (k Keeper) subscribe(ctx sdk.Context, msg *types.MsgSubscribe, store storetypes.KVStore) error {
 	if !msg.Amount.IsPositive() {
 		return errors.ErrInvalidRequest.Wrap("amount of tokens must be positive")
 	}
@@ -83,13 +83,13 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *api.MsgSubscribe, store storetyp
 	return nil
 }
 
-func (k Keeper) Withdraw(goCtx context.Context, msg *api.MsgWithdraw) (*emptypb.Empty, error) {
+func (k Keeper) Withdraw(goCtx context.Context, msg *types.MsgWithdraw) (*emptypb.Empty, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	if err := k.withdraw(ctx, msg, store); err != nil {
 		return nil, err
 	}
-	err := ctx.EventManager().EmitTypedEvent(&api.EventWithdraw{
+	err := ctx.EventManager().EmitTypedEvent(&types.EventWithdraw{
 		Sender: msg.Sender,
 		SaleId: msg.SaleId,
 		Amount: msg.Amount.String(),
@@ -98,7 +98,7 @@ func (k Keeper) Withdraw(goCtx context.Context, msg *api.MsgWithdraw) (*emptypb.
 }
 
 // it will update msg.Amount to the withdrawn amount (this changes only when msg.Amount == nil)
-func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes.KVStore) error {
+func (k Keeper) withdraw(ctx sdk.Context, msg *types.MsgWithdraw, store storetypes.KVStore) error {
 	if err := msg.Validate(); err != nil {
 		return err
 	}
@@ -123,23 +123,23 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *api.MsgWithdraw, store storetypes
 	return nil
 }
 
-func (k Keeper) ExitSale(goCtx context.Context, msg *api.MsgExitSale) (*api.MsgExitSaleResponse, error) {
+func (k Keeper) ExitSale(goCtx context.Context, msg *types.MsgExitSale) (*types.MsgExitSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	purchased, err := k.exitSale(ctx, msg, store)
 	if err != nil {
 		return nil, err
 	}
-	err = ctx.EventManager().EmitTypedEvent(&api.EventExit{
+	err = ctx.EventManager().EmitTypedEvent(&types.EventExit{
 		Sender:    msg.Sender,
 		SaleId:    msg.SaleId,
 		Purchased: purchased.String(),
 	})
-	return &api.MsgExitSaleResponse{Purchased: purchased}, err
+	return &types.MsgExitSaleResponse{Purchased: purchased}, err
 }
 
 // returns amount of tokens purchased
-func (k Keeper) exitSale(ctx sdk.Context, msg *api.MsgExitSale, store storetypes.KVStore) (sdk.Int, error) {
+func (k Keeper) exitSale(ctx sdk.Context, msg *types.MsgExitSale, store storetypes.KVStore) (sdk.Int, error) {
 	sender, p, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, false)
 	if err != nil {
 		return sdk.Int{}, err
@@ -172,22 +172,22 @@ func (k Keeper) exitSale(ctx sdk.Context, msg *api.MsgExitSale, store storetypes
 	return u.Purchased, nil
 }
 
-func (k Keeper) FinalizeSale(goCtx context.Context, msg *api.MsgFinalizeSale) (*api.MsgFinalizeSaleResponse, error) {
+func (k Keeper) FinalizeSale(goCtx context.Context, msg *types.MsgFinalizeSale) (*types.MsgFinalizeSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	income, err := k.finalizeSale(ctx, msg, store)
 	if err != nil {
 		return nil, err
 	}
-	err = ctx.EventManager().EmitTypedEvent(&api.EventFinalizeSale{
+	err = ctx.EventManager().EmitTypedEvent(&types.EventFinalizeSale{
 		SaleId: msg.SaleId,
 		Income: income.String(),
 	})
-	return &api.MsgFinalizeSaleResponse{Income: income}, err
+	return &types.MsgFinalizeSaleResponse{Income: income}, err
 }
 
 // returns Sale income
-func (k Keeper) finalizeSale(ctx sdk.Context, msg *api.MsgFinalizeSale, store storetypes.KVStore) (sdk.Int, error) {
+func (k Keeper) finalizeSale(ctx sdk.Context, msg *types.MsgFinalizeSale, store storetypes.KVStore) (sdk.Int, error) {
 	p, saleIdBz, err := k.getSale(store, msg.SaleId)
 	if err != nil {
 		return sdk.Int{}, err

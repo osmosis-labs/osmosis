@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
 // TODO: verify if this is enough!
@@ -27,10 +27,10 @@ func currentRound(start, end, now time.Time) int64 {
 	if !end.After(now) { // !(end>now) => end<=now
 		now = end
 	}
-	return int64(now.Sub(start) / api.ROUND)
+	return int64(now.Sub(start) / types.ROUND)
 }
 
-func saleRemainigBalance(p *api.Sale, userShares sdk.Int) sdk.Int {
+func saleRemainigBalance(p *types.Sale, userShares sdk.Int) sdk.Int {
 	if userShares.IsZero() {
 		return sdk.ZeroInt()
 	}
@@ -40,7 +40,7 @@ func saleRemainigBalance(p *api.Sale, userShares sdk.Int) sdk.Int {
 // compute amount of shares that should be minted for a new subscription amount
 // TODO: caller must assert that the sale didn't finish:
 //     inRemaining >0 and not ended
-func computeSharesAmount(p *api.Sale, amountIn sdk.Int, roundUp bool) sdk.Int {
+func computeSharesAmount(p *types.Sale, amountIn sdk.Int, roundUp bool) sdk.Int {
 	if p.Shares.IsZero() || amountIn.IsZero() {
 		return amountIn
 	}
@@ -53,11 +53,11 @@ func computeSharesAmount(p *api.Sale, amountIn sdk.Int, roundUp bool) sdk.Int {
 	return shares
 }
 
-func saleHasEnded(p *api.Sale, round int64) bool {
+func saleHasEnded(p *types.Sale, round int64) bool {
 	return p.EndRound >= round
 }
 
-func subscribe(p *api.Sale, u *api.UserPosition, amount sdk.Int, now time.Time) {
+func subscribe(p *types.Sale, u *types.UserPosition, amount sdk.Int, now time.Time) {
 	pingSale(p, now)
 	remaining := triggerUserPurchase(p, u)
 	u.Spent = u.Spent.Add(u.Staked).Sub(remaining)
@@ -71,7 +71,7 @@ func subscribe(p *api.Sale, u *api.UserPosition, amount sdk.Int, now time.Time) 
 // withdraw applies withdraw requests and updates sell state.
 // If amount == nil then it withdrawns all the remaining deposit.
 // Returns withdrawn amount.
-func withdraw(p *api.Sale, u *api.UserPosition, amount *sdk.Int, now time.Time) (sdk.Int, error) {
+func withdraw(p *types.Sale, u *types.UserPosition, amount *sdk.Int, now time.Time) (sdk.Int, error) {
 	pingSale(p, now)
 	remaining := triggerUserPurchase(p, u)
 	if amount == nil {
@@ -89,7 +89,7 @@ func withdraw(p *api.Sale, u *api.UserPosition, amount *sdk.Int, now time.Time) 
 	return *amount, nil
 }
 
-func pingSale(p *api.Sale, now time.Time) {
+func pingSale(p *types.Sale, now time.Time) {
 	// Need to use round for the end check to assure we have the final distribution
 	if now.Before(p.StartTime) || p.Round >= p.EndRound {
 		return
@@ -123,7 +123,7 @@ func pingSale(p *api.Sale, now time.Time) {
 }
 
 // returns remaining user token_in balance
-func triggerUserPurchase(p *api.Sale, u *api.UserPosition) sdk.Int {
+func triggerUserPurchase(p *types.Sale, u *types.UserPosition) sdk.Int {
 	// TODO: reorder and optimize - we can early return
 	if !p.OutPerShare.IsZero() && !u.Shares.IsZero() {
 		diff := p.OutPerShare.Sub(u.OutPerShare)

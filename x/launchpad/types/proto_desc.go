@@ -1,4 +1,4 @@
-package api
+package types
 
 import grpc "google.golang.org/grpc"
 

@@ -6,7 +6,7 @@ Package api is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package api
+package types
 
 import (
 	"context"
