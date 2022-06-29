@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/types";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/launchpad/types";
 option (gogoproto.goproto_getters_all) = false;
 // option (gogoproto.goproto_stringer_all) = false;
 
