@@ -34,7 +34,6 @@ const (
 )
 
 var (
-	epochIdentifierOptions    = []string{"day", "week"}
 	possibleBech32AddrLengths = []uint8{20, 32}
 
 	// Taken from: // https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
