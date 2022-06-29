@@ -252,11 +252,8 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 			suite.Require().NoError(err)
 
 			// expectedAdminIndex with negative value is assumed as admin with value of ""
-                        // emptyStringAdminIndexFlag is used to represent an index of admin with a value of ""
-                        const emptyStringAdminIndexFlag = -1
-                        ...
-                        // expectedAdminIndex equal to emptyStringAdminFlag is assumed as admin with value of ""
-			if tc.expectedAdminIndex == emptyStringAdminFlag {
+			const emptyStringAdminIndexFlag = -1
+			if tc.expectedAdminIndex == emptyStringAdminIndexFlag {
 				suite.Require().Equal("", queryRes.AuthorityMetadata.Admin)
 			} else {
 				suite.Require().Equal(suite.TestAccs[tc.expectedAdminIndex].String(), queryRes.AuthorityMetadata.Admin)
