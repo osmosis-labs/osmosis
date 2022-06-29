@@ -16,12 +16,12 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-type errUnexpectedHeight struct {
+type unexpectedHeightError struct {
 	ActualHeight   int64
 	ExpectedHeight int64
 }
 
-func (e errUnexpectedHeight) Error() string {
+func (e unexpectedHeightError) Error() string {
 	return fmt.Sprintf("height was %d, must be %d", e.ActualHeight, e.ExpectedHeight)
 }
 
@@ -81,7 +81,7 @@ func NewKeeper(
 // queries. The method returns an error if current height in ctx is greater than the v7 upgrade height.
 func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 	if ctx.BlockHeight() > v7constants.UpgradeHeight {
-		return errUnexpectedHeight{ActualHeight: ctx.BlockHeight(), ExpectedHeight: v7constants.UpgradeHeight}
+		return unexpectedHeightError{ActualHeight: ctx.BlockHeight(), ExpectedHeight: v7constants.UpgradeHeight}
 	}
 	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
 		return errDevVestingModuleAccountNotCreated
@@ -104,7 +104,7 @@ func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 		return errAmountCannotBeNilOrZero
 	}
 	if ctx.BlockHeight() != 0 {
-		return errUnexpectedHeight{ActualHeight: ctx.BlockHeight(), ExpectedHeight: 0}
+		return unexpectedHeightError{ActualHeight: ctx.BlockHeight(), ExpectedHeight: 0}
 	}
 	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
 		return errDevVestingModuleAccountAlreadyCreated

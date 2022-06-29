@@ -1,6 +1,6 @@
 package keeper
 
-type ErrUnexpectedHeight = errUnexpectedHeight
+type ErrUnexpectedHeight = unexpectedHeightError
 
 const (
 	DeveloperVestingAmount = developerVestingAmount
