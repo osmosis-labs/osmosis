@@ -18,6 +18,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.Ba
 	k.SetMinter(ctx, data.Minter)
 	k.SetParams(ctx, data.Params)
 
+	ak.GetModuleAccount(ctx, types.ModuleName)
+
 	// The account should be exported in the ExportGenesis of the
 	// x/auth SDK module. Therefore, we check for existence here
 	// to avoid overwriting pre-existing genesis account data.

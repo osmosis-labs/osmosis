@@ -14,7 +14,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
-	v7constants "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7/constants"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
@@ -231,11 +230,6 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
 			expectedError: keeper.ErrAmountCannotBeNilOrZero,
 		},
-		"non-zero height": {
-			blockHeight:   1,
-			amount:        sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
-			expectedError: keeper.ErrUnexpectedHeight{ActualHeight: 1, ExpectedHeight: 0},
-		},
 		"module account is already created": {
 			blockHeight:                     0,
 			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
@@ -270,17 +264,11 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 		expectedError error
 	}{
 		"valid call": {
-			blockHeight:                     v7constants.UpgradeHeight,
+			blockHeight:                     1,
 			isDeveloperModuleAccountCreated: true,
-		},
-		"non-v7 height": {
-			blockHeight:                     v7constants.UpgradeHeight + 1,
-			isDeveloperModuleAccountCreated: true,
-
-			expectedError: keeper.ErrUnexpectedHeight{ActualHeight: v7constants.UpgradeHeight + 1, ExpectedHeight: v7constants.UpgradeHeight},
 		},
 		"dev vesting module account does not exist": {
-			blockHeight: v7constants.UpgradeHeight,
+			blockHeight: 1,
 
 			expectedError: keeper.ErrDevVestingModuleAccountNotCreated,
 		},

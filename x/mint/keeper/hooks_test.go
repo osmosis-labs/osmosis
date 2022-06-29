@@ -38,10 +38,6 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	}
 	app.MintKeeper.SetParams(ctx, mintParams)
 
-	// setup developer rewards account
-	require.NoError(t, app.MintKeeper.CreateDeveloperVestingModuleAccount(
-		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2))))
-
 	height := int64(1)
 	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
 	// correct rewards
@@ -120,10 +116,6 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
-
-	// setup developer rewards account
-	require.NoError(t, app.MintKeeper.CreateDeveloperVestingModuleAccount(
-		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2))))
 
 	height := int64(1)
 	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
@@ -88,13 +89,6 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			expectedDeveloperVestingAmountDelta: sdk.NewInt(keeper.DeveloperVestingAmount),
 			expectedHalvenStartedEpoch:          3,
 		},
-		"non-zero ctx height - panic": {
-			mintGenesis: types.DefaultGenesisState(),
-			mintDenom:   sdk.DefaultBondDenom,
-			ctxHeight:   1,
-
-			expectPanic: true,
-		},
 		"nil genesis state - panic": {
 			mintDenom:   sdk.DefaultBondDenom,
 			expectPanic: true,
@@ -129,6 +123,10 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			})
 
 			// Assertions.
+
+			// Module account was created.
+			acc := accountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
+			suite.NotNil(acc)
 
 			// Epoch provisions are set to genesis epoch provisions from params.
 			actualEpochProvisions := mintKeeper.GetMinter(ctx).EpochProvisions

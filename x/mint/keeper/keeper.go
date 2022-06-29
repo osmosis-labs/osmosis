@@ -6,7 +6,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	v7constants "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7/constants"
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 
@@ -15,15 +14,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
-
-type unexpectedHeightError struct {
-	ActualHeight   int64
-	ExpectedHeight int64
-}
-
-func (e unexpectedHeightError) Error() string {
-	return fmt.Sprintf("height was %d, must be %d", e.ActualHeight, e.ExpectedHeight)
-}
 
 var (
 	errAmountCannotBeNilOrZero               = errors.New("amount cannot be nil or zero")
@@ -80,9 +70,6 @@ func NewKeeper(
 // we would like to ensure that unvested developer tokens are not returned as part of the supply
 // queries. The method returns an error if current height in ctx is greater than the v7 upgrade height.
 func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
-	if ctx.BlockHeight() > v7constants.UpgradeHeight {
-		return unexpectedHeightError{ActualHeight: ctx.BlockHeight(), ExpectedHeight: v7constants.UpgradeHeight}
-	}
 	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
 		return errDevVestingModuleAccountNotCreated
 	}
@@ -102,9 +89,6 @@ func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
 	if amount.IsNil() || amount.Amount.IsZero() {
 		return errAmountCannotBeNilOrZero
-	}
-	if ctx.BlockHeight() != 0 {
-		return unexpectedHeightError{ActualHeight: ctx.BlockHeight(), ExpectedHeight: 0}
 	}
 	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
 		return errDevVestingModuleAccountAlreadyCreated
