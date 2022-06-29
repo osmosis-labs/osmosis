@@ -45,12 +45,12 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 		},
 		"Second block at exactly interval later does not tick": {
 			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(time.Hour)},
+			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(defaultDuration)},
 			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
 		},
 		"Second block at interval + epsilon later does tick": {
 			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(time.Hour).Add(eps)},
+			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(defaultDuration).Add(eps)},
 			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 2, CurrentEpochStartTime: block1Time.Add(time.Hour), CurrentEpochStartHeight: 2},
 		},
 		"Downtime recovery (many intervals), first block causes 1 tick and sets current start time 1 interval ahead": {
@@ -92,7 +92,7 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 	}
 }
 
-// set identifier, duration and epochCountingStarted if blank in epoch
+// initializeBlankEpochInfoFields set identifier, duration and epochCountingStarted if blank in epoch
 func initializeBlankEpochInfoFields(epoch types.EpochInfo, identifier string, duration time.Duration) types.EpochInfo {
 	if epoch.Identifier == "" {
 		epoch.Identifier = identifier
