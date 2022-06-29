@@ -10,146 +10,112 @@ import (
 	simapp "github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"golang.org/x/exp/maps"
+
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 )
 
-func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
-	var app *simapp.OsmosisApp
-	var ctx sdk.Context
-	var epochInfo types.EpochInfo
+// This test is responsible for testing how epochs increment based off
+// of their initial conditions, and subsequent block height / times.
+//
+// TODO: Make a new test for init genesis logic
+func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
+	block1Time := time.Unix(1656907200, 0).UTC()
+	const defaultIdentifier = "hourly"
+	const defaultDuration = time.Hour
+	// eps is short for epsilon - in this case a negligible amount of time.
+	const eps = time.Nanosecond
 
-	now := time.Now()
-
-	tests := []struct {
-		expCurrentEpochStartTime   time.Time
-		expCurrentEpochStartHeight int64
-		expCurrentEpoch            int64
-		expInitialEpochStartTime   time.Time
-		fn                         func()
+	tests := map[string]struct {
+		// if identifier, duration is not set, we make it defaultIdentifier and defaultDuration.
+		// EpochCountingStarted, if unspecified, is inferred by CurrentEpoch == 0
+		// StartTime is inferred to be block1Time if left blank.
+		initialEpochInfo     types.EpochInfo
+		blockHeightTimePairs map[int]time.Time
+		expEpochInfo         types.EpochInfo
 	}{
-		{
-			// Only advance 2 seconds, do not increment epoch
-			expCurrentEpochStartHeight: 2,
-			expCurrentEpochStartTime:   now,
-			expCurrentEpoch:            1,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-			},
+		"First block running at exactly start time sets epoch tick": {
+			initialEpochInfo: types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
+			expEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
 		},
-		{
-			expCurrentEpochStartHeight: 2,
-			expCurrentEpochStartTime:   now,
-			expCurrentEpoch:            1,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-			},
+		"First block run sets start time, subsequent blocks within timer interval do not cause timer tick": {
+			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
+			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(time.Second), 3: block1Time.Add(time.Minute), 4: block1Time.Add(30 * time.Minute)},
+			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
 		},
-		{
-			expCurrentEpochStartHeight: 2,
-			expCurrentEpochStartTime:   now,
-			expCurrentEpoch:            1,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 31))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-			},
+		"Second block at exactly timer interval later does not tick": {
+			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
+			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(defaultDuration)},
+			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
 		},
-		// Test that incrementing _exactly_ 1 month increments the epoch count.
-		{
-			expCurrentEpochStartHeight: 3,
-			expCurrentEpochStartTime:   now.Add(time.Hour * 24 * 31),
-			expCurrentEpoch:            2,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-			},
+		"Second block at timer interval + epsilon later does tick": {
+			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
+			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(defaultDuration).Add(eps)},
+			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 2, CurrentEpochStartTime: block1Time.Add(time.Hour), CurrentEpochStartHeight: 2},
 		},
-		{
-			expCurrentEpochStartHeight: 3,
-			expCurrentEpochStartTime:   now.Add(time.Hour * 24 * 31),
-			expCurrentEpoch:            2,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				ctx.WithBlockHeight(4).WithBlockTime(now.Add(time.Hour * 24 * 33))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-			},
+		"Downtime recovery (many intervals), first block causes 1 tick and sets current start time 1 interval ahead": {
+			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
+			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(24 * time.Hour)},
+			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 2, CurrentEpochStartTime: block1Time.Add(time.Hour), CurrentEpochStartHeight: 2},
 		},
-		{
-			expCurrentEpochStartHeight: 3,
-			expCurrentEpochStartTime:   now.Add(time.Hour * 24 * 31),
-			expCurrentEpoch:            2,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				numBlocksSinceStart, _ := app.EpochsKeeper.NumBlocksSinceEpochStart(ctx, "monthly")
-				require.Equal(t, int64(0), numBlocksSinceStart)
-				ctx = ctx.WithBlockHeight(4).WithBlockTime(now.Add(time.Hour * 24 * 33))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-				numBlocksSinceStart, _ = app.EpochsKeeper.NumBlocksSinceEpochStart(ctx, "monthly")
-				require.Equal(t, int64(1), numBlocksSinceStart)
-			},
+		"Downtime recovery (many intervals), second block is at tick 2, w/ start time 2 intervals ahead": {
+			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
+			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(24 * time.Hour), 3: block1Time.Add(24 * time.Hour).Add(eps)},
+			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 3, CurrentEpochStartTime: block1Time.Add(2 * time.Hour), CurrentEpochStartHeight: 3},
+		},
+		"Many blocks between first and second tick": {
+			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time},
+			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(time.Second), 3: block1Time.Add(2 * time.Second), 4: block1Time.Add(time.Hour).Add(eps)},
+			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 2, CurrentEpochStartTime: block1Time.Add(time.Hour), CurrentEpochStartHeight: 4},
+		},
+		"Distinct identifier and duration still works": {
+			initialEpochInfo:     types.EpochInfo{Identifier: "hello", Duration: time.Minute, StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
+			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(time.Second), 3: block1Time.Add(time.Minute).Add(eps)},
+			expEpochInfo:         types.EpochInfo{Identifier: "hello", Duration: time.Minute, StartTime: block1Time, CurrentEpoch: 2, CurrentEpochStartTime: block1Time.Add(time.Minute), CurrentEpochStartHeight: 3},
+		},
+		"StartTime in future won't get ticked on first block": {
+			initialEpochInfo: types.EpochInfo{StartTime: block1Time.Add(time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
+			// currentEpochStartHeight is 1 because thats when the timer was created on-chain
+			expEpochInfo: types.EpochInfo{StartTime: block1Time.Add(time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}, CurrentEpochStartHeight: 1},
+		},
+		"StartTime in past will get ticked on first block": {
+			initialEpochInfo: types.EpochInfo{StartTime: block1Time.Add(-time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
+			expEpochInfo:     types.EpochInfo{StartTime: block1Time.Add(-time.Second), CurrentEpoch: 1, CurrentEpochStartTime: block1Time.Add(-time.Second), CurrentEpochStartHeight: 1},
 		},
 	}
+	for name, test := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			suite.Ctx = suite.Ctx.WithBlockHeight(1).WithBlockTime(block1Time)
+			initialEpoch := initializeBlankEpochInfoFields(test.initialEpochInfo, defaultIdentifier, defaultDuration)
+			suite.App.EpochsKeeper.AddEpochInfo(suite.Ctx, initialEpoch)
+			suite.App.EpochsKeeper.BeginBlocker(suite.Ctx)
 
-	for _, test := range tests {
-		app = simapp.Setup(false)
-		ctx = app.BaseApp.NewContext(false, tmproto.Header{})
-
-		// On init genesis, default epochs information is set
-		// To check init genesis again, should make it fresh status
-		epochInfos := app.EpochsKeeper.AllEpochInfos(ctx)
-		for _, epochInfo := range epochInfos {
-			app.EpochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
-		}
-
-		ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
-		// check init genesis
-		app.EpochsKeeper.InitGenesis(ctx, types.GenesisState{
-			Epochs: []types.EpochInfo{
-				{
-					Identifier:              "monthly",
-					StartTime:               time.Time{},
-					Duration:                time.Hour * 24 * 31,
-					CurrentEpoch:            0,
-					CurrentEpochStartHeight: ctx.BlockHeight(),
-					CurrentEpochStartTime:   time.Time{},
-					EpochCountingStarted:    false,
-				},
-			},
+			// get sorted heights
+			heights := maps.Keys(test.blockHeightTimePairs)
+			osmoutils.SortSlice(heights)
+			for _, h := range heights {
+				// for each height in order, run begin block
+				suite.Ctx = suite.Ctx.WithBlockHeight(int64(h)).WithBlockTime(test.blockHeightTimePairs[h])
+				suite.App.EpochsKeeper.BeginBlocker(suite.Ctx)
+			}
+			expEpoch := initializeBlankEpochInfoFields(test.expEpochInfo, initialEpoch.Identifier, initialEpoch.Duration)
+			actEpoch := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, initialEpoch.Identifier)
+			suite.Require().Equal(expEpoch, actEpoch)
 		})
-
-		test.fn()
-
-		require.Equal(t, epochInfo.Identifier, "monthly")
-		require.Equal(t, epochInfo.StartTime.UTC().String(), test.expInitialEpochStartTime.UTC().String())
-		require.Equal(t, epochInfo.Duration, time.Hour*24*31)
-		require.Equal(t, epochInfo.CurrentEpoch, test.expCurrentEpoch)
-		require.Equal(t, epochInfo.CurrentEpochStartHeight, test.expCurrentEpochStartHeight)
-		require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), test.expCurrentEpochStartTime.UTC().String())
-		require.Equal(t, epochInfo.EpochCountingStarted, true)
 	}
+}
+
+// initializeBlankEpochInfoFields set identifier, duration and epochCountingStarted if blank in epoch
+func initializeBlankEpochInfoFields(epoch types.EpochInfo, identifier string, duration time.Duration) types.EpochInfo {
+	if epoch.Identifier == "" {
+		epoch.Identifier = identifier
+	}
+	if epoch.Duration == time.Duration(0) {
+		epoch.Duration = duration
+	}
+	epoch.EpochCountingStarted = (epoch.CurrentEpoch != 0)
+	return epoch
 }
 
 func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
@@ -211,46 +177,4 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())
 	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
-}
-
-// This test ensures legacy EpochInfo messages will not throw errors via InitGenesis and BeginBlocker
-func TestLegacyEpochSerialization(t *testing.T) {
-	// Legacy Epoch Info message - without CurrentEpochStartHeight property
-	legacyEpochInfo := types.EpochInfo{
-		Identifier:            "monthly",
-		StartTime:             time.Time{},
-		Duration:              time.Hour * 24 * 31,
-		CurrentEpoch:          0,
-		CurrentEpochStartTime: time.Time{},
-		EpochCountingStarted:  false,
-	}
-
-	now := time.Now()
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	// On init genesis, default epochs information is set
-	// To check init genesis again, should make it fresh status
-	epochInfos := app.EpochsKeeper.AllEpochInfos(ctx)
-	for _, epochInfo := range epochInfos {
-		app.EpochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
-	}
-
-	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
-
-	// check init genesis
-	app.EpochsKeeper.InitGenesis(ctx, types.GenesisState{
-		Epochs: []types.EpochInfo{legacyEpochInfo},
-	})
-
-	// Do not increment epoch
-	ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-	app.EpochsKeeper.BeginBlocker(ctx)
-
-	// Increment epoch
-	ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
-	app.EpochsKeeper.BeginBlocker(ctx)
-	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-
-	require.NotEqual(t, epochInfo.CurrentEpochStartHeight, int64(0))
 }
