@@ -17,6 +17,7 @@ func RegisterInvariants(ir sdk.InvariantRegistry, keeper Keeper) {
 	ir.RegisterRoute(types.ModuleName, "accumulation-store-invariant", AccumulationStoreInvariant(keeper))
 }
 
+// SyntheticLockupInvariant ensures that synthetic lock's underlying lock id and the actual lock's id has the same id
 func SyntheticLockupInvariant(keeper Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		synthlocks := keeper.GetAllSyntheticLockups(ctx)
