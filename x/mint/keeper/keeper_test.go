@@ -29,12 +29,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 }
 
-// setupDeveloperAccountTestcase sets up test cases that utilize developer account
-// logic. It reverts some default logic added by suite.Setup()
-// Specifically, it removes the module account
+// setupDeveloperVestingModuleAccountTest sets up test cases that utilize developer vesting
+// module account logic. It reverts some default logic added by suite.Setup()
+// Specifically, it removes the developer vesting module account
 // from account keeper if isDeveloperModuleAccountCreated is true.
 // Additionally, it initializes suite's Ctx with blockHeight
-func (suite *KeeperTestSuite) setupDeveloperAccountTestcase(blockHeight int64, isDeveloperModuleAccountCreated bool) {
+func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight int64, isDeveloperModuleAccountCreated bool) {
 	suite.Setup()
 	// Reset height to the desired value since test suite setup initialized
 	// it to 1.
@@ -246,7 +246,7 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			suite.setupDeveloperAccountTestcase(tc.blockHeight, tc.isDeveloperModuleAccountCreated)
+			suite.setupDeveloperVestingModuleAccountTest(tc.blockHeight, tc.isDeveloperModuleAccountCreated)
 			mintKeeper := suite.App.MintKeeper
 
 			// Test
@@ -288,7 +288,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			suite.setupDeveloperAccountTestcase(tc.blockHeight, tc.isDeveloperModuleAccountCreated)
+			suite.setupDeveloperVestingModuleAccountTest(tc.blockHeight, tc.isDeveloperModuleAccountCreated)
 			ctx := suite.Ctx
 			bankKeeper := suite.App.BankKeeper
 			mintKeeper := suite.App.MintKeeper

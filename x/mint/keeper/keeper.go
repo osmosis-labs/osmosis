@@ -73,12 +73,12 @@ func NewKeeper(
 }
 
 // SetInitialSupplyOffsetDuringMigration sets the supply offset based on the balance of the
-// types.DeveloperVestingModuleAcctName. CreateDeveloperVestingModuleAccount must be called
+// developer vesting module account. CreateDeveloperVestingModuleAccount must be called
 // prior to calling this method. That is, developer vesting module account must exist when
 // SetInitialSupplyOffsetDuringMigration is called. Also, SetInitialSupplyOffsetDuringMigration
 //  should only be called one time during the initial migration to v7. This is done so because
 // we would like to ensure that unvested developer tokens are not returned as part of the supply
-// queries. The method returns an error if current height in ctx is greater than the v7.UpgradeHeight.
+// queries. The method returns an error if current height in ctx is greater than the v7 upgrade height.
 func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 	if ctx.BlockHeight() > v7constants.UpgradeHeight {
 		return errUnexpectedHeight{ActualHeight: ctx.BlockHeight(), ExpectedHeight: v7constants.UpgradeHeight}
@@ -92,13 +92,13 @@ func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 	return nil
 }
 
-// CreateDeveloperVestingModuleAccount creates the module account for developer vesting
+// CreateDeveloperVestingModuleAccount creates the developer vesting module account
 // and mints amount of tokens to it.
-// Should only be called in initial genesis creation, never again. Return nil on success.
-// Returns error in the following cases
+// Should only be called during the initial genesis creation, never again. Returns nil on success.
+// Returns error in the following cases:
 // - amount is nil or zero.
 // - if ctx has block height greater than 0.
-// - types.DeveloperVestingModuleAcctName is already created prior to calling this method.
+// - developer vesting module account is already created prior to calling this method.
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
 	if amount.IsNil() || amount.Amount.IsZero() {
 		return errAmountCannotBeNilOrZero

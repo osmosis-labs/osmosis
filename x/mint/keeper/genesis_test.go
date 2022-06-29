@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 	for name, tc := range testCases {
 		suite.Run(name, func() {
 			// Setup.
-			suite.setupDeveloperAccountTestcase(tc.ctxHeight, tc.isDeveloperModuleAccountCreated)
+			suite.setupDeveloperVestingModuleAccountTest(tc.ctxHeight, tc.isDeveloperModuleAccountCreated)
 			ctx := suite.Ctx
 			accountKeeper := suite.App.AccountKeeper
 			bankKeeper := suite.App.BankKeeper
