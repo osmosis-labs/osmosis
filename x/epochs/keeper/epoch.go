@@ -26,7 +26,9 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo
 	return epoch
 }
 
-// AddEpochInfo adds a new epoch info.
+// AddEpochInfo adds a new epoch info. Will return an error if the epoch fails validation,
+// or re-uses an existing identifier.
+// This method also sets the start time if left unset, and sets the epoch start height.
 func (k Keeper) AddEpochInfo(ctx sdk.Context, epoch types.EpochInfo) error {
 	err := epoch.Validate()
 	if err != nil {
