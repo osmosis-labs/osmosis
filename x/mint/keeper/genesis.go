@@ -10,6 +10,10 @@ const developerVestingAmount = 225_000_000_000_000
 
 // InitGenesis new mint genesis.
 func (k Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, data *types.GenesisState) {
+	if data == nil {
+		panic("nil mint genesis state")
+	}
+
 	data.Minter.EpochProvisions = data.Params.GenesisEpochProvisions
 	k.SetMinter(ctx, data.Minter)
 	k.SetParams(ctx, data.Params)

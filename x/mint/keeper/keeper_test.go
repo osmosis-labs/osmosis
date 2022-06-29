@@ -185,9 +185,9 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 
 func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccout() {
 	testcases := map[string]struct {
-		blockHeight            int64
-		amount                 sdk.Coin
-		isModuleAccountCreated bool
+		blockHeight                     int64
+		amount                          sdk.Coin
+		isDeveloperModuleAccountCreated bool
 
 		expectedError error
 	}{
@@ -210,24 +210,24 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccout() {
 			expectedError: keeper.ErrUnexpectedHeight{ActualHeight: 1, ExpectedHeight: 0},
 		},
 		"module account is already created": {
-			blockHeight:            0,
-			amount:                 sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
-			isModuleAccountCreated: true,
-			expectedError:          keeper.ErrDevVestingModuleAccountAlreadyCreated,
+			blockHeight:                     0,
+			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
+			isDeveloperModuleAccountCreated: true,
+			expectedError:                   keeper.ErrDevVestingModuleAccountAlreadyCreated,
 		},
 	}
 
 	// Sets up each test case by reverting some default logic added by suite.Setup()
 	// Specifically, it removes the module account from account keeper if
-	// isModuleAccountCreated is true.
+	// isDeveloperModuleAccountCreated is true.
 	// Returns initialized context to be used in tests.
-	testcaseSetup := func(suite *KeeperTestSuite, blockHeight int64, isModuleAccountCreated bool) sdk.Context {
+	testcaseSetup := func(suite *KeeperTestSuite, blockHeight int64, isDeveloperModuleAccountCreated bool) sdk.Context {
 		suite.Setup()
 		// Reset height to the desired value since test suite setup initialized
 		// it to 1.
 		ctx := suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
 
-		if !isModuleAccountCreated {
+		if !isDeveloperModuleAccountCreated {
 			// Remove the developer vesting account since suite setup creates and initializes it.
 			developerVestingAccount := suite.App.AccountKeeper.GetAccount(ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
 			suite.App.AccountKeeper.RemoveAccount(ctx, developerVestingAccount)
@@ -237,7 +237,7 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccout() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			ctx := testcaseSetup(suite, tc.blockHeight, tc.isModuleAccountCreated)
+			ctx := testcaseSetup(suite, tc.blockHeight, tc.isDeveloperModuleAccountCreated)
 			mintKeeper := suite.App.MintKeeper
 
 			// Test
@@ -255,18 +255,18 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccout() {
 
 func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 	testcases := map[string]struct {
-		blockHeight            int64
-		isModuleAccountCreated bool
+		blockHeight                     int64
+		isDeveloperModuleAccountCreated bool
 
 		expectedError error
 	}{
 		"valid call": {
-			blockHeight:            v7constants.UpgradeHeight,
-			isModuleAccountCreated: true,
+			blockHeight:                     v7constants.UpgradeHeight,
+			isDeveloperModuleAccountCreated: true,
 		},
 		"non-v7 height": {
-			blockHeight:            v7constants.UpgradeHeight + 1,
-			isModuleAccountCreated: true,
+			blockHeight:                     v7constants.UpgradeHeight + 1,
+			isDeveloperModuleAccountCreated: true,
 
 			expectedError: keeper.ErrUnexpectedHeight{ActualHeight: v7constants.UpgradeHeight + 1, ExpectedHeight: v7constants.UpgradeHeight},
 		},
@@ -279,15 +279,15 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 
 	// Sets up each test case by reverting some default logic added by suite.Setup()
 	// Specifically, it removes the module account
-	// from account keeper if isModuleAccountCreated is true.
+	// from account keeper if isDeveloperModuleAccountCreated is true.
 	// Returns initialized context to be used in tests.
-	testcaseSetup := func(suite *KeeperTestSuite, blockHeight int64, isModuleAccountCreated bool) sdk.Context {
+	testcaseSetup := func(suite *KeeperTestSuite, blockHeight int64, isDeveloperModuleAccountCreated bool) sdk.Context {
 		suite.Setup()
 		// Reset height to the desired value since test suite setup initialized
 		// it to 1.
 		ctx := suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
 
-		if !isModuleAccountCreated {
+		if !isDeveloperModuleAccountCreated {
 			// Remove the developer vesting account since suite setup creates and initializes it.
 			developerVestingAccount := suite.App.AccountKeeper.GetAccount(ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
 			suite.App.AccountKeeper.RemoveAccount(ctx, developerVestingAccount)
@@ -298,7 +298,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			ctx := testcaseSetup(suite, tc.blockHeight, tc.isModuleAccountCreated)
+			ctx := testcaseSetup(suite, tc.blockHeight, tc.isDeveloperModuleAccountCreated)
 			mintKeeper := suite.App.MintKeeper
 
 			supplyWithOffsetBefore := suite.App.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
