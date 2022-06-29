@@ -51,7 +51,7 @@ Sample sale.json file contents:
 {
 	"token-in": "token1",
 	"token-out": "token2",
-	"initial-deposit": "1000token2",
+	"initial-deposit": "1000",
 	"start-time": "2022-06-02T11:18:11.000Z",
 	"duration": "432000s",
 	"treasury": "osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6"
@@ -247,9 +247,9 @@ func NewBuildCreateSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		return txf, nil, fmt.Errorf("failed to parse sale: %w", err)
 	}
 
-	InitialDeposit, err := sdk.ParseCoinNormalized(s.InitialDeposit)
-	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse Initial-deposit amount: %s", s.InitialDeposit)
+	InitialDeposit, ok := sdk.NewIntFromString(s.InitialDeposit)
+	if !ok {
+		return txf, nil, fmt.Errorf("failed to parse initial deposit amount as an integer: %s", s.InitialDeposit)
 	}
 	treasury, err := sdk.AccAddressFromBech32(s.Treasury)
 	if err != nil {

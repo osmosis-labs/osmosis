@@ -39,7 +39,7 @@ func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, store storet
 	if treasury == "" {
 		treasury = msg.Creator
 	}
-	p := newSale(treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.InitialDeposit.Amount)
+	p := newSale(treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.InitialDeposit)
 	k.saveSale(store, idBz, &p)
 	// TODO:
 	// + send initial deposit from sender to the pool
