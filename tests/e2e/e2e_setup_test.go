@@ -397,7 +397,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	// via Docker.
 
 	if s.skipUpgrade {
-		initializedChain, err := initialization.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod))
+		initializedChain, err := initialization.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
 		s.Require().NoError(err)
 		s.initializeChainConfig(&newChainConfig, initializedChain)
 		return
@@ -607,6 +607,10 @@ func (s *IntegrationTestSuite) createPreUpgradeState() {
 }
 
 func (s *IntegrationTestSuite) runPostUpgradeTests() {
+	if s.skipIBC {
+		return
+	}
+
 	chainA := s.chainConfigs[0]
 	chainB := s.chainConfigs[1]
 
