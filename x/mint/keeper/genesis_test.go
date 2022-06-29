@@ -101,35 +101,9 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 		},
 	}
 
-	// Sets up each test case by reverting some default logic added by suite.Setup()
-	// Specifically, it removes the module account
-	// from account keeper if isDeveloperModuleAccountCreated is true.
-	// Returns initialized context to be used in tests.
-	testcaseSetup := func(suite *KeeperTestSuite, blockHeight int64, isDeveloperModuleAccountCreated bool) {
-		suite.Setup()
-		// Reset height to the desired value since test suite setup initialized
-		// it to 1.
-		suite.Ctx = suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
-
-		// If developer module account is created, the suite.Setup() also correctly sets the offset
-		if !isDeveloperModuleAccountCreated {
-			// Remove the developer vesting account since suite setup creates and initializes it.
-			// This environment w/o the developer vesting account configured is necessary for
-			// testing edge cases of multiple tests.
-			developerVestingAccount := suite.App.AccountKeeper.GetAccount(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
-			suite.App.AccountKeeper.RemoveAccount(suite.Ctx, developerVestingAccount)
-			suite.App.BankKeeper.BurnCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount))))
-
-			// Reset supply offset to 0
-			supplyOffset := suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom)
-			suite.App.BankKeeper.AddSupplyOffset(suite.Ctx, sdk.DefaultBondDenom, supplyOffset.Mul(sdk.NewInt(-1)))
-			suite.Equal(sdk.ZeroInt(), suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom))
-		}
-	}
-
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			testcaseSetup(suite, tc.ctxHeight, tc.isDeveloperModuleAccountCreated)
+			suite.setupDeveloperAccountTestcase(tc.ctxHeight, tc.isDeveloperModuleAccountCreated)
 			ctx := suite.Ctx
 			accountKeeper := suite.App.AccountKeeper
 			bankKeeper := suite.App.BankKeeper

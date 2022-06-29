@@ -29,6 +29,33 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 }
 
+// setupDeveloperAccountTestcase sets up test cases that utilize developer account
+// logic. It reverts some default logic added by suite.Setup()
+// Specifically, it removes the module account
+// from account keeper if isDeveloperModuleAccountCreated is true.
+// Additionally, it initializes suite's Ctx with blockHeight
+func (suite *KeeperTestSuite) setupDeveloperAccountTestcase(blockHeight int64, isDeveloperModuleAccountCreated bool) {
+	suite.Setup()
+	// Reset height to the desired value since test suite setup initialized
+	// it to 1.
+	suite.Ctx = suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
+
+	// If developer module account is created, the suite.Setup() also correctly sets the offset
+	if !isDeveloperModuleAccountCreated {
+		// Remove the developer vesting account since suite setup creates and initializes it.
+		// This environment w/o the developer vesting account configured is necessary for
+		// testing edge cases of multiple tests.
+		developerVestingAccount := suite.App.AccountKeeper.GetAccount(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+		suite.App.AccountKeeper.RemoveAccount(suite.Ctx, developerVestingAccount)
+		suite.App.BankKeeper.BurnCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount))))
+
+		// Reset supply offset to 0
+		supplyOffset := suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom)
+		suite.App.BankKeeper.AddSupplyOffset(suite.Ctx, sdk.DefaultBondDenom, supplyOffset.Mul(sdk.NewInt(-1)))
+		suite.Equal(sdk.ZeroInt(), suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom))
+	}
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
@@ -277,32 +304,15 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 		},
 	}
 
-	// Sets up each test case by reverting some default logic added by suite.Setup()
-	// Specifically, it removes the module account
-	// from account keeper if isDeveloperModuleAccountCreated is true.
-	// Returns initialized context to be used in tests.
-	testcaseSetup := func(suite *KeeperTestSuite, blockHeight int64, isDeveloperModuleAccountCreated bool) sdk.Context {
-		suite.Setup()
-		// Reset height to the desired value since test suite setup initialized
-		// it to 1.
-		ctx := suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
-
-		if !isDeveloperModuleAccountCreated {
-			// Remove the developer vesting account since suite setup creates and initializes it.
-			developerVestingAccount := suite.App.AccountKeeper.GetAccount(ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
-			suite.App.AccountKeeper.RemoveAccount(ctx, developerVestingAccount)
-		}
-
-		return ctx
-	}
-
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			ctx := testcaseSetup(suite, tc.blockHeight, tc.isDeveloperModuleAccountCreated)
+			suite.setupDeveloperAccountTestcase(tc.blockHeight, tc.isDeveloperModuleAccountCreated)
+			ctx := suite.Ctx
+			bankKeeper := suite.App.BankKeeper
 			mintKeeper := suite.App.MintKeeper
 
-			supplyWithOffsetBefore := suite.App.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
-			supplyOffsetBefore := suite.App.BankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
+			supplyWithOffsetBefore := bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
+			supplyOffsetBefore := bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
 
 			// Test
 			actualError := mintKeeper.SetInitialSupplyOffsetDuringMigration(ctx)
@@ -311,13 +321,13 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 				suite.Error(actualError)
 				suite.Equal(actualError, tc.expectedError)
 
-				suite.Equal(supplyWithOffsetBefore.Amount, suite.App.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
-				suite.Equal(supplyOffsetBefore, suite.App.BankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
+				suite.Equal(supplyWithOffsetBefore.Amount, bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+				suite.Equal(supplyOffsetBefore, bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
 				return
 			}
 			suite.NoError(actualError)
-			suite.Equal(supplyWithOffsetBefore.Amount.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), suite.App.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
-			suite.Equal(supplyOffsetBefore.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), suite.App.BankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
+			suite.Equal(supplyWithOffsetBefore.Amount.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+			suite.Equal(supplyOffsetBefore.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
 		})
 	}
 }
