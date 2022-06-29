@@ -100,62 +100,62 @@ message GaugeByIDResponse {
 }
 
 message GaugesRequest {
-  // Pagination defines a pagination for the request
+  // Pagination defines pagination for the request
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 message GaugesResponse {
   // Upcoming and active gauges
   repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
-  // Pagination defines a pagination for the request
+  // Pagination defines pagination for the response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message ActiveGaugesRequest {
-  // Pagination defines a pagination for the request
+  // Pagination defines pagination for the request
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 message ActiveGaugesResponse {
   // Active gagues only
   repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
-  // Pagination defines a pagination for the request
+  // Pagination defines pagination for the response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message ActiveGaugesPerDenomRequest {
   // Desired denom when querying active gagues
   string denom = 1;
-  // Pagination defines a pagination for the request
+  // Pagination defines pagination for the request
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 message ActiveGaugesPerDenomResponse {
   // Active gagues that match denom in query
   repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
-  // Pagination defines a pagination for the request
+  // Pagination defines pagination for the response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message UpcomingGaugesRequest {
-  // Pagination defines a pagination for the request.
+  // Pagination defines pagination for the request
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 message UpcomingGaugesResponse {
   // Gauges whose distribution is upcoming
   repeated Gauge data = 1 [ (gogoproto.nullable) = false ];
-  // Pagination defines a pagination for the request
+  // Pagination defines pagination for the response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message UpcomingGaugesPerDenomRequest {
   // Filter for upcoming gagues that match specific denom
   string denom = 1;
-  // Pagination defines a pagination for the request
+  // Pagination defines pagination for the request
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message UpcomingGaugesPerDenomResponse {
   // Upcoming gagues that match denom in query
   repeated Gauge upcoming_gauges = 1 [ (gogoproto.nullable) = false ];
-  // Pagination defines a pagination for the request
+  // Pagination defines pagination for the response
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
