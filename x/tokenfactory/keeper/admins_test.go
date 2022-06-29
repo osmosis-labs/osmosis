@@ -186,37 +186,44 @@ func (suite *KeeperTestSuite) TestBurnDenom() {
 
 func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 	for _, tc := range []struct {
-		desc               string
-		msgChangeAdmin     func(denom string) *types.MsgChangeAdmin
-		expectedAdminIndex int
-		msgMint            func(denom string) *types.MsgMint
+		desc                    string
+		msgChangeAdmin          func(denom string) *types.MsgChangeAdmin
+		expectedChangeAdminPass bool
+		expectedAdminIndex      int
+		msgMint                 func(denom string) *types.MsgMint
+		expectedMintPass        bool
 	}{
 		{
 			desc: "creator admin can't mint after setting to '' ",
 			msgChangeAdmin: func(denom string) *types.MsgChangeAdmin {
 				return types.NewMsgChangeAdmin(suite.TestAccs[0].String(), denom, "")
 			},
-			expectedAdminIndex: -1,
+			expectedChangeAdminPass: true,
+			expectedAdminIndex:      -1,
 			msgMint: func(denom string) *types.MsgMint {
 				return types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(denom, 5))
 			},
+			expectedMintPass: false,
 		},
 		{
 			desc: "non-admins can't change the existing admin",
 			msgChangeAdmin: func(denom string) *types.MsgChangeAdmin {
 				return types.NewMsgChangeAdmin(suite.TestAccs[1].String(), denom, suite.TestAccs[2].String())
 			},
-			expectedAdminIndex: 0,
+			expectedChangeAdminPass: false,
+			expectedAdminIndex:      0,
 		},
 		{
 			desc: "success change admin",
 			msgChangeAdmin: func(denom string) *types.MsgChangeAdmin {
 				return types.NewMsgChangeAdmin(suite.TestAccs[0].String(), denom, suite.TestAccs[1].String())
 			},
-			expectedAdminIndex: 1,
+			expectedAdminIndex:      1,
+			expectedChangeAdminPass: true,
 			msgMint: func(denom string) *types.MsgMint {
 				return types.NewMsgMint(suite.TestAccs[1].String(), sdk.NewInt64Coin(denom, 5))
 			},
+			expectedMintPass: true,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
@@ -233,7 +240,11 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 			suite.Require().NoError(err)
 
 			_, err = suite.msgServer.ChangeAdmin(sdk.WrapSDKContext(suite.Ctx), tc.msgChangeAdmin(testDenom))
-			suite.Require().NoError(err)
+			if tc.expectedChangeAdminPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
 
 			queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
 				Denom: testDenom,
@@ -247,9 +258,14 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 				suite.Require().Equal(suite.TestAccs[tc.expectedAdminIndex].String(), queryRes.AuthorityMetadata.Admin)
 			}
 
+			// we test mint to test if admin authority is performed properly after admin change.
 			if tc.msgMint != nil {
 				_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), tc.msgMint(testDenom))
-				suite.Require().NoError(err)
+				if tc.expectedMintPass {
+					suite.Require().NoError(err)
+				} else {
+					suite.Require().Error(err)
+				}
 			}
 		})
 	}
