@@ -1,9 +1,13 @@
 package keeper
 
 import (
+<<<<<<< HEAD
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+=======
+	sdk "github.com/cosmos/cosmos-sdk/types"
+>>>>>>> 21f7f981 (Fix epochs modules tests (#1893))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -11,14 +15,10 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	// set epoch info from genesis
 	for _, epoch := range genState.Epochs {
-		// Initialize empty epoch values via Cosmos SDK
-		if epoch.StartTime.Equal(time.Time{}) {
-			epoch.StartTime = ctx.BlockTime()
+		err := k.AddEpochInfo(ctx, epoch)
+		if err != nil {
+			panic(err)
 		}
-
-		epoch.CurrentEpochStartHeight = ctx.BlockHeight()
-
-		k.SetEpochInfo(ctx, epoch)
 	}
 }
 

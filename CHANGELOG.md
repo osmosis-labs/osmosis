@@ -96,6 +96,12 @@ This release contains minor CLI bug fixes.
 
 * [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
 
+<<<<<<< HEAD
+=======
+#### Golang API breaks
+
+* [#1893](https://github.com/osmosis-labs/osmosis/pull/1893) Change `EpochsKeeper.SetEpochInfo` to `AddEpochInfo`, which has more safety checks with it. (Makes it suitable to be called within upgrades)
+>>>>>>> 21f7f981 (Fix epochs modules tests (#1893))
 * [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Remove methods that constitute AppModuleSimulation APIs for several modules' AppModules, which implemented no-ops
 * [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Add hourly epochs to `x/epochs` DefaultGenesis.
 * [#1665](https://github.com/osmosis-labs/osmosis/pull/1665) Delete app/App interface, instead use simapp.App
