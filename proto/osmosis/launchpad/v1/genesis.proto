@@ -13,7 +13,13 @@ option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/types";
 // GenesisState defines the launchpad module's genesis state.
 message GenesisState {
   repeated Sale sales = 1;
-  repeated UserPosition user_positions = 2;
+  repeated UserPositionKV user_positions = 2 [ (gogoproto.nullable) = false ];
   uint64 next_sale_id = 3;
   Params params = 4 [ (gogoproto.nullable) = false ];
+}
+
+message UserPositionKV {
+  // user account address
+  string acc_address = 1;
+  UserPosition up = 2 [ (gogoproto.nullable) = false ];
 }

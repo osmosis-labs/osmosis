@@ -13,7 +13,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, genState types.GenesisState) {
 }
 
 // ExportGenesis returns the launchpad module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k Keeper) *types.GenesisState {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	// TODO export genesis -- GetSales, GetUserPositions, GetNextSaleNumber, GetParams
 	return &types.GenesisState{}
 }
