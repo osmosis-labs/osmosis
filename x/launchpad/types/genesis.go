@@ -3,9 +3,9 @@ package types
 // DefaultGenesis creates a default GenesisState object
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Sales:         []*Sale{},
-		UserPositions: []*UserPosition{},
-		NextSaleId:    1,
+		Sales:         []Sale{},
+		UserPositions: []UserPositionKV{},
+		NextSaleId:    0,
 		Params:        DefaultParams(),
 	}
 }

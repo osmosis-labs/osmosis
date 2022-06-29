@@ -15,12 +15,12 @@ func (k Keeper) Sales(goCtx context.Context, q *types.QuerySales) (*types.QueryS
 
 	var sales []types.Sale
 	pageRes, err := query.Paginate(store, q.Pagination, func(_, value []byte) error {
-		var p types.Sale
-		err := k.cdc.Unmarshal(value, &p)
+		var s types.Sale
+		err := k.cdc.Unmarshal(value, &s)
 		if err != nil {
 			return err
 		}
-		sales = append(sales, p)
+		sales = append(sales, s)
 		return nil
 	})
 	if err != nil {
