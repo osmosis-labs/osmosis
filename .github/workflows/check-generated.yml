@@ -7,7 +7,7 @@ name: Check generated code
 on:
   workflow_dispatch:
   push:
-      - xiangan/ci
+    - xiangan/ci
   pull_request:
     branches:
       - main
