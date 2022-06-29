@@ -37,17 +37,17 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 			initialEpochInfo: types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
 			expEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
 		},
-		"First block run sets start time, subsequent blocks within interval do not affect": {
+		"First block run sets start time, subsequent blocks within timer interval do not cause timer tick": {
 			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
 			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(time.Second), 3: block1Time.Add(time.Minute), 4: block1Time.Add(30 * time.Minute)},
 			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
 		},
-		"Second block at exactly interval later does not tick": {
+		"Second block at exactly timer interval later does not tick": {
 			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
 			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(defaultDuration)},
 			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
 		},
-		"Second block at interval + epsilon later does tick": {
+		"Second block at timer interval + epsilon later does tick": {
 			initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
 			blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(defaultDuration).Add(eps)},
 			expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 2, CurrentEpochStartTime: block1Time.Add(time.Hour), CurrentEpochStartHeight: 2},
