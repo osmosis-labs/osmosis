@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -361,7 +363,7 @@ func GetCmdRewardsEst() *cobra.Command {
 			fmt.Sprintf(`Query rewards estimation.
 
 Example:
-$ %s query incentives rewards-estimation 
+$ %s query incentives rewards-estimation
 `,
 				version.AppName,
 			),
@@ -384,14 +386,54 @@ $ %s query incentives rewards-estimation
 				return err
 			}
 
-			lockIdStrs := strings.Split(lockIdsCombined, ",")
-			lockIds := []uint64{}
-			for _, lockIdStr := range lockIdStrs {
-				lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
+			// GetCmdAccountLockedLongerDuration
+			var res *lockuptypes.AccountLockedLongerDurationResponse
+			if owner != "" {
+				queryClientLockup := lockuptypes.NewQueryClient(clientCtx)
+
+				res, err = queryClientLockup.AccountLockedLongerDuration(cmd.Context(), &lockuptypes.AccountLockedLongerDurationRequest{Owner: owner, Duration: time.Second})
 				if err != nil {
 					return err
 				}
-				lockIds = append(lockIds, lockId)
+			} else {
+				owner = ""
+				//res = nil
+			}
+
+			ownerLocks := []uint64{}
+
+			if res != nil {
+				for _, lockId := range res.Locks {
+					ownerLocks = append(ownerLocks, lockId.ID)
+				}
+			}
+
+			lockIdStrs := strings.Split(lockIdsCombined, ",")
+			lockIds := []uint64{}
+			if lockIdsCombined == "" && owner == "" {
+				err = fmt.Errorf("If owner flag is not set, lock IDs must be provided")
+				return err
+			} else if lockIdsCombined != "" {
+				for _, lockIdStr := range lockIdStrs {
+					lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
+					if err != nil {
+						return err
+					}
+					lockIds = append(lockIds, lockId)
+				}
+			} else if lockIdsCombined == "" && owner != "" {
+				for _, lockId := range ownerLocks {
+					lockIds = append(lockIds, lockId)
+				}
+			}
+
+			if len(lockIds) != 0 && owner != "" {
+				for _, lockId := range lockIds {
+					validInputLockId := contains(ownerLocks, lockId)
+					if !validInputLockId {
+						return fmt.Errorf("Lock-id %v does not belong to %v", lockId, owner)
+					}
+				}
 			}
 
 			endEpoch, err := cmd.Flags().GetInt64(FlagEndEpoch)
@@ -399,16 +441,22 @@ $ %s query incentives rewards-estimation
 				return err
 			}
 
-			res, err := queryClient.RewardsEst(cmd.Context(), &types.RewardsEstRequest{
+			// TODO: Figure out why some lock ids are good and some causes "Error: rpc error: code = Unknown desc = panic message redacted to hide potentially sensitive system info: panic"
+			// Since owner checks have already been completed above, we switch the owner address to a random module account address since a blank owner panics
+			// We should find a better way to circumvent this address validity check
+			if owner == "" {
+				owner = "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj"
+			}
+			res1, err1 := queryClient.RewardsEst(cmd.Context(), &types.RewardsEstRequest{
 				Owner:    owner, // owner is used only when lockIds are empty
 				LockIds:  lockIds,
 				EndEpoch: endEpoch,
 			})
-			if err != nil {
-				return err
+			if err1 != nil {
+				return err1
 			}
 
-			return clientCtx.PrintProto(res)
+			return clientCtx.PrintProto(res1)
 		},
 	}
 
@@ -418,4 +466,14 @@ $ %s query incentives rewards-estimation
 	cmd.Flags().Int64(FlagEndEpoch, 0, "the end epoch number to participate in rewards calculation")
 
 	return cmd
+}
+
+func contains(s []uint64, value uint64) bool {
+	for _, v := range s {
+		if v == value {
+			return true
+		}
+	}
+
+	return false
 }
