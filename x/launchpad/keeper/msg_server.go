@@ -13,8 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
 )
 
-var _ api.MsgServer = Keeper{}
-
 func (k Keeper) CreateSale(goCtx context.Context, msg *api.MsgCreateSale) (*api.MsgCreateSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
@@ -37,11 +35,15 @@ func (k Keeper) createSale(msg *api.MsgCreateSale, now time.Time, store storetyp
 	}
 	id, idBz := k.nextSaleID(store)
 	end := msg.StartTime.Add(msg.Duration)
-	p := newSale(msg.Treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.InitialDeposit.Amount)
+	treasury := msg.Recipient
+	if treasury == "" {
+		treasury = msg.Creator
+	}
+	p := newSale(treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.InitialDeposit.Amount)
 	k.saveSale(store, idBz, &p)
 	// TODO:
 	// + send initial deposit from sender to the pool
-	// + use ADR-28 addresses?
+	// + charege 100 osmo deposit
 	return id, nil
 }
 
@@ -196,7 +198,6 @@ func (k Keeper) finalizeSale(ctx sdk.Context, msg *api.MsgFinalizeSale, store st
 	if p.Income.IsZero() {
 		return sdk.Int{}, errors.ErrInvalidRequest.Wrap("Sale already finalized")
 	}
-
 	treasury, err := sdk.AccAddressFromBech32(p.Treasury)
 	if err != nil {
 		return sdk.Int{}, err

@@ -13,38 +13,44 @@ option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/api";
 option (gogoproto.goproto_getters_all) = false;
 
 service Msg {
-  // CreateSale creates new token sale.
+  // CreateSale creates new token sale. Anyone can create a new sale.
+  // params.SaleBond OSMO will be charged as a bond (returned in FinalizeSale)
+  // to avoid spams.
   // The sale follows the launchpad functionality explained in the
   // x/launchapd/spec
   rpc CreateSale(MsgCreateSale) returns (MsgCreateSaleResponse);
 
-  // Subscribe to a token sale. Any use any time before the sale end can join
-  // the sale by adding `token_in`. During the sale his `token_in` will be
-  // automatically charged every epoch to purchase `token_out`.
+  // Subscribe to a token sale. Any use at any time before the sale end can join
+  // the sale by sending `token_in` to the Sale through the Subscribe msg.
+  // During the salem user `token_in` will be automatically charged every
+  // epoch to purchase `token_out`.
   rpc Subscribe(MsgSubscribe) returns (google.protobuf.Empty);
 
-  // Withdraw sends back `amount` of unspent tokens_in back to the user.
+  // Withdraw sends back `amount` of unspent tokens_in to the user.
+  // If `amount` is empty, it will default to all unspent tokens.
   // User can do it any time unless his deposit is empty.
   rpc Withdraw(MsgWithdraw) returns (google.protobuf.Empty);
 
-  // ExitSale withdraws purchased tokens_out from the pool and remained
-  // tokens_in. Returns error if the Sale is still active.
+  // ExitSale withdraws (by a user who subscribed to the sale) purchased
+  // tokens_out from the pool and remained tokens_in. Returns error if it's
+  // called before the sale end.
   rpc ExitSale(MsgExitSale) returns (MsgExitSaleResponse);
 
-  // FinalizeSale sends income (earned tokens_in) to the Sale treasury.
-  // Returns error if called before the Sale finishes. Anyone can call this
-  // method.
+  // FinalizeSale clean ups the sale and sends income (earned tokens_in) to the
+  // Sale recipient. Returns error if called before the Sale end. Anyone can
+  // call this method.
   rpc FinalizeSale(MsgFinalizeSale) returns (MsgFinalizeSaleResponse);
 }
 
 message MsgCreateSale {
-  // Sale creator
+  // Sale creator and the account which provides token (token_out) to the sale.
+  // When processing this message, token_out
   string creator = 1;
-  // token_in a denom used to buy LB tokens (`token_out`). May be referred as
-  // quote_currency.
+  // token_in is a denom used to buy `token_out`. May be referred as a
+  // "quote currency".
   string token_in = 2;
-  // token_out a token denom to be bootstraped. May be referred as base
-  // currency.
+  // token_out a token denom to be bootstraped. May be referred as "base
+  // currency".
   string token_out = 3;
 
   // start time when the token sale starts.
@@ -55,16 +61,16 @@ message MsgCreateSale {
       [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 
   // total number of `tokens_out` to be sold during the continous sale.
-  // tokens are deposited from the treasury account.
-  // TODO: change to `creator`
+  // tokens are deposited from the creator account.
   string initial_deposit = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 
-  // Treasury is the account which provides the tokens to sale and receives
-  // earned money.
-  string treasury = 7;
+  // Recipient is the account which receives earned `token_in` from when the
+  // sale is finalized. If not defined (empty) the creator
+  // account will be used.
+  string recipient = 7;
 }
 
 message MsgCreateSaleResponse {
@@ -110,13 +116,13 @@ message MsgExitSaleResponse {
 }
 
 message MsgFinalizeSale {
-  // sender is an account address triggering the finalization.
+  // sender is an account signing the message and triggering the finalization.
   string sender = 1;
   uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
 }
 
 message MsgFinalizeSaleResponse {
-  // Income amount of token_in sent to the treasury.
+  // Income amount of token_in sent to the sale recipient.
   string income = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false

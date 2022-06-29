@@ -266,7 +266,7 @@ func NewBuildCreateSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		StartTime:      s.StartTime,
 		Duration:       duration,
 		InitialDeposit: InitialDeposit,
-		Treasury:       treasury.String(),
+		Recipient:      treasury.String(),
 		Creator:        clientCtx.GetFromAddress().String(),
 	}
 	if err = msg.ValidateBasic(); err != nil {

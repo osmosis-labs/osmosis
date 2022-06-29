@@ -54,9 +54,9 @@ type MsgCreateSale struct {
 	// tokens are deposited from the treasury account.
 	// TODO: change to `creator`
 	InitialDeposit github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,6,opt,name=initial_deposit,json=initialDeposit,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"initial_deposit"`
-	// Treasury is the account which provides the tokens to sale and receives
+	// Recipient is the account which provides the tokens to sale and receives
 	// earned money.
-	Treasury string `protobuf:"bytes,7,opt,name=treasury,proto3" json:"treasury,omitempty"`
+	Recipient string `protobuf:"bytes,7,opt,name=treasury,proto3" json:"treasury,omitempty"`
 }
 
 func (m *MsgCreateSale) Reset()         { *m = MsgCreateSale{} }
@@ -699,10 +699,10 @@ func (m *MsgCreateSale) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Treasury) > 0 {
-		i -= len(m.Treasury)
-		copy(dAtA[i:], m.Treasury)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Treasury)))
+	if len(m.Recipient) > 0 {
+		i -= len(m.Recipient)
+		copy(dAtA[i:], m.Recipient)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Recipient)))
 		i--
 		dAtA[i] = 0x3a
 	}
@@ -1047,7 +1047,7 @@ func (m *MsgCreateSale) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	l = m.InitialDeposit.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = len(m.Treasury)
+	l = len(m.Recipient)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -1419,7 +1419,7 @@ func (m *MsgCreateSale) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Treasury = string(dAtA[iNdEx:postIndex])
+			m.Recipient = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
