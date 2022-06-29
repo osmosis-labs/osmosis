@@ -6,6 +6,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
+// TODO: Why is this called _test?
+
 func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) error {
 	return k.addGaugeRefByKey(ctx, key, guageID)
 }

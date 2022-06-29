@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Given an array of IDs, return the index of a specific ID.
 func findIndex(IDs []uint64, ID uint64) int {
 	for index, id := range IDs {
 		if id == ID {
@@ -17,6 +18,7 @@ func findIndex(IDs []uint64, ID uint64) int {
 	return -1
 }
 
+// Given an array of IDs, find the index of a specific ID and remove that ID from the array.
 func removeValue(IDs []uint64, ID uint64) ([]uint64, int) {
 	index := findIndex(IDs, ID)
 	if index < 0 {
@@ -26,7 +28,7 @@ func removeValue(IDs []uint64, ID uint64) ([]uint64, int) {
 	return IDs[:len(IDs)-1], index
 }
 
-// getTimeKey returns the key used for getting a set of gauges.
+// Returns the time key used when getting a set of gauges.
 func getTimeKey(timestamp time.Time) []byte {
 	timeBz := sdk.FormatTimeBytes(timestamp)
 	timeBzL := len(timeBz)
@@ -45,7 +47,7 @@ func getTimeKey(timestamp time.Time) []byte {
 	return bz
 }
 
-// combineKeys combine bytes array into a single bytes.
+// Combines the byte arrays of multiple keys into a single byte array.
 func combineKeys(keys ...[]byte) []byte {
 	combined := []byte{}
 	for i, key := range keys {

@@ -24,6 +24,7 @@ var (
 )
 
 // TODO: Switch more code to use userLocks and perpGaugeDesc
+// TODO: Create issue for the above.
 type userLocks struct {
 	lockDurations []time.Duration
 	lockAmounts   []sdk.Coins

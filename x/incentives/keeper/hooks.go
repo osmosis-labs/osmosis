@@ -31,6 +31,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// or non-perpetual and for synthetic denoms.
 		// We distribute to perpetual synthetic denoms elsewhere in superfluid.
 		// TODO: This method of doing is a bit of hack, should clean this up later.
+		// TODO: Discuss/Create issue for the above.
 		distrGauges := []types.Gauge{}
 		for _, gauge := range gauges {
 			isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
@@ -47,23 +48,24 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 // ___________________________________________________________________________________________________
 
-// Hooks wrapper struct for incentives keeper.
+// Hooks wrapper struct for the incentives keeper.
 type Hooks struct {
 	k Keeper
 }
 
 var _ epochstypes.EpochHooks = Hooks{}
 
-// Return the wrapper struct.
+// Return the hook wrapper struct.
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-// epochs hooks.
+// Epoch start hook.
 func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }
 
+// Epoch end hook.
 func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }

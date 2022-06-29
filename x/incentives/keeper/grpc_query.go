@@ -18,29 +18,29 @@ import (
 
 var _ types.QueryServer = Querier{}
 
-// Querier defines a wrapper around the x/incentives keeper providing gRPC method
-// handlers.
+// Defines a wrapper around the x/incentives keeper providing gRPC method handlers.
 type Querier struct {
 	Keeper
 }
 
+// Creates a new Querier struct.
 func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
 }
 
-// ModuleToDistributeCoins returns coins that is going to be distributed.
+// Returns coins that are going to be distributed.
 func (q Querier) ModuleToDistributeCoins(goCtx context.Context, _ *types.ModuleToDistributeCoinsRequest) (*types.ModuleToDistributeCoinsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.ModuleToDistributeCoinsResponse{Coins: q.Keeper.GetModuleToDistributeCoins(ctx)}, nil
 }
 
-// ModuleDistributedCoins returns coins that are distributed by module so far.
+// Returns coins that have been distributed by module already.
 func (q Querier) ModuleDistributedCoins(goCtx context.Context, _ *types.ModuleDistributedCoinsRequest) (*types.ModuleDistributedCoinsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.ModuleDistributedCoinsResponse{Coins: q.Keeper.GetModuleDistributedCoins(ctx)}, nil
 }
 
-// GaugeByID returns Gauge by id.
+// Given a gaugeID, returns the respective gauge.
 func (q Querier) GaugeByID(goCtx context.Context, req *types.GaugeByIDRequest) (*types.GaugeByIDResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -56,7 +56,7 @@ func (q Querier) GaugeByID(goCtx context.Context, req *types.GaugeByIDRequest) (
 	return &types.GaugeByIDResponse{Gauge: gauge}, nil
 }
 
-// Gauges returns gauges both upcoming and active.
+// Returns both upcoming and active gauges.
 func (q Querier) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types.GaugesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -71,7 +71,7 @@ func (q Querier) Gauges(goCtx context.Context, req *types.GaugesRequest) (*types
 	return &types.GaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-// ActiveGauges returns active gauges.
+// Returns active gauges.
 func (q Querier) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesRequest) (*types.ActiveGaugesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -87,7 +87,7 @@ func (q Querier) ActiveGauges(goCtx context.Context, req *types.ActiveGaugesRequ
 	return &types.ActiveGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-// ActiveGaugesPerDenom returns active gauges for the specified denom.
+// Returns active gauges for the specified denom.
 func (q Querier) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGaugesPerDenomRequest) (*types.ActiveGaugesPerDenomResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -102,7 +102,7 @@ func (q Querier) ActiveGaugesPerDenom(goCtx context.Context, req *types.ActiveGa
 	return &types.ActiveGaugesPerDenomResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
-// UpcomingGauges returns scheduled gauges.
+// Returns upcoming gauges.
 func (q Querier) UpcomingGauges(goCtx context.Context, req *types.UpcomingGaugesRequest) (*types.UpcomingGaugesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -118,6 +118,7 @@ func (q Querier) UpcomingGauges(goCtx context.Context, req *types.UpcomingGauges
 	return &types.UpcomingGaugesResponse{Data: gauges, Pagination: pageRes}, nil
 }
 
+// Returns upcoming gauges for the specified denom.
 func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.UpcomingGaugesPerDenomRequest) (*types.UpcomingGaugesPerDenomResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if req == nil {
@@ -136,7 +137,7 @@ func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.Upcomi
 	return &types.UpcomingGaugesPerDenomResponse{UpcomingGauges: gauges, Pagination: pageRes}, nil
 }
 
-// RewardsEst returns rewards estimation at a future specific time.
+// Returns rewards estimation at a future specific time (by epoch).
 func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -168,13 +169,14 @@ func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest)
 	return &types.RewardsEstResponse{Coins: q.Keeper.GetRewardsEst(ctx, owner, locks, req.EndEpoch)}, nil
 }
 
+// Returns all of the allowed lockable durations on chain.
 func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDurationsRequest) (*types.QueryLockableDurationsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryLockableDurationsResponse{LockableDurations: q.Keeper.GetLockableDurations(sdkCtx)}, nil
 }
 
-// getGaugeFromIDJsonBytes returns gauges from gauge id json bytes.
+// Returns gauges from the json bytes of gaugeIDs.
 func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]types.Gauge, error) {
 	gauges := []types.Gauge{}
 	gaugeIDs := []uint64{}
@@ -196,7 +198,7 @@ func (q Querier) getGaugeFromIDJsonBytes(ctx sdk.Context, refValue []byte) ([]ty
 	return gauges, nil
 }
 
-// Filter gauges based on given prefix type and denom
+// Filter gauges based on a given key prefix and denom
 func (q Querier) filterByPrefixAndDenom(ctx sdk.Context, prefixType []byte, denom string, pagination *query.PageRequest) (*query.PageResponse, []types.Gauge, error) {
 	gauges := []types.Gauge{}
 	store := ctx.KVStore(q.Keeper.storeKey)

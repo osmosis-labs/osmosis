@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
-	// "fmt"
+	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
 
 	query "github.com/cosmos/cosmos-sdk/types/query"
+
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	pooltypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
@@ -481,4 +483,8 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	res, err = suite.querier.ModuleDistributedCoins(sdk.WrapSDKContext(suite.Ctx), &types.ModuleDistributedCoinsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins)
+}
+
+func TestQueryTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

@@ -51,11 +51,11 @@ func genQueryCondition(
 	coins sdk.Coins,
 	durationOptions []time.Duration,
 ) lockuptypes.QueryCondition {
-	lockQueryType := r.Intn(2)
+	// Only use lockQueryType ByDuration (0) since ByTime (1) is deprecated
+	lockQueryType := 0
 	denom := coins[r.Intn(len(coins))].Denom
 	durationOption := r.Intn(len(durationOptions))
 	duration := durationOptions[durationOption]
-	// timestampSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 	timestamp := time.Time{}
 
 	return lockuptypes.QueryCondition{
@@ -67,7 +67,6 @@ func genQueryCondition(
 }
 
 func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs int, b *testing.B) {
-	// b.ReportAllocs()
 	b.StopTimer()
 
 	blockStartTime := time.Now().UTC()
@@ -77,7 +76,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 
 	r := rand.New(rand.NewSource(10))
 
-	// setup accounts with balances
+	// Setup accounts with balances
 	addrs := []sdk.AccAddress{}
 	for i := 0; i < numAccts; i++ {
 		addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
@@ -93,7 +92,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	distrEpoch := app.EpochsKeeper.GetEpochInfo(ctx, app.IncentivesKeeper.GetParams(ctx).DistrEpochIdentifier)
 	durationOptions := app.IncentivesKeeper.GetLockableDurations(ctx)
 	fmt.Println(durationOptions)
-	// setup gauges
+	// Setup gauges
 	gaugeIds := []uint64{}
 	for i := 0; i < numGauges; i++ {
 		addr := addrs[r.Int()%numAccts]
@@ -103,7 +102,6 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		isPerpetual := true
 		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins, durationOptions)
 		rewards := genRewardCoins(r, simCoins)
-		// startTimeSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 		startTime := ctx.BlockTime().Add(time.Duration(-1) * time.Second)
 		durationMillisecs := distributeTo.Duration.Milliseconds()
 		numEpochsPaidOver := uint64(1)
@@ -121,12 +119,12 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		}
 	}
 
-	// jump time to the future
+	// Jump time to the future
 	futureSecs := r.Intn(1 * 60 * 60 * 24 * 7)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(futureSecs) * time.Second))
 
 	lockSecs := r.Intn(1 * 60 * 60 * 8)
-	// setup lockups
+	// Setup lockups
 	for i := 0; i < numLockups; i++ {
 		addr := addrs[i%numAccts]
 		simCoins := app.BankKeeper.SpendableCoins(ctx, addr)
@@ -143,7 +141,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	}
 	fmt.Println("created all lockups")
 
-	// begin distribution for all gauges
+	// Begin distribution for all gauges
 	for _, gaugeId := range gaugeIds {
 		gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
 		err := app.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(ctx, *gauge)
@@ -154,7 +152,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	}
 
 	b.StartTimer()
-	// distribute coins from gauges to lockup owners
+	// Distribute coins from gauges to lockup owners
 	for i := 0; i < numDistrs; i++ {
 		gauges := []types.Gauge{}
 		for _, gaugeId := range gaugeIds {
@@ -169,11 +167,21 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 }
 
 func BenchmarkDistributionLogicTiny(b *testing.B) {
-	benchmarkDistributionLogic(1, 1, 1, 1, 1, b)
+	numAccts := 1
+	numDenoms := 1
+	numGauges := 1
+	numLockups := 1
+	numDistrs := 1
+	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
 }
 
 func BenchmarkDistributionLogicSmall(b *testing.B) {
-	benchmarkDistributionLogic(10, 1, 10, 1000, 100, b)
+	numAccts := 10
+	numDenoms := 1
+	numGauges := 10
+	numLockups := 1000
+	numDistrs := 100
+	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
 }
 
 func BenchmarkDistributionLogicMedium(b *testing.B) {
@@ -197,5 +205,10 @@ func BenchmarkDistributionLogicLarge(b *testing.B) {
 }
 
 func BenchmarkDistributionLogicHuge(b *testing.B) {
-	benchmarkDistributionLogic(1000, 100, 1000, 1000, 30000, b)
+	numAccts := 1000
+	numDenoms := 100
+	numGauges := 1000
+	numLockups := 1000
+	numDistrs := 30000
+	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
 }
