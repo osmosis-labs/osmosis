@@ -109,6 +109,8 @@ This debug configuration helps to run e2e tests locally and skip the desired tes
         "OSMOSIS_E2E_SKIP_IBC": "true",
         "OSMOSIS_E2E_SKIP_UPGRADE": "true",
         "OSMOSIS_E2E_SKIP_CLEANUP": "true",
+        "OSMOSIS_E2E_UPGRADE_VERSION": "v10",
+        "OSMOSIS_E2E_FORK_HEIGHT": "4713065" # this is v10 fork height.
     }
 }
 ```
