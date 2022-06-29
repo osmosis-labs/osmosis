@@ -17,8 +17,6 @@ import (
 
 // This test is responsible for testing how epochs increment based off
 // of their initial conditions, and subsequent block height / times.
-//
-// TODO: Make a new test for init genesis logic
 func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 	block1Time := time.Unix(1656907200, 0).UTC()
 	const defaultIdentifier = "hourly"
