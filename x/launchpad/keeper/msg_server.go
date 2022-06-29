@@ -43,7 +43,8 @@ func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, store storet
 	k.saveSale(store, idBz, &p)
 	// TODO:
 	// + send initial deposit from sender to the pool
-	// + charege 100 osmo deposit
+	// + charege 100 osmo
+	// + verif sale with params (min duration etc..)
 	return id, nil
 }
 
