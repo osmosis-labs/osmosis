@@ -23,6 +23,7 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 	block1Time := time.Unix(1656907200, 0).UTC()
 	const defaultIdentifier = "hourly"
 	const defaultDuration = time.Hour
+	// eps is short for epsilon - in this case a negligible amount of time.
 	const eps = time.Nanosecond
 
 	tests := map[string]struct {
