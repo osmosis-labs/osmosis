@@ -8,10 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// DefaultIndex is the default capability global index.
+// The default incentive module's global index.
 const DefaultIndex uint64 = 1
 
-// DefaultGenesis returns the default Capability genesis state.
+// Returns the incentive module's default genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params: Params{
@@ -27,8 +27,7 @@ func DefaultGenesis() *GenesisState {
 	}
 }
 
-// GetGenesisStateFromAppState returns x/incentives GenesisState given raw application
-// genesis state.
+// Returns an incentive module GenesisState given a raw application genesis state.
 func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.RawMessage) *GenesisState {
 	var genesisState GenesisState
 
@@ -39,8 +38,7 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 	return &genesisState
 }
 
-// Validate performs basic genesis state validation returning an error upon any
-// failure.
+// Performs basic genesis state validation, returning an error upon any failure.
 func (gs GenesisState) Validate() error {
 	if gs.Params.DistrEpochIdentifier == "" {
 		return errors.New("epoch identifier should NOT be empty")
