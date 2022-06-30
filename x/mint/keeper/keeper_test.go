@@ -269,7 +269,6 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 		},
 		"dev vesting module account does not exist": {
 			blockHeight: 1,
-
 			expectedError: keeper.ErrDevVestingModuleAccountNotCreated,
 		},
 	}
