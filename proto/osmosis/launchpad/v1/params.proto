@@ -13,15 +13,20 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/launchpad/types";
 
 // Params holds parameters for the launchpad module
 message Params {
+  // fee charged when creating a new sale. The fee will go to the
+  // sale_fee_recipient unless it is not defined (empty).
   repeated cosmos.base.v1beta1.Coin sale_creation_fee = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"sale_creation_fee\"",
     (gogoproto.nullable) = false
   ];
 
-  google.protobuf.Duration minimumDurationUntilStartTime = 2
+  // bech32 address of the fee recipient
+  string sale_creation_fee_recipient = 2;
+
+  google.protobuf.Duration minimumDurationUntilStartTime = 3
       [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 
-  google.protobuf.Duration minimumSaleDuration = 3
+  google.protobuf.Duration minimumSaleDuration = 4
       [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 }
