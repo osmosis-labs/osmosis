@@ -1,10 +1,7 @@
 package keeper_test
 
 import (
-	"testing"
 	"time"
-
-	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -252,8 +249,4 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	gauges = suite.App.IncentivesKeeper.GetNotFinishedGauges(suite.Ctx)
 	suite.Require().Len(gauges, 1)
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
-}
-
-func TestDistributionTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

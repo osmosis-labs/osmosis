@@ -1,11 +1,5 @@
 package keeper_test
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
-)
-
 func (suite *KeeperTestSuite) TestGaugeReferencesManagement() {
 	key1 := []byte{0x11}
 	key2 := []byte{0x12}
@@ -27,8 +21,4 @@ func (suite *KeeperTestSuite) TestGaugeReferencesManagement() {
 
 	gaugeRefs3 := suite.App.IncentivesKeeper.GetGaugeRefs(suite.Ctx, key2)
 	suite.Require().Equal(len(gaugeRefs3), 2)
-}
-
-func TestStoreTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

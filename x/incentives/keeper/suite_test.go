@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coi
 	lockDuration time.Duration,
 ) []sdk.AccAddress {
 	addrs := make([]sdk.AccAddress, 0, numLocks)
-	randPrefix := make([]byte, 4)
+	randPrefix := make([]byte, 8)
 	_, _ = rand.Read(randPrefix)
 
 	bal := liquidBalance.Add(coinsPerLock...)

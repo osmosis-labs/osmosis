@@ -1,11 +1,9 @@
 package keeper_test
 
 import (
-	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 
 	query "github.com/cosmos/cosmos-sdk/types/query"
 
@@ -483,8 +481,4 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	res, err = suite.querier.ModuleDistributedCoins(sdk.WrapSDKContext(suite.Ctx), &types.ModuleDistributedCoinsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins)
-}
-
-func TestQueryTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }
