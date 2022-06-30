@@ -24,9 +24,9 @@ that utilize the testing suite.
 Currently, there is a single test in `e2e_test.go` to query the balances
 of a validator.
 
-## `chain` Package
+## `initialization` Package
 
-The `chain` package introduces the logic necessary for initializing a
+The `initialization` package introduces the logic necessary for initializing a
 chain by creating a genesis file and all required configuration files
 such as the `app.toml`. This package directly depends on the Osmosis
 codebase.
@@ -45,46 +45,12 @@ environment.
 
 ## Running Locally
 
-### To build the binary that initializes the chain
+### To build chain initialization image
 
-    make build-e2e-chain-init
-
-- The produced binary is an entrypoint to the
-    `osmosis-e2e-chain-init:debug` image.
-
-### To build the image for initializing the chain (`osmosis-e2e-chain-init:debug`)
-
-<!-- markdownlint-disable MD046 -->
-```sh
-    make docker-build-e2e-chain-init
-```
-
-### To run the chain initialization container locally
-
-```sh
-    mkdir < path >
-    docker run -v < path >:/tmp/osmo-test osmosis-e2e-chain-init:debug --data-dir=/tmp/osmo-test
-    sudo rm -r < path > # must be root to clean up
-```
-
-- runs a container with a volume mounted at \< path \> where all chain
-    initialization files are placed.
-- \< path \> must be absolute.
-- `--data-dir` flag is needed for outputting the files into a
-    directory inside the container
-
-Example:
-
-<!-- markdownlint-disable MD046 -->
-```sh
-  docker run\
-    -v /home/roman/cosmos/osmosis/tmp:/tmp/osmo-test \
-    osmosis-e2e-chain-init:debug \
-    --data-dir=/tmp/
-
-  osmo-test
-```
+Please refer to `tests/e2e/initialization/README.md`
 
 ### To build the debug Osmosis image
 
+```sh
     make docker-build-e2e-debug
+```
