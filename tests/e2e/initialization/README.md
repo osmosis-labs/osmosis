@@ -18,7 +18,7 @@ a root user, bypassing the file permission issues.
 
 ## Structure
 
-Each folder in `tests/e2e/initialization` corresponds to a standolone script.
+Each folder in `tests/e2e/initialization` corresponds to a standalone script.
 At the time of this writing, we have the following scripts/folders:
     - `chain` - for initializing a full chain
     - `node` - for initializing a single node
