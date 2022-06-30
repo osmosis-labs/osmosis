@@ -29,12 +29,82 @@ const (
 	weightedDevRewardReceiversKey             = "weighted_developer_rewards_receivers"
 	mintingRewardsDistributionStartEpochKey   = "minting_rewards_distribution_start_epoch"
 
-	maxInt64 = int(^uint(0) >> 1)
+	epochIdentifier = "day"
+	maxInt64        = int(^uint(0) >> 1)
 )
 
 var (
-	epochIdentifierOptions    = []string{"day", "week"}
 	possibleBech32AddrLengths = []uint8{20, 32}
+
+	// Taken from: // https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
+	distributionProportions = types.DistributionProportions{
+		Staking:          sdk.NewDecWithPrec(25, 2),
+		PoolIncentives:   sdk.NewDecWithPrec(45, 2),
+		DeveloperRewards: sdk.NewDecWithPrec(25, 2),
+		CommunityPool:    sdk.NewDecWithPrec(05, 2),
+	}
+	weightedDevRewardReceivers = []types.WeightedAddress{
+		{
+			Address: "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
+			Weight:  sdk.NewDecWithPrec(2887, 4),
+		},
+		{
+			Address: "osmo1gw445ta0aqn26suz2rg3tkqfpxnq2hs224d7gq",
+			Weight:  sdk.NewDecWithPrec(229, 3),
+		},
+		{
+			Address: "osmo13lt0hzc6u3htsk7z5rs6vuurmgg4hh2ecgxqkf",
+			Weight:  sdk.NewDecWithPrec(1625, 4),
+		},
+		{
+			Address: "osmo1kvc3he93ygc0us3ycslwlv2gdqry4ta73vk9hu",
+			Weight:  sdk.NewDecWithPrec(109, 3),
+		},
+		{
+			Address: "osmo19qgldlsk7hdv3ddtwwpvzff30pxqe9phq9evxf",
+			Weight:  sdk.NewDecWithPrec(995, 3).Quo(sdk.NewDec(10)), // 0.0995
+		},
+		{
+			Address: "osmo19fs55cx4594een7qr8tglrjtt5h9jrxg458htd",
+			Weight:  sdk.NewDecWithPrec(6, 1).Quo(sdk.NewDec(10)), // 0.06
+		},
+		{
+			Address: "osmo1ssp6px3fs3kwreles3ft6c07mfvj89a544yj9k",
+			Weight:  sdk.NewDecWithPrec(15, 2).Quo(sdk.NewDec(10)), // 0.015
+		},
+		{
+			Address: "osmo1c5yu8498yzqte9cmfv5zcgtl07lhpjrj0skqdx",
+			Weight:  sdk.NewDecWithPrec(1, 1).Quo(sdk.NewDec(10)), // 0.01
+		},
+		{
+			Address: "osmo1yhj3r9t9vw7qgeg22cehfzj7enwgklw5k5v7lj",
+			Weight:  sdk.NewDecWithPrec(75, 2).Quo(sdk.NewDec(100)), // 0.0075
+		},
+		{
+			Address: "osmo18nzmtyn5vy5y45dmcdnta8askldyvehx66lqgm",
+			Weight:  sdk.NewDecWithPrec(7, 1).Quo(sdk.NewDec(100)), // 0.007
+		},
+		{
+			Address: "osmo1z2x9z58cg96ujvhvu6ga07yv9edq2mvkxpgwmc",
+			Weight:  sdk.NewDecWithPrec(5, 1).Quo(sdk.NewDec(100)), // 0.005
+		},
+		{
+			Address: "osmo1tvf3373skua8e6480eyy38avv8mw3hnt8jcxg9",
+			Weight:  sdk.NewDecWithPrec(25, 2).Quo(sdk.NewDec(100)), // 0.0025
+		},
+		{
+			Address: "osmo1zs0txy03pv5crj2rvty8wemd3zhrka2ne8u05n",
+			Weight:  sdk.NewDecWithPrec(25, 2).Quo(sdk.NewDec(100)), // 0.0025
+		},
+		{
+			Address: "osmo1djgf9p53n7m5a55hcn6gg0cm5mue4r5g3fadee",
+			Weight:  sdk.NewDecWithPrec(1, 1).Quo(sdk.NewDec(100)), // 0.001
+		},
+		{
+			Address: "osmo1488zldkrn8xcjh3z40v2mexq7d088qkna8ceze",
+			Weight:  sdk.NewDecWithPrec(8, 1).Quo(sdk.NewDec(1000)), // 0.0008
+		},
+	}
 )
 
 // RandomizedGenState generates a random GenesisState for mint.
@@ -43,12 +113,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, epochProvisionsKey, &epochProvisions, simState.Rand,
 		func(r *rand.Rand) { epochProvisions = genEpochProvisions(r) },
-	)
-
-	var epochIdentifier string
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, epochIdentifierKey, &epochIdentifier, simState.Rand,
-		func(r *rand.Rand) { epochIdentifier = genEpochIdentifier(r) },
 	)
 
 	var reductionFactor sdk.Dec
@@ -61,18 +125,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, reductionPeriodInEpochsKey, &reductionPeriodInEpochs, simState.Rand,
 		func(r *rand.Rand) { reductionPeriodInEpochs = genReductionPeriodInEpochs(r) },
-	)
-
-	var distributionProportions types.DistributionProportions
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, distributionProportionsKey, &distributionProportions, simState.Rand,
-		func(r *rand.Rand) { distributionProportions = genDistributionProportions(r) },
-	)
-
-	var weightedDevRewardReceivers []types.WeightedAddress
-	simState.AppParams.GetOrGenerate(
-		simState.Cdc, weightedDevRewardReceiversKey, &weightedDevRewardReceivers, simState.Rand,
-		func(r *rand.Rand) { weightedDevRewardReceivers = genWeightedDevRewardReceivers(simState.Rand) },
 	)
 
 	var mintintRewardsDistributionStartEpoch int64
@@ -120,62 +172,6 @@ func genReductionFactor(r *rand.Rand) sdk.Dec {
 
 func genReductionPeriodInEpochs(r *rand.Rand) int64 {
 	return int64(r.Intn(maxInt64))
-}
-
-// genProportionsAddingUpToOne reurns a slice with numberOfProportions that add up to 1.
-func genProportionsAddingUpToOne(r *rand.Rand, numberOfProportions int) []sdk.Dec {
-	if numberOfProportions < 0 {
-		panic("numberOfProportions must be greater than or equal to 1")
-	}
-
-	proportions := make([]sdk.Dec, numberOfProportions)
-
-	// We start by estimating the first proportion with a limit of 1.
-	// Then, subtract the first proportion from 1 to esimate
-	// the remaining ratio to be used as upper bound for next randomization.
-	// Next, repeat the randomization process for the remaining proportions.
-	remainingRatio := sdk.OneDec()
-	for i := 0; i < numberOfProportions-1; i++ {
-		// We add 0.01 to make sure that zero is never returned because a proportion of 0 is deemed invalid.
-		nextProportion := sdk.MustNewDecFromStr("0.01").Add(sdk.NewDecWithPrec(int64(r.Intn(int(remainingRatio.MulInt64(9).TruncateInt64()))), 1))
-		proportions[i] = nextProportion
-		remainingRatio = remainingRatio.Sub(nextProportion)
-	}
-	proportions[numberOfProportions-1] = remainingRatio
-	return proportions
-}
-
-func genDistributionProportions(r *rand.Rand) types.DistributionProportions {
-	distributionProportions := types.DistributionProportions{}
-	randomDisitributionProportions := genProportionsAddingUpToOne(r, 4)
-	distributionProportions.Staking = randomDisitributionProportions[0]
-	distributionProportions.PoolIncentives = randomDisitributionProportions[1]
-	distributionProportions.DeveloperRewards = randomDisitributionProportions[2]
-	distributionProportions.CommunityPool = randomDisitributionProportions[3]
-	return distributionProportions
-}
-
-func genWeightedDevRewardReceivers(r *rand.Rand) []types.WeightedAddress {
-	var weightedDevRewardReceivers []types.WeightedAddress
-	addressCount := max(1, r.Intn(5))
-	randomDevRewardProportions := genProportionsAddingUpToOne(r, addressCount)
-
-	for i := 0; i < addressCount; i++ {
-		addressLength := possibleBech32AddrLengths[r.Intn(len(possibleBech32AddrLengths))]
-		addressRandBytes, err := randBytes(r, int(addressLength))
-		if err != nil {
-			panic(err)
-		}
-		address, err := sdk.Bech32ifyAddressBytes("osmo", addressRandBytes)
-		if err != nil {
-			panic(err)
-		}
-		weightedDevRewardReceivers = append(weightedDevRewardReceivers, types.WeightedAddress{
-			Address: address,
-			Weight:  randomDevRewardProportions[i],
-		})
-	}
-	return weightedDevRewardReceivers
 }
 
 func genMintintRewardsDistributionStartEpoch(r *rand.Rand) int64 {

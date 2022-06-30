@@ -20,7 +20,7 @@ func NewMultiMintHooks(hooks ...MintHooks) MultiMintHooks {
 	return hooks
 }
 
-// AfterDistributeMintedCoin is a hook that runs  after minter mints and distributes coins
+// AfterDistributeMintedCoin is a hook that runs after minter mints and distributes coins
 // at the beginning of each epoch.
 func (h MultiMintHooks) AfterDistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) {
 	for i := range h {

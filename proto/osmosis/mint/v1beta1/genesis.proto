@@ -14,7 +14,7 @@ message GenesisState {
   // params defines all the paramaters of the mint module.
   Params params = 2 [ (gogoproto.nullable) = false ];
 
-  // reduction_started_epoch the first epoch in which the reduction of mint
+  // reduction_started_epoch is the first epoch in which the reduction of mint
   // begins.
   int64 reduction_started_epoch = 3
       [ (gogoproto.moretags) = "yaml:\"reduction_started_epoch\"" ];

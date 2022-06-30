@@ -95,7 +95,7 @@ message Params {
   // denoms and how much.
   DistributionProportions distribution_proportions = 6
       [ (gogoproto.nullable) = false ];
-  // weighted_developer_rewards_receivers the address to receive developer
+  // weighted_developer_rewards_receivers is the address to receive developer
   // rewards with weights assignedt to each address. The final amount that each
   // address receives is: epoch_provisions *
   // distribution_proportions.developer_rewards * Address's Weight.

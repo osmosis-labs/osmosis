@@ -44,41 +44,16 @@ func TestRandomizedGenState(t *testing.T) {
 
 	const (
 		expectedEpochProvisionsStr      = "7913048388940673156"
-		expectedEpochIdentifier         = "day"
 		expectedReductionFactorStr      = "0.6"
 		expectedReductionPeriodInEpochs = int64(9171281239991390334)
 
-		expectedStakingDistributionProportion          = "0.51"
-		expectedPoolIncentivesDistributionProportion   = "0.01"
-		expectedDeveloperRewardsDistributionProportion = "0.31"
-		expectedCommunityPoolDistributionProportion    = "0.17"
+		expectedMintintRewardsDistributionStartEpoch = int64(14997548954463330)
 
-		expectedMintintRewardsDistributionStartEpoch = int64(8326275384461735988)
-
-		expectedReductionStartedEpoch = int64(8272964973000937025)
+		expectedReductionStartedEpoch = int64(6009281777831789783)
 
 		expectedNextEpochProvisionsStr = "3956524194470336578"
 		expectedDenom                  = sdk.DefaultBondDenom
 	)
-
-	var expectedWeightedAddresses []types.WeightedAddress = []types.WeightedAddress{
-		{
-			Address: "osmo10h0yjph5cs87jlrn0d7g7u4dmftufg57mute7qhn6zla86ha3ems0yhsdm",
-			Weight:  sdk.NewDecWithPrec(21, 2),
-		},
-		{
-			Address: "osmo1fcjs4czqdfcm8vpx0835kvxgh30hx8s4p8fk53",
-			Weight:  sdk.NewDecWithPrec(21, 2),
-		},
-		{
-			Address: "osmo1npjxgta2789ju4v063ewwuyv6wpz84x8gscg7hx4l9xlxwr0pgdqzzez3k",
-			Weight:  sdk.NewDecWithPrec(31, 2),
-		},
-		{
-			Address: "osmo15y8quyqq24d2xlkm6lekg5x3uqxcvf362jlq4yuayy6c4y3e9nysq8gmgg",
-			Weight:  sdk.NewDecWithPrec(27, 2),
-		},
-	}
 
 	// Epoch provisions from Minter.
 	epochProvisionsDec, err := sdk.NewDecFromStr(expectedEpochProvisionsStr)
@@ -86,7 +61,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, epochProvisionsDec, mintGenesis.Minter.EpochProvisions)
 
 	// Epoch identifier.
-	require.Equal(t, expectedEpochIdentifier, mintGenesis.Params.EpochIdentifier)
+	require.Equal(t, simulation.ExpectedEpochIdentifier, mintGenesis.Params.EpochIdentifier)
 
 	// Reduction factor.
 	reductionFactorDec, err := sdk.NewDecFromStr(expectedReductionFactorStr)
@@ -96,28 +71,11 @@ func TestRandomizedGenState(t *testing.T) {
 	// Reduction perion in epochs.
 	require.Equal(t, expectedReductionPeriodInEpochs, mintGenesis.Params.ReductionPeriodInEpochs)
 
-	// Staking rewards distribution proportion.
-	stakingDistributionProportionDec, err := sdk.NewDecFromStr(expectedStakingDistributionProportion)
-	require.NoError(t, err)
-	require.Equal(t, stakingDistributionProportionDec, mintGenesis.Params.DistributionProportions.Staking)
-
-	// Pool incentives distribution proportion.
-	poolIncentivesDistributionProportionDec, err := sdk.NewDecFromStr(expectedPoolIncentivesDistributionProportion)
-	require.NoError(t, err)
-	require.Equal(t, poolIncentivesDistributionProportionDec, mintGenesis.Params.DistributionProportions.PoolIncentives)
-
-	// Developer rewards distribution proportion.
-	developerRewardsDistributionProportionDec, err := sdk.NewDecFromStr(expectedDeveloperRewardsDistributionProportion)
-	require.NoError(t, err)
-	require.Equal(t, developerRewardsDistributionProportionDec, mintGenesis.Params.DistributionProportions.DeveloperRewards)
-
-	// Community pool distribution proportion.
-	communityPoolDistributionProportionDec, err := sdk.NewDecFromStr(expectedCommunityPoolDistributionProportion)
-	require.NoError(t, err)
-	require.Equal(t, communityPoolDistributionProportionDec, mintGenesis.Params.DistributionProportions.CommunityPool)
+	// Distribution proportions.
+	require.Equal(t, simulation.ExpectedDistributionProportions, mintGenesis.Params.DistributionProportions)
 
 	// Weighted developer rewards receivers.
-	require.Equal(t, expectedWeightedAddresses, mintGenesis.Params.WeightedDeveloperRewardsReceivers)
+	require.Equal(t, simulation.ExpectedDevRewardReceivers, mintGenesis.Params.WeightedDeveloperRewardsReceivers)
 
 	// Minting rewards distribution start epoch
 	require.Equal(t, expectedMintintRewardsDistributionStartEpoch, mintGenesis.Params.MintingRewardsDistributionStartEpoch)
