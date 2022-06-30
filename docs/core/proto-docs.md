@@ -2626,7 +2626,7 @@ GenesisState defines the mint module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `minter` | [Minter](#osmosis.mint.v1beta1.Minter) |  | minter is a space for holding current rewards information. |
 | `params` | [Params](#osmosis.mint.v1beta1.Params) |  | params defines all the paramaters of the module. |
-| `halven_started_epoch` | [int64](#int64) |  | current halven period start epoch |
+| `reduction_started_epoch` | [int64](#int64) |  | current reduction period start epoch |
 
 
 
