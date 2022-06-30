@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
 func TestSuites(t *testing.T) {
@@ -33,13 +33,13 @@ func (s *SaleSuite) SetupSuite() {
 	}
 	t0 := time.Unix(0, 0)
 	s.before = t0
-	s.before2 = t0.Add(api.ROUND)
-	s.start = t0.Add(api.ROUND * 10)
-	s.end = t0.Add(api.ROUND * 20)
-	s.after = t0.Add(api.ROUND * 25)
+	s.before2 = t0.Add(types.ROUND)
+	s.start = t0.Add(types.ROUND * 10)
+	s.end = t0.Add(types.ROUND * 20)
+	s.after = t0.Add(types.ROUND * 25)
 }
 
-func (s *SaleSuite) createSale() *api.Sale {
+func (s *SaleSuite) createSale() *types.Sale {
 	p := newSale(s.treasury.String(), 1, "t_in", "t_out", s.start, s.end, sdk.NewInt(12_000))
 	return &p
 }
@@ -61,7 +61,7 @@ func (s *SaleSuite) TestNBuyers() {
 func (s *SaleSuite) testNBuyers(n int) {
 	// require := s.Require()
 	p := s.createSale()
-	users := make([]*api.UserPosition, n)
+	users := make([]*types.UserPosition, n)
 	stakedAmount := sdk.NewInt(24_000)
 	// zero := sdk.ZeroInt()
 

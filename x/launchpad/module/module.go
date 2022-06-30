@@ -15,9 +15,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad/client/cli"
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
 var (
@@ -39,8 +39,8 @@ func (AppModuleBasic) Name() string {
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	api.RegisterMsgServer(cfg.MsgServer(), am.keeper)
-	api.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // RegisterLegacyAminoCodec registers the launchpad module's types for the given codec.
@@ -54,7 +54,7 @@ func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 // DefaultGenesis returns default genesis state as raw bytes for the launchpad
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(api.DefaultGenesis())
+	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
 // ValidateGenesis performs genesis state validation for the launchpad module.
@@ -68,7 +68,7 @@ func (AppModuleBasic) RegisterRESTRoutes(_ sdkclient.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the launchpad module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *runtime.ServeMux) {
-	if err := api.RegisterQueryHandlerClient(context.Background(), mux, api.NewQueryClient(clientCtx)); err != nil {
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
@@ -129,7 +129,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // InitGenesis performs genesis initialization for the launchpad module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genState api.GenesisState
+	var genState types.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(data, &genState)
 	keeper.InitGenesis(ctx, am.keeper, genState)
@@ -139,7 +139,10 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 // ExportGenesis returns the exported genesis state as raw bytes for the launchpad
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := keeper.ExportGenesis(ctx, am.keeper)
+	gs, err := am.keeper.ExportGenesis(ctx)
+	if err != nil {
+		panic(err)
+	}
 	return cdc.MustMarshalJSON(gs)
 }
 

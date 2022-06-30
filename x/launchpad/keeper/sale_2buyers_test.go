@@ -3,15 +3,15 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
 var zero = sdk.ZeroInt()
 
 type TwoBuyersSuite struct {
 	SaleSuite
-	u1, u2 *api.UserPosition
-	p      *api.Sale
+	u1, u2 *types.UserPosition
+	p      *types.Sale
 
 	staked1, staked2, totalStaked          sdk.Int
 	totalOut, inPerRound, outPerRound      sdk.Int
@@ -46,7 +46,7 @@ func (s *TwoBuyersSuite) Test2Buyers() {
 	// ping before start shouldn't change anything
 	pingSale(s.p, s.before2)
 	checkSale(require, s.p, 0, s.totalOut, zero, zero, s.totalStaked, zero, s.totalStaked)
-	pingSale(s.p, s.before2.Add(api.ROUND))
+	pingSale(s.p, s.before2.Add(types.ROUND))
 	checkSale(require, s.p, 0, s.totalOut, zero, zero, s.totalStaked, zero, s.totalStaked)
 
 	// ###############################################
@@ -63,7 +63,7 @@ func (s *TwoBuyersSuite) Test2Buyers() {
 
 	// ###############################################
 	// at the beginning of the first round (start + round) we should do the first sale
-	now := s.start.Add(api.ROUND)
+	now := s.start.Add(types.ROUND)
 	pingSale(s.p, now)
 	//checkSale(require, s.p, 1, s.totalOut.Sub(s.outPerRound), s.outPerRound, outPerShare, s.totalStaked.Sub(s.inPerRound), s.inPerRound, s.totalStaked)
 
@@ -81,13 +81,13 @@ func (s *TwoBuyersSuite) Test2Buyers() {
 	triggerUserPurchase(s.p, s.u1)
 	checkUser(require, s.u1, s.staked1, s.staked1, s.u1.OutPerShare, s.u1PurchasePerRound, "user1 first round")
 	// second purchase in the middle of the first round shouldn't make any effect
-	pingSale(s.p, now.Add(api.ROUND/2))
+	pingSale(s.p, now.Add(types.ROUND/2))
 	triggerUserPurchase(s.p, s.u1)
 	checkUser(require, s.u1, s.staked1, s.staked1, s.u1.OutPerShare, s.u1PurchasePerRound, "user1 first round")
 
 	// ###############################################
 	// round 3: user2 triggers a purchase
-	now = s.start.Add(3 * api.ROUND)
+	now = s.start.Add(3 * types.ROUND)
 	log("\n### u2 triggers purchase in 3rd round ###\n")
 	u2PurchasePerRound := s.u1PurchasePerRound.MulRaw(2)
 	pingSale(s.p, now)
@@ -105,7 +105,7 @@ func (s *TwoBuyersSuite) Test2Buyers() {
 	// ###############################################
 	// last by one round
 	log("\n### u1 triggers purchase in the last round ###\n")
-	now = s.end.Add(-api.ROUND)
+	now = s.end.Add(-types.ROUND)
 	pingSale(s.p, now)
 	triggerUserPurchase(s.p, s.u1)
 	checkSale(require, s.p, 9, s.outPerRound, s.outPerRound.MulRaw(9), s.u1.OutPerShare, s.totalStaked.Sub(s.inPerRound.MulRaw(9)), s.inPerRound.MulRaw(9), s.totalStaked)
@@ -141,7 +141,7 @@ func (s *TwoBuyersSuite) Test2BuyersEnd1() {
 	subscribe(s.p, s.u1, s.staked1, s.before)
 	subscribe(s.p, s.u2, s.staked2, s.before)
 
-	pingSale(s.p, s.end.Add(-api.ROUND)) // last by one purchase
+	pingSale(s.p, s.end.Add(-types.ROUND)) // last by one purchase
 	triggerUserPurchase(s.p, s.u1)
 	checkUser(require, s.u1, s.staked1, s.staked1, s.u1.OutPerShare, s.u1PurchasePerRound.MulRaw(9), "user1 @ end")
 
@@ -182,12 +182,12 @@ func (s *TwoBuyersSuite) Test2BuyersEnd3() {
 
 func (s *TwoBuyersSuite) Test2BuyersEnd_mid1() {
 	require := s.Require()
-	end := s.end.Add(api.ROUND / 2) // half round after normal end
+	end := s.end.Add(types.ROUND / 2) // half round after normal end
 	s.p.EndRound = currentRound(s.start, end, end)
 	subscribe(s.p, s.u1, s.staked1, s.before)
 	subscribe(s.p, s.u2, s.staked2, s.before)
 
-	pingSale(s.p, s.end.Add(-api.ROUND/2)) // last purchase still happens in the end_round
+	pingSale(s.p, s.end.Add(-types.ROUND/2)) // last purchase still happens in the end_round
 	triggerUserPurchase(s.p, s.u1)
 	checkUser(require, s.u1, s.staked1, s.staked1, s.u1.OutPerShare, s.totalOut.QuoRaw(3).Sub(s.u1PurchasePerRound), "user1 @ end")
 
@@ -208,7 +208,7 @@ func (s *TwoBuyersSuite) Test2BuyersEnd_mid1() {
 // subscribe at the beginning and trigger purchase after the end
 func (s *TwoBuyersSuite) Test2BuyersEnd_mid2() {
 	require := s.Require()
-	end := s.end.Add(api.ROUND / 2) // half round after normal end
+	end := s.end.Add(types.ROUND / 2) // half round after normal end
 	s.p.EndRound = currentRound(s.start, end, end)
 	subscribe(s.p, s.u1, s.staked1, s.before)
 	subscribe(s.p, s.u2, s.staked2, s.before)
@@ -224,7 +224,7 @@ func (s *TwoBuyersSuite) Test2Buyers_withdraw1() {
 	subscribe(s.p, s.u1, s.staked1, s.before)
 	subscribe(s.p, s.u2, s.staked2, s.before)
 
-	r2 := s.start.Add(api.ROUND * 2)
+	r2 := s.start.Add(types.ROUND * 2)
 	amount, err := withdraw(s.p, s.u1, nil, r2)
 	require.NoError(err)
 	expectedU1Spent := s.staked1.MulRaw(8).QuoRaw(10)
@@ -250,7 +250,7 @@ func (s *TwoBuyersSuite) Test2Buyers_withdraw2() {
 	subscribe(s.p, s.u1, s.staked1, s.before)
 	subscribe(s.p, s.u2, s.staked2, s.before)
 
-	r2 := s.start.Add(api.ROUND * 2)
+	r2 := s.start.Add(types.ROUND * 2)
 	u2RemainingHalfStake := s.staked2.MulRaw(8).QuoRaw(10).QuoRaw(2)
 
 	amountOut, err := withdraw(s.p, s.u2, &u2RemainingHalfStake, r2)

@@ -8,12 +8,19 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/launchpad/v1/state.proto";
 import "osmosis/launchpad/v1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/api";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/launchpad/types";
 
 // GenesisState defines the launchpad module's genesis state.
 message GenesisState {
-  repeated Sale sales = 1;
-  repeated UserPosition user_positions = 2;
+  repeated Sale sales = 1 [ (gogoproto.nullable) = false ];
+  repeated UserPositionKV user_positions = 2 [ (gogoproto.nullable) = false ];
   uint64 next_sale_id = 3;
   Params params = 4 [ (gogoproto.nullable) = false ];
+}
+
+message UserPositionKV {
+  // user account address
+  string acc_address = 1;
+  uint64 sale_id = 2;
+  UserPosition u = 3 [ (gogoproto.nullable) = false ];
 }

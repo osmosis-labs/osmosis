@@ -6,37 +6,37 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
-func (k Keeper) Sales(goCtx context.Context, q *api.QuerySales) (*api.QuerySalesResponse, error) {
+func (k Keeper) Sales(goCtx context.Context, q *types.QuerySales) (*types.QuerySalesResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
 	store := k.saleStore(sdkCtx.KVStore(k.storeKey))
 
-	var sales []api.Sale
+	var sales []types.Sale
 	pageRes, err := query.Paginate(store, q.Pagination, func(_, value []byte) error {
-		var p api.Sale
-		err := k.cdc.Unmarshal(value, &p)
+		var s types.Sale
+		err := k.cdc.Unmarshal(value, &s)
 		if err != nil {
 			return err
 		}
-		sales = append(sales, p)
+		sales = append(sales, s)
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &api.QuerySalesResponse{sales, pageRes}, nil
+	return &types.QuerySalesResponse{sales, pageRes}, nil
 }
 
-func (k Keeper) Sale(ctx context.Context, q *api.QuerySale) (*api.QuerySaleResponse, error) {
+func (k Keeper) Sale(ctx context.Context, q *types.QuerySale) (*types.QuerySaleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(k.storeKey)
 	s, _, err := k.getSale(store, q.SaleId)
-	return &api.QuerySaleResponse{s}, err
+	return &types.QuerySaleResponse{s}, err
 }
 
-func (k Keeper) UserPosition(ctx context.Context, q *api.QueryUserPosition) (*api.QueryUserPositionResponse, error) {
+func (k Keeper) UserPosition(ctx context.Context, q *types.QueryUserPosition) (*types.QueryUserPositionResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(k.storeKey)
 	user, err := sdk.AccAddressFromBech32(q.User)
@@ -48,5 +48,5 @@ func (k Keeper) UserPosition(ctx context.Context, q *api.QueryUserPosition) (*ap
 	if err != nil {
 		return nil, err
 	}
-	return &api.QueryUserPositionResponse{up}, nil
+	return &types.QueryUserPositionResponse{up}, nil
 }

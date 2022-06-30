@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
@@ -51,7 +51,7 @@ Sample sale.json file contents:
 {
 	"token-in": "token1",
 	"token-out": "token2",
-	"initial-deposit": "1000token2",
+	"initial-deposit": "1000",
 	"start-time": "2022-06-02T11:18:11.000Z",
 	"duration": "432000s",
 	"treasury": "osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6"
@@ -247,9 +247,9 @@ func NewBuildCreateSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		return txf, nil, fmt.Errorf("failed to parse sale: %w", err)
 	}
 
-	InitialDeposit, err := sdk.ParseCoinNormalized(s.InitialDeposit)
-	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse Initial-deposit amount: %s", s.InitialDeposit)
+	InitialDeposit, ok := sdk.NewIntFromString(s.InitialDeposit)
+	if !ok {
+		return txf, nil, fmt.Errorf("failed to parse initial deposit amount as an integer: %s", s.InitialDeposit)
 	}
 	treasury, err := sdk.AccAddressFromBech32(s.Treasury)
 	if err != nil {
@@ -260,13 +260,13 @@ func NewBuildCreateSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 		return txf, nil, err
 	}
 
-	msg := &api.MsgCreateSale{
+	msg := &types.MsgCreateSale{
 		TokenIn:        s.TokenIn,
 		TokenOut:       s.TokenOut,
 		StartTime:      s.StartTime,
 		Duration:       duration,
 		InitialDeposit: InitialDeposit,
-		Treasury:       treasury.String(),
+		Recipient:      treasury.String(),
 		Creator:        clientCtx.GetFromAddress().String(),
 	}
 	if err = msg.ValidateBasic(); err != nil {
@@ -282,7 +282,7 @@ func NewBuildFinalizeSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.
 		return txf, nil, err
 	}
 
-	msg := &api.MsgFinalizeSale{
+	msg := &types.MsgFinalizeSale{
 		Sender: clientCtx.GetFromAddress().String(),
 		SaleId: saleId,
 	}
@@ -302,7 +302,7 @@ func NewBuildSubscribeMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fla
 	if err != nil {
 		return txf, nil, err
 	}
-	msg := &api.MsgSubscribe{
+	msg := &types.MsgSubscribe{
 		Sender: clientCtx.GetFromAddress().String(),
 		SaleId: saleId,
 		Amount: sdk.NewInt(amount),
@@ -322,7 +322,7 @@ func NewBuildWithdrawMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 	if err != nil {
 		return txf, nil, err
 	}
-	msg := &api.MsgWithdraw{
+	msg := &types.MsgWithdraw{
 		Sender: clientCtx.GetFromAddress().String(),
 		SaleId: saleId,
 	}
@@ -345,7 +345,7 @@ func NewBuildExitSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Flag
 		return txf, nil, err
 	}
 
-	msg := &api.MsgExitSale{
+	msg := &types.MsgExitSale{
 		Sender: clientCtx.GetFromAddress().String(),
 		SaleId: saleId,
 	}

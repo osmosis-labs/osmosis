@@ -10,7 +10,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
 // StoreKey is the store key string for launchpad
@@ -22,17 +22,17 @@ var (
 	userStoreKey     = byte(2)   // userPosition objects
 )
 
-func (k *Keeper) saveSale(modulestore storetypes.KVStore, id []byte, p *api.Sale) {
+func (k *Keeper) saveSale(modulestore storetypes.KVStore, id []byte, p *types.Sale) {
 	store := k.saleStore(modulestore)
 	store.Set(id, k.cdc.MustMarshal(p))
 }
 
 // returns sale, sale bytes id, error
-func (k *Keeper) getSale(modulestore storetypes.KVStore, id uint64) (api.Sale, []byte, error) {
+func (k *Keeper) getSale(modulestore storetypes.KVStore, id uint64) (types.Sale, []byte, error) {
 	store := k.saleStore(modulestore)
 	idBz := storeIntIdKey(id)
 	bz := store.Get(idBz)
-	var p api.Sale
+	var p types.Sale
 	if bz == nil {
 		return p, idBz, errors.Wrap(errors.ErrKeyNotFound, "sale doesn't exist")
 	}
@@ -43,10 +43,10 @@ func (k *Keeper) getSale(modulestore storetypes.KVStore, id uint64) (api.Sale, [
 // gets or creates (when create == true) user position object
 // returns sale, error
 // return errors.NotFound whene the object is not there and create == false
-func (k *Keeper) getUserPosition(modulestore storetypes.KVStore, saleId []byte, user sdk.AccAddress, create bool) (api.UserPosition, error) {
+func (k *Keeper) getUserPosition(modulestore storetypes.KVStore, saleId []byte, user sdk.AccAddress, create bool) (types.UserPosition, error) {
 	store := k.userPositionStore(modulestore, saleId)
 	bz := store.Get(user)
-	var v api.UserPosition
+	var v types.UserPosition
 	if bz == nil {
 		if create == false {
 			return v, errors.ErrNotFound.Wrap("user position for given Sale is not found")
@@ -58,7 +58,7 @@ func (k *Keeper) getUserPosition(modulestore storetypes.KVStore, saleId []byte, 
 }
 
 // returns sale, found (bool), error
-func (k *Keeper) saveUserPosition(modulestore storetypes.KVStore, saleId []byte, addr sdk.AccAddress, v *api.UserPosition) {
+func (k *Keeper) saveUserPosition(modulestore storetypes.KVStore, saleId []byte, addr sdk.AccAddress, v *types.UserPosition) {
 	store := k.userPositionStore(modulestore, saleId)
 	store.Set(addr, k.cdc.MustMarshal(v))
 }
@@ -108,7 +108,7 @@ func lengthPrefix(bz []byte) ([]byte, error) {
 }
 
 // user: bech32 user address
-func (k Keeper) getUserAndSale(modulestore storetypes.KVStore, saleId uint64, user string, create bool) (sdk.AccAddress, *api.Sale, []byte, *api.UserPosition, error) {
+func (k Keeper) getUserAndSale(modulestore storetypes.KVStore, saleId uint64, user string, create bool) (sdk.AccAddress, *types.Sale, []byte, *types.UserPosition, error) {
 	userAddr, err := sdk.AccAddressFromBech32(user)
 	if err != nil {
 		return nil, nil, nil, nil, err

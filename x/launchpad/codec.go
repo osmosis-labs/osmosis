@@ -1,23 +1,23 @@
 package launchpad
 
 import (
-	types "github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
 // RegisterInterfaces registers the interfaces types with the interface registry
-func RegisterInterfaces(registry types.InterfaceRegistry) {
+func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&api.MsgCreateSale{},
-		&api.MsgExitSale{},
-		&api.MsgFinalizeSale{},
-		&api.MsgSubscribe{},
-		&api.MsgWithdraw{},
+		&types.MsgCreateSale{},
+		&types.MsgExitSale{},
+		&types.MsgFinalizeSale{},
+		&types.MsgSubscribe{},
+		&types.MsgWithdraw{},
 	)
 
 	// registry.RegisterInterface()
 
-	msgservice.RegisterMsgServiceDesc(registry, api.MsgServiceDesc())
+	msgservice.RegisterMsgServiceDesc(registry, types.MsgServiceDesc())
 }
