@@ -12,6 +12,7 @@ import (
 // Parameter store keys
 var (
 	KeySaleCreationFee               = []byte("SaleCreationFee")
+	KeySaleCreationFeeRecipient      = []byte("SaleCreationFeeRecipient")
 	KeyMinimumDurationUntilStartTime = []byte("MinimumDurationUntilStartTime")
 	KeyMinimumSaleDuration           = []byte("MinimumSaleDuration")
 )
@@ -23,9 +24,10 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(saleCreationFee sdk.Coins, minimumDurationUntilStartTime, minimumSaleDuration time.Duration) Params {
+func NewParams(saleCreationFee sdk.Coins, saleCreationFeeRecipient string, minimumDurationUntilStartTime, minimumSaleDuration time.Duration) Params {
 	return Params{
 		SaleCreationFee:               saleCreationFee,
+		SaleCreationFeeRecipient:      saleCreationFeeRecipient,
 		MinimumDurationUntilStartTime: minimumDurationUntilStartTime,
 		MinimumSaleDuration:           minimumSaleDuration,
 	}
@@ -34,7 +36,7 @@ func NewParams(saleCreationFee sdk.Coins, minimumDurationUntilStartTime, minimum
 // default launchpad module parameters
 func DefaultParams() Params {
 	return Params{
-		SaleCreationFee:               sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 100_000_000)}, // 100 OSMO
+		SaleCreationFee:               sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 200_000_000)}, // 200 OSMO
 		MinimumDurationUntilStartTime: time.Hour * 24,                                                   // 1 Day
 		MinimumSaleDuration:           time.Hour * 24,                                                   // 1 Day
 	}
@@ -59,9 +61,20 @@ func (p Params) Validate() error {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeySaleCreationFee, &p.SaleCreationFee, validateSaleCreationFee),
+		paramtypes.NewParamSetPair(KeySaleCreationFeeRecipient, &p.SaleCreationFeeRecipient, validateSaleCreationFeeRecipient),
 		paramtypes.NewParamSetPair(KeyMinimumDurationUntilStartTime, &p.MinimumDurationUntilStartTime, validateDuration),
 		paramtypes.NewParamSetPair(KeyMinimumSaleDuration, &p.MinimumSaleDuration, validateDuration),
 	}
+}
+func validateSaleCreationFeeRecipient(i interface{}) error {
+	v, ok := i.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T, expected string bech32", i)
+	}
+	if _, err := sdk.AccAddressFromBech32(v); err != nil {
+		return fmt.Errorf("invalid parameter type: expected string bech32")
+	}
+	return nil
 }
 
 func validateSaleCreationFee(i interface{}) error {

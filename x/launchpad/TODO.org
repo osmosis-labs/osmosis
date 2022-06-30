@@ -6,31 +6,29 @@ notion: https://www.notion.so/Task-List-19-May-2022-9a5eafea5a5a43189750c41f704b
 NOW:
 + track total number of currently buying accounts (we already track the number of staked tokens)
 
+* migration
 
-LBP
-+ treasury address
-+ should we add a circuit breaker in a pool (in case something bad happens)?
++ define params.SaleCreationFeeRecipient
 
 * Functionality
 
+
+Sale:
++ should we add a circuit breaker in a pool (in case something bad happens)?
+
 module:
-+ DefaultGenesis, genesis import / export
 + ValidateGenesis
 
 
-Permssions:
-+ who can create an LBP?
-+ fee - shall there be a bond or a fee?
-
-
-Check:
-+ user can only withdraw his purchased tokens only when the LBP finished
-+ seller can finalize and withdraw the income only when the LBP finished
-+ maybe rename MsgExit?
-+ how should we charge for the initial deposit (the LBP tokens_ou)?
-
-
-TODO:
+For Future:
 + Limit price when staking
 + LBP stop "button"?
 + ~multiplayer~ should be LBP parameter
+
+
+* Tests
+
+Integration tests
++ Genesis
++ params get/set
++ flow (create sale, subscribe, exit, withdraw)

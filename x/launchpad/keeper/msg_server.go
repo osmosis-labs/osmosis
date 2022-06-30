@@ -16,10 +16,23 @@ import (
 func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*types.MsgCreateSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
-	id, err := k.createSale(msg, ctx.BlockTime(), store)
+	id, creator, err := k.createSale(msg, ctx.BlockTime(), store)
 	if err != nil {
 		return nil, err
 	}
+	params := k.GetParams(ctx)
+	if params.SaleCreationFeeRecipient != "" && !params.SaleCreationFee.Empty() {
+		r, err := sdk.AccAddressFromBech32(params.SaleCreationFeeRecipient)
+		if err != nil {
+			return nil, err
+		}
+		k.bank.SendCoins(ctx, creator, r, params.SaleCreationFee)
+		ctx.Logger().Info("Sale Creation Fee charged",
+			"recipient", params.SaleCreationFeeRecipient, "fee", params.SaleCreationFee)
+	} else {
+		ctx.Logger().Info("Sale Creation Fee not charged. Params creation fee recipient or fee is not defined")
+	}
+
 	err = ctx.EventManager().EmitTypedEvent(&types.EventCreateSale{
 		Id:       id,
 		Creator:  msg.Creator,
@@ -29,10 +42,12 @@ func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*ty
 	return &types.MsgCreateSaleResponse{SaleId: id}, err
 }
 
-func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, store storetypes.KVStore) (uint64, error) {
-	if err := msg.Validate(now); err != nil { // handle.ValidateMsgCreateSale(msg)
-		return 0, err
+func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, store storetypes.KVStore) (uint64, sdk.AccAddress, error) {
+	creator, err := msg.Validate(now)
+	if err != nil {
+		return 0, nil, err
 	}
+
 	id, idBz := k.nextSaleID(store)
 	end := msg.StartTime.Add(msg.Duration)
 	treasury := msg.Recipient
@@ -43,9 +58,8 @@ func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, store storet
 	k.saveSale(store, idBz, &p)
 	// TODO:
 	// + send initial deposit from sender to the pool
-	// + charege 100 osmo
 	// + verif sale with params (min duration etc..)
-	return id, nil
+	return id, creator, nil
 }
 
 func (k Keeper) Subscribe(goCtx context.Context, msg *types.MsgSubscribe) (*emptypb.Empty, error) {

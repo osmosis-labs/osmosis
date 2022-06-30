@@ -12,12 +12,14 @@ const ROUND = time.Second
 var _ sdk.Msg = &MsgCreateSale{}
 
 func (msg *MsgCreateSale) ValidateBasic() error {
-	return errorStringsToError(msg.validate())
+	_, errs := msg.validate()
+	return errorStringsToError(errs)
 }
 
-func (msg *MsgCreateSale) validate() []string {
+func (msg *MsgCreateSale) validate() (sdk.AccAddress, []string) {
 	var errmsgs []string
-	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
 		errmsgs = append(errmsgs, fmt.Sprintf("Invalid creator address (%s)", err))
 	}
 	if msg.Recipient != "" {
@@ -46,16 +48,16 @@ func (msg *MsgCreateSale) validate() []string {
 		errmsgs = append(errmsgs, "`initial_deposit` amount must be positive and must be bigger than duration in seconds")
 	}
 
-	return errmsgs
+	return creator, errmsgs
 }
 
-func (msg *MsgCreateSale) Validate(now time.Time) error {
-	errmsgs := msg.validate()
+func (msg *MsgCreateSale) Validate(now time.Time) (sdk.AccAddress, error) {
+	creator, errmsgs := msg.validate()
 	if !msg.StartTime.After(now) {
 		errmsgs = append(errmsgs, fmt.Sprint("`start` must be after ", now))
 	}
 
-	return errorStringsToError(errmsgs)
+	return creator, errorStringsToError(errmsgs)
 }
 
 func (msg *MsgCreateSale) GetSigners() []sdk.AccAddress {
