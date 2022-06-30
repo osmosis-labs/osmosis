@@ -16,7 +16,7 @@ import (
 func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*types.MsgCreateSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
-	id, err := k.createSale(ctx, msg, ctx.BlockTime(), store)
+	id, err := k.createSale(msg, ctx.BlockTime(), store)
 	if err != nil {
 		return nil, err
 	}
