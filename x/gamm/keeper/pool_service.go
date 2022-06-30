@@ -317,6 +317,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 	}
 
 	tokenIn := sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInAmount))
+	// Not using generic JoinPool because we want to guarantee exact shares out
 	extendedPool.IncreaseLiquidity(shareOutAmount, tokenIn)
 
 	err = k.applyJoinPoolStateChange(ctx, pool, sender, shareOutAmount, tokenIn)
