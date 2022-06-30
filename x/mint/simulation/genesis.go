@@ -20,8 +20,6 @@ const (
 	reductionFactorKey         = "reduction_factor"
 	reductionPeriodInEpochsKey = "reduction_period_in_epochs"
 
-	distributionProportionsKey = "distribution_proportions"
-
 	stakingDistributionProportionKey          = "staking_distribution_proportion"
 	poolIncentivesDistributionProportionKey   = "pool_incentives_distribution_proportion"
 	developerRewardsDistributionProportionKey = "developer_rewards_distribution_proportion"
@@ -34,8 +32,6 @@ const (
 )
 
 var (
-	possibleBech32AddrLengths = []uint8{20, 32}
-
 	// Taken from: // https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
 	distributionProportions = types.DistributionProportions{
 		Staking:          sdk.NewDecWithPrec(25, 2),
@@ -162,10 +158,6 @@ func genEpochProvisions(r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(int64(r.Intn(maxInt64)))
 }
 
-func genEpochIdentifier(r *rand.Rand) string {
-	return "day"
-}
-
 func genReductionFactor(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
 }
@@ -180,20 +172,4 @@ func genMintintRewardsDistributionStartEpoch(r *rand.Rand) int64 {
 
 func genReductionStartedEpoch(r *rand.Rand) int64 {
 	return int64(r.Intn(maxInt64))
-}
-
-func randBytes(r *rand.Rand, length int) ([]byte, error) {
-	result := make([]byte, length)
-	n, err := r.Read(result)
-	if n != length {
-		return nil, fmt.Errorf("did not read enough bytes, read: %d, expected: %d", n, length)
-	}
-	return result, err
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
