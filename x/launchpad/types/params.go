@@ -1,4 +1,4 @@
-package api
+package types
 
 import (
 	"fmt"
@@ -34,9 +34,9 @@ func NewParams(saleCreationFee sdk.Coins, minimumDurationUntilStartTime, minimum
 // default launchpad module parameters
 func DefaultParams() Params {
 	return Params{
-		SaleCreationFee:               sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 1000_000_000)}, // 1000 OSMO
-		MinimumDurationUntilStartTime: time.Hour * 24,                                                    // 1 Day
-		MinimumSaleDuration:           time.Hour * 72,                                                    // 3 Days
+		SaleCreationFee:               sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 100_000_000)}, // 100 OSMO
+		MinimumDurationUntilStartTime: time.Hour * 24,                                                   // 1 Day
+		MinimumSaleDuration:           time.Hour * 24,                                                   // 1 Day
 	}
 }
 

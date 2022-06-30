@@ -8,7 +8,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 
 import "osmosis/launchpad/v1/state.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/x/launchpad/api";
+option go_package = "github.com/osmosis-labs/osmosis/v7/x/launchpad/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // Query defines the gRPC querier service.

@@ -12,17 +12,23 @@ var (
 )
 
 // Takes a module store, returns an ID (uint64 and it's store bytes representation) for
-// the next Pool and updates the sale ID counter.
-func (k Keeper) nextSaleID(store storetypes.KVStore) (uint64, []byte) {
-	store = prefix.NewStore(store, storeSeqStoreKey)
+// the next Pool and updates the sale ID counter in the store.
+func (k Keeper) nextSaleID(moduleStore storetypes.KVStore) (uint64, []byte) {
+	i, bz := getNextSaleID(moduleStore)
+	bzNext := make([]byte, 8)
+	binary.BigEndian.PutUint64(bzNext, i+1)
+	store := prefix.NewStore(moduleStore, storeSeqStoreKey)
+	store.Set(ormPoolID, bzNext)
+	return i, bz
+}
+
+func getNextSaleID(moduleStore storetypes.KVStore) (uint64, []byte) {
+	store := prefix.NewStore(moduleStore, storeSeqStoreKey)
 	bz := store.Get(ormPoolID)
 	if bz == nil {
 		bz = make([]byte, 8)
 		store.Set(ormPoolID, bz)
 		return 0, bz
 	}
-	i := binary.BigEndian.Uint64(bz)
-	binary.BigEndian.PutUint64(bz, i+1)
-	store.Set(ormPoolID, bz)
-	return i, bz
+	return binary.BigEndian.Uint64(bz), bz
 }

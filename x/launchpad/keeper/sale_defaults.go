@@ -5,12 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
-func newSale(treasury string, id uint64, tokenIn, tokenOut string, start, end time.Time, totalOut sdk.Int) api.Sale {
+func newSale(treasury string, id uint64, tokenIn, tokenOut string, start, end time.Time, totalOut sdk.Int) types.Sale {
 	zero := sdk.ZeroInt()
-	return api.Sale{
+	return types.Sale{
 		Treasury:  treasury,
 		Id:        id,
 		TokenOut:  tokenOut,
@@ -31,9 +31,9 @@ func newSale(treasury string, id uint64, tokenIn, tokenOut string, start, end ti
 	}
 }
 
-func newUserPosition() api.UserPosition {
+func newUserPosition() types.UserPosition {
 	zero := sdk.ZeroInt()
-	return api.UserPosition{
+	return types.UserPosition{
 		Shares:      zero,
 		Staked:      zero,
 		OutPerShare: zero,

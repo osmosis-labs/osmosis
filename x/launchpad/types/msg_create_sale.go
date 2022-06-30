@@ -1,4 +1,4 @@
-package api
+package types
 
 import (
 	"fmt"
@@ -20,10 +20,11 @@ func (msg *MsgCreateSale) validate() []string {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		errmsgs = append(errmsgs, fmt.Sprintf("Invalid creator address (%s)", err))
 	}
-	if _, err := sdk.AccAddressFromBech32(msg.Treasury); err != nil {
-		errmsgs = append(errmsgs, fmt.Sprintf("Invalid treasury address (%s)", err))
+	if msg.Recipient != "" {
+		if _, err := sdk.AccAddressFromBech32(msg.Recipient); err != nil {
+			errmsgs = append(errmsgs, fmt.Sprintf("Invalid treasury address (%s)", err))
+		}
 	}
-
 	var d = int64(msg.Duration / ROUND)
 	if d < 10 {
 		errmsgs = append(errmsgs, "`duration` must be at least 10 rounds")
@@ -41,10 +42,7 @@ func (msg *MsgCreateSale) validate() []string {
 	if msg.TokenOut == "" {
 		errmsgs = append(errmsgs, "`token_out` must be not empty")
 	}
-	if msg.InitialDeposit.Denom != msg.TokenOut {
-		errmsgs = append(errmsgs, "`initial_deposit` denom must be the same as `token_out`")
-	}
-	if msg.InitialDeposit.Amount.LTE(sdk.NewInt(d)) {
+	if !msg.InitialDeposit.GT(sdk.NewInt(d)) {
 		errmsgs = append(errmsgs, "`initial_deposit` amount must be positive and must be bigger than duration in seconds")
 	}
 
@@ -53,7 +51,7 @@ func (msg *MsgCreateSale) validate() []string {
 
 func (msg *MsgCreateSale) Validate(now time.Time) error {
 	errmsgs := msg.validate()
-	if msg.StartTime.Before(now) {
+	if !msg.StartTime.After(now) {
 		errmsgs = append(errmsgs, fmt.Sprint("`start` must be after ", now))
 	}
 

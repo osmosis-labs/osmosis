@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/api"
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -56,13 +56,13 @@ $ %s query launchpad sales
 			if err != nil {
 				return err
 			}
-			queryClient := api.NewQueryClient(clientCtx)
+			queryClient := types.NewQueryClient(clientCtx)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
-			sales := &api.QuerySales{
+			sales := &types.QuerySales{
 				Pagination: pageReq,
 			}
 			res, err := queryClient.Sales(cmd.Context(), sales)
@@ -98,13 +98,13 @@ $ %s query launchpad sale 1
 			if err != nil {
 				return err
 			}
-			queryClient := api.NewQueryClient(clientCtx)
+			queryClient := types.NewQueryClient(clientCtx)
 			saleID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			sale := &api.QuerySale{
+			sale := &types.QuerySale{
 				SaleId: saleID,
 			}
 			res, err := queryClient.Sale(cmd.Context(), sale)
@@ -140,7 +140,7 @@ $ %s query launchpad user-position 1 osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6
 			if err != nil {
 				return err
 			}
-			queryClient := api.NewQueryClient(clientCtx)
+			queryClient := types.NewQueryClient(clientCtx)
 			saleID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
@@ -150,7 +150,7 @@ $ %s query launchpad user-position 1 osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6
 				return err
 			}
 
-			userPosition := &api.QueryUserPosition{
+			userPosition := &types.QueryUserPosition{
 				SaleId: saleID,
 				User:   address.String(),
 			}
