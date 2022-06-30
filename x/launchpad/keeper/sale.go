@@ -38,8 +38,6 @@ func saleRemainigBalance(p *types.Sale, userShares sdk.Int) sdk.Int {
 }
 
 // compute amount of shares that should be minted for a new subscription amount
-// TODO: caller must assert that the sale didn't finish:
-//     inRemaining >0 and not ended
 func computeSharesAmount(p *types.Sale, amountIn sdk.Int, roundUp bool) sdk.Int {
 	if p.Shares.IsZero() || amountIn.IsZero() {
 		return amountIn
