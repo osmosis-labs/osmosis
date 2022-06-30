@@ -16,11 +16,11 @@ import (
 func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*types.MsgCreateSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
-	id, creator, err := k.createSale(msg, ctx.BlockTime(), store)
+	params := k.GetParams(ctx)
+	id, creator, err := k.createSale(msg, ctx.BlockTime(), params, store)
 	if err != nil {
 		return nil, err
 	}
-	params := k.GetParams(ctx)
 	if params.SaleCreationFeeRecipient != "" && !params.SaleCreationFee.Empty() {
 		r, err := sdk.AccAddressFromBech32(params.SaleCreationFeeRecipient)
 		if err != nil {
@@ -42,8 +42,8 @@ func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*ty
 	return &types.MsgCreateSaleResponse{SaleId: id}, err
 }
 
-func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, store storetypes.KVStore) (uint64, sdk.AccAddress, error) {
-	creator, err := msg.Validate(now)
+func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, params types.Params, store storetypes.KVStore) (uint64, sdk.AccAddress, error) {
+	creator, err := msg.Validate(now, params.MinimumSaleDuration, params.MinimumDurationUntilStartTime)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -58,7 +58,6 @@ func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, store storet
 	k.saveSale(store, idBz, &p)
 	// TODO:
 	// + send initial deposit from sender to the pool
-	// + verif sale with params (min duration etc..)
 	return id, creator, nil
 }
 

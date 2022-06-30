@@ -44,17 +44,21 @@ func (msg *MsgCreateSale) validate() (sdk.AccAddress, []string) {
 	if msg.TokenOut == "" {
 		errmsgs = append(errmsgs, "`token_out` must be not empty")
 	}
-	if msg.InitialDeposit.GT(sdk.NewInt(d)) {
-		errmsgs = append(errmsgs, "`initial_deposit` amount must be positive and must be bigger than duration in seconds")
+	if msg.InitialDeposit.IsNil() || msg.InitialDeposit.IsZero() {
+		errmsgs = append(errmsgs, "`initial_deposit` amount must be non zero")
 	}
 
 	return creator, errmsgs
 }
 
-func (msg *MsgCreateSale) Validate(now time.Time) (sdk.AccAddress, error) {
+func (msg *MsgCreateSale) Validate(now time.Time, minDuration, minDurationUntilStart time.Duration) (sdk.AccAddress, error) {
 	creator, errmsgs := msg.validate()
-	if !msg.StartTime.After(now) {
-		errmsgs = append(errmsgs, fmt.Sprint("`start` must be after ", now))
+	minStart := now.Add(minDurationUntilStart)
+	if msg.StartTime.Before(minStart) {
+		errmsgs = append(errmsgs, fmt.Sprint("`start` must be after ", minStart))
+	}
+	if msg.Duration < minDuration {
+		errmsgs = append(errmsgs, fmt.Sprint("Sale duration must be at least ", minDuration.String()))
 	}
 
 	return creator, errorStringsToError(errmsgs)
