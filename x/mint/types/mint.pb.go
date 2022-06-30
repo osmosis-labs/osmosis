@@ -166,7 +166,7 @@ var xxx_messageInfo_DistributionProportions proto.InternalMessageInfo
 
 // Params holds parameters for the x/mint module.
 type Params struct {
-	// mint_denom the denom of the coin to mint.
+	// mint_denom is the denom of the coin to mint.
 	MintDenom string `protobuf:"bytes,1,opt,name=mint_denom,json=mintDenom,proto3" json:"mint_denom,omitempty"`
 	// genesis_epoch_provisions epoch provisions from the first epoch.
 	GenesisEpochProvisions github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=genesis_epoch_provisions,json=genesisEpochProvisions,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"genesis_epoch_provisions" yaml:"genesis_epoch_provisions"`
@@ -182,7 +182,7 @@ type Params struct {
 	// denom. In other words, defines which stakeholders will receive the minted
 	// denoms and how much.
 	DistributionProportions DistributionProportions `protobuf:"bytes,6,opt,name=distribution_proportions,json=distributionProportions,proto3" json:"distribution_proportions"`
-	// weighted_developer_rewards_receivers the address to receive developer
+	// weighted_developer_rewards_receivers is the address to receive developer
 	// rewards with weights assignedt to each address. The final amount that each
 	// address receives is: epoch_provisions *
 	// distribution_proportions.developer_rewards * Address's Weight.
