@@ -66,7 +66,7 @@ func NewKeeper(
 // developer vesting module account. CreateDeveloperVestingModuleAccount must be called
 // prior to calling this method. That is, developer vesting module account must exist when
 // SetInitialSupplyOffsetDuringMigration is called. Also, SetInitialSupplyOffsetDuringMigration
-//  should only be called one time during the initial migration to v7. This is done so because
+// should only be called one time during the initial migration to v7. This is done so because
 // we would like to ensure that unvested developer tokens are not returned as part of the supply
 // queries. The method returns an error if current height in ctx is greater than the v7 upgrade height.
 func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
