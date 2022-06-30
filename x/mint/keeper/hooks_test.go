@@ -222,9 +222,9 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 
 // TODO: Remove after rounding errors are addressed and resolved.
 // Make sure that more specific test specs are added to validate the expected
-// supply for correctness. 
+// supply for correctness.
 //
-// Ref: https://github.com/osmosis-labs/osmosis/pull/1874
+// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
 func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	// Most values in this test are taken from mainnet genesis to mimic real-world behavior:
 	// https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
@@ -341,7 +341,7 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	// Test setup parameters are not identical with mainnet.
 	// Therfore, we set them here to the desired mainnet values.
 	app.MintKeeper.SetParams(ctx, mintParams)
-	app.MintKeeper.SetLastHalvenEpochNum(ctx, 0)
+	app.MintKeeper.SetLastReductionEpochNum(ctx, 0)
 	app.MintKeeper.SetMinter(ctx, types.Minter{
 		EpochProvisions: genesisEpochProvisionsDec,
 	})
@@ -403,7 +403,7 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 		require.Equal(t, expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, mintDenom).Amount)
 
 		// Validate that the epoch provisions have not been reduced.
-		require.Equal(t, mintingRewardsDistributionStartEpoch, app.MintKeeper.GetLastHalvenEpochNum(ctx))
+		require.Equal(t, mintingRewardsDistributionStartEpoch, app.MintKeeper.GetLastReductionEpochNum(ctx))
 		require.Equal(t, genesisEpochProvisions, app.MintKeeper.GetMinter(ctx).EpochProvisions.String())
 	}
 
@@ -426,7 +426,7 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	// (reduced) provisions.
 	app.MintKeeper.AfterEpochEnd(ctx, epochIdentifier, thirdeningEpochNum)
 
-	require.Equal(t, thirdeningEpochNum, app.MintKeeper.GetLastHalvenEpochNum(ctx))
+	require.Equal(t, thirdeningEpochNum, app.MintKeeper.GetLastReductionEpochNum(ctx))
 
 	expectedThirdenedProvisions := mintParams.ReductionFactor.Mul(genesisEpochProvisionsDec)
 	// Sanity check with the actual value on mainnet.
