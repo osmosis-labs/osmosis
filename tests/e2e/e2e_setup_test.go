@@ -41,16 +41,12 @@ type chainConfig struct {
 	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, and a buffer.
 	votingPeriod float32
 	// upgrade proposal height for chain.
-	propHeight int
-	forkHeight int
-	// Indexes of the validators to skip from running during initialization.
-	// This is needed for testing functionality like state-sync where we would
-	// like to start a node during tests post-initialization.
-	skipRunValidatorIndexes map[int]struct{}
-	latestProposalNumber    int
-	latestLockNumber        int
-	meta                    initialization.ChainMeta
-	validators              []*validatorConfig
+	propHeight           int
+	forkHeight           int
+	latestProposalNumber int
+	latestLockNumber     int
+	meta                 initialization.ChainMeta
+	validators           []*validatorConfig
 }
 
 const (
@@ -271,15 +267,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffset int) {
 	s.T().Logf("starting %s validator containers...", chainConfig.meta.Id)
-	for i, val := range chainConfig.validators {
-		// Skip some validators from running during set up.
-		// This is needed for testing functionality like
-		// state-sync where we might want to start some validators during tests.
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-			s.T().Logf("skipping %s validator with index %d from running...", val.validator.Name, i)
-			continue
-		}
-
+	for _, val := range chainConfig.validators {
 		validatorResource, err := s.containerManager.RunValidatorResource(chainConfig.meta.Id, val.validator.Name, val.validator.ConfigDir)
 		require.NoError(s.T(), err)
 		s.T().Logf("started %s validator container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
@@ -388,8 +376,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	numVal := float32(len(validatorConfigs))
 
 	newChainConfig := chainConfig{
-		votingPeriod:            propDepositBlocks + numVal*propVoteBlocks + propBufferBlocks,
-		skipRunValidatorIndexes: skipValidatorIndexes,
+		votingPeriod: propDepositBlocks + numVal*propVoteBlocks + propBufferBlocks,
 	}
 
 	// If upgrade is skipped, we can use the chain initialization logic from
@@ -470,10 +457,6 @@ func (s *IntegrationTestSuite) upgrade() {
 	// wait till all chains halt at upgrade height
 	for _, chainConfig := range s.chainConfigs {
 		for i := range chainConfig.validators {
-			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-				continue
-			}
-
 			validatorResource, exists := s.containerManager.GetValidatorResource(chainConfig.meta.Id, i)
 			require.True(s.T(), exists)
 			containerId := validatorResource.Container.ID
@@ -505,10 +488,7 @@ func (s *IntegrationTestSuite) upgrade() {
 
 	// remove all containers so we can upgrade them to the new version
 	for _, chainConfig := range s.chainConfigs {
-		for valIdx, val := range chainConfig.validators {
-			if _, ok := chainConfig.skipRunValidatorIndexes[valIdx]; ok {
-				continue
-			}
+		for _, val := range chainConfig.validators {
 			containerName := val.validator.Name
 			err := s.containerManager.RemoveValidatorResource(chainConfig.meta.Id, containerName)
 			s.Require().NoError(err)
@@ -526,10 +506,6 @@ func (s *IntegrationTestSuite) upgradeFork() {
 	for _, chainConfig := range s.chainConfigs {
 
 		for i := range chainConfig.validators {
-			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-				continue
-			}
-
 			validatorResource, exists := s.containerManager.GetValidatorResource(chainConfig.meta.Id, i)
 			require.True(s.T(), exists)
 			containerId := validatorResource.Container.ID
@@ -561,10 +537,7 @@ func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propH
 	s.containerManager.OsmosisRepository = containers.CurrentBranchOsmoRepository
 	s.containerManager.OsmosisTag = containers.CurrentBranchOsmoTag
 
-	for i, val := range chain.validators {
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-			continue
-		}
+	for _, val := range chain.validators {
 		validatorResource, err := s.containerManager.RunValidatorResource(chainConfig.meta.Id, val.validator.Name, val.validator.ConfigDir)
 		require.NoError(s.T(), err)
 		s.T().Logf("started %s validator container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
@@ -572,10 +545,6 @@ func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propH
 
 	// check that we are creating blocks again
 	for i := range chain.validators {
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-			continue
-		}
-
 		validatorResource, exists := s.containerManager.GetValidatorResource(chainConfig.meta.Id, i)
 		require.True(s.T(), exists)
 
