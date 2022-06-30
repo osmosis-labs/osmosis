@@ -26,22 +26,7 @@ jobs:
           fetch-depth: 1  # we need a .git directory to run git diff
 
       - name: "Check protobuf generated code"
-        run: |
-          set -euo pipefail
-          # Install buf and gogo tools, so that differences that arise from
-          # toolchain differences are also caught.
-          readonly tools="$(mktemp -d)"
-          export PATH="${PATH}:${tools}/bin"
-          export GOBIN="${tools}/bin"
-          go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
-          
-          make proto-gen
-          make proto-all
-          if ! git diff --stat --exit-code ; then
-            echo ">> ERROR:"
-            echo ">>"
-            echo ">> Protobuf generated code requires update (either tools or .proto files may have changed)."
-            echo ">> Ensure your tools are up-to-date, re-run 'make proto-gen' and update this PR."
-            echo ">>"
-            exit 1
-          fi
+        run: contrib/scripts/check-generated.sh
+        shell: bash
+        with:
+          password: ${{ secrets.ADD_TO_PROJECT_PAT }}
