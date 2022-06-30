@@ -17,7 +17,7 @@ var customGenesis = types.NewGenesisState(
 		"uosmo",                  // denom
 		sdk.NewDec(200),          // epoch provisions
 		"year",                   // epoch identifier
-		sdk.NewDecWithPrec(5, 1), //reduction factor
+		sdk.NewDecWithPrec(5, 1), // reduction factor
 		5,                        // reduction perion in epochs
 		types.DistributionProportions{
 			Staking:          sdk.NewDecWithPrec(25, 2),
@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 		expectPanic             bool
 		expectedEpochProvisions sdk.Dec
 		// Deltas represent by how much a certain paramets
-		// has changeda after calling InitGenesis()
+		// has changed after calling InitGenesis()
 		expectedSupplyOffsetDelta           sdk.Int
 		expectedSupplyWithOffsetDelta       sdk.Int
 		expectedDeveloperVestingAmountDelta sdk.Int
@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			suite.Equal(expectedDeveloperVestingAmount.Int64(), actualVestingCoins.Amount.Int64())
 
 			// Last halven epoch num is set to 0.
-			suite.Equal(tc.expectedHalvenStartedEpoch, mintKeeper.GetLastHalvenEpochNum(ctx))
+			suite.Equal(tc.expectedHalvenStartedEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
 		})
 	}
 }

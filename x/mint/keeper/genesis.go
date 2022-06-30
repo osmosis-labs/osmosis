@@ -33,7 +33,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.Ba
 		bk.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(developerVestingAmount).Neg())
 	}
 
-	k.SetLastHalvenEpochNum(ctx, data.HalvenStartedEpoch)
+	k.SetLastReductionEpochNum(ctx, data.ReductionStartedEpoch)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
@@ -45,6 +45,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		params.WeightedDeveloperRewardsReceivers = make([]types.WeightedAddress, 0)
 	}
 
-	lastHalvenEpoch := k.GetLastHalvenEpochNum(ctx)
+	lastHalvenEpoch := k.GetLastReductionEpochNum(ctx)
 	return types.NewGenesisState(minter, params, lastHalvenEpoch)
 }
