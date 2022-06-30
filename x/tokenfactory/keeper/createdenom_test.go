@@ -74,7 +74,6 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			setup: func() {
 				_, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
 				suite.Require().NoError(err)
-
 			},
 			subdenom: "bitcoin",
 			valid:    false,

@@ -29,6 +29,8 @@
   - x/superfluid/**/*
 "C:x/txfees":
   - x/txfees/**/*
+"C:x/tokenfactory":
+  - x/tokenfactory/**/*
 "T:build":
   - Makefile
   - Dockerfile

@@ -19,8 +19,8 @@ import (
 
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
@@ -33,7 +33,7 @@ type syncInfo struct {
 }
 
 type validatorConfig struct {
-	validator       chain.Validator
+	validator       initialization.Validator
 	operatorAddress string
 }
 
@@ -41,16 +41,12 @@ type chainConfig struct {
 	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, and a buffer.
 	votingPeriod float32
 	// upgrade proposal height for chain.
-	propHeight int
-	forkHeight int
-	// Indexes of the validators to skip from running during initialization.
-	// This is needed for testing functionality like state-sync where we would
-	// like to start a node during tests post-initialization.
-	skipRunValidatorIndexes map[int]struct{}
-	latestProposalNumber    int
-	latestLockNumber        int
-	meta                    chain.ChainMeta
-	validators              []*validatorConfig
+	propHeight           int
+	forkHeight           int
+	latestProposalNumber int
+	latestLockNumber     int
+	meta                 initialization.ChainMeta
+	validators           []*validatorConfig
 }
 
 const (
@@ -80,7 +76,7 @@ const (
 
 var (
 	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
-	validatorConfigsChainA = []*chain.ValidatorConfig{
+	validatorConfigsChainA = []*initialization.ValidatorConfig{
 		{
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
@@ -110,7 +106,7 @@ var (
 			SnapshotKeepRecent: 0,
 		},
 	}
-	validatorConfigsChainB = []*chain.ValidatorConfig{
+	validatorConfigsChainB = []*initialization.ValidatorConfig{
 		{
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
@@ -208,13 +204,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.containerManager, err = containers.NewManager(!s.skipUpgrade, s.isFork)
 	require.NoError(s.T(), err)
 
-	s.configureChain(chain.ChainAID, validatorConfigsChainA, map[int]struct{}{
+	s.configureChain(initialization.ChainAID, validatorConfigsChainA, map[int]struct{}{
 		3: {}, // skip validator at index 3
 	})
 
 	// We don't need a second chain if IBC is disabled
 	if !s.skipIBC {
-		s.configureChain(chain.ChainBID, validatorConfigsChainB, map[int]struct{}{})
+		s.configureChain(initialization.ChainBID, validatorConfigsChainB, map[int]struct{}{})
 	}
 
 	for i, chainConfig := range s.chainConfigs {
@@ -271,15 +267,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 
 func (s *IntegrationTestSuite) runValidators(chainConfig *chainConfig, portOffset int) {
 	s.T().Logf("starting %s validator containers...", chainConfig.meta.Id)
-	for i, val := range chainConfig.validators {
-		// Skip some validators from running during set up.
-		// This is needed for testing functionality like
-		// state-sync where we might want to start some validators during tests.
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-			s.T().Logf("skipping %s validator with index %d from running...", val.validator.Name, i)
-			continue
-		}
-
+	for _, val := range chainConfig.validators {
 		validatorResource, err := s.containerManager.RunValidatorResource(chainConfig.meta.Id, val.validator.Name, val.validator.ConfigDir)
 		require.NoError(s.T(), err)
 		s.T().Logf("started %s validator container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
@@ -375,7 +363,7 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chainConfig, chainB *chainC
 	s.connectIBCChains(chainA, chainB)
 }
 
-func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*chain.ValidatorConfig, skipValidatorIndexes map[int]struct{}) {
+func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*initialization.ValidatorConfig, skipValidatorIndexes map[int]struct{}) {
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-")
 
@@ -388,8 +376,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	numVal := float32(len(validatorConfigs))
 
 	newChainConfig := chainConfig{
-		votingPeriod:            propDepositBlocks + numVal*propVoteBlocks + propBufferBlocks,
-		skipRunValidatorIndexes: skipValidatorIndexes,
+		votingPeriod: propDepositBlocks + numVal*propVoteBlocks + propBufferBlocks,
 	}
 
 	// If upgrade is skipped, we can use the chain initialization logic from
@@ -397,7 +384,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	// via Docker.
 
 	if s.skipUpgrade {
-		initializedChain, err := chain.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
+		initializedChain, err := initialization.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
 		s.Require().NoError(err)
 		s.initializeChainConfig(&newChainConfig, initializedChain)
 		return
@@ -412,7 +399,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 
 	fileName := fmt.Sprintf("%v/%v-encode", tmpDir, chainId)
 	s.T().Logf("serialized init file for chain-id %v: %v", chainId, fileName)
-	var initializedChain chain.Chain
+	var initializedChain initialization.Chain
 	// loop through the reading and unmarshaling of the init file a total of maxRetries or until error is nil
 	// without this, test attempts to unmarshal file before docker container is finished writing
 	for i := 0; i < maxRetries; i++ {
@@ -437,7 +424,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	s.initializeChainConfig(&newChainConfig, &initializedChain)
 }
 
-func (s *IntegrationTestSuite) initializeChainConfig(chainConfig *chainConfig, initializedChain *chain.Chain) {
+func (s *IntegrationTestSuite) initializeChainConfig(chainConfig *chainConfig, initializedChain *initialization.Chain) {
 	chainConfig.meta.DataDir = initializedChain.ChainMeta.DataDir
 	chainConfig.meta.Id = initializedChain.ChainMeta.Id
 
@@ -470,10 +457,6 @@ func (s *IntegrationTestSuite) upgrade() {
 	// wait till all chains halt at upgrade height
 	for _, chainConfig := range s.chainConfigs {
 		for i := range chainConfig.validators {
-			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-				continue
-			}
-
 			validatorResource, exists := s.containerManager.GetValidatorResource(chainConfig.meta.Id, i)
 			require.True(s.T(), exists)
 			containerId := validatorResource.Container.ID
@@ -505,10 +488,7 @@ func (s *IntegrationTestSuite) upgrade() {
 
 	// remove all containers so we can upgrade them to the new version
 	for _, chainConfig := range s.chainConfigs {
-		for valIdx, val := range chainConfig.validators {
-			if _, ok := chainConfig.skipRunValidatorIndexes[valIdx]; ok {
-				continue
-			}
+		for _, val := range chainConfig.validators {
 			containerName := val.validator.Name
 			err := s.containerManager.RemoveValidatorResource(chainConfig.meta.Id, containerName)
 			s.Require().NoError(err)
@@ -526,10 +506,6 @@ func (s *IntegrationTestSuite) upgradeFork() {
 	for _, chainConfig := range s.chainConfigs {
 
 		for i := range chainConfig.validators {
-			if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-				continue
-			}
-
 			validatorResource, exists := s.containerManager.GetValidatorResource(chainConfig.meta.Id, i)
 			require.True(s.T(), exists)
 			containerId := validatorResource.Container.ID
@@ -561,10 +537,7 @@ func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propH
 	s.containerManager.OsmosisRepository = containers.CurrentBranchOsmoRepository
 	s.containerManager.OsmosisTag = containers.CurrentBranchOsmoTag
 
-	for i, val := range chain.validators {
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-			continue
-		}
+	for _, val := range chain.validators {
 		validatorResource, err := s.containerManager.RunValidatorResource(chainConfig.meta.Id, val.validator.Name, val.validator.ConfigDir)
 		require.NoError(s.T(), err)
 		s.T().Logf("started %s validator container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
@@ -572,10 +545,6 @@ func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propH
 
 	// check that we are creating blocks again
 	for i := range chain.validators {
-		if _, ok := chainConfig.skipRunValidatorIndexes[i]; ok {
-			continue
-		}
-
 		validatorResource, exists := s.containerManager.GetValidatorResource(chainConfig.meta.Id, i)
 		require.True(s.T(), exists)
 
@@ -598,22 +567,26 @@ func (s *IntegrationTestSuite) createPreUpgradeState() {
 	chainA := s.chainConfigs[0]
 	chainB := s.chainConfigs[1]
 
-	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, chain.OsmoToken)
-	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, chain.OsmoToken)
-	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, chain.StakeToken)
-	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, chain.StakeToken)
+	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, initialization.OsmoToken)
+	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, initialization.OsmoToken)
+	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, initialization.StakeToken)
+	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, initialization.StakeToken)
 	s.createPool(chainA, "pool1A.json")
 	s.createPool(chainB, "pool1B.json")
 }
 
 func (s *IntegrationTestSuite) runPostUpgradeTests() {
+	if s.skipIBC {
+		return
+	}
+
 	chainA := s.chainConfigs[0]
 	chainB := s.chainConfigs[1]
 
-	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, chain.OsmoToken)
-	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, chain.OsmoToken)
-	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, chain.StakeToken)
-	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, chain.StakeToken)
+	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, initialization.OsmoToken)
+	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, initialization.OsmoToken)
+	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, initialization.StakeToken)
+	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, initialization.StakeToken)
 	s.createPool(chainA, "pool2A.json")
 	s.createPool(chainB, "pool2B.json")
 }
