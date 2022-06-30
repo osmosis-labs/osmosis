@@ -52,6 +52,7 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		// the need for Docker.
 		config.OsmosisRepository = CurrentBranchOsmoRepository
 		config.OsmosisTag = CurrentBranchOsmoTag
+		return config
 	}
 
 	// If upgrade is tested, we need to utilize InitRepository and InitTag
