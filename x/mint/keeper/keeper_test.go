@@ -39,7 +39,6 @@ func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight
 	// it to 1.
 	suite.Ctx = suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
 
-	// If developer module account is created, the suite.Setup() also correctly sets the offset
 	if !isDeveloperModuleAccountCreated {
 		// Remove the developer vesting account since suite setup creates and initializes it.
 		// This environment w/o the developer vesting account configured is necessary for
@@ -48,7 +47,8 @@ func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight
 		suite.App.AccountKeeper.RemoveAccount(suite.Ctx, developerVestingAccount)
 		suite.App.BankKeeper.BurnCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount))))
 
-		// Reset supply offset to 0
+		// If developer module account is created, the suite.Setup() also sets the offset,
+		// therefore, we should reset it to 0 to set up the environment truly w/o the module account.
 		supplyOffset := suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom)
 		suite.App.BankKeeper.AddSupplyOffset(suite.Ctx, sdk.DefaultBondDenom, supplyOffset.Mul(sdk.NewInt(-1)))
 		suite.Equal(sdk.ZeroInt(), suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom))
