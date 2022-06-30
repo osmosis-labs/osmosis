@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -25,8 +24,6 @@ type Manager struct {
 	hermesResource *dockertest.Resource
 	valResources   map[string][]*dockertest.Resource
 }
-
-var errRegex = regexp.MustCompile(`(E|e)rror`)
 
 // NewManager creates a new Manager instance and initializes
 // all Docker specific utilies. Returns an error if initialiation fails.
@@ -88,16 +85,6 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 				ErrorStream:  &errBuf,
 			})
 			if err != nil {
-				return false
-			}
-
-			errBufString := errBuf.String()
-
-			// Note that this does not match all errors.
-			// This only works if CLI outpurs "Error" or "error"
-			// to stderr.
-			if errRegex.MatchString(errBufString) {
-				t.Log(errBufString)
 				return false
 			}
 
