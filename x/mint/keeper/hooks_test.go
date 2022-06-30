@@ -220,6 +220,11 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 	require.Equal(t, lastHalvenPeriod, mintParams.MintingRewardsDistributionStartEpoch)
 }
 
+// TODO: Remove after rounding errors are addressed and resolved.
+// Make sure that more specific test specs are added to validate the expected
+// supply for correctness. 
+//
+// Ref: https://github.com/osmosis-labs/osmosis/pull/1874
 func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 	// Most values in this test are taken from mainnet genesis to mimic real-world behavior:
 	// https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
