@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestAddEpochInfo() {
 			suite.SetupTest()
 			suite.Ctx = suite.Ctx.WithBlockHeight(startBlockHeight).WithBlockTime(startBlockTime)
 			err := suite.App.EpochsKeeper.AddEpochInfo(suite.Ctx, test.addedEpochInfo)
-			if test.expErr != true {
+			if !test.expErr {
 				suite.Require().NoError(err)
 				actualEpochInfo := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, test.addedEpochInfo.Identifier)
 				suite.Require().Equal(test.expEpochInfo, actualEpochInfo)
