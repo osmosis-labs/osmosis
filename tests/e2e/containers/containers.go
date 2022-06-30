@@ -106,7 +106,7 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 			}
 
 			if success != "" {
-				return strings.Contains(outBuf.String(), success) || strings.Contains(errBuf.String(), success)
+				return strings.Contains(outBuf.String(), success) || strings.Contains(errBufString, success)
 			}
 
 			return true
