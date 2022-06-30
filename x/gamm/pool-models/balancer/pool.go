@@ -118,11 +118,14 @@ func (pa *Pool) SubTotalShares(amt sdk.Int) {
 	pa.TotalShares.Amount = pa.TotalShares.Amount.Sub(amt)
 }
 
-// SetInitialPoolAssets sets the PoolAssets in the pool.
-// It is only designed to be called at the pool's creation.
-// If the same denom's PoolAsset exists, will return error.
-// The list of PoolAssets must be sorted. This is done to enable fast searching for a PoolAsset by denomination.
-// TODO: Unify story for validation of []PoolAsset, some is here, some is in CreatePool.ValidateBasic()
+// SetInitialPoolAssets sets the PoolAssets in the pool. It is only designed to
+// be called at the pool's creation. If the same denom's PoolAsset exists, will
+// return error.
+//
+// The list of PoolAssets must be sorted. This is done to enable fast searching
+// for a PoolAsset by denomination.
+// TODO: Unify story for validation of []PoolAsset, some is here, some is in
+// CreatePool.ValidateBasic()
 func (pa *Pool) SetInitialPoolAssets(PoolAssets []PoolAsset) error {
 	exists := make(map[string]bool)
 	for _, asset := range pa.PoolAssets {
@@ -384,7 +387,7 @@ func (pa *Pool) updateAllWeights(newWeights []PoolAsset) {
 }
 
 // PokePool checks to see if the pool's token weights need to be updated, and
-// if so, does so.
+// if so, does so. Currently doesn't do anything outside out LBPs.
 func (pa *Pool) PokePool(blockTime time.Time) {
 	// check if pool weights didn't change
 	poolWeightsChanging := pa.PoolParams.SmoothWeightChangeParams != nil

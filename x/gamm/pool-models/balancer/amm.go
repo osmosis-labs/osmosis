@@ -10,6 +10,77 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+// subPoolAssetWeights subtracts the weights of two different pool asset slices.
+// It assumes that both pool assets have the same token denominations,
+// with the denominations in the same order.
+// Returned weights can (and probably will have some) be negative.
+func subPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
+	weightDifference := make([]PoolAsset, len(base))
+	// TODO: Consider deleting these panics for performance
+	if len(base) != len(other) {
+		panic("subPoolAssetWeights called with invalid input, len(base) != len(other)")
+	}
+	for i, asset := range base {
+		if asset.Token.Denom != other[i].Token.Denom {
+			panic(fmt.Sprintf("subPoolAssetWeights called with invalid input, "+
+				"expected other's %vth asset to be %v, got %v",
+				i, asset.Token.Denom, other[i].Token.Denom))
+		}
+		curWeightDiff := asset.Weight.Sub(other[i].Weight)
+		weightDifference[i] = PoolAsset{Token: asset.Token, Weight: curWeightDiff}
+	}
+	return weightDifference
+}
+
+// addPoolAssetWeights adds the weights of two different pool asset slices.
+// It assumes that both pool assets have the same token denominations,
+// with the denominations in the same order.
+// Returned weights can be negative.
+func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
+	weightSum := make([]PoolAsset, len(base))
+	// TODO: Consider deleting these panics for performance
+	if len(base) != len(other) {
+		panic("addPoolAssetWeights called with invalid input, len(base) != len(other)")
+	}
+	for i, asset := range base {
+		if asset.Token.Denom != other[i].Token.Denom {
+			panic(fmt.Sprintf("addPoolAssetWeights called with invalid input, "+
+				"expected other's %vth asset to be %v, got %v",
+				i, asset.Token.Denom, other[i].Token.Denom))
+		}
+		curWeightSum := asset.Weight.Add(other[i].Weight)
+		weightSum[i] = PoolAsset{Token: asset.Token, Weight: curWeightSum}
+	}
+	return weightSum
+}
+
+// assumes 0 < d < 1
+func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
+	newWeights := make([]PoolAsset, len(base))
+	for i, asset := range base {
+		// TODO: This can adversarially panic at the moment! (as can Pool.TotalWeight)
+		// Ensure this won't be able to panic in the future PR where we bound
+		// each assets weight, and add precision
+		newWeight := d.MulInt(asset.Weight).RoundInt()
+		newWeights[i] = PoolAsset{Token: asset.Token, Weight: newWeight}
+	}
+	return newWeights
+}
+
+// ValidateUserSpecifiedWeight ensures that a weight that is provided from user-input anywhere
+// for creating a pool obeys the expected guarantees.
+// Namely, that the weight is in the range [1, MaxUserSpecifiedWeight)
+func ValidateUserSpecifiedWeight(weight sdk.Int) error {
+	if !weight.IsPositive() {
+		return sdkerrors.Wrap(types.ErrNotPositiveWeight, weight.String())
+	}
+
+	if weight.GTE(MaxUserSpecifiedWeight) {
+		return sdkerrors.Wrap(types.ErrWeightTooLarge, weight.String())
+	}
+	return nil
+}
+
 // solveConstantFunctionInvariant solves the constant function of an AMM
 // that determines the relationship between the differences of two sides
 // of assets inside the pool.
@@ -156,75 +227,4 @@ func calcPoolSharesInGivenSingleAssetOut(
 	// pAi = pAiAfterExitFee/(1-exitFee)
 	sharesInFeeIncluded := sharesIn.Quo(sdk.OneDec().Sub(exitFee))
 	return sharesInFeeIncluded
-}
-
-// ValidateUserSpecifiedWeight ensures that a weight that is provided from user-input anywhere
-// for creating a pool obeys the expected guarantees.
-// Namely, that the weight is in the range [1, MaxUserSpecifiedWeight)
-func ValidateUserSpecifiedWeight(weight sdk.Int) error {
-	if !weight.IsPositive() {
-		return sdkerrors.Wrap(types.ErrNotPositiveWeight, weight.String())
-	}
-
-	if weight.GTE(MaxUserSpecifiedWeight) {
-		return sdkerrors.Wrap(types.ErrWeightTooLarge, weight.String())
-	}
-	return nil
-}
-
-// subPoolAssetWeights subtracts the weights of two different pool asset slices.
-// It assumes that both pool assets have the same token denominations,
-// with the denominations in the same order.
-// Returned weights can (and probably will have some) be negative.
-func subPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
-	weightDifference := make([]PoolAsset, len(base))
-	// TODO: Consider deleting these panics for performance
-	if len(base) != len(other) {
-		panic("subPoolAssetWeights called with invalid input, len(base) != len(other)")
-	}
-	for i, asset := range base {
-		if asset.Token.Denom != other[i].Token.Denom {
-			panic(fmt.Sprintf("subPoolAssetWeights called with invalid input, "+
-				"expected other's %vth asset to be %v, got %v",
-				i, asset.Token.Denom, other[i].Token.Denom))
-		}
-		curWeightDiff := asset.Weight.Sub(other[i].Weight)
-		weightDifference[i] = PoolAsset{Token: asset.Token, Weight: curWeightDiff}
-	}
-	return weightDifference
-}
-
-// addPoolAssetWeights adds the weights of two different pool asset slices.
-// It assumes that both pool assets have the same token denominations,
-// with the denominations in the same order.
-// Returned weights can be negative.
-func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
-	weightSum := make([]PoolAsset, len(base))
-	// TODO: Consider deleting these panics for performance
-	if len(base) != len(other) {
-		panic("addPoolAssetWeights called with invalid input, len(base) != len(other)")
-	}
-	for i, asset := range base {
-		if asset.Token.Denom != other[i].Token.Denom {
-			panic(fmt.Sprintf("addPoolAssetWeights called with invalid input, "+
-				"expected other's %vth asset to be %v, got %v",
-				i, asset.Token.Denom, other[i].Token.Denom))
-		}
-		curWeightSum := asset.Weight.Add(other[i].Weight)
-		weightSum[i] = PoolAsset{Token: asset.Token, Weight: curWeightSum}
-	}
-	return weightSum
-}
-
-// assumes 0 < d < 1
-func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
-	newWeights := make([]PoolAsset, len(base))
-	for i, asset := range base {
-		// TODO: This can adversarially panic at the moment! (as can Pool.TotalWeight)
-		// Ensure this won't be able to panic in the future PR where we bound
-		// each assets weight, and add precision
-		newWeight := d.MulInt(asset.Weight).RoundInt()
-		newWeights[i] = PoolAsset{Token: asset.Token, Weight: newWeight}
-	}
-	return newWeights
 }
