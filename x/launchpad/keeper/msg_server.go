@@ -97,7 +97,6 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *types.MsgSubscribe, store storet
 
 	k.saveSale(store, saleIdBz, p)
 	k.saveUserPosition(store, saleIdBz, sender, u)
-	// TODO: event
 	return nil
 }
 
@@ -175,7 +174,6 @@ func (k Keeper) exitSale(ctx sdk.Context, msg *types.MsgExitSale, store storetyp
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	// TODO: make double check with p.OutSold?
 
 	if u.Shares.IsPositive() || u.Staked.IsPositive() {
 		ctx.Logger().Error("user has outstanding token_in balance", "user", msg.Sender, "balance", u.Staked)
