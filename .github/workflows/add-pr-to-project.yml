@@ -1,15 +1,12 @@
-name: Add new issues to project
+name: Add new PRs to project
 
 on:
-  issues:
-    types:
-      - opened
   pull_request:
     types:
       - opened
 jobs:
   add-to-project:
-    name: Add issue to chain dev project
+    name: Add PR to chain dev project
     if: ${{ github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
     runs-on: ubuntu-latest
     steps:
