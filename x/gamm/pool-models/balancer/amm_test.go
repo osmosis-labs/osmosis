@@ -1,30 +1,30 @@
 package balancer_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+=======
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+>>>>>>> e2d49117 (refactor: consolidate pool implementation (#1868))
 )
 
-// This test sets up 2 asset pools, and then checks the spot price on them.
-// It uses the pools spot price method, rather than the Gamm keepers spot price method.
-func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
-	baseDenom := "uosmo"
-	quoteDenom := "uion"
-
+func TestBalancerPoolParams(t *testing.T) {
+	// Tests that creating a pool with the given pair of swapfee and exit fee
+	// errors or succeeds as intended. Furthermore, it checks that
+	// NewPool panics in the error case.
 	tests := []struct {
-		name                string
-		baseDenomPoolInput  sdk.Coin
-		quoteDenomPoolInput sdk.Coin
-		expectError         bool
-		expectedOutput      sdk.Dec
+		SwapFee   sdk.Dec
+		ExitFee   sdk.Dec
+		shouldErr bool
 	}{
+<<<<<<< HEAD
 		{
 			name:                "equal value",
 			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
@@ -329,6 +329,37 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 				tol := sdk.NewDec(1)
 				require.True(osmoutils.DecApproxEq(t, initialCalcTokenOut.ToDec(), inverseCalcTokenOut, tol))
 			})
+=======
+		// Should work
+		{defaultSwapFee, defaultExitFee, noErr},
+		// Can't set the swap fee as negative
+		{sdk.NewDecWithPrec(-1, 2), defaultExitFee, wantErr},
+		// Can't set the swap fee as 1
+		{sdk.NewDec(1), defaultExitFee, wantErr},
+		// Can't set the swap fee above 1
+		{sdk.NewDecWithPrec(15, 1), defaultExitFee, wantErr},
+		// Can't set the exit fee as negative
+		{defaultSwapFee, sdk.NewDecWithPrec(-1, 2), wantErr},
+		// Can't set the exit fee as 1
+		{defaultSwapFee, sdk.NewDec(1), wantErr},
+		// Can't set the exit fee above 1
+		{defaultSwapFee, sdk.NewDecWithPrec(15, 1), wantErr},
+	}
+
+	for i, params := range tests {
+		PoolParams := balancer.PoolParams{
+			SwapFee: params.SwapFee,
+			ExitFee: params.ExitFee,
+		}
+		err := PoolParams.Validate(dummyPoolAssets)
+		if params.shouldErr {
+			require.Error(t, err, "unexpected lack of error, tc %v", i)
+			// Check that these are also caught if passed to the underlying pool creation func
+			_, err = balancer.NewBalancerPool(1, PoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
+			require.Error(t, err)
+		} else {
+			require.NoError(t, err, "unexpected error, tc %v", i)
+>>>>>>> e2d49117 (refactor: consolidate pool implementation (#1868))
 		}
 	}
 }
