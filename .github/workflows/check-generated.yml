@@ -24,9 +24,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 1  # we need a .git directory to run git diff
-          
+
       - name: "Check protobuf generated code"
-        run: contrib/scripts/check-generated.sh
         shell: bash
-        with:
-          password: ${{ secrets.ADD_TO_PROJECT_PAT }}
+        run: contrib/scripts/check-generated.sh
