@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 		expectedDeveloperVestingAmountDelta sdk.Int
 		expectedHalvenStartedEpoch          int64
 	}{
-		"default genesis - developer module account is not created priot to InitGenesis() - created during the call": {
+		"default genesis - developer module account is not created prior to InitGenesis() - created during the call": {
 			mintGenesis: types.DefaultGenesisState(),
 			mintDenom:   sdk.DefaultBondDenom,
 
