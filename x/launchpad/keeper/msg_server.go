@@ -32,7 +32,10 @@ func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*ty
 	} else {
 		ctx.Logger().Info("Sale Creation Fee not charged. Params creation fee recipient or fee is not defined")
 	}
-
+	err = k.bank.SendCoinsFromAccountToModule(ctx, creator, launchpad.ModuleName, sdk.NewCoins(*msg.TokenOut))
+	if err != nil {
+		return nil, err
+	}
 	err = ctx.EventManager().EmitTypedEvent(&types.EventCreateSale{
 		Id:       id,
 		Creator:  msg.Creator,
@@ -56,8 +59,6 @@ func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, params types
 	}
 	p := newSale(treasury, id, msg.TokenIn, *msg.TokenOut, msg.StartTime, end)
 	k.saveSale(store, idBz, &p)
-	// TODO:
-	// + send initial deposit from sender to the pool
 	return id, creator, nil
 }
 
