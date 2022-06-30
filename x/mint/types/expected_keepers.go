@@ -12,7 +12,6 @@ type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 
-	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	SetModuleAccount(sdk.Context, types.ModuleAccountI)
 	GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI
 }

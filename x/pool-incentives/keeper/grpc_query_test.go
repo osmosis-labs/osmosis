@@ -285,3 +285,46 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	})
 	suite.Error(err)
 }
+
+func (suite *KeeperTestSuite) TestGaugeIncentivePercentage() {
+	suite.SetupTest()
+
+	keeper := suite.App.PoolIncentivesKeeper
+	queryClient := suite.queryClient
+
+	poolId := suite.PrepareBalancerPool()
+	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
+	lockableDurations := keeper.GetLockableDurations(suite.Ctx)
+	suite.Equal(3, len(lockableDurations))
+
+	gauge1Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[0])
+	suite.NoError(err)
+
+	gauge2Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[1])
+	suite.NoError(err)
+
+	gauge3Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[2])
+	suite.NoError(err)
+
+	// Create 3 records
+	err = keeper.UpdateDistrRecords(suite.Ctx, types.DistrRecord{
+		GaugeId: gauge1Id,
+		Weight:  sdk.NewInt(100),
+	}, types.DistrRecord{
+		GaugeId: gauge2Id,
+		Weight:  sdk.NewInt(200),
+	}, types.DistrRecord{
+		GaugeId: gauge3Id,
+		Weight:  sdk.NewInt(300),
+	})
+	suite.NoError(err)
+
+	res, err := queryClient.GaugeIds(context.Background(), &types.QueryGaugeIdsRequest{
+		PoolId: poolId,
+	})
+
+	suite.NoError(err)
+	suite.Equal("16.666666666666666700", res.GaugeIdsWithDuration[0].GaugeIncentivePercentage)
+	suite.Equal("33.333333333333333300", res.GaugeIdsWithDuration[1].GaugeIncentivePercentage)
+	suite.Equal("50.000000000000000000", res.GaugeIdsWithDuration[2].GaugeIncentivePercentage)
+}

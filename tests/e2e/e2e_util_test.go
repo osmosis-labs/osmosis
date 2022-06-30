@@ -17,7 +17,7 @@ import (
 
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
@@ -77,7 +77,7 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chainConfig, dstChain *chainCon
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesBPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				tokenPost := balancesBPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				resPre := chain.OsmoToken.Amount
+				resPre := initialization.OsmoToken.Amount
 				resPost := tokenPost.Sub(tokenPre)
 				return resPost.Uint64() == resPre.Uint64()
 			} else {
@@ -142,9 +142,6 @@ func (s *IntegrationTestSuite) voteProposal(c *chainConfig) {
 	s.T().Logf("voting yes on proposal for chain-id: %s", c.meta.Id)
 	cmd := []string{"osmosisd", "tx", "gov", "vote", propStr, "yes", "--from=val", fmt.Sprintf("--chain-id=%s", c.meta.Id), "-b=block", "--yes", "--keyring-backend=test"}
 	for i := range c.validators {
-		if _, ok := c.skipRunValidatorIndexes[i]; ok {
-			continue
-		}
 		_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, i, cmd, "code: 0")
 		s.Require().NoError(err)
 		validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, i)
@@ -267,10 +264,6 @@ func (s *IntegrationTestSuite) sendTx(c *chainConfig, validatorIndex int, amount
 
 func (s *IntegrationTestSuite) extractValidatorOperatorAddresses(config *chainConfig) {
 	for i, val := range config.validators {
-		if _, ok := config.skipRunValidatorIndexes[i]; ok {
-			s.T().Logf("skipping %s validator with index %d from running...", val.validator.Name, i)
-			continue
-		}
 		cmd := []string{"osmosisd", "debug", "addr", val.validator.PublicKey}
 		s.T().Logf("extracting validator operator addresses for chain-id: %s", config.meta.Id)
 		_, errBuf, err := s.containerManager.ExecCmd(s.T(), config.meta.Id, i, cmd, "")

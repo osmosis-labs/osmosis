@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -92,10 +93,10 @@ func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
 	return k
 }
 
-// GetLastHalvenEpochNum returns last halven epoch number.
-func (k Keeper) GetLastHalvenEpochNum(ctx sdk.Context) int64 {
+// GetLastReductionEpochNum returns last reduction epoch number.
+func (k Keeper) GetLastReductionEpochNum(ctx sdk.Context) int64 {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.LastHalvenEpochKey)
+	b := store.Get(types.LastReductionEpochKey)
 	if b == nil {
 		return 0
 	}
@@ -103,10 +104,10 @@ func (k Keeper) GetLastHalvenEpochNum(ctx sdk.Context) int64 {
 	return int64(sdk.BigEndianToUint64(b))
 }
 
-// SetLastHalvenEpochNum set last halven epoch number.
-func (k Keeper) SetLastHalvenEpochNum(ctx sdk.Context, epochNum int64) {
+// SetLastReductionEpochNum set last reduction epoch number.
+func (k Keeper) SetLastReductionEpochNum(ctx sdk.Context, epochNum int64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastHalvenEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
+	store.Set(types.LastReductionEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
 }
 
 // get the minter.

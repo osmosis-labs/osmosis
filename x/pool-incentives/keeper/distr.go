@@ -10,16 +10,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// FundCommunityPoolFromModule allows the pool-incentives module to directly fund the community fund pool.
 func (k Keeper) FundCommunityPoolFromModule(ctx sdk.Context, asset sdk.Coin) error {
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.communityPoolName, sdk.Coins{asset})
-	if err != nil {
-		return err
+	moduleAddr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	if moduleAddr == nil {
+		panic("Could not get distribution module from SDK")
 	}
 
-	feePool := k.distrKeeper.GetFeePool(ctx)
-	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(asset)...)
-	k.distrKeeper.SetFeePool(ctx, feePool)
-	return nil
+	return k.distrKeeper.FundCommunityPool(ctx, sdk.Coins{asset}, moduleAddr)
 }
 
 // AllocateAsset allocates and distributes coin according a gauge’s proportional weight that is recorded in the record.
