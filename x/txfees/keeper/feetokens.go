@@ -10,7 +10,6 @@ import (
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount.
 func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error) {
-
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
 		return sdk.Coin{}, err
