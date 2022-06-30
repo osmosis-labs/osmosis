@@ -4,8 +4,8 @@ set -euo pipefail
 # Install buf and gogo tools, so that differences that arise from
 # toolchain differences are also caught.
 readonly tools="$(mktemp -d)"
-go install github.com/bufbuild/buf/cmd/buf
-go install github.com/gogo/protobuf/protoc-gen-gogofaster@latest
+go get github.com/bufbuild/buf/cmd/buf
+go get github.com/gogo/protobuf/protoc-gen-gogofaster@latest
 
 #Specificially ignore all differences in go.mod / go.sum.
 make proto-gen
