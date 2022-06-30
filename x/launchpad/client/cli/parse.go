@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/pflag"
@@ -34,19 +33,11 @@ func (inputs *createSaleInputs) ToMsgCreateSale(creator string) (*types.MsgCreat
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse recipient address: %s", inputs.Recipient)
 	}
-	duration, err := time.ParseDuration(inputs.Duration)
-	if err != nil {
-		return nil, err
-	}
-	tOut, err := sdk.ParseCoinNormalized(inputs.TokenOut)
-	if err != nil {
-		return nil, err
-	}
 	msg := &types.MsgCreateSale{
 		TokenIn:   inputs.TokenIn,
-		TokenOut:  &tOut,
+		TokenOut:  &inputs.TokenOut.Coin,
 		StartTime: inputs.StartTime,
-		Duration:  duration,
+		Duration:  inputs.Duration.Duration,
 		Recipient: inputs.Recipient,
 		Creator:   creator,
 	}
