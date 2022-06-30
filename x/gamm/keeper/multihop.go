@@ -61,7 +61,8 @@ func (k Keeper) MultihopSwapExactAmountOut(
 	for i, route := range routes {
 		_tokenOut := tokenOut
 
-		// If there is one pool left in the route, set the expected output of the current swap to the estimated input of the final pool
+		// If there is one pool left in the route, set the expected output of the current swap
+		// to the estimated input of the final pool.
 		if i != len(routes)-1 {
 			_tokenOut = sdk.NewCoin(routes[i+1].TokenInDenom, insExpected[i+1])
 		}
