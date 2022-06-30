@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			expectedSupplyWithOffsetDelta:       sdk.ZeroInt(),
 			expectedDeveloperVestingAmountDelta: sdk.NewInt(keeper.DeveloperVestingAmount),
 		},
-		"default genesis - developer module account is created priot to InitGenesis() - not created during the call": {
+		"default genesis - developer module account is created prior to InitGenesis() - not created during the call": {
 			mintGenesis:                     types.DefaultGenesisState(),
 			mintDenom:                       sdk.DefaultBondDenom,
 			isDeveloperModuleAccountCreated: true,
