@@ -86,7 +86,7 @@ func (k Keeper) MultihopSwapExactAmountOut(
 // createMultihopExpectedSwapOuts defines the output denom and output amount for the last pool in
 // the route of pools the caller is intending to hop through in a fixed-output multihop tx. It estimates the input
 // amount for this last pool and then chains that input as the output of the previous pool in the route, repeating
-// until the first pool is reached. It returns an array of inputs, each of which correspond to a pool in the
+// until the first pool is reached. It returns an array of inputs, each of which correspond to a pool ID in the
 // route of pools for the original multihop transaction.
 func (k Keeper) createMultihopExpectedSwapOuts(ctx sdk.Context, routes []types.SwapAmountOutRoute, tokenOut sdk.Coin) ([]sdk.Int, error) {
 	insExpected := make([]sdk.Int, len(routes))
