@@ -84,13 +84,16 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *types.MsgSubscribe, store storet
 	if err != nil {
 		return err
 	}
-
+	now := ctx.BlockTime()
+	if !now.Before(p.EndTime) {
+		return errors.ErrInvalidRequest.Wrapf("Can only subscribe before the sale end (%s)", p.EndTime)
+	}
 	coin := sdk.NewCoin(p.TokenIn, msg.Amount)
 	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, launchpad.ModuleName, sdk.NewCoins(coin))
 	if err != nil {
 		return errors.Wrap(err, "user doesn't have enough tokens to subscribe for a Sale")
 	}
-	subscribe(p, u, msg.Amount, ctx.BlockTime())
+	subscribe(p, u, msg.Amount, now)
 
 	k.saveSale(store, saleIdBz, p)
 	k.saveUserPosition(store, saleIdBz, sender, u)
