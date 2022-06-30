@@ -5,8 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/pflag"
+
+	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
 type CreateSaleInputs createSaleInputs
@@ -23,6 +27,30 @@ func (inputs *createSaleInputs) UnmarshalJSON(data []byte) error {
 
 	*inputs = createSaleInputs(saleInputs)
 	return nil
+}
+
+func (inputs *createSaleInputs) ToMsgCreateSale(creator string) (*types.MsgCreateSale, error) {
+	_, err := sdk.AccAddressFromBech32(inputs.Recipient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse recipient address: %s", inputs.Recipient)
+	}
+	duration, err := time.ParseDuration(inputs.Duration)
+	if err != nil {
+		return nil, err
+	}
+	tOut, err := sdk.ParseCoinNormalized(inputs.TokenOut)
+	if err != nil {
+		return nil, err
+	}
+	msg := &types.MsgCreateSale{
+		TokenIn:   inputs.TokenIn,
+		TokenOut:  &tOut,
+		StartTime: inputs.StartTime,
+		Duration:  duration,
+		Recipient: inputs.Recipient,
+		Creator:   creator,
+	}
+	return msg, msg.ValidateBasic()
 }
 
 func parseCreateSaleFlags(fs *pflag.FlagSet) (*createSaleInputs, error) {

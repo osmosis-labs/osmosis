@@ -22,19 +22,25 @@ message Sale {
   // referred as quote_currency or payment token.
   string token_in = 4;
 
+  // total number of `tokens_out` to be sold during the continous sale.
+  string token_out_supply = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+
   // start time when the token emission starts.
-  google.protobuf.Timestamp start_time = 5
+  google.protobuf.Timestamp start_time = 6
       [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
   // end time when the token emission ends. Can't be bigger than start +
   // 139years (to avoid round overflow)
-  google.protobuf.Timestamp end_time = 6
+  google.protobuf.Timestamp end_time = 7
       [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
 
   // Round number when the sale was last time updated.
-  int64 round = 7;
+  int64 round = 8;
 
   // Last round of the Sale;
-  int64 end_round = 8;
+  int64 end_round = 9;
 
   string out_remaining = 10 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -69,6 +75,7 @@ message Sale {
     (gogoproto.nullable) = false
   ];
 
+  // TODO:
   // string name = 20 [ (gogoproto.nullable) = false ];
   // string url = 21 [ (gogoproto.nullable) = false ];
 }

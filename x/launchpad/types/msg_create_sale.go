@@ -35,17 +35,20 @@ func (msg *MsgCreateSale) validate() (sdk.AccAddress, []string) {
 	if d > int64(maxDuration) {
 		errmsgs = append(errmsgs, "`duration` must not be bigger than "+maxDuration.String())
 	}
-	if msg.TokenIn == msg.TokenOut {
+	if msg.TokenOut == nil || msg.TokenOut.IsZero() {
+		errmsgs = append(errmsgs, "`token_out` amount must be positive")
+	}
+	if msg.TokenIn == msg.TokenOut.Denom {
 		errmsgs = append(errmsgs, "`token_in` must be different than `token_out`")
 	}
-	if msg.TokenIn == "" {
-		errmsgs = append(errmsgs, "`token_in` must be not empty")
+	if err = sdk.ValidateDenom(msg.TokenIn); err != nil {
+		errmsgs = append(errmsgs, "`token_in` must be a proper denom, "+err.Error())
 	}
-	if msg.TokenOut == "" {
-		errmsgs = append(errmsgs, "`token_out` must be not empty")
+	if err = msg.TokenOut.Validate(); err != nil {
+		errmsgs = append(errmsgs, "`token_out` must be well defined, "+err.Error())
 	}
-	if msg.InitialDeposit.IsNil() || msg.InitialDeposit.IsZero() {
-		errmsgs = append(errmsgs, "`initial_deposit` amount must be non zero")
+	if msg.TokenOut.IsZero() {
+		errmsgs = append(errmsgs, "`token_out` amount must be positive")
 	}
 
 	return creator, errmsgs

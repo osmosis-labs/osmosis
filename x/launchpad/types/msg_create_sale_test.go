@@ -16,6 +16,7 @@ func TestValidateMsgCreateSale(t *testing.T) {
 	_, _, creatorAddr := testdata.KeyTestPubAddr()
 	creator := creatorAddr.String()
 	// creatorBad := sdk.AccAddress("invalid").String()
+tOut:= sdk.NewCoin("tokenout", sdk.NewIntFromUint64(1000))
 
 	tcs := []struct{
 		name string
@@ -24,7 +25,7 @@ func TestValidateMsgCreateSale(t *testing.T) {
 	}{
 		// TODO: add more tests
 		{"good1", "",
-			MsgCreateSale{Creator: creator, TokenIn: "osmo", TokenOut: "tokenout", StartTime: now.Add(minUntilSale), Duration: minDuration, InitialDeposit: sdk.NewIntFromUint64(100)}},
+			MsgCreateSale{Creator: creator, TokenIn: "osmo", TokenOut: &tOut, StartTime: now.Add(minUntilSale), Duration: minDuration}},
 	}
 	for _, tc:= range tcs {
 		t.Run(tc.name, func(t *testing.T){

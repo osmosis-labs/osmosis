@@ -8,17 +8,18 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
 )
 
-func newSale(treasury string, id uint64, tokenIn, tokenOut string, start, end time.Time, totalOut sdk.Int) types.Sale {
+func newSale(treasury string, id uint64, tokenIn string, tokenOut sdk.Coin, start, end time.Time) types.Sale {
 	zero := sdk.ZeroInt()
 	return types.Sale{
-		Treasury:  treasury,
-		Id:        id,
-		TokenOut:  tokenOut,
-		TokenIn:   tokenIn,
-		StartTime: start,
-		EndTime:   end,
+		Treasury:       treasury,
+		Id:             id,
+		TokenOut:       tokenOut.Denom,
+		TokenOutSupply: tokenOut.Amount,
+		TokenIn:        tokenIn,
+		StartTime:      start,
+		EndTime:        end,
 
-		OutRemaining: totalOut,
+		OutRemaining: tokenOut.Amount,
 		OutSold:      zero,
 		OutPerShare:  zero,
 
