@@ -33,6 +33,7 @@ func Max(x, y int) int {
 	return y
 }
 
+// Given coins, returns a randomized coin struct used as rewards for the distribution benchmark.
 func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
@@ -45,13 +46,14 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	return
 }
 
+// Given coins and durations, returns a QueryConditon struct.
 func genQueryCondition(
 	r *rand.Rand,
 	blocktime time.Time,
 	coins sdk.Coins,
 	durationOptions []time.Duration,
 ) lockuptypes.QueryCondition {
-	// Only use lockQueryType ByDuration (0) since ByTime (1) is deprecated
+	// only use lockQueryType ByDuration (0) since ByTime (1) is deprecated
 	lockQueryType := 0
 	denom := coins[r.Intn(len(coins))].Denom
 	durationOption := r.Intn(len(durationOptions))
@@ -66,6 +68,7 @@ func genQueryCondition(
 	}
 }
 
+// Creates gauges with lockups that get distributed to. Benchmarks the performance of the distribution process.
 func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs int, b *testing.B) {
 	b.StopTimer()
 
@@ -76,7 +79,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 
 	r := rand.New(rand.NewSource(10))
 
-	// Setup accounts with balances
+	// setup accounts with balances
 	addrs := []sdk.AccAddress{}
 	for i := 0; i < numAccts; i++ {
 		addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
@@ -92,7 +95,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	distrEpoch := app.EpochsKeeper.GetEpochInfo(ctx, app.IncentivesKeeper.GetParams(ctx).DistrEpochIdentifier)
 	durationOptions := app.IncentivesKeeper.GetLockableDurations(ctx)
 	fmt.Println(durationOptions)
-	// Setup gauges
+	// setup gauges
 	gaugeIds := []uint64{}
 	for i := 0; i < numGauges; i++ {
 		addr := addrs[r.Int()%numAccts]
@@ -119,12 +122,12 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		}
 	}
 
-	// Jump time to the future
+	// jump time to the future
 	futureSecs := r.Intn(1 * 60 * 60 * 24 * 7)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(futureSecs) * time.Second))
 
 	lockSecs := r.Intn(1 * 60 * 60 * 8)
-	// Setup lockups
+	// setup lockups
 	for i := 0; i < numLockups; i++ {
 		addr := addrs[i%numAccts]
 		simCoins := app.BankKeeper.SpendableCoins(ctx, addr)
@@ -141,7 +144,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	}
 	fmt.Println("created all lockups")
 
-	// Begin distribution for all gauges
+	// begin distribution for all gauges
 	for _, gaugeId := range gaugeIds {
 		gauge, _ := app.IncentivesKeeper.GetGaugeByID(ctx, gaugeId)
 		err := app.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(ctx, *gauge)
@@ -152,7 +155,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 	}
 
 	b.StartTimer()
-	// Distribute coins from gauges to lockup owners
+	// distribute coins from gauges to lockup owners
 	for i := 0; i < numDistrs; i++ {
 		gauges := []types.Gauge{}
 		for _, gaugeId := range gaugeIds {

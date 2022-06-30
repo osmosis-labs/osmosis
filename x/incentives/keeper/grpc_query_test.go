@@ -12,18 +12,19 @@ import (
 	pooltypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
+// Tests querying gauges via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
 	suite.SetupTest()
 
 	// create a gauge
 	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
-	// Ensure that a querying for a gauge with an ID that doesn't exist returns an error
+	// ensure that a querying for a gauge with an ID that doesn't exist returns an error
 	res, err := suite.querier.GaugeByID(sdk.WrapSDKContext(suite.Ctx), &types.GaugeByIDRequest{Id: 1000})
 	suite.Require().Error(err)
 	suite.Require().Equal(res, (*types.GaugeByIDResponse)(nil))
 
-	// Check that querying a gauge with an ID that exists returns the gauge.
+	// check that querying a gauge with an ID that exists returns the gauge.
 	res, err = suite.querier.GaugeByID(sdk.WrapSDKContext(suite.Ctx), &types.GaugeByIDRequest{Id: gaugeID})
 	suite.Require().NoError(err)
 	suite.Require().NotEqual(res.Gauge, nil)
@@ -44,6 +45,7 @@ func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
 	suite.Require().Equal(res.Gauge.String(), expectedGauge.String())
 }
 
+// Tests querying upcoming and active gauges via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCGauges() {
 	suite.SetupTest()
 
@@ -86,6 +88,7 @@ func (suite *KeeperTestSuite) TestGRPCGauges() {
 	suite.Require().Len(res.Data, 10)
 }
 
+// Tests querying active gauges via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 	suite.SetupTest()
 
@@ -138,6 +141,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 	suite.Require().Len(res.Data, 10)
 }
 
+// Tests querying active gauges by denom via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	suite.SetupTest()
 
@@ -191,6 +195,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	suite.Require().Len(res.Data, 10)
 }
 
+// Tests querying upcoming gauges via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	suite.SetupTest()
 
@@ -240,6 +245,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	suite.Require().Len(res.Data, 12)
 }
 
+// Tests querying upcoming gauges by denom via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.SetupTest()
 
@@ -298,6 +304,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.Require().Len(res.UpcomingGauges, 10)
 }
 
+// Tests querying rewards estimation at a future specific time (by epoch) via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	suite.SetupTest()
 
@@ -320,6 +327,8 @@ func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	suite.Require().Equal(res.Coins, coins)
 }
 
+// Tests querying rewards estimation at a future specific time (by epoch) via gRPC returns the correct response.
+// Also changes distribution records for the pool incentives to distribute to the respective lock owner.
 func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	suite.SetupTest()
 
@@ -351,6 +360,7 @@ func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	curEpochNumber := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, epochIdentifier).CurrentEpoch
 	suite.App.EpochsKeeper.AfterEpochEnd(suite.Ctx, epochIdentifier, curEpochNumber)
 	// TODO: Figure out what this number should be
+	// TODO: Respond to this
 	mintCoins := sdk.NewCoin(coins[0].Denom, sdk.NewInt(1500000))
 
 	res, err = suite.querier.RewardsEst(sdk.WrapSDKContext(suite.Ctx), &types.RewardsEstRequest{
@@ -362,7 +372,9 @@ func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 }
 
 // TODO: make this test table driven, or simpler
-// I have no idea at a glance what its doing.
+// TODO: Make issue for this
+
+// Tests querying coins that are going to be distributed via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.SetupTest()
 
@@ -423,6 +435,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 }
 
+// Tests querying coins that have been distributed via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.SetupTest()
 

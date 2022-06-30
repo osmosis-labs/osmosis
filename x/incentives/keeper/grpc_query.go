@@ -18,7 +18,7 @@ import (
 
 var _ types.QueryServer = Querier{}
 
-// Defines a wrapper around the x/incentives keeper providing gRPC method handlers.
+// Defines a wrapper around the incentives module keeper providing gRPC method handlers.
 type Querier struct {
 	Keeper
 }
@@ -205,8 +205,8 @@ func (q Querier) filterByPrefixAndDenom(ctx sdk.Context, prefixType []byte, deno
 	valStore := prefix.NewStore(store, prefixType)
 
 	pageRes, err := query.FilteredPaginate(valStore, pagination, func(key []byte, value []byte, accumulate bool) (bool, error) {
-		// This may return multiple gauges at once if two gauges start at the same time.
-		// For now this is treated as an edge case that is not of importance
+		// this may return multiple gauges at once if two gauges start at the same time.
+		// for now this is treated as an edge case that is not of importance
 		newGauges, err := q.getGaugeFromIDJsonBytes(ctx, value)
 		if err != nil {
 			return false, err

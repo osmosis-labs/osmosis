@@ -9,8 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TestDistribute tests that when the distribute command is executed on
-// a provided gauge,
+// Tests that when the distribute command is executed on a provided gauge
+// the correct amount of rewards is sent to the correct lock owners.
 func (suite *KeeperTestSuite) TestDistribute() {
 	twoLockupUser := userLocks{
 		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
@@ -40,16 +40,16 @@ func (suite *KeeperTestSuite) TestDistribute() {
 		gauges          []perpGaugeDesc
 		expectedRewards []sdk.Coins
 	}{
-		// gauge 1 gives 3k coins. Three locks, all eligible. 1k coins per lock
-		// so 1k to oneLockupUser, 2k to twoLockupUser
+		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
+		// 1k should go to oneLockupUser and 2k to twoLockupUser.
 		{
 			users:           []userLocks{oneLockupUser, twoLockupUser},
 			gauges:          []perpGaugeDesc{defaultGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
 		},
-		// gauge 1 gives 3k coins. Three locks, all eligible.
-		// gauge 2 gives 3k coins to one lock, in twoLockupUser
-		// so 1k to oneLockupUser, 5k to twoLockupUser
+		// gauge 1 gives 3k coins. three locks, all eligible.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		// 1k should to oneLockupUser and 5k to twoLockupUser.
 		{
 			users:           []userLocks{oneLockupUser, twoLockupUser},
 			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestDistribute() {
 		addrs := suite.SetupUserLocks(tc.users)
 		_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
 		suite.Require().NoError(err)
-		// Check expected rewards
+		// check expected rewards
 		for i, addr := range addrs {
 			bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr)
 			suite.Require().Equal(tc.expectedRewards[i].String(), bal.String(), "tcnum %d, person %d", tcIndex, i)
@@ -80,10 +80,13 @@ func (suite *KeeperTestSuite) TestDistribute() {
 	}
 
 	// TODO: test distribution for synthetic lockup as well
+	// TODO: Make issue for the above
 }
 
-// TODO: Make this test table driven, or move whatever it tests into
-// the much simpler TestDistribute
+// TODO: Make this test table driven, or move whatever it tests into the much simpler TestDistribute
+// TODO: Make issue for the above
+
+// Tests the sum of coins yet to be distributed for all of the module is correct.
 func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -128,8 +131,10 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	suite.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...).Sub(distrCoins))
 }
 
-// TODO: Make this test table driven, or move whatever it tests into
-// the much simpler TestDistribute
+// TODO: Make this test table driven, or move whatever it tests into the much simpler TestDistribute
+// TODO: Make issue for the above.
+
+// Tests that the sum of coins that have been distributed so far for all of the module is correct.
 func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.SetupTest()
 
@@ -161,6 +166,8 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.Require().Equal(coins, distrCoins)
 }
 
+// TODO: Is this testing the creation of a perp gauge that has no locks associated, so when its distribution
+// occurs it should still be an active gauge?
 func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -241,6 +248,9 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().NoError(err)
 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
+	// TODO: its not perpetual so this shouldnt be true. I can fix this once I understand
+	// what both TestNoLockPerpetualGaugeDistribution and TestNoLockNonPerpetualGaugeDistribution
+	// are actually trying to prove.
 	distrCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins(nil))

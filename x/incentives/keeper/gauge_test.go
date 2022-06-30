@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Tests error handling for creating a gauge with an invalid duration.
 func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.SetupTest()
 
@@ -26,6 +27,7 @@ func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.Require().NoError(err)
 }
 
+// Tests error handling for creating a gauge with an invalid denom.
 func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	suite.SetupTest()
 
@@ -46,6 +48,9 @@ func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 // TODO: Make this test table driven
 // OR if it needs to be script based,
 // remove lots of boilerplate so this can actually be followed
+// TODO: Make issue for this test
+
+// Tests non perpetual gauge distribution logic.
 func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -146,6 +151,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	suite.Require().Equal(sdk.Coins{}, rewardsEst)
 }
 
+// Tests perpetual gauge distribution logic.
 func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -254,9 +260,11 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	suite.Require().Equal(sdk.Coins(nil), rewardsEst)
 }
 
+// Tests gauge distribution using the gauges by denom keeper.
 func (suite *KeeperTestSuite) TestGaugesByDenom() {
 	// TODO: This is not a good test. We should refactor it to be table driven,
 	// specifying a list of gauges to define, and then the expected result of gauges by denom
+	// TODO: Make issue for this.
 	testGaugeByDenom := func(isPerpetual bool) {
 		// test for module get gauges
 		suite.SetupTest()

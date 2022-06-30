@@ -16,9 +16,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-// GetQueryCmd returns the cli query commands for this module.
+// Returns the query commands for this module.
 func GetQueryCmd() *cobra.Command {
-	// Group incentives queries under a subcommand
+	// group incentives queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
@@ -42,7 +42,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdGauges returns full available gauges.
+// Returns all available gauges.
 func GetCmdGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gauges",
@@ -86,7 +86,7 @@ $ %s query incentives gauges
 	return cmd
 }
 
-// GetCmdToDistributeCoins returns coins that is going to be distributed.
+// Returns coins that are going to be distributed.
 func GetCmdToDistributeCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "to-distribute-coins",
@@ -122,7 +122,7 @@ $ %s query incentives to-distribute-coins
 	return cmd
 }
 
-// GetCmdDistributedCoins returns coins that are distributed so far.
+// Returns coins that have been distributed so far.
 func GetCmdDistributedCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "distributed-coins",
@@ -158,7 +158,7 @@ $ %s query incentives distributed-coins
 	return cmd
 }
 
-// GetCmdGaugeByID returns Gauge by id.
+// Returns a gauge by ID.
 func GetCmdGaugeByID() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gauge-by-id [id]",
@@ -199,7 +199,7 @@ $ %s query incentives gauge-by-id 1
 	return cmd
 }
 
-// GetCmdActiveGauges returns active gauges.
+// Returns active gauges.
 func GetCmdActiveGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "active-gauges",
@@ -240,7 +240,7 @@ $ %s query incentives active-gauges
 	return cmd
 }
 
-// GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
+// Returns active gauges for a specified denom.
 func GetCmdActiveGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "active-gauges-per-denom [denom]",
@@ -281,7 +281,7 @@ $ %s query incentives active-gauges-per-denom [denom]
 	return cmd
 }
 
-// GetCmdUpcomingGauges returns scheduled gauges.
+// Returns scheduled gauges.
 func GetCmdUpcomingGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upcoming-gauges",
@@ -322,7 +322,7 @@ $ %s query incentives upcoming-gauges
 	return cmd
 }
 
-// GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
+// Returns active gauges for a specified denom.
 func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upcoming-gauges-per-denom [denom]",
@@ -354,7 +354,7 @@ func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 	return cmd
 }
 
-// GetCmdRewardsEst returns rewards estimation.
+// Returns rewards estimation.
 func GetCmdRewardsEst() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rewards-estimation",
@@ -386,7 +386,6 @@ $ %s query incentives rewards-estimation
 				return err
 			}
 
-			// GetCmdAccountLockedLongerDuration
 			var res *lockuptypes.AccountLockedLongerDurationResponse
 			if owner != "" {
 				queryClientLockup := lockuptypes.NewQueryClient(clientCtx)
@@ -397,7 +396,6 @@ $ %s query incentives rewards-estimation
 				}
 			} else {
 				owner = ""
-				//res = nil
 			}
 
 			ownerLocks := []uint64{}
@@ -442,8 +440,8 @@ $ %s query incentives rewards-estimation
 			}
 
 			// TODO: Figure out why some lock ids are good and some causes "Error: rpc error: code = Unknown desc = panic message redacted to hide potentially sensitive system info: panic"
-			// Since owner checks have already been completed above, we switch the owner address to a random module account address since a blank owner panics
-			// We should find a better way to circumvent this address validity check
+			// since owner checks have already been completed above, we switch the owner address to a random module account address since a blank owner panics.
+			// we should find a better way to circumvent this address validity check
 			if owner == "" {
 				owner = "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj"
 			}

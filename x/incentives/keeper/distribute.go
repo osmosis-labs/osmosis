@@ -111,7 +111,7 @@ func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo l
 
 // Estimates distribution amount of coins from gauge
 // Expectation: gauge is a valid gauge
-// filteredLocks are all locks that are valid for gauge
+// filteredLocks are all locks that are valid gauges
 // It also applies an update for the gauge, handling the sending of the rewards.
 // (Note this update is in-memory, it does not change state.)
 func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge, filteredLocks []lockuptypes.PeriodLock) (types.Gauge, sdk.Coins, error) {
@@ -121,8 +121,8 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 	}
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
-	// remainEpochs is the number of remaining epochs that the gauge will pay out its rewards
-	// For a perpetual gauge, it will pay out everything in the next epoch, and we don't make
+	// remainEpochs is the number of remaining epochs that the gauge will pay out its rewards.
+	// for a perpetual gauge, it will pay out everything in the next epoch, and we don't make
 	// an assumption of the rate at which it will get refilled at.
 	remainEpochs := uint64(1)
 	if !gauge.IsPerpetual {
@@ -141,10 +141,10 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 		remainCoinsPerEpoch = remainCoinsPerEpoch.Add(sdk.NewCoin(coin.Denom, amt))
 	}
 
-	// Now we compute the filtered coins
+	// now we compute the filtered coins
 	filteredDistrCoins := sdk.Coins{}
 	if len(filteredLocks) == 0 {
-		// If were doing no filtering, we want to calculate the total amount to distributed in
+		// if were doing no filtering, we want to calculate the total amount to distributed in
 		// the next epoch.
 		// distribution in next epoch = gauge_size  / (remain_epochs)
 		filteredDistrCoins = remainCoinsPerEpoch
@@ -247,7 +247,7 @@ func (k Keeper) distributeSyntheticInternal(
 
 	qualifiedLocks := make([]lockuptypes.PeriodLock, 0, len(locks))
 	for _, lock := range locks {
-		// See if this lock has a synthetic lockup. If so, err == nil, and we add to qualifiedLocks
+		// see if this lock has a synthetic lockup. If so, err == nil, and we add to qualifiedLocks.
 		// otherwise it does not, and we continue.
 		_, err := k.lk.GetSyntheticLockup(ctx, lock.ID, denom)
 		if err != nil {
@@ -256,7 +256,7 @@ func (k Keeper) distributeSyntheticInternal(
 		qualifiedLocks = append(qualifiedLocks, lock)
 	}
 
-	// If locksum is zero, there are no synthetic locks so we return nil
+	// if locksum is zero, there are no synthetic locks so we return nil
 	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, lockuptypes.NativeDenom(denom))
 
 	if lockSum.IsZero() {
@@ -264,8 +264,8 @@ func (k Keeper) distributeSyntheticInternal(
 	}
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
-	// If its a perpetual gauge, we set remaining epochs to 1
-	// Otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
+	// if its a perpetual gauge, we set remaining epochs to 1.
+	// otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
 	remainEpochs := uint64(1)
 	if !gauge.IsPerpetual {
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
@@ -291,7 +291,7 @@ func (k Keeper) distributeSyntheticInternal(
 		if distrCoins.Empty() {
 			continue
 		}
-		// Update the amount for that address
+		// update the amount for that address
 		err := distrInfo.addLockRewards(lock.Owner, distrCoins)
 		if err != nil {
 			return nil, err
@@ -307,14 +307,14 @@ func (k Keeper) distributeSyntheticInternal(
 
 // Runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
-// locks is expected to be the correct set of lock recipients for this gauge.
+// Locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
 	denom := gauge.DistributeTo.Denom
 
-	// If locksum is zero, there are no locks so we return nil
+	// if locksum is zero, there are no locks so we return nil
 	lockSum := lockuptypes.SumLocksByDenom(locks, denom)
 
 	if lockSum.IsZero() {
@@ -322,8 +322,8 @@ func (k Keeper) distributeInternal(
 	}
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
-	// If its a perpetual gauge, we set remaining epochs to 1
-	// Otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
+	// if its a perpetual gauge, we set remaining epochs to 1.
+	// otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
 	remainEpochs := uint64(1)
 	if !gauge.IsPerpetual {
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
@@ -344,7 +344,7 @@ func (k Keeper) distributeInternal(
 		if distrCoins.Empty() {
 			continue
 		}
-		// Update the amount for that address
+		// update the amount for that address
 		err := distrInfo.addLockRewards(lock.Owner, distrCoins)
 		if err != nil {
 			return nil, err

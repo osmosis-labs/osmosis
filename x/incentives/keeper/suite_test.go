@@ -36,7 +36,8 @@ type perpGaugeDesc struct {
 	rewardAmount sdk.Coins
 }
 
-// Leave prefix blank if lazy, it'll be replaced with something random
+// Given a balance, prefix, and address number, return an account address byte array.
+// If prefix is left blank, it will be replaced with a random prefix.
 func (suite *KeeperTestSuite) setupAddr(addrNum int, prefix string, balance sdk.Coins) sdk.AccAddress {
 	if prefix == "" {
 		prefixBz := make([]byte, 8)
@@ -51,6 +52,7 @@ func (suite *KeeperTestSuite) setupAddr(addrNum int, prefix string, balance sdk.
 	return addr
 }
 
+// Given an array of user locks, returns the respective account address byte array.
 func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccAddress) {
 	accs = make([]sdk.AccAddress, len(users))
 	for i, user := range users {
@@ -69,6 +71,7 @@ func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccA
 	return
 }
 
+// Given an array of perpGaugeDesc structs, returns the corresponding array of Gauge structs.
 func (suite *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc) []types.Gauge {
 	gauges := make([]types.Gauge, len(gaugeDescriptors))
 	perpetual := true
@@ -79,6 +82,7 @@ func (suite *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc) []ty
 	return gauges
 }
 
+// Creates a gauge struct given the required params.
 func (suite *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpoch uint64) (uint64, *types.Gauge) {
 	suite.FundAcc(addr, coins)
 	gaugeID, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, isPerpetual, addr, coins, distrTo, startTime, numEpoch)
@@ -88,6 +92,7 @@ func (suite *KeeperTestSuite) CreateGauge(isPerpetual bool, addr sdk.AccAddress,
 	return gaugeID, gauge
 }
 
+// Adds coins to the specified gauge.
 func (suite *KeeperTestSuite) AddToGauge(coins sdk.Coins, gaugeID uint64) uint64 {
 	addr := sdk.AccAddress([]byte("addrx---------------"))
 	suite.FundAcc(addr, coins)
@@ -96,12 +101,14 @@ func (suite *KeeperTestSuite) AddToGauge(coins sdk.Coins, gaugeID uint64) uint64
 	return gaugeID
 }
 
+// Locks tokens for the specified duration
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
 	suite.FundAcc(addr, coins)
 	_, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr, coins, duration)
 	suite.Require().NoError(err)
 }
 
+// Creates a gauge with the specified duration.
 func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.Coins, duration time.Duration) (
 	uint64, *types.Gauge, sdk.Coins, time.Time,
 ) {
@@ -126,10 +133,14 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins 
 }
 
 // TODO: Delete all usages of this method
+// TODO: Why delete all usages of this method?
+
+// Creates a gauge with the default lock duration.
 func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (uint64, *types.Gauge, sdk.Coins, time.Time) {
 	return suite.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration)
 }
 
+// Creates a gauge with the specified duration and denom.
 func (suite *KeeperTestSuite) setupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string) (
 	uint64, *types.Gauge, sdk.Coins, time.Time,
 ) {
@@ -153,10 +164,12 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDenom(isPerpetual bool, coins sdk
 	return gaugeID, gauge, coins, startTime2
 }
 
+// Creates a gauge with the specified duration and denom.
 func (suite *KeeperTestSuite) SetupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, denom string) (uint64, *types.Gauge, sdk.Coins, time.Time) {
 	return suite.setupNewGaugeWithDenom(isPerpetual, coins, defaultLockDuration, denom)
 }
 
+// Creates as many locks as the user defines.
 func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coins, coinsPerLock sdk.Coins,
 	lockDuration time.Duration,
 ) []sdk.AccAddress {
@@ -174,6 +187,7 @@ func (suite *KeeperTestSuite) SetupManyLocks(numLocks int, liquidBalance sdk.Coi
 	return addrs
 }
 
+// Creates both a lock and a gauge.
 func (suite *KeeperTestSuite) SetupLockAndGauge(isPerpetual bool) (sdk.AccAddress, uint64, sdk.Coins, time.Time) {
 	// create a gauge and locks
 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
