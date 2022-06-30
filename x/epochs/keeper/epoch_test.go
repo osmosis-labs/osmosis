@@ -16,15 +16,17 @@ func (suite *KeeperTestSuite) TestAddEpochInfo() {
 		expErr         bool
 		expEpochInfo   types.EpochInfo
 	}{
-		"simple_add": {addedEpochInfo: types.EpochInfo{
-			Identifier:              defaultIdentifier,
-			StartTime:               time.Time{},
-			Duration:                defaultDuration,
-			CurrentEpoch:            0,
-			CurrentEpochStartHeight: 0,
-			CurrentEpochStartTime:   time.Time{},
-			EpochCountingStarted:    false,
-		}, expErr: false,
+		"simple_add": {
+			addedEpochInfo: types.EpochInfo{
+				Identifier:              defaultIdentifier,
+				StartTime:               time.Time{},
+				Duration:                defaultDuration,
+				CurrentEpoch:            0,
+				CurrentEpochStartHeight: 0,
+				CurrentEpochStartTime:   time.Time{},
+				EpochCountingStarted:    false,
+			},
+			expErr: false,
 			expEpochInfo: types.EpochInfo{
 				Identifier:              defaultIdentifier,
 				StartTime:               startBlockTime,
@@ -34,6 +36,18 @@ func (suite *KeeperTestSuite) TestAddEpochInfo() {
 				CurrentEpochStartTime:   time.Time{},
 				EpochCountingStarted:    false,
 			}},
+		"zero_duration": {
+			addedEpochInfo: types.EpochInfo{
+				Identifier:              defaultIdentifier,
+				StartTime:               time.Time{},
+				Duration:                time.Duration(0),
+				CurrentEpoch:            0,
+				CurrentEpochStartHeight: 0,
+				CurrentEpochStartTime:   time.Time{},
+				EpochCountingStarted:    false,
+			},
+			expErr: true,
+		},
 	}
 	for name, test := range tests {
 		suite.Run(name, func() {
