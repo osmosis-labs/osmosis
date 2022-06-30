@@ -88,10 +88,6 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 				return false
 			}
 
-			if strings.Contains(errBuf.String(), "error") || strings.Contains(errBuf.String(), "Error") {
-				t.Log(errBuf.String())
-			}
-
 			if success != "" {
 				return strings.Contains(outBuf.String(), success) || strings.Contains(errBuf.String(), success)
 			}
