@@ -17,8 +17,8 @@ var customGenesis = types.NewGenesisState(
 		"uosmo",                  // denom
 		sdk.NewDec(200),          // epoch provisions
 		"year",                   // epoch identifier
-		sdk.NewDecWithPrec(5, 1), //reduction factor
-		5,                        // reduction perion in epochs
+		sdk.NewDecWithPrec(5, 1), // reduction factor
+		5,                        // reduction period in epochs
 		types.DistributionProportions{
 			Staking:          sdk.NewDecWithPrec(25, 2),
 			PoolIncentives:   sdk.NewDecWithPrec(25, 2),
@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 		expectPanic             bool
 		expectedEpochProvisions sdk.Dec
 		// Deltas represent by how much a certain paramets
-		// has changeda after calling InitGenesis()
+		// has changed after calling InitGenesis()
 		expectedSupplyOffsetDelta           sdk.Int
 		expectedSupplyWithOffsetDelta       sdk.Int
 		expectedDeveloperVestingAmountDelta sdk.Int
