@@ -18,9 +18,9 @@ const (
 	ParamsDistrEpochIdentifier = "distr_epoch_identifier"
 )
 
-// RandomizedGenState generates a random GenesisState for gov.
+// Generate a random GenesisState for the incentives module.
 func RandomizedGenState(simState *module.SimulationState) {
-	// Parameter for how often rewards get distributed
+	// parameter for how often rewards get distributed
 	var distrEpochIdentifier string
 	simState.AppParams.GetOrGenerate(
 		simState.Cdc, ParamsDistrEpochIdentifier, &distrEpochIdentifier, simState.Rand,
@@ -31,7 +31,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		Params: types.Params{
 			DistrEpochIdentifier: distrEpochIdentifier,
 		},
-		// Gauges: gauges,
 		LockableDurations: []time.Duration{
 			time.Second,
 			time.Hour,
