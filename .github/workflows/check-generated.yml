@@ -26,4 +26,4 @@ jobs:
           fetch-depth: 1  # we need a .git directory to run git diff
 
       - name: "Check protobuf generated code"
-        run: bash contrib/scripts/check-generated.sh
+        run: contrib/scripts/check-generated.sh
