@@ -109,15 +109,11 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 				return strings.Contains(outBuf.String(), success) || strings.Contains(errBuf.String(), success)
 			}
 
-			if success != "" {
-				return strings.Contains(outBuf.String(), success) || strings.Contains(errBuf.String(), success)
-			}
-
 			return true
 		},
 		time.Minute,
 		time.Second,
-		"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
+		"tx returned a non-zero code",
 	)
 
 	return outBuf, errBuf, nil
