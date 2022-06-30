@@ -29,13 +29,13 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// LockQueryType defines the type of the lock query that can
+// either be by duration or start time of the lock.
 type LockQueryType int32
 
 const (
-	// Queries for locks that are longer than a certain duration
 	ByDuration LockQueryType = 0
-	// Queries for lockups that started before a specific time
-	ByTime LockQueryType = 1
+	ByTime     LockQueryType = 1
 )
 
 var LockQueryType_name = map[int32]string{
@@ -56,15 +56,28 @@ func (LockQueryType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_7e9d7527a237b489, []int{0}
 }
 
-// PeriodLock is a single unit of lock by period. It's a record of locked coin
-// at a specific time. It stores owner, duration, unlock time and the amount of
-// coins locked.
+// PeriodLock is a single lock unit by period defined by the x/lockup module.
+// It's a record of a locked coin at a specific time. It stores owner, duration,
+// unlock time and the number of coins locked. A state of a period lock is
+// created upon lock creation, and deleted once the lock has been matured after
+// the `duration` has passed since unbonding started.
 type PeriodLock struct {
-	ID       uint64                                   `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	Owner    string                                   `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
-	Duration time.Duration                            `protobuf:"bytes,3,opt,name=duration,proto3,stdduration" json:"duration,omitempty" yaml:"duration"`
-	EndTime  time.Time                                `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
-	Coins    github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+	// ID is the unique id of the lock.
+	// The ID of the lock is decided upon lock creation, incrementing by 1 for
+	// every lock.
+	ID uint64 `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	// Owner is the account address of the lock owner.
+	// Only the owner can modify the state of the lock.
+	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
+	// Duration is the time needed for a lock to mature after unlocking has
+	// started.
+	Duration time.Duration `protobuf:"bytes,3,opt,name=duration,proto3,stdduration" json:"duration,omitempty" yaml:"duration"`
+	// EndTime refers to the time at which the lock would mature and get deleted.
+	// This value is first initialized when an unlock has started for the lock,
+	// end time being block time + duration.
+	EndTime time.Time `protobuf:"bytes,4,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
+	// Coins are the tokens locked within the lock, kept in the module account.
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
 
 func (m *PeriodLock) Reset()         { *m = PeriodLock{} }
@@ -135,14 +148,21 @@ func (m *PeriodLock) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 	return nil
 }
 
+// QueryCondition is a struct used for querying locks upon different conditions.
+// Duration field and timestamp fields could be optional, depending on the
+// LockQueryType.
 type QueryCondition struct {
-	// type of lock query, ByLockDuration | ByLockTime
+	// LockQueryType is a type of lock query, ByLockDuration | ByLockTime
 	LockQueryType LockQueryType `protobuf:"varint,1,opt,name=lock_query_type,json=lockQueryType,proto3,enum=osmosis.lockup.LockQueryType" json:"lock_query_type,omitempty"`
-	// What token denomination are we looking for lockups of
+	// Denom represents the token denomination we are looking to lock up
 	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
-	// valid when query condition is ByDuration
+	// Duration is used to query locks with longer duration than the specified
+	// duration. Duration field must not be nil when the lock query type is
+	// `ByLockDuration`.
 	Duration time.Duration `protobuf:"bytes,3,opt,name=duration,proto3,stdduration" json:"duration" yaml:"duration"`
-	// valid when query condition is ByTime
+	// Timestamp is used by locks started before the specified duration.
+	// Timestamp field must not be nil when the lock query type is `ByLockTime`.
+	// Querying locks with timestamp is currently not implemented.
 	Timestamp time.Time `protobuf:"bytes,4,opt,name=timestamp,proto3,stdtime" json:"timestamp" yaml:"timestamp"`
 }
 
@@ -207,27 +227,22 @@ func (m *QueryCondition) GetTimestamp() time.Time {
 	return time.Time{}
 }
 
-// SyntheticLock is a single unit of synthetic lockup
-// TODO: Change this to have
-// * underlying_lock_id
-// * synthetic_coin
-// * end_time
-// * duration
-// * owner
-// We then index synthetic locks by the denom, just like we do with normal
-// locks. Ideally we even get an interface, so we can re-use that same logic.
-// I currently have no idea how reward distribution is supposed to be working...
-// EVENTUALLY
-// we make a "constrained_coin" field, which is what the current "coins" field
-// is. Constrained coin field can be a #post-v7 feature, since we aren't
-// allowing partial unlocks of synthetic lockups.
+// SyntheticLock is creating virtual lockup where new denom is combination of
+// original denom and synthetic suffix. At the time of synthetic lockup creation
+// and deletion, accumulation store is also being updated and on querier side,
+// they can query as freely as native lockup.
 type SyntheticLock struct {
-	// underlying native lockup id for this synthetic lockup
+	// Underlying Lock ID is the underlying native lock's id for this synthetic
+	// lockup. A synthetic lock MUST have an underlying lock.
 	UnderlyingLockId uint64 `protobuf:"varint,1,opt,name=underlying_lock_id,json=underlyingLockId,proto3" json:"underlying_lock_id,omitempty"`
-	SynthDenom       string `protobuf:"bytes,2,opt,name=synth_denom,json=synthDenom,proto3" json:"synth_denom,omitempty"`
+	// SynthDenom is the synthetic denom that is a combination of
+	// gamm share + bonding status + validator address.
+	SynthDenom string `protobuf:"bytes,2,opt,name=synth_denom,json=synthDenom,proto3" json:"synth_denom,omitempty"`
 	// used for unbonding synthetic lockups, for active synthetic lockups, this
 	// value is set to uninitialized value
-	EndTime  time.Time     `protobuf:"bytes,3,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
+	EndTime time.Time `protobuf:"bytes,3,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time" yaml:"end_time"`
+	// Duration is the duration for a synthetic lock to mature
+	// at the point of unbonding has started.
 	Duration time.Duration `protobuf:"bytes,4,opt,name=duration,proto3,stdduration" json:"duration,omitempty" yaml:"duration"`
 }
 

@@ -1,4 +1,4 @@
-package chain
+package initialization
 
 import (
 	"fmt"

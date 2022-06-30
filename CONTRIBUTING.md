@@ -105,8 +105,51 @@ For v6.x, and v4.x, most PRs to them should go to main and get a "backport" labe
 
 ### How to build proto files. (rm -rf vendor/ && make build-reproducible once docker is installed)
 
-You can do rm -rf vendor and make build-reproducible to redownload all dependencies - this should pull the latest docker image of Osmosis. You should also make sure to do make proto-all to auto-generate your protobuf files. Makes ure you have docker installed. 
+You can do rm -rf vendor and make build-reproducible to redownload all dependencies - this should pull the latest docker image of Osmosis. You should also make sure to do make proto-all to auto-generate your protobuf files. Makes ure you have docker installed.
 
-If you get something like `W0503 22:16:30.068560 158 services.go:38] No HttpRule found for method: Msg.CreateBalancerPool` feel free to ignore that. 
+If you get something like `W0503 22:16:30.068560 158 services.go:38] No HttpRule found for method: Msg.CreateBalancerPool` feel free to ignore that.
 
-Make sure to also do make all to run all the linting tests before you commit and push, as well as `gofmt`-ing the file you've modified or added to make sure everything still abides by the standards. 
+You can also feel free to do `make format` if you're getting errors related to `gofmt`. Setting this up to be [automatic](https://www.jetbrains.com/help/go/reformat-and-rearrange-code.html#reformat-on-save) for yourself is recommended.
+
+## Major Release
+
+There are several steps that go into a major release
+
+* Run the [existing binary creation tool](https://github.com/osmosis-labs/osmosis/blob/main/.github/workflows/release.yml). Running `make -f contrib/images/osmobuilder/Makefile release` on the root of the repo will replicate the CI that creates the release folder containing the binaries.
+
+* Make a PR to main, with a cosmovisor config, generated in tandem with the binaries from tool.
+  * Should be its own PR, as it may get denied for Fork upgrades.
+
+* Make a PR to main to update the import paths and go.mod for the new major release
+
+* Should also make a commit into every open PR to main to do the same find/replace. (Unless this will cause conflicts)
+
+* Do a PR if that commit has conflicts
+
+* (Eventually) Make a PR that adds a version handler for the next upgrade
+  * [Add v10 upgrade boilerplate #1649](https://github.com/osmosis-labs/osmosis/pull/1649/files)
+
+* Update chain JSON schema's recommended versions in `chain.schema.json` located in the root directory.
+
+### Pre-release auditing process
+
+For every module with notable changes, we assign someone who was not a primary author of those changes to review the entire module.
+
+Deliverables of review are:
+
+* PR's with in-line code comments for things they had to figure out (or questions) 
+
+* Tests / test comments needed to convince themselves of correctness 
+
+* Spec updates
+
+* Small refactors that helped in understanding / making code conform to consistency stds / improve code signal-to-noise ratio welcome
+
+* (As with all PRs, should not be a monolithic PR that gets PR'd, even though that may be the natural way its first formed)
+
+At the moment, we're looking for a tool that lets us statically figure out every message that had something in its code path that changed. Until a tool is found, we must do this manually.
+
+We test in testnet & e2e testnet behaviors about every message that has changed
+
+We communicate with various integrators if they'd like release-blocking QA testing for major releases
+    * Chainapsis has communicated wanting a series of osmosis-frontend functionalities to be checked for correctness on a testnet as a release blocking item
