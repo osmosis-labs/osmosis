@@ -71,9 +71,7 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 // * Only the admin of a denom can mint tokens for it
 // * The admin of a denom can mint tokens for it
 func (suite *KeeperTestSuite) TestMintDenom() {
-	var (
-		addr0bal = int64(0)
-	)
+	var addr0bal int64
 
 	// Create a denom
 	suite.CreateDefaultDenom()
@@ -122,9 +120,7 @@ func (suite *KeeperTestSuite) TestMintDenom() {
 }
 
 func (suite *KeeperTestSuite) TestBurnDenom() {
-	var (
-		addr0bal = int64(0)
-	)
+	var addr0bal int64
 
 	// Create a denom.
 	suite.CreateDefaultDenom()

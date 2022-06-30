@@ -388,7 +388,7 @@ func (pa *Pool) updateAllWeights(newWeights []PoolAsset) {
 }
 
 // PokePool checks to see if the pool's token weights need to be updated, and
-// if so, does so.
+// if so, does so. Currently doesn't do anything outside out LBPs.
 func (pa *Pool) PokePool(blockTime time.Time) {
 	// check if pool weights didn't change
 	poolWeightsChanging := pa.PoolParams.SmoothWeightChangeParams != nil
