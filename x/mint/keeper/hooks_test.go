@@ -43,9 +43,9 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2)))
 
 	height := int64(1)
-	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
+	lastReductionPeriod := app.MintKeeper.GetLastReductionEpochNum(ctx)
 	// correct rewards
-	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
 		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
 		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
@@ -82,10 +82,10 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
-	lastHalvenPeriod = app.MintKeeper.GetLastHalvenEpochNum(ctx)
-	require.Equal(t, lastHalvenPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
+	lastReductionPeriod = app.MintKeeper.GetLastReductionEpochNum(ctx)
+	require.Equal(t, lastReductionPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
 
-	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
 		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
 		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
@@ -126,9 +126,9 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2)))
 
 	height := int64(1)
-	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
+	lastReductionPeriod := app.MintKeeper.GetLastReductionEpochNum(ctx)
 	// correct rewards
-	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
 		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
 		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
@@ -153,10 +153,10 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
-	lastHalvenPeriod = app.MintKeeper.GetLastHalvenEpochNum(ctx)
-	require.Equal(t, lastHalvenPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
+	lastReductionPeriod = app.MintKeeper.GetLastReductionEpochNum(ctx)
+	require.Equal(t, lastReductionPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
 
-	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
 		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
 		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
@@ -215,9 +215,9 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 	require.NotEqual(t, sdk.DecCoins{}, app.DistrKeeper.GetFeePool(ctx).CommunityPool,
 		"Tokens to community pool at start distribution epoch")
 
-	// halven period should be set to mintParams.MintingRewardsDistributionStartEpoch
-	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
-	require.Equal(t, lastHalvenPeriod, mintParams.MintingRewardsDistributionStartEpoch)
+	// reduction period should be set to mintParams.MintingRewardsDistributionStartEpoch
+	lastReductionPeriod := app.MintKeeper.GetLastReductionEpochNum(ctx)
+	require.Equal(t, lastReductionPeriod, mintParams.MintingRewardsDistributionStartEpoch)
 }
 
 // TODO: Remove after rounding errors are addressed and resolved.
