@@ -66,17 +66,19 @@ func SimulateFromSeedLegacy(
 	cdc codec.JSONCodec,
 ) (stopEarly bool, exportedParams Params, err error) {
 	actions := ActionsFromWeightedOperations(ops)
-	return SimulateFromSeed(tb, w, app, appStateFn, randAccFn, actions, blockedAddrs, config, cdc)
+	initFns := simtypes.InitFunctions{
+		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(randAccFn, blockedAddrs),
+		AppInitialStateFn: appStateFn,
+	}
+	return SimulateFromSeed(tb, w, app, initFns, actions, config, cdc)
 }
 
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
 	app *baseapp.BaseApp,
-	appStateFn simulation.AppStateFn,
-	randAccFn simulation.RandomAccountFn,
+	initFunctions simtypes.InitFunctions,
 	actions []Action,
-	blockedAddrs map[string]bool,
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (stopEarly bool, exportedParams Params, err error) {
@@ -88,12 +90,12 @@ func SimulateFromSeed(
 	simParams := RandomParams(r)
 	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(simParams))
 
-	accs := randAccFn(r, simParams.NumKeys())
+	accs := initFunctions.RandomAccountFn(r, simParams.NumKeys())
 	if len(accs) == 0 {
 		return true, simParams, fmt.Errorf("must have greater than zero genesis accounts")
 	}
 
-	validators, genesisTimestamp, accs, chainID := initChain(r, simParams, accs, app, appStateFn, config, cdc)
+	validators, genesisTimestamp, accs, chainID := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config, cdc)
 
 	config.ChainID = chainID
 	if config.InitialBlockHeight == 0 {
@@ -105,17 +107,6 @@ func SimulateFromSeed(
 		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
 	)
 
-	// remove module account address if they exist in accs
-	// TODO: Push this complexity into the genesis initialization logic
-	var tmpAccs []simulation.Account
-
-	for _, acc := range accs {
-		if !blockedAddrs[acc.Address.String()] {
-			tmpAccs = append(tmpAccs, acc)
-		}
-	}
-
-	accs = tmpAccs
 	initialHeader := tmproto.Header{
 		ChainID:         chainID,
 		Height:          int64(config.InitialBlockHeight),
