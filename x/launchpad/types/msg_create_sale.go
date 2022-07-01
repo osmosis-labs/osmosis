@@ -55,6 +55,7 @@ func (msg *MsgCreateSale) validate() (sdk.AccAddress, []string) {
 	if _, err := url.ParseRequestURI(msg.Url); err != nil {
 		errmsgs = append(errmsgs, "`url` must be a proper url, "+err.Error())
 	}
+	errmsgs = validateStrLen(msg.Url, "url", 4, 120, errmsgs)
 	return creator, errmsgs
 }
 
