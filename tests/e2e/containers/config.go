@@ -13,6 +13,7 @@ type ImageConfig struct {
 	RelayerTag        string
 }
 
+//nolint:deadcode
 const (
 	// Current Git branch osmosis repo/version. It is meant to be built locally.
 	// It is used when skipping upgrade by setting OSMOSIS_E2E_SKIP_UPGRADE to true).

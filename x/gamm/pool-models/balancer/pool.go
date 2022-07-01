@@ -15,6 +15,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+//nolint:deadcode
 const (
 	errMsgFormatSharesAmountNotPositive       = "shares amount must be positive, was %d"
 	errMsgFormatTokenAmountNotPositive        = "token amount must be positive, was %d"
