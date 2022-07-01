@@ -36,7 +36,7 @@ func (msg *MsgCreateSale) validate() (sdk.AccAddress, []string) {
 	if d > int64(maxDuration) {
 		errmsgs = append(errmsgs, "`duration` must not be bigger than "+maxDuration.String())
 	}
-	if msg.TokenOut == nil || msg.TokenOut.IsZero() {
+	if msg.TokenOut.IsZero() {
 		errmsgs = append(errmsgs, "`token_out` amount must be positive")
 	}
 	if msg.TokenIn == msg.TokenOut.Denom {
@@ -51,6 +51,11 @@ func (msg *MsgCreateSale) validate() (sdk.AccAddress, []string) {
 	if msg.TokenOut.IsZero() {
 		errmsgs = append(errmsgs, "`token_out` amount must be positive")
 	}
+	for i := range msg.MaxFee {
+		if err := msg.MaxFee[i].Validate(); err != nil {
+			errmsgs = append(errmsgs, "`max_fee` is not valid, "+err.Error())
+		}
+	}
 	errmsgs = validateStrLen(msg.Name, "name", 4, 60, errmsgs)
 	if _, err := url.ParseRequestURI(msg.Url); err != nil {
 		errmsgs = append(errmsgs, "`url` must be a proper url, "+err.Error())
@@ -59,14 +64,17 @@ func (msg *MsgCreateSale) validate() (sdk.AccAddress, []string) {
 	return creator, errmsgs
 }
 
-func (msg *MsgCreateSale) Validate(now time.Time, minDuration, minDurationUntilStart time.Duration) (sdk.AccAddress, error) {
+func (msg *MsgCreateSale) Validate(now time.Time, minDuration, minDurationUntilStart time.Duration, fee sdk.Coins) (sdk.AccAddress, error) {
 	creator, errmsgs := msg.validate()
 	minStart := now.Add(minDurationUntilStart)
 	if msg.StartTime.Before(minStart) {
 		errmsgs = append(errmsgs, fmt.Sprint("`start` must be after ", minStart))
 	}
 	if msg.Duration < minDuration {
-		errmsgs = append(errmsgs, fmt.Sprint("Sale duration must be at least ", minDuration.String()))
+		errmsgs = append(errmsgs, fmt.Sprint("Sale duration must be at least ", minDuration))
+	}
+	if !sdk.Coins(msg.MaxFee).IsAllGTE(fee) {
+		errmsgs = append(errmsgs, fmt.Sprint("All coins in `max_fee` must be at least ", fee))
 	}
 
 	return creator, errorStringsToError(errmsgs)

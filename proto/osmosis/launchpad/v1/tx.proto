@@ -52,26 +52,33 @@ message MsgCreateSale {
   // token_out is a coin supply (denom + amount) to sell. May be referred as
   // "base currency". The whole supply will be transferred from the creator
   // to the module and will be sold during the sale.
-  cosmos.base.v1beta1.Coin token_out = 3;
+  cosmos.base.v1beta1.Coin token_out = 3 [ (gogoproto.nullable) = false ];
+
+  // Maximum fee the creator is going to pay for creating a sale. The creator
+  // will be charged params.SaleCreationFee. Transaction will fail if
+  // max_fee is smaller than params.SaleCreationFee. If empty, creator
+  // accepts doesn't accept any fee.
+  repeated cosmos.base.v1beta1.Coin max_fee = 4
+      [ (gogoproto.nullable) = false ];
 
   // start time when the token sale starts.
-  google.protobuf.Timestamp start_time = 4
+  google.protobuf.Timestamp start_time = 5
       [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
   // duration time that the sale takes place over
-  google.protobuf.Duration duration = 5
+  google.protobuf.Duration duration = 6
       [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 
   // Recipient is the account which receives earned `token_in` from when the
   // sale is finalized. If not defined (empty) the creator
   // account will be used.
-  string recipient = 6;
+  string recipient = 7;
 
   // Name for the sale, max 40 characters, min 4. Required.
-  string name = 7;
+  string name = 8;
   // URL with sale and project details. Can be a link a link to IPFS,
   // hackmd, project page, blog post... Max 120 characters. Must be
   // valid agains Go url.ParseRequestURI. Required.
-  string url = 8;
+  string url = 9;
 }
 
 message MsgCreateSaleResponse {

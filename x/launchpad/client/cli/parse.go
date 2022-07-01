@@ -33,9 +33,14 @@ func (inputs *createSaleInputs) ToMsgCreateSale(creator string) (*types.MsgCreat
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse recipient address: %s", inputs.Recipient)
 	}
+	var fee = sdk.Coins{}
+	for i := range inputs.MaxFee {
+		fee = append(fee, inputs.MaxFee[i].Coin)
+	}
 	msg := &types.MsgCreateSale{
 		TokenIn:   inputs.TokenIn,
-		TokenOut:  &inputs.TokenOut.Coin,
+		TokenOut:  inputs.TokenOut.Coin,
+		MaxFee:    fee,
 		StartTime: inputs.StartTime,
 		Duration:  inputs.Duration.Duration,
 		Recipient: inputs.Recipient,

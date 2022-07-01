@@ -50,6 +50,7 @@ Sample sale.json file contents:
 {
 	"token-in": "token1",
 	"token-out": "1000token2",
+	"max-fee": ["100token1"],
 	"start-time": "2022-06-02T11:18:11.000Z",
 	"duration": "432000s",
 	"recipient": "osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6"

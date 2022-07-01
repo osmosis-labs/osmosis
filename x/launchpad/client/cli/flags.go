@@ -17,6 +17,7 @@ const (
 type createSaleInputs struct {
 	TokenIn   string             `json:"token-in"`
 	TokenOut  jsontypes.Coin     `json:"token-out"`
+	MaxFee    []jsontypes.Coin   `json:"max-fee"`
 	StartTime time.Time          `json:"start-time"`
 	Duration  jsontypes.Duration `json:"duration"`
 	Recipient string             `json:"recipient"`

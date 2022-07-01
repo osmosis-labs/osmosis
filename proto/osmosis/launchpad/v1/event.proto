@@ -13,7 +13,7 @@ message EventCreateSale {
   uint64 id = 1;
   string creator = 2;
   string token_in = 3;
-  cosmos.base.v1beta1.Coin token_out = 4;
+  cosmos.base.v1beta1.Coin token_out = 4 [ (gogoproto.nullable) = false ];
 }
 
 message EventSubscribe {
