@@ -203,6 +203,9 @@ func (k Keeper) JoinPoolNoSwap(
 		if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs) && tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
 			return sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
 				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
+		} else if !(tokenInMaxs.DenomsSubsetOf(neededLpLiquidity)) {
+			return sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "TokenInMaxs includes tokens that are not part of the target pool,"+
+				" input tokens: %v, pool tokens %v", tokenInMaxs, neededLpLiquidity)
 		}
 	}
 
