@@ -18,7 +18,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	k.SetMinter(ctx, data.Minter)
 	k.SetParams(ctx, data.Params)
 
+	// The call to GetModuleAccount creates a module account if it does not exist.
 	k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
+
+	// k.accountKeeper.SetModuleAccount(ctx)
 
 	// The account should be exported in the ExportGenesis of the
 	// x/auth SDK module. Therefore, we check for existence here
