@@ -113,13 +113,13 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			// Test.
 			if tc.expectPanic {
 				suite.Panics(func() {
-					mintKeeper.InitGenesis(ctx, accountKeeper, bankKeeper, tc.mintGenesis)
+					mintKeeper.InitGenesis(ctx, tc.mintGenesis)
 				})
 				return
 			}
 
 			suite.NotPanics(func() {
-				mintKeeper.InitGenesis(ctx, accountKeeper, bankKeeper, tc.mintGenesis)
+				mintKeeper.InitGenesis(ctx, tc.mintGenesis)
 			})
 
 			// Assertions.
@@ -174,7 +174,7 @@ func (suite *KeeperTestSuite) TestMintExportGenesis() {
 			app := suite.App
 			ctx := suite.Ctx
 
-			app.MintKeeper.InitGenesis(ctx, app.AccountKeeper, app.BankKeeper, tc.expectedGenesis)
+			app.MintKeeper.InitGenesis(ctx, tc.expectedGenesis)
 
 			// Test.
 			actualGenesis := app.MintKeeper.ExportGenesis(ctx)
