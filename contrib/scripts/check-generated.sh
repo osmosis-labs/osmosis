@@ -5,7 +5,7 @@ set -euo pipefail
 # toolchain differences are also caught.
 readonly tools="$(mktemp -d)"
 go get github.com/bufbuild/buf/cmd/buf
-go get google.golang.org/protobuf/protoc-gen-gogofaster@latest
+go get github.com/gogo/protobuf/protoc-gen-gogofaster@latest
 
 make proto-all
 
