@@ -18,10 +18,6 @@ func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) []uint64 {
 	return k.getLockRefs(ctx, key)
 }
 
-func (k Keeper) SyntheticCoins(coins sdk.Coins, suffix string) sdk.Coins {
-	return syntheticCoins(coins, suffix)
-}
-
 func (k Keeper) GetCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 	return k.getCoinsFromLocks(locks)
 }
