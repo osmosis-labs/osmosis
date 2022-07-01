@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,8 +12,15 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k Keeper, genState types.GenesisState) {
-	// TODO setSales, setNextSaleNumber
-	//TODO  k.SetParams(ctx, genState.Params)
+	store := k.saleStore(ctx.KVStore(k.storeKey))
+	if err := k.importSales(store, genState.Sales); err != nil {
+		panic(err)
+	}
+	k.setNextSaleID(store, genState.NextSaleId)
+	if err := k.importUserPositions(store, genState.UserPositions); err != nil {
+		panic(err)
+	}
+	k.SetParams(ctx, genState.Params)
 }
 
 // ExportGenesis returns the launchpad module's exported genesis.
@@ -70,4 +78,26 @@ func (k Keeper) exportUserPositions(moduleStore prefix.Store) ([]types.UserPosit
 	}
 
 	return res, nil
+}
+
+func (k Keeper) importSales(moduleStore prefix.Store, sales []types.Sale) error {
+	for _, sale := range sales {
+		idBz := storeIntIdKey(sale.Id)
+		// TODO: do we need any validation here ?
+		k.saveSale(moduleStore, idBz, &sale)
+	}
+	return nil
+}
+
+func (k Keeper) importUserPositions(moduleStore prefix.Store, ups []types.UserPositionKV) error {
+	for idx, up := range ups {
+		idBz := storeIntIdKey(up.SaleId)
+		address, err := sdk.AccAddressFromBech32(up.AccAddress)
+		if err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress,
+				"invalid account address %s in user positions at index %d", up.AccAddress, idx)
+		}
+		k.saveUserPosition(moduleStore, idBz, address, &up.U)
+	}
+	return nil
 }

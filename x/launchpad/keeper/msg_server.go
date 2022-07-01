@@ -220,7 +220,7 @@ func (k Keeper) finalizeSale(ctx sdk.Context, msg *types.MsgFinalizeSale, store 
 	}
 
 	pingSale(&p, ctx.BlockTime())
-	coin := sdk.NewCoin(p.TokenOut, p.Income)
+	coin := sdk.NewCoin(p.TokenIn, p.Income)
 	err = k.bank.SendCoinsFromModuleToAccount(ctx, launchpad.ModuleName, treasury, sdk.NewCoins(coin))
 	if err != nil {
 		return sdk.Int{}, err

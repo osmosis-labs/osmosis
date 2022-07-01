@@ -32,3 +32,9 @@ func getNextSaleID(moduleStore storetypes.KVStore) (uint64, []byte) {
 	}
 	return binary.BigEndian.Uint64(bz), bz
 }
+
+func (k Keeper) setNextSaleID(moduleStore storetypes.KVStore, id uint64) {
+	bzNext := storeIntIdKey(id)
+	store := prefix.NewStore(moduleStore, storeSeqStoreKey)
+	store.Set(ormPoolID, bzNext)
+}
