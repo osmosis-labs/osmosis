@@ -10,8 +10,12 @@ import (
 //nolint:structcheck
 type SimCtx struct {
 	r *rand.Rand
-	//nolint:unused
-	rCounter uint64
+	// TODO: delete this, once we cleanup simulator initialization logic,
+	// and can then setup SimCtx with base seed.
+	internalSeed int64
+	rCounter     int64
+	seededMap    map[string]*rand.Rand
+
 	App      *baseapp.BaseApp
 	Accounts []simulation.Account
 	ChainID  string
@@ -19,17 +23,21 @@ type SimCtx struct {
 
 func NewSimCtx(r *rand.Rand, app *baseapp.BaseApp, accounts []simulation.Account, chainID string) *SimCtx {
 	return &SimCtx{
-		r:        r,
-		rCounter: 0,
+		r:            r,
+		internalSeed: r.Int63(),
+		rCounter:     0,
+		seededMap:    map[string]*rand.Rand{},
+
 		App:      app,
 		Accounts: accounts,
 		ChainID:  chainID,
 	}
 }
 
-// TODO: Refactor to eventually seed a new prng from rCounter
 func (sim *SimCtx) GetRand() *rand.Rand {
-	return sim.r
+	sim.rCounter += 1
+	r := rand.New(rand.NewSource(sim.internalSeed + sim.rCounter))
+	return r
 }
 
 // TODO: Refactor to eventually seed a new prng from seed

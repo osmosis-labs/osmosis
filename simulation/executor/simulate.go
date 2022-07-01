@@ -34,6 +34,7 @@ func initChain(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (mockValidators, time.Time, []simulation.Account, string) {
+	// TODO: Cleanup the whole config dependency with appStateFn
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 	consensusParams := randomConsensusParams(r, appState, cdc)
 	req := abci.RequestInitChain{
@@ -50,10 +51,8 @@ func initChain(
 	return validators, genesisTimestamp, accounts, chainID
 }
 
-// SimulateFromSeed tests an application by running the provided
+// SimulateFromSeedLegacy tests an application by running the provided
 // operations, testing the provided invariants, but using the provided config.Seed.
-// TODO: split this monster function up
-// TODO: Remove blockedAddrs as an arg
 func SimulateFromSeedLegacy(
 	tb testing.TB,
 	w io.Writer,
@@ -73,6 +72,8 @@ func SimulateFromSeedLegacy(
 	return SimulateFromSeed(tb, w, app, initFns, actions, config, cdc)
 }
 
+// SimulateFromSeed tests an application by running the provided
+// operations, testing the provided invariants, but using the provided config.Seed.
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,

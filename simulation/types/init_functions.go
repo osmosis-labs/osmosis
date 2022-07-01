@@ -9,7 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
+// TODO: Consider adding consensus parameters / simulator params / tendermint params to this.
 type InitFunctions struct {
+	// Why does this take in Numkeys / why isn't this part of the initial state function / config to decide?
 	RandomAccountFn   simulation.RandomAccountFn
 	AppInitialStateFn simulation.AppStateFn
 }
