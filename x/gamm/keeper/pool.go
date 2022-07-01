@@ -93,17 +93,6 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 	return nil
 }
 
-func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
-	store := ctx.KVStore(k.storeKey)
-	poolKey := types.GetKeyPrefixPools(poolId)
-	if !store.Has(poolKey) {
-		return fmt.Errorf("pool with ID %d does not exist", poolId)
-	}
-
-	store.Delete(poolKey)
-	return nil
-}
-
 // CleanupBalancerPool destructs a pool and refund all the assets according to
 // the shares held by the accounts. CleanupBalancerPool should not be called during
 // the chain execution time, as it iterates the entire account balances.
