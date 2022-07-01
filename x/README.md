@@ -13,7 +13,9 @@ Osmosis implements the following custom modules:
 * `txfees` - Contains logic for whitelisting txfee tokens, making them easily priceable in osmo, and auto-swapping to osmo.
   * Also contains logic for custom Osmosis mempool logic, though this should perhaps relocate.
 
-TODO: Make visual diagram of the dependency graph between these modules.
+See the module dependence graph below for further information:
+
+![ModuleDependenceGraph](https://user-images.githubusercontent.com/76530366/175043735-c66c2646-6afc-4a53-9f4b-d26ec45c73d9.png)
 
 This is done in addition to updates to several modules within the SDK.
 

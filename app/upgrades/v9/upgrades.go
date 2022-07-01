@@ -38,6 +38,9 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
+		// save oldIcaVersion, so we can skip icahost.InitModule in longer term tests.
+		oldIcaVersion := fromVM[icatypes.ModuleName]
+
 		// Add Interchain Accounts host module
 		// set the ICS27 consensus version so InitGenesis is not run
 		fromVM[icatypes.ModuleName] = mm.Modules[icatypes.ModuleName].ConsensusVersion()
@@ -79,7 +82,10 @@ func CreateUpgradeHandler(
 			panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
 		}
 
-		icamodule.InitModule(ctx, controllerParams, hostParams)
+		// skip InitModule in upgrade tests after the upgrade has gone through.
+		if oldIcaVersion != fromVM[icatypes.ModuleName] {
+			icamodule.InitModule(ctx, controllerParams, hostParams)
+		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}

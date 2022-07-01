@@ -7,22 +7,24 @@ import (
 	"os"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 )
 
 func main() {
 	var (
-		valConfig    []*chain.ValidatorConfig
+		valConfig    []*initialization.ValidatorConfig
 		dataDir      string
 		chainId      string
 		config       string
 		votingPeriod time.Duration
+		forkHeight   int
 	)
 
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
 	flag.StringVar(&chainId, "chain-id", "", "chain ID")
 	flag.StringVar(&config, "config", "", "serialized config")
 	flag.DurationVar(&votingPeriod, "voting-period", 30000000000, "voting period")
+	flag.IntVar(&forkHeight, "fork-height", 0, "fork height")
 
 	flag.Parse()
 
@@ -39,7 +41,7 @@ func main() {
 		panic(err)
 	}
 
-	createdChain, err := chain.Init(chainId, dataDir, valConfig, votingPeriod)
+	createdChain, err := initialization.Init(chainId, dataDir, valConfig, votingPeriod, forkHeight)
 	if err != nil {
 		panic(err)
 	}

@@ -1,4 +1,4 @@
-package chain
+package initialization
 
 import (
 	"encoding/json"
@@ -73,7 +73,7 @@ var (
 	tenOsmo         = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10_000_000)}
 )
 
-func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
+func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
@@ -94,6 +94,8 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress) error {
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 	}
+
+	genDoc.InitialHeight = int64(forkHeight)
 
 	authGenState := authtypes.GetGenesisStateFromAppState(util.Cdc, appState)
 
@@ -367,7 +369,7 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 	}
 }
 
-func initNodes(c *internalChain, numVal int) error {
+func initNodes(c *internalChain, numVal, forkHeight int) error {
 	if err := c.createAndInitValidators(numVal); err != nil {
 		return err
 	}
@@ -376,11 +378,11 @@ func initNodes(c *internalChain, numVal int) error {
 	val0ConfigDir := c.validators[0].configDir()
 	for _, val := range c.validators {
 		if c.chainMeta.Id == ChainAID {
-			if err := addAccount(val0ConfigDir, "", InitBalanceStrA, val.getKeyInfo().GetAddress()); err != nil {
+			if err := addAccount(val0ConfigDir, "", InitBalanceStrA, val.getKeyInfo().GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		} else if c.chainMeta.Id == ChainBID {
-			if err := addAccount(val0ConfigDir, "", InitBalanceStrB, val.getKeyInfo().GetAddress()); err != nil {
+			if err := addAccount(val0ConfigDir, "", InitBalanceStrB, val.getKeyInfo().GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		}
