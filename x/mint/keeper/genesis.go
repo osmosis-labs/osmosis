@@ -6,17 +6,32 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
+const developerVestingAmount = 225_000_000_000_000
+
 // InitGenesis new mint genesis.
-func (k Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, data *types.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
+	if data == nil {
+		panic("nil mint genesis state")
+	}
+
 	data.Minter.EpochProvisions = data.Params.GenesisEpochProvisions
 	k.SetMinter(ctx, data.Minter)
 	k.SetParams(ctx, data.Params)
 
-	if !ak.HasAccount(ctx, ak.GetModuleAddress(types.ModuleName)) {
-		ak.GetModuleAccount(ctx, types.ModuleName)
-		totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, sdk.NewInt(225_000_000_000_000))
-		k.CreateDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins)
-		bk.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(225_000_000_000_000).Neg())
+	// The call to GetModuleAccount creates a module account if it does not exist.
+	k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
+
+	// The account should be exported in the ExportGenesis of the
+	// x/auth SDK module. Therefore, we check for existence here
+	// to avoid overwriting pre-existing genesis account data.
+	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
+		totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, sdk.NewInt(developerVestingAmount))
+
+		if err := k.CreateDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins); err != nil {
+			panic(err)
+		}
+
+		k.bankKeeper.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(developerVestingAmount).Neg())
 	}
 
 	k.SetLastReductionEpochNum(ctx, data.ReductionStartedEpoch)
@@ -26,6 +41,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.Ba
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	minter := k.GetMinter(ctx)
 	params := k.GetParams(ctx)
-	lastReductionEpoch := k.GetLastReductionEpochNum(ctx)
-	return types.NewGenesisState(minter, params, lastReductionEpoch)
+
+	if params.WeightedDeveloperRewardsReceivers == nil {
+		params.WeightedDeveloperRewardsReceivers = make([]types.WeightedAddress, 0)
+	}
+
+	lastHalvenEpoch := k.GetLastReductionEpochNum(ctx)
+	return types.NewGenesisState(minter, params, lastHalvenEpoch)
 }
