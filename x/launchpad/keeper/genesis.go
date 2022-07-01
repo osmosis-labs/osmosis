@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -81,23 +82,22 @@ func (k Keeper) exportUserPositions(moduleStore prefix.Store) ([]types.UserPosit
 
 func (k Keeper) importSales(moduleStore prefix.Store, sales []types.Sale) error {
 	for _, sale := range sales {
-		idBZ := make([]byte, 8)
-		binary.BigEndian.PutUint64(idBZ, sale.Id)
+		idBz := storeIntIdKey(sale.Id)
 		// TODO: do we need any validation here ?
-		k.saveSale(moduleStore, idBZ, &sale)
+		k.saveSale(moduleStore, idBz, &sale)
 	}
 	return nil
 }
 
-func (k Keeper) importUserPositions(moduleStore prefix.Store, userPositionKv []types.UserPositionKV) error {
-    for _, up := range userPositionKv {
-		idBZ := make([]byte, 8)
-		binary.BigEndian.PutUint64(idBZ, up.SaleId)
+func (k Keeper) importUserPositions(moduleStore prefix.Store, ups []types.UserPositionKV) error {
+	for idx, up := range ups {
+		idBz := storeIntIdKey(up.SaleId)
 		address, err := sdk.AccAddressFromBech32(up.AccAddress)
 		if err != nil {
-			return err
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress,
+				"invalid account address %s in user positions at index %d", up.AccAddress, idx)
 		}
-    	k.saveUserPosition(moduleStore,idBZ, address, &up.U)
+		k.saveUserPosition(moduleStore, idBz, address, &up.U)
 	}
 	return nil
 }
