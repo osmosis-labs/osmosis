@@ -2,7 +2,6 @@ name: Add new PRs to project
 
 on:
   pull_request:
-    
     types:
       - opened
 jobs:
