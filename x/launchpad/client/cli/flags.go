@@ -1,8 +1,11 @@
 package cli
 
 import (
-	flag "github.com/spf13/pflag"
 	"time"
+
+	flag "github.com/spf13/pflag"
+
+	"github.com/osmosis-labs/osmosis/v7/osmoutils/jsontypes"
 )
 
 const (
@@ -12,12 +15,11 @@ const (
 )
 
 type createSaleInputs struct {
-	TokenIn        string    `json:"token-in"`
-	TokenOut       string    `json:"token-out"`
-	StartTime      time.Time `json:"start-time"`
-	Duration       string    `json:"duration"`
-	InitialDeposit string    `json:"initial-deposit"`
-	Treasury       string    `json:"treasury"`
+	TokenIn   string             `json:"token-in"`
+	TokenOut  jsontypes.Coin     `json:"token-out"`
+	StartTime time.Time          `json:"start-time"`
+	Duration  jsontypes.Duration `json:"duration"`
+	Recipient string             `json:"recipient"`
 }
 
 func FlagSetCreateSale() *flag.FlagSet {

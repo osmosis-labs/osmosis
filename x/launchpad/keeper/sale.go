@@ -38,8 +38,6 @@ func saleRemainigBalance(p *types.Sale, userShares sdk.Int) sdk.Int {
 }
 
 // compute amount of shares that should be minted for a new subscription amount
-// TODO: caller must assert that the sale didn't finish:
-//     inRemaining >0 and not ended
 func computeSharesAmount(p *types.Sale, amountIn sdk.Int, roundUp bool) sdk.Int {
 	if p.Shares.IsZero() || amountIn.IsZero() {
 		return amountIn
@@ -59,6 +57,9 @@ func saleHasEnded(p *types.Sale, round int64) bool {
 
 func subscribe(p *types.Sale, u *types.UserPosition, amount sdk.Int, now time.Time) {
 	pingSale(p, now)
+	if p.Round >= p.EndRound {
+		return
+	}
 	remaining := triggerUserPurchase(p, u)
 	u.Spent = u.Spent.Add(u.Staked).Sub(remaining)
 	shares := computeSharesAmount(p, amount, false)
@@ -91,11 +92,11 @@ func withdraw(p *types.Sale, u *types.UserPosition, amount *sdk.Int, now time.Ti
 
 func pingSale(p *types.Sale, now time.Time) {
 	// Need to use round for the end check to assure we have the final distribution
+	round := currentRound(p.StartTime, p.EndTime, now)
 	if now.Before(p.StartTime) || p.Round >= p.EndRound {
 		return
 	}
 
-	round := currentRound(p.StartTime, p.EndTime, now)
 	diff := round - p.Round
 	if p.Shares.IsZero() || diff == 0 {
 		p.Round = round
@@ -104,11 +105,11 @@ func pingSale(p *types.Sale, now time.Time) {
 	// remaining rounds including the current round
 	remainingRounds := p.EndRound - p.Round
 	// fmt.Println("remaining rounds:", remainingRounds, " p.round:", p.Round, " c_round:", round)
-	p.Round = round
-	if remainingRounds == 0 {
+	if remainingRounds <= 0 {
 		return
 	}
 
+	p.Round = round
 	sold := p.OutRemaining.MulRaw(diff).QuoRaw(remainingRounds)
 	if sold.IsPositive() {
 		p.OutSold = p.OutSold.Add(sold)

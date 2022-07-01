@@ -40,7 +40,8 @@ func (s *SaleSuite) SetupSuite() {
 }
 
 func (s *SaleSuite) createSale() *types.Sale {
-	p := newSale(s.treasury.String(), 1, "t_in", "t_out", s.start, s.end, sdk.NewInt(12_000))
+	tOut := sdk.NewCoin("tOut", sdk.NewInt(12_000))
+	p := newSale(s.treasury.String(), 1, "t_in", tOut, s.start, s.end)
 	return &p
 }
 

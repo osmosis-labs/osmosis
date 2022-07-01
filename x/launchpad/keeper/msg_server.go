@@ -16,11 +16,11 @@ import (
 func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*types.MsgCreateSaleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
-	id, creator, err := k.createSale(msg, ctx.BlockTime(), store)
+	params := k.GetParams(ctx)
+	id, creator, err := k.createSale(msg, ctx.BlockTime(), params, store)
 	if err != nil {
 		return nil, err
 	}
-	params := k.GetParams(ctx)
 	if params.SaleCreationFeeRecipient != "" && !params.SaleCreationFee.Empty() {
 		r, err := sdk.AccAddressFromBech32(params.SaleCreationFeeRecipient)
 		if err != nil {
@@ -32,7 +32,10 @@ func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*ty
 	} else {
 		ctx.Logger().Info("Sale Creation Fee not charged. Params creation fee recipient or fee is not defined")
 	}
-
+	err = k.bank.SendCoinsFromAccountToModule(ctx, creator, launchpad.ModuleName, sdk.NewCoins(*msg.TokenOut))
+	if err != nil {
+		return nil, err
+	}
 	err = ctx.EventManager().EmitTypedEvent(&types.EventCreateSale{
 		Id:       id,
 		Creator:  msg.Creator,
@@ -42,8 +45,8 @@ func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*ty
 	return &types.MsgCreateSaleResponse{SaleId: id}, err
 }
 
-func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, store storetypes.KVStore) (uint64, sdk.AccAddress, error) {
-	creator, err := msg.Validate(now)
+func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, params types.Params, store storetypes.KVStore) (uint64, sdk.AccAddress, error) {
+	creator, err := msg.Validate(now, params.MinimumSaleDuration, params.MinimumDurationUntilStartTime)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -54,11 +57,8 @@ func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, store storet
 	if treasury == "" {
 		treasury = msg.Creator
 	}
-	p := newSale(treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.InitialDeposit)
+	p := newSale(treasury, id, msg.TokenIn, *msg.TokenOut, msg.StartTime, end)
 	k.saveSale(store, idBz, &p)
-	// TODO:
-	// + send initial deposit from sender to the pool
-	// + verif sale with params (min duration etc..)
 	return id, creator, nil
 }
 
@@ -84,16 +84,16 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *types.MsgSubscribe, store storet
 	if err != nil {
 		return err
 	}
-	if p.EndTime.Before(ctx.BlockTime()) {
-		return errors.ErrInvalidRequest.Wrap("sale completed")
+	now := ctx.BlockTime()
+	if !now.Before(p.EndTime) {
+		return errors.ErrInvalidRequest.Wrapf("Can only subscribe before the sale end (%s)", p.EndTime)
 	}
-
 	coin := sdk.NewCoin(p.TokenIn, msg.Amount)
 	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, launchpad.ModuleName, sdk.NewCoins(coin))
 	if err != nil {
 		return errors.Wrap(err, "user doesn't have enough tokens to subscribe for a Sale")
 	}
-	subscribe(p, u, msg.Amount, ctx.BlockTime())
+	subscribe(p, u, msg.Amount, now)
 
 	k.saveSale(store, saleIdBz, p)
 	k.saveUserPosition(store, saleIdBz, sender, u)
@@ -174,7 +174,6 @@ func (k Keeper) exitSale(ctx sdk.Context, msg *types.MsgExitSale, store storetyp
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	// TODO: make double check with p.OutSold?
 
 	if u.Shares.IsPositive() || u.Staked.IsPositive() {
 		ctx.Logger().Error("user has outstanding token_in balance", "user", msg.Sender, "balance", u.Staked)

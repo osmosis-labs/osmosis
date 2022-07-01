@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -50,11 +49,10 @@ $ %s tx launchpad create --sale-file="path/to/sale.json [flags]
 Sample sale.json file contents:
 {
 	"token-in": "token1",
-	"token-out": "token2",
-	"initial-deposit": "1000",
+	"token-out": "1000token2",
 	"start-time": "2022-06-02T11:18:11.000Z",
 	"duration": "432000s",
-	"treasury": "osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6"
+	"recipient": "osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6"
 }
 `,
 				version.AppName,
@@ -185,7 +183,6 @@ $ %s tx launchpad withdraw --sale-id=1 --amount=10 (in the smallest denominator)
 			}
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-
 			txf, msg, err := NewBuildWithdrawMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
@@ -246,34 +243,8 @@ func NewBuildCreateSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.Fl
 	if err != nil {
 		return txf, nil, fmt.Errorf("failed to parse sale: %w", err)
 	}
-
-	InitialDeposit, ok := sdk.NewIntFromString(s.InitialDeposit)
-	if !ok {
-		return txf, nil, fmt.Errorf("failed to parse initial deposit amount as an integer: %s", s.InitialDeposit)
-	}
-	treasury, err := sdk.AccAddressFromBech32(s.Treasury)
-	if err != nil {
-		return txf, nil, fmt.Errorf("failed to parse treasury address: %s", s.Treasury)
-	}
-	duration, err := time.ParseDuration(s.Duration)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	msg := &types.MsgCreateSale{
-		TokenIn:        s.TokenIn,
-		TokenOut:       s.TokenOut,
-		StartTime:      s.StartTime,
-		Duration:       duration,
-		InitialDeposit: InitialDeposit,
-		Recipient:      treasury.String(),
-		Creator:        clientCtx.GetFromAddress().String(),
-	}
-	if err = msg.ValidateBasic(); err != nil {
-		return txf, nil, err
-	}
-
-	return txf, msg, nil
+	m, err := s.ToMsgCreateSale(clientCtx.GetFromAddress().String())
+	return txf, m, err
 }
 
 func NewBuildFinalizeSaleMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, sdk.Msg, error) {

@@ -49,9 +49,10 @@ message MsgCreateSale {
   // token_in is a denom used to buy `token_out`. May be referred as a
   // "quote currency".
   string token_in = 2;
-  // token_out a token denom to be bootstraped. May be referred as "base
-  // currency".
-  string token_out = 3;
+  // token_out is a coin supply (denom + amount) to sell. May be referred as
+  // "base currency". The whole supply will be transferred from the creator
+  // to the module and will be sold during the sale.
+  cosmos.base.v1beta1.Coin token_out = 3;
 
   // start time when the token sale starts.
   google.protobuf.Timestamp start_time = 4
@@ -60,17 +61,10 @@ message MsgCreateSale {
   google.protobuf.Duration duration = 5
       [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 
-  // total number of `tokens_out` to be sold during the continous sale.
-  // tokens are deposited from the creator account.
-  string initial_deposit = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-
   // Recipient is the account which receives earned `token_in` from when the
   // sale is finalized. If not defined (empty) the creator
   // account will be used.
-  string recipient = 7;
+  string recipient = 6;
 }
 
 message MsgCreateSaleResponse {

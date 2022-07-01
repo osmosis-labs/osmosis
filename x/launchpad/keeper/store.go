@@ -80,17 +80,6 @@ func (k Keeper) userPositionStore(moduleStore storetypes.KVStore, saleId []byte)
 	return prefix.NewStore(moduleStore, p)
 }
 
-// MustLengthPrefix is LengthPrefix with panic on error.
-// TODO: use address.MustLengthPrefix when moving to SDK 0.44+
-// func mustLengthPrefix(bz []byte) []byte {
-// 	res, err := lengthPrefix(bz)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	return res
-// }
-
 // MaxAddrLen is the maximum allowed length (in bytes) for an address.
 const MaxAddrLen = 255
 
