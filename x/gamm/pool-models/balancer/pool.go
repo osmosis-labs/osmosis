@@ -661,61 +661,6 @@ func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (n
 	return numShares, nil
 }
 
-func (p *Pool) calcJoinPoolSharesBroken(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
-	poolAssets := p.GetAllPoolAssets()
-	poolAssetsByDenom := make(map[string]PoolAsset)
-	for _, poolAsset := range poolAssets {
-		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
-	}
-
-	totalShares := p.GetTotalShares()
-
-	if tokensIn.Len() == 1 {
-		numShares, err = p.calcSingleAssetJoin(tokensIn[0], swapFee, poolAssetsByDenom[tokensIn[0].Denom], totalShares)
-		if err != nil {
-			return sdk.ZeroInt(), sdk.NewCoins(), err
-		}
-
-		newLiquidity = tokensIn
-
-		return numShares, newLiquidity, nil
-	} else if tokensIn.Len() != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("balancer pool only supports LP'ing with one asset or all assets in pool")
-	}
-
-	// Add all exact coins we can (no swap). ctx arg doesn't matter for Balancer.
-	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoinBroken(p, sdk.Context{}, tokensIn)
-	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), err
-	}
-
-	// update liquidity for accurate calcSingleAssetJoin calculation
-	newLiquidity = tokensIn.Sub(remCoins)
-	for _, coin := range newLiquidity {
-		poolAsset := poolAssetsByDenom[coin.Denom]
-		poolAsset.Token.Amount = poolAssetsByDenom[coin.Denom].Token.Amount.Add(coin.Amount)
-		poolAssetsByDenom[coin.Denom] = poolAsset
-	}
-
-	totalShares = totalShares.Add(numShares)
-
-	// If there are coins that couldn't be perfectly joined, do single asset joins
-	// for each of them.
-	if !remCoins.Empty() {
-		for _, coin := range remCoins {
-			newShares, err := p.calcSingleAssetJoin(coin, swapFee, poolAssetsByDenom[coin.Denom], totalShares)
-			if err != nil {
-				return sdk.ZeroInt(), sdk.NewCoins(), err
-			}
-
-			newLiquidity = newLiquidity.Add(coin)
-			numShares = numShares.Add(newShares)
-		}
-	}
-
-	return numShares, newLiquidity, nil
-}
-
 // CalcJoinPoolShares calculates the number of shares created to join pool with the provided amount of `tokenIn`.
 // The input tokens must either be:
 // - a single token
