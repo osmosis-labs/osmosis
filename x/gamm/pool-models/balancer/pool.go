@@ -724,9 +724,6 @@ func (p *Pool) calcJoinPoolSharesBroken(ctx sdk.Context, tokensIn sdk.Coins, swa
 // It returns the number of shares created, the amount of coins actually joined into the pool
 // (in case of not being able to fully join), or an error.
 func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
-	if ctx.BlockHeight() < v10Fork {
-		return p.calcJoinPoolSharesBroken(ctx, tokensIn, swapFee)
-	}
 	// 1) Get pool current liquidity + and token weights
 	// 2) If single token provided, do single asset join and exit.
 	// 3) If multi-asset join, first do as much of a join as we can with no swaps.
