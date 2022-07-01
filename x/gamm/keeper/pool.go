@@ -6,9 +6,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
@@ -40,19 +38,6 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, err
 
 	pool.PokePool(ctx.BlockTime())
 
-	return pool, nil
-}
-
-// Get pool and check if the pool is active, i.e. allowed to be swapped against.
-func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-	pool, err := k.GetPoolAndPoke(ctx, poolId)
-	if err != nil {
-		return &balancer.Pool{}, err
-	}
-
-	if !pool.IsActive(ctx) {
-		return &balancer.Pool{}, sdkerrors.Wrapf(types.ErrPoolLocked, "swap on inactive pool")
-	}
 	return pool, nil
 }
 

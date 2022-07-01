@@ -22,7 +22,7 @@ func (k Keeper) SwapExactAmountIn(
 	tokenOutDenom string,
 	tokenOutMinAmount sdk.Int,
 ) (sdk.Int, error) {
-	pool, err := k.getPoolForSwap(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -83,7 +83,7 @@ func (k Keeper) SwapExactAmountOut(
 	tokenInMaxAmount sdk.Int,
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
-	pool, err := k.getPoolForSwap(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}

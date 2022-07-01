@@ -43,10 +43,6 @@ func (pa Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
 	return pa.PoolParams.ExitFee
 }
 
-func (pa Pool) IsActive(ctx sdk.Context) bool {
-	return true
-}
-
 // Returns the coins in the pool owned by all LP shareholders
 func (pa Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
 	return pa.PoolLiquidity

@@ -469,10 +469,6 @@ func (pa Pool) NumAssets() int {
 	return len(pa.PoolAssets)
 }
 
-func (pa Pool) IsActive(ctx sdk.Context) bool {
-	return true
-}
-
 // CalcOutAmtGivenIn calculates tokens to be swapped out given the provided
 // amount and fee deducted, using solveConstantFunctionInvariant.
 func (p Pool) CalcOutAmtGivenIn(

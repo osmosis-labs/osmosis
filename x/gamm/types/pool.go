@@ -25,8 +25,6 @@ type PoolI interface {
 	// GetExitFee returns the pool's exit fee, based on the current state.
 	// Pools may choose to make their exit fees dependent upon state.
 	GetExitFee(ctx sdk.Context) sdk.Dec
-	// Returns whether the pool has swaps enabled at the moment
-	IsActive(ctx sdk.Context) bool
 	// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
 	GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins
 	// GetTotalShares returns the total number of LP shares in the pool
