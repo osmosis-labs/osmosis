@@ -144,35 +144,6 @@ func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	suite.Require().Len(locks, 0)
 }
 
-// func (suite *KeeperTestSuite) TestLock() {
-// 	// test for coin locking
-// 	suite.SetupTest()
-
-// 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-// 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-// 	lock := types.NewPeriodLock(1, addr1, time.Second, suite.Ctx.BlockTime().Add(time.Second), coins)
-
-// 	// try lock without balance
-// 	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-// 	suite.Require().Error(err)
-
-// 	// lock with balance
-// 	suite.FundAcc(addr1, coins)
-// 	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-// 	suite.Require().NoError(err)
-
-// 	// lock with balance with same id
-// 	suite.FundAcc(addr1, coins)
-// 	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-// 	suite.Require().Error(err)
-
-// 	// lock with balance with different id
-// 	lock = types.NewPeriodLock(2, addr1, time.Second, suite.Ctx.BlockTime().Add(time.Second), coins)
-// 	suite.FundAcc(addr1, coins)
-// 	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-// 	suite.Require().NoError(err)
-// }
-
 func (suite *KeeperTestSuite) TestUnlock() {
 	// test for coin unlocking
 	suite.SetupTest()
