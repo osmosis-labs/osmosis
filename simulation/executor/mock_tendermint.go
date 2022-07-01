@@ -12,6 +12,7 @@ import (
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"golang.org/x/exp/maps"
 
 	markov "github.com/osmosis-labs/osmosis/v7/simulation/types/transitionmatrix"
 )
@@ -49,11 +50,7 @@ func newMockValidators(r *rand.Rand, abciVals []abci.ValidatorUpdate, params Par
 
 func (mv mockValidators) Clone() mockValidators {
 	validators := make(mockValidators, len(mv))
-	keys := []string{}
-	for key, _ := range mv {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
+	keys := mv.getKeys()
 	for _, k := range keys {
 		validators[k] = mv[k]
 	}
@@ -62,16 +59,8 @@ func (mv mockValidators) Clone() mockValidators {
 
 // TODO describe usage
 func (vals mockValidators) getKeys() []string {
-	keys := make([]string, len(vals))
-	i := 0
-
-	for key := range vals {
-		keys[i] = key
-		i++
-	}
-
+	keys := maps.Keys(vals)
 	sort.Strings(keys)
-
 	return keys
 }
 

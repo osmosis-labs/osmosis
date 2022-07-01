@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	legacysimexec "github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
 )
@@ -53,13 +54,28 @@ func initChain(
 // operations, testing the provided invariants, but using the provided config.Seed.
 // TODO: split this monster function up
 // TODO: Remove blockedAddrs as an arg
+func SimulateFromSeedLegacy(
+	tb testing.TB,
+	w io.Writer,
+	app *baseapp.BaseApp,
+	appStateFn simulation.AppStateFn,
+	randAccFn simulation.RandomAccountFn,
+	ops legacysimexec.WeightedOperations,
+	blockedAddrs map[string]bool,
+	config simulation.Config,
+	cdc codec.JSONCodec,
+) (stopEarly bool, exportedParams Params, err error) {
+	actions := ActionsFromWeightedOperations(ops)
+	return SimulateFromSeed(tb, w, app, appStateFn, randAccFn, actions, blockedAddrs, config, cdc)
+}
+
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
 	app *baseapp.BaseApp,
 	appStateFn simulation.AppStateFn,
 	randAccFn simulation.RandomAccountFn,
-	ops WeightedOperations,
+	actions []Action,
 	blockedAddrs map[string]bool,
 	config simulation.Config,
 	cdc codec.JSONCodec,
@@ -90,6 +106,7 @@ func SimulateFromSeed(
 	)
 
 	// remove module account address if they exist in accs
+	// TODO: Push this complexity into the genesis initialization logic
 	var tmpAccs []simulation.Account
 
 	for _, acc := range accs {
@@ -121,7 +138,7 @@ func SimulateFromSeed(
 		stopEarly = true
 	}()
 
-	blockSimulator := createBlockSimulator(testingMode, w, simParams, ops, simState, config)
+	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config)
 
 	if !testingMode {
 		b.ResetTimer()
@@ -168,11 +185,13 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
-func createBlockSimulator(testingMode bool, w io.Writer, params Params, ops WeightedOperations,
+func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []Action,
 	simState *simState, config simulation.Config) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
-	selectOp := ops.getSelectOpFn()
+	// TODO: temporary
+	ops := actionsToWeightedOperations(actions)
+	selectOp := getSelectOpFn(ops)
 
 	return func(
 		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,

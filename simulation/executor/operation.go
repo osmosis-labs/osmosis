@@ -6,6 +6,8 @@ import (
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+
+	legacysimexec "github.com/cosmos/cosmos-sdk/x/simulation"
 	// simtypes "github.com/osmosis-labs/osmosis/simulation/types"
 )
 
@@ -106,33 +108,36 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps []simulation.Future
 	}
 }
 
-// WeightedOperation is an operation with associated weight.
-// This is used to bias the selection operation within the simulator.
-type WeightedOperation struct {
-	weight int
-	op     simulation.Operation
+// Action represents a simulator action.
+// The details of this struct are internal,
+// we currently plan on maintaining 3 constructors for it.
+// * ActionFromWeightedOperation - for legacy simulator compatability
+// * ActionFromMsg - An easy API to go from creating a message via simctx to something simulator can deal with
+// * ActionFromDependentMessages - API for defining a series of messages that depend on one another, and should satisfy
+//   some properties post-execution.
+type Action struct {
+	// temporary
+	weightedOp simulation.WeightedOperation
 }
 
-func (w WeightedOperation) Weight() int {
-	return w.weight
-}
-
-func (w WeightedOperation) Op() simulation.Operation {
-	return w.op
-}
-
-// NewWeightedOperation creates a new WeightedOperation instance
-func NewWeightedOperation(weight int, op simulation.Operation) WeightedOperation {
-	return WeightedOperation{
-		weight: weight,
-		op:     op,
+func ActionsFromWeightedOperations(ops legacysimexec.WeightedOperations) []Action {
+	actions := make([]Action, 0, len(ops))
+	for _, op := range ops {
+		actions = append(actions, Action{weightedOp: op})
 	}
+	return actions
 }
 
-// WeightedOperations is the group of all weighted operations to simulate.
-type WeightedOperations []simulation.WeightedOperation
+// temporary
+func actionsToWeightedOperations(actions []Action) legacysimexec.WeightedOperations {
+	ops := make(legacysimexec.WeightedOperations, 0, len(actions))
+	for _, action := range actions {
+		ops = append(ops, action.weightedOp)
+	}
+	return ops
+}
 
-func (ops WeightedOperations) totalWeight() int {
+func totalWeight(ops legacysimexec.WeightedOperations) int {
 	totalOpWeight := 0
 	for _, op := range ops {
 		totalOpWeight += op.Weight()
@@ -141,8 +146,8 @@ func (ops WeightedOperations) totalWeight() int {
 	return totalOpWeight
 }
 
-func (ops WeightedOperations) getSelectOpFn() simulation.SelectOpFn {
-	totalOpWeight := ops.totalWeight()
+func getSelectOpFn(ops legacysimexec.WeightedOperations) simulation.SelectOpFn {
+	totalOpWeight := totalWeight(ops)
 
 	return func(r *rand.Rand) simulation.Operation {
 		x := r.Intn(totalOpWeight)

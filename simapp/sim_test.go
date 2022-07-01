@@ -91,7 +91,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		fauxMerkleModeOpt)
 
 	// Run randomized simulation:
-	_, simParams, simErr := osmosim.SimulateFromSeed(
+	_, simParams, simErr := osmosim.SimulateFromSeedLegacy(
 		tb,
 		os.Stdout,
 		osmosis.BaseApp,
