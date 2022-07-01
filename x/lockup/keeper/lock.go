@@ -401,7 +401,7 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 
 	oldDuration := lock.GetDuration()
 	if newDuration != 0 {
-		if newDuration <= lock.Duration {
+		if newDuration <= oldDuration {
 			return fmt.Errorf("new duration should be greater than the original")
 		}
 
@@ -414,6 +414,7 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 		lock.Duration = newDuration
 	}
 
+	// add lock refs with the new duration
 	err = k.addLockRefs(ctx, *lock)
 	if err != nil {
 		return err
