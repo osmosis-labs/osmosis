@@ -111,7 +111,7 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps []simulation.Future
 // Action represents a simulator action.
 // The details of this struct are internal,
 // we currently plan on maintaining 3 constructors for it.
-// * ActionFromWeightedOperation - for legacy simulator compatability
+// * ActionFromWeightedOperation - for legacy simulator compatibility
 // * ActionFromMsg - An easy API to go from creating a message via simctx to something simulator can deal with
 // * ActionFromDependentMessages - API for defining a series of messages that depend on one another, and should satisfy
 //   some properties post-execution.

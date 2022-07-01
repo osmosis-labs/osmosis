@@ -23,6 +23,7 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 		t = _t
 		testingMode = true
 	} else {
+		//nolint:forcetypeassert
 		b = tb.(*testing.B)
 	}
 

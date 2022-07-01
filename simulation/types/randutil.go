@@ -8,13 +8,6 @@ import (
 	sdkrand "github.com/osmosis-labs/osmosis/v7/simulation/types/random"
 )
 
-const (
-	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	letterIdxBits = 6                    // 6 bits to represent a letter index
-	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
-	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
-)
-
 // RandStringOfLength generates a random string of a particular length
 func (sim *SimCtx) RandStringOfLength(n int) string {
 	r := sim.GetSeededRand("random string of bounded length")
