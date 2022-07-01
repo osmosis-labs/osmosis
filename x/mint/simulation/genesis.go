@@ -16,16 +16,10 @@ import (
 // Simulation parameter constants.
 const (
 	epochProvisionsKey         = "genesis_epoch_provisions"
-	epochIdentifierKey         = "epoch_identifier"
 	reductionFactorKey         = "reduction_factor"
 	reductionPeriodInEpochsKey = "reduction_period_in_epochs"
 
-	stakingDistributionProportionKey          = "staking_distribution_proportion"
-	poolIncentivesDistributionProportionKey   = "pool_incentives_distribution_proportion"
-	developerRewardsDistributionProportionKey = "developer_rewards_distribution_proportion"
-	communityPoolDistributionProportionKey    = "community_pool_distribution_proportion"
-	weightedDevRewardReceiversKey             = "weighted_developer_rewards_receivers"
-	mintingRewardsDistributionStartEpochKey   = "minting_rewards_distribution_start_epoch"
+	mintingRewardsDistributionStartEpochKey = "minting_rewards_distribution_start_epoch"
 
 	epochIdentifier = "day"
 	maxInt64        = int(^uint(0) >> 1)
