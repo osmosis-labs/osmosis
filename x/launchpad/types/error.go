@@ -12,3 +12,10 @@ func errorStringsToError(errmsgs []string) error {
 	}
 	return nil
 }
+
+func validateStrLen(s, field string, min, max int, errmsgs []string) []string {
+	if len(s) < min || len(s) > max {
+		errmsgs = append(errmsgs, fmt.Sprintf("%q length must be between <%d, %d>", s, min, max))
+	}
+	return errmsgs
+}

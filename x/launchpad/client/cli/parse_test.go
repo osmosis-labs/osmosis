@@ -15,9 +15,10 @@ func TestUnmarslahCreateSaleInputs(t *testing.T) {
 	start := "2022-02-03T15:00:00.000Z"
 	recipient := "osmo1r85gjuck87f9hw7l2c30w3zh696xrq0lus0kq6"
 	creator := "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44"
+	url1 := "https://api.ipfsbrowser.com/ipfs/get.php?hash=QmcGV8fimB7aeBxnDqr7bSSLUWLeyFKUukGqDhWnvriQ3T"
 	input := fmt.Sprintf(
-		`{"token-in": "%s", "token-out": "%s", "start-time": "%s", "duration": "24h", "recipient": "%s"}`,
-		tIn, tOut, start, recipient)
+		`{"token-in": "%s", "token-out": "%s", "start-time": "%s", "duration": "24h", "recipient": "%s", "name": "my token sale", "url": "%s"}`,
+		tIn, tOut, start, recipient, url1)
 	var i createSaleInputs
 	require.NoError(i.UnmarshalJSON([]byte(input)))
 	m, err := i.ToMsgCreateSale(creator)

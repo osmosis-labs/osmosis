@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"net/url"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,7 +51,10 @@ func (msg *MsgCreateSale) validate() (sdk.AccAddress, []string) {
 	if msg.TokenOut.IsZero() {
 		errmsgs = append(errmsgs, "`token_out` amount must be positive")
 	}
-
+	errmsgs = validateStrLen(msg.Name, "name", 4, 60, errmsgs)
+	if _, err := url.ParseRequestURI(msg.Url); err != nil {
+		errmsgs = append(errmsgs, "`url` must be a proper url, "+err.Error())
+	}
 	return creator, errmsgs
 }
 

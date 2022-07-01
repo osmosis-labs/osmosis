@@ -41,7 +41,7 @@ func (s *SaleSuite) SetupSuite() {
 
 func (s *SaleSuite) createSale() *types.Sale {
 	tOut := sdk.NewCoin("tOut", sdk.NewInt(12_000))
-	p := newSale(s.treasury.String(), 1, "t_in", tOut, s.start, s.end)
+	p := newSale(s.treasury.String(), 1, "t_in", tOut, s.start, s.end, "my token sale", "https://example.com")
 	return &p
 }
 

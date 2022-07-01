@@ -40,6 +40,8 @@ func (inputs *createSaleInputs) ToMsgCreateSale(creator string) (*types.MsgCreat
 		Duration:  inputs.Duration.Duration,
 		Recipient: inputs.Recipient,
 		Creator:   creator,
+		Name:      inputs.Name,
+		Url:       inputs.Url,
 	}
 	return msg, msg.ValidateBasic()
 }

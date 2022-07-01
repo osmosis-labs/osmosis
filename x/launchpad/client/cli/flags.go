@@ -20,6 +20,8 @@ type createSaleInputs struct {
 	StartTime time.Time          `json:"start-time"`
 	Duration  jsontypes.Duration `json:"duration"`
 	Recipient string             `json:"recipient"`
+	Name      string             `json:"name"`
+	Url       string             `json:"url"`
 }
 
 func FlagSetCreateSale() *flag.FlagSet {

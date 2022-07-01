@@ -75,9 +75,10 @@ message Sale {
     (gogoproto.nullable) = false
   ];
 
-  // TODO:
-  // string name = 20 [ (gogoproto.nullable) = false ];
-  // string url = 21 [ (gogoproto.nullable) = false ];
+  // Name for the sale.
+  string name = 20;
+  // URL with sale and project details.
+  string url = 21;
 }
 
 // UserPosition represents user account in a sale

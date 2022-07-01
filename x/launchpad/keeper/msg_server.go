@@ -57,7 +57,7 @@ func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, params types
 	if treasury == "" {
 		treasury = msg.Creator
 	}
-	p := newSale(treasury, id, msg.TokenIn, *msg.TokenOut, msg.StartTime, end)
+	p := newSale(treasury, id, msg.TokenIn, *msg.TokenOut, msg.StartTime, end, msg.Name, msg.Url)
 	k.saveSale(store, idBz, &p)
 	return id, creator, nil
 }

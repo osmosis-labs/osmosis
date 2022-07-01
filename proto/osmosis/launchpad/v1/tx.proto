@@ -65,6 +65,13 @@ message MsgCreateSale {
   // sale is finalized. If not defined (empty) the creator
   // account will be used.
   string recipient = 6;
+
+  // Name for the sale, max 40 characters, min 4. Required.
+  string name = 7;
+  // URL with sale and project details. Can be a link a link to IPFS,
+  // hackmd, project page, blog post... Max 120 characters. Must be
+  // valid agains Go url.ParseRequestURI. Required.
+  string url = 8;
 }
 
 message MsgCreateSaleResponse {
