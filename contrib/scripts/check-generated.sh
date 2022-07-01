@@ -7,9 +7,9 @@ readonly tools="$(mktemp -d)"
 go get github.com/bufbuild/buf/cmd/buf
 go get github.com/gogo/protobuf/protoc-gen-gogofaster@latest
 
-#Specificially ignore all differences in go.mod / go.sum.
 make proto-gen
 
+#Specificially ignore all differences in go.mod / go.sum.
 if ! git diff --stat --exit-code . ':(exclude)*.mod' ':(exclude)*.sum'; then
     echo ">> ERROR:"
     echo ">>"
