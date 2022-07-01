@@ -13,6 +13,7 @@ type ImageConfig struct {
 	RelayerTag        string
 }
 
+//nolint:deadcode
 const (
 	// Current Git branch osmosis repo/version. It is meant to be built locally.
 	// It is used when skipping upgrade by setting OSMOSIS_E2E_SKIP_UPGRADE to true).
@@ -31,7 +32,7 @@ const (
 	previousVersionOsmoTag        = "v10.0.0-debug"
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
-	previousVersionInitTag        = "v10.0.0"
+	previousVersionInitTag        = "v10.0.0-e2e-v1"
 	// Hermes repo/version for relayer
 	relayerRepository = "osmolabs/hermes"
 	relayerTag        = "0.13.0"
@@ -52,6 +53,7 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		// the need for Docker.
 		config.OsmosisRepository = CurrentBranchOsmoRepository
 		config.OsmosisTag = CurrentBranchOsmoTag
+		return config
 	}
 
 	// If upgrade is tested, we need to utilize InitRepository and InitTag

@@ -25,5 +25,5 @@ func TestMintInitGenesis(t *testing.T) {
 	expectedVestingCoins, ok := sdk.NewIntFromString("225000000000000")
 	require.True(t, ok)
 	require.Equal(t, expectedVestingCoins, initialVestingCoins.Amount)
-	require.Equal(t, int64(0), app.MintKeeper.GetLastHalvenEpochNum(ctx))
+	require.Equal(t, int64(0), app.MintKeeper.GetLastReductionEpochNum(ctx))
 }

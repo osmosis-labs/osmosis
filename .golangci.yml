@@ -13,7 +13,7 @@ linters:
     #    - bodyclose <- needs go 1.18 support
     # - contextcheck <- needs go 1.18 support
     #    - cyclop
-    #    - deadcode <- re-enable in another pr
+    - deadcode
     - depguard
     #    - dogsled <- disabled because we would like to participate in the iditerod
     # - dupl <- really just catches cli stub text

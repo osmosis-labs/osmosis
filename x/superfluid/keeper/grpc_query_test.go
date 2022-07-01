@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -199,4 +201,68 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 	totalSuperfluidDelegationsRes, err := suite.queryClient.TotalSuperfluidDelegations(sdk.WrapSDKContext(suite.Ctx), &types.TotalSuperfluidDelegationsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal(totalSuperfluidDelegationsRes.TotalDelegations, sdk.NewInt(30000000))
+}
+
+func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
+	suite.SetupTest()
+
+	// Generate delegator addresses
+	delAddrs := CreateRandomAccounts(2)
+
+	// setup 2 validators
+	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
+
+	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+	// create a delegation of 1000000 for every combination of 2 delegations, 2 validators, and 2 superfluid denoms
+	superfluidDelegations := []superfluidDelegation{
+		{0, 0, 0, 1000000},
+		{0, 1, 1, 1000000},
+		{1, 0, 1, 1000000},
+		{1, 1, 0, 1000000},
+	}
+
+	// setup superfluid delegations
+	suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
+
+	// setup normal delegations
+	bond0to0 := stakingtypes.NewDelegation(delAddrs[0], valAddrs[0], sdk.NewDec(9000000))
+	bond0to1 := stakingtypes.NewDelegation(delAddrs[0], valAddrs[1], sdk.NewDec(9000000))
+	bond1to0 := stakingtypes.NewDelegation(delAddrs[1], valAddrs[0], sdk.NewDec(9000000))
+	bond1to1 := stakingtypes.NewDelegation(delAddrs[1], valAddrs[1], sdk.NewDec(9000000))
+
+	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond0to0)
+	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond0to1)
+	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond1to0)
+	suite.App.StakingKeeper.SetDelegation(suite.Ctx, bond1to1)
+
+	multiplier0 := suite.querier.Keeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[0])
+	multiplier1 := suite.querier.Keeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[1])
+	minRiskFactor := suite.querier.Keeper.GetParams(suite.Ctx).MinimumRiskFactor
+
+	expectAmount0 := multiplier0.Mul(sdk.NewDec(1000000)).Sub(multiplier0.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
+	expectAmount1 := multiplier1.Mul(sdk.NewDec(1000000)).Sub(multiplier1.Mul(sdk.NewDec(1000000)).Mul(minRiskFactor))
+
+	// for each delegator, query all their superfluid delegations and normal delegations. Making sure they have 4 delegations
+	// Making sure TotalEquivalentStakedAmount is equal to converted amount + normal delegations
+	for _, delegator := range delAddrs {
+		res, err := suite.queryClient.TotalDelegationByDelegator(sdk.WrapSDKContext(suite.Ctx), &types.QueryTotalDelegationByDelegatorRequest{
+			DelegatorAddress: delegator.String(),
+		})
+
+		fmt.Printf("res = %v \n", res)
+
+		suite.Require().NoError(err)
+		suite.Require().Len(res.SuperfluidDelegationRecords, 2)
+		suite.Require().Len(res.DelegationResponse, 2)
+		suite.Require().True(res.TotalDelegatedCoins.IsEqual(sdk.NewCoins(
+			sdk.NewInt64Coin(denoms[0], 1000000),
+			sdk.NewInt64Coin(denoms[1], 1000000),
+			sdk.NewInt64Coin("uosmo", 18000000),
+		)))
+
+		total_osmo_equivalent := sdk.NewCoin("uosmo", expectAmount0.RoundInt().Add(expectAmount1.RoundInt()).Add(sdk.NewInt(18000000)))
+
+		suite.Require().True(res.TotalEquivalentStakedAmount.IsEqual(total_osmo_equivalent))
+	}
 }
