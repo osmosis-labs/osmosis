@@ -666,14 +666,14 @@ func (suite *KeeperTestSuite) TestEditLockup() {
 	lock, _ := suite.App.LockupKeeper.GetLockByID(suite.Ctx, 1)
 
 	// duration decrease should fail
-	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second/2)
+	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second/2)
 	suite.Require().Error(err)
 	// extending lock with same duration should fail
-	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second)
+	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second)
 	suite.Require().Error(err)
 
 	// duration increase should success
-	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second*2)
+	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second*2)
 	suite.Require().NoError(err)
 
 	// check queries
