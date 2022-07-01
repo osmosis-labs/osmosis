@@ -177,13 +177,14 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 // JoinPoolNoSwap determines the maximum amount that can be LP'd without any swap,
 // by looking at the ratio of the total LP'd assets. (e.g. 2 osmo : 1 atom)
 // It then finds the maximal amount that can be LP'd.
+// Emits add liquidity event on success.
 func (k Keeper) JoinPoolNoSwap(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
 	poolId uint64,
 	shareOutAmount sdk.Int,
 	tokenInMaxs sdk.Coins,
-) (err error) {
+) error {
 	// all pools handled within this method are pointer references, `JoinPool` directly updates the pools
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
@@ -220,6 +221,12 @@ func (k Keeper) JoinPoolNoSwap(
 	}
 
 	err = k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, neededLpLiquidity)
+	if err != nil {
+		return err
+	}
+
+	k.createAddLiquidityEvent(ctx, sender, poolId, neededLpLiquidity)
+
 	return err
 }
 
@@ -292,6 +299,17 @@ func (k Keeper) JoinSwapExactAmountIn(
 	return sharesOut, nil
 }
 
+// JoinSwapShareAmountOut joins pool with poolId if the
+// join requires tokenInDenom token of at most tokenInMaxAmount
+// given shareOutAmount. Returns the number of tokens actually
+// used for join.
+// Returns error if:
+// - pool with PoolId is not a pool supporting single asset join.
+// - join given shareOutAmount requires more than tokenInMaxAmount
+// of token in.
+// - internal calculation error occurs given invalid amount inputs.
+// - fails to apply pool state change.
+// On success, emits swap event and add liquidity event.
 func (k Keeper) JoinSwapShareAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -327,9 +345,17 @@ func (k Keeper) JoinSwapShareAmountOut(
 	if err != nil {
 		return sdk.ZeroInt(), err
 	}
+
+	k.createSwapEvent(ctx, sender, poolId, tokenInAmount, shareOutAmount)
+	k.createAddLiquidityEvent(ctx, sender, poolId, tokenIn)
+
 	return tokenInAmount, nil
 }
 
+// ExitPool exits pool with poolId if the actual exited coins
+// are at least tokenOutMins given shareInAmount. Returns
+// exited coins or error, if any.
+// Emits remove liqudity event on success.
 func (k Keeper) ExitPool(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -361,6 +387,8 @@ func (k Keeper) ExitPool(
 	if err != nil {
 		return sdk.Coins{}, err
 	}
+
+	k.createRemoveLiquidityEvent(ctx, sender, poolId, exitCoins)
 
 	return exitCoins, nil
 }

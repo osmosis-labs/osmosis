@@ -13,7 +13,8 @@ import (
 // denominated via tokenOutDenom through a pool denoted by poolId specifying that
 // tokenOutMinAmount must be returned in the resulting asset returning an error
 // upon failure. Upon success, the resulting tokens swapped for are returned. A
-// swap fee is applied determined by the pool's parameters.
+// swap fee is applied determined by the pool's parameters. Additionally, swap
+// event is emitted.
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -28,7 +29,14 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	swapFee := pool.GetSwapFee(ctx)
-	return k.swapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+	tokenOutAmount, err := k.swapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	k.createSwapEvent(ctx, sender, poolId, tokenIn.Amount, tokenOutAmount)
+
+	return tokenOutAmount, nil
 }
 
 // swapExactAmountIn is an internal method for swapping an exact amount of tokens
@@ -75,6 +83,15 @@ func (k Keeper) swapExactAmountIn(
 	return tokenOutAmount, nil
 }
 
+// SwapExactAmountOut swaps tokenInDenom token to tokenOut
+// if given tokenOut, the maximum amount of tokenIn needed to
+// complete the swap is less than or equal to tokenInMaxAmount.
+// Returns error if:
+// - pool with poolId does not exist.
+// - actual required amount of tokenInDenom needed to complete the swap
+// with tokenOut is greater than tokenInMaxAmount.
+// - internal balancer calculation error occurs due to invalid inputs.
+// On success, emits swap event.
 func (k Keeper) SwapExactAmountOut(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -88,7 +105,14 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 	swapFee := pool.GetSwapFee(ctx)
-	return k.swapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+	tokenInAmount, err = k.swapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	k.createSwapEvent(ctx, sender, poolId, tokenInAmount, tokenOut.Amount)
+
+	return tokenInAmount, nil
 }
 
 // swapExactAmountIn is an internal method for swapping to get an exact number of tokens out of a pool,

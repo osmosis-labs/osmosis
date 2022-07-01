@@ -113,11 +113,9 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 		return nil, err
 	}
 
+	// Add liquidity event is handled in keeper's JoinPoolNoSwap.
+
 	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtPoolJoined,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
@@ -141,11 +139,9 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 		return nil, err
 	}
 
+	// Remove liquidity event is handled in keeper's ExitPool.
+
 	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtPoolExited,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
@@ -169,7 +165,8 @@ func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgS
 		return nil, err
 	}
 
-	// Swap event is handled elsewhere
+	// Swap event is handled in keeper's SwapExactAmountIn.
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -194,7 +191,8 @@ func (server msgServer) SwapExactAmountOut(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	// Swap event is handled elsewhere
+	// Swap event is handled in its corresponding keeper method.
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -220,7 +218,7 @@ func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types
 		return nil, err
 	}
 
-	// Swap and LP events are handled elsewhere
+	// LP event is handled elsewhere
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -228,6 +226,8 @@ func (server msgServer) JoinSwapExternAmountIn(goCtx context.Context, msg *types
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 	})
+
+	server.keeper.createSwapEvent(ctx, sender, msg.PoolId, msg.TokenIn.Amount, shareOutAmount)
 
 	return &types.MsgJoinSwapExternAmountInResponse{ShareOutAmount: shareOutAmount}, nil
 }
@@ -245,7 +245,7 @@ func (server msgServer) JoinSwapShareAmountOut(goCtx context.Context, msg *types
 		return nil, err
 	}
 
-	// Swap and LP events are handled elsewhere
+	// LP event is handled elsewhere
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -253,6 +253,8 @@ func (server msgServer) JoinSwapShareAmountOut(goCtx context.Context, msg *types
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 	})
+
+	server.keeper.createSwapEvent(ctx, sender, msg.PoolId, tokenInAmount, msg.ShareOutAmount)
 
 	return &types.MsgJoinSwapShareAmountOutResponse{TokenInAmount: tokenInAmount}, nil
 }
@@ -270,7 +272,7 @@ func (server msgServer) ExitSwapExternAmountOut(goCtx context.Context, msg *type
 		return nil, err
 	}
 
-	// Swap and LP events are handled elsewhere
+	// LP event is handled elsewhere
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -278,6 +280,8 @@ func (server msgServer) ExitSwapExternAmountOut(goCtx context.Context, msg *type
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 	})
+
+	server.keeper.createSwapEvent(ctx, sender, msg.PoolId, shareInAmount, msg.TokenOut.Amount)
 
 	return &types.MsgExitSwapExternAmountOutResponse{ShareInAmount: shareInAmount}, nil
 }
@@ -295,7 +299,8 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 		return nil, err
 	}
 
-	// Swap and LP events are handled elsewhere
+	// Swap event is handled in its corresponsing keeper method.
+	// LP event is handled elsewhere
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
