@@ -161,7 +161,7 @@ func getPoolAssetsByDenom(poolAssets []PoolAsset) (map[string]PoolAsset, error) 
 
 // updateIntermediaryPoolAssetsLiquidity updates poolAssetsByDenom with liquidity.
 //
-// all liqidity coins must exist in poolAssetsByDenom. Returns error, if not.
+// all liquidity coins must exist in poolAssetsByDenom. Returns error, if not.
 //
 // This is a helper function that is useful for updating the pool asset amounts
 // as an intermediary step in a multi-join methods such as CalcJoinPoolShares.

@@ -23,6 +23,7 @@ const (
 	errMsgFormatFailedInterimLiquidityUpdate  = "failed to update interim liquidity - pool asset %s does not exist"
 	errMsgFormatRepeatingPoolAssetsNotAllowed = "repeating pool assets not allowed, found %s"
 	errMsgFormatNoPoolAssetFound              = "can't find the PoolAsset (%s)"
+	errMsgFormatInvalidInputDenoms            = "input denoms must already exist in the pool (%s)"
 
 	v10Fork = 4713065
 )
@@ -742,6 +743,14 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
+	}
+
+	// check to make sure the input denoms exist in the pool
+	for _, coin := range tokensIn {
+		_, ok := poolAssetsByDenom[coin.Denom]
+		if !ok {
+			return sdk.ZeroInt(), sdk.NewCoins(), fmt.Errorf(errMsgFormatInvalidInputDenoms, coin.Denom)
+		}
 	}
 
 	totalShares := p.GetTotalShares()
