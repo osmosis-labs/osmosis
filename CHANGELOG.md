@@ -50,7 +50,17 @@ This release contains minor CLI bug fixes.
 * Restores vesting by duration command
 * Fixes pagination in x/incentives module queries
 
+<<<<<<< HEAD
 ## v10.0.0
+=======
+* [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
+* [#1893](https://github.com/osmosis-labs/osmosis/pull/1893) Change `EpochsKeeper.SetEpochInfo` to `AddEpochInfo`, which has more safety checks with it. (Makes it suitable to be called within upgrades)
+* [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Remove methods that constitute AppModuleSimulation APIs for several modules' AppModules, which implemented no-ops
+* [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Add hourly epochs to `x/epochs` DefaultGenesis.
+* [#1665](https://github.com/osmosis-labs/osmosis/pull/1665) Delete app/App interface, instead use simapp.App
+* [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
+* [#1667](https://github.com/osmosis-labs/osmosis/pull/1673) Move wasm-bindings code out of app .
+>>>>>>> 99304f2b (x/lock: Fix `ExtendLockup` API  (#1937))
 
 
 ## v9.0.1

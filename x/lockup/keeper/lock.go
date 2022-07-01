@@ -353,7 +353,16 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 // 2. Locks that are unlokcing are not allowed to change duration.
 // 3. Locks that have synthetic lockup are not allowed to change.
 // 4. Provided duration should be greater than the original duration.
-func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration time.Duration) error {
+func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, newDuration time.Duration) error {
+	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return err
+	}
+
+	if lock.GetOwner() != owner.String() {
+		return types.ErrNotLockOwner
+	}
+
 	if lock.IsUnlocking() {
 		return fmt.Errorf("cannot edit unlocking lockup for lock %d", lock.ID)
 	}
@@ -363,10 +372,15 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration
 		return fmt.Errorf("cannot edit lockup with synthetic lock %d", lock.ID)
 	}
 
-	oldLock := lock
+	// completely delete existing lock refs
+	err = k.deleteLockRefs(ctx, unlockingPrefix(lock.IsUnlocking()), *lock)
+	if err != nil {
+		return err
+	}
 
+	oldDuration := lock.GetDuration()
 	if newDuration != 0 {
-		if newDuration <= lock.Duration {
+		if newDuration <= oldDuration {
 			return fmt.Errorf("new duration should be greater than the original")
 		}
 
@@ -379,25 +393,20 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lock types.PeriodLock, newDuration
 		lock.Duration = newDuration
 	}
 
-	// update lockup
-	err := k.deleteLockRefs(ctx, unlockingPrefix(oldLock.IsUnlocking()), oldLock)
+	// add lock refs with the new duration
+	err = k.addLockRefs(ctx, *lock)
 	if err != nil {
 		return err
 	}
 
-	err = k.addLockRefs(ctx, lock)
-	if err != nil {
-		return err
-	}
-
-	err = k.setLock(ctx, lock)
+	err = k.setLock(ctx, *lock)
 	if err != nil {
 		return err
 	}
 
 	k.hooks.OnLockupExtend(ctx,
 		lock.GetID(),
-		oldLock.GetDuration(),
+		oldDuration,
 		lock.GetDuration(),
 	)
 
