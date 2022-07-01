@@ -12,7 +12,7 @@ import (
 	pooltypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
-// Tests querying gauges via gRPC returns the correct response.
+// TestGRPCGaugeByID tests querying gauges via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
 	suite.SetupTest()
 
@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
 	suite.Require().Equal(res.Gauge.String(), expectedGauge.String())
 }
 
-// Tests querying upcoming and active gauges via gRPC returns the correct response.
+// TestGRPCGauges tests querying upcoming and active gauges via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCGauges() {
 	suite.SetupTest()
 
@@ -88,7 +88,7 @@ func (suite *KeeperTestSuite) TestGRPCGauges() {
 	suite.Require().Len(res.Data, 10)
 }
 
-// Tests querying active gauges via gRPC returns the correct response.
+// TestGRPCActiveGauges tests querying active gauges via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 	suite.SetupTest()
 
@@ -141,7 +141,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 	suite.Require().Len(res.Data, 10)
 }
 
-// Tests querying active gauges by denom via gRPC returns the correct response.
+// TestGRPCActiveGaugesPerDenom tests querying active gauges by denom via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	suite.SetupTest()
 
@@ -195,7 +195,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	suite.Require().Len(res.Data, 10)
 }
 
-// Tests querying upcoming gauges via gRPC returns the correct response.
+// TestGRPCUpcomingGauges tests querying upcoming gauges via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	suite.SetupTest()
 
@@ -245,7 +245,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	suite.Require().Len(res.Data, 12)
 }
 
-// Tests querying upcoming gauges by denom via gRPC returns the correct response.
+// TestGRPCUpcomingGaugesPerDenom tests querying upcoming gauges by denom via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.SetupTest()
 
@@ -304,7 +304,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.Require().Len(res.UpcomingGauges, 10)
 }
 
-// Tests querying rewards estimation at a future specific time (by epoch) via gRPC returns the correct response.
+// TestGRPCRewardsEst tests querying rewards estimation at a future specific time (by epoch) via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	suite.SetupTest()
 
@@ -327,7 +327,7 @@ func (suite *KeeperTestSuite) TestGRPCRewardsEst() {
 	suite.Require().Equal(res.Coins, coins)
 }
 
-// Tests querying rewards estimation at a future specific time (by epoch) via gRPC returns the correct response.
+// TestRewardsEstWithPoolIncentives tests querying rewards estimation at a future specific time (by epoch) via gRPC returns the correct response.
 // Also changes distribution records for the pool incentives to distribute to the respective lock owner.
 func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	suite.SetupTest()
@@ -374,7 +374,7 @@ func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 // TODO: make this test table driven, or simpler
 // TODO: Make issue for this
 
-// Tests querying coins that are going to be distributed via gRPC returns the correct response.
+// TestGRPCToDistributeCoins tests querying coins that are going to be distributed via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.SetupTest()
 
@@ -435,7 +435,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.Require().Equal(res.Coins, sdk.Coins(nil))
 }
 
-// Tests querying coins that have been distributed via gRPC returns the correct response.
+// TestGRPCDistributedCoins tests querying coins that have been distributed via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.SetupTest()
 

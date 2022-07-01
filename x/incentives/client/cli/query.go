@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-// Returns the query commands for this module.
+// GetQueryCmd returns the query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	// group incentives queries under a subcommand
 	cmd := &cobra.Command{
@@ -42,7 +42,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// Returns all available gauges.
+// GetCmdGauges returns all available gauges.
 func GetCmdGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gauges",
@@ -86,7 +86,7 @@ $ %s query incentives gauges
 	return cmd
 }
 
-// Returns coins that are going to be distributed.
+// GetCmdToDistributeCoins returns coins that are going to be distributed.
 func GetCmdToDistributeCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "to-distribute-coins",
@@ -122,7 +122,7 @@ $ %s query incentives to-distribute-coins
 	return cmd
 }
 
-// Returns coins that have been distributed so far.
+// GetCmdDistributedCoins returns coins that have been distributed so far.
 func GetCmdDistributedCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "distributed-coins",
@@ -158,7 +158,7 @@ $ %s query incentives distributed-coins
 	return cmd
 }
 
-// Returns a gauge by ID.
+// GetCmdGaugeByID returns a gauge by ID.
 func GetCmdGaugeByID() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gauge-by-id [id]",
@@ -199,7 +199,7 @@ $ %s query incentives gauge-by-id 1
 	return cmd
 }
 
-// Returns active gauges.
+// GetCmdActiveGauges returns active gauges.
 func GetCmdActiveGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "active-gauges",
@@ -240,7 +240,7 @@ $ %s query incentives active-gauges
 	return cmd
 }
 
-// Returns active gauges for a specified denom.
+// GetCmdActiveGaugesPerDenom returns active gauges for a specified denom.
 func GetCmdActiveGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "active-gauges-per-denom [denom]",
@@ -281,7 +281,7 @@ $ %s query incentives active-gauges-per-denom [denom]
 	return cmd
 }
 
-// Returns scheduled gauges.
+// GetCmdUpcomingGauges returns scheduled gauges.
 func GetCmdUpcomingGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upcoming-gauges",
@@ -322,7 +322,7 @@ $ %s query incentives upcoming-gauges
 	return cmd
 }
 
-// Returns active gauges for a specified denom.
+// GetCmdUpcomingGaugesPerDenom returns active gauges for a specified denom.
 func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upcoming-gauges-per-denom [denom]",
@@ -354,7 +354,7 @@ func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 	return cmd
 }
 
-// Returns rewards estimation.
+// GetCmdRewardsEst returns rewards estimation.
 func GetCmdRewardsEst() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rewards-estimation",

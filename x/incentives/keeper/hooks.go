@@ -8,11 +8,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Epoch start hook.
+// BeforeEpochStart is the epoch start hook.
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 }
 
-// Epoch end hook.
+// AfterEpochEnd is the epoch end hook.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.DistrEpochIdentifier {
@@ -50,24 +50,24 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 // ___________________________________________________________________________________________________
 
-// Hooks wrapper struct for the incentives keeper.
+// Hooks is the wrapper struct for the incentives keeper.
 type Hooks struct {
 	k Keeper
 }
 
 var _ epochstypes.EpochHooks = Hooks{}
 
-// Return the hook wrapper struct.
+// Hooks returns the hook wrapper struct.
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-// Epoch start hook.
+// BeforeEpochStart is the epoch start hook.
 func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }
 
-// Epoch end hook.
+// AfterEpochEnd is the epoch end hook.
 func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }

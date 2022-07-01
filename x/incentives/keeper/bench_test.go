@@ -33,7 +33,7 @@ func Max(x, y int) int {
 	return y
 }
 
-// Given coins, returns a randomized coin struct used as rewards for the distribution benchmark.
+// genRewardCoins takes coins and returns a randomized coin struct used as rewards for the distribution benchmark.
 func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
@@ -46,7 +46,7 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	return
 }
 
-// Given coins and durations, returns a QueryConditon struct.
+// genQueryCondition takes coins and durations and returns a QueryConditon struct.
 func genQueryCondition(
 	r *rand.Rand,
 	blocktime time.Time,
@@ -68,7 +68,7 @@ func genQueryCondition(
 	}
 }
 
-// Creates gauges with lockups that get distributed to. Benchmarks the performance of the distribution process.
+// benchmarkDistributionLogic creates gauges with lockups that get distributed to. Benchmarks the performance of the distribution process.
 func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs int, b *testing.B) {
 	b.StopTimer()
 

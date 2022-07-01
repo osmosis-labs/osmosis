@@ -18,7 +18,7 @@ const (
 	ParamsDistrEpochIdentifier = "distr_epoch_identifier"
 )
 
-// Generate a random GenesisState for the incentives module.
+// RandomizedGenState generates a random GenesisState for the incentives module.
 func RandomizedGenState(simState *module.SimulationState) {
 	// parameter for how often rewards get distributed
 	var distrEpochIdentifier string

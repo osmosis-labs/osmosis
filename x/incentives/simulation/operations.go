@@ -29,7 +29,7 @@ const (
 	OpWeightMsgAddToGauge           = "op_weight_msg_add_to_gauge"
 )
 
-// Returns all the operations from the module with their respective weights.
+// WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
 	bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper,
@@ -63,7 +63,7 @@ func WeightedOperations(
 	}
 }
 
-// Generates a random number of coin denoms with a respective random value for each coin.
+// genRewardCoins generates a random number of coin denoms with a respective random value for each coin.
 func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
@@ -78,7 +78,7 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	return
 }
 
-// Returns a single lockup QueryCondition, which is generated from a single coin randomly selected from the provided coin array
+// genQueryCondition returns a single lockup QueryCondition, which is generated from a single coin randomly selected from the provided coin array
 func genQueryCondition(r *rand.Rand, blocktime time.Time, coins sdk.Coins, durations []time.Duration) lockuptypes.QueryCondition {
 	// TODO: reset to 2 after postlaunch, only allow duration based query type on postlaunch
 	// lockQueryType := r.Intn(2)
@@ -129,7 +129,7 @@ func Max(x, y int) int {
 	return y
 }
 
-// Generates and executes a MsgCreateGauge with random parameters
+// SimulateMsgCreateGauge generates and executes a MsgCreateGauge with random parameters
 func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -168,7 +168,7 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 	}
 }
 
-// Generates and executes a MsgAddToGauge with random parameters
+// SimulateMsgAddToGauge generates and executes a MsgAddToGauge with random parameters
 func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
@@ -202,7 +202,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 	}
 }
 
-// Given a context, returns a random existing gauge.
+// RandomGauge takes a context, then returns a random existing gauge.
 func RandomGauge(ctx sdk.Context, r *rand.Rand, k keeper.Keeper) *types.Gauge {
 	gauges := k.GetGauges(ctx)
 	if len(gauges) == 0 {

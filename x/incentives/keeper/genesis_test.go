@@ -15,7 +15,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
-// Tests export genesis command for the incentives module.
+// TestIncentivesExportGenesis tests export genesis command for the incentives module.
 func TestIncentivesExportGenesis(t *testing.T) {
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -58,7 +58,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	})
 }
 
-// Provided a genesis state, tests init genesis for the incentives module.
+// TestIncentivesInitGenesis takes a genesis state and tests initializing that genesis for the incentives module.
 func TestIncentivesInitGenesis(t *testing.T) {
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})

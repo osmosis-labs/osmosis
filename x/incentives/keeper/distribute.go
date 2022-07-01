@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Returns coins that have been distributed already from the provided gauges
+// getDistributedCoinsFromGauges returns coins that have been distributed already from the provided gauges
 func (k Keeper) getDistributedCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	coins := sdk.Coins{}
 	for _, gauge := range gauges {
@@ -21,7 +21,7 @@ func (k Keeper) getDistributedCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	return coins
 }
 
-// Returns coins that have not been distributed yet from the provided gauges
+// getToDistributeCoinsFromGauges returns coins that have not been distributed yet from the provided gauges
 func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	// TODO: Consider optimizing this in the future to only require one iteration over all gauges.
 	// TODO: Lets make issue for this, requires changing getGaugesFromIterator logic in gauge.go
@@ -30,19 +30,19 @@ func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	return coins.Sub(distributed)
 }
 
-// Utilizes db.iterator to return a list of gauges.
+// getToDistributeCoinsFromIterator utilizes db.iterator to return a list of gauges.
 // From these gauges, coins that have not yet been distributed are returned
 func (k Keeper) getToDistributeCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getToDistributeCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
-// Utilizes db.iterator to return a list of gauges.
+// getDistributedCoinsFromIterator utilizes db.iterator to return a list of gauges.
 // From these gauges, coins that have already been distributed are returned
 func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getDistributedCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
-// Moves a gauge that has reached it's start time from an upcoming to an active status.
+// moveUpcomingGaugeToActiveGauge moves a gauge that has reached it's start time from an upcoming to an active status.
 func (k Keeper) moveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gauge) error {
 	// validation for current time and distribution start time
 	if ctx.BlockTime().Before(gauge.StartTime) {
@@ -59,7 +59,7 @@ func (k Keeper) moveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gaug
 	return nil
 }
 
-// Moves a gauge that has completed its distribution from an active to a finished status.
+// moveActiveGaugeToFinishedGauge moves a gauge that has completed its distribution from an active to a finished status.
 func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gauge) error {
 	timeKey := getTimeKey(gauge.StartTime)
 	if err := k.deleteGaugeRefByKey(ctx, combineKeys(types.KeyPrefixActiveGauges, timeKey), gauge.Id); err != nil {
@@ -75,7 +75,7 @@ func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 	return nil
 }
 
-// Returns locks that match the provided lockuptypes QueryCondition AND have yet to be distributed to yet.
+// GetLocksToDistribution returns locks that match the provided lockuptypes QueryCondition AND have yet to be distributed to yet.
 // TODO: Why is this exported?
 func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.QueryCondition) []lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
@@ -89,7 +89,7 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 	return []lockuptypes.PeriodLock{}
 }
 
-// Returns locks that match the provided lockuptypes QueryCondition,
+// getLocksToDistributionWithMaxDuration returns locks that match the provided lockuptypes QueryCondition,
 // are greater than the provided minDuration, AND have yet to be distributed to.
 func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo lockuptypes.QueryCondition, minDuration time.Duration) []lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
@@ -109,7 +109,7 @@ func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo l
 	return []lockuptypes.PeriodLock{}
 }
 
-// Estimates distribution amount of coins from gauge
+// FilteredLocksDistributionEst estimates distribution amount of coins from gauge.
 // Expectation: gauge is a valid gauge
 // filteredLocks are all locks that are valid gauges
 // It also applies an update for the gauge, handling the sending of the rewards.
@@ -167,7 +167,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 	return gauge, filteredDistrCoins, nil
 }
 
-// Stores all of the information for pent up sends for rewards distributions.
+// distributionInfo stores all of the information for pent up sends for rewards distributions.
 // This enables us to lower the number of events and calls to back.
 type distributionInfo struct {
 	nextID            int
@@ -177,7 +177,7 @@ type distributionInfo struct {
 	idToDistrCoins    []sdk.Coins
 }
 
-// Creates a new distributionInfo struct
+// newDistributionInfo creates a new distributionInfo struct
 func newDistributionInfo() distributionInfo {
 	return distributionInfo{
 		nextID:            0,
@@ -208,7 +208,7 @@ func (d *distributionInfo) addLockRewards(owner string, rewards sdk.Coins) error
 	return nil
 }
 
-// Utilizes provided distributionInfo to send coins from the module account to various recipients
+// doDistributionSends utilizes provided distributionInfo to send coins from the module account to various recipients
 func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) error {
 	numIDs := len(distrs.idToDecodedAddr)
 	ctx.Logger().Debug(fmt.Sprintf("Beginning distribution to %d users", numIDs))
@@ -234,7 +234,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 	return nil
 }
 
-// Runs the distribution logic for a synthetic rewards distribution gauge, and adds the sends to
+// distributeSyntheticInternal runs the distribution logic for a synthetic rewards distribution gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
 // TODO: Make this code have way more re-use with distribute internal (post-v7).
@@ -305,7 +305,7 @@ func (k Keeper) distributeSyntheticInternal(
 	return totalDistrCoins, err
 }
 
-// Runs the distribution logic for a gauge, and adds the sends to
+// distributeInternal runs the distribution logic for a gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // Locks is expected to be the correct set of lock recipients for this gauge.
 func (k Keeper) distributeInternal(
@@ -357,7 +357,7 @@ func (k Keeper) distributeInternal(
 	return totalDistrCoins, err
 }
 
-// Increments the gauge's filled epochs field.
+// updateGaugePostDistribute increments the gauge's filled epochs field.
 // Also adds the coins that were just distributed to the gauge's distributed coins field.
 func (k Keeper) updateGaugePostDistribute(ctx sdk.Context, gauge types.Gauge, newlyDistributedCoins sdk.Coins) error {
 	gauge.FilledEpochs += 1
@@ -368,7 +368,7 @@ func (k Keeper) updateGaugePostDistribute(ctx sdk.Context, gauge types.Gauge, ne
 	return nil
 }
 
-// Takes a gauge along with cached period locks by denom and returns locks that must be distributed to
+// getDistributeToBaseLocks takes a gauge along with cached period locks by denom and returns locks that must be distributed to
 func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cache map[string][]lockuptypes.PeriodLock) []lockuptypes.PeriodLock {
 	// if gauge is empty, don't get the locks
 	if gauge.Coins.Empty() {
@@ -389,7 +389,7 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 	return FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
 }
 
-// Distribute coins from an array of gauges to all eligible locks
+// Distribute distributes coins from an array of gauges to all eligible locks
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
 
@@ -421,7 +421,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	return totalDistributedCoins, nil
 }
 
-// Checks if all non perpetual gauges provided have completed their required distributions.
+// checkFinishDistribution checks if all non perpetual gauges provided have completed their required distributions.
 // If complete, move the gauge from an active to a finished status.
 func (k Keeper) checkFinishDistribution(ctx sdk.Context, gauges []types.Gauge) {
 	for _, gauge := range gauges {
@@ -437,7 +437,7 @@ func (k Keeper) checkFinishDistribution(ctx sdk.Context, gauges []types.Gauge) {
 	}
 }
 
-// Returns sum of coins yet to be distributed for all of the module.
+// GetModuleToDistributeCoins returns sum of coins yet to be distributed for all of the module.
 func (k Keeper) GetModuleToDistributeCoins(ctx sdk.Context) sdk.Coins {
 	activeGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.ActiveGaugesIterator(ctx))
 	upcomingGaugesDistr := k.getToDistributeCoinsFromIterator(ctx, k.UpcomingGaugesIteratorAfterTime(ctx, ctx.BlockTime()))

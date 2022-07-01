@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Returns an iterator over all gauges in the {prefix} space of state, that begin distributing rewards after a specific time.
+// iteratorAfterTime returns an iterator over all gauges in the {prefix} space of state, that begin distributing rewards after a specific time.
 func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	timeKey := getTimeKey(time)
@@ -18,7 +18,7 @@ func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time
 	return store.Iterator(storetypes.InclusiveEndBytes(key), storetypes.PrefixEndBytes(prefix))
 }
 
-// Returns an iterator over all gauges in the {prefix} space of state, that begin distributing rewards before a specific time.
+// iteratorBeforeTime returns an iterator over all gauges in the {prefix} space of state, that begin distributing rewards before a specific time.
 func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	timeKey := getTimeKey(time)
@@ -26,43 +26,43 @@ func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, time time.Tim
 	return store.Iterator(prefix, storetypes.InclusiveEndBytes(key))
 }
 
-// Returns an iterator over all gauges in the {prefix} space of state.
+// iterator returns an iterator over all gauges in the {prefix} space of state.
 func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(store, prefix)
 }
 
-// Returns the iterator to get all upcoming gauges that start distribution after a specific time.
+// UpcomingGaugesIteratorAfterTime returns the iterator to get all upcoming gauges that start distribution after a specific time.
 func (k Keeper) UpcomingGaugesIteratorAfterTime(ctx sdk.Context, time time.Time) sdk.Iterator {
 	return k.iteratorAfterTime(ctx, types.KeyPrefixUpcomingGauges, time)
 }
 
-// Returns the iterator to get all upcoming gauges that have already started distribution before a specific time.
+// UpcomingGaugesIteratorBeforeTime returns the iterator to get all upcoming gauges that have already started distribution before a specific time.
 func (k Keeper) UpcomingGaugesIteratorBeforeTime(ctx sdk.Context, time time.Time) sdk.Iterator {
 	return k.iteratorBeforeTime(ctx, types.KeyPrefixUpcomingGauges, time)
 }
 
-// Returns the iterator for all gauges.
+// GaugesIterator returns the iterator for all gauges.
 func (k Keeper) GaugesIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixGauges)
 }
 
-// Returns the iterator for all upcoming gauges.
+// UpcomingGaugesIterator returns the iterator for all upcoming gauges.
 func (k Keeper) UpcomingGaugesIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixUpcomingGauges)
 }
 
-// Returns the iterator for all active gauges.
+// ActiveGaugesIterator returns the iterator for all active gauges.
 func (k Keeper) ActiveGaugesIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixActiveGauges)
 }
 
-// Returns the iterator for all finished gauges.
+// FinishedGaugesIterator returns the iterator for all finished gauges.
 func (k Keeper) FinishedGaugesIterator(ctx sdk.Context) sdk.Iterator {
 	return k.iterator(ctx, types.KeyPrefixFinishedGauges)
 }
 
-// Returns locks whose lock duration is greater than the provided minimum duration.
+// FilterLocksByMinDuration returns locks whose lock duration is greater than the provided minimum duration.
 func FilterLocksByMinDuration(locks []lockuptypes.PeriodLock, minDuration time.Duration) []lockuptypes.PeriodLock {
 	filteredLocks := make([]lockuptypes.PeriodLock, 0, len(locks)/2)
 	for _, lock := range locks {

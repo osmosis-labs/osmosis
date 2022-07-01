@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Tests that when the distribute command is executed on a provided gauge
+// TestDistribute tests that when the distribute command is executed on a provided gauge
 // the correct amount of rewards is sent to the correct lock owners.
 func (suite *KeeperTestSuite) TestDistribute() {
 	twoLockupUser := userLocks{
@@ -86,7 +86,7 @@ func (suite *KeeperTestSuite) TestDistribute() {
 // TODO: Make this test table driven, or move whatever it tests into the much simpler TestDistribute
 // TODO: Make issue for the above
 
-// Tests the sum of coins yet to be distributed for all of the module is correct.
+// TestGetModuleToDistributeCoins tests the sum of coins yet to be distributed for all of the module is correct.
 func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 // TODO: Make this test table driven, or move whatever it tests into the much simpler TestDistribute
 // TODO: Make issue for the above.
 
-// Tests that the sum of coins that have been distributed so far for all of the module is correct.
+// TestGetModuleDistributedCoins tests that the sum of coins that have been distributed so far for all of the module is correct.
 func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.SetupTest()
 

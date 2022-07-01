@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Returns the last used gauge ID.
+// GetLastGaugeID returns the last used gauge ID.
 func (k Keeper) GetLastGaugeID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 
@@ -21,23 +21,23 @@ func (k Keeper) GetLastGaugeID(ctx sdk.Context) uint64 {
 	return sdk.BigEndianToUint64(bz)
 }
 
-// Sets the last used gauge ID to the provided ID.
+// SetLastGaugeID sets the last used gauge ID to the provided ID.
 func (k Keeper) SetLastGaugeID(ctx sdk.Context, ID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.KeyLastGaugeID, sdk.Uint64ToBigEndian(ID))
 }
 
-// Returns the combined byte array (store key) of the provided gauge ID's key prefix and the ID itself.
+// gaugeStoreKey returns the combined byte array (store key) of the provided gauge ID's key prefix and the ID itself.
 func gaugeStoreKey(ID uint64) []byte {
 	return combineKeys(types.KeyPrefixPeriodGauge, sdk.Uint64ToBigEndian(ID))
 }
 
-// Returns the combined byte array (store key) of the provided gauge denom key prefix and the denom itself.
+// gaugeDenomStoreKey returns the combined byte array (store key) of the provided gauge denom key prefix and the denom itself.
 func gaugeDenomStoreKey(denom string) []byte {
 	return combineKeys(types.KeyPrefixGaugesByDenom, []byte(denom))
 }
 
-// Returns the gauge IDs specified by the provided key.
+// getGaugeRefs returns the gauge IDs specified by the provided key.
 func (k Keeper) getGaugeRefs(ctx sdk.Context, key []byte) []uint64 {
 	store := ctx.KVStore(k.storeKey)
 	gaugeIDs := []uint64{}
@@ -51,7 +51,7 @@ func (k Keeper) getGaugeRefs(ctx sdk.Context, key []byte) []uint64 {
 	return gaugeIDs
 }
 
-// Appends the provided gauge ID into an array associated with the provided key.
+// addGaugeRefByKey appends the provided gauge ID into an array associated with the provided key.
 func (k Keeper) addGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	gaugeIDs := k.getGaugeRefs(ctx, key)
@@ -67,7 +67,7 @@ func (k Keeper) addGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) er
 	return nil
 }
 
-// Removes the provided gauge ID from an array associated with the provided key.
+// deleteGaugeRefByKey removes the provided gauge ID from an array associated with the provided key.
 func (k Keeper) deleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	gaugeIDs := k.getGaugeRefs(ctx, key)
@@ -87,17 +87,17 @@ func (k Keeper) deleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64)
 	return nil
 }
 
-// Returns all active gauge-IDs associated with lockups of the provided denom.
+// getAllGaugeIDsByDenom returns all active gauge-IDs associated with lockups of the provided denom.
 func (k Keeper) getAllGaugeIDsByDenom(ctx sdk.Context, denom string) []uint64 {
 	return k.getGaugeRefs(ctx, gaugeDenomStoreKey(denom))
 }
 
-// Deletes the provided ID from the list of gauge ID's associated with the provided denom.
+// deleteGaugeIDForDenom deletes the provided ID from the list of gauge ID's associated with the provided denom.
 func (k Keeper) deleteGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
 	return k.deleteGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
 }
 
-// Adds the provided ID to the list of gauge ID's associated with the provided denom.
+// addGaugeIDForDenom adds the provided ID to the list of gauge ID's associated with the provided denom.
 func (k Keeper) addGaugeIDForDenom(ctx sdk.Context, ID uint64, denom string) error {
 	return k.addGaugeRefByKey(ctx, gaugeDenomStoreKey(denom), ID)
 }

@@ -12,10 +12,10 @@ type IncentiveHooks interface {
 
 var _ IncentiveHooks = MultiIncentiveHooks{}
 
-// Combines multiple incentive hooks. All hook functions are run in array sequence.
+// MultiIncentiveHooks combines multiple incentive hooks. All hook functions are run in array sequence.
 type MultiIncentiveHooks []IncentiveHooks
 
-// Combines multiple incentive hooks into a single IncentiveHooks array.
+// NewMultiIncentiveHooks combines multiple incentive hooks into a single IncentiveHooks array.
 func NewMultiIncentiveHooks(hooks ...IncentiveHooks) MultiIncentiveHooks {
 	return hooks
 }

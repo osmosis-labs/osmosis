@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Tests error handling for creating a gauge with an invalid duration.
+// TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
 func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.SetupTest()
 
@@ -27,7 +27,7 @@ func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.Require().NoError(err)
 }
 
-// Tests error handling for creating a gauge with an invalid denom.
+// TestNonExistentDenomGaugeCreation tests error handling for creating a gauge with an invalid denom.
 func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	suite.SetupTest()
 
@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 // remove lots of boilerplate so this can actually be followed
 // TODO: Make issue for this test
 
-// Tests non perpetual gauge distribution logic.
+// TestNonPerpetualGaugeOperations tests non perpetual gauge distribution logic.
 func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -151,7 +151,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	suite.Require().Equal(sdk.Coins{}, rewardsEst)
 }
 
-// Tests perpetual gauge distribution logic.
+// TestPerpetualGaugeOperations tests perpetual gauge distribution logic.
 func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -260,7 +260,7 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	suite.Require().Equal(sdk.Coins(nil), rewardsEst)
 }
 
-// Tests gauge distribution using the gauges by denom keeper.
+// TestGaugesByDenom tests gauge distribution using the gauges by denom keeper.
 func (suite *KeeperTestSuite) TestGaugesByDenom() {
 	// TODO: This is not a good test. We should refactor it to be table driven,
 	// specifying a list of gauges to define, and then the expected result of gauges by denom

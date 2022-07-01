@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Returns the transaction commands for this module.
+// GetTxCmd returns the transaction commands for this module.
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -35,7 +35,7 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-// Broadcasts a CreateGauge message.
+// NewCreateGaugeCmd broadcasts a CreateGauge message.
 func NewCreateGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-gauge [lockup_denom] [reward] [flags]",
@@ -114,7 +114,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 	return cmd
 }
 
-// Broadcasts a AddToGauge message.
+// NewAddToGaugeCmd broadcasts a AddToGauge message.
 func NewAddToGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-to-gauge [gauge_id] [rewards] [flags]",

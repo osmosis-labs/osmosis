@@ -20,7 +20,7 @@ const (
 // TODO: x/epochs/simulation/genesis.go doesn't exist, what was this comment trying to say?
 var epochIdentifiers = []string{"day", "hour"}
 
-// Defines the parameters that can be modified by param change proposals on the simulation.
+// ParamChanges defines the parameters that can be modified by param change proposals on the simulation.
 func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{
 		simulation.NewSimParamChange(types.ModuleName, keyDistrEpochIdentifier,
@@ -31,7 +31,7 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 	}
 }
 
-// Generates a random epoch identifier to be used to distribute incentives on.
+// GenParamsDistrEpochIdentifier generates a random epoch identifier to be used to distribute incentives on.
 func GenParamsDistrEpochIdentifier(r *rand.Rand) string {
 	return epochIdentifiers[r.Intn(len(epochIdentifiers))]
 }
