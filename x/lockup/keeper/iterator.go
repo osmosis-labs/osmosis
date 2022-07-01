@@ -194,7 +194,7 @@ func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]typ
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
-		err := k.Unlock(ctx, lock.ID)
+		err := k.UnlockMaturedLock(ctx, lock.ID)
 		if err != nil {
 			panic(err)
 		}
