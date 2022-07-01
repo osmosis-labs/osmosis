@@ -155,8 +155,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs the module's genesis initialization.
-// It returns no validator updates.
-// TODO: What does "it returns no validator updates" mean?
+// InitGenesis requires an empty ValidatorUpdate array.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genState types.GenesisState
 	// initialize global index to index in genesis state.
@@ -175,9 +174,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // Executes all ABCI BeginBlock logic respective to the module.
 func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// Executes all ABCI EndBlock logic respective to the module
-// It returns no validator updates
-// TODO: It says "It returns no validator updates" but it looks like it does?
+// Executes all ABCI EndBlock logic respective to the module.
+// Returns a nil validatorUpdate struct array.
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
@@ -189,21 +187,18 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// Doesn't return any content functions for governance proposals.
-// TODO: Explain this better
+// Returns nil for governance proposals contents.
+// Should eventually be deleted in a future update.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
 }
 
-// Creates randomized param changes for the simulator.
-// TODO: This should't be nil right?
+// Returns nil. Should eventually be deleted in a future update.
 func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }
 
-// Registers a store decoder for the module's types.
-// Used to simulate import/export.
-// TODO: This also appears to do nothing
+// Unknown purpose. Should eventually be deleted in a future update.
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 }
 
