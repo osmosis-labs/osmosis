@@ -181,9 +181,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 	simState *simState, config simulation.Config) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
-	// TODO: temporary
-	ops := actionsToWeightedOperations(actions)
-	selectOp := getSelectOpFn(ops)
+	selectAction := getSelectActionFn(actions)
 
 	return func(
 		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,
@@ -194,30 +192,20 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 		)
 		lastBlockSizeState, blocksize = getBlockSize(simCtx, params, lastBlockSizeState, config.BlockSize)
 
-		type opAndR struct {
-			op   simulation.Operation
-			rand *rand.Rand
-		}
-
 		// TODO: Fix according to the r plans
-		r := simCtx.GetRand()
-		opAndRz := make([]opAndR, 0, blocksize)
 		// Predetermine the blocksize slice so that we can do things like block
 		// out certain operations without changing the ops that follow.
 		// NOTE: This is poor mans seeding, it will improve in our simctx plans =)
+		blockActions := make([]Action, 0, blocksize)
 		for i := 0; i < blocksize; i++ {
-			opAndRz = append(opAndRz, opAndR{
-				op:   selectOp(r),
-				rand: simulation.DeriveRand(r),
-			})
+			blockActions = append(blockActions, selectAction(simCtx.GetRand()))
 		}
 
 		for i := 0; i < blocksize; i++ {
-			// NOTE: the Rand 'r' should not be used here.
-			opAndR := opAndRz[i]
-			op, r2 := opAndR.op, opAndR.rand
-			// TODO: This will change under our wrapper struct
-			opMsg, futureOps, err := op(r2, simCtx.App, ctx, simCtx.Accounts, simCtx.ChainID)
+			action := blockActions[i]
+			// TODO: We need to make a simCtx.WithSeededRand, that replaces the rand map internally
+			// but allows updates to accounts.
+			opMsg, futureOps, err := action.Execute(simCtx, ctx)
 			opMsg.LogEvent(simState.eventStats.Tally)
 
 			if !simState.leanLogs || opMsg.OK {

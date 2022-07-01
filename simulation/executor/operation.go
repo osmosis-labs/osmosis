@@ -5,7 +5,10 @@ import (
 	"math/rand"
 	"sort"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+
+	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
 
 	legacysimexec "github.com/cosmos/cosmos-sdk/x/simulation"
 	// simtypes "github.com/osmosis-labs/osmosis/simulation/types"
@@ -115,50 +118,60 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps []simulation.Future
 // * ActionFromMsg - An easy API to go from creating a message via simctx to something simulator can deal with
 // * ActionFromDependentMessages - API for defining a series of messages that depend on one another, and should satisfy
 //   some properties post-execution.
-type Action struct {
-	// temporary
-	weightedOp simulation.WeightedOperation
+type Action interface {
+	Name() string
+	// I envision this weight being provided from a config.
+	// Module providers can optionally provide a default from an enum,
+	// but this should not be the default.
+	Weight() int
+	Execute(*simtypes.SimCtx, sdk.Context) (
+		OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error)
+}
+
+type weightedOperationAction struct {
+	op simulation.WeightedOperation
+}
+
+func (a weightedOperationAction) Name() string { return "weighted_op" }
+func (a weightedOperationAction) Weight() int  { return a.op.Weight() }
+func (a weightedOperationAction) Execute(sim *simtypes.SimCtx, ctx sdk.Context) (
+	simulation.OperationMsg, []simulation.FutureOperation, error) {
+	return a.op.Op()(sim.GetRand(), sim.App, ctx, sim.Accounts, sim.ChainID)
 }
 
 func ActionsFromWeightedOperations(ops legacysimexec.WeightedOperations) []Action {
 	actions := make([]Action, 0, len(ops))
 	for _, op := range ops {
-		actions = append(actions, Action{weightedOp: op})
+		actions = append(actions, weightedOperationAction{op: op})
 	}
 	return actions
 }
 
-// temporary
-func actionsToWeightedOperations(actions []Action) legacysimexec.WeightedOperations {
-	ops := make(legacysimexec.WeightedOperations, 0, len(actions))
+func totalWeight(actions []Action) int {
+	totalWeight := 0
 	for _, action := range actions {
-		ops = append(ops, action.weightedOp)
-	}
-	return ops
-}
-
-func totalWeight(ops legacysimexec.WeightedOperations) int {
-	totalOpWeight := 0
-	for _, op := range ops {
-		totalOpWeight += op.Weight()
+		totalWeight += action.Weight()
 	}
 
-	return totalOpWeight
+	return totalWeight
 }
 
-func getSelectOpFn(ops legacysimexec.WeightedOperations) simulation.SelectOpFn {
-	totalOpWeight := totalWeight(ops)
+type selectActionFn func(r *rand.Rand) Action
 
-	return func(r *rand.Rand) simulation.Operation {
+func getSelectActionFn(actions []Action) selectActionFn {
+	totalOpWeight := totalWeight(actions)
+
+	return func(r *rand.Rand) Action {
 		x := r.Intn(totalOpWeight)
-		for i := 0; i < len(ops); i++ {
-			if x <= ops[i].Weight() {
-				return ops[i].Op()
+		// TODO: Change to an accum list approach
+		for i := 0; i < len(actions); i++ {
+			if x <= actions[i].Weight() {
+				return actions[i]
 			}
 
-			x -= ops[i].Weight()
+			x -= actions[i].Weight()
 		}
 		// shouldn't happen
-		return ops[0].Op()
+		return actions[0]
 	}
 }
