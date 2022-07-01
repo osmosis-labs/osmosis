@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -13,6 +14,8 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 )
+
+var errRegex = regexp.MustCompile(`(E|e)rror`)
 
 // Manager is a wrapper around all Docker instances, and the Docker API.
 // It provides utilities to run and interact with all Docker containers used within e2e testing.
@@ -88,15 +91,29 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 				return false
 			}
 
+			errBufString := errBuf.String()
+			// Note that this does not match all errors.
+			// This only works if CLI outpurs "Error" or "error"
+			// to stderr.
+			if errRegex.MatchString(errBufString) {
+				t.Log("Potential error in stderr:")
+				t.Log(errBufString)
+				// N.B: We should not be returning false here
+				// because some applications such as Hermes might log
+				// "error" to stderr when they function correctly,
+				// causing test flakiness. This log is needed only for
+				// debugging purposes.
+			}
+
 			if success != "" {
-				return strings.Contains(outBuf.String(), success) || strings.Contains(errBuf.String(), success)
+				return strings.Contains(outBuf.String(), success) || strings.Contains(errBufString, success)
 			}
 
 			return true
 		},
 		time.Minute,
 		time.Second,
-		"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
+		"tx returned a non-zero code",
 	)
 
 	return outBuf, errBuf, nil
