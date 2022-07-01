@@ -104,20 +104,6 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 		// check gauges
 		gauges = suite.App.IncentivesKeeper.GetNotFinishedGauges(suite.Ctx)
 		suite.Require().Len(gauges, 1)
-		expectedGauge = types.Gauge{
-			Id:          gaugeID,
-			IsPerpetual: tc.isPerpetual,
-			DistributeTo: lockuptypes.QueryCondition{
-				LockQueryType: lockuptypes.ByDuration,
-				Denom:         "lptoken",
-				Duration:      time.Second,
-			},
-			Coins:             coins,
-			NumEpochsPaidOver: uint64(tc.expectedNumEpochsPaidOver),
-			FilledEpochs:      0,
-			DistributedCoins:  sdk.Coins{},
-			StartTime:         startTime,
-		}
 		suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 
 		// check upcoming gauges
