@@ -504,7 +504,7 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 
 // TestCalculateAmountOutAndIn_InverseRelationship tests that the same amount of token is guaranteed upon
 // sequential operation of CalcInAmtGivenOut and CalcOutAmtGivenIn.
-func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
+func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 	type testcase struct {
 		denomOut         string
 		initialPoolOut   int64
@@ -584,7 +584,7 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
 			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
-				ctx := createTestContext(t)
+				ctx := suite.CreateTestContext()
 
 				poolAssetOut := balancer.PoolAsset{
 					Token:  sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut),
@@ -605,24 +605,9 @@ func TestCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
 				pool := createTestPool(t, swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 				require.NotNil(t, pool)
 
-				initialOut := sdk.NewInt64Coin(poolAssetOut.Token.Denom, tc.initialCalcOut)
-				initialOutCoins := sdk.NewCoins(initialOut)
-
 				sut := func() {
-					actualTokenIn, err := pool.CalcInAmtGivenOut(ctx, initialOutCoins, poolAssetIn.Token.Denom, swapFeeDec)
-					require.NoError(t, err)
+					suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
 
-					inverseTokenOut, err := pool.CalcOutAmtGivenIn(ctx, sdk.NewCoins(actualTokenIn), poolAssetOut.Token.Denom, swapFeeDec)
-					require.NoError(t, err)
-
-					require.Equal(t, initialOut.Denom, inverseTokenOut.Denom)
-
-					expected := initialOut.Amount.ToDec()
-					actual := inverseTokenOut.Amount.ToDec()
-
-					// allow a rounding error of up to 1 for this relation
-					tol := sdk.NewDec(1)
-					require.True(osmoutils.DecApproxEq(t, expected, actual, tol))
 				}
 
 				balancerPool, ok := pool.(*balancer.Pool)
