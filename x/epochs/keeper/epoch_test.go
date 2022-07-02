@@ -35,7 +35,8 @@ func (suite *KeeperTestSuite) TestAddEpochInfo() {
 				CurrentEpochStartHeight: startBlockHeight,
 				CurrentEpochStartTime:   time.Time{},
 				EpochCountingStarted:    false,
-			}},
+			},
+		},
 		"zero_duration": {
 			addedEpochInfo: types.EpochInfo{
 				Identifier:              defaultIdentifier,

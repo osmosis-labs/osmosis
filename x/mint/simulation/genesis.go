@@ -31,7 +31,7 @@ var (
 		Staking:          sdk.NewDecWithPrec(25, 2),
 		PoolIncentives:   sdk.NewDecWithPrec(45, 2),
 		DeveloperRewards: sdk.NewDecWithPrec(25, 2),
-		CommunityPool:    sdk.NewDecWithPrec(05, 2),
+		CommunityPool:    sdk.NewDecWithPrec(0o5, 2),
 	}
 	weightedDevRewardReceivers = []types.WeightedAddress{
 		{
