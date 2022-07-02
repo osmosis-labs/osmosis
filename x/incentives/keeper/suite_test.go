@@ -12,13 +12,27 @@ import (
 )
 
 var (
-	defaultLPDenom      string        = "lptoken"
-	defaultLPTokens     sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
-	defaultLiquidTokens sdk.Coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
-	defaultLockDuration time.Duration = time.Second
-	oneLockupUser       userLocks     = userLocks{
+	defaultLPDenom           string        = "lptoken"
+	defaultLPSyntheticDenom  string        = "lptoken/superbonding"
+	defaultLPTokens          sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPDenom, 10)}
+	defaultLPSyntheticTokens sdk.Coins     = sdk.Coins{sdk.NewInt64Coin(defaultLPSyntheticDenom, 10)}
+	defaultLiquidTokens      sdk.Coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
+	defaultLockDuration      time.Duration = time.Second
+	oneLockupUser            userLocks     = userLocks{
 		lockDurations: []time.Duration{time.Second},
 		lockAmounts:   []sdk.Coins{defaultLPTokens},
+	}
+	twoLockupUser userLocks = userLocks{
+		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
+		lockAmounts:   []sdk.Coins{defaultLPTokens, defaultLPTokens},
+	}
+	oneSyntheticLockupUser userLocks = userLocks{
+		lockDurations: []time.Duration{time.Second},
+		lockAmounts:   []sdk.Coins{defaultLPSyntheticTokens},
+	}
+	twoSyntheticLockupUser userLocks = userLocks{
+		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
+		lockAmounts:   []sdk.Coins{defaultLPSyntheticTokens, defaultLPSyntheticTokens},
 	}
 	defaultRewardDenom string = "rewardDenom"
 )
@@ -52,7 +66,7 @@ func (suite *KeeperTestSuite) setupAddr(addrNum int, prefix string, balance sdk.
 	return addr
 }
 
-// SetupUserLocks takes an array of user locks. Then returns the respective account address byte array.
+// SetupUserLocks takes an array of user locks, creates locks based on this array, then returns the respective account address byte array.
 func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccAddress) {
 	accs = make([]sdk.AccAddress, len(users))
 	for i, user := range users {
@@ -71,12 +85,35 @@ func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccA
 	return
 }
 
+// SetupUserSyntheticLocks takes an array of user locks creates synthetic locks based on this array, then returns the respective account address byte array.
+func (suite *KeeperTestSuite) SetupUserSyntheticLocks(users []userLocks) (accs []sdk.AccAddress) {
+	accs = make([]sdk.AccAddress, len(users))
+	coins := sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}
+	var lockupID uint64
+	lockupID = 1
+	for i, user := range users {
+		suite.Assert().Equal(len(user.lockDurations), len(user.lockAmounts))
+		totalLockAmt := user.lockAmounts[0]
+		for j := 1; j < len(user.lockAmounts); j++ {
+			totalLockAmt = totalLockAmt.Add(user.lockAmounts[j]...)
+		}
+		accs[i] = suite.setupAddr(i, "", totalLockAmt)
+		for j := 0; j < len(user.lockAmounts); j++ {
+			suite.LockTokens(accs[i], coins, user.lockDurations[j])
+			err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, lockupID, "lptoken/superbonding", user.lockDurations[j], false)
+			lockupID++
+			suite.Require().NoError(err)
+		}
+	}
+	return
+}
+
 // SetupGauges takes an array of perpGaugeDesc structs. Then returns the corresponding array of Gauge structs.
-func (suite *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc) []types.Gauge {
+func (suite *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc, denom string) []types.Gauge {
 	gauges := make([]types.Gauge, len(gaugeDescriptors))
 	perpetual := true
 	for i, desc := range gaugeDescriptors {
-		_, gaugePtr, _, _ := suite.setupNewGaugeWithDuration(perpetual, desc.rewardAmount, desc.lockDuration)
+		_, gaugePtr, _, _ := suite.setupNewGaugeWithDuration(perpetual, desc.rewardAmount, desc.lockDuration, denom)
 		gauges[i] = *gaugePtr
 	}
 	return gauges
@@ -109,14 +146,14 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 }
 
 // setupNewGaugeWithDuration creates a gauge with the specified duration.
-func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.Coins, duration time.Duration) (
+func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string) (
 	uint64, *types.Gauge, sdk.Coins, time.Time,
 ) {
 	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
 	startTime2 := time.Now()
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
-		Denom:         "lptoken",
+		Denom:         denom,
 		Duration:      duration,
 	}
 
@@ -137,7 +174,7 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins 
 
 // SetupNewGauge creates a gauge with the default lock duration.
 func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (uint64, *types.Gauge, sdk.Coins, time.Time) {
-	return suite.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration)
+	return suite.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration, "lptoken")
 }
 
 // setupNewGaugeWithDenom creates a gauge with the specified duration and denom.

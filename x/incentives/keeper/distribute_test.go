@@ -1,7 +1,10 @@
 package keeper_test
 
 import (
+	"strings"
 	"time"
+
+	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -10,12 +13,8 @@ import (
 )
 
 // TestDistribute tests that when the distribute command is executed on a provided gauge
-// the correct amount of rewards is sent to the correct lock owners.
+// that the correct amount of rewards is sent to the correct lock owners.
 func (suite *KeeperTestSuite) TestDistribute() {
-	twoLockupUser := userLocks{
-		lockDurations: []time.Duration{defaultLockDuration, 2 * defaultLockDuration},
-		lockAmounts:   []sdk.Coins{defaultLPTokens, defaultLPTokens},
-	}
 	defaultGauge := perpGaugeDesc{
 		lockDenom:    defaultLPDenom,
 		lockDuration: defaultLockDuration,
@@ -68,7 +67,7 @@ func (suite *KeeperTestSuite) TestDistribute() {
 	}
 	for tcIndex, tc := range tests {
 		suite.SetupTest()
-		gauges := suite.SetupGauges(tc.gauges)
+		gauges := suite.SetupGauges(tc.gauges, defaultLPDenom)
 		addrs := suite.SetupUserLocks(tc.users)
 		_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
 		suite.Require().NoError(err)
@@ -78,9 +77,85 @@ func (suite *KeeperTestSuite) TestDistribute() {
 			suite.Require().Equal(tc.expectedRewards[i].String(), bal.String(), "tcnum %d, person %d", tcIndex, i)
 		}
 	}
+}
 
-	// TODO: test distribution for synthetic lockup as well
-	// TODO: Make issue for the above
+// TestSyntheticDistribute tests that when the distribute command is executed on a provided gauge
+// the correct amount of rewards is sent to the correct synthetic lock owners.
+func (suite *KeeperTestSuite) TestSyntheticDistribute() {
+	defaultGauge := perpGaugeDesc{
+		lockDenom:    defaultLPSyntheticDenom,
+		lockDuration: defaultLockDuration,
+		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+	}
+	doubleLengthGauge := perpGaugeDesc{
+		lockDenom:    defaultLPSyntheticDenom,
+		lockDuration: 2 * defaultLockDuration,
+		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+	}
+	noRewardGauge := perpGaugeDesc{
+		lockDenom:    defaultLPSyntheticDenom,
+		lockDuration: defaultLockDuration,
+		rewardAmount: sdk.Coins{},
+	}
+	noRewardCoins := sdk.Coins{}
+	oneKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000)}
+	twoKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 2000)}
+	fiveKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
+	tests := []struct {
+		name            string
+		users           []userLocks
+		gauges          []perpGaugeDesc
+		expectedRewards []sdk.Coins
+	}{
+		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
+		// 1k should go to oneLockupUser and 2k to twoLockupUser.
+		{
+			name:            "test1",
+			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
+			gauges:          []perpGaugeDesc{defaultGauge},
+			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
+		},
+		// gauge 1 gives 3k coins. three locks, all eligible.
+		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
+		// 1k should to oneLockupUser and 5k to twoLockupUser.
+		{
+			name:            "test2",
+			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
+			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
+			expectedRewards: []sdk.Coins{oneKRewardCoins, fiveKRewardCoins},
+		},
+		{
+			name:            "test3",
+			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
+			gauges:          []perpGaugeDesc{noRewardGauge},
+			expectedRewards: []sdk.Coins{noRewardCoins, noRewardCoins},
+		},
+		{
+			name:            "test4",
+			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
+			gauges:          []perpGaugeDesc{noRewardGauge, defaultGauge},
+			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
+		},
+	}
+	for _, tc := range tests {
+		suite.SetupTest()
+		gauges := suite.SetupGauges(tc.gauges, defaultLPSyntheticDenom)
+		addrs := suite.SetupUserSyntheticLocks(tc.users)
+		_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
+		suite.Require().NoError(err)
+		// check expected rewards
+		for i, addr := range addrs {
+			var rewards string
+			bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr)
+			// extract the superbonding tokens from the rewards distribution check
+			// figure out a less hacky way of doing this
+			if strings.Contains(bal.String(), "lptoken/superbonding,") {
+				rewards = strings.Split(bal.String(), "lptoken/superbonding,")[1]
+			}
+			suite.Require().Equal(tc.expectedRewards[i].String(), rewards, "test %v, person %d", tc.name, i)
+		}
+	}
+
 }
 
 // TODO: Make this test table driven, or move whatever it tests into the much simpler TestDistribute
@@ -260,3 +335,5 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().Len(gauges, 1)
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 }
+
+var _ = suite.TestingSuite(nil)
