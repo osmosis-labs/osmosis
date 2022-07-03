@@ -452,7 +452,7 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 		TotalEquivalentStakedAmount: superfluidDelegationResp.TotalEquivalentStakedAmount,
 	}
 
-	//this is for getting normal staking
+	// this is for getting normal staking
 	q.sk.IterateDelegations(ctx, delAddr, func(_ int64, del stakingtypes.DelegationI) bool {
 		val, found := q.sk.GetValidator(ctx, del.GetValidatorAddr())
 		if !found {

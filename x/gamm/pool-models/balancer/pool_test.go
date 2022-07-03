@@ -607,7 +607,6 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 
 				sut := func() {
 					suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
-
 				}
 
 				balancerPool, ok := pool.(*balancer.Pool)
