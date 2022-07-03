@@ -64,7 +64,7 @@ func SimulateFromSeedLegacy(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (stopEarly bool, exportedParams Params, err error) {
-	actions := ActionsFromWeightedOperations(ops)
+	actions := simtypes.ActionsFromWeightedOperations(ops)
 	initFns := simtypes.InitFunctions{
 		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(randAccFn, blockedAddrs),
 		AppInitialStateFn: appStateFn,
@@ -79,7 +79,7 @@ func SimulateFromSeed(
 	w io.Writer,
 	app *baseapp.BaseApp,
 	initFunctions simtypes.InitFunctions,
-	actions []Action,
+	actions []simtypes.Action,
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (stopEarly bool, exportedParams Params, err error) {
@@ -177,7 +177,7 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
-func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []Action,
+func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.Action,
 	simState *simState, config simulation.Config) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
@@ -196,7 +196,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 		// Predetermine the blocksize slice so that we can do things like block
 		// out certain operations without changing the ops that follow.
 		// NOTE: This is poor mans seeding, it will improve in our simctx plans =)
-		blockActions := make([]Action, 0, blocksize)
+		blockActions := make([]simtypes.Action, 0, blocksize)
 		for i := 0; i < blocksize; i++ {
 			blockActions = append(blockActions, selectAction(simCtx.GetRand()))
 		}

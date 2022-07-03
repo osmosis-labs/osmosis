@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -18,6 +19,7 @@ type SimCtx struct {
 
 	App      *baseapp.BaseApp
 	Accounts []simulation.Account
+	Cdc      codec.JSONCodec // application codec
 	ChainID  string
 }
 
