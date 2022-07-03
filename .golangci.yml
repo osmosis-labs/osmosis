@@ -47,7 +47,7 @@ linters:
 #    - gosec <- triggers too much for this round and should be re-enabled later
 #    - gosimple <- later
     - govet
-    #   - ifshort <- seems to be of questionable value
+    #   - ifshort <- questionable value, unclear if globally helping readability.
     - importas
     - ineffassign
     #    - ireturn <- disabled because we want to return interfaces
