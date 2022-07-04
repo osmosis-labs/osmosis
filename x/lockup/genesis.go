@@ -11,10 +11,10 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetLastLockID(ctx, genState.LastLockId)
-	if err := k.ResetAllLocks(ctx, genState.Locks); err != nil {
+	if err := k.InitializeAllLocks(ctx, genState.Locks); err != nil {
 		return
 	}
-	if err := k.ResetAllSyntheticLocks(ctx, genState.SyntheticLocks); err != nil {
+	if err := k.InitializeAllSyntheticLocks(ctx, genState.SyntheticLocks); err != nil {
 		return
 	}
 }

@@ -9,8 +9,13 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/app"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+=======
+	"github.com/osmosis-labs/osmosis/v7/app"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+>>>>>>> 1517e651 (refactor ref method (#1951))
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,7 +80,7 @@ func benchmarkResetLogic(numLockups int, b *testing.B) {
 	b.StartTimer()
 	b.ReportAllocs()
 	// distribute coins from gauges to lockup owners
-	_ = app.LockupKeeper.ResetAllLocks(ctx, locks)
+	_ = app.LockupKeeper.InitializeAllLocks(ctx, locks)
 }
 
 func BenchmarkResetLogicMedium(b *testing.B) {
