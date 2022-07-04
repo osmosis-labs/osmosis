@@ -18,7 +18,7 @@ service Msg {
 message MsgCreateGauge {
   // Flag to show if it's a perpetual or non-perpetual gauge
   // Non-perpetual gauges distribute their tokens equally per epoch while the
-  // gauge is in the active period Perpetual gauges distribute all their tokens
+  // gauge is in the active period. Perpetual gauges distribute all their tokens
   // at a single time and only distribute their tokens again once the gauge is
   // refilled
   bool is_perpetual = 1;
@@ -43,7 +43,7 @@ message MsgCreateGauge {
 }
 message MsgCreateGaugeResponse {}
 
-// Add coins to a gauge previously created
+// Add coins to a gauge previously created gauge
 message MsgAddToGauge {
   // Address (owner) must match creator of initial gauge
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];

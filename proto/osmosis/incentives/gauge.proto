@@ -21,7 +21,7 @@ message Gauge {
   // refilled
   bool is_perpetual = 2;
   // Rewards are distributed to lockups that are are returned by this lockup
-  // query This is queried via lock duration or by timestamp
+  // query. This is queried via lock duration or by timestamp
   osmosis.lockup.QueryCondition distribute_to = 3
       [ (gogoproto.nullable) = false ];
   // Total amount of coins that has been in the gauge
