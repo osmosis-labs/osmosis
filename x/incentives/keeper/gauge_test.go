@@ -160,7 +160,7 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 		suite.Require().Len(gaugeIdsByDenom, 1)
 
 		// finish distribution for non perpetual gauge
-		if !gauge.IsPerpetual {
+		if !tc.isPerpetual {
 			err = suite.App.IncentivesKeeper.MoveActiveGaugeToFinishedGauge(suite.Ctx, *gauge)
 			suite.Require().NoError(err)
 		}
