@@ -89,6 +89,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 	if k.hooks == nil {
 		return lock, nil
 	}
+
 	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), sdk.NewCoins(tokensToAdd))
 
 	return lock, nil
