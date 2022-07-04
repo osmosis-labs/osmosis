@@ -11,21 +11,22 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Params returns the total set of minting parameters.
+  // Params defines a gRPC query method that returns the tokenfactory module's
+  // parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/osmosis/tokenfactory/v1beta1/params";
   }
 
-  rpc DenomAuthorityMetadata(QueryDenomAuthorityMetadataRequest)
-      returns (QueryDenomAuthorityMetadataResponse) {
-    option (google.api.http).get =
-        "/osmosis/tokenfactory/v1beta1/denoms/{denom}/authority_metadata";
+  // DenomAuthorityMetadata defines a gRPC query method for fetching
+  // DenomAuthorityMetadata for a particular denom.
+  rpc DenomAuthorityMetadata(QueryDenomAuthorityMetadataRequest) returns (QueryDenomAuthorityMetadataResponse) {
+    option (google.api.http).get = "/osmosis/tokenfactory/v1beta1/denoms/{denom}/authority_metadata";
   }
 
-  rpc DenomsFromCreator(QueryDenomsFromCreatorRequest)
-      returns (QueryDenomsFromCreatorResponse) {
-    option (google.api.http).get =
-        "/osmosis/tokenfactory/v1beta1/denoms_from_creator/{creator}";
+  // DenomsFromCreator defines a gRPC query method for fetching all denominations
+  // created by a specific admin/creator.
+  rpc DenomsFromCreator(QueryDenomsFromCreatorRequest) returns (QueryDenomsFromCreatorResponse) {
+    option (google.api.http).get = "/osmosis/tokenfactory/v1beta1/denoms_from_creator/{creator}";
   }
 }
 
@@ -35,22 +36,30 @@ message QueryParamsRequest {}
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params defines the parameters of the module.
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
 }
 
+// QueryDenomAuthorityMetadataRequest defines the request structure for the
+// DenomAuthorityMetadata gRPC query.
 message QueryDenomAuthorityMetadataRequest {
-  string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
-}
-message QueryDenomAuthorityMetadataResponse {
-  DenomAuthorityMetadata authority_metadata = 1 [
-    (gogoproto.moretags) = "yaml:\"authority_metadata\"",
-    (gogoproto.nullable) = false
-  ];
+  string denom = 1 [(gogoproto.moretags) = "yaml:\"denom\""];
 }
 
-message QueryDenomsFromCreatorRequest {
-  string creator = 1 [ (gogoproto.moretags) = "yaml:\"creator\"" ];
+// QueryDenomAuthorityMetadataResponse defines the response structure for the
+// DenomAuthorityMetadata gRPC query.
+message QueryDenomAuthorityMetadataResponse {
+  DenomAuthorityMetadata authority_metadata = 1
+      [(gogoproto.moretags) = "yaml:\"authority_metadata\"", (gogoproto.nullable) = false];
 }
+
+// QueryDenomsFromCreatorRequest defines the request structure for the
+// DenomsFromCreator gRPC query.
+message QueryDenomsFromCreatorRequest {
+  string creator = 1 [(gogoproto.moretags) = "yaml:\"creator\""];
+}
+
+// QueryDenomsFromCreatorRequest defines the response structure for the
+// DenomsFromCreator gRPC query.
 message QueryDenomsFromCreatorResponse {
-  repeated string denoms = 1 [ (gogoproto.moretags) = "yaml:\"denoms\"" ];
+  repeated string denoms = 1 [(gogoproto.moretags) = "yaml:\"denoms\""];
 }
