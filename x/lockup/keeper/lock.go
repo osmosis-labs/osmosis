@@ -434,10 +434,10 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 	return nil
 }
 
-// ResetAllLocks takes a set of locks, and initializes state to be storing
+// InitializeAllLocks takes a set of locks, and initializes state to be storing
 // them all correctly. This utilizes batch optimizations to improve efficiency,
 // as this becomes a bottleneck at chain initialization & upgrades.
-func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
+func (k Keeper) InitializeAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 	// index by coin.Denom, them duration -> amt
 	// We accumulate the accumulation store entries separately,
 	// to avoid hitting the myriad of slowdowns in the SDK iterator creation process.
@@ -449,7 +449,7 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 			msg := fmt.Sprintf("Reset %d lock refs, cur lock ID %d", i, lock.ID)
 			ctx.Logger().Info(msg)
 		}
-		err := k.setLockAndResetLockRefs(ctx, lock)
+		err := k.setLockAndAddLockRefs(ctx, lock)
 		if err != nil {
 			return err
 		}
@@ -497,7 +497,7 @@ func (k Keeper) ResetAllLocks(ctx sdk.Context, locks []types.PeriodLock) error {
 	return nil
 }
 
-func (k Keeper) ResetAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.SyntheticLock) error {
+func (k Keeper) InitializeAllSyntheticLocks(ctx sdk.Context, syntheticLocks []types.SyntheticLock) error {
 	// index by coin.Denom, them duration -> amt
 	// We accumulate the accumulation store entries separately,
 	// to avoid hitting the myriad of slowdowns in the SDK iterator creation process.
@@ -633,9 +633,9 @@ func (k Keeper) setLock(ctx sdk.Context, lock types.PeriodLock) error {
 	return nil
 }
 
-// setLockAndResetLockRefs sets the lock, and resets all of its lock references
+// setLockAndAddLockRefs sets the lock, and resets all of its lock references
 // This puts the lock into a 'clean' state, aside from the AccumulationStore.
-func (k Keeper) setLockAndResetLockRefs(ctx sdk.Context, lock types.PeriodLock) error {
+func (k Keeper) setLockAndAddLockRefs(ctx sdk.Context, lock types.PeriodLock) error {
 	err := k.setLock(ctx, lock)
 	if err != nil {
 		return err
