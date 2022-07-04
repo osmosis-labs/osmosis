@@ -24,8 +24,6 @@ const (
 	errMsgFormatFailedInterimLiquidityUpdate  = "failed to update interim liquidity - pool asset %s does not exist"
 	errMsgFormatRepeatingPoolAssetsNotAllowed = "repeating pool assets not allowed, found %s"
 	errMsgFormatNoPoolAssetFound              = "can't find the PoolAsset (%s)"
-
-	v10Fork = 4713065
 )
 
 var (
