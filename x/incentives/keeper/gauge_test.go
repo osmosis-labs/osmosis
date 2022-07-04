@@ -129,6 +129,7 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 		// distribute coins to stakers
 		distrCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
 		suite.Require().NoError(err)
+		// SetupLockAndGauge hard-codes 10 "stake" tokens
 		suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(10/tc.expectedNumEpochsPaidOver))}, distrCoins)
 
 		if tc.isPerpetual {
