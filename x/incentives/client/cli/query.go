@@ -420,9 +420,7 @@ $ %s query incentives rewards-estimation
 					lockIds = append(lockIds, lockId)
 				}
 			} else if lockIdsCombined == "" && owner != "" {
-				for _, lockId := range ownerLocks {
-					lockIds = append(lockIds, lockId)
-				}
+				lockIds = append(lockIds, ownerLocks...)
 			}
 
 			if len(lockIds) != 0 && owner != "" {

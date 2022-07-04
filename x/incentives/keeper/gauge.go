@@ -48,9 +48,10 @@ func (k Keeper) getCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 
 // getCoinsFromIterator iterates over everything in a gauge's iterator, until it reaches the end.
 // From these gauges, computes the total amount of coins and return this value.
-func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
-}
+// Commented out as unused
+// func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
+// 	return k.getCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
+// }
 
 // setGauge assigns a key to a gauge value.
 func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
