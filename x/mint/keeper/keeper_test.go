@@ -166,6 +166,15 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 			err = suite.App.MintKeeper.DistributeMintedCoin(suite.Ctx, tc.mintCoin)
 			suite.NoError(err)
 
+			feePool := suite.App.DistrKeeper.GetFeePool(suite.Ctx)
+			feeCollector := suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+			suite.Equal(
+				tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
+				suite.App.BankKeeper.GetAllBalances(suite.Ctx, feeCollector).AmountOf("stake"))
+			suite.Equal(
+				tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.CommunityPool),
+				feePool.CommunityPool.AmountOf("stake"))
+
 			// check devAddress balances
 			for i, weightedAddresse := range tc.weightedAddresses {
 				devRewardsReceiver, _ := sdk.AccAddressFromBech32(weightedAddresse.GetAddress())
