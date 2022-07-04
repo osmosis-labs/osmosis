@@ -13,8 +13,8 @@ import (
 )
 
 // Validates a pool asset, to check if it has a valid weight.
-func (asset PoolAsset) ValidateWeight() error {
-	if asset.Weight.LTE(sdk.ZeroInt()) {
+func (pa PoolAsset) ValidateWeight() error {
+	if pa.Weight.LTE(sdk.ZeroInt()) {
 		return fmt.Errorf("a token's weight in the pool must be greater than 0")
 	}
 
@@ -31,10 +31,10 @@ type poolAssetPretty struct {
 	Weight sdk.Dec  `json:"weight" yaml:"weight"`
 }
 
-func (asset PoolAsset) prettify() poolAssetPretty {
+func (pa PoolAsset) prettify() poolAssetPretty {
 	return poolAssetPretty{
-		Weight: sdk.NewDecFromInt(asset.Weight).QuoInt64(GuaranteedWeightPrecision),
-		Token:  asset.Token,
+		Weight: sdk.NewDecFromInt(pa.Weight).QuoInt64(GuaranteedWeightPrecision),
+		Token:  pa.Token,
 	}
 }
 
