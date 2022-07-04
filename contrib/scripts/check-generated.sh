@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-# Install buf and gogo tools, so that differences that arise from
-# toolchain differences are also caught.
-readonly tools="$(mktemp -d)"
 
 make proto-gen
 
