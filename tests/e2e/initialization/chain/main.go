@@ -12,7 +12,7 @@ import (
 
 func main() {
 	var (
-		valConfig    []*initialization.ValidatorConfig
+		valConfig    []*initialization.NodeConfig
 		dataDir      string
 		chainId      string
 		config       string

@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -176,14 +175,6 @@ Example:
 					return err
 				}
 			}
-
-			authGenesis := authtypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["auth"], &authGenesis)
-			accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
-			if err != nil {
-				panic(err)
-			}
-			accounts = authtypes.SanitizeGenesisAccounts(accounts)
 
 			// Produce the map of address to total atom balance, both staked and UnbondingStake
 			snapshotAccs := make(map[string]DerivedAccount)
