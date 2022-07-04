@@ -60,27 +60,44 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
-	mintKeeper := suite.App.MintKeeper
+	tests := []struct {
+		name         string
+		ratio        sdk.Dec
+		fn           func()
+		expectedCoin sdk.Coin
+		fee          sdk.Coin
+	}{
+		{
+			name:         "coin is minted to the fee collector",
+			fee:          sdk.NewCoin("stake", sdk.NewInt(0)),
+			ratio:        sdk.NewDecWithPrec(2, 1),
+			expectedCoin: sdk.NewCoin("stake", sdk.NewInt(0)),
+		}, {
+			name:  "mint the 100K stake coin to the fee collector",
+			fee:   sdk.NewCoin("stake", sdk.NewInt(100000)),
+			ratio: sdk.NewDecWithPrec(2, 1),
+			fn: func() {
+				fee := sdk.NewCoin("stake", sdk.NewInt(100000))
+				fees := sdk.NewCoins(fee)
+				err := simapp.FundModuleAccount(suite.App.BankKeeper,
+					suite.Ctx,
+					authtypes.FeeCollectorName,
+					fees)
+				suite.NoError(err)
+			},
+			expectedCoin: sdk.NewCoin("stake", sdk.NewInt(100000).Quo(sdk.NewInt(5))),
+		},
+	}
 
-	// When coin is minted to the fee collector
-	fee := sdk.NewCoin("stake", sdk.NewInt(0))
-	fees := sdk.NewCoins(fee)
-	coin := mintKeeper.GetProportions(suite.Ctx, fee, sdk.NewDecWithPrec(2, 1))
-	suite.Equal("0stake", coin.String())
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			// reset suite
+			suite.SetupTest()
+			coin := suite.App.MintKeeper.GetProportions(suite.Ctx, tc.fee, tc.ratio)
+			suite.Equal(tc.expectedCoin, coin)
 
-	// When mint the 100K stake coin to the fee collector
-	fee = sdk.NewCoin("stake", sdk.NewInt(100000))
-	fees = sdk.NewCoins(fee)
-
-	err := simapp.FundModuleAccount(suite.App.BankKeeper,
-		suite.Ctx,
-		authtypes.FeeCollectorName,
-		fees)
-	suite.NoError(err)
-
-	// check proportion for 20%
-	coin = mintKeeper.GetProportions(suite.Ctx, fee, sdk.NewDecWithPrec(2, 1))
-	suite.Equal(fees[0].Amount.Quo(sdk.NewInt(5)), coin.Amount)
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty() {
