@@ -35,6 +35,7 @@ func (suite *KeeperTestSuite) TestDistribute() {
 	twoKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 2000)}
 	fiveKRewardCoins := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
 	tests := []struct {
+		name            string
 		users           []userLocks
 		gauges          []perpGaugeDesc
 		expectedRewards []sdk.Coins
@@ -42,6 +43,7 @@ func (suite *KeeperTestSuite) TestDistribute() {
 		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
 		// 1k should go to oneLockupUser and 2k to twoLockupUser.
 		{
+			name:            "One user with one lockup, another user with two lockups, single default gauge",
 			users:           []userLocks{oneLockupUser, twoLockupUser},
 			gauges:          []perpGaugeDesc{defaultGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
@@ -50,31 +52,40 @@ func (suite *KeeperTestSuite) TestDistribute() {
 		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
 		// 1k should to oneLockupUser and 5k to twoLockupUser.
 		{
+			name:            "One user with one lockup (default gauge), another user with two lockups (double length gauge)",
 			users:           []userLocks{oneLockupUser, twoLockupUser},
 			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, fiveKRewardCoins},
 		},
+		// gauge 1 gives zero rewards.
+		// both oneLockupUser and twoLockupUser should get no rewards.
 		{
+			name:            "One user with one lockup, another user with two lockups, both with no rewards gauge",
 			users:           []userLocks{oneLockupUser, twoLockupUser},
 			gauges:          []perpGaugeDesc{noRewardGauge},
 			expectedRewards: []sdk.Coins{noRewardCoins, noRewardCoins},
 		},
+		// gauge 1 gives no rewards.
+		// gauge 2 gives 3k coins. three locks, all eligible. 1k coins per lock.
+		// 1k should to oneLockupUser and 2k to twoLockupUser.
 		{
+			name:            "One user with one lockup and another user with two lockups. No rewards and a default gauge",
 			users:           []userLocks{oneLockupUser, twoLockupUser},
 			gauges:          []perpGaugeDesc{noRewardGauge, defaultGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
 		},
 	}
-	for tcIndex, tc := range tests {
+	for _, tc := range tests {
 		suite.SetupTest()
+		// setup gauges and the locks defined in the above tests, then distribute to them
 		gauges := suite.SetupGauges(tc.gauges, defaultLPDenom)
 		addrs := suite.SetupUserLocks(tc.users)
 		_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
 		suite.Require().NoError(err)
-		// check expected rewards
+		// check expected rewards against actual rewards received
 		for i, addr := range addrs {
 			bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr)
-			suite.Require().Equal(tc.expectedRewards[i].String(), bal.String(), "tcnum %d, person %d", tcIndex, i)
+			suite.Require().Equal(tc.expectedRewards[i].String(), bal.String(), "test %v, person %d", tc.name, i)
 		}
 	}
 }
@@ -110,7 +121,7 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 		// gauge 1 gives 3k coins. three locks, all eligible. 1k coins per lock.
 		// 1k should go to oneLockupUser and 2k to twoLockupUser.
 		{
-			name:            "test1",
+			name:            "One user with one synthetic lockup, another user with two synthetic lockups, both with default gauge",
 			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
 			gauges:          []perpGaugeDesc{defaultGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
@@ -119,19 +130,24 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 		// gauge 2 gives 3k coins. one lock, to twoLockupUser.
 		// 1k should to oneLockupUser and 5k to twoLockupUser.
 		{
-			name:            "test2",
+			name:            "One user with one synthetic lockup (default gauge), another user with two synthetic lockups (double length gauge)",
 			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
 			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, fiveKRewardCoins},
 		},
+		// gauge 1 gives zero rewards.
+		// both oneLockupUser and twoLockupUser should get no rewards.
 		{
-			name:            "test3",
+			name:            "One user with one synthetic lockup, another user with two synthetic lockups, both with no rewards gauge",
 			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
 			gauges:          []perpGaugeDesc{noRewardGauge},
 			expectedRewards: []sdk.Coins{noRewardCoins, noRewardCoins},
 		},
+		// gauge 1 gives no rewards.
+		// gauge 2 gives 3k coins. three locks, all eligible. 1k coins per lock.
+		// 1k should to oneLockupUser and 2k to twoLockupUser.
 		{
-			name:            "test4",
+			name:            "One user with one synthetic lockup (no rewards gauge), another user with two synthetic lockups (default gauge)",
 			users:           []userLocks{oneSyntheticLockupUser, twoSyntheticLockupUser},
 			gauges:          []perpGaugeDesc{noRewardGauge, defaultGauge},
 			expectedRewards: []sdk.Coins{oneKRewardCoins, twoKRewardCoins},
@@ -139,16 +155,17 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 	}
 	for _, tc := range tests {
 		suite.SetupTest()
+		// setup gauges and the synthetic locks defined in the above tests, then distribute to them
 		gauges := suite.SetupGauges(tc.gauges, defaultLPSyntheticDenom)
 		addrs := suite.SetupUserSyntheticLocks(tc.users)
 		_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
 		suite.Require().NoError(err)
-		// check expected rewards
+		// check expected rewards against actual rewards received
 		for i, addr := range addrs {
 			var rewards string
 			bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr)
-			// extract the superbonding tokens from the rewards distribution check
-			// figure out a less hacky way of doing this
+			// extract the superbonding tokens from the rewards distribution
+			// TODO: figure out a less hacky way of doing this
 			if strings.Contains(bal.String(), "lptoken/superbonding,") {
 				rewards = strings.Split(bal.String(), "lptoken/superbonding,")[1]
 			}
@@ -163,33 +180,32 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 
 // TestGetModuleToDistributeCoins tests the sum of coins yet to be distributed for all of the module is correct.
 func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
-	// test for module get gauges
 	suite.SetupTest()
 
-	// initial check
+	// check that the sum of coins yet to be distributed is nil
 	coins := suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
 	suite.Require().Equal(coins, sdk.Coins(nil))
 
-	// setup lock and gauge
+	// setup a non perpetual lock and gauge
 	_, gaugeID, gaugeCoins, startTime := suite.SetupLockAndGauge(false)
 
-	// check after gauge creation
+	// check that the sum of coins yet to be distributed is equal to the newly created gaugeCoins
 	coins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
 	suite.Require().Equal(coins, gaugeCoins)
 
-	// add to gauge and check
+	// add coins to the previous gauge and check that the sum of coins yet to be distributed includes these new coins
 	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 200)}
 	suite.AddToGauge(addCoins, gaugeID)
 	coins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
 	suite.Require().Equal(coins, gaugeCoins.Add(addCoins...))
 
-	// check after creating another gauge from another address
+	// create a new gauge
+	// check that the sum of coins yet to be distributed is equal to the gauge1 and gauge2 coins combined
 	_, _, gaugeCoins2, _ := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 1000)})
-
 	coins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
 	suite.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...))
 
-	// start distribution
+	// move all created gauges from upcoming to active
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
@@ -213,18 +229,18 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.SetupTest()
 
-	// initial check
+	// check that the sum of coins yet to be distributed is nil
 	coins := suite.App.IncentivesKeeper.GetModuleDistributedCoins(suite.Ctx)
 	suite.Require().Equal(coins, sdk.Coins(nil))
 
-	// setup lock and gauge
+	// setup a non perpetual lock and gauge
 	_, gaugeID, _, startTime := suite.SetupLockAndGauge(false)
 
-	// check after gauge creation
+	// check that the sum of coins yet to be distributed is equal to the newly created gaugeCoins
 	coins = suite.App.IncentivesKeeper.GetModuleDistributedCoins(suite.Ctx)
 	suite.Require().Equal(coins, sdk.Coins(nil))
 
-	// start distribution
+	// move all created gauges from upcoming to active
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
@@ -236,23 +252,24 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 5)})
 
-	// check after distribution
+	// check gauge changes after distribution
 	coins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
 	suite.Require().Equal(coins, distrCoins)
 }
 
 // TestNoLockPerpetualGaugeDistribution tests that the creation of a perp gauge that has no locks associated does not distribute any tokens.
 func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
-	// test for module get gauges
 	suite.SetupTest()
 
-	// setup no lock perpetual gauge
+	// setup a perpetual gauge with no associated locks
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	gaugeID, _, _, startTime := suite.SetupNewGauge(true, coins)
 
-	// check gauges
+	// ensure the created gauge has not completed distribution
 	gauges := suite.App.IncentivesKeeper.GetNotFinishedGauges(suite.Ctx)
 	suite.Require().Len(gauges, 1)
+
+	// ensure the not finished gauge matches the previously created gauge
 	expectedGauge := types.Gauge{
 		Id:          gaugeID,
 		IsPerpetual: true,
@@ -269,7 +286,7 @@ func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 	}
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 
-	// start distribution
+	// move the created gauge from upcoming to active
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
@@ -289,16 +306,17 @@ func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 
 // TestNoLockNonPerpetualGaugeDistribution tests that the creation of a non perp gauge that has no locks associated does not distribute any tokens.
 func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
-	// test for module get gauges
 	suite.SetupTest()
 
-	// setup no lock non-perpetual gauge
+	// setup non-perpetual gauge with no associated locks
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	gaugeID, _, _, startTime := suite.SetupNewGauge(false, coins)
 
-	// check gauges
+	// ensure the created gauge has not completed distribution
 	gauges := suite.App.IncentivesKeeper.GetNotFinishedGauges(suite.Ctx)
 	suite.Require().Len(gauges, 1)
+
+	// ensure the not finished gauge matches the previously created gauge
 	expectedGauge := types.Gauge{
 		Id:          gaugeID,
 		IsPerpetual: false,
@@ -315,7 +333,7 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	}
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 
-	// start distribution
+	// move the created gauge from upcoming to active
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
