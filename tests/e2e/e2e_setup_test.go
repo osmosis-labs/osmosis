@@ -398,7 +398,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	// via Docker.
 
 	if s.skipUpgrade {
-		initializedChain, err := initialization.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
+		initializedChain, err := initialization.InitChain(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
 		s.Require().NoError(err)
 		s.initializeChainConfig(&newChainConfig, initializedChain)
 		return

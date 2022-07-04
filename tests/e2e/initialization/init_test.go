@@ -51,7 +51,7 @@ func TestChainInit(t *testing.T) {
 		dataDir, err = ioutil.TempDir("", "osmosis-e2e-testnet-test")
 	)
 
-	chain, err := initialization.Init(id, dataDir, nodeConfigs, time.Second*3, forkHeight)
+	chain, err := initialization.InitChain(id, dataDir, nodeConfigs, time.Second*3, forkHeight)
 	require.NoError(t, err)
 
 	require.Equal(t, chain.ChainMeta.DataDir, dataDir)
@@ -109,7 +109,7 @@ func TestSingleNodeInit(t *testing.T) {
 	)
 
 	// Setup
-	existingChain, err := initialization.Init(id, dataDir, existingChainNodeConfigs, time.Second*3, forkHeight)
+	existingChain, err := initialization.InitChain(id, dataDir, existingChainNodeConfigs, time.Second*3, forkHeight)
 	require.NoError(t, err)
 
 	actualNode, err := initialization.InitSingleNode(existingChain.ChainMeta.Id, dataDir, filepath.Join(existingChain.Nodes[0].ConfigDir, "config", "genesis.json"), expectedConfig, time.Second*3, 3, "testHash", []string{"some server"})

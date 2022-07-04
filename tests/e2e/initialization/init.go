@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
-func Init(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.Duration, forkHeight int) (*Chain, error) {
+func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.Duration, forkHeight int) (*Chain, error) {
 	chain, err := new(id, dataDir)
 	if err != nil {
 		return nil, err

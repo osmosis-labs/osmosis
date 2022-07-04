@@ -41,7 +41,7 @@ func main() {
 		panic(err)
 	}
 
-	createdChain, err := initialization.Init(chainId, dataDir, valConfig, votingPeriod, forkHeight)
+	createdChain, err := initialization.InitChain(chainId, dataDir, valConfig, votingPeriod, forkHeight)
 	if err != nil {
 		panic(err)
 	}
