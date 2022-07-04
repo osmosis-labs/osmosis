@@ -15,7 +15,6 @@ var (
 )
 
 // solidly CFMM is xy(x^2 + y^2) = k
-// nolint:deadcode
 func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
 	xy := xReserve.Mul(yReserve)
 	x2 := xReserve.Mul(xReserve)
@@ -28,7 +27,6 @@ func cfmmConstant(xReserve, yReserve sdk.Dec) sdk.Dec {
 // outside of x and y (e.g. u = wz), and v is the sum
 // of their squares (e.g. v = w^2 + z^2).
 // When u = 1 and v = 0, this is equivalent to solidly's CFMM
-// nolint:deadcode
 func cfmmConstantMulti(xReserve, yReserve, uReserve, vSumSquares sdk.Dec) sdk.Dec {
 	xyu := xReserve.Mul(yReserve.Mul(uReserve))
 	x2 := xReserve.Mul(xReserve)
@@ -161,7 +159,6 @@ func solveCfmm(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 // how many units `a` of x do we get out.
 // So we solve the following expression for `a`
 // xyz(x^2 + y^2 + w) = (x - a)(y + b)z((x - a)^2 + (y + b)^2 + w)
-// nolint:deadcode
 func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	if !yReserve.Add(yIn).IsPositive() {
 		panic("invalid yReserve, yIn combo")
@@ -274,7 +271,6 @@ var (
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 // added for future extension
-// nolint:deadcode
 func solveCFMMBinarySearch(constantFunction func(sdk.Dec, sdk.Dec) sdk.Dec) func(sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec {
 	return func(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 		k := constantFunction(xReserve, yReserve)
@@ -298,7 +294,6 @@ func solveCFMMBinarySearch(constantFunction func(sdk.Dec, sdk.Dec) sdk.Dec) func
 
 // solveCFMMBinarySearch searches the correct dx using binary search over constant K.
 // added for future extension
-// nolint:deadcode
 func solveCFMMBinarySearchMulti(constantFunction func(sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec) func(sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) sdk.Dec {
 	return func(xReserve, yReserve, uReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 		k := constantFunction(xReserve, yReserve, uReserve, wSumSquares)
@@ -320,7 +315,6 @@ func solveCFMMBinarySearchMulti(constantFunction func(sdk.Dec, sdk.Dec, sdk.Dec,
 	}
 }
 
-//nolint:unused
 func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
 	// y = baseAsset, x = quoteAsset
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by

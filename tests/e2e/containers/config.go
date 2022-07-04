@@ -20,11 +20,6 @@ const (
 	// This image should be pre-built with `make docker-build-debug` either in CI or locally.
 	CurrentBranchOsmoRepository = "osmosis"
 	CurrentBranchOsmoTag        = "debug"
-	/// Current Git branch repo/version for osmosis initialization. It is meant to be built locally.
-	// It is used when skipping upgrade by setting OSMOSIS_E2E_SKIP_UPGRADE to true).
-	// This image should be pre-built with `make docker-build-e2e-chain-init` either in CI or locally.
-	currentBranchInitRepository = "osmosis-e2e-chain-init"
-	currentBranchInitTag        = "debug"
 	// Pre-upgrade osmosis repo/tag to pull.
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
