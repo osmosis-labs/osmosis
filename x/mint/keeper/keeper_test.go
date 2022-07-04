@@ -101,85 +101,80 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 }
 
 func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty() {
-	mintKeeper := suite.App.MintKeeper
-	params := suite.App.MintKeeper.GetParams(suite.Ctx)
-	devRewardsReceiver := sdk.AccAddress([]byte("addr1---------------"))
-	gaugeCreator := sdk.AccAddress([]byte("addr2---------------"))
-	devRewardsReceiver2 := sdk.AccAddress([]byte("addr3---------------"))
-	devRewardsReceiver3 := sdk.AccAddress([]byte("addr4---------------"))
-	params.WeightedDeveloperRewardsReceivers = []types.WeightedAddress{
+	var (
+		distrTo = lockuptypes.QueryCondition{
+			LockQueryType: lockuptypes.ByDuration,
+			Denom:         "lptoken",
+			Duration:      time.Second,
+		}
+		params       = suite.App.MintKeeper.GetParams(suite.Ctx)
+		gaugeCoins   = sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
+		gaugeCreator = sdk.AccAddress([]byte("addr2---------------"))
+		mintLPtokens = sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	)
+
+	tests := []struct {
+		name              string
+		weightedAddresses []types.WeightedAddress
+		mintCoin          sdk.Coin
+	}{
 		{
-			Address: devRewardsReceiver.String(),
-			Weight:  sdk.NewDec(1),
-		},
-	}
-	suite.App.MintKeeper.SetParams(suite.Ctx, params)
-
-	// Create record
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	suite.FundAcc(gaugeCreator, coins)
-	distrTo := lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         "lptoken",
-		Duration:      time.Second,
-	}
-
-	// mints coins so supply exists on chain
-	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
-	suite.FundAcc(gaugeCreator, mintLPtokens)
-
-	gaugeId, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, true, gaugeCreator, coins, distrTo, time.Now(), 1)
-	suite.NoError(err)
-	err = suite.App.PoolIncentivesKeeper.UpdateDistrRecords(suite.Ctx, poolincentivestypes.DistrRecord{
-		GaugeId: gaugeId,
-		Weight:  sdk.NewInt(100),
-	})
-	suite.NoError(err)
-
-	// At this time, there is no distr record, so the asset should be allocated to the community pool.
-	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
-	mintCoins := sdk.Coins{mintCoin}
-	err = mintKeeper.MintCoins(suite.Ctx, mintCoins)
-	suite.NoError(err)
-	err = mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin)
-	suite.NoError(err)
-
-	feePool := suite.App.DistrKeeper.GetFeePool(suite.Ctx)
-	feeCollector := suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-	suite.Equal(
-		mintCoin.Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
-		suite.App.BankKeeper.GetAllBalances(suite.Ctx, feeCollector).AmountOf("stake"))
-	suite.Equal(
-		mintCoin.Amount.ToDec().Mul(params.DistributionProportions.CommunityPool),
-		feePool.CommunityPool.AmountOf("stake"))
-	suite.Equal(
-		mintCoin.Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).TruncateInt(),
-		suite.App.BankKeeper.GetBalance(suite.Ctx, devRewardsReceiver, "stake").Amount)
-
-	// Test for multiple dev reward addresses
-	params.WeightedDeveloperRewardsReceivers = []types.WeightedAddress{
-		{
-			Address: devRewardsReceiver2.String(),
-			Weight:  sdk.NewDecWithPrec(6, 1),
+			name: "one dev reward address",
+			weightedAddresses: []types.WeightedAddress{
+				{
+					Address: sdk.AccAddress([]byte("addr1---------------")).String(),
+					Weight:  sdk.NewDec(1),
+				}},
+			mintCoin: sdk.NewCoin("stake", sdk.NewInt(10000)),
 		},
 		{
-			Address: devRewardsReceiver3.String(),
-			Weight:  sdk.NewDecWithPrec(4, 1),
+			name: "multiple dev reward addresses",
+			weightedAddresses: []types.WeightedAddress{
+				{
+					Address: sdk.AccAddress([]byte("addr3---------------")).String(),
+					Weight:  sdk.NewDecWithPrec(6, 1),
+				},
+				{
+					Address: sdk.AccAddress([]byte("addr4---------------")).String(),
+					Weight:  sdk.NewDecWithPrec(4, 1),
+				}},
+			mintCoin: sdk.NewCoin("stake", sdk.NewInt(10000)),
 		},
 	}
-	suite.App.MintKeeper.SetParams(suite.Ctx, params)
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.Setup()
+			// set WeightedDeveloperRewardsReceivers
+			params.WeightedDeveloperRewardsReceivers = tc.weightedAddresses
+			suite.App.MintKeeper.SetParams(suite.Ctx, params)
 
-	err = mintKeeper.MintCoins(suite.Ctx, mintCoins)
-	suite.NoError(err)
-	err = mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin)
-	suite.NoError(err)
+			// mints coins so supply exists on chain
+			suite.FundAcc(gaugeCreator, gaugeCoins)
+			suite.FundAcc(gaugeCreator, mintLPtokens)
 
-	suite.Equal(
-		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).Mul(params.WeightedDeveloperRewardsReceivers[0].Weight).TruncateInt(),
-		suite.App.BankKeeper.GetBalance(suite.Ctx, devRewardsReceiver2, "stake").Amount)
-	suite.Equal(
-		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).Mul(params.WeightedDeveloperRewardsReceivers[1].Weight).TruncateInt(),
-		suite.App.BankKeeper.GetBalance(suite.Ctx, devRewardsReceiver3, "stake").Amount)
+			gaugeId, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, true, gaugeCreator, gaugeCoins, distrTo, time.Now(), 1)
+			suite.NoError(err)
+			err = suite.App.PoolIncentivesKeeper.UpdateDistrRecords(suite.Ctx, poolincentivestypes.DistrRecord{
+				GaugeId: gaugeId,
+				Weight:  sdk.NewInt(100),
+			})
+			suite.NoError(err)
+
+			// At this time, there is no distr record, so the asset should be allocated to the community pool.}
+			err = suite.App.MintKeeper.MintCoins(suite.Ctx, sdk.NewCoins(tc.mintCoin))
+			suite.NoError(err)
+			err = suite.App.MintKeeper.DistributeMintedCoin(suite.Ctx, tc.mintCoin)
+			suite.NoError(err)
+
+			// check devAddress balances
+			for i, weightedAddresse := range tc.weightedAddresses {
+				devRewardsReceiver, _ := sdk.AccAddressFromBech32(weightedAddresse.GetAddress())
+				suite.Equal(
+					tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).Mul(params.WeightedDeveloperRewardsReceivers[i].Weight).TruncateInt(),
+					suite.App.BankKeeper.GetBalance(suite.Ctx, devRewardsReceiver, "stake").Amount)
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperRewardsAddr() {
