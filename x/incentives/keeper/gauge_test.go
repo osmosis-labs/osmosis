@@ -9,65 +9,60 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
-// 	suite.SetupTest()
+func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
+	suite.SetupTest()
 
-// 	addrs := suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
-// 	distrTo := lockuptypes.QueryCondition{
-// 		LockQueryType: lockuptypes.ByDuration,
-// 		Denom:         defaultLPDenom,
-// 		Duration:      defaultLockDuration / 2, // 0.5 second, invalid duration
-// 	}
-// 	_, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
-// 	suite.Require().Error(err)
+	addrs := suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
+	distrTo := lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         defaultLPDenom,
+		Duration:      defaultLockDuration / 2, // 0.5 second, invalid duration
+	}
+	_, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	suite.Require().Error(err)
 
-// 	distrTo.Duration = defaultLockDuration
-// 	_, err = suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
-// 	suite.Require().NoError(err)
-// }
+	distrTo.Duration = defaultLockDuration
+	_, err = suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	suite.Require().NoError(err)
+}
 
-// func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
-// 	suite.SetupTest()
+func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
+	suite.SetupTest()
 
-// 	addrNoSupply := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
-// 	addrs := suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
-// 	distrTo := lockuptypes.QueryCondition{
-// 		LockQueryType: lockuptypes.ByDuration,
-// 		Denom:         defaultLPDenom,
-// 		Duration:      defaultLockDuration,
-// 	}
-// 	_, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrNoSupply, defaultLiquidTokens, distrTo, time.Time{}, 1)
-// 	suite.Require().Error(err)
+	addrNoSupply := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
+	addrs := suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
+	distrTo := lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         defaultLPDenom,
+		Duration:      defaultLockDuration,
+	}
+	_, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrNoSupply, defaultLiquidTokens, distrTo, time.Time{}, 1)
+	suite.Require().Error(err)
 
-// 	_, err = suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
-// 	suite.Require().NoError(err)
-// }
+	_, err = suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, addrs[0], defaultLiquidTokens, distrTo, time.Time{}, 1)
+	suite.Require().NoError(err)
+}
 
 func (suite *KeeperTestSuite) TestGaugeOperations() {
 	testCases := []struct {
-		isPerpetual               bool
-		numLocks         int
-		expectedNumEpochsPaidOver int
+		isPerpetual bool
+		numLocks    int
 	}{
 		{
-			isPerpetual:               true,
-			numLocks: 1,
-			expectedNumEpochsPaidOver: 1,
+			isPerpetual: true,
+			numLocks:    1,
 		},
 		{
-			isPerpetual:               true,
-			numLocks: 2,
-			expectedNumEpochsPaidOver: 1,
+			isPerpetual: false,
+			numLocks:    1,
 		},
 		{
-			isPerpetual:               false,
-			numLocks: 3,
-			expectedNumEpochsPaidOver: 2,
+			isPerpetual: true,
+			numLocks:    2,
 		},
 		{
-			isPerpetual:               false,
-			numLocks: 4,
-			expectedNumEpochsPaidOver: 2,
+			isPerpetual: false,
+			numLocks:    2,
 		},
 	}
 	for _, tc := range testCases {
@@ -85,6 +80,13 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 		gaugeID, _, coins, startTime := suite.SetupNewGauge(tc.isPerpetual, sdk.Coins{sdk.NewInt64Coin("stake", 12)})
 		// evenly distributed per lock
 		expectedCoinsPerLock := sdk.Coins{sdk.NewInt64Coin("stake", 12/int64(tc.numLocks))}
+		// set expected epochs
+		var expectedNumEpochsPaidOver int
+		if tc.isPerpetual {
+			expectedNumEpochsPaidOver = 1
+		} else {
+			expectedNumEpochsPaidOver = 2
+		}
 
 		// check gauges
 		gauges = suite.App.IncentivesKeeper.GetNotFinishedGauges(suite.Ctx)
@@ -98,7 +100,7 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 				Duration:      time.Second,
 			},
 			Coins:             coins,
-			NumEpochsPaidOver: uint64(tc.expectedNumEpochsPaidOver),
+			NumEpochsPaidOver: uint64(expectedNumEpochsPaidOver),
 			FilledEpochs:      0,
 			DistributedCoins:  sdk.Coins{},
 			StartTime:         startTime,
@@ -150,7 +152,7 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 		distrCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
 		suite.Require().NoError(err)
 		// We hardcoded 12 "stake" tokens when initializing gauge
-		suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(12/tc.expectedNumEpochsPaidOver))}, distrCoins)
+		suite.Require().Equal(sdk.Coins{sdk.NewInt64Coin("stake", int64(12/expectedNumEpochsPaidOver))}, distrCoins)
 
 		if tc.isPerpetual {
 			// distributing twice without adding more for perpetual gauge
@@ -210,8 +212,8 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 			rewardsEst = suite.App.IncentivesKeeper.GetRewardsEst(suite.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
 			suite.Require().Equal(sdk.Coins{}, rewardsEst)
 			expectedNumLpGauges = 0
-		// check perpetual gauges (not finished + rewards estimate empty)
-		} else {
+		} else { // check perpetual gauges (not finished + rewards estimate empty)
+
 			// check finished gauges
 			gauges = suite.App.IncentivesKeeper.GetFinishedGauges(suite.Ctx)
 			suite.Require().Len(gauges, 0)
