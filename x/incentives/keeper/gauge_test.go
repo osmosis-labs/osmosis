@@ -45,11 +45,6 @@ func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	suite.Require().NoError(err)
 }
 
-// TODO: Make this test table driven
-// OR if it needs to be script based,
-// remove lots of boilerplate so this can actually be followed
-// TODO: Make issue for this test
-
 // TestNonPerpetualGaugeOperations tests non perpetual gauge distribution logic.
 func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	// test for module get gauges
@@ -262,9 +257,6 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 
 // TestGaugesByDenom tests gauge distribution using the gauges by denom keeper.
 func (suite *KeeperTestSuite) TestGaugesByDenom() {
-	// TODO: This is not a good test. We should refactor it to be table driven,
-	// specifying a list of gauges to define, and then the expected result of gauges by denom
-	// TODO: Make issue for this.
 	testGaugeByDenom := func(isPerpetual bool) {
 		// test for module get gauges
 		suite.SetupTest()

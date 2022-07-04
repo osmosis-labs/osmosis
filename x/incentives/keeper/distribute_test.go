@@ -241,8 +241,7 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	suite.Require().Equal(coins, distrCoins)
 }
 
-// TODO: Is this testing the creation of a perp gauge that has no locks associated, so when its distribution
-// occurs it should still be an active gauge?
+// TestNoLockPerpetualGaugeDistribution tests that the creation of a perp gauge that has no locks associated does not distribute any tokens.
 func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -288,6 +287,7 @@ func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 }
 
+// TestNoLockNonPerpetualGaugeDistribution tests that the creation of a non perp gauge that has no locks associated does not distribute any tokens.
 func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -322,10 +322,7 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
 
-	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
-	// TODO: its not perpetual so this shouldnt be true. I can fix this once I understand
-	// what both TestNoLockPerpetualGaugeDistribution and TestNoLockNonPerpetualGaugeDistribution
-	// are actually trying to prove.
+	// distribute coins to stakers
 	distrCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
 	suite.Require().NoError(err)
 	suite.Require().Equal(distrCoins, sdk.Coins(nil))

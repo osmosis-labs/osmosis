@@ -371,8 +371,7 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 	if gauge.Coins.Empty() {
 		return []lockuptypes.PeriodLock{}
 	}
-	// TODO: FIXME!!!
-	// TODO: Make issue for the above
+	// TODO: https://github.com/osmosis-labs/osmosis/issues/1827
 	// Confusingly, there is no way to get all synthetic lockups. Thus we use a separate method `distributeSyntheticInternal` to separately get lockSum for synthetic lockups.
 	// All gauges have a precondition of being ByDuration.
 	distributeBaseDenom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
