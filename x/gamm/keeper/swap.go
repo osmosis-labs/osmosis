@@ -49,6 +49,8 @@ func (k Keeper) swapExactAmountIn(
 	}
 	tokensIn := sdk.Coins{tokenIn}
 
+	// Executes the swap in the pool and stores the output. Updates pool assets but
+	// does not actually transfer any tokens to or from the pool.
 	tokenOutCoin, err := pool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
@@ -64,6 +66,8 @@ func (k Keeper) swapExactAmountIn(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
 	}
 
+	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
+	// Also emits swap event and updates related liquidity metrics
 	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOutCoin); err != nil {
 		return sdk.Int{}, err
 	}

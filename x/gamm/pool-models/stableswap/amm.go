@@ -315,7 +315,6 @@ func solveCFMMBinarySearchMulti(constantFunction func(sdk.Dec, sdk.Dec, sdk.Dec,
 	}
 }
 
-//nolint:unused
 func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
 	// y = baseAsset, x = quoteAsset
 	// Define f_{y -> x}(a) as the function that outputs the amount of tokens X you'd get by
