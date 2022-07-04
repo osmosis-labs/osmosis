@@ -30,19 +30,19 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// A Gague is a location for yields to be stored in order to be distributed to
+// A Gauge is a location for yields to be stored in order to be distributed to
 // stakers who meet the specified conditions
 type Gauge struct {
 	// Unique ID of a Gauge
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Flag to show if it's a perpetual or non-perpetual gauge
 	// Non-perpetual gauges distribute their tokens equally per epoch while the
-	// gauge is in the active period Perpetual gauges distribute all their tokens
+	// gauge is in the active period. Perpetual gauges distribute all their tokens
 	// at a single time and only distribute their tokens again once the gauge is
 	// refilled
 	IsPerpetual bool `protobuf:"varint,2,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
 	// Rewards are distributed to lockups that are are returned by this lockup
-	// query This is queried via lock duration or by timestamp
+	// query. This is queried via lock duration or by timestamp
 	DistributeTo types.QueryCondition `protobuf:"bytes,3,opt,name=distribute_to,json=distributeTo,proto3" json:"distribute_to"`
 	// Total amount of coins that has been in the gauge
 	// Can distribute multiple coin denoms

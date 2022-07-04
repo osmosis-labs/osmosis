@@ -39,7 +39,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type MsgCreateGauge struct {
 	// Flag to show if it's a perpetual or non-perpetual gauge
 	// Non-perpetual gauges distribute their tokens equally per epoch while the
-	// gauge is in the active period Perpetual gauges distribute all their tokens
+	// gauge is in the active period. Perpetual gauges distribute all their tokens
 	// at a single time and only distribute their tokens again once the gauge is
 	// refilled
 	IsPerpetual bool `protobuf:"varint,1,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
@@ -166,7 +166,7 @@ func (m *MsgCreateGaugeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateGaugeResponse proto.InternalMessageInfo
 
-// Add coins to a gauge previously created
+// Add coins to a gauge previously created gauge
 type MsgAddToGauge struct {
 	// Address (owner) must match creator of initial gauge
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
