@@ -50,47 +50,6 @@ func CalcExitPool(ctx sdk.Context, pool types.PoolI, exitingShares sdk.Int, exit
 	return exitedCoins, nil
 }
 
-func MaximalExactRatioJoinBroken(p types.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares sdk.Int, remCoins sdk.Coins, err error) {
-	coinShareRatios := make([]sdk.Dec, len(tokensIn))
-	minShareRatio := sdk.MaxSortableDec
-	maxShareRatio := sdk.ZeroDec()
-	poolLiquidity := p.GetTotalPoolLiquidity(ctx)
-	totalShares := p.GetTotalShares()
-	for i, coin := range tokensIn {
-		shareRatio := coin.Amount.ToDec().QuoInt(poolLiquidity.AmountOfNoDenomValidation(coin.Denom))
-		if shareRatio.LT(minShareRatio) {
-			minShareRatio = shareRatio
-		}
-		if shareRatio.GT(maxShareRatio) {
-			maxShareRatio = shareRatio
-		}
-		coinShareRatios[i] = shareRatio
-	}
-	if minShareRatio.Equal(sdk.MaxSortableDec) {
-		return numShares, remCoins, errors.New("unexpected error in MaximalExactRatioJoin")
-	}
-	remCoins = sdk.Coins{}
-	numShares = minShareRatio.MulInt(totalShares).TruncateInt()
-	// if we have multiple share values, calculate remainingCoins
-	if !minShareRatio.Equal(maxShareRatio) {
-		// we have to calculate remCoins
-		for i, coin := range tokensIn {
-			// if coinShareRatios[i] == minShareRatio, no remainder
-			if coinShareRatios[i].Equal(minShareRatio) {
-				continue
-			}
-
-			usedAmount := minShareRatio.MulInt(coin.Amount).Ceil().TruncateInt()
-			newAmt := coin.Amount.Sub(usedAmount)
-			// if newAmt is non-zero, add to RemCoins. (It could be zero due to rounding)
-			if !newAmt.IsZero() {
-				remCoins = remCoins.Add(sdk.Coin{Denom: coin.Denom, Amount: newAmt})
-			}
-		}
-	}
-	return numShares, remCoins, nil
-}
-
 // MaximalExactRatioJoin calculates the maximal amount of tokens that can be joined whilst maintaining pool asset's ratio
 // returning the number of shares that'd be and how many coins would be left over.
 // 		e.g) suppose we have a pool of 10 foo tokens and 10 bar tokens, with the total amount of 100 shares.

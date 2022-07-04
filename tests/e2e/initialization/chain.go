@@ -1,4 +1,4 @@
-package chain
+package initialization
 
 import (
 	"fmt"
@@ -39,33 +39,6 @@ func (c *internalChain) createAndInitValidators(count int) error {
 
 		// create keys
 		if err := node.createKey("val"); err != nil {
-			return err
-		}
-		if err := node.createNodeKey(); err != nil {
-			return err
-		}
-		if err := node.createConsensusKey(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (c *internalChain) createAndInitValidatorsWithMnemonics(count int, mnemonics []string) error {
-	for i := 0; i < count; i++ {
-		// create node
-		node := c.createValidator(i)
-
-		// generate genesis files
-		if err := node.init(); err != nil {
-			return err
-		}
-
-		c.validators = append(c.validators, node)
-
-		// create keys
-		if err := node.createKeyFromMnemonic("val", mnemonics[i]); err != nil {
 			return err
 		}
 		if err := node.createNodeKey(); err != nil {
