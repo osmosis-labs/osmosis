@@ -105,6 +105,8 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	if err != nil {
 		return 0, 0, err
 	}
+
+	// nolint: staticcheck
 	defer db_bs.Close()
 
 	bs := tmstore.NewBlockStore(db_bs)
@@ -117,6 +119,15 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 		return 0, 0, err
 	}
 	fmt.Println("Pruned Block Store ...", prunedBlocks)
+
+	// N.B: We duplicate the call to db_bs.Close() on top of
+	// the call in defer statement above to make sure that the resources
+	// are properly released and any potential error from Close()
+	// is handled. Close() should be idempotent so this is acceptable.
+	if err := db_bs.Close(); err != nil {
+		return 0, 0, err
+	}
+
 	return startHeight, currentHeight, nil
 }
 
@@ -128,11 +139,19 @@ func compactBlockStore(dbPath string) error {
 	fmt.Println("Compacting Block Store ...")
 
 	db, err := leveldb.OpenFile(dbPath+"/blockstore.db", &compactOpts)
+	// nolint: staticcheck
 	defer db.Close()
 	if err != nil {
 		return err
 	}
 	if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
+		return err
+	}
+	// N.B: We duplicate the call to db.Close() on top of
+	// the call in defer statement above to make sure that the resources
+	// are properly released and any potential error from Close()
+	// is handled. Close() should be idempotent so this is acceptable.
+	if err := db.Close(); err != nil {
 		return err
 	}
 	return nil

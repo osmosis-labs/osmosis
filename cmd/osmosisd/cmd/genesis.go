@@ -78,6 +78,9 @@ Example:
 
 			// run Prepare Genesis
 			appState, genDoc, err = PrepareGenesis(clientCtx, appState, genDoc, genesisParams, chainID)
+			if err != nil {
+				return err
+			}
 
 			// validate genesis state
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, appState); err != nil {

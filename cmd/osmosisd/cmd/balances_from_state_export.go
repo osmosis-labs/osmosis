@@ -179,11 +179,6 @@ Example:
 
 			authGenesis := authtypes.GenesisState{}
 			clientCtx.Codec.MustUnmarshalJSON(genState["auth"], &authGenesis)
-			accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
-			if err != nil {
-				panic(err)
-			}
-			accounts = authtypes.SanitizeGenesisAccounts(accounts)
 
 			// Produce the map of address to total atom balance, both staked and UnbondingStake
 			snapshotAccs := make(map[string]DerivedAccount)
