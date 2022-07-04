@@ -339,6 +339,14 @@ func (suite *KeeperTestSuite) TestCreateLock() {
 		Duration:      time.Second,
 	})
 	suite.Require().Equal(accum.String(), "30")
+
+	// check balance
+	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+	suite.Require().Equal(sdk.ZeroInt(), balance.Amount)
+
+	acc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
+	balance = suite.App.BankKeeper.GetBalance(suite.Ctx, acc.GetAddress(), "stake")
+	suite.Require().Equal(sdk.NewInt(30), balance.Amount)
 }
 
 func (suite *KeeperTestSuite) TestAddTokensToLock() {
@@ -400,6 +408,52 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	suite.FundAcc(addr2, sdk.Coins{addCoins})
 	_, err = suite.App.LockupKeeper.AddTokensToLockByID(cacheCtx, locks[0].ID, addr2, addCoins)
 	suite.Require().Error(err)
+}
+
+func (suite *KeeperTestSuite) TestLock() {
+	suite.SetupTest()
+
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+
+	lock := types.PeriodLock{
+		ID:       1,
+		Owner:    addr1.String(),
+		Duration: time.Second,
+		EndTime:  time.Time{},
+		Coins:    coins,
+	}
+
+	// test locking without balance
+	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
+	suite.Require().Error(err)
+
+	// check accumulation store
+	accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "0")
+
+	suite.FundAcc(addr1, coins)
+	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
+	suite.Require().NoError(err)
+
+	// check accumulation store
+	accum = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "10")
+
+	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+	suite.Require().Equal(sdk.ZeroInt(), balance.Amount)
+
+	acc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
+	balance = suite.App.BankKeeper.GetBalance(suite.Ctx, acc.GetAddress(), "stake")
+	suite.Require().Equal(sdk.NewInt(10), balance.Amount)
 }
 
 func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
