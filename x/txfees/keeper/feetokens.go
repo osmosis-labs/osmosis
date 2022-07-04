@@ -32,10 +32,10 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 	return sdk.NewCoin(baseDenom, spotPrice.MulInt(inputFee.Amount).RoundInt()), nil
 }
 
-// CalcFeeSpotPrice convert the provided tx fees into their equivalent value in the base denomination.
+// CalcFeeSpotPrice converts the provided tx fees into their equivalent value in the base denomination.
 // Spot Price Calculation: spotPrice / (1 - swapFee),
 // where spotPrice is defined as:
-// `(tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)`
+// (tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)
 func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, error) {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {

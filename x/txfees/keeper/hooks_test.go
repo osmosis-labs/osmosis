@@ -39,35 +39,27 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 
 	tests := []struct {
 		name       string
-		coin       sdk.Coin
+		coins      sdk.Coins
 		baseDenom  string
-		denom      string
-		poolType   gammtypes.PoolI
+		denoms     []string
+		poolTypes  []gammtypes.PoolI
 		swapFee    sdk.Dec
 		expectPass bool
 	}{
 		{
-			name:      "TxFees AfterEpochEnd for uion",
-			coin:      sdk.NewInt64Coin(uion, 10),
+			name:      "One non-osmo fee token (uion): TxFees AfterEpochEnd",
+			coins:     sdk.Coins{sdk.NewInt64Coin(uion, 10)},
 			baseDenom: baseDenom,
-			denom:     uion,
-			poolType:  uionPool,
+			denoms:    []string{uion},
+			poolTypes: []gammtypes.PoolI{uionPool},
 			swapFee:   sdk.NewDec(0),
 		},
 		{
-			name:      "TxFees AfterEpochEnd for atom",
-			coin:      sdk.NewInt64Coin(atom, 20),
+			name:      "Multiple non-osmo fee token: TxFees AfterEpochEnd",
+			coins:     sdk.Coins{sdk.NewInt64Coin(atom, 20), sdk.NewInt64Coin(ust, 30)},
 			baseDenom: baseDenom,
-			denom:     atom,
-			poolType:  atomPool,
-			swapFee:   sdk.NewDec(0),
-		},
-		{
-			name:      "TxFees AfterEpochEnd for ust :(",
-			coin:      sdk.NewInt64Coin(ust, 14),
-			baseDenom: baseDenom,
-			denom:     ust,
-			poolType:  ustPool,
+			denoms:    []string{atom, ust},
+			poolTypes: []gammtypes.PoolI{atomPool, ustPool},
 			swapFee:   sdk.NewDec(0),
 		},
 	}
@@ -75,19 +67,22 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	var finalOutputAmount = sdk.NewInt(0)
 
 	for _, tc := range tests {
-		// Get the output amount in osmos denom
-		expectedOutput, err := tc.poolType.CalcOutAmtGivenIn(suite.Ctx,
-			sdk.Coins{sdk.Coin{Denom: tc.denom, Amount: tc.coin.Amount}},
-			tc.baseDenom,
-			tc.swapFee)
-		suite.Require().NoError(err)
 
-		finalOutputAmount = finalOutputAmount.Add(expectedOutput.Amount)
+		for i, coin := range tc.coins {
+			// Get the output amount in osmo denom
+			expectedOutput, err := tc.poolTypes[i].CalcOutAmtGivenIn(suite.Ctx,
+				sdk.Coins{sdk.Coin{Denom: tc.denoms[i], Amount: coin.Amount}},
+				tc.baseDenom,
+				tc.swapFee)
+			suite.Require().NoError(err)
 
-		// Deposit some fee amount (non-native-denom) to the fee module account
-		_, _, addr0 := testdata.KeyTestPubAddr()
-		simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.Coins{tc.coin})
-		suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr0, types.NonNativeFeeCollectorName, sdk.Coins{tc.coin})
+			finalOutputAmount = finalOutputAmount.Add(expectedOutput.Amount)
+
+			// Deposit some fee amount (non-native-denom) to the fee module account
+			_, _, addr0 := testdata.KeyTestPubAddr()
+			simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.Coins{coin})
+			suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr0, types.NonNativeFeeCollectorName, sdk.Coins{coin})
+		}
 
 		// End of epoch, so all the non-osmo fee amount should be swapped to osmo and transfer to fee module account
 		params := suite.App.IncentivesKeeper.GetParams(suite.Ctx)
