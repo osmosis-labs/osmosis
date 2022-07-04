@@ -1,9 +1,5 @@
 package initialization
 
-import (
-	"fmt"
-)
-
 const (
 	keyringPassphrase = "testpassphrase"
 	keyringAppName    = "testnet"
@@ -24,13 +20,6 @@ func new(id, dataDir string) (*internalChain, error) {
 	return &internalChain{
 		chainMeta: chainMeta,
 	}, nil
-}
-
-func (c *internalChain) createValidator(index int) *internalNode {
-	return &internalNode{
-		chain:   c,
-		moniker: fmt.Sprintf("%s-osmosis-%d", c.chainMeta.Id, index),
-	}
 }
 
 func (c *internalChain) export() *Chain {

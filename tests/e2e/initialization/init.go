@@ -29,7 +29,7 @@ func Init(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.Durat
 
 	var peers []string
 	for _, peer := range chain.nodes {
-		peerID := fmt.Sprintf("%s@%s:26656", peer.getNodeKey().ID(), peer.getMoniker())
+		peerID := fmt.Sprintf("%s@%s:26656", peer.getNodeKey().ID(), peer.moniker)
 		peer.peerId = peerID
 		peers = append(peers, peerID)
 	}

@@ -171,11 +171,11 @@ func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight in
 	configDir := chain.nodes[0].configDir()
 	for _, val := range chain.nodes {
 		if chain.chainMeta.Id == ChainAID {
-			if err := addAccount(configDir, "", InitBalanceStrA, val.getKeyInfo().GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrA, val.keyInfo.GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		} else if chain.chainMeta.Id == ChainBID {
-			if err := addAccount(configDir, "", InitBalanceStrB, val.getKeyInfo().GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrB, val.keyInfo.GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		}
@@ -196,7 +196,7 @@ func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight in
 	config := serverCtx.Config
 
 	config.SetRoot(chain.nodes[0].configDir())
-	config.Moniker = chain.nodes[0].getMoniker()
+	config.Moniker = chain.nodes[0].moniker
 
 	genFilePath := config.GenesisFile()
 	appGenState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFilePath)

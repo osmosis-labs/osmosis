@@ -71,19 +71,7 @@ func newNode(chain *internalChain, nodeConfig *NodeConfig) (*internalNode, error
 }
 
 func (n *internalNode) configDir() string {
-	return fmt.Sprintf("%s/%s", n.chain.chainMeta.configDir(), n.getMoniker())
-}
-
-func (n *internalNode) getKeyInfo() keyring.Info {
-	return n.keyInfo
-}
-
-func (n *internalNode) getMoniker() string {
-	return n.moniker
-}
-
-func (n *internalNode) getMnemonic() string {
-	return n.mnemonic
+	return fmt.Sprintf("%s/%s", n.chain.chainMeta.configDir(), n.moniker)
 }
 
 func (n *internalNode) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {
@@ -217,7 +205,7 @@ func (n *internalNode) createKey(name string) error {
 
 func (n *internalNode) export() *Node {
 	return &Node{
-		Name:          n.getMoniker(),
+		Name:          n.moniker,
 		ConfigDir:     n.configDir(),
 		Mnemonic:      n.mnemonic,
 		PublicAddress: n.keyInfo.GetAddress().String(),
@@ -318,7 +306,7 @@ func (n *internalNode) initValidatorConfigs(c *internalChain, persistendtPeers [
 
 	valConfig.P2P.ListenAddress = "tcp://0.0.0.0:26656"
 	valConfig.P2P.AddrBookStrict = false
-	valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", n.getMoniker(), 26656)
+	valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", n.moniker, 26656)
 	valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
 	valConfig.StateSync.Enable = false
 	valConfig.LogLevel = "info"
@@ -361,7 +349,7 @@ func (n *internalNode) signMsg(msgs ...sdk.Msg) (*sdktx.Tx, error) {
 		return nil, err
 	}
 
-	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", n.nodeKey.ID(), n.getMoniker()))
+	txBuilder.SetMemo(fmt.Sprintf("%s@%s:26656", n.nodeKey.ID(), n.moniker))
 	txBuilder.SetFeeAmount(sdk.NewCoins())
 	txBuilder.SetGasLimit(uint64(200000 * len(msgs)))
 
