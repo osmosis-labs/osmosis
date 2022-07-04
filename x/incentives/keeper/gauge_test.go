@@ -165,7 +165,7 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 			suite.Require().NoError(err)
 		}
 
-		// check finished gauges
+		// check non-perpetual/finished gauges
 		if !tc.isPerpetual {
 
 			// check finished gauges
