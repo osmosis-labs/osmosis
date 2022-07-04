@@ -82,7 +82,6 @@ func (k Keeper) GetLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.Quer
 	case lockuptypes.ByDuration:
 		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
 	case lockuptypes.ByTime:
-		// TODO: Shouldn't this panic since we don't support lockuptypes byTime?
 		return k.lk.GetLocksPastTimeDenom(ctx, distrTo.Denom, distrTo.Timestamp)
 	default:
 	}
@@ -128,10 +127,8 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 	if !gauge.IsPerpetual {
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 	}
-	// TODO: Should this return err
-	// TODO: Is this all that was needed?
 	if remainEpochs == 0 {
-		return gauge, sdk.Coins{}, fmt.Errorf("There are no more remaining epochs for this gauge.")
+		return gauge, sdk.Coins{}, nil
 	}
 
 	remainCoinsPerEpoch := sdk.Coins{}
@@ -188,7 +185,7 @@ func newDistributionInfo() distributionInfo {
 	}
 }
 
-// TODO: Slightly confused here, how does this determine which lockID to add rewards to? Cant a single owner own multiple locks?
+// addLockRewards adds the provided rewards to the lockID mapped to the provided owner address
 func (d *distributionInfo) addLockRewards(owner string, rewards sdk.Coins) error {
 	if id, ok := d.lockOwnerAddrToID[owner]; ok {
 		oldDistrCoins := d.idToDistrCoins[id]

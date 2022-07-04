@@ -6,8 +6,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 )
 
-// TODO: Why is this called _test?
-
 // AddGaugeRefByKey appends the provided gauge ID into an array associated with the provided key.
 func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) error {
 	return k.addGaugeRefByKey(ctx, key, guageID)

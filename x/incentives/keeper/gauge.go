@@ -118,7 +118,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		if !durationOk {
 			return 0, fmt.Errorf("invalid duration: %d", distrTo.Duration)
 		}
-	} // TODO: Should we panic here if LockQueryType is byTime?
+	}
 
 	// Ensure that the denom this gauge pays out to exists on-chain
 	if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
@@ -204,8 +204,7 @@ func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gau
 	return gauges, nil
 }
 
-// GetGauges returns both upcoming and active gauges.
-// TODO: This also returns finished gauges right? Otherwise would be same as GetNotFinishedGauges
+// GetGauges returns upcoming, active, and finished gauges.
 func (k Keeper) GetGauges(ctx sdk.Context) []types.Gauge {
 	return k.getGaugesFromIterator(ctx, k.GaugesIterator(ctx))
 }
