@@ -21,3 +21,7 @@ func (k Keeper) GetLockRefs(ctx sdk.Context, key []byte) []uint64 {
 func (k Keeper) GetCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 	return k.getCoinsFromLocks(locks)
 }
+
+func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
+	return k.lock(ctx, lock, tokensToLock)
+}

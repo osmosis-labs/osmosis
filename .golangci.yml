@@ -45,7 +45,7 @@ linters:
     - gomodguard
     - goprintffuncname
 #    - gosec <- triggers too much for this round and should be re-enabled later
-#    - gosimple <- later
+    - gosimple # specializes in simplifying code, subset of staticcheck binary.
     - govet
     #   - ifshort <- questionable value, unclear if globally helping readability.
     - importas

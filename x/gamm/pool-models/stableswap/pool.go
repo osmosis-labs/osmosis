@@ -235,7 +235,7 @@ func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (n
 }
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
-	exitingCoins, err = p.CalcExitPoolShares(ctx, exitingShares, exitFee)
+	exitingCoins, err = p.CalcExitPoolCoinsFromShares(ctx, exitingShares, exitFee)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -246,7 +246,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 	return exitingCoins, nil
 }
 
-func (p Pool) CalcExitPoolShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
 	return cfmm_common.CalcExitPool(ctx, &p, exitingShares, exitFee)
 }
 
