@@ -91,7 +91,7 @@ func (p Pool) GetSwapFee(_ sdk.Context) sdk.Dec {
 }
 
 func (p Pool) GetTotalPoolLiquidity(_ sdk.Context) sdk.Coins {
-	return poolAssetsCoins(pa.PoolAssets)
+	return poolAssetsCoins(p.PoolAssets)
 }
 
 func (p Pool) GetExitFee(_ sdk.Context) sdk.Dec {
