@@ -72,6 +72,8 @@ message MsgChangeAdmin {
   string new_admin = 3 [ (gogoproto.moretags) = "yaml:\"new_admin\"" ];
 }
 
+// MsgChangeAdminResponse defines the response structure for an executed
+// MsgChangeAdmin message.
 message MsgChangeAdminResponse {}
 
 // message MsgForceTransfer {
