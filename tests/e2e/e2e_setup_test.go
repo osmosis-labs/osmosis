@@ -502,9 +502,7 @@ func (s *IntegrationTestSuite) upgrade() {
 }
 
 func (s *IntegrationTestSuite) upgradeFork() {
-
 	for _, chainConfig := range s.chainConfigs {
-
 		for i := range chainConfig.validators {
 			validatorResource, exists := s.containerManager.GetValidatorResource(chainConfig.meta.Id, i)
 			require.True(s.T(), exists)

@@ -366,7 +366,6 @@ func GetCmdTotalDelegationByDelegator() *cobra.Command {
 			res, err := queryClient.TotalDelegationByDelegator(cmd.Context(), &types.QueryTotalDelegationByDelegatorRequest{
 				DelegatorAddress: args[0],
 			})
-
 			if err != nil {
 				return err
 			}
