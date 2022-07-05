@@ -212,7 +212,7 @@ func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, va
 
 	initResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s", chainId),
+			Name:       chainId,
 			Repository: m.ImageConfig.InitRepository,
 			Tag:        m.ImageConfig.InitTag,
 			NetworkID:  m.network.Network.ID,
