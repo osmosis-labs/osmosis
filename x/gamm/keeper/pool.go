@@ -203,9 +203,8 @@ func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store.Set(types.KeyNextGlobalPoolNumber, bz)
 }
 
-// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
-func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
-	var poolNumber uint64
+func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
+	var nextPoolId uint64
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.KeyNextGlobalPoolNumber)
@@ -219,11 +218,16 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 			panic(err)
 		}
 
-		poolNumber = val.GetValue()
+		nextPoolId = val.GetValue()
 	}
+	return nextPoolId
+}
 
-	k.SetNextPoolNumber(ctx, poolNumber+1)
-	return poolNumber
+// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
+func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
+	nextPoolId := k.GetNextPoolId(ctx)
+	k.SetNextPoolNumber(ctx, nextPoolId+1)
+	return nextPoolId
 }
 
 // set ScalingFactors in stable stableswap pools

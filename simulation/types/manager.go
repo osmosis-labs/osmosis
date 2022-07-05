@@ -18,7 +18,6 @@ type AppModuleSimulationV2 interface {
 	// randomized genesis states
 	// TODO: Come back and improve SimulationState interface
 	GenerateGenesisState(*module.SimulationState, *SimCtx)
-	// simulation operations (i.e msgs) with their respective weight
 	Actions() []Action
 }
 
