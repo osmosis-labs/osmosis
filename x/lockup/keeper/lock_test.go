@@ -125,6 +125,14 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			expectedUnlockMaturedLockPass: false,
 			balanceAfterUnlock:            sdk.Coins{},
 		},
+		{
+			name:                          "unlocking should not finish yet",
+			unlockingCoins:                initialLockCoins,
+			expectedBeginUnlockPass:       true,
+			passedTime:                    time.Millisecond,
+			expectedUnlockMaturedLockPass: false,
+			balanceAfterUnlock:            sdk.Coins{},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -187,9 +195,9 @@ func (suite *KeeperTestSuite) TestUnlock() {
 
 			unlockings := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
 			suite.Require().Equal(len(unlockings), 0)
+
 		} else {
 			suite.Require().Error(err)
-
 			// things to test if unlocking has started
 			if tc.expectedBeginUnlockPass {
 				// should still be unlocking if `UnlockMaturedLock` failed
@@ -200,7 +208,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 				if tc.unlockingCoins == nil {
 					unlockingCoins = initialLockCoins
 				}
-				suite.Require().Equal(unlockingCoins, unlockings[0])
+				suite.Require().Equal(unlockingCoins, unlockings)
 			}
 		}
 
