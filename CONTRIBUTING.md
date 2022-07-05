@@ -26,37 +26,51 @@ To contribute a change proposal, use the following workflow:
 4. Create a branch and name it appropriately.
 5. Work on only one major change in one pull request.
 6. Make sure all tests are passing locally.
-7. Next, rince and repeat the following:
+7. Next, rinse and repeat the following:
 
-    1. Commit your changes. Write a simple, straightforward commit message. To learn more, see [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/).
-    2. Push your changes to your remote fork. To add your remote, you can copy/paste the following:
-    ```sh
+   1. Commit your changes. Write a simple, straightforward commit message. To learn more, see [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/).
+   2. Push your changes to your remote fork. To add your remote, you can copy/paste the following:
 
-    #Remove origin
+   ```sh
 
-    git remote remove origin
+   #Remove origin
 
-    #set a new remote
+   git remote remove origin
 
-    git remote add my_awesome_new_remote_repo [insert-link-found-in-source-subtab-of-your-repo]
+   #set a new remote
 
-    #Verify new remote
+   git remote add my_awesome_new_remote_repo [insert-link-found-in-source-subtab-of-your-repo]
 
-    git remote -v
+   #Verify new remote
 
-    > my_awesome_new_remote_repo  [link-found-in-source-subtab-of-your-repo] (fetch)
-    > my_awesome_new_remote_repo  [link-found-in-source-subtab-of-your-repo] (push)
+   git remote -v
 
-    #Push changes to your remote repo
+   > my_awesome_new_remote_repo  [link-found-in-source-subtab-of-your-repo] (fetch)
+   > my_awesome_new_remote_repo  [link-found-in-source-subtab-of-your-repo] (push)
 
-    git push <your_remote_name>
+   #Push changes to your remote repo
 
-    #e.g. git push my_awesome_new_remote_repo
-    ```
-    3. Create a PR on the Osmosis repository. There should be a PR template to help you do so.
-    4. Wait for your changes to be reviewed. If you are a maintainer, you can assign your PR to one or more reviewers. If you aren't a maintainer, one of the maintainers will assign a reviewer.
-    5. After you receive feedback from a reviewer, make the requested changes, commit them to your branch, and push them to your remote fork again.
-    6. Once approval is given, feel free to squash & merge!
+   git push <your_remote_name>
+
+   #e.g. git push my_awesome_new_remote_repo
+   ```
+
+   3. Create a PR on the Osmosis repository. There should be a PR template to help you do so.
+   4. Wait for your changes to be reviewed. If you are a maintainer, you can assign your PR to one or more reviewers. If you aren't a maintainer, one of the maintainers will assign a reviewer.
+   5. After you receive feedback from a reviewer, make the requested changes, commit them to your branch, and push them to your remote fork again.
+   6. Once approval is given, feel free to squash & merge!
+
+## Writing tests
+
+We use [table-driven tests](https://dave.cheney.net/2019/05/07/prefer-table-driven-tests) because they allow us to test similar logic on many different cases in a way that is easy to both implement and understand.
+
+Rules of thumb:
+
+1. Each test case should test one thing
+2. Each test case should be independent from one another
+3. Functions should not be set as fields for a test case
+
+Example structure:
 
 ## Working with the SDK
 
@@ -115,21 +129,23 @@ You can also feel free to do `make format` if you're getting errors related to `
 
 There are several steps that go into a major release
 
-* Run the [existing binary creation tool](https://github.com/osmosis-labs/osmosis/blob/main/.github/workflows/release.yml). Running `make -f contrib/images/osmobuilder/Makefile release` on the root of the repo will replicate the CI that creates the release folder containing the binaries.
+- Run the [existing binary creation tool](https://github.com/osmosis-labs/osmosis/blob/main/.github/workflows/release.yml). Running `make -f contrib/images/osmobuilder/Makefile release` on the root of the repo will replicate the CI that creates the release folder containing the binaries.
 
-* Make a PR to main, with a cosmovisor config, generated in tandem with the binaries from tool.
-  * Should be its own PR, as it may get denied for Fork upgrades.
+- Make a PR to main, with a cosmovisor config, generated in tandem with the binaries from tool.
 
-* Make a PR to main to update the import paths and go.mod for the new major release
+  - Should be its own PR, as it may get denied for Fork upgrades.
 
-* Should also make a commit into every open PR to main to do the same find/replace. (Unless this will cause conflicts)
+- Make a PR to main to update the import paths and go.mod for the new major release
 
-* Do a PR if that commit has conflicts
+- Should also make a commit into every open PR to main to do the same find/replace. (Unless this will cause conflicts)
 
-* (Eventually) Make a PR that adds a version handler for the next upgrade
-  * [Add v10 upgrade boilerplate #1649](https://github.com/osmosis-labs/osmosis/pull/1649/files)
+- Do a PR if that commit has conflicts
 
-* Update chain JSON schema's recommended versions in `chain.schema.json` located in the root directory.
+- (Eventually) Make a PR that adds a version handler for the next upgrade
+
+  - [Add v10 upgrade boilerplate #1649](https://github.com/osmosis-labs/osmosis/pull/1649/files)
+
+- Update chain JSON schema's recommended versions in `chain.schema.json` located in the root directory.
 
 ### Pre-release auditing process
 
@@ -137,19 +153,18 @@ For every module with notable changes, we assign someone who was not a primary a
 
 Deliverables of review are:
 
-* PR's with in-line code comments for things they had to figure out (or questions) 
+- PR's with in-line code comments for things they had to figure out (or questions)
 
-* Tests / test comments needed to convince themselves of correctness 
+- Tests / test comments needed to convince themselves of correctness
 
-* Spec updates
+- Spec updates
 
-* Small refactors that helped in understanding / making code conform to consistency stds / improve code signal-to-noise ratio welcome
+- Small refactors that helped in understanding / making code conform to consistency stds / improve code signal-to-noise ratio welcome
 
-* (As with all PRs, should not be a monolithic PR that gets PR'd, even though that may be the natural way its first formed)
+- (As with all PRs, should not be a monolithic PR that gets PR'd, even though that may be the natural way its first formed)
 
 At the moment, we're looking for a tool that lets us statically figure out every message that had something in its code path that changed. Until a tool is found, we must do this manually.
 
 We test in testnet & e2e testnet behaviors about every message that has changed
 
-We communicate with various integrators if they'd like release-blocking QA testing for major releases
-    * Chainapsis has communicated wanting a series of osmosis-frontend functionalities to be checked for correctness on a testnet as a release blocking item
+We communicate with various integrators if they'd like release-blocking QA testing for major releases \* Chainapsis has communicated wanting a series of osmosis-frontend functionalities to be checked for correctness on a testnet as a release blocking item
