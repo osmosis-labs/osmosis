@@ -290,7 +290,7 @@ func (n *internalNode) createMnemonic() (string, error) {
 	return mnemonic, nil
 }
 
-func (n *internalNode) initValidatorConfigs(c *internalChain, persistendtPeers []string) error {
+func (n *internalNode) initValidatorConfigs(c *internalChain, persistentPeers []string) error {
 	tmCfgPath := filepath.Join(n.configDir(), "config", "config.toml")
 
 	vpr := viper.New()
@@ -310,7 +310,7 @@ func (n *internalNode) initValidatorConfigs(c *internalChain, persistendtPeers [
 	valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
 	valConfig.StateSync.Enable = false
 	valConfig.LogLevel = "info"
-	valConfig.P2P.PersistentPeers = strings.Join(persistendtPeers, ",")
+	valConfig.P2P.PersistentPeers = strings.Join(persistentPeers, ",")
 
 	tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 	return nil
