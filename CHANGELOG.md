@@ -28,7 +28,8 @@ Types of changes (Stanzas):
 "Bug Fixes" for any bug fixes.
 "Client Breaking" for breaking CLI commands and REST routes used by end-users.
 "API Breaking" for breaking exported APIs used by developers building on SDK.
-"State Machine Breaking" for any changes that result in a different AppState given same genesisState and txList.
+"State Machine Breaking" for any changes that result in a different AppState 
+given same genesisState and txList.
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
@@ -41,12 +42,137 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Breaking Changes
+
+* [#1825](https://github.com/osmosis-labs/osmosis/pull/1825) Fixes Interchain Accounts (host side) by adding it to AppModuleBasics
+* [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
+
+#### Golang API breaks
+
+* [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
+* [#1893](https://github.com/osmosis-labs/osmosis/pull/1893) Change `EpochsKeeper.SetEpochInfo` to `AddEpochInfo`, which has more safety checks with it. (Makes it suitable to be called within upgrades)
+* [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Remove methods that constitute AppModuleSimulation APIs for several modules' AppModules, which implemented no-ops
+* [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Add hourly epochs to `x/epochs` DefaultGenesis.
+* [#1665](https://github.com/osmosis-labs/osmosis/pull/1665) Delete app/App interface, instead use simapp.App
+* [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
+* [#1667](https://github.com/osmosis-labs/osmosis/pull/1673) Move wasm-bindings code out of app .
+
 ### Features
 
-* [#1244](https://github.com/osmosis-labs/osmosis/pull/1244) Refactor `x/gamm`'s `ExitSwapExternAmountOut`.
-* [#1107](https://github.com/osmosis-labs/osmosis/pull/1107) Update to wasmvm v0.24.0, re-enabling building on M1 macs!
+* [#1312] Stableswap: Createpool logic 
+* [#1230] Stableswap CFMM equations
+* [#1429] solver for multi-asset CFMM
+* [#1539] Superfluid: Combine superfluid and staking query on querying delegation by delegator
+
+### Bug Fixes
+
+* [1930](https://github.com/osmosis-labs/osmosis/pull/1930) Ensure you can't `JoinPoolNoSwap` tokens that are not in the pool
+* [1700](https://github.com/osmosis-labs/osmosis/pull/1700) Upgrade sdk fork with missing snapshot manager fix.
+* [1716](https://github.com/osmosis-labs/osmosis/pull/1716) Fix secondary over-LP shares bug with uneven swap amounts in `CalcJoinPoolShares`.
+* [1759](https://github.com/osmosis-labs/osmosis/pull/1759) Fix pagination filter in incentives query.
+* [1698](https://github.com/osmosis-labs/osmosis/pull/1698) Register wasm snapshotter extension.
+
+## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
+
+The Nitrogen release brings with it a number of features enabling further cosmwasm development work in Osmosis.
+It including breaking changes to the GAMM API's, many developer and node operator improvements for Cosmwasm & IBC, along with new txfee and governance features. In addition to various bug fixes and code quality improvements.
+
+#### GAMM API changes
+
+API changes were done to enable more CFMM's to be implemented within the existing framework.
+Integrators will have to update their messages and queries to adapt, please see https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/breaking_changes_notes.md
+
+#### Governance Changes
+
+* [#1191](https://github.com/osmosis-labs/osmosis/pull/1191), [#1555](https://github.com/osmosis-labs/osmosis/pull/1555) Superfluid stakers now have their votes override their validators votes
+* [sdk #239](https://github.com/osmosis-labs/cosmos-sdk/pull/239) Governance can set a distinct voting period for every proposal type.
+
+#### IBC
+
+* [#1535](https://github.com/osmosis-labs/osmosis/pull/1535) Upgrade to [IBC v3](https://github.com/cosmos/ibc-go/releases/tag/v3.0.0)
+* [#1564](https://github.com/osmosis-labs/osmosis/pull/1564) Enable Interchain account host module
+  * See [here](https://github.com/osmosis-labs/osmosis/blob/main/app/upgrades/v9/upgrades.go#L49-L71) for the supported messages
+
+#### Txfees
+
+[#1145](https://github.com/osmosis-labs/osmosis/pull/1145) Non-osmo txfees now get swapped into osmo everyday at epoch, and then distributed to stakers.
+
+#### Cosmwasm
+
+Upgrade from wasmd v0.23.x to [v0.27.0](https://github.com/CosmWasm/wasmd/releases/tag/v0.27.0). This has the following features:
+  * State sync now works for cosmwasm state
+  * Cosmwasm builds on M1 macs
+  * Many security fixes
+
+The TokenFactory module is added to the chain, making it possible for users and contracts to make new native tokens.
+Cosmwasm bindings have been added, to make swapping and creating these new tokens easier within the contract ecosystem.
+
+* [#1640](https://github.com/osmosis-labs/osmosis/pull/1640) fix: localosmosis to work for testing cosmwasm contracts
+
+### Other Features
+
+* [#1629](https://github.com/osmosis-labs/osmosis/pull/1629) Fix bug in the airdrop claim script
+* [#1570](https://github.com/osmosis-labs/osmosis/pull/1570) upgrade sdk with app version fix for state-sync
+* [#1554](https://github.com/osmosis-labs/osmosis/pull/1554) local dev environment
+* [#1541](https://github.com/osmosis-labs/osmosis/pull/1541) Add arm64 support to Docker
+* [#1535](https://github.com/osmosis-labs/osmosis/pull/1535) upgrade wasmd to v0.27.0.rc3-osmo and ibc-go to v3
+  * State sync now works for cosmwasm state
+  * Cosmwasm builds on M1 macs
+* [#1435](https://github.com/osmosis-labs/osmosis/pull/1435) `x/tokenfactory` create denom fee for spam resistance 
+* [#1253](https://github.com/osmosis-labs/osmosis/pull/1253) Add a message to increase the duration of a bonded lock.
+* [#1656](https://github.com/osmosis-labs/osmosis/pull/1656) Change camelCase to snake_case in proto.
+* [#1632](https://github.com/osmosis-labs/osmosis/pull/1632) augment SuperfluidDelegationsByDelegator query, return osmo equivilent is staked via superfluid
+* [#1723](https://github.com/osmosis-labs/osmosis/pull/1723) fix number of LP shares returned from stableswap pool
+
+## [v8.0.0 - Emergency proposals upgrade](https://github.com/osmosis-labs/osmosis/releases/tag/v8.0.0)
+
+This upgrade is a patch that must be hard forked in, as on-chain governance of Osmosis approved proposal [227](https://www.mintscan.io/osmosis/proposals/227) and proposal [228](https://www.mintscan.io/osmosis/proposals/228).
+
+This upgrade includes:
+
+* Adding height-gated AnteHandler message filter to filter unpooling tx pre-upgrade.
+* At block height 4402000 accelerates prop 225, which in turn moves incentives from certain pools according to props 222-224
+* Adds a msg allowing unpooling of UST pools. 
+  * This procedure is initiated by whitelisting pools 560, 562, 567, 578, 592, 610, 612, 615, 642, 679, 580, 635. 
+  * Unpooling allows exiting whitelisted pools directly, finish unbonding duration with the exited tokens instead of having to wait unbonding duration to swap LP shares back to collaterals. 
+  * This procedure also includes locks that were already unbonding pre-upgrade and locks that were superfluid delegated.
+
+Every node should upgrade their software version to v8.0.0 before the upgrade block height 4402000. If you use cosmovisor, simply swap out the binary at upgrades/v7/bin to be v8.0.0, and restart the node. Do check cosmovisor version returns v8.0.0
+
+### Features 
+* {Across many PRs} Initiate emergency upgrade 
+* [#1481] Emergency upgrade as of prop [226] (https://www.mintscan.io/osmosis/proposals/226) 
+* [#1482] Checking Whitelisted Pools contain UST 
+* [#1486] Update whitelisted pool IDs
+* [#1262] Add a forceprune command to the binaries, that prunes golevelDB data better
+* [#1154] Database stability improvements
+* [#840] Move lock.go functions into iterator.go, lock_refs.go and store.go
+* [#916] And a fn for Unbond and Burn tokens
+* [#908] Superfluid slashing code
+* [#904] LockAndSuperfluidDelegate
 
 ### Minor improvements & Bug Fixes
+
+* [#1428] fix: pool params query (backport #1315)
+* [#1390] upgrade sdk to v0.45.0x-osmo-v7.9
+* [#1087] Test improvisation for Superfluid (backport #1070)
+* [#1022] upgrade iavl to v0.17.3-osmo-v4
+
+### Features
+
+* [#1378](https://github.com/osmosis-labs/osmosis/pull/1378) add .gitpod.yml
+* [#1262](https://github.com/osmosis-labs/osmosis/pull/1262) Add a `forceprune` command to the binaries, that prunes golevelDB data better.
+* [#1244](https://github.com/osmosis-labs/osmosis/pull/1244) Refactor `x/gamm`'s `ExitSwapExternAmountOut`.
+* [#1107](https://github.com/osmosis-labs/osmosis/pull/1107) Update to wasmvm v0.24.0, re-enabling building on M1 macs!
+* [#1292](https://github.com/osmosis-labs/osmosis/pull/1292) CLI account-locked-duration
+
+### Minor improvements & Bug Fixes
+
+* [#1442](https://github.com/osmosis-labs/osmosis/pull/1442) Use latest tm-db release for badgerdb and rocksdb improvments
+* [#1379](https://github.com/osmosis-labs/osmosis/pull/1379) Introduce `Upgrade` and `Fork` structs, to simplify upgrade logic.
+* [#1363](https://github.com/osmosis-labs/osmosis/pull/1363) Switch e2e test setup to create genesis and configs via Dockertest
+* [#1335](https://github.com/osmosis-labs/osmosis/pull/1335) Add utility for deriving total orderings from partial orderings.
+* [#1308](https://github.com/osmosis-labs/osmosis/pull/1308) Make panics inside of epochs no longer chain halt by default.
 * [#1286](https://github.com/osmosis-labs/osmosis/pull/1286) Fix release build scripts.
 * [#1203](https://github.com/osmosis-labs/osmosis/pull/1203) cleanup Makefile and ci workflows
 * [#1177](https://github.com/osmosis-labs/osmosis/pull/1177) upgrade to go 1.18
@@ -108,7 +234,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Minor improvements & Bug Fixes
 
 * [#1022](https://github.com/osmosis-labs/osmosis/pull/1022) upgrade iavl to v0.17.3-osmo-v4 - fix state export at an old height
-* [#988](https://github.com/osmosis-labs/osmosis/pull/988) Make `SuperfluidUndelegationsByDelegator` query also return synthetic locks 
+* [#988](https://github.com/osmosis-labs/osmosis/pull/988) Make `SuperfluidUndelegationsByDelegator` query also return synthetic locks
 * [#984](https://github.com/osmosis-labs/osmosis/pull/984) Add wasm support to Dockerfile
 
 ## [v7.0.2 - Carbon](https://github.com/osmosis-labs/osmosis/releases/tag/v7.0.2)
@@ -286,7 +412,7 @@ Upgrade instructions for node operators can be found [here](https://github.com/o
 * [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to Cosmos SDK v0.44.x
   * Numerous large updates, such as making module accounts be 32 bytes, Rosetta support, etc.
   * Adds & integrates the [Authz module](https://github.com/cosmos/cosmos-sdk/tree/master/x/authz/spec)
-   See: [SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) For more details
+    See: [SDK v0.43.0 Release Notes](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.43.0) For more details
 * [\#610](https://github.com/osmosis-labs/osmosis/pull/610) Upgrade to IBC-v2
 * [\#560](https://github.com/osmosis-labs/osmosis/pull/560) Implements Osmosis [prop32](https://www.mintscan.io/osmosis/proposals/32) -- clawing back the final 20% of unclaimed osmo and ion airdrop.
 * [\#394](https://github.com/osmosis-labs/osmosis/pull/394) Allow whitelisted tx fee tokens based on conversion rate to OSMO

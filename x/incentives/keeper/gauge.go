@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	db "github.com/tendermint/tm-db"
+
 	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	db "github.com/tendermint/tm-db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -43,10 +44,6 @@ func (k Keeper) getCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 		coins = coins.Add(gauge.Coins...)
 	}
 	return coins
-}
-
-func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
 // setGauge set the gauge inside store.

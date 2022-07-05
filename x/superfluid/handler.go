@@ -29,6 +29,9 @@ func NewHandler(k *keeper.Keeper) sdk.Handler {
 		case *types.MsgLockAndSuperfluidDelegate:
 			res, err := msgServer.LockAndSuperfluidDelegate(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
+		case *types.MsgUnPoolWhitelistedPool:
+			res, err := msgServer.UnPoolWhitelistedPool(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
 		// case *types.MsgSuperfluidRedelegate:
 		// 	res, err := msgServer.SuperfluidRedelegate(sdk.WrapSDKContext(ctx), msg)
 		// return sdk.WrapServiceResult(ctx, res, err)

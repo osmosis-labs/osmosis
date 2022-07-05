@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
@@ -195,6 +197,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 	res := types.SuperfluidDelegationsByDelegatorResponse{
 		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
 		TotalDelegatedCoins:         sdk.NewCoins(),
+		TotalEquivalentStakedAmount: sdk.NewCoin(appparams.BaseCoinUnit, sdk.ZeroInt()),
 	}
 
 	syntheticLocks := q.Keeper.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
@@ -213,17 +216,25 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		baseDenom := periodLock.Coins.GetDenomByIndex(0)
 		lockedCoins := sdk.NewCoin(baseDenom, periodLock.GetCoins().AmountOf(baseDenom))
 		valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
+
+		// Find how many osmo tokens this delegation is worth at superfluids current risk adjustment
+		// and twap of the denom.
+		equivalentAmount := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
+		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
+
 		if err != nil {
 			return nil, err
 		}
 		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
 			types.SuperfluidDelegationRecord{
-				DelegatorAddress: req.DelegatorAddress,
-				ValidatorAddress: valAddr,
-				DelegationAmount: lockedCoins,
+				DelegatorAddress:       req.DelegatorAddress,
+				ValidatorAddress:       valAddr,
+				DelegationAmount:       lockedCoins,
+				EquivalentStakedAmount: &coin,
 			},
 		)
 		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
+		res.TotalEquivalentStakedAmount = res.TotalEquivalentStakedAmount.Add(coin)
 	}
 
 	return &res, nil
@@ -411,4 +422,61 @@ func (q Querier) TotalSuperfluidDelegations(goCtx context.Context, _ *types.Tota
 	return &types.TotalSuperfluidDelegationsResponse{
 		TotalDelegations: totalSuperfluidDelegated,
 	}, nil
+}
+
+func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.QueryTotalDelegationByDelegatorRequest) (*types.QueryTotalDelegationByDelegatorResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if len(req.DelegatorAddress) == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	superfluidDelegationResp, err := q.SuperfluidDelegationsByDelegator(goCtx, &types.SuperfluidDelegationsByDelegatorRequest{
+		DelegatorAddress: req.DelegatorAddress})
+	if err != nil {
+		return nil, err
+	}
+
+	res := types.QueryTotalDelegationByDelegatorResponse{
+		SuperfluidDelegationRecords: superfluidDelegationResp.SuperfluidDelegationRecords,
+		DelegationResponse:          []stakingtypes.DelegationResponse{},
+		TotalDelegatedCoins:         superfluidDelegationResp.TotalDelegatedCoins,
+		TotalEquivalentStakedAmount: superfluidDelegationResp.TotalEquivalentStakedAmount,
+	}
+
+	// this is for getting normal staking
+	q.sk.IterateDelegations(ctx, delAddr, func(_ int64, del stakingtypes.DelegationI) bool {
+		val, found := q.sk.GetValidator(ctx, del.GetValidatorAddr())
+		if !found {
+			return true
+		}
+
+		lockedCoins := sdk.NewCoin(appparams.BaseCoinUnit, val.TokensFromShares(del.GetShares()).TruncateInt())
+
+		res.DelegationResponse = append(res.DelegationResponse,
+			stakingtypes.DelegationResponse{
+				Delegation: stakingtypes.Delegation{
+					DelegatorAddress: del.GetDelegatorAddr().String(),
+					ValidatorAddress: del.GetValidatorAddr().String(),
+					Shares:           del.GetShares(),
+				},
+				Balance: lockedCoins,
+			},
+		)
+
+		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
+		res.TotalEquivalentStakedAmount = res.TotalEquivalentStakedAmount.Add(lockedCoins)
+
+		return false
+	})
+
+	return &res, nil
 }

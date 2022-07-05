@@ -5,8 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -14,7 +15,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module.
-func GetQueryCmd(queryRoute string) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	// Group superfluid queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -34,6 +35,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdSuperfluidDelegationsByDelegator(),
 		GetCmdSuperfluidUndelegationsByDelegator(),
 		GetCmdTotalSuperfluidDelegations(),
+		GetCmdTotalDelegationByDelegator(),
 	)
 
 	return cmd
@@ -336,6 +338,34 @@ func GetCmdTotalSuperfluidDelegations() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.TotalSuperfluidDelegations(cmd.Context(), &types.TotalSuperfluidDelegationsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func GetCmdTotalDelegationByDelegator() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-delegation-by-delegator [delegator_address]",
+		Short: "Query both superfluid delegation and normal delegation",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.TotalDelegationByDelegator(cmd.Context(), &types.QueryTotalDelegationByDelegatorRequest{
+				DelegatorAddress: args[0],
+			})
 			if err != nil {
 				return err
 			}

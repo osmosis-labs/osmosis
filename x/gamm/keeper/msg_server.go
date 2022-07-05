@@ -26,15 +26,40 @@ func NewBalancerMsgServerImpl(keeper *Keeper) balancer.MsgServer {
 	}
 }
 
+// func NewStableswapMsgServerImpl(keeper *Keeper) stableswap.MsgServer {
+// 	return &msgServer{
+// 		keeper: keeper,
+// 	}
+// }
+
 var (
 	_ types.MsgServer    = msgServer{}
 	_ balancer.MsgServer = msgServer{}
+	// _ stableswap.MsgServer = msgServer{}
 )
 
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
 }
+
+// func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
+// 	poolId, err := server.CreatePool(goCtx, msg)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return &stableswap.MsgCreateStableswapPoolResponse{PoolID: poolId}, nil
+// }
+
+// func (server msgServer) StableSwapAdjustScalingFactors(goCtx context.Context, msg *stableswap.MsgStableSwapAdjustScalingFactors) (*stableswap.MsgStableSwapAdjustScalingFactorsResponse, error) {
+// 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+// 	if err := server.keeper.SetStableSwapScalingFactors(ctx, msg.ScalingFactors, msg.PoolID, msg.ScalingFactorGovernor); err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
+// }
 
 func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -59,6 +84,22 @@ func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMs
 	return poolId, nil
 }
 
+// JoinPool routes `JoinPoolNoSwap` where we do an abstract calculation on needed lp liquidity coins to get the designated
+// amount of shares for the pool. (This is done by taking the number of shares we want and then using the total number of shares
+// to get the ratio of the pool it accounts for. Using this ratio, we iterate over all pool assets to get the number of tokens we need
+// to get the specified number of shares).
+// Using the number of tokens needed to actually join the pool, we do a basic sanity check on whether the token does not exceed
+// `TokenInMaxs`. Then we hit the actual implementation of `JoinPool` defined by each pool model.
+// `JoinPool` takes in the tokensIn calculated above as the parameter rather than using the number of shares provided in the msg.
+// This can result in negotiable difference between the number of shares provided within the msg
+// and the actual number of share amount resulted from joining pool.
+// Internal logic flow for each pool model is as follows:
+// Balancer: TokensIn provided as the argument must be either a single token or tokens containing all assets in the pool.
+// 			 For the case of a single token, we simply perform single asset join (balancer notation: pAo, pool shares amount out,
+// 			 given single asset in).
+//			 For the case of multi-asset join, we first calculate the maximal amount of tokens that can be joined whilst maintaining
+// 			 pool asset's ratio without swap. We then iterate through the remaining coins that couldn't be joined
+// 			 and perform single asset join on each token.
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

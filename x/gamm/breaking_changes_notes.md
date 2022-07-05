@@ -21,6 +21,8 @@
   * Before the message would fail if you had too few shares to get a single token out for any given denom. Now you can get 0 tokens of one side out, if the min amount is also not present.
 * ExitSwapShareAmountIn
   * Switched to a more inefficient algorithm for now, so gas numbers will be much higher.
+* MsgSwapExactAmountOut
+  * Prior behavior rounded down the required AmountIn input. The logic now rounds up. Any prior test vectors will likely be off by one.
 * Messages now have responses
 
 ## Events

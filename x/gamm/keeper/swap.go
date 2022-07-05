@@ -49,6 +49,8 @@ func (k Keeper) swapExactAmountIn(
 	}
 	tokensIn := sdk.Coins{tokenIn}
 
+	// Executes the swap in the pool and stores the output. Updates pool assets but
+	// does not actually transfer any tokens to or from the pool.
 	tokenOutCoin, err := pool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
@@ -64,6 +66,8 @@ func (k Keeper) swapExactAmountIn(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
 	}
 
+	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
+	// Also emits swap event and updates related liquidity metrics
 	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOutCoin); err != nil {
 		return sdk.Int{}, err
 	}
@@ -109,21 +113,19 @@ func (k Keeper) swapExactAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
 			"can't get more tokens out than there are tokens in the pool")
 	}
-	tokenInCoin, err := pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
+	tokenIn, err := pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	tokenInAmount = tokenInCoin.Amount
+	tokenInAmount = tokenIn.Amount
 
 	if tokenInAmount.LTE(sdk.ZeroInt()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
 	}
 
 	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "%s token required is larger than max amount", tokenInDenom)
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
 	}
-
-	tokenIn := sdk.Coin{Denom: tokenInDenom, Amount: tokenInAmount}
 
 	err = k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut)
 	if err != nil {

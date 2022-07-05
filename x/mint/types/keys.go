@@ -1,15 +1,17 @@
 package types
 
-// MinterKey is the key to use for the keeper store.
+// MinterKey is the key to use for the keeper store at which
+// the Minter and its EpochProvisions are stored.
 var MinterKey = []byte{0x00}
 
-// LastHalvenEpochKey is the key to use for the keeper store.
-var LastHalvenEpochKey = []byte{0x03}
+// LastReductionEpochKey is the key to use for the keeper store
+// for storing the last epoch at which reduction occurred.
+var LastReductionEpochKey = []byte{0x03}
 
 const (
-	// module name.
+	// ModuleName is the module name.
 	ModuleName = "mint"
-	// module acct name for developer vesting.
+	// DeveloperVestingModuleAcctName is the module acct name for developer vesting.
 	DeveloperVestingModuleAcctName = "developer_vesting_unvested"
 
 	// StoreKey is the default store key for mint.
@@ -18,7 +20,9 @@ const (
 	// QuerierRoute is the querier route for the minting store.
 	QuerierRoute = StoreKey
 
-	// Query endpoints supported by the minting querier.
-	QueryParameters      = "parameters"
+	// QueryParameters is an endpoint path for querying mint parameters.
+	QueryParameters = "parameters"
+
+	// QueryEpochProvisions is an endpoint path for querying mint epoch provisions.
 	QueryEpochProvisions = "epoch_provisions"
 )
