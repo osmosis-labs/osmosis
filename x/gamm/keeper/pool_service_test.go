@@ -223,13 +223,13 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 	}
 
 	tests := []struct {
-		name       string
+		name            string
 		poolCreationFee sdk.Coins
-		msg        balancertypes.MsgCreateBalancerPool
-		expectPass bool
+		msg             balancertypes.MsgCreateBalancerPool
+		expectPass      bool
 	}{
 		{
-			name: "no pool creation fee for default asset pool",
+			name:            "no pool creation fee for default asset pool",
 			poolCreationFee: sdk.Coins{},
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
@@ -237,7 +237,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 			}, defaultPoolAssets, defaultFutureGovernor),
 			expectPass: true,
 		}, {
-			name: "nil pool creation fee on basic pool",
+			name:            "nil pool creation fee on basic pool",
 			poolCreationFee: nil,
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
@@ -552,7 +552,6 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 		suite.Require().NoError(err)
 
 		balanceBeforeJoin := suite.App.BankKeeper.GetAllBalances(suite.Ctx, joinPoolAcc)
-		fmt.Println(balanceBeforeJoin.String())
 
 		err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
 		suite.Require().NoError(err)
