@@ -259,7 +259,7 @@ func (s *IntegrationTestSuite) queryPropTally(endpoint, addr string) (sdk.Int, s
 	return noTotal, yesTotal, noWithVetoTotal, abstainTotal, nil
 }
 
-func (s *IntegrationTestSuite) createPool(c *chainConfig, poolFile string) {
+func (s *IntegrationTestSuite) createPool(c *chainConfig, poolFile string, from string) {
 	s.T().Logf("creating pool for chain-id: %s", c.meta.Id)
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", c.meta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test"}
 	s.ExecTx(c.meta.Id, 0, cmd, "code: 0")
