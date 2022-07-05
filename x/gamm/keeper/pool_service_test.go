@@ -47,6 +47,9 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
 	}
 
+	// we keep this account empty to test attempts with insufficient balance
+	emptySender := suite.TestAccs[1]
+
 	// TODO: Refactor this to be more sensible.
 	// The struct should contain a MsgCreateBalancerPool.
 	// then the scaffolding should test pool creation, and check if it was a success or not.
@@ -63,7 +66,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			expectPass: true,
 		}, {
 			name:       "create pool with no assets",
-			msg:        balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
+			msg:        balancer.NewMsgCreateBalancerPool(emptySender, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
 			expectPass: false,
 		}, {
 			name: "create a pool with negative swap fee",
@@ -164,7 +167,9 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		// fund sender test account
 		sender, err := sdk.AccAddressFromBech32(test.msg.Sender)
 		suite.Require().NoError(err, "test: %v", test.name)
-		suite.FundAcc(sender, defaultAcctFunds)
+		if sender.String() != emptySender.String() {
+			suite.FundAcc(sender, defaultAcctFunds)
+		}
 
 		// note starting balances for community fee pool and pool creator account
 		feePoolBeforeNewPool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
