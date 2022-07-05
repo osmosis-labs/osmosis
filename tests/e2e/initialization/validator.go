@@ -31,15 +31,14 @@ import (
 )
 
 type internalValidator struct {
-	chain            *internalChain
-	index            int
-	moniker          string
-	mnemonic         string
-	keyInfo          keyring.Info
-	privateKey       cryptotypes.PrivKey
-	consensusKey     privval.FilePVKey
-	consensusPrivKey cryptotypes.PrivKey
-	nodeKey          p2p.NodeKey
+	chain        *internalChain
+	index        int
+	moniker      string
+	mnemonic     string
+	keyInfo      keyring.Info
+	privateKey   cryptotypes.PrivKey
+	consensusKey privval.FilePVKey
+	nodeKey      p2p.NodeKey
 }
 
 func (v *internalValidator) instanceName() string {
@@ -56,10 +55,6 @@ func (v *internalValidator) getKeyInfo() keyring.Info {
 
 func (v *internalValidator) getMoniker() string {
 	return v.moniker
-}
-
-func (v *internalValidator) getMnemonic() string {
-	return v.mnemonic
 }
 
 func (v *internalValidator) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error) {

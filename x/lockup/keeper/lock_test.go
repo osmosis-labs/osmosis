@@ -114,7 +114,7 @@ func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	// unlock lock just now
 	lock, err := lockKeeper.GetLockByID(suite.Ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.Unlock(suite.Ctx, lock.ID)
+	err = lockKeeper.UnlockMaturedLock(suite.Ctx, lock.ID)
 	suite.Require().Error(err)
 
 	// move start time to 1 second in the future.
@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	// Try to finish unlocking a lock, before starting unlock.
 	lock, err = lockKeeper.GetLockByID(suite.Ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.Unlock(suite.Ctx, lock.ID)
+	err = lockKeeper.UnlockMaturedLock(suite.Ctx, lock.ID)
 	suite.Require().Error(err)
 
 	// begin unlock
@@ -135,42 +135,13 @@ func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
 	// unlock 1s after begin unlock
 	lock, err = lockKeeper.GetLockByID(suite.Ctx, 1)
 	suite.Require().NoError(err)
-	err = lockKeeper.Unlock(suite.Ctx.WithBlockTime(now.Add(time.Second*2)), lock.ID)
+	err = lockKeeper.UnlockMaturedLock(suite.Ctx.WithBlockTime(now.Add(time.Second*2)), lock.ID)
 	suite.Require().NoError(err)
 
 	// check locks
 	locks, err = lockKeeper.GetPeriodLocks(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Len(locks, 0)
-}
-
-func (suite *KeeperTestSuite) TestLock() {
-	// test for coin locking
-	suite.SetupTest()
-
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	lock := types.NewPeriodLock(1, addr1, time.Second, suite.Ctx.BlockTime().Add(time.Second), coins)
-
-	// try lock without balance
-	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-	suite.Require().Error(err)
-
-	// lock with balance
-	suite.FundAcc(addr1, coins)
-	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-	suite.Require().NoError(err)
-
-	// lock with balance with same id
-	suite.FundAcc(addr1, coins)
-	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-	suite.Require().Error(err)
-
-	// lock with balance with different id
-	lock = types.NewPeriodLock(2, addr1, time.Second, suite.Ctx.BlockTime().Add(time.Second), coins)
-	suite.FundAcc(addr1, coins)
-	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestUnlock() {
@@ -180,11 +151,10 @@ func (suite *KeeperTestSuite) TestUnlock() {
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, coins)
 
 	// lock with balance
 	suite.FundAcc(addr1, coins)
-	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock)
+	lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
 	suite.Require().NoError(err)
 
 	// begin unlock with lock object
@@ -195,7 +165,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	suite.Require().NoError(err)
 
 	// unlock with lock object
-	err = suite.App.LockupKeeper.Unlock(suite.Ctx.WithBlockTime(now.Add(time.Second)), lockPtr.ID)
+	err = suite.App.LockupKeeper.UnlockMaturedLock(suite.Ctx.WithBlockTime(now.Add(time.Second)), lockPtr.ID)
 	suite.Require().NoError(err)
 }
 
@@ -252,7 +222,7 @@ func (suite *KeeperTestSuite) TestPartialUnlock() {
 
 	// Finish unlocking partial unlock
 	partialUnlock := suite.App.LockupKeeper.GetAccountPeriodLocks(suite.Ctx, addr1)[1]
-	err = suite.App.LockupKeeper.Unlock(suite.Ctx.WithBlockTime(now.Add(time.Second)), partialUnlock.ID)
+	err = suite.App.LockupKeeper.UnlockMaturedLock(suite.Ctx.WithBlockTime(now.Add(time.Second)), partialUnlock.ID)
 	suite.Require().NoError(err)
 
 	// check unlocking coins
@@ -320,6 +290,65 @@ func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 	suite.Require().Len(locks, 1)
 }
 
+func (suite *KeeperTestSuite) TestCreateLock() {
+	suite.SetupTest()
+
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+
+	// test locking without balance
+	_, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
+	suite.Require().Error(err)
+
+	suite.FundAcc(addr1, coins)
+
+	lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
+	suite.Require().NoError(err)
+
+	// check new lock
+	suite.Require().Equal(coins, lock.Coins)
+	suite.Require().Equal(time.Second, lock.Duration)
+	suite.Require().Equal(time.Time{}, lock.EndTime)
+	suite.Require().Equal(uint64(1), lock.ID)
+
+	lockID := suite.App.LockupKeeper.GetLastLockID(suite.Ctx)
+	suite.Require().Equal(uint64(1), lockID)
+
+	// check accumulation store
+	accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "10")
+
+	// create new lock
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
+	suite.FundAcc(addr1, coins)
+
+	lock, err = suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
+	suite.Require().NoError(err)
+
+	lockID = suite.App.LockupKeeper.GetLastLockID(suite.Ctx)
+	suite.Require().Equal(uint64(2), lockID)
+
+	// check accumulation store
+	accum = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "30")
+
+	// check balance
+	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+	suite.Require().Equal(sdk.ZeroInt(), balance.Amount)
+
+	acc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
+	balance = suite.App.BankKeeper.GetBalance(suite.Ctx, acc.GetAddress(), "stake")
+	suite.Require().Equal(sdk.NewInt(30), balance.Amount)
+}
+
 func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	suite.SetupTest()
 
@@ -379,6 +408,52 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	suite.FundAcc(addr2, sdk.Coins{addCoins})
 	_, err = suite.App.LockupKeeper.AddTokensToLockByID(cacheCtx, locks[0].ID, addr2, addCoins)
 	suite.Require().Error(err)
+}
+
+func (suite *KeeperTestSuite) TestLock() {
+	suite.SetupTest()
+
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+
+	lock := types.PeriodLock{
+		ID:       1,
+		Owner:    addr1.String(),
+		Duration: time.Second,
+		EndTime:  time.Time{},
+		Coins:    coins,
+	}
+
+	// test locking without balance
+	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
+	suite.Require().Error(err)
+
+	// check accumulation store
+	accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "0")
+
+	suite.FundAcc(addr1, coins)
+	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
+	suite.Require().NoError(err)
+
+	// check accumulation store
+	accum = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "10")
+
+	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+	suite.Require().Equal(sdk.ZeroInt(), balance.Amount)
+
+	acc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
+	balance = suite.App.BankKeeper.GetBalance(suite.Ctx, acc.GetAddress(), "stake")
+	suite.Require().Equal(sdk.NewInt(10), balance.Amount)
 }
 
 func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
@@ -666,14 +741,14 @@ func (suite *KeeperTestSuite) TestEditLockup() {
 	lock, _ := suite.App.LockupKeeper.GetLockByID(suite.Ctx, 1)
 
 	// duration decrease should fail
-	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second/2)
+	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second/2)
 	suite.Require().Error(err)
 	// extending lock with same duration should fail
-	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second)
+	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second)
 	suite.Require().Error(err)
 
 	// duration increase should success
-	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second*2)
+	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second*2)
 	suite.Require().NoError(err)
 
 	// check queries

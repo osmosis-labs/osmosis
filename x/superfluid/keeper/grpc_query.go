@@ -439,48 +439,17 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 		return nil, err
 	}
 
-	res := types.QueryTotalDelegationByDelegatorResponse{
-		SuperfluidDelegationRecords: []types.SuperfluidDelegationRecord{},
-		DelegationResponse:          []stakingtypes.DelegationResponse{},
-		TotalDelegatedCoins:         sdk.NewCoins(),
-		TotalEquivalentStakedAmount: sdk.NewCoin(appparams.BaseCoinUnit, sdk.ZeroInt()),
+	superfluidDelegationResp, err := q.SuperfluidDelegationsByDelegator(goCtx, &types.SuperfluidDelegationsByDelegatorRequest{
+		DelegatorAddress: req.DelegatorAddress})
+	if err != nil {
+		return nil, err
 	}
 
-	syntheticLocks := q.Keeper.lk.GetAllSyntheticLockupsByAddr(ctx, delAddr)
-
-	for _, syntheticLock := range syntheticLocks {
-		// don't include unbonding delegations
-		if strings.Contains(syntheticLock.SynthDenom, "superunbonding") {
-			continue
-		}
-
-		periodLock, err := q.Keeper.lk.GetLockByID(ctx, syntheticLock.UnderlyingLockId)
-		if err != nil {
-			return nil, err
-		}
-
-		baseDenom := periodLock.Coins.GetDenomByIndex(0)
-		lockedCoins := sdk.NewCoin(baseDenom, periodLock.GetCoins().AmountOf(baseDenom))
-		valAddr, err := ValidatorAddressFromSyntheticDenom(syntheticLock.SynthDenom)
-
-		// Find how many osmo tokens this delegation is worth at superfluids current risk adjustment
-		// and twap of the denom.
-		equivalentAmount := q.Keeper.GetSuperfluidOSMOTokens(ctx, baseDenom, lockedCoins.Amount)
-		coin := sdk.NewCoin(appparams.BaseCoinUnit, equivalentAmount)
-
-		if err != nil {
-			return nil, err
-		}
-		res.SuperfluidDelegationRecords = append(res.SuperfluidDelegationRecords,
-			types.SuperfluidDelegationRecord{
-				DelegatorAddress:       req.DelegatorAddress,
-				ValidatorAddress:       valAddr,
-				DelegationAmount:       lockedCoins,
-				EquivalentStakedAmount: &coin,
-			},
-		)
-		res.TotalDelegatedCoins = res.TotalDelegatedCoins.Add(lockedCoins)
-		res.TotalEquivalentStakedAmount = res.TotalEquivalentStakedAmount.Add(coin)
+	res := types.QueryTotalDelegationByDelegatorResponse{
+		SuperfluidDelegationRecords: superfluidDelegationResp.SuperfluidDelegationRecords,
+		DelegationResponse:          []stakingtypes.DelegationResponse{},
+		TotalDelegatedCoins:         superfluidDelegationResp.TotalDelegatedCoins,
+		TotalEquivalentStakedAmount: superfluidDelegationResp.TotalEquivalentStakedAmount,
 	}
 
 	// this is for getting normal staking
