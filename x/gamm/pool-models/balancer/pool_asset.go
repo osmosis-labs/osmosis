@@ -18,8 +18,8 @@ type poolAssetPretty struct {
 }
 
 // validates a pool asset, to check if it has a valid weight.
-func (asset PoolAsset) validateWeight() error {
-	if asset.Weight.LTE(sdk.ZeroInt()) {
+func (pa PoolAsset) validateWeight() error {
+	if pa.Weight.LTE(sdk.ZeroInt()) {
 		return fmt.Errorf("a token's weight in the pool must be greater than 0")
 	}
 
