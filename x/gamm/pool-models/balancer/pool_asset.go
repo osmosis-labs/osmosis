@@ -23,10 +23,6 @@ func (asset PoolAsset) validateWeight() error {
 		return fmt.Errorf("a token's weight in the pool must be greater than 0")
 	}
 
-	if asset.Weight.GTE(sdk.NewInt(1 << 32)) {
-		return fmt.Errorf("a token's weight in the pool must be less than 2^32")
-	}
-
 	return nil
 }
 
