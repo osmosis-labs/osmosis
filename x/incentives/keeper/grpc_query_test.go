@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
 
 	query "github.com/cosmos/cosmos-sdk/types/query"
 
@@ -529,3 +530,5 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins)
 }
+
+var _ = suite.TestingSuite(nil)

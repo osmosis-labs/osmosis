@@ -36,6 +36,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg = app.DefaultConfig()
 
 	// modification to pay pool creation fee with test bond denom "stake"
+	// marshal result into genesis json
 	genesisState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
 	gammGen := gammtypes.DefaultGenesis()
 	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1000000)}
@@ -43,8 +44,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genesisState[gammtypes.ModuleName] = gammGenJson
 	s.cfg.GenesisState = genesisState
 
+	// create a network with a validator
 	s.network = network.New(s.T(), s.cfg)
-
 	val := s.network.Validators[0]
 
 	// create a pool to receive gamm tokens

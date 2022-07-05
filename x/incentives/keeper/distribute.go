@@ -109,8 +109,6 @@ func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo l
 }
 
 // FilteredLocksDistributionEst estimates distribution amount of coins from gauge.
-// Expectation: gauge is a valid gauge
-// filteredLocks are all locks that are valid gauges
 // It also applies an update for the gauge, handling the sending of the rewards.
 // (Note this update is in-memory, it does not change state.)
 func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge, filteredLocks []lockuptypes.PeriodLock) (types.Gauge, sdk.Coins, error) {

@@ -12,7 +12,6 @@ const (
 	FlagStartTime = "start-time"
 	FlagEpochs    = "epochs"
 	FlagPerpetual = "perpetual"
-
 	FlagTimestamp = "timestamp"
 	FlagOwner     = "owner"
 	FlagLockIds   = "lock-ids"

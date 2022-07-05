@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
@@ -310,3 +312,5 @@ func (suite *KeeperTestSuite) TestGaugesByDenom() {
 	testGaugeByDenom(true)
 	testGaugeByDenom(false)
 }
+
+var _ = suite.TestingSuite(nil)

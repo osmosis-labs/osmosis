@@ -13,11 +13,18 @@ import (
 )
 
 func TestCombineKeys(t *testing.T) {
+	// create three keys, each different byte arrays
 	key1 := []byte{0x11}
 	key2 := []byte{0x12}
 	key3 := []byte{0x13}
+
+	// combine the three keys into a single key
 	key := combineKeys(key1, key2, key3)
-	require.Len(t, key, 3+2) // 2 is separator
+
+	// three keys plus two separators is equal to a length of 5
+	require.Len(t, key, 3+2)
+
+	// ensure the newly created key is made up of the three previous keys (and the two key index separators)
 	require.Equal(t, key[0], key1[0])
 	require.Equal(t, key[1], types.KeyIndexSeparator[0])
 	require.Equal(t, key[2], key2[0])
@@ -26,7 +33,11 @@ func TestCombineKeys(t *testing.T) {
 }
 
 func TestFindIndex(t *testing.T) {
+	// create an array of 5 IDs
 	IDs := []uint64{1, 2, 3, 4, 5}
+
+	// use the findIndex function to find the index of the respective IDs
+	// if it doesn't exist, return -1
 	require.Equal(t, findIndex(IDs, 1), 0)
 	require.Equal(t, findIndex(IDs, 3), 2)
 	require.Equal(t, findIndex(IDs, 5), 4)
@@ -34,7 +45,11 @@ func TestFindIndex(t *testing.T) {
 }
 
 func TestRemoveValue(t *testing.T) {
+	// create an array of 5 IDs
 	IDs := []uint64{1, 2, 3, 4, 5}
+
+	// remove an ID
+	// ensure if ID exists, the length is reduced by one and the index of the removed ID is returned
 	IDs, index1 := removeValue(IDs, 5)
 	require.Len(t, IDs, 4)
 	require.Equal(t, index1, 4)
