@@ -17,23 +17,24 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 }
 
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+	const walletName = "wallet"
 	chainA := s.chainConfigs[0]
 	s.submitSuperfluidProposal(chainA, "gamm/pool/1")
 	s.depositProposal(chainA)
 	s.voteProposal(chainA)
-	walletAddr := s.createWallet(chainA, 0, "wallet")
+	walletAddr := s.createWallet(chainA, 0, walletName)
 	// send gamm tokens to validator's other wallet (non self-delegation wallet)
 	s.sendTx(chainA, 0, "100000000000000000000gamm/pool/1", chainA.validators[0].validator.PublicAddress, walletAddr)
 	// lock tokens from validator 0 on chain A
-	s.lockTokens(chainA, 0, "100000000000000000000gamm/pool/1", "240s", "wallet")
+	s.lockTokens(chainA, 0, "100000000000000000000gamm/pool/1", "240s", walletName)
 	// superfluid delegate from validator 0 non self-delegation wallet to validator 1 on chain A
-	s.superfluidDelegate(chainA, chainA.validators[1].operatorAddress, "wallet")
+	s.superfluidDelegate(chainA, chainA.validators[1].operatorAddress, walletName)
 	// create a text prop, deposit and vote yes
 	s.submitTextProposal(chainA, "superfluid vote overwrite test")
 	s.depositProposal(chainA)
 	s.voteProposal(chainA)
 	// set delegator vote to no
-	s.voteNoProposal(chainA, 0, "wallet")
+	s.voteNoProposal(chainA, 0, walletName)
 
 	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[chainA.meta.Id][0].GetHostPort("1317/tcp"))
 	sfProposalNumber := strconv.Itoa(chainA.latestProposalNumber)
