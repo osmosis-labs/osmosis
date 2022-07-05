@@ -25,3 +25,7 @@ func (k Keeper) SyntheticCoins(coins sdk.Coins, suffix string) sdk.Coins {
 func (k Keeper) GetCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 	return k.getCoinsFromLocks(locks)
 }
+
+func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
+	return k.lock(ctx, lock, tokensToLock)
+}

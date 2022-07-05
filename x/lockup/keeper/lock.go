@@ -125,31 +125,41 @@ func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sd
 	return locks, nil
 }
 
+<<<<<<< HEAD
 // AddTokensToLock locks more tokens into a lockup
 // This also saves the lock to the store.
 func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, coin sdk.Coin) (*types.PeriodLock, error) {
+=======
+// AddTokensToLock locks additional tokens into an existing lock with the given ID.
+// Tokens locked are sent and kept in the module account.
+// This method alters the lock state in store, thus we do a sanity check to ensure
+// lock owner matches the given owner.
+func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, tokensToAdd sdk.Coin) (*types.PeriodLock, error) {
+>>>>>>> c1155937 (Refactor `lock` method (#1936))
 	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return nil, err
+	}
 
 	if lock.GetOwner() != owner.String() {
 		return nil, types.ErrNotLockOwner
 	}
 
+	lock.Coins = lock.Coins.Add(tokensToAdd)
+	err = k.lock(ctx, *lock, sdk.NewCoins(tokensToAdd))
 	if err != nil {
-		return nil, err
-	}
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.OwnerAddress(), types.ModuleName, sdk.NewCoins(coin)); err != nil {
 		return nil, err
 	}
 
-	err = k.addTokenToLock(ctx, lock, coin)
-	if err != nil {
-		return nil, err
+	for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
+		k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), tokensToAdd.Amount)
 	}
 
 	if k.hooks == nil {
 		return lock, nil
 	}
 
+<<<<<<< HEAD
 	k.hooks.OnTokenLocked(ctx, lock.OwnerAddress(), lock.ID, sdk.Coins{coin}, lock.Duration, lock.EndTime)
 	return lock, nil
 }
@@ -181,22 +191,69 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 }
 
 // LockTokens lock tokens from an account for specified duration.
+=======
+	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), sdk.NewCoins(tokensToAdd))
+
+	return lock, nil
+}
+
+// CreateLock creates a new lock with the specified duration for the owner.
+// Returns an error in the following conditions:
+//  - account does not have enough balance
+>>>>>>> c1155937 (Refactor `lock` method (#1936))
 func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is set at the beginning of unlocking time
 	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
-	err := k.Lock(ctx, lock)
+	err := k.lock(ctx, lock, lock.Coins)
 	if err != nil {
 		return lock, err
 	}
+
+	// add lock refs into not unlocking queue
+	err = k.addLockRefs(ctx, lock)
+	if err != nil {
+		return lock, err
+	}
+
 	k.SetLastLockID(ctx, lock.ID)
 	return lock, nil
 }
 
+<<<<<<< HEAD
 func (k Keeper) clearKeysByPrefix(ctx sdk.Context, prefix []byte) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
+=======
+// lock is an internal utility to lock coins and set corresponding states.
+// This is only called by either of the two possible entry points to lock tokens.
+// 1. CreateLock
+// 2. AddTokensToLockByID
+func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
+	owner, err := sdk.AccAddressFromBech32(lock.Owner)
+	if err != nil {
+		return err
+	}
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, tokensToLock); err != nil {
+		return err
+	}
+
+	// store lock object into the store
+	err = k.setLock(ctx, lock)
+	if err != nil {
+		return err
+	}
+
+	// add to accumulation store
+	for _, coin := range tokensToLock {
+		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
+	}
+
+	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	return nil
+}
+>>>>>>> c1155937 (Refactor `lock` method (#1936))
 
 	for ; iterator.Valid(); iterator.Next() {
 		store.Delete(iterator.Key())
