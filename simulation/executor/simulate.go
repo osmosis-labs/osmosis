@@ -74,6 +74,10 @@ func SimulateFromSeedLegacy(
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided config.Seed.
+// TODO: Inputs should be:
+// * SimManager for module configs
+// * Config file for params
+// * whatever is needed for logging (tb + w rn)
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,

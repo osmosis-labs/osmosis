@@ -1,10 +1,14 @@
 package simulation
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"math/rand"
 	"sort"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	legacysimexec "github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"golang.org/x/exp/maps"
 )
 
@@ -18,25 +22,12 @@ type AppModuleSimulationV2 interface {
 	Actions() []Action
 }
 
-type v2wrapperOfV1Module struct {
-	module module.AppModuleSimulation
-	name   string
-}
-
-func (mod v2wrapperOfV1Module) Actions() []Action {
-	weightedOps := legacysimexec.WeightedOperations(mod.module.WeightedOperations(module.SimulationState{}))
-	return ActionsFromWeightedOperations(weightedOps)
-}
-
-func (mod v2wrapperOfV1Module) GenerateGenesisState(simState *module.SimulationState, sim *SimCtx) {
-	mod.module.GenerateGenesisState(simState)
-}
-
 // SimulationManager defines a simulation manager that provides the high level utility
 // for managing and executing simulation functionalities for a group of modules
 type Manager struct {
 	moduleManager module.Manager
-	Modules       map[string]AppModuleSimulationV2 // array of app modules; we use an array for deterministic simulation tests
+	Modules       map[string]AppModuleSimulationV2      // map of all non-legacy app modules;
+	legacyModules map[string]module.AppModuleSimulation // legacy app modules
 }
 
 func NewSimulationManager(manager module.Manager, overrideModules map[string]module.AppModuleSimulation) Manager {
@@ -45,6 +36,7 @@ func NewSimulationManager(manager module.Manager, overrideModules map[string]mod
 	}
 
 	simModules := map[string]AppModuleSimulationV2{}
+	legacySimModules := map[string]module.AppModuleSimulation{}
 	appModuleNamesSorted := maps.Keys(manager.Modules)
 	sort.Strings(appModuleNamesSorted)
 
@@ -53,18 +45,71 @@ func NewSimulationManager(manager module.Manager, overrideModules map[string]mod
 		// Else, if we can cast the app module into a simulation module add it.
 		// otherwise no simulation module.
 		if simModule, ok := overrideModules[moduleName]; ok {
-			simModules[moduleName] = v2wrapperOfV1Module{module: simModule, name: moduleName}
+			legacySimModules[moduleName] = simModule
 		} else {
 			appModule := manager.Modules[moduleName]
 			if simModule, ok := appModule.(AppModuleSimulationV2); ok {
 				simModules[moduleName] = simModule
 			} else if simModule, ok := appModule.(module.AppModuleSimulation); ok {
-				simModules[moduleName] = v2wrapperOfV1Module{module: simModule, name: moduleName}
+				legacySimModules[moduleName] = simModule
 			}
 			// cannot cast, so we continue
 		}
 	}
-	return Manager{moduleManager: manager, Modules: simModules}
+	return Manager{moduleManager: manager, legacyModules: legacySimModules, Modules: simModules}
+}
+
+func loadAppParamsForWasm(path string) simulation.AppParams {
+	bz, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	appParams := make(simulation.AppParams)
+	err = json.Unmarshal(bz, &appParams)
+	if err != nil {
+		panic(err)
+	}
+	return appParams
+}
+
+func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []Action {
+	// We do not support the legacy simulator config format, and just (unfortunately)
+	// hardcode this one filepath for wasm.
+	// TODO: Clean this up / make a better plan
+
+	simState := module.SimulationState{
+		AppParams:    loadAppParamsForWasm("params.json"),
+		ParamChanges: []simulation.ParamChange{},
+		Contents:     []simulation.WeightedProposalContent{},
+		Cdc:          cdc,
+	}
+
+	r := rand.New(rand.NewSource(seed))
+	// first pass generate randomized params + proposal contents
+	for _, moduleName := range m.moduleManager.OrderInitGenesis {
+		if simModule, ok := m.legacyModules[moduleName]; ok {
+			simState.ParamChanges = append(simState.ParamChanges, simModule.RandomizedParams(r)...)
+			simState.Contents = append(simState.Contents, simModule.ProposalContents(simState)...)
+		}
+	}
+	// second pass generate actions
+	weightedOps := []simulation.WeightedOperation{}
+	for _, moduleName := range m.moduleManager.OrderInitGenesis {
+		if simModule, ok := m.legacyModules[moduleName]; ok {
+			weightedOps = append(weightedOps, simModule.WeightedOperations(simState)...)
+		}
+	}
+	return ActionsFromWeightedOperations(weightedOps)
+}
+
+// TODO: Can we use sim here instead? Perhaps by passing in the simulation module manager to the simulator.
+func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []Action {
+	actions := m.legacyActions(seed, cdc)
+	for _, simModule := range m.Modules {
+		actions = append(actions, simModule.Actions()...)
+	}
+	return actions
 }
 
 // TODO: Fix this
@@ -85,6 +130,9 @@ func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *Si
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.Modules[moduleName]; ok {
 			simModule.GenerateGenesisState(simState, sim)
+		}
+		if simModule, ok := m.legacyModules[moduleName]; ok {
+			simModule.GenerateGenesisState(simState)
 		}
 	}
 }
