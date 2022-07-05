@@ -113,6 +113,8 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+// QueryDenomAuthorityMetadataRequest defines the request structure for the
+// DenomAuthorityMetadata gRPC query.
 type QueryDenomAuthorityMetadataRequest struct {
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
 }
@@ -157,6 +159,8 @@ func (m *QueryDenomAuthorityMetadataRequest) GetDenom() string {
 	return ""
 }
 
+// QueryDenomAuthorityMetadataResponse defines the response structure for the
+// DenomAuthorityMetadata gRPC query.
 type QueryDenomAuthorityMetadataResponse struct {
 	AuthorityMetadata DenomAuthorityMetadata `protobuf:"bytes,1,opt,name=authority_metadata,json=authorityMetadata,proto3" json:"authority_metadata" yaml:"authority_metadata"`
 }
@@ -201,6 +205,8 @@ func (m *QueryDenomAuthorityMetadataResponse) GetAuthorityMetadata() DenomAuthor
 	return DenomAuthorityMetadata{}
 }
 
+// QueryDenomsFromCreatorRequest defines the request structure for the
+// DenomsFromCreator gRPC query.
 type QueryDenomsFromCreatorRequest struct {
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty" yaml:"creator"`
 }
@@ -245,6 +251,8 @@ func (m *QueryDenomsFromCreatorRequest) GetCreator() string {
 	return ""
 }
 
+// QueryDenomsFromCreatorRequest defines the response structure for the
+// DenomsFromCreator gRPC query.
 type QueryDenomsFromCreatorResponse struct {
 	Denoms []string `protobuf:"bytes,1,rep,name=denoms,proto3" json:"denoms,omitempty" yaml:"denoms"`
 }
@@ -354,9 +362,14 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Params returns the total set of minting parameters.
+	// Params defines a gRPC query method that returns the tokenfactory module's
+	// parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// DenomAuthorityMetadata defines a gRPC query method for fetching
+	// DenomAuthorityMetadata for a particular denom.
 	DenomAuthorityMetadata(ctx context.Context, in *QueryDenomAuthorityMetadataRequest, opts ...grpc.CallOption) (*QueryDenomAuthorityMetadataResponse, error)
+	// DenomsFromCreator defines a gRPC query method for fetching all
+	// denominations created by a specific admin/creator.
 	DenomsFromCreator(ctx context.Context, in *QueryDenomsFromCreatorRequest, opts ...grpc.CallOption) (*QueryDenomsFromCreatorResponse, error)
 }
 
@@ -397,9 +410,14 @@ func (c *queryClient) DenomsFromCreator(ctx context.Context, in *QueryDenomsFrom
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Params returns the total set of minting parameters.
+	// Params defines a gRPC query method that returns the tokenfactory module's
+	// parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// DenomAuthorityMetadata defines a gRPC query method for fetching
+	// DenomAuthorityMetadata for a particular denom.
 	DenomAuthorityMetadata(context.Context, *QueryDenomAuthorityMetadataRequest) (*QueryDenomAuthorityMetadataResponse, error)
+	// DenomsFromCreator defines a gRPC query method for fetching all
+	// denominations created by a specific admin/creator.
 	DenomsFromCreator(context.Context, *QueryDenomsFromCreatorRequest) (*QueryDenomsFromCreatorResponse, error)
 }
 

@@ -77,6 +77,9 @@ func (m *GenesisState) GetFactoryDenoms() []GenesisDenom {
 	return nil
 }
 
+// GenesisDenom defines a tokenfactory denom that is defined within genesis
+// state. The structure contains DenomAuthorityMetadata which defines the
+// denom's admin.
 type GenesisDenom struct {
 	Denom             string                 `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
 	AuthorityMetadata DenomAuthorityMetadata `protobuf:"bytes,2,opt,name=authority_metadata,json=authorityMetadata,proto3" json:"authority_metadata" yaml:"authority_metadata"`
