@@ -11,7 +11,7 @@ created denom. Once a denom is created, the original creator is given
 - Mint their denom to any account
 - Burn their denom from any account
 - Create a transfer of their denom between any two accounts
-- Change the admin In the future, more admin capabilities may be added. Admins
+- Change the admin. In the future, more admin capabilities may be added. Admins
   can choose to share admin privileges with other accounts using the authz
   module. The `ChangeAdmin` functionality, allows changing the master admin
   account, or even setting it to `""`, meaning no account has admin privileges
