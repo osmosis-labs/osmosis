@@ -41,19 +41,11 @@ var (
 func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
 
+	// get raw pool creation fee(s) as DecCoins
 	poolCreationFeeDecCoins := sdk.DecCoins{}
 	for _, coin := range params.PoolCreationFee {
 		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
 	}
-
-	func() {
-		keeper := suite.App.GAMMKeeper
-
-		// Try to create pool without balances.
-		msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
-		_, err := keeper.CreatePool(suite.Ctx, msg)
-		suite.Require().Error(err)
-	}()
 
 	// TODO: Refactor this to be more sensible.
 	// The struct should contain a MsgCreateBalancerPool.
@@ -66,9 +58,13 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		expectPass bool
 	}{
 		{
-			name:       "create basic pool with default assets",
+			name:       "create pool with default assets",
 			msg:        balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
 			expectPass: true,
+		}, {
+			name:       "create pool with no assets",
+			msg:        balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
+			expectPass: false,
 		}, {
 			name: "create a pool with negative swap fee",
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
@@ -159,53 +155,6 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			}}, defaultFutureGovernor),
 			expectPass: false,
 		},
-		/* Move these last two tests to a new PoolCreationFee test section
-		{
-			name: "empty pool creation fee on basic pool",
-			fn: func() {
-				keeper := suite.App.GAMMKeeper
-				keeper.SetParams(suite.Ctx, types.Params{
-					PoolCreationFee: sdk.Coins{},
-				})
-				msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-					SwapFee: sdk.NewDecWithPrec(1, 2),
-					ExitFee: sdk.NewDecWithPrec(1, 2),
-				}, defaultPoolAssets, defaultFutureGovernor)
-				_, err := keeper.CreatePool(suite.Ctx, msg)
-				suite.Require().NoError(err)
-				pools, err := keeper.GetPoolsAndPoke(suite.Ctx)
-				suite.Require().Len(pools, 1)
-				suite.Require().NoError(err)
-			},
-			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: true,
-		}, {
-			name: "nil pool creation fee on basic pool",
-			fn: func() {
-				keeper := suite.App.GAMMKeeper
-				keeper.SetParams(suite.Ctx, types.Params{
-					PoolCreationFee: nil,
-				})
-				msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-					SwapFee: sdk.NewDecWithPrec(1, 2),
-					ExitFee: sdk.NewDecWithPrec(1, 2),
-				}, defaultPoolAssets, defaultFutureGovernor)
-				_, err := keeper.CreatePool(suite.Ctx, msg)
-				suite.Require().NoError(err)
-				pools, err := keeper.GetPoolsAndPoke(suite.Ctx)
-				suite.Require().Len(pools, 1)
-				suite.Require().NoError(err)
-			},
-			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: true,
-		}
-		*/
 	}
 
 	for _, test := range tests {
@@ -254,7 +203,96 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.Ctx)
 			suite.Require().Equal(expectedPoolTokens.String(), liquidity.String())
 		} else {
-			suite.Require().Error(err, test.msg.ValidateBasic(), "test: %v", test.name)
+			suite.Require().Error(err, "test: %v", test.name)
+		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestPoolCreationFee() {
+	params := suite.App.GAMMKeeper.GetParams(suite.Ctx)
+
+	// get raw pool creation fee(s) as DecCoins
+	poolCreationFeeDecCoins := sdk.DecCoins{}
+	for _, coin := range params.PoolCreationFee {
+		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
+	}
+
+	tests := []struct {
+		name       string
+		poolCreationFee sdk.Coins
+		msg        balancertypes.MsgCreateBalancerPool
+		expectPass bool
+	}{
+		{
+			name: "no pool creation fee for default asset pool",
+			poolCreationFee: sdk.Coins{},
+			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: sdk.NewDecWithPrec(1, 2),
+			}, defaultPoolAssets, defaultFutureGovernor),
+			expectPass: true,
+		}, {
+			name: "nil pool creation fee on basic pool",
+			poolCreationFee: nil,
+			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: sdk.NewDecWithPrec(1, 2),
+			}, defaultPoolAssets, defaultFutureGovernor),
+			expectPass: true,
+		},
+	}
+
+	for _, test := range tests {
+		suite.SetupTest()
+		keeper := suite.App.GAMMKeeper
+
+		// set pool creation fee
+		keeper.SetParams(suite.Ctx, types.Params{
+			PoolCreationFee: test.poolCreationFee,
+		})
+
+		// fund sender test account
+		sender, err := sdk.AccAddressFromBech32(test.msg.Sender)
+		suite.Require().NoError(err, "test: %v", test.name)
+		suite.FundAcc(sender, defaultAcctFunds)
+
+		// note starting balances for community fee pool and pool creator account
+		feePoolBeforeNewPool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
+		senderBalBeforeNewPool := suite.App.BankKeeper.GetAllBalances(suite.Ctx, sender)
+
+		// attempt to create a pool with the given NewMsgCreateBalancerPool message
+		poolId, err := keeper.CreatePool(suite.Ctx, test.msg)
+
+		if test.expectPass {
+			suite.Require().NoError(err, "test: %v", test.name)
+
+			// check to make sure new pool exists and has minted the correct number of pool shares
+			pool, err := keeper.GetPoolAndPoke(suite.Ctx, poolId)
+			suite.Require().NoError(err, "test: %v", test.name)
+			suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
+				fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply.String()),
+			)
+
+			// make sure pool creation fee is correctly sent to community pool
+			feePool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
+			suite.Require().Equal(feePool, feePoolBeforeNewPool.Add(sdk.NewDecCoinsFromCoins(test.poolCreationFee...)...))
+			// get expected tokens in new pool and corresponding pool shares
+			expectedPoolTokens := sdk.Coins{}
+			for _, asset := range test.msg.GetPoolAssets() {
+				expectedPoolTokens = expectedPoolTokens.Add(asset.Token)
+			}
+			expectedPoolShares := sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)
+
+			// make sure sender's balance is updated correctly
+			senderBal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, sender)
+			expectedSenderBal := senderBalBeforeNewPool.Sub(test.poolCreationFee).Sub(expectedPoolTokens).Add(expectedPoolShares)
+			suite.Require().Equal(senderBal.String(), expectedSenderBal.String())
+
+			// check pool's liquidity is correctly increased
+			liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.Ctx)
+			suite.Require().Equal(expectedPoolTokens.String(), liquidity.String())
+		} else {
+			suite.Require().Error(err, "test: %v", test.name)
 		}
 	}
 }
