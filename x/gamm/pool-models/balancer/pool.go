@@ -90,7 +90,7 @@ func (pa Pool) GetSwapFee(_ sdk.Context) sdk.Dec {
 }
 
 func (pa Pool) GetTotalPoolLiquidity(_ sdk.Context) sdk.Coins {
-	return PoolAssetsCoins(pa.PoolAssets)
+	return poolAssetsCoins(pa.PoolAssets)
 }
 
 func (pa Pool) GetExitFee(_ sdk.Context) sdk.Dec {
@@ -140,7 +140,7 @@ func (pa *Pool) SetInitialPoolAssets(PoolAssets []PoolAsset) error {
 			return fmt.Errorf("can't add the zero or negative balance of token")
 		}
 
-		err := asset.ValidateWeight()
+		err := asset.validateWeight()
 		if err != nil {
 			return err
 		}
@@ -160,7 +160,7 @@ func (pa *Pool) SetInitialPoolAssets(PoolAssets []PoolAsset) error {
 	// Furthermore, consider changing the underlying data type to allow in-place modification if the
 	// number of PoolAssets is expected to be large.
 	pa.PoolAssets = append(pa.PoolAssets, scaledPoolAssets...)
-	SortPoolAssetsByDenom(pa.PoolAssets)
+	sortPoolAssetsByDenom(pa.PoolAssets)
 
 	pa.TotalWeight = newTotalWeight
 
@@ -183,7 +183,7 @@ func (pa *Pool) setInitialPoolParams(params PoolParams, sortedAssets []PoolAsset
 
 		// sort target weights by denom
 		targetPoolWeights := params.SmoothWeightChangeParams.TargetPoolWeights
-		SortPoolAssetsByDenom(targetPoolWeights)
+		sortPoolAssetsByDenom(targetPoolWeights)
 
 		// scale target pool weights by GuaranteedWeightPrecision
 		for i, v := range targetPoolWeights {
@@ -246,8 +246,8 @@ func (pa Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
 	Aasset PoolAsset, Basset PoolAsset, err error,
 ) {
-	Aasset, found1 := GetPoolAssetByDenom(p.PoolAssets, tokenADenom)
-	Basset, found2 := GetPoolAssetByDenom(p.PoolAssets, tokenBDenom)
+	Aasset, found1 := getPoolAssetByDenom(p.PoolAssets, tokenADenom)
+	Basset, found2 := getPoolAssetByDenom(p.PoolAssets, tokenBDenom)
 	if !(found1 && found2) {
 		return Aasset, Basset, errors.New("one of the provided pool denoms does not exist in pool")
 	}
@@ -375,7 +375,7 @@ func (pa *Pool) updateAllWeights(newWeights []PoolAsset) {
 				"expected new weights' %vth asset to be %v, got %v",
 				i, asset.Token.Denom, newWeights[i].Token.Denom))
 		}
-		err := newWeights[i].ValidateWeight()
+		err := newWeights[i].validateWeight()
 		if err != nil {
 			panic("updateAllWeights: Tried to set an invalid weight")
 		}
