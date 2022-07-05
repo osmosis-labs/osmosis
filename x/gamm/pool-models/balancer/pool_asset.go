@@ -5,11 +5,16 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	"gopkg.in/yaml.v2"
+
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+var (
+	assetWeightLimit = sdk.NewIntFromUint64(1 << 32)
 )
 
 // Validates a pool asset, to check if it has a valid weight.
@@ -18,10 +23,9 @@ func (asset PoolAsset) ValidateWeight() error {
 		return fmt.Errorf("a token's weight in the pool must be greater than 0")
 	}
 
-	// TODO: Choose a value that is too large for weights
-	// if asset.Weight >= (1 << 32) {
-	// 	return fmt.Errorf("a token's weight in the pool must be less than 2^32")
-	// }
+	if asset.Weight.GTE(assetWeightLimit) {
+		return fmt.Errorf("a token's weight in the pool must be less than 2^32")
+	}
 
 	return nil
 }
