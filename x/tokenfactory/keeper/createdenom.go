@@ -13,8 +13,8 @@ import (
 func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error) {
 	// Temporary check until IBC bug is sorted out
 	if k.bankKeeper.HasSupply(ctx, subdenom) {
-		return "", fmt.Errorf("Temporary error until IBC bug is sorted out, " +
-			"can't create subdenoms that are the same as a native denom.")
+		return "", fmt.Errorf("temporary error until IBC bug is sorted out, " +
+			"can't create subdenoms that are the same as a native denom")
 	}
 
 	// Send creation fee to community pool

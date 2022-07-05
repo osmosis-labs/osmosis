@@ -238,8 +238,8 @@ func (node *Node) setAcc(idx int, acc sdk.Int) *Node {
 	return node
 }
 
-func (cs *Node) insert(idx int, c *Child) *Node {
-	arr := append(cs.Children[:idx], append([]*Child{c}, cs.Children[idx:]...)...)
+func (node *Node) insert(idx int, c *Child) *Node {
+	arr := append(node.Children[:idx], append([]*Child{c}, node.Children[idx:]...)...)
 	return NewNode(arr...)
 }
 

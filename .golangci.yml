@@ -70,7 +70,7 @@ linters:
     # - sqlclosecheck <- needs go 1.18 support
 #    - staticcheck <- later
 #    - structcheck <- later
-#    - stylecheck <- enable later, atriggers on underscores in variable names and on poolId
+    - stylecheck # replacement of golint, subset of staticcheck binary.
     #    - tagliatelle <- disabled for defying cosmos idiom
     - tenv
     - testpackage
@@ -102,5 +102,8 @@ issues:
         # across its files, once stableswap is fully complete.
         - unused
         - deadcode
+    - linters:
+      - stylecheck
+      text: "ST1003:" # requires identifiers with "id" to be "ID".
   max-issues-per-linter: 10000
   max-same-issues: 10000
