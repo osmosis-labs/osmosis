@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
 func DefaultFeeString(cfg network.Config) string {
@@ -48,16 +46,4 @@ func ParseSdkIntFromString(s string, separator string) ([]sdk.Int, error) {
 		parsedInts = append(parsedInts, sdk.NewIntFromUint64(parsed))
 	}
 	return parsedInts, nil
-}
-
-// ConditionalPanic checks if expectPanic is true, asserts that sut (system under test)
-// panics. If expectPanic is false, asserts that sut does not panic.
-// returns true if sut panics and false it it doesnot
-func ConditionalPanic(t *testing.T, expectPanic bool, sut func()) {
-	if expectPanic {
-		require.Panics(t, sut)
-		return
-	}
-
-	require.NotPanics(t, sut)
 }
