@@ -310,7 +310,6 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		sharesRequested sdk.Int
 		tokenInMaxs     sdk.Coins
 		expectPass      bool
-		fn              func(poolId uint64)
 	}{
 		{
 			name:            "basic join no swap",
@@ -402,93 +401,101 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 }
 
 func (suite *KeeperTestSuite) TestExitPool() {
+	// we keep this account empty to test attempts with insufficient balance
+	emptySender := suite.TestAccs[1]
+
 	tests := []struct {
-		fn func(poolId uint64)
+		name         string
+		txSender     sdk.AccAddress
+		sharesIn     sdk.Int
+		tokenOutMins sdk.Coins
+		expectPass   bool
 	}{
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.App.GAMMKeeper
-				// Acc2 has no share token.
-				_, err := keeper.ExitPool(suite.Ctx, suite.TestAccs[1], poolId, types.OneShare.MulRaw(50), sdk.Coins{})
-				suite.Require().Error(err)
-			},
+			name:         "attempt exit pool with no pool share balance",
+			txSender:     emptySender,
+			sharesIn:     types.OneShare.MulRaw(50),
+			tokenOutMins: sdk.Coins{},
+			expectPass:   false,
 		},
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.App.GAMMKeeper
-
-				balancesBefore := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
-				_, err := keeper.ExitPool(suite.Ctx, suite.TestAccs[0], poolId, types.InitPoolSharesSupply.QuoRaw(2), sdk.Coins{})
-				suite.Require().NoError(err)
-				// (100 - 50) * OneShare should remain.
-				suite.Require().Equal(types.InitPoolSharesSupply.QuoRaw(2).String(), suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], "gamm/pool/1").Amount.String())
-				balancesAfter := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
-
-				deltaBalances, _ := balancesBefore.SafeSub(balancesAfter)
-				// The pool was created with the 10000foo, 10000bar, and the pool share was minted as 100*OneShare gamm/pool/1.
-				// Thus, to refund the 50*OneShare gamm/pool/1, (10000foo, 10000bar) * (1 / 2) balances should be refunded.
-				suite.Require().Equal("-5000", deltaBalances.AmountOf("foo").String())
-				suite.Require().Equal("-5000", deltaBalances.AmountOf("bar").String())
-			},
+			name:         "exit half pool with correct pool share balance",
+			txSender:     suite.TestAccs[0],
+			sharesIn:     types.OneShare.MulRaw(50),
+			tokenOutMins: sdk.Coins{},
+			expectPass:   true,
 		},
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.App.GAMMKeeper
-
-				_, err := keeper.ExitPool(suite.Ctx, suite.TestAccs[0], poolId, sdk.NewInt(0), sdk.Coins{})
-				suite.Require().Error(err, "can't join the pool with requesting 0 share amount")
-			},
+			name:         "attempt exit pool requesting 0 share amount",
+			txSender:     suite.TestAccs[0],
+			sharesIn:     sdk.NewInt(0),
+			tokenOutMins: sdk.Coins{},
+			expectPass:   false,
 		},
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.App.GAMMKeeper
-
-				_, err := keeper.ExitPool(suite.Ctx, suite.TestAccs[0], poolId, sdk.NewInt(-1), sdk.Coins{})
-				suite.Require().Error(err, "can't join the pool with requesting negative share amount")
-			},
+			name:         "attempt exit pool requesting negative share amount",
+			txSender:     suite.TestAccs[0],
+			sharesIn:     sdk.NewInt(-1),
+			tokenOutMins: sdk.Coins{},
+			expectPass:   false,
 		},
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.App.GAMMKeeper
-
-				// Test the "tokenOutMins"
-				// In this case, to refund the 50000000 amount of share token, the foo, bar token are expected to be refunded as 5000 amounts.
-				_, err := keeper.ExitPool(suite.Ctx, suite.TestAccs[0], poolId, types.OneShare.MulRaw(50), sdk.Coins{
-					sdk.NewCoin("foo", sdk.NewInt(5001)),
-				})
-				suite.Require().Error(err)
+			name:     "attempt exit pool with tokenOutMins above actual output",
+			txSender: suite.TestAccs[0],
+			sharesIn: types.OneShare.MulRaw(50),
+			tokenOutMins: sdk.Coins{
+				sdk.NewCoin("foo", sdk.NewInt(5001)),
 			},
+			expectPass: false,
 		},
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.App.GAMMKeeper
-
-				// Test the "tokenOutMins"
-				// In this case, to refund the 50000000 amount of share token, the foo, bar token are expected to be refunded as 5000 amounts.
-				_, err := keeper.ExitPool(suite.Ctx, suite.TestAccs[0], poolId, types.OneShare.MulRaw(50), sdk.Coins{
-					sdk.NewCoin("foo", sdk.NewInt(5000)),
-				})
-				suite.Require().NoError(err)
+			name:     "attempt exit pool requesting tokenOutMins at exactly the actual output",
+			txSender: suite.TestAccs[0],
+			sharesIn: types.OneShare.MulRaw(50),
+			tokenOutMins: sdk.Coins{
+				sdk.NewCoin("foo", sdk.NewInt(5000)),
 			},
+			expectPass: true,
 		},
 	}
 
 	for _, test := range tests {
 		suite.SetupTest()
 
-		// Mint some assets to the accounts.
-		for _, acc := range suite.TestAccs {
-			suite.FundAcc(acc, defaultAcctFunds)
+		keeper := suite.App.GAMMKeeper
 
-			// Create the pool at first
-			msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDec(0),
-			}, defaultPoolAssets, defaultFutureGovernor)
-			poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
-			suite.Require().NoError(err)
+		// Mint assets to the pool creator
+		suite.FundAcc(test.txSender, defaultAcctFunds)
 
-			test.fn(poolId)
+		// Create the pool at first
+		msg := balancer.NewMsgCreateBalancerPool(test.txSender, balancer.PoolParams{
+			SwapFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: sdk.NewDec(0),
+		}, defaultPoolAssets, defaultFutureGovernor)
+		poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+
+		// If we are testing insufficient pool share balances, switch sender to empty account
+		if test.txSender.String() == emptySender.String() {
+			test.txSender = suite.TestAccs[2]
+		}
+
+		balancesBefore := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.txSender)
+		_, err = keeper.ExitPool(suite.Ctx, test.txSender, poolId, test.sharesIn, test.tokenOutMins)
+
+		if test.expectPass {
+			suite.Require().NoError(err, "test: %v", test.name)
+			suite.Require().Equal(test.sharesIn.String(), suite.App.BankKeeper.GetBalance(suite.Ctx, test.txSender, "gamm/pool/1").Amount.String())
+			balancesAfter := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.txSender)
+			deltaBalances, _ := balancesBefore.SafeSub(balancesAfter)
+			// The pool was created with the 10000foo, 10000bar, and the pool share was minted as 100*OneShare gamm/pool/1.
+			// Thus, to refund the 50*OneShare gamm/pool/1, (10000foo, 10000bar) * (1 / 2) balances should be refunded.
+			suite.Require().Equal("-5000", deltaBalances.AmountOf("foo").String())
+			suite.Require().Equal("-5000", deltaBalances.AmountOf("bar").String())
+
+			liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.Ctx)
+			suite.Require().Equal("5000bar,5000foo", liquidity.String())
+		} else {
+			suite.Require().Error(err, "test: %v", test.name)
 		}
 	}
 }
