@@ -47,44 +47,47 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		poolCreationFeeDecCoins = poolCreationFeeDecCoins.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
 	}
 
-	// we keep this account empty to test attempts with insufficient balance
-	emptySender := suite.TestAccs[1]
-
 	// TODO: should be moved to balancer package
 	tests := []struct {
-		name       string
-		msg        balancertypes.MsgCreateBalancerPool
-		expectPass bool
+		name        string
+		msg         balancertypes.MsgCreateBalancerPool
+		emptySender bool
+		expectPass  bool
 	}{
 		{
-			name:       "create pool with default assets",
-			msg:        balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: true,
+			name:        "create pool with default assets",
+			msg:         balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
+			emptySender: false,
+			expectPass:  true,
 		}, {
-			name:       "create pool with no assets",
-			msg:        balancer.NewMsgCreateBalancerPool(emptySender, defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: false,
+			name:        "create pool with no assets",
+			msg:         balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor),
+			emptySender: true,
+			expectPass:  false,
 		}, {
 			name: "create a pool with negative swap fee",
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(-1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: false,
+			emptySender: false,
+			expectPass:  false,
 		}, {
 			name: "create a pool with negative exit fee",
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(-1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
-			expectPass: false,
+			emptySender: false,
+			expectPass:  false,
 		}, {
 			name: "create the pool with empty PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{}, defaultFutureGovernor),
-			expectPass: false,
+			emptySender: false,
+			expectPass:  false,
 		}, {
 			name: "create the pool with 0 weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
@@ -97,7 +100,8 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
-			expectPass: false,
+			emptySender: false,
+			expectPass:  false,
 		}, {
 			name: "create the pool with negative weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
@@ -110,7 +114,8 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
-			expectPass: false,
+			emptySender: false,
+			expectPass:  false,
 		}, {
 			name: "create the pool with 0 balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
@@ -123,7 +128,8 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
-			expectPass: false,
+			emptySender: false,
+			expectPass:  false,
 		}, {
 			name: "create the pool with negative balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
@@ -139,7 +145,8 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
-			expectPass: false,
+			emptySender: false,
+			expectPass:  false,
 		}, {
 			name: "create the pool with duplicated PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
@@ -152,7 +159,8 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}}, defaultFutureGovernor),
-			expectPass: false,
+			emptySender: false,
+			expectPass:  false,
 		},
 	}
 
@@ -163,7 +171,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		// fund sender test account
 		sender, err := sdk.AccAddressFromBech32(test.msg.Sender)
 		suite.Require().NoError(err, "test: %v", test.name)
-		if sender.String() != emptySender.String() {
+		if !test.emptySender {
 			suite.FundAcc(sender, defaultAcctFunds)
 		}
 
@@ -240,6 +248,14 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
 			expectPass: true,
+		}, {
+			name:            "attempt pool creation without sufficient funds for fees",
+			poolCreationFee: sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(10000))},
+			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: sdk.NewDecWithPrec(1, 2),
+			}, defaultPoolAssets, defaultFutureGovernor),
+			expectPass: false,
 		},
 	}
 
@@ -397,21 +413,20 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 }
 
 func (suite *KeeperTestSuite) TestExitPool() {
-	// we keep this account empty to test attempts with insufficient balance
-	emptySender := suite.TestAccs[1]
-
 	tests := []struct {
 		name         string
 		txSender     sdk.AccAddress
 		sharesIn     sdk.Int
 		tokenOutMins sdk.Coins
+		emptySender  bool
 		expectPass   bool
 	}{
 		{
 			name:         "attempt exit pool with no pool share balance",
-			txSender:     emptySender,
+			txSender:     suite.TestAccs[0],
 			sharesIn:     types.OneShare.MulRaw(50),
 			tokenOutMins: sdk.Coins{},
+			emptySender:  true,
 			expectPass:   false,
 		},
 		{
@@ -419,6 +434,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			txSender:     suite.TestAccs[0],
 			sharesIn:     types.OneShare.MulRaw(50),
 			tokenOutMins: sdk.Coins{},
+			emptySender:  false,
 			expectPass:   true,
 		},
 		{
@@ -426,6 +442,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			txSender:     suite.TestAccs[0],
 			sharesIn:     sdk.NewInt(0),
 			tokenOutMins: sdk.Coins{},
+			emptySender:  false,
 			expectPass:   false,
 		},
 		{
@@ -433,6 +450,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			txSender:     suite.TestAccs[0],
 			sharesIn:     sdk.NewInt(-1),
 			tokenOutMins: sdk.Coins{},
+			emptySender:  false,
 			expectPass:   false,
 		},
 		{
@@ -442,7 +460,8 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			tokenOutMins: sdk.Coins{
 				sdk.NewCoin("foo", sdk.NewInt(5001)),
 			},
-			expectPass: false,
+			emptySender: false,
+			expectPass:  false,
 		},
 		{
 			name:     "attempt exit pool requesting tokenOutMins at exactly the actual output",
@@ -451,7 +470,8 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			tokenOutMins: sdk.Coins{
 				sdk.NewCoin("foo", sdk.NewInt(5000)),
 			},
-			expectPass: true,
+			emptySender: false,
+			expectPass:  true,
 		},
 	}
 
@@ -471,8 +491,8 @@ func (suite *KeeperTestSuite) TestExitPool() {
 		poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
 
 		// If we are testing insufficient pool share balances, switch sender to empty account
-		if test.txSender.String() == emptySender.String() {
-			test.txSender = suite.TestAccs[2]
+		if test.emptySender {
+			test.txSender = suite.TestAccs[1]
 		}
 
 		balancesBefore := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.txSender)
