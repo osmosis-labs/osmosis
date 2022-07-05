@@ -70,7 +70,7 @@ linters:
     # - sqlclosecheck <- needs go 1.18 support
     - staticcheck # set of rules from staticcheck, subset of staticcheck binary.
 #    - structcheck <- later
-#    - stylecheck <- enable later, atriggers on underscores in variable names and on poolId
+    - stylecheck # replacement of golint, subset of staticcheck binary.
     #    - tagliatelle <- disabled for defying cosmos idiom
     - tenv
     - testpackage
@@ -105,5 +105,8 @@ issues:
     - linters:
       - staticcheck
       text: "SA1024: cutset contains duplicate characters" # proved to not provide much value, only false positives.
+    - linters:
+      - stylecheck
+      text: "ST1003:" # requires identifiers with "id" to be "ID".
   max-issues-per-linter: 10000
   max-same-issues: 10000
