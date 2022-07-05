@@ -138,7 +138,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 					Address: sdk.AccAddress([]byte("addr4---------------")).String(),
 					Weight:  sdk.NewDecWithPrec(4, 1),
 				}},
-			mintCoin: sdk.NewCoin("stake", sdk.NewInt(10000)),
+			mintCoin: sdk.NewCoin("stake", sdk.NewInt(100000)),
 		},
 	}
 	for _, tc := range tests {
@@ -160,12 +160,12 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 			})
 			suite.NoError(err)
 
-			// At this time, there is no distr record, so the asset should be allocated to the community pool.}
 			err = suite.App.MintKeeper.MintCoins(suite.Ctx, sdk.NewCoins(tc.mintCoin))
 			suite.NoError(err)
 			err = suite.App.MintKeeper.DistributeMintedCoin(suite.Ctx, tc.mintCoin)
 			suite.NoError(err)
 
+			// check feePool
 			feePool := suite.App.DistrKeeper.GetFeePool(suite.Ctx)
 			feeCollector := suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 			suite.Equal(
