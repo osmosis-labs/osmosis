@@ -196,6 +196,11 @@ func OrderEndBlockers(allModuleNames []string) []string {
 
 // OrderInitGenesis returns module names in order for init genesis calls.
 func OrderInitGenesis(allModuleNames []string) []string {
+	// NOTE: The genutils moodule must occur after staking so that pools are
+	// properly initialized with tokens from genesis accounts.
+	// NOTE: Capability module must occur first so that it can initialize any capabilities
+	// so that other modules that want to create or claim capabilities afterwards in InitChain
+	// can do so safely.
 	return []string{
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
@@ -229,7 +234,8 @@ func OrderInitGenesis(allModuleNames []string) []string {
 	}
 }
 
-// simulationModules returns modules for simulation manager
+// createSimulationManager returns a simulation manager
+// must be ran after modulemanager.SetInitGenesisOrder
 func createSimulationManager(
 	app *OsmosisApp,
 	encodingConfig appparams.EncodingConfig,
@@ -237,13 +243,11 @@ func createSimulationManager(
 ) *simulation.Manager {
 	appCodec := encodingConfig.Marshaler
 
-	// recreate list of modules, to ensure no issues with overriding prior module structs.
-	modules := appModules(app, encodingConfig, skipGenesisInvariants)
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
 	}
-	manager := simulation.NewSimulationManager(modules, overrideModules)
-	return &manager
+	simulationManager := simulation.NewSimulationManager(*app.mm, overrideModules)
+	return &simulationManager
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.

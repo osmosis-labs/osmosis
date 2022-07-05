@@ -231,11 +231,6 @@ func NewOsmosisApp(
 	// Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
 	app.mm.SetOrderEndBlockers(OrderEndBlockers(app.mm.ModuleNames())...)
 
-	// NOTE: The genutils moodule must occur after staking so that pools are
-	// properly initialized with tokens from genesis accounts.
-	// NOTE: Capability module must occur first so that it can initialize any capabilities
-	// so that other modules that want to create or claim capabilities afterwards in InitChain
-	// can do so safely.
 	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -246,9 +241,6 @@ func NewOsmosisApp(
 	app.setupUpgradeHandlers()
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
-	//
-	// NOTE: this is not required apps that don't use the simulator for fuzz testing
-	// transactions
 	app.sm = createSimulationManager(app, encodingConfig, skipGenesisInvariants)
 
 	// app.sm.RegisterStoreDecoders()

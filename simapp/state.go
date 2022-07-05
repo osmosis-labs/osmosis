@@ -180,7 +180,7 @@ func AppStateRandomizedFn(
 		GenTimestamp: genesisTimestamp,
 	}
 
-	simManager.GenerateGenesisStates(simState)
+	simManager.GenerateGenesisStates(simState, &simulation.SimCtx{})
 
 	appState, err := json.Marshal(genesisState)
 	if err != nil {
