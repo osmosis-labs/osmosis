@@ -23,7 +23,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/viper"
-	tmcfg "github.com/tendermint/tendermint/config"
 	tmconfig "github.com/tendermint/tendermint/config"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	"github.com/tendermint/tendermint/p2p"
@@ -272,7 +271,7 @@ func (n *internalNode) init() error {
 		return fmt.Errorf("failed to export app genesis state: %w", err)
 	}
 
-	tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+	tmconfig.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 	return nil
 }
 
@@ -330,7 +329,7 @@ func (n *internalNode) initStateSyncConfig(trustHeight int64, trustHash string, 
 		return err
 	}
 
-	valConfig.StateSync = tmcfg.DefaultStateSyncConfig()
+	valConfig.StateSync = tmconfig.DefaultStateSyncConfig()
 	valConfig.StateSync.Enable = true
 	valConfig.StateSync.TrustHeight = trustHeight
 	valConfig.StateSync.TrustHash = trustHash
