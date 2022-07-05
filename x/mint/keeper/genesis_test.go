@@ -112,8 +112,8 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			originalVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
 
 			// Test.
-
-			if osmoutils.ConditionalPanic(suite.T(), tc.expectPanic || false, func() { mintKeeper.InitGenesis(ctx, tc.mintGenesis) }) {
+			osmoutils.ConditionalPanic(suite.T(), tc.expectPanic, func() { mintKeeper.InitGenesis(ctx, tc.mintGenesis) })
+			if tc.expectPanic {
 				return
 			}
 

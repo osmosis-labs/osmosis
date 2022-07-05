@@ -53,12 +53,11 @@ func ParseSdkIntFromString(s string, separator string) ([]sdk.Int, error) {
 // ConditionalPanic checks if expectPanic is true, asserts that sut (system under test)
 // panics. If expectPanic is false, asserts that sut does not panic.
 // returns true if sut panics and false it it doesnot
-func ConditionalPanic(t *testing.T, expectPanic bool, sut func()) bool {
+func ConditionalPanic(t *testing.T, expectPanic bool, sut func()) {
 	if expectPanic {
 		require.Panics(t, sut)
-		return true
+		return
 	}
 
 	require.NotPanics(t, sut)
-	return false
 }
