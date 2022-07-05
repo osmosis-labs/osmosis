@@ -38,10 +38,6 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 	}
 	app.MintKeeper.SetParams(ctx, mintParams)
 
-	// setup developer rewards account
-	app.MintKeeper.CreateDeveloperVestingModuleAccount(
-		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2)))
-
 	height := int64(1)
 	lastReductionPeriod := app.MintKeeper.GetLastReductionEpochNum(ctx)
 	// correct rewards
@@ -120,10 +116,6 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
-
-	// setup developer rewards account
-	app.MintKeeper.CreateDeveloperVestingModuleAccount(
-		ctx, sdk.NewCoin("stake", sdk.NewInt(156*500000*2)))
 
 	height := int64(1)
 	lastReductionPeriod := app.MintKeeper.GetLastReductionEpochNum(ctx)
@@ -244,9 +236,7 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 		developerAccountBalance = 225_000_000_000_000
 	)
 
-	var (
-		reductionFactor = sdk.NewDec(2).Quo(sdk.NewDec(3))
-	)
+	reductionFactor := sdk.NewDec(2).Quo(sdk.NewDec(3))
 
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -264,7 +254,7 @@ func TestAfterEpochEnd_FirstYearThirdening_RealParameters(t *testing.T) {
 			Staking:          sdk.NewDecWithPrec(25, 2),
 			PoolIncentives:   sdk.NewDecWithPrec(45, 2),
 			DeveloperRewards: sdk.NewDecWithPrec(25, 2),
-			CommunityPool:    sdk.NewDecWithPrec(05, 2),
+			CommunityPool:    sdk.NewDecWithPrec(0o5, 2),
 		},
 		WeightedDeveloperRewardsReceivers: []types.WeightedAddress{
 			{

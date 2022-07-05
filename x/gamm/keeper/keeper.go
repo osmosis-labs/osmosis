@@ -61,6 +61,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 	}
 }
 
+// nolint: unused
 func (k *Keeper) createSwapEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -74,6 +75,7 @@ func (k *Keeper) createSwapEvent(ctx sdk.Context, sender sdk.AccAddress, poolId 
 	})
 }
 
+// nolint: unused
 func (k *Keeper) createAddLiquidityEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, liquidity sdk.Coins) {
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -86,6 +88,7 @@ func (k *Keeper) createAddLiquidityEvent(ctx sdk.Context, sender sdk.AccAddress,
 	})
 }
 
+// nolint: unused
 func (k *Keeper) createRemoveLiquidityEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, liquidity sdk.Coins) {
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

@@ -61,12 +61,14 @@ func TestInitGenesis(t *testing.T) {
 	coins = app.LockupKeeper.GetAccountLockedCoins(ctx, acc2)
 	require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 5000000).String())
 
-	// TODO: module account balance is kept by bank keeper and no need to check here
-	// coins = app.LockupKeeper.GetModuleBalance(ctx)
-	// require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 30000000).String())
-
 	lastLockId := app.LockupKeeper.GetLastLockID(ctx)
 	require.Equal(t, lastLockId, uint64(10))
+
+	acc := app.LockupKeeper.GetPeriodLocksAccumulation(ctx, types.QueryCondition{
+		Denom:    "foo",
+		Duration: time.Second,
+	})
+	require.Equal(t, sdk.NewInt(30000000), acc)
 }
 
 func TestExportGenesis(t *testing.T) {

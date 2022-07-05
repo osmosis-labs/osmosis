@@ -7,7 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/test_helpers"
 )
+
+type BalancerTestSuite struct {
+	test_helpers.CfmmCommonTestSuite
+}
 
 func TestBalancerPoolParams(t *testing.T) {
 	// Tests that creating a pool with the given pair of swapfee and exit fee
