@@ -76,6 +76,7 @@ func NewOperationQueue() OperationQueue {
 }
 
 // queueOperations adds all future operations into the operation queue.
+// TODO: Change FutureOperation to FutureAction
 func queueOperations(queuedOps OperationQueue, queuedTimeOps []simulation.FutureOperation, futureOps []simulation.FutureOperation) {
 	if futureOps == nil {
 		return

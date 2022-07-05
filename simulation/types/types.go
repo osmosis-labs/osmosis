@@ -9,6 +9,7 @@ import (
 )
 
 //nolint:structcheck
+//TODO: Contemplate name better
 type SimCtx struct {
 	r *rand.Rand
 	// TODO: delete this, once we cleanup simulator initialization logic,

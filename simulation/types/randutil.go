@@ -4,9 +4,21 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"golang.org/x/exp/constraints"
 
 	sdkrand "github.com/osmosis-labs/osmosis/v7/simulation/types/random"
 )
+
+func RandLTBound[T constraints.Integer](sim *SimCtx, upperbound T) T {
+	return RandLTEBound(sim, upperbound-T(1))
+}
+
+func RandLTEBound[T constraints.Integer](sim *SimCtx, upperbound T) T {
+	max := int(upperbound)
+	r := sim.RandIntBetween(0, max+1)
+	t := T(r)
+	return t
+}
 
 // RandStringOfLength generates a random string of a particular length
 func (sim *SimCtx) RandStringOfLength(n int) string {
@@ -20,9 +32,8 @@ func (sim *SimCtx) RandPositiveInt(max sdk.Int) (sdk.Int, error) {
 	return sdkrand.RandPositiveInt(r, max)
 }
 
-// TODO: Duplicate of RandomPositiveInt???
 // RandomAmount generates a random amount
-// Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
+// that is biased to return max and 0.
 func (sim *SimCtx) RandomAmount(max sdk.Int) sdk.Int {
 	r := sim.GetSeededRand("random bounded positive int")
 	return sdkrand.RandomAmount(r, max)
@@ -41,7 +52,7 @@ func (sim *SimCtx) RandTimestamp() time.Time {
 	return sdkrand.RandTimestamp(r)
 }
 
-// RandIntBetween returns a random int between two numbers inclusively.
+// RandIntBetween returns a random int between two numbers, inclusive of min, exclusive of max.
 func (sim *SimCtx) RandIntBetween(min, max int) int {
 	r := sim.GetSeededRand("random int between")
 	return sdkrand.RandIntBetween(r, min, max)

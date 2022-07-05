@@ -19,6 +19,7 @@ type AppModuleSimulationV2 interface {
 	// TODO: Come back and improve SimulationState interface
 	GenerateGenesisState(*module.SimulationState, *SimCtx)
 	Actions() []Action
+	// PropertyTests()
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility

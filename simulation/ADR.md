@@ -32,11 +32,31 @@ On complex states, check that all of state is "consistent" acccording to various
 
 ### Make memory-ful property tests
 
+Simulator takes as input property tests
+A property test can specify a list of actions it wants to run before & after
+And this function can maintain its own local state/memory (Not State machine state)
+
 (CFMM k value)
 
-### Make dependent, multi-msg property tests
+```go
+func CheckCfmmK() {
+
+}
+```
+
+### Make dependent, multi-msg
+
+Q: Do we consider these property tests or Actions
+Its altering state (2 txs), so seems like an Action
+But if it fails on the important part (if outcoins > inCoins), we want the simulator to fail with an informative error.
 
 (Join <> Exit invariants)
+
+```go
+shares := SimulateJoinPoolMessage(inCoins)
+outCoins := ExitPool(shares)
+assert outCoins <= inCoins
+```
 
 ## Dev UX goals
 

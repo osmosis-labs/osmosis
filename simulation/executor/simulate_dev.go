@@ -85,6 +85,7 @@ func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator 
 	numQueuedTimeOpsRan := simState.runQueuedTimeOperations(simCtx, ctx)
 
 	// run standard operations
+	// TODO: rename blockSimulator arg
 	operations := blockSimulator(simCtx, ctx, simState.header)
 	simState.opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 
