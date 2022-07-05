@@ -390,7 +390,7 @@ $ %s query incentives rewards-estimation
 			if owner != "" {
 				queryClientLockup := lockuptypes.NewQueryClient(clientCtx)
 
-				res, err = queryClientLockup.AccountLockedLongerDuration(cmd.Context(), &lockuptypes.AccountLockedLongerDurationRequest{Owner: owner, Duration: time.Second})
+				res, err = queryClientLockup.AccountLockedLongerDuration(cmd.Context(), &lockuptypes.AccountLockedLongerDurationRequest{Owner: owner, Duration: time.Millisecond})
 				if err != nil {
 					return err
 				}
@@ -408,9 +408,12 @@ $ %s query incentives rewards-estimation
 
 			lockIdStrs := strings.Split(lockIdsCombined, ",")
 			lockIds := []uint64{}
+			// if user doesn't provide any lockIDs or a lock owner, we don't have enough information to proceed
 			if lockIdsCombined == "" && owner == "" {
 				err = fmt.Errorf("If owner flag is not set, lock IDs must be provided")
 				return err
+
+				// if user provides lockIDs, use these lockIDs in our rewards estimation
 			} else if lockIdsCombined != "" {
 				for _, lockIdStr := range lockIdStrs {
 					lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
@@ -419,10 +422,14 @@ $ %s query incentives rewards-estimation
 					}
 					lockIds = append(lockIds, lockId)
 				}
+
+				// if no lockIDs are provided but an owner is provided, we query the rewards for all of the locks the owner has
 			} else if lockIdsCombined == "" && owner != "" {
 				lockIds = append(lockIds, ownerLocks...)
 			}
 
+			// if lockIDs are provided and an owner is provided, only query the lockIDs that are provided
+			// if a lockID was provided and it doesn't belong to the owner, return an error
 			if len(lockIds) != 0 && owner != "" {
 				for _, lockId := range lockIds {
 					validInputLockId := contains(ownerLocks, lockId)

@@ -400,9 +400,6 @@ func (suite *KeeperTestSuite) TestRewardsEstWithPoolIncentives() {
 	suite.Require().Equal(res.Coins, coins.Add(mintCoins))
 }
 
-// TODO: make this test table driven, or simpler
-// TODO: Make issue for this
-
 // TestGRPCToDistributeCoins tests querying coins that are going to be distributed via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.SetupTest()
