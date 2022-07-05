@@ -23,26 +23,31 @@ service Msg {
 // address and a sub denomination. The (sender_address, sub_denomination) tuple
 // must be unique and cannot be re-used.
 //
-// The resulting denom created is defined as <factory/{creatorAddress}/{subdenom}>.
-// The resulting denom's admin is originally set to be the creator, but this can
-// be changed later. The token denom does not indicate the current admin.
+// The resulting denom created is defined as
+// <factory/{creatorAddress}/{subdenom}>. The resulting denom's admin is
+// originally set to be the creator, but this can be changed later. The token
+// denom does not indicate the current admin.
 message MsgCreateDenom {
-  string sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   // subdenom can be up to 44 "alphanumeric" characters long.
-  string subdenom = 2 [(gogoproto.moretags) = "yaml:\"subdenom\""];
+  string subdenom = 2 [ (gogoproto.moretags) = "yaml:\"subdenom\"" ];
 }
 
 // MsgCreateDenomResponse is the return value of MsgCreateDenom
 // It returns the full string of the newly created denom
 message MsgCreateDenomResponse {
-  string new_token_denom = 1 [(gogoproto.moretags) = "yaml:\"new_token_denom\""];
+  string new_token_denom = 1
+      [ (gogoproto.moretags) = "yaml:\"new_token_denom\"" ];
 }
 
 // MsgMint is the sdk.Msg type for allowing an admin account to mint
 // more of a token.  For now, we only support minting to the sender account
 message MsgMint {
-  string                   sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
-  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.moretags) = "yaml:\"amount\"", (gogoproto.nullable) = false];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgMintResponse {}
@@ -50,8 +55,11 @@ message MsgMintResponse {}
 // MsgBurn is the sdk.Msg type for allowing an admin account to burn
 // a token.  For now, we only support burning from the sender account.
 message MsgBurn {
-  string                   sender = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
-  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.moretags) = "yaml:\"amount\"", (gogoproto.nullable) = false];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgBurnResponse {}
@@ -59,9 +67,9 @@ message MsgBurnResponse {}
 // MsgChangeAdmin is the sdk.Msg type for allowing an admin account to reassign
 // adminship of a denom to a new account
 message MsgChangeAdmin {
-  string sender    = 1 [(gogoproto.moretags) = "yaml:\"sender\""];
-  string denom     = 2 [(gogoproto.moretags) = "yaml:\"denom\""];
-  string new_admin = 3 [(gogoproto.moretags) = "yaml:\"new_admin\""];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string new_admin = 3 [ (gogoproto.moretags) = "yaml:\"new_admin\"" ];
 }
 
 message MsgChangeAdminResponse {}
