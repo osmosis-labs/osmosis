@@ -11,7 +11,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
+=======
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+>>>>>>> 1da14b8b (e2e: refactor initialization with single node logic (#1963))
 )
 
 const forkHeight = 10

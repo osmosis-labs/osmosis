@@ -261,9 +261,18 @@ func (s *IntegrationTestSuite) queryPropTally(endpoint, addr string) (sdk.Int, s
 
 func (s *IntegrationTestSuite) createPool(c *chainConfig, poolFile string, from string) {
 	s.T().Logf("creating pool for chain-id: %s", c.meta.Id)
+<<<<<<< HEAD
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", c.meta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test"}
 	s.ExecTx(c.meta.Id, 0, cmd, "code: 0")
 	s.T().Logf("successfully created pool from %s container: %s", s.valResources[c.meta.Id][0].Container.Name[1:], s.valResources[c.meta.Id][0].Container.ID)
+=======
+	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", c.meta.Id), fmt.Sprintf("--from=%s", from), "-b=block", "--yes", "--keyring-backend=test"}
+	_, _, err := s.containerManager.ExecCmd(s.T(), c.meta.Id, 0, cmd, "code: 0")
+	s.Require().NoError(err)
+	validatorResource, exists := s.containerManager.GetValidatorResource(c.meta.Id, 0)
+	s.Require().True(exists)
+	s.T().Logf("successfully created pool from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
+>>>>>>> 1da14b8b (e2e: refactor initialization with single node logic (#1963))
 }
 
 func (s *IntegrationTestSuite) lockTokens(config *chainConfig, i int, tokens string, duration string, from string) {

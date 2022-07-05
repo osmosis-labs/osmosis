@@ -17,7 +17,16 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 }
 
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+<<<<<<< HEAD
 	const walletName = "wallet"
+=======
+	if s.skipUpgrade {
+		// TODO: https://github.com/osmosis-labs/osmosis/issues/1843
+		s.T().Skip("Superfluid tests are broken when upgrade is skipped. To be fixed in #1843")
+	}
+	const walletName = "superfluid-wallet"
+
+>>>>>>> 1da14b8b (e2e: refactor initialization with single node logic (#1963))
 	chainA := s.chainConfigs[0]
 	s.submitSuperfluidProposal(chainA, "gamm/pool/1")
 	s.depositProposal(chainA)

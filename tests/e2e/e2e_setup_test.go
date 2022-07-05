@@ -422,8 +422,23 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	numVal := float32(len(validatorConfigs))
 
 	newChainConfig := chainConfig{
+<<<<<<< HEAD
 		votingPeriod:            propDepositBlocks + numVal*propVoteBlocks + propBufferBlocks,
 		skipRunValidatorIndexes: skipValidatorIndexes,
+=======
+		votingPeriod: propDepositBlocks + numVal*propVoteBlocks + propBufferBlocks,
+	}
+
+	// If upgrade is skipped, we can use the chain initialization logic from
+	// current branch directly. As a result, there is no need to run this
+	// via Docker.
+
+	if s.skipUpgrade {
+		initializedChain, err := initialization.InitChain(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
+		s.Require().NoError(err)
+		s.initializeChainConfig(&newChainConfig, initializedChain)
+		return
+>>>>>>> 1da14b8b (e2e: refactor initialization with single node logic (#1963))
 	}
 
 	votingPeriodDuration := time.Duration(int(newChainConfig.votingPeriod) * 1000000000)
@@ -488,8 +503,15 @@ func (s *IntegrationTestSuite) configureDockerResources(chainIDOne, chainIDTwo s
 	s.dkrPool, err = dockertest.NewPool("")
 	s.Require().NoError(err)
 
+<<<<<<< HEAD
 	s.dkrNet, err = s.dkrPool.CreateNetwork(fmt.Sprintf("%s-%s-testnet", chainIDOne, chainIDTwo))
 	s.Require().NoError(err)
+=======
+	chainConfig.validators = make([]*validatorConfig, 0, len(initializedChain.Nodes))
+	for _, val := range initializedChain.Nodes {
+		chainConfig.validators = append(chainConfig.validators, &validatorConfig{validator: *val})
+	}
+>>>>>>> 1da14b8b (e2e: refactor initialization with single node logic (#1963))
 
 	s.valResources = make(map[string][]*dockertest.Resource)
 }

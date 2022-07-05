@@ -7,7 +7,11 @@ import (
 	"strings"
 	"time"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
+=======
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+>>>>>>> 1da14b8b (e2e: refactor initialization with single node logic (#1963))
 )
 
 func main() {
