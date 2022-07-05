@@ -490,7 +490,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 		}, defaultPoolAssets, defaultFutureGovernor)
 		poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
 
-		// If we are testing insufficient pool share balances, switch sender to empty account
+		// If we are testing insufficient pool share balances, switch tx sender from pool creator to empty account
 		if test.emptySender {
 			test.txSender = suite.TestAccs[1]
 		}
