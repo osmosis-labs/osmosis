@@ -176,7 +176,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		}
 
 		// note starting balances for community fee pool and pool creator account
-		feePoolBeforeNewPool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
+		feePoolBalBeforeNewPool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
 		senderBalBeforeNewPool := suite.App.BankKeeper.GetAllBalances(suite.Ctx, sender)
 
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
@@ -194,7 +194,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 
 			// make sure pool creation fee is correctly sent to community pool
 			feePool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
-			suite.Require().Equal(feePool, feePoolBeforeNewPool.Add(poolCreationFeeDecCoins...))
+			suite.Require().Equal(feePool, feePoolBalBeforeNewPool.Add(poolCreationFeeDecCoins...))
 
 			// get expected tokens in new pool and corresponding pool shares
 			expectedPoolTokens := sdk.Coins{}
@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 		suite.FundAcc(sender, defaultAcctFunds)
 
 		// note starting balances for community fee pool and pool creator account
-		feePoolBeforeNewPool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
+		feePoolBalBeforeNewPool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
 		senderBalBeforeNewPool := suite.App.BankKeeper.GetAllBalances(suite.Ctx, sender)
 
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
@@ -292,7 +292,7 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 
 			// make sure pool creation fee is correctly sent to community pool
 			feePool := suite.App.DistrKeeper.GetFeePoolCommunityCoins(suite.Ctx)
-			suite.Require().Equal(feePool, feePoolBeforeNewPool.Add(sdk.NewDecCoinsFromCoins(test.poolCreationFee...)...))
+			suite.Require().Equal(feePool, feePoolBalBeforeNewPool.Add(sdk.NewDecCoinsFromCoins(test.poolCreationFee...)...))
 			// get expected tokens in new pool and corresponding pool shares
 			expectedPoolTokens := sdk.Coins{}
 			for _, asset := range test.msg.GetPoolAssets() {
