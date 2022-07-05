@@ -50,11 +50,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	// we keep this account empty to test attempts with insufficient balance
 	emptySender := suite.TestAccs[1]
 
-	// TODO: Refactor this to be more sensible.
-	// The struct should contain a MsgCreateBalancerPool.
-	// then the scaffolding should test pool creation, and check if it was a success or not.
-	// (And should be moved to balancer package)
-	// PoolCreationFee tests should get their own isolated test in this package.
+	// TODO: should be moved to balancer package
 	tests := []struct {
 		name       string
 		msg        balancertypes.MsgCreateBalancerPool
