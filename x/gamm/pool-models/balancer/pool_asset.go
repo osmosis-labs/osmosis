@@ -23,6 +23,9 @@ func (asset PoolAsset) validateWeight() error {
 		return fmt.Errorf("a token's weight in the pool must be greater than 0")
 	}
 
+	// TODO: add validation for asset weight overflow:
+	// https://github.com/osmosis-labs/osmosis/issues/1958
+
 	return nil
 }
 
