@@ -129,7 +129,7 @@ func TestPow(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		s := Pow(tc.base, tc.exp)
+		actualResult := Pow(tc.base, tc.exp)
 		require.True(
 			t,
 			tc.expectedResult.Sub(s).Abs().LTE(powPrecision),
