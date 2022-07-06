@@ -75,7 +75,7 @@ func TestPowApprox(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		s := PowApprox(tc.base, tc.exp, tc.powPrecision)
+		actualResult := PowApprox(tc.base, tc.exp, tc.powPrecision)
 		require.True(
 			t,
 			tc.expectedResult.Sub(s).Abs().LTE(tc.powPrecision),
