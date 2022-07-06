@@ -55,15 +55,22 @@ func TestPowApprox(t *testing.T) {
 			// large base, large integer exp
 			base:           sdk.MustNewDecFromStr("1.777"),
 			exp:            sdk.MustNewDecFromStr("20"),
-			powPrecision:   sdk.MustNewDecFromStr("0.000000001"),
+			powPrecision:   sdk.MustNewDecFromStr("0.000000000001"),
 			expectedResult: sdk.MustNewDecFromStr("98570.862372081602"),
 		},
 		{
-			// small base, large integer exp
-			base:           sdk.MustNewDecFromStr("0.123"),
-			exp:            sdk.MustNewDecFromStr("12"),
-			powPrecision:   sdk.MustNewDecFromStr("0.00000001"),
-			expectedResult: sdk.ZeroDec(),
+			// medium base, large exp, high precision
+			base:           sdk.MustNewDecFromStr("1.556"),
+			exp:            sdk.MustNewDecFromStr("20.9123"),
+			powPrecision:   sdk.MustNewDecFromStr("0.0000000000000001"),
+			expectedResult: sdk.MustNewDecFromStr("10360.058421529811344618"),
+		},
+		{
+			// high base, large exp, high precision
+			base:           sdk.MustNewDecFromStr("1.886"),
+			exp:            sdk.MustNewDecFromStr("31.9123"),
+			powPrecision:   sdk.MustNewDecFromStr("0.00000000000001"),
+			expectedResult: sdk.MustNewDecFromStr("621110716.84727942280335811"),
 		},
 		{
 			// base equal one
@@ -78,7 +85,7 @@ func TestPowApprox(t *testing.T) {
 		actualResult := PowApprox(tc.base, tc.exp, tc.powPrecision)
 		require.True(
 			t,
-			tc.expectedResult.Sub(s).Abs().LTE(tc.powPrecision),
+			tc.expectedResult.Sub(actualResult).Abs().LTE(tc.powPrecision),
 			fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
 		)
 	}
@@ -132,7 +139,7 @@ func TestPow(t *testing.T) {
 		actualResult := Pow(tc.base, tc.exp)
 		require.True(
 			t,
-			tc.expectedResult.Sub(s).Abs().LTE(powPrecision),
+			tc.expectedResult.Sub(actualResult).Abs().LTE(powPrecision),
 			fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
 		)
 	}
