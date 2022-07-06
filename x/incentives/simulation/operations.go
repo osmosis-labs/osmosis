@@ -80,9 +80,6 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 
 // genQueryCondition returns a single lockup QueryCondition, which is generated from a single coin randomly selected from the provided coin array
 func genQueryCondition(r *rand.Rand, blocktime time.Time, coins sdk.Coins, durations []time.Duration) lockuptypes.QueryCondition {
-	// TODO: reset to 2 after postlaunch, only allow duration based query type on postlaunch
-	// lockQueryType := r.Intn(2)
-	// TODO: why reset to 2 after postlaunch? Only 0 and 1 exist, and 1 is no longer used.
 	lockQueryType := 0
 	denom := coins[r.Intn(len(coins))].Denom
 	// TODO: for postlaunch, only specific lock durations are allowed
