@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			baseDenom: baseDenom,
 			denoms:    []string{uion},
 			poolTypes: []gammtypes.PoolI{uionPool},
-			swapFee:   sdk.NewDec(0),
+			swapFee:   sdk.MustNewDecFromStr("0"),
 		},
 		{
 			name:      "Multiple non-osmo fee token: TxFees AfterEpochEnd",
@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			baseDenom: baseDenom,
 			denoms:    []string{atom, ust},
 			poolTypes: []gammtypes.PoolI{atomPool, ustPool},
-			swapFee:   sdk.NewDec(0),
+			swapFee:   sdk.MustNewDecFromStr("0"),
 		},
 	}
 
@@ -75,6 +75,8 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 				tc.baseDenom,
 				tc.swapFee)
 			suite.Require().NoError(err)
+			// sanity check for the expectedAmount
+			suite.Require().True(coin.Amount.GTE(expectedOutput.Amount))
 
 			finalOutputAmount = finalOutputAmount.Add(expectedOutput.Amount)
 
@@ -96,7 +98,9 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		// checks the balance of the non-native denom in module account (should be empty)
 		moduleAddrNonNativeFee := suite.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
 
+		// non-osmos module account should be empty as all the funds should be transferred to osmo module
 		suite.Require().Empty(suite.App.BankKeeper.GetAllBalances(suite.Ctx, moduleAddrNonNativeFee))
+		// check that the total osmo amount has been transferred to module account
 		suite.Require().Equal(moduleBaseDenomBalance.Amount, finalOutputAmount)
 	}
 }
