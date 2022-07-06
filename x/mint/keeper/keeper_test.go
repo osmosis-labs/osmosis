@@ -61,22 +61,30 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 	tests := []struct {
-		name         string
-		ratio        sdk.Dec
-		fn           func()
-		expectedCoin sdk.Coin
-		fee          sdk.Coin
+		name                 string
+		ratio                sdk.Dec
+		hasPreExistingSupply bool
+		expectedCoin         sdk.Coin
+		fee                  sdk.Coin
 	}{
 		{
-			name:         "coin is minted to the fee collector",
-			fee:          sdk.NewCoin("stake", sdk.NewInt(0)),
-			ratio:        sdk.NewDecWithPrec(2, 1),
-			expectedCoin: sdk.NewCoin("stake", sdk.NewInt(0)),
+			name:                 "coin is minted to the fee collector",
+			fee:                  sdk.NewCoin("stake", sdk.NewInt(0)),
+			ratio:                sdk.NewDecWithPrec(2, 1),
+			hasPreExistingSupply: false,
+			expectedCoin:         sdk.NewCoin("stake", sdk.NewInt(0)),
 		}, {
-			name:  "mint the 100K stake coin to the fee collector",
-			fee:   sdk.NewCoin("stake", sdk.NewInt(100000)),
-			ratio: sdk.NewDecWithPrec(2, 1),
-			fn: func() {
+			name:                 "mint the 100K stake coin to the fee collector",
+			fee:                  sdk.NewCoin("stake", sdk.NewInt(100000)),
+			ratio:                sdk.NewDecWithPrec(2, 1),
+			hasPreExistingSupply: true,
+			expectedCoin:         sdk.NewCoin("stake", sdk.NewInt(100000).Quo(sdk.NewInt(5))),
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			if tc.hasPreExistingSupply {
 				fee := sdk.NewCoin("stake", sdk.NewInt(100000))
 				fees := sdk.NewCoins(fee)
 				err := simapp.FundModuleAccount(suite.App.BankKeeper,
@@ -84,23 +92,15 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 					authtypes.FeeCollectorName,
 					fees)
 				suite.NoError(err)
-			},
-			expectedCoin: sdk.NewCoin("stake", sdk.NewInt(100000).Quo(sdk.NewInt(5))),
-		},
-	}
+			}
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			// reset suite
-			suite.SetupTest()
 			coin := suite.App.MintKeeper.GetProportions(suite.Ctx, tc.fee, tc.ratio)
 			suite.Equal(tc.expectedCoin, coin)
-
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty() {
+func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 	var (
 		distrTo = lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
@@ -144,9 +144,10 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			suite.Setup()
+			mintKeeper := suite.App.MintKeeper
 			// set WeightedDeveloperRewardsReceivers
 			params.WeightedDeveloperRewardsReceivers = tc.weightedAddresses
-			suite.App.MintKeeper.SetParams(suite.Ctx, params)
+			mintKeeper.SetParams(suite.Ctx, params)
 
 			// mints coins so supply exists on chain
 			suite.FundAcc(gaugeCreator, gaugeCoins)
@@ -160,9 +161,9 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddrWhenNotEmpty()
 			})
 			suite.NoError(err)
 
-			err = suite.App.MintKeeper.MintCoins(suite.Ctx, sdk.NewCoins(tc.mintCoin))
+			err = mintKeeper.MintCoins(suite.Ctx, sdk.NewCoins(tc.mintCoin))
 			suite.NoError(err)
-			err = suite.App.MintKeeper.DistributeMintedCoin(suite.Ctx, tc.mintCoin)
+			err = mintKeeper.DistributeMintedCoin(suite.Ctx, tc.mintCoin)
 			suite.NoError(err)
 
 			// check feePool
