@@ -54,3 +54,20 @@ func TestNonStandardAPIOrder(t *testing.T) {
 	expOrdering = []string{"A", "B", "C", "D", "E", "F", "G"}
 	require.Equal(t, expOrdering, ord.TotalOrdering())
 }
+
+func TestSetSequence(t *testing.T) {
+	// This test uses direct ordering before First, and after Last
+	names := []string{"A", "B", "C", "D", "E", "F", "G"}
+	ord := partialord.NewPartialOrdering(names)
+	// Make B A C a sequence
+	ord.Sequence("B", "A", "C")
+	// Make A G E a sub-sequence
+	ord.Sequence("A", "G", "E")
+	// make first elements D B F
+	ord.FirstElements("D", "B", "F")
+	// make C come after E
+	ord.After("C", "G")
+
+	expOrdering := []string{"D", "B", "F", "A", "G", "C", "E"}
+	require.Equal(t, expOrdering, ord.TotalOrdering())
+}
