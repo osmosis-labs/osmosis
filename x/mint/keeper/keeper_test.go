@@ -177,7 +177,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 				feePool.CommunityPool.AmountOf("stake"))
 
 			// check devAddress balances
-			for i, weightedAddresse := range tc.weightedAddresses {
+			for i, weightedAddress := range tc.weightedAddresses {
 				devRewardsReceiver, _ := sdk.AccAddressFromBech32(weightedAddress.GetAddress())
 				suite.Equal(
 					tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).Mul(params.WeightedDeveloperRewardsReceivers[i].Weight).TruncateInt(),
