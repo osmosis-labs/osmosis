@@ -77,6 +77,7 @@ type AppModule struct {
 	ak types.AccountKeeper
 	bk types.BankKeeper
 	gk keeper.Keeper
+	tk twapkeeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -128,6 +129,7 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock returns the end blocker for the gamm module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	am.tk.endBlockLogic(ctx)
 	return []abci.ValidatorUpdate{}
 }
 

@@ -15,7 +15,7 @@ func (k twapkeeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
 	store.Set(poolIdBz, sentinelExistsValue)
 }
 
-func (k twapkeeper) getChangedPools(ctx sdk.Context, poolId uint64) []uint64 {
+func (k twapkeeper) getChangedPools(ctx sdk.Context) []uint64 {
 	store := ctx.TransientStore(&k.transientKey)
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()
