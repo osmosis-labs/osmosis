@@ -440,7 +440,8 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 	}
 
 	superfluidDelegationResp, err := q.SuperfluidDelegationsByDelegator(goCtx, &types.SuperfluidDelegationsByDelegatorRequest{
-		DelegatorAddress: req.DelegatorAddress})
+		DelegatorAddress: req.DelegatorAddress,
+	})
 	if err != nil {
 		return nil, err
 	}
