@@ -55,7 +55,9 @@ func TestNonStandardAPIOrder(t *testing.T) {
 	require.Equal(t, expOrdering, ord.TotalOrdering())
 }
 
-func TestSetSequence(t *testing.T) {
+// This test ad-hocly tests combination of multiple sequences, first elements, and an After
+// invokation.
+func TestSequence(t *testing.T) {
 	// This test uses direct ordering before First, and after Last
 	names := []string{"A", "B", "C", "D", "E", "F", "G"}
 	ord := partialord.NewPartialOrdering(names)
