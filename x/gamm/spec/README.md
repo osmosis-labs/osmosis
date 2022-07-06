@@ -147,12 +147,8 @@ The GAMM module also has a **PoolCreationFee** parameter, which currently is set
 
 [comment]: <> (TODO Add better description of how the weights affect things)
 
-
-
 </br>
 </br>
-
-
 
 ## Messages
 
@@ -196,7 +192,6 @@ The `x/gamm` module supports the following message types:
 
 ## Transactions
 
-
 ### Create pool
 
 Create a new liquidity pool and provide initial liquidity to it.
@@ -235,12 +230,12 @@ The configuration json file contains the following parameters:
  "future-governor": ""
 }
 ```
+
 :::
 
 ::: warning
 There is now a 100 OSMO fee for creating pools.
 :::
-
 
 ### Join pool
 
@@ -257,9 +252,8 @@ Join `pool 3` with a **maximum** of `.037753 AKT` and the corresponding amount o
 ```sh
 osmosisd tx gamm join-pool --pool-id 3 --max-amounts-in 37753ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 --share-amount-out 1227549469722224220 --from WALLET_NAME --chain-id osmosis-1
 ```
+
 :::
-
-
 
 ### Exit pool
 
@@ -276,9 +270,8 @@ Exit `pool 3` with for **exactly** `1.136326462628731195 gamm/pool/3` in order t
 ```sh
 osmosisd tx gamm exit-pool --pool-id 3 --min-amounts-out 33358ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 --share-amount-in 1136326462628731195 --from WALLET_NAME --chain-id osmosis-1
 ```
+
 :::
-
-
 
 ### Join-swap-extern-amount-in
 
@@ -297,10 +290,8 @@ Join `pool 3` with **exactly** `.200000 AKT` (and `0 OSMO`) to get a **minimum**
 ```sh
 osmosisd tx gamm join-swap-extern-amount-in 200000ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 3234812471272883046 --pool-id 3 --from WALLET_NAME --chain-id osmosis-1
 ```
+
 :::
-
-
-
 
 ### Exit-swap-extern-amount-out
 
@@ -319,10 +310,8 @@ Exit `pool 3` by removing a **maximum** of `3.408979387886193586 gamm/pool/3` an
 ```sh
 osmosisd tx gamm exit-swap-extern-amount-out 199430ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 3408979387886193586 --pool-id 3 --from WALLET_NAME --chain-id osmosis-1
 ```
+
 :::
-
-
-
 
 ### Join-swap-share-amount-out
 
@@ -339,10 +328,8 @@ Swap a **maximum** of `0.312466 OSMO` for the corresponding amount of `AKT`, the
 ```sh
 osmosisd tx gamm join-swap-share-amount-out uosmo 312466 14481270389710236872 --pool-id 3 --from WALLET_NAME --chain-id osmosis-1
 ```
+
 :::
-
-
-
 
 ### Exit-swap-share-amount-in
 
@@ -359,13 +346,12 @@ Exit `pool 3` by removing **exactly** `14.563185400026723131 gamm/pool/3` and sw
 ```sh
 osmosisd tx gamm exit-swap-share-amount-in uosmo 14563185400026723131 298548 --pool-id 3 --from WALLET_NAME --chain-id osmosis-1
 ```
-:::
 
+:::
 
 ### Swap-exact-amount-in
 
 Swap an **exact** amount of tokens for a **minimum** of another token, similar to swapping a token on the trade screen GUI.
-
 
 ```sh
 osmosisd tx gamm swap-exact-amount-in [token-in] [token-out-min-amount] --pool-id --from --chain-id
@@ -378,9 +364,8 @@ Swap **exactly** `.407239 AKT` through `pool 3` into a **minimum** of `.140530 O
 ```sh
 osmosisd tx gamm swap-exact-amount-in 407239ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 140530 --swap-route-pool-ids 3 --swap-route-denoms uosmo --from WALLET_NAME --chain-id osmosis-1
 ```
+
 :::
-
-
 
 ### Swap-exact-amount-out
 
@@ -398,14 +383,10 @@ Swap a **maximum** of `.407239 AKT` through `pool 3` into **exactly** `.140530 O
 osmosisd tx gamm swap-exact-amount-out 140530uosmo 407239 --swap-route-pool-ids 3 --swap-route-denoms ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 --from WALLET_NAME --chain-id osmosis-1
 ```
 
-
 [comment]: <> (Other resources Creating a liquidity bootstrapping pool and Creating a pool with a pool file)
 :::
 
-
-
 ## Queries and Transactions
-
 
 ## Queries
 
@@ -423,26 +404,35 @@ The **Query** submodule of the GAMM module provides the logic to request informa
 - [Total Share](#total-share)
 
 ### Estimate Swap Exact Amount In
+
 Query the estimated result of the [Swap Exact Amount In](#swap-exact-amount-in) transaction. Note that the flags *swap-route-pool* and *swap-route-denoms* are required.
+
 #### Usage
+
 ```sh
 osmosisd query gamm estimate-swap-exact-amount-in <poolID> <sender> <tokenIn> [flags]
 ```
+
 #### Example
+
 Query the amount of ATOM the sender would receive for swapping 1 OSMO in pool 1.
 
 ```sh
 osmosisd query gamm estimate-swap-exact-amount-in 1 osmo123nfq6m8f88m4g3sky570unsnk4zng4uqv7cm8 1000000uosmo --swap-route-pool-ids 1 --swap-route-denoms ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 
 ```
 
-
 ### Estimate Swap Exact Amount Out
+
 Query the estimated result of the [Swap Exact Amount Out](#swap-exact-amount-out) transaction. Note that the flags *swap-route-pool* and *swap-route-denoms* are required.
+
 #### Usage
+
 ```sh
 osmosisd query gamm estimate-swap-exact-amount-out <poolID> <sender> <tokenOut> [flags]
 ```
+
 #### Example
+
 Query the amount of OSMO the sender would require to swap 1 ATOM out of pool 1.
 
 ```sh
@@ -450,14 +440,17 @@ osmosisd query gamm estimate-swap-exact-amount-out 1 osmo123nfq6m8f88m4g3sky570u
 ```
 
 ### Num Pools
+
 Query the number of active pools.
 
 #### Usage
+
 ```sh
 osmosisd query gamm num-pools
 ```
 
 ## Pool
+
 Query the parameter and assets of a specific pool.
 
 ### Usage
@@ -474,10 +467,12 @@ Query parameters and assets from pool 1.
 osmosisd query gamm pool 1
 ```
 
-
 ### Pool Assets
+
 Query the assets of a specific pool. This query is a reduced form of the [Pool](#pool) query.
+
 #### Usage
+
 ```sh
 osmosisd query gamm pool-assets <poolID> [flags]
 ```
@@ -490,55 +485,63 @@ Query the assets from pool 1.
 osmosisd query gamm pool-assets 1
 ```
 
-
 ### Pool Params
+
 Query the parameters of a specific pool. This query is a reduced form of the [Pool](#pool) query.
+
 #### Usage
+
 ```sh
 osmosisd query gamm pool-params <poolID> [flags]
 ```
 
 Query the parameters from pool 1.
+
 #### Example
+
 ```sh
 osmosisd query gamm pool-params 1
 ```
 
-
 ### Pools
+
 Query parameters and assets of all active pools.
 
-
 #### Usage
+
 Query the price of OSMO based on the price of ATOM in pool 1.
 
 ```sh
 osmosisd query gamm spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
 ```
 
-
 ### Total Liquidity
+
 Query the total liquidity of all active pools.
+
 #### Usage
+
 ```sh
 osmosisd query gamm total-liquidity
 ```
 
-
 ### Total Share
+
 Query the total amount of GAMM shares of a specific pool.
+
 #### Usage
+
 ```sh
 osmosisd query gamm total-share <poolID> [flags]
 ```
+
 #### Example
+
 Query the total amount of GAMM shares of pool 1.
 
 ```sh
 osmosisd query gamm total-share 1
 ```
-
-
 
 ## Transactions
 
@@ -569,9 +572,8 @@ Query the amount of ATOM (or `ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA
 ```sh
 osmosisd query gamm estimate-swap-exact-amount-in 1 osmo123nfq6m8f88m4g3sky570unsnk4zng4uqv7cm8 1000000uosmo --swap-route-pool-ids 1 --swap-route-denoms ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
 ```
+
 :::
-
-
 
 ### Estimate-swap-exact-amount-out
 
@@ -588,9 +590,8 @@ Query the amount of `OSMO` the `sender` would require to swap 1 ATOM (or `100000
 ```sh
 osmosisd query gamm estimate-swap-exact-amount-out 1 osmo123nfq6m8f88m4g3sky570unsnk4zng4uqv7cm8 1000000ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 --swap-route-pool-ids 1 --swap-route-denoms uosmo
 ```
+
 :::
-
-
 
 ### Num-pools
 
@@ -599,8 +600,6 @@ Query the number of active pools.
 ```sh
 osmosisd query gamm num-pools
 ```
-
-
 
 ### Pool
 
@@ -644,11 +643,10 @@ Which outputs:
       amount: "21388879300450"
     weight: "500000.000000000000000000"
 ```
+
 :::
 
-
 ### Pool-assets
-
 
 Query the assets of a specific pool. This query is a reduced form of the [pool](#pool) query.
 
@@ -677,8 +675,8 @@ poolAssets:
     denom: uosmo
   weight: "536870912000000"
 ```
-:::
 
+:::
 
 ### Pool Params
 
@@ -703,12 +701,10 @@ swap_fee: "0.003000000000000000"
 exit_fee: "0.000000000000000000"
 smooth_weight_change_params: null
 ```
+
 :::
 
-
-
 ### Pools
-
 
 Query parameters and assets of all active pools.
 
@@ -716,12 +712,7 @@ Query parameters and assets of all active pools.
 osmosisd query gamm pools
 ```
 
-
-
-
-
 ### Spot-price
-
 
 Query the spot price of a pool asset based on a specific pool it is in.
 
@@ -746,12 +737,7 @@ spotPrice: "5.314387014412388547"
 In other words, at the time of this writing, ~5.314 OSMO is equivalent to 1 ATOM.
 :::
 
-
-
-
-
 ### Total-liquidity
-
 
 Query the total liquidity of all active pools.
 
@@ -759,12 +745,7 @@ Query the total liquidity of all active pools.
 osmosisd query gamm total-liquidity
 ```
 
-
-
-
-
 ### Total-share
-
 
 Query the total amount of GAMM shares of a specific pool.
 
@@ -792,9 +773,8 @@ Indicating there are a total of `252328895.834096787303097071 gamm/pool/1` at th
 
 :::
 
-
-
 ### Create Pool
+
 Create a new liquidity pool and provide the initial liquidity to it. Pool initialization parameters must be provided through a JSON file using the flag *pool-file*.
 
 #### Usage
@@ -814,7 +794,9 @@ The configuration file *config.json* must specify the following parameters.
  "future-governor": [number of hours]
 }
 ```
+
 #### Example
+
 Create a new ATOM-OSMO liquidity pool with a swap and exit fee of 1%.
 
 ```sh
@@ -833,9 +815,8 @@ The configuration file contains the following parameters.
 }
 ```
 
-
-
 ### Join Pool
+
 Join a specific pool with a custom amount of tokens. Note that the flags *pool-id*, *max-amounts-in* and *share-amount-out* are required.
 
 #### Usage
@@ -852,8 +833,8 @@ Join pool 1 with 1 OSMO and the respective amount of ATOM, using myKeyringWallet
 osmosisd tx gamm join-pool --pool-id 2 --max-amounts-in 1000000uosmo --max-amounts-in 1000000uion --share-amount-out 1000000 --from myKeyringWallet
 ```
 
-
 ### Exit Pool
+
 Exit a specific pool with a custom amount of tokens. Note that the flags *pool-id*, *min-amounts-out* and *share-amount-in* are required.
 
 #### Usage
@@ -870,8 +851,8 @@ Exit pool one with 1 OSMO and the respective amount of ATOM using myKeyringWalle
 osmosisd tx gamm exit-pool --pool-id 1 --min-amounts-out 1000000uosmo --share-amount-in 1000000 --from myKeyringWallet
 ```
 
-
 ### Join Swap Extern Amount In
+
 Note that the flags *pool-id* is required.
 
 #### Usage
@@ -886,8 +867,8 @@ osmosisd tx gamm join-swap-extern-amount-in [token-in] [share-out-min-amount] [f
 osmosisd tx gamm join-swap-extern-amount-in 1000000uosmo 1000000 --pool-id 1 --from myKeyringWallet
 ```
 
-
 ### Exit Swap Extern Amount Out
+
 Note that the flag *pool-id* is required.
 
 ```sh
@@ -900,8 +881,8 @@ osmosisd tx gamm exit-swap-extern-amount-out [token-out] [share-in-max-amount] [
 osmosisd tx gamm exit-swap-extern-amount-out 1000000uosmo 1000000 --pool-id 1 --from myKeyringWallet
 ```
 
-
 ### Join Swap Share Amount Out
+
 Note that the flag *pool-id* is required.
 
 #### Usage
@@ -916,8 +897,8 @@ osmosisd tx gamm join-swap-share-amount-out [token-in-denom] [token-in-max-amoun
 osmosisd tx gamm join-swap-share-amount-out uosmo 1000000 1000000 --pool-id 1 --from myKeyringWallet
 ```
 
-
 ### Exit Swap Share Amount In
+
 Note that the flag *pool-id* is required.
 
 #### Usage
@@ -933,6 +914,7 @@ osmosisd tx gamm exit-swap-share-amount-in uosmo 1000000 1000000 --pool-id 1 --f
 ```
 
 ### Swap Exact Amount In
+
 Swap an exact amount of tokens into a specific pool. Note that the flags *swap-route-pool-ids* and *swap-route-denoms* are required.
 
 #### Usage
@@ -949,8 +931,8 @@ Swap 1 OSMO through pool 1 into at least 0.3 ATOM using MyKeyringWallet.
 osmosisd tx gamm swap-exact-amount-in 1000000uosmo 300000 --swap-route-pool-ids 1 --swap-route-denoms ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 --from MyKeyringWallet
 ```
 
-
 ### Swap Exact Amount Out
+
 Swap an exact amount of tokens out of a specific pool. Note that the flags *swap-route-pool-ids* and *swap-route-denoms* are required.
 
 ### Usage
@@ -968,12 +950,14 @@ osmosisd tx gamm swap-exact-amount-out 1000000ibc/27394FB092D2ECCD56123C74F36E4C
 ```
 
 ## Other resources
-* [Creating a liquidity bootstrapping pool](./client/docs/create-lbp-pool.md)
-* [Creating a pool with a pool file](./client/docs/create-pool.md)
+
+- [Creating a liquidity bootstrapping pool](./client/docs/create-lbp-pool.md)
+- [Creating a pool with a pool file](./client/docs/create-pool.md)
 
 ## Events
 
 There are 4 types of events that exist in GAMM:
+
 - `sdk.EventTypeMessage` - "message"
 - `types.TypeEvtPoolJoined` - "pool_joined"
 - `types.TypeEvtPoolExited` - "pool_exited"
@@ -1000,13 +984,14 @@ This event is emitted after one of `SwapExactAmountOut` or `SwapExactAmountIn` u
 pool state successfully.
 
 It consists of the following attributes:
+
 - `sdk.AttributeKeyModule` - "module"
-    * The value is the module's name - "gamm".
+  - The value is the module's name - "gamm".
 - sdk.AttributeKeySender
-    * The value is the address of the sender who created the swap message.
+  - The value is the address of the sender who created the swap message.
 - types.AttributeKeyPoolId
-    * The value is the pool id of the pool where swap occurs.
+  - The value is the pool id of the pool where swap occurs.
 - types.AttributeKeyTokensIn
-    * The value is the string representation of the tokens being swapped in.
+  - The value is the string representation of the tokens being swapped in.
 - types.AttributeKeyTokensOut
-    * * The value is the string representation of the tokens being swapped out.
+  - The value is the string representation of the tokens being swapped out.
