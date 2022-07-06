@@ -410,7 +410,7 @@ $ %s query incentives rewards-estimation
 			lockIds := []uint64{}
 			// if user doesn't provide any lockIDs or a lock owner, we don't have enough information to proceed
 			if lockIdsCombined == "" && owner == "" {
-				err = fmt.Errorf("If owner flag is not set, lock IDs must be provided")
+				err = fmt.Errorf("if owner flag is not set, lock IDs must be provided")
 				return err
 
 				// if user provides lockIDs, use these lockIDs in our rewards estimation
@@ -434,7 +434,7 @@ $ %s query incentives rewards-estimation
 				for _, lockId := range lockIds {
 					validInputLockId := contains(ownerLocks, lockId)
 					if !validInputLockId {
-						return fmt.Errorf("Lock-id %v does not belong to %v", lockId, owner)
+						return fmt.Errorf("lock-id %v does not belong to %v", lockId, owner)
 					}
 				}
 			}
