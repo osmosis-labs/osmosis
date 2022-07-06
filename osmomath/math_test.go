@@ -52,7 +52,7 @@ func TestPowApprox(t *testing.T) {
 			expectedResult: sdk.MustNewDecFromStr("1.172821461"),
 		},
 		{
-			// large base, large exp
+			// large base, large integer exp
 			base:           sdk.MustNewDecFromStr("1.777"),
 			exp:            sdk.MustNewDecFromStr("20"),
 			powPrecision:   sdk.MustNewDecFromStr("0.000000001"),
