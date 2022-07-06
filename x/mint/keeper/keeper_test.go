@@ -140,6 +140,11 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 				}},
 			mintCoin: sdk.NewCoin("stake", sdk.NewInt(100000)),
 		},
+		{
+			name:              "nil dev reward address",
+			weightedAddresses: nil,
+			mintCoin:          sdk.NewCoin("stake", sdk.NewInt(100000)),
+		},
 	}
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
@@ -163,6 +168,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 
 			err = mintKeeper.MintCoins(suite.Ctx, sdk.NewCoins(tc.mintCoin))
 			suite.NoError(err)
+
 			err = mintKeeper.DistributeMintedCoin(suite.Ctx, tc.mintCoin)
 			suite.NoError(err)
 
@@ -172,9 +178,17 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 			suite.Equal(
 				tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
 				suite.App.BankKeeper.GetAllBalances(suite.Ctx, feeCollector).AmountOf("stake"))
-			suite.Equal(
-				tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.CommunityPool),
-				feePool.CommunityPool.AmountOf("stake"))
+
+			if tc.weightedAddresses != nil {
+				suite.Equal(
+					tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.CommunityPool),
+					feePool.CommunityPool.AmountOf("stake"))
+			} else {
+				suite.Equal(
+					//distribution go to community pool because nil dev reward addresses.
+					tc.mintCoin.Amount.ToDec().Mul((params.DistributionProportions.DeveloperRewards).Add(params.DistributionProportions.CommunityPool)),
+					feePool.CommunityPool.AmountOf("stake"))
+			}
 
 			// check devAddress balances
 			for i, weightedAddress := range tc.weightedAddresses {
