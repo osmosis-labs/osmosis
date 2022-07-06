@@ -6,7 +6,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -350,64 +349,110 @@ func (suite *KeeperTestSuite) TestCreateLock() {
 }
 
 func (suite *KeeperTestSuite) TestAddTokensToLock() {
-	suite.SetupTest()
-
-	// lock coins
+	initialLockCoin := sdk.NewInt64Coin("stake", 10)
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-
-	// check locks
-	locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().Equal(locks[0].Coins, coins)
-	// check accumulation store is correctly updated
-	accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
-		LockQueryType: types.ByDuration,
-		Denom:         "stake",
-		Duration:      time.Second,
-	})
-	suite.Require().Equal(accum.String(), "10")
-
-	// add more tokens to lock
-	addCoins := sdk.NewInt64Coin("stake", 10)
-	suite.FundAcc(addr1, sdk.Coins{addCoins})
-	_, err = suite.App.LockupKeeper.AddTokensToLockByID(suite.Ctx, locks[0].ID, addr1, addCoins)
-	suite.Require().NoError(err)
-
-	// check locks after adding tokens to lock
-	locks, err = suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().Equal(locks[0].Coins, coins.Add(sdk.Coins{addCoins}...))
-
-	// check accumulation store is correctly updated
-	accum = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
-		LockQueryType: types.ByDuration,
-		Denom:         "stake",
-		Duration:      time.Second,
-	})
-	suite.Require().Equal(accum.String(), "20")
-
-	// try to add tokens to unavailable lock
-	cacheCtx, _ := suite.Ctx.CacheContext()
-	err = simapp.FundAccount(suite.App.BankKeeper, cacheCtx, addr1, sdk.Coins{addCoins})
-	suite.Require().NoError(err)
-	// curBalance := suite.App.BankKeeper.GetAllBalances(cacheCtx, addr1)
-	_, err = suite.App.LockupKeeper.AddTokensToLockByID(cacheCtx, 1111, addr1, addCoins)
-	suite.Require().Error(err)
-
-	// try to add tokens with lack balance
-	cacheCtx, _ = suite.Ctx.CacheContext()
-	_, err = suite.App.LockupKeeper.AddTokensToLockByID(cacheCtx, locks[0].ID, addr1, addCoins)
-	suite.Require().Error(err)
-
-	// try to add tokens to lock that is owned by others
 	addr2 := sdk.AccAddress([]byte("addr2---------------"))
-	suite.FundAcc(addr2, sdk.Coins{addCoins})
-	_, err = suite.App.LockupKeeper.AddTokensToLockByID(cacheCtx, locks[0].ID, addr2, addCoins)
-	suite.Require().Error(err)
+
+	testCases := []struct {
+		name                         string
+		tokenToAdd                   sdk.Coin
+		duration                     time.Duration
+		lockingAddress               sdk.AccAddress
+		expectAddTokensToLockSuccess bool
+		expectedError                bool
+	}{
+		{
+			name:                         "normal add tokens to lock case",
+			tokenToAdd:                   initialLockCoin,
+			duration:                     time.Second,
+			lockingAddress:               addr1,
+			expectAddTokensToLockSuccess: true,
+		},
+		{
+			name:                         "not the owner of the lock",
+			tokenToAdd:                   initialLockCoin,
+			duration:                     time.Second,
+			lockingAddress:               addr2,
+			expectAddTokensToLockSuccess: false,
+		},
+		{
+			name:                         "lock with matching duration not existing",
+			tokenToAdd:                   initialLockCoin,
+			duration:                     time.Second * 2,
+			lockingAddress:               addr1,
+			expectAddTokensToLockSuccess: false,
+		},
+		{
+			name:                         "lock invalid tokens",
+			tokenToAdd:                   sdk.NewCoin("unknown", sdk.NewInt(10)),
+			duration:                     time.Second,
+			lockingAddress:               addr1,
+			expectAddTokensToLockSuccess: false,
+		},
+		{
+			name:                         "token to add exceeds balance",
+			tokenToAdd:                   sdk.NewCoin("stake", sdk.NewInt(20)),
+			duration:                     time.Second,
+			lockingAddress:               addr1,
+			expectAddTokensToLockSuccess: false,
+			expectedError:                true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.SetupTest()
+		// lock with balance
+		suite.FundAcc(addr1, sdk.Coins{initialLockCoin})
+		lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, sdk.Coins{initialLockCoin}, time.Second)
+		suite.Require().NoError(err)
+
+		suite.FundAcc(addr1, sdk.Coins{initialLockCoin})
+		balanceBeforeLock := suite.App.BankKeeper.GetAllBalances(suite.Ctx, tc.lockingAddress)
+
+		_, err = suite.App.LockupKeeper.AddToExistingLock(suite.Ctx, tc.lockingAddress, tc.tokenToAdd, tc.duration)
+		if tc.expectedError {
+			suite.Require().Error(err)
+		} else {
+			suite.Require().NoError(err)
+		}
+
+		if tc.expectAddTokensToLockSuccess {
+			suite.Require().NoError(err)
+
+			// get updated lock
+			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
+			suite.Require().NoError(err)
+
+			// check that tokens have been added successfully to the lock
+			suite.Require().True(sdk.Coins{initialLockCoin.Add(tc.tokenToAdd)}.IsEqual(lock.Coins))
+
+			// check balance has decreased
+			balanceAfterLock := suite.App.BankKeeper.GetAllBalances(suite.Ctx, tc.lockingAddress)
+			suite.Require().True(balanceBeforeLock.IsEqual(balanceAfterLock.Add(tc.tokenToAdd)))
+
+			// check accumulation store
+			accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+				LockQueryType: types.ByDuration,
+				Denom:         "stake",
+				Duration:      time.Second,
+			})
+			suite.Require().Equal(initialLockCoin.Amount.Add(tc.tokenToAdd.Amount), accum)
+		} else {
+			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
+			suite.Require().NoError(err)
+
+			// check that locked coins haven't changed
+			suite.Require().True(lock.Coins.IsEqual(sdk.Coins{initialLockCoin}))
+
+			// check accumulation store didn't change
+			accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+				LockQueryType: types.ByDuration,
+				Denom:         "stake",
+				Duration:      time.Second,
+			})
+			suite.Require().Equal(initialLockCoin.Amount, accum)
+		}
+	}
 }
 
 func (suite *KeeperTestSuite) TestLock() {
