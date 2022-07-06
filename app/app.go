@@ -226,7 +226,7 @@ func NewOsmosisApp(
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 
 	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block.
-	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
+	app.mm.SetOrderBeginBlockers(orderBeginBlockers(app.mm.ModuleNames())...)
 
 	// Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
 	app.mm.SetOrderEndBlockers(OrderEndBlockers(app.mm.ModuleNames())...)

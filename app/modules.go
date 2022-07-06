@@ -144,7 +144,21 @@ func appModules(
 
 // orderBeginBlockers Tell the app's module manager how to set the order of
 // BeginBlockers, which are run at the beginning of every block.
-func orderBeginBlockers() []string {
+func orderBeginBlockers(allModuleNames []string) []string {
+	ord := partialord.NewPartialOrdering(allModuleNames)
+	// Upgrades should be run VERY first
+	// Epochs is set to be next right now, this in principle could change to come later / be at the end.
+	// requires more thought into if it breaks existing logic.
+	ord.FirstElements(upgradetypes.ModuleName, epochstypes.ModuleName, capabilitytypes.ModuleName)
+	// mint must come before pool incentives & distribution
+	ord.Before(minttypes.ModuleName, poolincentivestypes.ModuleName)
+	ord.Before(minttypes.ModuleName, distrtypes.ModuleName)
+	// staking, slashing & superfluid should come after distribution
+	ord.Before(distrtypes.ModuleName, slashingtypes.ModuleName)
+	ord.Before(distrtypes.ModuleName, stakingtypes.ModuleName)
+	ord.Before(distrtypes.ModuleName, superfluidtypes.ModuleName)
+	// evidence should come after slashing
+	ord.Before(slashingtypes.ModuleName, evidencetypes.ModuleName)
 	return []string{
 		// Upgrades should be run VERY first
 		upgradetypes.ModuleName,
