@@ -1,10 +1,15 @@
 package superfluid
 
 import (
+<<<<<<< HEAD
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+=======
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+>>>>>>> 28417c0b (Remove the EndBlock ordering constraints, that didn't matter before (#1981))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,9 +23,4 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper) {
 	if numBlocksSinceEpochStart == 0 {
 		k.AfterEpochStartBeginBlock(ctx)
 	}
-}
-
-// Called every block to automatically unlock matured locks.
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
 }
