@@ -158,13 +158,13 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			// check unlocking coins. When a lock is a partial lock
 			// (i.e. tc.unlockingCoins is not nit and less than initialLockCoins),
 			// we only unlock the partial amount of tc.unlockingCoins
-			unlockingCoins := tc.unlockingCoins
-			if tc.unlockingCoins == nil {
-				unlockingCoins = initialLockCoins
+			expectedUnlockingCoins := tc.unlockingCoins
+			if expectedUnlockingCoins == nil {
+				expectedUnlockingCoins = initialLockCoins
 			}
-			unlockings := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
-			suite.Require().Equal(len(unlockings), 1)
-			suite.Require().Equal(unlockings[0].Amount, unlockingCoins[0].Amount)
+			actualUnlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
+			suite.Require().Equal(len(actualUnlockingCoins), 1)
+			suite.Require().Equal(expectedUnlockingCoins[0].Amount, actualUnlockingCoins0].Amount)
 
 			lock = suite.App.LockupKeeper.GetAccountPeriodLocks(suite.Ctx, addr1)[0]
 
@@ -181,10 +181,10 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			suite.Require().Error(err)
 
 			// check unlocking coins, should not be unlocking any coins
-			unlockings := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
+			unlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
 			suite.Require().Equal(len(unlockings), 0)
 
-			locked := suite.App.LockupKeeper.GetAccountLockedCoins(suite.Ctx, addr1)
+			lockedCoins := suite.App.LockupKeeper.GetAccountLockedCoins(suite.Ctx, addr1)
 			suite.Require().Equal(len(locked), 1)
 			suite.Require().Equal(initialLockCoins[0], locked[0])
 		}
@@ -203,10 +203,10 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			// things to test if unlocking has started
 			if tc.expectedBeginUnlockPass {
 				// should still be unlocking if `UnlockMaturedLock` failed
-				unlockings := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
+				actualUnlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
 				suite.Require().Equal(len(unlockings), 1)
 
-				unlockingCoins := tc.unlockingCoins
+				expectedUnlockingCoins := tc.unlockingCoins
 				if tc.unlockingCoins == nil {
 					unlockingCoins = initialLockCoins
 				}
