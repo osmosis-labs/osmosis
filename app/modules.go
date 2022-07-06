@@ -142,58 +142,23 @@ func appModules(
 	}
 }
 
-// orderBeginBlockers Tell the app's module manager how to set the order of
-// BeginBlockers, which are run at the beginning of every block.
+// orderBeginBlockers returns the order of BeginBlockers, by module name.
 func orderBeginBlockers(allModuleNames []string) []string {
-	// ord := partialord.NewPartialOrdering(allModuleNames)
-	// // Upgrades should be run VERY first
-	// // Epochs is set to be next right now, this in principle could change to come later / be at the end.
-	// // requires more thought into if it breaks existing logic.
-	// ord.FirstElements(upgradetypes.ModuleName, epochstypes.ModuleName, capabilitytypes.ModuleName)
+	ord := partialord.NewPartialOrdering(allModuleNames)
+	// Upgrades should be run VERY first
+	// Epochs is set to be next right now, this in principle could change to come later / be at the end.
+	// But would have to be a holistic change with other pipelines taken into account.
+	ord.FirstElements(upgradetypes.ModuleName, epochstypes.ModuleName, capabilitytypes.ModuleName)
 
-	// // IBC ordering constraint
-	// ord.Sequence(ibchost.ModuleName)
-	// // token distribution ordering constraint
-	// // staking, slashing & superfluid should come after distribution
-	// ord.Before(distrtypes.ModuleName, slashingtypes.ModuleName)
-	// ord.Before(distrtypes.ModuleName, stakingtypes.ModuleName)
-	// ord.Before(distrtypes.ModuleName, superfluidtypes.ModuleName)
-	// // evidence should come after slashing
-	// ord.After(evidencetypes.ModuleName, slashingtypes.ModuleName)
-	return []string{
-		// Upgrades should be run VERY first
-		upgradetypes.ModuleName,
-		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
-		epochstypes.ModuleName,
-		capabilitytypes.ModuleName,
-		minttypes.ModuleName,           // no begin block logic
-		poolincentivestypes.ModuleName, // no begin block logic
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		ibchost.ModuleName,             // no begin block logic
-		ibctransfertypes.ModuleName,    // no begin block logic
-		icatypes.ModuleName,            // no begin block logic
-		authtypes.ModuleName,           // no begin block logic
-		banktypes.ModuleName,           // no begin block logic
-		govtypes.ModuleName,            // no begin block logic (only end block oddly)
-		crisistypes.ModuleName,         // no begin block logic (only end block)
-		genutiltypes.ModuleName,        // no begin block logic
-		authz.ModuleName,               // no begin block logic
-		paramstypes.ModuleName,         // no begin block logic
-		vestingtypes.ModuleName,        // no begin block logic
-		gammtypes.ModuleName,           // no begin block logic
-		incentivestypes.ModuleName,     // no begin block logic
-		lockuptypes.ModuleName,         // no begin block logic
-		poolincentivestypes.ModuleName, // no begin block logic
-		tokenfactorytypes.ModuleName,   // no begin block logic
-		// superfluid must come after distribution and epochs
-		superfluidtypes.ModuleName,
-		bech32ibctypes.ModuleName, // no begin block logic
-		txfeestypes.ModuleName,    // no begin block logic
-		wasm.ModuleName,           // no begin block logic
-	}
+	// Staking ordering
+	// TODO: Perhaps this can be relaxed, left to future work to analyze.
+	ord.Sequence(distrtypes.ModuleName, slashingtypes.ModuleName, evidencetypes.ModuleName, stakingtypes.ModuleName)
+	// superfluid must come after distribution & epochs.
+	// TODO: we actually set it to come after staking, since thats what happened before, and want to minimize chance of break.
+	ord.After(superfluidtypes.ModuleName, stakingtypes.ModuleName)
+
+	// every remaining module's begin block is a no-op.
+	return ord.TotalOrdering()
 }
 
 func OrderEndBlockers(allModuleNames []string) []string {
