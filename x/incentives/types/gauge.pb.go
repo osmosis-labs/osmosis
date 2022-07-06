@@ -30,33 +30,30 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Gauge is a struct that works as a single unit for each distribution of
-// incentives defined by x/incentives module.
+// A Gauge is a location for yields to be stored in order to be distributed to
+// stakers who meet the specified conditions
 type Gauge struct {
-	// ID is the unique id of the gauge.
-	// The ID of the gauge is decided upon gauge creation, incrementing by 1 for
-	// every gauge.
+	// Unique ID of a Gauge
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// IsPerpetual defines whether the gauge is perpetual or not.
-	// A non-perpetual gauge distributes the incentive tokens equally per epoch
-	// while the gauge is in an active period.
-	// A perpetual gauge distributes all tokens at a single distribution, mainly
-	// used to distribute minted osmo to lp token stakers.
+	// Flag to show if it's a perpetual or non-perpetual gauge
+	// Non-perpetual gauges distribute their tokens equally per epoch while the
+	// gauge is in the active period. Perpetual gauges distribute all their tokens
+	// at a single time and only distribute their tokens again once the gauge is
+	// refilled
 	IsPerpetual bool `protobuf:"varint,2,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
-	// DistributeTo is the lock query condition that the gauge reward are to be
-	// distributed to.
+	// Rewards are distributed to lockups that are are returned by this lockup
+	// query. This is queried via lock duration or by timestamp
 	DistributeTo types.QueryCondition `protobuf:"bytes,3,opt,name=distribute_to,json=distributeTo,proto3" json:"distribute_to"`
-	// Coins is the total amount of tokens in the gauge.
-	// Multiple coins can be distributed.
+	// Total amount of coins that has been in the gauge
+	// Can distribute multiple coin denoms
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
-	// StartTime is the distribution start time for the gauge.
+	// Distribution start time
 	StartTime time.Time `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
-	// NumEpochsPaidOver is the number of epochs it takes for the distribution to
-	// be done.
+	// Number of total epochs distribution will be completed over
 	NumEpochsPaidOver uint64 `protobuf:"varint,6,opt,name=num_epochs_paid_over,json=numEpochsPaidOver,proto3" json:"num_epochs_paid_over,omitempty"`
-	// FilledEpoch is the number of epochs distributed already.
+	// Number of epochs distribution has been completed on already
 	FilledEpochs uint64 `protobuf:"varint,7,opt,name=filled_epochs,json=filledEpochs,proto3" json:"filled_epochs,omitempty"`
-	// DistributedCoins are the coins already distributed from the gauge.
+	// Coins that have been distributed already
 	DistributedCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,8,rep,name=distributed_coins,json=distributedCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"distributed_coins"`
 }
 
@@ -150,6 +147,7 @@ func (m *Gauge) GetDistributedCoins() github_com_cosmos_cosmos_sdk_types.Coins {
 }
 
 type LockableDurationsInfo struct {
+	// List of incentivised durations that gauges will pay out to
 	LockableDurations []time.Duration `protobuf:"bytes,1,rep,name=lockable_durations,json=lockableDurations,proto3,stdduration" json:"lockable_durations" yaml:"lockable_durations"`
 }
 
