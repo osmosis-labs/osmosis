@@ -155,7 +155,9 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		if tc.expectedBeginUnlockPass {
 			suite.Require().NoError(err)
 
-			// check unlocking coins
+			// check unlocking coins. When a lock is a partial lock
+			// (i.e. tc.unlockingCoins is not nit and less than initialLockCoins),
+			// we only unlock the partial amount of tc.unlockingCoins
 			unlockingCoins := tc.unlockingCoins
 			if tc.unlockingCoins == nil {
 				unlockingCoins = initialLockCoins
