@@ -6,6 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -45,6 +47,13 @@ func TestPowApprox(t *testing.T) {
 			expectedResult: sdk.OneDec(),
 		},
 		{
+			// zero base, this should panic
+			base:           sdk.ZeroDec(),
+			exp:            sdk.OneDec(),
+			powPrecision:   sdk.MustNewDecFromStr("0.00001"),
+			expectedResult: sdk.ZeroDec(),
+		},
+		{
 			// large base, small exp
 			base:           sdk.MustNewDecFromStr("1.9999"),
 			exp:            sdk.MustNewDecFromStr("0.23"),
@@ -82,12 +91,16 @@ func TestPowApprox(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		actualResult := PowApprox(tc.base, tc.exp, tc.powPrecision)
-		require.True(
-			t,
-			tc.expectedResult.Sub(actualResult).Abs().LTE(tc.powPrecision),
-			fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
-		)
+		var actualResult sdk.Dec
+		osmoutils.ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
+			fmt.Println(tc.base)
+			actualResult = PowApprox(tc.base, tc.exp, tc.powPrecision)
+			require.True(
+				t,
+				tc.expectedResult.Sub(actualResult).Abs().LTE(tc.powPrecision),
+				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
+			)
+		})
 	}
 }
 
@@ -108,6 +121,12 @@ func TestPow(t *testing.T) {
 			base:           sdk.MustNewDecFromStr("0.8"),
 			exp:            sdk.ZeroDec(),
 			expectedResult: sdk.OneDec(),
+		},
+		{
+			// zero base, this should panic
+			base:           sdk.ZeroDec(),
+			exp:            sdk.OneDec(),
+			expectedResult: sdk.ZeroDec(),
 		},
 		{
 			// large base, small exp
@@ -136,11 +155,14 @@ func TestPow(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		actualResult := Pow(tc.base, tc.exp)
-		require.True(
-			t,
-			tc.expectedResult.Sub(actualResult).Abs().LTE(powPrecision),
-			fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
-		)
+		var actualResult sdk.Dec
+		osmoutils.ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
+			actualResult = Pow(tc.base, tc.exp)
+			require.True(
+				t,
+				tc.expectedResult.Sub(actualResult).Abs().LTE(powPrecision),
+				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
+			)
+		})
 	}
 }
