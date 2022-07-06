@@ -37,6 +37,18 @@ func (sim *SimCtx) FindAccount(address sdk.Address) (simulation.Account, bool) {
 	return simulation.Account{}, false
 }
 
+// TODO: Thread in bank keeper here
+// func (sim *SimCtx) SelAddrWithDenoms(denoms []string) (simulation.Account, bool) {
+// 	filteredAddrs := []simulation.Account{}
+// 	for _, acc := range sim.Accounts {
+// 		if acc.Address.Equals(address) {
+// 			return acc, true
+// 		}
+// 	}
+
+// 	return simulation.Account{}, false
+// }
+
 // RandomFees returns a random fee by selecting a random coin denomination and
 // amount from the account's available balance. If the user doesn't have enough
 // funds for paying fees, it returns empty coins.
