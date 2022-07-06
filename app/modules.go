@@ -156,7 +156,9 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	// superfluid must come after distribution & epochs.
 	// TODO: we actually set it to come after staking, since thats what happened before, and want to minimize chance of break.
 	ord.After(superfluidtypes.ModuleName, stakingtypes.ModuleName)
-
+	// TODO: This can almost certainly be un-constrained, but we keep the constraint to match prior functionality.
+	// IBChost came after staking, before superfluid.
+	ord.After(superfluidtypes.ModuleName, ibchost.ModuleName)
 	// every remaining module's begin block is a no-op.
 	return ord.TotalOrdering()
 }
