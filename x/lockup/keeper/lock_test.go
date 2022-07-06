@@ -155,14 +155,16 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		if tc.expectedBeginUnlockPass {
 			suite.Require().NoError(err)
 
-			// check unlocking coins
-			unlockingCoins := tc.unlockingCoins
-			if tc.unlockingCoins == nil {
-				unlockingCoins = initialLockCoins
+			// check unlocking coins. When a lock is a partial lock
+			// (i.e. tc.unlockingCoins is not nit and less than initialLockCoins),
+			// we only unlock the partial amount of tc.unlockingCoins
+			expectedUnlockingCoins := tc.unlockingCoins
+			if expectedUnlockingCoins == nil {
+				expectedUnlockingCoins = initialLockCoins
 			}
-			unlockings := lockupKeeper.GetAccountUnlockingCoins(ctx, addr1)
-			suite.Require().Equal(len(unlockings), 1)
-			suite.Require().Equal(unlockings[0].Amount, unlockingCoins[0].Amount)
+			actualUnlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
+			suite.Require().Equal(len(actualUnlockingCoins), 1)
+			suite.Require().Equal(expectedUnlockingCoins[0].Amount, actualUnlockingCoins[0].Amount)
 
 			lock = lockupKeeper.GetAccountPeriodLocks(ctx, addr1)[0]
 
@@ -179,12 +181,12 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			suite.Require().Error(err)
 
 			// check unlocking coins, should not be unlocking any coins
-			unlockings := lockupKeeper.GetAccountUnlockingCoins(ctx, addr1)
-			suite.Require().Equal(len(unlockings), 0)
+			unlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
+			suite.Require().Equal(len(unlockingCoins), 0)
 
-			locked := lockupKeeper.GetAccountLockedCoins(ctx, addr1)
-			suite.Require().Equal(len(locked), 1)
-			suite.Require().Equal(initialLockCoins[0], locked[0])
+			lockedCoins := suite.App.LockupKeeper.GetAccountLockedCoins(suite.Ctx, addr1)
+			suite.Require().Equal(len(lockedCoins), 1)
+			suite.Require().Equal(initialLockCoins[0], lockedCoins[0])
 		}
 
 		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.passedTime))
@@ -200,14 +202,14 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			// things to test if unlocking has started
 			if tc.expectedBeginUnlockPass {
 				// should still be unlocking if `UnlockMaturedLock` failed
-				unlockings := lockupKeeper.GetAccountUnlockingCoins(ctx, addr1)
-				suite.Require().Equal(len(unlockings), 1)
+				actualUnlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
+				suite.Require().Equal(len(actualUnlockingCoins), 1)
 
-				unlockingCoins := tc.unlockingCoins
+				expectedUnlockingCoins := tc.unlockingCoins
 				if tc.unlockingCoins == nil {
-					unlockingCoins = initialLockCoins
+					actualUnlockingCoins = initialLockCoins
 				}
-				suite.Require().Equal(unlockingCoins, unlockings)
+				suite.Require().Equal(expectedUnlockingCoins, actualUnlockingCoins)
 			}
 		}
 
