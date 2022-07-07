@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
 	// create a gauge
 	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
 
-	// ensure that a querying for a gauge with an ID that doesn't exist returns an error
+	// ensure that querying for a gauge with an ID that doesn't exist returns an error.
 	res, err := suite.querier.GaugeByID(sdk.WrapSDKContext(suite.Ctx), &types.GaugeByIDRequest{Id: 1000})
 	suite.Require().Error(err)
 	suite.Require().Equal(res, (*types.GaugeByIDResponse)(nil))

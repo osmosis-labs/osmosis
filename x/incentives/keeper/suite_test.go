@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) setupAddr(addrNum int, prefix string, balance sdk.
 	return addr
 }
 
-// SetupUserLocks takes an array of user locks, creates locks based on this array, then returns the respective account address byte array.
+// SetupUserLocks takes an array of user locks, creates locks based on this array, then returns the respective array of accounts.
 func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccAddress) {
 	accs = make([]sdk.AccAddress, len(users))
 	for i, user := range users {
@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccA
 	return
 }
 
-// SetupUserSyntheticLocks takes an array of user locks creates synthetic locks based on this array, then returns the respective account address byte array.
+// SetupUserSyntheticLocks takes an array of user locks and creates synthetic locks based on this array, then returns the respective account address byte array.
 func (suite *KeeperTestSuite) SetupUserSyntheticLocks(users []userLocks) (accs []sdk.AccAddress) {
 	accs = make([]sdk.AccAddress, len(users))
 	coins := sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}
