@@ -18,7 +18,7 @@ message Gauge {
   // Non-perpetual gauges distribute their tokens equally per epoch while the
   // gauge is in the active period. Perpetual gauges distribute all their tokens
   // at a single time and only distribute their tokens again once the gauge is
-  // refilled
+  // refilled, Intended for use with incentives that get refilled daily.
   bool is_perpetual = 2;
   // Rewards are distributed to lockups that are are returned by this lockup
   // query. This is queried via lock duration or by timestamp
