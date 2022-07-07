@@ -3,12 +3,15 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
 func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.SetupTest()
 
@@ -26,6 +29,7 @@ func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.Require().NoError(err)
 }
 
+// TestNonExistentDenomGaugeCreation tests error handling for creating a gauge with an invalid denom.
 func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	suite.SetupTest()
 
@@ -43,9 +47,7 @@ func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	suite.Require().NoError(err)
 }
 
-// TODO: Make this test table driven
-// OR if it needs to be script based,
-// remove lots of boilerplate so this can actually be followed
+// TestNonPerpetualGaugeOperations tests non perpetual gauge distribution logic.
 func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -146,6 +148,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	suite.Require().Equal(sdk.Coins{}, rewardsEst)
 }
 
+// TestPerpetualGaugeOperations tests perpetual gauge distribution logic.
 func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	// test for module get gauges
 	suite.SetupTest()
@@ -254,9 +257,8 @@ func (suite *KeeperTestSuite) TestPerpetualGaugeOperations() {
 	suite.Require().Equal(sdk.Coins(nil), rewardsEst)
 }
 
+// TestGaugesByDenom tests gauge distribution using the gauges by denom keeper.
 func (suite *KeeperTestSuite) TestGaugesByDenom() {
-	// TODO: This is not a good test. We should refactor it to be table driven,
-	// specifying a list of gauges to define, and then the expected result of gauges by denom
 	testGaugeByDenom := func(isPerpetual bool) {
 		// test for module get gauges
 		suite.SetupTest()
@@ -310,3 +312,5 @@ func (suite *KeeperTestSuite) TestGaugesByDenom() {
 	testGaugeByDenom(true)
 	testGaugeByDenom(false)
 }
+
+var _ = suite.TestingSuite(nil)
