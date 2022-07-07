@@ -408,7 +408,7 @@ $ %s query incentives rewards-estimation
 			lockIds := []uint64{}
 			// if user doesn't provide at least one of the lock ids or owner, we don't have enough information to proceed.
 			if lockIdsCombined == "" && owner == "" {
-				err = fmt.Errorf("either one of owner flag or lock IDs must be provided")
+				return fmt.Errorf("either one of owner flag or lock IDs must be provided")
 
 				// if user provides lockIDs, use these lockIDs in our rewards estimation
 			} else if owner == "" {
