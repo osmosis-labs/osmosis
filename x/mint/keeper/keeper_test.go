@@ -37,21 +37,24 @@ func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight
 	suite.Setup()
 	// Reset height to the desired value since test suite setup initialized
 	// it to 1.
+	bankKeeper := suite.App.BankKeeper
+	accountKeeper := suite.App.AccountKeeper
+
 	suite.Ctx = suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
 
 	if !isDeveloperModuleAccountCreated {
 		// Remove the developer vesting account since suite setup creates and initializes it.
 		// This environment w/o the developer vesting account configured is necessary for
 		// testing edge cases of multiple tests.
-		developerVestingAccount := suite.App.AccountKeeper.GetAccount(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
-		suite.App.AccountKeeper.RemoveAccount(suite.Ctx, developerVestingAccount)
-		suite.App.BankKeeper.BurnCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount))))
+		developerVestingAccount := accountKeeper.GetAccount(suite.Ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+		accountKeeper.RemoveAccount(suite.Ctx, developerVestingAccount)
+		bankKeeper.BurnCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount))))
 
 		// If developer module account is created, the suite.Setup() also sets the offset,
 		// therefore, we should reset it to 0 to set up the environment truly w/o the module account.
-		supplyOffset := suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom)
-		suite.App.BankKeeper.AddSupplyOffset(suite.Ctx, sdk.DefaultBondDenom, supplyOffset.Mul(sdk.NewInt(-1)))
-		suite.Equal(sdk.ZeroInt(), suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom))
+		supplyOffset := bankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom)
+		bankKeeper.AddSupplyOffset(suite.Ctx, sdk.DefaultBondDenom, supplyOffset.Mul(sdk.NewInt(-1)))
+		suite.Equal(sdk.ZeroInt(), bankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom))
 	}
 }
 
@@ -84,17 +87,20 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
+			bankKeeper := suite.App.BankKeeper
+			mintKeeper := suite.App.MintKeeper
+
 			if tc.hasPreExistingSupply {
 				fee := sdk.NewCoin("stake", sdk.NewInt(100000))
 				fees := sdk.NewCoins(fee)
-				err := simapp.FundModuleAccount(suite.App.BankKeeper,
+				err := simapp.FundModuleAccount(bankKeeper,
 					suite.Ctx,
 					authtypes.FeeCollectorName,
 					fees)
 				suite.NoError(err)
 			}
 
-			coin := suite.App.MintKeeper.GetProportions(suite.Ctx, tc.fee, tc.ratio)
+			coin := mintKeeper.GetProportions(suite.Ctx, tc.fee, tc.ratio)
 			suite.Equal(tc.expectedCoin, coin)
 		})
 	}
@@ -149,7 +155,14 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			suite.Setup()
+
 			mintKeeper := suite.App.MintKeeper
+			bankKeeper := suite.App.BankKeeper
+			intencentivesKeeper := suite.App.IncentivesKeeper
+			poolincentivesKeeper := suite.App.PoolIncentivesKeeper
+			distrKeeper := suite.App.DistrKeeper
+			accountKeeper := suite.App.AccountKeeper
+
 			// set WeightedDeveloperRewardsReceivers
 			params.WeightedDeveloperRewardsReceivers = tc.weightedAddresses
 			mintKeeper.SetParams(suite.Ctx, params)
@@ -158,9 +171,9 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 			suite.FundAcc(gaugeCreator, gaugeCoins)
 			suite.FundAcc(gaugeCreator, mintLPtokens)
 
-			gaugeId, err := suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, true, gaugeCreator, gaugeCoins, distrTo, time.Now(), 1)
+			gaugeId, err := intencentivesKeeper.CreateGauge(suite.Ctx, true, gaugeCreator, gaugeCoins, distrTo, time.Now(), 1)
 			suite.NoError(err)
-			err = suite.App.PoolIncentivesKeeper.UpdateDistrRecords(suite.Ctx, poolincentivestypes.DistrRecord{
+			err = poolincentivesKeeper.UpdateDistrRecords(suite.Ctx, poolincentivestypes.DistrRecord{
 				GaugeId: gaugeId,
 				Weight:  sdk.NewInt(100),
 			})
@@ -173,11 +186,11 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 			suite.NoError(err)
 
 			// check feePool
-			feePool := suite.App.DistrKeeper.GetFeePool(suite.Ctx)
-			feeCollector := suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+			feePool := distrKeeper.GetFeePool(suite.Ctx)
+			feeCollector := accountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 			suite.Equal(
 				tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
-				suite.App.BankKeeper.GetAllBalances(suite.Ctx, feeCollector).AmountOf("stake"))
+				bankKeeper.GetAllBalances(suite.Ctx, feeCollector).AmountOf("stake"))
 
 			if tc.weightedAddresses != nil {
 				suite.Equal(
@@ -195,7 +208,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 				devRewardsReceiver, _ := sdk.AccAddressFromBech32(weightedAddress.GetAddress())
 				suite.Equal(
 					tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).Mul(params.WeightedDeveloperRewardsReceivers[i].Weight).TruncateInt(),
-					suite.App.BankKeeper.GetBalance(suite.Ctx, devRewardsReceiver, "stake").Amount)
+					bankKeeper.GetBalance(suite.Ctx, devRewardsReceiver, "stake").Amount)
 			}
 		})
 	}
@@ -203,6 +216,9 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 
 func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperRewardsAddr() {
 	mintKeeper := suite.App.MintKeeper
+	bankKeeper := suite.App.BankKeeper
+	distrKeeper := suite.App.DistrKeeper
+	accountKeeper := suite.App.AccountKeeper
 
 	params := suite.App.MintKeeper.GetParams(suite.Ctx)
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
@@ -213,17 +229,17 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 	err = mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin)
 	suite.NoError(err)
 
-	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *suite.App.DistrKeeper)
+	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *distrKeeper)
 
-	feePool := suite.App.DistrKeeper.GetFeePool(suite.Ctx)
-	feeCollector := suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	feePool := distrKeeper.GetFeePool(suite.Ctx)
+	feeCollector := accountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	// PoolIncentives + DeveloperRewards + CommunityPool => CommunityPool
 	proportionToCommunity := params.DistributionProportions.PoolIncentives.
 		Add(params.DistributionProportions.DeveloperRewards).
 		Add(params.DistributionProportions.CommunityPool)
 	suite.Equal(
 		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
-		suite.App.BankKeeper.GetBalance(suite.Ctx, feeCollector, "stake").Amount)
+		bankKeeper.GetBalance(suite.Ctx, feeCollector, "stake").Amount)
 	suite.Equal(
 		mintCoins[0].Amount.ToDec().Mul(proportionToCommunity),
 		feePool.CommunityPool.AmountOf("stake"))
@@ -234,12 +250,12 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 	err = mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin)
 	suite.NoError(err)
 
-	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *suite.App.DistrKeeper)
+	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *distrKeeper)
 
-	feePool = suite.App.DistrKeeper.GetFeePool(suite.Ctx)
+	feePool = distrKeeper.GetFeePool(suite.Ctx)
 	suite.Equal(
 		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt().Mul(sdk.NewInt(2)),
-		suite.App.BankKeeper.GetBalance(suite.Ctx, feeCollector, "stake").Amount)
+		bankKeeper.GetBalance(suite.Ctx, feeCollector, "stake").Amount)
 	suite.Equal(
 		mintCoins[0].Amount.ToDec().Mul(proportionToCommunity).Mul(sdk.NewDec(2)),
 		feePool.CommunityPool.AmountOf("stake"))
