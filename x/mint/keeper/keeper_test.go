@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v9/app/apptesting"
-	lockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v9/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v9/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {

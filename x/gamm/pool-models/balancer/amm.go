@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v9/osmomath"
-	"github.com/osmosis-labs/osmosis/v9/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v9/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/osmomath"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 const (

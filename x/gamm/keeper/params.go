@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v9/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

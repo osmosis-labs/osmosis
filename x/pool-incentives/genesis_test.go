@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/osmosis-labs/osmosis/v9/app"
-	pool_incentives "github.com/osmosis-labs/osmosis/v9/x/pool-incentives"
-	"github.com/osmosis-labs/osmosis/v9/x/pool-incentives/types"
+	simapp "github.com/osmosis-labs/osmosis/v10/app"
+	pool_incentives "github.com/osmosis-labs/osmosis/v10/x/pool-incentives"
+	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

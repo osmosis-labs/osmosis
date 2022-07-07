@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	lockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v9/x/superfluid/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
