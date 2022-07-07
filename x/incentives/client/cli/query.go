@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-// GetQueryCmd returns the cli query commands for this module.
+// GetQueryCmd returns the query commands for this module.
 func GetQueryCmd() *cobra.Command {
-	// Group incentives queries under a subcommand
+	// group incentives queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
@@ -40,7 +42,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdGauges returns full available gauges.
+// GetCmdGauges returns all available gauges.
 func GetCmdGauges() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gauges",
@@ -84,7 +86,7 @@ $ %s query incentives gauges
 	return cmd
 }
 
-// GetCmdToDistributeCoins returns coins that is going to be distributed.
+// GetCmdToDistributeCoins returns coins that are going to be distributed.
 func GetCmdToDistributeCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "to-distribute-coins",
@@ -120,7 +122,7 @@ $ %s query incentives to-distribute-coins
 	return cmd
 }
 
-// GetCmdDistributedCoins returns coins that are distributed so far.
+// GetCmdDistributedCoins returns coins that have been distributed so far.
 func GetCmdDistributedCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "distributed-coins",
@@ -156,7 +158,7 @@ $ %s query incentives distributed-coins
 	return cmd
 }
 
-// GetCmdGaugeByID returns Gauge by id.
+// GetCmdGaugeByID returns a gauge by ID.
 func GetCmdGaugeByID() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gauge-by-id [id]",
@@ -238,7 +240,7 @@ $ %s query incentives active-gauges
 	return cmd
 }
 
-// GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
+// GetCmdActiveGaugesPerDenom returns active gauges for a specified denom.
 func GetCmdActiveGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "active-gauges-per-denom [denom]",
@@ -320,7 +322,7 @@ $ %s query incentives upcoming-gauges
 	return cmd
 }
 
-// GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
+// GetCmdUpcomingGaugesPerDenom returns active gauges for a specified denom.
 func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upcoming-gauges-per-denom [denom]",
@@ -361,7 +363,7 @@ func GetCmdRewardsEst() *cobra.Command {
 			fmt.Sprintf(`Query rewards estimation.
 
 Example:
-$ %s query incentives rewards-estimation 
+$ %s query incentives rewards-estimation
 `,
 				version.AppName,
 			),
@@ -384,14 +386,57 @@ $ %s query incentives rewards-estimation
 				return err
 			}
 
-			lockIdStrs := strings.Split(lockIdsCombined, ",")
-			lockIds := []uint64{}
-			for _, lockIdStr := range lockIdStrs {
-				lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
+			var res *lockuptypes.AccountLockedLongerDurationResponse
+			if owner != "" {
+				queryClientLockup := lockuptypes.NewQueryClient(clientCtx)
+
+				res, err = queryClientLockup.AccountLockedLongerDuration(cmd.Context(), &lockuptypes.AccountLockedLongerDurationRequest{Owner: owner, Duration: time.Millisecond})
 				if err != nil {
 					return err
 				}
-				lockIds = append(lockIds, lockId)
+			} else {
+				owner = ""
+			}
+
+			ownerLocks := []uint64{}
+
+			if res != nil {
+				for _, lockId := range res.Locks {
+					ownerLocks = append(ownerLocks, lockId.ID)
+				}
+			}
+
+			lockIdStrs := strings.Split(lockIdsCombined, ",")
+			lockIds := []uint64{}
+			// if user doesn't provide any lockIDs or a lock owner, we don't have enough information to proceed
+			if lockIdsCombined == "" && owner == "" {
+				err = fmt.Errorf("if owner flag is not set, lock IDs must be provided")
+				return err
+
+				// if user provides lockIDs, use these lockIDs in our rewards estimation
+			} else if lockIdsCombined != "" {
+				for _, lockIdStr := range lockIdStrs {
+					lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
+					if err != nil {
+						return err
+					}
+					lockIds = append(lockIds, lockId)
+				}
+
+				// if no lockIDs are provided but an owner is provided, we query the rewards for all of the locks the owner has
+			} else if lockIdsCombined == "" && owner != "" {
+				lockIds = append(lockIds, ownerLocks...)
+			}
+
+			// if lockIDs are provided and an owner is provided, only query the lockIDs that are provided
+			// if a lockID was provided and it doesn't belong to the owner, return an error
+			if len(lockIds) != 0 && owner != "" {
+				for _, lockId := range lockIds {
+					validInputLockId := contains(ownerLocks, lockId)
+					if !validInputLockId {
+						return fmt.Errorf("lock-id %v does not belong to %v", lockId, owner)
+					}
+				}
 			}
 
 			endEpoch, err := cmd.Flags().GetInt64(FlagEndEpoch)
@@ -399,16 +444,22 @@ $ %s query incentives rewards-estimation
 				return err
 			}
 
-			res, err := queryClient.RewardsEst(cmd.Context(), &types.RewardsEstRequest{
+			// TODO: Figure out why some lock ids are good and some causes "Error: rpc error: code = Unknown desc = panic message redacted to hide potentially sensitive system info: panic"
+			// since owner checks have already been completed above, we switch the owner address to a random module account address since a blank owner panics.
+			// we should find a better way to circumvent this address validity check
+			if owner == "" {
+				owner = "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj"
+			}
+			res1, err1 := queryClient.RewardsEst(cmd.Context(), &types.RewardsEstRequest{
 				Owner:    owner, // owner is used only when lockIds are empty
 				LockIds:  lockIds,
 				EndEpoch: endEpoch,
 			})
-			if err != nil {
-				return err
+			if err1 != nil {
+				return err1
 			}
 
-			return clientCtx.PrintProto(res)
+			return clientCtx.PrintProto(res1)
 		},
 	}
 
@@ -418,4 +469,14 @@ $ %s query incentives rewards-estimation
 	cmd.Flags().Int64(FlagEndEpoch, 0, "the end epoch number to participate in rewards calculation")
 
 	return cmd
+}
+
+func contains(s []uint64, value uint64) bool {
+	for _, v := range s {
+		if v == value {
+			return true
+		}
+	}
+
+	return false
 }
