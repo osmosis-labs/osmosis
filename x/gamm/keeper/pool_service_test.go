@@ -318,6 +318,18 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 				suite.Require().Equal("15000bar,15000foo", liquidity.String())
 			},
 		},
+		{
+			fn: func(poolId uint64) {
+				keeper := suite.App.GAMMKeeper
+				// Test the "tokenInMaxs" with an additional invalid denom
+				// In this case, to get the 50 * OneShare amount of share token, the foo, bar token are expected to be provided as 5000 amounts.
+				// The test input has the correct amount for each, but also includes an incorrect denom that should cause an error
+				err := keeper.JoinPoolNoSwap(suite.Ctx, suite.TestAccs[1], poolId, types.OneShare.MulRaw(50), sdk.Coins{
+					sdk.NewCoin("bar", sdk.NewInt(5000)), sdk.NewCoin("foo", sdk.NewInt(5000)), sdk.NewCoin("baz", sdk.NewInt(5000)),
+				})
+				suite.Require().Error(err)
+			},
+		},
 	}
 
 	for _, test := range tests {

@@ -46,10 +46,6 @@ func (k Keeper) getCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	return coins
 }
 
-func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
-}
-
 // setGauge set the gauge inside store.
 func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	store := ctx.KVStore(k.storeKey)
