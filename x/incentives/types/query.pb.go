@@ -1103,30 +1103,27 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// ModuleToDistributeCoins returns coins that are going to be distributed
+	// Returns coins that are going to be distributed
 	ModuleToDistributeCoins(ctx context.Context, in *ModuleToDistributeCoinsRequest, opts ...grpc.CallOption) (*ModuleToDistributeCoinsResponse, error)
-	// ModuleDistributedCoins returns coins that are distributed by the module so
-	// far
+	// Returns coins that are distributed by the module so far
 	ModuleDistributedCoins(ctx context.Context, in *ModuleDistributedCoinsRequest, opts ...grpc.CallOption) (*ModuleDistributedCoinsResponse, error)
-	// GaugeByID returns gauges by their respective ID
+	// Returns gauges by their respective ID
 	GaugeByID(ctx context.Context, in *GaugeByIDRequest, opts ...grpc.CallOption) (*GaugeByIDResponse, error)
-	// Gauges returns both upcoming and active gauges
+	// Returns both upcoming and active gauges
 	Gauges(ctx context.Context, in *GaugesRequest, opts ...grpc.CallOption) (*GaugesResponse, error)
-	// ActiveGauges returns active gauges
+	// Returns active gauges
 	ActiveGauges(ctx context.Context, in *ActiveGaugesRequest, opts ...grpc.CallOption) (*ActiveGaugesResponse, error)
-	// ActiveGaugesPerDenom returns active gauges by denom
+	// Returns active gauges by denom
 	ActiveGaugesPerDenom(ctx context.Context, in *ActiveGaugesPerDenomRequest, opts ...grpc.CallOption) (*ActiveGaugesPerDenomResponse, error)
 	// Returns scheduled gauges that have not yet occured
 	UpcomingGauges(ctx context.Context, in *UpcomingGaugesRequest, opts ...grpc.CallOption) (*UpcomingGaugesResponse, error)
-	// UpcomingGaugesPerDenom returns scheduled gauges that have not yet occured
-	// by denom
+	// Returns scheduled gauges that have not yet occured by denom
 	UpcomingGaugesPerDenom(ctx context.Context, in *UpcomingGaugesPerDenomRequest, opts ...grpc.CallOption) (*UpcomingGaugesPerDenomResponse, error)
 	// RewardsEst returns an estimate of the rewards from now until a specified
 	// time in the future The querier either provides an address or a set of locks
 	// for which they want to find the associated rewards
 	RewardsEst(ctx context.Context, in *RewardsEstRequest, opts ...grpc.CallOption) (*RewardsEstResponse, error)
-	// LockableDurations returns lockable durations that are valid to distribute
-	// incentives for
+	// Returns lockable durations that are valid to distribute incentives for
 	LockableDurations(ctx context.Context, in *QueryLockableDurationsRequest, opts ...grpc.CallOption) (*QueryLockableDurationsResponse, error)
 }
 
@@ -1230,30 +1227,27 @@ func (c *queryClient) LockableDurations(ctx context.Context, in *QueryLockableDu
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// ModuleToDistributeCoins returns coins that are going to be distributed
+	// Returns coins that are going to be distributed
 	ModuleToDistributeCoins(context.Context, *ModuleToDistributeCoinsRequest) (*ModuleToDistributeCoinsResponse, error)
-	// ModuleDistributedCoins returns coins that are distributed by the module so
-	// far
+	// Returns coins that are distributed by the module so far
 	ModuleDistributedCoins(context.Context, *ModuleDistributedCoinsRequest) (*ModuleDistributedCoinsResponse, error)
-	// GaugeByID returns gauges by their respective ID
+	// Returns gauges by their respective ID
 	GaugeByID(context.Context, *GaugeByIDRequest) (*GaugeByIDResponse, error)
-	// Gauges returns both upcoming and active gauges
+	// Returns both upcoming and active gauges
 	Gauges(context.Context, *GaugesRequest) (*GaugesResponse, error)
-	// ActiveGauges returns active gauges
+	// Returns active gauges
 	ActiveGauges(context.Context, *ActiveGaugesRequest) (*ActiveGaugesResponse, error)
-	// ActiveGaugesPerDenom returns active gauges by denom
+	// Returns active gauges by denom
 	ActiveGaugesPerDenom(context.Context, *ActiveGaugesPerDenomRequest) (*ActiveGaugesPerDenomResponse, error)
 	// Returns scheduled gauges that have not yet occured
 	UpcomingGauges(context.Context, *UpcomingGaugesRequest) (*UpcomingGaugesResponse, error)
-	// UpcomingGaugesPerDenom returns scheduled gauges that have not yet occured
-	// by denom
+	// Returns scheduled gauges that have not yet occured by denom
 	UpcomingGaugesPerDenom(context.Context, *UpcomingGaugesPerDenomRequest) (*UpcomingGaugesPerDenomResponse, error)
 	// RewardsEst returns an estimate of the rewards from now until a specified
 	// time in the future The querier either provides an address or a set of locks
 	// for which they want to find the associated rewards
 	RewardsEst(context.Context, *RewardsEstRequest) (*RewardsEstResponse, error)
-	// LockableDurations returns lockable durations that are valid to distribute
-	// incentives for
+	// Returns lockable durations that are valid to distribute incentives for
 	LockableDurations(context.Context, *QueryLockableDurationsRequest) (*QueryLockableDurationsResponse, error)
 }
 
