@@ -175,9 +175,6 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 
 }
 
-// TODO: Make this test table driven, or move whatever it tests into the much simpler TestDistribute
-// TODO: Make issue for the above
-
 // TestGetModuleToDistributeCoins tests the sum of coins yet to be distributed for all of the module is correct.
 func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	suite.SetupTest()
@@ -221,9 +218,6 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	coins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
 	suite.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...).Sub(distrCoins))
 }
-
-// TODO: Make this test table driven, or move whatever it tests into the much simpler TestDistribute
-// TODO: Make issue for the above.
 
 // TestGetModuleDistributedCoins tests that the sum of coins that have been distributed so far for all of the module is correct.
 func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
