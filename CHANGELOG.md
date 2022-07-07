@@ -84,7 +84,7 @@ Integrators will have to update their messages and queries to adapt, please see 
 
 * [#1535](https://github.com/osmosis-labs/osmosis/pull/1535) Upgrade to [IBC v3](https://github.com/cosmos/ibc-go/releases/tag/v3.0.0)
 * [#1564](https://github.com/osmosis-labs/osmosis/pull/1564) Enable Interchain account host module
-  * See [here](https://github.com/osmosis-labs/osmosis/blob/main/app/upgrades/v9/upgrades.go#L49-L71) for the supported messages
+  * See [here](https://github.com/osmosis-labs/osmosis/blob/main/app/upgrades/v10/upgrades.go#L49-L71) for the supported messages
 
 #### Txfees
 

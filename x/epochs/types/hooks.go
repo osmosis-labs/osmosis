@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v9/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 )
 
 type EpochHooks interface {

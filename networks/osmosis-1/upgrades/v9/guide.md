@@ -121,12 +121,12 @@ source ~/.profile
 Now, create the required folder, make the build, and copy the daemon over to that folder
 
 ```{.sh}
-mkdir -p ~/.osmosisd/cosmovisor/upgrades/v9/bin
+mkdir -p ~/.osmosisd/cosmovisor/upgrades/v10/bin
 cd $HOME/osmosis
 git pull
 git checkout v9.0.0
 make build
-cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v9/bin
+cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v10/bin
 ```
 
 Now, at the upgrade height, Cosmovisor will upgrade to the v9 binary

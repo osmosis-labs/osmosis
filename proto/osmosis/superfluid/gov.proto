@@ -4,7 +4,7 @@ package osmosis.superfluid.v1beta1;
 import "gogoproto/gogo.proto";
 import "osmosis/superfluid/superfluid.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v9/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/superfluid/types";
 
 // SetSuperfluidAssetsProposal is a gov Content type to update the superfluid
 // assets

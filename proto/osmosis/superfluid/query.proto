@@ -11,7 +11,7 @@ import "osmosis/superfluid/params.proto";
 import "osmosis/lockup/lock.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v9/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/superfluid/types";
 
 // Query defines the gRPC querier service.
 service Query {
