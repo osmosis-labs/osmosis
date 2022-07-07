@@ -68,7 +68,7 @@ func (suite *KeeperTestSuite) setupAddr(addrNum int, prefix string, balance sdk.
 	return addr
 }
 
-// SetupUserLocks takes an array of user locks, creates locks based on this array, then returns the respective account address byte array.
+// SetupUserLocks takes an array of user locks, creates locks based on this array, then returns the respective array of accounts.
 func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccAddress) {
 	accs = make([]sdk.AccAddress, len(users))
 	for i, user := range users {
