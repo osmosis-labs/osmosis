@@ -1512,7 +1512,7 @@ type QueryClient interface {
 	AssetType(ctx context.Context, in *AssetTypeRequest, opts ...grpc.CallOption) (*AssetTypeResponse, error)
 	// Returns all registered superfluid assets.
 	AllAssets(ctx context.Context, in *AllAssetsRequest, opts ...grpc.CallOption) (*AllAssetsResponse, error)
-	// Returns the osmo equivilent multiplier used in the most recent epoch.
+	// Returns the osmo equivalent multiplier used in the most recent epoch.
 	AssetMultiplier(ctx context.Context, in *AssetMultiplierRequest, opts ...grpc.CallOption) (*AssetMultiplierResponse, error)
 	// Returns all superfluid intermediary accounts.
 	AllIntermediaryAccounts(ctx context.Context, in *AllIntermediaryAccountsRequest, opts ...grpc.CallOption) (*AllIntermediaryAccountsResponse, error)
@@ -1673,7 +1673,7 @@ type QueryServer interface {
 	AssetType(context.Context, *AssetTypeRequest) (*AssetTypeResponse, error)
 	// Returns all registered superfluid assets.
 	AllAssets(context.Context, *AllAssetsRequest) (*AllAssetsResponse, error)
-	// Returns the osmo equivilent multiplier used in the most recent epoch.
+	// Returns the osmo equivalent multiplier used in the most recent epoch.
 	AssetMultiplier(context.Context, *AssetMultiplierRequest) (*AssetMultiplierResponse, error)
 	// Returns all superfluid intermediary accounts.
 	AllIntermediaryAccounts(context.Context, *AllIntermediaryAccountsRequest) (*AllIntermediaryAccountsResponse, error)

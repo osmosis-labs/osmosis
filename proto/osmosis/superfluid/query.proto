@@ -32,7 +32,7 @@ service Query {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/all_assets";
   }
 
-  // Returns the osmo equivilent multiplier used in the most recent epoch.
+  // Returns the osmo equivalent multiplier used in the most recent epoch.
   rpc AssetMultiplier(AssetMultiplierRequest)
       returns (AssetMultiplierResponse) {
     option (google.api.http).get =

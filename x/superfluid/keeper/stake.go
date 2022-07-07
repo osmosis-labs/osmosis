@@ -21,7 +21,7 @@ func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk
 }
 
 // GetExpectedDelegationAmount returns the total number of osmo the intermediary account
-// has delegated using the most recent osmo equivilent multiplier.
+// has delegated using the most recent osmo equivalent multiplier.
 // This is labeled expected because the way it calculates the amount can
 // lead rounding errors from the true delegated amount.
 func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) sdk.Int {
@@ -99,7 +99,7 @@ func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amo
 		return nil
 	}
 
-	// mint OSMO token based on the most recent osmo equivilent multiplier
+	// mint OSMO token based on the most recent osmo equivalent multiplier
 	// of locked denom to denom module account
 	osmoAmt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
 	if osmoAmt.IsZero() {
@@ -175,13 +175,13 @@ func (k Keeper) validateValAddrForDelegate(ctx sdk.Context, valAddr string) (sta
 	return validator, nil
 }
 
-// SuperfluidDelegate superfluid delegates osmo equivilent amount the given lock holds.
+// SuperfluidDelegate superfluid delegates osmo equivalent amount the given lock holds.
 // The actial delegation is done using / creating a intermediary account for the (denom, validator) pair
 // and having the intermediary account delegate to the designated validator, not the sender themselves.
 // A state entry of IntermediaryAccountConnection is stored to store the connection between the lock ID
 // and the intermediary account, as an intermediary account does not serve for delegations from a single delegator.
-// The actual amount of delegation is not equal to the equivilent amount of osmo the lock has. That is,
-// the actual amount of delegation is amount * osmo equivilent multiplier * (1 - k.RiskFactor(asset)).
+// The actual amount of delegation is not equal to the equivalent amount of osmo the lock has. That is,
+// the actual amount of delegation is amount * osmo equivalent multiplier * (1 - k.RiskFactor(asset)).
 func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64, valAddr string) error {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -224,7 +224,7 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 }
 
 // SuperfluidUndelegate starts undelegating superfluid delegated position for the given lock.
-// Undelegation is done instantly and the equivilent amount is sent to the module account
+// Undelegation is done instantly and the equivalent amount is sent to the module account
 // where it is burnt instantly. Note that this method does not include unbonding the lock
 // itself.
 func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {

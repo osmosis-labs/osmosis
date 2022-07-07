@@ -37,9 +37,9 @@ var _ types.MsgServer = msgServer{}
 // - lock should not be unlocking
 // - lock should not have a different superfluid staking position
 // - lock duration should be greater or equal to the staking.Unbonding time
-// Note that the amount of delegation is not equal to the equivilent amount of osmo within the lock.
+// Note that the amount of delegation is not equal to the equivalent amount of osmo within the lock.
 // Instead, we use the osmo equivalent multiplier stored in the latest epoch, calculate how much
-// osmo equivilent is in lock, and use the risk adjusted osmo value.
+// osmo equivalent is in lock, and use the risk adjusted osmo value.
 // Delegation does not happen directly from msg.Sender, but instead delegation is done via intermediary account.
 func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.MsgSuperfluidDelegate) (*types.MsgSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
