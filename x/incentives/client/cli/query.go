@@ -394,8 +394,6 @@ $ %s query incentives rewards-estimation
 				if err != nil {
 					return err
 				}
-			} else {
-				owner = ""
 			}
 
 			ownerLocks := []uint64{}
@@ -447,16 +445,16 @@ $ %s query incentives rewards-estimation
 			if owner == "" {
 				owner = "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj"
 			}
-			res1, err1 := queryClient.RewardsEst(cmd.Context(), &types.RewardsEstRequest{
+			rewardsEstimateResult, err := queryClient.RewardsEst(cmd.Context(), &types.RewardsEstRequest{
 				Owner:    owner, // owner is used only when lockIds are empty
 				LockIds:  lockIds,
 				EndEpoch: endEpoch,
 			})
-			if err1 != nil {
-				return err1
+			if err != nil {
+				return err
 			}
 
-			return clientCtx.PrintProto(res1)
+			return clientCtx.PrintProto(rewardsEstimateResult)
 		},
 	}
 
