@@ -131,7 +131,7 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	return startHeight, currentHeight, nil
 }
 
-func compactBlockStore(dbPath string) error {
+func compactBlockStore(dbPath string) (err error) {
 	compactOpts := opt.Options{
 		DisableSeeksCompaction: true,
 	}
@@ -140,18 +140,13 @@ func compactBlockStore(dbPath string) error {
 
 	db, err := leveldb.OpenFile(dbPath+"/blockstore.db", &compactOpts)
 	// nolint: staticcheck
-	defer db.Close()
+	defer func() {
+		err = db.Close()
+	}()
 	if err != nil {
 		return err
 	}
 	if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
-		return err
-	}
-	// N.B: We duplicate the call to db.Close() on top of
-	// the call in defer statement above to make sure that the resources
-	// are properly released and any potential error from Close()
-	// is handled. Close() should be idempotent so this is acceptable.
-	if err := db.Close(); err != nil {
 		return err
 	}
 	return nil
