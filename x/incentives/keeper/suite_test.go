@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
@@ -237,5 +235,3 @@ func (suite *KeeperTestSuite) SetupLockAndGauge(isPerpetual bool) (sdk.AccAddres
 
 	return lockOwner, gaugeID, gaugeCoins, startTime
 }
-
-var _ = suite.TestingSuite(nil)
