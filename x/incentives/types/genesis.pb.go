@@ -30,15 +30,15 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // GenesisState defines the incentives module's various parameters when first
 // initialized
 type GenesisState struct {
-	// All the parameters of the module
+	// params are all the parameters of the module
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	// All gauges that should exist at genesis
+	// gauges are all gauges that should exist at genesis
 	Gauges []Gauge `protobuf:"bytes,2,rep,name=gauges,proto3" json:"gauges"`
-	// All lockup durations that gauges can be locked for in order to recieve
-	// incentives
+	// lockable_durations are all lockup durations that gauges can be locked for
+	// in order to recieve incentives
 	LockableDurations []time.Duration `protobuf:"bytes,3,rep,name=lockable_durations,json=lockableDurations,proto3,stdduration" json:"lockable_durations" yaml:"lockable_durations"`
-	// What the gauge number will increment from when creating the next gauge
-	// after genesis
+	// last_gauge_id is what the gauge number will increment from when creating
+	// the next gauge after genesis
 	LastGaugeId uint64 `protobuf:"varint,4,opt,name=last_gauge_id,json=lastGaugeId,proto3" json:"last_gauge_id,omitempty"`
 }
 
