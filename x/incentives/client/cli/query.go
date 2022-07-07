@@ -400,10 +400,8 @@ $ %s query incentives rewards-estimation
 
 			ownerLocks := []uint64{}
 
-			if res != nil {
-				for _, lockId := range res.Locks {
-					ownerLocks = append(ownerLocks, lockId.ID)
-				}
+			for _, lockId := range res.Locks {
+				ownerLocks = append(ownerLocks, lockId.ID)
 			}
 
 			lockIdStrs := strings.Split(lockIdsCombined, ",")
@@ -413,7 +411,7 @@ $ %s query incentives rewards-estimation
 				return fmt.Errorf("if owner flag is not set, lock IDs must be provided")
 
 				// if user provides lockIDs, use these lockIDs in our rewards estimation
-			} else if lockIdsCombined != "" {
+			} else if owner == "" {
 				for _, lockIdStr := range lockIdStrs {
 					lockId, err := strconv.ParseUint(lockIdStr, 10, 64)
 					if err != nil {
@@ -423,7 +421,7 @@ $ %s query incentives rewards-estimation
 				}
 
 				// if no lockIDs are provided but an owner is provided, we query the rewards for all of the locks the owner has
-			} else if lockIdsCombined == "" && owner != "" {
+			} else if lockIdsCombined == "" {
 				lockIds = append(lockIds, ownerLocks...)
 			}
 
