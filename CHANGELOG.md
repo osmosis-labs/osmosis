@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * MsgExitPoolResponse: token_out field 
 * [#1825](https://github.com/osmosis-labs/osmosis/pull/1825) Fixes Interchain Accounts (host side) by adding it to AppModuleBasics
 * [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
+* [#1994](https://github.com/osmosis-labs/osmosis/pull/1994) Removed bech32ibc module
 
 #### Golang API breaks
 
