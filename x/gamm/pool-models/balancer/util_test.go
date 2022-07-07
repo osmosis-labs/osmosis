@@ -39,7 +39,10 @@ func createTestContext(t *testing.T) sdk.Context {
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
-func assertExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) error {
+// validateExpectedSharesErrRatio validates that actualShares are within
+// the acceptable multiplicative tolerance from expectedShares.
+// Returns an error if not. Otherwise, nil.
+func validateExpectedSharesErrRatio(t *testing.T, expectedShares, actualShares sdk.Int) error {
 	allowedErrRatioDec, err := sdk.NewDecFromStr(allowedErrRatio)
 	require.NoError(t, err)
 

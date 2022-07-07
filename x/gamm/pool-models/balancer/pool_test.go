@@ -198,7 +198,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				err = assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+				err = validateExpectedSharesErrRatio(t, tc.expectShares, shares)
 				if tc.expectToleranceError {
 					require.Error(t, err)
 				} else {
@@ -353,38 +353,40 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 		},
 		{
 			// Compares expected shares and actual shares to make sure the multiplicativeTolerance ratio below is maintained
+			// Expected shares were determined based on the amount of tokensIn, the higher the tokens the more the shares
 			// |a - b| / min(a, b) <= allowedErrRatio
-			// 0.04000000047920000 = abs(2_599_999_968_750-2_499_999_968_800)/2_499_999_968_800
-			// 0.04000000047920000 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
+			// 0.199999996 = abs(2_999_999_955_000-2_499_999_968_800)/2_499_999_968_800
+			// 0.199999996 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
 			//
 			// where:
 			// a = expected shares,
 			// b = actual shares
 			// allowedErrRatio = 0.0000001
-			// 	Full solution: https://www.wolframalpha.com/input?i=abs%282599999968750-2499999968800%29%2F2499999968800
+			// 	Full solution: https://www.wolframalpha.com/input?i=abs%282999999955000-2499999968800%29%2F2499999968800
 			name:                 "Error Tolerance: One token in, expected > actual",
 			swapFee:              sdk.MustNewDecFromStr("0"),
 			poolAssets:           oneTrillionEvenPoolAssets,
-			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000)),
-			expectShares:         sdk.NewInt(2_599_999_968_750), // ACTUAL: 2_499_999_968_800
+			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 60_000)),
+			expectShares:         sdk.NewInt(2_599_999_968_750), // ACTUAL: 2_999_999_955_000
 			expectToleranceError: true,
 		},
 		{
 			// Compares expected shares and actual shares to make sure the multiplicativeTolerance ratio below is maintained
+			// Expected shares were determined based on the amount of tokensIn, the higher the tokens the more the shares
 			// |a - b| / min(a, b) <= allowedErrRatio
-			// 0.0399999874 = abs(5_000_000_000_099-5_199_999_937_500)/5_000_000_000_099
-			// 0.0399999874 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
+			// 0.1538461677 = abs(5_999_999_999_999-5_199_999_937_500)/5_199_999_937_500
+			// 0.1538461677 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
 			//
 			// where:
 			// a = expected shares,
 			// b = actual shares
 			// allowedErrRatio = 0.0000001
-			// Full Solution: https://www.wolframalpha.com/input?i=abs%285000000000099-5199999937500%29%2F5000000000099
+			// Full Solution: https://www.wolframalpha.com/input?i=abs%285999999999999-5199999937500%29%2F5199999937500
 			name:                 "Error Tolerance: Two token in, expected > actual",
 			swapFee:              sdk.MustNewDecFromStr("0"),
 			poolAssets:           oneTrillionEvenPoolAssets,
-			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 50_000), sdk.NewInt64Coin("uatom", 50_000)),
-			expectShares:         sdk.NewInt(2_599_999_968_750 * 2), // ACTUAL: 5_000_000_000_099
+			tokensIn:             sdk.NewCoins(sdk.NewInt64Coin("uosmo", 60_000), sdk.NewInt64Coin("uatom", 60_000)),
+			expectShares:         sdk.NewInt(2_599_999_968_750 * 2), // ACTUAL: 5_999_999_999_999
 			expectToleranceError: true,
 		},
 		{
@@ -438,12 +440,13 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 
 				require.Equal(t, expectedNewLiquidity, totalNewLiquidity)
 
+				// If the expectShares is 0, no need to do error tolerance check
 				if tc.expectShares.Int64() == 0 {
 					require.Equal(t, tc.expectShares, totalNumShares)
 					return
 				}
-
-				err = assertExpectedSharesErrRatio(t, tc.expectShares, totalNumShares)
+				fmt.Println(tc.name, tc.expectShares, totalNumShares)
+				err = validateExpectedSharesErrRatio(t, tc.expectShares, totalNumShares)
 				if tc.expectToleranceError {
 					require.Error(t, err)
 				} else {

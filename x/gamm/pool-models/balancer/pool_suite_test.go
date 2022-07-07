@@ -52,14 +52,17 @@ var (
 // the same test cases for unit testing both calcSingleAssetJoin and
 //  CalcJoinPoolShares with only one tokensIn.
 type calcJoinSharesTestCase struct {
-	name                 string
-	swapFee              sdk.Dec
-	poolAssets           []balancer.PoolAsset
-	tokensIn             sdk.Coins
-	expectShares         sdk.Int
-	expectLiq            sdk.Coins
-	expectPanic          bool
-	expErr               error
+	name         string
+	swapFee      sdk.Dec
+	poolAssets   []balancer.PoolAsset
+	tokensIn     sdk.Coins
+	expectShares sdk.Int
+	expectLiq    sdk.Coins
+	expectPanic  bool
+	expErr       error
+	// There are known cases where the actual shares might fall outside of the
+	// tolerable range from the expected shares. Each such test case documents
+	// the reason for the fallout.
 	expectToleranceError bool
 }
 
@@ -653,36 +656,38 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 		},
 		{
 			// Compares expected shares and actual shares to make sure the multiplicativeTolerance ratio below is maintained
+			// Expected shares were determined based on increasing the tokensIn amount, the higher the tokens the more the shares
 			// |a - b| / min(a, b) <= allowedErrRatio
-			// 0.028380636507 = abs(3850000000000-3743749992293)/3743749992293
-			// 0.028380636507 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
+			// 0.667779634 = abs(6_243_749_992_287-3_743_749_992_293)/3_743_749_992_293
+			// 0.667779634 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
 			//
 			// where:
 			// a = expected shares,
 			// b = actual shares
 			// allowedErrRatio = 0.0000001
-			// 	Full solution: https://www.wolframalpha.com/input?i=abs%283850000000000-3743749992293%29%2F3743749992293
+			// 	Full solution: https://www.wolframalpha.com/input?i=abs%286243749992287-3743749992293%29%2F3743749992293
 			name:       "Error tolerance: Multi token with unequal amounts, with equal weights and 0.01 swap fee",
 			swapFee:    sdk.MustNewDecFromStr("0.01"),
 			poolAssets: oneTrillionEvenPoolAssets,
 			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 25_000),
-				sdk.NewInt64Coin("uatom", 50_000),
+				sdk.NewInt64Coin("uosmo", 50_000),
+				sdk.NewInt64Coin("uatom", 75_000),
 			),
-			expectShares:         sdk.NewInt(2.5e12 + 1350000000000), // ACTUAL: 3743749992293
+			expectShares:         sdk.NewInt(2.5e12 + 1350000000000), // ACTUAL: 6_243_749_992_287
 			expectToleranceError: true,
 		},
 		{
 			//	Compares expected shares and actual shares to make sure the multiplicativeTolerance ratio below is maintained
+			//	Expected shares were determined based on increasing the tokensIn amount, the higher the tokens the more the shares
 			//	|a - b| / min(a, b) <= allowedErrRatio
-			//	0.12052731373 = abs(1659374990000-1859375000017)/1659374990000
+			//	0.12052731373 = abs(1_659_374_990_000-1_859_375_000_017)/1_659_374_990_000
 			// 	0.12052731373 <= 0.0000001 (NOT WITHIN ACCEPTED RATIO)
 			//
 			// where:
 			// a = expected shares,
 			// b = actual shares
 			// allowedErrRatio = 0.0000001
-			// 	Full solution: https://www.wolframalpha.com/input?i=abs%281659374990000-1859375000017%29%2F1659374990000
+			// 	Full solution: https://www.wolframalpha.com/input?i=+abs%281659374990000-1859375000017%29%2F1659374990000
 			name:    "Error tolerance: Multi-tokens In with unequal amounts, with unequal weights with 0.03 swap fee",
 			swapFee: sdk.MustNewDecFromStr("0.03"),
 			poolAssets: []balancer.PoolAsset{
@@ -693,10 +698,10 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				defaultAtomPoolAsset,
 			},
 			tokensIn: sdk.NewCoins(
-				sdk.NewInt64Coin("uosmo", 25_000),
-				sdk.NewInt64Coin("uatom", 50_000),
+				sdk.NewInt64Coin("uosmo", 25_000*2),
+				sdk.NewInt64Coin("uatom", 50_000*2),
 			),
-			expectShares:         sdk.NewInt(1250000000000 + 409374990000), // ACTUAL: 1859375000017
+			expectShares:         sdk.NewInt(1250000000000 + 409374990000), // ACTUAL: 1_659_374_990_000
 			expectToleranceError: true,
 		},
 		{
@@ -762,7 +767,8 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				} else {
 					require.NoError(t, err)
 					assertExpectedLiquidity(t, tc.tokensIn, liquidity)
-					err = assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+					fmt.Println(tc.name, tc.expectShares, shares)
+					err = validateExpectedSharesErrRatio(t, tc.expectShares, shares)
 					if tc.expectToleranceError {
 						require.Error(t, err)
 					} else {
