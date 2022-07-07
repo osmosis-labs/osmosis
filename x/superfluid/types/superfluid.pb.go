@@ -26,6 +26,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// SuperfluidAssetType indicates whether the superfluid asset is
+// a native token itself or the lp share of a pool.
 type SuperfluidAssetType int32
 
 const (
@@ -53,7 +55,9 @@ func (SuperfluidAssetType) EnumDescriptor() ([]byte, []int) {
 
 // SuperfluidAsset stores the pair of superfluid asset type and denom pair
 type SuperfluidAsset struct {
-	Denom     string              `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// AssetType indicates whether the superfluid asset is a native token or an lp
+	// share
 	AssetType SuperfluidAssetType `protobuf:"varint,2,opt,name=asset_type,json=assetType,proto3,enum=osmosis.superfluid.SuperfluidAssetType" json:"asset_type,omitempty"`
 }
 
@@ -91,8 +95,10 @@ func (m *SuperfluidAsset) XXX_DiscardUnknown() {
 var xxx_messageInfo_SuperfluidAsset proto.InternalMessageInfo
 
 // SuperfluidIntermediaryAccount takes the role of intermediary between LP token
-// and OSMO tokens for superfluid staking
+// and OSMO tokens for superfluid staking. The intermdeiary account is the
+// actual account responsible for delegation, not the validator account itself.
 type SuperfluidIntermediaryAccount struct {
+	// Denom indicates the denom of the superfluid asset.
 	Denom   string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 	ValAddr string `protobuf:"bytes,2,opt,name=val_addr,json=valAddr,proto3" json:"val_addr,omitempty"`
 	// perpetual gauge for rewards distribution
@@ -158,7 +164,7 @@ func (m *SuperfluidIntermediaryAccount) GetGaugeId() uint64 {
 // to be set as the Time-weighted-average-osmo-backing for the entire duration
 // of epoch N-1. (Thereby locking whats in use for epoch N as based on the prior
 // epochs rewards) However for now, this is not the TWAP but instead the spot
-// price at the boundary.  For different types of assets in the future, it could
+// price at the boundary. For different types of assets in the future, it could
 // change.
 type OsmoEquivalentMultiplierRecord struct {
 	EpochNumber int64 `protobuf:"varint,1,opt,name=epoch_number,json=epochNumber,proto3" json:"epoch_number,omitempty"`
@@ -214,8 +220,8 @@ func (m *OsmoEquivalentMultiplierRecord) GetDenom() string {
 	return ""
 }
 
-// SuperfluidDelegationRecord takes the role of intermediary between LP token
-// and OSMO tokens for superfluid staking
+// SuperfluidDelegationRecord is a struct used to indicate superfluid
+// delegations of an account in the state machine in a user friendly form.
 type SuperfluidDelegationRecord struct {
 	DelegatorAddress       string      `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
 	ValidatorAddress       string      `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
@@ -284,6 +290,8 @@ func (m *SuperfluidDelegationRecord) GetEquivalentStakedAmount() *types.Coin {
 	return nil
 }
 
+// LockIdIntermediaryAccountConnection is a struct used to indicate the
+// underlying lock id for each superfluid delegation done via lp shares.
 type LockIdIntermediaryAccountConnection struct {
 	LockId              uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
 	IntermediaryAccount string `protobuf:"bytes,2,opt,name=intermediary_account,json=intermediaryAccount,proto3" json:"intermediary_account,omitempty"`

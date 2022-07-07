@@ -13,9 +13,11 @@ service Msg {
   // Execute superfluid delegation for a lockup
   rpc SuperfluidDelegate(MsgSuperfluidDelegate)
       returns (MsgSuperfluidDelegateResponse);
+
   // Execute superfluid undelegation for a lockup
   rpc SuperfluidUndelegate(MsgSuperfluidUndelegate)
       returns (MsgSuperfluidUndelegateResponse);
+
   // Execute superfluid redelegation for a lockup
   // rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns
   // (MsgSuperfluidRedelegateResponse);
@@ -28,6 +30,7 @@ service Msg {
   // Execute lockup lock and superfluid delegation in a single msg
   rpc LockAndSuperfluidDelegate(MsgLockAndSuperfluidDelegate)
       returns (MsgLockAndSuperfluidDelegateResponse);
+
   rpc UnPoolWhitelistedPool(MsgUnPoolWhitelistedPool)
       returns (MsgUnPoolWhitelistedPoolResponse);
 }
