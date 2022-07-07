@@ -408,7 +408,7 @@ $ %s query incentives rewards-estimation
 
 			lockIdStrs := strings.Split(lockIdsCombined, ",")
 			lockIds := []uint64{}
-			// if user doesn't provide any lockIDs or a lock owner, we don't have enough information to proceed
+			// if user doesn't provide at least one of the lock ids or owner, we don't have enough information to proceed.
 			if lockIdsCombined == "" && owner == "" {
 				err = fmt.Errorf("if owner flag is not set, lock IDs must be provided")
 				return err
