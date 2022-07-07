@@ -169,9 +169,6 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins 
 	return gaugeID, gauge, coins, startTime2
 }
 
-// TODO: Delete all usages of this method
-// TODO: Why delete all usages of this method?
-
 // SetupNewGauge creates a gauge with the default lock duration.
 func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (uint64, *types.Gauge, sdk.Coins, time.Time) {
 	return suite.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration, "lptoken")
