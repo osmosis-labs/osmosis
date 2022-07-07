@@ -958,11 +958,11 @@ osmosisd tx gamm swap-exact-amount-out 1000000ibc/27394FB092D2ECCD56123C74F36E4C
 
 There are 4 types of events that exist in GAMM:
 
-- `sdk.EventTypeMessage` - "message"
-- `types.TypeEvtPoolJoined` - "pool_joined"
-- `types.TypeEvtPoolExited` - "pool_exited"
-- `types.TypeEvtPoolCreated` - "pool_created"
-- `types.TypeEvtTokenSwapped` - "token_swapped"
+* `sdk.EventTypeMessage` - "message"
+* `types.TypeEvtPoolJoined` - "pool_joined"
+* `types.TypeEvtPoolExited` - "pool_exited"
+* `types.TypeEvtPoolCreated` - "pool_created"
+* `types.TypeEvtTokenSwapped` - "token_swapped"
 
 ### `sdk.EventTypeMessage`
 
