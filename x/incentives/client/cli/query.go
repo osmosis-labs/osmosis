@@ -398,8 +398,10 @@ $ %s query incentives rewards-estimation
 
 			ownerLocks := []uint64{}
 
-			for _, lockId := range res.Locks {
-				ownerLocks = append(ownerLocks, lockId.ID)
+			if res != nil {
+				for _, lockId := range res.Locks {
+					ownerLocks = append(ownerLocks, lockId.ID)
+				}
 			}
 
 			lockIdStrs := strings.Split(lockIdsCombined, ",")
