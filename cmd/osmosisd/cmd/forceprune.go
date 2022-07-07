@@ -139,7 +139,6 @@ func compactBlockStore(dbPath string) (err error) {
 	fmt.Println("Compacting Block Store ...")
 
 	db, err := leveldb.OpenFile(dbPath+"/blockstore.db", &compactOpts)
-	// nolint: staticcheck
 	defer func() {
 		err = db.Close()
 	}()
