@@ -951,8 +951,8 @@ osmosisd tx gamm swap-exact-amount-out 1000000ibc/27394FB092D2ECCD56123C74F36E4C
 
 ## Other resources
 
-- [Creating a liquidity bootstrapping pool](./client/docs/create-lbp-pool.md)
-- [Creating a pool with a pool file](./client/docs/create-pool.md)
+* [Creating a liquidity bootstrapping pool](./client/docs/create-lbp-pool.md)
+* [Creating a pool with a pool file](./client/docs/create-pool.md)
 
 ## Events
 
