@@ -9,8 +9,9 @@ import "osmosis/lockup/lock.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/incentives/types";
 
-// A Gauge is an object that stores and distributes yields to recipients who satisfy certain conditions.
-// Currently gauges support conditions around the duration for which a given denom is locked.
+// A Gauge is an object that stores and distributes yields to recipients who
+// satisfy certain conditions. Currently gauges support conditions around the
+// duration for which a given denom is locked.
 message Gauge {
   // Unique ID of a Gauge
   uint64 id = 1;
