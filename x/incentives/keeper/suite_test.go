@@ -89,8 +89,7 @@ func (suite *KeeperTestSuite) SetupUserLocks(users []userLocks) (accs []sdk.AccA
 func (suite *KeeperTestSuite) SetupUserSyntheticLocks(users []userLocks) (accs []sdk.AccAddress) {
 	accs = make([]sdk.AccAddress, len(users))
 	coins := sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}
-	var lockupID uint64
-	lockupID = 1
+	lockupID := uint64(1)
 	for i, user := range users {
 		suite.Assert().Equal(len(user.lockDurations), len(user.lockAmounts))
 		totalLockAmt := user.lockAmounts[0]
