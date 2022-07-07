@@ -25,7 +25,8 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params holds parameters for the incentives module
 type Params struct {
-	// What epoch type will distribution be triggered by (day, week, etc.)
+	// distr_epoch_identifier is what epoch type distribution will be triggered by
+	// (day, week, etc.)
 	DistrEpochIdentifier string `protobuf:"bytes,1,opt,name=distr_epoch_identifier,json=distrEpochIdentifier,proto3" json:"distr_epoch_identifier,omitempty" yaml:"distr_epoch_identifier"`
 }
 

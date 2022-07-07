@@ -11,18 +11,18 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/incentives/types";
 // GenesisState defines the incentives module's various parameters when first
 // initialized
 message GenesisState {
-  // All the parameters of the module
+  // params are all the parameters of the module
   Params params = 1 [ (gogoproto.nullable) = false ];
-  // All gauges that should exist at genesis
+  // gauges are all gauges that should exist at genesis
   repeated Gauge gauges = 2 [ (gogoproto.nullable) = false ];
-  // All lockup durations that gauges can be locked for in order to recieve
-  // incentives
+  // lockable_durations are all lockup durations that gauges can be locked for
+  // in order to recieve incentives
   repeated google.protobuf.Duration lockable_durations = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"lockable_durations\""
   ];
-  // What the gauge number will increment from when creating the next gauge
-  // after genesis
+  // last_gauge_id is what the gauge number will increment from when creating
+  // the next gauge after genesis
   uint64 last_gauge_id = 4;
 }

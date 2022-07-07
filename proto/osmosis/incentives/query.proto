@@ -13,33 +13,34 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/incentives/types";
 
 // Query defines the gRPC querier service
 service Query {
-  // Returns coins that are going to be distributed
+  // ModuleToDistributeCoins returns coins that are going to be distributed
   rpc ModuleToDistributeCoins(ModuleToDistributeCoinsRequest)
       returns (ModuleToDistributeCoinsResponse) {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/module_to_distribute_coins";
   }
-  // Returns coins that are distributed by the module so far
+  // ModuleDistributedCoins returns coins that are distributed by the module so
+  // far
   rpc ModuleDistributedCoins(ModuleDistributedCoinsRequest)
       returns (ModuleDistributedCoinsResponse) {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/module_distributed_coins";
   }
 
-  // Returns gauges by their respective ID
+  // GaugeByID returns gauges by their respective ID
   rpc GaugeByID(GaugeByIDRequest) returns (GaugeByIDResponse) {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/gauge_by_id/{id}";
   }
-  // Returns both upcoming and active gauges
+  // Gauges returns both upcoming and active gauges
   rpc Gauges(GaugesRequest) returns (GaugesResponse) {
     option (google.api.http).get = "/osmosis/incentives/v1beta1/gauges";
   }
-  // Returns active gauges
+  // ActiveGauges returns active gauges
   rpc ActiveGauges(ActiveGaugesRequest) returns (ActiveGaugesResponse) {
     option (google.api.http).get = "/osmosis/incentives/v1beta1/active_gauges";
   }
-  // Returns active gauges by denom
+  // ActiveGaugesPerDenom returns active gauges by denom
   rpc ActiveGaugesPerDenom(ActiveGaugesPerDenomRequest)
       returns (ActiveGaugesPerDenomResponse) {
     option (google.api.http).get =
@@ -50,7 +51,8 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/upcoming_gauges";
   }
-  // Returns scheduled gauges that have not yet occured by denom
+  // UpcomingGaugesPerDenom returns scheduled gauges that have not yet occured
+  // by denom
   rpc UpcomingGaugesPerDenom(UpcomingGaugesPerDenomRequest)
       returns (UpcomingGaugesPerDenomResponse) {
     option (google.api.http).get =
@@ -64,7 +66,8 @@ service Query {
     option (google.api.http).get =
         "/osmosis/incentives/v1beta1/rewards_est/{owner}";
   }
-  // Returns lockable durations that are valid to distribute incentives for
+  // LockableDurations returns lockable durations that are valid to distribute
+  // incentives for
   rpc LockableDurations(QueryLockableDurationsRequest)
       returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =

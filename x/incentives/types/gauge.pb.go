@@ -30,31 +30,33 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// A Gauge is an object that stores and distributes yields to recipients who
+// Gauge is an object that stores and distributes yields to recipients who
 // satisfy certain conditions. Currently gauges support conditions around the
 // duration for which a given denom is locked.
 type Gauge struct {
-	// Unique ID of a Gauge
+	// id is the unique ID of a Gauge
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// Flag to show if it's a perpetual or non-perpetual gauge
+	// is_perpetual is a flag to show if it's a perpetual or non-perpetual gauge
 	// Non-perpetual gauges distribute their tokens equally per epoch while the
 	// gauge is in the active period. Perpetual gauges distribute all their tokens
 	// at a single time and only distribute their tokens again once the gauge is
 	// refilled, Intended for use with incentives that get refilled daily.
 	IsPerpetual bool `protobuf:"varint,2,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
-	// Rewards are distributed to lockups that are are returned by this lockup
-	// query. This is queried via lock duration or by timestamp
+	// distribute_to is where the gauge rewards are distributed to.
+	// This is queried via lock duration or by timestamp
 	DistributeTo types.QueryCondition `protobuf:"bytes,3,opt,name=distribute_to,json=distributeTo,proto3" json:"distribute_to"`
-	// Total amount of coins that has been in the gauge
+	// coins is the total amount of coins that have been in the gauge
 	// Can distribute multiple coin denoms
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
-	// Distribution start time
+	// start_time is the distribution start time
 	StartTime time.Time `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
-	// Number of total epochs distribution will be completed over
+	// num_epochs_paid_over is the number of total epochs distribution will be
+	// completed over
 	NumEpochsPaidOver uint64 `protobuf:"varint,6,opt,name=num_epochs_paid_over,json=numEpochsPaidOver,proto3" json:"num_epochs_paid_over,omitempty"`
-	// Number of epochs distribution has been completed on already
+	// filled_epochs is the number of epochs distribution has been completed on
+	// already
 	FilledEpochs uint64 `protobuf:"varint,7,opt,name=filled_epochs,json=filledEpochs,proto3" json:"filled_epochs,omitempty"`
-	// Coins that have been distributed already
+	// distributed_coins are coins that have been distributed already
 	DistributedCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,8,rep,name=distributed_coins,json=distributedCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"distributed_coins"`
 }
 

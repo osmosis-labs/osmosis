@@ -14,42 +14,44 @@ service Msg {
   rpc AddToGauge(MsgAddToGauge) returns (MsgAddToGaugeResponse);
 }
 
-// Create a gague to distribute rewards to users
+// MsgCreateGauge creates a gague to distribute rewards to users
 message MsgCreateGauge {
-  // Flag to show if it's a perpetual or non-perpetual gauge
+  // is_perpetual shows if it's a perpetual or non-perpetual gauge
   // Non-perpetual gauges distribute their tokens equally per epoch while the
   // gauge is in the active period. Perpetual gauges distribute all their tokens
   // at a single time and only distribute their tokens again once the gauge is
   // refilled
   bool is_perpetual = 1;
-  // Address of gauge creator
+  // owner is the address of gauge creator
   string owner = 2 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  // Distribute to a lock by time duration or by timestamp
+  // distribute_to show which lock the gauge should distribute to by time
+  // duration or by timestamp
   osmosis.lockup.QueryCondition distribute_to = 3
       [ (gogoproto.nullable) = false ];
-  // Coin(s) to be distributed
+  // coins are coin(s) to be distributed by the gauge
   repeated cosmos.base.v1beta1.Coin coins = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-  // Distribution start time
+  // start_time is the distribution start time
   google.protobuf.Timestamp start_time = 5 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"timestamp\""
   ];
-  // Number of epochs distribution will be done over
+  // num_epochs_paid_over is the number of epochs distribution will be completed
+  // over
   uint64 num_epochs_paid_over = 6;
 }
 message MsgCreateGaugeResponse {}
 
-// Add coins to a gauge previously created gauge
+// MsgAddToGauge adds coins to a previously created gauge
 message MsgAddToGauge {
-  // Address (owner) must match creator of initial gauge
+  // owner is the gauge owner's address
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  // ID of gauge that rewards are getting added to
+  // gauge_id is the ID of gauge that rewards are getting added to
   uint64 gauge_id = 2;
-  // Coin(s) to add to gauge
+  // rewards are the coin(s) to add to gauge
   repeated cosmos.base.v1beta1.Coin rewards = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
