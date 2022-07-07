@@ -13,6 +13,8 @@ import (
 	pooltypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
 )
 
+var _ = suite.TestingSuite(nil)
+
 // TestGRPCGaugeByID tests querying gauges via gRPC returns the correct response.
 func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
 	suite.SetupTest()
@@ -527,5 +529,3 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins)
 }
-
-var _ = suite.TestingSuite(nil)

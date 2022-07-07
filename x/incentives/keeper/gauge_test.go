@@ -11,6 +11,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var _ = suite.TestingSuite(nil)
+
 // TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
 func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.SetupTest()
@@ -312,5 +314,3 @@ func (suite *KeeperTestSuite) TestGaugesByDenom() {
 	testGaugeByDenom(true)
 	testGaugeByDenom(false)
 }
-
-var _ = suite.TestingSuite(nil)
