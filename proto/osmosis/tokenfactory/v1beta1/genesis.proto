@@ -18,6 +18,9 @@ message GenesisState {
   ];
 }
 
+// GenesisDenom defines a tokenfactory denom that is defined within genesis
+// state. The structure contains DenomAuthorityMetadata which defines the
+// denom's admin.
 message GenesisDenom {
   option (gogoproto.equal) = true;
 

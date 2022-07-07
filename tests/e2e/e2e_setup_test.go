@@ -33,7 +33,7 @@ type syncInfo struct {
 }
 
 type validatorConfig struct {
-	validator       initialization.Validator
+	validator       initialization.Node
 	operatorAddress string
 }
 
@@ -76,57 +76,71 @@ const (
 
 var (
 	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
-	validatorConfigsChainA = []*initialization.ValidatorConfig{
+	validatorConfigsChainA = []*initialization.NodeConfig{
 		{
+			Name:               "prune-default-snapshot",
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-nothing-snapshot",
 			Pruning:            "nothing",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-custom-10000-13-snapshot",
 			Pruning:            "custom",
 			PruningKeepRecent:  "10000",
 			PruningInterval:    "13",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-everything-no-snapshot",
 			Pruning:            "everything",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   0,
 			SnapshotKeepRecent: 0,
+			IsValidator:        true,
 		},
 	}
-	validatorConfigsChainB = []*initialization.ValidatorConfig{
+	validatorConfigsChainB = []*initialization.NodeConfig{
 		{
+			Name:               "prune-default-snapshot",
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-nothing-snapshot",
 			Pruning:            "nothing",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-custom-snapshot",
 			Pruning:            "custom",
 			PruningKeepRecent:  "10000",
 			PruningInterval:    "13",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 	}
 )
@@ -363,7 +377,7 @@ func (s *IntegrationTestSuite) runIBCRelayer(chainA *chainConfig, chainB *chainC
 	s.connectIBCChains(chainA, chainB)
 }
 
-func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*initialization.ValidatorConfig, skipValidatorIndexes map[int]struct{}) {
+func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs []*initialization.NodeConfig, skipValidatorIndexes map[int]struct{}) {
 	s.T().Logf("starting e2e infrastructure for chain-id: %s", chainId)
 	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-")
 
@@ -384,7 +398,7 @@ func (s *IntegrationTestSuite) configureChain(chainId string, validatorConfigs [
 	// via Docker.
 
 	if s.skipUpgrade {
-		initializedChain, err := initialization.Init(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
+		initializedChain, err := initialization.InitChain(chainId, tmpDir, validatorConfigs, time.Duration(newChainConfig.votingPeriod), s.forkHeight)
 		s.Require().NoError(err)
 		s.initializeChainConfig(&newChainConfig, initializedChain)
 		return
@@ -428,8 +442,8 @@ func (s *IntegrationTestSuite) initializeChainConfig(chainConfig *chainConfig, i
 	chainConfig.meta.DataDir = initializedChain.ChainMeta.DataDir
 	chainConfig.meta.Id = initializedChain.ChainMeta.Id
 
-	chainConfig.validators = make([]*validatorConfig, 0, len(initializedChain.Validators))
-	for _, val := range initializedChain.Validators {
+	chainConfig.validators = make([]*validatorConfig, 0, len(initializedChain.Nodes))
+	for _, val := range initializedChain.Nodes {
 		chainConfig.validators = append(chainConfig.validators, &validatorConfig{validator: *val})
 	}
 
@@ -569,8 +583,8 @@ func (s *IntegrationTestSuite) createPreUpgradeState() {
 	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, initialization.OsmoToken)
 	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, initialization.StakeToken)
 	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, initialization.StakeToken)
-	s.createPool(chainA, "pool1A.json")
-	s.createPool(chainB, "pool1B.json")
+	s.createPool(chainA, "pool1A.json", initialization.ValidatorWalletName)
+	s.createPool(chainB, "pool1B.json", initialization.ValidatorWalletName)
 }
 
 func (s *IntegrationTestSuite) runPostUpgradeTests() {
@@ -585,6 +599,6 @@ func (s *IntegrationTestSuite) runPostUpgradeTests() {
 	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, initialization.OsmoToken)
 	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, initialization.StakeToken)
 	s.sendIBC(chainB, chainA, chainA.validators[0].validator.PublicAddress, initialization.StakeToken)
-	s.createPool(chainA, "pool2A.json")
-	s.createPool(chainB, "pool2B.json")
+	s.createPool(chainA, "pool2A.json", initialization.ValidatorWalletName)
+	s.createPool(chainB, "pool2B.json", initialization.ValidatorWalletName)
 }

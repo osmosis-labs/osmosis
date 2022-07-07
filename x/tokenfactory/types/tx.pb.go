@@ -29,13 +29,15 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgCreateDenom is the sdk.Msg type for allowing an account to create
-// a new denom. It requires a sender address and a subdenomination.
-// The (sender_address, sub_denomination) pair must be unique and cannot be
-// re-used. The resulting denom created is `factory/{creator
-// address}/{subdenom}`. The resultant denom's admin is originally set to be the
-// creator, but this can be changed later. The token denom does not indicate the
-// current admin.
+// MsgCreateDenom defines the message structure for the CreateDenom gRPC service
+// method. It allows an account to create a new denom. It requires a sender
+// address and a sub denomination. The (sender_address, sub_denomination) tuple
+// must be unique and cannot be re-used.
+//
+// The resulting denom created is defined as
+// <factory/{creatorAddress}/{subdenom}>. The resulting denom's admin is
+// originally set to be the creator, but this can be changed later. The token
+// denom does not indicate the current admin.
 type MsgCreateDenom struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	// subdenom can be up to 44 "alphanumeric" characters long.
@@ -377,6 +379,8 @@ func (m *MsgChangeAdmin) GetNewAdmin() string {
 	return ""
 }
 
+// MsgChangeAdminResponse defines the response structure for an executed
+// MsgChangeAdmin message.
 type MsgChangeAdminResponse struct {
 }
 
@@ -480,9 +484,6 @@ type MsgClient interface {
 	CreateDenom(ctx context.Context, in *MsgCreateDenom, opts ...grpc.CallOption) (*MsgCreateDenomResponse, error)
 	Mint(ctx context.Context, in *MsgMint, opts ...grpc.CallOption) (*MsgMintResponse, error)
 	Burn(ctx context.Context, in *MsgBurn, opts ...grpc.CallOption) (*MsgBurnResponse, error)
-	// ForceTransfer is deactivated for now because we need to think through edge
-	// cases rpc ForceTransfer(MsgForceTransfer) returns
-	// (MsgForceTransferResponse);
 	ChangeAdmin(ctx context.Context, in *MsgChangeAdmin, opts ...grpc.CallOption) (*MsgChangeAdminResponse, error)
 }
 
@@ -535,9 +536,6 @@ type MsgServer interface {
 	CreateDenom(context.Context, *MsgCreateDenom) (*MsgCreateDenomResponse, error)
 	Mint(context.Context, *MsgMint) (*MsgMintResponse, error)
 	Burn(context.Context, *MsgBurn) (*MsgBurnResponse, error)
-	// ForceTransfer is deactivated for now because we need to think through edge
-	// cases rpc ForceTransfer(MsgForceTransfer) returns
-	// (MsgForceTransferResponse);
 	ChangeAdmin(context.Context, *MsgChangeAdmin) (*MsgChangeAdminResponse, error)
 }
 
