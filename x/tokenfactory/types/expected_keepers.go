@@ -33,3 +33,8 @@ type AccountKeeper interface {
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
+
+// BankHooks event hooks
+type BankHooks interface {
+	BeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error // Must be called when a bank transfer happens
+}

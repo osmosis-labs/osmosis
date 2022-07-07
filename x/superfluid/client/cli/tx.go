@@ -5,8 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -208,7 +209,7 @@ func NewCmdSubmitSetSuperfluidAssetsProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypes.NewMsgSubmitProposalWithExpedited(content, deposit, from, false)
 			if err != nil {
 				return err
 			}
@@ -257,7 +258,7 @@ func NewCmdSubmitRemoveSuperfluidAssetsProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypes.NewMsgSubmitProposalWithExpedited(content, deposit, from, false)
 			if err != nil {
 				return err
 			}

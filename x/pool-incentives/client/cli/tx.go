@@ -85,7 +85,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 
 			content := types.NewUpdatePoolIncentivesProposal(proposal.Title, proposal.Deposit, records)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypes.NewMsgSubmitProposalWithExpedited(content, deposit, from, false)
 			if err != nil {
 				return err
 			}
@@ -154,7 +154,7 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 
 			content := types.NewReplacePoolIncentivesProposal(proposal.Title, proposal.Description, records)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govtypes.NewMsgSubmitProposalWithExpedited(content, deposit, from, false)
 			if err != nil {
 				return err
 			}

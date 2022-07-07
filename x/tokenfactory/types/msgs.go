@@ -7,11 +7,12 @@ import (
 
 // constants
 const (
-	TypeMsgCreateDenom   = "create_denom"
-	TypeMsgMint          = "mint"
-	TypeMsgBurn          = "burn"
-	TypeMsgForceTransfer = "force_transfer"
-	TypeMsgChangeAdmin   = "change_admin"
+	TypeMsgCreateDenom       = "create_denom"
+	TypeMsgMint              = "mint"
+	TypeMsgBurn              = "burn"
+	TypeMsgForceTransfer     = "force_transfer"
+	TypeMsgChangeAdmin       = "change_admin"
+	TypeMsgSetBeforeSendHook = "set_before_send_hook"
 )
 
 var _ sdk.Msg = &MsgCreateDenom{}
@@ -199,6 +200,47 @@ func (m MsgChangeAdmin) GetSignBytes() []byte {
 }
 
 func (m MsgChangeAdmin) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgSetBeforeSendHook{}
+
+// NewMsgSetBeforeSendHook creates a message to set a new before send hook
+func NewMsgSetBeforeSendHook(sender string, denom string, cosmwasmAddress string) *MsgSetBeforeSendHook {
+	return &MsgSetBeforeSendHook{
+		Sender:          sender,
+		Denom:           denom,
+		CosmwasmAddress: cosmwasmAddress,
+	}
+}
+
+func (m MsgSetBeforeSendHook) Route() string { return RouterKey }
+func (m MsgSetBeforeSendHook) Type() string  { return TypeMsgBurn }
+func (m MsgSetBeforeSendHook) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	_, err = sdk.AccAddressFromBech32(m.CosmwasmAddress)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid cosmwasm contract address (%s)", err)
+	}
+
+	_, _, err = DeconstructDenom(m.Denom)
+	if err != nil {
+		return ErrInvalidDenom
+	}
+
+	return nil
+}
+
+func (m MsgSetBeforeSendHook) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgSetBeforeSendHook) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
 }

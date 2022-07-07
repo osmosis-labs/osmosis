@@ -12,6 +12,7 @@ service Msg {
   rpc Mint(MsgMint) returns (MsgMintResponse);
   rpc Burn(MsgBurn) returns (MsgBurnResponse);
   rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
+  rpc SetBeforeSendHook(MsgSetBeforeSendHook) returns (MsgSetBeforeSendHookResponse);
 
   // ForceTransfer is deactivated for now because we need to think through edge
   // cases rpc ForceTransfer(MsgForceTransfer) returns
@@ -75,6 +76,18 @@ message MsgChangeAdmin {
 // MsgChangeAdminResponse defines the response structure for an executed
 // MsgChangeAdmin message.
 message MsgChangeAdminResponse {}
+
+// MsgSetBeforeSendHook is the sdk.Msg type for allowing an admin account to assign a
+// CosmWasm contract to call with a BeforeSend hook
+message MsgSetBeforeSendHook {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string cosmwasm_address = 3 [ (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
+}
+
+// MsgSetBeforeSendHookResponse defines the response structure for an executed
+// MsgSetBeforeSendHook message.
+message MsgSetBeforeSendHookResponse {}
 
 // message MsgForceTransfer {
 //   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
