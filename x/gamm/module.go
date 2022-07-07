@@ -15,7 +15,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
@@ -87,9 +86,6 @@ type AppModule struct {
 	ak     types.AccountKeeper
 	bk     types.BankKeeper
 	keeper keeper.Keeper
-
-	accountKeeper stakingtypes.AccountKeeper
-	bankKeeper    stakingtypes.BankKeeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {

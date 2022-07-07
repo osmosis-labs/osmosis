@@ -6,24 +6,27 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types";
 
-// Msg defines the Msg service.
+// Msg defines the tokefactory module's gRPC message service.
 service Msg {
   rpc CreateDenom(MsgCreateDenom) returns (MsgCreateDenomResponse);
   rpc Mint(MsgMint) returns (MsgMintResponse);
   rpc Burn(MsgBurn) returns (MsgBurnResponse);
+  rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
+
   // ForceTransfer is deactivated for now because we need to think through edge
   // cases rpc ForceTransfer(MsgForceTransfer) returns
   // (MsgForceTransferResponse);
-  rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
 }
 
-// MsgCreateDenom is the sdk.Msg type for allowing an account to create
-// a new denom. It requires a sender address and a subdenomination.
-// The (sender_address, sub_denomination) pair must be unique and cannot be
-// re-used. The resulting denom created is `factory/{creator
-// address}/{subdenom}`. The resultant denom's admin is originally set to be the
-// creator, but this can be changed later. The token denom does not indicate the
-// current admin.
+// MsgCreateDenom defines the message structure for the CreateDenom gRPC service
+// method. It allows an account to create a new denom. It requires a sender
+// address and a sub denomination. The (sender_address, sub_denomination) tuple
+// must be unique and cannot be re-used.
+//
+// The resulting denom created is defined as
+// <factory/{creatorAddress}/{subdenom}>. The resulting denom's admin is
+// originally set to be the creator, but this can be changed later. The token
+// denom does not indicate the current admin.
 message MsgCreateDenom {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   // subdenom can be up to 44 "alphanumeric" characters long.
@@ -61,7 +64,18 @@ message MsgBurn {
 
 message MsgBurnResponse {}
 
-// // ===================== MsgForceTransfer
+// MsgChangeAdmin is the sdk.Msg type for allowing an admin account to reassign
+// adminship of a denom to a new account
+message MsgChangeAdmin {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string new_admin = 3 [ (gogoproto.moretags) = "yaml:\"new_admin\"" ];
+}
+
+// MsgChangeAdminResponse defines the response structure for an executed
+// MsgChangeAdmin message.
+message MsgChangeAdminResponse {}
+
 // message MsgForceTransfer {
 //   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 //   cosmos.base.v1beta1.Coin amount = 2 [
@@ -75,13 +89,3 @@ message MsgBurnResponse {}
 // }
 
 // message MsgForceTransferResponse {}
-
-// MsgChangeAdmin is the sdk.Msg type for allowing an admin account to reassign
-// adminship of a denom to a new account
-message MsgChangeAdmin {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
-  string new_admin = 3 [ (gogoproto.moretags) = "yaml:\"new_admin\"" ];
-}
-
-message MsgChangeAdminResponse {}
