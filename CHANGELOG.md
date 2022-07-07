@@ -54,6 +54,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    * Bring back the cliff vesting command: https://github.com/osmosis-labs/cosmos-sdk/pull/272
    * Allow ScheduleUpgrade to come from same block: https://github.com/osmosis-labs/cosmos-sdk/pull/261
 
+* [#1889](https://github.com/osmosis-labs/osmosis/pull/1825) Add proto responses to gamm LP messages:
+  * MsgJoinPoolResponse: share_out_amount and token_in fields 
+  * MsgExitPoolResponse: token_out field 
+* [#1825](https://github.com/osmosis-labs/osmosis/pull/1825) Fixes Interchain Accounts (host side) by adding it to AppModuleBasics
+* [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
+* [#1994](https://github.com/osmosis-labs/osmosis/pull/1994) Removed bech32ibc module
 
 ## v10.0.1
 

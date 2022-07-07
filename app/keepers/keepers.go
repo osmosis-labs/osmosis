@@ -46,10 +46,6 @@ import (
 
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
-	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
-	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
-	bech32ics20keeper "github.com/osmosis-labs/bech32-ibc/x/bech32ics20/keeper"
 
 	owasm "github.com/osmosis-labs/osmosis/v10/app/wasm"
 	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
@@ -100,8 +96,6 @@ type AppKeepers struct {
 	IBCKeeper            *ibckeeper.Keeper
 	ICAHostKeeper        *icahostkeeper.Keeper
 	TransferKeeper       *ibctransferkeeper.Keeper
-	Bech32IBCKeeper      *bech32ibckeeper.Keeper
-	Bech32ICS20Keeper    *bech32ics20keeper.Keeper
 	EvidenceKeeper       *evidencekeeper.Keeper
 	GAMMKeeper           *gammkeeper.Keeper
 	LockupKeeper         *lockupkeeper.Keeper
@@ -231,22 +225,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
-	appKeepers.Bech32IBCKeeper = bech32ibckeeper.NewKeeper(
-		appKeepers.IBCKeeper.ChannelKeeper, appCodec, appKeepers.keys[bech32ibctypes.StoreKey],
-		appKeepers.TransferKeeper,
-	)
-
-	// TODO: Should we be passing this instead of bank in many places?
-	// Where do we want send coins to be cross-chain?
-	appKeepers.Bech32ICS20Keeper = bech32ics20keeper.NewKeeper(
-		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.TransferKeeper,
-		appKeepers.Bech32IBCKeeper,
-		appKeepers.TransferKeeper,
-		appCodec,
-	)
-
 	// create evidence keeper with router
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	appKeepers.EvidenceKeeper = evidencekeeper.NewKeeper(
@@ -374,7 +352,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(*appKeepers.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
-		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*appKeepers.Bech32IBCKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper))
 
@@ -539,7 +516,6 @@ func KVStoreKeys() []string {
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
-		bech32ibctypes.StoreKey,
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
 	}

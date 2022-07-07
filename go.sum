@@ -434,8 +434,8 @@ github.com/go-playground/locales v0.13.0 h1:HyWk6mgj5qFqCT5fjGBuRArbVDfE4hi8+e8c
 github.com/go-playground/locales v0.13.0/go.mod h1:taPMhCMXrRLJO55olJkUXHZBHCxTMfnGwq/HNwmWNS8=
 github.com/go-playground/universal-translator v0.17.0 h1:icxd5fm+REJzpZx7ZfpaD876Lmtgy7VtROAbHHXk8no=
 github.com/go-playground/universal-translator v0.17.0/go.mod h1:UkSxE5sNxxRwHyU+Scu5vgOQjsIJAF8j9muTVoKLVtA=
+github.com/go-playground/validator/v10 v10.2.0 h1:KgJ0snyC2R9VXYN2rneOtQcw5aHQB1Vv0sFl1UcHBOY=
 github.com/go-playground/validator/v10 v10.2.0/go.mod h1:uOYAAleCW8F/7oMFd6aG0GOhaH6EGOAJShg8Id5JGkI=
-github.com/go-playground/validator/v10 v10.4.1 h1:pH2c5ADXtd66mxoE0Zm9SUhxE20r7aM3F26W0hOn+GE=
 github.com/go-redis/redis v6.15.8+incompatible/go.mod h1:NAIEuMOZ/fxfXJIrKDQDz8wamY7mA7PouImQ2Jvg6kA=
 github.com/go-sourcemap/sourcemap v2.1.2+incompatible/go.mod h1:F8jJfvm2KbVjc5NqelyYJmf/v5J0dwNLS2mL4sNA1Jg=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
@@ -1032,8 +1032,8 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/ory/dockertest/v3 v3.9.1 h1:v4dkG+dlu76goxMiTT2j8zV7s4oPPEppKT8K8p2f1kY=
 github.com/ory/dockertest/v3 v3.9.1/go.mod h1:42Ir9hmvaAPm0Mgibk6mBPi7SFvTXxEcnztDYOJ//uM=
-github.com/osmosis-labs/bech32-ibc v0.3.0-rc1 h1:frHKHEdPfzoK2iMF2GeWKudLLzUXz+6GJcdZ/TMcs2k=
-github.com/osmosis-labs/bech32-ibc v0.3.0-rc1/go.mod h1:X5/FZHMPL+B3ufuVyY2/koxVjd4hIwyTLjYP1DZwppQ=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220620200611-3e46ff7501a1 h1:DGOm5SJcKVmgUVN8of2u4jj3vxEhAYs/+e+XqsxcrnQ=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220620200611-3e46ff7501a1/go.mod h1:pMiEr6WR7drhXAXK1FOdAKPazWCi7b+WOyWOF4O0OXY=
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220709005907-f37e34d99505 h1:vrTGp5Yty0U3X4718KaZLhdznEeAs6010LEFpJH+z1k=
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220709005907-f37e34d99505/go.mod h1:pMiEr6WR7drhXAXK1FOdAKPazWCi7b+WOyWOF4O0OXY=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v7 h1:6KcADC/WhL7yDmNQxUIJt2XmzNt4FfRmq9gRke45w74=

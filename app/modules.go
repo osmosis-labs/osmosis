@@ -8,9 +8,6 @@ import (
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
-	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -106,7 +103,7 @@ func appModules(
 		),
 		auth.NewAppModule(appCodec, *app.AccountKeeper, nil),
 		vesting.NewAppModule(*app.AccountKeeper, app.BankKeeper),
-		bech32ics20.NewAppModule(appCodec, *app.Bech32ICS20Keeper),
+		bank.NewAppModule(appCodec, *app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
@@ -139,7 +136,6 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 	}
 }
 
@@ -194,7 +190,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		bech32ibctypes.ModuleName, // comes after ibctransfertypes
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
