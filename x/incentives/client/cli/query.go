@@ -370,11 +370,9 @@ $ %s query incentives rewards-estimation
 		),
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
+			var res *lockuptypes.AccountLockedLongerDurationResponse
+			ownerLocks := []uint64{}
+			lockIds := []uint64{}
 
 			owner, err := cmd.Flags().GetString(FlagOwner)
 			if err != nil {
@@ -385,27 +383,13 @@ $ %s query incentives rewards-estimation
 			if err != nil {
 				return err
 			}
-
-			var res *lockuptypes.AccountLockedLongerDurationResponse
-			if owner != "" {
-				queryClientLockup := lockuptypes.NewQueryClient(clientCtx)
-
-				res, err = queryClientLockup.AccountLockedLongerDuration(cmd.Context(), &lockuptypes.AccountLockedLongerDurationRequest{Owner: owner, Duration: time.Millisecond})
-				if err != nil {
-					return err
-				}
-			}
-
-			ownerLocks := []uint64{}
-
-			if res != nil {
-				for _, lockId := range res.Locks {
-					ownerLocks = append(ownerLocks, lockId.ID)
-				}
-			}
-
 			lockIdStrs := strings.Split(lockIdsCombined, ",")
-			lockIds := []uint64{}
+
+			endEpoch, err := cmd.Flags().GetInt64(FlagEndEpoch)
+			if err != nil {
+				return err
+			}
+
 			// if user doesn't provide at least one of the lock ids or owner, we don't have enough information to proceed.
 			if lockIdsCombined == "" && owner == "" {
 				return fmt.Errorf("either one of owner flag or lock IDs must be provided")
@@ -436,9 +420,22 @@ $ %s query incentives rewards-estimation
 				}
 			}
 
-			endEpoch, err := cmd.Flags().GetInt64(FlagEndEpoch)
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			if owner != "" {
+				queryClientLockup := lockuptypes.NewQueryClient(clientCtx)
+
+				res, err = queryClientLockup.AccountLockedLongerDuration(cmd.Context(), &lockuptypes.AccountLockedLongerDurationRequest{Owner: owner, Duration: time.Millisecond})
+				if err != nil {
+					return err
+				}
+				for _, lockId := range res.Locks {
+					ownerLocks = append(ownerLocks, lockId.ID)
+				}
 			}
 
 			// TODO: Figure out why some lock ids are good and some causes "Error: rpc error: code = Unknown desc = panic message redacted to hide potentially sensitive system info: panic"
