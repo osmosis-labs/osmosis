@@ -192,7 +192,6 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 			suite.Require().NoError(err)
 		}
 
-		var expectedNumLpGauges int
 		// check non-perpetual gauges (finished + rewards estimate empty)
 		if !tc.isPerpetual {
 
@@ -211,7 +210,10 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 			suite.Require().Error(err)
 			rewardsEst = suite.App.IncentivesKeeper.GetRewardsEst(suite.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
 			suite.Require().Equal(sdk.Coins{}, rewardsEst)
-			expectedNumLpGauges = 0
+
+			// check gauge ids by denom
+			gaugeIdsByDenom = suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lptoken")
+			suite.Require().Len(gaugeIdsByDenom, 0)
 		} else { // check perpetual gauges (not finished + rewards estimate empty)
 
 			// check finished gauges
@@ -221,12 +223,11 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 			// check rewards estimation
 			rewardsEst = suite.App.IncentivesKeeper.GetRewardsEst(suite.Ctx, lockOwners[0], []lockuptypes.PeriodLock{}, 100)
 			suite.Require().Equal(sdk.Coins(nil), rewardsEst)
-			expectedNumLpGauges = 1
-		}
 
-		// check gauge ids by denom
-		gaugeIdsByDenom = suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lptoken")
-		suite.Require().Len(gaugeIdsByDenom, expectedNumLpGauges)
+			// check gauge ids by denom
+			gaugeIdsByDenom = suite.App.IncentivesKeeper.GetAllGaugeIDsByDenom(suite.Ctx, "lptoken")
+			suite.Require().Len(gaugeIdsByDenom, 1)
+		}
 	}
 
 }
