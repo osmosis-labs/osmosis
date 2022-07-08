@@ -107,10 +107,10 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			expectedPoolAssetsByDenom := map[string]balancer.PoolAsset{}
-			for i, asset := range tc.originalPoolAssets {
-				expectedValue := balancer.PoolAsset{Token: asset.Token, Weight: asset.Weight}
-				expectedValue.Token.Amount = expectedValue.Token.Amount.Add(tc.newLiquidity.AmountOf(i))
-				expectedPoolAssetsByDenom[i] = expectedValue
+			for denom, asset := range tc.originalPoolAssets {
+				expectedValue := asset
+				expectedValue.Token.Amount = expectedValue.Token.Amount.Add(tc.newLiquidity.AmountOf(denom))
+				expectedPoolAssetsByDenom[denom] = expectedValue
 			}
 
 			err := balancer.UpdateIntermediaryPoolAssetsLiquidity(tc.newLiquidity, tc.originalPoolAssets)
