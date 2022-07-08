@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 )
 
 type Configurer interface {
@@ -25,57 +25,71 @@ type Configurer interface {
 
 var (
 	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
-	validatorConfigsChainA = []*chaininit.ValidatorConfig{
+	validatorConfigsChainA = []*initialization.NodeConfig{
 		{
+			Name:               "prune-default-snapshot",
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-nothing-snapshot",
 			Pruning:            "nothing",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-custom-10000-13-snapshot",
 			Pruning:            "custom",
 			PruningKeepRecent:  "10000",
 			PruningInterval:    "13",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-everything-no-snapshot",
 			Pruning:            "everything",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   0,
 			SnapshotKeepRecent: 0,
+			IsValidator:        true,
 		},
 	}
-	validatorConfigsChainB = []*chaininit.ValidatorConfig{
+	validatorConfigsChainB = []*initialization.NodeConfig{
 		{
+			Name:               "prune-default-snapshot",
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-nothing-snapshot",
 			Pruning:            "nothing",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 		{
+			Name:               "prune-custom-snapshot",
 			Pruning:            "custom",
 			PruningKeepRecent:  "10000",
 			PruningInterval:    "13",
 			SnapshotInterval:   1500,
 			SnapshotKeepRecent: 2,
+			IsValidator:        true,
 		},
 	}
 )
@@ -88,34 +102,36 @@ var (
 // at the previous Osmosis version.
 // - If !isIBCEnabled and !isUpgradeEnabled, we only need one chain at the current
 // Git branch version of the Osmosis code.
-func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) {
-	containerManager, err := containers.NewManager(isUpgradeEnabled)
+func New(t *testing.T, isIBCEnabled bool, upgradeSettings UpgradeSettings) (Configurer, error) {
+	containerManager, err := containers.NewManager(upgradeSettings.IsEnabled, upgradeSettings.ForkHeight > 0)
 	if err != nil {
 		return nil, err
 	}
 
-	if isIBCEnabled && isUpgradeEnabled {
+	if isIBCEnabled && upgradeSettings.IsEnabled {
 		// skip none - configure two chains via Docker
 		// to utilize the older version of osmosis to upgrade from
 		return NewUpgradeConfigurer(t,
 			[]*chain.Config{
-				chain.New(t, containerManager, chaininit.ChainAID, validatorConfigsChainA),
-				chain.New(t, containerManager, chaininit.ChainBID, validatorConfigsChainB),
+				chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
+				chain.New(t, containerManager, initialization.ChainBID, validatorConfigsChainB),
 			},
 			withUpgrade(withIBC(baseSetup)), // base set up with IBC and upgrade
 			containerManager,
+			upgradeSettings.Version,
+			upgradeSettings.ForkHeight,
 		), nil
 	} else if isIBCEnabled {
 		// configure two chains from current Git branch
 		return NewCurrentBranchConfigurer(t,
 			[]*chain.Config{
-				chain.New(t, containerManager, chaininit.ChainAID, validatorConfigsChainA),
-				chain.New(t, containerManager, chaininit.ChainBID, validatorConfigsChainB),
+				chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
+				chain.New(t, containerManager, initialization.ChainBID, validatorConfigsChainB),
 			},
 			withIBC(baseSetup), // base set up with IBC
 			containerManager,
 		), nil
-	} else if isUpgradeEnabled {
+	} else if upgradeSettings.IsEnabled {
 		// invalid - IBC tests must be enabled for upgrade
 		// to function
 		return nil, errors.New("IBC tests must be enabled for upgrade to work")
@@ -123,7 +139,7 @@ func New(t *testing.T, isIBCEnabled, isUpgradeEnabled bool) (Configurer, error) 
 		// configure one chain from current Git branch
 		return NewCurrentBranchConfigurer(t,
 			[]*chain.Config{
-				chain.New(t, containerManager, chaininit.ChainAID, validatorConfigsChainA),
+				chain.New(t, containerManager, initialization.ChainAID, validatorConfigsChainA),
 			},
 			baseSetup, // base set up only
 			containerManager,

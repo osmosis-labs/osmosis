@@ -51,6 +51,7 @@ message QueryGaugeIdsResponse {
     uint64 gauge_id = 1 [ (gogoproto.moretags) = "yaml:\"gauge_id\"" ];
     google.protobuf.Duration duration = 2
         [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+    string gauge_incentive_percentage = 3;
   }
 
   repeated GaugeIdWithDuration gauge_ids_with_duration = 1

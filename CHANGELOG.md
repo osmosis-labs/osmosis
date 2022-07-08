@@ -44,28 +44,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+
+* [#1889](https://github.com/osmosis-labs/osmosis/pull/1825) Add proto responses to gamm LP messages:
+  * MsgJoinPoolResponse: share_out_amount and token_in fields 
+  * MsgExitPoolResponse: token_out field 
 * [#1825](https://github.com/osmosis-labs/osmosis/pull/1825) Fixes Interchain Accounts (host side) by adding it to AppModuleBasics
 * [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
 
-#### golang API breaks
+#### Golang API breaks
 
+* [#1987](https://github.com/osmosis-labs/osmosis/pull/1987) Remove `GammKeeper.GetNextPoolNumberAndIncrement` in favor of the non-mutative `GammKeeper.GetNextPoolNumber`.
+* [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
+* [#1893](https://github.com/osmosis-labs/osmosis/pull/1893) Change `EpochsKeeper.SetEpochInfo` to `AddEpochInfo`, which has more safety checks with it. (Makes it suitable to be called within upgrades)
 * [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Remove methods that constitute AppModuleSimulation APIs for several modules' AppModules, which implemented no-ops
 * [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Add hourly epochs to `x/epochs` DefaultGenesis.
 * [#1665](https://github.com/osmosis-labs/osmosis/pull/1665) Delete app/App interface, instead use simapp.App
 * [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
-* [#1667](https://github.com/osmosis-labs/osmosis/pull/1673) Move wasm-bindings code out of app .
+* [#1667](https://github.com/osmosis-labs/osmosis/pull/1673) Move wasm-bindings code out of app package into its own root level package.
 
 ### Features
 
 * [#1312] Stableswap: Createpool logic 
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM
+* [#1539] Superfluid: Combine superfluid and staking query on querying delegation by delegator
 
 ### Bug Fixes
+
+* [1930](https://github.com/osmosis-labs/osmosis/pull/1930) Ensure you can't `JoinPoolNoSwap` tokens that are not in the pool
 * [1700](https://github.com/osmosis-labs/osmosis/pull/1700) Upgrade sdk fork with missing snapshot manager fix.
 * [1716](https://github.com/osmosis-labs/osmosis/pull/1716) Fix secondary over-LP shares bug with uneven swap amounts in `CalcJoinPoolShares`.
 * [1759](https://github.com/osmosis-labs/osmosis/pull/1759) Fix pagination filter in incentives query.
 * [1698](https://github.com/osmosis-labs/osmosis/pull/1698) Register wasm snapshotter extension.
+* [1931](https://github.com/osmosis-labs/osmosis/pull/1931) Add explicit check for input denoms to `CalcJoinPoolShares`
 
 ## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
 

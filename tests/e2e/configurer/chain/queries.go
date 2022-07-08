@@ -117,14 +117,14 @@ func (c *Config) QueryPropTally(validatorIdx int, addr string) (sdk.Int, sdk.Int
 }
 
 func (c *Config) QueryValidatorOperatorAddresses() {
-	for i, val := range c.ValidatorConfigs {
+	for i, val := range c.NodeConfigs {
 		cmd := []string{"osmosisd", "debug", "addr", val.PublicKey}
 		c.t.Logf("extracting validator operator addresses for chain-id: %s", c.Id)
 		_, errBuf, err := c.containerManager.ExecCmd(c.t, c.Id, i, cmd, "")
 		require.NoError(c.t, err)
 		re := regexp.MustCompile("osmovaloper(.{39})")
 		operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
-		c.ValidatorConfigs[i].OperatorAddress = strings.TrimSuffix(operAddr, "\n")
+		c.NodeConfigs[i].OperatorAddress = strings.TrimSuffix(operAddr, "\n")
 	}
 }
 

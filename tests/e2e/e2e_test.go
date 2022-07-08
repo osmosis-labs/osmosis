@@ -5,17 +5,17 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 )
 
 func (s *IntegrationTestSuite) TestCreatePoolPostUpgrade() {
 	if s.skipUpgrade {
-		s.T().Skip()
+		s.T().Skip("pool creation tests are broken when upgrade is skipped. To be fixed in #1843")
 	}
 
 	chainA := s.configurer.GetChainConfig(0)
-	chainA.CreatePool("pool2A.json")
-	chainA.CreatePool("pool2B.json")
+	chainA.CreatePool("pool2A.json", initialization.ValidatorWalletName)
+	chainA.CreatePool("pool2B.json", initialization.ValidatorWalletName)
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
@@ -26,26 +26,32 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainB := s.configurer.GetChainConfig(1)
 
-	chainA.SendIBC(chainB, chainB.ValidatorConfigs[0].PublicAddress, chain.OsmoToken)
-	chainB.SendIBC(chainA, chainA.ValidatorConfigs[0].PublicAddress, chain.OsmoToken)
-	chainA.SendIBC(chainB, chainB.ValidatorConfigs[0].PublicAddress, chain.StakeToken)
-	chainB.SendIBC(chainA, chainA.ValidatorConfigs[0].PublicAddress, chain.StakeToken)
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 }
 
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+	if s.skipUpgrade {
+		// TODO: https://github.com/osmosis-labs/osmosis/issues/1843
+		s.T().Skip("Superfluid tests are broken when upgrade is skipped. To be fixed in #1843")
+	}
+	const walletName = "superfluid-wallet"
+
 	chainA := s.configurer.GetChainConfig(0)
 
 	chainA.SubmitSuperfluidProposal("gamm/pool/1")
 
 	chainA.DepositProposal()
 	chainA.VoteYesProposal()
-	walletAddr := chainA.CreateWallet(0, "wallet")
+	walletAddr := chainA.CreateWallet(0, walletName)
 	// send gamm tokens to validator's other wallet (non self-delegation wallet)
-	chainA.BankSend(0, "100000000000000000000gamm/pool/1", chainA.ValidatorConfigs[0].PublicAddress, walletAddr)
+	chainA.BankSend(0, "100000000000000000000gamm/pool/1", chainA.NodeConfigs[0].PublicAddress, walletAddr)
 	// lock tokens from validator 0 on chain A
-	chainA.LockTokens(0, "100000000000000000000gamm/pool/1", "240s", "wallet")
+	chainA.LockTokens(0, "100000000000000000000gamm/pool/1", "240s", walletName)
 	// superfluid delegate from validator 0 non self-delegation wallet to validator 1 on chain A
-	chainA.SuperfluidDelegate(chainA.ValidatorConfigs[1].OperatorAddress, "wallet")
+	chainA.SuperfluidDelegate(chainA.NodeConfigs[1].OperatorAddress, walletName)
 	// create a text prop, deposit and vote yes
 	chainA.SubmitTextProposal("superfluid vote overwrite test")
 	chainA.DepositProposal()
@@ -75,7 +81,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 
 	s.Require().Eventually(
 		func() bool {
-			intAccountBalance, err := chainA.QueryIntermediaryAccount(0, "gamm/pool/1", chainA.ValidatorConfigs[1].OperatorAddress)
+			intAccountBalance, err := chainA.QueryIntermediaryAccount(0, "gamm/pool/1", chainA.NodeConfigs[1].OperatorAddress)
 			s.Require().NoError(err)
 			if err != nil {
 				return false
