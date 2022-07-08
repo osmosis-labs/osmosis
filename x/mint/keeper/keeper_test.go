@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	gocontext "context"
 	"testing"
 	"time"
 
@@ -22,10 +23,13 @@ import (
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
+	queryClient types.QueryClient
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
+
+	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 }
 
 // setupDeveloperVestingModuleAccountTest sets up test cases that utilize developer vesting
@@ -57,6 +61,16 @@ func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+func (suite *KeeperTestSuite) TestGRPCParams() {
+	_, _, queryClient := suite.App, suite.Ctx, suite.queryClient
+
+	_, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+
+	_, err = queryClient.EpochProvisions(gocontext.Background(), &types.QueryEpochProvisionsRequest{})
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
