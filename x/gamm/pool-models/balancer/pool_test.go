@@ -122,6 +122,7 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 			} else {
 				require.Error(t, tc.err, "test: %v", tc.name)
 				require.Equal(t, tc.err, err)
+				require.Equal(t, expectedPoolAssetsByDenom, tc.originalPoolAssets)
 			}
 			return
 		})
