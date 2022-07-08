@@ -8,8 +8,9 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 
 // Params holds parameters for the superfluid module
 message Params {
-  // MinimumRiskFactor is to be cut on OSMO equivalent value of lp tokens for
-  // superfluid staking, default: 5%
+  // minimum_risk_factor is to be cut on OSMO equivalent value of lp tokens for
+  // superfluid staking, default: 5%. The minimum risk facotr works as a
+  // parameter to better incentive vanilla staking.
   string minimum_risk_factor = 1 [
     (gogoproto.moretags) = "yaml:\"minimum_risk_factor\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

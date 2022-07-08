@@ -30,7 +30,7 @@ message SuperfluidAsset {
 }
 
 // SuperfluidIntermediaryAccount takes the role of intermediary between LP token
-// and OSMO tokens for superfluid staking. The intermdeiary account is the
+// and OSMO tokens for superfluid staking. The intermediary account is the
 // actual account responsible for delegation, not the validator account itself.
 message SuperfluidIntermediaryAccount {
   // Denom indicates the denom of the superfluid asset.
@@ -72,7 +72,8 @@ message SuperfluidDelegationRecord {
 }
 
 // LockIdIntermediaryAccountConnection is a struct used to indicate the
-// underlying lock id for each superfluid delegation done via lp shares.
+// relationship between the underlying lock id and superfluid delegation done
+// via lp shares.
 message LockIdIntermediaryAccountConnection {
   uint64 lock_id = 1;
   string intermediary_account = 2;

@@ -27,8 +27,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params holds parameters for the superfluid module
 type Params struct {
-	// MinimumRiskFactor is to be cut on OSMO equivalent value of lp tokens for
-	// superfluid staking, default: 5%
+	// minimum_risk_factor is to be cut on OSMO equivalent value of lp tokens for
+	// superfluid staking, default: 5%. The minimum risk facotr works as a
+	// parameter to better incentive vanilla staking.
 	MinimumRiskFactor github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=minimum_risk_factor,json=minimumRiskFactor,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"minimum_risk_factor" yaml:"minimum_risk_factor"`
 }
 

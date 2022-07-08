@@ -22,7 +22,7 @@ func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk
 
 // GetExpectedDelegationAmount returns the total number of osmo the intermediary account
 // has delegated using the most recent osmo equivalent multiplier.
-// This is labeled expected because the way it calculates the amount can
+// This is labeled as expected because the way it calculates the amount can
 // lead rounding errors from the true delegated amount.
 func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) sdk.Int {
 	// (1) Find how many tokens total T are locked for (denom, validator) pair
@@ -37,7 +37,7 @@ func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.Superflui
 // This method includes minting new osmo if the refreshed delegation amount has increased, and
 // instantly undelegating and burning if the refreshed delgation has decreased.
 func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
-	// iterate over all intermedairy account - every (denom, validator) pair
+	// iterate over all intermedairy accounts - every (denom, validator) pair
 	accs := k.GetAllIntermediaryAccounts(ctx)
 	for _, acc := range accs {
 		mAddr := acc.GetAccAddress()
@@ -127,7 +127,7 @@ func (k Keeper) validateLockForSF(ctx sdk.Context, lock *lockuptypes.PeriodLock,
 	return nil
 }
 
-// validateLockForSFDelegate runs the following sanity checks on the lock"
+// validateLockForSFDelegate runs the following sanity checks on the lock:
 // - the sender is the owner of the lock
 // - the lock is consisted of a single coin
 // - the asset is registered as a superfluid asset via governance
@@ -176,8 +176,8 @@ func (k Keeper) validateValAddrForDelegate(ctx sdk.Context, valAddr string) (sta
 }
 
 // SuperfluidDelegate superfluid delegates osmo equivalent amount the given lock holds.
-// The actial delegation is done using / creating a intermediary account for the (denom, validator) pair
-// and having the intermediary account delegate to the designated validator, not the sender themselves.
+// The actual delegation is done by using/creating an intermediary account for the (denom, validator) pair
+// and having the intermediary account delegate to the designated validator, not by the sender themselves.
 // A state entry of IntermediaryAccountConnection is stored to store the connection between the lock ID
 // and the intermediary account, as an intermediary account does not serve for delegations from a single delegator.
 // The actual amount of delegation is not equal to the equivalent amount of osmo the lock has. That is,

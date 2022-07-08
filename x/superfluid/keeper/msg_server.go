@@ -30,7 +30,7 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 var _ types.MsgServer = msgServer{}
 
 // SuperfluidDelegate creates a delegation for the given lock ID and the validator to delegate to.
-// This requires the lock to have locked tokens that has been already registeed as a superfluid asset via governance.
+// This requires the lock to have locked tokens that have been already registered as a superfluid asset via governance.
 // The pre-requisites for a lock to be able to be eligible for superfluid delegation are
 // - assets in the lock should be a superfluid registered asset
 // - lock should only have a single asset
@@ -39,7 +39,8 @@ var _ types.MsgServer = msgServer{}
 // - lock duration should be greater or equal to the staking.Unbonding time
 // Note that the amount of delegation is not equal to the equivalent amount of osmo within the lock.
 // Instead, we use the osmo equivalent multiplier stored in the latest epoch, calculate how much
-// osmo equivalent is in lock, and use the risk adjusted osmo value.
+// osmo equivalent is in lock, and use the risk adjusted osmo value. The minimum risk ratio works as a parameter
+// to better incentivize and balance between superfluid staking and vanilla staking.
 // Delegation does not happen directly from msg.Sender, but instead delegation is done via intermediary account.
 func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.MsgSuperfluidDelegate) (*types.MsgSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -101,7 +102,7 @@ func (server msgServer) SuperfluidUnbondLock(goCtx context.Context, msg *types.M
 }
 
 // LockAndSuperfluidDelegate locks and superfluid delegates given tokens in a single message.
-// This method is consisted of multiple messages, `LockTokens` from the lockup module msg server, and
+// This method consists of multiple messages, `LockTokens` from the lockup module msg server, and
 // `SuperfluidDelegate` from the superfluid module msg server.
 func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgLockAndSuperfluidDelegate) (*types.MsgLockAndSuperfluidDelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

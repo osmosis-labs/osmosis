@@ -95,7 +95,7 @@ func (m *SuperfluidAsset) XXX_DiscardUnknown() {
 var xxx_messageInfo_SuperfluidAsset proto.InternalMessageInfo
 
 // SuperfluidIntermediaryAccount takes the role of intermediary between LP token
-// and OSMO tokens for superfluid staking. The intermdeiary account is the
+// and OSMO tokens for superfluid staking. The intermediary account is the
 // actual account responsible for delegation, not the validator account itself.
 type SuperfluidIntermediaryAccount struct {
 	// Denom indicates the denom of the superfluid asset.
@@ -291,7 +291,8 @@ func (m *SuperfluidDelegationRecord) GetEquivalentStakedAmount() *types.Coin {
 }
 
 // LockIdIntermediaryAccountConnection is a struct used to indicate the
-// underlying lock id for each superfluid delegation done via lp shares.
+// relationship between the underlying lock id and superfluid delegation done
+// via lp shares.
 type LockIdIntermediaryAccountConnection struct {
 	LockId              uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
 	IntermediaryAccount string `protobuf:"bytes,2,opt,name=intermediary_account,json=intermediaryAccount,proto3" json:"intermediary_account,omitempty"`

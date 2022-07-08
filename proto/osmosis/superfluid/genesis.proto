@@ -10,15 +10,15 @@ option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 // GenesisState defines the module's genesis state.
 message GenesisState {
   Params params = 1 [ (gogoproto.nullable) = false ];
-  // SuperfluidAssets defines the registered superfluid assets that has been
+  // superfluid_assets defines the registered superfluid assets that have been
   // registered via governance.
   repeated SuperfluidAsset superfluid_assets = 2
       [ (gogoproto.nullable) = false ];
-  // OsmoEquivilentMultipliers is the records of osmo equivilent amount of each
-  // superfluid registered pool, updated every epoch.
+  // osmo_equivalent_multipliers is the records of osmo equivilent amount of
+  // each superfluid registered pool, updated every epoch.
   repeated OsmoEquivalentMultiplierRecord osmo_equivalent_multipliers = 3
       [ (gogoproto.nullable) = false ];
-  // IntermediaryAccounts is a secondary account for superfluid staking that
+  // intermediary_accounts is a secondary account for superfluid staking that
   // plays an intermediary role between validators and the delegators.
   repeated SuperfluidIntermediaryAccount intermediary_accounts = 4
       [ (gogoproto.nullable) = false ];
