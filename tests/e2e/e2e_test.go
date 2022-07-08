@@ -57,7 +57,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	chainA.DepositProposal()
 	chainA.VoteYesProposal()
 	// set delegator vote to no
-	chainA.VoteNoProposal(0, "wallet")
+	chainA.VoteNoProposal(0, walletName)
 
 	sfProposalNumber := strconv.Itoa(chainA.LatestProposalNumber)
 	s.Require().Eventually(
