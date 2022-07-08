@@ -9,6 +9,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
+func TestMintGRPCQueryTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
+
 func (suite *KeeperTestSuite) TestGRPCParams() {
 	_, _, queryClient := suite.App, suite.Ctx, suite.queryClient
 
@@ -17,8 +21,4 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 
 	_, err = queryClient.EpochProvisions(gocontext.Background(), &types.QueryEpochProvisionsRequest{})
 	suite.Require().NoError(err)
-}
-
-func TestMintTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

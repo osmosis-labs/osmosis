@@ -1,8 +1,10 @@
 package keeper_test
 
 import (
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -21,7 +23,7 @@ func (suite *KeeperTestSuite) TestEndOfEpochMintedCoinDistribution() {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	suite.setupGaugeForLPIncentives(app, ctx)
+	setupGaugeForLPIncentives(suite.T(), app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -60,8 +62,8 @@ func (suite *KeeperTestSuite) TestEndOfEpochMintedCoinDistribution() {
 		// ensure post-epoch supply with offset changed by less than the minted coins amount (because of developer vesting account)
 		postsupply := app.BankKeeper.GetSupply(ctx, mintParams.MintDenom)
 		postsupplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, mintParams.MintDenom)
-		suite.Require().False(postsupply.IsEqual(presupply.Add(mintedCoin)))
-		suite.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset.Add(mintedCoin)))
+		suite.False(postsupply.IsEqual(presupply.Add(mintedCoin)))
+		suite.True(postsupplyWithOffset.IsEqual(presupplyWithOffset.Add(mintedCoin)))
 
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
@@ -110,7 +112,7 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	suite.setupGaugeForLPIncentives(app, ctx)
+	setupGaugeForLPIncentives(suite.T(), app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -181,7 +183,7 @@ func (suite *KeeperTestSuite) TestEndOfEpochNoDistributionWhenIsNotYetStartTime(
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	suite.setupGaugeForLPIncentives(app, ctx)
+	setupGaugeForLPIncentives(suite.T(), app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -422,11 +424,11 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	suite.Require().Equal(expectedThirdenedProvisions, app.MintKeeper.GetMinter(ctx).EpochProvisions)
 }
 
-func (suite *KeeperTestSuite) setupGaugeForLPIncentives(app *osmoapp.OsmosisApp, ctx sdk.Context) {
+func setupGaugeForLPIncentives(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context) {
 	addr := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
 	err := simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
-	suite.Require().NoError(err)
+	require.NoError(t, err)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
@@ -436,8 +438,8 @@ func (suite *KeeperTestSuite) setupGaugeForLPIncentives(app *osmoapp.OsmosisApp,
 	// mints coins so supply exists on chain
 	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
 	err = simapp.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
-	suite.Require().NoError(err)
+	require.NoError(t, err)
 
 	_, err = app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
-	suite.Require().NoError(err)
+	require.NoError(t, err)
 }
