@@ -14,6 +14,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
@@ -100,7 +101,8 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 				suite.NoError(err)
 			}
 
-			coin := mintKeeper.GetProportions(suite.Ctx, tc.fee, tc.ratio)
+			coin, err := mintKeeper.GetProportions(suite.Ctx, tc.fee, tc.ratio)
+			suite.NoError(err)
 			suite.Equal(tc.expectedCoin, coin)
 		})
 	}
@@ -349,6 +351,121 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 			suite.NoError(actualError)
 			suite.Equal(supplyWithOffsetBefore.Amount.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 			suite.Equal(supplyOffsetBefore.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
+		})
+	}
+}
+
+// TestDistributeToModule tests that distribution from mint module to another module helper
+// function is working as expected.
+func (suite *KeeperTestSuite) TestDistributeToModule() {
+	const (
+		denomDoesNotExist         = "denomDoesNotExist"
+		moduleAccountDoesNotExist = "moduleAccountDoesNotExist"
+	)
+
+	tests := map[string]struct {
+		preMintAmount sdk.Coin
+
+		recepientModule string
+		mintedCoin      sdk.Coin
+		proportion      sdk.Dec
+
+		expectedError bool
+		expectPanic   bool
+	}{
+		"pre-mint == distribute - poolincentives module - full amount - success": {
+			preMintAmount: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+
+			recepientModule: poolincentivestypes.ModuleName,
+			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			proportion:      sdk.NewDec(1),
+		},
+		"pre-mint > distribute - developer vesting module - two thirds - success": {
+			preMintAmount: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(101)),
+
+			recepientModule: poolincentivestypes.ModuleName,
+			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			proportion:      sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
+		},
+		"pre-mint < distribute (0) - error": {
+			preMintAmount: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+
+			recepientModule: poolincentivestypes.ModuleName,
+			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			proportion:      sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
+
+			expectedError: true,
+		},
+		"denom does not exist - error": {
+			preMintAmount: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+
+			recepientModule: poolincentivestypes.ModuleName,
+			mintedCoin:      sdk.NewCoin(denomDoesNotExist, sdk.NewInt(100)),
+			proportion:      sdk.NewDec(1),
+
+			expectedError: true,
+		},
+		"invalid module account -panic": {
+			preMintAmount: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+
+			recepientModule: moduleAccountDoesNotExist,
+			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			proportion:      sdk.NewDec(1),
+
+			expectPanic: true,
+		},
+		"proportion greater than 1 - error": {
+			preMintAmount: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(300)),
+
+			recepientModule: poolincentivestypes.ModuleName,
+			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			proportion:      sdk.NewDec(2),
+
+			expectedError: true,
+		},
+	}
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.Setup()
+			osmoutils.ConditionalPanic(suite.T(), tc.expectPanic, func() {
+				mintKeeper := suite.App.MintKeeper
+				bankKeeper := suite.App.BankKeeper
+				accountKeeper := suite.App.AccountKeeper
+				ctx := suite.Ctx
+
+				// Setup.
+				suite.NoError(mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.preMintAmount)))
+
+				// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
+				// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
+				expectedDistributed := tc.mintedCoin.Amount.ToDec().Mul(tc.proportion).TruncateInt()
+				oldMintModuleBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintedCoin.Denom)
+				oldRecepientModuleBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(tc.recepientModule), tc.mintedCoin.Denom)
+
+				// Test.
+				actualDistributed, err := mintKeeper.DistributeToModule(ctx, tc.recepientModule, tc.mintedCoin, tc.proportion)
+
+				// Assertions.
+				actualMintModuleBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintedCoin.Denom)
+				actualRecepientModuleBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(tc.recepientModule), tc.mintedCoin.Denom)
+
+				if tc.expectedError {
+					suite.Error(err)
+					suite.Equal(actualDistributed, sdk.Coin{})
+					// Old balances should not change.
+					suite.Equal(oldMintModuleBalance.Amount.Int64(), actualMintModuleBalance.Amount.Int64())
+					suite.Equal(oldRecepientModuleBalance.Amount.Int64(), actualRecepientModuleBalance.Amount.Int64())
+					return
+				}
+
+				suite.NoError(err)
+				suite.Equal(tc.mintedCoin.Denom, actualDistributed.Denom)
+				suite.Equal(expectedDistributed, actualDistributed.Amount)
+
+				// Updated balances.
+				suite.Equal(oldMintModuleBalance.Sub(actualDistributed).Amount.Int64(), actualMintModuleBalance.Amount.Int64())
+				suite.Equal(oldRecepientModuleBalance.Add(actualDistributed).Amount.Int64(), actualRecepientModuleBalance.Amount.Int64())
+			})
 		})
 	}
 }
