@@ -50,7 +50,7 @@ Conceptually, we can split the e2e setup into 2 parts:
     we are upgrading from.
 
     The decision of what configuration type to use is decided by the `Configurer`.
-    This is an interface that has `CurrentBranchConfigurer` abd `UpgradeConfigurer` implementations.
+    This is an interface that has `CurrentBranchConfigurer` and `UpgradeConfigurer` implementations.
     There is also a `BaseConfigurer` which is shared by the concrete implementations. However,
     The user of the `configurer` package does not need to know about this detail.
 
@@ -64,13 +64,13 @@ Conceptually, we can split the e2e setup into 2 parts:
     ```
 
     The caller (e2e setup logic), does not need to be concerned about what type of
-    configurations is hapenning in the background. The approporiate logic is selected
+    configurations is hapenning in the background. The appropriate logic is selected
     depending on what the values of the arguments to `configurer.New(...)` are.
 
-    To dive into the details, the configurer constructor is using a factory design pattern
+    The configurer constructor is using a factory design pattern
     to decide on what kind of configurer to return.
 
-    At the time of this writing, the rules for deciding on the configurer type 
+    The rules for deciding on the configurer type 
     are as follows:
     
     - If only `isIBCEnabled`, we want to have 2 chains initialized at the
