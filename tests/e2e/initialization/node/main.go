@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v9/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
 func main() {

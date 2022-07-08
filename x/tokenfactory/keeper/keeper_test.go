@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v9/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v9/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 )
 
 type KeeperTestSuite struct {

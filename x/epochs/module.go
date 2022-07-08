@@ -18,11 +18,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v9/x/epochs/client/cli"
-	"github.com/osmosis-labs/osmosis/v9/x/epochs/keeper"
-	"github.com/osmosis-labs/osmosis/v9/x/epochs/simulation"
-	"github.com/osmosis-labs/osmosis/v9/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v9/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/client/cli"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/simulation"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/client/rest"
 )
 
 var (

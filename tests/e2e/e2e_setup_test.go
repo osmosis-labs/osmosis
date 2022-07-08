@@ -20,9 +20,9 @@ import (
 
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
-	dockerconfig "github.com/osmosis-labs/osmosis/v9/tests/e2e/docker"
-	"github.com/osmosis-labs/osmosis/v9/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v9/tests/e2e/util"
+	dockerconfig "github.com/osmosis-labs/osmosis/v10/tests/e2e/docker"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
 )
 
 type status struct {

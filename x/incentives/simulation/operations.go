@@ -4,13 +4,13 @@ import (
 	"math/rand"
 	"time"
 
-	osmo_simulation "github.com/osmosis-labs/osmosis/v9/x/simulation"
+	osmo_simulation "github.com/osmosis-labs/osmosis/v10/x/simulation"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	"github.com/osmosis-labs/osmosis/v9/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v9/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
