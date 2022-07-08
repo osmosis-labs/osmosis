@@ -35,18 +35,25 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// MsgCreateGauge creates a gague to distribute rewards to users
 type MsgCreateGauge struct {
-	// flag to show if it's perpetual or multi-epoch
-	// distribution incentives by third party
-	IsPerpetual bool   `protobuf:"varint,1,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
-	Owner       string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
-	// distribute condition of a lock which meet one of these conditions
+	// is_perpetual shows if it's a perpetual or non-perpetual gauge
+	// Non-perpetual gauges distribute their tokens equally per epoch while the
+	// gauge is in the active period. Perpetual gauges distribute all their tokens
+	// at a single time and only distribute their tokens again once the gauge is
+	// refilled
+	IsPerpetual bool `protobuf:"varint,1,opt,name=is_perpetual,json=isPerpetual,proto3" json:"is_perpetual,omitempty"`
+	// owner is the address of gauge creator
+	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
+	// distribute_to show which lock the gauge should distribute to by time
+	// duration or by timestamp
 	DistributeTo types.QueryCondition `protobuf:"bytes,3,opt,name=distribute_to,json=distributeTo,proto3" json:"distribute_to"`
-	// can distribute multiple coins
+	// coins are coin(s) to be distributed by the gauge
 	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
-	// distribution start time
+	// start_time is the distribution start time
 	StartTime time.Time `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"timestamp"`
-	// number of epochs distribution will be done
+	// num_epochs_paid_over is the number of epochs distribution will be completed
+	// over
 	NumEpochsPaidOver uint64 `protobuf:"varint,6,opt,name=num_epochs_paid_over,json=numEpochsPaidOver,proto3" json:"num_epochs_paid_over,omitempty"`
 }
 
@@ -161,9 +168,13 @@ func (m *MsgCreateGaugeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateGaugeResponse proto.InternalMessageInfo
 
+// MsgAddToGauge adds coins to a previously created gauge
 type MsgAddToGauge struct {
-	Owner   string                                   `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
-	GaugeId uint64                                   `protobuf:"varint,2,opt,name=gauge_id,json=gaugeId,proto3" json:"gauge_id,omitempty"`
+	// owner is the gauge owner's address
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
+	// gauge_id is the ID of gauge that rewards are getting added to
+	GaugeId uint64 `protobuf:"varint,2,opt,name=gauge_id,json=gaugeId,proto3" json:"gauge_id,omitempty"`
+	// rewards are the coin(s) to add to gauge
 	Rewards github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"rewards"`
 }
 

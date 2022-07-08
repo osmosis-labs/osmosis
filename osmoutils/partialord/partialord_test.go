@@ -14,12 +14,11 @@ func TestAPI(t *testing.T) {
 	moduleNames := []string{
 		"auth", "authz", "bank", "capabilities",
 		"staking", "distribution", "epochs", "mint", "upgrades", "wasm", "ibc",
-		"ibctransfers", "bech32ibc",
+		"ibctransfers",
 	}
 	beginBlockOrd := partialord.NewPartialOrdering(moduleNames)
 	beginBlockOrd.FirstElements("upgrades", "epochs", "capabilities")
 	beginBlockOrd.After("ibctransfers", "ibc")
-	beginBlockOrd.After("bech32ibc", "ibctransfers")
 	beginBlockOrd.Before("mint", "distribution")
 	// This is purely just to test last functionality, doesn't make sense in context
 	beginBlockOrd.LastElements("auth", "authz", "wasm")
@@ -27,7 +26,7 @@ func TestAPI(t *testing.T) {
 	totalOrd := beginBlockOrd.TotalOrdering()
 	expTotalOrd := []string{
 		"upgrades", "epochs", "capabilities",
-		"bank", "staking", "mint", "ibc", "distribution", "ibctransfers", "bech32ibc",
+		"bank", "staking", "mint", "ibc", "distribution", "ibctransfers",
 		"auth", "authz", "wasm",
 	}
 	require.Equal(t, expTotalOrd, totalOrd)
