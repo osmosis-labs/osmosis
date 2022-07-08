@@ -52,7 +52,7 @@ Conceptually, we can split the e2e setup into 2 parts:
     The decision of what configuration type to use is decided by the `Configurer`.
     This is an interface that has `CurrentBranchConfigurer` and `UpgradeConfigurer` implementations.
     There is also a `BaseConfigurer` which is shared by the concrete implementations. However,
-    The user of the `configurer` package does not need to know about this detail.
+    the user of the `configurer` package does not need to know about this detail.
 
     When the desired configurer is created, the caller may
     configure the chain in the desired way as follows:
