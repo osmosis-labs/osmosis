@@ -35,6 +35,7 @@ func NewUpgradeConfigurer(t *testing.T, chainConfigs []*chain.Config, setupTests
 			chainConfigs:     chainConfigs,
 			containerManager: containerManager,
 			setupTests:       setupTests,
+			syncUntilHeight:  forkHeight + defaultSyncUntilHeight,
 			t:                t,
 		},
 		forkHeight:     forkHeight,

@@ -29,8 +29,12 @@ type baseConfigurer struct {
 	chainConfigs     []*chain.Config
 	containerManager *containers.Manager
 	setupTests       setupFn
+	syncUntilHeight  int64 // the height until which to wait for validators to sync when first started.
 	t                *testing.T
 }
+
+// defaultSyncUntilHeight arbitrary small height to make sure the chain is making progress.
+const defaultSyncUntilHeight = 3
 
 func (bc *baseConfigurer) ClearResources() error {
 	bc.t.Log("tearing down e2e integration test suite...")
@@ -50,15 +54,15 @@ func (bc *baseConfigurer) GetChainConfig(chainIndex int) *chain.Config {
 }
 
 func (bc *baseConfigurer) RunValidators() error {
-	for i, chainConfig := range bc.chainConfigs {
-		if err := bc.runValidators(chainConfig, i*10); err != nil {
+	for _, chainConfig := range bc.chainConfigs {
+		if err := bc.runValidators(chainConfig); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (bc *baseConfigurer) runValidators(chainConfig *chain.Config, portOffset int) error {
+func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
 
 	for _, val := range chainConfig.NodeConfigs {
@@ -91,7 +95,7 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config, portOffset in
 			}
 
 			// let the node produce a few blocks
-			if status.SyncInfo.CatchingUp || status.SyncInfo.LatestBlockHeight < 3 {
+			if status.SyncInfo.CatchingUp && status.SyncInfo.LatestBlockHeight < bc.syncUntilHeight {
 				return false
 			}
 

@@ -53,7 +53,7 @@ func (c *Config) QueryRPC(path string) ([]byte, error) {
 
 func (c *Config) QueryChainStatus(validatorIdx int) []byte {
 	cmd := []string{"osmosisd", "status"}
-	_, errBuf, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIdx, cmd, "")
+	_, errBuf, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIdx, cmd, "NodeInfo")
 	require.NoError(c.t, err)
 	return errBuf.Bytes()
 }
@@ -78,7 +78,7 @@ func (c *Config) QueryCurrentChainHeightFromValidator(validatorIdx int) int {
 
 func (c *Config) QueryBalances(validatorIndex int, addr string) (sdk.Coins, error) {
 	cmd := []string{"osmosisd", "query", "bank", "balances", addr, "--output=json"}
-	outBuf, _, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIndex, cmd, "")
+	outBuf, _, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIndex, cmd, "balances")
 	require.NoError(c.t, err)
 
 	var balancesResp banktypes.QueryAllBalancesResponse

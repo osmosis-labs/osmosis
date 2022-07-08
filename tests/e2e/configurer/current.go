@@ -22,6 +22,7 @@ func NewCurrentBranchConfigurer(t *testing.T, chainConfigs []*chain.Config, setu
 			chainConfigs:     chainConfigs,
 			containerManager: containerManager,
 			setupTests:       setupTests,
+			syncUntilHeight:  defaultSyncUntilHeight,
 			t:                t,
 		},
 	}
