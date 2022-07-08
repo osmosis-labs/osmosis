@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -16,9 +15,9 @@ import (
 	"github.com/stretchr/testify/require"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
-	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
 )
 
@@ -62,7 +61,7 @@ func (bc *baseConfigurer) RunValidators() error {
 func (bc *baseConfigurer) runValidators(chainConfig *chain.Config, portOffset int) error {
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
 
-	for _, val := range chainConfig.ValidatorConfigs {
+	for _, val := range chainConfig.NodeConfigs {
 		resource, err := bc.containerManager.RunValidatorResource(chainConfig.Id, val.Name, val.ConfigDir)
 		if err != nil {
 			return err
@@ -102,6 +101,7 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config, portOffset in
 		time.Second,
 		"Osmosis node failed to produce blocks",
 	)
+	chainConfig.ExtractValidatorOperatorAddresses()
 	return nil
 }
 
@@ -120,7 +120,7 @@ func (bc *baseConfigurer) RunIBC() error {
 func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
 	bc.t.Log("starting Hermes relayer container...")
 
-	tmpDir, err := ioutil.TempDir("", "osmosis-e2e-testnet-hermes-")
+	tmpDir, err := os.MkdirTemp("", "osmosis-e2e-testnet-hermes-")
 	if err != nil {
 		return err
 	}
@@ -141,8 +141,8 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 
 	hermesResource, err := bc.containerManager.RunHermesResource(
 		chainConfigA.Id,
-		chainConfigA.ValidatorConfigs[0].Mnemonic,
-		chainConfigB.Id, chainConfigB.ValidatorConfigs[0].Mnemonic,
+		chainConfigA.NodeConfigs[0].Mnemonic,
+		chainConfigB.Id, chainConfigB.NodeConfigs[0].Mnemonic,
 		hermesCfgPath)
 	if err != nil {
 		return err
@@ -203,12 +203,12 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.C
 	return nil
 }
 
-func (bc *baseConfigurer) initializeChainConfigFromInitChain(initializedChain *chaininit.Chain, chainConfig *chain.Config) {
+func (bc *baseConfigurer) initializeChainConfigFromInitChain(initializedChain *initialization.Chain, chainConfig *chain.Config) {
 	chainConfig.ChainMeta = initializedChain.ChainMeta
-	chainConfig.ValidatorConfigs = make([]*chain.ValidatorConfig, 0, len(initializedChain.Validators))
-	for _, validator := range initializedChain.Validators {
-		chainConfig.ValidatorConfigs = append(chainConfig.ValidatorConfigs, &chain.ValidatorConfig{
-			Validator: *validator,
+	chainConfig.NodeConfigs = make([]*chain.ValidatorConfig, 0, len(initializedChain.Nodes))
+	for _, validator := range initializedChain.Nodes {
+		chainConfig.NodeConfigs = append(chainConfig.NodeConfigs, &chain.ValidatorConfig{
+			Node: *validator,
 		})
 	}
 }

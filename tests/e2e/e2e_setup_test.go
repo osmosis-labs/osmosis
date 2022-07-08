@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"testing"
 
-	configurer "github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer"
 	"github.com/stretchr/testify/suite"
+
+	configurer "github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer"
 )
 
 const (
@@ -15,15 +16,18 @@ const (
 	skipUpgradeEnv = "OSMOSIS_E2E_SKIP_UPGRADE"
 	// Environment variable name to skip the IBC tests
 	skipIBCEnv = "OSMOSIS_E2E_SKIP_IBC"
-	// Environment variable name to skip cleaning up Docker resources in teardown.
+	// Environment variable name to determine if this upgrade is a fork
+	forkHeightEnv = "OSMOSIS_E2E_FORK_HEIGHT"
+	// Environment variable name to skip cleaning up Docker resources in teardown
 	skipCleanupEnv = "OSMOSIS_E2E_SKIP_CLEANUP"
+	// Environment variable name to determine what version we are upgrading to
+	upgradeVersionEnv = "OSMOSIS_E2E_UPGRADE_VERSION"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	configurer configurer.Configurer
-
+	configurer  configurer.Configurer
 	skipUpgrade bool
 	skipIBC     bool
 }
@@ -34,6 +38,10 @@ func TestIntegrationTestSuite(t *testing.T) {
 
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up e2e integration test suite...")
+	var (
+		err             error
+		upgradeSettings configurer.UpgradeSettings
+	)
 
 	// The e2e test flow is as follows:
 	//
@@ -43,14 +51,18 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 2. Start both networks.
 	// 3. Run IBC relayer betweeen the two chains.
 	// 4. Execute various e2e tests, including IBC.
-	var (
-		err error
-	)
-
 	if str := os.Getenv(skipUpgradeEnv); len(str) > 0 {
 		s.skipUpgrade, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
 		s.T().Log(fmt.Sprintf("%s was true, skipping upgrade tests", skipIBCEnv))
+	}
+	upgradeSettings.IsEnabled = !s.skipUpgrade
+
+	if str := os.Getenv(forkHeightEnv); len(str) > 0 {
+		upgradeSettings.ForkHeight, err = strconv.ParseInt(str, 0, 64)
+		s.Require().NoError(err)
+
+		s.T().Log(fmt.Sprintf("fork upgrade is enabled, %s was set to height %d", forkHeightEnv, upgradeSettings.ForkHeight))
 	}
 
 	if str := os.Getenv(skipIBCEnv); len(str) > 0 {
@@ -59,7 +71,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Log(fmt.Sprintf("%s was true, skipping IBC tests", skipIBCEnv))
 	}
 
-	s.configurer, err = configurer.New(s.T(), !s.skipIBC, !s.skipUpgrade)
+	if str := os.Getenv(upgradeVersionEnv); len(str) > 0 {
+		upgradeSettings.Version = str
+		s.T().Log(fmt.Sprintf("upgrade version set to %s", upgradeSettings.Version))
+	}
+
+	s.configurer, err = configurer.New(s.T(), !s.skipIBC, upgradeSettings)
 	s.Require().NoError(err)
 
 	err = s.configurer.ConfigureChains()

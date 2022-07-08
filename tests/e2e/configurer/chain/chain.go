@@ -3,21 +3,21 @@ package chain
 import (
 	"testing"
 
-	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 )
 
 type Config struct {
-	chaininit.ChainMeta
+	initialization.ChainMeta
 
-	ValidatorInitConfigs []*chaininit.ValidatorConfig
+	ValidatorInitConfigs []*initialization.NodeConfig
 	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, and a buffer.
 	VotingPeriod float32
 	// upgrade proposal height for chain.
 	PropHeight           int
 	LatestProposalNumber int
 	LatestLockNumber     int
-	ValidatorConfigs     []*ValidatorConfig
+	NodeConfigs          []*ValidatorConfig
 
 	t                *testing.T
 	containerManager *containers.Manager
@@ -31,9 +31,9 @@ type syncInfo struct {
 	SyncInfo status `json:"SyncInfo"`
 }
 
-func New(t *testing.T, containerManager *containers.Manager, id string, initValidatorConfigs []*chaininit.ValidatorConfig) *Config {
+func New(t *testing.T, containerManager *containers.Manager, id string, initValidatorConfigs []*initialization.NodeConfig) *Config {
 	return &Config{
-		ChainMeta: chaininit.ChainMeta{
+		ChainMeta: initialization.ChainMeta{
 			Id: id,
 		},
 		ValidatorInitConfigs: initValidatorConfigs,

@@ -1,9 +1,9 @@
 package chain
 
-import chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
+import "github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 
 type ValidatorConfig struct {
-	chaininit.Validator
+	initialization.Node
 
 	OperatorAddress string
 }

@@ -10,13 +10,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	chaininit "github.com/osmosis-labs/osmosis/v7/tests/e2e/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 )
 
-func (c *Config) CreatePool(poolFile string) {
+func (c *Config) CreatePool(poolFile, from string) {
 	c.t.Logf("creating pool for chain-id: %s", c.Id)
-	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", c.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test"}
+	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", c.Id), fmt.Sprintf("--from=%s", from), "-b=block", "--yes", "--keyring-backend=test"}
 	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, 0, cmd, "code: 0")
 	require.NoError(c.t, err)
 
@@ -25,13 +24,13 @@ func (c *Config) CreatePool(poolFile string) {
 	c.t.Logf("successfully created pool from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
 }
 
-func (c *Config) SubmitUpgradeProposal() {
+func (c *Config) SubmitUpgradeProposal(upgradeVersion string) {
 	validatorResource, exists := c.containerManager.GetValidatorResource(c.Id, 0)
 	require.True(c.t, exists)
 
 	upgradeHeightStr := strconv.Itoa(c.PropHeight)
 	c.t.Logf("submitting upgrade proposal on %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", config.UpgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", config.UpgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
 	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, 0, cmd, "code: 0")
 	require.NoError(c.t, err)
 	c.t.Log("successfully submitted upgrade proposal")
@@ -78,7 +77,7 @@ func (c *Config) VoteYesProposal() {
 	propStr := strconv.Itoa(c.LatestProposalNumber)
 	c.t.Logf("voting yes on proposal for chain-id: %s", c.Id)
 	cmd := []string{"osmosisd", "tx", "gov", "vote", propStr, "yes", "--from=val", fmt.Sprintf("--chain-id=%s", c.Id), "-b=block", "--yes", "--keyring-backend=test"}
-	for i := range c.ValidatorConfigs {
+	for i := range c.NodeConfigs {
 		_, _, err := c.containerManager.ExecCmd(c.t, c.Id, i, cmd, "code: 0")
 		require.NoError(c.t, err)
 
@@ -146,12 +145,12 @@ func (c *Config) CreateWallet(validatorIndex int, walletName string) string {
 }
 
 func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
-	cmd := []string{"hermes", "tx", "raw", "ft-transfer", dstChain.Id, c.Id, "transfer", "channel-0", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
-	_, _, err := c.containerManager.ExecCmd(c.t, "", 0, cmd, "Success")
-	require.NoError(c.t, err)
-
 	c.t.Logf("sending %s from %s to %s (%s)", token, c.Id, dstChain.Id, recipient)
 	balancesBPre, err := dstChain.QueryBalances(0, recipient)
+	require.NoError(c.t, err)
+
+	cmd := []string{"hermes", "tx", "raw", "ft-transfer", dstChain.Id, c.Id, "transfer", "channel-0", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
+	_, _, err = c.containerManager.ExecCmd(c.t, "", 0, cmd, "Success")
 	require.NoError(c.t, err)
 
 	require.Eventually(
@@ -163,7 +162,7 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesBPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				tokenPost := balancesBPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				resPre := chaininit.OsmoToken.Amount
+				resPre := initialization.OsmoToken.Amount
 				resPost := tokenPost.Sub(tokenPre)
 				return resPost.Uint64() == resPre.Uint64()
 			} else {
@@ -176,4 +175,16 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	)
 
 	c.t.Log("successfully sent IBC tokens")
+}
+
+func (c *Config) ExtractValidatorOperatorAddresses() {
+	for i, val := range c.NodeConfigs {
+		cmd := []string{"osmosisd", "debug", "addr", val.PublicKey}
+		c.t.Logf("extracting validator operator addresses for chain-id: %s", c.Id)
+		_, errBuf, err := c.containerManager.ExecCmd(c.t, c.Id, i, cmd, "")
+		require.NoError(c.t, err)
+		re := regexp.MustCompile("osmovaloper(.{39})")
+		operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
+		c.NodeConfigs[i].OperatorAddress = strings.TrimSuffix(operAddr, "\n")
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -13,6 +14,8 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 )
+
+var errRegex = regexp.MustCompile(`(E|e)rror`)
 
 // Manager is a wrapper around all Docker instances, and the Docker API.
 // It provides utilities to run and interact with all Docker containers used within e2e testing.
@@ -27,9 +30,9 @@ type Manager struct {
 
 // NewManager creates a new Manager instance and initializes
 // all Docker specific utilies. Returns an error if initialiation fails.
-func NewManager(isUpgradeEnabled bool) (docker *Manager, err error) {
+func NewManager(isUpgrade bool, isFork bool) (docker *Manager, err error) {
 	docker = &Manager{
-		ImageConfig:  NewImageConfig(isUpgradeEnabled),
+		ImageConfig:  NewImageConfig(isUpgrade, isFork),
 		valResources: make(map[string][]*dockertest.Resource),
 	}
 	docker.pool, err = dockertest.NewPool("")
@@ -88,15 +91,29 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 				return false
 			}
 
+			errBufString := errBuf.String()
+			// Note that this does not match all errors.
+			// This only works if CLI outpurs "Error" or "error"
+			// to stderr.
+			if errRegex.MatchString(errBufString) {
+				t.Log("Potential error in stderr:")
+				t.Log(errBufString)
+				// N.B: We should not be returning false here
+				// because some applications such as Hermes might log
+				// "error" to stderr when they function correctly,
+				// causing test flakiness. This log is needed only for
+				// debugging purposes.
+			}
+
 			if success != "" {
-				return strings.Contains(outBuf.String(), success) || strings.Contains(errBuf.String(), success)
+				return strings.Contains(outBuf.String(), success) || strings.Contains(errBufString, success)
 			}
 
 			return true
 		},
 		time.Minute,
 		time.Second,
-		"tx returned a non-zero code; stdout: %s, stderr: %s", outBuf.String(), errBuf.String(),
+		"tx returned a non-zero code",
 	)
 
 	return outBuf, errBuf, nil
@@ -190,12 +207,12 @@ func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCond
 // The genesis and configs are to be mounted on the init container as volume on mountDir path.
 // Returns the container resource and error if any. This method does not Purge the container. The caller
 // must deal with removing the resource.
-func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, mountDir string) (*dockertest.Resource, error) {
+func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, mountDir string, forkHeight int64) (*dockertest.Resource, error) {
 	votingPeriodDuration := time.Duration(chainVotingPeriod * 1000000000)
 
 	initResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s", chainId),
+			Name:       chainId,
 			Repository: m.ImageConfig.InitRepository,
 			Tag:        m.ImageConfig.InitTag,
 			NetworkID:  m.network.Network.ID,
@@ -204,6 +221,7 @@ func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, va
 				fmt.Sprintf("--chain-id=%s", chainId),
 				fmt.Sprintf("--config=%s", validatorConfigBytes),
 				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
+				fmt.Sprintf("--fork-height=%v", forkHeight),
 			},
 			User: "root:root",
 			Mounts: []string{
