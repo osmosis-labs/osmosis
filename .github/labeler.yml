@@ -29,11 +29,13 @@
   - x/superfluid/**/*
 "C:x/txfees":
   - x/txfees/**/*
-"Type:build":
+"C:x/tokenfactory":
+  - x/tokenfactory/**/*
+"T:build":
   - Makefile
   - Dockerfile
   - scripts/*
-"Type:CI":
+"T:CI":
   - .github/**/*.yml
   - .mergify.yml
   - .golangci.yml

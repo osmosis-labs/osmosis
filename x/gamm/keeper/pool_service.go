@@ -105,7 +105,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	poolId := k.GetNextPoolNumberAndIncrement(ctx)
+	poolId := k.getNextPoolNumberAndIncrement(ctx)
 	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
 		return 0, err
@@ -183,32 +183,35 @@ func (k Keeper) JoinPoolNoSwap(
 	poolId uint64,
 	shareOutAmount sdk.Int,
 	tokenInMaxs sdk.Coins,
-) (err error) {
+) (tokenIn sdk.Coins, sharesOut sdk.Int, err error) {
 	// all pools handled within this method are pointer references, `JoinPool` directly updates the pools
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
-		return err
+		return nil, sdk.ZeroInt(), err
 	}
 
 	// we do an abstract calculation on the lp liquidity coins needed to have
 	// the designated amount of given shares of the pool without performing swap
 	neededLpLiquidity, err := getMaximalNoSwapLPAmount(ctx, pool, shareOutAmount)
 	if err != nil {
-		return err
+		return nil, sdk.ZeroInt(), err
 	}
 
 	// check that needed lp liquidity does not exceed the given `tokenInMaxs` parameter. Return error if so.
 	// if tokenInMaxs == 0, don't do this check.
 	if tokenInMaxs.Len() != 0 {
 		if !(neededLpLiquidity.DenomsSubsetOf(tokenInMaxs) && tokenInMaxs.IsAllGTE(neededLpLiquidity)) {
-			return sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
+			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrLimitMaxAmount, "TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
 				" upperbound: %v, needed %v", tokenInMaxs, neededLpLiquidity)
+		} else if !(tokenInMaxs.DenomsSubsetOf(neededLpLiquidity)) {
+			return nil, sdk.ZeroInt(), sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "TokenInMaxs includes tokens that are not part of the target pool,"+
+				" input tokens: %v, pool tokens %v", tokenInMaxs, neededLpLiquidity)
 		}
 	}
 
-	sharesOut, err := pool.JoinPool(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
+	sharesOut, err = pool.JoinPool(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
 	if err != nil {
-		return err
+		return nil, sdk.ZeroInt(), err
 	}
 	// sanity check, don't return error as not worth halting the LP. We know its not too much.
 	if sharesOut.LT(shareOutAmount) {
@@ -217,10 +220,10 @@ func (k Keeper) JoinPoolNoSwap(
 	}
 
 	err = k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, neededLpLiquidity)
-	return err
+	return neededLpLiquidity, sharesOut, err
 }
 
-// getMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of share of the pool.
+// getMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of shares in the pool.
 // Steps to getting the needed lp liquidity coins needed for the share of the pools are
 // 		1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
 // 		2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
@@ -317,6 +320,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 	}
 
 	tokenIn := sdk.NewCoins(sdk.NewCoin(tokenInDenom, tokenInAmount))
+	// Not using generic JoinPool because we want to guarantee exact shares out
 	extendedPool.IncreaseLiquidity(shareOutAmount, tokenIn)
 
 	err = k.applyJoinPoolStateChange(ctx, pool, sender, shareOutAmount, tokenIn)

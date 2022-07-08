@@ -65,6 +65,15 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Log(fmt.Sprintf("fork upgrade is enabled, %s was set to height %d", forkHeightEnv, upgradeSettings.ForkHeight))
 	}
 
+	if str := os.Getenv(forkHeightEnv); len(str) > 0 {
+		forkHeight64, err = strconv.ParseInt(str, 0, 64)
+		s.Require().NoError(err)
+		s.forkHeight = int(forkHeight64)
+		s.isFork = true
+
+		s.T().Log(fmt.Sprintf("fork upgrade is enabled, %s was set to height %v", forkHeightEnv, s.forkHeight))
+	}
+
 	if str := os.Getenv(skipIBCEnv); len(str) > 0 {
 		s.skipIBC, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
