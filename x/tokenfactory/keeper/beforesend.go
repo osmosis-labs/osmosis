@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -86,6 +87,7 @@ func (h Hooks) BeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.C
 			em := sdk.NewEventManager()
 
 			_, err = h.wasmkeeper.Sudo(ctx.WithEventManager(em), cwAddr, msgBz)
+			fmt.Println(err)
 			if err != nil {
 				return err
 			}
