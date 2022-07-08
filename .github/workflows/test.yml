@@ -67,8 +67,6 @@ jobs:
         run: make test-unit
   
   e2e_test:
-    needs: should_run_go_test
-    if: ${{ needs.should_run_test.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -123,12 +121,6 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BASE_IMG_TAG=debug
-      -
-        name: Disable Long Tests
-        run: |
-          echo "OSMOSIS_E2E_SKIP_UPGRADE=true" >> $GITHUB_ENV
-        # This ensures that we disable long tests on all events other than push to main or release branches i.e. v9.x
-        if: ${{ !(github.event_name == 'push' && (github.ref == 'refs/heads/main' || (startsWith(github.ref,'refs/heads/v') && endsWith(github.ref, '.x')))) }}
       -
         name: Test e2e and Upgrade
         run: make test-e2e
