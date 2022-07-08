@@ -45,8 +45,5 @@ func (gs GenesisState) Validate() error {
 	if gs.Params.DistrEpochIdentifier == "" {
 		return errors.New("epoch identifier should NOT be empty")
 	}
-	if gs.LastGaugeId < 0 {
-		return errors.New("lock gauge lock id should be non-negative")
-	}
 	return nil
 }
