@@ -53,6 +53,7 @@ func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sd
 	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, coin.Denom, duration)
 	// if existing lock with same duration and denom exists, just add there
 	if len(locks) > 0 {
+		// there should only be a sinlge lock with the same duration + token, thus we take the first lock
 		lock := locks[0]
 		_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
 		if err != nil {
