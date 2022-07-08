@@ -20,7 +20,7 @@ func (s *IntegrationTestSuite) TestCreatePoolPostUpgrade() {
 
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	if s.skipIBC {
-		s.T().Skip()
+		s.T().Skip("Skipping IBC tests")
 	}
 
 	chainA := s.configurer.GetChainConfig(0)
