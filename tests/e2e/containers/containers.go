@@ -207,7 +207,7 @@ func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCond
 // The genesis and configs are to be mounted on the init container as volume on mountDir path.
 // Returns the container resource and error if any. This method does not Purge the container. The caller
 // must deal with removing the resource.
-func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, mountDir string, forkHeight int64) (*dockertest.Resource, error) {
+func (m *Manager) RunChainInitResource(chainId string, chainVotingPeriod int, validatorConfigBytes []byte, mountDir string, forkHeight int) (*dockertest.Resource, error) {
 	votingPeriodDuration := time.Duration(chainVotingPeriod * 1000000000)
 
 	initResource, err := m.pool.RunWithOptions(

@@ -65,10 +65,7 @@ func (c *Config) QueryCurrentChainHeightFromValidator(validatorIdx int) int {
 		func() bool {
 			out := c.QueryChainStatus(validatorIdx)
 			err := json.Unmarshal(out, &block)
-			if err != nil {
-				return false
-			}
-			return true
+			return err == nil
 		},
 		1*time.Minute,
 		time.Second,

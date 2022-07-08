@@ -47,16 +47,3 @@ func withUpgrade(setupHandler setupFn) setupFn {
 		return nil
 	}
 }
-
-// This is for illustration purposes only and is currently WIP.
-func withStateSync(setupHandler setupFn) setupFn {
-	return func(configurer Configurer) error {
-		if err := setupHandler(configurer); err != nil {
-			return err
-		}
-
-		// Set up for state sync
-
-		return nil
-	}
-}
