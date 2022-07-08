@@ -68,7 +68,10 @@ Conceptually, we can split the e2e setup into 2 parts:
     depending on what the values of the arguments to `configurer.New(...)` are.
 
     The configurer constructor is using a factory design pattern
-    to decide on what kind of configurer to return.
+    to decide on what kind of configurer to return. Factory design
+    pattern is used to decouple the client from the initialization
+    details of the configurer. More on this can be found
+    [here](https://www.tutorialspoint.com/design_pattern/factory_pattern.htm)
 
     The rules for deciding on the configurer type 
     are as follows:
