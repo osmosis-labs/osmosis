@@ -22,6 +22,7 @@ import (
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
+	queryClient types.QueryClient
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -30,6 +31,8 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
+
+	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 }
 
 // setupDeveloperVestingModuleAccountTest sets up test cases that utilize developer vesting
