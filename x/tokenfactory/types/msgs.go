@@ -223,9 +223,11 @@ func (m MsgSetBeforeSendHook) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	_, err = sdk.AccAddressFromBech32(m.CosmwasmAddress)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid cosmwasm contract address (%s)", err)
+	if m.CosmwasmAddress != "" {
+		_, err = sdk.AccAddressFromBech32(m.CosmwasmAddress)
+		if err != nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid cosmwasm contract address (%s)", err)
+		}
 	}
 
 	_, _, err = DeconstructDenom(m.Denom)

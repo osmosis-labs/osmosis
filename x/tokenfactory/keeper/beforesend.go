@@ -19,12 +19,18 @@ func (k Keeper) setBeforeSendHook(ctx sdk.Context, denom string, cosmwasmAddress
 		return err
 	}
 
+	store := k.GetDenomPrefixStore(ctx, denom)
+
+	if cosmwasmAddress == "" {
+		store.Delete([]byte(types.BeforeSendHookAddressPrefixKey))
+		return nil
+	}
+
 	_, err = sdk.AccAddressFromBech32(cosmwasmAddress)
 	if err != nil {
 		return err
 	}
 
-	store := k.GetDenomPrefixStore(ctx, denom)
 	store.Set([]byte(types.BeforeSendHookAddressPrefixKey), []byte(cosmwasmAddress))
 
 	return nil
