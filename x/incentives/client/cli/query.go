@@ -322,7 +322,7 @@ $ %s query incentives upcoming-gauges
 	return cmd
 }
 
-// GetCmdUpcomingGaugesPerDenom returns active gauges for a specified denom.
+// GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
 func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upcoming-gauges-per-denom [denom]",
@@ -438,12 +438,7 @@ $ %s query incentives rewards-estimation
 				}
 			}
 
-			// TODO: Figure out why some lock ids are good and some causes "Error: rpc error: code = Unknown desc = panic message redacted to hide potentially sensitive system info: panic"
-			// since owner checks have already been completed above, we switch the owner address to a random module account address since a blank owner panics.
-			// we should find a better way to circumvent this address validity check
-			if owner == "" {
-				owner = "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj"
-			}
+			// TODO: Fix accumulation store bug. For now, we return a graceful error when attempting to query bugged gauges
 			rewardsEstimateResult, err := queryClient.RewardsEst(cmd.Context(), &types.RewardsEstRequest{
 				Owner:    owner, // owner is used only when lockIds are empty
 				LockIds:  lockIds,
