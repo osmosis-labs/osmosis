@@ -322,7 +322,7 @@ $ %s query incentives upcoming-gauges
 	return cmd
 }
 
-// GetCmdActiveGaugesPerDenom returns active gauges for specified denom.
+// GetCmdUpcomingGaugesPerDenom returns active gauges for specified denom.
 func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upcoming-gauges-per-denom [denom]",
