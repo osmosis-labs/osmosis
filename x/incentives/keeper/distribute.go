@@ -75,17 +75,18 @@ func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 	return nil
 }
 
-// GetLocksToDistribution returns locks that match the provided lockuptypes QueryCondition AND have yet to be distributed to yet.
-func (k Keeper) getLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.QueryCondition) []lockuptypes.PeriodLock {
-	switch distrTo.LockQueryType {
-	case lockuptypes.ByDuration:
-		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
-	case lockuptypes.ByTime:
-		return k.lk.GetLocksPastTimeDenom(ctx, distrTo.Denom, distrTo.Timestamp)
-	default:
-	}
-	return []lockuptypes.PeriodLock{}
-}
+// getLocksToDistribution returns locks that match the provided lockuptypes QueryCondition AND have yet to be distributed to yet.
+// commented this out due to it not being used anywhere
+// func (k Keeper) getLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.QueryCondition) []lockuptypes.PeriodLock {
+// 	switch distrTo.LockQueryType {
+// 	case lockuptypes.ByDuration:
+// 		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
+// 	case lockuptypes.ByTime:
+// 		return k.lk.GetLocksPastTimeDenom(ctx, distrTo.Denom, distrTo.Timestamp)
+// 	default:
+// 	}
+// 	return []lockuptypes.PeriodLock{}
+// }
 
 // getLocksToDistributionWithMaxDuration returns locks that match the provided lockuptypes QueryCondition,
 // are greater than the provided minDuration, AND have yet to be distributed to.
