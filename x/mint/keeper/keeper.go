@@ -15,12 +15,6 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-var (
-	errAmountCannotBeNilOrZero               = errors.New("amount cannot be nil or zero")
-	errDevVestingModuleAccountAlreadyCreated = fmt.Errorf("%s module account already exists", types.DeveloperVestingModuleAcctName)
-	errDevVestingModuleAccountNotCreated     = fmt.Errorf("%s module account does not exist", types.DeveloperVestingModuleAcctName)
-)
-
 // Keeper of the mint store.
 type Keeper struct {
 	cdc              codec.BinaryCodec
@@ -33,6 +27,20 @@ type Keeper struct {
 	hooks            types.MintHooks
 	feeCollectorName string
 }
+
+type invalidRatioError struct {
+	ActualRatio sdk.Dec
+}
+
+func (e invalidRatioError) Error() string {
+	return fmt.Sprintf("mint allocation ratio %s is greater than 1", e.ActualRatio)
+}
+
+var (
+	errAmountCannotBeNilOrZero               = errors.New("amount cannot be nil or zero")
+	errDevVestingModuleAccountAlreadyCreated = fmt.Errorf("%s module account already exists", types.DeveloperVestingModuleAcctName)
+	errDevVestingModuleAccountNotCreated     = fmt.Errorf("%s module account does not exist", types.DeveloperVestingModuleAcctName)
+)
 
 // NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
@@ -185,14 +193,6 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
-// GetProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the `AllocationRatio`.
-func (k Keeper) GetProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) (sdk.Coin, error) {
-	if ratio.GT(sdk.OneDec()) {
-		return sdk.Coin{}, fmt.Errorf("mint allocation ratio %s is greater than 1", ratio)
-	}
-	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt()), nil
-}
-
 // DistributeMintedCoins implements distribution of minted coins from mint to external modules.
 func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
 	params := k.GetParams(ctx)
@@ -210,7 +210,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		return err
 	}
 
-	devRewardCoin, err := k.GetProportions(ctx, mintedCoin, proportions.DeveloperRewards)
+	devRewardCoin, err := getProportions(ctx, mintedCoin, proportions.DeveloperRewards)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range params.WeightedDeveloperRewardsReceivers {
-			devPortionCoin, err := k.GetProportions(ctx, devRewardCoin, w.Weight)
+			devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
 			if err != nil {
 				return err
 			}
@@ -278,7 +278,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 }
 
 func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Coin, error) {
-	distributionCoin, err := k.GetProportions(ctx, mintedCoin, proportion)
+	distributionCoin, err := getProportions(ctx, mintedCoin, proportion)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -286,4 +286,13 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 		return sdk.Coin{}, err
 	}
 	return distributionCoin, nil
+}
+
+// getProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the
+// allocation ratio. Returns error if ratio is greater than 1.
+func getProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) (sdk.Coin, error) {
+	if ratio.GT(sdk.OneDec()) {
+		return sdk.Coin{}, invalidRatioError{ratio}
+	}
+	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt()), nil
 }

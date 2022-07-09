@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
@@ -23,6 +22,10 @@ import (
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
@@ -59,49 +62,66 @@ func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight
 	}
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
-
-func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
+// TestGetProportions tests that mint allocations are computed as expected.
+func (suite *KeeperTestSuite) TestGetProportions() {
 	tests := []struct {
-		name                 string
-		ratio                sdk.Dec
-		hasPreExistingSupply bool
-		expectedCoin         sdk.Coin
-		fee                  sdk.Coin
+		name          string
+		ratio         sdk.Dec
+		expectedCoin  sdk.Coin
+		expectedError error
+		mintedCoin    sdk.Coin
 	}{
 		{
-			name:                 "coin is minted to the fee collector",
-			fee:                  sdk.NewCoin("stake", sdk.NewInt(0)),
-			ratio:                sdk.NewDecWithPrec(2, 1),
-			hasPreExistingSupply: false,
-			expectedCoin:         sdk.NewCoin("stake", sdk.NewInt(0)),
-		}, {
-			name:                 "mint the 100K stake coin to the fee collector",
-			fee:                  sdk.NewCoin("stake", sdk.NewInt(100000)),
-			ratio:                sdk.NewDecWithPrec(2, 1),
-			hasPreExistingSupply: true,
-			expectedCoin:         sdk.NewCoin("stake", sdk.NewInt(100000).Quo(sdk.NewInt(5))),
+			name:         "0 * 0.5 = 0",
+			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+			ratio:        sdk.NewDecWithPrec(2, 1),
+			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+		},
+		{
+			name:         "100000 * 0.2 = 20000",
+			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000)),
+			ratio:        sdk.NewDecWithPrec(2, 1),
+			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000).Quo(sdk.NewInt(5))),
+		},
+		{
+			name:         "123456 * 2/3 = 82304",
+			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(123456)),
+			ratio:        sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
+			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(82304)),
+		},
+		{
+			name:       "54617981 * 131/273 approx = 2.62",
+			mintedCoin: sdk.NewCoin("uosmo", sdk.NewInt(54617981)),
+			ratio:      sdk.NewDecWithPrec(131, 3).Quo(sdk.NewDecWithPrec(273, 3)),
+			// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
+			// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
+			expectedCoin: sdk.NewCoin("uosmo", sdk.NewInt(54617981).ToDec().Mul(sdk.NewDecWithPrec(131, 3).Quo(sdk.NewDecWithPrec(273, 3))).TruncateInt()),
+		},
+		{
+			name:         "1 * 1 = 1",
+			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+			ratio:        sdk.NewDec(1),
+			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+		},
+		{
+			name:       "1 * 1.01 - error, ratio must be <= 1",
+			mintedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+			ratio:      sdk.NewDecWithPrec(101, 2),
+
+			expectedError: keeper.ErrInvalidRatio{ActualRatio: sdk.NewDecWithPrec(101, 2)},
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			bankKeeper := suite.App.BankKeeper
-			mintKeeper := suite.App.MintKeeper
+			coin, err := keeper.GetProportions(suite.Ctx, tc.mintedCoin, tc.ratio)
 
-			if tc.hasPreExistingSupply {
-				fee := sdk.NewCoin("stake", sdk.NewInt(100000))
-				fees := sdk.NewCoins(fee)
-				err := simapp.FundModuleAccount(bankKeeper,
-					suite.Ctx,
-					authtypes.FeeCollectorName,
-					fees)
-				suite.NoError(err)
+			if tc.expectedError != nil {
+				suite.Require().Equal(tc.expectedError, err)
+				suite.Equal(sdk.Coin{}, coin)
+				return
 			}
 
-			coin, err := mintKeeper.GetProportions(suite.Ctx, tc.fee, tc.ratio)
 			suite.NoError(err)
 			suite.Equal(tc.expectedCoin, coin)
 		})
