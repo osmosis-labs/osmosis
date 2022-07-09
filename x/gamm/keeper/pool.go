@@ -197,7 +197,7 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // }
 
 // SetNextPoolNumber sets next pool number.
-func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
+func (k Keeper) setNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolNumber})
 	store.Set(types.KeyNextGlobalPoolNumber, bz)
@@ -222,7 +222,7 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 		poolNumber = val.GetValue()
 	}
 
-	k.SetNextPoolNumber(ctx, poolNumber+1)
+	k.setNextPoolNumber(ctx, poolNumber+1)
 	return poolNumber
 }
 
