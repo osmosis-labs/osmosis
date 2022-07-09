@@ -15,9 +15,6 @@ const (
 	keyDistrEpochIdentifier = "DistrEpochIdentifier"
 )
 
-// TODO: remove hardcoded params
-// refer x/epochs/simulation/genesis.go.
-// TODO: x/epochs/simulation/genesis.go doesn't exist, what was this comment trying to say?
 var epochIdentifiers = []string{"day", "hour"}
 
 // ParamChanges defines the parameters that can be modified by param change proposals on the simulation.

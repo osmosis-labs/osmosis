@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -82,23 +81,6 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 func genQueryCondition(r *rand.Rand, blocktime time.Time, coins sdk.Coins, durations []time.Duration) lockuptypes.QueryCondition {
 	lockQueryType := 0
 	denom := coins[r.Intn(len(coins))].Denom
-	// TODO: for postlaunch, only specific lock durations are allowed
-	// durationSecs := r.Intn(1*60*60*24*7) + 1*60*60 // range of 1 week, min 1 hour
-	// duration := time.Duration(durationSecs) * time.Second
-	// TODO: delete this comment if the below code satisfies the above request
-	lockableDurations := types.DefaultGenesis().LockableDurations
-	durationOk := false
-	for _, duration := range durations {
-		for _, lockableduration := range lockableDurations {
-			if duration == lockableduration {
-				durationOk = true
-				break
-			}
-		}
-		if !durationOk {
-			panic(fmt.Errorf("invalid duration: %d", duration))
-		}
-	}
 	durationIndex := r.Intn(len(durations))
 	duration := durations[durationIndex]
 	timestampSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
