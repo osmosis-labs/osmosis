@@ -30,13 +30,13 @@ func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	return coins.Sub(distributed)
 }
 
-// getToDistributeCoinsFromIterator utilizes db.iterator to return a list of gauges.
+// getToDistributeCoinsFromIterator utilizes iterator to return a list of gauges.
 // From these gauges, coins that have not yet been distributed are returned
 func (k Keeper) getToDistributeCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getToDistributeCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
-// getDistributedCoinsFromIterator utilizes db.iterator to return a list of gauges.
+// getDistributedCoinsFromIterator utilizes iterator to return a list of gauges.
 // From these gauges, coins that have already been distributed are returned
 func (k Keeper) getDistributedCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getDistributedCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
@@ -182,7 +182,7 @@ func newDistributionInfo() distributionInfo {
 	}
 }
 
-// addLockRewards adds the provided rewards to the lockID mapped to the provided owner address
+// addLockRewards adds the provided rewards to the lockID mapped to the provided owner address.
 func (d *distributionInfo) addLockRewards(owner string, rewards sdk.Coins) error {
 	if id, ok := d.lockOwnerAddrToID[owner]; ok {
 		oldDistrCoins := d.idToDistrCoins[id]
@@ -202,7 +202,7 @@ func (d *distributionInfo) addLockRewards(owner string, rewards sdk.Coins) error
 	return nil
 }
 
-// doDistributionSends utilizes provided distributionInfo to send coins from the module account to various recipients
+// doDistributionSends utilizes provided distributionInfo to send coins from the module account to various recipients.
 func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) error {
 	numIDs := len(distrs.idToDecodedAddr)
 	ctx.Logger().Debug(fmt.Sprintf("Beginning distribution to %d users", numIDs))
@@ -381,7 +381,7 @@ func (k Keeper) getDistributeToBaseLocks(ctx sdk.Context, gauge types.Gauge, cac
 	return FilterLocksByMinDuration(allLocks, gauge.DistributeTo.Duration)
 }
 
-// Distribute distributes coins from an array of gauges to all eligible locks
+// Distribute distributes coins from an array of gauges to all eligible locks.
 func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, error) {
 	distrInfo := newDistributionInfo()
 

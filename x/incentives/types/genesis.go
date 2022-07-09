@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-// DefaultIndex ihe default incentive module's global index.
+// DefaultIndex is the default incentive module's global index.
 const DefaultIndex uint64 = 1
 
 // DefaultGenesis returns the incentive module's default genesis state.
