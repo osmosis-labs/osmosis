@@ -23,8 +23,6 @@ func (k Keeper) getDistributedCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 
 // getToDistributeCoinsFromGauges returns coins that have not been distributed yet from the provided gauges
 func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
-	// TODO: Consider optimizing this in the future to only require one iteration over all gauges.
-	// TODO: Lets make issue for this, requires changing getGaugesFromIterator logic in gauge.go
 	coins := k.getCoinsFromGauges(gauges)
 	distributed := k.getDistributedCoinsFromGauges(gauges)
 	return coins.Sub(distributed)
@@ -75,27 +73,11 @@ func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 	return nil
 }
 
-// getLocksToDistribution returns locks that match the provided lockuptypes QueryCondition AND have yet to be distributed to yet.
-// commented this out due to it not being used anywhere
-// func (k Keeper) getLocksToDistribution(ctx sdk.Context, distrTo lockuptypes.QueryCondition) []lockuptypes.PeriodLock {
-// 	switch distrTo.LockQueryType {
-// 	case lockuptypes.ByDuration:
-// 		return k.lk.GetLocksLongerThanDurationDenom(ctx, distrTo.Denom, distrTo.Duration)
-// 	case lockuptypes.ByTime:
-// 		return k.lk.GetLocksPastTimeDenom(ctx, distrTo.Denom, distrTo.Timestamp)
-// 	default:
-// 	}
-// 	return []lockuptypes.PeriodLock{}
-// }
-
 // getLocksToDistributionWithMaxDuration returns locks that match the provided lockuptypes QueryCondition,
 // are greater than the provided minDuration, AND have yet to be distributed to.
 func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo lockuptypes.QueryCondition, minDuration time.Duration) []lockuptypes.PeriodLock {
 	switch distrTo.LockQueryType {
 	case lockuptypes.ByDuration:
-		// TODO: Create issue for this
-		// Confusingly, synthetic lockups aren't indexed by denom as expected.
-		// Thus you have to do this as a hack
 		denom := lockuptypes.NativeDenom(distrTo.Denom)
 		if distrTo.Duration > minDuration {
 			return k.lk.GetLocksLongerThanDurationDenom(ctx, denom, minDuration)
@@ -232,8 +214,6 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // distributeSyntheticInternal runs the distribution logic for a synthetic rewards distribution gauge, and adds the sends to
 // the distrInfo struct. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
-// TODO: Make this code have way more re-use with distribute internal (post-v7).
-// TODO: Create issue for the above
 func (k Keeper) distributeSyntheticInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {

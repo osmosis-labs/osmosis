@@ -32,8 +32,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// only distribute to active gauges that are for native denoms
 		// or non-perpetual and for synthetic denoms.
 		// We distribute to perpetual synthetic denoms elsewhere in superfluid.
-		// TODO: This method of doing is a bit of hack, should clean this up later.
-		// TODO: Discuss/Create issue for the above.
 		distrGauges := []types.Gauge{}
 		for _, gauge := range gauges {
 			isSynthetic := lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom)
