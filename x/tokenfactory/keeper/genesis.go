@@ -21,7 +21,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
-		_, err = k.CreateDenom(ctx, creator, subdenom)
+		_, err = k.createDenomAfterCharge(ctx, creator, subdenom)
 		if err != nil {
 			panic(err)
 		}

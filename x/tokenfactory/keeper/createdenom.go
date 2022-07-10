@@ -11,32 +11,20 @@ import (
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
 func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error) {
-	// Temporary check until IBC bug is sorted out
-	if k.bankKeeper.HasSupply(ctx, subdenom) {
-		return "", fmt.Errorf("temporary error until IBC bug is sorted out, " +
-			"can't create subdenoms that are the same as a native denom")
-	}
-
-	// Send creation fee to community pool
-	creationFee := k.GetParams(ctx).DenomCreationFee
-	accAddr, err := sdk.AccAddressFromBech32(creatorAddr)
-	if err != nil {
-		return "", err
-	}
-	if len(creationFee) > 0 {
-		if err := k.distrKeeper.FundCommunityPool(ctx, creationFee, accAddr); err != nil {
-			return "", err
-		}
-	}
-
-	denom, err := types.GetTokenDenom(creatorAddr, subdenom)
+	err = k.chargeForCreateDenom(ctx, creatorAddr, subdenom)
 	if err != nil {
 		return "", err
 	}
 
-	_, found := k.bankKeeper.GetDenomMetaData(ctx, denom)
-	if found {
-		return "", types.ErrDenomExists
+	return k.createDenomAfterCharge(ctx, creatorAddr, subdenom)
+}
+
+// Runs CreateDenom logic after the charge has been handled.
+// Made into a separate method for genesis handling.
+func (k Keeper) createDenomAfterCharge(ctx sdk.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error) {
+	denom, err := k.validateCreateDenom(ctx, creatorAddr, subdenom)
+	if err != nil {
+		return "", err
 	}
 
 	denomMetaData := banktypes.Metadata{
@@ -59,4 +47,39 @@ func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string
 
 	k.addDenomFromCreator(ctx, creatorAddr, denom)
 	return denom, nil
+}
+
+func (k Keeper) validateCreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error) {
+	// Temporary check until IBC bug is sorted out
+	if k.bankKeeper.HasSupply(ctx, subdenom) {
+		return "", fmt.Errorf("temporary error until IBC bug is sorted out, " +
+			"can't create subdenoms that are the same as a native denom")
+	}
+
+	denom, err := types.GetTokenDenom(creatorAddr, subdenom)
+	if err != nil {
+		return "", err
+	}
+
+	_, found := k.bankKeeper.GetDenomMetaData(ctx, denom)
+	if found {
+		return "", types.ErrDenomExists
+	}
+
+	return denom, nil
+}
+
+func (k Keeper) chargeForCreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (err error) {
+	// Send creation fee to community pool
+	creationFee := k.GetParams(ctx).DenomCreationFee
+	accAddr, err := sdk.AccAddressFromBech32(creatorAddr)
+	if err != nil {
+		return err
+	}
+	if len(creationFee) > 0 {
+		if err := k.distrKeeper.FundCommunityPool(ctx, creationFee, accAddr); err != nil {
+			return err
+		}
+	}
+	return nil
 }
