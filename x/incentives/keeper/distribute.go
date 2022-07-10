@@ -230,7 +230,6 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 func (k Keeper) distributeSyntheticInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
-	// totalDistrCoins := sdk.NewCoins()
 	denom := gauge.DistributeTo.Denom
 
 	qualifiedLocks := make([]lockuptypes.PeriodLock, 0, len(locks))
