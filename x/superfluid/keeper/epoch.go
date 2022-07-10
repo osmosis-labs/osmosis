@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
@@ -61,6 +63,10 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 		// we use cacheCtx and apply the changes later
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			_, err := k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
+			if err == distributiontypes.ErrEmptyDelegationDistInfo {
+				ctx.Logger().Debug("no swaps occurred in this pool between last epoch and this epoch")
+				return nil
+			}
 			return err
 		})
 
