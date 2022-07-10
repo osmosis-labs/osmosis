@@ -65,7 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-* [#1312] Stableswap: Createpool logic 
+* [#1312] Stableswap: Createpool logic
+* [#2009](https://github.com/osmosis-labs/osmosis/pull/2009) Fast tm-db 
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM
 * [#1539] Superfluid: Combine superfluid and staking query on querying delegation by delegator
