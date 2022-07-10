@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 
 			// join pool
 			balanceBeforeJoin := suite.App.BankKeeper.GetAllBalances(suite.Ctx, poolJoinAcc)
-			err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, poolJoinAcc, poolId, gammtypes.OneShare.MulRaw(50), sdk.Coins{})
+			_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, poolJoinAcc, poolId, gammtypes.OneShare.MulRaw(50), sdk.Coins{})
 			suite.Require().NoError(err)
 			balanceAfterJoin := suite.App.BankKeeper.GetAllBalances(suite.Ctx, poolJoinAcc)
 

@@ -1,6 +1,5 @@
 #!/usr/bin/make -f
 
-PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
@@ -113,10 +112,6 @@ build-linux: go.sum
 build-contract-tests-hooks:
 	mkdir -p $(BUILDDIR)
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./cmd/contract_tests
-
-build-e2e-chain-init:
-	mkdir -p $(BUILDDIR)
-	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/chain_init
 
 go-mod-cache: go.sum
 	@echo "--> Download go modules to local cache"
@@ -238,7 +233,7 @@ test-sim:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
 
 test-e2e:
-	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v11" go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
@@ -249,11 +244,18 @@ test-mutation:
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
+build-e2e-script:
+	mkdir -p $(BUILDDIR)
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
+
 docker-build-debug:
 	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
 
-docker-build-e2e-chain-init:
-	@docker build -t osmosis-e2e-chain-init:debug -f tests/e2e/chain_init/chain-init.Dockerfile .
+docker-build-e2e-init-chain:
+	@docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
+
+docker-build-e2e-init-node:
+	@docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
 
 .PHONY: test-mutation
 

@@ -105,10 +105,13 @@ func (k Keeper) getLocksToDistributionWithMaxDuration(ctx sdk.Context, distrTo l
 // filteredLocks are all locks that are valid for gauge
 // It also applies an update for the gauge, handling the sending of the rewards.
 // (Note this update is in-memory, it does not change state.)
-func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge, filteredLocks []lockuptypes.PeriodLock) (types.Gauge, sdk.Coins, error) {
+func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge, filteredLocks []lockuptypes.PeriodLock) (types.Gauge, sdk.Coins, bool, error) {
 	TotalAmtLocked := k.lk.GetPeriodLocksAccumulation(ctx, gauge.DistributeTo)
 	if TotalAmtLocked.IsZero() {
-		return types.Gauge{}, nil, nil
+		return types.Gauge{}, nil, false, nil
+	}
+	if TotalAmtLocked.IsNegative() {
+		return types.Gauge{}, nil, true, nil
 	}
 
 	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
@@ -119,9 +122,8 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 	if !gauge.IsPerpetual {
 		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
 	}
-	// TODO: Should this return err
 	if remainEpochs == 0 {
-		return gauge, sdk.Coins{}, nil
+		return gauge, sdk.Coins{}, false, nil
 	}
 
 	remainCoinsPerEpoch := sdk.Coins{}
@@ -154,7 +156,7 @@ func (k Keeper) FilteredLocksDistributionEst(ctx sdk.Context, gauge types.Gauge,
 	gauge.FilledEpochs += 1
 	gauge.DistributedCoins = gauge.DistributedCoins.Add(remainCoinsPerEpoch...)
 
-	return gauge, filteredDistrCoins, nil
+	return gauge, filteredDistrCoins, false, nil
 }
 
 // distributionInfo stores all of the information for pent up sends for rewards distributions.

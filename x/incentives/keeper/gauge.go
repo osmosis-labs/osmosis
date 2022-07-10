@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,10 +45,6 @@ func (k Keeper) getCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 		coins = coins.Add(gauge.Coins...)
 	}
 	return coins
-}
-
-func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }
 
 // setGauge set the gauge inside store.
@@ -265,9 +262,12 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 		}
 
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
-			newGauge, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, gauge, locks)
+			newGauge, distrCoins, isBuggedGauge, err := k.FilteredLocksDistributionEst(cacheCtx, gauge, locks)
 			if err != nil {
 				continue
+			}
+			if isBuggedGauge {
+				ctx.Logger().Error("Reward estimation does not include gauge " + strconv.Itoa(int(gauge.Id)) + " due to accumulation store bug")
 			}
 			estimatedRewards = estimatedRewards.Add(distrCoins...)
 			gauge = newGauge
