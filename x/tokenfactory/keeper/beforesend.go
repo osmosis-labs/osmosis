@@ -47,6 +47,14 @@ func (k Keeper) GetBeforeSendHook(ctx sdk.Context, denom string) string {
 	return string(bz)
 }
 
+func CWCoinsFromSDKCoins(in sdk.Coins) wasmvmtypes.Coins {
+	var cwCoins wasmvmtypes.Coins
+	for _, coin := range in {
+		cwCoins = append(cwCoins, CWCoinFromSDKCoin(coin))
+	}
+	return cwCoins
+}
+
 func CWCoinFromSDKCoin(in sdk.Coin) wasmvmtypes.Coin {
 	return wasmvmtypes.Coin{
 		Denom:  in.GetDenom(),
@@ -69,6 +77,9 @@ func (k Keeper) Hooks(wasmkeeper wasmKeeper.Keeper) Hooks {
 
 // Implements sdk.ValidatorHooks
 func (h Hooks) BeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error {
+
+	cwCoins := CWCoinsFromSDKCoins(amount)
+
 	for _, coin := range amount {
 		cosmwasmAddress := h.k.GetBeforeSendHook(ctx, coin.Denom)
 		if cosmwasmAddress != "" {
@@ -81,7 +92,7 @@ func (h Hooks) BeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.C
 				BeforeSend: types.BeforeSendMsg{
 					From:   from.String(),
 					To:     to.String(),
-					Amount: wasmvmtypes.Coins{CWCoinFromSDKCoin(coin)},
+					Amount: cwCoins,
 				},
 			}
 
