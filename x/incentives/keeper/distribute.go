@@ -21,9 +21,13 @@ func (k Keeper) getDistributedCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 }
 
 func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
-	// TODO: Consider optimizing this in the future to only require one iteration over all gauges.
-	coins := k.getCoinsFromGauges(gauges)
-	distributed := k.getDistributedCoinsFromGauges(gauges)
+	coins := sdk.Coins{}
+	distributed := sdk.Coins{}
+	for _, gauge := range gauges {
+		coins = coins.Add(gauge.Coins...)
+		distributed = coins.Add(gauge.DistributedCoins...)
+	}
+
 	return coins.Sub(distributed)
 }
 
