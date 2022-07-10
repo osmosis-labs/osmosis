@@ -63,7 +63,7 @@ func (k Keeper) MoveSuperfluidDelegationRewardToGauges(ctx sdk.Context) {
 		// we use cacheCtx and apply the changes later
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			_, err := k.dk.WithdrawDelegationRewards(cacheCtx, addr, valAddr)
-			if err == distributiontypes.ErrEmptyDelegationDistInfo {
+			if errors.Is(err, distributiontypes.ErrEmptyDelegationDistInfo) {
 				ctx.Logger().Debug("no swaps occurred in this pool between last epoch and this epoch")
 				return nil
 			}
