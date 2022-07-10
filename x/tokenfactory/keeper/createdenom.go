@@ -16,16 +16,18 @@ func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string
 		return "", err
 	}
 
-	return k.createDenomAfterCharge(ctx, creatorAddr, subdenom)
-}
-
-// Runs CreateDenom logic after the charge has been handled.
-// Made into a separate method for genesis handling.
-func (k Keeper) createDenomAfterCharge(ctx sdk.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error) {
 	denom, err := k.validateCreateDenom(ctx, creatorAddr, subdenom)
 	if err != nil {
 		return "", err
 	}
+
+	err = k.createDenomAfterValidation(ctx, creatorAddr, denom)
+	return denom, err
+}
+
+// Runs CreateDenom logic after the charge has been handled.
+// Made into a separate method for genesis handling.
+func (k Keeper) createDenomAfterValidation(ctx sdk.Context, creatorAddr string, denom string) (err error) {
 
 	denomMetaData := banktypes.Metadata{
 		DenomUnits: []*banktypes.DenomUnit{{
@@ -42,11 +44,11 @@ func (k Keeper) createDenomAfterCharge(ctx sdk.Context, creatorAddr string, subd
 	}
 	err = k.setAuthorityMetadata(ctx, denom, authorityMetadata)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	k.addDenomFromCreator(ctx, creatorAddr, denom)
-	return denom, nil
+	return nil
 }
 
 func (k Keeper) validateCreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error) {

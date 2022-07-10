@@ -16,12 +16,18 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	}
 	k.SetParams(ctx, genState.Params)
 
+	seenDenoms := make(map[string]bool, len(genState.FactoryDenoms))
+
 	for _, genDenom := range genState.GetFactoryDenoms() {
-		creator, subdenom, err := types.DeconstructDenom(genDenom.GetDenom())
+		if _, ok := seenDenoms[genDenom.GetDenom()]; ok {
+			panic("duplicate denoms in factory state")
+		}
+
+		creator, _, err := types.DeconstructDenom(genDenom.GetDenom())
 		if err != nil {
 			panic(err)
 		}
-		_, err = k.createDenomAfterCharge(ctx, creator, subdenom)
+		err = k.createDenomAfterValidation(ctx, creator, genDenom.GetDenom())
 		if err != nil {
 			panic(err)
 		}
@@ -29,6 +35,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
+		seenDenoms[genDenom.GetDenom()] = true
 	}
 }
 
