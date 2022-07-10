@@ -1,21 +1,14 @@
 package keeper_test
 
 import (
-	"testing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
-func TestGenesis(t *testing.T) {
-	appparams.SetAddressPrefixes()
-
+func (suite *KeeperTestSuite) TestGenesis() {
 	genesisState := types.GenesisState{
 		FactoryDenoms: []types.GenesisDenom{
 			{
@@ -38,12 +31,19 @@ func TestGenesis(t *testing.T) {
 			},
 		},
 	}
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app := suite.App
+	suite.Ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	// Test both with bank denom metadata set, and not set.
+	for i, denom := range genesisState.FactoryDenoms {
+		// hacky, sets bank metadata to exist if i != 0, to cover both cases.
+		if i != 0 {
+			app.BankKeeper.SetDenomMetaData(suite.Ctx, banktypes.Metadata{Base: denom.GetDenom()})
+		}
+	}
 
-	app.TokenFactoryKeeper.SetParams(ctx, types.Params{DenomCreationFee: sdk.Coins{sdk.NewInt64Coin("uosmo", 100)}})
-	app.TokenFactoryKeeper.InitGenesis(ctx, genesisState)
-	exportedGenesis := app.TokenFactoryKeeper.ExportGenesis(ctx)
-	require.NotNil(t, exportedGenesis)
-	require.Equal(t, genesisState, *exportedGenesis)
+	app.TokenFactoryKeeper.SetParams(suite.Ctx, types.Params{DenomCreationFee: sdk.Coins{sdk.NewInt64Coin("uosmo", 100)}})
+	app.TokenFactoryKeeper.InitGenesis(suite.Ctx, genesisState)
+	exportedGenesis := app.TokenFactoryKeeper.ExportGenesis(suite.Ctx)
+	suite.Require().NotNil(exportedGenesis)
+	suite.Require().Equal(genesisState, *exportedGenesis)
 }

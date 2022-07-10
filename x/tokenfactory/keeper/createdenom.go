@@ -28,7 +28,6 @@ func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string
 // Runs CreateDenom logic after the charge has been handled.
 // Made into a separate method for genesis handling.
 func (k Keeper) createDenomAfterValidation(ctx sdk.Context, creatorAddr string, denom string) (err error) {
-
 	denomMetaData := banktypes.Metadata{
 		DenomUnits: []*banktypes.DenomUnit{{
 			Denom:    denom,
