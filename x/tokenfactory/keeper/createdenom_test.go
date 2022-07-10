@@ -3,8 +3,12 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
+=======
+	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
+>>>>>>> 938f9bdb (Fix Initgenesis bug in tokenfactory, when the denom creation fee para… (#2011))
 )
 
 func (suite *KeeperTestSuite) TestMsgCreateDenom() {
@@ -58,3 +62,62 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
 	suite.Require().Error(err)
 }
+<<<<<<< HEAD
+=======
+
+func (suite *KeeperTestSuite) TestCreateDenom() {
+	for _, tc := range []struct {
+		desc     string
+		setup    func()
+		subdenom string
+		valid    bool
+	}{
+		{
+			desc:     "subdenom too long",
+			subdenom: "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
+			valid:    false,
+		},
+		{
+			desc: "subdenom and creator pair already exists",
+			setup: func() {
+				_, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
+				suite.Require().NoError(err)
+			},
+			subdenom: "bitcoin",
+			valid:    false,
+		},
+		{
+			desc:     "success case",
+			subdenom: "evmos",
+			valid:    true,
+		},
+		{
+			desc:     "subdenom having invalid characters",
+			subdenom: "bit/***///&&&/coin",
+			valid:    false,
+		},
+	} {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			if tc.setup != nil {
+				tc.setup()
+			}
+			// Create a denom
+			res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
+			if tc.valid {
+				suite.Require().NoError(err)
+
+				// Make sure that the admin is set correctly
+				queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
+					Denom: res.GetNewTokenDenom(),
+				})
+
+				suite.Require().NoError(err)
+				suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
+
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+>>>>>>> 938f9bdb (Fix Initgenesis bug in tokenfactory, when the denom creation fee para… (#2011))
