@@ -77,7 +77,6 @@ func (k Keeper) Hooks(wasmkeeper wasmKeeper.Keeper) Hooks {
 
 // Implements sdk.ValidatorHooks
 func (h Hooks) BeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error {
-
 	cwCoins := CWCoinsFromSDKCoins(amount)
 
 	for _, coin := range amount {
