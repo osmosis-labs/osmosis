@@ -23,9 +23,10 @@ func (k Keeper) getDistributedCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	coins := sdk.Coins{}
 	distributed := sdk.Coins{}
+
 	for _, gauge := range gauges {
 		coins = coins.Add(gauge.Coins...)
-		distributed = coins.Add(gauge.DistributedCoins...)
+		distributed = distributed.Add(gauge.DistributedCoins...)
 	}
 
 	return coins.Sub(distributed)
