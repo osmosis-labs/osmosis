@@ -226,7 +226,6 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 // distributeSyntheticInternal runs the distribution logic for a synthetic rewards distribution gauge, and adds the sends to
 // the distrInfo computed. It also updates the gauge for the distribution.
 // locks is expected to be the correct set of lock recipients for this gauge.
-// TODO: Make this code have way more re-use with distribute internal (post-v7).
 func (k Keeper) distributeSyntheticInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
