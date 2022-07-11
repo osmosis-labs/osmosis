@@ -6,21 +6,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
->>>>>>> 4aeb5155 (Add table-driven tests to x/tokenfactory (#1691))
 )
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
-	queryClient  types.QueryClient
-	msgServer    types.MsgServer
+	queryClient types.QueryClient
+	msgServer   types.MsgServer
 	// defaultDenom is on the suite, as it depends on the creator test address.
 	defaultDenom string
 }
