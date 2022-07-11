@@ -5,14 +5,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-<<<<<<< HEAD
-	simapp "github.com/osmosis-labs/osmosis/v10/app"
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
->>>>>>> 938f9bdb (Fix Initgenesis bug in tokenfactory, when the denom creation fee para… (#2011))
 )
 
 func (suite *KeeperTestSuite) TestGenesis() {

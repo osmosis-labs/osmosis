@@ -11,19 +11,7 @@ import (
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount
 func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (newTokenDenom string, err error) {
-<<<<<<< HEAD
-	// Temporary check until IBC bug is sorted out
-	if k.bankKeeper.HasSupply(ctx, subdenom) {
-		return "", fmt.Errorf("Temporary error until IBC bug is sorted out, " +
-			"can't create subdenoms that are the same as a native denom.")
-	}
-
-	// Send creation fee to community pool
-	creationFee := k.GetParams(ctx).DenomCreationFee
-	accAddr, err := sdk.AccAddressFromBech32(creatorAddr)
-=======
 	err = k.chargeForCreateDenom(ctx, creatorAddr, subdenom)
->>>>>>> 938f9bdb (Fix Initgenesis bug in tokenfactory, when the denom creation fee para… (#2011))
 	if err != nil {
 		return "", err
 	}

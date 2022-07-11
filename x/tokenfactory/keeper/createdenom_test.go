@@ -1,14 +1,12 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
->>>>>>> 938f9bdb (Fix Initgenesis bug in tokenfactory, when the denom creation fee para… (#2011))
 )
 
 func (suite *KeeperTestSuite) TestMsgCreateDenom() {
@@ -62,8 +60,6 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 	res, err = msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom("osmosis.eth/creator", "bitcoin"))
 	suite.Require().Error(err)
 }
-<<<<<<< HEAD
-=======
 
 func (suite *KeeperTestSuite) TestCreateDenom() {
 	for _, tc := range []struct {
@@ -120,4 +116,3 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 		})
 	}
 }
->>>>>>> 938f9bdb (Fix Initgenesis bug in tokenfactory, when the denom creation fee para… (#2011))
