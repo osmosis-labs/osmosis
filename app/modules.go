@@ -155,7 +155,8 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	ord.After(superfluidtypes.ModuleName, stakingtypes.ModuleName)
 	// TODO: This can almost certainly be un-constrained, but we keep the constraint to match prior functionality.
 	// IBChost came after staking, before superfluid.
-	ord.After(superfluidtypes.ModuleName, ibchost.ModuleName)
+	// TODO: Come back and delete this line after testing the base change.
+	ord.Sequence(stakingtypes.ModuleName, ibchost.ModuleName, superfluidtypes.ModuleName)
 	// every remaining module's begin block is a no-op.
 	return ord.TotalOrdering()
 }

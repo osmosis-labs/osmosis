@@ -202,3 +202,4 @@ $RECYCLE.BIN/
 /x/incentives/keeper/osmosis_testing/
 tools-stamp
 /tests/localosmosis/.osmosisd/*
+*nano.save*
