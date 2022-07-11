@@ -214,7 +214,6 @@ func (pa *Pool) SetSwapFee(_ sdk.Context, newSwapFee sdk.Dec) (err error) {
 		return types.ErrTooMuchSwapFee
 	}
 
-	fmt.Println(newSwapFee)
 	pa.PoolParams.SwapFee = newSwapFee
 	return nil
 }

@@ -19,7 +19,7 @@ func NewGAMMProposalHandler(k keeper.Keeper) govtypes.Handler {
 			return gov.HandleSetExitFeeProposal(ctx, k, c)
 
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized pool incentives proposal content type: %T", c)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gamm proposal content type: %T", c)
 		}
 	}
 }

@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -53,12 +52,17 @@ func (p *SetSwapFeeProposal) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-
+	if p.Content.PoolId < 0 {
+		return ErrInvalidPoolId
+	}
+	if p.Content.SwapFee.LT(sdk.NewDec(0)) {
+		return ErrNegativeSwapFee
+	}
 	return nil
 }
 
 func (p SetSwapFeeProposal) String() string {
-	return fmt.Sprintf(`Set Superfluid Assets Proposal:
+	return fmt.Sprintf(`Set Swap Fee Proposal:
 	Title:       %s
 	Description: %s
 	Content:     %+v
@@ -92,16 +96,19 @@ func (p *SetExitFeeProposal) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-
+	if p.Content.PoolId <= 0 {
+		return ErrInvalidPoolId
+	}
+	if p.Content.ExitFee.LT(sdk.NewDec(0)) {
+		return ErrNegativeExitFee
+	}
 	return nil
 }
 
 func (p SetExitFeeProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Remove Superfluid Assets Proposal:
-  Title:       %s
-  Description: %s
-  SuperfluidAssetDenoms:     %+v
-`, p.Title, p.Description, p.Content))
-	return b.String()
+	return fmt.Sprintf(`Set Exit Fee Proposal:
+	Title:       %s
+	Description: %s
+	Content:     %+v
+  `, p.Title, p.Description, p.Content)
 }

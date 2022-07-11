@@ -37,155 +37,201 @@ var (
 )
 
 func (suite *KeeperTestSuite) TestHandleSetSwapFeeProposal() {
-	tests := []struct {
-		fn func(poolId uint64)
+	testCases := []struct {
+		name    	string
+		args 		types.SetSwapFeeProposal
+		expectErr 	bool
 	}{
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.app.GAMMKeeper
-
-				err := gov.HandleSetSwapFeeProposal(suite.ctx, *keeper, &types.SetSwapFeeProposal{
-					Title:       "tittle",
-					Description: "des",
-					Content: types.SetSwapFeeContent{
-						PoolId:  1,
-						SwapFee: sdk.MustNewDecFromStr("1.1"),
-					},
-				})
-
-				suite.Require().Error(err, types.ErrTooMuchSwapFee)
+			"happy path flow",
+			types.SetSwapFeeProposal{
+				Title:       "tittle",
+				Description: "des",
+				Content: types.SetSwapFeeContent{
+					PoolId:  1,
+					SwapFee: sdk.MustNewDecFromStr("0.03"),
+				},
 			},
+			false,
 		},
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.app.GAMMKeeper
-
-				err := gov.HandleSetSwapFeeProposal(suite.ctx, *keeper, &types.SetSwapFeeProposal{
-					Title:       "tittle",
-					Description: "des",
-					Content: types.SetSwapFeeContent{
-						PoolId:  1,
-						SwapFee: sdk.MustNewDecFromStr("-0.01"),
-					},
-				})
-
-				suite.Require().Error(err, types.ErrNegativeSwapFee)
+			"invalid pool id",
+			types.SetSwapFeeProposal{
+				Title:       "tittle",
+				Description: "des",
+				Content: types.SetSwapFeeContent{
+					PoolId:  0,
+					SwapFee: sdk.MustNewDecFromStr("0.03"),
+				},
 			},
+			true,
 		},
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.app.GAMMKeeper
-
-				err := gov.HandleSetSwapFeeProposal(suite.ctx, *keeper, &types.SetSwapFeeProposal{
-					Title:       "tittle",
-					Description: "des",
-					Content: types.SetSwapFeeContent{
-						PoolId:  1,
-						SwapFee: sdk.MustNewDecFromStr("0.03"),
-					},
-				})
-
-				suite.Require().NoError(err)
-				pool, err := keeper.GetPool(suite.ctx, poolId)
-				suite.Require().NoError(err)
-				suite.Require().Equal(pool.GetSwapFee(suite.ctx), sdk.MustNewDecFromStr("0.03"))
+			"pool not found",
+			types.SetSwapFeeProposal{
+				Title:       "tittle",
+				Description: "des",
+				Content: types.SetSwapFeeContent{
+					PoolId:  2,
+					SwapFee: sdk.MustNewDecFromStr("0.03"),
+				},
 			},
+			true,
+		},
+		{
+			"swap fee negative",
+			types.SetSwapFeeProposal{
+				Title:       "tittle",
+				Description: "des",
+				Content: types.SetSwapFeeContent{
+					PoolId:  1,
+					SwapFee: sdk.MustNewDecFromStr("-0.03"),
+				},
+			},
+			true,
+		},
+		{
+			"swap fee too much",
+			types.SetSwapFeeProposal{
+				Title:       "tittle",
+				Description: "des",
+				Content: types.SetSwapFeeContent{
+					PoolId:  1,
+					SwapFee: sdk.MustNewDecFromStr("1.1"),
+				},
+			},
+			true,
 		},
 	}
 
-	for _, test := range tests {
-		suite.SetupTest()
+	for _, tc := range testCases {
+		tc := tc
 
-		// Mint some assets to the accounts.
-		for _, acc := range suite.TestAccs {
-			suite.FundAcc(acc, defaultAcctFunds)
-		}
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			// Mint some assets to the accounts.
+			for _, acc := range suite.TestAccs {
+				suite.FundAcc(acc, defaultAcctFunds)
+			}
 
-		// Create the pool at first
-		msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, defaultPoolAssets, defaultFutureGovernor)
-		poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
-		suite.Require().NoError(err)
+			// Create the pool at first
+			msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: sdk.NewDecWithPrec(1, 2),
+			}, defaultPoolAssets, defaultFutureGovernor)
+			poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
+			suite.Require().NoError(err)
 
-		test.fn(poolId)
+			err = gov.HandleSetSwapFeeProposal(suite.ctx, *suite.app.GAMMKeeper, &tc.args)
+
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				pool, err := suite.app.GAMMKeeper.GetPoolAndPoke(suite.ctx, poolId)
+				suite.Require().NoError(err)
+				suite.Require().Equal(pool.GetSwapFee(suite.ctx), tc.args.Content.SwapFee)
+			}			
+		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestHandleSetExitFeeProposal() {
-	tests := []struct {
-		fn func(poolId uint64)
+	testCases := []struct {
+		name    	string
+		args 		types.SetExitFeeProposal
+		expectErr 	bool
 	}{
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.app.GAMMKeeper
-
-				err := gov.HandleSetExitFeeProposal(suite.ctx, *keeper, &types.SetExitFeeProposal{
-					Title:       "tittle",
-					Description: "des",
-					Content: types.SetExitFeeContent{
-						PoolId:  1,
-						ExitFee: sdk.MustNewDecFromStr("1.1"),
-					},
-				})
-
-				suite.Require().Error(err, types.ErrTooMuchExitFee)
+			"happy path flow",
+			types.SetExitFeeProposal{
+				Title:       "tittle",
+				Description: "des",
+				Content: types.SetExitFeeContent{
+					PoolId:  1,
+					ExitFee: sdk.MustNewDecFromStr("0.03"),
+				},
 			},
+			false,
 		},
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.app.GAMMKeeper
-
-				err := gov.HandleSetExitFeeProposal(suite.ctx, *keeper, &types.SetExitFeeProposal{
-					Title:       "tittle",
-					Description: "des",
-					Content: types.SetExitFeeContent{
-						PoolId:  1,
-						ExitFee: sdk.MustNewDecFromStr("-0.01"),
-					},
-				})
-
-				suite.Require().Error(err, types.ErrNegativeSwapFee)
+			"invalid pool id",
+			types.SetExitFeeProposal{
+				Title:       "tittle",
+				Description: "des",
+				Content: types.SetExitFeeContent{
+					PoolId:  0,
+					ExitFee: sdk.MustNewDecFromStr("0.03"),
+				},
 			},
+			true,
 		},
 		{
-			fn: func(poolId uint64) {
-				keeper := suite.app.GAMMKeeper
-
-				err := gov.HandleSetExitFeeProposal(suite.ctx, *keeper, &types.SetExitFeeProposal{
-					Title:       "tittle",
-					Description: "des",
-					Content: types.SetExitFeeContent{
-						PoolId:  1,
-						ExitFee: sdk.MustNewDecFromStr("0.03"),
-					},
-				})
-
-				suite.Require().NoError(err)
-				pool, err := keeper.GetPool(suite.ctx, poolId)
-				suite.Require().NoError(err)
-				suite.Require().Equal(pool.GetExitFee(suite.ctx), sdk.MustNewDecFromStr("0.03"))
+			"pool not found",
+			types.SetExitFeeProposal{
+				Title:       "tittle",
+				Description: "des",
+				Content: types.SetExitFeeContent{
+					PoolId:  2,
+					ExitFee: sdk.MustNewDecFromStr("0.03"),
+				},
 			},
+			true,
+		},
+		{
+			"exit fee negative",
+			types.SetExitFeeProposal{
+				Title:       "tittle",
+				Description: "des",
+				Content: types.SetExitFeeContent{
+					PoolId:  1,
+					ExitFee: sdk.MustNewDecFromStr("-0.03"),
+				},
+			},
+			true,
+		},
+		{
+			"exit fee too much",
+			types.SetExitFeeProposal{
+				Title:       "tittle",
+				Description: "des",
+				Content: types.SetExitFeeContent{
+					PoolId:  1,
+					ExitFee: sdk.MustNewDecFromStr("1.1"),
+				},
+			},
+			true,
 		},
 	}
 
-	for _, test := range tests {
-		suite.SetupTest()
+	for _, tc := range testCases {
+		tc := tc
 
-		// Mint some assets to the accounts.
-		for _, acc := range suite.TestAccs {
-			suite.FundAcc(acc, defaultAcctFunds)
-		}
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			// Mint some assets to the accounts.
+			for _, acc := range suite.TestAccs {
+				suite.FundAcc(acc, defaultAcctFunds)
+			}
 
-		// Create the pool at first
-		msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
-			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
-		}, defaultPoolAssets, defaultFutureGovernor)
-		poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
-		suite.Require().NoError(err)
+			// Create the pool at first
+			msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: sdk.NewDecWithPrec(1, 2),
+			}, defaultPoolAssets, defaultFutureGovernor)
+			poolId, err := suite.app.GAMMKeeper.CreatePool(suite.ctx, msg)
+			suite.Require().NoError(err)
 
-		test.fn(poolId)
+			err = gov.HandleSetExitFeeProposal(suite.ctx, *suite.app.GAMMKeeper, &tc.args)
+
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				pool, err := suite.app.GAMMKeeper.GetPoolAndPoke(suite.ctx, poolId)
+				suite.Require().NoError(err)
+				suite.Require().Equal(pool.GetExitFee(suite.ctx), tc.args.Content.ExitFee)
+			}			
+		})
 	}
 }

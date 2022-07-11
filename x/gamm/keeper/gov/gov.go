@@ -9,7 +9,7 @@ import (
 
 func HandleSetSwapFeeProposal(ctx sdk.Context, k keeper.Keeper, p *types.SetSwapFeeProposal) error {
 	poolId := p.Content.PoolId
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func HandleSetSwapFeeProposal(ctx sdk.Context, k keeper.Keeper, p *types.SetSwap
 
 func HandleSetExitFeeProposal(ctx sdk.Context, k keeper.Keeper, p *types.SetExitFeeProposal) error {
 	poolId := p.Content.PoolId
-	pool, err := k.GetPool(ctx, poolId)
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return err
 	}

@@ -22,22 +22,6 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
-func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-	store := ctx.KVStore(k.storeKey)
-	poolKey := types.GetKeyPrefixPools(poolId)
-	if !store.Has(poolKey) {
-		return nil, fmt.Errorf("pool with ID %d does not exist", poolId)
-	}
-
-	bz := store.Get(poolKey)
-
-	pool, err := k.UnmarshalPool(bz)
-	if err != nil {
-		return nil, err
-	}
-	return pool, nil
-}
-
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. Prior
 // to returning the pool, the weights of the pool are updated via PokePool.
 func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
