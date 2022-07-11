@@ -12,6 +12,8 @@ const (
 	// Raise 10 to the power of SigFigsExponent to determine number of significant figures.
 	// i.e. SigFigExponent = 8 is 10^8 which is 100000000. This gives 8 significant figures.
 	SigFigsExponent = 8
+	// TODO: Current fixed cost gas fee per swap -- turn this into a param in the future.
+	GasFeeForSwap = 10000
 )
 
 var (
