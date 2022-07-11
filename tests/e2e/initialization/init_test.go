@@ -2,7 +2,6 @@ package initialization_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,11 +15,9 @@ import (
 
 const forkHeight = 10
 
-var (
-	expectedConfigFiles = []string{
-		"app.toml", "config.toml", "genesis.json", "node_key.json", "priv_validator_key.json",
-	}
-)
+var expectedConfigFiles = []string{
+	"app.toml", "config.toml", "genesis.json", "node_key.json", "priv_validator_key.json",
+}
 
 // TestChainInit tests that chain initialization correctly initializes a full chain
 // and produces the desired output with genesis, chain and validator configs.
@@ -48,7 +45,7 @@ func TestChainInit(t *testing.T) {
 				IsValidator:        false,
 			},
 		}
-		dataDir, err = ioutil.TempDir("", "osmosis-e2e-testnet-test")
+		dataDir, err = os.MkdirTemp("", "osmosis-e2e-testnet-test")
 	)
 
 	chain, err := initialization.InitChain(id, dataDir, nodeConfigs, time.Second*3, forkHeight)
@@ -105,7 +102,7 @@ func TestSingleNodeInit(t *testing.T) {
 			SnapshotKeepRecent: 1,
 			IsValidator:        false,
 		}
-		dataDir, err = ioutil.TempDir("", "osmosis-e2e-testnet-test")
+		dataDir, err = os.MkdirTemp("", "osmosis-e2e-testnet-test")
 	)
 
 	// Setup

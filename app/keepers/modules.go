@@ -6,7 +6,6 @@ import (
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/client"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -82,7 +81,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	epochs.AppModuleBasic{},
 	superfluid.AppModuleBasic{},
 	tokenfactory.AppModuleBasic{},
-	bech32ibc.AppModuleBasic{},
 	wasm.AppModuleBasic{},
 	ica.AppModuleBasic{},
 }

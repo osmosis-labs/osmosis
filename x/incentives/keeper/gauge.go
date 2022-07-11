@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,16 +38,7 @@ func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []t
 	return gauges
 }
 
-// getCoinsFromGauges takes an array of gauges and computes the total amount of coins contained in all provided gauges.
-func (k Keeper) getCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
-	coins := sdk.Coins{}
-	for _, gauge := range gauges {
-		coins = coins.Add(gauge.Coins...)
-	}
-	return coins
-}
-
-// setGauge assigns a key to a gauge value.
+// setGauge set the gauge inside store.
 func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	store := ctx.KVStore(k.storeKey)
 	bz, err := proto.Marshal(gauge)
@@ -268,9 +260,12 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 		}
 
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
-			newGauge, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, gauge, locks)
+			newGauge, distrCoins, isBuggedGauge, err := k.FilteredLocksDistributionEst(cacheCtx, gauge, locks)
 			if err != nil {
 				continue
+			}
+			if isBuggedGauge {
+				ctx.Logger().Error("Reward estimation does not include gauge " + strconv.Itoa(int(gauge.Id)) + " due to accumulation store bug")
 			}
 			estimatedRewards = estimatedRewards.Add(distrCoins...)
 			gauge = newGauge

@@ -139,10 +139,11 @@ func (q Querier) UpcomingGaugesPerDenom(goCtx context.Context, req *types.Upcomi
 
 // RewardsEst returns rewards estimation at a future specific time (by epoch).
 func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest) (*types.RewardsEstResponse, error) {
+	var ownerAddress sdk.AccAddress
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	if len(req.Owner) == 0 {
+	if len(req.Owner) == 0 && len(req.LockIds) == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty owner")
 	}
 
@@ -152,9 +153,12 @@ func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "end epoch out of ranges")
 	}
 
-	owner, err := sdk.AccAddressFromBech32(req.Owner)
-	if err != nil {
-		return nil, err
+	if len(req.Owner) != 0 {
+		owner, err := sdk.AccAddressFromBech32(req.Owner)
+		if err != nil {
+			return nil, err
+		}
+		ownerAddress = owner
 	}
 
 	locks := make([]lockuptypes.PeriodLock, 0, len(req.LockIds))
@@ -166,7 +170,7 @@ func (q Querier) RewardsEst(goCtx context.Context, req *types.RewardsEstRequest)
 		locks = append(locks, *lock)
 	}
 
-	return &types.RewardsEstResponse{Coins: q.Keeper.GetRewardsEst(ctx, owner, locks, req.EndEpoch)}, nil
+	return &types.RewardsEstResponse{Coins: q.Keeper.GetRewardsEst(ctx, ownerAddress, locks, req.EndEpoch)}, nil
 }
 
 // LockableDurations returns all of the allowed lockable durations on chain.
