@@ -35,7 +35,7 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-// NewCreateGaugeCmd broadcast MsgCreateGauge.
+// NewCreateGaugeCmd broadcasts a CreateGauge message.
 func NewCreateGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-gauge [lockup_denom] [reward] [flags]",
@@ -114,7 +114,7 @@ func NewCreateGaugeCmd() *cobra.Command {
 	return cmd
 }
 
-// NewAddToGaugeCmd broadcast MsgAddToGauge.
+// NewAddToGaugeCmd broadcasts a AddToGauge message.
 func NewAddToGaugeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-to-gauge [gauge_id] [rewards] [flags]",
