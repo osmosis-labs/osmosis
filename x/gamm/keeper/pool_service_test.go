@@ -359,7 +359,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			txSender:        suite.TestAccs[1],
 			sharesRequested: types.OneShare.MulRaw(50),
 			tokenInMaxs: sdk.Coins{
-				sdk.NewCoin("bar", sdk.NewInt(5000)), sdk.NewCoin("foo", sdk.NewInt(5000)),
+				fiveKFooAndBar[0], fiveKFooAndBar[1],
 			},
 			expectPass: true,
 		},
@@ -368,7 +368,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			txSender:        suite.TestAccs[1],
 			sharesRequested: types.OneShare.MulRaw(50),
 			tokenInMaxs: sdk.Coins{
-				sdk.NewCoin("bar", sdk.NewInt(5000)), sdk.NewCoin("foo", sdk.NewInt(5000)), sdk.NewCoin("baz", sdk.NewInt(5000)),
+				fiveKFooAndBar[0], fiveKFooAndBar[1], sdk.NewCoin("baz", sdk.NewInt(5000)),
 			},
 			expectPass: false,
 		},
@@ -393,7 +393,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		suite.FundAcc(test.txSender, defaultAcctFunds)
 
 		balancesBefore := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.txSender)
-		err = keeper.JoinPoolNoSwap(suite.Ctx, test.txSender, poolId, test.sharesRequested, test.tokenInMaxs)
+		_, _, err = keeper.JoinPoolNoSwap(suite.Ctx, test.txSender, poolId, test.sharesRequested, test.tokenInMaxs)
 
 		if test.expectPass {
 			suite.Require().NoError(err, "test: %v", test.name)
@@ -470,7 +470,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			txSender: suite.TestAccs[0],
 			sharesIn: types.OneShare.MulRaw(50),
 			tokenOutMins: sdk.Coins{
-				sdk.NewCoin("foo", sdk.NewInt(5000)),
+				fiveKFooAndBar[1],
 			},
 			emptySender: false,
 			expectPass:  true,
