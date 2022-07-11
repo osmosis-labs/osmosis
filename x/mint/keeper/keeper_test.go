@@ -67,6 +67,8 @@ func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight
 
 // TestGetProportions tests that mint allocations are computed as expected.
 func (suite *KeeperTestSuite) TestGetProportions() {
+	complexRatioDec := sdk.NewDecWithPrec(131, 3).Quo(sdk.NewDecWithPrec(273, 3))
+
 	tests := []struct {
 		name          string
 		ratio         sdk.Dec
@@ -93,12 +95,12 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(82304)),
 		},
 		{
-			name:       "54617981 * 131/273 approx = 2.62",
+			name:       "54617981 * .131/.273 approx = 2.62",
 			mintedCoin: sdk.NewCoin("uosmo", sdk.NewInt(54617981)),
-			ratio:      sdk.NewDecWithPrec(131, 3).Quo(sdk.NewDecWithPrec(273, 3)),
+			ratio:      complexRatioDec, // .131/.273
 			// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
 			// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-			expectedCoin: sdk.NewCoin("uosmo", sdk.NewInt(54617981).ToDec().Mul(sdk.NewDecWithPrec(131, 3).Quo(sdk.NewDecWithPrec(273, 3))).TruncateInt()),
+			expectedCoin: sdk.NewCoin("uosmo", sdk.NewInt(54617981).ToDec().Mul(complexRatioDec).TruncateInt()),
 		},
 		{
 			name:         "1 * 1 = 1",
