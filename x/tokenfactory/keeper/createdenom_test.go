@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 )
 
@@ -74,7 +73,6 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			setup: func() {
 				_, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
 				suite.Require().NoError(err)
-
 			},
 			subdenom: "bitcoin",
 			valid:    false,
@@ -91,7 +89,6 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.msgServer = keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)
 			if tc.setup != nil {
 				tc.setup()
 			}

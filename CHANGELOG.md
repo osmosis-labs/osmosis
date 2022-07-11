@@ -40,6 +40,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased - v10.1.0
+* [2011](https://github.com/osmosis-labs/osmosis/pull/2011) Fix bug in TokenFactory initGenesis, relating to denom creation fee param.
+
+
 ## v10.0.1
 
 This release contains minor CLI bug fixes.
@@ -63,6 +67,7 @@ This release contains minor CLI bug fixes.
 * [1716](https://github.com/osmosis-labs/osmosis/pull/1716) Fix secondary over-LP shares bug with uneven swap amounts in `CalcJoinPoolShares`.
 * [1759](https://github.com/osmosis-labs/osmosis/pull/1759) Fix pagination filter in incentives query.
 * [1698](https://github.com/osmosis-labs/osmosis/pull/1698) Register wasm snapshotter extension.
+* [1931](https://github.com/osmosis-labs/osmosis/pull/1931) Add explicit check for input denoms to `CalcJoinPoolShares`
 
 
 ## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
