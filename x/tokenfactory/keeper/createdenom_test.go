@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 )
 
