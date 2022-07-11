@@ -16,8 +16,8 @@ type balancerPoolPretty struct {
 	PoolAssets         []PoolAsset    `json:"pool_assets" yaml:"pool_assets"`
 }
 
-func (pa Pool) String() string {
-	out, err := pa.MarshalJSON()
+func (p Pool) String() string {
+	out, err := p.MarshalJSON()
 	if err != nil {
 		panic(err)
 	}
@@ -25,39 +25,39 @@ func (pa Pool) String() string {
 }
 
 // MarshalJSON returns the JSON representation of a Pool.
-func (pa Pool) MarshalJSON() ([]byte, error) {
-	accAddr, err := sdk.AccAddressFromBech32(pa.Address)
+func (p Pool) MarshalJSON() ([]byte, error) {
+	accAddr, err := sdk.AccAddressFromBech32(p.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	decTotalWeight := sdk.NewDecFromInt(pa.TotalWeight)
+	decTotalWeight := sdk.NewDecFromInt(p.TotalWeight)
 
 	return json.Marshal(balancerPoolPretty{
 		Address:            accAddr,
-		Id:                 pa.Id,
-		PoolParams:         pa.PoolParams,
-		FuturePoolGovernor: pa.FuturePoolGovernor,
+		Id:                 p.Id,
+		PoolParams:         p.PoolParams,
+		FuturePoolGovernor: p.FuturePoolGovernor,
 		TotalWeight:        decTotalWeight,
-		TotalShares:        pa.TotalShares,
-		PoolAssets:         pa.PoolAssets,
+		TotalShares:        p.TotalShares,
+		PoolAssets:         p.PoolAssets,
 	})
 }
 
 // UnmarshalJSON unmarshals raw JSON bytes into a Pool.
-func (pa *Pool) UnmarshalJSON(bz []byte) error {
+func (p *Pool) UnmarshalJSON(bz []byte) error {
 	var alias balancerPoolPretty
 	if err := json.Unmarshal(bz, &alias); err != nil {
 		return err
 	}
 
-	pa.Address = alias.Address.String()
-	pa.Id = alias.Id
-	pa.PoolParams = alias.PoolParams
-	pa.FuturePoolGovernor = alias.FuturePoolGovernor
-	pa.TotalWeight = alias.TotalWeight.RoundInt()
-	pa.TotalShares = alias.TotalShares
-	pa.PoolAssets = alias.PoolAssets
+	p.Address = alias.Address.String()
+	p.Id = alias.Id
+	p.PoolParams = alias.PoolParams
+	p.FuturePoolGovernor = alias.FuturePoolGovernor
+	p.TotalWeight = alias.TotalWeight.RoundInt()
+	p.TotalShares = alias.TotalShares
+	p.PoolAssets = alias.PoolAssets
 
 	return nil
 }

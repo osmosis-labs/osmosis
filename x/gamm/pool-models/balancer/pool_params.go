@@ -47,8 +47,8 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 			}
 		}
 		// Ensure that all the target weight denoms are same as pool asset weights
-		sortedTargetPoolWeights := SortPoolAssetsOutOfPlaceByDenom(targetWeights)
-		sortedPoolWeights := SortPoolAssetsOutOfPlaceByDenom(poolWeights)
+		sortedTargetPoolWeights := sortPoolAssetsOutOfPlaceByDenom(targetWeights)
+		sortedPoolWeights := sortPoolAssetsOutOfPlaceByDenom(poolWeights)
 		for i, v := range sortedPoolWeights {
 			if sortedTargetPoolWeights[i].Token.Denom != v.Token.Denom {
 				return types.ErrPoolParamsInvalidDenom

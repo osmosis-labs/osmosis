@@ -33,6 +33,7 @@ func Max(x, y int) int {
 	return y
 }
 
+// genRewardCoins takes coins and returns a randomized coin struct used as rewards for the distribution benchmark.
 func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
@@ -45,17 +46,18 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
 	return
 }
 
+// genQueryCondition takes coins and durations and returns a QueryConditon struct.
 func genQueryCondition(
 	r *rand.Rand,
 	blocktime time.Time,
 	coins sdk.Coins,
 	durationOptions []time.Duration,
 ) lockuptypes.QueryCondition {
-	lockQueryType := r.Intn(2)
+	// only use lockQueryType ByDuration (0) since ByTime (1) is deprecated
+	lockQueryType := 0
 	denom := coins[r.Intn(len(coins))].Denom
 	durationOption := r.Intn(len(durationOptions))
 	duration := durationOptions[durationOption]
-	// timestampSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 	timestamp := time.Time{}
 
 	return lockuptypes.QueryCondition{
@@ -66,8 +68,8 @@ func genQueryCondition(
 	}
 }
 
+// benchmarkDistributionLogic creates gauges with lockups that get distributed to. Benchmarks the performance of the distribution process.
 func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs int, b *testing.B) {
-	// b.ReportAllocs()
 	b.StopTimer()
 
 	blockStartTime := time.Now().UTC()
@@ -103,7 +105,6 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 		isPerpetual := true
 		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins, durationOptions)
 		rewards := genRewardCoins(r, simCoins)
-		// startTimeSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 		startTime := ctx.BlockTime().Add(time.Duration(-1) * time.Second)
 		durationMillisecs := distributeTo.Duration.Milliseconds()
 		numEpochsPaidOver := uint64(1)
@@ -169,11 +170,21 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 }
 
 func BenchmarkDistributionLogicTiny(b *testing.B) {
-	benchmarkDistributionLogic(1, 1, 1, 1, 1, b)
+	numAccts := 1
+	numDenoms := 1
+	numGauges := 1
+	numLockups := 1
+	numDistrs := 1
+	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
 }
 
 func BenchmarkDistributionLogicSmall(b *testing.B) {
-	benchmarkDistributionLogic(10, 1, 10, 1000, 100, b)
+	numAccts := 10
+	numDenoms := 1
+	numGauges := 10
+	numLockups := 1000
+	numDistrs := 100
+	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
 }
 
 func BenchmarkDistributionLogicMedium(b *testing.B) {
@@ -197,5 +208,10 @@ func BenchmarkDistributionLogicLarge(b *testing.B) {
 }
 
 func BenchmarkDistributionLogicHuge(b *testing.B) {
-	benchmarkDistributionLogic(1000, 100, 1000, 1000, 30000, b)
+	numAccts := 1000
+	numDenoms := 100
+	numGauges := 1000
+	numLockups := 1000
+	numDistrs := 30000
+	benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numDistrs, b)
 }
