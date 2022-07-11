@@ -76,9 +76,9 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 					sdk.Coins{sdk.Coin{Denom: tc.denoms[i], Amount: coin.Amount}},
 					tc.baseDenom,
 					tc.swapFee)
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				// sanity check for the expectedAmount
-				suite.Require().True(coin.Amount.GTE(expectedOutput.Amount))
+				suite.True(coin.Amount.GTE(expectedOutput.Amount))
 
 				finalOutputAmount = finalOutputAmount.Add(expectedOutput.Amount)
 
@@ -87,6 +87,10 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 				simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.Coins{coin})
 				suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr0, types.NonNativeFeeCollectorName, sdk.Coins{coin})
 			}
+
+			// checks the balance of the non-native denom in module account
+			moduleAddrNonNativeFee := suite.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
+			suite.Equal(suite.App.BankKeeper.GetAllBalances(suite.Ctx, moduleAddrNonNativeFee), tc.coins)
 
 			// End of epoch, so all the non-osmo fee amount should be swapped to osmo and transfer to fee module account
 			params := suite.App.IncentivesKeeper.GetParams(suite.Ctx)
@@ -97,13 +101,10 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 			moduleAddrFee := suite.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
 			moduleBaseDenomBalance := suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddrFee, tc.baseDenom)
 
-			// checks the balance of the non-native denom in module account (should be empty)
-			moduleAddrNonNativeFee := suite.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
-
 			// non-osmos module account should be empty as all the funds should be transferred to osmo module
-			suite.Require().Empty(suite.App.BankKeeper.GetAllBalances(suite.Ctx, moduleAddrNonNativeFee))
+			suite.Empty(suite.App.BankKeeper.GetAllBalances(suite.Ctx, moduleAddrNonNativeFee))
 			// check that the total osmo amount has been transferred to module account
-			suite.Require().Equal(moduleBaseDenomBalance.Amount, finalOutputAmount)
+			suite.Equal(moduleBaseDenomBalance.Amount, finalOutputAmount)
 		})
 	}
 }
