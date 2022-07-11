@@ -75,7 +75,7 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 		mintedCoin    sdk.Coin
 	}{
 		{
-			name:         "0 * 0.5 = 0",
+			name:         "0 * 0.2 = 0",
 			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
 			ratio:        sdk.NewDecWithPrec(2, 1),
 			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
