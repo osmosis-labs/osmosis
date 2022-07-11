@@ -71,7 +71,8 @@ We'll lay out three examples below (one that uses our format for messages, one t
 1. Each test case should test one thing
 2. Each test case should be independent from one another (i.e. ideally, reordering the tests shouldn't cause them to fail)
 3. Functions should not be set as fields for a test case (this usually means that the table-driven approach is being sidestepped and that the logic in the function should probably be factored out to cover multiple/all test cases)
-4. Avoid verbosity in tests by initializing local variables instead of dereferencing struct fields. The antipattern related to this rule is particularly evident with dereferencing `suite.App` to get keepers.
+4. Avoid verbosity by creating local variables instead of constantly referring to struct field (e.g. doing `lockupKeeper := suite.App.LockupKeeper` instead of using `suite.App.LockupKeeper` every time).
+
 ### Example #1: [Message-Related Test](https://github.com/osmosis-labs/osmosis/blob/f0270d04bd77cc5e1c23f7913118b3c2ba737e97/x/tokenfactory/keeper/admins_test.go#L122-L181) 
 This type of test is mainly for functions that would be triggered by incoming messages (we interact directly with the message server since all other metadata is stripped from a message by the time it hits the msg_server):
 
