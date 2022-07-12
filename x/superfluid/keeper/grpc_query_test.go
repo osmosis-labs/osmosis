@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	}
 
 	// setup superfluid delegations
-	_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
+	delAddrs, _, locks := suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	// for each superfluid delegation, query the amount and make sure it is 1000000
 	for _, delegation := range superfluidDelegations {
@@ -139,9 +139,6 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbonding() {
 	suite.SetupTest()
 
-	// Generate delegator addresses
-	delAddrs := CreateRandomAccounts(2)
-
 	// setup 2 validators
 	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
 
@@ -156,7 +153,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 	}
 
 	// setup superfluid delegations
-	_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
+	delAddrs, _, locks := suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	// start unbonding the superfluid delegations of denom0 from delegator0 to validator0
 	err := suite.querier.SuperfluidUndelegate(suite.Ctx, locks[0].Owner, locks[0].ID)
@@ -206,9 +203,6 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegationsDontIncludeUnbon
 func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	suite.SetupTest()
 
-	// Generate delegator addresses
-	delAddrs := CreateRandomAccounts(2)
-
 	// setup 2 validators
 	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded})
 
@@ -223,7 +217,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTotalDelegationByDelegator() {
 	}
 
 	// setup superfluid delegations
-	suite.SetupSuperfluidDelegations(delAddrs, valAddrs, superfluidDelegations, denoms)
+	delAddrs, _, _ := suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	// setup normal delegations
 	bond0to0 := stakingtypes.NewDelegation(delAddrs[0], valAddrs[0], sdk.NewDec(9000000))
