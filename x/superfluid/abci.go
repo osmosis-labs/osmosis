@@ -1,8 +1,6 @@
 package superfluid
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 
