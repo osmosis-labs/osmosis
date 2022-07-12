@@ -43,7 +43,7 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, err
 	return pool, nil
 }
 
-// Get pool, and check if the pool is active / allowed to be swapped against
+// Get pool and check if the pool is active, i.e. allowed to be swapped against.
 func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
@@ -196,16 +196,17 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // 	return nil
 // }
 
-// SetNextPoolNumber sets next pool number.
-func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
+// setNextPoolNumber sets next pool number.
+func (k Keeper) setNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolNumber})
 	store.Set(types.KeyNextGlobalPoolNumber, bz)
 }
 
-// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
-func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
-	var poolNumber uint64
+// GetNextPoolNumber returns the next pool number.
+// TODO: Rename NextPoolNumber to NextPoolId
+func (k Keeper) GetNextPoolNumber(ctx sdk.Context) uint64 {
+	var nextPoolId uint64
 	store := ctx.KVStore(k.storeKey)
 
 	bz := store.Get(types.KeyNextGlobalPoolNumber)
@@ -219,11 +220,16 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 			panic(err)
 		}
 
-		poolNumber = val.GetValue()
+		nextPoolId = val.GetValue()
 	}
+	return nextPoolId
+}
 
-	k.SetNextPoolNumber(ctx, poolNumber+1)
-	return poolNumber
+// getNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
+func (k Keeper) getNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
+	nextPoolId := k.GetNextPoolNumber(ctx)
+	k.setNextPoolNumber(ctx, nextPoolId+1)
+	return nextPoolId
 }
 
 // set ScalingFactors in stable stableswap pools

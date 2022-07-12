@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,12 +30,6 @@ func (suite *KeeperTestSuite) TestOsmoEquivalentMultiplierSetGetDeleteFlow() {
 	}
 	multipliers = suite.App.SuperfluidKeeper.GetAllOsmoEquivalentMultipliers(suite.Ctx)
 	suite.Require().Equal(multipliers, expectedMultipliers)
-
-	epochIdentifier := suite.App.SuperfluidKeeper.GetEpochIdentifier(suite.Ctx)
-	suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochstypes.EpochInfo{
-		Identifier:   epochIdentifier,
-		CurrentEpoch: 2,
-	})
 
 	// test last epoch price
 	multiplier = suite.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.Ctx, "gamm/pool/1")

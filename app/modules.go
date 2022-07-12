@@ -8,9 +8,6 @@ import (
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
-	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ics20"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -106,7 +103,7 @@ func appModules(
 		),
 		auth.NewAppModule(appCodec, *app.AccountKeeper, nil),
 		vesting.NewAppModule(*app.AccountKeeper, app.BankKeeper),
-		bech32ics20.NewAppModule(appCodec, *app.Bech32ICS20Keeper),
+		bank.NewAppModule(appCodec, *app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
@@ -139,7 +136,6 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		bech32ibc.NewAppModule(appCodec, *app.Bech32IBCKeeper),
 	}
 }
 
@@ -176,7 +172,6 @@ func orderBeginBlockers() []string {
 		tokenfactorytypes.ModuleName,
 		// superfluid must come after distribution and epochs
 		superfluidtypes.ModuleName,
-		bech32ibctypes.ModuleName,
 		txfeestypes.ModuleName,
 		wasm.ModuleName,
 	}
@@ -184,13 +179,8 @@ func orderBeginBlockers() []string {
 
 func OrderEndBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
-	// Epochs must run after all other end blocks
-	ord.LastElements(epochstypes.ModuleName)
-	// txfees auto-swap code should occur before any potential gamm end block code.
-	ord.Before(txfeestypes.ModuleName, gammtypes.ModuleName)
-	// only remaining modules that aren;t no-ops are: crisis & govtypes
+	// only Osmosis modules with endblock code are: crisis, govtypes, staking
 	// we don't care about the relative ordering between them.
-
 	return ord.TotalOrdering()
 }
 
@@ -216,7 +206,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		bech32ibctypes.ModuleName, // comes after ibctransfertypes
 		poolincentivestypes.ModuleName,
 		superfluidtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
@@ -237,35 +226,26 @@ func simulationModules(
 ) []module.AppModuleSimulation {
 	appCodec := encodingConfig.Marshaler
 
-	return []module.AppModuleSimulation{
-		auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		gov.NewAppModule(appCodec, *app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		mint.NewAppModule(appCodec, *app.MintKeeper, app.AccountKeeper, app.BankKeeper),
-		slashing.NewAppModule(appCodec, *app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		distr.NewAppModule(appCodec, *app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
-		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		params.NewAppModule(*app.ParamsKeeper),
-		evidence.NewAppModule(*app.EvidenceKeeper),
-		wasm.NewAppModule(appCodec, app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		ibc.NewAppModule(app.IBCKeeper),
-		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
-		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
-		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
-		superfluid.NewAppModule(
-			appCodec,
-			*app.SuperfluidKeeper,
-			app.AccountKeeper,
-			app.BankKeeper,
-			app.StakingKeeper,
-			app.LockupKeeper,
-			app.GAMMKeeper,
-			app.EpochsKeeper,
-		),
-		app.TransferModule,
+	// recreate list of modules, to ensure no issues with overriding prior module structs.
+	modules := appModules(app, encodingConfig, skipGenesisInvariants)
+	overrideModules := map[string]module.AppModuleSimulation{
+		authtypes.ModuleName: auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
 	}
+
+	simModules := []module.AppModuleSimulation{}
+	for _, appModule := range modules {
+		// For every module, see if we override it. If so, use override.
+		// Else, if we can cast the app module into a simulation module add it.
+		// otherwise no simulation module.
+		if simModule, ok := overrideModules[appModule.Name()]; ok {
+			simModules = append(simModules, simModule)
+		} else {
+			if simModule, ok := appModule.(module.AppModuleSimulation); ok {
+				simModules = append(simModules, simModule)
+			}
+		}
+	}
+	return simModules
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.

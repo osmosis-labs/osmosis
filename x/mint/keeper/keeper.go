@@ -1,9 +1,13 @@
 package keeper
 
 import (
+	"errors"
+	"fmt"
+
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +27,20 @@ type Keeper struct {
 	hooks            types.MintHooks
 	feeCollectorName string
 }
+
+type invalidRatioError struct {
+	ActualRatio sdk.Dec
+}
+
+func (e invalidRatioError) Error() string {
+	return fmt.Sprintf("mint allocation ratio %s is greater than 1", e.ActualRatio)
+}
+
+var (
+	errAmountCannotBeNilOrZero               = errors.New("amount cannot be nil or zero")
+	errDevVestingModuleAccountAlreadyCreated = fmt.Errorf("%s module account already exists", types.DeveloperVestingModuleAcctName)
+	errDevVestingModuleAccountNotCreated     = fmt.Errorf("%s module account does not exist", types.DeveloperVestingModuleAcctName)
+)
 
 // NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
@@ -53,25 +71,46 @@ func NewKeeper(
 }
 
 // SetInitialSupplyOffsetDuringMigration sets the supply offset based on the balance of the
-// Develop rVesting Module Account.  It should only be called one time during the initial
-// migration to v7.
-func SetInitialSupplyOffsetDuringMigration(ctx sdk.Context, k Keeper) {
+// developer vesting module account. CreateDeveloperVestingModuleAccount must be called
+// prior to calling this method. That is, developer vesting module account must exist when
+// SetInitialSupplyOffsetDuringMigration is called. Also, SetInitialSupplyOffsetDuringMigration
+// should only be called one time during the initial migration to v7. This is done so because
+// we would like to ensure that unvested developer tokens are not returned as part of the supply
+// queries. The method returns an error if current height in ctx is greater than the v7 upgrade height.
+func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
+	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
+		return errDevVestingModuleAccountNotCreated
+	}
+
 	moduleAccBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), k.GetParams(ctx).MintDenom)
 	k.bankKeeper.AddSupplyOffset(ctx, moduleAccBalance.Denom, moduleAccBalance.Amount.Neg())
+	return nil
 }
 
-// CreateDeveloperVestingModuleAccount creates the module account for developer vesting.
-// Should only be called in initial genesis creation, never again.
-func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) {
+// CreateDeveloperVestingModuleAccount creates the developer vesting module account
+// and mints amount of tokens to it.
+// Should only be called during the initial genesis creation, never again. Returns nil on success.
+// Returns error in the following cases:
+// - amount is nil or zero.
+// - if ctx has block height greater than 0.
+// - developer vesting module account is already created prior to calling this method.
+func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
+	if amount.IsNil() || amount.Amount.IsZero() {
+		return errAmountCannotBeNilOrZero
+	}
+	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
+		return errDevVestingModuleAccountAlreadyCreated
+	}
+
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
-
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
 	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 // _____________________________________________________________________
@@ -92,10 +131,10 @@ func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
 	return k
 }
 
-// GetLastHalvenEpochNum returns last halven epoch number.
-func (k Keeper) GetLastHalvenEpochNum(ctx sdk.Context) int64 {
+// GetLastReductionEpochNum returns last reduction epoch number.
+func (k Keeper) GetLastReductionEpochNum(ctx sdk.Context) int64 {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.LastHalvenEpochKey)
+	b := store.Get(types.LastReductionEpochKey)
 	if b == nil {
 		return 0
 	}
@@ -103,10 +142,10 @@ func (k Keeper) GetLastHalvenEpochNum(ctx sdk.Context) int64 {
 	return int64(sdk.BigEndianToUint64(b))
 }
 
-// SetLastHalvenEpochNum set last halven epoch number.
-func (k Keeper) SetLastHalvenEpochNum(ctx sdk.Context, epochNum int64) {
+// SetLastReductionEpochNum set last reduction epoch number.
+func (k Keeper) SetLastReductionEpochNum(ctx sdk.Context, epochNum int64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastHalvenEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
+	store.Set(types.LastReductionEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
 }
 
 // get the minter.
@@ -154,36 +193,31 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
-// GetProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the `AllocationRatio`.
-func (k Keeper) GetProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
-	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt())
-}
-
 // DistributeMintedCoins implements distribution of minted coins from mint to external modules.
 func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
 	params := k.GetParams(ctx)
 	proportions := params.DistributionProportions
 
 	// allocate staking incentives into fee collector account to be moved to on next begin blocker by staking module
-	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.Staking))
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, stakingIncentivesCoins)
+	stakingIncentivesCoin, err := k.distributeToModule(ctx, k.feeCollectorName, mintedCoin, proportions.Staking)
 	if err != nil {
 		return err
 	}
 
 	// allocate pool allocation ratio to pool-incentives module account account
-	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.PoolIncentives))
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, poolincentivestypes.ModuleName, poolIncentivesCoins)
+	poolIncentivesCoin, err := k.distributeToModule(ctx, poolincentivestypes.ModuleName, mintedCoin, proportions.PoolIncentives)
 	if err != nil {
 		return err
 	}
 
-	devRewardCoin := k.GetProportions(ctx, mintedCoin, proportions.DeveloperRewards)
+	devRewardCoin, err := getProportions(ctx, mintedCoin, proportions.DeveloperRewards)
+	if err != nil {
+		return err
+	}
 	devRewardCoins := sdk.NewCoins(devRewardCoin)
 	// This is supposed to come from the developer vesting module address, not the mint module address
 	// we over-allocated to the mint module address earlier though, so we burn it right here.
-	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins)
-	if err != nil {
+	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins); err != nil {
 		return err
 	}
 
@@ -194,16 +228,19 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 
 	if len(params.WeightedDeveloperRewardsReceivers) == 0 {
 		// fund community pool when rewards address is empty
-		err = k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
-		if err != nil {
+		if err := k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)); err != nil {
 			return err
 		}
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range params.WeightedDeveloperRewardsReceivers {
-			devRewardPortionCoins := sdk.NewCoins(k.GetProportions(ctx, devRewardCoin, w.Weight))
+			devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
+			if err != nil {
+				return err
+			}
+			devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
 			if w.Address == "" {
-				err = k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
+				err := k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
 					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
 				if err != nil {
 					return err
@@ -228,8 +265,8 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	k.bankKeeper.AddSupplyOffset(ctx, mintedCoin.Denom, developerAccountBalance.Amount.Neg())
 
 	// subtract from original provision to ensure no coins left over after the allocations
-	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins).Sub(poolIncentivesCoins).Sub(devRewardCoins)
-	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
+	communityPoolCoin := mintedCoin.Sub(stakingIncentivesCoin).Sub(poolIncentivesCoin).Sub(devRewardCoin)
+	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(communityPoolCoin), k.accountKeeper.GetModuleAddress(types.ModuleName))
 	if err != nil {
 		return err
 	}
@@ -238,4 +275,24 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	k.hooks.AfterDistributeMintedCoin(ctx, mintedCoin)
 
 	return err
+}
+
+func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Coin, error) {
+	distributionCoin, err := getProportions(ctx, mintedCoin, proportion)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, sdk.NewCoins(distributionCoin)); err != nil {
+		return sdk.Coin{}, err
+	}
+	return distributionCoin, nil
+}
+
+// getProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the
+// allocation ratio. Returns error if ratio is greater than 1.
+func getProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) (sdk.Coin, error) {
+	if ratio.GT(sdk.OneDec()) {
+		return sdk.Coin{}, invalidRatioError{ratio}
+	}
+	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt()), nil
 }

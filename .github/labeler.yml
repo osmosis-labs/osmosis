@@ -29,14 +29,27 @@
   - x/superfluid/**/*
 "C:x/txfees":
   - x/txfees/**/*
-"Type:build":
+"C:x/tokenfactory":
+  - x/tokenfactory/**/*
+"T:build":
   - Makefile
   - Dockerfile
   - scripts/*
-"Type:CI":
+"T:CI":
   - .github/**/*.yml
   - .mergify.yml
   - .golangci.yml
 "C:CLI":
   - client/**/*
   - x/*/client/**/*
+# Add "C:docs" label to documented related files and directories. 
+"C:docs":
+  - CHANGELOG.md
+  - bug.md
+  - issue.md
+  - proto-docs.md
+  - README.md
+  - x/**/*.md
+  - x/**/*/*.md
+  - tests/**/*.md
+  

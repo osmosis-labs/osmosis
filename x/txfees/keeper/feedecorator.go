@@ -78,6 +78,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
 		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx)
 		if !(minBaseGasPrice.IsZero()) {
+			// You should only be able to pay with one fee token in a single tx
 			if len(feeCoins) != 1 {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
 			}
@@ -108,6 +109,7 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 	if err != nil {
 		return err
 	}
+	// check to ensure that the convertedFee should always be greater than or equal to the requireBaseFee
 	if !(convertedFee.IsGTE(requiredBaseFee)) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
 	}
@@ -117,6 +119,7 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasReq
 
 func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDenom string, tx sdk.FeeTx) sdk.Dec {
 	cfgMinGasPrice := ctx.MinGasPrices().AmountOf(baseDenom)
+	// the check below prevents tx gas from getting over HighGasTxThreshold which is default to 1_000_000
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
 	}
@@ -155,7 +158,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	// checks to make sure the module account has been set to collect fees in base token
 	if addr := dfd.ak.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return ctx, fmt.Errorf("Fee collector module account (%s) has not been set", types.FeeCollectorName)
+		return ctx, fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
 	}
 
 	// checks to make sure a separate module account has been set to collect fees not in base token

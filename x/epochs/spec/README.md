@@ -17,62 +17,30 @@ they can easily be signalled upon such events.
 4. **[Keeper](#keeper)**
 5. **[Hooks](#hooks)**
 6. **[Queries](#queries)**
-7. **[Future improvements](#future-improvements)**
+7. **[Downtime Recovery](#downtime-recovery)**
 
 ## Concepts
 
-The purpose of `epochs` module is to provide generalized epoch interface
-to other modules so that they can easily implement epochs without
-keeping own code for epochs.
+The epochs module defines on-chain timers, that execute at fixed time intervals.
+Other SDK modules can then register logic to be executed at the timer ticks.
+We refer to the period in between two timer ticks as an "epoch".
+
+Every timer has a unique identifier.
+Every epoch will have a start time, and an end time, where `end time = start time + timer interval`.
+On Osmosis mainnet, we only utilize one identifier, with a time interval of `one day`.
+
+The timer will tick at the first block whose blocktime is greater than the timer end time,
+and set the start as the prior timer end time. (Notably, its not set to the block time!)
+This means that if the chain has been down for awhile, you will get one timer tick per block,
+until the timer has caught up.
 
 ## State
 
-Epochs module keeps `EpochInfo` objects and modify the information as
-epochs info changes. Epochs are initialized as part of genesis
-initialization, and modified on begin blockers or end blockers.
-
-### Epoch information type
-
-```protobuf
-message EpochInfo {
-    string identifier = 1;
-    google.protobuf.Timestamp start_time = 2 [
-        (gogoproto.stdtime) = true,
-        (gogoproto.nullable) = false,
-        (gogoproto.moretags) = "yaml:\"start_time\""
-    ];
-    google.protobuf.Duration duration = 3 [
-        (gogoproto.nullable) = false,
-        (gogoproto.stdduration) = true,
-        (gogoproto.jsontag) = "duration,omitempty",
-        (gogoproto.moretags) = "yaml:\"duration\""
-    ];
-    int64 current_epoch = 4;
-    google.protobuf.Timestamp current_epoch_start_time = 5 [
-        (gogoproto.stdtime) = true,
-        (gogoproto.nullable) = false,
-        (gogoproto.moretags) = "yaml:\"current_epoch_start_time\""
-    ];
-    bool epoch_counting_started = 6;
-    reserved 7;
-    int64 current_epoch_start_height = 8;
-}
-```
-
-EpochInfo keeps `identifier`, `start_time`,`duration`, `current_epoch`,
-`current_epoch_start_time`, `epoch_counting_started`,
-`current_epoch_start_height`.
-
-1. `identifier` keeps epoch identification string.
-2. `start_time` keeps epoch counting start time, if block time passes
-    `start_time`, `epoch_counting_started` is set.
-3. `duration` keeps target epoch duration.
-4. `current_epoch` keeps current active epoch number.
-5. `current_epoch_start_time` keeps the start time of current epoch.
-6. `epoch_number` is counted only when `epoch_counting_started` flag is
-    set.
-7. `current_epoch_start_height` keeps the start block height of current
-    epoch.
+The Epochs module keeps a single [`EpochInfo`](https://github.com/osmosis-labs/osmosis/blob/b4befe4f3eb97ebb477323234b910c4afafab9b7/proto/osmosis/epochs/genesis.proto#L12) per identifier.
+This contains the current state of the timer with the corresponding identifier.
+Its fields are modified at every timer tick. 
+EpochInfos are initialized as part of genesis initialization or upgrade logic,
+and are only modified on begin blockers.
 
 ## Events
 
@@ -115,7 +83,6 @@ type Keeper interface {
 
 ## Hooks
 
-<!-- markdownlint-disable MD013 -->
 ```go
   // the first block whose timestamp is after the duration is counted as the end of the epoch
   AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64)
@@ -128,8 +95,17 @@ type Keeper interface {
 On hook receiver function of other modules, they need to filter
 `epochIdentifier` and only do executions for only specific
 epochIdentifier. Filtering epochIdentifier could be in `Params` of other
-modules so that they can be modified by governance. Governance can
-change epoch from `week` to `day` as their need.
+modules so that they can be modified by governance.
+
+This is the standard dev UX of this:
+```golang
+func (k MyModuleKeeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+    params := k.GetParams(ctx)
+    if epochIdentifier == params.DistrEpochIdentifier {
+    // my logic
+  }
+}
+```
 
 ### Panic isolation
 
@@ -143,12 +119,10 @@ hook, and that epoch hook reverted, your hook may also have an issue. So
 do keep in mind "what if a prior hook didn't get executed" in the safety
 checks you consider for a new epoch hook.
 
-
 ## Queries
 
 Epochs module is providing below queries to check the module's state.
 
-<!-- markdownlint-disable MD013 -->
 ```protobuf
 service Query {
   // EpochInfos provide running epochInfos
@@ -210,33 +184,3 @@ Which in this example outputs:
 ```sh
 current_epoch: "183"
 ```
-
-:::
-
-## Future Improvements
-
-### Lack point using this module
-
-In current design each epoch should be at least 2 blocks as start block
-should be different from endblock. Because of this, each epoch time will
-be `max(blocks_time x 2, epoch_duration)`. If epoch\_duration is set to
-`1s`, and `block_time` is `5s`, actual epoch time should be `10s`. We
-definitely recommend configure epoch\_duration as more than 2x
-block\_time, to use this module correctly. If you enforce to set it to
-1s, it's same as 10s - could make module logic invalid.
-
-TODO for postlaunch: We should see if we can architect things such that
-the receiver doesn't have to do this filtering, and the epochs module
-would pre-filter for them.
-
-### Block-time drifts problem
-
-This implementation has block time drift based on block time. For
-instance, we have an epoch of 100 units that ends at t=100, if we have a
-block at t=97 and a block at t=104 and t=110, this epoch ends at t=104.
-And new epoch start at t=110. There are time drifts here, for around 1-2
-blocks time. It will slow down epochs.
-
-It's going to slow down epoch by 10-20s per week when epoch duration is
-1 week. This should be resolved after launch.
-
