@@ -8,9 +8,13 @@ import (
 )
 
 func (sim *SimCtx) RandomSimAccount() simulation.Account {
+	return sim.randomSimAccount(sim.Accounts)
+}
+
+func (sim *SimCtx) randomSimAccount(accs []simulation.Account) simulation.Account {
 	r := sim.GetSeededRand("select random account")
-	idx := r.Intn(len(sim.Accounts))
-	return sim.Accounts[idx]
+	idx := r.Intn(len(accs))
+	return accs[idx]
 }
 
 func (sim *SimCtx) RandomExistingAddress() sdk.AccAddress {
@@ -37,17 +41,26 @@ func (sim *SimCtx) FindAccount(address sdk.Address) (simulation.Account, bool) {
 	return simulation.Account{}, false
 }
 
-// TODO: Thread in bank keeper here
-// func (sim *SimCtx) SelAddrWithDenoms(denoms []string) (simulation.Account, bool) {
-// 	filteredAddrs := []simulation.Account{}
-// 	for _, acc := range sim.Accounts {
-// 		if acc.Address.Equals(address) {
-// 			return acc, true
-// 		}
-// 	}
+// Returns (account, found), so if found = false, then no such address exists.
+// TODO: Write unit test
+func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulation.Account, bool) {
+	filteredAddrs := []simulation.Account{}
+	for _, acc := range sim.Accounts {
+		// ensure acc has non-zero balance for all denoms
+		for _, denom := range denoms {
+			if sim.App.GetBankKeeper().GetBalance(ctx, acc.Address, denom).Amount.IsZero() {
+				continue
+			}
+		}
+		// if so, add to filtered addrs
+		filteredAddrs = append(filteredAddrs, acc)
+	}
 
-// 	return simulation.Account{}, false
-// }
+	if len(filteredAddrs) == 0 {
+		return simulation.Account{}, false
+	}
+	return sim.randomSimAccount(filteredAddrs), true
+}
 
 // RandomFees returns a random fee by selecting a random coin denomination and
 // amount from the account's available balance. If the user doesn't have enough
