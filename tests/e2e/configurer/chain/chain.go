@@ -40,7 +40,7 @@ type syncInfo struct {
 
 const (
 	// waitUntilRepeatPauseTime is the time to wait between each check of the node status.
-	waitUntilRepeatPauseTime = 5 * time.Second
+	waitUntilRepeatPauseTime = 500 * time.Millisecond
 	// waitUntilrepeatMax is the maximum number of times to repeat the wait until condition.
 	waitUntilrepeatMax = 20
 )
