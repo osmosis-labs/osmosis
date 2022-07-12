@@ -66,100 +66,79 @@ func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sd
 // Tokens locked are sent and kept in the module account.
 // This method alters the lock state in store, thus we do a sanity check to ensure
 // lock owner matches the given owner.
-func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, coin sdk.Coin) (*types.PeriodLock, error) {
+func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, tokensToAdd sdk.Coin) (*types.PeriodLock, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
+	if err != nil {
+		return nil, err
+	}
 
 	if lock.GetOwner() != owner.String() {
 		return nil, types.ErrNotLockOwner
 	}
 
+	lock.Coins = lock.Coins.Add(tokensToAdd)
+	err = k.lock(ctx, *lock, sdk.NewCoins(tokensToAdd))
 	if err != nil {
-		return nil, err
-	}
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, lock.OwnerAddress(), types.ModuleName, sdk.NewCoins(coin)); err != nil {
 		return nil, err
 	}
 
-	err = k.addTokenToLock(ctx, lock, coin)
-	if err != nil {
-		return nil, err
+	for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
+		k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), tokensToAdd.Amount)
 	}
 
 	if k.hooks == nil {
 		return lock, nil
 	}
 
-	k.hooks.OnTokenLocked(ctx, lock.OwnerAddress(), lock.ID, sdk.Coins{coin}, lock.Duration, lock.EndTime)
+	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), sdk.NewCoins(tokensToAdd))
+
 	return lock, nil
 }
 
-// addTokenToLock adds token to lock and modifies the state of the lock and the accumulation store.
-func (k Keeper) addTokenToLock(ctx sdk.Context, lock *types.PeriodLock, coin sdk.Coin) error {
-	lock.Coins = lock.Coins.Add(coin)
-
-	err := k.setLock(ctx, *lock)
-	if err != nil {
-		return err
-	}
-
-	// modifications to accumulation store
-	k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
-
-	// CONTRACT: lock will have synthetic lock only if it has a single coin
-	// accumulation store for its synthetic denom is increased if exists.
-	lockedCoin, err := lock.SingleCoin()
-	if err == nil {
-		for _, synthlock := range k.GetAllSyntheticLockupsByLockup(ctx, lock.ID) {
-			k.accumulationStore(ctx, synthlock.SynthDenom).Increase(accumulationKey(synthlock.Duration), sdk.NewCoins(coin).AmountOf(lockedCoin.Denom))
-		}
-	}
-
-	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), sdk.NewCoins(coin))
-
-	return nil
-}
-
 // CreateLock creates a new lock with the specified duration for the owner.
+// Returns an error in the following conditions:
+//  - account does not have enough balance
 func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is initially set without a value, gets set as unlock start time + duration
 	// when unlocking starts.
 	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
-	err := k.Lock(ctx, lock)
+	err := k.lock(ctx, lock, lock.Coins)
 	if err != nil {
 		return lock, err
 	}
+
+	// add lock refs into not unlocking queue
+	err = k.addLockRefs(ctx, lock)
+	if err != nil {
+		return lock, err
+	}
+
 	k.SetLastLockID(ctx, lock.ID)
 	return lock, nil
 }
 
-// Lock is a utility method to lock tokens into the module account. This method includes setting the
-// lock within the state machine and increasing the value of accumulation store.
-func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock) error {
+// lock is an internal utility to lock coins and set corresponding states.
+// This is only called by either of the two possible entry points to lock tokens.
+// 1. CreateLock
+// 2. AddTokensToLockByID
+func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
 	owner, err := sdk.AccAddressFromBech32(lock.Owner)
 	if err != nil {
 		return err
 	}
-	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, lock.Coins); err != nil {
+	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, tokensToLock); err != nil {
 		return err
 	}
 
 	// store lock object into the store
-	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(&lock)
-	if err != nil {
-		return err
-	}
-	store.Set(lockStoreKey(lock.ID), bz)
-
-	// add lock refs into not unlocking queue
-	err = k.addLockRefs(ctx, lock)
+	err = k.setLock(ctx, lock)
 	if err != nil {
 		return err
 	}
 
 	// add to accumulation store
-	for _, coin := range lock.Coins {
+	for _, coin := range tokensToLock {
 		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
 	}
 
