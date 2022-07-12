@@ -225,7 +225,6 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 func (k Keeper) distributeSyntheticInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
-	totalDistrCoins := sdk.NewCoins()
 	denom := gauge.DistributeTo.Denom
 
 	qualifiedLocks := make([]lockuptypes.PeriodLock, 0, len(locks))
@@ -239,53 +238,7 @@ func (k Keeper) distributeSyntheticInternal(
 		qualifiedLocks = append(qualifiedLocks, lock)
 	}
 
-	// if locksum is zero, there are no synthetic locks so we return nil
-	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, lockuptypes.NativeDenom(denom))
-
-	if lockSum.IsZero() {
-		return nil, nil
-	}
-
-	remainCoins := gauge.Coins.Sub(gauge.DistributedCoins)
-	// if its a perpetual gauge, we set remaining epochs to 1.
-	// otherwise is is a non perpetual gauge and we determine how many epoch payouts are left
-	remainEpochs := uint64(1)
-	if !gauge.IsPerpetual {
-		remainEpochs = gauge.NumEpochsPaidOver - gauge.FilledEpochs
-	}
-
-	for _, lock := range qualifiedLocks {
-		distrCoins := sdk.Coins{}
-		for _, coin := range remainCoins {
-			lockedCoin, err := lock.SingleCoin()
-			if err != nil {
-				k.Logger(ctx).Error(err.Error())
-				continue
-			}
-			// distribution amount = gauge_size * denom_lock_amount / (total_denom_lock_amount * remain_epochs)
-			// check if the synthlock is qualified for GetLocksToDistribution
-			amt := coin.Amount.Mul(lockedCoin.Amount).Quo(lockSum.Mul(sdk.NewIntFromUint64(remainEpochs)))
-			if amt.IsPositive() {
-				newlyDistributedCoin := sdk.Coin{Denom: coin.Denom, Amount: amt}
-				distrCoins = distrCoins.Add(newlyDistributedCoin)
-			}
-		}
-		distrCoins = distrCoins.Sort()
-		if distrCoins.Empty() {
-			continue
-		}
-		// update the amount for that address
-		err := distrInfo.addLockRewards(lock.Owner, distrCoins)
-		if err != nil {
-			return nil, err
-		}
-
-		totalDistrCoins = totalDistrCoins.Add(distrCoins...)
-	}
-
-	// increase filled epochs after distribution
-	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
-	return totalDistrCoins, err
+	return k.distributeInternal(ctx, gauge, qualifiedLocks, distrInfo)
 }
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
@@ -295,9 +248,7 @@ func (k Keeper) distributeInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
 	totalDistrCoins := sdk.NewCoins()
-	denom := gauge.DistributeTo.Denom
-
-	// if locksum is zero, there are no locks so we return nil
+	denom := lockuptypes.NativeDenom(gauge.DistributeTo.Denom)
 	lockSum := lockuptypes.SumLocksByDenom(locks, denom)
 
 	if lockSum.IsZero() {
