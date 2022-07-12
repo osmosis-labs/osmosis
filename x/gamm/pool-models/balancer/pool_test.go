@@ -202,7 +202,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			}
 
 			assertPoolStateNotModified(t, balancerPool, func() {
-				assertPanic(t, tc.expectPanic, sut)
+				osmoutils.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
 	}
@@ -607,7 +607,6 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 
 				sut := func() {
 					suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
-
 				}
 
 				balancerPool, ok := pool.(*balancer.Pool)

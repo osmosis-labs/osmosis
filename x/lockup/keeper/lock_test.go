@@ -46,37 +46,6 @@ func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable 
 	suite.Require().NotEqual(locks[0].IsUnlocking(), false)
 }
 
-func (suite *KeeperTestSuite) TestBeginUnlockPeriodLock() {
-	suite.SetupTest()
-
-	// initial check
-	locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 0)
-
-	// lock coins
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-
-	// check locks
-	locks, err = suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 1)
-	suite.Require().Equal(locks[0].EndTime, time.Time{})
-	suite.Require().Equal(locks[0].IsUnlocking(), false)
-
-	// begin unlock
-	err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, locks[0].ID, nil)
-	suite.Require().NoError(err)
-
-	// check locks
-	locks, err = suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().NotEqual(locks[0].EndTime, time.Time{})
-	suite.Require().NotEqual(locks[0].IsUnlocking(), false)
-}
-
 func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 	suite.SetupTest()
 
@@ -96,173 +65,157 @@ func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 	suite.Require().Len(locks, 1)
 }
 
-func (suite *KeeperTestSuite) TestUnlockPeriodLockByID() {
-	suite.SetupTest()
-	now := suite.Ctx.BlockTime()
-	lockKeeper := suite.App.LockupKeeper
-
-	// initial check
-	locks, err := lockKeeper.GetPeriodLocks(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 0)
-
-	// lock coins
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.LockTokens(addr1, coins, time.Second)
-
-	// unlock lock just now
-	lock, err := lockKeeper.GetLockByID(suite.Ctx, 1)
-	suite.Require().NoError(err)
-	err = lockKeeper.UnlockMaturedLock(suite.Ctx, lock.ID)
-	suite.Require().Error(err)
-
-	// move start time to 1 second in the future.
-	suite.Ctx = suite.Ctx.WithBlockTime(now.Add(time.Second))
-
-	// Try to finish unlocking a lock, before starting unlock.
-	lock, err = lockKeeper.GetLockByID(suite.Ctx, 1)
-	suite.Require().NoError(err)
-	err = lockKeeper.UnlockMaturedLock(suite.Ctx, lock.ID)
-	suite.Require().Error(err)
-
-	// begin unlock
-	lock, err = lockKeeper.GetLockByID(suite.Ctx, 1)
-	suite.Require().NoError(err)
-	err = lockKeeper.BeginUnlock(suite.Ctx, lock.ID, nil)
-	suite.Require().NoError(err)
-
-	// unlock 1s after begin unlock
-	lock, err = lockKeeper.GetLockByID(suite.Ctx, 1)
-	suite.Require().NoError(err)
-	err = lockKeeper.UnlockMaturedLock(suite.Ctx.WithBlockTime(now.Add(time.Second*2)), lock.ID)
-	suite.Require().NoError(err)
-
-	// check locks
-	locks, err = lockKeeper.GetPeriodLocks(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Len(locks, 0)
-}
-
-func (suite *KeeperTestSuite) TestLock() {
-	// test for coin locking
-	suite.SetupTest()
-
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	lock := types.NewPeriodLock(1, addr1, time.Second, suite.Ctx.BlockTime().Add(time.Second), coins)
-
-	// try lock without balance
-	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-	suite.Require().Error(err)
-
-	// lock with balance
-	suite.FundAcc(addr1, coins)
-	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-	suite.Require().NoError(err)
-
-	// lock with balance with same id
-	suite.FundAcc(addr1, coins)
-	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-	suite.Require().Error(err)
-
-	// lock with balance with different id
-	lock = types.NewPeriodLock(2, addr1, time.Second, suite.Ctx.BlockTime().Add(time.Second), coins)
-	suite.FundAcc(addr1, coins)
-	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-	suite.Require().NoError(err)
-}
-
 func (suite *KeeperTestSuite) TestUnlock() {
-	// test for coin unlocking
 	suite.SetupTest()
-	now := suite.Ctx.BlockTime()
+	initialLockCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, coins)
+	testCases := []struct {
+		name                          string
+		unlockingCoins                sdk.Coins
+		expectedBeginUnlockPass       bool
+		passedTime                    time.Duration
+		expectedUnlockMaturedLockPass bool
+		balanceAfterUnlock            sdk.Coins
+	}{
+		{
+			name:                          "normal unlocking case",
+			unlockingCoins:                initialLockCoins,
+			expectedBeginUnlockPass:       true,
+			passedTime:                    time.Second,
+			expectedUnlockMaturedLockPass: true,
+			balanceAfterUnlock:            initialLockCoins,
+		},
+		{
+			name:                          "begin unlocking with nil as unlocking coins",
+			unlockingCoins:                nil,
+			expectedBeginUnlockPass:       true,
+			passedTime:                    time.Second,
+			expectedUnlockMaturedLockPass: true,
+			balanceAfterUnlock:            initialLockCoins,
+		},
+		{
+			name:                          "unlocking coins exceed what's in lock",
+			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("stake", 20)},
+			passedTime:                    time.Second,
+			expectedUnlockMaturedLockPass: false,
+			balanceAfterUnlock:            sdk.Coins{},
+		},
+		{
+			name:                          "unlocking unknown tokens",
+			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("unknown", 10)},
+			passedTime:                    time.Second,
+			expectedUnlockMaturedLockPass: false,
+			balanceAfterUnlock:            sdk.Coins{},
+		},
+		{
+			name:                          "partial unlocking",
+			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("stake", 5)},
+			expectedBeginUnlockPass:       true,
+			passedTime:                    time.Second,
+			expectedUnlockMaturedLockPass: true,
+			balanceAfterUnlock:            sdk.Coins{sdk.NewInt64Coin("stake", 5)},
+		},
+		{
+			name:                          "partial unlocking unknown tokens",
+			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("unknown", 5)},
+			passedTime:                    time.Second,
+			expectedUnlockMaturedLockPass: false,
+			balanceAfterUnlock:            sdk.Coins{},
+		},
+		{
+			name:                          "unlocking should not finish yet",
+			unlockingCoins:                initialLockCoins,
+			expectedBeginUnlockPass:       true,
+			passedTime:                    time.Millisecond,
+			expectedUnlockMaturedLockPass: false,
+			balanceAfterUnlock:            sdk.Coins{},
+		},
+	}
 
-	// lock with balance
-	suite.FundAcc(addr1, coins)
-	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock)
-	suite.Require().NoError(err)
+	for _, tc := range testCases {
+		suite.SetupTest()
+		lockupKeeper := suite.App.LockupKeeper
+		bankKeeper := suite.App.BankKeeper
+		ctx := suite.Ctx
 
-	// begin unlock with lock object
-	err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, nil)
-	suite.Require().NoError(err)
+		addr1 := sdk.AccAddress([]byte("addr1---------------"))
+		lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, initialLockCoins)
 
-	lockPtr, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
-	suite.Require().NoError(err)
+		// lock with balance
+		suite.FundAcc(addr1, initialLockCoins)
+		lock, err := lockupKeeper.CreateLock(ctx, addr1, initialLockCoins, time.Second)
+		suite.Require().NoError(err)
 
-	// unlock with lock object
-	err = suite.App.LockupKeeper.UnlockMaturedLock(suite.Ctx.WithBlockTime(now.Add(time.Second)), lockPtr.ID)
-	suite.Require().NoError(err)
-}
+		// store in variable if we're testing partial unlocking for future use
+		partialUnlocking := tc.unlockingCoins.IsAllLT(initialLockCoins) && tc.unlockingCoins != nil
 
-func (suite *KeeperTestSuite) TestPartialUnlock() {
-	suite.SetupTest()
-	now := suite.Ctx.BlockTime()
+		// begin unlocking
+		err = lockupKeeper.BeginUnlock(ctx, lock.ID, tc.unlockingCoins)
 
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+		if tc.expectedBeginUnlockPass {
+			suite.Require().NoError(err)
 
-	// lock with balance
-	suite.FundAcc(addr1, coins)
-	lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
-	suite.Require().NoError(err)
+			// check unlocking coins. When a lock is a partial lock
+			// (i.e. tc.unlockingCoins is not nit and less than initialLockCoins),
+			// we only unlock the partial amount of tc.unlockingCoins
+			expectedUnlockingCoins := tc.unlockingCoins
+			if expectedUnlockingCoins == nil {
+				expectedUnlockingCoins = initialLockCoins
+			}
+			actualUnlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
+			suite.Require().Equal(len(actualUnlockingCoins), 1)
+			suite.Require().Equal(expectedUnlockingCoins[0].Amount, actualUnlockingCoins[0].Amount)
 
-	// check unlocking coins
-	unlockings := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
-	suite.Require().Equal(len(unlockings), 0)
+			lock = lockupKeeper.GetAccountPeriodLocks(ctx, addr1)[0]
 
-	// check locked coins
-	locked := suite.App.LockupKeeper.GetAccountLockedCoins(suite.Ctx, addr1)
-	suite.Require().Equal(len(locked), 1)
-	suite.Require().Equal(locked[0].Amount.Int64(), int64(10))
+			// if it is partial unlocking, get the new partial lock id
+			if partialUnlocking {
+				lock = lockupKeeper.GetAccountPeriodLocks(ctx, addr1)[1]
+			}
 
-	// test exceeding coins
-	exceedingCoins := sdk.Coins{sdk.NewInt64Coin("stake", 15)}
-	err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, exceedingCoins)
-	suite.Require().Error(err)
+			// check lock state
+			suite.Require().Equal(ctx.BlockTime().Add(lock.Duration), lock.EndTime)
+			suite.Require().Equal(true, lock.IsUnlocking())
 
-	// test invalid coins
-	invalidCoins := sdk.Coins{sdk.NewInt64Coin("unknown", 1)}
-	err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, invalidCoins)
-	suite.Require().Error(err)
+		} else {
+			suite.Require().Error(err)
 
-	// begin unlock partial amount
-	partialCoins := sdk.Coins{sdk.NewInt64Coin("stake", 1)}
-	err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, partialCoins)
-	suite.Require().NoError(err)
+			// check unlocking coins, should not be unlocking any coins
+			unlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
+			suite.Require().Equal(len(unlockingCoins), 0)
 
-	// check unlocking coins
-	unlockings = suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
-	suite.Require().Equal(len(unlockings), 1)
-	suite.Require().Equal(unlockings[0].Amount.Int64(), int64(1))
+			lockedCoins := suite.App.LockupKeeper.GetAccountLockedCoins(suite.Ctx, addr1)
+			suite.Require().Equal(len(lockedCoins), 1)
+			suite.Require().Equal(initialLockCoins[0], lockedCoins[0])
+		}
 
-	// check locked coins
-	locked = suite.App.LockupKeeper.GetAccountLockedCoins(suite.Ctx, addr1)
-	suite.Require().Equal(len(locked), 1)
-	suite.Require().Equal(locked[0].Amount.Int64(), int64(10))
+		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.passedTime))
 
-	// check locked coins after the unlocking period
-	locked = suite.App.LockupKeeper.GetAccountLockedCoins(suite.Ctx.WithBlockTime(now.Add(time.Second)), addr1)
-	suite.Require().Equal(len(locked), 1)
-	suite.Require().Equal(locked[0].Amount.Int64(), int64(9))
+		err = lockupKeeper.UnlockMaturedLock(ctx, lock.ID)
+		if tc.expectedUnlockMaturedLockPass {
+			suite.Require().NoError(err)
 
-	// Finish unlocking partial unlock
-	partialUnlock := suite.App.LockupKeeper.GetAccountPeriodLocks(suite.Ctx, addr1)[1]
-	err = suite.App.LockupKeeper.UnlockMaturedLock(suite.Ctx.WithBlockTime(now.Add(time.Second)), partialUnlock.ID)
-	suite.Require().NoError(err)
+			unlockings := lockupKeeper.GetAccountUnlockingCoins(ctx, addr1)
+			suite.Require().Equal(len(unlockings), 0)
+		} else {
+			suite.Require().Error(err)
+			// things to test if unlocking has started
+			if tc.expectedBeginUnlockPass {
+				// should still be unlocking if `UnlockMaturedLock` failed
+				actualUnlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
+				suite.Require().Equal(len(actualUnlockingCoins), 1)
 
-	// check unlocking coins
-	unlockings = suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
-	suite.Require().Equal(len(unlockings), 0)
+				expectedUnlockingCoins := tc.unlockingCoins
+				if tc.unlockingCoins == nil {
+					actualUnlockingCoins = initialLockCoins
+				}
+				suite.Require().Equal(expectedUnlockingCoins, actualUnlockingCoins)
+			}
+		}
 
-	// check locked coins
-	locked = suite.App.LockupKeeper.GetAccountLockedCoins(suite.Ctx, addr1)
-	suite.Require().Equal(len(locked), 1)
-	suite.Require().Equal(locked[0].Amount.Int64(), int64(9))
+		balance := bankKeeper.GetAllBalances(ctx, addr1)
+		suite.Require().Equal(tc.balanceAfterUnlock, balance)
+	}
 }
 
 func (suite *KeeperTestSuite) TestModuleLockedCoins() {
@@ -318,6 +271,65 @@ func (suite *KeeperTestSuite) TestLocksLongerThanDurationDenom() {
 	// final check
 	locks = suite.App.LockupKeeper.GetLocksLongerThanDurationDenom(suite.Ctx, "stake", duration)
 	suite.Require().Len(locks, 1)
+}
+
+func (suite *KeeperTestSuite) TestCreateLock() {
+	suite.SetupTest()
+
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+
+	// test locking without balance
+	_, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
+	suite.Require().Error(err)
+
+	suite.FundAcc(addr1, coins)
+
+	lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
+	suite.Require().NoError(err)
+
+	// check new lock
+	suite.Require().Equal(coins, lock.Coins)
+	suite.Require().Equal(time.Second, lock.Duration)
+	suite.Require().Equal(time.Time{}, lock.EndTime)
+	suite.Require().Equal(uint64(1), lock.ID)
+
+	lockID := suite.App.LockupKeeper.GetLastLockID(suite.Ctx)
+	suite.Require().Equal(uint64(1), lockID)
+
+	// check accumulation store
+	accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "10")
+
+	// create new lock
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 20)}
+	suite.FundAcc(addr1, coins)
+
+	lock, err = suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
+	suite.Require().NoError(err)
+
+	lockID = suite.App.LockupKeeper.GetLastLockID(suite.Ctx)
+	suite.Require().Equal(uint64(2), lockID)
+
+	// check accumulation store
+	accum = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "30")
+
+	// check balance
+	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+	suite.Require().Equal(sdk.ZeroInt(), balance.Amount)
+
+	acc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
+	balance = suite.App.BankKeeper.GetBalance(suite.Ctx, acc.GetAddress(), "stake")
+	suite.Require().Equal(sdk.NewInt(30), balance.Amount)
 }
 
 func (suite *KeeperTestSuite) TestAddTokensToLock() {
@@ -379,6 +391,52 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	suite.FundAcc(addr2, sdk.Coins{addCoins})
 	_, err = suite.App.LockupKeeper.AddTokensToLockByID(cacheCtx, locks[0].ID, addr2, addCoins)
 	suite.Require().Error(err)
+}
+
+func (suite *KeeperTestSuite) TestLock() {
+	suite.SetupTest()
+
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+
+	lock := types.PeriodLock{
+		ID:       1,
+		Owner:    addr1.String(),
+		Duration: time.Second,
+		EndTime:  time.Time{},
+		Coins:    coins,
+	}
+
+	// test locking without balance
+	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
+	suite.Require().Error(err)
+
+	// check accumulation store
+	accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "0")
+
+	suite.FundAcc(addr1, coins)
+	err = suite.App.LockupKeeper.Lock(suite.Ctx, lock, coins)
+	suite.Require().NoError(err)
+
+	// check accumulation store
+	accum = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+		LockQueryType: types.ByDuration,
+		Denom:         "stake",
+		Duration:      time.Second,
+	})
+	suite.Require().Equal(accum.String(), "10")
+
+	balance := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+	suite.Require().Equal(sdk.ZeroInt(), balance.Amount)
+
+	acc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
+	balance = suite.App.BankKeeper.GetBalance(suite.Ctx, acc.GetAddress(), "stake")
+	suite.Require().Equal(sdk.NewInt(10), balance.Amount)
 }
 
 func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
@@ -666,14 +724,14 @@ func (suite *KeeperTestSuite) TestEditLockup() {
 	lock, _ := suite.App.LockupKeeper.GetLockByID(suite.Ctx, 1)
 
 	// duration decrease should fail
-	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second/2)
+	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second/2)
 	suite.Require().Error(err)
 	// extending lock with same duration should fail
-	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second)
+	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second)
 	suite.Require().Error(err)
 
 	// duration increase should success
-	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, *lock, time.Second*2)
+	err = suite.App.LockupKeeper.ExtendLockup(suite.Ctx, lock.ID, addr, time.Second*2)
 	suite.Require().NoError(err)
 
 	// check queries

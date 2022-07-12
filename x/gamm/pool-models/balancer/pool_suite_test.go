@@ -13,6 +13,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	v10 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
@@ -499,33 +500,34 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 
 	for _, tc := range tests {
 		suite.SetupTest()
+		suite.Run(tc.name, func() {
+			poolId := suite.PrepareUni2PoolWithAssets(
+				tc.baseDenomPoolInput,
+				tc.quoteDenomPoolInput,
+			)
 
-		poolId := suite.PrepareUni2PoolWithAssets(
-			tc.baseDenomPoolInput,
-			tc.quoteDenomPoolInput,
-		)
+			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+			suite.Require().NoError(err, "test: %s", tc.name)
+			balancerPool, isPool := pool.(*balancer.Pool)
+			suite.Require().True(isPool, "test: %s", tc.name)
 
-		pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
-		suite.Require().NoError(err, "test: %s", tc.name)
-		balancerPool, isPool := pool.(*balancer.Pool)
-		suite.Require().True(isPool, "test: %s", tc.name)
+			sut := func() {
+				spotPrice, err := balancerPool.SpotPrice(
+					suite.Ctx,
+					tc.baseDenomPoolInput.Denom,
+					tc.quoteDenomPoolInput.Denom)
 
-		sut := func() {
-			spotPrice, err := balancerPool.SpotPrice(
-				suite.Ctx,
-				tc.baseDenomPoolInput.Denom,
-				tc.quoteDenomPoolInput.Denom)
-
-			if tc.expectError {
-				suite.Require().Error(err, "test: %s", tc.name)
-			} else {
-				suite.Require().NoError(err, "test: %s", tc.name)
-				suite.Require().True(spotPrice.Equal(tc.expectedOutput),
-					"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
-					spotPrice, tc.expectedOutput)
+				if tc.expectError {
+					suite.Require().Error(err, "test: %s", tc.name)
+				} else {
+					suite.Require().NoError(err, "test: %s", tc.name)
+					suite.Require().True(spotPrice.Equal(tc.expectedOutput),
+						"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
+						spotPrice, tc.expectedOutput)
+				}
 			}
-		}
-		assertPoolStateNotModified(suite.T(), balancerPool, sut)
+			assertPoolStateNotModified(suite.T(), balancerPool, sut)
+		})
 	}
 }
 
@@ -720,7 +722,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			require.True(t, ok)
 
 			assertPoolStateNotModified(t, balancerPool, func() {
-				assertPanic(t, tc.expectPanic, sut)
+				osmoutils.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
 	}

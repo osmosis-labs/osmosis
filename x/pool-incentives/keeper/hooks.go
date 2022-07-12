@@ -11,8 +11,10 @@ type Hooks struct {
 	k Keeper
 }
 
-var _ gammtypes.GammHooks = Hooks{}
-var _ minttypes.MintHooks = Hooks{}
+var (
+	_ gammtypes.GammHooks = Hooks{}
+	_ minttypes.MintHooks = Hooks{}
+)
 
 // Create new pool incentives hooks.
 func (k Keeper) Hooks() Hooks { return Hooks{k} }

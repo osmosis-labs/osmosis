@@ -45,7 +45,6 @@ func BenchmarkNextEpochProvisions(b *testing.B) {
 }
 
 func TestMinterValidate(t *testing.T) {
-
 	testcases := []struct {
 		name     string
 		minter   types.Minter
