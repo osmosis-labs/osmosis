@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased - v10.1.0
 * [2011](https://github.com/osmosis-labs/osmosis/pull/2011) Fix bug in TokenFactory initGenesis, relating to denom creation fee param.
 
+#### Golang API breaks
+* [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
 
 ## v10.0.1
 

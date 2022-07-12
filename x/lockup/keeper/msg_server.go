@@ -155,18 +155,19 @@ func createBeginUnlockEvent(lock *types.PeriodLock) sdk.Event {
 func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtendLockup) (*types.MsgExtendLockupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.ExtendLockup(ctx, msg.ID, owner, msg.Duration)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
 	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
-	if msg.Owner != lock.Owner {
-		return nil, sdkerrors.Wrapf(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
-	}
-
-	err = server.keeper.ExtendLockup(ctx, *lock, msg.Duration)
-	if err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
