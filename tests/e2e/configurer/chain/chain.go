@@ -57,7 +57,7 @@ func New(t *testing.T, containerManager *containers.Manager, id string, initVali
 }
 
 // RunNode runs a node container for the given nodeIndex.
-// The node configuration must be already added to chain prior to calling this
+// The node configuration must be already added to the chain config prior to calling this
 // method.
 func (c *Config) RunNode(nodeIndex int) error {
 	c.t.Logf("starting %s validator containers...", c.Id)
