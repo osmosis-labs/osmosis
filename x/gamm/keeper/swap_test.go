@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
@@ -94,8 +95,8 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			suite.NoError(err, "test: %v", test.name)
 			suite.True(tokenOutAmount.Equal(test.param.expectedTokenOut), "test: %v", test.name)
 			gasConsumedForSwap := suite.Ctx.GasMeter().GasConsumed() - prevGasConsumed
-			// We consume 10,000 gas directly, so the extra I/O operation mean we end up consuming more.
-			suite.Assert().Greater(gasConsumedForSwap, uint64(10000))
+			// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
+			suite.Assert().Greater(gasConsumedForSwap, uint64(types.GasFeeForSwap))
 
 			spotPriceAfter, err := keeper.CalculateSpotPrice(suite.Ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 			suite.NoError(err, "test: %v", test.name)
