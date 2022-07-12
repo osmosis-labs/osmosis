@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/types";
 
-// SetSuperfluidAssetsProposal is a gov Content type to update the superfluid
+// SetSwapFeeProposal is a gov Content type to update the pool swap fee
 // assets
 message SetSwapFeeProposal {
   option (gogoproto.equal) = true;
@@ -26,7 +26,7 @@ message SetSwapFeeContent {
   ];
 }
 
-// RemoveSuperfluidAssetsProposal is a gov Content type to remove the superfluid
+// SetExitFeeProposal is a gov Content type to update the pool exit fee
 // assets by denom
 message SetExitFeeProposal {
   option (gogoproto.equal) = true;

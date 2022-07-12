@@ -1,7 +1,6 @@
 package client
 
 import (
-
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/rest"
 

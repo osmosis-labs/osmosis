@@ -294,4 +294,3 @@ func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int
 
 // no-op for stableswap
 func (p *Pool) PokePool(blockTime time.Time) {}
-

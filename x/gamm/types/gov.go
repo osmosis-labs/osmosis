@@ -52,7 +52,7 @@ func (p *SetSwapFeeProposal) ValidateBasic() error {
 	if err != nil {
 		return err
 	}
-	if p.Content.PoolId < 0 {
+	if p.Content.PoolId <= 0 {
 		return ErrInvalidPoolId
 	}
 	if p.Content.SwapFee.LT(sdk.NewDec(0)) {
