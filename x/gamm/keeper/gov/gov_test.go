@@ -38,9 +38,9 @@ var (
 
 func (suite *KeeperTestSuite) TestHandleSetSwapFeeProposal() {
 	testCases := []struct {
-		name    	string
-		args 		types.SetSwapFeeProposal
-		expectErr 	bool
+		name      string
+		args      types.SetSwapFeeProposal
+		expectErr bool
 	}{
 		{
 			"happy path flow",
@@ -131,16 +131,16 @@ func (suite *KeeperTestSuite) TestHandleSetSwapFeeProposal() {
 				pool, err := suite.app.GAMMKeeper.GetPoolAndPoke(suite.ctx, poolId)
 				suite.Require().NoError(err)
 				suite.Require().Equal(pool.GetSwapFee(suite.ctx), tc.args.Content.SwapFee)
-			}			
+			}
 		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestHandleSetExitFeeProposal() {
 	testCases := []struct {
-		name    	string
-		args 		types.SetExitFeeProposal
-		expectErr 	bool
+		name      string
+		args      types.SetExitFeeProposal
+		expectErr bool
 	}{
 		{
 			"happy path flow",
@@ -231,7 +231,7 @@ func (suite *KeeperTestSuite) TestHandleSetExitFeeProposal() {
 				pool, err := suite.app.GAMMKeeper.GetPoolAndPoke(suite.ctx, poolId)
 				suite.Require().NoError(err)
 				suite.Require().Equal(pool.GetExitFee(suite.ctx), tc.args.Content.ExitFee)
-			}			
+			}
 		})
 	}
 }
