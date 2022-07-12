@@ -102,9 +102,7 @@ func (c *Config) RunNode(nodeIndex int) error {
 func (c *Config) WaitUntil(nodeIndex int, doneCondition func(syncInfo coretypes.SyncInfo) bool) error {
 	var latestBlockHeight int64
 	for i := 0; i < waitUntilrepeatMax; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), waitUntilRepeatPauseTime)
-		defer cancel()
-		status, err := c.NodeConfigs[nodeIndex].rpcClient.Status(ctx)
+		status, err := c.NodeConfigs[nodeIndex].rpcClient.Status(context.Background())
 		if err != nil {
 			return err
 		}
