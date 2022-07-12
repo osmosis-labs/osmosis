@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
@@ -146,35 +144,11 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 
 	// wait till all chains halt at upgrade height
 	for _, chainConfig := range uc.chainConfigs {
-		for validatorIndex := range chainConfig.NodeConfigs {
-			validatorResource, exists := uc.containerManager.GetValidatorResource(chainConfig.Id, validatorIndex)
-			require.True(uc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainConfig.Id, validatorIndex)
-			containerId := validatorResource.Container.ID
-			containerName := validatorResource.Container.Name[1:]
-
-			// use counter to ensure no new blocks are being created
-			counter := 0
-			uc.t.Logf("waiting to reach upgrade height on %s validator container: %s", containerName, containerId)
-			require.Eventually(
-				uc.t,
-				func() bool {
-					currentHeight := chainConfig.QueryCurrentChainHeightFromValidator(validatorIndex)
-					if currentHeight != chainConfig.PropHeight {
-						uc.t.Logf("current block height on %s is %v, waiting for block %v container: %s", containerName, currentHeight, chainConfig.PropHeight, containerId)
-					}
-					if currentHeight > chainConfig.PropHeight {
-						panic("chain did not halt at upgrade height")
-					}
-					if currentHeight == chainConfig.PropHeight {
-						counter++
-					}
-					return counter == 3
-				},
-				5*time.Minute,
-				time.Second,
-			)
-			uc.t.Logf("reached upgrade height on %s container: %s", containerName, containerId)
+		uc.t.Logf("waiting to reach upgrade height on chain %s", chainConfig.Id)
+		if err := chainConfig.WaitUntilHeight(int64(chainConfig.PropHeight)); err != nil {
+			return err
 		}
+		uc.t.Logf("upgrade height reached on chain %s", chainConfig.Id)
 	}
 
 	// remove all containers so we can upgrade them to the new version
@@ -189,71 +163,40 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 
 	// remove all containers so we can upgrade them to the new version
 	for _, chainConfig := range uc.chainConfigs {
-		uc.upgradeContainers(chainConfig, chainConfig.PropHeight)
+		if err := uc.upgradeContainers(chainConfig, chainConfig.PropHeight); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func (uc *UpgradeConfigurer) runForkUpgrade() error {
 	for _, chainConfig := range uc.chainConfigs {
-		for i := range chainConfig.NodeConfigs {
-			validatorResource, exists := uc.containerManager.GetValidatorResource(chainConfig.Id, i)
-			if !exists {
-				return fmt.Errorf("validator container not found: chain id %s, valIdx %d ", chainConfig.Id, i)
-			}
-			containerId := validatorResource.Container.ID
-			containerName := validatorResource.Container.Name[1:]
-
-			uc.t.Logf("waiting to reach fork height on %s validator container: %s", containerName, containerId)
-			require.Eventually(
-				uc.t,
-				func() bool {
-					currentHeight := chainConfig.QueryCurrentChainHeightFromValidator(i)
-					if int64(currentHeight) < uc.forkHeight {
-						uc.t.Logf("current block height on %s is %v, waiting for block %v container: %s", containerName, currentHeight, uc.forkHeight, containerId)
-						return false
-					}
-					return true
-				},
-				5*time.Minute,
-				time.Second,
-			)
-			uc.t.Logf("successfully got past fork height on %s container: %s", containerName, containerId)
+		uc.t.Logf("waiting to reach fork height on chain %s", chainConfig.Id)
+		if err := chainConfig.WaitUntilHeight(uc.forkHeight); err != nil {
+			return err
 		}
+		uc.t.Logf("fork height reached on chain %s", chainConfig.Id)
 	}
 	return nil
 }
 
-func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int) {
+func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int) error {
 	// upgrade containers to the locally compiled daemon
 	uc.t.Logf("starting upgrade for chain-id: %s...", chainConfig.Id)
 	uc.containerManager.OsmosisRepository = containers.CurrentBranchOsmoRepository
 	uc.containerManager.OsmosisTag = containers.CurrentBranchOsmoTag
-	for _, val := range chainConfig.NodeConfigs {
-		validatorResource, err := uc.containerManager.RunValidatorResource(chainConfig.Id, val.Name, val.ConfigDir)
-		require.NoError(uc.t, err)
-		uc.t.Logf("started %s validator container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
+
+	for nodeIndex := range chainConfig.NodeConfigs {
+		if err := chainConfig.RunNode(nodeIndex); err != nil {
+			return err
+		}
 	}
 
-	// check that we are creating blocks again
-	for validatorIndex := range chainConfig.NodeConfigs {
-		validatorResource, exists := uc.containerManager.GetValidatorResource(chainConfig.Id, validatorIndex)
-		require.True(uc.t, exists, "validator container not found: chain id %s, valIdx %d ", chainConfig.Id, validatorIndex)
-		containerId := validatorResource.Container.ID
-		containerName := validatorResource.Container.Name[1:]
-
-		require.Eventually(
-			uc.t,
-			func() bool {
-				currentHeight := chainConfig.QueryCurrentChainHeightFromValidator(validatorIndex)
-				if currentHeight <= propHeight {
-					uc.t.Logf("current block height on %s is %v, waiting to create blocks container: %s", containerName, currentHeight, containerId)
-				}
-				return currentHeight > propHeight
-			},
-			5*time.Minute,
-			time.Second,
-		)
-		uc.t.Logf("upgrade successful on %s validator container: %s", containerName, containerId)
+	uc.t.Logf("waiting to upgrade containers on chain %s", chainConfig.Id)
+	if err := chainConfig.WaitUntilHeight(int64(propHeight)); err != nil {
+		return err
 	}
+	uc.t.Logf("upgrade successful on chain %s", chainConfig.Id)
+	return nil
 }

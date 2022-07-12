@@ -60,7 +60,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	chainA.VoteNoProposal(0, walletName)
 
 	sfProposalNumber := strconv.Itoa(chainA.LatestProposalNumber)
-	s.Require().Eventually(
+	s.Eventually(
 		func() bool {
 			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainA.QueryPropTally(0, sfProposalNumber)
 			if err != nil {
@@ -77,9 +77,9 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 	noTotal, _, _, _, _ := chainA.QueryPropTally(0, sfProposalNumber)
 	noTotalFinal, err := strconv.Atoi(noTotal.String())
-	s.Require().NoError(err)
+	s.NoError(err)
 
-	s.Require().Eventually(
+	s.Eventually(
 		func() bool {
 			intAccountBalance, err := chainA.QueryIntermediaryAccount(0, "gamm/pool/1", chainA.NodeConfigs[1].OperatorAddress)
 			s.Require().NoError(err)

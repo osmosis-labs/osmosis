@@ -1,9 +1,14 @@
 package chain
 
-import "github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+import (
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
-type ValidatorConfig struct {
+	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+)
+
+type NodeConfig struct {
 	initialization.Node
 
 	OperatorAddress string
+	rpcClient       *rpchttp.HTTP
 }

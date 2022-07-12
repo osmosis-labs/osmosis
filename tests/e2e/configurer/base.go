@@ -1,7 +1,6 @@
 package configurer
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,7 +12,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
@@ -64,48 +62,11 @@ func (bc *baseConfigurer) RunValidators() error {
 
 func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
-
-	for _, val := range chainConfig.NodeConfigs {
-		resource, err := bc.containerManager.RunValidatorResource(chainConfig.Id, val.Name, val.ConfigDir)
-		if err != nil {
+	for valIndex := range chainConfig.NodeConfigs {
+		if err := chainConfig.RunNode(valIndex); err != nil {
 			return err
 		}
-		bc.t.Logf("started %s validator container: %s", resource.Container.Name[1:], resource.Container.ID)
 	}
-
-	validatorHostPort, err := bc.containerManager.GetValidatorHostPort(chainConfig.Id, 0, "26657/tcp")
-	if err != nil {
-		return err
-	}
-
-	rpcClient, err := rpchttp.New(fmt.Sprintf("tcp://%s", validatorHostPort), "/websocket")
-	if err != nil {
-		return err
-	}
-
-	require.Eventually(
-		bc.t,
-		func() bool {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-			defer cancel()
-
-			status, err := rpcClient.Status(ctx)
-			if err != nil {
-				return false
-			}
-
-			// let the node produce a few blocks
-			if status.SyncInfo.CatchingUp && status.SyncInfo.LatestBlockHeight < bc.syncUntilHeight {
-				return false
-			}
-
-			return true
-		},
-		5*time.Minute,
-		time.Second,
-		"Osmosis node failed to produce blocks",
-	)
-	chainConfig.ExtractValidatorOperatorAddresses()
 	return nil
 }
 
@@ -209,9 +170,9 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.C
 
 func (bc *baseConfigurer) initializeChainConfigFromInitChain(initializedChain *initialization.Chain, chainConfig *chain.Config) {
 	chainConfig.ChainMeta = initializedChain.ChainMeta
-	chainConfig.NodeConfigs = make([]*chain.ValidatorConfig, 0, len(initializedChain.Nodes))
+	chainConfig.NodeConfigs = make([]*chain.NodeConfig, 0, len(initializedChain.Nodes))
 	for _, validator := range initializedChain.Nodes {
-		chainConfig.NodeConfigs = append(chainConfig.NodeConfigs, &chain.ValidatorConfig{
+		chainConfig.NodeConfigs = append(chainConfig.NodeConfigs, &chain.NodeConfig{
 			Node: *validator,
 		})
 	}
