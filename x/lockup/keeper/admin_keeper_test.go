@@ -3,12 +3,7 @@ package keeper_test
 import (
 	"time"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
->>>>>>> c1155937 (Refactor `lock` method (#1936))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
