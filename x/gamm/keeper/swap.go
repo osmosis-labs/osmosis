@@ -49,7 +49,6 @@ func (k Keeper) swapExactAmountIn(
 	}
 	tokensIn := sdk.Coins{tokenIn}
 
-	ctx.GasMeter().ConsumeGas(types.GasFeeForSwap, "swap computation")
 	// Executes the swap in the pool and stores the output. Updates pool assets but
 	// does not actually transfer any tokens to or from the pool.
 	tokenOutCoin, err := pool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
@@ -114,7 +113,7 @@ func (k Keeper) swapExactAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
 			"can't get more tokens out than there are tokens in the pool")
 	}
-	ctx.GasMeter().ConsumeGas(types.GasFeeForSwap, "swap computation")
+
 	tokenIn, err := pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err

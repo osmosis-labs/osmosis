@@ -13,7 +13,7 @@ const (
 	// i.e. SigFigExponent = 8 is 10^8 which is 100000000. This gives 8 significant figures.
 	SigFigsExponent = 8
 	// TODO: Turn this into a param in the future.
-	GasFeeForSwap = 10000
+	BalancerGasFeeForSwap = 10000
 )
 
 var (
