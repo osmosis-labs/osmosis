@@ -40,9 +40,9 @@ type syncInfo struct {
 
 const (
 	// waitUntilRepeatPauseTime is the time to wait between each check of the node status.
-	waitUntilRepeatPauseTime = 500 * time.Millisecond
+	waitUntilRepeatPauseTime = 2 * time.Second
 	// waitUntilrepeatMax is the maximum number of times to repeat the wait until condition.
-	waitUntilrepeatMax = 20
+	waitUntilrepeatMax = 60
 )
 
 func New(t *testing.T, containerManager *containers.Manager, id string, initValidatorConfigs []*initialization.NodeConfig) *Config {
