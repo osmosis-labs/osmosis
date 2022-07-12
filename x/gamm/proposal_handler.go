@@ -16,7 +16,7 @@ func NewGAMMProposalHandler(k keeper.Keeper) govtypes.Handler {
 		case *types.SetSwapFeeProposal:
 			return handleSetSwapFeeProposal(ctx, k, c)
 		case *types.SetExitFeeProposal:
-			return gov.HandleSetExitFeeProposal(ctx, k, c)
+			return handleSetExitFeeProposal(ctx, k, c)
 
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized gamm proposal content type: %T", c)

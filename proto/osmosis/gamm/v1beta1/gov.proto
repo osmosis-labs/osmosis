@@ -18,6 +18,7 @@ message SetSwapFeeProposal {
 }
 
 message SetSwapFeeContent {
+  option (gogoproto.equal) = true;
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string swap_fee = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -39,6 +40,7 @@ message SetExitFeeProposal {
 }
 
 message SetExitFeeContent {
+  option (gogoproto.equal) = true;
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string exit_fee = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
