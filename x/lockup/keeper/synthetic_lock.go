@@ -11,36 +11,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) setSyntheticLockupObject(ctx sdk.Context, synthLock *types.SyntheticLock) error {
-	store := ctx.KVStore(k.storeKey)
-	bz, err := proto.Marshal(synthLock)
-	if err != nil {
-		return err
-	}
-	store.Set(syntheticLockStoreKey(synthLock.UnderlyingLockId, synthLock.SynthDenom), bz)
-	if !synthLock.EndTime.Equal(time.Time{}) {
-		store.Set(syntheticLockTimeStoreKey(synthLock.UnderlyingLockId, synthLock.SynthDenom, synthLock.EndTime), bz)
-	}
-	return nil
-}
+// A synthetic lock object is a lock obejct used for the superfluid module.
+// Each synthetic lock object is stored in state using lock id and synthetic denom
+// as it's key, where a synthetic denom would be consisted of the original denom of the lock,
+// validator address, and the staking positiion of the lock.
+// Unlike the original lock objects, synthetic locks are mainly used to indicate the staking
+// position of the lock.
+// Synthetic use different accumulation store from the original lock objects.
+// Note that locks with synthetic objects cannot be directly deleted or cannot directly start
+// unlocking. locks with synthetic lock objects are to be unlocked via superfluid module.
+// The Endtime and the Duration fields of the synthetic locks do not need to have the same values
+// as the underlying lock objects.
 
-func (k Keeper) deleteSyntheticLockupObject(ctx sdk.Context, lockID uint64, synthdenom string) {
-	store := ctx.KVStore(k.storeKey)
-	synthLock, _ := k.GetSyntheticLockup(ctx, lockID, synthdenom)
-	if synthLock != nil && !synthLock.EndTime.Equal(time.Time{}) {
-		store.Delete(syntheticLockTimeStoreKey(lockID, synthdenom, synthLock.EndTime))
-	}
-	store.Delete(syntheticLockStoreKey(lockID, synthdenom))
-}
-
-func (k Keeper) GetUnderlyingLock(ctx sdk.Context, synthlock types.SyntheticLock) types.PeriodLock {
-	lock, err := k.GetLockByID(ctx, synthlock.UnderlyingLockId)
-	if err != nil {
-		panic(err) // Synthetic lock MUST have underlying lock
-	}
-	return *lock
-}
-
+// GetSyntheticLockup gets the synthetic lock object using lock ID and synthetic denom as key.
 func (k Keeper) GetSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom string) (*types.SyntheticLock, error) {
 	synthLock := types.SyntheticLock{}
 	store := ctx.KVStore(k.storeKey)
@@ -53,6 +36,7 @@ func (k Keeper) GetSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom st
 	return &synthLock, err
 }
 
+// GetAllSyntheticLockupsByLockup gets all the synthetic lockup object of the original lockup.
 func (k Keeper) GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []types.SyntheticLock {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
@@ -70,6 +54,7 @@ func (k Keeper) GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) [
 	return synthLocks
 }
 
+// GetAllSyntheticLockupsByAddr gets all the synthetic lockups from all the locks owned by the given address.
 func (k Keeper) GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddress) []types.SyntheticLock {
 	synthLocks := []types.SyntheticLock{}
 	locks := k.GetAccountPeriodLocks(ctx, owner)
@@ -79,6 +64,7 @@ func (k Keeper) GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddre
 	return synthLocks
 }
 
+// HasAnySyntheticLockups returns true if the lock has a synthetic lock.
 func (k Keeper) HasAnySyntheticLockups(ctx sdk.Context, lockID uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, combineKeys(types.KeyPrefixSyntheticLockup, sdk.Uint64ToBigEndian(lockID)))
@@ -86,6 +72,7 @@ func (k Keeper) HasAnySyntheticLockups(ctx sdk.Context, lockID uint64) bool {
 	return iterator.Valid()
 }
 
+// GetAllSyntheticLockups gets all synthetic locks within the store.
 func (k Keeper) GetAllSyntheticLockups(ctx sdk.Context) []types.SyntheticLock {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixSyntheticLockup)
@@ -107,7 +94,7 @@ func (k Keeper) GetAllSyntheticLockups(ctx sdk.Context) []types.SyntheticLock {
 func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom string, unlockDuration time.Duration, isUnlocking bool) error {
 	// Note: synthetic lockup is doing everything same as lockup except coin movement
 	// There is no relationship between unbonding and bonding synthetic lockup, it's managed separately
-	// Accumulation store works without caring about unlocking synthetic or not
+	// A separate accumulation store is incremented with the synth denom.
 
 	_, err := k.GetSyntheticLockup(ctx, lockID, synthDenom)
 	if err == nil {
@@ -154,7 +141,27 @@ func (k Keeper) CreateSyntheticLockup(ctx sdk.Context, lockID uint64, synthDenom
 	return nil
 }
 
+// DeleteAllSyntheticLocks iterates over given array of synthetic locks and deletes all individual synthetic locks.
+func (k Keeper) DeleteAllSyntheticLocks(ctx sdk.Context, lock types.PeriodLock, synthLocks []types.SyntheticLock) error {
+	if len(synthLocks) == 0 {
+		return nil
+	}
+
+	for _, synthLock := range synthLocks {
+		err := k.DeleteSyntheticLockup(ctx, lock.ID, synthLock.SynthDenom)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // DeleteSyntheticLockup delete synthetic lockup with lock id and synthdenom.
+// Synthetic lock has three relevant state entries.
+// - synthetic lock object itself
+// - synthetic lock refs
+// - accumulation store for the synthetic lock.
+// all of which are deleted within this method.
 func (k Keeper) DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom string) error {
 	synthLock, err := k.GetSyntheticLockup(ctx, lockID, synthdenom)
 	if err != nil {
@@ -186,6 +193,7 @@ func (k Keeper) DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, synthdenom
 	return nil
 }
 
+// DeleteAllMaturedSyntheticLocks deletes all matured synthetic locks.
 func (k Keeper) DeleteAllMaturedSyntheticLocks(ctx sdk.Context) {
 	iterator := k.iteratorBeforeTime(ctx, combineKeys(types.KeyPrefixSyntheticLockTimestamp), ctx.BlockTime())
 	defer iterator.Close()
@@ -201,4 +209,34 @@ func (k Keeper) DeleteAllMaturedSyntheticLocks(ctx sdk.Context) {
 			panic(err)
 		}
 	}
+}
+
+func (k Keeper) GetUnderlyingLock(ctx sdk.Context, synthlock types.SyntheticLock) types.PeriodLock {
+	lock, err := k.GetLockByID(ctx, synthlock.UnderlyingLockId)
+	if err != nil {
+		panic(err) // Synthetic lock MUST have underlying lock
+	}
+	return *lock
+}
+
+func (k Keeper) setSyntheticLockupObject(ctx sdk.Context, synthLock *types.SyntheticLock) error {
+	store := ctx.KVStore(k.storeKey)
+	bz, err := proto.Marshal(synthLock)
+	if err != nil {
+		return err
+	}
+	store.Set(syntheticLockStoreKey(synthLock.UnderlyingLockId, synthLock.SynthDenom), bz)
+	if !synthLock.EndTime.Equal(time.Time{}) {
+		store.Set(syntheticLockTimeStoreKey(synthLock.UnderlyingLockId, synthLock.SynthDenom, synthLock.EndTime), bz)
+	}
+	return nil
+}
+
+func (k Keeper) deleteSyntheticLockupObject(ctx sdk.Context, lockID uint64, synthdenom string) {
+	store := ctx.KVStore(k.storeKey)
+	synthLock, _ := k.GetSyntheticLockup(ctx, lockID, synthdenom)
+	if synthLock != nil && !synthLock.EndTime.Equal(time.Time{}) {
+		store.Delete(syntheticLockTimeStoreKey(lockID, synthdenom, synthLock.EndTime))
+	}
+	store.Delete(syntheticLockStoreKey(lockID, synthdenom))
 }
