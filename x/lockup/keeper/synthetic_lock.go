@@ -5,15 +5,10 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-<<<<<<< HEAD
 
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
-=======
->>>>>>> 25bf1d8b (chore: x/lockup documentation, module cleanup (#1900))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
 // A synthetic lock object is a lock obejct used for the superfluid module.
