@@ -304,6 +304,10 @@ func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 	return config.Marshaler, config.Amino
 }
 
+func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
+	return app.BaseApp
+}
+
 // Name returns the name of the App.
 func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 

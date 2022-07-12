@@ -3,7 +3,6 @@ package simulation
 import (
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -18,13 +17,13 @@ type SimCtx struct {
 	rCounter     int64
 	seededMap    map[string]*rand.Rand
 
-	App      *baseapp.BaseApp
+	App      App
 	Accounts []simulation.Account
 	Cdc      codec.JSONCodec // application codec
 	ChainID  string
 }
 
-func NewSimCtx(r *rand.Rand, app *baseapp.BaseApp, accounts []simulation.Account, chainID string) *SimCtx {
+func NewSimCtx(r *rand.Rand, app App, accounts []simulation.Account, chainID string) *SimCtx {
 	return &SimCtx{
 		r:            r,
 		internalSeed: r.Int63(),

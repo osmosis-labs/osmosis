@@ -78,7 +78,7 @@ func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator 
 	}
 
 	requestBeginBlock := simState.beginBlock(simCtx)
-	ctx := simCtx.App.NewContext(false, simState.header)
+	ctx := simCtx.App.GetBaseApp().NewContext(false, simState.header)
 
 	// Run queued operations. Ignores blocksize if blocksize is too small
 	numQueuedOpsRan := simState.runQueuedOperations(simCtx, ctx)
@@ -101,12 +101,12 @@ func (simState *simState) beginBlock(simCtx *simtypes.SimCtx) abci.RequestBeginB
 	requestBeginBlock := RandomRequestBeginBlock(simCtx.GetRand(), simState.simParams, simState.curValidators, simState.pastTimes, simState.pastVoteInfos, simState.eventStats.Tally, simState.header)
 	// Run the BeginBlock handler
 	simState.logWriter.AddEntry(BeginBlockEntry(simState.header.Height))
-	simCtx.App.BeginBlock(requestBeginBlock)
+	simCtx.App.GetBaseApp().BeginBlock(requestBeginBlock)
 	return requestBeginBlock
 }
 
 func (simState *simState) endBlock(simCtx *simtypes.SimCtx) abci.ResponseEndBlock {
-	res := simCtx.App.EndBlock(abci.RequestEndBlock{})
+	res := simCtx.App.GetBaseApp().EndBlock(abci.RequestEndBlock{})
 	simState.logWriter.AddEntry(EndBlockEntry(simState.header.Height))
 	return res
 }

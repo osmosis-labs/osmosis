@@ -13,11 +13,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	legacysimexec "github.com/cosmos/cosmos-sdk/x/simulation"
 
 	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
 )
@@ -29,7 +27,7 @@ func initChain(
 	r *rand.Rand,
 	params Params,
 	accounts []simulation.Account,
-	app *baseapp.BaseApp,
+	app simtypes.App,
 	appStateFn simulation.AppStateFn,
 	config simulation.Config,
 	cdc codec.JSONCodec,
@@ -45,7 +43,7 @@ func initChain(
 	}
 	// Valid app version can only be zero on app initialization.
 	req.ConsensusParams.Version.AppVersion = 0
-	res := app.InitChain(req)
+	res := app.GetBaseApp().InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 
 	return validators, genesisTimestamp, accounts, chainID
@@ -53,24 +51,25 @@ func initChain(
 
 // SimulateFromSeedLegacy tests an application by running the provided
 // operations, testing the provided invariants, but using the provided config.Seed.
-func SimulateFromSeedLegacy(
-	tb testing.TB,
-	w io.Writer,
-	app *baseapp.BaseApp,
-	appStateFn simulation.AppStateFn,
-	randAccFn simulation.RandomAccountFn,
-	ops legacysimexec.WeightedOperations,
-	blockedAddrs map[string]bool,
-	config simulation.Config,
-	cdc codec.JSONCodec,
-) (stopEarly bool, exportedParams Params, err error) {
-	actions := simtypes.ActionsFromWeightedOperations(ops)
-	initFns := simtypes.InitFunctions{
-		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(randAccFn, blockedAddrs),
-		AppInitialStateFn: appStateFn,
-	}
-	return SimulateFromSeed(tb, w, app, initFns, actions, config, cdc)
-}
+// TODO: Restore SimulateFromSeedLegacy by adding a wrapper that can take in
+// func SimulateFromSeedLegacy(
+// 	tb testing.TB,
+// 	w io.Writer,
+// 	app *baseapp.BaseApp,
+// 	appStateFn simulation.AppStateFn,
+// 	randAccFn simulation.RandomAccountFn,
+// 	ops legacysimexec.WeightedOperations,
+// 	blockedAddrs map[string]bool,
+// 	config simulation.Config,
+// 	cdc codec.JSONCodec,
+// ) (stopEarly bool, exportedParams Params, err error) {
+// 	actions := simtypes.ActionsFromWeightedOperations(ops)
+// 	initFns := simtypes.InitFunctions{
+// 		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(randAccFn, blockedAddrs),
+// 		AppInitialStateFn: appStateFn,
+// 	}
+// 	return SimulateFromSeed(tb, w, app, initFns, actions, config, cdc)
+// }
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided config.Seed.
@@ -81,7 +80,7 @@ func SimulateFromSeedLegacy(
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
-	app *baseapp.BaseApp,
+	app simtypes.App,
 	initFunctions simtypes.InitFunctions,
 	actions []simtypes.Action,
 	config simulation.Config,
@@ -161,7 +160,7 @@ func SimulateFromSeed(
 		}
 
 		if config.Commit {
-			simCtx.App.Commit()
+			simCtx.App.GetBaseApp().Commit()
 		}
 	}
 
@@ -254,7 +253,7 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queuedOp[i](r, simCtx.App, ctx, simCtx.Accounts, simCtx.ChainID)
+		opMsg, _, err := queuedOp[i](r, simCtx.App.GetBaseApp(), ctx, simCtx.Accounts, simCtx.ChainID)
 		opMsg.LogEvent(simState.eventStats.Tally)
 
 		if !simState.leanLogs || opMsg.OK {
@@ -283,7 +282,7 @@ func (simState *simState) runQueuedTimeOperations(simCtx *simtypes.SimCtx, ctx s
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queueOps[0].Op(r, simCtx.App, ctx, simCtx.Accounts, simCtx.ChainID)
+		opMsg, _, err := queueOps[0].Op(r, simCtx.App.GetBaseApp(), ctx, simCtx.Accounts, simCtx.ChainID)
 		opMsg.LogEvent(simState.eventStats.Tally)
 
 		if !simState.leanLogs || opMsg.OK {

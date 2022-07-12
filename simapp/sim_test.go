@@ -91,7 +91,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	_, simParams, simErr := osmosim.SimulateFromSeed(
 		tb,
 		os.Stdout,
-		osmosis.BaseApp,
+		osmosis,
 		initFns,
 		osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 		config,

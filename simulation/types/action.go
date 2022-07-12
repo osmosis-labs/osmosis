@@ -32,7 +32,7 @@ func (a weightedOperationAction) Name() string { return "weighted_op" }
 func (a weightedOperationAction) Weight() int  { return a.op.Weight() }
 func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	simulation.OperationMsg, []simulation.FutureOperation, error) {
-	return a.op.Op()(sim.GetRand(), sim.App, ctx, sim.Accounts, sim.ChainID)
+	return a.op.Op()(sim.GetRand(), sim.App.GetBaseApp(), ctx, sim.Accounts, sim.ChainID)
 }
 
 func ActionsFromWeightedOperations(ops legacysimexec.WeightedOperations) []Action {
