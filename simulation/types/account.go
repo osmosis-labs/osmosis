@@ -41,9 +41,10 @@ func (sim *SimCtx) FindAccount(address sdk.Address) (simulation.Account, bool) {
 	return simulation.Account{}, false
 }
 
-// Returns (account, found), so if found = false, then no such address exists.
+// Returns (account, randSubsetCoins, found), so if found = false, then no such address exists.
+// randSubsetCoins is a random subset of the provided denoms, if the account is found.
 // TODO: Write unit test
-func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulation.Account, bool) {
+func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulation.Account, sdk.Coins, bool) {
 	filteredAddrs := []simulation.Account{}
 	for _, acc := range sim.Accounts {
 		// ensure acc has non-zero balance for all denoms
@@ -57,9 +58,24 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 	}
 
 	if len(filteredAddrs) == 0 {
-		return simulation.Account{}, false
+		return simulation.Account{}, sdk.Coins{}, false
 	}
-	return sim.randomSimAccount(filteredAddrs), true
+	acc := sim.randomSimAccount(filteredAddrs)
+	balance := sim.RandCoinSubset(ctx, acc.Address, denoms)
+	return acc, balance, true
+}
+
+func (sim *SimCtx) RandCoinSubset(ctx sdk.Context, addr sdk.AccAddress, denoms []string) sdk.Coins {
+	subsetCoins := sdk.Coins{}
+	for _, denom := range denoms {
+		bal := sim.App.GetBankKeeper().GetBalance(ctx, addr, denom)
+		amt, err := sim.RandPositiveInt(bal.Amount)
+		if err != nil {
+			panic(err)
+		}
+		subsetCoins = subsetCoins.Add(sdk.NewCoin(bal.Denom, amt))
+	}
+	return subsetCoins
 }
 
 // RandomFees returns a random fee by selecting a random coin denomination and
