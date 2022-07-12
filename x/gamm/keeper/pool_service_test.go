@@ -565,34 +565,36 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 	for _, tc := range testCases {
 		suite.SetupTest()
 
-		for _, acc := range suite.TestAccs {
-			suite.FundAcc(acc, defaultAcctFunds)
-		}
+		suite.Run(tc.name, func() {
+			for _, acc := range suite.TestAccs {
+				suite.FundAcc(acc, defaultAcctFunds)
+			}
 
-		createPoolAcc := suite.TestAccs[0]
-		joinPoolAcc := suite.TestAccs[1]
+			createPoolAcc := suite.TestAccs[0]
+			joinPoolAcc := suite.TestAccs[1]
 
-		// test account is set on every test case iteration, we need to manually update address for pool creator
-		tc.pool.Sender = createPoolAcc.String()
+			// test account is set on every test case iteration, we need to manually update address for pool creator
+			tc.pool.Sender = createPoolAcc.String()
 
-		poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, tc.pool)
-		suite.Require().NoError(err)
+			poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, tc.pool)
+			suite.Require().NoError(err)
 
-		balanceBeforeJoin := suite.App.BankKeeper.GetAllBalances(suite.Ctx, joinPoolAcc)
+		  balanceBeforeJoin := suite.App.BankKeeper.GetAllBalances(suite.Ctx, joinPoolAcc)
 
-		_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
-		suite.Require().NoError(err)
+		  _, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+		  suite.Require().NoError(err)
 
-		_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+			_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
 
-		balanceAfterExit := suite.App.BankKeeper.GetAllBalances(suite.Ctx, joinPoolAcc)
-		deltaBalance, _ := balanceBeforeJoin.SafeSub(balanceAfterExit)
+			balanceAfterExit := suite.App.BankKeeper.GetAllBalances(suite.Ctx, joinPoolAcc)
+			deltaBalance, _ := balanceBeforeJoin.SafeSub(balanceAfterExit)
 
-		// due to rounding, `balanceBeforeJoin` and `balanceAfterExit` have neglectable difference
-		// coming from rounding in exitPool.Here we test if the difference is within rounding tolerance range
-		roundingToleranceCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1)), sdk.NewCoin("bar", sdk.NewInt(1)))
-		suite.Require().True(deltaBalance.AmountOf("foo").LTE(roundingToleranceCoins.AmountOf("foo")))
-		suite.Require().True(deltaBalance.AmountOf("bar").LTE(roundingToleranceCoins.AmountOf("bar")))
+			// due to rounding, `balanceBeforeJoin` and `balanceAfterExit` have neglectable difference
+			// coming from rounding in exitPool.Here we test if the difference is within rounding tolerance range
+			roundingToleranceCoins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1)), sdk.NewCoin("bar", sdk.NewInt(1)))
+			suite.Require().True(deltaBalance.AmountOf("foo").LTE(roundingToleranceCoins.AmountOf("foo")))
+			suite.Require().True(deltaBalance.AmountOf("bar").LTE(roundingToleranceCoins.AmountOf("bar")))
+		})
 	}
 }
 

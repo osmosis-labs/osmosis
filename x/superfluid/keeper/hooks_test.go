@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				suite.Require().Equal(gauge.Id, intermediaryAcc.GaugeId)
 				suite.Require().Equal(gauge.IsPerpetual, true)
 				suite.Require().Equal(gauge.Coins, tc.expRewards[index])
-				suite.Require().Equal(gauge.DistributedCoins, tc.expRewards[index])
+				suite.Require().Equal(gauge.DistributedCoins.String(), tc.expRewards[index].String())
 			}
 
 			// check delegation changes
