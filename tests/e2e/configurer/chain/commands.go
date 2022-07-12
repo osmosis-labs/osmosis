@@ -177,14 +177,19 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	c.t.Log("successfully sent IBC tokens")
 }
 
-func (c *Config) ExtractValidatorOperatorAddresses() {
-	for i, val := range c.NodeConfigs {
-		cmd := []string{"osmosisd", "debug", "addr", val.PublicKey}
-		c.t.Logf("extracting validator operator addresses for chain-id: %s", c.Id)
-		_, errBuf, err := c.containerManager.ExecCmd(c.t, c.Id, i, cmd, "")
-		require.NoError(c.t, err)
-		re := regexp.MustCompile("osmovaloper(.{39})")
-		operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
-		c.NodeConfigs[i].OperatorAddress = strings.TrimSuffix(operAddr, "\n")
+func (c *Config) ExtractValidatorOperatorAddress(nodeIndex int) error {
+	node := c.NodeConfigs[nodeIndex]
+
+	if !node.IsValidator {
+		return fmt.Errorf("node %s at index %d is not a validator", node.Name, nodeIndex)
 	}
+
+	cmd := []string{"osmosisd", "debug", "addr", node.PublicKey}
+	c.t.Logf("extracting validator operator addresses for chain-id: %s", c.Id)
+	_, errBuf, err := c.containerManager.ExecCmd(c.t, c.Id, nodeIndex, cmd, "")
+	require.NoError(c.t, err)
+	re := regexp.MustCompile("osmovaloper(.{39})")
+	operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
+	c.NodeConfigs[nodeIndex].OperatorAddress = strings.TrimSuffix(operAddr, "\n")
+	return nil
 }
