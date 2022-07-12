@@ -225,17 +225,10 @@ func (k Keeper) GetNextPoolNumber(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
-<<<<<<< HEAD
-// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
-func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
-	nextPoolId := k.GetNextPoolId(ctx)
-	k.SetNextPoolNumber(ctx, nextPoolId+1)
-=======
 // getNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
 func (k Keeper) getNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	nextPoolId := k.GetNextPoolNumber(ctx)
 	k.setNextPoolNumber(ctx, nextPoolId+1)
->>>>>>> main
 	return nextPoolId
 }
 

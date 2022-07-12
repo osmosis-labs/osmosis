@@ -8,7 +8,7 @@ import (
 )
 
 func SimulateJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) {
-	pool_id := simulation.RandLTBound(sim, k.GetNextPoolId(ctx))
+	pool_id := simulation.RandLTBound(sim, k.GetNextPoolNumber(ctx))
 	pool_id = pool_id
 	// sender := sim.FuzzAddrWithDenoms(k.GetPool(ctx, pool_id).Assets())
 	// token_in_maxs := sim.FuzzTokensSubset(sender, k.GetPool(pool_id).Assets().Denoms())
