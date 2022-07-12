@@ -407,9 +407,6 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 func (k Keeper) checkFinishDistribution(ctx sdk.Context, gauges []types.Gauge) {
 	for _, gauge := range gauges {
 		// filled epoch is increased in this step and we compare with +1
-		// TODO: Wat? we increment filled epochs earlier, this looks wrong and like
-		// were not paying out the last epoch of rewards...
-		// TODO: @dev explain the above comment further so we can either fix or create issue
 		if !gauge.IsPerpetual && gauge.NumEpochsPaidOver <= gauge.FilledEpochs+1 {
 			if err := k.moveActiveGaugeToFinishedGauge(ctx, gauge); err != nil {
 				panic(err)
