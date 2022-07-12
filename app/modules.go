@@ -143,6 +143,7 @@ func appModules(
 	}
 }
 
+<<<<<<< HEAD
 // orderBeginBlockers Tell the app's module manager how to set the order of
 // BeginBlockers, which are run at the beginning of every block.
 func orderBeginBlockers() []string {
@@ -180,6 +181,28 @@ func orderBeginBlockers() []string {
 		txfeestypes.ModuleName,
 		wasm.ModuleName,
 	}
+=======
+// orderBeginBlockers returns the order of BeginBlockers, by module name.
+func orderBeginBlockers(allModuleNames []string) []string {
+	ord := partialord.NewPartialOrdering(allModuleNames)
+	// Upgrades should be run VERY first
+	// Epochs is set to be next right now, this in principle could change to come later / be at the end.
+	// But would have to be a holistic change with other pipelines taken into account.
+	ord.FirstElements(upgradetypes.ModuleName, epochstypes.ModuleName, capabilitytypes.ModuleName)
+
+	// Staking ordering
+	// TODO: Perhaps this can be relaxed, left to future work to analyze.
+	ord.Sequence(distrtypes.ModuleName, slashingtypes.ModuleName, evidencetypes.ModuleName, stakingtypes.ModuleName)
+	// superfluid must come after distribution & epochs.
+	// TODO: we actually set it to come after staking, since thats what happened before, and want to minimize chance of break.
+	ord.After(superfluidtypes.ModuleName, stakingtypes.ModuleName)
+	// TODO: This can almost certainly be un-constrained, but we keep the constraint to match prior functionality.
+	// IBChost came after staking, before superfluid.
+	// TODO: Come back and delete this line after testing the base change.
+	ord.Sequence(stakingtypes.ModuleName, ibchost.ModuleName, superfluidtypes.ModuleName)
+	// every remaining module's begin block is a no-op.
+	return ord.TotalOrdering()
+>>>>>>> 5f17b194 (Add partial ord for begin block (#1980))
 }
 
 func OrderEndBlockers(allModuleNames []string) []string {
