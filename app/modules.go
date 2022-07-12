@@ -249,3 +249,11 @@ func (app *OsmosisApp) ModuleAccountAddrs() map[string]bool {
 
 	return modAccAddrs
 }
+
+func (app *OsmosisApp) GetAccountKeeper() simulation.AccountKeeper {
+	return app.AppKeepers.AccountKeeper
+}
+
+func (app *OsmosisApp) GetBankKeeper() simulation.BankKeeper {
+	return app.AppKeepers.BankKeeper
+}
