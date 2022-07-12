@@ -130,8 +130,6 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	}
 	k.SetLastGaugeID(ctx, gauge.Id)
 
-	// TODO: Do we need to be concerned with case where this should be ActiveGauges?
-	// TODO: Discuss/Create issue for the above
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
 	activeOrUpcomingGauge := true
 
