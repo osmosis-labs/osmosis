@@ -47,7 +47,6 @@ func (e insufficientDevVestingBalanceError) Error() string {
 
 var (
 	errAmountCannotBeNilOrZero               = errors.New("amount cannot be nil or zero")
-	errNoDeveloperRewardReceiversGiven       = errors.New("no developer rewards receivers specified")
 	errDevVestingModuleAccountAlreadyCreated = fmt.Errorf("%s module account already exists", types.DeveloperVestingModuleAcctName)
 	errDevVestingModuleAccountNotCreated     = fmt.Errorf("%s module account does not exist", types.DeveloperVestingModuleAcctName)
 )
