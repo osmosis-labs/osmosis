@@ -36,8 +36,18 @@ func (e invalidRatioError) Error() string {
 	return fmt.Sprintf("mint allocation ratio (%s) is greater than 1", e.ActualRatio)
 }
 
+type insufficientDevVestingBalanceError struct {
+	ActualBalance         sdk.Int
+	AttemptedDistribution sdk.Int
+}
+
+func (e insufficientDevVestingBalanceError) Error() string {
+	return fmt.Sprintf("developer vesting balance (%s) is smaller than requested distribution of (%s)", e.ActualBalance, e.AttemptedDistribution)
+}
+
 var (
 	errAmountCannotBeNilOrZero               = errors.New("amount cannot be nil or zero")
+	errNoDeveloperRewardReceiversGiven       = errors.New("no developer rewards receivers specified")
 	errDevVestingModuleAccountAlreadyCreated = fmt.Errorf("%s module account already exists", types.DeveloperVestingModuleAcctName)
 	errDevVestingModuleAccountNotCreated     = fmt.Errorf("%s module account does not exist", types.DeveloperVestingModuleAcctName)
 )
@@ -261,49 +271,50 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
+	developerRewardsModuleAccountAddress := k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
+	developerAccountBalance := k.bankKeeper.GetBalance(ctx, developerRewardsModuleAccountAddress, totalMintedCoin.Denom)
+	if developerAccountBalance.Amount.LT(devRewardCoin.Amount) {
+		return sdk.Int{}, insufficientDevVestingBalanceError{ActualBalance: developerAccountBalance.Amount, AttemptedDistribution: devRewardCoin.Amount}
+	}
+
 	devRewardCoins := sdk.NewCoins(devRewardCoin)
-	// This is supposed to come from the developer vesting module address, not the mint module address
-	// we over-allocated to the mint module address earlier though, so we burn it right here.
+	// TODO: next step in https://github.com/osmosis-labs/osmosis/issues/1916
+	// Avoid over-allocating from the mint module address and have to later burn it here:
 	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins); err != nil {
 		return sdk.Int{}, err
 	}
 
 	// Take the current balance of the developer rewards pool and remove it from the supply offset
 	// We re-introduce the new supply at the end, in order to avoid any rounding discrepancies.
-	developerAccountBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), totalMintedCoin.Denom)
 	k.bankKeeper.AddSupplyOffset(ctx, totalMintedCoin.Denom, developerAccountBalance.Amount)
 
 	if len(developerRewardsReceivers) == 0 {
-		// fund community pool when rewards address is empty
-		if err := k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)); err != nil {
+		err = k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, developerRewardsModuleAccountAddress)
+		if err != nil {
 			return sdk.Int{}, err
 		}
-	} else {
-		// allocate developer rewards to addresses by weight
-		for _, w := range developerRewardsReceivers {
-			devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
-			if err != nil {
-				return sdk.Int{}, err
-			}
-			devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
-			if w.Address == "" {
-				err := k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
-					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
-				if err != nil {
-					return sdk.Int{}, err
-				}
-			} else {
-				devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
-				if err != nil {
-					return sdk.Int{}, err
-				}
-				// If recipient is vesting account, pay to account according to its vesting condition
-				err = k.bankKeeper.SendCoinsFromModuleToAccount(
-					ctx, types.DeveloperVestingModuleAcctName, devRewardsAddr, devRewardPortionCoins)
-				if err != nil {
-					return sdk.Int{}, err
-				}
-			}
+		// All dev rewards go to the community pool.
+		k.bankKeeper.AddSupplyOffset(ctx, totalMintedCoin.Denom, developerAccountBalance.Amount.Sub(devRewardCoin.Amount))
+		return devRewardCoin.Amount, err
+	}
+
+	// allocate developer rewards to addresses by weight
+	for _, w := range developerRewardsReceivers {
+		devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+		devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
+		devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+		// If recipient is vesting account, pay to account according to its vesting condition
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(
+			ctx, types.DeveloperVestingModuleAcctName, devRewardsAddr, devRewardPortionCoins)
+		if err != nil {
+			return sdk.Int{}, err
 		}
 	}
 

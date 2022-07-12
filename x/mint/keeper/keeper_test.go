@@ -664,7 +664,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 					Weight:  sdk.NewDec(1),
 				},
 			},
-			expectedError: sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", validPreMintCoin, sdk.NewCoin(sdk.DefaultBondDenom, validPreMintAmountAddOne))),
+			expectedError: keeper.ErrInsufficientDevVestingBalance{ActualBalance: validPreMintCoin.Amount, AttemptedDistribution: validPreMintAmountAddOne},
 		},
 	}
 	for name, tc := range tests {

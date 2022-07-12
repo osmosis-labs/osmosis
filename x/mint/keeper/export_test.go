@@ -7,7 +7,8 @@ import (
 )
 
 type (
-	ErrInvalidRatio = invalidRatioError
+	ErrInvalidRatio                  = invalidRatioError
+	ErrInsufficientDevVestingBalance = insufficientDevVestingBalanceError
 )
 
 const (
