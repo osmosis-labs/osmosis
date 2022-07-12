@@ -288,6 +288,8 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	// We re-introduce the new supply at the end, in order to avoid any rounding discrepancies.
 	k.bankKeeper.AddSupplyOffset(ctx, totalMintedCoin.Denom, developerAccountBalance.Amount)
 
+        // If no developer rewards receivers provided, fund the community pool from
+        // the developer vesting module account.
 	if len(developerRewardsReceivers) == 0 {
 		err = k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, developerRewardsModuleAccountAddress)
 		if err != nil {
