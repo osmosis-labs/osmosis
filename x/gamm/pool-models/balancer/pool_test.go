@@ -42,11 +42,11 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 		weight = 100
 	)
 	testCases := []struct {
-		name               string
-		newLiquidity       sdk.Coins
-		originalPoolAssets map[string]balancer.PoolAsset
-		expectPass         bool
-		err                error
+		name         string
+		newLiquidity sdk.Coins
+		poolAssets   map[string]balancer.PoolAsset
+		expectPass   bool
+		err          error
 	}{
 		{
 			name: "regular case with multiple pool assets and a subset of newLiquidity to update",
@@ -54,7 +54,7 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 				sdk.NewInt64Coin("uosmo", 1_000),
 				sdk.NewInt64Coin("atom", 2_000),
 				sdk.NewInt64Coin("ion", 3_000)),
-			originalPoolAssets: map[string]balancer.PoolAsset{
+			poolAssets: map[string]balancer.PoolAsset{
 				"uosmo": {
 					Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
 					Weight: sdk.NewInt(weight),
@@ -73,7 +73,7 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 		{
 			name:         "new liquidity has no coins",
 			newLiquidity: sdk.NewCoins(),
-			originalPoolAssets: map[string]balancer.PoolAsset{
+			poolAssets: map[string]balancer.PoolAsset{
 				"uosmo": {
 					Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
 					Weight: sdk.NewInt(weight),
@@ -93,7 +93,7 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 			name: "newLiquidity has a coin that poolAssets don't",
 			newLiquidity: sdk.NewCoins(
 				sdk.NewInt64Coin("juno", 1_000)),
-			originalPoolAssets: map[string]balancer.PoolAsset{
+			poolAssets: map[string]balancer.PoolAsset{
 				"uosmo": {
 					Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
 					Weight: sdk.NewInt(weight),
@@ -107,22 +107,22 @@ func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			expectedPoolAssetsByDenom := map[string]balancer.PoolAsset{}
-			for denom, asset := range tc.originalPoolAssets {
+			for denom, asset := range tc.poolAssets {
 				expectedValue := asset
 				expectedValue.Token.Amount = expectedValue.Token.Amount.Add(tc.newLiquidity.AmountOf(denom))
 				expectedPoolAssetsByDenom[denom] = expectedValue
 			}
 
-			err := balancer.UpdateIntermediaryPoolAssetsLiquidity(tc.newLiquidity, tc.originalPoolAssets)
+			err := balancer.UpdateIntermediaryPoolAssetsLiquidity(tc.newLiquidity, tc.poolAssets)
 
 			if tc.expectPass {
 				require.NoError(t, tc.err, "test: %v", tc.name)
-				// make sure actual pool assets aren't changed
-				require.Equal(t, expectedPoolAssetsByDenom, tc.originalPoolAssets)
+				// make sure actual pool assets are properly updated
+				require.Equal(t, expectedPoolAssetsByDenom, tc.poolAssets)
 			} else {
 				require.Error(t, tc.err, "test: %v", tc.name)
 				require.Equal(t, tc.err, err)
-				require.Equal(t, expectedPoolAssetsByDenom, tc.originalPoolAssets)
+				require.Equal(t, expectedPoolAssetsByDenom, tc.poolAssets)
 			}
 			return
 		})
