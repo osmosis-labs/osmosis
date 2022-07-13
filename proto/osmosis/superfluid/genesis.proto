@@ -14,7 +14,7 @@ message GenesisState {
   // registered via governance.
   repeated SuperfluidAsset superfluid_assets = 2
       [ (gogoproto.nullable) = false ];
-  // osmo_equivalent_multipliers is the records of osmo equivilent amount of
+  // osmo_equivalent_multipliers is the records of osmo equivalent amount of
   // each superfluid registered pool, updated every epoch.
   repeated OsmoEquivalentMultiplierRecord osmo_equivalent_multipliers = 3
       [ (gogoproto.nullable) = false ];
