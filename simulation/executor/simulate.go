@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"runtime"
+	"runtime/debug"
 	"syscall"
 	"testing"
 	"time"
@@ -141,6 +143,8 @@ func SimulateFromSeed(
 		// recover logs in case of panic
 		defer func() {
 			if r := recover(); r != nil {
+				// TODO: Come back and cleanup the entire panic recovery logging.
+				// printPanicRecoveryError(r)
 				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d\n", simState.header.Height)
 				simState.logWriter.PrintLogs()
 				panic(r)
@@ -174,6 +178,25 @@ func SimulateFromSeed(
 
 	simState.eventStats.exportEvents(config.ExportStatsPath, w)
 	return stopEarly, exportedParams, nil
+}
+
+//nolint:deadcode,unused
+func printPanicRecoveryError(recoveryError interface{}) {
+	errStackTrace := string(debug.Stack())
+	switch e := recoveryError.(type) {
+	case string:
+		fmt.Println("Recovering from (string) panic: " + e)
+	case runtime.Error:
+		fmt.Println("recovered (runtime.Error) panic: " + e.Error())
+	case error:
+		fmt.Println("recovered (error) panic: " + e.Error())
+	default:
+		fmt.Println("recovered (default) panic. Could not capture logs in ctx, see stdout")
+		fmt.Println("Recovering from panic ", recoveryError)
+		debug.PrintStack()
+		return
+	}
+	fmt.Println("stack trace: " + errStackTrace)
 }
 
 type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header) (opCount int)
