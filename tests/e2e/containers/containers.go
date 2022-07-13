@@ -46,6 +46,15 @@ func NewManager(isUpgrade bool, isFork bool) (docker *Manager, err error) {
 	return docker, nil
 }
 
+// ExecTxCmd Runs ExecCmd, with flags for txs added.
+// namely `--chain-id={chain-id} -b=block --yes --keyring-backend=test`, and searching for `code: 0`
+func (m *Manager) ExecTxCmd(t *testing.T, chainId string, validatorIndex int, command []string) (bytes.Buffer, bytes.Buffer, error) {
+	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId), "-b=block", "--yes", "--keyring-backend=test"}
+	txCommand := append(command, allTxArgs...)
+	successStr := "code: 0"
+	return m.ExecCmd(t, chainId, validatorIndex, txCommand, successStr)
+}
+
 // ExecCmd executes command on chainId by running it on the validator container (specified by validatorIndex)
 // success is the output of the command that needs to be observed for the command to be deemed successful.
 // It is found by checking if stdout or stderr contains the success string anywhere within it.
