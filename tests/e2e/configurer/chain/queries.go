@@ -20,12 +20,18 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func (c *Config) QueryRPC(path string) ([]byte, error) {
-	var err error
+func (c *Config) QueryRPC(validatorIdx int, path string) ([]byte, error) {
+	// add the URL for the given validator ID, and pre-pend to to path.
+	hostPort, err := c.containerManager.GetValidatorHostPort(c.Id, validatorIdx, "1317/tcp")
+	require.NoError(c.t, err)
+	endpoint := fmt.Sprintf("http://%s", hostPort)
+	fullQueryPath := fmt.Sprintf("%s/%s", endpoint, path)
+
+	// TODO: Document why we have this loop
 	var resp *http.Response
 	retriesLeft := 5
 	for {
-		resp, err = http.Get(path)
+		resp, err = http.Get(fullQueryPath)
 
 		if resp.StatusCode == http.StatusServiceUnavailable {
 			retriesLeft--
@@ -89,16 +95,8 @@ func (c *Config) QueryBalances(validatorIndex int, addr string) (sdk.Coins, erro
 }
 
 func (c *Config) QueryPropTally(validatorIdx int, addr string) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
-	hostPort, err := c.containerManager.GetValidatorHostPort(c.Id, validatorIdx, "1317/tcp")
-	require.NoError(c.t, err)
-
-	endpoint := fmt.Sprintf("http://%s", hostPort)
-
-	path := fmt.Sprintf(
-		"%s/cosmos/gov/v1beta1/proposals/%s/tally",
-		endpoint, addr,
-	)
-	bz, err := c.QueryRPC(path)
+	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%s/tally", addr)
+	bz, err := c.QueryRPC(validatorIdx, path)
 	require.NoError(c.t, err)
 
 	var balancesResp govtypes.QueryTallyResultResponse
@@ -126,17 +124,12 @@ func (c *Config) QueryValidatorOperatorAddresses() {
 }
 
 func (c *Config) QueryIntermediaryAccount(validatorIdx int, denom string, valAddr string) (int, error) {
-	hostPort, err := c.containerManager.GetValidatorHostPort(c.Id, validatorIdx, "1317/tcp")
-	require.NoError(c.t, err)
-
-	endpoint := fmt.Sprintf("http://%s", hostPort)
-
 	intAccount := superfluidtypes.GetSuperfluidIntermediaryAccountAddr(denom, valAddr)
 	path := fmt.Sprintf(
-		"%s/cosmos/staking/v1beta1/validators/%s/delegations/%s",
-		endpoint, valAddr, intAccount,
+		"cosmos/staking/v1beta1/validators/%s/delegations/%s",
+		valAddr, intAccount,
 	)
-	bz, err := c.QueryRPC(path)
+	bz, err := c.QueryRPC(validatorIdx, path)
 	require.NoError(c.t, err)
 
 	var stakingResp stakingtypes.QueryDelegationResponse
