@@ -15,11 +15,9 @@ import (
 
 const forkHeight = 10
 
-var (
-	expectedConfigFiles = []string{
-		"app.toml", "config.toml", "genesis.json", "node_key.json", "priv_validator_key.json",
-	}
-)
+var expectedConfigFiles = []string{
+	"app.toml", "config.toml", "genesis.json", "node_key.json", "priv_validator_key.json",
+}
 
 // TestChainInit tests that chain initialization correctly initializes a full chain
 // and produces the desired output with genesis, chain and validator configs.
