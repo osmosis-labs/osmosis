@@ -94,6 +94,12 @@ At most each module can 'optionally' provide a 'weight-hint' from an enum, rathe
 We should make all logs go into a standard database, have an easy way of seeing the history
 and seeing how many message attempts failed
 
+### Replay
+
+* Be able to replay old simulation messages (so going off the messages in sequence)
+* Be able to run blocks from a real network
+    * osmosisd export-history-for-simulator
+
 ## What exists in the SDK to date
 
 The SDK to date only has tooling for constructing complex state machines, and memoryless checks (dubbed invariants)

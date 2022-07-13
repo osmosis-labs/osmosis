@@ -4,8 +4,9 @@ import (
 	"errors"
 	"time"
 
-	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
+	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
@@ -31,22 +32,24 @@ func RandomMsgBeginUnlockingAll(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk
 }
 
 func RandomMsgBeginUnlocking(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*types.MsgBeginUnlocking, error) {
-	// TODO: Make random Sim Account with filter API, remove error here
-	sender := sim.RandomSimAccount()
-	lock, err := RandomAccountLock(k, sim, ctx, sender.Address)
-	if err != nil {
-		return nil, err
+	sender, senderExists := sim.RandomSimAccountWithConstraint(accountHasLockConstraint(k, ctx))
+	if !senderExists {
+		return nil, errors.New("No addr has created a lock")
 	}
+	lock := randLock(k, sim, ctx, sender.Address)
 	return &types.MsgBeginUnlocking{
 		Owner: sender.Address.String(),
 		ID:    lock.ID,
 	}, nil
 }
 
-func RandomAccountLock(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context, addr sdk.AccAddress) (types.PeriodLock, error) {
-	locks := k.GetAccountPeriodLocks(ctx, addr)
-	if len(locks) == 0 {
-		return types.PeriodLock{}, errors.New("no lock found for address")
+func accountHasLockConstraint(k keeper.Keeper, ctx sdk.Context) simulation.SimAccountConstraint {
+	return func(acc legacysimulationtype.Account) bool {
+		return len(k.GetAccountPeriodLocks(ctx, acc.Address)) != 0
 	}
-	return simulation.RandSelect(sim, locks...), nil
+}
+
+func randLock(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context, addr sdk.AccAddress) types.PeriodLock {
+	locks := k.GetAccountPeriodLocks(ctx, addr)
+	return simulation.RandSelect(sim, locks...)
 }

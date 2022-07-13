@@ -18,6 +18,26 @@ func (sim *SimCtx) randomSimAccount(accs []simulation.Account) simulation.Accoun
 	return accs[idx]
 }
 
+type SimAccountConstraint = func(account simulation.Account) bool
+
+// returns acc, accExists := sim.RandomSimAccountWithConstraint(f)
+// where acc is a uniformly sampled account from all accounts satisfying the constraint f
+// a constraint is satisfied for an account `acc` if f(acc) = true
+// accExists is false, if there is no such account.
+func (sim *SimCtx) RandomSimAccountWithConstraint(f SimAccountConstraint) (simulation.Account, bool) {
+	filteredAddrs := []simulation.Account{}
+	for _, acc := range sim.Accounts {
+		if f(acc) {
+			filteredAddrs = append(filteredAddrs, acc)
+		}
+	}
+
+	if len(filteredAddrs) == 0 {
+		return simulation.Account{}, false
+	}
+	return sim.randomSimAccount(filteredAddrs), true
+}
+
 func (sim *SimCtx) RandomExistingAddress() sdk.AccAddress {
 	acc := sim.RandomSimAccount()
 	return acc.Address
@@ -46,22 +66,19 @@ func (sim *SimCtx) FindAccount(address sdk.Address) (simulation.Account, bool) {
 // randSubsetCoins is a random subset of the provided denoms, if the account is found.
 // TODO: Write unit test
 func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulation.Account, sdk.Coins, bool) {
-	filteredAddrs := []simulation.Account{}
-	for _, acc := range sim.Accounts {
-		// ensure acc has non-zero balance for all denoms
+	accHasDenoms := func(acc simulation.Account) bool {
 		for _, denom := range denoms {
 			if sim.App.GetBankKeeper().GetBalance(ctx, acc.Address, denom).Amount.IsZero() {
-				continue
+				return false
 			}
 		}
-		// if so, add to filtered addrs
-		filteredAddrs = append(filteredAddrs, acc)
+		return true
 	}
 
-	if len(filteredAddrs) == 0 {
-		return simulation.Account{}, sdk.Coins{}, false
+	acc, accExists := sim.RandomSimAccountWithConstraint(accHasDenoms)
+	if !accExists {
+		return acc, sdk.Coins{}, false
 	}
-	acc := sim.randomSimAccount(filteredAddrs)
 	balance := sim.RandCoinSubset(ctx, acc.Address, denoms)
 	return acc, balance, true
 }
