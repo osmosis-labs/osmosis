@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"errors"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +38,7 @@ func NewSimCtx(r *rand.Rand, app App, accounts []simulation.Account, chainID str
 		Accounts: accounts,
 		ChainID:  chainID,
 
-		txbuilder: func(sdk.Context, sdk.Msg) (sdk.Tx, error) { return nil, errors.New("unimplemented") },
+		txbuilder: noopTxBuilder(),
 	}
 }
 

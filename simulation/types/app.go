@@ -30,4 +30,6 @@ type AccountKeeper interface {
 type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	// TODO: Revisit
+	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
