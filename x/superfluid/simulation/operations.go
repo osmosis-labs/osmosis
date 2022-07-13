@@ -3,7 +3,7 @@ package simulation
 import (
 	"math/rand"
 
-	osmo_simulation "github.com/osmosis-labs/osmosis/v7/x/simulation"
+	osmo_simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 

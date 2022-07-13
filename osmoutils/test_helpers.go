@@ -1,6 +1,7 @@
 package osmoutils
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,4 +16,13 @@ func ConditionalPanic(t *testing.T, expectPanic bool, sut func()) {
 		return
 	}
 	require.NotPanics(t, sut)
+}
+
+// GetType uses reflection to return a string representation of the name of a given struct.
+func GetType(myvar interface{}) string {
+	if t := reflect.TypeOf(myvar); t.Kind() == reflect.Ptr {
+		return "*" + t.Elem().Name()
+	} else {
+		return t.Name()
+	}
 }

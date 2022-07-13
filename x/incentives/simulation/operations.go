@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	osmo_simulation "github.com/osmosis-labs/osmosis/v7/x/simulation"
+	osmo_simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
@@ -133,8 +133,8 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 		}
 
 		msg := types.MsgCreateGauge{
-			IsPerpetual:       isPerpetual,
 			Owner:             simAccount.Address.String(),
+			IsPerpetual:       isPerpetual,
 			DistributeTo:      distributeTo,
 			Coins:             rewards,
 			StartTime:         startTime,
