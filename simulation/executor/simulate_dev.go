@@ -65,9 +65,9 @@ func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testin
 	}
 }
 
-func (s *simState) WithLogParam(leanLogs bool) *simState {
-	s.leanLogs = leanLogs
-	return s
+func (simState *simState) WithLogParam(leanLogs bool) *simState {
+	simState.leanLogs = leanLogs
+	return simState
 }
 
 // simulate a block, update state

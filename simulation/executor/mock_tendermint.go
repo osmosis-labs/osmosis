@@ -58,22 +58,22 @@ func (mv mockValidators) Clone() mockValidators {
 }
 
 // TODO describe usage
-func (vals mockValidators) getKeys() []string {
-	keys := maps.Keys(vals)
+func (mv mockValidators) getKeys() []string {
+	keys := maps.Keys(mv)
 	sort.Strings(keys)
 	return keys
 }
 
 // randomProposer picks a random proposer from the current validator set
-func (vals mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
-	keys := vals.getKeys()
+func (mv mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
+	keys := mv.getKeys()
 	if len(keys) == 0 {
 		return nil
 	}
 
 	key := keys[r.Intn(len(keys))]
 
-	proposer := vals[key].val
+	proposer := mv[key].val
 	pk, err := cryptoenc.PubKeyFromProto(proposer.PubKey)
 	if err != nil { //nolint:wsl
 		panic(err)

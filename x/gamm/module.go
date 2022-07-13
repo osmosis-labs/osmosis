@@ -158,12 +158,12 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // **** simulation implementation ****
-func (a AppModule) GenerateGenesisState(m *module.SimulationState, s *simulation.SimCtx) {
-	m.GenState[types.ModuleName] = a.DefaultGenesis(m.Cdc)
+func (am AppModule) GenerateGenesisState(m *module.SimulationState, s *simulation.SimCtx) {
+	m.GenState[types.ModuleName] = am.DefaultGenesis(m.Cdc)
 }
 
-func (a AppModule) Actions() []simulation.Action {
+func (am AppModule) Actions() []simulation.Action {
 	return []simulation.Action{
-		simulation.NewMsgBasedAction("MsgJoinPool", gammsimulation.CurrySimMsgJoinPool(a.keeper)),
+		simulation.NewMsgBasedAction("MsgJoinPool", gammsimulation.CurrySimMsgJoinPool(am.keeper)),
 	}
 }
