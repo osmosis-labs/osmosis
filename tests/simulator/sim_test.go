@@ -136,6 +136,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config := sdkSimapp.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
+	config.NumBlocks = 10
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
@@ -153,11 +154,12 @@ func TestAppStateDeterminism(t *testing.T) {
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
-			if sdkSimapp.FlagVerboseValue {
-				logger = log.TestingLogger()
-			} else {
-				logger = log.NewNopLogger()
-			}
+			logger = log.TestingLogger()
+			// if sdkSimapp.FlagVerboseValue {
+			// 	logger = log.TestingLogger()
+			// } else {
+			// 	logger = log.NewNopLogger()
+			// }
 
 			db := dbm.NewMemDB()
 			osmosis := app.NewOsmosisApp(

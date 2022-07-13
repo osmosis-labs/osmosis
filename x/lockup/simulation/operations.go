@@ -6,6 +6,7 @@ import (
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -43,13 +44,16 @@ func RandomMsgBeginUnlocking(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Co
 	}, nil
 }
 
+var notUnlockingFilter = func(l types.PeriodLock) bool { return !l.IsUnlocking() }
+
 func accountHasLockConstraint(k keeper.Keeper, ctx sdk.Context) simulation.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
-		return len(k.GetAccountPeriodLocks(ctx, acc.Address)) != 0
+		return len(osmoutils.Filter(notUnlockingFilter, k.GetAccountPeriodLocks(ctx, acc.Address))) != 0
 	}
 }
 
 func randLock(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context, addr sdk.AccAddress) types.PeriodLock {
 	locks := k.GetAccountPeriodLocks(ctx, addr)
-	return simulation.RandSelect(sim, locks...)
+	notUnlockingLocks := osmoutils.Filter(notUnlockingFilter, locks)
+	return simulation.RandSelect(sim, notUnlockingLocks...)
 }
