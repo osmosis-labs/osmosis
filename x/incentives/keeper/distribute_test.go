@@ -192,15 +192,13 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	tests := []struct {
 		// each sdk.Coins in initialGaugeCoins will be used to create a new gauge
 		initialGaugeCoins []sdk.Coins
-		// coin to add to gauge with gauge id
+		// sdk.Coins to add to gauge with gauge id
 		coinsToAddToGauges map[uint64]sdk.Coins
-		lockedCoins        sdk.Coins
 	}{
 		{
 			initialGaugeCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 10)),
 			},
-			lockedCoins: sdk.Coins{sdk.NewInt64Coin("lptoken", 10)},
 			coinsToAddToGauges: map[uint64]sdk.Coins{
 				1: sdk.NewCoins(sdk.NewInt64Coin("stake", 200)),
 			},
@@ -210,7 +208,6 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 40)),
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 70)),
 			},
-			lockedCoins: sdk.Coins{sdk.NewInt64Coin("lptoken", 10)},
 			coinsToAddToGauges: map[uint64]sdk.Coins{
 				1: sdk.NewCoins(sdk.NewInt64Coin("stake", 300)),
 				2: sdk.NewCoins(sdk.NewInt64Coin("stake", 700)),
@@ -221,7 +218,6 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
 				sdk.NewCoins(sdk.NewInt64Coin("notstake", 60)),
 			},
-			lockedCoins: sdk.Coins{sdk.NewInt64Coin("lptoken", 10)},
 			coinsToAddToGauges: map[uint64]sdk.Coins{
 				1: sdk.NewCoins(sdk.NewInt64Coin("notstake", 1000)),
 				2: sdk.NewCoins(sdk.NewInt64Coin("stake", 500)),
@@ -242,7 +238,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 		// coins that will be distributed after the first epoch
 		expDistributedCoinsFirstEpoch := map[uint64]sdk.Coins{}
 
-		suite.LockTokens(lockOwner, tc.lockedCoins, time.Second)
+		suite.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
 
 		// create new gauge using initialGaugeCoins
 		for _, coins := range tc.initialGaugeCoins {
