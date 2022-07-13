@@ -27,7 +27,6 @@ func (c *Config) QueryRPC(validatorIdx int, path string) ([]byte, error) {
 	endpoint := fmt.Sprintf("http://%s", hostPort)
 	fullQueryPath := fmt.Sprintf("%s/%s", endpoint, path)
 
-	// TODO: Document why we have this loop
 	var resp *http.Response
 	retriesLeft := 5
 	for {
