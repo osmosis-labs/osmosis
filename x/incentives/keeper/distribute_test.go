@@ -185,8 +185,9 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 
 }
 
-// TestGetModuleToDistributeCoins tests the sum of coins yet to be distributed for all of the module is correct.
-func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
+// TestGetModuleToDistributeAndDistributedCoins tests the sum of coins yet to be distributed
+// and the sum of distributed coins for all of the module is correct.
+func (suite *KeeperTestSuite) TestGetModuleToDistributeAndDistributedCoins() {
 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
 
 	tests := []struct {
