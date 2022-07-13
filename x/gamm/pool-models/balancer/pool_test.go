@@ -1232,11 +1232,9 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 func (suite *BalancerTestSuite) TestIsActive(t *testing.T) {
 	tests := map[string]struct {
 		expectedIsActive bool
-		expectPass       bool
 	}{
 		"IsActive is true": {
 			expectedIsActive: true,
-			expectPass:       true,
 		},
 	}
 
@@ -1244,19 +1242,12 @@ func (suite *BalancerTestSuite) TestIsActive(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := suite.CreateTestContext()
 
-			// Initialize the pool
+			// Initialize a pool
 			pool, err := balancer.NewBalancerPool(defaultPoolId, defaultBalancerPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 			require.NoError(t, err, "test %v", name)
 
 			isActive := pool.IsActive(ctx)
-
-			if tc.expectPass {
-				require.Equal(t, tc.expectedIsActive, isActive)
-				require.NoError(t, err, "test %v", name)
-			} else {
-				require.NotEqual(t, tc.expectedIsActive, isActive)
-				require.Error(t, err, "test %v", name)
-			}
+			require.Equal(t, tc.expectedIsActive, isActive)
 		})
 	}
 }
