@@ -1,9 +1,6 @@
 package keeper
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
@@ -79,7 +76,7 @@ func NewKeeper(
 // queries. The method returns an error if current height in ctx is greater than the v7 upgrade height.
 func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
-		return errDevVestingModuleAccountNotCreated
+		return types.ErrDevVestingModuleAccountNotCreated
 	}
 
 	moduleAccBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), k.GetParams(ctx).MintDenom)
@@ -96,10 +93,10 @@ func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 // - developer vesting module account is already created prior to calling this method.
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
 	if amount.IsNil() || amount.Amount.IsZero() {
-		return errAmountCannotBeNilOrZero
+		return types.ErrAmountCannotBeNilOrZero
 	}
 	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
-		return errDevVestingModuleAccountAlreadyCreated
+		return types.ErrDevVestingModuleAccountAlreadyCreated
 	}
 
 	moduleAcc := authtypes.NewEmptyModuleAccount(

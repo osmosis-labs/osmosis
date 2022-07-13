@@ -315,18 +315,18 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 		},
 		"nil amount": {
 			blockHeight:   0,
-			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+			expectedError: types.ErrAmountCannotBeNilOrZero,
 		},
 		"zero amount": {
 			blockHeight:   0,
 			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
-			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+			expectedError: types.ErrAmountCannotBeNilOrZero,
 		},
 		"module account is already created": {
 			blockHeight:                     0,
 			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
 			isDeveloperModuleAccountCreated: true,
-			expectedError:                   keeper.ErrDevVestingModuleAccountAlreadyCreated,
+			expectedError:                   types.ErrDevVestingModuleAccountAlreadyCreated,
 		},
 	}
 
@@ -361,7 +361,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 		},
 		"dev vesting module account does not exist": {
 			blockHeight:   1,
-			expectedError: keeper.ErrDevVestingModuleAccountNotCreated,
+			expectedError: types.ErrDevVestingModuleAccountNotCreated,
 		},
 	}
 
