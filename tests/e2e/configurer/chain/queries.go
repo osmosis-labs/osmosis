@@ -94,8 +94,8 @@ func (c *Config) QueryBalances(validatorIndex int, addr string) (sdk.Coins, erro
 	return balancesResp.GetBalances(), nil
 }
 
-func (c *Config) QueryPropTally(validatorIdx int, addr string) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
-	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%s/tally", addr)
+func (c *Config) QueryPropTally(validatorIdx int, proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
+	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%d/tally", proposalNumber)
 	bz, err := c.QueryRPC(validatorIdx, path)
 	require.NoError(c.t, err)
 
