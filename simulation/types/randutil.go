@@ -20,6 +20,11 @@ func RandLTEBound[T constraints.Integer](sim *SimCtx, upperbound T) T {
 	return t
 }
 
+func RandSelect[T interface{}](sim *SimCtx, args ...T) T {
+	choice := RandLTBound(sim, len(args))
+	return args[choice]
+}
+
 // RandStringOfLength generates a random string of a particular length
 func (sim *SimCtx) RandStringOfLength(n int) string {
 	r := sim.GetSeededRand("random string of bounded length")

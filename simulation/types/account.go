@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"fmt"
+	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -63,6 +64,28 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 	acc := sim.randomSimAccount(filteredAddrs)
 	balance := sim.RandCoinSubset(ctx, acc.Address, denoms)
 	return acc, balance, true
+}
+
+// RandGeometricCoin uniformly samples a denom from the addr's balances.
+// Then it samples an Exponentially distributed amount of the addr's coins, with rate = 10.
+// (Meaning that on average it samples 10% of the chosen balance)
+func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) sdk.Coin {
+	balances := sim.App.GetBankKeeper().GetAllBalances(ctx, addr)
+	coin := RandSelect(sim, balances...)
+	// TODO: Reconsider if this becomes problematic in the future, but currently thinking it
+	// should be fine for simulation.
+	r := sim.GetSeededRand("Exponential distribution")
+	lambda := float64(10)
+	sample := r.ExpFloat64() / lambda
+	// truncate exp at 1, which will only be reached in .0045% of the time.
+	// .000045 ~= (1 - CDF(1, Exp[\lambda=10])) = e^{-10}
+	sample = math.Min(1, sample)
+	// Do some hacky scaling to get this into an SDK decimal,
+	// were going to treat it as an integer in the range [0, 10000]
+	maxRange := int64(10000)
+	intSample := int64(math.Round(sample * float64(maxRange)))
+	newAmount := coin.Amount.MulRaw(intSample).QuoRaw(maxRange)
+	return sdk.NewCoin(coin.Denom, newAmount)
 }
 
 func (sim *SimCtx) RandCoinSubset(ctx sdk.Context, addr sdk.AccAddress, denoms []string) sdk.Coins {
