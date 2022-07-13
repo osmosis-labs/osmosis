@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,50 +15,21 @@ func noopTxBuilder() func(ctx sdk.Context, msg sdk.Msg) (sdk.Tx, error) {
 	return func(sdk.Context, sdk.Msg) (sdk.Tx, error) { return nil, errors.New("unimplemented") }
 }
 
-func genAndDeliverTxWithRandFees(
-	sim *SimCtx,
-	msg sdk.Msg,
-	msgName string,
-	coinsSpentInMsg sdk.Coins,
-	ctx sdk.Context,
-) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-	account, found := sim.FindAccount(msg.GetSigners()[0])
-	if !found {
-		return simulation.NoOpMsg(msgName, msgName, "unable to generate mock tx"), nil, errors.New("sim acct not found")
-	}
-	spendable := sim.App.GetBankKeeper().SpendableCoins(ctx, account.Address)
-
-	var fees sdk.Coins
-	var err error
-
-	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg)
-	if hasNeg {
-		return simulation.NoOpMsg(msgName, msgName, "message doesn't leave room for fees"), nil, err
-	}
-
-	// Only allow fees in "uosmo"
-	coins = sdk.NewCoins(sdk.NewCoin("uosmo", coins.AmountOf("uosmo")))
-
-	fees, err = simulation.RandomFees(sim.GetRand(), ctx, coins)
-	if err != nil {
-		return simulation.NoOpMsg(msgName, msgName, "unable to generate fees"), nil, err
-	}
-	return sim.genAndDeliverTx(msg, msgName, fees, ctx)
-}
-
 // TODO: Comeback and clean this up to not suck
-func (sim *SimCtx) genAndDeliverTx(
+func (sim *SimCtx) defaultTxBuilder(
+	ctx sdk.Context,
 	msg sdk.Msg,
 	msgName string, // TODO fix
-	fees sdk.Coins,
-	ctx sdk.Context,
-) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+) (sdk.Tx, error) {
 	account, found := sim.FindAccount(msg.GetSigners()[0])
 	if !found {
-		return simulation.NoOpMsg(msgName, msgName, "unable to generate mock tx"), nil, errors.New("sim acct not found")
+		return nil, errors.New("unable to generate mock tx: sim acct not found")
 	}
 	authAcc := sim.App.GetAccountKeeper().GetAccount(ctx, account.Address)
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
+	// TODO: Consider making a default tx builder that charges some random fees
+	// Low value for amount of work right now though.
+	fees := sdk.Coins{}
 	tx, err := helpers.GenTx(
 		txConfig,
 		[]sdk.Msg{msg},
@@ -69,9 +41,9 @@ func (sim *SimCtx) genAndDeliverTx(
 		account.PrivKey,
 	)
 	if err != nil {
-		return simulation.NoOpMsg(msgName, msgName, "unable to generate mock tx"), nil, err
+		return nil, fmt.Errorf("unable to generate mock tx %v", err)
 	}
-	return sim.deliverTx(tx, msg, msgName)
+	return tx, nil
 }
 
 // TODO: Fix these args

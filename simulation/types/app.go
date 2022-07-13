@@ -24,7 +24,7 @@ type App interface {
 
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-	GetAllAccounts(ctx sdk.Context) []authtypes.AccountI
+	// GetAllAccounts(ctx sdk.Context) []authtypes.AccountI
 }
 
 type BankKeeper interface {
