@@ -231,7 +231,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeAndDistributedCoins() {
 
 		// check that the sum of coins yet to be distributed is nil
 		moduleToDistributeCoins := suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
-		suite.Require().Equal(moduleToDistributeCoins, sdk.Coins(nil))
+		suite.Equal(moduleToDistributeCoins, sdk.Coins(nil))
 		// gauges used in this test
 		gauges := []*types.Gauge{}
 
