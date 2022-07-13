@@ -49,6 +49,7 @@ func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	suite.Require().NoError(err)
 }
 
+// TestGaugeOperations tests perpetual and non-perpetual gauge distribution logic using the gauges by denom keeper.
 func (suite *KeeperTestSuite) TestGaugeOperations() {
 	testCases := []struct {
 		isPerpetual bool
