@@ -92,7 +92,6 @@ func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	}
 	tx, err := sim.txbuilder(ctx, msg, m.name)
 	if err != nil {
-		panic(err)
 		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build tx due to: %v", err)), nil, err
 	}
 	return sim.deliverTx(tx, msg, m.name)
