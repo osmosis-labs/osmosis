@@ -14,6 +14,14 @@ import (
 
 var _ = suite.TestingSuite(nil)
 
+// TODO: move this to osmosutil so that tests from other modules can use this
+func DivCoin(coins sdk.Coins, divisor int64) sdk.Coins {
+	for id, coin := range coins {
+		coins[id].Amount = coin.Amount.QuoRaw(divisor)
+	}
+	return coins
+}
+
 // TestDistribute tests that when the distribute command is executed on a provided gauge
 // that the correct amount of rewards is sent to the correct lock owners.
 func (suite *KeeperTestSuite) TestDistribute() {
@@ -179,78 +187,108 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 
 // TestGetModuleToDistributeCoins tests the sum of coins yet to be distributed for all of the module is correct.
 func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
-	suite.SetupTest()
+	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
 
-	// check that the sum of coins yet to be distributed is nil
-	coins := suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
-	suite.Require().Equal(coins, sdk.Coins(nil))
+	tests := []struct {
+		// each sdk.Coins in initialGaugeCoins will be used to create a new gauge
+		initialGaugeCoins []sdk.Coins
+		// coin to add to gauge with gauge id
+		coinsToAddToGauges map[uint64]sdk.Coins
+		lockedCoins        sdk.Coins
+	}{
+		{
+			initialGaugeCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 10)),
+			},
+			lockedCoins: sdk.Coins{sdk.NewInt64Coin("lptoken", 10)},
+			coinsToAddToGauges: map[uint64]sdk.Coins{
+				1: sdk.NewCoins(sdk.NewInt64Coin("stake", 200)),
+			},
+		},
+		{
+			initialGaugeCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 40)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 70)),
+			},
+			lockedCoins: sdk.Coins{sdk.NewInt64Coin("lptoken", 10)},
+			coinsToAddToGauges: map[uint64]sdk.Coins{
+				1: sdk.NewCoins(sdk.NewInt64Coin("stake", 300)),
+				2: sdk.NewCoins(sdk.NewInt64Coin("stake", 700)),
+			},
+		},
+		{
+			initialGaugeCoins: []sdk.Coins{
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 50)),
+				sdk.NewCoins(sdk.NewInt64Coin("notstake", 60)),
+			},
+			lockedCoins: sdk.Coins{sdk.NewInt64Coin("lptoken", 10)},
+			coinsToAddToGauges: map[uint64]sdk.Coins{
+				1: sdk.NewCoins(sdk.NewInt64Coin("notstake", 1000)),
+				2: sdk.NewCoins(sdk.NewInt64Coin("stake", 500)),
+			},
+		},
+	}
 
-	// setup a non perpetual lock and gauge
-	_, gaugeID, gaugeCoins, startTime := suite.SetupLockAndGauge(false)
+	for _, tc := range tests {
+		suite.SetupTest()
 
-	// check that the sum of coins yet to be distributed is equal to the newly created gaugeCoins
-	coins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
-	suite.Require().Equal(coins, gaugeCoins)
+		// check that the sum of coins yet to be distributed is nil
+		moduleToDistributeCoins := suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
+		suite.Require().Equal(moduleToDistributeCoins, sdk.Coins(nil))
+		// gauges used in this test
+		gauges := []*types.Gauge{}
 
-	// add coins to the previous gauge and check that the sum of coins yet to be distributed includes these new coins
-	addCoins := sdk.Coins{sdk.NewInt64Coin("stake", 200)}
-	suite.AddToGauge(addCoins, gaugeID)
-	coins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
-	suite.Require().Equal(coins, gaugeCoins.Add(addCoins...))
+		expModuleToDistributeCoins := sdk.Coins{}
+		// coins that will be distributed after the first epoch
+		expDistributedCoinsFirstEpoch := map[uint64]sdk.Coins{}
 
-	// create a new gauge
-	// check that the sum of coins yet to be distributed is equal to the gauge1 and gauge2 coins combined
-	_, _, gaugeCoins2, _ := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 1000)})
-	coins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
-	suite.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...))
+		suite.LockTokens(lockOwner, tc.lockedCoins, time.Second)
 
-	// move all created gauges from upcoming to active
-	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
-	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
-	suite.Require().NoError(err)
-	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
-	suite.Require().NoError(err)
+		// create new gauge using initialGaugeCoins
+		for _, coins := range tc.initialGaugeCoins {
+			_, gauge, gaugeCoins, _ := suite.SetupNewGauge(false, coins)
+			suite.Require().Equal(coins, gaugeCoins)
 
-	// distribute coins to stakers
-	distrCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
-	suite.Require().NoError(err)
-	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 105)})
+			gauges = append(gauges, gauge)
 
-	// check gauge changes after distribution
-	coins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
-	suite.Require().Equal(coins, gaugeCoins.Add(addCoins...).Add(gaugeCoins2...).Sub(distrCoins))
-}
+			moduleToDistributeCoins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
+			expModuleToDistributeCoins = expModuleToDistributeCoins.Add(gaugeCoins...)
+			suite.Require().Equal(expModuleToDistributeCoins, moduleToDistributeCoins)
 
-// TestGetModuleDistributedCoins tests that the sum of coins that have been distributed so far for all of the module is correct.
-func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
-	suite.SetupTest()
+			// div by 2 since all gauge in this tests distribute over 2 epochs
+			expDistributedCoinsFirstEpoch[gauge.Id] = DivCoin(coins, 2)
+		}
 
-	// check that the sum of coins yet to be distributed is nil
-	coins := suite.App.IncentivesKeeper.GetModuleDistributedCoins(suite.Ctx)
-	suite.Require().Equal(coins, sdk.Coins(nil))
+		for gaugeID, coins := range tc.coinsToAddToGauges {
+			suite.AddToGauge(coins, gaugeID)
 
-	// setup a non perpetual lock and gauge
-	_, gaugeID, _, startTime := suite.SetupLockAndGauge(false)
+			moduleToDistributeCoins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
+			expModuleToDistributeCoins = expModuleToDistributeCoins.Add(coins...)
+			suite.Require().Equal(expModuleToDistributeCoins, moduleToDistributeCoins)
 
-	// check that the sum of coins yet to be distributed is equal to the newly created gaugeCoins
-	coins = suite.App.IncentivesKeeper.GetModuleDistributedCoins(suite.Ctx)
-	suite.Require().Equal(coins, sdk.Coins(nil))
+			// div by 2 since all gauge in this tests distribute over 2 epochs
+			expDistributedCoinsFirstEpoch[gaugeID] = expDistributedCoinsFirstEpoch[gaugeID].Add(DivCoin(coins, 2)...)
+		}
 
-	// move all created gauges from upcoming to active
-	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
-	gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
-	suite.Require().NoError(err)
-	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
-	suite.Require().NoError(err)
-
-	// distribute coins to stakers
-	distrCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
-	suite.Require().NoError(err)
-	suite.Require().Equal(distrCoins, sdk.Coins{sdk.NewInt64Coin("stake", 5)})
-
-	// check gauge changes after distribution
-	coins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
-	suite.Require().Equal(coins, distrCoins)
+		// move all created gauges from upcoming to active
+		// distribute coins from those gauges to stakers
+		for _, gauge := range gauges {
+			// move this gauge from upcoming to active
+			suite.Ctx = suite.Ctx.WithBlockTime(gauge.StartTime)
+			gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gauge.Id)
+			suite.Require().NoError(err)
+			err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
+			suite.Require().NoError(err)
+			// distribute coins from this gauge to stakers
+			distrCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
+			suite.Require().NoError(err)
+			suite.Require().Equal(distrCoins, expDistributedCoinsFirstEpoch[gauge.Id])
+			// check gauge changes after distribution
+			expModuleToDistributeCoins = expModuleToDistributeCoins.Sub(distrCoins)
+			moduleToDistributeCoins = suite.App.IncentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
+			suite.Require().Equal(expModuleToDistributeCoins, moduleToDistributeCoins)
+		}
+	}
 }
 
 // TestNoLockPerpetualGaugeDistribution tests that the creation of a perp gauge that has no locks associated does not distribute any tokens.
