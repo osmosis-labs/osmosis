@@ -67,9 +67,9 @@ type PoolI interface {
 	// and returns the number of coins that are being returned.
 	// This mutates the pool and state.
 	ExitPool(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
-	// CalcExitPoolShares returns how many coins ExitPool would return on these arguments.
+	// CalcExitPoolCoinsFromShares returns how many coins ExitPool would return on these arguments.
 	// This does not mutate the pool, or state.
-	CalcExitPoolShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
+	CalcExitPoolCoinsFromShares(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
 
 	// PokePool determines if a pool's weights need to be updated and updates
 	// them if so.

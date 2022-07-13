@@ -3,12 +3,17 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var _ = suite.TestingSuite(nil)
+
+// TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
 func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.SetupTest()
 
@@ -26,6 +31,7 @@ func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 	suite.Require().NoError(err)
 }
 
+// TestNonExistentDenomGaugeCreation tests error handling for creating a gauge with an invalid denom.
 func (suite *KeeperTestSuite) TestNonExistentDenomGaugeCreation() {
 	suite.SetupTest()
 
