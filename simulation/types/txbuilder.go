@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/app/params"
 )
 
+//nolint:deadcode,unused
 func noopTxBuilder() func(ctx sdk.Context, msg sdk.Msg) (sdk.Tx, error) {
 	return func(sdk.Context, sdk.Msg) (sdk.Tx, error) { return nil, errors.New("unimplemented") }
 }

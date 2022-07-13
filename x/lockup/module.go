@@ -193,6 +193,8 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *si
 // WeightedOperations returns the all the lockup module operations with their respective weights.
 func (am AppModule) Actions() []simulation.Action {
 	return []simulation.Action{
-		simulation.NewCurriedMsgBasedAction("locktokens", am.keeper, locksimulation.RandomMsgLockTokens),
+		simulation.NewCurriedMsgBasedAction("lock tokens", am.keeper, locksimulation.RandomMsgLockTokens),
+		simulation.NewCurriedMsgBasedAction("unlock all tokens", am.keeper, locksimulation.RandomMsgBeginUnlockingAll),
+		simulation.NewCurriedMsgBasedAction("unlock lock", am.keeper, locksimulation.RandomMsgBeginUnlocking),
 	}
 }
