@@ -1505,28 +1505,26 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Params returns the total set of superfluid parameters.
+	// Params returns the total set of minting parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// Returns superfluid asset type, whether if it's a native asset or an lp
-	// share.
+	// Returns superfluid asset type
 	AssetType(ctx context.Context, in *AssetTypeRequest, opts ...grpc.CallOption) (*AssetTypeResponse, error)
-	// Returns all registered superfluid assets.
+	// Returns all superfluid asset types
 	AllAssets(ctx context.Context, in *AllAssetsRequest, opts ...grpc.CallOption) (*AllAssetsResponse, error)
-	// Returns the osmo equivalent multiplier used in the most recent epoch.
+	// Returns superfluid asset Multiplier
 	AssetMultiplier(ctx context.Context, in *AssetMultiplierRequest, opts ...grpc.CallOption) (*AssetMultiplierResponse, error)
-	// Returns all superfluid intermediary accounts.
+	// Returns all superfluid intermediary account
 	AllIntermediaryAccounts(ctx context.Context, in *AllIntermediaryAccountsRequest, opts ...grpc.CallOption) (*AllIntermediaryAccountsResponse, error)
 	// Returns intermediary account connected to a superfluid staked lock by id
 	ConnectedIntermediaryAccount(ctx context.Context, in *ConnectedIntermediaryAccountRequest, opts ...grpc.CallOption) (*ConnectedIntermediaryAccountResponse, error)
-	// Returns the total amount of osmo superfluidly staked.
-	// Response is denominated in uosmo.
+	// Returns the total amount of osmo superfluidly staked
+	// response denominated in uosmo
 	TotalSuperfluidDelegations(ctx context.Context, in *TotalSuperfluidDelegationsRequest, opts ...grpc.CallOption) (*TotalSuperfluidDelegationsResponse, error)
-	// Returns the coins superfluid delegated for the delegator, validator, denom
+	// Returns the coins superfluid delegated for a delegator, validator, denom
 	// triplet
 	SuperfluidDelegationAmount(ctx context.Context, in *SuperfluidDelegationAmountRequest, opts ...grpc.CallOption) (*SuperfluidDelegationAmountResponse, error)
-	// Returns all the delegated superfluid poistions for a specific delegator.
+	// Returns all the superfluid poistions for a specific delegator
 	SuperfluidDelegationsByDelegator(ctx context.Context, in *SuperfluidDelegationsByDelegatorRequest, opts ...grpc.CallOption) (*SuperfluidDelegationsByDelegatorResponse, error)
-	// Returns all the undelegating superfluid poistions for a specific delegator.
 	SuperfluidUndelegationsByDelegator(ctx context.Context, in *SuperfluidUndelegationsByDelegatorRequest, opts ...grpc.CallOption) (*SuperfluidUndelegationsByDelegatorResponse, error)
 	// Returns all the superfluid positions of a specific denom delegated to one
 	// validator
@@ -1666,28 +1664,26 @@ func (c *queryClient) TotalDelegationByDelegator(ctx context.Context, in *QueryT
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Params returns the total set of superfluid parameters.
+	// Params returns the total set of minting parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// Returns superfluid asset type, whether if it's a native asset or an lp
-	// share.
+	// Returns superfluid asset type
 	AssetType(context.Context, *AssetTypeRequest) (*AssetTypeResponse, error)
-	// Returns all registered superfluid assets.
+	// Returns all superfluid asset types
 	AllAssets(context.Context, *AllAssetsRequest) (*AllAssetsResponse, error)
-	// Returns the osmo equivalent multiplier used in the most recent epoch.
+	// Returns superfluid asset Multiplier
 	AssetMultiplier(context.Context, *AssetMultiplierRequest) (*AssetMultiplierResponse, error)
-	// Returns all superfluid intermediary accounts.
+	// Returns all superfluid intermediary account
 	AllIntermediaryAccounts(context.Context, *AllIntermediaryAccountsRequest) (*AllIntermediaryAccountsResponse, error)
 	// Returns intermediary account connected to a superfluid staked lock by id
 	ConnectedIntermediaryAccount(context.Context, *ConnectedIntermediaryAccountRequest) (*ConnectedIntermediaryAccountResponse, error)
-	// Returns the total amount of osmo superfluidly staked.
-	// Response is denominated in uosmo.
+	// Returns the total amount of osmo superfluidly staked
+	// response denominated in uosmo
 	TotalSuperfluidDelegations(context.Context, *TotalSuperfluidDelegationsRequest) (*TotalSuperfluidDelegationsResponse, error)
-	// Returns the coins superfluid delegated for the delegator, validator, denom
+	// Returns the coins superfluid delegated for a delegator, validator, denom
 	// triplet
 	SuperfluidDelegationAmount(context.Context, *SuperfluidDelegationAmountRequest) (*SuperfluidDelegationAmountResponse, error)
-	// Returns all the delegated superfluid poistions for a specific delegator.
+	// Returns all the superfluid poistions for a specific delegator
 	SuperfluidDelegationsByDelegator(context.Context, *SuperfluidDelegationsByDelegatorRequest) (*SuperfluidDelegationsByDelegatorResponse, error)
-	// Returns all the undelegating superfluid poistions for a specific delegator.
 	SuperfluidUndelegationsByDelegator(context.Context, *SuperfluidUndelegationsByDelegatorRequest) (*SuperfluidUndelegationsByDelegatorResponse, error)
 	// Returns all the superfluid positions of a specific denom delegated to one
 	// validator
