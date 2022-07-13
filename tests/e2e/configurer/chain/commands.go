@@ -30,7 +30,7 @@ func (c *Config) SubmitUpgradeProposal(upgradeVersion string) {
 
 	upgradeHeightStr := strconv.Itoa(c.PropHeight)
 	c.t.Logf("submitting upgrade proposal on %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", "--from=val", "--log_format=json"}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", "--from=val"}
 	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, 0, cmd)
 	require.NoError(c.t, err)
 	c.t.Log("successfully submitted upgrade proposal")
@@ -42,7 +42,7 @@ func (c *Config) SubmitSuperfluidProposal(asset string) {
 	require.True(c.t, exists)
 
 	c.t.Logf("submitting superfluid proposal for asset %s on %s container: %s", asset, validatorResource.Container.Name[1:], validatorResource.Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "--log_format=json"}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val"}
 	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, 0, cmd)
 	require.NoError(c.t, err)
 	c.t.Log("successfully submitted superfluid proposal")
@@ -54,7 +54,7 @@ func (c *Config) SubmitTextProposal(text string) {
 	require.True(c.t, exists)
 
 	c.t.Logf("submitting text proposal on %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", "--log_format=json"}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val"}
 	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, 0, cmd)
 	c.t.Log("successfully submitted text proposal")
 	require.NoError(c.t, err)

@@ -47,9 +47,10 @@ func NewManager(isUpgrade bool, isFork bool) (docker *Manager, err error) {
 }
 
 // ExecTxCmd Runs ExecCmd, with flags for txs added.
-// namely `--chain-id={chain-id} -b=block --yes --keyring-backend=test`, and searching for `code: 0`
+// namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json"`,
+// and searching for `code: 0`
 func (m *Manager) ExecTxCmd(t *testing.T, chainId string, validatorIndex int, command []string) (bytes.Buffer, bytes.Buffer, error) {
-	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId), "-b=block", "--yes", "--keyring-backend=test"}
+	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
 	txCommand := append(command, allTxArgs...)
 	successStr := "code: 0"
 	return m.ExecCmd(t, chainId, validatorIndex, txCommand, successStr)
