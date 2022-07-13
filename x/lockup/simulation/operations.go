@@ -34,7 +34,7 @@ func RandomMsgBeginUnlockingAll(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk
 func RandomMsgBeginUnlocking(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*types.MsgBeginUnlocking, error) {
 	sender, senderExists := sim.RandomSimAccountWithConstraint(accountHasLockConstraint(k, ctx))
 	if !senderExists {
-		return nil, errors.New("No addr has created a lock")
+		return nil, errors.New("no addr has created a lock")
 	}
 	lock := randLock(k, sim, ctx, sender.Address)
 	return &types.MsgBeginUnlocking{
