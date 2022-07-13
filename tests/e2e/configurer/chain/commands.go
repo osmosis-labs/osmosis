@@ -15,8 +15,8 @@ import (
 
 func (c *Config) CreatePool(poolFile, from string) {
 	c.t.Logf("creating pool for chain-id: %s", c.Id)
-	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--chain-id=%s", c.Id), fmt.Sprintf("--from=%s", from), "-b=block", "--yes", "--keyring-backend=test"}
-	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, 0, cmd, "code: 0")
+	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
+	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, 0, cmd)
 	require.NoError(c.t, err)
 
 	validatorResource, exists := c.containerManager.GetValidatorResource(c.Id, 0)
@@ -30,8 +30,8 @@ func (c *Config) SubmitUpgradeProposal(upgradeVersion string) {
 
 	upgradeHeightStr := strconv.Itoa(c.PropHeight)
 	c.t.Logf("submitting upgrade proposal on %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
-	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, 0, cmd, "code: 0")
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", "--from=val"}
+	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, 0, cmd)
 	require.NoError(c.t, err)
 	c.t.Log("successfully submitted upgrade proposal")
 	c.LatestProposalNumber = c.LatestProposalNumber + 1
@@ -42,8 +42,8 @@ func (c *Config) SubmitSuperfluidProposal(asset string) {
 	require.True(c.t, exists)
 
 	c.t.Logf("submitting superfluid proposal for asset %s on %s container: %s", asset, validatorResource.Container.Name[1:], validatorResource.Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.Id)}
-	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, 0, cmd, "code: 0")
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val"}
+	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, 0, cmd)
 	require.NoError(c.t, err)
 	c.t.Log("successfully submitted superfluid proposal")
 	c.LatestProposalNumber = c.LatestProposalNumber + 1
@@ -54,8 +54,8 @@ func (c *Config) SubmitTextProposal(text string) {
 	require.True(c.t, exists)
 
 	c.t.Logf("submitting text proposal on %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.Id)}
-	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, 0, cmd, "code: 0")
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val"}
+	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, 0, cmd)
 	c.t.Log("successfully submitted text proposal")
 	require.NoError(c.t, err)
 	c.LatestProposalNumber = c.LatestProposalNumber + 1
@@ -67,8 +67,8 @@ func (c *Config) DepositProposal() {
 
 	propStr := strconv.Itoa(c.LatestProposalNumber)
 	c.t.Logf("depositing to proposal from %s container: %s", validatorResource.Container.Name[1:], validatorResource.Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "deposit", propStr, "500000000uosmo", "--from=val", fmt.Sprintf("--chain-id=%s", c.Id), "-b=block", "--yes", "--keyring-backend=test"}
-	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, 0, cmd, "code: 0")
+	cmd := []string{"osmosisd", "tx", "gov", "deposit", propStr, "500000000uosmo", "--from=val"}
+	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, 0, cmd)
 	require.NoError(c.t, err)
 	c.t.Log("successfully deposited to proposal")
 }
@@ -76,9 +76,9 @@ func (c *Config) DepositProposal() {
 func (c *Config) VoteYesProposal() {
 	propStr := strconv.Itoa(c.LatestProposalNumber)
 	c.t.Logf("voting yes on proposal for chain-id: %s", c.Id)
-	cmd := []string{"osmosisd", "tx", "gov", "vote", propStr, "yes", "--from=val", fmt.Sprintf("--chain-id=%s", c.Id), "-b=block", "--yes", "--keyring-backend=test"}
+	cmd := []string{"osmosisd", "tx", "gov", "vote", propStr, "yes", "--from=val"}
 	for i := range c.NodeConfigs {
-		_, _, err := c.containerManager.ExecCmd(c.t, c.Id, i, cmd, "code: 0")
+		_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, i, cmd)
 		require.NoError(c.t, err)
 
 		validatorResource, exists := c.containerManager.GetValidatorResource(c.Id, i)
@@ -90,8 +90,8 @@ func (c *Config) VoteYesProposal() {
 func (c *Config) VoteNoProposal(validatorIdx int, from string) {
 	propStr := strconv.Itoa(c.LatestProposalNumber)
 	c.t.Logf("voting no on proposal for chain-id: %s", c.Id)
-	cmd := []string{"osmosisd", "tx", "gov", "vote", propStr, "no", fmt.Sprintf("--from=%s", from), fmt.Sprintf("--chain-id=%s", c.Id), "-b=block", "--yes", "--keyring-backend=test"}
-	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIdx, cmd, "code: 0")
+	cmd := []string{"osmosisd", "tx", "gov", "vote", propStr, "no", fmt.Sprintf("--from=%s", from)}
+	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, validatorIdx, cmd)
 	require.NoError(c.t, err)
 
 	validatorResource, exists := c.containerManager.GetValidatorResource(c.Id, validatorIdx)
@@ -101,8 +101,8 @@ func (c *Config) VoteNoProposal(validatorIdx int, from string) {
 
 func (c *Config) LockTokens(validatorIdx int, tokens string, duration string, from string) {
 	c.t.Logf("locking %s for %s on chain-id: %s", tokens, duration, c.Id)
-	cmd := []string{"osmosisd", "tx", "lockup", "lock-tokens", tokens, fmt.Sprintf("--chain-id=%s", c.Id), fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from), "-b=block", "--yes", "--keyring-backend=test"}
-	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIdx, cmd, "code: 0")
+	cmd := []string{"osmosisd", "tx", "lockup", "lock-tokens", tokens, fmt.Sprintf("--duration=%s", duration), fmt.Sprintf("--from=%s", from)}
+	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, validatorIdx, cmd)
 	require.NoError(c.t, err)
 
 	validatorResource, exists := c.containerManager.GetValidatorResource(c.Id, validatorIdx)
@@ -114,8 +114,8 @@ func (c *Config) LockTokens(validatorIdx int, tokens string, duration string, fr
 func (c *Config) SuperfluidDelegate(valAddress string, from string) {
 	lockStr := strconv.Itoa(c.LatestLockNumber)
 	c.t.Logf("superfluid delegating lock %s to %s on chain-id: %s", lockStr, valAddress, c.Id)
-	cmd := []string{"osmosisd", "tx", "superfluid", "delegate", lockStr, valAddress, fmt.Sprintf("--chain-id=%s", c.Id), fmt.Sprintf("--from=%s", from), "-b=block", "--yes", "--keyring-backend=test"}
-	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, 0, cmd, "code: 0")
+	cmd := []string{"osmosisd", "tx", "superfluid", "delegate", lockStr, valAddress, fmt.Sprintf("--from=%s", from)}
+	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, 0, cmd)
 	require.NoError(c.t, err)
 
 	validatorResource, exists := c.containerManager.GetValidatorResource(c.Id, 0)
@@ -125,8 +125,8 @@ func (c *Config) SuperfluidDelegate(valAddress string, from string) {
 
 func (c *Config) BankSend(validatorIndex int, amount string, sendAddress string, receiveAddress string) {
 	c.t.Logf("sending %s from %s to %s on chain-id: %s", amount, sendAddress, receiveAddress, c.Id)
-	cmd := []string{"osmosisd", "tx", "bank", "send", sendAddress, receiveAddress, amount, fmt.Sprintf("--chain-id=%s", c.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test"}
-	_, _, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIndex, cmd, "code: 0")
+	cmd := []string{"osmosisd", "tx", "bank", "send", sendAddress, receiveAddress, amount, "--from=val"}
+	_, _, err := c.containerManager.ExecTxCmd(c.t, c.Id, validatorIndex, cmd)
 	require.NoError(c.t, err)
 
 	validatorResource, exists := c.containerManager.GetValidatorResource(c.Id, 0)
