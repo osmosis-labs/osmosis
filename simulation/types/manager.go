@@ -15,8 +15,12 @@ import (
 // AppModuleSimulation defines the standard functions that every module should expose
 // for the SDK blockchain simulator
 type AppModuleSimulationV2 interface {
+	module.AppModule
+
 	// randomized genesis states
 	// TODO: Come back and improve SimulationState interface
+	// TODO: Move this to an extension interface
+	// default: simState.GenState[types.ModuleName] = app.DefaultGenesis(simState.Cdc)
 	GenerateGenesisState(*module.SimulationState, *SimCtx)
 	Actions() []Action
 	// PropertyTests()
