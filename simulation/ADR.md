@@ -97,8 +97,7 @@ and seeing how many message attempts failed
 ### Replay
 
 * Be able to replay old simulation messages (so going off the messages in sequence)
-* Be able to run blocks from a real network
-    * osmosisd export-history-for-simulator
+* Be able to run blocks from a real network `osmosisd export-history-for-simulator`
 
 ## What exists in the SDK to date
 
