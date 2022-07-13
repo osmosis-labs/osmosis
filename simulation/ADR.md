@@ -80,9 +80,14 @@ func MakeRandomizedJoinPoolMsg(sim simulator.Helper) sdk.Msg {
 }
 ```
 
+### Unscrew up genesis handling
+
+Genesis handling is a tremendous mess right now in the simulator. I've spent many hours in the refactor, and I still have trouble tracking wtf it was doing. The old genesis handling / simState config should be entirely scrapped.
+
 ### Weight management
 
-Weight management should be done globally at the simulator, with a config.
+Weight management should be done globally at the simulator, with a config. Not per module.
+At most each module can 'optionally' provide a 'weight-hint' from an enum, rather than a number.
 
 ### Observability into simulation run
 

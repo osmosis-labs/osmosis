@@ -67,6 +67,7 @@ func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error) {
 	// msg := m.msgGenerator(sim, ctx)
 	// tx, err := sim.txbuilder(ctx, msg)
-
+	// if err != nil {return simulation.OperationMsg{}, nil, nil}
+	// return sim.deliverTx(tx)
 	return simulation.OperationMsg{}, nil, nil
 }
