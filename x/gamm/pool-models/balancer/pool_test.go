@@ -1225,3 +1225,29 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		require.Nil(t, pacc.PoolParams.SmoothWeightChangeParams)
 	}
 }
+
+// This test (currently trivially) checks to make sure that `IsActive` returns true for balancer pools.
+// This is mainly to make sure that if IsActive is ever used as an emergency switch, it is not accidentally left off for any (or all) pools.
+// TODO: create a test with mocks to make sure IsActive works as intended when flipped for specific pools/all pools
+func (suite *BalancerTestSuite) TestIsActive(t *testing.T) {
+	tests := map[string]struct {
+		expectedIsActive bool
+	}{
+		"IsActive is true": {
+			expectedIsActive: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := suite.CreateTestContext()
+
+			// Initialize a pool
+			pool, err := balancer.NewBalancerPool(defaultPoolId, defaultBalancerPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
+			require.NoError(t, err, "test %v", name)
+
+			isActive := pool.IsActive(ctx)
+			require.Equal(t, tc.expectedIsActive, isActive)
+		})
+	}
+}
