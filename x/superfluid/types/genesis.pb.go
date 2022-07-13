@@ -29,7 +29,7 @@ type GenesisState struct {
 	// superfluid_assets defines the registered superfluid assets that have been
 	// registered via governance.
 	SuperfluidAssets []SuperfluidAsset `protobuf:"bytes,2,rep,name=superfluid_assets,json=superfluidAssets,proto3" json:"superfluid_assets"`
-	// osmo_equivalent_multipliers is the records of osmo equivilent amount of
+	// osmo_equivalent_multipliers is the records of osmo equivalent amount of
 	// each superfluid registered pool, updated every epoch.
 	OsmoEquivalentMultipliers []OsmoEquivalentMultiplierRecord `protobuf:"bytes,3,rep,name=osmo_equivalent_multipliers,json=osmoEquivalentMultipliers,proto3" json:"osmo_equivalent_multipliers"`
 	// intermediary_accounts is a secondary account for superfluid staking that
