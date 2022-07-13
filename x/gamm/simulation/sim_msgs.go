@@ -20,11 +20,13 @@ func CurrySimMsgJoinPool(k keeper.Keeper) func(sim *simulation.SimCtx, ctx sdk.C
 }
 
 func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
+	// Get pool
 	pool_id := simulation.RandLTBound(sim, k.GetNextPoolNumber(ctx))
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
 		return &gammtypes.MsgJoinPool{}, err
 	}
+	// Get address that has all denoms in the pool
 	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
 	sender, tokenInMaxs, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
 	if !senderExists {
