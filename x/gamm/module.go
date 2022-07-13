@@ -165,5 +165,6 @@ func (am AppModule) GenerateGenesisState(m *module.SimulationState, s *simulatio
 func (am AppModule) Actions() []simulation.Action {
 	return []simulation.Action{
 		simulation.NewMsgBasedAction("MsgJoinPool", gammsimulation.CurrySimMsgJoinPool(am.keeper)),
+		simulation.NewCurriedMsgBasedAction("Msg create univ2 pool", am.keeper, gammsimulation.RandomCreateUniv2PoolMsg),
 	}
 }

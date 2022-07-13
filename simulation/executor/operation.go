@@ -111,7 +111,7 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps []simulation.Future
 func totalWeight(actions []simtypes.Action) int {
 	totalWeight := 0
 	for _, action := range actions {
-		totalWeight += action.Weight()
+		totalWeight += int(action.Weight())
 	}
 
 	return totalWeight
@@ -126,11 +126,11 @@ func getSelectActionFn(actions []simtypes.Action) selectActionFn {
 		x := r.Intn(totalOpWeight)
 		// TODO: Change to an accum list approach
 		for i := 0; i < len(actions); i++ {
-			if x <= actions[i].Weight() {
+			if x <= int(actions[i].Weight()) {
 				return actions[i]
 			}
 
-			x -= actions[i].Weight()
+			x -= int(actions[i].Weight())
 		}
 		// shouldn't happen
 		return actions[0]

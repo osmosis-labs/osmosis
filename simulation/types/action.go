@@ -21,7 +21,8 @@ type Action interface {
 	// I envision this weight being provided from a config.
 	// Module providers can optionally provide a default from an enum,
 	// but this should not be the default.
-	Weight() int
+	// TODO: Maybe we make a "WithWeight" fn?
+	Weight() Weight
 	Execute(*SimCtx, sdk.Context) (
 		OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error)
 }
@@ -30,8 +31,8 @@ type weightedOperationAction struct {
 	op simulation.WeightedOperation
 }
 
-func (a weightedOperationAction) Name() string { return "weighted_op" }
-func (a weightedOperationAction) Weight() int  { return a.op.Weight() }
+func (a weightedOperationAction) Name() string   { return "weighted_op" }
+func (a weightedOperationAction) Weight() Weight { return Weight(a.op.Weight()) }
 func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	simulation.OperationMsg, []simulation.FutureOperation, error) {
 	return a.op.Op()(sim.GetRand(), sim.App.GetBaseApp(), ctx, sim.Accounts, sim.ChainID)
@@ -55,16 +56,34 @@ func NewMsgBasedAction[M sdk.Msg](actionName string, msgGenerator func(sim *SimC
 	// TODO: Also do we even want this? Isn't the goal to write simulation event hooks based on Name
 	// var sampleMsg M
 	// msgName := osmoutils.GetType(sampleMsg)
-	return msgBasedAction{name: actionName, msgGenerator: wrappedMsgGen}
+	return msgBasedAction{name: actionName, weight: Normal, msgGenerator: wrappedMsgGen}
+}
+
+// TODO: Decide if I want NewMsgBasedAction to auto-curry
+func CurryMsgGenerator[K interface{}, M sdk.Msg](k K, f func(K, *SimCtx, sdk.Context) (M, error)) func(*SimCtx, sdk.Context) (M, error) {
+	return func(sim *SimCtx, ctx sdk.Context) (M, error) {
+		return f(k, sim, ctx)
+	}
+}
+
+func NewCurriedMsgBasedAction[K interface{}, M sdk.Msg](actionName string, k K, f func(K, *SimCtx, sdk.Context) (M, error)) Action {
+	msgGenerator := CurryMsgGenerator(k, f)
+	return NewMsgBasedAction(actionName, msgGenerator)
 }
 
 type msgBasedAction struct {
 	name         string
+	weight       Weight
 	msgGenerator func(sim *SimCtx, ctx sdk.Context) (sdk.Msg, error)
 }
 
-func (m msgBasedAction) Name() string { return m.name }
-func (m msgBasedAction) Weight() int  { return 10 }
+func (m msgBasedAction) WithWeight(weight Weight) msgBasedAction {
+	m.weight = weight
+	return m
+}
+
+func (m msgBasedAction) Name() string   { return m.name }
+func (m msgBasedAction) Weight() Weight { return m.weight }
 func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error) {
 	msg, err := m.msgGenerator(sim, ctx)
