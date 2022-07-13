@@ -17,7 +17,7 @@ func Filter[T interface{}](filter func(T) bool, s []T) []T {
 	filteredSlice := []T{}
 	for _, s := range s {
 		if filter(s) {
-			filteredSlice = append(filteredSlice)
+			filteredSlice = append(filteredSlice, s)
 		}
 	}
 	return filteredSlice
