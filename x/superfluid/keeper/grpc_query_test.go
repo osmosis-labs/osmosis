@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestGRPCQuerySuperfluidDelegations() {
 	}
 
 	// setup superfluid delegations
-	delAddrs, _, locks := suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
+	delegatorAddresses, _, locks := suite.setupSuperfluidDelegations(valAddrs, superfluidDelegations, denoms)
 
 	// for each superfluid delegation, query the amount and make sure it is 1000000
 	for _, delegation := range superfluidDelegations {
