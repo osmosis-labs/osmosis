@@ -59,10 +59,9 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	// set delegator vote to no
 	chainA.VoteNoProposal(0, walletName)
 
-	sfProposalNumber := strconv.Itoa(chainA.LatestProposalNumber)
 	s.Eventually(
 		func() bool {
-			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainA.QueryPropTally(0, sfProposalNumber)
+			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainA.QueryPropTally(0, chainA.LatestProposalNumber)
 			if err != nil {
 				return false
 			}
@@ -75,7 +74,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 		time.Second,
 		"Osmosis node failed to retrieve prop tally",
 	)
-	noTotal, _, _, _, _ := chainA.QueryPropTally(0, sfProposalNumber)
+	noTotal, _, _, _, _ := chainA.QueryPropTally(0, chainA.LatestProposalNumber)
 	noTotalFinal, err := strconv.Atoi(noTotal.String())
 	s.NoError(err)
 
