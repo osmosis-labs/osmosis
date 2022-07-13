@@ -403,13 +403,13 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 		suite.SetupTest()
 		// lock with balance
 		suite.FundAcc(addr1, sdk.Coins{initialLockCoin})
-		lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, sdk.Coins{initialLockCoin}, time.Second)
+		originalLock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, sdk.Coins{initialLockCoin}, time.Second)
 		suite.Require().NoError(err)
 
 		suite.FundAcc(addr1, sdk.Coins{initialLockCoin})
 		balanceBeforeLock := suite.App.BankKeeper.GetAllBalances(suite.Ctx, tc.lockingAddress)
 
-		_, err = suite.App.LockupKeeper.AddToExistingLock(suite.Ctx, tc.lockingAddress, tc.tokenToAdd, tc.duration)
+		lockID, err := suite.App.LockupKeeper.AddToExistingLock(suite.Ctx, tc.lockingAddress, tc.tokenToAdd, tc.duration)
 		if tc.expectedError {
 			suite.Require().Error(err)
 		} else {
@@ -420,7 +420,7 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 			suite.Require().NoError(err)
 
 			// get updated lock
-			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
+			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 			suite.Require().NoError(err)
 
 			// check that tokens have been added successfully to the lock
@@ -438,7 +438,9 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 			})
 			suite.Require().Equal(initialLockCoin.Amount.Add(tc.tokenToAdd.Amount), accum)
 		} else {
-			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
+			suite.Require().Equal(uint64(0), lockID)
+
+			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, originalLock.ID)
 			suite.Require().NoError(err)
 
 			// check that locked coins haven't changed

@@ -48,21 +48,22 @@ func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddr
 }
 
 // AddToExistingLock adds the given coin to the existing lock with the same owner and duration.
-// Returns an empty struct of period lock when a lock with the given condition does not exist.
-func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sdk.Coin, duration time.Duration) (types.PeriodLock, error) {
+// Returns the updated lock ID if successfully added coin, returns 0 when a lock with
+// given condition does not exist.
+func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sdk.Coin, duration time.Duration) (uint64, error) {
 	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, coin.Denom, duration)
 	// if existing lock with same duration and denom exists, just add there
 	if len(locks) > 0 {
-		// there should only be a sinlge lock with the same duration + token, thus we take the first lock
+		// there should only be a single lock with the same duration + token, thus we take the first lock
 		lock := locks[0]
 		_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
 		if err != nil {
-			return types.PeriodLock{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			return 0, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}
-		return locks[0], nil
+		return lock.ID, nil
 	}
 
-	return types.PeriodLock{}, nil
+	return 0, nil
 }
 
 // AddTokensToLock locks additional tokens into an existing lock with the given ID.
