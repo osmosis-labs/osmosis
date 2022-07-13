@@ -1,6 +1,8 @@
 package simulation
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -45,8 +47,8 @@ func ActionsFromWeightedOperations(ops legacysimexec.WeightedOperations) []Actio
 
 var _ Action = msgBasedAction{}
 
-func NewMsgBasedAction[M sdk.Msg](actionName string, msgGenerator func(sim *SimCtx, ctx sdk.Context) M) Action {
-	wrappedMsgGen := func(sim *SimCtx, ctx sdk.Context) sdk.Msg {
+func NewMsgBasedAction[M sdk.Msg](actionName string, msgGenerator func(sim *SimCtx, ctx sdk.Context) (M, error)) Action {
+	wrappedMsgGen := func(sim *SimCtx, ctx sdk.Context) (sdk.Msg, error) {
 		return msgGenerator(sim, ctx)
 	}
 	// TODO: This likely won't work, and we need to instead make a mock sim ctx and ctx to get this.
@@ -58,17 +60,20 @@ func NewMsgBasedAction[M sdk.Msg](actionName string, msgGenerator func(sim *SimC
 
 type msgBasedAction struct {
 	name         string
-	msgGenerator func(sim *SimCtx, ctx sdk.Context) sdk.Msg
+	msgGenerator func(sim *SimCtx, ctx sdk.Context) (sdk.Msg, error)
 }
 
 func (m msgBasedAction) Name() string { return m.name }
 func (m msgBasedAction) Weight() int  { return 10 }
 func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error) {
-	msg := m.msgGenerator(sim, ctx)
+	msg, err := m.msgGenerator(sim, ctx)
+	if err != nil {
+		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build msg due to: %v", err)), nil, nil
+	}
 	tx, err := sim.txbuilder(ctx, msg, m.name)
 	if err != nil {
-		return simulation.OperationMsg{}, nil, nil
+		return simulation.NoOpMsg(m.name, m.name, "unable to build tx"), nil, err
 	}
 	return sim.deliverTx(tx, msg, m.name)
 }

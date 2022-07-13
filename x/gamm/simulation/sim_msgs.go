@@ -1,6 +1,8 @@
 package gammsimulation
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
@@ -9,22 +11,22 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
-func CurrySimMsgJoinPool(k keeper.Keeper) func(sim *simulation.SimCtx, ctx sdk.Context) *gammtypes.MsgJoinPool {
-	return func(sim *simulation.SimCtx, ctx sdk.Context) *gammtypes.MsgJoinPool {
+func CurrySimMsgJoinPool(k keeper.Keeper) func(sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
+	return func(sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
 		return SimulateJoinPoolMsg(k, sim, ctx)
 	}
 }
 
-func SimulateJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) *gammtypes.MsgJoinPool {
+func SimulateJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
 	pool_id := simulation.RandLTBound(sim, k.GetNextPoolNumber(ctx))
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
-		return &gammtypes.MsgJoinPool{}
+		return &gammtypes.MsgJoinPool{}, err
 	}
 	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
 	sender, tokenInMaxs, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
 	if !senderExists {
-		return &gammtypes.MsgJoinPool{}
+		return &gammtypes.MsgJoinPool{}, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 	// TODO: Make FuzzTokenSubset API, token_in_maxs := sim.FuzzTokensSubset(sender, poolDenoms)
 	// TODO: Add some slippage tolerance
@@ -35,5 +37,5 @@ func SimulateJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Contex
 		PoolId:         pool_id,
 		ShareOutAmount: minShareOutAmt,
 		TokenInMaxs:    tokenInMaxs,
-	}
+	}, nil
 }

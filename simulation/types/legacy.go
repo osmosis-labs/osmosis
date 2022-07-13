@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
+// TODO: Must delete
 func GenAndDeliverTxWithRandFees(
 	r *rand.Rand,
 	app *baseapp.BaseApp,
@@ -44,6 +45,7 @@ func GenAndDeliverTxWithRandFees(
 	return GenAndDeliverTx(app, txGen, msg, fees, ctx, simAccount, ak, moduleName)
 }
 
+// TODO: Must delete
 func GenAndDeliverTx(
 	app *baseapp.BaseApp,
 	txGen client.TxConfig,
