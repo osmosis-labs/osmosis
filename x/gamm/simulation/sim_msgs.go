@@ -9,12 +9,23 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
+func CurrySimMsgJoinPool(k keeper.Keeper) func(sim *simulation.SimCtx, ctx sdk.Context) *gammtypes.MsgJoinPool {
+	return func(sim *simulation.SimCtx, ctx sdk.Context) *gammtypes.MsgJoinPool {
+		return SimulateJoinPoolMsg(k, sim, ctx)
+	}
+}
+
 func SimulateJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) *gammtypes.MsgJoinPool {
 	pool_id := simulation.RandLTBound(sim, k.GetNextPoolNumber(ctx))
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	if err != nil {
+		return &gammtypes.MsgJoinPool{}
+	}
 	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
 	sender, tokenInMaxs, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
-	_, _, _, _ = err, sender, tokenInMaxs, senderExists
+	if !senderExists {
+		return &gammtypes.MsgJoinPool{}
+	}
 	// TODO: Make FuzzTokenSubset API, token_in_maxs := sim.FuzzTokensSubset(sender, poolDenoms)
 	// TODO: Add some slippage tolerance
 	minShareOutAmt, _, _ := pool.CalcJoinPoolShares(ctx, tokenInMaxs, pool.GetSwapFee(ctx))

@@ -20,6 +20,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	gammsimulation "github.com/osmosis-labs/osmosis/v7/x/gamm/simulation"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -163,6 +164,6 @@ func (a AppModule) GenerateGenesisState(m *module.SimulationState, s *simulation
 
 func (a AppModule) Actions() []simulation.Action {
 	return []simulation.Action{
-		// TODO: simulation.ActionFromMsgGenerator{gammsim.SimulateJoinPoolMsg}
+		simulation.NewMsgBasedAction("MsgJoinPool", gammsimulation.CurrySimMsgJoinPool(a.keeper)),
 	}
 }

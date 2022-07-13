@@ -42,3 +42,31 @@ func ActionsFromWeightedOperations(ops legacysimexec.WeightedOperations) []Actio
 	}
 	return actions
 }
+
+var _ Action = msgBasedAction{}
+
+func NewMsgBasedAction[M sdk.Msg](actionName string, msgGenerator func(sim *SimCtx, ctx sdk.Context) M) Action {
+	wrappedMsgGen := func(sim *SimCtx, ctx sdk.Context) sdk.Msg {
+		return msgGenerator(sim, ctx)
+	}
+	// TODO: This likely won't work, and we need to instead make a mock sim ctx and ctx to get this.
+	// TODO: Also do we even want this? Isn't the goal to write simulation event hooks based on Name
+	// var sampleMsg M
+	// msgName := osmoutils.GetType(sampleMsg)
+	return msgBasedAction{name: actionName, msgGenerator: wrappedMsgGen}
+}
+
+type msgBasedAction struct {
+	name         string
+	msgGenerator func(sim *SimCtx, ctx sdk.Context) sdk.Msg
+}
+
+func (m msgBasedAction) Name() string { return m.name }
+func (m msgBasedAction) Weight() int  { return 10 }
+func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
+	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error) {
+	// msg := m.msgGenerator(sim, ctx)
+	// tx, err := sim.txbuilder(ctx, msg)
+
+	return simulation.OperationMsg{}, nil, nil
+}

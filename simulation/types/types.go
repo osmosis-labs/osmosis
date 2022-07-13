@@ -1,7 +1,10 @@
 package simulation
 
 import (
+	"errors"
 	"math/rand"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -21,6 +24,8 @@ type SimCtx struct {
 	Accounts []simulation.Account
 	Cdc      codec.JSONCodec // application codec
 	ChainID  string
+
+	txbuilder func(ctx sdk.Context, msg sdk.Msg) (sdk.Tx, error)
 }
 
 func NewSimCtx(r *rand.Rand, app App, accounts []simulation.Account, chainID string) *SimCtx {
@@ -33,6 +38,8 @@ func NewSimCtx(r *rand.Rand, app App, accounts []simulation.Account, chainID str
 		App:      app,
 		Accounts: accounts,
 		ChainID:  chainID,
+
+		txbuilder: func(sdk.Context, sdk.Msg) (sdk.Tx, error) { return nil, errors.New("unimplemented") },
 	}
 }
 
