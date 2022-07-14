@@ -240,7 +240,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 		gauges := []*types.Gauge{}
 
 		expModuleToDistributeCoins := sdk.Coins{}
-		// coins that will be distributed after the first epoch
+		// coins that will be distributed after the first epoch for each gauge
 		expDistributedCoinsFirstEpoch := map[uint64]sdk.Coins{}
 
 		suite.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
@@ -348,7 +348,7 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 		gauges := []*types.Gauge{}
 
 		expModuleDistributedCoins := sdk.Coins{}
-		// coins that will be distributed after the first epoch
+		// coins that will be distributed after the first epoch for each gauge
 		expDistributedCoinsFirstEpoch := map[uint64]sdk.Coins{}
 
 		suite.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
