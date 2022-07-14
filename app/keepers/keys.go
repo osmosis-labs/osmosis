@@ -25,14 +25,17 @@ func (appKeepers *AppKeepers) GetSubspace(moduleName string) paramstypes.Subspac
 	return subspace
 }
 
+// Get KV Store keys
 func (appKeepers *AppKeepers) GetKVStoreKey() map[string]*sdk.KVStoreKey {
 	return appKeepers.keys
 }
 
+// Get Transient Store keys
 func (appKeepers *AppKeepers) GetTransientStoreKey() map[string]*sdk.TransientStoreKey {
 	return appKeepers.tkeys
 }
 
+// Get memory Store keys
 func (appKeepers *AppKeepers) GetMemoryStoreKey() map[string]*sdk.MemoryStoreKey {
 	return appKeepers.memKeys
 }
