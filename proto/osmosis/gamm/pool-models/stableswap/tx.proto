@@ -14,6 +14,7 @@ service Msg {
       returns (MsgStableSwapAdjustScalingFactorsResponse);
 }
 
+// ===================== MsgCreatePool
 message MsgCreateStableswapPool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
@@ -28,6 +29,7 @@ message MsgCreateStableswapPool {
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
 }
 
+// Returns a poolID with custom poolName.
 message MsgCreateStableswapPoolResponse {
   uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
 }

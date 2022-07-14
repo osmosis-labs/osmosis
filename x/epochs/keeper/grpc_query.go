@@ -19,6 +19,7 @@ type Querier struct {
 	Keeper
 }
 
+// Initializes new querier.
 func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
 }
