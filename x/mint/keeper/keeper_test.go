@@ -157,7 +157,8 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 				{
 					Address: sdk.AccAddress([]byte("addr1---------------")).String(),
 					Weight:  sdk.NewDec(1),
-				}},
+				},
+			},
 			mintCoin: sdk.NewCoin("stake", sdk.NewInt(10000)),
 		},
 		{
@@ -170,7 +171,8 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 				{
 					Address: sdk.AccAddress([]byte("addr4---------------")).String(),
 					Weight:  sdk.NewDecWithPrec(4, 1),
-				}},
+				},
+			},
 			mintCoin: sdk.NewCoin("stake", sdk.NewInt(100000)),
 		},
 		{
@@ -225,7 +227,7 @@ func (suite *KeeperTestSuite) TestDistrAssetToDeveloperRewardsAddr() {
 					feePool.CommunityPool.AmountOf("stake"))
 			} else {
 				suite.Equal(
-					//distribution go to community pool because nil dev reward addresses.
+					// distribution go to community pool because nil dev reward addresses.
 					tc.mintCoin.Amount.ToDec().Mul((params.DistributionProportions.DeveloperRewards).Add(params.DistributionProportions.CommunityPool)),
 					feePool.CommunityPool.AmountOf("stake"))
 			}
