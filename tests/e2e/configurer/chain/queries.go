@@ -28,6 +28,10 @@ func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
 	var resp *http.Response
 	require.Eventually(n.t, func() bool {
 		resp, err = http.Get(fullQueryPath)
+		if err != nil {
+			n.t.Logf("error while executing HTTP request: %s", err.Error())
+			return false
+		}
 
 		return resp.StatusCode != http.StatusServiceUnavailable
 	}, time.Minute, time.Second*10, "failed to execute HTTP request")
