@@ -36,6 +36,7 @@ func init() {
 	RegisterDenoms()
 }
 
+// Registers token denoms
 func RegisterDenoms() {
 	err := sdk.RegisterDenom(HumanCoinUnit, sdk.OneDec())
 	if err != nil {
@@ -47,6 +48,7 @@ func RegisterDenoms() {
 	}
 }
 
+// Builds the Config with Bech32 addressPrefix and publKeyPrefix for accounts, validators, and consensus nodes and verifies that addreeses have correct format.
 func SetAddressPrefixes() {
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)

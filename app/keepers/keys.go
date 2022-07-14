@@ -6,6 +6,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+//Generates new keys (KV Store, Transient store, and memory store).
 func (appKeepers *AppKeepers) GenerateKeys() {
 	// Define what keys will be used in the cosmos-sdk key/value store.
 	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain.
@@ -18,6 +19,7 @@ func (appKeepers *AppKeepers) GenerateKeys() {
 	appKeepers.memKeys = sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 }
 
+// Get existing substore from keeper.
 func (appKeepers *AppKeepers) GetSubspace(moduleName string) paramstypes.Subspace {
 	subspace, _ := appKeepers.ParamsKeeper.GetSubspace(moduleName)
 	return subspace

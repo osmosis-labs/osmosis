@@ -422,6 +422,7 @@ func (d BigDec) Format(s fmt.State, verb rune) {
 	}
 }
 
+// returns a BigDec as a string.
 func (d BigDec) String() string {
 	if d.i == nil {
 		return d.i.String()
@@ -535,6 +536,7 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	}
 }
 
+// Remove a Precision amount of rightmost digits and rounds up.
 func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
@@ -796,6 +798,7 @@ func DecEq(t *testing.T, exp, got BigDec) (*testing.T, bool, string, string, str
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
+// intended to be used with require/assert:  require.True(DecEq(...))
 func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bool, string, string, string) {
 	diff := d1.Sub(d2).Abs()
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()

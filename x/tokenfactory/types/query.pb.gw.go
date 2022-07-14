@@ -2,9 +2,7 @@
 // source: osmosis/tokenfactory/v1beta1/query.proto
 
 /*
-Package types is a reverse proxy.
-
-It translates gRPC into RESTful JSON APIs.
+Package types translates gRPC into RESTful JSON APIs.
 */
 package types
 

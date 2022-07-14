@@ -161,6 +161,7 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	return ord.TotalOrdering()
 }
 
+// orderBeginBlockers returns EndBlockers (crisis, govtypes, staking) with no relative order.
 func OrderEndBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
 	// only Osmosis modules with endblock code are: crisis, govtypes, staking

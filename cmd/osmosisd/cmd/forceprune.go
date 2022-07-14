@@ -94,6 +94,7 @@ func forceprune() *cobra.Command {
 	return cmd
 }
 
+//Prunes blockstore and returns the startHeight and currentHeight.
 func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	startHeight int64, currentHeight int64, err error,
 ) {
@@ -131,6 +132,7 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	return startHeight, currentHeight, nil
 }
 
+// Compacts block storage.
 func compactBlockStore(dbPath string) (err error) {
 	compactOpts := opt.Options{
 		DisableSeeksCompaction: true,
@@ -151,6 +153,7 @@ func compactBlockStore(dbPath string) (err error) {
 	return nil
 }
 
+// Prunes and compacts state storage.
 func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, fullHeight int64) error {
 	opts := opt.Options{
 		DisableSeeksCompaction: true,

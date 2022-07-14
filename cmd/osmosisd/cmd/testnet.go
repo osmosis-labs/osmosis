@@ -270,6 +270,7 @@ func InitTestnet(
 	return nil
 }
 
+// Initializes genesis files for testnet.
 func initGenFiles(
 	clientCtx client.Context, mbm module.BasicManager, genesisParams GenesisParams, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
