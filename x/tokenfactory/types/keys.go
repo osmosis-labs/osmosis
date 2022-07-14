@@ -27,6 +27,7 @@ const KeySeparator = "|"
 var (
 	DenomAuthorityMetadataKey = "authoritymetadata"
 	DenomsPrefixKey           = "denoms"
+	BlacklistPrefixKey        = "blacklist"
 	CreatorPrefixKey          = "creator"
 	AdminPrefixKey            = "admin"
 )
@@ -35,6 +36,12 @@ var (
 // is stored
 func GetDenomPrefixStore(denom string) []byte {
 	return []byte(strings.Join([]string{DenomsPrefixKey, denom, ""}, KeySeparator))
+}
+
+// GetDenomBlacklistPrefixStore returns the store prefix where all the data associated with a specific denom's blacklist
+// is stored
+func GetDenomBlacklistPrefixStore(denom string) []byte {
+	return []byte(strings.Join([]string{DenomsPrefixKey, denom, BlacklistPrefixKey, ""}, KeySeparator))
 }
 
 // GetCreatorsPrefix returns the store prefix where the list of the denoms created by a specific

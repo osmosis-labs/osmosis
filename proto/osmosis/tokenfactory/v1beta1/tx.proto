@@ -12,6 +12,7 @@ service Msg {
   rpc Mint(MsgMint) returns (MsgMintResponse);
   rpc Burn(MsgBurn) returns (MsgBurnResponse);
   rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
+  rpc UpdateBlacklist(MsgUpdateBlacklist) returns (MsgUpdateBlacklistResponse);
 
   // ForceTransfer is deactivated for now because we need to think through edge
   // cases rpc ForceTransfer(MsgForceTransfer) returns
@@ -75,6 +76,21 @@ message MsgChangeAdmin {
 // MsgChangeAdminResponse defines the response structure for an executed
 // MsgChangeAdmin message.
 message MsgChangeAdminResponse {}
+
+
+// MsgUpdateBlacklist is the sdk.Msg type for allowing an admin account to blacklist or unblacklist
+// a denom to be able to receive tokens
+message MsgUpdateBlacklist {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string blacklistee = 3 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  bool status = 4 [ (gogoproto.moretags) = "yaml:\"status\"" ];
+}
+
+// MsgUpdateBlacklistResponse defines the response structure for an executed
+// MsgUpdateBlacklist message.
+message MsgUpdateBlacklistResponse {}
+
 
 // message MsgForceTransfer {
 //   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];

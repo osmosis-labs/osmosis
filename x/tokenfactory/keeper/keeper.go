@@ -63,6 +63,12 @@ func (k Keeper) GetDenomPrefixStore(ctx sdk.Context, denom string) sdk.KVStore {
 	return prefix.NewStore(store, types.GetDenomPrefixStore(denom))
 }
 
+// GetDenomPrefixStore returns the substore for a specific denom
+func (k Keeper) GetDenomBlacklistPrefixStore(ctx sdk.Context, denom string) sdk.KVStore {
+	store := ctx.KVStore(k.storeKey)
+	return prefix.NewStore(store, types.GetDenomBlacklistPrefixStore(denom))
+}
+
 // GetCreatorPrefixStore returns the substore for a specific creator address
 func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) sdk.KVStore {
 	store := ctx.KVStore(k.storeKey)
