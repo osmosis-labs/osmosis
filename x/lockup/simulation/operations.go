@@ -15,7 +15,10 @@ import (
 )
 
 func RandomMsgLockTokens(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*types.MsgLockTokens, error) {
-	sender := sim.RandomSimAccountWithBalance(ctx)
+	sender, err := sim.RandomSimAccountWithBalance(ctx)
+	if err != nil {
+		return nil, err
+	}
 	lockCoin := sim.RandExponentialCoin(ctx, sender.Address)
 	duration := simulation.RandSelect(sim, time.Minute, time.Hour, time.Hour*24)
 	return &types.MsgLockTokens{

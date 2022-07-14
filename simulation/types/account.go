@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -62,15 +63,15 @@ func (sim *SimCtx) FindAccount(address sdk.Address) (simulation.Account, bool) {
 	return simulation.Account{}, false
 }
 
-func (sim *SimCtx) RandomSimAccountWithBalance(ctx sdk.Context) simulation.Account {
+func (sim *SimCtx) RandomSimAccountWithBalance(ctx sdk.Context) (simulation.Account, error) {
 	accHasBal := func(acc simulation.Account) bool {
 		return len(sim.App.GetBankKeeper().SpendableCoins(ctx, acc.Address)) == 0
 	}
 	acc, found := sim.RandomSimAccountWithConstraint(accHasBal)
 	if !found {
-		panic("No account has a balance in simulation, something has gone wrong.")
+		return simulation.Account{}, errors.New("no address with balance found. Check simulator configuration, this should be very rare.")
 	}
-	return acc
+	return acc, nil
 }
 
 // Returns (account, randSubsetCoins, found), so if found = false, then no such address exists.
