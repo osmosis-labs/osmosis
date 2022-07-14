@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
+
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
@@ -107,10 +108,41 @@ func (k Keeper) SetIntermediaryAccount(ctx sdk.Context, acc types.SuperfluidInte
 	prefixStore.Set(acc.GetAccAddress(), bz)
 }
 
-func (k Keeper) DeleteIntermediaryAccount(ctx sdk.Context, address sdk.AccAddress) {
+func (k Keeper) DeleteIntermediaryAccount(ctx sdk.Context, intermedairyAcc types.SuperfluidIntermediaryAccount) {
 	store := ctx.KVStore(k.storeKey)
+
+	// store for intermediary account
 	prefixStore := prefix.NewStore(store, types.KeyPrefixIntermediaryAccount)
-	prefixStore.Delete(address)
+	prefixStore.Delete(intermedairyAcc.GetAccAddress())
+}
+
+func (k Keeper) CheckIntermediaryAccountDelegations(ctx sdk.Context, intermedairyAcc types.SuperfluidIntermediaryAccount) (delegations bool) {
+	store := ctx.KVStore(k.storeKey)
+
+	// we first check if the intermediary account does not have any connections
+	// store for intermediary account connection
+	intermediaryAccConnectionPrefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
+	iterator := intermediaryAccConnectionPrefixStore.Iterator(nil, nil)
+
+	intermediaryConnectionExists := false
+
+	for ; iterator.Valid(); iterator.Next() {
+		if sdk.AccAddress(iterator.Value()).Equals(intermedairyAcc.GetAccAddress()) {
+			intermediaryConnectionExists = true
+		}
+	}
+
+	if intermediaryConnectionExists {
+		return true
+	}
+
+	// now check and verify that we don't have any delegations
+	_, found := k.sk.GetDelegation(ctx, intermedairyAcc.GetAccAddress(), sdk.ValAddress(intermedairyAcc.ValAddr))
+	if found {
+		return true
+	}
+
+	return false
 }
 
 func (k Keeper) SetLockIdIntermediaryAccountConnection(ctx sdk.Context, lockId uint64, acc types.SuperfluidIntermediaryAccount) {

@@ -259,6 +259,11 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 		return err
 	}
 
+	delegationsExist := k.CheckIntermediaryAccountDelegations(ctx, intermediaryAcc)
+	if !delegationsExist {
+		k.DeleteIntermediaryAccount(ctx, intermediaryAcc)
+	}
+
 	// Create a new synthetic lockup representing the unstaking side.
 	return k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
 }
