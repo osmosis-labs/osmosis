@@ -237,6 +237,9 @@ test-e2e:
 test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
+test-mutation:
+	@sh scripts/mutation-test.sh
+
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
 
@@ -252,6 +255,8 @@ docker-build-e2e-init-chain:
 
 docker-build-e2e-init-node:
 	@docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
+
+.PHONY: test-mutation
 
 ###############################################################################
 ###                                Linting                                  ###
