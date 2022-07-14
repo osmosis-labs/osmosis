@@ -278,7 +278,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	}
 
 	devRewardCoins := sdk.NewCoins(devRewardCoin)
-	// TODO: next step in https://github.com/osmosis-labs/osmosis/issues/1916
+	// TODO: https://github.com/osmosis-labs/osmosis/issues/2025
 	// Avoid over-allocating from the mint module address and have to later burn it here:
 	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins); err != nil {
 		return sdk.Int{}, err
@@ -295,27 +295,24 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 		if err != nil {
 			return sdk.Int{}, err
 		}
-		// All dev rewards go to the community pool.
-		k.bankKeeper.AddSupplyOffset(ctx, totalMintedCoin.Denom, developerAccountBalance.Amount.Sub(devRewardCoin.Amount))
-		return devRewardCoin.Amount, err
-	}
-
-	// allocate developer rewards to addresses by weight
-	for _, w := range developerRewardsReceivers {
-		devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
-		if err != nil {
-			return sdk.Int{}, err
-		}
-		devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
-		devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
-		if err != nil {
-			return sdk.Int{}, err
-		}
-		// If recipient is vesting account, pay to account according to its vesting condition
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(
-			ctx, types.DeveloperVestingModuleAcctName, devRewardsAddr, devRewardPortionCoins)
-		if err != nil {
-			return sdk.Int{}, err
+	} else {
+		// allocate developer rewards to addresses by weight
+		for _, w := range developerRewardsReceivers {
+			devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
+			if err != nil {
+				return sdk.Int{}, err
+			}
+			devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
+			devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
+			if err != nil {
+				return sdk.Int{}, err
+			}
+			// If recipient is vesting account, pay to account according to its vesting condition
+			err = k.bankKeeper.SendCoinsFromModuleToAccount(
+				ctx, types.DeveloperVestingModuleAcctName, devRewardsAddr, devRewardPortionCoins)
+			if err != nil {
+				return sdk.Int{}, err
+			}
 		}
 	}
 
