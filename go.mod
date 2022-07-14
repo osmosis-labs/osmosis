@@ -71,7 +71,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.7.0 // indirect
 	github.com/confio/ics23/go v0.7.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
-	github.com/cosmos/btcutil v1.0.4 // indirect
+	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.11.1 // indirect
 	github.com/cosmos/ledger-go v0.9.2 // indirect
@@ -278,8 +278,8 @@ require (
 replace (
 	// branch: v0.27.0.rc3-osmo, current tag: v0.27.0.rc3-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk osmosis-main, TODO: update tag
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220708201328-d49b3e754929
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk osmosis-main, current tag: v0.45.0x-osmo-v11.rc1
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220714223138-b81ad24550fa
 	// Use Osmosis fast iavl
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7
 	// use cosmos-compatible protobufs
