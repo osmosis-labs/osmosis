@@ -29,8 +29,6 @@ type Config struct {
 	containerManager *containers.Manager
 }
 
-type ProposalType int
-
 const (
 	// defaultNodeIndex to use for querying and executing transactions.
 	// It is used when we are indifferent about the node we are working with.

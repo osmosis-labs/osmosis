@@ -255,11 +255,11 @@ func (m *Manager) GetNodeResource(containerName string) (*dockertest.Resource, e
 	return resource, nil
 }
 
-// GetNodeHostPort returns the port-forwarding address of the running host
-// necessary to connect to the node's portId exposed inside the container.
-// The node container is determined by containerName.
+// GetHostPort returns the port-forwarding address of the running host
+// necessary to connect to the portId exposed inside the container.
+// The container is determined by containerName.
 // Returns the host-port or error if any.
-func (m *Manager) GetNodeHostPort(containerName string, portId string) (string, error) {
+func (m *Manager) GetHostPort(containerName string, portId string) (string, error) {
 	resource, err := m.GetNodeResource(containerName)
 	if err != nil {
 		return "", err
