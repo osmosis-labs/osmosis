@@ -77,7 +77,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 		errBuf bytes.Buffer
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 	// We use the `require.Eventually` function because it is only allowed to do one transaction per block without
 	// sequence numbers. For simplicity, we avoid keeping track of the sequence number and just use the `require.Eventually`.
