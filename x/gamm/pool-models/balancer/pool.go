@@ -17,14 +17,15 @@ import (
 
 //nolint:deadcode
 const (
-	errMsgFormatSharesAmountNotPositive       = "shares amount must be positive, was %d"
-	errMsgFormatTokenAmountNotPositive        = "token amount must be positive, was %d"
-	errMsgFormatTokensLargerThanMax           = "%d resulted tokens is larger than the max amount of %d"
-	errMsgFormatSharesLargerThanMax           = "%d resulted shares is larger than the max amount of %d"
+	nonPostiveSharesAmountErrFormat = "shares amount must be positive, was %d"
+	nonPostiveTokenAmountErrFormat  = "token amount must be positive, was %d"
+	sharesLargerThanMaxErrFormat    = "%d resulted shares is larger than the max amount of %d"
+	invalidInputDenomsErrFormat     = "input denoms must already exist in the pool (%s)"
+
+	// the errors below are being used in export_test
 	errMsgFormatFailedInterimLiquidityUpdate  = "failed to update interim liquidity - pool asset %s does not exist"
 	errMsgFormatRepeatingPoolAssetsNotAllowed = "repeating pool assets not allowed, found %s"
 	errMsgFormatNoPoolAssetFound              = "can't find the PoolAsset (%s)"
-	errMsgFormatInvalidInputDenoms            = "input denoms must already exist in the pool (%s)"
 )
 
 var (
@@ -690,7 +691,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	for _, coin := range tokensIn {
 		_, ok := poolAssetsByDenom[coin.Denom]
 		if !ok {
-			return sdk.ZeroInt(), sdk.NewCoins(), fmt.Errorf(errMsgFormatInvalidInputDenoms, coin.Denom)
+			return sdk.ZeroInt(), sdk.NewCoins(), sdkerrors.Wrapf(types.ErrDenomAlreadyInPool, invalidInputDenomsErrFormat, coin.Denom)
 		}
 	}
 
@@ -825,7 +826,7 @@ func (p *Pool) CalcTokenInShareAmountOut(
 	).Ceil().TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMsgFormatTokenAmountNotPositive, tokenInAmount.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
 	}
 
 	return tokenInAmount, nil
@@ -852,7 +853,7 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 	).TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMsgFormatTokenAmountNotPositive, tokenInAmount.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
 	}
 
 	poolAssetIn.Token.Amount = poolAssetIn.Token.Amount.Add(tokenInAmount)
@@ -884,11 +885,11 @@ func (p *Pool) ExitSwapExactAmountOut(
 	).TruncateInt()
 
 	if !sharesIn.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, errMsgFormatSharesAmountNotPositive, sharesIn.Int64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
 	}
 
 	if sharesIn.GT(shareInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, sharesIn.Int64(), shareInMaxAmount.Uint64())
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
 	}
 
 	if err := p.exitPool(ctx, sdk.NewCoins(tokenOut), sharesIn); err != nil {
