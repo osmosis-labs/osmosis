@@ -15,27 +15,32 @@ service Query {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/gauge-ids/{pool_id}";
   }
-
+  // DistrInfo returns the pools' matching gauge ids and weights.
   rpc DistrInfo(QueryDistrInfoRequest) returns (QueryDistrInfoResponse) {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/distr_info";
   }
 
+  // Params returns pool incentives params.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/osmosis/pool-incentives/v1beta1/params";
   }
 
+  // LockableDurations returns lock durations for pools.
   rpc LockableDurations(QueryLockableDurationsRequest)
       returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/lockable_durations";
   }
 
+  // IncentivizedPools returns currently incentivized pools
   rpc IncentivizedPools(QueryIncentivizedPoolsRequest)
       returns (QueryIncentivizedPoolsResponse) {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/incentivized_pools";
   }
+
+  // ExternalIncentiveGauges returns external incentive gauges.
   rpc ExternalIncentiveGauges(QueryExternalIncentiveGaugesRequest)
       returns (QueryExternalIncentiveGaugesResponse) {
     option (google.api.http).get =

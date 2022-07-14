@@ -18,6 +18,7 @@ func unlockingPrefix(isUnlocking bool) []byte {
 	return types.KeyPrefixNotUnlocking
 }
 
+// iterate through keys between that use prefix, and have a time.
 func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	timeKey := getTimeKey(time)
@@ -37,6 +38,7 @@ func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, maxTime time.
 	return store.Iterator(prefix, storetypes.PrefixEndBytes(key))
 }
 
+// Iterates over a domain of keys for a specified duration.
 func (k Keeper) iteratorDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
@@ -44,6 +46,7 @@ func (k Keeper) iteratorDuration(ctx sdk.Context, prefix []byte, duration time.D
 	return sdk.KVStorePrefixIterator(store, key)
 }
 
+// Iterates over a domain of keys for longer than a specified duration.
 func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
@@ -52,6 +55,7 @@ func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration 
 	return store.Iterator(key, storetypes.PrefixEndBytes(prefix))
 }
 
+// Iterates over a domain of keys for shorter than a specified duration.
 func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
@@ -60,6 +64,7 @@ func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration
 	return store.Iterator(prefix, key)
 }
 
+// Iterates over a domain of keys.
 func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(store, prefix)
@@ -173,6 +178,7 @@ func (k Keeper) AccountLockIteratorDurationDenom(ctx sdk.Context, isUnlocking bo
 	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockDuration, addr, []byte(denom)), duration)
 }
 
+// Returns an array of single lock unit by period defined by the x/lockup module.
 func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []types.PeriodLock {
 	locks := []types.PeriodLock{}
 	defer iterator.Close()
@@ -187,6 +193,7 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 	return locks
 }
 
+// Gets locks from the iterator, then unlocks all matured locks. Returns locks unlocked and sum of coins unlocked.
 func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
 	// Note: this function is only used for an account
 	// and this has no conflicts with synthetic lockups
@@ -204,6 +211,7 @@ func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]typ
 	return locks, coins
 }
 
+// Starts unlocking coins from NotUnlocking queue.
 func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, error) {
 	// Note: this function is only used for an account
 	// and this has no conflicts with synthetic lockups
@@ -218,6 +226,7 @@ func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) (
 	return locks, nil
 }
 
+// Gets coins from locks using the iterator.
 func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getCoinsFromLocks(k.getLocksFromIterator(ctx, iterator))
 }
