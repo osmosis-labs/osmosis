@@ -91,11 +91,11 @@ func (suite *KeeperTestSuite) TestDistribute() {
 		gauges := suite.SetupGauges(tc.gauges, defaultLPDenom)
 		addrs := suite.SetupUserLocks(tc.users)
 		_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
-		suite.Require().NoError(err)
+		suite.NoError(err)
 		// check expected rewards against actual rewards received
 		for i, addr := range addrs {
 			bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr)
-			suite.Require().Equal(tc.expectedRewards[i].String(), bal.String(), "test %v, person %d", tc.name, i)
+			suite.Equal(tc.expectedRewards[i].String(), bal.String(), "test %v, person %d", tc.name, i)
 		}
 	}
 }
@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 		gauges := suite.SetupGauges(tc.gauges, defaultLPSyntheticDenom)
 		addrs := suite.SetupUserSyntheticLocks(tc.users)
 		_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
-		suite.Require().NoError(err)
+		suite.NoError(err)
 		// check expected rewards against actual rewards received
 		for i, addr := range addrs {
 			var rewards string
@@ -179,7 +179,7 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 			if strings.Contains(bal.String(), "lptoken/superbonding,") {
 				rewards = strings.Split(bal.String(), "lptoken/superbonding,")[1]
 			}
-			suite.Require().Equal(tc.expectedRewards[i].String(), rewards, "test %v, person %d", tc.name, i)
+			suite.Equal(tc.expectedRewards[i].String(), rewards, "test %v, person %d", tc.name, i)
 		}
 	}
 
@@ -190,12 +190,14 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
 
 	tests := []struct {
+		name string
 		// each sdk.Coins in initialGaugeCoins will be used to create a new gauge
 		initialGaugeCoins []sdk.Coins
 		// sdk.Coins to add to gauge with gauge id
 		coinsToAddToGauges map[uint64]sdk.Coins
 	}{
 		{
+			name: "one gauge",
 			initialGaugeCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 1089328)),
 			},
@@ -204,6 +206,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 			},
 		},
 		{
+			name: "two gauge",
 			initialGaugeCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 430458903450)),
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 734523458)),
@@ -214,6 +217,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 			},
 		},
 		{
+			name: "two gauge with 2 types of distributed coins",
 			initialGaugeCoins: []sdk.Coins{
 				sdk.NewCoins(sdk.NewInt64Coin("stake", 50345983536)),
 				sdk.NewCoins(sdk.NewInt64Coin("notstake", 643875873404)),
@@ -245,13 +249,13 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 		// create new gauge using initialGaugeCoins
 		for _, coins := range tc.initialGaugeCoins {
 			_, gauge, gaugeCoins, _ := suite.SetupNewGauge(false, coins)
-			suite.Require().Equal(coins, gaugeCoins)
+			suite.Equal(coins, gaugeCoins, "test %v", tc.name)
 
 			gauges = append(gauges, gauge)
 
 			moduleToDistributeCoins = incentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
 			expModuleToDistributeCoins = expModuleToDistributeCoins.Add(gaugeCoins...)
-			suite.Require().Equal(expModuleToDistributeCoins, moduleToDistributeCoins)
+			suite.Equal(expModuleToDistributeCoins, moduleToDistributeCoins, "test %v", tc.name)
 
 			// div by 2 since all gauge in this tests distribute over 2 epochs
 			expDistributedCoinsFirstEpoch[gauge.Id] = DivCoin(coins, 2)
@@ -262,7 +266,7 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 
 			moduleToDistributeCoins = incentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
 			expModuleToDistributeCoins = expModuleToDistributeCoins.Add(coins...)
-			suite.Require().Equal(expModuleToDistributeCoins, moduleToDistributeCoins)
+			suite.Equal(expModuleToDistributeCoins, moduleToDistributeCoins, "test %v", tc.name)
 
 			// div by 2 since all gauge in this tests distribute over 2 epochs
 			expDistributedCoinsFirstEpoch[gaugeID] = expDistributedCoinsFirstEpoch[gaugeID].Add(DivCoin(coins, 2)...)
@@ -274,17 +278,17 @@ func (suite *KeeperTestSuite) TestGetModuleToDistributeCoins() {
 			// move this gauge from upcoming to active
 			suite.Ctx = suite.Ctx.WithBlockTime(gauge.StartTime)
 			gauge, err := incentivesKeeper.GetGaugeByID(suite.Ctx, gauge.Id)
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			err = incentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			// distribute coins from this gauge to stakers
 			distrCoins, err := incentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
-			suite.Require().NoError(err)
-			suite.Require().Equal(distrCoins, expDistributedCoinsFirstEpoch[gauge.Id])
+			suite.NoError(err)
+			suite.Equal(distrCoins, expDistributedCoinsFirstEpoch[gauge.Id], "test %v", tc.name)
 			// check gauge changes after distribution
 			expModuleToDistributeCoins = expModuleToDistributeCoins.Sub(distrCoins)
 			moduleToDistributeCoins = incentivesKeeper.GetModuleToDistributeCoins(suite.Ctx)
-			suite.Require().Equal(expModuleToDistributeCoins, moduleToDistributeCoins)
+			suite.Equal(expModuleToDistributeCoins, moduleToDistributeCoins, "test %v", tc.name)
 		}
 	}
 }
@@ -294,37 +298,41 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 	lockOwner := sdk.AccAddress([]byte("addr1---------------"))
 
 	tests := []struct {
+		name string
 		// each sdk.Coins in initialGaugeCoins will be used to create a new gauge
 		initialGaugeCoins []sdk.Coins
 		// sdk.Coins to add to gauge with gauge id
 		coinsToAddToGauges map[uint64]sdk.Coins
 	}{
 		{
+			name: "one gauge",
 			initialGaugeCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 567458)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 1089328)),
 			},
 			coinsToAddToGauges: map[uint64]sdk.Coins{
-				1: sdk.NewCoins(sdk.NewInt64Coin("stake", 340200)),
+				1: sdk.NewCoins(sdk.NewInt64Coin("stake", 2089231840)),
 			},
 		},
 		{
+			name: "two gauge",
 			initialGaugeCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 89898)),
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 70)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 430458903450)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 734523458)),
 			},
 			coinsToAddToGauges: map[uint64]sdk.Coins{
-				1: sdk.NewCoins(sdk.NewInt64Coin("stake", 3030)),
-				2: sdk.NewCoins(sdk.NewInt64Coin("stake", 7938400)),
+				1: sdk.NewCoins(sdk.NewInt64Coin("stake", 3034553240)),
+				2: sdk.NewCoins(sdk.NewInt64Coin("stake", 70349583945834)),
 			},
 		},
 		{
+			name: "two gauge with 2 types of distributed coins",
 			initialGaugeCoins: []sdk.Coins{
-				sdk.NewCoins(sdk.NewInt64Coin("stake", 50008)),
-				sdk.NewCoins(sdk.NewInt64Coin("notstake", 650)),
+				sdk.NewCoins(sdk.NewInt64Coin("stake", 50345983536)),
+				sdk.NewCoins(sdk.NewInt64Coin("notstake", 643875873404)),
 			},
 			coinsToAddToGauges: map[uint64]sdk.Coins{
-				1: sdk.NewCoins(sdk.NewInt64Coin("notstake", 1100)),
-				2: sdk.NewCoins(sdk.NewInt64Coin("stake", 7500)),
+				1: sdk.NewCoins(sdk.NewInt64Coin("notstake", 1000384574)),
+				2: sdk.NewCoins(sdk.NewInt64Coin("stake", 500222222)),
 			},
 		},
 	}
@@ -349,12 +357,12 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 		// create new gauge using initialGaugeCoins
 		for _, coins := range tc.initialGaugeCoins {
 			_, gauge, gaugeCoins, _ := suite.SetupNewGauge(false, coins)
-			suite.Require().Equal(coins, gaugeCoins)
+			suite.Equal(coins, gaugeCoins)
 
 			gauges = append(gauges, gauge)
 
 			moduleDistributedCoins = incentivesKeeper.GetModuleDistributedCoins(suite.Ctx)
-			suite.Require().Equal(sdk.Coins(nil), moduleDistributedCoins)
+			suite.Equal(sdk.Coins(nil), moduleDistributedCoins, "test %v", tc.name)
 
 			// div by 2 since all gauge in this tests distribute over 2 epochs
 			expDistributedCoinsFirstEpoch[gauge.Id] = DivCoin(coins, 2)
@@ -364,7 +372,7 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 			suite.AddToGauge(coins, gaugeID)
 
 			moduleDistributedCoins = incentivesKeeper.GetModuleDistributedCoins(suite.Ctx)
-			suite.Require().Equal(sdk.Coins(nil), moduleDistributedCoins)
+			suite.Equal(sdk.Coins(nil), moduleDistributedCoins, "test %v", tc.name)
 
 			// div by 2 since all gauge in this tests distribute over 2 epochs
 			expDistributedCoinsFirstEpoch[gaugeID] = expDistributedCoinsFirstEpoch[gaugeID].Add(DivCoin(coins, 2)...)
@@ -376,17 +384,17 @@ func (suite *KeeperTestSuite) TestGetModuleDistributedCoins() {
 			// move this gauge from upcoming to active
 			suite.Ctx = suite.Ctx.WithBlockTime(gauge.StartTime)
 			gauge, err := incentivesKeeper.GetGaugeByID(suite.Ctx, gauge.Id)
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			err = incentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			// distribute coins from this gauge to stakers
 			distrCoins, err := incentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
-			suite.Require().NoError(err)
-			suite.Require().Equal(distrCoins, expDistributedCoinsFirstEpoch[gauge.Id])
+			suite.NoError(err)
+			suite.Equal(distrCoins, expDistributedCoinsFirstEpoch[gauge.Id], "test %v", tc.name)
 			// check gauge changes after distribution
 			expModuleDistributedCoins = expModuleDistributedCoins.Add(DivCoin(gauge.Coins, 2)...)
 			moduleDistributedCoins = incentivesKeeper.GetModuleDistributedCoins(suite.Ctx)
-			suite.Require().Equal(expModuleDistributedCoins, moduleDistributedCoins)
+			suite.Equal(expModuleDistributedCoins, moduleDistributedCoins, "test %v", tc.name)
 		}
 	}
 }
@@ -420,24 +428,24 @@ func (suite *KeeperTestSuite) TestNoLockPerpetualGaugeDistribution() {
 		DistributedCoins:  sdk.Coins{},
 		StartTime:         startTime,
 	}
-	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
+	suite.Equal(gauges[0].String(), expectedGauge.String())
 
 	// move the created gauge from upcoming to active
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := incentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 	err = incentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	// distribute coins to stakers, since it's perpetual distribute everything on single distribution
 	distrCoins, err := incentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
-	suite.Require().NoError(err)
-	suite.Require().Equal(distrCoins, sdk.Coins(nil))
+	suite.NoError(err)
+	suite.Equal(distrCoins, sdk.Coins(nil))
 
 	// check state is same after distribution
 	gauges = incentivesKeeper.GetNotFinishedGauges(suite.Ctx)
 	suite.Require().Len(gauges, 1)
-	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
+	suite.Equal(gauges[0].String(), expectedGauge.String())
 }
 
 // TestNoLockNonPerpetualGaugeDistribution tests that the creation of a non perp gauge that has no locks associated does not distribute any tokens.
@@ -469,22 +477,22 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 		DistributedCoins:  sdk.Coins{},
 		StartTime:         startTime,
 	}
-	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
+	suite.Equal(gauges[0].String(), expectedGauge.String())
 
 	// move the created gauge from upcoming to active
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime)
 	gauge, err := incentivesKeeper.GetGaugeByID(suite.Ctx, gaugeID)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 	err = incentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	// distribute coins to stakers
 	distrCoins, err := incentivesKeeper.Distribute(suite.Ctx, []types.Gauge{*gauge})
-	suite.Require().NoError(err)
-	suite.Require().Equal(distrCoins, sdk.Coins(nil))
+	suite.NoError(err)
+	suite.Equal(distrCoins, sdk.Coins(nil))
 
 	// check state is same after distribution
 	gauges = incentivesKeeper.GetNotFinishedGauges(suite.Ctx)
 	suite.Require().Len(gauges, 1)
-	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
+	suite.Equal(gauges[0].String(), expectedGauge.String())
 }
