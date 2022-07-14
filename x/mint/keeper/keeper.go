@@ -317,7 +317,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	}
 
 	// Take the new balance of the developer rewards pool and add it back to the supply offset deduction
-	developerAccountBalance = k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), totalMintedCoin.Denom)
+	developerAccountBalance = k.bankKeeper.GetBalance(ctx, developerRewardsModuleAccountAddress, totalMintedCoin.Denom)
 	k.bankKeeper.AddSupplyOffset(ctx, totalMintedCoin.Denom, developerAccountBalance.Amount.Neg())
 
 	return devRewardCoin.Amount, nil
