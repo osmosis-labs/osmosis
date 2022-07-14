@@ -6,13 +6,6 @@ tc.assertion(t, {{if .OnlyReturnsError}}{{template "call" .}}{{else}}err{{end}}
 )
 {{- end}}
 
-
-{{define "equal"}}assert.Equal{{if or (not .Subtests) .PrintInputs}}f{{end}}{{end}}
-
-
-{{define "msg"}}{{if or (not .Subtests) .PrintInputs}} , "{{template "message" .}}", {{template "inputs" .}}{{end}}{{end}}
-
-
 {{define "function"}}
 {{- $f := .}}
 
