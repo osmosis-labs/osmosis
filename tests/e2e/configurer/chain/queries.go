@@ -28,10 +28,10 @@ func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
 	var resp *http.Response
 	require.Eventually(n.t, func() bool {
 		resp, err = http.Get(fullQueryPath)
-		if resp.StatusCode == http.StatusServiceUnavailable {
-			return false
+		if resp.StatusCode != http.StatusServiceUnavailable {
+			return true
 		}
-		return true
+		return false
 	}, time.Minute, time.Second*10, "failed to execute HTTP request: %w")
 
 	defer resp.Body.Close()
