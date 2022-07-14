@@ -86,8 +86,11 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 // RandGeometricCoin uniformly samples a denom from the addr's balances.
 // Then it samples an Exponentially distributed amount of the addr's coins, with rate = 10.
 // (Meaning that on average it samples 10% of the chosen balance)
-func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) sdk.Coin {
-	balances := sim.App.GetBankKeeper().GetAllBalances(ctx, addr)
+func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coin, bool) {
+	balances := sim.App.GetBankKeeper().SpendableCoins(ctx, addr)
+	if len(balances) == 0 {
+		return sdk.Coin{}, false
+	}
 	coin := RandSelect(sim, balances...)
 	// TODO: Reconsider if this becomes problematic in the future, but currently thinking it
 	// should be fine for simulation.
@@ -102,7 +105,7 @@ func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) sdk
 	maxRange := int64(10000)
 	intSample := int64(math.Round(sample * float64(maxRange)))
 	newAmount := coin.Amount.MulRaw(intSample).QuoRaw(maxRange)
-	return sdk.NewCoin(coin.Denom, newAmount)
+	return sdk.NewCoin(coin.Denom, newAmount), true
 }
 
 func (sim *SimCtx) RandCoinSubset(ctx sdk.Context, addr sdk.AccAddress, denoms []string) sdk.Coins {
