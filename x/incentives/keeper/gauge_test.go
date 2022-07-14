@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) TestNonPerpetualGaugeOperations() {
 	suite.Require().Len(gauges, 0)
 
 	lockOwners := suite.SetupManyLocks(5, defaultLiquidTokens, defaultLPTokens, time.Second)
-	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, 2)
 	// evenly distributed per lock
 	expectedCoinsPerLock := sdk.Coins{sdk.NewInt64Coin("stake", 2)}
 

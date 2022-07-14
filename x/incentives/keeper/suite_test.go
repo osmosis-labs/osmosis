@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) SetupGauges(gaugeDescriptors []perpGaugeDesc, deno
 	gauges := make([]types.Gauge, len(gaugeDescriptors))
 	perpetual := true
 	for i, desc := range gaugeDescriptors {
-		_, gaugePtr, _, _ := suite.setupNewGaugeWithDuration(perpetual, desc.rewardAmount, desc.lockDuration, denom)
+		_, gaugePtr, _, _ := suite.setupNewGaugeWithDuration(perpetual, desc.rewardAmount, desc.lockDuration, denom, 2)
 		gauges[i] = *gaugePtr
 	}
 	return gauges
@@ -145,7 +145,7 @@ func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, d
 }
 
 // setupNewGaugeWithDuration creates a gauge with the specified duration.
-func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string) (
+func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string, numEpochsPaidOver uint64) (
 	uint64, *types.Gauge, sdk.Coins, time.Time,
 ) {
 	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
@@ -160,7 +160,6 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins 
 	mintCoins := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
 	suite.FundAcc(addr, mintCoins)
 
-	numEpochsPaidOver := uint64(2)
 	if isPerpetual {
 		numEpochsPaidOver = uint64(1)
 	}
@@ -169,12 +168,12 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins 
 }
 
 // SetupNewGauge creates a gauge with the default lock duration.
-func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins) (uint64, *types.Gauge, sdk.Coins, time.Time) {
-	return suite.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration, "lptoken")
+func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins, numEpochsPaidOver uint64) (uint64, *types.Gauge, sdk.Coins, time.Time) {
+	return suite.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration, "lptoken", numEpochsPaidOver)
 }
 
 // setupNewGaugeWithDenom creates a gauge with the specified duration and denom.
-func (suite *KeeperTestSuite) setupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string) (
+func (suite *KeeperTestSuite) setupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string, numEpochsPaidOver uint64) (
 	uint64, *types.Gauge, sdk.Coins, time.Time,
 ) {
 	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
@@ -189,7 +188,6 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDenom(isPerpetual bool, coins sdk
 	mintCoins := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
 	suite.FundAcc(addr, mintCoins)
 
-	numEpochsPaidOver := uint64(2)
 	if isPerpetual {
 		numEpochsPaidOver = uint64(1)
 	}
@@ -198,8 +196,8 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDenom(isPerpetual bool, coins sdk
 }
 
 // SetupNewGaugeWithDenom creates a gauge with the specified duration and denom.
-func (suite *KeeperTestSuite) SetupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, denom string) (uint64, *types.Gauge, sdk.Coins, time.Time) {
-	return suite.setupNewGaugeWithDenom(isPerpetual, coins, defaultLockDuration, denom)
+func (suite *KeeperTestSuite) SetupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, denom string, numEpochsPaidOver uint64) (uint64, *types.Gauge, sdk.Coins, time.Time) {
+	return suite.setupNewGaugeWithDenom(isPerpetual, coins, defaultLockDuration, denom, numEpochsPaidOver)
 }
 
 // SetupManyLocks creates as many locks as the user defines.
@@ -227,7 +225,7 @@ func (suite *KeeperTestSuite) SetupLockAndGauge(isPerpetual bool) (sdk.AccAddres
 	suite.LockTokens(lockOwner, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, time.Second)
 
 	// create gauge
-	gaugeID, _, gaugeCoins, startTime := suite.SetupNewGauge(isPerpetual, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, gaugeCoins, startTime := suite.SetupNewGauge(isPerpetual, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, 2)
 
 	return lockOwner, gaugeID, gaugeCoins, startTime
 }

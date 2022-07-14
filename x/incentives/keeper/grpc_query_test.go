@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) TestGRPCGaugeByID() {
 	suite.SetupTest()
 
 	// create a gauge
-	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, 2)
 
 	// ensure that querying for a gauge with an ID that doesn't exist returns an error.
 	res, err := suite.querier.GaugeByID(sdk.WrapSDKContext(suite.Ctx), &types.GaugeByIDRequest{Id: 1000})
@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestGRPCGauges() {
 	suite.Require().Len(res.Data, 0)
 
 	// create a gauge
-	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, 2)
 
 	// query gauges again, but this time expect the gauge created earlier in the response
 	res, err = suite.querier.Gauges(sdk.WrapSDKContext(suite.Ctx), &types.GaugesRequest{})
@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestGRPCGauges() {
 
 	// create 10 more gauges
 	for i := 0; i < 10; i++ {
-		suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
+		suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, 2)
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
 	}
 
@@ -102,7 +102,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 	suite.Require().Len(res.Data, 0)
 
 	// create a gauge and move it from upcoming to active
-	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, 2)
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
 	err = suite.querier.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 	suite.Require().NoError(err)
@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGauges() {
 
 	// create 20 more gauges
 	for i := 0; i < 20; i++ {
-		_, gauge, _, _ := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
+		_, gauge, _, _ := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, 2)
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
 
 		// move the first 9 gauges from upcoming to active (now 10 active gauges, 30 total gauges)
@@ -157,7 +157,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 	suite.Require().Len(res.Data, 0)
 
 	// create a gauge
-	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, 2)
 	suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
 	err = suite.App.IncentivesKeeper.MoveUpcomingGaugeToActiveGauge(suite.Ctx, *gauge)
 
@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestGRPCActiveGaugesPerDenom() {
 
 	// setup 20 more gauges with the pool denom
 	for i := 0; i < 20; i++ {
-		_, gauge, _, _ := suite.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool")
+		_, gauge, _, _ := suite.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool", 2)
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
 
 		// move the first 10 of 20 gauges to an active status
@@ -215,7 +215,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 	suite.Require().Len(res.Data, 0)
 
 	// create a gauge
-	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, 2)
 
 	// query upcoming gauges again, but this time expect the gauge created earlier in the response
 	res, err = suite.querier.UpcomingGauges(sdk.WrapSDKContext(suite.Ctx), &types.UpcomingGaugesRequest{})
@@ -239,7 +239,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGauges() {
 
 	// setup 20 more upcoming gauges
 	for i := 0; i < 20; i++ {
-		_, gauge, _, _ := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)})
+		_, gauge, _, _ := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, 2)
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
 
 		// move the first 9 created gauges to an active status
@@ -269,7 +269,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 	suite.Require().Len(res.UpcomingGauges, 0)
 
 	// create a gauge, and check upcoming gauge is working
-	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, gauge, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, 2)
 
 	// query upcoming gauges by denom again, but this time expect the gauge created earlier in the response
 	res, err = suite.querier.UpcomingGaugesPerDenom(sdk.WrapSDKContext(suite.Ctx), &upcomingGaugeRequest)
@@ -301,7 +301,7 @@ func (suite *KeeperTestSuite) TestGRPCUpcomingGaugesPerDenom() {
 
 	// setup 20 more upcoming gauges with pool denom
 	for i := 0; i < 20; i++ {
-		_, gauge, _, _ := suite.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool")
+		_, gauge, _, _ := suite.SetupNewGaugeWithDenom(false, sdk.Coins{sdk.NewInt64Coin("stake", 3)}, "pool", 2)
 		suite.Ctx = suite.Ctx.WithBlockTime(startTime.Add(time.Second))
 
 		// move the first 10 created gauges from upcoming to active
@@ -418,7 +418,7 @@ func (suite *KeeperTestSuite) TestGRPCToDistributeCoins() {
 	suite.LockTokens(addr2, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, 2*time.Second)
 
 	// setup a non perpetual gauge
-	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, 2)
 	gauge, err := suite.querier.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(gauge)
@@ -483,7 +483,7 @@ func (suite *KeeperTestSuite) TestGRPCDistributedCoins() {
 	suite.LockTokens(addr2, sdk.Coins{sdk.NewInt64Coin("lptoken", 10)}, 2*time.Second)
 
 	// setup a non perpetual gauge
-	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	gaugeID, _, coins, startTime := suite.SetupNewGauge(false, sdk.Coins{sdk.NewInt64Coin("stake", 10)}, 2)
 	gauge, err := suite.querier.GetGaugeByID(suite.Ctx, gaugeID)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(gauge)
