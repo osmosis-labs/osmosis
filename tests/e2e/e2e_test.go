@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -108,5 +109,68 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 		1*time.Minute,
 		10*time.Millisecond,
 		"superfluid delegation vote overwrite not working as expected",
+	)
+}
+
+func (s *IntegrationTestSuite) TestStateSync() {
+	if s.skipStateSync {
+		s.T().Skip()
+	}
+
+	chain := s.configurer.GetChainConfig(0)
+	runningNode, err := chain.GetDefaultNode()
+	s.NoError(err)
+
+	stateSyncHostPort := fmt.Sprintf("%s:26657", runningNode.Name)
+
+	trustHeight, err := runningNode.QueryCurrentHeight()
+	s.NoError(err)
+
+	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
+	s.NoError(err)
+
+	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
+
+	stateSynchingNodeConfig := &initialization.NodeConfig{
+		Name:               "state-sync",
+		Pruning:            "default",
+		PruningKeepRecent:  "0",
+		PruningInterval:    "0",
+		SnapshotInterval:   1500,
+		SnapshotKeepRecent: 2,
+	}
+
+	nodeInit, err := initialization.InitSingleNode(
+		chain.Id,
+		chain.DataDir,
+		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
+		stateSynchingNodeConfig,
+		time.Duration(chain.VotingPeriod),
+		trustHeight,
+		trustHash,
+		stateSyncRPCServers,
+	)
+	s.NoError(err)
+
+	stateSynchingNode := chain.CreateNodeConfig(nodeInit)
+
+	// State sync starts here
+	err = stateSynchingNode.Run()
+	s.NoError(err)
+
+	stateSynchingNode.QueryCurrentHeight()
+
+	s.Require().Eventually(func() bool {
+
+		syncHeight, err := stateSynchingNode.QueryCurrentHeight()
+		s.NoError(err)
+
+		runningHeight, err := runningNode.QueryCurrentHeight()
+		s.NoError(err)
+
+		return syncHeight == runningHeight
+	},
+		3*time.Minute,
+		2*time.Second,
 	)
 }

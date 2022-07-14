@@ -50,6 +50,18 @@ func New(t *testing.T, containerManager *containers.Manager, id string, initVali
 	}
 }
 
+// CreateNodeConfig returns new initialized NodeConfig.
+func (c *Config) CreateNodeConfig(initNode *initialization.Node) *NodeConfig {
+	nodeConfig := &NodeConfig{
+		Node:             *initNode,
+		chainId:          c.Id,
+		containerManager: c.containerManager,
+		t:                c.t,
+	}
+	c.NodeConfigs = append(c.NodeConfigs, nodeConfig)
+	return nodeConfig
+}
+
 // WaitUntilHeight waits for all validators to reach the specified height at the minimum.
 // returns error, if any.
 func (c *Config) WaitUntilHeight(height int64) error {
