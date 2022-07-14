@@ -62,6 +62,17 @@ func (sim *SimCtx) FindAccount(address sdk.Address) (simulation.Account, bool) {
 	return simulation.Account{}, false
 }
 
+func (sim *SimCtx) RandomSimAccountWithBalance(ctx sdk.Context) simulation.Account {
+	accHasBal := func(acc simulation.Account) bool {
+		return len(sim.App.GetBankKeeper().SpendableCoins(ctx, acc.Address)) == 0
+	}
+	acc, found := sim.RandomSimAccountWithConstraint(accHasBal)
+	if !found {
+		panic("No account has a balance in simulation, something has gone wrong.")
+	}
+	return acc
+}
+
 // Returns (account, randSubsetCoins, found), so if found = false, then no such address exists.
 // randSubsetCoins is a random subset of the provided denoms, if the account is found.
 // TODO: Write unit test
@@ -86,10 +97,11 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 // RandGeometricCoin uniformly samples a denom from the addr's balances.
 // Then it samples an Exponentially distributed amount of the addr's coins, with rate = 10.
 // (Meaning that on average it samples 10% of the chosen balance)
-func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coin, bool) {
+// Pre-condition: Addr must have a spendable balance
+func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) sdk.Coin {
 	balances := sim.App.GetBankKeeper().SpendableCoins(ctx, addr)
 	if len(balances) == 0 {
-		return sdk.Coin{}, false
+		panic("precondition for RandExponentialCoin broken: Addr has 0 spendable balance")
 	}
 	coin := RandSelect(sim, balances...)
 	// TODO: Reconsider if this becomes problematic in the future, but currently thinking it
@@ -105,7 +117,7 @@ func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) (sd
 	maxRange := int64(10000)
 	intSample := int64(math.Round(sample * float64(maxRange)))
 	newAmount := coin.Amount.MulRaw(intSample).QuoRaw(maxRange)
-	return sdk.NewCoin(coin.Denom, newAmount), true
+	return sdk.NewCoin(coin.Denom, newAmount)
 }
 
 func (sim *SimCtx) RandCoinSubset(ctx sdk.Context, addr sdk.AccAddress, denoms []string) sdk.Coins {

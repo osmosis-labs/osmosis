@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -16,11 +15,8 @@ import (
 )
 
 func RandomMsgLockTokens(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*types.MsgLockTokens, error) {
-	sender := sim.RandomSimAccount()
-	lockCoin, found := sim.RandExponentialCoin(ctx, sender.Address)
-	if !found {
-		return nil, fmt.Errorf("no addresses with spendable coins")
-	}
+	sender := sim.RandomSimAccountWithBalance(ctx)
+	lockCoin := sim.RandExponentialCoin(ctx, sender.Address)
 	duration := simulation.RandSelect(sim, time.Minute, time.Hour, time.Hour*24)
 	return &types.MsgLockTokens{
 		Owner:    sender.Address.String(),
