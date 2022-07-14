@@ -20,7 +20,6 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		// Although the app version was already set during the v9 upgrade, our v10 was a fork.
 		// As a result, the upgrade handler was not executed to increment the app version.
 		// This change helps to correctly set the app version for v11.
