@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -83,18 +84,18 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 		}
 	}
 
-	tx := gen.NewTxBuilder()
-	err := tx.SetMsgs(msgs...)
+	txBuilder := gen.NewTxBuilder()
+	err := txBuilder.SetMsgs(msgs...)
 	if err != nil {
 		return nil, err
 	}
-	err = tx.SetSignatures(sigs...)
+	err = txBuilder.SetSignatures(sigs...)
 	if err != nil {
 		return nil, err
 	}
-	tx.SetMemo(memo)
-	tx.SetFeeAmount(feeAmt)
-	tx.SetGasLimit(gas)
+	txBuilder.SetMemo(memo)
+	txBuilder.SetFeeAmount(feeAmt)
+	txBuilder.SetGasLimit(gas)
 
 	// 2nd round: once all signer infos are set, every signer can sign.
 	for i, p := range priv {
@@ -103,21 +104,17 @@ func genTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, ch
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
 		}
-		signBytes, err := gen.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
-		if err != nil {
-			panic(err)
-		}
-		sig, err := p.Sign(signBytes)
+		sig, err := tx.SignWithPrivKey(signMode, signerData, txBuilder, p, gen, accSeqs[i])
 		if err != nil {
 			panic(err)
 		}
 		//nolint:forcetypeassert
-		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
-		err = tx.SetSignatures(sigs...)
+		sigs[i] = sig
+		err = txBuilder.SetSignatures(sigs...)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	return tx.GetTx(), nil
+	return txBuilder.GetTx(), nil
 }

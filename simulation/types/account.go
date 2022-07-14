@@ -65,7 +65,7 @@ func (sim *SimCtx) FindAccount(address sdk.Address) (simulation.Account, bool) {
 
 func (sim *SimCtx) RandomSimAccountWithBalance(ctx sdk.Context) (simulation.Account, error) {
 	accHasBal := func(acc simulation.Account) bool {
-		return len(sim.App.GetBankKeeper().SpendableCoins(ctx, acc.Address)) == 0
+		return len(sim.App.GetBankKeeper().SpendableCoins(ctx, acc.Address)) != 0
 	}
 	acc, found := sim.RandomSimAccountWithConstraint(accHasBal)
 	if !found {
