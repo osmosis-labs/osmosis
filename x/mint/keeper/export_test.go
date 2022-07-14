@@ -1,8 +1,15 @@
 package keeper
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-type ErrInvalidRatio = invalidRatioError
+	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+)
+
+type (
+	ErrInvalidRatio                  = invalidRatioError
+	ErrInsufficientDevVestingBalance = insufficientDevVestingBalanceError
+)
 
 const (
 	DeveloperVestingAmount = developerVestingAmount
@@ -16,6 +23,10 @@ var (
 	GetProportions = getProportions
 )
 
-func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Coin, error) {
+func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Int, error) {
 	return k.distributeToModule(ctx, recipientModule, mintedCoin, proportion)
+}
+
+func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion sdk.Dec, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
+	return k.distributeDeveloperRewards(ctx, totalMintedCoin, developerRewardsProportion, developerRewardsReceivers)
 }
