@@ -1,11 +1,3 @@
-{{define "assertion" -}}
-tc.assertion(t, {{if .OnlyReturnsError}}{{template "call" .}}{{else}}err{{end}}
-{{- if or (not .Subtests) .PrintInputs -}}
-	, fmt.Sprintf("{{template "message" .}}", {{template "inputs" .}})
-{{- end -}}
-)
-{{- end}}
-
 {{define "function"}}
 {{- $f := .}}
 
