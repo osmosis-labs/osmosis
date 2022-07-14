@@ -14,7 +14,6 @@ import (
 
 var _ = suite.TestingSuite(nil)
 
-// TODO: move this to osmosutil so that tests from other modules can use this
 func DivCoin(coins sdk.Coins, divisor int64) sdk.Coins {
 	for id, coin := range coins {
 		coins[id].Amount = coin.Amount.QuoRaw(divisor)
