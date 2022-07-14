@@ -139,7 +139,7 @@ func (k Keeper) CheckIntermediaryAccountDelegations(ctx sdk.Context, intermedair
 	// now check and verify that we don't have any delegations
 	_, found := k.sk.GetDelegation(ctx, intermedairyAcc.GetAccAddress(), sdk.ValAddress(intermedairyAcc.ValAddr))
 	if found {
-		return true
+		return found
 	}
 
 	return false

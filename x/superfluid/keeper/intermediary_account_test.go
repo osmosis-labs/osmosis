@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountsSetGetDeleteFlow() {
 	suite.Require().Equal(accs, []types.SuperfluidIntermediaryAccount{acc})
 
 	// delete asset
-	suite.App.SuperfluidKeeper.DeleteIntermediaryAccount(suite.Ctx, acc.GetAccAddress())
+	suite.App.SuperfluidKeeper.DeleteIntermediaryAccount(suite.Ctx, acc)
 
 	// get account
 	gacc = suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, acc.GetAccAddress())
