@@ -25,9 +25,15 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the module's genesis state.
 type GenesisState struct {
-	Params                        Params                                `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	SuperfluidAssets              []SuperfluidAsset                     `protobuf:"bytes,2,rep,name=superfluid_assets,json=superfluidAssets,proto3" json:"superfluid_assets"`
-	OsmoEquivalentMultipliers     []OsmoEquivalentMultiplierRecord      `protobuf:"bytes,3,rep,name=osmo_equivalent_multipliers,json=osmoEquivalentMultipliers,proto3" json:"osmo_equivalent_multipliers"`
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	// superfluid_assets defines the registered superfluid assets that have been
+	// registered via governance.
+	SuperfluidAssets []SuperfluidAsset `protobuf:"bytes,2,rep,name=superfluid_assets,json=superfluidAssets,proto3" json:"superfluid_assets"`
+	// osmo_equivalent_multipliers is the records of osmo equivalent amount of
+	// each superfluid registered pool, updated every epoch.
+	OsmoEquivalentMultipliers []OsmoEquivalentMultiplierRecord `protobuf:"bytes,3,rep,name=osmo_equivalent_multipliers,json=osmoEquivalentMultipliers,proto3" json:"osmo_equivalent_multipliers"`
+	// intermediary_accounts is a secondary account for superfluid staking that
+	// plays an intermediary role between validators and the delegators.
 	IntermediaryAccounts          []SuperfluidIntermediaryAccount       `protobuf:"bytes,4,rep,name=intermediary_accounts,json=intermediaryAccounts,proto3" json:"intermediary_accounts"`
 	IntemediaryAccountConnections []LockIdIntermediaryAccountConnection `protobuf:"bytes,5,rep,name=intemediary_account_connections,json=intemediaryAccountConnections,proto3" json:"intemediary_account_connections"`
 }

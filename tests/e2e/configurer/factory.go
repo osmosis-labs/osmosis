@@ -24,7 +24,8 @@ type Configurer interface {
 }
 
 var (
-	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
+	// each started validator containers corresponds to one of
+	// the configurations below.
 	validatorConfigsChainA = []*initialization.NodeConfig{
 		{
 			Name:               "prune-default-snapshot",
