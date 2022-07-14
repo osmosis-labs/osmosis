@@ -1,0 +1,46 @@
+{{define "assertion" -}}
+tc.assertion(t, {{if .OnlyReturnsError}}{{template "call" .}}{{else}}err{{end}}
+{{- if or (not .Subtests) .PrintInputs -}}
+	, fmt.Sprintf("{{template "message" .}}", {{template "inputs" .}})
+{{- end -}}
+)
+{{- end}}
+
+
+{{define "equal"}}assert.Equal{{if or (not .Subtests) .PrintInputs}}f{{end}}{{end}}
+
+
+{{define "msg"}}{{if or (not .Subtests) .PrintInputs}} , "{{template "message" .}}", {{template "inputs" .}}{{end}}{{end}}
+
+
+{{define "function"}}
+{{- $f := .}}
+
+func (suite *KeeperTestSuite) Test{{.Name}}() {
+
+	tests := map[string]struct {
+        {{- range .TestParameters}}
+            {{Param .}} {{.Type}}
+        {{- end}}
+        expectPass bool
+	}{
+        "example test": {
+        },
+	}
+
+	for name, tc := range tests {
+        suite.Run(name, func() {
+            suite.SetupTest()
+            k := suite.App.GAMMKeeper
+
+            err := k.{{template "call" $f}}
+
+            if tc.expectPass {
+                suite.Require().NoError(err, "test: %s", name)
+            } else {
+                suite.Require().Error(err, "test: %s", name)
+            }
+        })
+    }
+}
+{{end}}
