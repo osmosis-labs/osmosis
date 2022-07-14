@@ -15,25 +15,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const hermesContainerName = "hermes-relayer"
+
 var errRegex = regexp.MustCompile(`(E|e)rror`)
 
 // Manager is a wrapper around all Docker instances, and the Docker API.
 // It provides utilities to run and interact with all Docker containers used within e2e testing.
 type Manager struct {
 	ImageConfig
-	pool    *dockertest.Pool
-	network *dockertest.Network
-
-	hermesResource *dockertest.Resource
-	valResources   map[string][]*dockertest.Resource
+	pool      *dockertest.Pool
+	network   *dockertest.Network
+	resources map[string]*dockertest.Resource
 }
 
 // NewManager creates a new Manager instance and initializes
 // all Docker specific utilies. Returns an error if initialiation fails.
 func NewManager(isUpgrade bool, isFork bool) (docker *Manager, err error) {
 	docker = &Manager{
-		ImageConfig:  NewImageConfig(isUpgrade, isFork),
-		valResources: make(map[string][]*dockertest.Resource),
+		ImageConfig: NewImageConfig(isUpgrade, isFork),
+		resources:   make(map[string]*dockertest.Resource),
 	}
 	docker.pool, err = dockertest.NewPool("")
 	if err != nil {
@@ -49,33 +49,36 @@ func NewManager(isUpgrade bool, isFork bool) (docker *Manager, err error) {
 // ExecTxCmd Runs ExecCmd, with flags for txs added.
 // namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json"`,
 // and searching for `code: 0`
-func (m *Manager) ExecTxCmd(t *testing.T, chainId string, validatorIndex int, command []string) (bytes.Buffer, bytes.Buffer, error) {
+func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
 	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
 	txCommand := append(command, allTxArgs...)
 	successStr := "code: 0"
-	return m.ExecCmd(t, chainId, validatorIndex, txCommand, successStr)
+	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
 
-// ExecCmd executes command on chainId by running it on the validator container (specified by validatorIndex)
+// ExecHermesCmd executes command on the hermes relaer container.
+func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	return m.ExecCmd(t, hermesContainerName, command, success)
+}
+
+// ExecCmd executes command by running it on the node container (specified by containerName)
 // success is the output of the command that needs to be observed for the command to be deemed successful.
 // It is found by checking if stdout or stderr contains the success string anywhere within it.
 // returns container std out, container std err, and error if any.
 // An error is returned if the command fails to execute or if the success string is not found in the output.
-func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	var containerId string
-	if chainId == "" {
-		containerId = m.hermesResource.Container.ID
-	} else {
-		containerId = m.valResources[chainId][validatorIndex].Container.ID
+func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	if _, ok := m.resources[containerName]; !ok {
+		return bytes.Buffer{}, bytes.Buffer{}, fmt.Errorf("no resource %s found", containerName)
 	}
+	containerId := m.resources[containerName].Container.ID
 
 	var (
 		outBuf bytes.Buffer
 		errBuf bytes.Buffer
 	)
 
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
 	// We use the `require.Eventually` function because it is only allowed to do one transaction per block without
 	// sequence numbers. For simplicity, we avoid keeping track of the sequence number and just use the `require.Eventually`.
 	require.Eventually(
@@ -130,11 +133,11 @@ func (m *Manager) ExecCmd(t *testing.T, chainId string, validatorIndex int, comm
 }
 
 // RunHermesResource runs a Hermes container. Returns the container resource and error if any.
-func (m *Manager) RunHermesResource(chainAID, osmoAValMnemonic, chainBID, osmoBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
-	var err error
-	m.hermesResource, err = m.pool.RunWithOptions(
+// the name of the hermes container is "<chain A id>-<chain B id>-relayer"
+func (m *Manager) RunHermesResource(chainAID, osmoARelayerNodeName, osmoAValMnemonic, chainBID, osmoBRelayerNodeName, osmoBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
+	hermesResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("%s-%s-relayer", chainAID, chainBID),
+			Name:       hermesContainerName,
 			Repository: m.RelayerRepository,
 			Tag:        m.RelayerTag,
 			NetworkID:  m.network.Network.ID,
@@ -156,8 +159,8 @@ func (m *Manager) RunHermesResource(chainAID, osmoAValMnemonic, chainBID, osmoBV
 				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", chainBID),
 				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAValMnemonic),
 				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBValMnemonic),
-				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", m.valResources[chainAID][0].Container.Name[1:]),
-				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", m.valResources[chainBID][0].Container.Name[1:]),
+				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", osmoARelayerNodeName),
+				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", osmoBRelayerNodeName),
 			},
 			Entrypoint: []string{
 				"sh",
@@ -170,24 +173,20 @@ func (m *Manager) RunHermesResource(chainAID, osmoAValMnemonic, chainBID, osmoBV
 	if err != nil {
 		return nil, err
 	}
-	return m.hermesResource, nil
+	m.resources[hermesContainerName] = hermesResource
+	return hermesResource, nil
 }
 
-// GetHermesContainerId returns the Hermes container ID.
-func (m *Manager) GetHermesContainerID() string {
-	return m.hermesResource.Container.ID
-}
-
-// RunValidatorResource runs a validator container. Assings valContainerName to the container.
+// RunNodeResource runs a node container. Assings containerName to the container.
 // Mounts the container on valConfigDir volume on the running host. Returns the container resource and error if any.
-func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCondifDir string) (*dockertest.Resource, error) {
+func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir string) (*dockertest.Resource, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
 
 	runOpts := &dockertest.RunOptions{
-		Name:       valContainerName,
+		Name:       containerName,
 		Repository: m.OsmosisRepository,
 		Tag:        m.OsmosisTag,
 		NetworkID:  m.network.Network.ID,
@@ -203,11 +202,7 @@ func (m *Manager) RunValidatorResource(chainId string, valContainerName, valCond
 		return nil, err
 	}
 
-	chainValidatorResources, exists := m.valResources[chainId]
-	if !exists {
-		chainValidatorResources = make([]*dockertest.Resource, 0)
-	}
-	m.valResources[chainId] = append(chainValidatorResources, resource)
+	m.resources[containerName] = resource
 
 	return resource, nil
 }
@@ -251,62 +246,49 @@ func (m *Manager) PurgeResource(resource *dockertest.Resource) error {
 	return m.pool.Purge(resource)
 }
 
-// GetValidatorResource returns the validator resource at validatorIndex for the given chainId.
-func (m *Manager) GetValidatorResource(chainId string, validatorIndex int) (*dockertest.Resource, bool) {
-	chainValidators, exists := m.valResources[chainId]
-	if !exists || validatorIndex >= len(chainValidators) {
-		return nil, false
+// GetNodeResource returns the node resource for containerName.
+func (m *Manager) GetNodeResource(containerName string) (*dockertest.Resource, error) {
+	resource, exists := m.resources[containerName]
+	if !exists {
+		return nil, fmt.Errorf("node resource not found: container name: %s", containerName)
 	}
-	return chainValidators[validatorIndex], true
+	return resource, nil
 }
 
-// GetValidatorHostPort returns the port-forwarding address of the running host
-// necessary to connect to the validator's portId exposed inside the container.
-// The validator container is determined by chainId and validatorIndex.
+// GetHostPort returns the port-forwarding address of the running host
+// necessary to connect to the portId exposed inside the container.
+// The container is determined by containerName.
 // Returns the host-port or error if any.
-func (m *Manager) GetValidatorHostPort(chainId string, validatorIndex int, portId string) (string, error) {
-	validatorResource, exists := m.GetValidatorResource(chainId, validatorIndex)
-	if !exists {
-		return "", fmt.Errorf("validator resource not found: chainId: %s, validatorIndex: %d", chainId, validatorIndex)
+func (m *Manager) GetHostPort(containerName string, portId string) (string, error) {
+	resource, err := m.GetNodeResource(containerName)
+	if err != nil {
+		return "", err
 	}
-	return validatorResource.GetHostPort(portId), nil
+	return resource.GetHostPort(portId), nil
 }
 
-// RemoveValidatorResource removes a validator container specified by chainId and containerName.
+// RemoveNodeResource removes a node container specified by containerName.
 // Returns error if any.
-func (m *Manager) RemoveValidatorResource(chainId string, containerName string) error {
-	chainValidators, exists := m.valResources[chainId]
-	if !exists {
-		return fmt.Errorf("no validators on chain %s", chainId)
+func (m *Manager) RemoveNodeResource(containerName string) error {
+	resource, err := m.GetNodeResource(containerName)
+	if err != nil {
+		return err
 	}
-
-	for validatorIndex, validator := range chainValidators {
-		if validator.Container.Name[1:] == containerName {
-			var opts docker.RemoveContainerOptions
-			opts.ID = validator.Container.ID
-			opts.Force = true
-			if err := m.pool.Client.RemoveContainer(opts); err != nil {
-				return err
-			}
-			m.valResources[chainId] = append(chainValidators[:validatorIndex], chainValidators[validatorIndex+1:]...)
-			return nil
-		}
+	var opts docker.RemoveContainerOptions
+	opts.ID = resource.Container.ID
+	opts.Force = true
+	if err := m.pool.Client.RemoveContainer(opts); err != nil {
+		return err
 	}
-
-	return fmt.Errorf("no validator container %s on chain %s", containerName, chainId)
+	delete(m.resources, containerName)
+	return nil
 }
 
 // ClearResources removes all outstanding Docker resources created by the Manager.
 func (m *Manager) ClearResources() error {
-	if err := m.pool.Purge(m.hermesResource); err != nil {
-		return err
-	}
-
-	for _, vr := range m.valResources {
-		for _, r := range vr {
-			if err := m.pool.Purge(r); err != nil {
-				return err
-			}
+	for _, resource := range m.resources {
+		if err := m.pool.Purge(resource); err != nil {
+			return err
 		}
 	}
 
