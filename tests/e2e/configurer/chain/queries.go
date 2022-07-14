@@ -113,7 +113,7 @@ func (n *NodeConfig) QueryHashFromBlock(height int64) (string, error) {
 	return block.BlockID.Hash.String(), nil
 }
 
-// QueryCurrentHeight returns current of the node or error.
+// QueryCurrentHeight returns the current block height of the node or error.
 func (n *NodeConfig) QueryCurrentHeight() (int64, error) {
 	status, err := n.rpcClient.Status(context.Background())
 	if err != nil {
