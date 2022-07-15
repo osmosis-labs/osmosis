@@ -71,7 +71,6 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	}
 
 	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.Id, int(chainConfig.VotingPeriod), validatorConfigBytes, tmpDir, int(forkHeight))
-
 	if err != nil {
 		return err
 	}

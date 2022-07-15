@@ -108,6 +108,7 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps []simulation.Future
 		queuedTimeOps[index] = futureOp
 	}
 }
+
 func totalWeight(actions []simtypes.Action) int {
 	totalWeight := 0
 	for _, action := range actions {
