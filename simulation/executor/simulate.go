@@ -95,35 +95,13 @@ func SimulateFromSeed(
 	cdc codec.JSONCodec,
 ) (stopEarly bool, exportedParams Params, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
-	testingMode, _, b := getTestingMode(tb)
+	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
 
-	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
-	r := rand.New(rand.NewSource(config.Seed))
-	simParams := RandomParams(r)
-	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(simParams))
-
-	accs := initFunctions.RandomAccountFn(r, simParams.NumKeys())
-	if len(accs) == 0 {
-		return true, simParams, fmt.Errorf("must have greater than zero genesis accounts")
+	// Encapsulate the bizarre initialization logic that must be cleaned.
+	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config, cdc)
+	if err != nil {
+		return true, simParams, err
 	}
-
-	validators, genesisTimestamp, accs := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, &config, cdc)
-
-	fmt.Printf(
-		"Starting the simulation from time %v (unixtime %v)\n",
-		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
-	)
-
-	simCtx := simtypes.NewSimCtx(r, app, accs, config.ChainID)
-
-	initialHeader := tmproto.Header{
-		ChainID:         config.ChainID,
-		Height:          int64(config.InitialBlockHeight),
-		Time:            genesisTimestamp,
-		ProposerAddress: validators.randomProposer(r),
-	}
-
-	simState := newSimulatorState(simParams, initialHeader, tb, w, validators).WithLogParam(config.Lean)
 
 	// Setup code to catch SIGTERM's
 	c := make(chan os.Signal, 1)
@@ -136,6 +114,7 @@ func SimulateFromSeed(
 		stopEarly = true
 	}()
 
+	testingMode, _, b := getTestingMode(tb)
 	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config)
 
 	if !testingMode {
@@ -180,6 +159,50 @@ func SimulateFromSeed(
 
 	simState.eventStats.exportEvents(config.ExportStatsPath, w)
 	return stopEarly, exportedParams, nil
+}
+
+// The goal of this function is to group the extremely badly abstracted genesis logic,
+// into a single function we can target continuing to improve / abstract better.
+// It outputs SimCtx and SimState which are "cleaner" interface abstractions for the rest of the simulator.
+// It also outputs SimParams which is not great.
+// It also can modify config.
+func cursedInitializationLogic(
+	tb testing.TB,
+	w io.Writer,
+	app simtypes.App,
+	initFunctions simtypes.InitFunctions,
+	config *simulation.Config,
+	cdc codec.JSONCodec) (*simtypes.SimCtx, *simState, Params, error) {
+	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
+
+	r := rand.New(rand.NewSource(config.Seed))
+	simParams := RandomParams(r)
+	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(simParams))
+
+	accs := initFunctions.RandomAccountFn(r, simParams.NumKeys())
+	if len(accs) == 0 {
+		return nil, nil, simParams, fmt.Errorf("must have greater than zero genesis accounts")
+	}
+
+	validators, genesisTimestamp, accs := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config, cdc)
+
+	fmt.Printf(
+		"Starting the simulation from time %v (unixtime %v)\n",
+		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
+	)
+
+	simCtx := simtypes.NewSimCtx(r, app, accs, config.ChainID)
+
+	initialHeader := tmproto.Header{
+		ChainID:         config.ChainID,
+		Height:          int64(config.InitialBlockHeight),
+		Time:            genesisTimestamp,
+		ProposerAddress: validators.randomProposer(r),
+	}
+
+	simState := newSimulatorState(simParams, initialHeader, tb, w, validators).WithLogParam(config.Lean)
+
+	return simCtx, simState, simParams, nil
 }
 
 //nolint:deadcode,unused

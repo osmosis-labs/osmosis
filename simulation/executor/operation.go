@@ -78,10 +78,6 @@ func NewOperationQueue() OperationQueue {
 // queueOperations adds all future operations into the operation queue.
 // TODO: Change FutureOperation to FutureAction
 func (simState *simState) queueOperations(futureOps []simulation.FutureOperation) {
-	if len(futureOps) == 0 {
-		return
-	}
-
 	for _, futureOp := range futureOps {
 		futureOp := futureOp
 		if futureOp.BlockHeight != 0 {
