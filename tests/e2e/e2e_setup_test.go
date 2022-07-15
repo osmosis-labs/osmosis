@@ -47,11 +47,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// The e2e test flow is as follows:
 	//
 	// 1. Configure two chains - chan A and chain B.
-	//   * For each chain, set up two validators
-	//   * Initialize configs and genesis for all validators.
+	//   * For each chain, set up several validator nodes
+	//   * Initialize configs and genesis for all them.
 	// 2. Start both networks.
 	// 3. Run IBC relayer betweeen the two chains.
-	// 4. Execute various e2e tests, including IBC.
+	// 4. Execute various e2e tests, including IBC, upgrade, superfluid.
 	if str := os.Getenv(skipUpgradeEnv); len(str) > 0 {
 		s.skipUpgrade, err = strconv.ParseBool(str)
 		s.Require().NoError(err)

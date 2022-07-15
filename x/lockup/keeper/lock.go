@@ -184,6 +184,10 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 		return fmt.Errorf("requested amount to unlock exceeds locked tokens")
 	}
 
+	if lock.IsUnlocking() {
+		return fmt.Errorf("trying to unlock a lock that is already unlocking")
+	}
+
 	// If the amount were unlocking is empty, or the entire coins amount, unlock the entire lock.
 	// Otherwise, split the lock into two locks, and fully unlock the newly created lock.
 	// (By virtue, the newly created lock we split into should have the unlock amount)

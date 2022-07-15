@@ -43,6 +43,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils/partialord"
+	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm"
@@ -139,42 +140,26 @@ func appModules(
 	}
 }
 
-// orderBeginBlockers Tell the app's module manager how to set the order of
-// BeginBlockers, which are run at the beginning of every block.
-func orderBeginBlockers() []string {
-	return []string{
-		// Upgrades should be run VERY first
-		upgradetypes.ModuleName,
-		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
-		epochstypes.ModuleName,
-		capabilitytypes.ModuleName,
-		minttypes.ModuleName,
-		poolincentivestypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		ibchost.ModuleName,
-		ibctransfertypes.ModuleName,
-		icatypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		govtypes.ModuleName,
-		crisistypes.ModuleName,
-		genutiltypes.ModuleName,
-		authz.ModuleName,
-		paramstypes.ModuleName,
-		vestingtypes.ModuleName,
-		gammtypes.ModuleName,
-		incentivestypes.ModuleName,
-		lockuptypes.ModuleName,
-		poolincentivestypes.ModuleName,
-		tokenfactorytypes.ModuleName,
-		// superfluid must come after distribution and epochs
-		superfluidtypes.ModuleName,
-		txfeestypes.ModuleName,
-		wasm.ModuleName,
-	}
+// orderBeginBlockers returns the order of BeginBlockers, by module name.
+func orderBeginBlockers(allModuleNames []string) []string {
+	ord := partialord.NewPartialOrdering(allModuleNames)
+	// Upgrades should be run VERY first
+	// Epochs is set to be next right now, this in principle could change to come later / be at the end.
+	// But would have to be a holistic change with other pipelines taken into account.
+	ord.FirstElements(upgradetypes.ModuleName, epochstypes.ModuleName, capabilitytypes.ModuleName)
+
+	// Staking ordering
+	// TODO: Perhaps this can be relaxed, left to future work to analyze.
+	ord.Sequence(distrtypes.ModuleName, slashingtypes.ModuleName, evidencetypes.ModuleName, stakingtypes.ModuleName)
+	// superfluid must come after distribution & epochs.
+	// TODO: we actually set it to come after staking, since thats what happened before, and want to minimize chance of break.
+	ord.After(superfluidtypes.ModuleName, stakingtypes.ModuleName)
+	// TODO: This can almost certainly be un-constrained, but we keep the constraint to match prior functionality.
+	// IBChost came after staking, before superfluid.
+	// TODO: Come back and delete this line after testing the base change.
+	ord.Sequence(stakingtypes.ModuleName, ibchost.ModuleName, superfluidtypes.ModuleName)
+	// every remaining module's begin block is a no-op.
+	return ord.TotalOrdering()
 }
 
 func OrderEndBlockers(allModuleNames []string) []string {
@@ -186,6 +171,11 @@ func OrderEndBlockers(allModuleNames []string) []string {
 
 // OrderInitGenesis returns module names in order for init genesis calls.
 func OrderInitGenesis(allModuleNames []string) []string {
+	// NOTE: The genutils moodule must occur after staking so that pools are
+	// properly initialized with tokens from genesis accounts.
+	// NOTE: Capability module must occur first so that it can initialize any capabilities
+	// so that other modules that want to create or claim capabilities afterwards in InitChain
+	// can do so safely.
 	return []string{
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
@@ -218,34 +208,20 @@ func OrderInitGenesis(allModuleNames []string) []string {
 	}
 }
 
-// simulationModules returns modules for simulation manager
-func simulationModules(
+// createSimulationManager returns a simulation manager
+// must be ran after modulemanager.SetInitGenesisOrder
+func createSimulationManager(
 	app *OsmosisApp,
 	encodingConfig appparams.EncodingConfig,
 	skipGenesisInvariants bool,
-) []module.AppModuleSimulation {
+) *simulation.Manager {
 	appCodec := encodingConfig.Marshaler
 
-	// recreate list of modules, to ensure no issues with overriding prior module structs.
-	modules := appModules(app, encodingConfig, skipGenesisInvariants)
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
 	}
-
-	simModules := []module.AppModuleSimulation{}
-	for _, appModule := range modules {
-		// For every module, see if we override it. If so, use override.
-		// Else, if we can cast the app module into a simulation module add it.
-		// otherwise no simulation module.
-		if simModule, ok := overrideModules[appModule.Name()]; ok {
-			simModules = append(simModules, simModule)
-		} else {
-			if simModule, ok := appModule.(module.AppModuleSimulation); ok {
-				simModules = append(simModules, simModule)
-			}
-		}
-	}
-	return simModules
+	simulationManager := simulation.NewSimulationManager(*app.mm, overrideModules)
+	return &simulationManager
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
@@ -256,4 +232,12 @@ func (app *OsmosisApp) ModuleAccountAddrs() map[string]bool {
 	}
 
 	return modAccAddrs
+}
+
+func (app *OsmosisApp) GetAccountKeeper() simulation.AccountKeeper {
+	return app.AppKeepers.AccountKeeper
+}
+
+func (app *OsmosisApp) GetBankKeeper() simulation.BankKeeper {
+	return app.AppKeepers.BankKeeper
 }

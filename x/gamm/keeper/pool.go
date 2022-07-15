@@ -24,6 +24,7 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. Prior
 // to returning the pool, the weights of the pool are updated via PokePool.
+// TODO: Consider rename to GetPool due to downstream API confusion.
 func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
