@@ -220,8 +220,8 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,
 	) (opCount int) {
 		_, _ = fmt.Fprintf(
-			w, "\rSimulating... block %d/%d, operation %d/%d.",
-			header.Height, config.NumBlocks, opCount, blocksize,
+			w, "\rSimulating... block %d/%d, operation 0/%d.",
+			header.Height, config.NumBlocks, blocksize,
 		)
 		lastBlockSizeState, blocksize = getBlockSize(simCtx, params, lastBlockSizeState, config.BlockSize)
 
@@ -239,31 +239,35 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			// TODO: We need to make a simCtx.WithSeededRand, that replaces the rand map internally
 			// but allows updates to accounts.
 			opMsg, futureOps, err := action.Execute(simCtx, ctx)
-			opMsg.LogEvent(simState.eventStats.Tally)
-
-			if !simState.leanLogs || opMsg.OK {
-				simState.logWriter.AddEntry(MsgEntry(header.Height, int64(i), opMsg))
-			}
-
-			if err != nil {
-				simState.logWriter.PrintLogs()
-				simState.tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
-%v
-Comment: %s`,
-					header.Height, config.NumBlocks, opCount, blocksize, opMsg.Route, err, opMsg.Comment)
-			}
+			simState.logActionResult(header, i, config, blocksize, opMsg, err)
 
 			simState.queueOperations(futureOps)
 
-			if testingMode && opCount%50 == 0 {
+			if testingMode && i%50 == 0 {
 				fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
-					header.Height, config.NumBlocks, opCount, blocksize)
+					header.Height, config.NumBlocks, i, blocksize)
 			}
-
-			opCount++
 		}
 
-		return opCount
+		return blocksize
+	}
+}
+
+// This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
+func (simState *simState) logActionResult(
+	header tmproto.Header, actionIndex int, config simulation.Config, blocksize int,
+	opMsg simulation.OperationMsg, actionErr error) {
+	opMsg.LogEvent(simState.eventStats.Tally)
+	if !simState.leanLogs || opMsg.OK {
+		simState.logWriter.AddEntry(MsgEntry(header.Height, int64(actionIndex), opMsg))
+	}
+
+	if actionErr != nil {
+		simState.logWriter.PrintLogs()
+		simState.tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
+%v
+Comment: %s`,
+			header.Height, config.NumBlocks, actionIndex, blocksize, opMsg.Route, actionErr, opMsg.Comment)
 	}
 }
 
