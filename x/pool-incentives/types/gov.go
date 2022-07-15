@@ -39,7 +39,7 @@ func (p *ReplacePoolIncentivesProposal) GetDescription() string { return p.Descr
 func (p *ReplacePoolIncentivesProposal) ProposalRoute() string { return RouterKey }
 
 func (p *ReplacePoolIncentivesProposal) ProposalType() string {
-	return ProposalTypeUpdatePoolIncentives
+	return ProposalTypeReplacePoolIncentives
 }
 
 func (p *ReplacePoolIncentivesProposal) ValidateBasic() error {
