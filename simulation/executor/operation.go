@@ -5,8 +5,6 @@ package simulation
 import (
 	"encoding/json"
 	"math/rand"
-	"sort"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -95,22 +93,6 @@ func (simState *simState) queueOperations(futureOps []simulation.FutureOperation
 
 			continue
 		}
-
-		if (futureOp.BlockTime == time.Time{}) {
-			continue
-		}
-		// TODO: Replace with proper sorted data structure, so don't have the
-		// copy entire slice
-		index := sort.Search(
-			len(simState.timeOperationQueue),
-			func(i int) bool {
-				return simState.timeOperationQueue[i].BlockTime.After(futureOp.BlockTime)
-			},
-		)
-
-		simState.timeOperationQueue = append(simState.timeOperationQueue, simulation.FutureOperation{})
-		copy(simState.timeOperationQueue[index+1:], simState.timeOperationQueue[index:])
-		simState.timeOperationQueue[index] = futureOp
 	}
 }
 

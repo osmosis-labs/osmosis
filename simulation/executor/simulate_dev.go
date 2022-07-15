@@ -20,8 +20,7 @@ type simState struct {
 
 	// These are operations which have been queued by previous operations
 	// TODO: Replace with new action syntax
-	operationQueue     map[int][]simulation.Operation
-	timeOperationQueue []simulation.FutureOperation
+	operationQueue map[int][]simulation.Operation
 
 	curValidators  mockValidators
 	nextValidators mockValidators
@@ -49,19 +48,18 @@ type simState struct {
 
 func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testing.TB, w io.Writer, validators mockValidators) *simState {
 	return &simState{
-		simParams:          simParams,
-		header:             initialHeader,
-		operationQueue:     NewOperationQueue(),
-		timeOperationQueue: []simulation.FutureOperation{},
-		curValidators:      validators.Clone(),
-		nextValidators:     validators.Clone(),
-		tb:                 tb,
-		pastTimes:          []time.Time{},
-		pastVoteInfos:      [][]abci.VoteInfo{},
-		logWriter:          NewLogWriter(tb),
-		w:                  w,
-		eventStats:         NewEventStats(),
-		opCount:            0,
+		simParams:      simParams,
+		header:         initialHeader,
+		operationQueue: NewOperationQueue(),
+		curValidators:  validators.Clone(),
+		nextValidators: validators.Clone(),
+		tb:             tb,
+		pastTimes:      []time.Time{},
+		pastVoteInfos:  [][]abci.VoteInfo{},
+		logWriter:      NewLogWriter(tb),
+		w:              w,
+		eventStats:     NewEventStats(),
+		opCount:        0,
 	}
 }
 
