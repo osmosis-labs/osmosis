@@ -1,5 +1,7 @@
 package simulation
 
+// TODO: Figure out how to delete everything in this file OR migrate to improved logging concepts
+
 import (
 	"encoding/json"
 	"math/rand"
@@ -8,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
 	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
-	// simtypes "github.com/osmosis-labs/osmosis/simulation/types"
 )
 
 // entry kinds for use within OperationEntry
@@ -77,7 +78,7 @@ func NewOperationQueue() OperationQueue {
 
 // queueOperations adds all future operations into the operation queue.
 // TODO: Change FutureOperation to FutureAction
-func queueOperations(queuedOps OperationQueue, queuedTimeOps []simulation.FutureOperation, futureOps []simulation.FutureOperation) {
+func (simState *simState) queueOperations(futureOps []simulation.FutureOperation) {
 	if futureOps == nil {
 		return
 	}
@@ -85,10 +86,10 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps []simulation.Future
 	for _, futureOp := range futureOps {
 		futureOp := futureOp
 		if futureOp.BlockHeight != 0 {
-			if val, ok := queuedOps[futureOp.BlockHeight]; ok {
-				queuedOps[futureOp.BlockHeight] = append(val, futureOp.Op)
+			if val, ok := simState.operationQueue[futureOp.BlockHeight]; ok {
+				simState.operationQueue[futureOp.BlockHeight] = append(val, futureOp.Op)
 			} else {
-				queuedOps[futureOp.BlockHeight] = []simulation.Operation{futureOp.Op}
+				simState.operationQueue[futureOp.BlockHeight] = []simulation.Operation{futureOp.Op}
 			}
 
 			continue
@@ -97,15 +98,15 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps []simulation.Future
 		// TODO: Replace with proper sorted data structure, so don't have the
 		// copy entire slice
 		index := sort.Search(
-			len(queuedTimeOps),
+			len(simState.timeOperationQueue),
 			func(i int) bool {
-				return queuedTimeOps[i].BlockTime.After(futureOp.BlockTime)
+				return simState.timeOperationQueue[i].BlockTime.After(futureOp.BlockTime)
 			},
 		)
 
-		queuedTimeOps = append(queuedTimeOps, simulation.FutureOperation{})
-		copy(queuedTimeOps[index+1:], queuedTimeOps[index:])
-		queuedTimeOps[index] = futureOp
+		simState.timeOperationQueue = append(simState.timeOperationQueue, simulation.FutureOperation{})
+		copy(simState.timeOperationQueue[index+1:], simState.timeOperationQueue[index:])
+		simState.timeOperationQueue[index] = futureOp
 	}
 }
 

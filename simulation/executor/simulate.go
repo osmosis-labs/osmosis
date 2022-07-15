@@ -31,11 +31,11 @@ func initChain(
 	accounts []simulation.Account,
 	app simtypes.App,
 	appStateFn simulation.AppStateFn,
-	config simulation.Config,
+	config *simulation.Config,
 	cdc codec.JSONCodec,
-) (mockValidators, time.Time, []simulation.Account, string) {
+) (mockValidators, time.Time, []simulation.Account) {
 	// TODO: Cleanup the whole config dependency with appStateFn
-	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
+	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, *config)
 	consensusParams := randomConsensusParams(r, appState, cdc)
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
@@ -48,7 +48,13 @@ func initChain(
 	res := app.GetBaseApp().InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 
-	return validators, genesisTimestamp, accounts, chainID
+	// update config
+	config.ChainID = chainID
+	if config.InitialBlockHeight == 0 {
+		config.InitialBlockHeight = 1
+	}
+
+	return validators, genesisTimestamp, accounts
 }
 
 // SimulateFromSeedLegacy tests an application by running the provided
@@ -101,28 +107,23 @@ func SimulateFromSeed(
 		return true, simParams, fmt.Errorf("must have greater than zero genesis accounts")
 	}
 
-	validators, genesisTimestamp, accs, chainID := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config, cdc)
-
-	config.ChainID = chainID
-	if config.InitialBlockHeight == 0 {
-		config.InitialBlockHeight = 1
-	}
+	validators, genesisTimestamp, accs := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, &config, cdc)
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",
 		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
 	)
 
+	simCtx := simtypes.NewSimCtx(r, app, accs, config.ChainID)
+
 	initialHeader := tmproto.Header{
-		ChainID:         chainID,
+		ChainID:         config.ChainID,
 		Height:          int64(config.InitialBlockHeight),
 		Time:            genesisTimestamp,
 		ProposerAddress: validators.randomProposer(r),
 	}
 
 	simState := newSimulatorState(simParams, initialHeader, tb, w, validators).WithLogParam(config.Lean)
-
-	simCtx := simtypes.NewSimCtx(r, app, accs, simState.header.ChainID)
 
 	// Setup code to catch SIGTERM's
 	c := make(chan os.Signal, 1)
@@ -248,7 +249,7 @@ Comment: %s`,
 					header.Height, config.NumBlocks, opCount, blocksize, opMsg.Route, err, opMsg.Comment)
 			}
 
-			queueOperations(simState.operationQueue, simState.timeOperationQueue, futureOps)
+			simState.queueOperations(futureOps)
 
 			if testingMode && opCount%50 == 0 {
 				fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
