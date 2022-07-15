@@ -57,3 +57,31 @@ func TestRandManagerGetRandIndependence(t *testing.T) {
 	expectedEqualRands = append(expectedEqualRands, r2)
 	require.True(t, randInstancesEqual(expectedEqualRands))
 }
+
+// Test that the rand manager GetSeededRand() for the same seed are all returning the same rand instance.
+func TestRandManagerSameSeedGetSeededRand(t *testing.T) {
+	rms := getKDefaultRandManager(3)
+	seed := "test seed"
+	// We want to test that in each of the the following three scenarios, we generated the same 'trace' of values.
+	// 1) r1 := rm.GetSeededRand(seed); r1.Int(); r2 := rm.GetSeededRand(seed); r2.Int();
+	// 2) r1 := rm.GetSeededRand(seed); r2 := rm.GetSeededRand(seed); r1.Int(); r2.Int();
+	// 3) r1 := rm.GetSeededRand(seed); r2 := rm.GetSeededRand(seed); r2.Int(); r1.Int();
+	scenario1RM := rms[0]
+	r1 := scenario1RM.GetSeededRand(seed)
+	v1 := r1.Int()
+	r2 := scenario1RM.GetSeededRand(seed)
+	scenario1Trace := []int{v1, r2.Int()}
+
+	scenario2RM := rms[1]
+	r1 = scenario2RM.GetSeededRand(seed)
+	r2 = scenario2RM.GetSeededRand(seed)
+	scenario2Trace := []int{r1.Int(), r2.Int()}
+
+	scenario3RM := rms[2]
+	r1 = scenario3RM.GetSeededRand(seed)
+	r2 = scenario3RM.GetSeededRand(seed)
+	scenario3Trace := []int{r2.Int(), r1.Int()}
+
+	require.Equal(t, scenario1Trace, scenario2Trace)
+	require.Equal(t, scenario1Trace, scenario3Trace)
+}

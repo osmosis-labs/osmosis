@@ -38,10 +38,13 @@ func NewSimCtx(r *rand.Rand, app App, accounts []simulation.Account, chainID str
 	return sim
 }
 
+// TODO: Consider rename to Rand()
 func (sim *SimCtx) GetRand() *rand.Rand {
 	return sim.rm.GetRand()
 }
 
+// TODO: Consider rename to SeededRand()
+// or DomainSeparatedRand
 func (sim *SimCtx) GetSeededRand(seed string) *rand.Rand {
 	return sim.rm.GetSeededRand(seed)
 }
@@ -66,6 +69,10 @@ func (sim SimCtx) BankKeeper() BankKeeper {
 	return sim.app.GetBankKeeper()
 }
 
+// randManager is built to give API's for randomness access
+// which allow the caller to avoid "butterfly effects".
+// e.g. in the Simulator, I don't want adding one new rand call to a message
+// to create an entirely new "run" shape.
 type randManager struct {
 	// TODO: delete this, once we cleanup simulator initialization logic,
 	// and can then setup SimCtx with base seed.
@@ -122,6 +129,7 @@ func (rm *randManager) GetRand() *rand.Rand {
 	return r
 }
 
+// TODO: Consider rename to DomainSeparatedRand
 func (rm *randManager) GetSeededRand(seed string) *rand.Rand {
 	// use value in map if present
 	if r, ok := rm.seededMap[seed]; ok {
