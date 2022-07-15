@@ -1,9 +1,12 @@
 package osmomath
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 
 	"github.com/stretchr/testify/require"
 )
@@ -23,50 +26,143 @@ func TestAbsDifferenceWithSign(t *testing.T) {
 }
 
 func TestPowApprox(t *testing.T) {
-	base, err := sdk.NewDecFromStr("0.8")
-	require.NoError(t, err)
-	exp, err := sdk.NewDecFromStr("0.32")
-	require.NoError(t, err)
+	testCases := []struct {
+		base           sdk.Dec
+		exp            sdk.Dec
+		powPrecision   sdk.Dec
+		expectedResult sdk.Dec
+	}{
+		{
+			// medium base, small exp
+			base:           sdk.MustNewDecFromStr("0.8"),
+			exp:            sdk.MustNewDecFromStr("0.32"),
+			powPrecision:   sdk.MustNewDecFromStr("0.00000001"),
+			expectedResult: sdk.MustNewDecFromStr("0.93108385"),
+		},
+		{
+			// zero exp
+			base:           sdk.MustNewDecFromStr("0.8"),
+			exp:            sdk.ZeroDec(),
+			powPrecision:   sdk.MustNewDecFromStr("0.00001"),
+			expectedResult: sdk.OneDec(),
+		},
+		{
+			// zero base, this should panic
+			base:           sdk.ZeroDec(),
+			exp:            sdk.OneDec(),
+			powPrecision:   sdk.MustNewDecFromStr("0.00001"),
+			expectedResult: sdk.ZeroDec(),
+		},
+		{
+			// large base, small exp
+			base:           sdk.MustNewDecFromStr("1.9999"),
+			exp:            sdk.MustNewDecFromStr("0.23"),
+			powPrecision:   sdk.MustNewDecFromStr("0.000000001"),
+			expectedResult: sdk.MustNewDecFromStr("1.172821461"),
+		},
+		{
+			// large base, large integer exp
+			base:           sdk.MustNewDecFromStr("1.777"),
+			exp:            sdk.MustNewDecFromStr("20"),
+			powPrecision:   sdk.MustNewDecFromStr("0.000000000001"),
+			expectedResult: sdk.MustNewDecFromStr("98570.862372081602"),
+		},
+		{
+			// medium base, large exp, high precision
+			base:           sdk.MustNewDecFromStr("1.556"),
+			exp:            sdk.MustNewDecFromStr("20.9123"),
+			powPrecision:   sdk.MustNewDecFromStr("0.0000000000000001"),
+			expectedResult: sdk.MustNewDecFromStr("10360.058421529811344618"),
+		},
+		{
+			// high base, large exp, high precision
+			base:           sdk.MustNewDecFromStr("1.886"),
+			exp:            sdk.MustNewDecFromStr("31.9123"),
+			powPrecision:   sdk.MustNewDecFromStr("0.00000000000001"),
+			expectedResult: sdk.MustNewDecFromStr("621110716.84727942280335811"),
+		},
+		{
+			// base equal one
+			base:           sdk.MustNewDecFromStr("1"),
+			exp:            sdk.MustNewDecFromStr("123"),
+			powPrecision:   sdk.MustNewDecFromStr("0.00000001"),
+			expectedResult: sdk.OneDec(),
+		},
+	}
 
-	s := PowApprox(base, exp, powPrecision)
-	expectedDec, err := sdk.NewDecFromStr("0.93108385")
-	require.NoError(t, err)
-
-	require.True(
-		t,
-		expectedDec.Sub(s).Abs().LTE(powPrecision),
-		"expected value & actual value's difference should less than precision",
-	)
-
-	base, err = sdk.NewDecFromStr("0.8")
-	require.NoError(t, err)
-	exp = sdk.ZeroDec()
-	require.NoError(t, err)
-
-	s = PowApprox(base, exp, powPrecision)
-	expectedDec = sdk.OneDec()
-	require.NoError(t, err)
-
-	require.True(
-		t,
-		expectedDec.Sub(s).Abs().LTE(powPrecision),
-		"expected value & actual value's difference should less than precision",
-	)
+	for i, tc := range testCases {
+		var actualResult sdk.Dec
+		osmoutils.ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
+			fmt.Println(tc.base)
+			actualResult = PowApprox(tc.base, tc.exp, tc.powPrecision)
+			require.True(
+				t,
+				tc.expectedResult.Sub(actualResult).Abs().LTE(tc.powPrecision),
+				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
+			)
+		})
+	}
 }
 
 func TestPow(t *testing.T) {
-	base, err := sdk.NewDecFromStr("1.68")
-	require.NoError(t, err)
-	exp, err := sdk.NewDecFromStr("0.32")
-	require.NoError(t, err)
+	testCases := []struct {
+		base           sdk.Dec
+		exp            sdk.Dec
+		expectedResult sdk.Dec
+	}{
+		{
+			// medium base, small exp
+			base:           sdk.MustNewDecFromStr("0.8"),
+			exp:            sdk.MustNewDecFromStr("0.32"),
+			expectedResult: sdk.MustNewDecFromStr("0.93108385"),
+		},
+		{
+			// zero exp
+			base:           sdk.MustNewDecFromStr("0.8"),
+			exp:            sdk.ZeroDec(),
+			expectedResult: sdk.OneDec(),
+		},
+		{
+			// zero base, this should panic
+			base:           sdk.ZeroDec(),
+			exp:            sdk.OneDec(),
+			expectedResult: sdk.ZeroDec(),
+		},
+		{
+			// large base, small exp
+			base:           sdk.MustNewDecFromStr("1.9999"),
+			exp:            sdk.MustNewDecFromStr("0.23"),
+			expectedResult: sdk.MustNewDecFromStr("1.172821461"),
+		},
+		{
+			// small base, large exp
+			base:           sdk.MustNewDecFromStr("0.0000123"),
+			exp:            sdk.MustNewDecFromStr("123"),
+			expectedResult: sdk.ZeroDec(),
+		},
+		{
+			// large base, large exp
+			base:           sdk.MustNewDecFromStr("1.777"),
+			exp:            sdk.MustNewDecFromStr("20"),
+			expectedResult: sdk.MustNewDecFromStr("98570.862372081602"),
+		},
+		{
+			// base equal one
+			base:           sdk.MustNewDecFromStr("1"),
+			exp:            sdk.MustNewDecFromStr("123"),
+			expectedResult: sdk.OneDec(),
+		},
+	}
 
-	s := Pow(base, exp)
-	expectedDec, err := sdk.NewDecFromStr("1.18058965")
-	require.NoError(t, err)
-
-	require.True(
-		t,
-		expectedDec.Sub(s).Abs().LTE(powPrecision),
-		"expected value & actual value's difference should less than precision",
-	)
+	for i, tc := range testCases {
+		var actualResult sdk.Dec
+		osmoutils.ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
+			actualResult = Pow(tc.base, tc.exp)
+			require.True(
+				t,
+				tc.expectedResult.Sub(actualResult).Abs().LTE(powPrecision),
+				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
+			)
+		})
+	}
 }
