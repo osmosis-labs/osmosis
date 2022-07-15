@@ -68,6 +68,34 @@ func (simState *simState) WithLogParam(leanLogs bool) *simState {
 	return simState
 }
 
+func (simState *simState) SimulateAllBlocks(
+	w io.Writer,
+	simCtx *simtypes.SimCtx,
+	blockSimulator blockSimFn,
+	config simulation.Config) (stopEarly bool) {
+	stopEarly = false
+	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
+		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)
+		if stopEarly {
+			break
+		}
+
+		if config.Commit {
+			simCtx.App.GetBaseApp().Commit()
+		}
+	}
+
+	if !stopEarly {
+		fmt.Fprintf(
+			w,
+			"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
+			simState.header.Height, simState.header.Time, simState.opCount,
+		)
+		simState.logWriter.PrintLogs()
+	}
+	return stopEarly
+}
+
 // simulate a block, update state
 func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator blockSimFn) (stopEarly bool) {
 	if simState.header.ProposerAddress == nil {

@@ -85,6 +85,8 @@ func initChain(
 // * SimManager for module configs
 // * Config file for params
 // * whatever is needed for logging (tb + w rn)
+// OR: Could be a struct or something with options,
+//     to give caller ability to step through / instrument benchmarking if they wanted to, and add a cleanup function.
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
@@ -132,25 +134,7 @@ func SimulateFromSeed(
 		}()
 	}
 
-	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
-		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)
-		if stopEarly {
-			break
-		}
-
-		if config.Commit {
-			simCtx.App.GetBaseApp().Commit()
-		}
-	}
-
-	if !stopEarly {
-		fmt.Fprintf(
-			w,
-			"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
-			simState.header.Height, simState.header.Time, simState.opCount,
-		)
-		simState.logWriter.PrintLogs()
-	}
+	stopEarly = simState.SimulateAllBlocks(w, simCtx, blockSimulator, config)
 
 	simState.eventStats.exportEvents(config.ExportStatsPath, w)
 	return stopEarly, nil
