@@ -78,7 +78,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 			customAppTemplate, customAppConfig := initAppConfig()
 			serverCtx := server.GetServerContextFromCmd(cmd)
-			serverCtx.Config.Consensus.TimeoutCommit = time.Second
+			serverCtx.Config.Consensus.TimeoutCommit = 2 * time.Second
 
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
 		},
