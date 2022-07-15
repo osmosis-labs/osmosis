@@ -93,14 +93,14 @@ func SimulateFromSeed(
 	actions []simtypes.Action,
 	config simulation.Config,
 	cdc codec.JSONCodec,
-) (stopEarly bool, exportedParams Params, err error) {
+) (stopEarly bool, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
 
 	// Encapsulate the bizarre initialization logic that must be cleaned.
 	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config, cdc)
 	if err != nil {
-		return true, simParams, err
+		return true, err
 	}
 
 	// Setup code to catch SIGTERM's
@@ -132,11 +132,6 @@ func SimulateFromSeed(
 		}()
 	}
 
-	// set exported params to the initial state
-	if config.ExportParamsPath != "" && config.ExportParamsHeight == 0 {
-		exportedParams = simParams
-	}
-
 	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
 		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)
 		if stopEarly {
@@ -158,7 +153,7 @@ func SimulateFromSeed(
 	}
 
 	simState.eventStats.exportEvents(config.ExportStatsPath, w)
-	return stopEarly, exportedParams, nil
+	return stopEarly, nil
 }
 
 // The goal of this function is to group the extremely badly abstracted genesis logic,
@@ -201,6 +196,8 @@ func cursedInitializationLogic(
 	}
 
 	simState := newSimulatorState(simParams, initialHeader, tb, w, validators).WithLogParam(config.Lean)
+
+	// TODO: If simulation has a param export path configured, export params here.
 
 	return simCtx, simState, simParams, nil
 }
