@@ -31,10 +31,13 @@ name: check_state_compatibility
 on:
   push:
     branches:
-      - 'nicco/check-state-compatibility' 
+      - 'v10.x'
   pull_request:
     branches:
-      - 'nicco/check-state-compatibility'
+      - 'v10.x'
+  workflow_dispatch:
+    branches:
+      - 'v10.x'
 
 env:
   SNAPSHOT_URL: https://osmosis-snapshot.sfo3.cdn.digitaloceanspaces.com/osmosis.json
