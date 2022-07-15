@@ -58,6 +58,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 			upgradeclient.ProposalHandler,
 			upgradeclient.CancelProposalHandler,
 			poolincentivesclient.UpdatePoolIncentivesHandler,
+			poolincentivesclient.ReplacePoolIncentivesHandler,
 			ibcclientclient.UpdateClientProposalHandler,
 			ibcclientclient.UpgradeProposalHandler,
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
