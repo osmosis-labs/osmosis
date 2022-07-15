@@ -82,12 +82,12 @@ func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator 
 
 	// Run queued operations. Ignores blocksize if blocksize is too small
 	numQueuedOpsRan := simState.runQueuedOperations(simCtx, ctx)
-	numQueuedTimeOpsRan := simState.runQueuedTimeOperations(simCtx, ctx)
+	// numQueuedTimeOpsRan := simState.runQueuedTimeOperations(simCtx, ctx)
 
 	// run standard operations
 	// TODO: rename blockSimulator arg
 	operations := blockSimulator(simCtx, ctx, simState.header)
-	simState.opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
+	simState.opCount += operations + numQueuedOpsRan // + numQueuedTimeOpsRan
 
 	responseEndBlock := simState.endBlock(simCtx)
 

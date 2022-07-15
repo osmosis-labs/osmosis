@@ -288,6 +288,10 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 
 		if err != nil {
 			simState.logWriter.PrintLogs()
+			simState.tb.Fatalf(`error on block  %d, height queued operation (%d/%d) from x/%s:
+%v
+Comment: %s`,
+				simState.header.Height, i, numOpsRan, opMsg.Route, err, opMsg.Comment)
 			simState.tb.FailNow()
 		}
 	}
@@ -299,6 +303,7 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 func (simState *simState) runQueuedTimeOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (
 	numOpsRan int,
 ) {
+	// TODO: Refactor this to gather time queue ops, then execute them.
 	queueOps := simState.timeOperationQueue
 	currentTime := simState.header.Time
 	numOpsRan = 0
@@ -318,6 +323,10 @@ func (simState *simState) runQueuedTimeOperations(simCtx *simtypes.SimCtx, ctx s
 
 		if err != nil {
 			simState.logWriter.PrintLogs()
+			simState.tb.Fatalf(`error on block  %d, time queued operation (x/x) from x/%s:
+			%v
+			Comment: %s`,
+				simState.header.Height, opMsg.Route, err, opMsg.Comment)
 			simState.tb.FailNow()
 		}
 

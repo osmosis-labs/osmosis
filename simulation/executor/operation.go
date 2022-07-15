@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"math/rand"
 	"sort"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -79,7 +80,7 @@ func NewOperationQueue() OperationQueue {
 // queueOperations adds all future operations into the operation queue.
 // TODO: Change FutureOperation to FutureAction
 func (simState *simState) queueOperations(futureOps []simulation.FutureOperation) {
-	if futureOps == nil {
+	if len(futureOps) == 0 {
 		return
 	}
 
@@ -95,6 +96,9 @@ func (simState *simState) queueOperations(futureOps []simulation.FutureOperation
 			continue
 		}
 
+		if (futureOp.BlockTime == time.Time{}) {
+			continue
+		}
 		// TODO: Replace with proper sorted data structure, so don't have the
 		// copy entire slice
 		index := sort.Search(
