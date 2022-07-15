@@ -20,13 +20,13 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, 
 		bk.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(225_000_000_000_000).Neg())
 	}
 
-	keeper.SetLastHalvenEpochNum(ctx, data.HalvenStartedEpoch)
+	keeper.SetLastReductionEpochNum(ctx, data.ReductionStartedEpoch)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	minter := keeper.GetMinter(ctx)
 	params := keeper.GetParams(ctx)
-	lastHalvenEpoch := keeper.GetLastHalvenEpochNum(ctx)
+	lastHalvenEpoch := keeper.GetLastReductionEpochNum(ctx)
 	return types.NewGenesisState(minter, params, lastHalvenEpoch)
 }

@@ -2533,15 +2533,17 @@ Msg defines the Msg service.
 <a name="osmosis.mint.v1beta1.DistributionProportions"></a>
 
 ### DistributionProportions
-
+DistributionProportions defines the distribution proportions of the minted
+denom. In other words, defines which stakeholders will receive the minted
+denoms and how much.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `staking` | [string](#string) |  | staking defines the proportion of the minted minted_denom that is to be allocated as staking rewards. |
-| `pool_incentives` | [string](#string) |  | pool_incentives defines the proportion of the minted minted_denom that is to be allocated as pool incentives. |
-| `developer_rewards` | [string](#string) |  | developer_rewards defines the proportion of the minted minted_denom that is to be allocated to developer rewards address. |
-| `community_pool` | [string](#string) |  | community_pool defines the proportion of the minted minted_denom that is to be allocated to the community pool. |
+| `staking` | [string](#string) |  | staking defines the proportion of the minted mint_denom that is to be allocated as staking rewards. |
+| `pool_incentives` | [string](#string) |  | pool_incentives defines the proportion of the minted mint_denom that is to be allocated as pool incentives. |
+| `developer_rewards` | [string](#string) |  | developer_rewards defines the proportion of the minted mint_denom that is to be allocated to developer rewards address. |
+| `community_pool` | [string](#string) |  | community_pool defines the proportion of the minted mint_denom that is to be allocated to the community pool. |
 
 
 
@@ -2556,7 +2558,7 @@ Minter represents the minting state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `epoch_provisions` | [string](#string) |  | current epoch provisions |
+| `epoch_provisions` | [string](#string) |  | epoch_provisions represent rewards for the current epoch. |
 
 
 
@@ -2566,19 +2568,19 @@ Minter represents the minting state.
 <a name="osmosis.mint.v1beta1.Params"></a>
 
 ### Params
-Params holds parameters for the mint module.
+Params holds parameters for the x/mint module.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `mint_denom` | [string](#string) |  | type of coin to mint |
-| `genesis_epoch_provisions` | [string](#string) |  | epoch provisions from the first epoch |
-| `epoch_identifier` | [string](#string) |  | mint epoch identifier |
-| `reduction_period_in_epochs` | [int64](#int64) |  | number of epochs take to reduce rewards |
-| `reduction_factor` | [string](#string) |  | reduction multiplier to execute on each period |
-| `distribution_proportions` | [DistributionProportions](#osmosis.mint.v1beta1.DistributionProportions) |  | distribution_proportions defines the proportion of the minted denom |
-| `weighted_developer_rewards_receivers` | [WeightedAddress](#osmosis.mint.v1beta1.WeightedAddress) | repeated | address to receive developer rewards |
-| `minting_rewards_distribution_start_epoch` | [int64](#int64) |  | start epoch to distribute minting rewards |
+| `mint_denom` | [string](#string) |  | mint_denom is the denom of the coin to mint. |
+| `genesis_epoch_provisions` | [string](#string) |  | genesis_epoch_provisions epoch provisions from the first epoch. |
+| `epoch_identifier` | [string](#string) |  | epoch_identifier mint epoch identifier e.g. (day, week). |
+| `reduction_period_in_epochs` | [int64](#int64) |  | reduction_period_in_epochs the number of epochs it takes to reduce the rewards. |
+| `reduction_factor` | [string](#string) |  | reduction_factor is the reduction multiplier to execute at the end of each period set by reduction_period_in_epochs. |
+| `distribution_proportions` | [DistributionProportions](#osmosis.mint.v1beta1.DistributionProportions) |  | distribution_proportions defines the distribution proportions of the minted denom. In other words, defines which stakeholders will receive the minted denoms and how much. |
+| `weighted_developer_rewards_receivers` | [WeightedAddress](#osmosis.mint.v1beta1.WeightedAddress) | repeated | weighted_developer_rewards_receivers is the address to receive developer rewards with weights assignedt to each address. The final amount that each address receives is: epoch_provisions * distribution_proportions.developer_rewards * Address's Weight. |
+| `minting_rewards_distribution_start_epoch` | [int64](#int64) |  | minting_rewards_distribution_start_epoch start epoch to distribute minting rewards |
 
 
 
@@ -2588,7 +2590,9 @@ Params holds parameters for the mint module.
 <a name="osmosis.mint.v1beta1.WeightedAddress"></a>
 
 ### WeightedAddress
-
+WeightedAddress represents an address with a weight assigned to it.
+The weight is used to determine the proportion of the total minted
+tokens to be minted to the address.
 
 
 | Field | Type | Label | Description |
@@ -2625,9 +2629,9 @@ GenesisState defines the mint module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `minter` | [Minter](#osmosis.mint.v1beta1.Minter) |  | minter is a space for holding current rewards information. |
-| `params` | [Params](#osmosis.mint.v1beta1.Params) |  | params defines all the paramaters of the module. |
-| `halven_started_epoch` | [int64](#int64) |  | current halven period start epoch |
+| `minter` | [Minter](#osmosis.mint.v1beta1.Minter) |  | minter is an abstraction for holding current rewards information. |
+| `params` | [Params](#osmosis.mint.v1beta1.Params) |  | params defines all the paramaters of the mint module. |
+| `reduction_started_epoch` | [int64](#int64) |  | reduction_started_epoch is the first epoch in which the reduction of mint begins. |
 
 
 
@@ -2716,7 +2720,7 @@ Query provides defines the gRPC querier service.
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#osmosis.mint.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#osmosis.mint.v1beta1.QueryParamsResponse) | Params returns the total set of minting parameters. | GET|/osmosis/mint/v1beta1/params|
-| `EpochProvisions` | [QueryEpochProvisionsRequest](#osmosis.mint.v1beta1.QueryEpochProvisionsRequest) | [QueryEpochProvisionsResponse](#osmosis.mint.v1beta1.QueryEpochProvisionsResponse) | EpochProvisions current minting epoch provisions value. | GET|/osmosis/mint/v1beta1/epoch_provisions|
+| `EpochProvisions` | [QueryEpochProvisionsRequest](#osmosis.mint.v1beta1.QueryEpochProvisionsRequest) | [QueryEpochProvisionsResponse](#osmosis.mint.v1beta1.QueryEpochProvisionsResponse) | EpochProvisions returns the current minting epoch provisions value. | GET|/osmosis/mint/v1beta1/epoch_provisions|
 
  <!-- end services -->
 

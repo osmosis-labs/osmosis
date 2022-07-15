@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
 )
 
 type Hooks struct {
@@ -11,6 +12,7 @@ type Hooks struct {
 }
 
 var _ gammtypes.GammHooks = Hooks{}
+var _ minttypes.MintHooks = Hooks{}
 
 // Create new pool incentives hooks.
 func (k Keeper) Hooks() Hooks { return Hooks{k} }

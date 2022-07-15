@@ -30,6 +30,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
+// NewParams returns new mint module parameters initialized to the given values.
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
 	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
@@ -47,7 +48,7 @@ func NewParams(
 	}
 }
 
-// default minting module parameters.
+// DefaultParams returns the default minting module parameters.
 func DefaultParams() Params {
 	return Params{
 		MintDenom:               sdk.DefaultBondDenom,
@@ -66,7 +67,8 @@ func DefaultParams() Params {
 	}
 }
 
-// validate params.
+// Validate validates mint module parameters. Returns nil if valid,
+// error otherwise
 func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err
@@ -193,8 +195,6 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("developer rewards distribution ratio should not be negative")
 	}
 
-	// TODO: Maybe we should allow this :joy:, lets you burn osmo from community pool
-	// for new chains
 	if v.CommunityPool.IsNegative() {
 		return errors.New("community pool distribution ratio should not be negative")
 	}
