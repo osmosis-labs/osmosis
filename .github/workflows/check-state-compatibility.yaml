@@ -101,7 +101,4 @@ jobs:
         with:
           name: osmosisd_start.log
           path: /tmp/osmosisd_start.log
-      - 
-        name: Clean up
-        if: always()
-        run: rm -rf ${{ github.workspace }}
+
