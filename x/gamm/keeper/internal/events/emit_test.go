@@ -29,7 +29,6 @@ func TestGammEventsTestSuite(t *testing.T) {
 }
 
 func (suite *GammEventsTestSuite) TestEmitSwapEvent() {
-
 	testcases := map[string]struct {
 		ctx             sdk.Context
 		testAccountAddr sdk.AccAddress
