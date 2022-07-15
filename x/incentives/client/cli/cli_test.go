@@ -78,7 +78,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
