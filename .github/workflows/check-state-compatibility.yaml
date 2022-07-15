@@ -1,20 +1,20 @@
 # This workflow runs on every new commit to the latest development branch. 
 # It checks that the new commit didn't break state compatibility by:
-#
+
 # - building the new `osmosisd` binary with the latest changes
 # - replaying a configurable number of previous blocks from chain history
-#
-# Currently, the node starts from a snapshot taken some blocks before last epoch 
-# and waits `DELTA_HALT_HEIGHT` blocks after epoch before halting.
-#
+
+# Currently, the node starts from a snapshot taken some blocks before the last epoch 
+# and waits `DELTA_HALT_HEIGHT` blocks after epoch before finally halting.
+
 # Important Caveat:
-#
+
 # The fact that this workflow succeeds and the binary doesn't fail doesn't 
 # directly imply that the new binary is state-compatible.
 # It could be that the binary is not state-compatible, but the condition 
-# which would break state compatibility was not present in the chuck of block history used.
-#
-# On the other hand, if the workflow fails, the binary is not state-compatible. 
+# which would break state compatibility was not present in the chunk of block history used.
+
+# On the other hand, if the workflow fails, the binary is not state-compatible.
 
 name: check_state_compatibility
 
