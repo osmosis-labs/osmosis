@@ -300,6 +300,7 @@ Comment: %s`,
 	return numOpsRan
 }
 
+//nolint:unused,deadcode
 func (simState *simState) runQueuedTimeOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (
 	numOpsRan int,
 ) {
