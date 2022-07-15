@@ -167,13 +167,8 @@ func orderBeginBlockers(allModuleNames []string) []string {
 
 func OrderEndBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
-	// Epochs must run after all other end blocks
-	ord.LastElements(epochstypes.ModuleName)
-	// txfees auto-swap code should occur before any potential gamm end block code.
-	ord.Before(txfeestypes.ModuleName, gammtypes.ModuleName)
-	// only remaining modules that aren;t no-ops are: crisis & govtypes
+	// only Osmosis modules with endblock code are: crisis, govtypes, staking
 	// we don't care about the relative ordering between them.
-
 	return ord.TotalOrdering()
 }
 
