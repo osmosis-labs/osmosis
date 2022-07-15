@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -76,7 +77,7 @@ func NewKeeper(
 // queries. The method returns an error if current height in ctx is greater than the v7 upgrade height.
 func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
-		return types.ErrDevVestingModuleAccountNotCreated
+		return sdkerrors.Wrap(types.ErrModuleDoesnotExist, "vesting module account doesnot exist")
 	}
 
 	moduleAccBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), k.GetParams(ctx).MintDenom)
@@ -93,10 +94,10 @@ func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 // - developer vesting module account is already created prior to calling this method.
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
 	if amount.IsNil() || amount.Amount.IsZero() {
-		return types.ErrAmountCannotBeNilOrZero
+		return sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero")
 	}
 	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
-		return types.ErrDevVestingModuleAccountAlreadyCreated
+		return sdkerrors.Wrap(types.ErrModuleAlreadyExist, "vesting module account already exist")
 	}
 
 	moduleAcc := authtypes.NewEmptyModuleAccount(

@@ -16,6 +16,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -315,18 +316,18 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 		},
 		"nil amount": {
 			blockHeight:   0,
-			expectedError: types.ErrAmountCannotBeNilOrZero,
+			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"zero amount": {
 			blockHeight:   0,
 			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
-			expectedError: types.ErrAmountCannotBeNilOrZero,
+			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"module account is already created": {
 			blockHeight:                     0,
 			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
 			isDeveloperModuleAccountCreated: true,
-			expectedError:                   types.ErrDevVestingModuleAccountAlreadyCreated,
+			expectedError:                   sdkerrors.Wrap(types.ErrModuleAlreadyExist, "vesting module account already exist"),
 		},
 	}
 
@@ -340,7 +341,7 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 
 			if tc.expectedError != nil {
 				suite.Error(actualError)
-				suite.Equal(actualError, tc.expectedError)
+				suite.ErrorIs(actualError, tc.expectedError)
 				return
 			}
 			suite.NoError(actualError)
@@ -361,7 +362,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 		},
 		"dev vesting module account does not exist": {
 			blockHeight:   1,
-			expectedError: types.ErrDevVestingModuleAccountNotCreated,
+			expectedError: sdkerrors.Wrap(types.ErrModuleDoesnotExist, "vesting module account doesnot exist"),
 		},
 	}
 
@@ -380,7 +381,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 
 			if tc.expectedError != nil {
 				suite.Error(actualError)
-				suite.Equal(actualError, tc.expectedError)
+				suite.ErrorIs(actualError, tc.expectedError)
 
 				suite.Equal(supplyWithOffsetBefore.Amount, bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 				suite.Equal(supplyOffsetBefore, bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
