@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,11 +18,11 @@ import (
 type SimCtx struct {
 	rm randManager
 
-	App      App
 	Accounts []simulation.Account
 	Cdc      codec.JSONCodec // application codec
-	// TODO: de-expose
-	ChainID string
+
+	app     App
+	chainID string
 
 	txbuilder func(ctx sdk.Context, msg sdk.Msg, msgName string) (sdk.Tx, error)
 }
@@ -29,9 +30,9 @@ type SimCtx struct {
 func NewSimCtx(r *rand.Rand, app App, accounts []simulation.Account, chainID string) *SimCtx {
 	sim := &SimCtx{
 		rm:       newRandManager(r),
-		App:      app,
+		app:      app,
 		Accounts: accounts,
-		ChainID:  chainID,
+		chainID:  chainID,
 	}
 	sim.txbuilder = sim.defaultTxBuilder
 	return sim
@@ -43,6 +44,26 @@ func (sim *SimCtx) GetRand() *rand.Rand {
 
 func (sim *SimCtx) GetSeededRand(seed string) *rand.Rand {
 	return sim.rm.GetSeededRand(seed)
+}
+
+func (sim SimCtx) ChainID() string {
+	return sim.chainID
+}
+
+func (sim SimCtx) BaseApp() *baseapp.BaseApp {
+	return sim.app.GetBaseApp()
+}
+
+func (sim SimCtx) AppCodec() codec.Codec {
+	return sim.app.AppCodec()
+}
+
+func (sim SimCtx) AccountKeeper() AccountKeeper {
+	return sim.app.GetAccountKeeper()
+}
+
+func (sim SimCtx) BankKeeper() BankKeeper {
+	return sim.app.GetBankKeeper()
 }
 
 type randManager struct {
