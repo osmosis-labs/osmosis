@@ -236,5 +236,4 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 			suite.Require().Len(gaugeIdsByDenom, 1)
 		}
 	}
-
 }

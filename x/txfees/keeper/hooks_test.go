@@ -64,7 +64,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		},
 	}
 
-	var finalOutputAmount = sdk.NewInt(0)
+	finalOutputAmount := sdk.NewInt(0)
 
 	for _, tc := range tests {
 		tc := tc

@@ -34,7 +34,8 @@ type weightedOperationAction struct {
 func (a weightedOperationAction) Name() string   { return "weighted_op" }
 func (a weightedOperationAction) Weight() Weight { return Weight(a.op.Weight()) }
 func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
-	simulation.OperationMsg, []simulation.FutureOperation, error) {
+	simulation.OperationMsg, []simulation.FutureOperation, error,
+) {
 	return a.op.Op()(sim.GetRand(), sim.App.GetBaseApp(), ctx, sim.Accounts, sim.ChainID)
 }
 
@@ -85,7 +86,8 @@ func (m msgBasedAction) WithWeight(weight Weight) msgBasedAction {
 func (m msgBasedAction) Name() string   { return m.name }
 func (m msgBasedAction) Weight() Weight { return m.weight }
 func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
-	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error) {
+	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error,
+) {
 	msg, err := m.msgGenerator(sim, ctx)
 	if err != nil {
 		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build msg due to: %v", err)), nil, nil

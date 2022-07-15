@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -62,6 +63,17 @@ func (sim *SimCtx) FindAccount(address sdk.Address) (simulation.Account, bool) {
 	return simulation.Account{}, false
 }
 
+func (sim *SimCtx) RandomSimAccountWithBalance(ctx sdk.Context) (simulation.Account, error) {
+	accHasBal := func(acc simulation.Account) bool {
+		return len(sim.App.GetBankKeeper().SpendableCoins(ctx, acc.Address)) != 0
+	}
+	acc, found := sim.RandomSimAccountWithConstraint(accHasBal)
+	if !found {
+		return simulation.Account{}, errors.New("no address with balance found. Check simulator configuration, this should be very rare.")
+	}
+	return acc, nil
+}
+
 // Returns (account, randSubsetCoins, found), so if found = false, then no such address exists.
 // randSubsetCoins is a random subset of the provided denoms, if the account is found.
 // TODO: Write unit test
@@ -86,8 +98,12 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 // RandGeometricCoin uniformly samples a denom from the addr's balances.
 // Then it samples an Exponentially distributed amount of the addr's coins, with rate = 10.
 // (Meaning that on average it samples 10% of the chosen balance)
+// Pre-condition: Addr must have a spendable balance
 func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) sdk.Coin {
-	balances := sim.App.GetBankKeeper().GetAllBalances(ctx, addr)
+	balances := sim.App.GetBankKeeper().SpendableCoins(ctx, addr)
+	if len(balances) == 0 {
+		panic("precondition for RandExponentialCoin broken: Addr has 0 spendable balance")
+	}
 	coin := RandSelect(sim, balances...)
 	// TODO: Reconsider if this becomes problematic in the future, but currently thinking it
 	// should be fine for simulation.
