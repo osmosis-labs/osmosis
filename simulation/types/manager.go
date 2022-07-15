@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"golang.org/x/exp/maps"
+
+	"github.com/osmosis-labs/osmosis/v7/osmoutils"
 )
 
 // AppModuleSimulation defines the standard functions that every module should expose
@@ -110,8 +112,10 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []Action {
 // TODO: Can we use sim here instead? Perhaps by passing in the simulation module manager to the simulator.
 func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []Action {
 	actions := m.legacyActions(seed, cdc)
-	for _, simModule := range m.Modules {
-		actions = append(actions, simModule.Actions()...)
+	moduleKeys := maps.Keys(m.Modules)
+	osmoutils.SortSlice(moduleKeys)
+	for _, simModuleName := range moduleKeys {
+		actions = append(actions, m.Modules[simModuleName].Actions()...)
 	}
 	return actions
 }

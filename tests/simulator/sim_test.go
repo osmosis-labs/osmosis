@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -134,9 +133,9 @@ func TestAppStateDeterminism(t *testing.T) {
 	// }
 
 	config := sdkSimapp.NewConfigFromFlags()
-	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
-	config.NumBlocks = 10
+	config.NumBlocks = 50
+	config.BlockSize = 5
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
@@ -147,7 +146,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
-	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
+	appHashList := make([]string, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
 		config.Seed = rand.Int63()
@@ -199,16 +198,12 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			require.NoError(t, simErr)
 
-			if config.Commit {
-				sdkSimapp.PrintStats(db)
-			}
-
 			appHash := osmosis.LastCommitID().Hash
-			appHashList[j] = appHash
+			appHashList[j] = fmt.Sprintf("%X", appHash)
 
 			if j != 0 {
 				require.Equal(
-					t, string(appHashList[0]), string(appHashList[j]),
+					t, appHashList[0], appHashList[j],
 					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 				)
 			}

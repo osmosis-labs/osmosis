@@ -174,6 +174,7 @@ func SimulateFromSeed(
 			"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
 			simState.header.Height, simState.header.Time, simState.opCount,
 		)
+		simState.logWriter.PrintLogs()
 	}
 
 	simState.eventStats.exportEvents(config.ExportStatsPath, w)

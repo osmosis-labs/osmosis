@@ -33,131 +33,98 @@ var (
 // TestUpdateIntermediaryPoolAssetsLiquidity tests if `updateIntermediaryPoolAssetsLiquidity` returns poolAssetsByDenom map
 // with the updated liquidity given by the parameter
 func TestUpdateIntermediaryPoolAssetsLiquidity(t *testing.T) {
+	const (
+		uosmoValueOriginal = 1_000_000_000_000
+		atomValueOriginal  = 123
+		ionValueOriginal   = 657
+
+		// Weight does not affect calculations so it is shared
+		weight = 100
+	)
 	testCases := []struct {
-		name string
-
-		// returns newLiquidity, originalPoolAssetsByDenom, expectedPoolAssetsByDenom
-		setup func() (sdk.Coins, map[string]balancer.PoolAsset, map[string]balancer.PoolAsset)
-
-		err error
+		name         string
+		newLiquidity sdk.Coins
+		poolAssets   map[string]balancer.PoolAsset
+		expectPass   bool
+		err          error
 	}{
 		{
 			name: "regular case with multiple pool assets and a subset of newLiquidity to update",
-
-			setup: func() (sdk.Coins, map[string]balancer.PoolAsset, map[string]balancer.PoolAsset) {
-				const (
-					uosmoValueOriginal = 1_000_000_000_000
-					atomValueOriginal  = 123
-					ionValueOriginal   = 657
-
-					// Weight does not affect calculations so it is shared
-					weight = 100
-				)
-
-				newLiquidity := sdk.NewCoins(
-					sdk.NewInt64Coin("uosmo", 1_000),
-					sdk.NewInt64Coin("atom", 2_000),
-					sdk.NewInt64Coin("ion", 3_000))
-
-				originalPoolAssetsByDenom := map[string]balancer.PoolAsset{
-					"uosmo": {
-						Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
-						Weight: sdk.NewInt(weight),
-					},
-					"atom": {
-						Token:  sdk.NewInt64Coin("atom", atomValueOriginal),
-						Weight: sdk.NewInt(weight),
-					},
-					"ion": {
-						Token:  sdk.NewInt64Coin("ion", ionValueOriginal),
-						Weight: sdk.NewInt(weight),
-					},
-				}
-
-				expectedPoolAssetsByDenom := map[string]balancer.PoolAsset{}
-				for k, v := range originalPoolAssetsByDenom {
-					expectedValue := balancer.PoolAsset{Token: v.Token, Weight: v.Weight}
-					expectedValue.Token.Amount = expectedValue.Token.Amount.Add(newLiquidity.AmountOf(k))
-					expectedPoolAssetsByDenom[k] = expectedValue
-				}
-
-				return newLiquidity, originalPoolAssetsByDenom, expectedPoolAssetsByDenom
+			newLiquidity: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 1_000),
+				sdk.NewInt64Coin("atom", 2_000),
+				sdk.NewInt64Coin("ion", 3_000)),
+			poolAssets: map[string]balancer.PoolAsset{
+				"uosmo": {
+					Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
+					Weight: sdk.NewInt(weight),
+				},
+				"atom": {
+					Token:  sdk.NewInt64Coin("atom", atomValueOriginal),
+					Weight: sdk.NewInt(weight),
+				},
+				"ion": {
+					Token:  sdk.NewInt64Coin("ion", ionValueOriginal),
+					Weight: sdk.NewInt(weight),
+				},
 			},
+			expectPass: true,
 		},
 		{
-			name: "new liquidity has no coins",
-
-			setup: func() (sdk.Coins, map[string]balancer.PoolAsset, map[string]balancer.PoolAsset) {
-				const (
-					uosmoValueOriginal = 1_000_000_000_000
-					atomValueOriginal  = 123
-					ionValueOriginal   = 657
-
-					// Weight does not affect calculations so it is shared
-					weight = 100
-				)
-
-				newLiquidity := sdk.NewCoins()
-
-				originalPoolAssetsByDenom := map[string]balancer.PoolAsset{
-					"uosmo": {
-						Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
-						Weight: sdk.NewInt(weight),
-					},
-					"atom": {
-						Token:  sdk.NewInt64Coin("atom", atomValueOriginal),
-						Weight: sdk.NewInt(weight),
-					},
-					"ion": {
-						Token:  sdk.NewInt64Coin("ion", ionValueOriginal),
-						Weight: sdk.NewInt(weight),
-					},
-				}
-
-				return newLiquidity, originalPoolAssetsByDenom, originalPoolAssetsByDenom
+			name:         "new liquidity has no coins",
+			newLiquidity: sdk.NewCoins(),
+			poolAssets: map[string]balancer.PoolAsset{
+				"uosmo": {
+					Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
+					Weight: sdk.NewInt(weight),
+				},
+				"atom": {
+					Token:  sdk.NewInt64Coin("atom", atomValueOriginal),
+					Weight: sdk.NewInt(weight),
+				},
+				"ion": {
+					Token:  sdk.NewInt64Coin("ion", ionValueOriginal),
+					Weight: sdk.NewInt(weight),
+				},
 			},
+			expectPass: true,
 		},
 		{
 			name: "newLiquidity has a coin that poolAssets don't",
-
-			setup: func() (sdk.Coins, map[string]balancer.PoolAsset, map[string]balancer.PoolAsset) {
-				const (
-					uosmoValueOriginal = 1_000_000_000_000
-
-					// Weight does not affect calculations so it is shared
-					weight = 100
-				)
-
-				newLiquidity := sdk.NewCoins(
-					sdk.NewInt64Coin("juno", 1_000))
-
-				originalPoolAssetsByDenom := map[string]balancer.PoolAsset{
-					"uosmo": {
-						Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
-						Weight: sdk.NewInt(weight),
-					},
-				}
-
-				return newLiquidity, originalPoolAssetsByDenom, originalPoolAssetsByDenom
+			newLiquidity: sdk.NewCoins(
+				sdk.NewInt64Coin("juno", 1_000)),
+			poolAssets: map[string]balancer.PoolAsset{
+				"uosmo": {
+					Token:  sdk.NewInt64Coin("uosmo", uosmoValueOriginal),
+					Weight: sdk.NewInt(weight),
+				},
 			},
-
-			err: fmt.Errorf(balancer.ErrMsgFormatFailedInterimLiquidityUpdate, "juno"),
+			expectPass: false,
+			err:        fmt.Errorf(balancer.ErrMsgFormatFailedInterimLiquidityUpdate, "juno"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			newLiquidity, originalPoolAssetsByDenom, expectedPoolAssetsByDenom := tc.setup()
-
-			err := balancer.UpdateIntermediaryPoolAssetsLiquidity(newLiquidity, originalPoolAssetsByDenom)
-
-			require.Equal(t, tc.err, err)
-
-			if tc.err != nil {
-				return
+			expectedPoolAssetsByDenom := map[string]balancer.PoolAsset{}
+			for denom, asset := range tc.poolAssets {
+				expectedValue := asset
+				expectedValue.Token.Amount = expectedValue.Token.Amount.Add(tc.newLiquidity.AmountOf(denom))
+				expectedPoolAssetsByDenom[denom] = expectedValue
 			}
 
-			require.Equal(t, expectedPoolAssetsByDenom, originalPoolAssetsByDenom)
+			err := balancer.UpdateIntermediaryPoolAssetsLiquidity(tc.newLiquidity, tc.poolAssets)
+
+			if tc.expectPass {
+				require.NoError(t, tc.err, "test: %v", tc.name)
+				// make sure actual pool assets are properly updated
+				require.Equal(t, expectedPoolAssetsByDenom, tc.poolAssets)
+			} else {
+				require.Error(t, tc.err, "test: %v", tc.name)
+				require.Equal(t, tc.err, err)
+				require.Equal(t, expectedPoolAssetsByDenom, tc.poolAssets)
+			}
+			return
 		})
 	}
 }
