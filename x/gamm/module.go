@@ -163,6 +163,6 @@ func (am AppModule) Actions() []simulation.Action {
 	return []simulation.Action{
 		simulation.NewCurriedMsgBasedAction("MsgJoinPool", am.keeper, gammsimulation.RandomJoinPoolMsg),
 		simulation.NewCurriedMsgBasedAction("MsgExitPool", am.keeper, gammsimulation.RandomExitPoolMsg),
-		simulation.NewCurriedMsgBasedAction("CreateUniV2lMsg", am.keeper, gammsimulation.RandomCreateUniV2lMsg),
+		simulation.NewCurriedMsgBasedAction("CreateUniV2Msg", am.keeper, gammsimulation.RandomCreateUniV2Msg),
 	}
 }
