@@ -10,6 +10,4 @@ const (
 	QuerierRoute = ModuleName
 )
 
-var (
-	AlteredPoolIdsPrefix = []byte{0}
-)
+var AlteredPoolIdsPrefix = []byte{0}

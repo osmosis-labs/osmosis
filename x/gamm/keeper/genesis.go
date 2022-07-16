@@ -51,7 +51,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		poolAnys = append(poolAnys, any)
 	}
 	return &types.GenesisState{
-		NextPoolNumber: k.GetNextPoolNumberAndIncrement(ctx),
+		NextPoolNumber: k.GetNextPoolNumber(ctx),
 		Pools:          poolAnys,
 		Params:         k.GetParams(ctx),
 	}

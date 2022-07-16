@@ -1,23 +1,25 @@
 package simapp
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/osmosis-labs/osmosis/v7/app"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	osmosim "github.com/osmosis-labs/osmosis/v7/simulation/executor"
+	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
 )
 
 // Profile with:
@@ -38,7 +40,7 @@ func TestFullAppSimulation(t *testing.T) {
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
 	sdkSimapp.FlagEnabledValue = true
-	sdkSimapp.FlagNumBlocksValue = 20
+	sdkSimapp.FlagNumBlocksValue = 100
 	sdkSimapp.FlagBlockSizeValue = 25
 	sdkSimapp.FlagCommitValue = true
 	sdkSimapp.FlagVerboseValue = true
@@ -87,23 +89,21 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		interBlockCacheOpt(),
 		fauxMerkleModeOpt)
 
+	initFns := simtypes.InitFunctions{
+		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation2.RandomAccounts, osmosis.ModuleAccountAddrs()),
+		AppInitialStateFn: AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
+	}
+
 	// Run randomized simulation:
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, simErr := osmosim.SimulateFromSeed(
 		tb,
 		os.Stdout,
-		osmosis.BaseApp,
-		AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
-		simulation2.RandomAccounts,                                          // Replace with own random account function if using keys other than secp256k1
-		sdkSimapp.SimulationOperations(osmosis, osmosis.AppCodec(), config), // Run all registered operations
-		osmosis.ModuleAccountAddrs(),
+		osmosis,
+		initFns,
+		osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 		config,
 		osmosis.AppCodec(),
 	)
-
-	// export state and simParams before the simulation error is checked
-	if err = sdkSimapp.CheckExportSimulation(osmosis, config, simParams); err != nil {
-		tb.Fatal(err)
-	}
 
 	if simErr != nil {
 		tb.Fatal(simErr)
@@ -120,16 +120,17 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
-// // TODO: Make another test for the fuzzer itself, which just has noOp txs
-// // and doesn't depend on the application.
+// TODO: Make another test for the fuzzer itself, which just has noOp txs
+// and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
 	// if !sdkSimapp.FlagEnabledValue {
 	// 	t.Skip("skipping application simulation")
 	// }
 
 	config := sdkSimapp.NewConfigFromFlags()
-	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
+	config.NumBlocks = 50
+	config.BlockSize = 5
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
@@ -140,21 +141,22 @@ func TestAppStateDeterminism(t *testing.T) {
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
-	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
+	appHashList := make([]string, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
 		config.Seed = rand.Int63()
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
-			if sdkSimapp.FlagVerboseValue {
-				logger = log.TestingLogger()
-			} else {
-				logger = log.NewNopLogger()
-			}
+			logger = log.TestingLogger()
+			// if sdkSimapp.FlagVerboseValue {
+			// 	logger = log.TestingLogger()
+			// } else {
+			// 	logger = log.NewNopLogger()
+			// }
 
 			db := dbm.NewMemDB()
-			app := app.NewOsmosisApp(
+			osmosis := app.NewOsmosisApp(
 				logger,
 				db,
 				nil,
@@ -173,29 +175,30 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			_, _, err := simulation.SimulateFromSeed(
-				t,
-				os.Stdout,
-				app.BaseApp,
-				AppStateFn(app.AppCodec(), app.SimulationManager()),
-				simulation2.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				sdkSimapp.SimulationOperations(app, app.AppCodec(), config),
-				app.ModuleAccountAddrs(),
-				config,
-				app.AppCodec(),
-			)
-			require.NoError(t, err)
-
-			if config.Commit {
-				sdkSimapp.PrintStats(db)
+			initFns := simtypes.InitFunctions{
+				RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation2.RandomAccounts, osmosis.ModuleAccountAddrs()),
+				AppInitialStateFn: AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
 			}
 
-			appHash := app.LastCommitID().Hash
-			appHashList[j] = appHash
+			// Run randomized simulation:
+			_, simErr := osmosim.SimulateFromSeed(
+				t,
+				os.Stdout,
+				osmosis,
+				initFns,
+				osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
+				config,
+				osmosis.AppCodec(),
+			)
+
+			require.NoError(t, simErr)
+
+			appHash := osmosis.LastCommitID().Hash
+			appHashList[j] = fmt.Sprintf("%X", appHash)
 
 			if j != 0 {
 				require.Equal(
-					t, string(appHashList[0]), string(appHashList[j]),
+					t, appHashList[0], appHashList[j],
 					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 				)
 			}

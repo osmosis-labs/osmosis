@@ -68,7 +68,7 @@ linters:
 #    - revive <- temporarily disabled while jacob figures out how to make poolId not trigger it.
     # - rowserrcheck <- needs go 1.18 support
     # - sqlclosecheck <- needs go 1.18 support
-#    - staticcheck <- later
+    - staticcheck # set of rules from staticcheck, subset of staticcheck binary.
 #    - structcheck <- later
     - stylecheck # replacement of golint, subset of staticcheck binary.
     #    - tagliatelle <- disabled for defying cosmos idiom
@@ -103,7 +103,16 @@ issues:
         - unused
         - deadcode
     - linters:
+      - staticcheck
+      text: "SA1024: cutset contains duplicate characters" # proved to not provide much value, only false positives.
+    - linters:
+      - staticcheck
+      text: "SA9004: only the first constant in this group has an explicit type" # explicitly recommended in go syntax
+    - linters:
       - stylecheck
       text: "ST1003:" # requires identifiers with "id" to be "ID".
+    - linters:
+      - stylecheck
+      text: "ST1005:" # punctuation in error messages
   max-issues-per-linter: 10000
   max-same-issues: 10000

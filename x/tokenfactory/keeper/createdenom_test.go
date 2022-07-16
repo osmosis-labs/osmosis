@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
 )
 
@@ -90,7 +89,6 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			suite.msgServer = keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)
 			if tc.setup != nil {
 				tc.setup()
 			}

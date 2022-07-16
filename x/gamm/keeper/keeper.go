@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 
@@ -59,46 +58,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		bankKeeper:    bankKeeper,
 		distrKeeper:   distrKeeper,
 	}
-}
-
-// nolint: unused
-func (k *Keeper) createSwapEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtTokenSwapped,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyTokensIn, input.String()),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, output.String()),
-		),
-	})
-}
-
-// nolint: unused
-func (k *Keeper) createAddLiquidityEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, liquidity sdk.Coins) {
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtPoolJoined,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyTokensIn, liquidity.String()),
-		),
-	})
-}
-
-// nolint: unused
-func (k *Keeper) createRemoveLiquidityEvent(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, liquidity sdk.Coins) {
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtPoolExited,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, liquidity.String()),
-		),
-	})
 }
 
 // Set the gamm hooks.
