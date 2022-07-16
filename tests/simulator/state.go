@@ -7,8 +7,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/app"
+	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdksimapp "github.com/cosmos/cosmos-sdk/simapp"
