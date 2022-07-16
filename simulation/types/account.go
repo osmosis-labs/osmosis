@@ -107,22 +107,57 @@ func (sim *SimCtx) SelAddrWithDenom(ctx sdk.Context, denom string) (simulation.A
 	return acc, subsetCoins[0], found
 }
 
-// RandomSimAccountWithKDenoms returns a random account that possesses greater than or equal to the requested(k) denoms
+// GetRandSubsetOfKDenoms returns a random subset of coins of k unique denoms from the provided account
 // TODO: Write unit test
-func (sim *SimCtx) RandomSimAccountWithKDenoms(ctx sdk.Context, k int) (simulation.Account, sdk.Coins, bool) {
-	var coins sdk.Coins
-	accHasBal := func(acc simulation.Account) bool {
-		if len(sim.BankKeeper().SpendableCoins(ctx, acc.Address)) >= k {
-			return true
+func (sim *SimCtx) GetRandSubsetOfKDenoms(ctx sdk.Context, acc simulation.Account, k int) (sdk.Coins, bool) {
+	coins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
+	if len(coins) < k {
+		return sdk.Coins{}, false
+	}
+	// make sure at least one coin added
+	r := sim.GetSeededRand("select random seed")
+	denomIdx := r.Intn(len(coins))
+	coin := coins[denomIdx]
+	amt, err := simulation.RandPositiveInt(r, coin.Amount)
+	// malformed coin. 0 amt in coins
+	if err != nil {
+		return sdk.Coins{}, false
+	}
+
+	subset := sdk.Coins{sdk.NewCoin(coin.Denom, amt)}
+
+	for i, c := range coins {
+		for l := 1; i < k; {
+			// skip denom that we already chose earlier
+			if i == denomIdx {
+				continue
+			}
+			// coin flip if multiple coins
+			// if there is single coin then return random amount of it
+			if r.Intn(2) == 0 && len(coins) != 1 {
+				continue
+			}
+
+			amt, err := simulation.RandPositiveInt(r, c.Amount)
+			// ignore errors and try another denom
+			if err != nil {
+				continue
+			}
+
+			subset = append(subset, sdk.NewCoin(c.Denom, amt))
+			l++
 		}
-		coins = sim.BankKeeper().SpendableCoins(ctx, acc.Address)
-		return false
 	}
-	acc, found := sim.RandomSimAccountWithConstraint(accHasBal)
-	if !found {
-		return simulation.Account{}, sdk.Coins{}, false
+
+	return subset.Sort(), true
+}
+
+// RandomSimAccountWithKDenoms returns an account that possesses k unique denoms
+func (sim *SimCtx) RandomSimAccountWithKDenoms(ctx sdk.Context, k int) (simulation.Account, bool) {
+	accHasBal := func(acc simulation.Account) bool {
+		return len(sim.BankKeeper().SpendableCoins(ctx, acc.Address)) >= k
 	}
-	return acc, coins, true
+	return sim.RandomSimAccountWithConstraint(accHasBal)
 }
 
 // RandGeometricCoin uniformly samples a denom from the addr's balances.

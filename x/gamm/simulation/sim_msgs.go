@@ -69,11 +69,14 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 func RandomCreateUniV2lMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
 	var poolAssets []balancertypes.PoolAsset
 	// find an address with two or more distinct denoms in their wallet
-	sender, poolCoins, senderExists := sim.RandomSimAccountWithKDenoms(ctx, 2)
+	sender, senderExists := sim.RandomSimAccountWithKDenoms(ctx, 2)
 	if !senderExists {
 		return &balancertypes.MsgCreateBalancerPool{}, fmt.Errorf("no sender with two different denoms exists")
 	}
-
+	poolCoins, denomsExist := sim.GetRandSubsetOfKDenoms(ctx, sender, 2)
+	if !denomsExist {
+		return &balancertypes.MsgCreateBalancerPool{}, fmt.Errorf("provided sender does not posses two unique denoms")
+	}
 	// TODO: pseudo-randomly generate swap and exit fees
 	poolParams := &balancertypes.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
