@@ -100,18 +100,11 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 // randSubsetCoins is a random subset of the provided denoms, if the account is found.
 // TODO: Write unit test
 func (sim *SimCtx) SelAddrWithDenom(ctx sdk.Context, denom string) (simulation.Account, sdk.Coin, bool) {
-	denomSlice := []string{denom}
-	accHasDenoms := func(acc simulation.Account) bool {
-		return !sim.App.GetBankKeeper().GetBalance(ctx, acc.Address, denom).Amount.IsZero()
-	}
-
-	acc, accExists := sim.RandomSimAccountWithConstraint(accHasDenoms)
-	if !accExists {
-		return acc, sdk.Coin{}, false
-	}
-	balance := sim.RandCoinSubset(ctx, acc.Address, denomSlice)
-	balanceCoin := balance[0]
-	return acc, balanceCoin, true
+	acc, subsetCoins, found := sim.SelAddrWithDenoms(ctx, []string{denom}
+        if !found {
+          return acc, sdk.Coin{}, found
+        }
+        return acc, subsetCoins[0], found
 }
 
 // RandomSimAccountWithKDenoms returns a random account that possesses greater than or equal to the requested(k) denoms
