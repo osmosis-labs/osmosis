@@ -49,6 +49,24 @@ func (sim *SimCtx) GetSeededRand(seed string) *rand.Rand {
 	return sim.rm.GetSeededRand(seed)
 }
 
+// WrapRand returns a new sim object and a cleanup function to write
+// Accounts changes to the parent (and invalidate the prior)
+func (sim *SimCtx) WrapRand(domainSeparator string) (wrappedSim *SimCtx, cleanup func()) {
+	wrappedSim = &SimCtx{
+		rm:        sim.rm.WrapRand(domainSeparator),
+		app:       sim.app,
+		Accounts:  sim.Accounts,
+		Cdc:       sim.Cdc,
+		chainID:   sim.chainID,
+		txbuilder: sim.txbuilder,
+	}
+	cleanup = func() {
+		sim.Accounts = wrappedSim.Accounts
+		wrappedSim.Accounts = nil
+	}
+	return wrappedSim, cleanup
+}
+
 func (sim SimCtx) ChainID() string {
 	return sim.chainID
 }
