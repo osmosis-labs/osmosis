@@ -15,10 +15,6 @@ const (
 )
 
 var (
-	ErrAmountCannotBeNilOrZero               = errAmountCannotBeNilOrZero
-	ErrDevVestingModuleAccountAlreadyCreated = errDevVestingModuleAccountAlreadyCreated
-	ErrDevVestingModuleAccountNotCreated     = errDevVestingModuleAccountNotCreated
-
 	GetProportions = getProportions
 )
 
