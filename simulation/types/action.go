@@ -37,7 +37,7 @@ func (a weightedOperationAction) Weight() Weight { return Weight(a.op.Weight()) 
 func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	simulation.OperationMsg, []simulation.FutureOperation, error,
 ) {
-	return a.op.Op()(sim.GetRand(), sim.App.GetBaseApp(), ctx, sim.Accounts, sim.ChainID)
+	return a.op.Op()(sim.GetRand(), sim.BaseApp(), ctx, sim.Accounts, sim.ChainID())
 }
 
 func ActionsFromWeightedOperations(ops legacysimexec.WeightedOperations) []Action {
