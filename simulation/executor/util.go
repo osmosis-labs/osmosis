@@ -3,14 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simulation "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
 )
@@ -62,20 +55,4 @@ func mustMarshalJSONIndent(o interface{}) []byte {
 	}
 
 	return bz
-}
-
-// OperationInput is a struct that holds all the needed values to generate a tx and deliver it
-type OperationInput struct {
-	R               *rand.Rand
-	App             *baseapp.BaseApp
-	TxGen           client.TxConfig
-	Cdc             *codec.ProtoCodec
-	Msg             sdk.Msg
-	MsgType         string
-	CoinsSpentInMsg sdk.Coins
-	Context         sdk.Context
-	SimAccount      simulation.Account
-	AccountKeeper   AccountKeeper
-	Bankkeeper      BankKeeper
-	ModuleName      string
 }

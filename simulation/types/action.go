@@ -28,10 +28,11 @@ type Action interface {
 }
 
 type weightedOperationAction struct {
-	op simulation.WeightedOperation
+	moduleName string
+	op         simulation.WeightedOperation
 }
 
-func (a weightedOperationAction) Name() string   { return "weighted_op" }
+func (a weightedOperationAction) Name() string   { return fmt.Sprintf("%s: weighted_op", a.moduleName) }
 func (a weightedOperationAction) Weight() Weight { return Weight(a.op.Weight()) }
 func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	simulation.OperationMsg, []simulation.FutureOperation, error,
@@ -40,9 +41,13 @@ func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
 }
 
 func ActionsFromWeightedOperations(ops legacysimexec.WeightedOperations) []Action {
+	return actionsFromWeightedOperations("no module name", ops)
+}
+
+func actionsFromWeightedOperations(moduleName string, ops legacysimexec.WeightedOperations) []Action {
 	actions := make([]Action, 0, len(ops))
 	for _, op := range ops {
-		actions = append(actions, weightedOperationAction{op: op})
+		actions = append(actions, weightedOperationAction{moduleName: moduleName, op: op})
 	}
 	return actions
 }

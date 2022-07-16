@@ -106,13 +106,14 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []Action {
 		}
 	}
 	// second pass generate actions
-	weightedOps := []simulation.WeightedOperation{}
+	actions := []Action{}
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.legacyModules[moduleName]; ok {
-			weightedOps = append(weightedOps, simModule.WeightedOperations(simState)...)
+			weightedOps := simModule.WeightedOperations(simState)
+			actions = append(actions, actionsFromWeightedOperations(moduleName, weightedOps)...)
 		}
 	}
-	return ActionsFromWeightedOperations(weightedOps)
+	return actions
 }
 
 // TODO: Can we use sim here instead? Perhaps by passing in the simulation module manager to the simulator.
