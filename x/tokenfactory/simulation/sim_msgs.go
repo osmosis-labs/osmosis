@@ -13,10 +13,7 @@ import (
 // RandomMsgCreateDenom creates a random tokenfactory denom that is no greater than 44 alphanumeric characters
 func RandomMsgCreateDenom(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*types.MsgCreateDenom, error) {
 	// select a pseudo-random simulation account
-	sender, err := sim.RandomSimAccountWithBalance(ctx)
-	if err != nil {
-		return nil, err
-	}
+	sender := sim.RandomSimAccount()
 
 	// select a pseudo-random denom using alpha-numeric characters
 	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
