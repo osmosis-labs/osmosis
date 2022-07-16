@@ -134,11 +134,25 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		}
 	}
 
+	voteInfos := randomVoteInfos(r, params, validators, event)
+	evidence := randomDoubleSignEvidence(r, params, validators, pastTimes, pastVoteInfos, event, header, voteInfos)
+
+	return abci.RequestBeginBlock{
+		Header: header,
+		LastCommitInfo: abci.LastCommitInfo{
+			Votes: voteInfos,
+		},
+		ByzantineValidators: evidence,
+	}
+}
+
+func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators, event func(route, op, evResult string),
+) []abci.VoteInfo {
 	voteInfos := make([]abci.VoteInfo, len(validators))
 
 	for i, key := range validators.getKeys() {
 		mVal := validators[key]
-		mVal.livenessState = params.LivenessTransitionMatrix().NextState(r, mVal.livenessState)
+		mVal.livenessState = simParams.LivenessTransitionMatrix().NextState(r, mVal.livenessState)
 		signed := true
 
 		if mVal.livenessState == 1 {
@@ -171,18 +185,19 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		}
 	}
 
+	return voteInfos
+}
+
+func randomDoubleSignEvidence(r *rand.Rand, params Params,
+	validators mockValidators, pastTimes []time.Time,
+	pastVoteInfos [][]abci.VoteInfo,
+	event func(route, op, evResult string), header tmproto.Header, voteInfos []abci.VoteInfo) []abci.Evidence {
+	evidence := []abci.Evidence{}
 	// return if no past times
 	if len(pastTimes) == 0 {
-		return abci.RequestBeginBlock{
-			Header: header,
-			LastCommitInfo: abci.LastCommitInfo{
-				Votes: voteInfos,
-			},
-		}
+		return evidence
 	}
 
-	// TODO: Determine capacity before allocation
-	evidence := make([]abci.Evidence, 0)
 	// TODO: Change this to be markov based & clean this up
 	for r.Float64() < params.EvidenceFraction() {
 		height := header.Height
@@ -215,12 +230,5 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 
 		event("begin_block", "evidence", "ok")
 	}
-
-	return abci.RequestBeginBlock{
-		Header: header,
-		LastCommitInfo: abci.LastCommitInfo{
-			Votes: voteInfos,
-		},
-		ByzantineValidators: evidence,
-	}
+	return evidence
 }
