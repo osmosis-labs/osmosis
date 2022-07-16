@@ -205,7 +205,8 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.Action,
-	simState *simState, config simulation.Config) blockSimFn {
+	simState *simState, config simulation.Config,
+) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
 	selectAction := getSelectActionFn(actions)
@@ -295,7 +296,8 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 }
 
 func (simState *simState) runQueuedTimeOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (
-	numOpsRan int) {
+	numOpsRan int,
+) {
 	queueOps := simState.timeOperationQueue
 	currentTime := simState.header.Time
 	numOpsRan = 0

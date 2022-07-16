@@ -28,6 +28,12 @@ type AppModuleSimulationV2 interface {
 	// PropertyTests()
 }
 
+type AppModuleSimulationV2WithRandGenesis interface {
+	AppModuleSimulationV2
+	// TODO: Come back and improve SimulationState interface
+	RandomGenesisState(*module.SimulationState, *SimCtx)
+}
+
 // SimulationManager defines a simulation manager that provides the high level utility
 // for managing and executing simulation functionalities for a group of modules
 type Manager struct {
@@ -137,7 +143,12 @@ func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []Action {
 func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *SimCtx) {
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.Modules[moduleName]; ok {
-			simModule.RandomGenesisState(simState, sim)
+			// if we define a random genesis function use it, otherwise use default genesis
+			if mod, ok := simModule.(AppModuleSimulationV2WithRandGenesis); ok {
+				mod.RandomGenesisState(simState, sim)
+			} else {
+				simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
+			}
 		}
 		if simModule, ok := m.legacyModules[moduleName]; ok {
 			simModule.GenerateGenesisState(simState)

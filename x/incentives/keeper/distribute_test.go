@@ -174,7 +174,6 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 			suite.Require().Equal(tc.expectedRewards[i].String(), rewards, "test %v, person %d", tc.name, i)
 		}
 	}
-
 }
 
 // TestGetModuleToDistributeCoins tests the sum of coins yet to be distributed for all of the module is correct.
