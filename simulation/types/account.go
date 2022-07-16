@@ -95,6 +95,43 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 	return acc, balance, true
 }
 
+// SelAddrWithDenom attempts to find an address with the provided denom. This function
+// returns (account, randSubsetCoins, found), so if found = false, then no such address exists.
+// randSubsetCoins is a random subset of the provided denoms, if the account is found.
+// TODO: Write unit test
+func (sim *SimCtx) SelAddrWithDenom(ctx sdk.Context, denom string) (simulation.Account, sdk.Coin, bool) {
+	denomSlice := []string{denom}
+	accHasDenoms := func(acc simulation.Account) bool {
+		return !sim.App.GetBankKeeper().GetBalance(ctx, acc.Address, denom).Amount.IsZero()
+	}
+
+	acc, accExists := sim.RandomSimAccountWithConstraint(accHasDenoms)
+	if !accExists {
+		return acc, sdk.Coin{}, false
+	}
+	balance := sim.RandCoinSubset(ctx, acc.Address, denomSlice)
+	balanceCoin := balance[0]
+	return acc, balanceCoin, true
+}
+
+// RandomSimAccountWithKDenoms returns a random account that possesses greater than or equal to the requested(k) denoms
+// TODO: Write unit test
+func (sim *SimCtx) RandomSimAccountWithKDenoms(ctx sdk.Context, k int) (simulation.Account, sdk.Coins, bool) {
+	var coins sdk.Coins
+	accHasBal := func(acc simulation.Account) bool {
+		if len(sim.App.GetBankKeeper().SpendableCoins(ctx, acc.Address)) >= k {
+			return true
+		}
+		coins = sim.App.GetBankKeeper().SpendableCoins(ctx, acc.Address)
+		return false
+	}
+	acc, found := sim.RandomSimAccountWithConstraint(accHasBal)
+	if !found {
+		return simulation.Account{}, sdk.Coins{}, false
+	}
+	return acc, coins, true
+}
+
 // RandGeometricCoin uniformly samples a denom from the addr's balances.
 // Then it samples an Exponentially distributed amount of the addr's coins, with rate = 10.
 // (Meaning that on average it samples 10% of the chosen balance)

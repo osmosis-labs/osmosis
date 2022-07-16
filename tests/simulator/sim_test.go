@@ -95,7 +95,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	}
 
 	// Run randomized simulation:
-	_, simParams, simErr := osmosim.SimulateFromSeed(
+	_, _, simErr := osmosim.SimulateFromSeed(
 		tb,
 		os.Stdout,
 		osmosis,
@@ -104,7 +104,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		config,
 		osmosis.AppCodec(),
 	)
-	simParams = simParams
+
 	// export state and simParams before the simulation error is checked
 	// if err = sdkSimapp.CheckExportSimulation(osmosis, config, simParams); err != nil {
 	// 	tb.Fatal(err)
