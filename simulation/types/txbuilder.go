@@ -32,7 +32,7 @@ func (sim *SimCtx) defaultTxBuilder(
 	if !found {
 		return nil, errors.New("unable to generate mock tx: sim acct not found")
 	}
-	authAcc := sim.App.GetAccountKeeper().GetAccount(ctx, account.Address)
+	authAcc := sim.AccountKeeper().GetAccount(ctx, account.Address)
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
 	// TODO: Consider making a default tx builder that charges some random fees
 	// Low value for amount of work right now though.
@@ -56,7 +56,7 @@ func (sim *SimCtx) defaultTxBuilder(
 // TODO: Fix these args
 func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
-	_, results, err := sim.App.GetBaseApp().Deliver(txConfig.TxEncoder(), tx)
+	_, results, err := sim.BaseApp().Deliver(txConfig.TxEncoder(), tx)
 	if err != nil {
 		return simulation.NoOpMsg(msgName, msgName, fmt.Sprintf("unable to deliver tx. \nreason: %v\n results: %v\n msg: %s\n tx: %s", err, results, msg, tx)), nil, err
 	}

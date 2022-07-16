@@ -225,20 +225,20 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 		)
 		lastBlockSizeState, blocksize = getBlockSize(simCtx, params, lastBlockSizeState, config.BlockSize)
 
-		// TODO: Fix according to the r plans
-		// Predetermine the blocksize slice so that we can do things like block
-		// out certain operations without changing the ops that follow.
-		// NOTE: This is poor mans seeding, it will improve in our simctx plans =)
-		blockActions := make([]simtypes.Action, 0, blocksize)
+		blockNumStr := fmt.Sprintf("block %d", header.Height)
 		for i := 0; i < blocksize; i++ {
-			blockActions = append(blockActions, selectAction(simCtx.GetRand()))
-		}
+			// Sample and execute every action using independent randomness.
+			// Thus any change within one action's randomness won't waterfall
+			// to every other action and the overall order of txs.
+			// We can also use this to limit which operations we run, in debugging a simulator run.
+			actionSeed := fmt.Sprintf("%s operation %d", blockNumStr, i)
+			actionSimCtx, cleanup := simCtx.WrapRand(actionSeed)
 
-		for i := 0; i < blocksize; i++ {
-			action := blockActions[i]
-			// TODO: We need to make a simCtx.WithSeededRand, that replaces the rand map internally
-			// but allows updates to accounts.
-			opMsg, futureOps, err := action.Execute(simCtx, ctx)
+			// Select and execute tx
+			action := selectAction(actionSimCtx.GetSeededRand("action select"))
+			opMsg, futureOps, err := action.Execute(actionSimCtx, ctx)
+			cleanup()
+
 			simState.logActionResult(header, i, config, blocksize, opMsg, err)
 
 			simState.queueOperations(futureOps)
@@ -287,7 +287,7 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queuedOp[i](r, simCtx.App.GetBaseApp(), ctx, simCtx.Accounts, simCtx.ChainID)
+		opMsg, _, err := queuedOp[i](r, simCtx.BaseApp(), ctx, simCtx.Accounts, simCtx.ChainID())
 		opMsg.LogEvent(simState.eventStats.Tally)
 
 		if !simState.leanLogs || opMsg.OK {

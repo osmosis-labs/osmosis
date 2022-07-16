@@ -65,7 +65,7 @@ func (sim *SimCtx) FindAccount(address sdk.Address) (simulation.Account, bool) {
 
 func (sim *SimCtx) RandomSimAccountWithBalance(ctx sdk.Context) (simulation.Account, error) {
 	accHasBal := func(acc simulation.Account) bool {
-		return len(sim.App.GetBankKeeper().SpendableCoins(ctx, acc.Address)) != 0
+		return len(sim.BankKeeper().SpendableCoins(ctx, acc.Address)) != 0
 	}
 	acc, found := sim.RandomSimAccountWithConstraint(accHasBal)
 	if !found {
@@ -80,7 +80,7 @@ func (sim *SimCtx) RandomSimAccountWithBalance(ctx sdk.Context) (simulation.Acco
 func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulation.Account, sdk.Coins, bool) {
 	accHasDenoms := func(acc simulation.Account) bool {
 		for _, denom := range denoms {
-			if sim.App.GetBankKeeper().GetBalance(ctx, acc.Address, denom).Amount.IsZero() {
+			if sim.BankKeeper().GetBalance(ctx, acc.Address, denom).Amount.IsZero() {
 				return false
 			}
 		}
@@ -100,7 +100,7 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 // (Meaning that on average it samples 10% of the chosen balance)
 // Pre-condition: Addr must have a spendable balance
 func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) sdk.Coin {
-	balances := sim.App.GetBankKeeper().SpendableCoins(ctx, addr)
+	balances := sim.BankKeeper().SpendableCoins(ctx, addr)
 	if len(balances) == 0 {
 		panic("precondition for RandExponentialCoin broken: Addr has 0 spendable balance")
 	}
@@ -124,7 +124,7 @@ func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) sdk
 func (sim *SimCtx) RandCoinSubset(ctx sdk.Context, addr sdk.AccAddress, denoms []string) sdk.Coins {
 	subsetCoins := sdk.Coins{}
 	for _, denom := range denoms {
-		bal := sim.App.GetBankKeeper().GetBalance(ctx, addr, denom)
+		bal := sim.BankKeeper().GetBalance(ctx, addr, denom)
 		amt, err := sim.RandPositiveInt(bal.Amount)
 		if err != nil {
 			panic(err)
