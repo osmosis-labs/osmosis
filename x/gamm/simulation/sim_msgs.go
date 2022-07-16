@@ -83,7 +83,7 @@ func RandomCreateUniV2lMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Cont
 	// from the above selected account, determine the token type and respective weight needed to make the pool
 	for i := 0; i < len(poolCoins); i++ {
 		poolAssets = append(poolAssets, balancertypes.PoolAsset{
-			Weight: poolCoins[i].Amount,
+			Weight: sdk.OneInt(),
 			Token:  poolCoins[i],
 		})
 	}
