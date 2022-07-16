@@ -23,7 +23,7 @@ type AppModuleSimulationV2 interface {
 	// TODO: Come back and improve SimulationState interface
 	// TODO: Move this to an extension interface
 	// default: simState.GenState[types.ModuleName] = app.DefaultGenesis(simState.Cdc)
-	GenerateGenesisState(*module.SimulationState, *SimCtx)
+	RandomGenesisState(*module.SimulationState, *SimCtx)
 	Actions() []Action
 	// PropertyTests()
 }
@@ -137,7 +137,7 @@ func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []Action {
 func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *SimCtx) {
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.Modules[moduleName]; ok {
-			simModule.GenerateGenesisState(simState, sim)
+			simModule.RandomGenesisState(simState, sim)
 		}
 		if simModule, ok := m.legacyModules[moduleName]; ok {
 			simModule.GenerateGenesisState(simState)
