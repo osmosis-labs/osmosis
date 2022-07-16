@@ -15,16 +15,7 @@ func RandomMsgCreateDenom(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Conte
 	// select a pseudo-random simulation account
 	sender := sim.RandomSimAccount()
 
-	// select a pseudo-random denom using alpha-numeric characters
-	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
-	// denom can be no greater than 44 characters
-	denomLen := simulation.RandLTBound(sim, 44)
-
-	b := make([]rune, denomLen)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	subdenom := string(b)
+	subdenom := sim.RandStringOfLength(44)
 
 	return &types.MsgCreateDenom{
 		Sender:   sender.Address.String(),
