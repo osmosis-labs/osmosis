@@ -10,7 +10,7 @@ on:
     inputs:
       version:
         description: 'Current Version that we want to change'
-        default: '11'
+        default: '10'
         required: true
       target-branch:
         description: 'Target Branch'
