@@ -1,8 +1,6 @@
 package simulation
 
 import (
-	"math/rand"
-
 	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"

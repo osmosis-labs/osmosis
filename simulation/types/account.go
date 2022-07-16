@@ -112,10 +112,10 @@ func (sim *SimCtx) SelAddrWithDenom(ctx sdk.Context, denom string) (simulation.A
 func (sim *SimCtx) RandomSimAccountWithKDenoms(ctx sdk.Context, k int) (simulation.Account, sdk.Coins, bool) {
 	var coins sdk.Coins
 	accHasBal := func(acc simulation.Account) bool {
-		if len(sim.App.GetBankKeeper().SpendableCoins(ctx, acc.Address)) >= k {
+		if len(sim.BankKeeper().SpendableCoins(ctx, acc.Address)) >= k {
 			return true
 		}
-		coins = sim.App.GetBankKeeper().SpendableCoins(ctx, acc.Address)
+		coins = sim.BankKeeper().SpendableCoins(ctx, acc.Address)
 		return false
 	}
 	acc, found := sim.RandomSimAccountWithConstraint(accHasBal)
