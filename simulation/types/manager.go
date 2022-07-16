@@ -19,11 +19,6 @@ import (
 type AppModuleSimulationV2 interface {
 	module.AppModule
 
-	// randomized genesis states
-	// TODO: Come back and improve SimulationState interface
-	// TODO: Move this to an extension interface
-	// default: simState.GenState[types.ModuleName] = app.DefaultGenesis(simState.Cdc)
-	RandomGenesisState(*module.SimulationState, *SimCtx)
 	Actions() []Action
 	// PropertyTests()
 }
