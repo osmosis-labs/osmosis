@@ -28,7 +28,7 @@ func (suite *UpgradeTestSuite) TestProp214() {
 	_, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 	suite.Require().NoError(err)
 
-	// Commented for recordkeeping. Since SetPool is now private, the changes being tested for can no longer be made:
+	// Kept as comments for recordkeeping. Since SetPool is now private, the changes being tested for can no longer be made:
 	// 		swapFee := pool.GetSwapFee(suite.Ctx)
 	//  	expectedSwapFee := sdk.MustNewDecFromStr("0.002")
 	//
