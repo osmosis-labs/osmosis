@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	sdkcrypto "github.com/cosmos/cosmos-sdk/crypto"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -310,6 +311,7 @@ func (n *internalNode) initValidatorConfigs(c *internalChain, persistentPeers []
 	valConfig.StateSync.Enable = false
 	valConfig.LogLevel = "info"
 	valConfig.P2P.PersistentPeers = strings.Join(persistentPeers, ",")
+	valConfig.Consensus.TimeoutCommit = 5 * time.Millisecond
 
 	tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 	return nil
