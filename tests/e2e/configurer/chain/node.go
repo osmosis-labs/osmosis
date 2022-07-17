@@ -124,7 +124,7 @@ func (n *NodeConfig) WithSetupTime(t time.Time) *NodeConfig {
 }
 
 func (n *NodeConfig) LogActionF(msg string, args ...interface{}) {
-	timeSinceStart := time.Since(n.setupTime)
+	timeSinceStart := time.Since(n.setupTime).Round(time.Millisecond)
 	s := fmt.Sprintf(msg, args...)
 	n.t.Logf("[%s] %s. From container %s", timeSinceStart, s, n.Name)
 }
