@@ -23,11 +23,11 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/app"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
 type KeeperTestHelper struct {

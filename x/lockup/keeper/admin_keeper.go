@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
