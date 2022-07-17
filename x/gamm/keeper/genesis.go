@@ -22,7 +22,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetPool(ctx, pool)
+		err = k.setPool(ctx, pool)
 		if err != nil {
 			panic(err)
 		}

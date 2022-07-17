@@ -54,6 +54,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 // Interfaces.
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
+
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
 }
@@ -62,6 +63,7 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 	return nil
 	// return cli.NewTxCmd()
 }
+
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return nil
 	// return cli.GetQueryCmd()

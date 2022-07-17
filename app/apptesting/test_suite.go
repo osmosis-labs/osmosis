@@ -174,10 +174,6 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
 func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
-	s.App.GAMMKeeper.SetParams(s.Ctx, gammtypes.Params{
-		PoolCreationFee: sdk.Coins{},
-	})
-
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())

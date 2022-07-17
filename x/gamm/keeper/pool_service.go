@@ -160,7 +160,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		Display: poolShareDisplayDenom,
 	})
 
-	if err := k.SetPool(ctx, pool); err != nil {
+	if err := k.setPool(ctx, pool); err != nil {
 		return 0, err
 	}
 

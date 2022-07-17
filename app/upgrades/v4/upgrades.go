@@ -7,7 +7,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v7/app/keepers"
 	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
 // CreateUpgradeHandler returns an x/upgrade handler for the Osmosis v4 on-chain
@@ -22,8 +21,8 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		// configure upgrade for x/gamm module pool creation fee param
-		keepers.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
+		// Commented for recordkeeping. SetParams is now private:
+		// 		keepers.GAMMKeeper.SetParams(ctx, gammtypes.NewParams(sdk.Coins{sdk.NewInt64Coin("uosmo", 1)})) // 1 uOSMO
 
 		Prop12(ctx, keepers.BankKeeper, keepers.DistrKeeper)
 
