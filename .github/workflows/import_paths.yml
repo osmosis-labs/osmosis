@@ -57,21 +57,17 @@ jobs:
       -
         name: Run find & replace script
         run: ./scripts/replace_import_paths.sh ${{ inputs.version }}
-      - name: Commit and push changes
-        uses: devops-infra/action-commit-push@master
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          commit_message: "auto: update Go import paths to v${{ inputs.version }}"
-          target_branch: update-paths
-      - name: Open PR
-        uses: devops-infra/action-pull-request@v0.5.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          title: ${{ github.event.commits[0].message }}
-          source_branch: ${{ inputs.source-branch }}
-          target_branch: ${{ inputs.target-branch }}
-          assignee: ${{ github.actor }}
-          draft: true
-          label: T:auto,T:code-hygiene
+          token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          title: "auto: update Go import paths to v${{ inputs.version }}"
+          commit-message: "auto: update Go import paths to v${{ inputs.version }}"
           body: "**Automated pull request**\n\nUpdating Go import paths to v${{ inputs.version }}"
-          get_diff: true
+          base: ${{ inputs.target-branch }}
+          branch-suffix: random
+          branch: ${{ inputs.source-branch }}
+          delete-branch: true
+          assignees: ${{ github.actor }}
+          draft: true
+          labels: T:auto,T:code-hygiene
