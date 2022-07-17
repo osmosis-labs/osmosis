@@ -118,8 +118,13 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 	return nil
 }
 
+func (n *NodeConfig) WithSetupTime(t time.Time) *NodeConfig {
+	n.setupTime = t
+	return n
+}
+
 func (n *NodeConfig) LogActionF(msg string, args ...interface{}) {
-	timeSinceStart := time.Now().Sub(n.setupTime)
+	timeSinceStart := time.Since(n.setupTime)
 	s := fmt.Sprintf(msg, args...)
 	n.t.Logf("[%s] %s. From container %s", timeSinceStart, s, n.Name)
 }
