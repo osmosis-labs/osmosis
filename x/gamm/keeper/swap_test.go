@@ -95,9 +95,13 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 				suite.NoError(err, "test: %v", test.name)
 
+				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
 				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
 				suite.NoError(err, "test: %v", test.name)
 				suite.True(tokenOutAmount.Equal(test.param.expectedTokenOut), "test: %v", test.name)
+				gasConsumedForSwap := suite.Ctx.GasMeter().GasConsumed() - prevGasConsumed
+				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
+				suite.Assert().Greater(gasConsumedForSwap, uint64(types.BalancerGasFeeForSwap))
 
 				assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, 1)
 
@@ -199,11 +203,15 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
 				suite.NoError(err, "test: %v", test.name)
 
+				prevGasConsumed := suite.Ctx.GasMeter().GasConsumed()
 				tokenInAmount, err := keeper.SwapExactAmountOut(ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
 				suite.NoError(err, "test: %v", test.name)
 				suite.True(tokenInAmount.Equal(test.param.expectedTokenInAmount),
 					"test: %v\n expect_eq actual: %s, expected: %s",
 					test.name, tokenInAmount, test.param.expectedTokenInAmount)
+				gasConsumedForSwap := suite.Ctx.GasMeter().GasConsumed() - prevGasConsumed
+				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
+				suite.Assert().Greater(gasConsumedForSwap, uint64(types.BalancerGasFeeForSwap))
 
 				assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, 1)
 
