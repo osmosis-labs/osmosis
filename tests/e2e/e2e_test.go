@@ -8,16 +8,30 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
 )
 
+func (s *IntegrationTestSuite) TestCreatePoolPostUpgrade() {
+	if s.skipUpgrade {
+		s.T().Skip("pool creation tests are broken when upgrade is skipped. To be fixed in #1843")
+	}
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
+
+	node.CreatePool("pool2A.json", initialization.ValidatorWalletName)
+	node.CreatePool("pool2B.json", initialization.ValidatorWalletName)
+}
+
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
 
-	chainA := s.chainConfigs[0]
-	chainB := s.chainConfigs[1]
-	// compare coins of receiver pre and post IBC send
-	// diff should only be the amount sent
-	s.sendIBC(chainA, chainB, chainB.validators[0].validator.PublicAddress, initialization.OsmoToken)
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
+
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 }
 
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
@@ -27,32 +41,41 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	}
 	const walletName = "superfluid-wallet"
 
-	chainA := s.chainConfigs[0]
-	s.submitSuperfluidProposal(chainA, "gamm/pool/1")
-	s.depositProposal(chainA)
-	s.voteProposal(chainA)
-	walletAddr := s.createWallet(chainA, 0, walletName)
-	// send gamm tokens to validator's other wallet (non self-delegation wallet)
-	s.sendTx(chainA, 0, "100000000000000000000gamm/pool/1", chainA.validators[0].validator.PublicAddress, walletAddr)
-	// lock tokens from validator 0 on chain A
-	s.lockTokens(chainA, 0, "100000000000000000000gamm/pool/1", "240s", walletName)
-	// superfluid delegate from validator 0 non self-delegation wallet to validator 1 on chain A
-	s.superfluidDelegate(chainA, chainA.validators[1].operatorAddress, walletName)
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
+
+	// enable superfluid via proposal.
+	node.SubmitSuperfluidProposal("gamm/pool/1")
+	chain.LatestProposalNumber += 1
+	node.DepositProposal(chain.LatestProposalNumber)
+	for _, node := range chain.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	}
+
+	walletAddr := node.CreateWallet(walletName)
+	// send gamm tokens to node's other wallet (non self-delegation wallet)
+	node.BankSend("100000000000000000000gamm/pool/1", chain.NodeConfigs[0].PublicAddress, walletAddr)
+	// lock tokens from node 0 on chain A
+	node.LockTokens("100000000000000000000gamm/pool/1", "240s", walletName)
+	chain.LatestLockNumber += 1
+	// superfluid delegate from non self-delegation wallet to validator 1 on chain.
+	node.SuperfluidDelegate(chain.LatestLockNumber, chain.NodeConfigs[1].OperatorAddress, walletName)
+
 	// create a text prop, deposit and vote yes
-	s.submitTextProposal(chainA, "superfluid vote overwrite test")
-	s.depositProposal(chainA)
-	s.voteProposal(chainA)
+	node.SubmitTextProposal("superfluid vote overwrite test")
+	chain.LatestProposalNumber += 1
+	node.DepositProposal(chain.LatestProposalNumber)
+	for _, node := range chain.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	}
+
 	// set delegator vote to no
-	s.voteNoProposal(chainA, 0, walletName)
+	node.VoteNoProposal(walletName, chain.LatestProposalNumber)
 
-	hostPort, err := s.containerManager.GetValidatorHostPort(chainA.meta.Id, 0, "1317/tcp")
-	s.Require().NoError(err)
-
-	chainAAPIEndpoint := fmt.Sprintf("http://%s", hostPort)
-	sfProposalNumber := strconv.Itoa(chainA.latestProposalNumber)
-	s.Require().Eventually(
+	s.Eventually(
 		func() bool {
-			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := s.queryPropTally(chainAAPIEndpoint, sfProposalNumber)
+			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := node.QueryPropTally(chain.LatestProposalNumber)
 			if err != nil {
 				return false
 			}
@@ -65,13 +88,13 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 		time.Second,
 		"Osmosis node failed to retrieve prop tally",
 	)
-	noTotal, _, _, _, _ := s.queryPropTally(chainAAPIEndpoint, sfProposalNumber)
+	noTotal, _, _, _, _ := node.QueryPropTally(chain.LatestProposalNumber)
 	noTotalFinal, err := strconv.Atoi(noTotal.String())
-	s.Require().NoError(err)
+	s.NoError(err)
 
-	s.Require().Eventually(
+	s.Eventually(
 		func() bool {
-			intAccountBalance, err := s.queryIntermediaryAccount(chainA, chainAAPIEndpoint, "gamm/pool/1", chainA.validators[1].operatorAddress)
+			intAccountBalance, err := node.QueryIntermediaryAccount("gamm/pool/1", chain.NodeConfigs[1].OperatorAddress)
 			s.Require().NoError(err)
 			if err != nil {
 				return false

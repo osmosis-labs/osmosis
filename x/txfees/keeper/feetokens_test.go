@@ -101,54 +101,55 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 	}
 
 	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			feeTokensBefore := suite.App.TxFeesKeeper.GetFeeTokens(suite.Ctx)
 
-		feeTokensBefore := suite.App.TxFeesKeeper.GetFeeTokens(suite.Ctx)
+			// Add a new whitelisted fee token via a governance proposal
+			err := suite.ExecuteUpgradeFeeTokenProposal(tc.feeToken, tc.poolId)
 
-		// Add a new whitelisted fee token via a governance proposal
-		err := suite.ExecuteUpgradeFeeTokenProposal(tc.feeToken, tc.poolId)
+			feeTokensAfter := suite.App.TxFeesKeeper.GetFeeTokens(suite.Ctx)
 
-		feeTokensAfter := suite.App.TxFeesKeeper.GetFeeTokens(suite.Ctx)
-
-		if tc.expectPass {
-			// Make sure no error during setting of proposal
-			suite.Require().NoError(err, "test: %s", tc.name)
-
-			// For a proposal that adds a feetoken
-			if tc.poolId != 0 {
-				// Make sure the length of fee tokens is >= before
-				suite.Require().GreaterOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
-				// Ensure that the fee token is convertable to base token
-				_, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, sdk.NewInt64Coin(tc.feeToken, 10))
+			if tc.expectPass {
+				// Make sure no error during setting of proposal
 				suite.Require().NoError(err, "test: %s", tc.name)
-				// make sure the queried poolId is the same as expected
-				queriedPoolId, err := suite.queryClient.DenomPoolId(suite.Ctx.Context(),
-					&types.QueryDenomPoolIdRequest{
-						Denom: tc.feeToken,
-					},
-				)
-				suite.Require().NoError(err, "test: %s", tc.name)
-				suite.Require().Equal(tc.poolId, queriedPoolId.GetPoolID(), "test: %s", tc.name)
+
+				// For a proposal that adds a feetoken
+				if tc.poolId != 0 {
+					// Make sure the length of fee tokens is >= before
+					suite.Require().GreaterOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
+					// Ensure that the fee token is convertable to base token
+					_, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, sdk.NewInt64Coin(tc.feeToken, 10))
+					suite.Require().NoError(err, "test: %s", tc.name)
+					// make sure the queried poolId is the same as expected
+					queriedPoolId, err := suite.queryClient.DenomPoolId(suite.Ctx.Context(),
+						&types.QueryDenomPoolIdRequest{
+							Denom: tc.feeToken,
+						},
+					)
+					suite.Require().NoError(err, "test: %s", tc.name)
+					suite.Require().Equal(tc.poolId, queriedPoolId.GetPoolID(), "test: %s", tc.name)
+				} else {
+					// if this proposal deleted a fee token
+					// ensure that the length of fee tokens is <= to before
+					suite.Require().LessOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
+					// Ensure that the fee token is not convertable to base token
+					_, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, sdk.NewInt64Coin(tc.feeToken, 10))
+					suite.Require().Error(err, "test: %s", tc.name)
+					// make sure the queried poolId errors
+					_, err = suite.queryClient.DenomPoolId(suite.Ctx.Context(),
+						&types.QueryDenomPoolIdRequest{
+							Denom: tc.feeToken,
+						},
+					)
+					suite.Require().Error(err, "test: %s", tc.name)
+				}
 			} else {
-				// if this proposal deleted a fee token
-				// ensure that the length of fee tokens is <= to before
-				suite.Require().LessOrEqual(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
-				// Ensure that the fee token is not convertable to base token
-				_, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, sdk.NewInt64Coin(tc.feeToken, 10))
+				// Make sure errors during setting of proposal
 				suite.Require().Error(err, "test: %s", tc.name)
-				// make sure the queried poolId errors
-				_, err = suite.queryClient.DenomPoolId(suite.Ctx.Context(),
-					&types.QueryDenomPoolIdRequest{
-						Denom: tc.feeToken,
-					},
-				)
-				suite.Require().Error(err, "test: %s", tc.name)
+				// fee tokens should be the same
+				suite.Require().Equal(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
 			}
-		} else {
-			// Make sure errors during setting of proposal
-			suite.Require().Error(err, "test: %s", tc.name)
-			// fee tokens should be the same
-			suite.Require().Equal(len(feeTokensAfter), len(feeTokensBefore), "test: %s", tc.name)
-		}
+		})
 	}
 }
 
@@ -203,19 +204,21 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 	for _, tc := range tests {
 		suite.SetupTest(false)
 
-		poolId := suite.PrepareUni2PoolWithAssets(
-			tc.baseDenomPoolInput,
-			tc.feeTokenPoolInput,
-		)
+		suite.Run(tc.name, func() {
+			poolId := suite.PrepareUni2PoolWithAssets(
+				tc.baseDenomPoolInput,
+				tc.feeTokenPoolInput,
+			)
 
-		suite.ExecuteUpgradeFeeTokenProposal(tc.feeTokenPoolInput.Denom, poolId)
+			suite.ExecuteUpgradeFeeTokenProposal(tc.feeTokenPoolInput.Denom, poolId)
 
-		converted, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, tc.inputFee)
-		if tc.expectedConvertable {
-			suite.Require().NoError(err, "test: %s", tc.name)
-			suite.Require().True(converted.IsEqual(tc.expectedOutput), "test: %s", tc.name)
-		} else {
-			suite.Require().Error(err, "test: %s", tc.name)
-		}
+			converted, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, tc.inputFee)
+			if tc.expectedConvertable {
+				suite.Require().NoError(err, "test: %s", tc.name)
+				suite.Require().True(converted.IsEqual(tc.expectedOutput), "test: %s", tc.name)
+			} else {
+				suite.Require().Error(err, "test: %s", tc.name)
+			}
+		})
 	}
 }

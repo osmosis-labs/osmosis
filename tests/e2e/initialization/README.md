@@ -63,7 +63,7 @@ Additionally, it takes the following arguments:
   - The configurable voting period duration for the chain
 
 ```go
-    tmpDir, _ := ioutil.TempDir("", "osmosis-e2e-testnet-")
+    tmpDir, _ := os.MkdirTemp("", "osmosis-e2e-testnet-")
 
  initResource, _ = s.dkrPool.RunWithOptions(
   &dockertest.RunOptions{

@@ -24,11 +24,93 @@ core bootstrapping logic that creates a testing environment via Docker
 containers. A testing network is created dynamically with 2 test
 validators.
 
-The file e2e\_test.go contains the actual end-to-end integration tests
+The file `e2e_test.go` contains the actual end-to-end integration tests
 that utilize the testing suite.
 
-Currently, there is a single test in `e2e_test.go` to query the balances
-of a validator.
+Currently, there is a single IBC test in `e2e_test.go`.
+
+Additionally, there is an ability to disable certain components
+of the e2e suite. This can be done by setting the environment
+variables. See "Environment variables" section below for more details.
+
+## How It Works
+
+Conceptually, we can split the e2e setup into 2 parts:
+
+1. Chain Initialization
+
+    The chain can either be initailized off of the current branch, or off the prior mainnet release and then upgraded to the current branch.
+
+    If current, we run chain initialization off of the current Git branch
+    by calling `chain.Init(...)` method in the `configurer/current.go`.
+
+    If with the upgrade, the same `chain.Init(...)` function is run inside a Docker container
+    of the previous Osmosis version, inside `configurer/upgrade.go`. This is
+    needed to initialize chain configs and the genesis of the previous version that
+    we are upgrading from.
+
+    The decision of what configuration type to use is decided by the `Configurer`.
+    This is an interface that has `CurrentBranchConfigurer` and `UpgradeConfigurer` implementations.
+    There is also a `BaseConfigurer` which is shared by the concrete implementations. However,
+    the user of the `configurer` package does not need to know about this detail.
+
+    When the desired configurer is created, the caller may
+    configure the chain in the desired way as follows:
+
+    ```go
+    conf, _ := configurer.New(..., < isIBCEnabled bool >, < isUpgradeEnabled bool >)
+
+    conf.ConfigureChains()
+    ```
+
+    The caller (e2e setup logic), does not need to be concerned about what type of
+    configurations is hapenning in the background. The appropriate logic is selected
+    depending on what the values of the arguments to `configurer.New(...)` are.
+
+    The configurer constructor is using a factory design pattern
+    to decide on what kind of configurer to return. Factory design
+    pattern is used to decouple the client from the initialization
+    details of the configurer. More on this can be found
+    [here](https://www.tutorialspoint.com/design_pattern/factory_pattern.htm)
+
+    The rules for deciding on the configurer type 
+    are as follows:
+    
+    - If only `isIBCEnabled`, we want to have 2 chains initialized at the
+    current branch version of Osmosis codebase
+
+    - If only `isUpgradeEnabled`, that's invalid (we can decouple upgrade
+     testing from IBC in a future PR)
+
+    - If both `isIBCEnabled` and `isUpgradeEnabled`, we want 2 chain
+    with IBC initialized at the previous Osmosis version
+
+    - If none are true, we only need one chain at the current branch version
+    of the Osmosis code
+
+2. Setting up e2e components
+
+    Currently, there exist the following components:
+
+    - Base logic
+        - This is the most basic type of setup where a single chain is created
+        - It simply spins up the desired number of validators on a chain.
+    - IBC testing
+        - 2 chains are created connected by Hermes relayer
+        - Upgrade Testing
+        - 2 chains of the older Osmosis version are created, and
+        connected by Hermes relayer
+    - Upgrade testing
+        - CLI commands are run to create an upgrade proposal and approve it
+        - Old version containers are stopped and the upgrade binary is added
+        - Current branch Osmosis version is spun up to continue with testing
+    - State Sync Testing (WIP)
+        - An additional full node is created after a chain has started.
+        - This node is meant to state sync with the rest of the system.
+
+    This is done in `configurer/setup_runner.go` via function decorator design pattern
+    where we chain the desired setup components during configurer creation.
+    [Example](https://github.com/osmosis-labs/osmosis/blob/c5d5c9f0c6b5c7fdf9688057eb78ec793f6dd580/tests/e2e/configurer/configurer.go#L166)
 
 ## `initialization` Package
 
@@ -56,7 +138,7 @@ Docker containers. Currently, validator containers are created
 with a name of the corresponding validator struct that is initialized
 in the `chain` package.
 
-## Running Locally
+## Running From Current Branch
 
 ### To build chain initialization image
 
