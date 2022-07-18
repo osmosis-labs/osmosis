@@ -44,7 +44,7 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, chainId string, 
 // The node configuration must be already added to the chain config prior to calling this
 // method.
 func (n *NodeConfig) Run() error {
-	n.t.Logf("starting %s validator container: %s", n.chainId, n.Name)
+	n.t.Logf("starting node container: %s", n.Name)
 	resource, err := n.containerManager.RunNodeResource(n.chainId, n.Name, n.ConfigDir)
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (n *NodeConfig) Run() error {
 				return false
 			}
 
-			n.t.Logf("started %s node container: %s", resource.Container.Name[1:], resource.Container.ID)
+			n.t.Logf("started node container: %s", n.Name)
 			return true
 		},
 		5*time.Minute,
@@ -77,6 +77,16 @@ func (n *NodeConfig) Run() error {
 		return err
 	}
 
+	return nil
+}
+
+// Stop stops the node from running and removes its container.
+func (n *NodeConfig) Stop() error {
+	n.t.Logf("stopping node container: %s", n.Name)
+	if err := n.containerManager.RemoveNodeResource(n.Name); err != nil {
+		return err
+	}
+	n.t.Logf("stopped node container: %s", n.Name)
 	return nil
 }
 

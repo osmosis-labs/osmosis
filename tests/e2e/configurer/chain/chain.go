@@ -50,8 +50,8 @@ func New(t *testing.T, containerManager *containers.Manager, id string, initVali
 	}
 }
 
-// CreateNodeConfig returns new initialized NodeConfig.
-func (c *Config) CreateNodeConfig(initNode *initialization.Node) *NodeConfig {
+// CreateNode returns new initialized NodeConfig.
+func (c *Config) CreateNode(initNode *initialization.Node) *NodeConfig {
 	nodeConfig := &NodeConfig{
 		Node:             *initNode,
 		chainId:          c.Id,
@@ -60,6 +60,18 @@ func (c *Config) CreateNodeConfig(initNode *initialization.Node) *NodeConfig {
 	}
 	c.NodeConfigs = append(c.NodeConfigs, nodeConfig)
 	return nodeConfig
+}
+
+// RemoveNode removes the node from chain and stops it from running.
+func (c *Config) RemoveNode(nodeName string) error {
+	for i, node := range c.NodeConfigs {
+		if node.Name == nodeName {
+			c.NodeConfigs = append(c.NodeConfigs[:i], c.NodeConfigs[i+1:]...)
+			node.Stop()
+			return nil
+		}
+	}
+	return fmt.Errorf("node %s not found", nodeName)
 }
 
 // WaitUntilHeight waits for all validators to reach the specified height at the minimum.

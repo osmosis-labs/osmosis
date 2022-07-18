@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -144,9 +145,12 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		SnapshotKeepRecent: 2,
 	}
 
+	tempDir, err := os.MkdirTemp("", "osmosis-e2e-statesync-")
+	s.Require().NoError(err)
+
 	nodeInit, err := initialization.InitSingleNode(
 		chain.Id,
-		chain.DataDir,
+		tempDir,
 		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
 		stateSynchingNodeConfig,
 		time.Duration(chain.VotingPeriod),
@@ -157,7 +161,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	)
 	s.Require().NoError(err)
 
-	stateSynchingNode := chain.CreateNodeConfig(nodeInit)
+	stateSynchingNode := chain.CreateNode(nodeInit)
 
 	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
 		const snapshotHeight = 25
@@ -200,4 +204,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		3*time.Minute,
 		2*time.Second,
 	)
+
+	err = chain.RemoveNode(stateSynchingNode.Name)
+	s.NoError(err)
 }

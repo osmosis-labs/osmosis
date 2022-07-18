@@ -101,7 +101,7 @@ func (n *internalNode) buildCreateValidatorMsg(amount sdk.Coin) (sdk.Msg, error)
 
 func (n *internalNode) createConfig() error {
 	p := path.Join(n.configDir(), "config")
-	return os.MkdirAll(p, 0o777)
+	return os.MkdirAll(p, 0o755)
 }
 
 func (n *internalNode) createAppConfig(nodeConfig *NodeConfig) {
