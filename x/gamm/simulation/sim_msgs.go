@@ -1,14 +1,18 @@
 package gammsimulation
 
 import (
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
 	balancertypes "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
@@ -96,7 +100,7 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 		return &gammtypes.MsgExitPool{}, err
 	}
 	// select an address that has gamm shares of the selected pool
-	gammDenom := fmt.Sprintf("gamm/pool/%v", pool_id)
+	gammDenom := types.GetPoolShareDenom(pool_id)
 	sender, gammShares, senderExists := sim.SelAddrWithDenom(ctx, gammDenom)
 	if !senderExists {
 		return &gammtypes.MsgExitPool{}, fmt.Errorf("no sender with denom %s exists", gammDenom)
@@ -116,22 +120,19 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 func RandomCreateUniV2Msg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
 	var poolAssets []balancertypes.PoolAsset
 	// find an address with two or more distinct denoms in their wallet
-	sender, senderExists := sim.RandomSimAccountWithKDenoms(ctx, 2)
+	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
 	if !senderExists {
-		return &balancertypes.MsgCreateBalancerPool{}, fmt.Errorf("no sender with two different denoms exists")
+		return &balancertypes.MsgCreateBalancerPool{}, errors.New("no sender with two different denoms & pool creation fee exists")
 	}
-	senderStake := sim.BankKeeper().GetBalance(ctx, sender.Address, "stake")
-	if senderStake.Amount.LT(PoolCreationFee.Amount) {
-		return &balancertypes.MsgCreateBalancerPool{}, fmt.Errorf("sender does not enough for pool creation fee")
+	poolCoins, _ := sim.GetRandSubsetOfKDenoms(ctx, sender, 2)
+	if poolCoins.Add(PoolCreationFee).IsAnyGT(sim.BankKeeper().SpendableCoins(ctx, sender.Address)) {
+		return &balancertypes.MsgCreateBalancerPool{}, errors.New("chose an account / creation amount that didn't pass fee bar")
 	}
-	poolCoins, denomsExist := sim.GetRandSubsetOfKDenoms(ctx, sender, 2)
-	if !denomsExist {
-		return &balancertypes.MsgCreateBalancerPool{}, fmt.Errorf("provided sender %s does not posses two unique denoms %s", sender.Address.String(), poolCoins.String())
-	}
+
 	// TODO: pseudo-randomly generate swap and exit fees
 	poolParams := &balancertypes.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}
 
 	// from the above selected account, determine the token type and respective weight needed to make the pool
@@ -146,4 +147,13 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Conte
 		PoolParams: poolParams,
 		PoolAssets: poolAssets,
 	}, nil
+}
+
+func createPoolRestriction(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) simulation.SimAccountConstraint {
+	return func(acc legacysimulationtype.Account) bool {
+		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
+		hasTwoCoins := len(accCoins) >= 2
+		hasPoolCreationFee := accCoins.AmountOf("stake").GT(PoolCreationFee.Amount)
+		return hasTwoCoins && hasPoolCreationFee
+	}
 }
