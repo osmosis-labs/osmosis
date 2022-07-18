@@ -20,7 +20,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	gammsimulation "github.com/osmosis-labs/osmosis/v10/x/gamm/simulation"
+	simulation "github.com/osmosis-labs/osmosis/v10/x/gamm/simulation"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
@@ -161,7 +161,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
-		simtypes.NewMsgBasedAction("MsgJoinPool", gammsimulation.CurrySimMsgJoinPool(am.keeper)),
-		simtypes.NewCurriedMsgBasedAction("Msg create univ2 pool", am.keeper, gammsimulation.RandomCreateUniv2PoolMsg),
+		simtypes.NewMsgBasedAction("MsgJoinPool", simulation.CurrySimMsgJoinPool(am.keeper)),
+		simtypes.NewCurriedMsgBasedAction("Msg create univ2 pool", am.keeper, simulation.RandomCreateUniv2PoolMsg),
 	}
 }
