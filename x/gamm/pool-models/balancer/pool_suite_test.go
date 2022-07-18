@@ -695,6 +695,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			expectShares: sdk.NewInt(100_000_000),
 		},
 	}
+	testCases = append(testCases, calcSingleAssetJoinTestCases...)
 
 	for _, tc := range testCases {
 		tc := tc
