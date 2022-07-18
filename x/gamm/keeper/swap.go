@@ -114,6 +114,7 @@ func (k Keeper) swapExactAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
 			"can't get more tokens out than there are tokens in the pool")
 	}
+
 	tokenIn, err := pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
