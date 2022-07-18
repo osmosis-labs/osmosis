@@ -127,14 +127,14 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	persistenrPeers := chain.GetPersistentPeers()
 
 	stateSyncHostPort := fmt.Sprintf("%s:26657", runningNode.Name)
+	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
 
+	// get trust height and trust hash.
 	trustHeight, err := runningNode.QueryCurrentHeight()
 	s.Require().NoError(err)
 
 	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
 	s.Require().NoError(err)
-
-	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
 
 	stateSynchingNodeConfig := &initialization.NodeConfig{
 		Name:               "state-sync",
@@ -148,6 +148,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	tempDir, err := os.MkdirTemp("", "osmosis-e2e-statesync-")
 	s.Require().NoError(err)
 
+	// configure genesis and config files for the state-synchin node.
 	nodeInit, err := initialization.InitSingleNode(
 		chain.Id,
 		tempDir,
@@ -163,6 +164,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	stateSynchingNode := chain.CreateNode(nodeInit)
 
+	// ensure that the running node has snapshots at a height > trustHeight.
 	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
 		const snapshotHeight = 25
 		if syncInfo.LatestBlockHeight < snapshotHeight {
@@ -184,27 +186,27 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		s.T().Log("state sync snashot after trust height is not found")
 		return foundAvailableSnapshot
 	}
-
 	runningNode.WaitUntil(hasSnapshotsAvailable)
 
-	// State sync starts here
+	// start the state synchin node.
 	err = stateSynchingNode.Run()
 	s.NoError(err)
 
+	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
-
-		syncHeight, err := stateSynchingNode.QueryCurrentHeight()
+		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
 		s.NoError(err)
 
-		runningHeight, err := runningNode.QueryCurrentHeight()
+		runningNodeHeight, err := runningNode.QueryCurrentHeight()
 		s.NoError(err)
 
-		return syncHeight == runningHeight
+		return stateSyncNodeHeight == runningNodeHeight
 	},
 		3*time.Minute,
-		2*time.Second,
+		500*time.Millisecond,
 	)
 
+	// stop the state synchin node.
 	err = chain.RemoveNode(stateSynchingNode.Name)
 	s.NoError(err)
 }
