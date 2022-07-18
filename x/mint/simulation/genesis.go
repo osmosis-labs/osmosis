@@ -3,8 +3,6 @@ package simulation
 // DONTCOVER
 
 import (
-	"encoding/json"
-	"fmt"
 	"math/rand"
 
 	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
@@ -140,11 +138,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	mintGenesis := types.NewGenesisState(minter, params, reductionStartedEpoch)
 
-	bz, err := json.MarshalIndent(&mintGenesis, "", " ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Selected pseudo-randomly generated minting parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(mintGenesis)
 }
 

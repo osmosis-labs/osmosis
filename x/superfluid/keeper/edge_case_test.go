@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
@@ -49,7 +50,7 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
 			for _, del := range tc.superDelegations {
 				valAddr := valAddrs[del.valIndex]
 				delAddr := delAddrs[del.delIndex]
-				lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
+				lock := suite.setupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
 
 				// save accounts and locks for future use
 				locks = append(locks, lock)
@@ -125,8 +126,6 @@ func (suite *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 		tc := tc
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			// Generate delegator addresses
-			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
 
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
@@ -134,8 +133,7 @@ func (suite *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
-			_, _, _ = delAddrs, valAddrs, denoms
-			_, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
+			_, _, locks := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
 
 			for _, lock := range locks {
 				err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, sdk.Coins{})

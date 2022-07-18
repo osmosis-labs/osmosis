@@ -3,7 +3,6 @@ package v9_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
@@ -26,11 +25,12 @@ func (suite *UpgradeTestSuite) TestProp214() {
 	poolId := suite.PrepareBalancerPool()
 	v9.ExecuteProp214(suite.Ctx, suite.App.GAMMKeeper)
 
-	pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+	_, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 	suite.Require().NoError(err)
 
-	swapFee := pool.GetSwapFee(suite.Ctx)
-	expectedSwapFee := sdk.MustNewDecFromStr("0.002")
-
-	suite.Require().Equal(expectedSwapFee, swapFee)
+	// Kept as comments for recordkeeping. Since SetPool is now private, the changes being tested for can no longer be made:
+	// 		swapFee := pool.GetSwapFee(suite.Ctx)
+	//  	expectedSwapFee := sdk.MustNewDecFromStr("0.002")
+	//
+	//  	suite.Require().Equal(expectedSwapFee, swapFee)
 }

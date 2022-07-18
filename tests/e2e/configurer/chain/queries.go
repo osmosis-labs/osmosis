@@ -1,13 +1,11 @@
 package chain
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,27 +18,23 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 )
 
-func (c *Config) QueryRPC(path string) ([]byte, error) {
-	var err error
+func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
+	// add the URL for the given validator ID, and pre-pend to to path.
+	hostPort, err := n.containerManager.GetHostPort(n.Name, "1317/tcp")
+	require.NoError(n.t, err)
+	endpoint := fmt.Sprintf("http://%s", hostPort)
+	fullQueryPath := fmt.Sprintf("%s/%s", endpoint, path)
+
 	var resp *http.Response
-	retriesLeft := 5
-	for {
-		resp, err = http.Get(path)
-
-		if resp.StatusCode == http.StatusServiceUnavailable {
-			retriesLeft--
-			if retriesLeft == 0 {
-				return nil, err
-			}
-			time.Sleep(10 * time.Second)
-		} else {
-			break
+	require.Eventually(n.t, func() bool {
+		resp, err = http.Get(fullQueryPath)
+		if err != nil {
+			n.t.Logf("error while executing HTTP request: %s", err.Error())
+			return false
 		}
-	}
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
-	}
+		return resp.StatusCode != http.StatusServiceUnavailable
+	}, time.Minute, time.Millisecond*10, "failed to execute HTTP request")
 
 	defer resp.Body.Close()
 
@@ -51,55 +45,23 @@ func (c *Config) QueryRPC(path string) ([]byte, error) {
 	return bz, nil
 }
 
-func (c *Config) QueryChainStatus(validatorIdx int) []byte {
-	cmd := []string{"osmosisd", "status"}
-	_, errBuf, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIdx, cmd, "NodeInfo")
-	require.NoError(c.t, err)
-	return errBuf.Bytes()
-}
-
-func (c *Config) QueryCurrentChainHeightFromValidator(validatorIdx int) int {
-	var block syncInfo
-	require.Eventually(
-		c.t,
-		func() bool {
-			out := c.QueryChainStatus(validatorIdx)
-			err := json.Unmarshal(out, &block)
-			return err == nil
-		},
-		1*time.Minute,
-		time.Second,
-		"Osmosis node failed to retrieve height info",
-	)
-	currentHeight, err := strconv.Atoi(block.SyncInfo.LatestHeight)
-	require.NoError(c.t, err)
-	return currentHeight
-}
-
-func (c *Config) QueryBalances(validatorIndex int, addr string) (sdk.Coins, error) {
-	cmd := []string{"osmosisd", "query", "bank", "balances", addr, "--output=json"}
-	outBuf, _, err := c.containerManager.ExecCmd(c.t, c.Id, validatorIndex, cmd, "balances")
-	require.NoError(c.t, err)
+// QueryBalancer returns balances at the address.
+func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
+	path := fmt.Sprintf("cosmos/bank/v1beta1/balances/%s", address)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
 
 	var balancesResp banktypes.QueryAllBalancesResponse
-	err = util.Cdc.UnmarshalJSON(outBuf.Bytes(), &balancesResp)
-	require.NoError(c.t, err)
-
+	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
+		return sdk.Coins{}, err
+	}
 	return balancesResp.GetBalances(), nil
 }
 
-func (c *Config) QueryPropTally(validatorIdx int, addr string) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
-	hostPort, err := c.containerManager.GetValidatorHostPort(c.Id, validatorIdx, "1317/tcp")
-	require.NoError(c.t, err)
-
-	endpoint := fmt.Sprintf("http://%s", hostPort)
-
-	path := fmt.Sprintf(
-		"%s/cosmos/gov/v1beta1/proposals/%s/tally",
-		endpoint, addr,
-	)
-	bz, err := c.QueryRPC(path)
-	require.NoError(c.t, err)
+func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
+	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%d/tally", proposalNumber)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
 
 	var balancesResp govtypes.QueryTallyResultResponse
 	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
@@ -113,38 +75,40 @@ func (c *Config) QueryPropTally(validatorIdx int, addr string) (sdk.Int, sdk.Int
 	return noTotal, yesTotal, noWithVetoTotal, abstainTotal, nil
 }
 
-func (c *Config) QueryValidatorOperatorAddresses() {
-	for i, val := range c.NodeConfigs {
-		cmd := []string{"osmosisd", "debug", "addr", val.PublicKey}
-		c.t.Logf("extracting validator operator addresses for chain-id: %s", c.Id)
-		_, errBuf, err := c.containerManager.ExecCmd(c.t, c.Id, i, cmd, "")
-		require.NoError(c.t, err)
-		re := regexp.MustCompile("osmovaloper(.{39})")
-		operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
-		c.NodeConfigs[i].OperatorAddress = strings.TrimSuffix(operAddr, "\n")
-	}
-}
-
-func (c *Config) QueryIntermediaryAccount(validatorIdx int, denom string, valAddr string) (int, error) {
-	hostPort, err := c.containerManager.GetValidatorHostPort(c.Id, validatorIdx, "1317/tcp")
-	require.NoError(c.t, err)
-
-	endpoint := fmt.Sprintf("http://%s", hostPort)
-
+func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (int, error) {
 	intAccount := superfluidtypes.GetSuperfluidIntermediaryAccountAddr(denom, valAddr)
 	path := fmt.Sprintf(
-		"%s/cosmos/staking/v1beta1/validators/%s/delegations/%s",
-		endpoint, valAddr, intAccount,
+		"cosmos/staking/v1beta1/validators/%s/delegations/%s",
+		valAddr, intAccount,
 	)
-	bz, err := c.QueryRPC(path)
-	require.NoError(c.t, err)
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
 
 	var stakingResp stakingtypes.QueryDelegationResponse
 	err = util.Cdc.UnmarshalJSON(bz, &stakingResp)
-	require.NoError(c.t, err)
+	require.NoError(n.t, err)
 
 	intAccBalance := stakingResp.DelegationResponse.Balance.Amount.String()
 	intAccountBalance, err := strconv.Atoi(intAccBalance)
-	require.NoError(c.t, err)
+	require.NoError(n.t, err)
 	return intAccountBalance, err
+}
+
+// QueryHashFromBlock gets block hash at a specific height. Otherwise, error.
+func (n *NodeConfig) QueryHashFromBlock(height int64) (string, error) {
+	block, err := n.rpcClient.Block(context.Background(), &height)
+	if err != nil {
+		return "", err
+	}
+	return block.BlockID.Hash.String(), nil
+}
+
+// QueryCurrentHeight returns the current block height of the node or error.
+func (n *NodeConfig) QueryCurrentHeight() (int64, error) {
+	status, err := n.rpcClient.Status(context.Background())
+	if err != nil {
+		return 0, err
+	}
+	return status.SyncInfo.LatestBlockHeight, nil
 }

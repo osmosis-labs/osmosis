@@ -62,8 +62,8 @@ func (bc *baseConfigurer) RunValidators() error {
 
 func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 	bc.t.Logf("starting %s validator containers...", chainConfig.Id)
-	for valIndex := range chainConfig.NodeConfigs {
-		if err := chainConfig.RunNode(valIndex); err != nil {
+	for _, node := range chainConfig.NodeConfigs {
+		if err := node.Run(); err != nil {
 			return err
 		}
 	}
@@ -104,10 +104,16 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		return err
 	}
 
+	relayerNodeA := chainConfigA.NodeConfigs[0]
+	relayerNodeB := chainConfigB.NodeConfigs[0]
+
 	hermesResource, err := bc.containerManager.RunHermesResource(
 		chainConfigA.Id,
-		chainConfigA.NodeConfigs[0].Mnemonic,
-		chainConfigB.Id, chainConfigB.NodeConfigs[0].Mnemonic,
+		relayerNodeA.Name,
+		relayerNodeA.Mnemonic,
+		chainConfigB.Id,
+		relayerNodeB.Name,
+		relayerNodeB.Mnemonic,
 		hermesCfgPath)
 	if err != nil {
 		return err
@@ -147,7 +153,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		time.Second,
 		"hermes relayer not healthy")
 
-	bc.t.Logf("started Hermes relayer container: %s", bc.containerManager.GetHermesContainerID())
+	bc.t.Logf("started Hermes relayer container: %s", hermesResource.Container.ID)
 
 	// XXX: Give time to both networks to start, otherwise we might see gRPC
 	// transport errors.
@@ -160,7 +166,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config) error {
 	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.Id, chainB.ChainMeta.Id)
 	cmd := []string{"hermes", "create", "channel", chainA.ChainMeta.Id, chainB.ChainMeta.Id, "--port-a=transfer", "--port-b=transfer"}
-	_, _, err := bc.containerManager.ExecCmd(bc.t, "", 0, cmd, "successfully opened init channel")
+	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, "successfully opened init channel")
 	if err != nil {
 		return err
 	}
@@ -171,9 +177,9 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.C
 func (bc *baseConfigurer) initializeChainConfigFromInitChain(initializedChain *initialization.Chain, chainConfig *chain.Config) {
 	chainConfig.ChainMeta = initializedChain.ChainMeta
 	chainConfig.NodeConfigs = make([]*chain.NodeConfig, 0, len(initializedChain.Nodes))
+	setupTime := time.Now()
 	for _, validator := range initializedChain.Nodes {
-		chainConfig.NodeConfigs = append(chainConfig.NodeConfigs, &chain.NodeConfig{
-			Node: *validator,
-		})
+		conf := chain.NewNodeConfig(bc.t, validator, chainConfig.Id, bc.containerManager).WithSetupTime(setupTime)
+		chainConfig.NodeConfigs = append(chainConfig.NodeConfigs, conf)
 	}
 }

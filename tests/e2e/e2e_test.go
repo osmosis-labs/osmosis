@@ -12,10 +12,12 @@ func (s *IntegrationTestSuite) TestCreatePoolPostUpgrade() {
 	if s.skipUpgrade {
 		s.T().Skip("pool creation tests are broken when upgrade is skipped. To be fixed in #1843")
 	}
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
 
-	chainA := s.configurer.GetChainConfig(0)
-	chainA.CreatePool("pool2A.json", initialization.ValidatorWalletName)
-	chainA.CreatePool("pool2B.json", initialization.ValidatorWalletName)
+	node.CreatePool("pool2A.json", initialization.ValidatorWalletName)
+	node.CreatePool("pool2B.json", initialization.ValidatorWalletName)
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
@@ -39,30 +41,41 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	}
 	const walletName = "superfluid-wallet"
 
-	chainA := s.configurer.GetChainConfig(0)
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
 
-	chainA.SubmitSuperfluidProposal("gamm/pool/1")
+	// enable superfluid via proposal.
+	node.SubmitSuperfluidProposal("gamm/pool/1")
+	chain.LatestProposalNumber += 1
+	node.DepositProposal(chain.LatestProposalNumber)
+	for _, node := range chain.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	}
 
-	chainA.DepositProposal()
-	chainA.VoteYesProposal()
-	walletAddr := chainA.CreateWallet(0, walletName)
-	// send gamm tokens to validator's other wallet (non self-delegation wallet)
-	chainA.BankSend(0, "100000000000000000000gamm/pool/1", chainA.NodeConfigs[0].PublicAddress, walletAddr)
-	// lock tokens from validator 0 on chain A
-	chainA.LockTokens(0, "100000000000000000000gamm/pool/1", "240s", walletName)
-	// superfluid delegate from validator 0 non self-delegation wallet to validator 1 on chain A
-	chainA.SuperfluidDelegate(chainA.NodeConfigs[1].OperatorAddress, walletName)
+	walletAddr := node.CreateWallet(walletName)
+	// send gamm tokens to node's other wallet (non self-delegation wallet)
+	node.BankSend("100000000000000000000gamm/pool/1", chain.NodeConfigs[0].PublicAddress, walletAddr)
+	// lock tokens from node 0 on chain A
+	node.LockTokens("100000000000000000000gamm/pool/1", "240s", walletName)
+	chain.LatestLockNumber += 1
+	// superfluid delegate from non self-delegation wallet to validator 1 on chain.
+	node.SuperfluidDelegate(chain.LatestLockNumber, chain.NodeConfigs[1].OperatorAddress, walletName)
+
 	// create a text prop, deposit and vote yes
-	chainA.SubmitTextProposal("superfluid vote overwrite test")
-	chainA.DepositProposal()
-	chainA.VoteYesProposal()
-	// set delegator vote to no
-	chainA.VoteNoProposal(0, walletName)
+	node.SubmitTextProposal("superfluid vote overwrite test")
+	chain.LatestProposalNumber += 1
+	node.DepositProposal(chain.LatestProposalNumber)
+	for _, node := range chain.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	}
 
-	sfProposalNumber := strconv.Itoa(chainA.LatestProposalNumber)
+	// set delegator vote to no
+	node.VoteNoProposal(walletName, chain.LatestProposalNumber)
+
 	s.Eventually(
 		func() bool {
-			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainA.QueryPropTally(0, sfProposalNumber)
+			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := node.QueryPropTally(chain.LatestProposalNumber)
 			if err != nil {
 				return false
 			}
@@ -72,16 +85,16 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 			return true
 		},
 		1*time.Minute,
-		time.Second,
+		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
-	noTotal, _, _, _, _ := chainA.QueryPropTally(0, sfProposalNumber)
+	noTotal, _, _, _, _ := node.QueryPropTally(chain.LatestProposalNumber)
 	noTotalFinal, err := strconv.Atoi(noTotal.String())
 	s.NoError(err)
 
 	s.Eventually(
 		func() bool {
-			intAccountBalance, err := chainA.QueryIntermediaryAccount(0, "gamm/pool/1", chainA.NodeConfigs[1].OperatorAddress)
+			intAccountBalance, err := node.QueryIntermediaryAccount("gamm/pool/1", chain.NodeConfigs[1].OperatorAddress)
 			s.Require().NoError(err)
 			if err != nil {
 				return false
@@ -93,7 +106,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 			return true
 		},
 		1*time.Minute,
-		time.Second,
+		10*time.Millisecond,
 		"superfluid delegation vote overwrite not working as expected",
 	)
 }
