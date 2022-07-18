@@ -81,7 +81,7 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.PoolI, err error) 
 	return res, nil
 }
 
-func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
+func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	bz, err := k.MarshalPool(pool)
 	if err != nil {
 		return err
@@ -255,7 +255,7 @@ func (k *Keeper) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []u
 
 	stableswapPool.ScalingFactor = scalingFactors
 
-	if err = k.SetPool(ctx, stableswapPool); err != nil {
+	if err = k.setPool(ctx, stableswapPool); err != nil {
 		return err
 	}
 	return nil

@@ -18,7 +18,7 @@ func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool types.PoolI, join
 		return err
 	}
 
-	err = k.SetPool(ctx, pool)
+	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (k Keeper) applyExitPoolStateChange(ctx sdk.Context, pool types.PoolI, exit
 		return err
 	}
 
-	err = k.SetPool(ctx, pool)
+	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err
 	}
