@@ -516,7 +516,6 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 	const (
 		invalidAddress = "invalid"
-		emptyAddress   = ""
 	)
 
 	var (
@@ -676,7 +675,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			proportion: sdk.NewDecWithPrec(153, 3),
 			recepientAddresses: []types.WeightedAddress{
 				{
-					Address: emptyAddress,
+					Address: keeper.EmptyWeightedAddressReceiver,
 					Weight:  sdk.NewDec(1),
 				},
 			},
@@ -688,7 +687,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			proportion: sdk.NewDecWithPrec(153, 3),
 			recepientAddresses: []types.WeightedAddress{
 				{
-					Address: emptyAddress,
+					Address: keeper.EmptyWeightedAddressReceiver,
 					Weight:  sdk.NewDec(1),
 				},
 				{
@@ -720,7 +719,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 				oldCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), tc.mintedCoin.Denom).Amount
 				oldDeveloperRewardsBalanceAmounts := make([]sdk.Int, len(tc.recepientAddresses))
 				for i, weightedAddress := range tc.recepientAddresses {
-					if weightedAddress.Address == emptyAddress {
+					if weightedAddress.Address == keeper.EmptyWeightedAddressReceiver {
 						continue
 					}
 
@@ -778,7 +777,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 					// TODO: truncation should not occur: https://github.com/osmosis-labs/osmosis/issues/1917
 					expectedAllocation := expectedDistributed.ToDec().Mul(tc.recepientAddresses[i].Weight).TruncateInt()
 
-					if weightedAddress.Address == emptyAddress {
+					if weightedAddress.Address == keeper.EmptyWeightedAddressReceiver {
 						expectedDistributedCommunityPool = expectedDistributedCommunityPool.Add(expectedAllocation)
 						continue
 					}

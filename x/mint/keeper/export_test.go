@@ -12,7 +12,8 @@ type (
 )
 
 const (
-	DeveloperVestingAmount = developerVestingAmount
+	EmptyWeightedAddressReceiver = emptyWeightedAddressReceiver
+	DeveloperVestingAmount       = developerVestingAmount
 )
 
 var (

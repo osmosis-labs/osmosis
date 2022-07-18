@@ -45,6 +45,8 @@ func (e insufficientDevVestingBalanceError) Error() string {
 	return fmt.Sprintf("developer vesting balance (%s) is smaller than requested distribution of (%s)", e.ActualBalance, e.AttemptedDistribution)
 }
 
+const emptyWeightedAddressReceiver = ""
+
 var (
 	errAmountCannotBeNilOrZero               = errors.New("amount cannot be nil or zero")
 	errDevVestingModuleAccountAlreadyCreated = fmt.Errorf("%s module account already exists", types.DeveloperVestingModuleAcctName)
@@ -298,7 +300,8 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range developerRewardsReceivers {
-			if w.Address == "" {
+			// fund community pool when rewards address is empty.
+			if w.Address == emptyWeightedAddressReceiver {
 				err := k.distrKeeper.FundCommunityPool(ctx, devRewardCoins,
 					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
 				if err != nil {
