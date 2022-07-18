@@ -60,6 +60,7 @@ type PoolI interface {
 	JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
 
 	// CalcJoinPoolShares returns how many LP shares JoinPool would return on these arguments.
+	// This mutates the pool and state.
 	CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error)
 
 	// ExitPool exits #numShares LP shares from the pool, decreases its internal liquidity & LP share totals,
