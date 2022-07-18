@@ -185,11 +185,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // AppModuleSimulationV2 functions
 
-// GenerateGenesisState creates a randomized GenState of the pool-incentives module.
-func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *simulation.SimCtx) {
-	simState.GenState[types.ModuleName] = am.DefaultGenesis(simState.Cdc)
-}
-
 // WeightedOperations returns the all the lockup module operations with their respective weights.
 func (am AppModule) Actions() []simulation.Action {
 	return []simulation.Action{

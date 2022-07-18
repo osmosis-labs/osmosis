@@ -19,13 +19,14 @@ import (
 type AppModuleSimulationV2 interface {
 	module.AppModule
 
-	// randomized genesis states
-	// TODO: Come back and improve SimulationState interface
-	// TODO: Move this to an extension interface
-	// default: simState.GenState[types.ModuleName] = app.DefaultGenesis(simState.Cdc)
-	GenerateGenesisState(*module.SimulationState, *SimCtx)
 	Actions() []Action
 	// PropertyTests()
+}
+
+type AppModuleSimulationV2WithRandGenesis interface {
+	AppModuleSimulationV2
+	// TODO: Come back and improve SimulationState interface
+	RandomGenesisState(*module.SimulationState, *SimCtx)
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility
@@ -100,13 +101,14 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []Action {
 		}
 	}
 	// second pass generate actions
-	weightedOps := []simulation.WeightedOperation{}
+	actions := []Action{}
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.legacyModules[moduleName]; ok {
-			weightedOps = append(weightedOps, simModule.WeightedOperations(simState)...)
+			weightedOps := simModule.WeightedOperations(simState)
+			actions = append(actions, actionsFromWeightedOperations(moduleName, weightedOps)...)
 		}
 	}
-	return ActionsFromWeightedOperations(weightedOps)
+	return actions
 }
 
 // TODO: Can we use sim here instead? Perhaps by passing in the simulation module manager to the simulator.
@@ -137,7 +139,12 @@ func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []Action {
 func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *SimCtx) {
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.Modules[moduleName]; ok {
-			simModule.GenerateGenesisState(simState, sim)
+			// if we define a random genesis function use it, otherwise use default genesis
+			if mod, ok := simModule.(AppModuleSimulationV2WithRandGenesis); ok {
+				mod.RandomGenesisState(simState, sim)
+			} else {
+				simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
+			}
 		}
 		if simModule, ok := m.legacyModules[moduleName]; ok {
 			simModule.GenerateGenesisState(simState)

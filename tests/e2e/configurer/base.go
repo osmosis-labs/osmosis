@@ -177,7 +177,9 @@ func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.C
 func (bc *baseConfigurer) initializeChainConfigFromInitChain(initializedChain *initialization.Chain, chainConfig *chain.Config) {
 	chainConfig.ChainMeta = initializedChain.ChainMeta
 	chainConfig.NodeConfigs = make([]*chain.NodeConfig, 0, len(initializedChain.Nodes))
+	setupTime := time.Now()
 	for _, validator := range initializedChain.Nodes {
-		chainConfig.NodeConfigs = append(chainConfig.NodeConfigs, chain.NewNodeConfig(bc.t, validator, chainConfig.Id, bc.containerManager))
+		conf := chain.NewNodeConfig(bc.t, validator, chainConfig.Id, bc.containerManager).WithSetupTime(setupTime)
+		chainConfig.NodeConfigs = append(chainConfig.NodeConfigs, conf)
 	}
 }

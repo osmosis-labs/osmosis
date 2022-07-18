@@ -24,6 +24,9 @@ type NodeConfig struct {
 	rpcClient        *rpchttp.HTTP
 	t                *testing.T
 	containerManager *containers.Manager
+
+	// Add this to help with logging / tracking time since start.
+	setupTime time.Time
 }
 
 // NewNodeConfig returens new initialized NodeConfig.
@@ -33,6 +36,7 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, chainId string, 
 		chainId:          chainId,
 		containerManager: containerManager,
 		t:                t,
+		setupTime:        time.Now(),
 	}
 }
 
@@ -112,4 +116,15 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 	operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
 	n.OperatorAddress = strings.TrimSuffix(operAddr, "\n")
 	return nil
+}
+
+func (n *NodeConfig) WithSetupTime(t time.Time) *NodeConfig {
+	n.setupTime = t
+	return n
+}
+
+func (n *NodeConfig) LogActionF(msg string, args ...interface{}) {
+	timeSinceStart := time.Since(n.setupTime).Round(time.Millisecond)
+	s := fmt.Sprintf(msg, args...)
+	n.t.Logf("[%s] %s. From container %s", timeSinceStart, s, n.Name)
 }

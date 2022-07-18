@@ -26,24 +26,15 @@ func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
 	fullQueryPath := fmt.Sprintf("%s/%s", endpoint, path)
 
 	var resp *http.Response
-	retriesLeft := 5
-	for {
+	require.Eventually(n.t, func() bool {
 		resp, err = http.Get(fullQueryPath)
-
-		if resp.StatusCode == http.StatusServiceUnavailable {
-			retriesLeft--
-			if retriesLeft == 0 {
-				return nil, err
-			}
-			time.Sleep(10 * time.Second)
-		} else {
-			break
+		if err != nil {
+			n.t.Logf("error while executing HTTP request: %s", err.Error())
+			return false
 		}
-	}
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
-	}
+		return resp.StatusCode != http.StatusServiceUnavailable
+	}, time.Minute, time.Millisecond*10, "failed to execute HTTP request")
 
 	defer resp.Body.Close()
 

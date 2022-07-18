@@ -31,11 +31,11 @@ func initChain(
 	accounts []simulation.Account,
 	app simtypes.App,
 	appStateFn simulation.AppStateFn,
-	config simulation.Config,
+	config *simulation.Config,
 	cdc codec.JSONCodec,
-) (mockValidators, time.Time, []simulation.Account, string) {
+) (mockValidators, time.Time, []simulation.Account) {
 	// TODO: Cleanup the whole config dependency with appStateFn
-	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
+	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, *config)
 	consensusParams := randomConsensusParams(r, appState, cdc)
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
@@ -48,7 +48,13 @@ func initChain(
 	res := app.GetBaseApp().InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 
-	return validators, genesisTimestamp, accounts, chainID
+	// update config
+	config.ChainID = chainID
+	if config.InitialBlockHeight == 0 {
+		config.InitialBlockHeight = 1
+	}
+
+	return validators, genesisTimestamp, accounts
 }
 
 // SimulateFromSeedLegacy tests an application by running the provided
@@ -79,6 +85,8 @@ func initChain(
 // * SimManager for module configs
 // * Config file for params
 // * whatever is needed for logging (tb + w rn)
+// OR: Could be a struct or something with options,
+//     to give caller ability to step through / instrument benchmarking if they wanted to, and add a cleanup function.
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
@@ -87,42 +95,15 @@ func SimulateFromSeed(
 	actions []simtypes.Action,
 	config simulation.Config,
 	cdc codec.JSONCodec,
-) (stopEarly bool, exportedParams Params, err error) {
+) (stopEarly bool, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
-	testingMode, _, b := getTestingMode(tb)
+	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
 
-	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
-	r := rand.New(rand.NewSource(config.Seed))
-	simParams := RandomParams(r)
-	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(simParams))
-
-	accs := initFunctions.RandomAccountFn(r, simParams.NumKeys())
-	if len(accs) == 0 {
-		return true, simParams, fmt.Errorf("must have greater than zero genesis accounts")
+	// Encapsulate the bizarre initialization logic that must be cleaned.
+	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config, cdc)
+	if err != nil {
+		return true, err
 	}
-
-	validators, genesisTimestamp, accs, chainID := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config, cdc)
-
-	config.ChainID = chainID
-	if config.InitialBlockHeight == 0 {
-		config.InitialBlockHeight = 1
-	}
-
-	fmt.Printf(
-		"Starting the simulation from time %v (unixtime %v)\n",
-		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
-	)
-
-	initialHeader := tmproto.Header{
-		ChainID:         chainID,
-		Height:          int64(config.InitialBlockHeight),
-		Time:            genesisTimestamp,
-		ProposerAddress: validators.randomProposer(r),
-	}
-
-	simState := newSimulatorState(simParams, initialHeader, tb, w, validators).WithLogParam(config.Lean)
-
-	simCtx := simtypes.NewSimCtx(r, app, accs, simState.header.ChainID)
 
 	// Setup code to catch SIGTERM's
 	c := make(chan os.Signal, 1)
@@ -135,6 +116,7 @@ func SimulateFromSeed(
 		stopEarly = true
 	}()
 
+	testingMode, _, b := getTestingMode(tb)
 	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config)
 
 	if !testingMode {
@@ -152,33 +134,56 @@ func SimulateFromSeed(
 		}()
 	}
 
-	// set exported params to the initial state
-	if config.ExportParamsPath != "" && config.ExportParamsHeight == 0 {
-		exportedParams = simParams
-	}
-
-	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
-		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)
-		if stopEarly {
-			break
-		}
-
-		if config.Commit {
-			simCtx.App.GetBaseApp().Commit()
-		}
-	}
-
-	if !stopEarly {
-		fmt.Fprintf(
-			w,
-			"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
-			simState.header.Height, simState.header.Time, simState.opCount,
-		)
-		simState.logWriter.PrintLogs()
-	}
+	stopEarly = simState.SimulateAllBlocks(w, simCtx, blockSimulator, config)
 
 	simState.eventStats.exportEvents(config.ExportStatsPath, w)
-	return stopEarly, exportedParams, nil
+	return stopEarly, nil
+}
+
+// The goal of this function is to group the extremely badly abstracted genesis logic,
+// into a single function we can target continuing to improve / abstract better.
+// It outputs SimCtx and SimState which are "cleaner" interface abstractions for the rest of the simulator.
+// It also outputs SimParams which is not great.
+// It also can modify config.
+func cursedInitializationLogic(
+	tb testing.TB,
+	w io.Writer,
+	app simtypes.App,
+	initFunctions simtypes.InitFunctions,
+	config *simulation.Config,
+	cdc codec.JSONCodec) (*simtypes.SimCtx, *simState, Params, error) {
+	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
+
+	r := rand.New(rand.NewSource(config.Seed))
+	simParams := RandomParams(r)
+	fmt.Fprintf(w, "Randomized simulation params: \n%s\n", mustMarshalJSONIndent(simParams))
+
+	accs := initFunctions.RandomAccountFn(r, simParams.NumKeys())
+	if len(accs) == 0 {
+		return nil, nil, simParams, fmt.Errorf("must have greater than zero genesis accounts")
+	}
+
+	validators, genesisTimestamp, accs := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config, cdc)
+
+	fmt.Printf(
+		"Starting the simulation from time %v (unixtime %v)\n",
+		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
+	)
+
+	simCtx := simtypes.NewSimCtx(r, app, accs, config.ChainID)
+
+	initialHeader := tmproto.Header{
+		ChainID:         config.ChainID,
+		Height:          int64(config.InitialBlockHeight),
+		Time:            genesisTimestamp,
+		ProposerAddress: validators.randomProposer(r),
+	}
+
+	simState := newSimulatorState(simParams, initialHeader, tb, w, validators).WithLogParam(config.Lean)
+
+	// TODO: If simulation has a param export path configured, export params here.
+
+	return simCtx, simState, simParams, nil
 }
 
 //nolint:deadcode,unused
@@ -205,7 +210,8 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.Action,
-	simState *simState, config simulation.Config) blockSimFn {
+	simState *simState, config simulation.Config,
+) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
 	selectAction := getSelectActionFn(actions)
@@ -214,50 +220,54 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,
 	) (opCount int) {
 		_, _ = fmt.Fprintf(
-			w, "\rSimulating... block %d/%d, operation %d/%d.",
-			header.Height, config.NumBlocks, opCount, blocksize,
+			w, "\rSimulating... block %d/%d, operation 0/%d.",
+			header.Height, config.NumBlocks, blocksize,
 		)
 		lastBlockSizeState, blocksize = getBlockSize(simCtx, params, lastBlockSizeState, config.BlockSize)
 
-		// TODO: Fix according to the r plans
-		// Predetermine the blocksize slice so that we can do things like block
-		// out certain operations without changing the ops that follow.
-		// NOTE: This is poor mans seeding, it will improve in our simctx plans =)
-		blockActions := make([]simtypes.Action, 0, blocksize)
+		blockNumStr := fmt.Sprintf("block %d", header.Height)
 		for i := 0; i < blocksize; i++ {
-			blockActions = append(blockActions, selectAction(simCtx.GetRand()))
+			// Sample and execute every action using independent randomness.
+			// Thus any change within one action's randomness won't waterfall
+			// to every other action and the overall order of txs.
+			// We can also use this to limit which operations we run, in debugging a simulator run.
+			actionSeed := fmt.Sprintf("%s operation %d", blockNumStr, i)
+			actionSimCtx, cleanup := simCtx.WrapRand(actionSeed)
+
+			// Select and execute tx
+			action := selectAction(actionSimCtx.GetSeededRand("action select"))
+			opMsg, futureOps, err := action.Execute(actionSimCtx, ctx)
+			cleanup()
+
+			simState.logActionResult(header, i, config, blocksize, opMsg, err)
+
+			simState.queueOperations(futureOps)
+
+			if testingMode && i%50 == 0 {
+				fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
+					header.Height, config.NumBlocks, i, blocksize)
+			}
 		}
 
-		for i := 0; i < blocksize; i++ {
-			action := blockActions[i]
-			// TODO: We need to make a simCtx.WithSeededRand, that replaces the rand map internally
-			// but allows updates to accounts.
-			opMsg, futureOps, err := action.Execute(simCtx, ctx)
-			opMsg.LogEvent(simState.eventStats.Tally)
+		return blocksize
+	}
+}
 
-			if !simState.leanLogs || opMsg.OK {
-				simState.logWriter.AddEntry(MsgEntry(header.Height, int64(i), opMsg))
-			}
+// This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
+func (simState *simState) logActionResult(
+	header tmproto.Header, actionIndex int, config simulation.Config, blocksize int,
+	opMsg simulation.OperationMsg, actionErr error) {
+	opMsg.LogEvent(simState.eventStats.Tally)
+	if !simState.leanLogs || opMsg.OK {
+		simState.logWriter.AddEntry(MsgEntry(header.Height, int64(actionIndex), opMsg))
+	}
 
-			if err != nil {
-				simState.logWriter.PrintLogs()
-				simState.tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
+	if actionErr != nil {
+		simState.logWriter.PrintLogs()
+		simState.tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
 %v
 Comment: %s`,
-					header.Height, config.NumBlocks, opCount, blocksize, opMsg.Route, err, opMsg.Comment)
-			}
-
-			queueOperations(simState.operationQueue, simState.timeOperationQueue, futureOps)
-
-			if testingMode && opCount%50 == 0 {
-				fmt.Fprintf(w, "\rSimulating... block %d/%d, operation %d/%d. ",
-					header.Height, config.NumBlocks, opCount, blocksize)
-			}
-
-			opCount++
-		}
-
-		return opCount
+			header.Height, config.NumBlocks, actionIndex, blocksize, opMsg.Route, actionErr, opMsg.Comment)
 	}
 }
 
@@ -277,7 +287,7 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		opMsg, _, err := queuedOp[i](r, simCtx.App.GetBaseApp(), ctx, simCtx.Accounts, simCtx.ChainID)
+		opMsg, _, err := queuedOp[i](r, simCtx.BaseApp(), ctx, simCtx.Accounts, simCtx.ChainID())
 		opMsg.LogEvent(simState.eventStats.Tally)
 
 		if !simState.leanLogs || opMsg.OK {
@@ -286,41 +296,14 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 
 		if err != nil {
 			simState.logWriter.PrintLogs()
+			simState.tb.Fatalf(`error on block  %d, height queued operation (%d/%d) from x/%s:
+%v
+Comment: %s`,
+				simState.header.Height, i, numOpsRan, opMsg.Route, err, opMsg.Comment)
 			simState.tb.FailNow()
 		}
 	}
 	delete(simState.operationQueue, height)
 
-	return numOpsRan
-}
-
-func (simState *simState) runQueuedTimeOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (
-	numOpsRan int) {
-	queueOps := simState.timeOperationQueue
-	currentTime := simState.header.Time
-	numOpsRan = 0
-	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
-		// TODO: Fix according to the r plans
-		r := simCtx.GetRand()
-
-		// For now, queued operations cannot queue more operations.
-		// If a need arises for us to support queued messages to queue more messages, this can
-		// be changed.
-		opMsg, _, err := queueOps[0].Op(r, simCtx.App.GetBaseApp(), ctx, simCtx.Accounts, simCtx.ChainID)
-		opMsg.LogEvent(simState.eventStats.Tally)
-
-		if !simState.leanLogs || opMsg.OK {
-			simState.logWriter.AddEntry(QueuedMsgEntry(simState.header.Height, opMsg))
-		}
-
-		if err != nil {
-			simState.logWriter.PrintLogs()
-			simState.tb.FailNow()
-		}
-
-		queueOps = queueOps[1:]
-		numOpsRan++
-	}
-	simState.timeOperationQueue = queueOps
 	return numOpsRan
 }

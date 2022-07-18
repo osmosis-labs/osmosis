@@ -584,6 +584,8 @@ func (p *Pool) SwapInAmtGivenOut(
 
 // ApplySwap.
 func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) error {
+	// Fixed gas consumption per swap to prevent spam
+	ctx.GasMeter().ConsumeGas(types.BalancerGasFeeForSwap, "balancer swap computation")
 	// Also ensures that len(tokensIn) = 1 = len(tokensOut)
 	inPoolAsset, outPoolAsset, err := p.parsePoolAssetsCoins(tokensIn, tokensOut)
 	if err != nil {
