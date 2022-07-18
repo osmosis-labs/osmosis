@@ -85,7 +85,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 			return true
 		},
 		1*time.Minute,
-		time.Second,
+		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
 	noTotal, _, _, _, _ := node.QueryPropTally(chain.LatestProposalNumber)
@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 			return true
 		},
 		1*time.Minute,
-		time.Second,
+		10*time.Millisecond,
 		"superfluid delegation vote overwrite not working as expected",
 	)
 }
