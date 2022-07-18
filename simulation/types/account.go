@@ -92,7 +92,7 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 		return acc, sdk.Coins{}, false
 	}
 	balance := sim.RandCoinSubset(ctx, acc.Address, denoms)
-	return acc, balance, true
+	return acc, balance.Sort(), true
 }
 
 // SelAddrWithDenom attempts to find an address with the provided denom. This function

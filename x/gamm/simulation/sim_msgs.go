@@ -27,11 +27,17 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 	if !senderExists {
 		return &gammtypes.MsgJoinPool{}, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
+	ctx.Logger().Error("SUSHI IN" + tokenIn.String())
+	// test
+	// test
 
 	// cap joining pool to double the pool liquidity
 	for i, coinPool := range pool.GetTotalPoolLiquidity(ctx) {
-		if coinPool.Amount.LT(tokenIn[i].Amount.Quo(sdk.NewInt(2))) {
-			return &gammtypes.MsgJoinPool{}, fmt.Errorf("join pool is capped to double the pool liquidity")
+		ctx.Logger().Error("SUSHI POOL" + coinPool.Amount.String() + coinPool.Denom)
+		ctx.Logger().Error("SUSHI TOKEN" + tokenIn[i].Amount.String() + tokenIn[i].Denom)
+		ctx.Logger().Error("SUSHI BREAK")
+		if coinPool.Amount.LT(tokenIn[i].Amount) {
+			return &gammtypes.MsgJoinPool{}, fmt.Errorf("join pool is capped to the pool liquidity")
 		}
 	}
 
