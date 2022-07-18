@@ -264,7 +264,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 // - the balance of mint module is less than totalMintedCoin * developerRewardsProportion.
 // CONTRACT:
 // - weights in developerRewardsReceivers add up to 1.
-// - addresses in developerRewardsReceivers are valid.
+// - addresses in developerRewardsReceivers are valid or empty string.
 func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion sdk.Dec, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
 	devRewardCoin, err := getProportions(ctx, totalMintedCoin, developerRewardsProportion)
 	if err != nil {
@@ -298,20 +298,28 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range developerRewardsReceivers {
-			devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
-			if err != nil {
-				return sdk.Int{}, err
-			}
-			devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
-			devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
-			if err != nil {
-				return sdk.Int{}, err
-			}
-			// If recipient is vesting account, pay to account according to its vesting condition
-			err = k.bankKeeper.SendCoinsFromModuleToAccount(
-				ctx, types.DeveloperVestingModuleAcctName, devRewardsAddr, devRewardPortionCoins)
-			if err != nil {
-				return sdk.Int{}, err
+			if w.Address == "" {
+				err := k.distrKeeper.FundCommunityPool(ctx, devRewardCoins,
+					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+				if err != nil {
+					return sdk.Int{}, err
+				}
+			} else {
+				devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
+				if err != nil {
+					return sdk.Int{}, err
+				}
+				devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
+				devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
+				if err != nil {
+					return sdk.Int{}, err
+				}
+				// If recipient is vesting account, pay to account according to its vesting condition
+				err = k.bankKeeper.SendCoinsFromModuleToAccount(
+					ctx, types.DeveloperVestingModuleAcctName, devRewardsAddr, devRewardPortionCoins)
+				if err != nil {
+					return sdk.Int{}, err
+				}
 			}
 		}
 	}
