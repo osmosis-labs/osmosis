@@ -3,7 +3,7 @@ package osmosis.txfees.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/txfees/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/txfees/types";
 
 // FeeToken is a struct that specifies a coin denom, and pool ID pair.
 // This marks the token as eligible for use as a tx fee asset in Osmosis.
