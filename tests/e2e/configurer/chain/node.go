@@ -118,6 +118,10 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 	return nil
 }
 
+func (n *NodeConfig) GetHostPort(portId string) (string, error) {
+	return n.containerManager.GetHostPort(n.Name, portId)
+}
+
 func (n *NodeConfig) WithSetupTime(t time.Time) *NodeConfig {
 	n.setupTime = t
 	return n

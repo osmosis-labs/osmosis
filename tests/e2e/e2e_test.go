@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
@@ -119,15 +121,17 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	chain := s.configurer.GetChainConfig(0)
 	runningNode, err := chain.GetDefaultNode()
-	s.NoError(err)
+	s.Require().NoError(err)
+
+	persistenrPeers := chain.GetPersistentPeers()
 
 	stateSyncHostPort := fmt.Sprintf("%s:26657", runningNode.Name)
 
 	trustHeight, err := runningNode.QueryCurrentHeight()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
 
@@ -149,16 +153,39 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		trustHeight,
 		trustHash,
 		stateSyncRPCServers,
+		persistenrPeers,
 	)
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	stateSynchingNode := chain.CreateNodeConfig(nodeInit)
+
+	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
+		const snapshotHeight = 25
+		if syncInfo.LatestBlockHeight < snapshotHeight {
+			s.T().Logf("snapshot height is not reached yet, current (%d), need (%d)", syncInfo.LatestBlockHeight, snapshotHeight)
+			return false
+		}
+
+		snapshots, err := runningNode.QueryListSnapshots()
+		s.Require().NoError(err)
+
+		foundAvailableSnapshot := false
+		for _, snapshot := range snapshots {
+			if snapshot.Height > uint64(trustHeight) {
+				foundAvailableSnapshot = true
+				s.T().Log("found state sync snapshot after trust height")
+				return true
+			}
+		}
+		s.T().Log("state sync snashot after trust height is not found")
+		return foundAvailableSnapshot
+	}
+
+	runningNode.WaitUntil(hasSnapshotsAvailable)
 
 	// State sync starts here
 	err = stateSynchingNode.Run()
 	s.NoError(err)
-
-	stateSynchingNode.QueryCurrentHeight()
 
 	s.Require().Eventually(func() bool {
 

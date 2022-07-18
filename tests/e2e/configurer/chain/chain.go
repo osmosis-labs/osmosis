@@ -130,6 +130,16 @@ func (c *Config) GetDefaultNode() (*NodeConfig, error) {
 	return c.getNodeAtIndex(defaultNodeIndex)
 }
 
+// GetPersistentPeers returns persistent peers from every node
+// associated with a chain.
+func (c *Config) GetPersistentPeers() []string {
+	peers := make([]string, len(c.NodeConfigs))
+	for i, node := range c.NodeConfigs {
+		peers[i] = node.PeerId
+	}
+	return peers
+}
+
 func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	if nodeIndex > len(c.NodeConfigs) {
 		return nil, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
