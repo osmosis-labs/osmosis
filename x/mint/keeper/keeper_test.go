@@ -16,12 +16,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {

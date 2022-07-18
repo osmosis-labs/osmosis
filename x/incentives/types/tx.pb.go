@@ -13,7 +13,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
 	github_com_gogo_protobuf_types "github.com/gogo/protobuf/types"
-	types "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	types "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
