@@ -183,7 +183,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // ___________________________________________________________________________
 
-// AppModuleSimulationV2 functions
+// AppModuleSimulation functions
 
 // WeightedOperations returns the all the lockup module operations with their respective weights.
 func (am AppModule) Actions() []simtypes.Action {
