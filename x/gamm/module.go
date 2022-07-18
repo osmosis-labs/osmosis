@@ -162,7 +162,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *simulation.SimCtx) {
 	DefaultGen := types.DefaultGenesis()
 	// change the pool creation fee denom from uosmo to stake
-	DefaultGen.Params.PoolCreationFee = sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000))
+	DefaultGen.Params.PoolCreationFee = sdk.NewCoins(gammsimulation.PoolCreationFee)
 	DefaultGenJson := simState.Cdc.MustMarshalJSON(DefaultGen)
 	simState.GenState[types.ModuleName] = DefaultGenJson
 }

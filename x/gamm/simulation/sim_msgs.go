@@ -12,6 +12,10 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
+var (
+	PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
+)
+
 // RandomJoinPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective underlying token denoms, and attempts to execute a join pool transaction
 func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
@@ -115,6 +119,10 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Conte
 	sender, senderExists := sim.RandomSimAccountWithKDenoms(ctx, 2)
 	if !senderExists {
 		return &balancertypes.MsgCreateBalancerPool{}, fmt.Errorf("no sender with two different denoms exists")
+	}
+	senderStake := sim.BankKeeper().GetBalance(ctx, sender.Address, "stake")
+	if senderStake.Amount.LT(PoolCreationFee.Amount) {
+		return &balancertypes.MsgCreateBalancerPool{}, fmt.Errorf("sender does not enough for pool creation fee")
 	}
 	poolCoins, denomsExist := sim.GetRandSubsetOfKDenoms(ctx, sender, 2)
 	if !denomsExist {
