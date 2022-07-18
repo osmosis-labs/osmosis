@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v10/app"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
@@ -18,8 +18,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	osmosim "github.com/osmosis-labs/osmosis/v7/simulation/executor"
-	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
+	osmosim "github.com/osmosis-labs/osmosis/v10/simulation/executor"
+	simtypes "github.com/osmosis-labs/osmosis/v10/simulation/types"
 )
 
 // Profile with:
@@ -95,7 +95,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	}
 
 	// Run randomized simulation:
-	_, simParams, simErr := osmosim.SimulateFromSeed(
+	_, simErr := osmosim.SimulateFromSeed(
 		tb,
 		os.Stdout,
 		osmosis,
@@ -104,11 +104,6 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		config,
 		osmosis.AppCodec(),
 	)
-	simParams = simParams
-	// export state and simParams before the simulation error is checked
-	// if err = sdkSimapp.CheckExportSimulation(osmosis, config, simParams); err != nil {
-	// 	tb.Fatal(err)
-	// }
 
 	if simErr != nil {
 		tb.Fatal(simErr)
@@ -186,7 +181,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			// Run randomized simulation:
-			_, _, simErr := osmosim.SimulateFromSeed(
+			_, simErr := osmosim.SimulateFromSeed(
 				t,
 				os.Stdout,
 				osmosis,

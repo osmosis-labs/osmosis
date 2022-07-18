@@ -17,13 +17,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/client/rest"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
+	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/client/cli"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/client/rest"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
 
-	locksimulation "github.com/osmosis-labs/osmosis/v7/x/lockup/simulation"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	locksimulation "github.com/osmosis-labs/osmosis/v10/x/lockup/simulation"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
 var (
@@ -184,11 +184,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // ___________________________________________________________________________
 
 // AppModuleSimulationV2 functions
-
-// GenerateGenesisState creates a randomized GenState of the pool-incentives module.
-func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *simulation.SimCtx) {
-	simState.GenState[types.ModuleName] = am.DefaultGenesis(simState.Cdc)
-}
 
 // WeightedOperations returns the all the lockup module operations with their respective weights.
 func (am AppModule) Actions() []simulation.Action {

@@ -28,20 +28,26 @@ type Action interface {
 }
 
 type weightedOperationAction struct {
-	op simulation.WeightedOperation
+	moduleName string
+	op         simulation.WeightedOperation
 }
 
-func (a weightedOperationAction) Name() string   { return "weighted_op" }
+func (a weightedOperationAction) Name() string   { return fmt.Sprintf("%s: weighted_op", a.moduleName) }
 func (a weightedOperationAction) Weight() Weight { return Weight(a.op.Weight()) }
 func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
-	simulation.OperationMsg, []simulation.FutureOperation, error) {
-	return a.op.Op()(sim.GetRand(), sim.App.GetBaseApp(), ctx, sim.Accounts, sim.ChainID)
+	simulation.OperationMsg, []simulation.FutureOperation, error,
+) {
+	return a.op.Op()(sim.GetRand(), sim.BaseApp(), ctx, sim.Accounts, sim.ChainID())
 }
 
 func ActionsFromWeightedOperations(ops legacysimexec.WeightedOperations) []Action {
+	return actionsFromWeightedOperations("no module name", ops)
+}
+
+func actionsFromWeightedOperations(moduleName string, ops legacysimexec.WeightedOperations) []Action {
 	actions := make([]Action, 0, len(ops))
 	for _, op := range ops {
-		actions = append(actions, weightedOperationAction{op: op})
+		actions = append(actions, weightedOperationAction{moduleName: moduleName, op: op})
 	}
 	return actions
 }
@@ -85,7 +91,8 @@ func (m msgBasedAction) WithWeight(weight Weight) msgBasedAction {
 func (m msgBasedAction) Name() string   { return m.name }
 func (m msgBasedAction) Weight() Weight { return m.weight }
 func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
-	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error) {
+	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error,
+) {
 	msg, err := m.msgGenerator(sim, ctx)
 	if err != nil {
 		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build msg due to: %v", err)), nil, nil

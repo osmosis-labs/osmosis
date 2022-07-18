@@ -6,11 +6,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/rosetta/lib/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
+	balancertypes "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 func CurrySimMsgJoinPool(k keeper.Keeper) func(sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
 func (s *IntegrationTestSuite) TestCreatePoolPostUpgrade() {
@@ -85,7 +85,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 			return true
 		},
 		1*time.Minute,
-		time.Second,
+		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
 	noTotal, _, _, _, _ := node.QueryPropTally(chain.LatestProposalNumber)
@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 			return true
 		},
 		1*time.Minute,
-		time.Second,
+		10*time.Millisecond,
 		"superfluid delegation vote overwrite not working as expected",
 	)
 }

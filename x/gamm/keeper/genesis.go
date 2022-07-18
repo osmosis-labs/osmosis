@@ -4,13 +4,13 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 // InitGenesis initializes the x/gamm module's state from a provided genesis
 // state, which includes the current live pools, global pool parameters (e.g. pool creation fee), next pool number etc.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpacker codectypes.AnyUnpacker) {
-	k.SetParams(ctx, genState.Params)
+	k.setParams(ctx, genState.Params)
 	k.setNextPoolNumber(ctx, genState.NextPoolNumber)
 
 	// Sums up the liquidity in all genesis state pools to find the total liquidity across all pools.
@@ -22,7 +22,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetPool(ctx, pool)
+		err = k.setPool(ctx, pool)
 		if err != nil {
 			panic(err)
 		}
@@ -33,7 +33,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 		}
 	}
 
-	k.SetTotalLiquidity(ctx, liquidity)
+	k.setTotalLiquidity(ctx, liquidity)
 }
 
 // ExportGenesis returns the capability module's exported genesis.

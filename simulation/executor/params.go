@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	markov "github.com/osmosis-labs/osmosis/v7/simulation/types/transitionmatrix"
+	markov "github.com/osmosis-labs/osmosis/v10/simulation/types/transitionmatrix"
 )
 
 const (
@@ -88,69 +88,6 @@ func RandomParams(r *rand.Rand) Params {
 		blockSizeTransitionMatrix: defaultBlockSizeTransitionMatrix,
 	}
 }
-
-// Param change proposals
-
-// ParamChange defines the object used for simulating parameter change proposals
-type ParamChange struct {
-	subspace string
-	key      string
-	simValue simulation.SimValFn
-}
-
-func (spc ParamChange) Subspace() string {
-	return spc.subspace
-}
-
-func (spc ParamChange) Key() string {
-	return spc.key
-}
-
-func (spc ParamChange) SimValue() simulation.SimValFn {
-	return spc.simValue
-}
-
-// NewSimParamChange creates a new ParamChange instance
-func NewSimParamChange(subspace, key string, simVal simulation.SimValFn) simulation.ParamChange {
-	return ParamChange{
-		subspace: subspace,
-		key:      key,
-		simValue: simVal,
-	}
-}
-
-// ComposedKey creates a new composed key for the param change proposal
-func (spc ParamChange) ComposedKey() string {
-	return spc.Subspace() + "/" + spc.Key()
-}
-
-// Proposal Contents
-
-// WeightedProposalContent defines a common struct for proposal contents defined by
-// external modules (i.e outside gov)
-type WeightedProposalContent struct {
-	appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
-	defaultWeight      int                           // default weight
-	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function
-}
-
-func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent {
-	return &WeightedProposalContent{appParamsKey: appParamsKey, defaultWeight: defaultWeight, contentSimulatorFn: contentSimulatorFn}
-}
-
-func (w WeightedProposalContent) AppParamsKey() string {
-	return w.appParamsKey
-}
-
-func (w WeightedProposalContent) DefaultWeight() int {
-	return w.defaultWeight
-}
-
-func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn {
-	return w.contentSimulatorFn
-}
-
-// Param change proposals
 
 // randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
 func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *abci.ConsensusParams {
