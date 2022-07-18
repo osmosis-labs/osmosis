@@ -65,7 +65,7 @@ type PoolI interface {
 
 	// ExitPool exits #numShares LP shares from the pool, decreases its internal liquidity & LP share totals,
 	// and returns the number of coins that are being returned.
-	// This mutates the pool and state.
+	// This does not mutate the pool, or state.
 	ExitPool(ctx sdk.Context, numShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error)
 	// CalcExitPoolCoinsFromShares returns how many coins ExitPool would return on these arguments.
 	// This does not mutate the pool, or state.
