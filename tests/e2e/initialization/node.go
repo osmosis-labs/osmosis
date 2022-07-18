@@ -311,6 +311,7 @@ func (n *internalNode) initValidatorConfigs(c *internalChain, persistentPeers []
 	valConfig.StateSync.Enable = false
 	valConfig.LogLevel = "info"
 	valConfig.P2P.PersistentPeers = strings.Join(persistentPeers, ",")
+	valConfig.Consensus = tmconfig.TestConsensusConfig()
 
 	tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 	return nil
