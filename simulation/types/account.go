@@ -179,10 +179,7 @@ func (sim *SimCtx) RandCoinSubset(ctx sdk.Context, addr sdk.AccAddress, denoms [
 	subsetCoins := sdk.Coins{}
 	for _, denom := range denoms {
 		bal := sim.BankKeeper().GetBalance(ctx, addr, denom)
-		amt, err := sim.RandPositiveInt(bal.Amount)
-		if err != nil {
-			panic(err)
-		}
+		amt := sim.RandPositiveInt(bal.Amount)
 		subsetCoins = subsetCoins.Add(sdk.NewCoin(bal.Denom, amt))
 	}
 	return subsetCoins
