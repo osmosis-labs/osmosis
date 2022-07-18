@@ -44,7 +44,7 @@ func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
 }
 
-// Checks if a pool exists and their respective poolWeights.
+// Pool checks if a pool exists and their respective poolWeights.
 func (q Querier) Pool(
 	ctx context.Context,
 	req *types.QueryPoolRequest,
@@ -68,7 +68,7 @@ func (q Querier) Pool(
 	return &types.QueryPoolResponse{Pool: any}, nil
 }
 
-// Checks existence of multiple pools and their poolWeights
+// Pools checks existence of multiple pools and their poolWeights
 func (q Querier) Pools(
 	ctx context.Context,
 	req *types.QueryPoolsRequest,
@@ -118,7 +118,7 @@ func (q Querier) Pools(
 	}, nil
 }
 
-// Returns total number of pools.
+// NumPools returns total number of pools.
 func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -127,7 +127,7 @@ func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*
 	}, nil
 }
 
-// Queries a specified pool for its params.
+// PoolParams queries a specified pool for its params.
 func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsRequest) (*types.QueryPoolParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -157,7 +157,7 @@ func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsReque
 	}
 }
 
-// Returns total liquidity in pool.
+// TotalPoolLiquidity returns total liquidity in pool.
 func (q Querier) TotalPoolLiquidity(ctx context.Context, req *types.QueryTotalPoolLiquidityRequest) (*types.QueryTotalPoolLiquidityResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -175,7 +175,7 @@ func (q Querier) TotalPoolLiquidity(ctx context.Context, req *types.QueryTotalPo
 	}, nil
 }
 
-// Returns total pool shares.
+// TotalShares returns total pool shares.
 func (q Querier) TotalShares(ctx context.Context, req *types.QueryTotalSharesRequest) (*types.QueryTotalSharesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -195,7 +195,7 @@ func (q Querier) TotalShares(ctx context.Context, req *types.QueryTotalSharesReq
 	}, nil
 }
 
-// Returns target pool asset prices on base and quote assets.
+// SpotPrice returns target pool asset prices on base and quote assets.
 func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest) (*types.QuerySpotPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -226,7 +226,7 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 	}, nil
 }
 
-// Returns total liquidity across all pools.
+// TotalLiquidity returns total liquidity across all pools.
 func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidityRequest) (*types.QueryTotalLiquidityResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -235,7 +235,7 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 	}, nil
 }
 
-// Estimates input token amount for a swap.
+// EstimateSwapExactAmountIn estimates input token amount for a swap.
 func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -275,7 +275,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 	}, nil
 }
 
-// Estimates token output amount for a swap.
+// EstimateSwapExactAmountOut estimates token output amount for a swap.
 func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

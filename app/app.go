@@ -132,7 +132,7 @@ type OsmosisApp struct {
 	configurator module.Configurator
 }
 
-// Sets DefaultNodeHome to default osmosisd install location.
+// init sets DefaultNodeHome to default osmosisd install location.
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {

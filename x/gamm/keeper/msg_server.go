@@ -38,7 +38,7 @@ var (
 	// _ stableswap.MsgServer = msgServer{}
 )
 
-// Create balancer pool message.
+// CreateBalancerPool is a create balancer pool message.
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err

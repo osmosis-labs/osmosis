@@ -43,7 +43,7 @@ type DerivedAccount struct {
 	TotalBalances       sdk.Coins            `json:"total_balances"`
 }
 
-// Returns a new derived account.
+// newDerivedAccount returns a new derived account.
 func newDerivedAccount(address string) DerivedAccount {
 	return DerivedAccount{
 		Address:        address,
@@ -54,7 +54,7 @@ func newDerivedAccount(address string) DerivedAccount {
 	}
 }
 
-// Returns liquidity pool's underlying coin balances.
+// underlyingCoins returns liquidity pool's underlying coin balances.
 func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sdk.Coins {
 	balances := sdk.Coins{}
 	convertAgain := false
@@ -117,7 +117,7 @@ func underlyingCoinsForSelectPools(
 	return balancesByPool
 }
 
-// Returns a JSON genState message from inputted path.
+// getGenStateFromPath returns a JSON genState message from inputted path.
 func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, error) {
 	genState := make(map[string]json.RawMessage)
 

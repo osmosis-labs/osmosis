@@ -422,7 +422,7 @@ func (d BigDec) Format(s fmt.State, verb rune) {
 	}
 }
 
-// returns a BigDec as a string.
+// String returns a BigDec as a string.
 func (d BigDec) String() string {
 	if d.i == nil {
 		return d.i.String()
@@ -536,7 +536,7 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	}
 }
 
-// Remove a Precision amount of rightmost digits and rounds up.
+// chopPrecisionAndRoundUp removes a Precision amount of rightmost digits and rounds up.
 func chopPrecisionAndRoundUp(d *big.Int) *big.Int {
 	// remove the negative and add it back when returning
 	if d.Sign() == -1 {
@@ -763,7 +763,7 @@ func (d *BigDec) UnmarshalAmino(bz []byte) error { return d.Unmarshal(bz) }
 
 // helpers
 
-// test if two decimal arrays are equal
+// DecsEqual tests if two decimal arrays are equal
 func DecsEqual(d1s, d2s []BigDec) bool {
 	if len(d1s) != len(d2s) {
 		return false
@@ -777,7 +777,7 @@ func DecsEqual(d1s, d2s []BigDec) bool {
 	return true
 }
 
-// minimum decimal between two
+// MinDec gets minimum decimal between two
 func MinDec(d1, d2 BigDec) BigDec {
 	if d1.LT(d2) {
 		return d1
@@ -785,7 +785,7 @@ func MinDec(d1, d2 BigDec) BigDec {
 	return d2
 }
 
-// maximum decimal between two
+// MaxDec gets maximum decimal between two
 func MaxDec(d1, d2 BigDec) BigDec {
 	if d1.LT(d2) {
 		return d2
@@ -793,12 +793,12 @@ func MaxDec(d1, d2 BigDec) BigDec {
 	return d1
 }
 
-// intended to be used with require/assert:  require.True(DecEq(...))
+// DecEq is intended to be used with require/assert:  require.True(DecEq(...))
 func DecEq(t *testing.T, exp, got BigDec) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
-// intended to be used with require/assert:  require.True(DecEq(...))
+// DecApproxEq is intended to be used with require/assert:  require.True(DecEq(...))
 func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bool, string, string, string) {
 	diff := d1.Sub(d2).Abs()
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()

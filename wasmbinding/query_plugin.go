@@ -11,7 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v7/wasmbinding/bindings"
 )
 
-// Dispatches custom CosmWasm bindings queries.
+// CustomQuerier dispatches custom CosmWasm bindings queries.
 func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 		var contractQuery bindings.OsmosisQuery

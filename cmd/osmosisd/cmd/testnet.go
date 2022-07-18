@@ -45,7 +45,7 @@ var (
 	emptyMnemonic = ""
 )
 
-// get cmd to initialize all files for tendermint testnet and application.
+// testnetCmd get cmd to initialize all files for tendermint testnet and application.
 func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
@@ -105,7 +105,7 @@ Example:
 
 const nodeDirPerm = 0o755
 
-// Initialize the testnet.
+// InitTestnet initializes the testnet.
 func InitTestnet(
 	clientCtx client.Context,
 	cmd *cobra.Command,
@@ -270,7 +270,7 @@ func InitTestnet(
 	return nil
 }
 
-// Initializes genesis files for testnet.
+// initGenFiles initializes genesis files for testnet.
 func initGenFiles(
 	clientCtx client.Context, mbm module.BasicManager, genesisParams GenesisParams, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,

@@ -14,14 +14,14 @@ type SendBlockOptions struct {
 	PermittedOnlySendTo map[string]string
 }
 
-// Options for sending new blocks.
+// NewSendBlockOptions returns options for sending new blocks.
 func NewSendBlockOptions(appOpts servertypes.AppOptions) SendBlockOptions {
 	return SendBlockOptions{
 		PermittedOnlySendTo: parsePermittedOnlySendTo(appOpts),
 	}
 }
 
-// Parses the mapping PermittedOnlySendTo
+// parsePermittedOnlySendTo parses the mapping PermittedOnlySendTo
 func parsePermittedOnlySendTo(opts servertypes.AppOptions) map[string]string {
 	valueInterface := opts.Get("permitted-only-send-to")
 	if valueInterface == nil {
@@ -34,14 +34,14 @@ type SendBlockDecorator struct {
 	Options SendBlockOptions
 }
 
-// The auth module provides AnteDecorators that are recursively chained together into a single AntiHandler.
+// NewSendBlockDecorator are a part of auth module AnteDecorators that are recursively chained together into a single AntiHandler.
 func NewSendBlockDecorator(options SendBlockOptions) *SendBlockDecorator {
 	return &SendBlockDecorator{
 		Options: options, // TODO: hydrate from configuration
 	}
 }
 
-// Antehandlers are used for performing basic validity checks on a transaction such that it can be thrown out of the mempool.
+// AnteHandle is used for performing basic validity checks on a transaction such that it can be thrown out of the mempool.
 func (decorator *SendBlockDecorator) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,

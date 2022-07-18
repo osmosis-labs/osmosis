@@ -39,7 +39,7 @@ type KeeperTestHelper struct {
 	TestAccs    []sdk.AccAddress
 }
 
-// Sets up keeper tests.
+// Setup sets up keeper tests.
 func (s *KeeperTestHelper) Setup() {
 	s.App = app.Setup(false)
 	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
@@ -51,7 +51,7 @@ func (s *KeeperTestHelper) Setup() {
 	s.TestAccs = CreateRandomAccounts(3)
 }
 
-// Creates a test context.
+// CreateTestContext creates a test context.
 func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
 	db := dbm.NewMemDB()
 	logger := log.NewNopLogger()
@@ -61,13 +61,13 @@ func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
-// Funds target address with specified amount.
+// FundAcc funds target address with specified amount.
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
 	s.Require().NoError(err)
 }
 
-//SetupValidator sets up a validator and returns its address.
+// SetupValidator sets up a validator and returns its address.
 func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
@@ -102,7 +102,7 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	return valAddr
 }
 
-//SetupTokenFactory sets up a token module account for the TokenFactoryKeeper.
+// SetupTokenFactory sets up a token module account for the TokenFactoryKeeper.
 func (s *KeeperTestHelper) SetupTokenFactory() {
 	s.App.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
 }
