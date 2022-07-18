@@ -527,11 +527,11 @@ func (suite *KeeperTestSuite) TestDeleteAllEmptyIntermediaryAccounts() {
 		superDelegations []superfluidDelegation
 		// each boolean field should account for each superfluid delegation
 		undelegationStart           []bool
-		timePassedBeforeEpoch       time.Duration
+		timePassedBeforeEndblock    time.Duration
 		expInterAccNumAfterDeletion int
 	}{
 		{
-			"successful intermediary account deletion",
+			"sinlge intermediary account deletion upon single superfluid undelegation finish",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]bool{true},
@@ -539,7 +539,7 @@ func (suite *KeeperTestSuite) TestDeleteAllEmptyIntermediaryAccounts() {
 			0,
 		},
 		{
-			"should not delete when undelegation did not start",
+			"no deletion when undelegation did not start",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]bool{false},
@@ -547,11 +547,35 @@ func (suite *KeeperTestSuite) TestDeleteAllEmptyIntermediaryAccounts() {
 			1,
 		},
 		{
-			"should not delete when unbonding did not finish",
+			"no deletion when unbonding did not finish",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}},
 			[]bool{false},
 			time.Second,
+			1,
+		},
+		{
+			"single intermediary account deletion upon multiple superfluid(different lp pool) undelegation finish",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 1, 1000000}},
+			[]bool{true, false},
+			unbondingDuration,
+			1,
+		},
+		{
+			"single intermediary account deletion upon multiple superfluid(different validator) undelegation finish",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]bool{true, false},
+			unbondingDuration,
+			1,
+		},
+		{
+			"no deletion when remaining superfluid stake postion in intermediary account",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 0, 0, 1000000}},
+			[]bool{true, false},
+			unbondingDuration,
 			1,
 		},
 	}
@@ -563,7 +587,6 @@ func (suite *KeeperTestSuite) TestDeleteAllEmptyIntermediaryAccounts() {
 
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
-
 			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			_, intermediaryAccs, locks := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
@@ -585,10 +608,10 @@ func (suite *KeeperTestSuite) TestDeleteAllEmptyIntermediaryAccounts() {
 			}
 
 			// add unbonding duration time to current block time
-			suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(tc.timePassedBeforeEpoch))
+			// we set block height to value greater than MinBlockHeightToBeginAutoWithdrawing in lockup module
+			suite.Ctx = suite.Ctx.WithBlockHeight(7)
+			suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(tc.timePassedBeforeEndblock))
 
-			// TODO: delete this, this should run in endblocker
-			suite.App.LockupKeeper.DeleteAllMaturedSyntheticLocks(suite.Ctx)
 			suite.App.EndBlocker(suite.Ctx, abci.RequestEndBlock{Height: suite.Ctx.BlockHeight()})
 
 			intermediaryAccs = suite.App.SuperfluidKeeper.GetAllIntermediaryAccounts(suite.Ctx)

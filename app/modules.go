@@ -164,6 +164,10 @@ func orderBeginBlockers(allModuleNames []string) []string {
 
 func OrderEndBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
+
+	// superfluid should come after lockup module because matured synth locks
+	// has to be deleted before superfluid endblocker
+	ord.After(superfluidtypes.ModuleName, lockuptypes.ModuleName)
 	// only Osmosis modules with endblock code are: crisis, govtypes, staking
 	// we don't care about the relative ordering between them.
 	return ord.TotalOrdering()
