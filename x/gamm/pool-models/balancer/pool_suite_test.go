@@ -712,8 +712,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				} else {
 					require.NoError(t, err)
 					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
-					// TODO: Come back
-					// assertExpectedLiquidity(t, tc.expectLiq, tc.tokensIn, liquidity)
+					assertExpectedLiquidity(t, tc.tokensIn, liquidity)
 				}
 			}
 
