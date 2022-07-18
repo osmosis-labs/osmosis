@@ -25,5 +25,4 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	k.DeleteAllEmptyIntermediaryAccounts(ctx)
 
 	return []abci.ValidatorUpdate{}
-
 }
