@@ -161,6 +161,8 @@ tests require IBC logic.
 
 - `OSMOSIS_E2E_SKIP_IBC` - when true, skips the IBC tests tests.
 
+- `OSMOSIS_E2E_SKIP_STATE_SYNC` - when true, skips the state sync tests.
+
 - `OSMOSIS_E2E_SKIP_CLEANUP` - when true, avoids cleaning up the e2e Docker
 containers.
 
