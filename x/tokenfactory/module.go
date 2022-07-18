@@ -190,5 +190,6 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *si
 func (am AppModule) Actions() []simulation.Action {
 	return []simulation.Action{
 		simulation.NewCurriedMsgBasedAction("create token factory token", am.keeper, tokenfactorysimulation.RandomMsgCreateDenom),
+		simulation.NewCurriedMsgBasedAction("mint token factory token", am.keeper, tokenfactorysimulation.RandomMsgMintDenom),
 	}
 }

@@ -110,43 +110,32 @@ func (sim *SimCtx) SelAddrWithDenom(ctx sdk.Context, denom string) (simulation.A
 // GetRandSubsetOfKDenoms returns a random subset of coins of k unique denoms from the provided account
 // TODO: Write unit test
 func (sim *SimCtx) GetRandSubsetOfKDenoms(ctx sdk.Context, acc simulation.Account, k int) (sdk.Coins, bool) {
+	// get all spendable coins from provided account
 	coins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
+	// ensure account coins are greater than or equal to the requested subset length
 	if len(coins) < k {
 		return sdk.Coins{}, false
 	}
-	// make sure at least one coin added
+	// randomly remove a denom from the coins array until we reach desired length
 	r := sim.GetSeededRand("select random seed")
-	denomIdx := r.Intn(len(coins))
-	coin := coins[denomIdx]
-	amt, err := simulation.RandPositiveInt(r, coin.Amount)
-	// malformed coin. 0 amt in coins
-	if err != nil {
-		return sdk.Coins{}, false
+
+	for len(coins) != k {
+		index := r.Intn(len(coins) - 1)
+		coins = RemoveIndex(coins, index)
+	}
+	// append random amount less than or equal to existing amount to new subset array
+	subset := sdk.Coins{}
+	for _, c := range coins {
+		amt, err := simulation.RandPositiveInt(r, c.Amount)
+		if err != nil {
+			return sdk.Coins{}, false
+		}
+		subset = append(subset, sdk.NewCoin(c.Denom, amt))
 	}
 
-	subset := sdk.Coins{sdk.NewCoin(coin.Denom, amt)}
-
-	for i, c := range coins {
-		for l := 1; i < k; {
-			// skip denom that we already chose earlier
-			if i == denomIdx {
-				continue
-			}
-			// coin flip if multiple coins
-			// if there is single coin then return random amount of it
-			if r.Intn(2) == 0 && len(coins) != 1 {
-				continue
-			}
-
-			amt, err := simulation.RandPositiveInt(r, c.Amount)
-			// ignore errors and try another denom
-			if err != nil {
-				continue
-			}
-
-			subset = append(subset, sdk.NewCoin(c.Denom, amt))
-			l++
-		}
+	// return nothing if the coin struct length is less than requested (sanity check)
+	if len(subset) < k {
+		return sdk.Coins{}, false
 	}
 
 	return subset.Sort(), true
@@ -232,4 +221,8 @@ func (sim *SimCtx) RandomFees(ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 	fees := sdk.NewCoins(sdk.NewCoin(randCoin.Denom, amt))
 
 	return fees, nil
+}
+
+func RemoveIndex(s sdk.Coins, index int) sdk.Coins {
+	return append(s[:index], s[index+1:]...)
 }
