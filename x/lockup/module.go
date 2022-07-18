@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -16,13 +15,14 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/client/cli"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/client/rest"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/simulation"
+
+	locksimulation "github.com/osmosis-labs/osmosis/v7/x/lockup/simulation"
 	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 )
 
@@ -126,7 +126,7 @@ func (am AppModule) Name() string {
 
 // Route returns the capability module's message routing key.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the capability module's query routing key.
@@ -178,37 +178,18 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-// ___________________________________________________________________________
-
-// AppModuleSimulation functions
-
-// GenerateGenesisState creates a randomized GenState of the pool-incentives module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// TODO
-}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil // TODO
-}
-
-// RandomizedParams creates randomized pool-incentives param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return nil // TODO
-}
-
-// RegisterStoreDecoder registers a decoder for supply module's types.
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	// TODO
-}
-
-// WeightedOperations returns the all the lockup module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(
-		simState.AppParams, simState.Cdc,
-		am.accountKeeper, am.bankKeeper, am.keeper,
-	)
-}
-
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// ___________________________________________________________________________
+
+// AppModuleSimulationV2 functions
+
+// WeightedOperations returns the all the lockup module operations with their respective weights.
+func (am AppModule) Actions() []simulation.Action {
+	return []simulation.Action{
+		simulation.NewCurriedMsgBasedAction("lock tokens", am.keeper, locksimulation.RandomMsgLockTokens),
+		simulation.NewCurriedMsgBasedAction("unlock all tokens", am.keeper, locksimulation.RandomMsgBeginUnlockingAll),
+		simulation.NewCurriedMsgBasedAction("unlock lock", am.keeper, locksimulation.RandomMsgBeginUnlocking),
+	}
+}

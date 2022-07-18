@@ -37,49 +37,74 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 	ust := "ust"
 	_, ustPool := suite.preparePool(ust)
 
-	// todo make this section onwards table driven
-	coins := sdk.NewCoins(sdk.NewInt64Coin(uion, 10),
-		sdk.NewInt64Coin(atom, 20),
-		sdk.NewInt64Coin(ust, 14))
+	tests := []struct {
+		name       string
+		coins      sdk.Coins
+		baseDenom  string
+		denoms     []string
+		poolTypes  []gammtypes.PoolI
+		swapFee    sdk.Dec
+		expectPass bool
+	}{
+		{
+			name:      "One non-osmo fee token (uion): TxFees AfterEpochEnd",
+			coins:     sdk.Coins{sdk.NewInt64Coin(uion, 10)},
+			baseDenom: baseDenom,
+			denoms:    []string{uion},
+			poolTypes: []gammtypes.PoolI{uionPool},
+			swapFee:   sdk.MustNewDecFromStr("0"),
+		},
+		{
+			name:      "Multiple non-osmo fee token: TxFees AfterEpochEnd",
+			coins:     sdk.Coins{sdk.NewInt64Coin(atom, 20), sdk.NewInt64Coin(ust, 30)},
+			baseDenom: baseDenom,
+			denoms:    []string{atom, ust},
+			poolTypes: []gammtypes.PoolI{atomPool, ustPool},
+			swapFee:   sdk.MustNewDecFromStr("0"),
+		},
+	}
 
-	swapFee := sdk.NewDec(0)
+	finalOutputAmount := sdk.NewInt(0)
 
-	expectedOutput1, err := uionPool.CalcOutAmtGivenIn(suite.Ctx,
-		sdk.Coins{sdk.Coin{Denom: uion, Amount: coins.AmountOf(uion)}},
-		baseDenom,
-		swapFee)
-	suite.Require().NoError(err)
-	expectedOutput2, err := atomPool.CalcOutAmtGivenIn(suite.Ctx,
-		sdk.Coins{sdk.Coin{Denom: atom, Amount: coins.AmountOf(atom)}},
-		baseDenom,
-		swapFee)
-	suite.Require().NoError(err)
-	expectedOutput3, err := ustPool.CalcOutAmtGivenIn(suite.Ctx,
-		sdk.Coins{sdk.Coin{Denom: ust, Amount: coins.AmountOf(ust)}},
-		baseDenom,
-		swapFee)
-	suite.Require().NoError(err)
+	for _, tc := range tests {
+		tc := tc
 
-	fullExpectedOutput := expectedOutput1.Add(expectedOutput2).Add(expectedOutput3)
+		suite.Run(tc.name, func() {
+			for i, coin := range tc.coins {
+				// Get the output amount in osmo denom
+				expectedOutput, err := tc.poolTypes[i].CalcOutAmtGivenIn(suite.Ctx,
+					sdk.Coins{sdk.Coin{Denom: tc.denoms[i], Amount: coin.Amount}},
+					tc.baseDenom,
+					tc.swapFee)
+				suite.NoError(err)
+				// sanity check for the expectedAmount
+				suite.True(coin.Amount.GTE(expectedOutput.Amount))
 
-	_, _, addr0 := testdata.KeyTestPubAddr()
-	simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, coins)
-	suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr0, types.NonNativeFeeCollectorName, coins)
+				finalOutputAmount = finalOutputAmount.Add(expectedOutput.Amount)
 
-	moduleAddrFee := suite.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
-	moduleAddrNonNativeFee := suite.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
+				// Deposit some fee amount (non-native-denom) to the fee module account
+				_, _, addr0 := testdata.KeyTestPubAddr()
+				simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.Coins{coin})
+				suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr0, types.NonNativeFeeCollectorName, sdk.Coins{coin})
+			}
 
-	// make sure module account is funded with test fee tokens
-	suite.Require().True(suite.App.BankKeeper.HasBalance(suite.Ctx, moduleAddrNonNativeFee, coins[0]))
-	suite.Require().True(suite.App.BankKeeper.HasBalance(suite.Ctx, moduleAddrNonNativeFee, coins[1]))
-	suite.Require().True(suite.App.BankKeeper.HasBalance(suite.Ctx, moduleAddrNonNativeFee, coins[2]))
+			// checks the balance of the non-native denom in module account
+			moduleAddrNonNativeFee := suite.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
+			suite.Equal(suite.App.BankKeeper.GetAllBalances(suite.Ctx, moduleAddrNonNativeFee), tc.coins)
 
-	params := suite.App.IncentivesKeeper.GetParams(suite.Ctx)
-	futureCtx := suite.Ctx.WithBlockTime(time.Now().Add(time.Minute))
+			// End of epoch, so all the non-osmo fee amount should be swapped to osmo and transfer to fee module account
+			params := suite.App.IncentivesKeeper.GetParams(suite.Ctx)
+			futureCtx := suite.Ctx.WithBlockTime(time.Now().Add(time.Minute))
+			suite.App.TxFeesKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, int64(1))
 
-	suite.App.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, int64(1))
+			// check the balance of the native-basedenom in module
+			moduleAddrFee := suite.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
+			moduleBaseDenomBalance := suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddrFee, tc.baseDenom)
 
-	moduleBaseDenomBalance := suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddrFee, baseDenom)
-	suite.Require().Empty(suite.App.BankKeeper.GetAllBalances(suite.Ctx, moduleAddrNonNativeFee))
-	suite.Require().True(moduleBaseDenomBalance.Amount.GTE(fullExpectedOutput.Amount))
+			// non-osmos module account should be empty as all the funds should be transferred to osmo module
+			suite.Empty(suite.App.BankKeeper.GetAllBalances(suite.Ctx, moduleAddrNonNativeFee))
+			// check that the total osmo amount has been transferred to module account
+			suite.Equal(moduleBaseDenomBalance.Amount, finalOutputAmount)
+		})
+	}
 }

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -49,6 +50,8 @@ func (k Keeper) swapExactAmountIn(
 	}
 	tokensIn := sdk.Coins{tokenIn}
 
+	// Executes the swap in the pool and stores the output. Updates pool assets but
+	// does not actually transfer any tokens to or from the pool.
 	tokenOutCoin, err := pool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
@@ -64,6 +67,8 @@ func (k Keeper) swapExactAmountIn(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
 	}
 
+	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
+	// Also emits swap event and updates related liquidity metrics
 	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOutCoin); err != nil {
 		return sdk.Int{}, err
 	}
@@ -109,6 +114,7 @@ func (k Keeper) swapExactAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
 			"can't get more tokens out than there are tokens in the pool")
 	}
+
 	tokenIn, err := pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
@@ -143,7 +149,7 @@ func (k Keeper) updatePoolForSwap(
 	tokensIn := sdk.Coins{tokenIn}
 	tokensOut := sdk.Coins{tokenOut}
 
-	err := k.SetPool(ctx, pool)
+	err := k.setPool(ctx, pool)
 	if err != nil {
 		return err
 	}
@@ -162,7 +168,7 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
-	ctx.EventManager().EmitEvent(types.CreateSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut))
+	events.EmitSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut)
 	k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
 	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
 	k.RecordTotalLiquidityDecrease(ctx, tokensOut)

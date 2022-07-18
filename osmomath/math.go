@@ -11,6 +11,7 @@ import (
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
 // Singletons.
+// nolint: deadcode, unused
 var zero sdk.Dec = sdk.ZeroDec()
 
 var (
@@ -83,6 +84,10 @@ func Pow(base sdk.Dec, exp sdk.Dec) sdk.Dec {
 // Contract: 0 < base <= 2
 // 0 <= exp < 1.
 func PowApprox(base sdk.Dec, exp sdk.Dec, precision sdk.Dec) sdk.Dec {
+	if !base.IsPositive() {
+		panic(fmt.Errorf("base must be greater than 0"))
+	}
+
 	if exp.IsZero() {
 		return sdk.OneDec()
 	}

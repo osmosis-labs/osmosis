@@ -14,7 +14,7 @@ service Query {
     option (google.api.http).get = "/osmosis/mint/v1beta1/params";
   }
 
-  // EpochProvisions current minting epoch provisions value.
+  // EpochProvisions returns the current minting epoch provisions value.
   rpc EpochProvisions(QueryEpochProvisionsRequest)
       returns (QueryEpochProvisionsResponse) {
     option (google.api.http).get = "/osmosis/mint/v1beta1/epoch_provisions";

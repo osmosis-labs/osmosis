@@ -14,8 +14,8 @@ import (
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
-	queryClient  types.QueryClient
-	msgServer    types.MsgServer
+	queryClient types.QueryClient
+	msgServer   types.MsgServer
 	// defaultDenom is on the suite, as it depends on the creator test address.
 	defaultDenom string
 }

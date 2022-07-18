@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -18,7 +19,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/v7/app"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
@@ -38,13 +41,22 @@ type KeeperTestHelper struct {
 
 func (s *KeeperTestHelper) Setup() {
 	s.App = app.Setup(false)
-	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
 		Ctx:             s.Ctx,
 	}
 
 	s.TestAccs = CreateRandomAccounts(3)
+}
+
+func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
+	db := dbm.NewMemDB()
+	logger := log.NewNopLogger()
+
+	ms := rootmulti.NewStore(db, logger)
+
+	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
@@ -125,7 +137,7 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 		newBlockTime = endEpochTime.Add(time.Second)
 	}
 
-	header := tmproto.Header{Height: s.Ctx.BlockHeight() + 1, Time: newBlockTime}
+	header := tmtypes.Header{Height: s.Ctx.BlockHeight() + 1, Time: newBlockTime}
 	newCtx := s.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(s.Ctx.BlockHeight() + 1)
 	s.Ctx = newCtx
 	lastCommitInfo := abci.LastCommitInfo{
@@ -162,16 +174,11 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
 func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
-	s.App.GAMMKeeper.SetParams(s.Ctx, gammtypes.Params{
-		PoolCreationFee: sdk.Coins{},
-	})
-
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-	poolCreationFee := s.App.GAMMKeeper.GetParams(s.Ctx)
-	s.FundAcc(acc1, poolCreationFee.PoolCreationFee)
+	params := s.App.GAMMKeeper.GetParams(s.Ctx)
 
 	pools := []gammtypes.PoolI{}
 	for index, multiplier := range multipliers {
@@ -181,22 +188,22 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 		s.FundAcc(acc1, sdk.NewCoins(
 			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
 			sdk.NewInt64Coin(token, 100000),
-		))
+		).Add(params.PoolCreationFee...))
 
 		var (
 			defaultFutureGovernor = ""
 
 			// pool assets
-			defaultFooAsset balancer.PoolAsset = balancer.PoolAsset{
+			defaultFooAsset = balancer.PoolAsset{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
 			}
-			defaultBarAsset balancer.PoolAsset = balancer.PoolAsset{
+			defaultBarAsset = balancer.PoolAsset{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
 			}
 
-			poolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
+			poolAssets = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 		)
 
 		poolParams := balancer.PoolParams{

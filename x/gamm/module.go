@@ -15,11 +15,12 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	gammsimulation "github.com/osmosis-labs/osmosis/v7/x/gamm/simulation"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
 )
 
@@ -87,9 +88,6 @@ type AppModule struct {
 	ak     types.AccountKeeper
 	bk     types.BankKeeper
 	keeper keeper.Keeper
-
-	accountKeeper stakingtypes.AccountKeeper
-	bankKeeper    stakingtypes.BankKeeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -117,7 +115,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // Route returns the message routing key for the gamm module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(&am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the gamm module's querier route name.
@@ -158,3 +156,12 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// **** simulation implementation ****
+
+func (am AppModule) Actions() []simulation.Action {
+	return []simulation.Action{
+		simulation.NewMsgBasedAction("MsgJoinPool", gammsimulation.CurrySimMsgJoinPool(am.keeper)),
+		simulation.NewCurriedMsgBasedAction("Msg create univ2 pool", am.keeper, gammsimulation.RandomCreateUniv2PoolMsg),
+	}
+}

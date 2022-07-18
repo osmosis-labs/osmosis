@@ -10,36 +10,42 @@ import "osmosis/superfluid/superfluid.proto";
 import "osmosis/superfluid/params.proto";
 import "osmosis/lockup/lock.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/staking/v1beta1/staking.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Params returns the total set of minting parameters.
+  // Params returns the total set of superfluid parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/params";
   }
 
-  // Returns superfluid asset type
+  // Returns superfluid asset type, whether if it's a native asset or an lp
+  // share.
   rpc AssetType(AssetTypeRequest) returns (AssetTypeResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/asset_type";
   }
-  // Returns all superfluid asset types
+
+  // Returns all registered superfluid assets.
   rpc AllAssets(AllAssetsRequest) returns (AllAssetsResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/all_assets";
   }
-  // Returns superfluid asset Multiplier
+
+  // Returns the osmo equivalent multiplier used in the most recent epoch.
   rpc AssetMultiplier(AssetMultiplierRequest)
       returns (AssetMultiplierResponse) {
     option (google.api.http).get =
         "/osmosis/superfluid/v1beta1/asset_multiplier";
   }
-  // Returns all superfluid intermediary account
+
+  // Returns all superfluid intermediary accounts.
   rpc AllIntermediaryAccounts(AllIntermediaryAccountsRequest)
       returns (AllIntermediaryAccountsResponse) {
     option (google.api.http).get =
         "/osmosis/superfluid/v1beta1/all_intermediary_accounts";
   }
+
   // Returns intermediary account connected to a superfluid staked lock by id
   rpc ConnectedIntermediaryAccount(ConnectedIntermediaryAccountRequest)
       returns (ConnectedIntermediaryAccountResponse) {
@@ -47,15 +53,15 @@ service Query {
         "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
   }
 
-  // Returns the total amount of osmo superfluidly staked
-  // response denominated in uosmo
+  // Returns the total amount of osmo superfluidly staked.
+  // Response is denominated in uosmo.
   rpc TotalSuperfluidDelegations(TotalSuperfluidDelegationsRequest)
       returns (TotalSuperfluidDelegationsResponse) {
     option (google.api.http).get =
         "/osmosis/superfluid/v1beta1/all_superfluid_delegations";
   }
 
-  // Returns the coins superfluid delegated for a delegator, validator, denom
+  // Returns the coins superfluid delegated for the delegator, validator, denom
   // triplet
   rpc SuperfluidDelegationAmount(SuperfluidDelegationAmountRequest)
       returns (SuperfluidDelegationAmountResponse) {
@@ -63,13 +69,14 @@ service Query {
         "/osmosis/superfluid/v1beta1/superfluid_delegation_amount";
   }
 
-  // Returns all the superfluid poistions for a specific delegator
+  // Returns all the delegated superfluid poistions for a specific delegator.
   rpc SuperfluidDelegationsByDelegator(SuperfluidDelegationsByDelegatorRequest)
       returns (SuperfluidDelegationsByDelegatorResponse) {
     option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
                                    "superfluid_delegations/{delegator_address}";
   }
 
+  // Returns all the undelegating superfluid poistions for a specific delegator.
   rpc SuperfluidUndelegationsByDelegator(
       SuperfluidUndelegationsByDelegatorRequest)
       returns (SuperfluidUndelegationsByDelegatorResponse) {
@@ -98,20 +105,13 @@ service Query {
         "estimate_superfluid_delegation_amount_by_validator_denom";
   }
 
-  // // Returns all the unbonding superfluid positions of a delegator
-  // rpc SuperfluidUnbondingsByDelegator(SuperfluidUnbondingsByDelegatorRequest)
-  //   returns (SuperfluidUnbondingsByDelegatorResponse) {
-  // option (google.api.http).get =
-  //     "/osmosis/superfluid/v1beta1/superfluid_unbondings/{delegator_address}";
-  // }
-
-  // // Returns all the unbonding superfluid positions of a specific denom
-  // unbonding from one validator rpc
-  // SuperfluidUnbondingsByValidatorDenom(SuperfluidUnbondingsByValidatorDenomRequest)
-  //     returns (SuperfluidUnbondingsByValidatorDenomResponse) {
-  //   option (google.api.http).get =
-  //       "/osmosis/superfluid/v1beta1/superfluid_unbondings_by_validator_denom";
-  // }
+  // Returns the specified delegations for a specific delegator
+  rpc TotalDelegationByDelegator(QueryTotalDelegationByDelegatorRequest)
+      returns (QueryTotalDelegationByDelegatorResponse) {
+    option (google.api.http).get =
+        "/osmosis/superfluid/v1beta1/"
+        "total_delegation_by_delegator/{delegator_address}";
+  }
 }
 
 message QueryParamsRequest {}
@@ -231,29 +231,20 @@ message EstimateSuperfluidDelegatedAmountByValidatorDenomResponse {
   ];
 }
 
-// message SuperfluidUnbondingsByDelegatorRequest {
-//   string delegator_address = 1;
-// }
+message QueryTotalDelegationByDelegatorRequest { string delegator_address = 1; }
 
-// message SuperfluidUnbondingsByDelegatorResponse {
-//   repeated SuperfluidDelegationRecord superfluid_unbonding_records = 1
-//   [ (gogoproto.nullable) = false ];
-//   repeated cosmos.base.v1beta1.Coin total_unbonding_coins = 2 [
-//     (gogoproto.nullable) = false,
-//     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-//   ];
-// }
+message QueryTotalDelegationByDelegatorResponse {
+  repeated SuperfluidDelegationRecord superfluid_delegation_records = 1
+      [ (gogoproto.nullable) = false ];
 
-// message SuperfluidUnbondingsByValidatorDenomRequest {
-//   string validator_address = 1;
-//   string denom = 2;
-// }
-
-// message SuperfluidUnbondingsByValidatorDenomResponse {
-//   repeated SuperfluidDelegationRecord superfluid_unbonding_records = 1
-//   [ (gogoproto.nullable) = false ];
-//   repeated cosmos.base.v1beta1.Coin total_unbonding_coins = 2 [
-//     (gogoproto.nullable) = false,
-//     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-//   ];
-// }
+  repeated cosmos.staking.v1beta1.DelegationResponse delegation_response = 2
+      [ (gogoproto.nullable) = false ];
+  repeated cosmos.base.v1beta1.Coin total_delegated_coins = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  cosmos.base.v1beta1.Coin total_equivalent_staked_amount = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}
