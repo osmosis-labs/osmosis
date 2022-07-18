@@ -243,7 +243,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params returns the total set of minting parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// EpochProvisions current minting epoch provisions value.
+	// EpochProvisions returns the current minting epoch provisions value.
 	EpochProvisions(ctx context.Context, in *QueryEpochProvisionsRequest, opts ...grpc.CallOption) (*QueryEpochProvisionsResponse, error)
 }
 
@@ -277,7 +277,7 @@ func (c *queryClient) EpochProvisions(ctx context.Context, in *QueryEpochProvisi
 type QueryServer interface {
 	// Params returns the total set of minting parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// EpochProvisions current minting epoch provisions value.
+	// EpochProvisions returns the current minting epoch provisions value.
 	EpochProvisions(context.Context, *QueryEpochProvisionsRequest) (*QueryEpochProvisionsResponse, error)
 }
 
