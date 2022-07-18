@@ -55,7 +55,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 }
 
 // TODO: Fix CalcJoinPoolShares API so we don't have to do this
-func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.PoolI) (sdk.Int, err) {
+func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.PoolI) (sdk.Int, error) {
 	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, tokenIn, pool.GetSwapFee(ctx))
 	if err != nil {
 		return sdk.Int{}, err
