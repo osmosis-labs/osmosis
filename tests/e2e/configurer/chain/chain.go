@@ -67,8 +67,7 @@ func (c *Config) RemoveNode(nodeName string) error {
 	for i, node := range c.NodeConfigs {
 		if node.Name == nodeName {
 			c.NodeConfigs = append(c.NodeConfigs[:i], c.NodeConfigs[i+1:]...)
-			node.Stop()
-			return nil
+			return node.Stop()
 		}
 	}
 	return fmt.Errorf("node %s not found", nodeName)
