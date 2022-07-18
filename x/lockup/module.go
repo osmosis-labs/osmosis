@@ -188,8 +188,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // WeightedOperations returns the all the lockup module operations with their respective weights.
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
-		simtypes.NewCurriedMsgBasedAction("lock tokens", am.keeper, simulation.RandomMsgLockTokens),
-		simtypes.NewCurriedMsgBasedAction("unlock all tokens", am.keeper, simulation.RandomMsgBeginUnlockingAll),
-		simtypes.NewCurriedMsgBasedAction("unlock lock", am.keeper, simulation.RandomMsgBeginUnlocking),
+		simtypes.NewMsgBasedAction("lock tokens", am.keeper, simulation.RandomMsgLockTokens),
+		simtypes.NewMsgBasedAction("unlock all tokens", am.keeper, simulation.RandomMsgBeginUnlockingAll),
+		simtypes.NewMsgBasedAction("unlock lock", am.keeper, simulation.RandomMsgBeginUnlocking),
 	}
 }

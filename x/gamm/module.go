@@ -161,7 +161,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
-		simtypes.NewMsgBasedAction("MsgJoinPool", simulation.CurrySimMsgJoinPool(am.keeper)),
-		simtypes.NewCurriedMsgBasedAction("Msg create univ2 pool", am.keeper, simulation.RandomCreateUniv2PoolMsg),
+		simtypes.NewKeeperlessMsgBasedAction("MsgJoinPool", simulation.CurrySimMsgJoinPool(am.keeper)),
+		simtypes.NewMsgBasedAction("Msg create univ2 pool", am.keeper, simulation.RandomCreateUniv2PoolMsg),
 	}
 }
