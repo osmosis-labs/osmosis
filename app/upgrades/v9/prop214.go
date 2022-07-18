@@ -25,8 +25,9 @@ func ExecuteProp214(ctx sdk.Context, gamm *gammkeeper.Keeper) {
 
 	balancerPool.PoolParams.SwapFee = sdk.MustNewDecFromStr("0.002")
 
-	err = gamm.SetPool(ctx, balancerPool)
-	if err != nil {
-		panic(err)
-	}
+	// Kept as comments for recordkeeping. SetPool is now private:
+	// 		err = gamm.SetPool(ctx, balancerPool)
+	// 		if err != nil {
+	//	 		panic(err)
+	//  	}
 }

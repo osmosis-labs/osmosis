@@ -143,7 +143,7 @@ func (k Keeper) updatePoolForSwap(
 	tokensIn := sdk.Coins{tokenIn}
 	tokensOut := sdk.Coins{tokenOut}
 
-	err := k.SetPool(ctx, pool)
+	err := k.setPool(ctx, pool)
 	if err != nil {
 		return err
 	}

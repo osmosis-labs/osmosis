@@ -8,11 +8,19 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
+<<<<<<< HEAD:x/gamm/genesis.go
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, unpacker codectypes.AnyUnpacker) {
 	k.SetParams(ctx, genState.Params)
 	k.SetNextPoolNumber(ctx, genState.NextPoolNumber)
+=======
+// InitGenesis initializes the x/gamm module's state from a provided genesis
+// state, which includes the current live pools, global pool parameters (e.g. pool creation fee), next pool number etc.
+func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpacker codectypes.AnyUnpacker) {
+	k.setParams(ctx, genState.Params)
+	k.setNextPoolNumber(ctx, genState.NextPoolNumber)
+>>>>>>> 7fb5f824 (x/gamm: Make all internal set functions private (#2013)):x/gamm/keeper/genesis.go
 
 	liquidity := sdk.Coins{}
 	for _, any := range genState.Pools {
@@ -21,7 +29,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 		if err != nil {
 			panic(err)
 		}
-		err = k.SetPool(ctx, pool)
+		err = k.setPool(ctx, pool)
 		if err != nil {
 			panic(err)
 		}
@@ -32,7 +40,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState, 
 		}
 	}
 
-	k.SetTotalLiquidity(ctx, liquidity)
+	k.setTotalLiquidity(ctx, liquidity)
 }
 
 // ExportGenesis returns the capability module's exported genesis.
