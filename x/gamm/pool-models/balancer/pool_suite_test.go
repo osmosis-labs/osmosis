@@ -704,7 +704,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 
 			// system under test
 			sut := func() {
-				shares, liquidity, err := pool.CalcMultiTokenInJoinPoolShares(suite.Ctx, tc.tokensIn, tc.swapFee)
+				shares, liquidity, err := pool.CalcJoinPoolShares(suite.Ctx, tc.tokensIn, tc.swapFee)
 				if tc.expErr != nil {
 					require.Error(t, err)
 					require.ErrorAs(t, tc.expErr, &err)
