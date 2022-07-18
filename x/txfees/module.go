@@ -1,3 +1,12 @@
+/*
+The txfees modules allows nodes to easily support many
+tokens for usage as txfees, while letting node operators
+only specify their tx fee parameters for a single "base" asset.
+
+- Adds a whitelist of tokens that can be used as fees on the chain.
+- Any token not on this list cannot be provided as a tx fee.
+- Adds a new SDK message for creating governance proposals for adding new TxFee denoms.
+*/
 package txfees
 
 import (

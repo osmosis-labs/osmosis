@@ -1,3 +1,12 @@
+/*
+Package gamm contains a variety of generalized automated market maker
+functionality which provides the logic to create and interact with
+liquidity pools on the Osmosis DEX.
+ - Has pool creation, join pool, and exit pool logic
+ - Token swap logic
+ - GAMM pool queries
+*/
+
 package gamm
 
 import (

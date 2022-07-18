@@ -2,7 +2,9 @@
 // source: osmosis/incentives/query.proto
 
 /*
-Package types translates gRPC into RESTful JSON APIs.
+Package types is a reverse proxy.
+
+It translates gRPC into RESTful JSON APIs.
 */
 package types
 

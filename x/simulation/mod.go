@@ -1,3 +1,10 @@
+/*
+A module used for simulation testing pre-production.
+Please refer to the contributing guide on further details
+on how this is used in production.
+
+https://github.com/osmosis-labs/osmosis/blob/main/CONTRIBUTING.md
+*/
 package simulation
 
 import (
