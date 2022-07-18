@@ -300,19 +300,19 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range developerRewardsReceivers {
+			devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
+			if err != nil {
+				return sdk.Int{}, err
+			}
+			devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
 			// fund community pool when rewards address is empty.
 			if w.Address == emptyWeightedAddressReceiver {
-				err := k.distrKeeper.FundCommunityPool(ctx, devRewardCoins,
+				err := k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
 					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
 				if err != nil {
 					return sdk.Int{}, err
 				}
 			} else {
-				devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
-				if err != nil {
-					return sdk.Int{}, err
-				}
-				devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
 				devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
 				if err != nil {
 					return sdk.Int{}, err
