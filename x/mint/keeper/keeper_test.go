@@ -130,7 +130,7 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			coin, err := keeper.GetProportions(tc.mintedCoin, tc.ratio)
+			coin, err := keeper.GetProportions(suite.Ctx, tc.mintedCoin, tc.ratio)
 
 			if tc.expectedError != nil {
 				suite.Require().Equal(tc.expectedError, err)
@@ -168,7 +168,8 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin_ToDeveloperRewardsAddr() 
 				{
 					Address: testAddressOne.String(),
 					Weight:  sdk.NewDec(1),
-				}},
+				},
+			},
 			mintCoin: sdk.NewCoin("stake", sdk.NewInt(10000)),
 		},
 		{
@@ -181,7 +182,8 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin_ToDeveloperRewardsAddr() 
 				{
 					Address: testAddressFour.String(),
 					Weight:  sdk.NewDecWithPrec(4, 1),
-				}},
+				},
+			},
 			mintCoin: sdk.NewCoin("stake", sdk.NewInt(100000)),
 		},
 		{
@@ -236,7 +238,7 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin_ToDeveloperRewardsAddr() 
 					feePool.CommunityPool.AmountOf("stake"))
 			} else {
 				suite.Equal(
-					//distribution go to community pool because nil dev reward addresses.
+					// distribution go to community pool because nil dev reward addresses.
 					tc.mintCoin.Amount.ToDec().Mul((params.DistributionProportions.DeveloperRewards).Add(params.DistributionProportions.CommunityPool)),
 					feePool.CommunityPool.AmountOf("stake"))
 			}
@@ -313,18 +315,18 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 		},
 		"nil amount": {
 			blockHeight:   0,
-			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"zero amount": {
 			blockHeight:   0,
 			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
-			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"module account is already created": {
 			blockHeight:                     0,
 			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
 			isDeveloperModuleAccountCreated: true,
-			expectedError:                   keeper.ErrDevVestingModuleAccountAlreadyCreated,
+			expectedError:                   sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName),
 		},
 	}
 
@@ -338,7 +340,7 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 
 			if tc.expectedError != nil {
 				suite.Error(actualError)
-				suite.Equal(actualError, tc.expectedError)
+				suite.ErrorIs(actualError, tc.expectedError)
 				return
 			}
 			suite.NoError(actualError)
@@ -359,7 +361,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 		},
 		"dev vesting module account does not exist": {
 			blockHeight:   1,
-			expectedError: keeper.ErrDevVestingModuleAccountNotCreated,
+			expectedError: sdkerrors.Wrapf(types.ErrModuleDoesnotExist, "%s vesting module account doesnot exist", types.DeveloperVestingModuleAcctName),
 		},
 	}
 
@@ -378,7 +380,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 
 			if tc.expectedError != nil {
 				suite.Error(actualError)
-				suite.Equal(actualError, tc.expectedError)
+				suite.ErrorIs(actualError, tc.expectedError)
 
 				suite.Equal(supplyWithOffsetBefore.Amount, bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 				suite.Equal(supplyOffsetBefore, bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))

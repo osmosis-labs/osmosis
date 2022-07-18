@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) TestEndOfEpochMintedCoinDistribution() {
 
 		mintParams = app.MintKeeper.GetParams(ctx)
 		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
-		expectedRewardsCoin, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.Staking)
+		expectedRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking)
 		suite.NoError(err)
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsCoin.Amount)
 
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestEndOfEpochMintedCoinDistribution() {
 
 		// test that the dev rewards module account balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewards, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
+		expectedDevRewards, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
 		suite.NoError(err)
 		suite.Equal(devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
@@ -92,7 +92,7 @@ func (suite *KeeperTestSuite) TestEndOfEpochMintedCoinDistribution() {
 
 		mintParams = app.MintKeeper.GetParams(ctx)
 		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
-		expectedRewardsCoin, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.Staking)
+		expectedRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking)
 		suite.NoError(err)
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsCoin.Amount)
 
@@ -102,7 +102,7 @@ func (suite *KeeperTestSuite) TestEndOfEpochMintedCoinDistribution() {
 
 		// test that the balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewardsCoin, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
+		expectedDevRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
 		suite.NoError(err)
 		suite.Equal(devRewardsModuleAfter.Add(expectedDevRewardsCoin), devRewardsModuleOrigin, expectedRewards.String())
 	}
@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 
 		mintParams := app.MintKeeper.GetParams(ctx)
 		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
-		expectedRewardsCoin, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards))
+		expectedRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards))
 		suite.NoError(err)
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsCoin.Amount)
 
@@ -142,7 +142,7 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 
 		// test that the dev rewards module account balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewardsCoin, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
+		expectedDevRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
 		suite.NoError(err)
 		suite.Equal(devRewardsModuleAfter.Add(expectedDevRewardsCoin), devRewardsModuleOrigin, expectedRewards.String())
 	}
@@ -163,7 +163,7 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 
 		mintParams := app.MintKeeper.GetParams(ctx)
 		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
-		expectedRewardsCoin, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards))
+		expectedRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards))
 		suite.NoError(err)
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsCoin.Amount)
 
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 
 		// test that the dev rewards module account balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewardsCoin, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
+		expectedDevRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
 		suite.NoError(err)
 		suite.Equal(devRewardsModuleAfter.Add(expectedDevRewardsCoin), devRewardsModuleOrigin, expectedRewards.String())
 	}
