@@ -62,7 +62,7 @@ func (c *Config) CreateNode(initNode *initialization.Node) *NodeConfig {
 	return nodeConfig
 }
 
-// RemoveNode removes the node from chain and stops it from running.
+// RemoveNode removes node and stops it from running.
 func (c *Config) RemoveNode(nodeName string) error {
 	for i, node := range c.NodeConfigs {
 		if node.Name == nodeName {
