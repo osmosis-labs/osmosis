@@ -29,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdksimapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -53,6 +52,7 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
+	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
 )
 
 const appName = "OsmosisApp"
@@ -87,7 +87,7 @@ var (
 	// EmptyWasmOpts defines a type alias for a list of wasm options.
 	EmptyWasmOpts []wasm.Option
 
-	_ sdksimapp.App = (*OsmosisApp)(nil)
+	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
 	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
@@ -128,7 +128,7 @@ type OsmosisApp struct {
 	invCheckPeriod    uint
 
 	mm           *module.Manager
-	sm           *module.SimulationManager
+	sm           *simulation.Manager
 	configurator module.Configurator
 }
 
@@ -231,11 +231,6 @@ func NewOsmosisApp(
 	// Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
 	app.mm.SetOrderEndBlockers(OrderEndBlockers(app.mm.ModuleNames())...)
 
-	// NOTE: The genutils moodule must occur after staking so that pools are
-	// properly initialized with tokens from genesis accounts.
-	// NOTE: Capability module must occur first so that it can initialize any capabilities
-	// so that other modules that want to create or claim capabilities afterwards in InitChain
-	// can do so safely.
 	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -246,12 +241,9 @@ func NewOsmosisApp(
 	app.setupUpgradeHandlers()
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
-	//
-	// NOTE: this is not required apps that don't use the simulator for fuzz testing
-	// transactions
-	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig, skipGenesisInvariants)...)
+	app.sm = createSimulationManager(app, encodingConfig, skipGenesisInvariants)
 
-	app.sm.RegisterStoreDecoders()
+	// app.sm.RegisterStoreDecoders()
 
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
@@ -312,6 +304,10 @@ func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 	return config.Marshaler, config.Amino
 }
 
+func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
+	return app.BaseApp
+}
+
 // Name returns the name of the App.
 func (app *OsmosisApp) Name() string { return app.BaseApp.Name() }
 
@@ -365,7 +361,7 @@ func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
 }
 
 // SimulationManager implements the SimulationApp interface.
-func (app *OsmosisApp) SimulationManager() *module.SimulationManager {
+func (app *OsmosisApp) SimulationManager() *simulation.Manager {
 	return app.sm
 }
 

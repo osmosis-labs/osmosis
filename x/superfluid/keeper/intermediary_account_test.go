@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountCreation() {
 				suite.Require().Equal(uint64(0), interAcc.GaugeId)
 				suite.Require().Equal("", interAcc.ValAddr)
 
-				lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, denom, superDelegation.lpAmount)
+				lock := suite.setupSuperfluidDelegate(delAddr, valAddr, denom, superDelegation.lpAmount)
 
 				// check that intermediary Account connection is established
 				interAccConnection := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)

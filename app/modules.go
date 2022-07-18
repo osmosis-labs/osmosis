@@ -43,6 +43,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
 	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v7/osmoutils/partialord"
+	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
 	"github.com/osmosis-labs/osmosis/v7/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v7/x/gamm"
@@ -170,6 +171,11 @@ func OrderEndBlockers(allModuleNames []string) []string {
 
 // OrderInitGenesis returns module names in order for init genesis calls.
 func OrderInitGenesis(allModuleNames []string) []string {
+	// NOTE: The genutils moodule must occur after staking so that pools are
+	// properly initialized with tokens from genesis accounts.
+	// NOTE: Capability module must occur first so that it can initialize any capabilities
+	// so that other modules that want to create or claim capabilities afterwards in InitChain
+	// can do so safely.
 	return []string{
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
@@ -202,34 +208,20 @@ func OrderInitGenesis(allModuleNames []string) []string {
 	}
 }
 
-// simulationModules returns modules for simulation manager
-func simulationModules(
+// createSimulationManager returns a simulation manager
+// must be ran after modulemanager.SetInitGenesisOrder
+func createSimulationManager(
 	app *OsmosisApp,
 	encodingConfig appparams.EncodingConfig,
 	skipGenesisInvariants bool,
-) []module.AppModuleSimulation {
+) *simulation.Manager {
 	appCodec := encodingConfig.Marshaler
 
-	// recreate list of modules, to ensure no issues with overriding prior module structs.
-	modules := appModules(app, encodingConfig, skipGenesisInvariants)
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
 	}
-
-	simModules := []module.AppModuleSimulation{}
-	for _, appModule := range modules {
-		// For every module, see if we override it. If so, use override.
-		// Else, if we can cast the app module into a simulation module add it.
-		// otherwise no simulation module.
-		if simModule, ok := overrideModules[appModule.Name()]; ok {
-			simModules = append(simModules, simModule)
-		} else {
-			if simModule, ok := appModule.(module.AppModuleSimulation); ok {
-				simModules = append(simModules, simModule)
-			}
-		}
-	}
-	return simModules
+	simulationManager := simulation.NewSimulationManager(*app.mm, overrideModules)
+	return &simulationManager
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
@@ -240,4 +232,12 @@ func (app *OsmosisApp) ModuleAccountAddrs() map[string]bool {
 	}
 
 	return modAccAddrs
+}
+
+func (app *OsmosisApp) GetAccountKeeper() simulation.AccountKeeper {
+	return app.AppKeepers.AccountKeeper
+}
+
+func (app *OsmosisApp) GetBankKeeper() simulation.BankKeeper {
+	return app.AppKeepers.BankKeeper
 }

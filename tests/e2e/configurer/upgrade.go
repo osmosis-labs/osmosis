@@ -71,7 +71,6 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	}
 
 	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.Id, int(chainConfig.VotingPeriod), validatorConfigBytes, tmpDir, int(forkHeight))
-
 	if err != nil {
 		return err
 	}
@@ -106,17 +105,26 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	return nil
 }
 
-func (uc *UpgradeConfigurer) CreatePreUpgradeState() {
+func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA := uc.chainConfigs[0]
+	chainANode, err := chainA.GetDefaultNode()
+	if err != nil {
+		return err
+	}
 	chainB := uc.chainConfigs[1]
+	chainBNode, err := chainB.GetDefaultNode()
+	if err != nil {
+		return err
+	}
 
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
-	chainA.CreatePool("pool1A.json", initialization.ValidatorWalletName)
-	chainB.CreatePool("pool1B.json", initialization.ValidatorWalletName)
+	chainANode.CreatePool("pool1A.json", initialization.ValidatorWalletName)
+	chainBNode.CreatePool("pool1B.json", initialization.ValidatorWalletName)
+	return nil
 }
 
 func (uc *UpgradeConfigurer) RunSetup() error {
@@ -134,18 +142,25 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	// submit, deposit, and vote for upgrade proposal
 	// prop height = current height + voting period + time it takes to submit proposal + small buffer
 	for _, chainConfig := range uc.chainConfigs {
-		currentHeight := chainConfig.QueryCurrentChainHeightFromValidator(0)
-		chainConfig.PropHeight = currentHeight + int(chainConfig.VotingPeriod) + int(config.PropSubmitBlocks) + int(config.PropBufferBlocks)
-
-		chainConfig.SubmitUpgradeProposal(uc.upgradeVersion)
-		chainConfig.DepositProposal()
-		chainConfig.VoteYesProposal()
+		for validatorIdx, node := range chainConfig.NodeConfigs {
+			if validatorIdx == 0 {
+				currentHeight, err := node.QueryCurrentHeight()
+				if err != nil {
+					return err
+				}
+				chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
+				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight)
+				chainConfig.LatestProposalNumber += 1
+				node.DepositProposal(chainConfig.LatestProposalNumber)
+			}
+			node.VoteYesProposal(initialization.ValidatorWalletName, chainConfig.LatestProposalNumber)
+		}
 	}
 
 	// wait till all chains halt at upgrade height
 	for _, chainConfig := range uc.chainConfigs {
 		uc.t.Logf("waiting to reach upgrade height on chain %s", chainConfig.Id)
-		if err := chainConfig.WaitUntilHeight(int64(chainConfig.PropHeight)); err != nil {
+		if err := chainConfig.WaitUntilHeight(chainConfig.UpgradePropHeight); err != nil {
 			return err
 		}
 		uc.t.Logf("upgrade height reached on chain %s", chainConfig.Id)
@@ -154,7 +169,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	// remove all containers so we can upgrade them to the new version
 	for _, chainConfig := range uc.chainConfigs {
 		for _, validatorConfig := range chainConfig.NodeConfigs {
-			err := uc.containerManager.RemoveValidatorResource(chainConfig.Id, validatorConfig.Name)
+			err := uc.containerManager.RemoveNodeResource(validatorConfig.Name)
 			if err != nil {
 				return err
 			}
@@ -163,7 +178,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 
 	// remove all containers so we can upgrade them to the new version
 	for _, chainConfig := range uc.chainConfigs {
-		if err := uc.upgradeContainers(chainConfig, chainConfig.PropHeight); err != nil {
+		if err := uc.upgradeContainers(chainConfig, chainConfig.UpgradePropHeight); err != nil {
 			return err
 		}
 	}
@@ -181,20 +196,20 @@ func (uc *UpgradeConfigurer) runForkUpgrade() error {
 	return nil
 }
 
-func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int) error {
+func (uc *UpgradeConfigurer) upgradeContainers(chainConfig *chain.Config, propHeight int64) error {
 	// upgrade containers to the locally compiled daemon
 	uc.t.Logf("starting upgrade for chain-id: %s...", chainConfig.Id)
 	uc.containerManager.OsmosisRepository = containers.CurrentBranchOsmoRepository
 	uc.containerManager.OsmosisTag = containers.CurrentBranchOsmoTag
 
-	for nodeIndex := range chainConfig.NodeConfigs {
-		if err := chainConfig.RunNode(nodeIndex); err != nil {
+	for _, node := range chainConfig.NodeConfigs {
+		if err := node.Run(); err != nil {
 			return err
 		}
 	}
 
 	uc.t.Logf("waiting to upgrade containers on chain %s", chainConfig.Id)
-	if err := chainConfig.WaitUntilHeight(int64(propHeight)); err != nil {
+	if err := chainConfig.WaitUntilHeight(propHeight); err != nil {
 		return err
 	}
 	uc.t.Logf("upgrade successful on chain %s", chainConfig.Id)
