@@ -6,14 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/osmomath"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/osmomath"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
->>>>>>> e2d49117 (refactor: consolidate pool implementation (#1868))
 )
 
 // subPoolAssetWeights subtracts the weights of two different pool asset slices.

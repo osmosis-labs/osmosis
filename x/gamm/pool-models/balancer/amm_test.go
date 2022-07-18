@@ -6,13 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
->>>>>>> e2d49117 (refactor: consolidate pool implementation (#1868))
 )
 
 func TestBalancerPoolParams(t *testing.T) {

@@ -11,16 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-<<<<<<< HEAD:x/gamm/pool-models/balancer/amm_joinpool_test.go
 	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
-	v10 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v10"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
->>>>>>> e2d49117 (refactor: consolidate pool implementation (#1868)):x/gamm/pool-models/balancer/pool_suite_test.go
 )
 
 const (
