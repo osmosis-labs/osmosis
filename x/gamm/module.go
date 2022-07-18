@@ -16,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
@@ -159,9 +159,9 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // **** simulation implementation ****
 
-func (am AppModule) Actions() []simulation.Action {
-	return []simulation.Action{
-		simulation.NewMsgBasedAction("MsgJoinPool", gammsimulation.CurrySimMsgJoinPool(am.keeper)),
-		simulation.NewCurriedMsgBasedAction("Msg create univ2 pool", am.keeper, gammsimulation.RandomCreateUniv2PoolMsg),
+func (am AppModule) Actions() []simtypes.Action {
+	return []simtypes.Action{
+		simtypes.NewMsgBasedAction("MsgJoinPool", gammsimulation.CurrySimMsgJoinPool(am.keeper)),
+		simtypes.NewCurriedMsgBasedAction("Msg create univ2 pool", am.keeper, gammsimulation.RandomCreateUniv2PoolMsg),
 	}
 }

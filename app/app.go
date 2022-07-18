@@ -52,7 +52,7 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
-	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	simulation "github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 const appName = "OsmosisApp"

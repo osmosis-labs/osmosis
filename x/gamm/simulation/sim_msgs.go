@@ -7,21 +7,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
 	balancertypes "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
-func CurrySimMsgJoinPool(k keeper.Keeper) func(sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
-	return func(sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
+func CurrySimMsgJoinPool(k keeper.Keeper) func(sim *simtypes.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
+	return func(sim *simtypes.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
 		return RandomJoinPoolMsg(k, sim, ctx)
 	}
 }
 
-func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
+func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
 	// Get pool
-	pool_id := simulation.RandLTBound(sim, k.GetNextPoolNumber(ctx))
+	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
 		return &gammtypes.MsgJoinPool{}, err
@@ -44,7 +44,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 	}, nil
 }
 
-func RandomCreateUniv2PoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
+func RandomCreateUniv2PoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
 	// 1) Select two denoms, ideally with some frequency weighting based on distribution amongst addrs
 	// 2) Select sender with both denoms + creation fee
 	// 3) Create pool

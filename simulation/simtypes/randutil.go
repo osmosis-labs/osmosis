@@ -1,4 +1,4 @@
-package simulation
+package simtypes
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/constraints"
 
-	sdkrand "github.com/osmosis-labs/osmosis/v10/simulation/types/random"
+	sdkrand "github.com/osmosis-labs/osmosis/v10/simulation/simtypes/random"
 )
 
 func RandLTBound[T constraints.Integer](sim *SimCtx, upperbound T) T {
