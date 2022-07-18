@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
 	balancertypes "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 var (
@@ -22,30 +21,30 @@ var (
 
 // RandomJoinPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective underlying token denoms, and attempts to execute a join pool transaction
-func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgJoinPool, error) {
+func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*types.MsgJoinPool, error) {
 	// get random pool
 	pool_id := simulation.RandLTBound(sim, k.GetNextPoolNumber(ctx))
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
-		return &gammtypes.MsgJoinPool{}, err
+		return &types.MsgJoinPool{}, err
 	}
 	// get address that has all denoms from the randomly selected pool
 	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
 	sender, tokenIn, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
 	if !senderExists {
-		return &gammtypes.MsgJoinPool{}, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
+		return &types.MsgJoinPool{}, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 
 	// cap joining pool to double the pool liquidity
 	for i, coinPool := range pool.GetTotalPoolLiquidity(ctx) {
 		if coinPool.Amount.LT(tokenIn[i].Amount) {
-			return &gammtypes.MsgJoinPool{}, fmt.Errorf("join pool is capped to the pool liquidity")
+			return &types.MsgJoinPool{}, fmt.Errorf("join pool is capped to the pool liquidity")
 		}
 	}
 
 	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, tokenIn, pool.GetSwapFee(ctx))
 	if err != nil {
-		return &gammtypes.MsgJoinPool{}, err
+		return &types.MsgJoinPool{}, err
 	}
 
 	totalSharesAmount := pool.GetTotalShares()
@@ -53,7 +52,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 	// shares currently in the pool. It is intended to be used in scenarios where you want
 	shareRatio := minShareOutAmt.ToDec().QuoInt(totalSharesAmount)
 	if shareRatio.LTE(sdk.ZeroDec()) {
-		return &gammtypes.MsgJoinPool{}, fmt.Errorf("share ratio is zero or negative")
+		return &types.MsgJoinPool{}, fmt.Errorf("share ratio is zero or negative")
 	}
 
 	poolLiquidity := pool.GetTotalPoolLiquidity(ctx)
@@ -63,7 +62,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 		// (coin.Amt * shareRatio).Ceil()
 		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
 		if neededAmt.LTE(sdk.ZeroInt()) {
-			return &gammtypes.MsgJoinPool{}, fmt.Errorf("Too few shares out wanted")
+			return &types.MsgJoinPool{}, fmt.Errorf("Too few shares out wanted")
 		}
 		neededCoin := sdk.Coin{Denom: coin.Denom, Amount: neededAmt}
 		neededLpLiquidity = neededLpLiquidity.Add(neededCoin)
@@ -71,10 +70,10 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 
 	if tokenIn.Len() != 0 {
 		if !(neededLpLiquidity.DenomsSubsetOf(tokenIn) && tokenIn.IsAllGTE(neededLpLiquidity)) {
-			return &gammtypes.MsgJoinPool{}, fmt.Errorf("TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
+			return &types.MsgJoinPool{}, fmt.Errorf("TokenInMaxs is less than the needed LP liquidity to this JoinPoolNoSwap,"+
 				" upperbound: %v, needed %v", tokenIn, neededLpLiquidity)
 		} else if !(tokenIn.DenomsSubsetOf(neededLpLiquidity)) {
-			return &gammtypes.MsgJoinPool{}, fmt.Errorf("TokenInMaxs includes tokens that are not part of the target pool,"+
+			return &types.MsgJoinPool{}, fmt.Errorf("TokenInMaxs includes tokens that are not part of the target pool,"+
 				" input tokens: %v, pool tokens %v", tokenIn, neededLpLiquidity)
 		}
 	}
@@ -82,7 +81,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 	// TODO: Make FuzzTokenSubset API, token_in_maxs := sim.FuzzTokensSubset(sender, poolDenoms)
 	// TODO: Add some slippage tolerance
 	// TODO: Make MinShareOutAmt fuzz API: minShareOutAmt = sim.FuzzEqualInt(share_out_amount)
-	return &gammtypes.MsgJoinPool{
+	return &types.MsgJoinPool{
 		Sender:         sender.Address.String(),
 		PoolId:         pool_id,
 		ShareOutAmount: minShareOutAmt,
@@ -92,22 +91,22 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 
 // RandomExitPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective unbonded gamm shares, and attempts to execute an exit pool transaction
-func RandomExitPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*gammtypes.MsgExitPool, error) {
+func RandomExitPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*types.MsgExitPool, error) {
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
 	pool_id := simulation.RandLTBound(sim, k.GetNextPoolNumber(ctx))
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
-		return &gammtypes.MsgExitPool{}, err
+		return &types.MsgExitPool{}, err
 	}
 	// select an address that has gamm shares of the selected pool
 	gammDenom := types.GetPoolShareDenom(pool_id)
 	sender, gammShares, senderExists := sim.SelAddrWithDenom(ctx, gammDenom)
 	if !senderExists {
-		return &gammtypes.MsgExitPool{}, fmt.Errorf("no sender with denom %s exists", gammDenom)
+		return &types.MsgExitPool{}, fmt.Errorf("no sender with denom %s exists", gammDenom)
 	}
 	// calculate the minimum number of tokens received from input of gamm shares
 	tokenOutMins, _ := pool.CalcExitPoolCoinsFromShares(ctx, gammShares.Amount, pool.GetExitFee(ctx))
-	return &gammtypes.MsgExitPool{
+	return &types.MsgExitPool{
 		Sender:        sender.Address.String(),
 		PoolId:        pool_id,
 		ShareInAmount: gammShares.Amount,
