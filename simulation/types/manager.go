@@ -26,7 +26,7 @@ type AppModuleSimulationV2 interface {
 type AppModuleSimulationV2WithRandGenesis interface {
 	AppModuleSimulationV2
 	// TODO: Come back and improve SimulationState interface
-	RandomGenesisState(*module.SimulationState, *SimCtx)
+	GenerateGenesisState(*module.SimulationState, *SimCtx)
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility
@@ -141,7 +141,7 @@ func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *Si
 		if simModule, ok := m.Modules[moduleName]; ok {
 			// if we define a random genesis function use it, otherwise use default genesis
 			if mod, ok := simModule.(AppModuleSimulationV2WithRandGenesis); ok {
-				mod.RandomGenesisState(simState, sim)
+				mod.GenerateGenesisState(simState, sim)
 			} else {
 				simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
 			}

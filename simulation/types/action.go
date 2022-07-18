@@ -77,6 +77,9 @@ func NewCurriedMsgBasedAction[K interface{}, M sdk.Msg](actionName string, k K, 
 	return NewMsgBasedAction(actionName, msgGenerator)
 }
 
+// TODO: make API in simulator action collection interface
+// to add a 'modulename' to many actions
+
 type msgBasedAction struct {
 	name         string
 	weight       Weight

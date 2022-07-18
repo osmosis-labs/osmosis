@@ -40,7 +40,7 @@ func TestFullAppSimulation(t *testing.T) {
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
 	sdkSimapp.FlagEnabledValue = true
-	sdkSimapp.FlagNumBlocksValue = 100
+	sdkSimapp.FlagNumBlocksValue = 200
 	sdkSimapp.FlagBlockSizeValue = 25
 	sdkSimapp.FlagCommitValue = true
 	sdkSimapp.FlagVerboseValue = true
