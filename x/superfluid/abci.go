@@ -1,6 +1,8 @@
 package superfluid
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
 
@@ -16,4 +18,12 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper) {
 	if numBlocksSinceEpochStart == 0 {
 		k.AfterEpochStartBeginBlock(ctx)
 	}
+}
+
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
+	// delete empty intermediary accounts
+	k.DeleteAllEmptyIntermediaryAccounts(ctx)
+
+	return []abci.ValidatorUpdate{}
+
 }

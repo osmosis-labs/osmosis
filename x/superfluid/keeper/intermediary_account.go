@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	"github.com/gogo/protobuf/proto"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
@@ -108,7 +110,22 @@ func (k Keeper) SetIntermediaryAccount(ctx sdk.Context, acc types.SuperfluidInte
 	prefixStore.Set(acc.GetAccAddress(), bz)
 }
 
-func (k Keeper) DeleteIntermediaryAccount(ctx sdk.Context, intermedairyAcc types.SuperfluidIntermediaryAccount) {
+func (k Keeper) DeleteAllEmptyIntermediaryAccounts(ctx sdk.Context) {
+	itermedairyAccounts := k.GetAllIntermediaryAccounts(ctx)
+	for _, intermediaryAccount := range itermedairyAccounts {
+		k.DeleteIntermediaryAccountIfNoDelegation(ctx, intermediaryAccount)
+	}
+}
+
+// DeleteIntermediaryAccount deletes given intermediary account from store
+// Note that intermediary account is highly related to staking and delgation, and this
+// method should be used with caution.
+func (k Keeper) DeleteIntermediaryAccountIfNoDelegation(ctx sdk.Context, intermedairyAcc types.SuperfluidIntermediaryAccount) {
+	// check if any delegations or intermediary connections exist
+	if k.IntermediaryAccountDelegationsExists(ctx, intermedairyAcc) {
+		return
+	}
+
 	store := ctx.KVStore(k.storeKey)
 
 	// store for intermediary account
@@ -116,7 +133,12 @@ func (k Keeper) DeleteIntermediaryAccount(ctx sdk.Context, intermedairyAcc types
 	prefixStore.Delete(intermedairyAcc.GetAccAddress())
 }
 
-func (k Keeper) CheckIntermediaryAccountDelegations(ctx sdk.Context, intermedairyAcc types.SuperfluidIntermediaryAccount) (delegations bool) {
+// IntermediaryAccountDelegationsExists returns true if the gien intermediary account has any delegations.
+// We check this by
+// - using staking keeper to check if actual delegations exist,
+// - checking if there are any intermediary account connection remaining to the intermediaryAcc
+// - if there's no synthetic lock with the intermediaryAccount.Denom + intermediaryAccount.ValAddr combination
+func (k Keeper) IntermediaryAccountDelegationsExists(ctx sdk.Context, intermedairyAcc types.SuperfluidIntermediaryAccount) (delegations bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	// we first check if the intermediary account does not have any connections
@@ -142,6 +164,21 @@ func (k Keeper) CheckIntermediaryAccountDelegations(ctx sdk.Context, intermedair
 		return found
 	}
 
+	// check that the there's no synth denom with the synthdenom from the intermediary account
+	locks := k.lk.GetLocksLongerThanDurationDenom(ctx, intermedairyAcc.Denom, time.Second)
+	for _, lock := range locks {
+		// check if there are bonded synth locks with the synthdenom
+		synthLock, _ := k.lk.GetSyntheticLockup(ctx, lock.ID, stakingSyntheticDenom(intermedairyAcc.Denom, intermedairyAcc.ValAddr))
+		if synthLock != nil {
+			return true
+		}
+
+		// check if there are unbonding synth locks with the synthdenom
+		synthLock, _ = k.lk.GetSyntheticLockup(ctx, lock.ID, unstakingSyntheticDenom(intermedairyAcc.Denom, intermedairyAcc.ValAddr))
+		if synthLock != nil {
+			return true
+		}
+	}
 	return false
 }
 

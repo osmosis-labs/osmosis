@@ -913,6 +913,95 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestDeleteAllEmptyIntermediaryAccounts() {
+	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+	testCases := []struct {
+		name             string
+		validatorStats   []stakingtypes.BondStatus
+		delegatorNumber  int
+		superDelegations []superfluidDelegation
+		// each boolean field should account for each superfluid delegation
+		undelegationStart           []bool
+		timePassedBeforeEpoch       time.Duration
+		expInterAccNumAfterDeletion int
+	}{
+		{
+			"successful intermediary account deletion",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]bool{true},
+			unbondingDuration,
+			0,
+		},
+		{
+			"should not delete when undelegation did not start",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]bool{false},
+			unbondingDuration,
+			1,
+		},
+		{
+			"should not delete when unbonding did not finish",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]bool{false},
+			time.Second,
+			1,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
+
+			// setup validators
+			valAddrs := suite.SetupValidators(tc.validatorStats)
+
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+			intermediaryAccs, locks := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
+
+			// balance of intermediary account before epoch
+			balancesBeforeEpoch := []sdk.Coins{}
+
+			for _, intermediaryAccount := range intermediaryAccs {
+				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, intermediaryAccount.GetAccAddress())
+				balancesBeforeEpoch = append(balancesBeforeEpoch, balance)
+			}
+
+			// start superfluid unstaking
+			for i, lock := range locks {
+				if tc.undelegationStart[i] {
+					err := suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.Owner, lock.ID)
+					suite.Require().NoError(err)
+				}
+			}
+
+			// add unbonding duration time to current block time
+			suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime().Add(tc.timePassedBeforeEpoch))
+
+			// TODO: delete this, this should run in endblocker
+			suite.App.LockupKeeper.DeleteAllMaturedSyntheticLocks(suite.Ctx)
+			suite.App.EndBlocker(suite.Ctx, abci.RequestEndBlock{Height: suite.Ctx.BlockHeight()})
+
+			intermediaryAccs = suite.App.SuperfluidKeeper.GetAllIntermediaryAccounts(suite.Ctx)
+			suite.Require().Equal(tc.expInterAccNumAfterDeletion, len(intermediaryAccs))
+
+			// check balance after possible deletion
+			for i, intermediaryAccount := range intermediaryAccs {
+				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, intermediaryAccount.GetAccAddress())
+				suite.Require().True(balancesBeforeEpoch[i].IsEqual(balance))
+			}
+		})
+	}
+}
 func (suite *KeeperTestSuite) TestSuperfluidDelegationGovernanceVoting() {
 	testCases := []struct {
 		name              string
