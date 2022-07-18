@@ -1,3 +1,11 @@
+/*
+The tokenfactory module allows any account to create a new token with
+the name `factory/{creator address}/{subdenom}`.
+
+- Mint and burn user denom to and form any account
+- Create a transfer of their denom between any two accounts
+- Change the admin. In the future, more admin capabilities may be added.
+*/
 package tokenfactory
 
 import (
