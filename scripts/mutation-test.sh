@@ -23,6 +23,9 @@ OUTPUT=$(go run github.com/zimmski/go-mutesting/cmd/go-mutesting --disable=$DISA
 RESULT=$(echo "$OUTPUT" | grep 'The mutation score')
 SCORE=$(echo "$RESULT" | grep -Eo '[[:digit:]]\.[[:digit:]]+')
 
+echo "writing mutation test result to mutation_test_result.txt"
+echo "$OUTPUT" > mutation_test_result.txt
+
 echo $RESULT
 
 # Return a non-zero exit code if the score is below 75%

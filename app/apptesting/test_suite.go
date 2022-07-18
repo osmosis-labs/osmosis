@@ -23,11 +23,11 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/app"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
 type KeeperTestHelper struct {
@@ -174,16 +174,11 @@ func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, re
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
 func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
-	s.App.GAMMKeeper.SetParams(s.Ctx, gammtypes.Params{
-		PoolCreationFee: sdk.Coins{},
-	})
-
 	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-	poolCreationFee := s.App.GAMMKeeper.GetParams(s.Ctx)
-	s.FundAcc(acc1, poolCreationFee.PoolCreationFee)
+	params := s.App.GAMMKeeper.GetParams(s.Ctx)
 
 	pools := []gammtypes.PoolI{}
 	for index, multiplier := range multipliers {
@@ -193,7 +188,7 @@ func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []s
 		s.FundAcc(acc1, sdk.NewCoins(
 			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
 			sdk.NewInt64Coin(token, 100000),
-		))
+		).Add(params.PoolCreationFee...))
 
 		var (
 			defaultFutureGovernor = ""

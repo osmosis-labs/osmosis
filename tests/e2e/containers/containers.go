@@ -125,7 +125,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			return true
 		},
 		time.Minute,
-		time.Second,
+		50*time.Millisecond,
 		"tx returned a non-zero code",
 	)
 

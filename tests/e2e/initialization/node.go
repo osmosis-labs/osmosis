@@ -29,8 +29,8 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	osmosisApp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
+	osmosisApp "github.com/osmosis-labs/osmosis/v10/app"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
 )
 
 type internalNode struct {
@@ -310,6 +310,7 @@ func (n *internalNode) initValidatorConfigs(c *internalChain, persistentPeers []
 	valConfig.StateSync.Enable = false
 	valConfig.LogLevel = "info"
 	valConfig.P2P.PersistentPeers = strings.Join(persistentPeers, ",")
+	valConfig.Consensus = tmconfig.TestConsensusConfig()
 
 	tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 	return nil

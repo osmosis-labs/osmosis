@@ -15,12 +15,12 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
-	tokenfactorysimulation "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/simulation"
+	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	tokenfactorysimulation "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/simulation"
 
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/client/cli"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 )
 
 var (

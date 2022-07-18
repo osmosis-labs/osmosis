@@ -5,11 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
+	balancertypes "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 // RandomJoinPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the

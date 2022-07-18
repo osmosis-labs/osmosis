@@ -14,8 +14,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
@@ -34,7 +34,7 @@ func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
 		}
 
 		return resp.StatusCode != http.StatusServiceUnavailable
-	}, time.Minute, time.Second*10, "failed to execute HTTP request")
+	}, time.Minute, time.Millisecond*10, "failed to execute HTTP request")
 
 	defer resp.Body.Close()
 

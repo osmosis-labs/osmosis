@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
@@ -81,7 +81,7 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.PoolI, err error) 
 	return res, nil
 }
 
-func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
+func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	bz, err := k.MarshalPool(pool)
 	if err != nil {
 		return err
@@ -255,7 +255,7 @@ func (k *Keeper) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []u
 
 	stableswapPool.ScalingFactor = scalingFactors
 
-	if err = k.SetPool(ctx, stableswapPool); err != nil {
+	if err = k.setPool(ctx, stableswapPool); err != nil {
 		return err
 	}
 	return nil

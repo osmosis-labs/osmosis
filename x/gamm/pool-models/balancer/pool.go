@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v7/osmomath"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/osmomath"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 //nolint:deadcode
@@ -584,6 +584,8 @@ func (p *Pool) SwapInAmtGivenOut(
 
 // ApplySwap.
 func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) error {
+	// Fixed gas consumption per swap to prevent spam
+	ctx.GasMeter().ConsumeGas(types.BalancerGasFeeForSwap, "balancer swap computation")
 	// Also ensures that len(tokensIn) = 1 = len(tokensOut)
 	inPoolAsset, outPoolAsset, err := p.parsePoolAssetsCoins(tokensIn, tokensOut)
 	if err != nil {
