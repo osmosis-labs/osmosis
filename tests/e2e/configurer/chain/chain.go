@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
 type Config struct {
