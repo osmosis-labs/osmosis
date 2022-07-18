@@ -208,10 +208,7 @@ func (sim *SimCtx) RandomFees(ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 		return nil, fmt.Errorf("no coins found for random fees")
 	}
 
-	amt, err := sim.RandPositiveInt(randCoin.Amount)
-	if err != nil {
-		return nil, err
-	}
+	amt := sim.RandPositiveInt(randCoin.Amount)
 
 	// Create a random fee and verify the fees are within the account's spendable
 	// balance.
