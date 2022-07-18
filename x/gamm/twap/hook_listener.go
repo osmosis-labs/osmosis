@@ -3,10 +3,25 @@ package twap
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 var _ types.GammHooks = &gammhook{}
+var _ epochtypes.EpochHooks = &epochhook{}
+
+type epochhook struct {
+	k twapkeeper
+}
+
+func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+	// TODO:
+	// if epochIdentifier == hook.k.PruneIdentifier() {
+	//	 hook.k.pruneOldTwaps(ctx)
+	// }
+}
+
+func (hook *epochhook) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {}
 
 type gammhook struct {
 	k twapkeeper
