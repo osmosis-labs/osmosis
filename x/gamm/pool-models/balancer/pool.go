@@ -22,10 +22,9 @@ const (
 	sharesLargerThanMaxErrFormat    = "%d resulted shares is larger than the max amount of %d"
 	invalidInputDenomsErrFormat     = "input denoms must already exist in the pool (%s)"
 
-	// the errors below are being used in export_test
-	errMsgFormatFailedInterimLiquidityUpdate  = "failed to update interim liquidity - pool asset %s does not exist"
-	errMsgFormatRepeatingPoolAssetsNotAllowed = "repeating pool assets not allowed, found %s"
-	errMsgFormatNoPoolAssetFound              = "can't find the PoolAsset (%s)"
+	failedInterimLiquidityUpdateErrFormat        = "failed to update interim liquidity - pool asset %s does not exist"
+	formatRepeatingPoolAssetsNotAllowedErrFormat = "repeating pool assets not allowed, found %s"
+	formatNoPoolAssetFoundErrFormat              = "can't find the PoolAsset (%s)"
 )
 
 var (
@@ -224,7 +223,7 @@ func (p Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	}
 
 	if len(p.PoolAssets) == 0 {
-		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(errMsgFormatNoPoolAssetFound, denom))
+		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
 	}
 
 	i := sort.Search(len(p.PoolAssets), func(i int) bool {
@@ -235,11 +234,11 @@ func (p Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	})
 
 	if i < 0 || i >= len(p.PoolAssets) {
-		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(errMsgFormatNoPoolAssetFound, denom))
+		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
 	}
 
 	if p.PoolAssets[i].Token.Denom != denom {
-		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(errMsgFormatNoPoolAssetFound, denom))
+		return -1, PoolAsset{}, sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
 	}
 
 	return i, p.PoolAssets[i], nil

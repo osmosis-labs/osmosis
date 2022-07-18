@@ -93,7 +93,7 @@ func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 		return sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero")
 	}
 	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
-		return sdkerrors.Wrapf(types.ErrModuleAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName)
+		return sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName)
 	}
 
 	moduleAcc := authtypes.NewEmptyModuleAccount(

@@ -326,7 +326,7 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 			blockHeight:                     0,
 			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
 			isDeveloperModuleAccountCreated: true,
-			expectedError:                   sdkerrors.Wrapf(types.ErrModuleAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName),
+			expectedError:                   sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName),
 		},
 	}
 
