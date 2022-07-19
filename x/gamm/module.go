@@ -16,11 +16,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	gammsimulation "github.com/osmosis-labs/osmosis/v10/x/gamm/simulation"
+	simulation "github.com/osmosis-labs/osmosis/v10/x/gamm/simulation"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
@@ -158,10 +158,19 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // **** simulation implementation ****
+// GenerateGenesisState creates a randomized GenState of the gamm module.
+func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
+	DefaultGen := types.DefaultGenesis()
+	// change the pool creation fee denom from uosmo to stake
+	DefaultGen.Params.PoolCreationFee = sdk.NewCoins(simulation.PoolCreationFee)
+	DefaultGenJson := simState.Cdc.MustMarshalJSON(DefaultGen)
+	simState.GenState[types.ModuleName] = DefaultGenJson
+}
 
-func (am AppModule) Actions() []simulation.Action {
-	return []simulation.Action{
-		simulation.NewMsgBasedAction("MsgJoinPool", gammsimulation.CurrySimMsgJoinPool(am.keeper)),
-		simulation.NewCurriedMsgBasedAction("Msg create univ2 pool", am.keeper, gammsimulation.RandomCreateUniv2PoolMsg),
+func (am AppModule) Actions() []simtypes.Action {
+	return []simtypes.Action{
+		simtypes.NewMsgBasedAction("MsgJoinPool", am.keeper, simulation.RandomJoinPoolMsg),
+		simtypes.NewMsgBasedAction("MsgExitPool", am.keeper, simulation.RandomExitPoolMsg),
+		simtypes.NewMsgBasedAction("CreateUniV2Msg", am.keeper, simulation.RandomCreateUniV2Msg),
 	}
 }
