@@ -30,6 +30,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// ===================== MsgCreatePool
 type MsgCreateStableswapPool struct {
 	Sender               string                                   `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	PoolParams           *PoolParams                              `protobuf:"bytes,2,opt,name=pool_params,json=poolParams,proto3" json:"pool_params,omitempty" yaml:"pool_params"`
@@ -98,6 +99,7 @@ func (m *MsgCreateStableswapPool) GetFuturePoolGovernor() string {
 	return ""
 }
 
+// Returns a poolID with custom poolName.
 type MsgCreateStableswapPoolResponse struct {
 	PoolID uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 }
@@ -142,9 +144,9 @@ func (m *MsgCreateStableswapPoolResponse) GetPoolID() uint64 {
 	return 0
 }
 
+// Sender must be the pool's scaling_factor_governor in order for the tx to
+// succeed. Adjusts stableswap scaling factors.
 type MsgStableSwapAdjustScalingFactors struct {
-	// Sender must be the pool's scaling_factor_governor in order for the tx to
-	// succeed
 	Sender         string   `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	PoolID         uint64   `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 	ScalingFactors []uint64 `protobuf:"varint,3,rep,packed,name=scaling_factors,json=scalingFactors,proto3" json:"scaling_factors,omitempty" yaml:"stableswap_scaling_factor"`
