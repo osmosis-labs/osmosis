@@ -1,4 +1,4 @@
-package simulation
+package simtypes
 
 import (
 	"fmt"
@@ -54,7 +54,7 @@ func actionsFromWeightedOperations(moduleName string, ops legacysimexec.Weighted
 
 var _ Action = msgBasedAction{}
 
-func NewMsgBasedAction[M sdk.Msg](actionName string, msgGenerator func(sim *SimCtx, ctx sdk.Context) (M, error)) Action {
+func NewKeeperlessMsgBasedAction[M sdk.Msg](actionName string, msgGenerator func(sim *SimCtx, ctx sdk.Context) (M, error)) Action {
 	wrappedMsgGen := func(sim *SimCtx, ctx sdk.Context) (sdk.Msg, error) {
 		return msgGenerator(sim, ctx)
 	}
@@ -65,16 +65,15 @@ func NewMsgBasedAction[M sdk.Msg](actionName string, msgGenerator func(sim *SimC
 	return msgBasedAction{name: actionName, weight: Normal, msgGenerator: wrappedMsgGen}
 }
 
-// TODO: Decide if I want NewMsgBasedAction to auto-curry
 func CurryMsgGenerator[K interface{}, M sdk.Msg](k K, f func(K, *SimCtx, sdk.Context) (M, error)) func(*SimCtx, sdk.Context) (M, error) {
 	return func(sim *SimCtx, ctx sdk.Context) (M, error) {
 		return f(k, sim, ctx)
 	}
 }
 
-func NewCurriedMsgBasedAction[K interface{}, M sdk.Msg](actionName string, k K, f func(K, *SimCtx, sdk.Context) (M, error)) Action {
+func NewMsgBasedAction[K interface{}, M sdk.Msg](actionName string, k K, f func(K, *SimCtx, sdk.Context) (M, error)) Action {
 	msgGenerator := CurryMsgGenerator(k, f)
-	return NewMsgBasedAction(actionName, msgGenerator)
+	return NewKeeperlessMsgBasedAction(actionName, msgGenerator)
 }
 
 // TODO: make API in simulator action collection interface
