@@ -46,6 +46,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Golang API breaks
 * [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
 
+#### SDK Upgrades
+* [#2146](https://github.com/osmosis-labs/osmosis/pull/2146) Upgrade SDK for to v0.45.0x-osmo-v9.1. Major changes:
+   * Concurrency query client option: https://github.com/osmosis-labs/cosmos-sdk/pull/281
+   * Remove redacted message fix: https://github.com/osmosis-labs/cosmos-sdk/pull/284
+   * Reduce commit store logs (change to Debug): https://github.com/osmosis-labs/cosmos-sdk/pull/282
+   * Bring back the cliff vesting command: https://github.com/osmosis-labs/cosmos-sdk/pull/272
+   * Allow ScheduleUpgrade to come from same block: https://github.com/osmosis-labs/cosmos-sdk/pull/261
+
+
 ## v10.0.1
 
 This release contains minor CLI bug fixes.
