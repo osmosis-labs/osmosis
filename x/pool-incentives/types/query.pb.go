@@ -743,7 +743,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// GaugeIds takes the pool id and returns the matching gauge ids and durations
 	GaugeIds(ctx context.Context, in *QueryGaugeIdsRequest, opts ...grpc.CallOption) (*QueryGaugeIdsResponse, error)
-	// DistrInfo returns the pools' matching gauge ids and weights.
+	// DistrInfo returns the pool's matching gauge ids and weights.
 	DistrInfo(ctx context.Context, in *QueryDistrInfoRequest, opts ...grpc.CallOption) (*QueryDistrInfoResponse, error)
 	// Params returns pool incentives params.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
@@ -821,7 +821,7 @@ func (c *queryClient) ExternalIncentiveGauges(ctx context.Context, in *QueryExte
 type QueryServer interface {
 	// GaugeIds takes the pool id and returns the matching gauge ids and durations
 	GaugeIds(context.Context, *QueryGaugeIdsRequest) (*QueryGaugeIdsResponse, error)
-	// DistrInfo returns the pools' matching gauge ids and weights.
+	// DistrInfo returns the pool's matching gauge ids and weights.
 	DistrInfo(context.Context, *QueryDistrInfoRequest) (*QueryDistrInfoResponse, error)
 	// Params returns pool incentives params.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
