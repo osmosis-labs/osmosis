@@ -69,10 +69,7 @@ func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sd
 // HasLock returns true if lock with the given condition exists
 func (k Keeper) HasLock(ctx sdk.Context, owner sdk.AccAddress, coin sdk.Coin, duration time.Duration) bool {
 	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, coin.Denom, duration)
-	if len(locks) > 0 {
-		return true
-	}
-	return false
+	return len(locks) > 0
 }
 
 // AddTokensToLock locks additional tokens into an existing lock with the given ID.
