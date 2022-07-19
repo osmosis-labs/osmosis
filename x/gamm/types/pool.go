@@ -59,9 +59,18 @@ type PoolI interface {
 	// Pools are expected to guarantee LP'ing at the exact ratio, and single sided LP'ing.
 	JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
 
+	// JoinPoolNoSwap joins the pool with an all-asset join using the maximum amount possible given the tokensIn provided.
+	// This function is mutative and updates the pool's internal state if there is no error.
+	// Pools are expected to guarantee LP'ing at the exact ratio.
+	JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
+
 	// CalcJoinPoolShares returns how many LP shares JoinPool would return on these arguments.
 	// This does not mutate the pool, or state.
 	CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error)
+
+	// CalcJoinPoolNoSwapShares returns how many LP shares JoinPoolNoSwap would return on these arguments.
+	// This does not mutate the pool, or state.
+	CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, remainingTokens sdk.Coins, err error)
 
 	// ExitPool exits #numShares LP shares from the pool, decreases its internal liquidity & LP share totals,
 	// and returns the number of coins that are being returned.
