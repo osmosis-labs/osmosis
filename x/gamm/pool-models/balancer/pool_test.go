@@ -1218,3 +1218,51 @@ func (suite *BalancerTestSuite) TestIsActive(t *testing.T) {
 		})
 	}
 }
+
+func TestCalcJoinPoolNoSwapShares(t *testing.T) {
+	balancerPoolAsset := []balancer.PoolAsset{
+		{Token: sdk.NewInt64Coin("foo", 100), Weight: sdk.NewIntFromUint64(5)},
+		{Token: sdk.NewInt64Coin("bar", 100), Weight: sdk.NewIntFromUint64(5)},
+	}
+
+	tests := map[string]struct {
+		tokensIn        sdk.Coins
+		expNumShare     sdk.Int
+		expTokensJoined sdk.Coins
+		expRemCoin      sdk.Coins
+	}{
+		"two asset pool, same tokenIn ratio": {
+			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
+			expNumShare:     sdk.NewIntFromUint64(10000000000000000000),
+			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
+			expRemCoin:      sdk.Coins{},
+		},
+		"two asset pool, different tokenIn ratio with pool": {
+			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(11))),
+			expNumShare:     sdk.NewIntFromUint64(10000000000000000000),
+			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
+			expRemCoin:      sdk.NewCoins(sdk.NewCoin("bar", sdk.NewIntFromUint64(1))),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := sdk.Context{}
+			balancerPool, err := balancer.NewBalancerPool(
+				defaultPoolId,
+				balancer.PoolParams{SwapFee: defaultSwapFee, ExitFee: defaultExitFee},
+				balancerPoolAsset,
+				defaultFutureGovernor,
+				defaultCurBlockTime,
+			)
+			require.NoError(t, err)
+
+			numShare, tokensJoined, remCoins, err := balancerPool.CalcJoinPoolNoSwapShares(ctx, test.tokensIn, balancerPool.GetSwapFee(ctx))
+
+			require.NoError(t, err)
+			require.Equal(t, test.expNumShare, numShare)
+			require.Equal(t, test.expTokensJoined, tokensJoined)
+			require.Equal(t, test.expRemCoin, remCoins)
+		})
+	}
+}
