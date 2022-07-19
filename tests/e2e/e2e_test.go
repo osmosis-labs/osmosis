@@ -175,16 +175,14 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		snapshots, err := runningNode.QueryListSnapshots()
 		s.Require().NoError(err)
 
-		foundAvailableSnapshot := false
 		for _, snapshot := range snapshots {
 			if snapshot.Height > uint64(trustHeight) {
-				foundAvailableSnapshot = true
 				s.T().Log("found state sync snapshot after trust height")
 				return true
 			}
 		}
 		s.T().Log("state sync snashot after trust height is not found")
-		return foundAvailableSnapshot
+		return false
 	}
 	runningNode.WaitUntil(hasSnapshotsAvailable)
 
