@@ -1,4 +1,4 @@
-package simulation
+package simtypes
 
 import (
 	"github.com/cosmos/cosmos-sdk/baseapp"

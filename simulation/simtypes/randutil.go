@@ -1,4 +1,4 @@
-package simulation
+package simtypes
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"golang.org/x/exp/constraints"
 
-	sdkrand "github.com/osmosis-labs/osmosis/v10/simulation/types/random"
+	sdkrand "github.com/osmosis-labs/osmosis/v10/simulation/simtypes/random"
 )
 
 func RandLTBound[T constraints.Integer](sim *SimCtx, upperbound T) T {
@@ -32,9 +32,13 @@ func (sim *SimCtx) RandStringOfLength(n int) string {
 }
 
 // RandPositiveInt get a rand positive sdk.Int
-func (sim *SimCtx) RandPositiveInt(max sdk.Int) (sdk.Int, error) {
+func (sim *SimCtx) RandPositiveInt(max sdk.Int) sdk.Int {
 	r := sim.GetSeededRand("random bounded positive int")
-	return sdkrand.RandPositiveInt(r, max)
+	v, err := sdkrand.RandPositiveInt(r, max)
+	if err != nil {
+		panic(err)
+	}
+	return v
 }
 
 // RandomAmount generates a random amount

@@ -1,4 +1,4 @@
-package simulation
+package simtypes
 
 import (
 	"errors"
@@ -92,7 +92,61 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 		return acc, sdk.Coins{}, false
 	}
 	balance := sim.RandCoinSubset(ctx, acc.Address, denoms)
-	return acc, balance, true
+	return acc, balance.Sort(), true
+}
+
+// SelAddrWithDenom attempts to find an address with the provided denom. This function
+// returns (account, randSubsetCoins, found), so if found = false, then no such address exists.
+// randSubsetCoins is a random subset of the provided denoms, if the account is found.
+// TODO: Write unit test
+func (sim *SimCtx) SelAddrWithDenom(ctx sdk.Context, denom string) (simulation.Account, sdk.Coin, bool) {
+	acc, subsetCoins, found := sim.SelAddrWithDenoms(ctx, []string{denom})
+	if !found {
+		return acc, sdk.Coin{}, found
+	}
+	return acc, subsetCoins[0], found
+}
+
+// GetRandSubsetOfKDenoms returns a random subset of coins of k unique denoms from the provided account
+// TODO: Write unit test
+func (sim *SimCtx) GetRandSubsetOfKDenoms(ctx sdk.Context, acc simulation.Account, k int) (sdk.Coins, bool) {
+	// get all spendable coins from provided account
+	coins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
+	// ensure account coins are greater than or equal to the requested subset length
+	if len(coins) < k {
+		return sdk.Coins{}, false
+	}
+	// randomly remove a denom from the coins array until we reach desired length
+	r := sim.GetSeededRand("select random seed")
+
+	for len(coins) != k {
+		index := r.Intn(len(coins) - 1)
+		coins = RemoveIndex(coins, index)
+	}
+	// append random amount less than or equal to existing amount to new subset array
+	subset := sdk.Coins{}
+	for _, c := range coins {
+		amt, err := simulation.RandPositiveInt(r, c.Amount)
+		if err != nil {
+			return sdk.Coins{}, false
+		}
+		subset = append(subset, sdk.NewCoin(c.Denom, amt))
+	}
+
+	// return nothing if the coin struct length is less than requested (sanity check)
+	if len(subset) < k {
+		return sdk.Coins{}, false
+	}
+
+	return subset.Sort(), true
+}
+
+// RandomSimAccountWithKDenoms returns an account that possesses k unique denoms
+func (sim *SimCtx) RandomSimAccountWithKDenoms(ctx sdk.Context, k int) (simulation.Account, bool) {
+	accHasBal := func(acc simulation.Account) bool {
+		return len(sim.BankKeeper().SpendableCoins(ctx, acc.Address)) >= k
+	}
+	return sim.RandomSimAccountWithConstraint(accHasBal)
 }
 
 // RandGeometricCoin uniformly samples a denom from the addr's balances.
@@ -125,10 +179,7 @@ func (sim *SimCtx) RandCoinSubset(ctx sdk.Context, addr sdk.AccAddress, denoms [
 	subsetCoins := sdk.Coins{}
 	for _, denom := range denoms {
 		bal := sim.BankKeeper().GetBalance(ctx, addr, denom)
-		amt, err := sim.RandPositiveInt(bal.Amount)
-		if err != nil {
-			panic(err)
-		}
+		amt := sim.RandPositiveInt(bal.Amount)
 		subsetCoins = subsetCoins.Add(sdk.NewCoin(bal.Denom, amt))
 	}
 	return subsetCoins
@@ -157,14 +208,15 @@ func (sim *SimCtx) RandomFees(ctx sdk.Context, spendableCoins sdk.Coins) (sdk.Co
 		return nil, fmt.Errorf("no coins found for random fees")
 	}
 
-	amt, err := sim.RandPositiveInt(randCoin.Amount)
-	if err != nil {
-		return nil, err
-	}
+	amt := sim.RandPositiveInt(randCoin.Amount)
 
 	// Create a random fee and verify the fees are within the account's spendable
 	// balance.
 	fees := sdk.NewCoins(sdk.NewCoin(randCoin.Denom, amt))
 
 	return fees, nil
+}
+
+func RemoveIndex(s sdk.Coins, index int) sdk.Coins {
+	return append(s[:index], s[index+1:]...)
 }
