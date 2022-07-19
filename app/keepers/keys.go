@@ -25,7 +25,7 @@ func (appKeepers *AppKeepers) GetSubspace(moduleName string) paramstypes.Subspac
 	return subspace
 }
 
-// GetKVStoreKey gets KV Store keys
+// GetKVStoreKey gets KV Store keys.
 func (appKeepers *AppKeepers) GetKVStoreKey() map[string]*sdk.KVStoreKey {
 	return appKeepers.keys
 }
