@@ -5,13 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/app/keepers"
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/app/keepers"
-	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
->>>>>>> 7fb5f824 (x/gamm: Make all internal set functions private (#2013))
 )
 
 // CreateUpgradeHandler returns an x/upgrade handler for the Osmosis v4 on-chain

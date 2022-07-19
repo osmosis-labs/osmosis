@@ -11,13 +11,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/app"
 	v4 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v4"
-=======
-	"github.com/osmosis-labs/osmosis/v7/app"
-	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
->>>>>>> 7fb5f824 (x/gamm: Make all internal set functions private (#2013))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
