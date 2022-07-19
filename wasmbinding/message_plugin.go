@@ -109,7 +109,7 @@ func (m *CustomMessenger) mintTokens(ctx sdk.Context, contractAddr sdk.AccAddres
 	return nil, nil, nil
 }
 
-// PerformMint used with mintTokens to validate the mint message and mint thru token factory.
+// PerformMint used with mintTokens to validate the mint message and mint through token factory.
 func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk.Context, contractAddr sdk.AccAddress, mint *bindings.MintTokens) error {
 	if mint == nil {
 		return wasmvmtypes.InvalidRequest{Err: "mint token null mint"}
