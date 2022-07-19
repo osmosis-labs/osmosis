@@ -315,18 +315,18 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 		},
 		"nil amount": {
 			blockHeight:   0,
-			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"zero amount": {
 			blockHeight:   0,
 			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
-			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"module account is already created": {
 			blockHeight:                     0,
 			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
 			isDeveloperModuleAccountCreated: true,
-			expectedError:                   keeper.ErrDevVestingModuleAccountAlreadyCreated,
+			expectedError:                   sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName),
 		},
 	}
 
@@ -340,7 +340,7 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 
 			if tc.expectedError != nil {
 				suite.Error(actualError)
-				suite.Equal(actualError, tc.expectedError)
+				suite.ErrorIs(actualError, tc.expectedError)
 				return
 			}
 			suite.NoError(actualError)
@@ -361,7 +361,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 		},
 		"dev vesting module account does not exist": {
 			blockHeight:   1,
-			expectedError: keeper.ErrDevVestingModuleAccountNotCreated,
+			expectedError: sdkerrors.Wrapf(types.ErrModuleDoesnotExist, "%s vesting module account doesnot exist", types.DeveloperVestingModuleAcctName),
 		},
 	}
 
@@ -380,7 +380,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 
 			if tc.expectedError != nil {
 				suite.Error(actualError)
-				suite.Equal(actualError, tc.expectedError)
+				suite.ErrorIs(actualError, tc.expectedError)
 
 				suite.Equal(supplyWithOffsetBefore.Amount, bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 				suite.Equal(supplyOffsetBefore, bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))

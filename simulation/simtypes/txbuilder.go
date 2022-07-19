@@ -61,7 +61,10 @@ func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation
 		return simulation.NoOpMsg(msgName, msgName, fmt.Sprintf("unable to deliver tx. \nreason: %v\n results: %v\n msg: %s\n tx: %s", err, results, msg, tx)), nil, err
 	}
 
-	return simulation.NewOperationMsg(msg, true, "", nil), nil, nil
+	opMsg := simulation.NewOperationMsg(msg, true, "", nil)
+	opMsg.Route = msgName
+	opMsg.Name = msgName
+	return opMsg, nil, nil
 }
 
 // GenTx generates a signed mock transaction.

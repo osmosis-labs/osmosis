@@ -76,6 +76,9 @@ func NewMsgBasedAction[K interface{}, M sdk.Msg](actionName string, k K, f func(
 	return NewKeeperlessMsgBasedAction(actionName, msgGenerator)
 }
 
+// TODO: make API in simulator action collection interface
+// to add a 'modulename' to many actions
+
 type msgBasedAction struct {
 	name         string
 	weight       Weight

@@ -158,10 +158,19 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // **** simulation implementation ****
+// GenerateGenesisState creates a randomized GenState of the gamm module.
+func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
+	DefaultGen := types.DefaultGenesis()
+	// change the pool creation fee denom from uosmo to stake
+	DefaultGen.Params.PoolCreationFee = sdk.NewCoins(simulation.PoolCreationFee)
+	DefaultGenJson := simState.Cdc.MustMarshalJSON(DefaultGen)
+	simState.GenState[types.ModuleName] = DefaultGenJson
+}
 
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
-		simtypes.NewKeeperlessMsgBasedAction("MsgJoinPool", simulation.CurrySimMsgJoinPool(am.keeper)),
-		simtypes.NewMsgBasedAction("Msg create univ2 pool", am.keeper, simulation.RandomCreateUniv2PoolMsg),
+		simtypes.NewMsgBasedAction("MsgJoinPool", am.keeper, simulation.RandomJoinPoolMsg),
+		simtypes.NewMsgBasedAction("MsgExitPool", am.keeper, simulation.RandomExitPoolMsg),
+		simtypes.NewMsgBasedAction("CreateUniV2Msg", am.keeper, simulation.RandomCreateUniV2Msg),
 	}
 }
