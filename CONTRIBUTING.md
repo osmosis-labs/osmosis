@@ -323,7 +323,7 @@ The e2e package defines an integration testing suite used for full end-to-end te
 
 As a result, the test suite may provide the desired Osmosis version to Docker containers during the initialization. This design allows for the opportunity of testing chain upgrades in the future by providing an older Osmosis version to the container, performing the chain upgrade, and running the latest test suite. 
 
-The file `e2e_setup_test.go` defines the testing suite and contains the core bootstrapping logic that creates a testing environment via Docker containers. A testing network is created dynamically with 2 test validators.
+The file `e2e_setup_test.go` defines the testing suite and contains the core bootstrapping logic that creates a testing environment via Docker containers. A testing network is created dynamically by providing the desirable number of validator configurations.
 
 The file `e2e_test.go` contains the actual end-to-end integration tests that utilize the testing suite.
 
