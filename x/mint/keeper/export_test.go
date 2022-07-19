@@ -7,18 +7,16 @@ import (
 )
 
 type (
-	ErrInvalidRatio = invalidRatioError
+	ErrInvalidRatio                  = invalidRatioError
+	ErrInsufficientDevVestingBalance = insufficientDevVestingBalanceError
 )
 
 const (
-	DeveloperVestingAmount = developerVestingAmount
+	EmptyWeightedAddressReceiver = emptyWeightedAddressReceiver
+	DeveloperVestingAmount       = developerVestingAmount
 )
 
 var (
-	ErrAmountCannotBeNilOrZero               = errAmountCannotBeNilOrZero
-	ErrDevVestingModuleAccountAlreadyCreated = errDevVestingModuleAccountAlreadyCreated
-	ErrDevVestingModuleAccountNotCreated     = errDevVestingModuleAccountNotCreated
-
 	GetProportions = getProportions
 )
 

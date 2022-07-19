@@ -10,3 +10,18 @@ func CoinsDenoms(coins sdk.Coins) []string {
 	}
 	return denoms
 }
+
+// MinCoins returns the minimum of each denom between both coins.
+// For now it assumes they have the same denoms.
+// TODO: Replace with method in SDK once we update our version
+func MinCoins(coinsA sdk.Coins, coinsB sdk.Coins) sdk.Coins {
+	resCoins := sdk.Coins{}
+	for i, coin := range coinsA {
+		if coinsB[i].Amount.GT(coin.Amount) {
+			resCoins = append(resCoins, coin)
+		} else {
+			resCoins = append(resCoins, coinsB[i])
+		}
+	}
+	return resCoins
+}

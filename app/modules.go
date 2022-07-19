@@ -43,7 +43,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
 	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v10/osmoutils/partialord"
-	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v10/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm"
@@ -162,6 +162,7 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	return ord.TotalOrdering()
 }
 
+// OrderEndBlockers returns EndBlockers (crisis, govtypes, staking) with no relative order.
 func OrderEndBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
 	// only Osmosis modules with endblock code are: crisis, govtypes, staking
@@ -214,13 +215,13 @@ func createSimulationManager(
 	app *OsmosisApp,
 	encodingConfig appparams.EncodingConfig,
 	skipGenesisInvariants bool,
-) *simulation.Manager {
+) *simtypes.Manager {
 	appCodec := encodingConfig.Marshaler
 
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
 	}
-	simulationManager := simulation.NewSimulationManager(*app.mm, overrideModules)
+	simulationManager := simtypes.NewSimulationManager(*app.mm, overrideModules)
 	return &simulationManager
 }
 
@@ -234,10 +235,10 @@ func (app *OsmosisApp) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-func (app *OsmosisApp) GetAccountKeeper() simulation.AccountKeeper {
+func (app *OsmosisApp) GetAccountKeeper() simtypes.AccountKeeper {
 	return app.AppKeepers.AccountKeeper
 }
 
-func (app *OsmosisApp) GetBankKeeper() simulation.BankKeeper {
+func (app *OsmosisApp) GetBankKeeper() simtypes.BankKeeper {
 	return app.AppKeepers.BankKeeper
 }

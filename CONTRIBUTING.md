@@ -317,6 +317,26 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 }
 ```
 
+## Debug testing e2e locally
+
+The e2e package defines an integration testing suite used for full end-to-end testing functionality. This package is decoupled from depending on the Osmosis codebase. It initializes the chains for testing via Docker files. 
+
+As a result, the test suite may provide the desired Osmosis version to Docker containers during the initialization. This design allows for the opportunity of testing chain upgrades in the future by providing an older Osmosis version to the container, performing the chain upgrade, and running the latest test suite. 
+
+The file `e2e_setup_test.go` defines the testing suite and contains the core bootstrapping logic that creates a testing environment via Docker containers. A testing network is created dynamically by providing the desirable number of validator configurations.
+
+The file `e2e_test.go` contains the actual end-to-end integration tests that utilize the testing suite.
+
+
+Additionally, there is an ability to disable certain components of the e2e suite. This can be done by setting the environment variables. See the [E2E test docs](https://github.com/osmosis-labs/osmosis/blob/main/tests/e2e/README.md)  or more details.
+
+To get started:
+- Run `make test-e2e`
+- Inspect the logs of the docker containers and see if something it’s there
+- `docker ps -a #` to list all docker containers
+- Note the container id of the one you want to see the logs
+- And then run `docker logs <CONTAINER_NAME>`  to debug via container logs
+
 ## Working with the SDK
 
 ### Updating dependencies for builds

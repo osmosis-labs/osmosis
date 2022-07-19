@@ -7,11 +7,11 @@ import (
 
 	"github.com/cosmos/btcutil/bech32"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -44,6 +44,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+	params := suite.App.MintKeeper.GetParams(suite.Ctx)
+	params.ReductionPeriodInEpochs = 10
+	suite.App.MintKeeper.SetParams(suite.Ctx, params)
 }
 
 // setupDeveloperVestingModuleAccountTest sets up test cases that utilize developer vesting
@@ -315,18 +318,18 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 		},
 		"nil amount": {
 			blockHeight:   0,
-			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"zero amount": {
 			blockHeight:   0,
 			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
-			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"module account is already created": {
 			blockHeight:                     0,
 			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
 			isDeveloperModuleAccountCreated: true,
-			expectedError:                   keeper.ErrDevVestingModuleAccountAlreadyCreated,
+			expectedError:                   sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName),
 		},
 	}
 
@@ -340,7 +343,7 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 
 			if tc.expectedError != nil {
 				suite.Error(actualError)
-				suite.Equal(actualError, tc.expectedError)
+				suite.ErrorIs(actualError, tc.expectedError)
 				return
 			}
 			suite.NoError(actualError)
@@ -361,7 +364,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 		},
 		"dev vesting module account does not exist": {
 			blockHeight:   1,
-			expectedError: keeper.ErrDevVestingModuleAccountNotCreated,
+			expectedError: sdkerrors.Wrapf(types.ErrModuleDoesnotExist, "%s vesting module account doesnot exist", types.DeveloperVestingModuleAcctName),
 		},
 	}
 
@@ -380,7 +383,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 
 			if tc.expectedError != nil {
 				suite.Error(actualError)
-				suite.Equal(actualError, tc.expectedError)
+				suite.ErrorIs(actualError, tc.expectedError)
 
 				suite.Equal(supplyWithOffsetBefore.Amount, bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 				suite.Equal(supplyOffsetBefore, bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
@@ -666,7 +669,35 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 					Weight:  sdk.NewDec(1),
 				},
 			},
-			expectedError: sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", validPreMintCoin, sdk.NewCoin(sdk.DefaultBondDenom, validPreMintAmountAddOne))),
+			expectedError: keeper.ErrInsufficientDevVestingBalance{ActualBalance: validPreMintCoin.Amount, AttemptedDistribution: validPreMintAmountAddOne},
+		},
+		"valid case with 1 empty string weighted address - distributes to community pool": {
+			preMintCoin: validPreMintCoin,
+
+			mintedCoin: validPreMintCoin,
+			proportion: sdk.NewDecWithPrec(153, 3),
+			recepientAddresses: []types.WeightedAddress{
+				{
+					Address: keeper.EmptyWeightedAddressReceiver,
+					Weight:  sdk.NewDec(1),
+				},
+			},
+		},
+		"valid case with 2 addresses - empty string (distributes to community pool) and regular address (distributes to the address)": {
+			preMintCoin: validPreMintCoin,
+
+			mintedCoin: validPreMintCoin,
+			proportion: sdk.NewDecWithPrec(153, 3),
+			recepientAddresses: []types.WeightedAddress{
+				{
+					Address: keeper.EmptyWeightedAddressReceiver,
+					Weight:  sdk.NewDec(1),
+				},
+				{
+					Address: testAddressOne.String(),
+					Weight:  sdk.NewDec(1),
+				},
+			},
 		},
 	}
 	for name, tc := range tests {
@@ -691,6 +722,10 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 				oldCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), tc.mintedCoin.Denom).Amount
 				oldDeveloperRewardsBalanceAmounts := make([]sdk.Int, len(tc.recepientAddresses))
 				for i, weightedAddress := range tc.recepientAddresses {
+					if weightedAddress.Address == keeper.EmptyWeightedAddressReceiver {
+						continue
+					}
+
 					// No error check to be able to test invalid addresses.
 					address, _ := sdk.AccAddressFromBech32(weightedAddress.Address)
 					oldDeveloperRewardsBalanceAmounts[i] = bankKeeper.GetBalance(ctx, address, tc.mintedCoin.Denom).Amount
@@ -739,12 +774,20 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 				// TODO: these should be equal, slightly off due to known rounding issues: https://github.com/osmosis-labs/osmosis/issues/1917
 				// suite.Equal(oldDeveloperVestingModuleBalanceAmount.Sub(expectedDistributed).Int64(), actualDeveloperVestingModuleBalanceAmount.Int64())
 
+				expectedDistributedCommunityPool := sdk.NewInt(0)
+
 				for i, weightedAddress := range tc.recepientAddresses {
+					// TODO: truncation should not occur: https://github.com/osmosis-labs/osmosis/issues/1917
+					expectedAllocation := expectedDistributed.ToDec().Mul(tc.recepientAddresses[i].Weight).TruncateInt()
+
+					if weightedAddress.Address == keeper.EmptyWeightedAddressReceiver {
+						expectedDistributedCommunityPool = expectedDistributedCommunityPool.Add(expectedAllocation)
+						continue
+					}
+
 					address, err := sdk.AccAddressFromBech32(weightedAddress.Address)
 					suite.NoError(err)
 
-					// TODO: truncation should not occur: https://github.com/osmosis-labs/osmosis/issues/1917
-					expectedAllocation := expectedDistributed.ToDec().Mul(tc.recepientAddresses[i].Weight).TruncateInt()
 					actualDeveloperRewardsBalanceAmounts := bankKeeper.GetBalance(ctx, address, tc.mintedCoin.Denom).Amount
 
 					// Edge case. See testcases with this flag set to true for details.
@@ -755,6 +798,8 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 
 					suite.Equal(oldDeveloperRewardsBalanceAmounts[i].Add(expectedAllocation).Int64(), actualDeveloperRewardsBalanceAmounts.Int64())
 				}
+
+				suite.Equal(oldCommunityPoolBalanceAmount.Add(expectedDistributedCommunityPool).Int64(), actualCommunityPoolModuleBalanceAmount.Int64())
 			})
 		})
 	}

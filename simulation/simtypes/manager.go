@@ -1,4 +1,4 @@
-package simulation
+package simtypes
 
 import (
 	"encoding/json"
@@ -16,24 +16,24 @@ import (
 
 // AppModuleSimulation defines the standard functions that every module should expose
 // for the SDK blockchain simulator
-type AppModuleSimulationV2 interface {
+type AppModuleSimulation interface {
 	module.AppModule
 
 	Actions() []Action
 	// PropertyTests()
 }
 
-type AppModuleSimulationV2WithRandGenesis interface {
-	AppModuleSimulationV2
+type AppModuleSimulationGenesis interface {
+	AppModuleSimulation
 	// TODO: Come back and improve SimulationState interface
-	RandomGenesisState(*module.SimulationState, *SimCtx)
+	SimulatorGenesisState(*module.SimulationState, *SimCtx)
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility
 // for managing and executing simulation functionalities for a group of modules
 type Manager struct {
 	moduleManager module.Manager
-	Modules       map[string]AppModuleSimulationV2      // map of all non-legacy app modules;
+	Modules       map[string]AppModuleSimulation        // map of all non-legacy app modules;
 	legacyModules map[string]module.AppModuleSimulation // legacy app modules
 }
 
@@ -42,7 +42,7 @@ func NewSimulationManager(manager module.Manager, overrideModules map[string]mod
 		panic("manager.OrderInitGenesis is unset, needs to be set prior to creating simulation manager")
 	}
 
-	simModules := map[string]AppModuleSimulationV2{}
+	simModules := map[string]AppModuleSimulation{}
 	legacySimModules := map[string]module.AppModuleSimulation{}
 	appModuleNamesSorted := maps.Keys(manager.Modules)
 	sort.Strings(appModuleNamesSorted)
@@ -55,7 +55,7 @@ func NewSimulationManager(manager module.Manager, overrideModules map[string]mod
 			legacySimModules[moduleName] = simModule
 		} else {
 			appModule := manager.Modules[moduleName]
-			if simModule, ok := appModule.(AppModuleSimulationV2); ok {
+			if simModule, ok := appModule.(AppModuleSimulation); ok {
 				simModules[moduleName] = simModule
 			} else if simModule, ok := appModule.(module.AppModuleSimulation); ok {
 				legacySimModules[moduleName] = simModule
@@ -140,8 +140,8 @@ func (m Manager) GenerateGenesisStates(simState *module.SimulationState, sim *Si
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.Modules[moduleName]; ok {
 			// if we define a random genesis function use it, otherwise use default genesis
-			if mod, ok := simModule.(AppModuleSimulationV2WithRandGenesis); ok {
-				mod.RandomGenesisState(simState, sim)
+			if mod, ok := simModule.(AppModuleSimulationGenesis); ok {
+				mod.SimulatorGenesisState(simState, sim)
 			} else {
 				simState.GenState[simModule.Name()] = simModule.DefaultGenesis(simState.Cdc)
 			}

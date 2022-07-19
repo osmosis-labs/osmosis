@@ -1,4 +1,4 @@
-package simulation
+package simtypes
 
 type Weight int64
 

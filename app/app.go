@@ -52,7 +52,7 @@ import (
 	v8 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v8"
 	v9 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
-	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 const appName = "OsmosisApp"
@@ -128,10 +128,11 @@ type OsmosisApp struct {
 	invCheckPeriod    uint
 
 	mm           *module.Manager
-	sm           *simulation.Manager
+	sm           *simtypes.Manager
 	configurator module.Configurator
 }
 
+// init sets DefaultNodeHome to default osmosisd install location.
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -361,7 +362,7 @@ func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
 }
 
 // SimulationManager implements the SimulationApp interface.
-func (app *OsmosisApp) SimulationManager() *simulation.Manager {
+func (app *OsmosisApp) SimulationManager() *simtypes.Manager {
 	return app.sm
 }
 

@@ -1,3 +1,10 @@
+/*
+The superfluid module handles all logic in relation to
+the superfluid staking feature on Osmosis. Namely:
+- Methods to lock funds and mint synthetic osmo for staking
+- Daily minting and burning of the purpose of adjusting synthetic osmo lockups.
+- Staking reward distribution via the intermediary account.
+*/
 package superfluid
 
 import (

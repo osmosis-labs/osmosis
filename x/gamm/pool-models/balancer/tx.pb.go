@@ -97,6 +97,7 @@ func (m *MsgCreateBalancerPool) GetFuturePoolGovernor() string {
 	return ""
 }
 
+// Returns the poolID
 type MsgCreateBalancerPoolResponse struct {
 	PoolID uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 }

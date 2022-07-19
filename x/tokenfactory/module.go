@@ -1,3 +1,11 @@
+/*
+The tokenfactory module allows any account to create a new token with
+the name `factory/{creator address}/{subdenom}`.
+
+- Mint and burn user denom to and form any account
+- Create a transfer of their denom between any two accounts
+- Change the admin. In the future, more admin capabilities may be added.
+*/
 package tokenfactory
 
 import (
@@ -14,6 +22,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	simulation "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/simulation"
 
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/client/cli"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
@@ -169,4 +180,24 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // returns no validator updates.
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+// ___________________________________________________________________________
+
+// AppModuleSimulationV2 functions
+
+// GenerateGenesisState creates a randomized GenState of the tokenfactory module.
+func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
+	tfDefaultGen := types.DefaultGenesis()
+	tfDefaultGen.Params.DenomCreationFee = sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000))
+	tfDefaultGenJson := simState.Cdc.MustMarshalJSON(tfDefaultGen)
+	simState.GenState[types.ModuleName] = tfDefaultGenJson
+}
+
+// WeightedOperations returns the all the lockup module operations with their respective weights.
+func (am AppModule) Actions() []simtypes.Action {
+	return []simtypes.Action{
+		simtypes.NewMsgBasedAction("create token factory token", am.keeper, simulation.RandomMsgCreateDenom),
+		simtypes.NewMsgBasedAction("mint token factory token", am.keeper, simulation.RandomMsgMintDenom),
+	}
 }

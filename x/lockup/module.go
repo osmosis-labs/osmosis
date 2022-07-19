@@ -1,3 +1,14 @@
+/*
+Lockup module provides an interface for users to lock tokens
+(also known as bonding) into the module to get incentives.
+After tokens have been added to a specific pool and turned into LP shares
+through the GAMM module, users can then lock these LP shares with
+a specific duration in order to begin earing rewards.
+ - Lock and unlock token message handling
+ - Lock token infos and LP shares balance queries
+ - Pool locked denom balance queries
+*/
+
 package lockup
 
 import (
@@ -17,12 +28,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/client/cli"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/client/rest"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
 
-	locksimulation "github.com/osmosis-labs/osmosis/v10/x/lockup/simulation"
+	simulation "github.com/osmosis-labs/osmosis/v10/x/lockup/simulation"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
@@ -183,13 +194,13 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // ___________________________________________________________________________
 
-// AppModuleSimulationV2 functions
+// AppModuleSimulation functions
 
 // WeightedOperations returns the all the lockup module operations with their respective weights.
-func (am AppModule) Actions() []simulation.Action {
-	return []simulation.Action{
-		simulation.NewCurriedMsgBasedAction("lock tokens", am.keeper, locksimulation.RandomMsgLockTokens),
-		simulation.NewCurriedMsgBasedAction("unlock all tokens", am.keeper, locksimulation.RandomMsgBeginUnlockingAll),
-		simulation.NewCurriedMsgBasedAction("unlock lock", am.keeper, locksimulation.RandomMsgBeginUnlocking),
+func (am AppModule) Actions() []simtypes.Action {
+	return []simtypes.Action{
+		simtypes.NewMsgBasedAction("lock tokens", am.keeper, simulation.RandomMsgLockTokens),
+		simtypes.NewMsgBasedAction("unlock all tokens", am.keeper, simulation.RandomMsgBeginUnlockingAll),
+		simtypes.NewMsgBasedAction("unlock lock", am.keeper, simulation.RandomMsgBeginUnlocking),
 	}
 }

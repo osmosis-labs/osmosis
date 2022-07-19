@@ -118,6 +118,7 @@ type AppKeepers struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 }
 
+// InitNormalKeepers initializes all 'normal' keepers (account, app, bank, auth, staking, distribution, slashing, transfer, gamm, IBC router, pool incentives, governance, mint, txfees keepers).
 func (appKeepers *AppKeepers) InitNormalKeepers(
 	appCodec codec.Codec,
 	bApp *baseapp.BaseApp,
@@ -367,6 +368,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.GovKeeper = &govKeeper
 }
 
+// InitSpecialKeepers initiates special keepers (crisis appkeeper, upgradekeeper, params keeper)
 func (appKeepers *AppKeepers) InitSpecialKeepers(
 	appCodec codec.Codec,
 	bApp *baseapp.BaseApp,
@@ -433,6 +435,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	return paramsKeeper
 }
 
+// SetupHooks sets up hooks for modules.
 func (appKeepers *AppKeepers) SetupHooks() {
 	// For every module that has hooks set on it,
 	// you must check InitNormalKeepers to ensure that its not passed by de-reference
