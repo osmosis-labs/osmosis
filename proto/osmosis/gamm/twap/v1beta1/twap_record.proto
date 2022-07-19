@@ -17,9 +17,6 @@ option go_package = "github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types";
 // than an optimal state storage format. The system bottleneck is elsewhere for
 // now.
 message TwapRecord {
-  option (gogoproto.equal) = true;
-  option (gogoproto.goproto_stringer) = false;
-
   uint64 pool_id = 1;
   // Lexicographically smaller denom of the pair
   string asset_0_denom = 2;
