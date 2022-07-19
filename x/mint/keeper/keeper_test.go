@@ -11,9 +11,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 )
@@ -24,6 +26,33 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
+}
+
+// setupDeveloperVestingModuleAccountTest sets up test cases that utilize developer vesting
+// module account logic. It reverts some default logic added by suite.Setup()
+// Specifically, it removes the developer vesting module account
+// from account keeper if isDeveloperModuleAccountCreated is true.
+// Additionally, it initializes suite's Ctx with blockHeight
+func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight int64, isDeveloperModuleAccountCreated bool) {
+	suite.Setup()
+	// Reset height to the desired value since test suite setup initialized
+	// it to 1.
+	suite.Ctx = suite.Ctx.WithBlockHeader(tmproto.Header{Height: blockHeight})
+
+	if !isDeveloperModuleAccountCreated {
+		// Remove the developer vesting account since suite setup creates and initializes it.
+		// This environment w/o the developer vesting account configured is necessary for
+		// testing edge cases of multiple tests.
+		developerVestingAccount := suite.App.AccountKeeper.GetAccount(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+		suite.App.AccountKeeper.RemoveAccount(suite.Ctx, developerVestingAccount)
+		suite.App.BankKeeper.BurnCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount))))
+
+		// If developer module account is created, the suite.Setup() also sets the offset,
+		// therefore, we should reset it to 0 to set up the environment truly w/o the module account.
+		supplyOffset := suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom)
+		suite.App.BankKeeper.AddSupplyOffset(suite.Ctx, sdk.DefaultBondDenom, supplyOffset.Mul(sdk.NewInt(-1)))
+		suite.Equal(sdk.ZeroInt(), suite.App.BankKeeper.GetSupplyOffset(suite.Ctx, sdk.DefaultBondDenom))
+	}
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -178,4 +207,96 @@ func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperReward
 	suite.Equal(
 		mintCoins[0].Amount.ToDec().Mul(proportionToCommunity).Mul(sdk.NewDec(2)),
 		feePool.CommunityPool.AmountOf("stake"))
+}
+
+func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
+	testcases := map[string]struct {
+		blockHeight                     int64
+		amount                          sdk.Coin
+		isDeveloperModuleAccountCreated bool
+
+		expectedError error
+	}{
+		"valid call": {
+			blockHeight: 0,
+			amount:      sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
+		},
+		"nil amount": {
+			blockHeight:   0,
+			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+		},
+		"zero amount": {
+			blockHeight:   0,
+			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
+			expectedError: keeper.ErrAmountCannotBeNilOrZero,
+		},
+		"module account is already created": {
+			blockHeight:                     0,
+			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
+			isDeveloperModuleAccountCreated: true,
+			expectedError:                   keeper.ErrDevVestingModuleAccountAlreadyCreated,
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			suite.setupDeveloperVestingModuleAccountTest(tc.blockHeight, tc.isDeveloperModuleAccountCreated)
+			mintKeeper := suite.App.MintKeeper
+
+			// Test
+			actualError := mintKeeper.CreateDeveloperVestingModuleAccount(suite.Ctx, tc.amount)
+
+			if tc.expectedError != nil {
+				suite.Error(actualError)
+				suite.Equal(actualError, tc.expectedError)
+				return
+			}
+			suite.NoError(actualError)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
+	testcases := map[string]struct {
+		blockHeight                     int64
+		isDeveloperModuleAccountCreated bool
+
+		expectedError error
+	}{
+		"valid call": {
+			blockHeight:                     1,
+			isDeveloperModuleAccountCreated: true,
+		},
+		"dev vesting module account does not exist": {
+			blockHeight:   1,
+			expectedError: keeper.ErrDevVestingModuleAccountNotCreated,
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			suite.setupDeveloperVestingModuleAccountTest(tc.blockHeight, tc.isDeveloperModuleAccountCreated)
+			ctx := suite.Ctx
+			bankKeeper := suite.App.BankKeeper
+			mintKeeper := suite.App.MintKeeper
+
+			supplyWithOffsetBefore := bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
+			supplyOffsetBefore := bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
+
+			// Test
+			actualError := mintKeeper.SetInitialSupplyOffsetDuringMigration(ctx)
+
+			if tc.expectedError != nil {
+				suite.Error(actualError)
+				suite.Equal(actualError, tc.expectedError)
+
+				suite.Equal(supplyWithOffsetBefore.Amount, bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+				suite.Equal(supplyOffsetBefore, bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
+				return
+			}
+			suite.NoError(actualError)
+			suite.Equal(supplyWithOffsetBefore.Amount.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+			suite.Equal(supplyOffsetBefore.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
+		})
+	}
 }

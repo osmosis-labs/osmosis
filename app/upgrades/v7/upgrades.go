@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v10/app/keepers"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
-	mintkeeper "github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
@@ -54,7 +53,9 @@ func CreateUpgradeHandler(
 		keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
 
 		// Set the supply offset from the developer vesting account
-		mintkeeper.SetInitialSupplyOffsetDuringMigration(ctx, *keepers.MintKeeper)
+		if err := keepers.MintKeeper.SetInitialSupplyOffsetDuringMigration(ctx); err != nil {
+			panic(err)
+		}
 
 		return newVM, err
 	}
