@@ -10,7 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 type simState struct {

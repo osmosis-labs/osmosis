@@ -3,22 +3,20 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 )
 
 type (
-	ErrInvalidRatio = invalidRatioError
+	ErrInvalidRatio                  = invalidRatioError
+	ErrInsufficientDevVestingBalance = insufficientDevVestingBalanceError
 )
 
 const (
-	DeveloperVestingAmount = developerVestingAmount
+	EmptyWeightedAddressReceiver = emptyWeightedAddressReceiver
+	DeveloperVestingAmount       = developerVestingAmount
 )
 
 var (
-	ErrAmountCannotBeNilOrZero               = errAmountCannotBeNilOrZero
-	ErrDevVestingModuleAccountAlreadyCreated = errDevVestingModuleAccountAlreadyCreated
-	ErrDevVestingModuleAccountNotCreated     = errDevVestingModuleAccountNotCreated
-
 	GetProportions = getProportions
 )
 

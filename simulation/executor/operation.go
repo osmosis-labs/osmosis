@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 // entry kinds for use within OperationEntry

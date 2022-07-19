@@ -1,4 +1,4 @@
-package simulation
+package simtypes
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
-	"github.com/osmosis-labs/osmosis/v7/app/params"
+	"github.com/osmosis-labs/osmosis/v10/app/params"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -61,7 +61,10 @@ func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation
 		return simulation.NoOpMsg(msgName, msgName, fmt.Sprintf("unable to deliver tx. \nreason: %v\n results: %v\n msg: %s\n tx: %s", err, results, msg, tx)), nil, err
 	}
 
-	return simulation.NewOperationMsg(msg, true, "", nil), nil, nil
+	opMsg := simulation.NewOperationMsg(msg, true, "", nil)
+	opMsg.Route = msgName
+	opMsg.Name = msgName
+	return opMsg, nil, nil
 }
 
 // GenTx generates a signed mock transaction.

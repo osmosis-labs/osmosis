@@ -10,16 +10,17 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
+	"github.com/osmosis-labs/osmosis/v10/app"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
-	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	osmosim "github.com/osmosis-labs/osmosis/v7/simulation/executor"
-	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
+	osmosim "github.com/osmosis-labs/osmosis/v10/simulation/executor"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes/simlogger"
 )
 
 // Profile with:
@@ -40,7 +41,7 @@ func TestFullAppSimulation(t *testing.T) {
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
 	sdkSimapp.FlagEnabledValue = true
-	sdkSimapp.FlagNumBlocksValue = 100
+	sdkSimapp.FlagNumBlocksValue = 200
 	sdkSimapp.FlagBlockSizeValue = 25
 	sdkSimapp.FlagCommitValue = true
 	sdkSimapp.FlagVerboseValue = true
@@ -54,6 +55,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
+	logger = simlogger.NewSimLogger(logger)
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
 	config.ParamsFile = "params.json"
@@ -90,7 +92,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		fauxMerkleModeOpt)
 
 	initFns := simtypes.InitFunctions{
-		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation2.RandomAccounts, osmosis.ModuleAccountAddrs()),
+		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation.RandomAccounts, osmosis.ModuleAccountAddrs()),
 		AppInitialStateFn: AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
 	}
 
@@ -102,7 +104,6 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		initFns,
 		osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 		config,
-		osmosis.AppCodec(),
 	)
 
 	if simErr != nil {
@@ -148,7 +149,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
-			logger = log.TestingLogger()
+			logger = simlogger.NewSimLogger(log.TestingLogger())
 			// if sdkSimapp.FlagVerboseValue {
 			// 	logger = log.TestingLogger()
 			// } else {
@@ -176,7 +177,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			initFns := simtypes.InitFunctions{
-				RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation2.RandomAccounts, osmosis.ModuleAccountAddrs()),
+				RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation.RandomAccounts, osmosis.ModuleAccountAddrs()),
 				AppInitialStateFn: AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
 			}
 
@@ -188,7 +189,6 @@ func TestAppStateDeterminism(t *testing.T) {
 				initFns,
 				osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 				config,
-				osmosis.AppCodec(),
 			)
 
 			require.NoError(t, simErr)
