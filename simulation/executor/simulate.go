@@ -15,7 +15,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -23,39 +22,6 @@ import (
 )
 
 const AverageBlockTime = 6 * time.Second
-
-// initialize the chain for the simulation
-func initChain(
-	r *rand.Rand,
-	params Params,
-	accounts []simulation.Account,
-	app simtypes.App,
-	appStateFn simulation.AppStateFn,
-	config *simulation.Config,
-	cdc codec.JSONCodec,
-) (mockValidators, time.Time, []simulation.Account) {
-	// TODO: Cleanup the whole config dependency with appStateFn
-	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, *config)
-	consensusParams := randomConsensusParams(r, appState, cdc)
-	req := abci.RequestInitChain{
-		AppStateBytes:   appState,
-		ChainId:         chainID,
-		ConsensusParams: consensusParams,
-		Time:            genesisTimestamp,
-	}
-	// Valid app version can only be zero on app initialization.
-	req.ConsensusParams.Version.AppVersion = 0
-	res := app.GetBaseApp().InitChain(req)
-	validators := newMockValidators(r, res.Validators, params)
-
-	// update config
-	config.ChainID = chainID
-	if config.InitialBlockHeight == 0 {
-		config.InitialBlockHeight = 1
-	}
-
-	return validators, genesisTimestamp, accounts
-}
 
 // SimulateFromSeedLegacy tests an application by running the provided
 // operations, testing the provided invariants, but using the provided config.Seed.
@@ -94,13 +60,12 @@ func SimulateFromSeed(
 	initFunctions simtypes.InitFunctions,
 	actions []simtypes.Action,
 	config simulation.Config,
-	cdc codec.JSONCodec,
 ) (stopEarly bool, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
 
 	// Encapsulate the bizarre initialization logic that must be cleaned.
-	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config, cdc)
+	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config)
 	if err != nil {
 		return true, err
 	}
@@ -150,8 +115,7 @@ func cursedInitializationLogic(
 	w io.Writer,
 	app simtypes.App,
 	initFunctions simtypes.InitFunctions,
-	config *simulation.Config,
-	cdc codec.JSONCodec) (*simtypes.SimCtx, *simState, Params, error) {
+	config *simulation.Config) (*simtypes.SimCtx, *simState, Params, error) {
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
 
 	r := rand.New(rand.NewSource(config.Seed))
@@ -163,7 +127,7 @@ func cursedInitializationLogic(
 		return nil, nil, simParams, fmt.Errorf("must have greater than zero genesis accounts")
 	}
 
-	validators, genesisTimestamp, accs := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config, cdc)
+	validators, genesisTimestamp, accs := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",
@@ -184,6 +148,38 @@ func cursedInitializationLogic(
 	// TODO: If simulation has a param export path configured, export params here.
 
 	return simCtx, simState, simParams, nil
+}
+
+// initialize the chain for the simulation
+func initChain(
+	r *rand.Rand,
+	params Params,
+	accounts []simulation.Account,
+	app simtypes.App,
+	appStateFn simulation.AppStateFn,
+	config *simulation.Config,
+) (mockValidators, time.Time, []simulation.Account) {
+	// TODO: Cleanup the whole config dependency with appStateFn
+	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, *config)
+	consensusParams := randomConsensusParams(r, appState, app.AppCodec())
+	req := abci.RequestInitChain{
+		AppStateBytes:   appState,
+		ChainId:         chainID,
+		ConsensusParams: consensusParams,
+		Time:            genesisTimestamp,
+	}
+	// Valid app version can only be zero on app initialization.
+	req.ConsensusParams.Version.AppVersion = 0
+	res := app.GetBaseApp().InitChain(req)
+	validators := newMockValidators(r, res.Validators, params)
+
+	// update config
+	config.ChainID = chainID
+	if config.InitialBlockHeight == 0 {
+		config.InitialBlockHeight = 1
+	}
+
+	return validators, genesisTimestamp, accounts
 }
 
 //nolint:deadcode,unused
