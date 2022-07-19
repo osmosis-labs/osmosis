@@ -15,7 +15,7 @@ service Query {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/gauge-ids/{pool_id}";
   }
-  // DistrInfo returns the pools' matching gauge ids and weights.
+  // DistrInfo returns the pool's matching gauge ids and weights.
   rpc DistrInfo(QueryDistrInfoRequest) returns (QueryDistrInfoResponse) {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/distr_info";
