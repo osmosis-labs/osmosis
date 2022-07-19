@@ -17,18 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/client/cli"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/simulation"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
->>>>>>> f21e29eb (Delete unused simulator code (#1671))
 )
 
 var (
