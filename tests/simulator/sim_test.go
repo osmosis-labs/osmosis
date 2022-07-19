@@ -20,6 +20,7 @@ import (
 
 	osmosim "github.com/osmosis-labs/osmosis/v10/simulation/executor"
 	simtypes "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/types/simlogger"
 )
 
 // Profile with:
@@ -54,6 +55,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
+	logger = simlogger.NewSimLogger(logger)
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
 	config.ParamsFile = "params.json"
@@ -102,7 +104,6 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		initFns,
 		osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 		config,
-		osmosis.AppCodec(),
 	)
 
 	if simErr != nil {
@@ -148,7 +149,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
-			logger = log.TestingLogger()
+			logger = simlogger.NewSimLogger(log.TestingLogger())
 			// if sdkSimapp.FlagVerboseValue {
 			// 	logger = log.TestingLogger()
 			// } else {
@@ -188,7 +189,6 @@ func TestAppStateDeterminism(t *testing.T) {
 				initFns,
 				osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 				config,
-				osmosis.AppCodec(),
 			)
 
 			require.NoError(t, simErr)
