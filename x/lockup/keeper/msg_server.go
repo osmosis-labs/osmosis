@@ -39,13 +39,13 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 
 	// check if there's an existing lock from the same owner with the same duration.
 	// If so, simply add tokens to the existing lock.
-	lockID, err := server.keeper.AddToExistingLock(ctx, owner, msg.Coins[0], msg.Duration)
-	if err != nil {
-		return nil, err
-	}
+	lockExists := server.keeper.HasLock(ctx, owner, msg.Coins[0], msg.Duration)
+	if lockExists {
+		lockID, err := server.keeper.AddToExistingLock(ctx, owner, msg.Coins[0], msg.Duration)
+		if err != nil {
+			return nil, err
+		}
 
-	// return the lock id of the existing lock when successfully added to the existing lock.
-	if lockID != 0 {
 		ctx.EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(
 				types.TypeEvtAddTokensToLock,
