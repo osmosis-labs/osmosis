@@ -44,7 +44,7 @@ type printInfo struct {
 	AppMessage json.RawMessage `json:"app_message" yaml:"app_message"`
 }
 
-// newPrintInfo initializes a printInfo struct
+// newPrintInfo initializes a printInfo struct.
 func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.RawMessage) printInfo {
 	return printInfo{
 		Moniker:    moniker,
