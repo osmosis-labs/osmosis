@@ -34,7 +34,7 @@ import (
 )
 
 //nolint:ineffassign
-// PrepareGenesisCmd returns prepare-genesis-account cobra Command.
+// PrepareGenesisCmd returns prepare-genesis cobra Command.
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare-genesis",
