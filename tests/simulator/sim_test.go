@@ -19,10 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
 	osmosim "github.com/osmosis-labs/osmosis/v10/simulation/executor"
-	simtypes "github.com/osmosis-labs/osmosis/v10/simulation/types"
-	"github.com/osmosis-labs/osmosis/v10/simulation/types/simlogger"
 	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
-  "github.com/osmosis-labs/osmosis/v10/simulation/simtypes/simlogger"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes/simlogger"
 )
 
 // Profile with:
