@@ -2,6 +2,7 @@ package simtypes
 
 import (
 	"fmt"
+	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -102,4 +103,33 @@ func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build tx due to: %v", err)), nil, err
 	}
 	return sim.deliverTx(tx, msg, m.name)
+}
+
+func totalFrequency(actions []Action) int {
+	totalFrequency := 0
+	for _, action := range actions {
+		totalFrequency += int(MapFrequencyFromString(action.Frequency()))
+	}
+
+	return totalFrequency
+}
+
+type selectActionFn func(r *rand.Rand) Action
+
+func GetSelectActionFn(actions []Action) selectActionFn {
+	totalOpFrequency := totalFrequency(actions)
+
+	return func(r *rand.Rand) Action {
+		x := r.Intn(totalOpFrequency)
+		// TODO: Change to an accum list approach
+		for i := 0; i < len(actions); i++ {
+			if x <= int(MapFrequencyFromString(actions[i].Frequency())) {
+				return actions[i]
+			}
+
+			x -= int(MapFrequencyFromString(actions[i].Frequency()))
+		}
+		// shouldn't happen
+		return actions[0]
+	}
 }

@@ -4,11 +4,8 @@ package simulation
 
 import (
 	"encoding/json"
-	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-
-	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 // entry kinds for use within OperationEntry
@@ -89,34 +86,5 @@ func (simState *simState) queueOperations(futureOps []simulation.FutureOperation
 
 			continue
 		}
-	}
-}
-
-func totalFrequency(actions []simtypes.Action) int {
-	totalFrequency := 0
-	for _, action := range actions {
-		totalFrequency += int(simtypes.MapFrequencyFromString(action.Frequency()))
-	}
-
-	return totalFrequency
-}
-
-type selectActionFn func(r *rand.Rand) simtypes.Action
-
-func getSelectActionFn(actions []simtypes.Action) selectActionFn {
-	totalOpFrequency := totalFrequency(actions)
-
-	return func(r *rand.Rand) simtypes.Action {
-		x := r.Intn(totalOpFrequency)
-		// TODO: Change to an accum list approach
-		for i := 0; i < len(actions); i++ {
-			if x <= int(simtypes.MapFrequencyFromString(actions[i].Frequency())) {
-				return actions[i]
-			}
-
-			x -= int(simtypes.MapFrequencyFromString(actions[i].Frequency()))
-		}
-		// shouldn't happen
-		return actions[0]
 	}
 }
