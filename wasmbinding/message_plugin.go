@@ -147,7 +147,7 @@ func (m *CustomMessenger) changeAdmin(ctx sdk.Context, contractAddr sdk.AccAddre
 	return nil, nil, nil
 }
 
-// Used with changeAdmin to validate changeAdmin messages and to dispatch.
+// ChangeAdmin is used with changeAdmin to validate changeAdmin messages and to dispatch.
 func ChangeAdmin(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, changeAdmin *bindings.ChangeAdmin) error {
 	if changeAdmin == nil {
 		return wasmvmtypes.InvalidRequest{Err: "changeAdmin is nil"}
