@@ -793,7 +793,8 @@ func MaxDec(d1, d2 BigDec) BigDec {
 	return d1
 }
 
-// DecEq is intended to be used with require/assert:  require.True(DecEq(...))
+// DecEq returns true if two given decimals are equal.
+// Intended to be used with require/assert:  require.True(t, DecEq(...))
 func DecEq(t *testing.T, exp, got BigDec) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
