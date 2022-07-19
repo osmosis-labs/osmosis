@@ -39,7 +39,7 @@ type KeeperTestHelper struct {
 	TestAccs    []sdk.AccAddress
 }
 
-// Setup sets up keeper tests.
+// Setup sets up basic environment for suite (App, Ctx, and test accounts)
 func (s *KeeperTestHelper) Setup() {
 	s.App = app.Setup(false)
 	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
