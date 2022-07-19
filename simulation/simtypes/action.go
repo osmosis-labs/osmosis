@@ -35,7 +35,7 @@ type weightedOperationAction struct {
 func (a weightedOperationAction) WithFrequency(w Frequency) Action { a.frequency = w; return a }
 func (a weightedOperationAction) Name() string                     { return fmt.Sprintf("%s: weighted_op", a.moduleName) }
 func (a weightedOperationAction) Frequency() Frequency {
-	return Frequency(MapFrequencyFromInt(a.op.Weight()))
+	return Frequency(mapFrequencyFromInt(a.op.Weight()))
 }
 func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	simulation.OperationMsg, []simulation.FutureOperation, error,
@@ -108,7 +108,7 @@ func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 func totalFrequency(actions []Action) int {
 	totalFrequency := 0
 	for _, action := range actions {
-		totalFrequency += int(MapFrequencyFromString(action.Frequency()))
+		totalFrequency += mapFrequencyFromString(action.Frequency())
 	}
 
 	return totalFrequency
@@ -123,11 +123,11 @@ func GetSelectActionFn(actions []Action) selectActionFn {
 		x := r.Intn(totalOpFrequency)
 		// TODO: Change to an accum list approach
 		for i := 0; i < len(actions); i++ {
-			if x <= int(MapFrequencyFromString(actions[i].Frequency())) {
+			if x <= mapFrequencyFromString(actions[i].Frequency()) {
 				return actions[i]
 			}
 
-			x -= int(MapFrequencyFromString(actions[i].Frequency()))
+			x -= mapFrequencyFromString(actions[i].Frequency())
 		}
 		// shouldn't happen
 		return actions[0]

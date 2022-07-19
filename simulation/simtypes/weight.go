@@ -9,30 +9,30 @@ const (
 	Frequent   = "Frequent"
 )
 
-func MapFrequencyFromInt(intFrequency int) string {
+func mapFrequencyFromInt(intFrequency int) string {
 	switch {
 	case intFrequency < 10:
-		return "Rare"
+		return Rare
 	case intFrequency > 10 && intFrequency < 20:
-		return "Infrequent"
+		return Infrequent
 	case intFrequency > 20 && intFrequency < 50:
-		return "Common"
+		return Common
 	case intFrequency > 50:
-		return "Frequent"
+		return Frequent
 	default:
-		return "Common"
+		return Common
 	}
 }
 
-func MapFrequencyFromString(strFrequency Frequency) int {
+func mapFrequencyFromString(strFrequency Frequency) int {
 	switch {
-	case strFrequency == "Rare":
+	case strFrequency == Rare:
 		return 5
-	case strFrequency == "Infrequent":
+	case strFrequency == Infrequent:
 		return 15
-	case strFrequency == "Common":
+	case strFrequency == Common:
 		return 35
-	case strFrequency == "Frequent":
+	case strFrequency == Frequent:
 		return 65
 	default:
 		return 35
