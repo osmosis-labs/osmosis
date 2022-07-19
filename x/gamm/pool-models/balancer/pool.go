@@ -681,6 +681,7 @@ func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.D
 //
 // It returns the number of shares created, the amount of coins actually joined into the pool
 // (in case of not being able to fully join), or an error.
+// and updates pool accordingly.
 func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
 	// 1) Get pool current liquidity + and token weights
 	// 2) If single token provided, do single asset join and exit.
@@ -731,11 +732,10 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
+	// safely ends the calculation if all input tokens are successfully LP'd
 	if tokensJoined.IsAnyGT(tokensIn) {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than tokens passed in")
-	}
-
-	if remainingTokensIn.Empty() {
+	} else if remainingTokensIn.Empty() {
 		return numShares, tokensJoined, nil
 	}
 
