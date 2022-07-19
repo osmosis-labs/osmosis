@@ -166,8 +166,8 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// ensure that the running node has snapshots at a height > trustHeight.
 	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
-		const snapshotHeight = 25
-		if syncInfo.LatestBlockHeight < snapshotHeight {
+		snapshotHeight := runningNode.SnapshotInterval
+		if uint64(syncInfo.LatestBlockHeight) < snapshotHeight {
 			s.T().Logf("snapshot height is not reached yet, current (%d), need (%d)", syncInfo.LatestBlockHeight, snapshotHeight)
 			return false
 		}

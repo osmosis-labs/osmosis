@@ -20,6 +20,7 @@ type NodeConfig struct {
 	initialization.Node
 
 	OperatorAddress  string
+	SnapshotInterval uint64
 	chainId          string
 	rpcClient        *rpchttp.HTTP
 	t                *testing.T
@@ -30,9 +31,10 @@ type NodeConfig struct {
 }
 
 // NewNodeConfig returens new initialized NodeConfig.
-func NewNodeConfig(t *testing.T, initNode *initialization.Node, chainId string, containerManager *containers.Manager) *NodeConfig {
+func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *initialization.NodeConfig, chainId string, containerManager *containers.Manager) *NodeConfig {
 	return &NodeConfig{
 		Node:             *initNode,
+		SnapshotInterval: initConfig.SnapshotInterval,
 		chainId:          chainId,
 		containerManager: containerManager,
 		t:                t,
