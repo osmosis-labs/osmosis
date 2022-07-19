@@ -50,6 +50,29 @@ func New(t *testing.T, containerManager *containers.Manager, id string, initVali
 	}
 }
 
+// CreateNode returns new initialized NodeConfig.
+func (c *Config) CreateNode(initNode *initialization.Node) *NodeConfig {
+	nodeConfig := &NodeConfig{
+		Node:             *initNode,
+		chainId:          c.Id,
+		containerManager: c.containerManager,
+		t:                c.t,
+	}
+	c.NodeConfigs = append(c.NodeConfigs, nodeConfig)
+	return nodeConfig
+}
+
+// RemoveNode removes node and stops it from running.
+func (c *Config) RemoveNode(nodeName string) error {
+	for i, node := range c.NodeConfigs {
+		if node.Name == nodeName {
+			c.NodeConfigs = append(c.NodeConfigs[:i], c.NodeConfigs[i+1:]...)
+			return node.Stop()
+		}
+	}
+	return fmt.Errorf("node %s not found", nodeName)
+}
+
 // WaitUntilHeight waits for all validators to reach the specified height at the minimum.
 // returns error, if any.
 func (c *Config) WaitUntilHeight(height int64) error {
@@ -116,6 +139,16 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 // ndoes created.
 func (c *Config) GetDefaultNode() (*NodeConfig, error) {
 	return c.getNodeAtIndex(defaultNodeIndex)
+}
+
+// GetPersistentPeers returns persistent peers from every node
+// associated with a chain.
+func (c *Config) GetPersistentPeers() []string {
+	peers := make([]string, len(c.NodeConfigs))
+	for i, node := range c.NodeConfigs {
+		peers[i] = node.PeerId
+	}
+	return peers
 }
 
 func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
