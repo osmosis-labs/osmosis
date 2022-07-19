@@ -327,7 +327,6 @@ The file `e2e_setup_test.go` defines the testing suite and contains the core boo
 
 The file `e2e_test.go` contains the actual end-to-end integration tests that utilize the testing suite.
 
-Currently, there is a single IBC test in e2e_test.go.
 
 Additionally, there is an ability to disable certain components of the e2e suite. This can be done by setting the environment variables. See the [E2E test docs](https://github.com/osmosis-labs/osmosis/blob/main/tests/e2e/README.md)  or more details.
 
