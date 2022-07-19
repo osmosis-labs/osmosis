@@ -92,29 +92,29 @@ func (simState *simState) queueOperations(futureOps []simulation.FutureOperation
 	}
 }
 
-func totalWeight(actions []simtypes.Action) int {
-	totalWeight := 0
+func totalFrequency(actions []simtypes.Action) int {
+	totalFrequency := 0
 	for _, action := range actions {
-		totalWeight += int(action.Weight())
+		totalFrequency += int(simtypes.MapFrequencyFromString(action.Frequency()))
 	}
 
-	return totalWeight
+	return totalFrequency
 }
 
 type selectActionFn func(r *rand.Rand) simtypes.Action
 
 func getSelectActionFn(actions []simtypes.Action) selectActionFn {
-	totalOpWeight := totalWeight(actions)
+	totalOpFrequency := totalFrequency(actions)
 
 	return func(r *rand.Rand) simtypes.Action {
-		x := r.Intn(totalOpWeight)
+		x := r.Intn(totalOpFrequency)
 		// TODO: Change to an accum list approach
 		for i := 0; i < len(actions); i++ {
-			if x <= int(actions[i].Weight()) {
+			if x <= int(simtypes.MapFrequencyFromString(actions[i].Frequency())) {
 				return actions[i]
 			}
 
-			x -= int(actions[i].Weight())
+			x -= int(simtypes.MapFrequencyFromString(actions[i].Frequency()))
 		}
 		// shouldn't happen
 		return actions[0]
