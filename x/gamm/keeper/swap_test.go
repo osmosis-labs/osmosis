@@ -4,9 +4,13 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
+
+var _ = suite.TestingSuite(nil)
 
 func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	type param struct {
@@ -80,29 +84,34 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 	}
 
 	for _, test := range tests {
-		// Init suite for each test.
-		suite.SetupTest()
-		poolId := suite.PrepareBalancerPool()
-		keeper := suite.App.GAMMKeeper
+		suite.Run(test.name, func() {
+			// Init suite for each test.
+			suite.SetupTest()
+			poolId := suite.PrepareBalancerPool()
+			keeper := suite.App.GAMMKeeper
+			ctx := suite.Ctx
 
-		if test.expectPass {
-			spotPriceBefore, err := keeper.CalculateSpotPrice(suite.Ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
-			suite.NoError(err, "test: %v", test.name)
+			if test.expectPass {
+				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
+				suite.NoError(err, "test: %v", test.name)
 
-			tokenOutAmount, err := keeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
-			suite.NoError(err, "test: %v", test.name)
-			suite.True(tokenOutAmount.Equal(test.param.expectedTokenOut), "test: %v", test.name)
+				tokenOutAmount, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
+				suite.NoError(err, "test: %v", test.name)
+				suite.True(tokenOutAmount.Equal(test.param.expectedTokenOut), "test: %v", test.name)
 
-			spotPriceAfter, err := keeper.CalculateSpotPrice(suite.Ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
-			suite.NoError(err, "test: %v", test.name)
+				assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, 1)
 
-			// Ratio of the token out should be between the before spot price and after spot price.
-			tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
-			suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
-		} else {
-			_, err := keeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
-			suite.Error(err, "test: %v", test.name)
-		}
+				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
+				suite.NoError(err, "test: %v", test.name)
+
+				// Ratio of the token out should be between the before spot price and after spot price.
+				tradeAvgPrice := test.param.tokenIn.Amount.ToDec().Quo(tokenOutAmount.ToDec())
+				suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
+			} else {
+				_, err := keeper.SwapExactAmountIn(ctx, suite.TestAccs[0], poolId, test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount)
+				suite.Error(err, "test: %v", test.name)
+			}
+		})
 	}
 }
 
@@ -178,32 +187,37 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 	}
 
 	for _, test := range tests {
-		// Init suite for each test.
-		suite.SetupTest()
-		poolId := suite.PrepareBalancerPool()
+		suite.Run(test.name, func() {
+			// Init suite for each test.
+			suite.SetupTest()
+			poolId := suite.PrepareBalancerPool()
 
-		keeper := suite.App.GAMMKeeper
+			keeper := suite.App.GAMMKeeper
+			ctx := suite.Ctx
 
-		if test.expectPass {
-			spotPriceBefore, err := keeper.CalculateSpotPrice(suite.Ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
-			suite.NoError(err, "test: %v", test.name)
+			if test.expectPass {
+				spotPriceBefore, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
+				suite.NoError(err, "test: %v", test.name)
 
-			tokenInAmount, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
-			suite.NoError(err, "test: %v", test.name)
-			suite.True(tokenInAmount.Equal(test.param.expectedTokenInAmount),
-				"test: %v\n expect_eq actual: %s, expected: %s",
-				test.name, tokenInAmount, test.param.expectedTokenInAmount)
+				tokenInAmount, err := keeper.SwapExactAmountOut(ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
+				suite.NoError(err, "test: %v", test.name)
+				suite.True(tokenInAmount.Equal(test.param.expectedTokenInAmount),
+					"test: %v\n expect_eq actual: %s, expected: %s",
+					test.name, tokenInAmount, test.param.expectedTokenInAmount)
 
-			spotPriceAfter, err := keeper.CalculateSpotPrice(suite.Ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
-			suite.NoError(err, "test: %v", test.name)
+				assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, 1)
 
-			// Ratio of the token out should be between the before spot price and after spot price.
-			tradeAvgPrice := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
-			suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
-		} else {
-			_, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
-			suite.Error(err, "test: %v", test.name)
-		}
+				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
+				suite.NoError(err, "test: %v", test.name)
+
+				// Ratio of the token out should be between the before spot price and after spot price.
+				tradeAvgPrice := tokenInAmount.ToDec().Quo(test.param.tokenOut.Amount.ToDec())
+				suite.True(tradeAvgPrice.GT(spotPriceBefore) && tradeAvgPrice.LT(spotPriceAfter), "test: %v", test.name)
+			} else {
+				_, err := keeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], poolId, test.param.tokenInDenom, test.param.tokenInMaxAmount, test.param.tokenOut)
+				suite.Error(err, "test: %v", test.name)
+			}
+		})
 	}
 }
 

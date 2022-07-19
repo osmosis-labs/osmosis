@@ -46,6 +46,9 @@ func (k Keeper) MultihopSwapExactAmountOut(
 	if err != nil {
 		return sdk.Int{}, err
 	}
+	if len(insExpected) == 0 {
+		return sdk.Int{}, nil
+	}
 
 	insExpected[0] = tokenInMaxAmount
 
