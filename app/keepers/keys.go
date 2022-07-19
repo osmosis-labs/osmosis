@@ -30,7 +30,7 @@ func (appKeepers *AppKeepers) GetKVStoreKey() map[string]*sdk.KVStoreKey {
 	return appKeepers.keys
 }
 
-// GetTransientStoreKey gets Transient Store keys
+// GetTransientStoreKey gets Transient Store keys.
 func (appKeepers *AppKeepers) GetTransientStoreKey() map[string]*sdk.TransientStoreKey {
 	return appKeepers.tkeys
 }
