@@ -35,7 +35,7 @@ func (appKeepers *AppKeepers) GetTransientStoreKey() map[string]*sdk.TransientSt
 	return appKeepers.tkeys
 }
 
-// GetMemoryStoreKey get memory Store keys
+// GetMemoryStoreKey get memory Store keys.
 func (appKeepers *AppKeepers) GetMemoryStoreKey() map[string]*sdk.MemoryStoreKey {
 	return appKeepers.memKeys
 }
