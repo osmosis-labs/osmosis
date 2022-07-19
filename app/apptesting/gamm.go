@@ -30,7 +30,7 @@ func (s *KeeperTestHelper) PrepareUni2PoolWithAssets(asset1, asset2 sdk.Coin) ui
 	)
 }
 
-// PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams
+// PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
 func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 		SwapFee: sdk.NewDec(0),
