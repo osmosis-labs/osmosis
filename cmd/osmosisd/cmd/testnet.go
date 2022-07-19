@@ -45,7 +45,7 @@ var (
 	emptyMnemonic = ""
 )
 
-// testnetCmd get cmd to initialize all files for tendermint testnet and application.
+// testnetCmd gets the cmd to initialize all files for tendermint testnet and application.
 func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
