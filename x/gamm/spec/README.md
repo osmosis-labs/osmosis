@@ -972,18 +972,18 @@ TBD
 
 ### `types.TypeEvtPoolJoined`
 
-This event is emitted after one of `JoinPool` or `JoinPoolNoSwap` joins
+This event is emitted after one of `JoinPool` or `JoinPoolNoSwap` complete joining
 the requested pool successfully.
 
 It consists of the following attributes:
 
 * `sdk.AttributeKeyModule` - "module"
   * The value is the module's name - "gamm".
-* sdk.AttributeKeySender
+* `sdk.AttributeKeySender`
   * The value is the address of the sender who created the swap message.
-* types.AttributeKeyPoolId
+* `types.AttributeKeyPoolId`
   * The value is the pool id of the pool where swap occurs.
-* types.AttributeKeyTokensIn
+* `types.AttributeKeyTokensIn`
   * The value is the string representation of the tokens being swapped in.
 
 ### `types.TypeEvtPoolExited`
