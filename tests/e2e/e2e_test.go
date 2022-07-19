@@ -204,7 +204,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		500*time.Millisecond,
 	)
 
-	// stop the state synchin node.
+	// stop the state synching node.
 	err = chain.RemoveNode(stateSynchingNode.Name)
 	s.NoError(err)
 }
