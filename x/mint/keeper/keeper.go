@@ -36,6 +36,17 @@ func (e invalidRatioError) Error() string {
 	return fmt.Sprintf("mint allocation ratio (%s) is greater than 1", e.ActualRatio)
 }
 
+type insufficientDevVestingBalanceError struct {
+	ActualBalance         sdk.Int
+	AttemptedDistribution sdk.Int
+}
+
+func (e insufficientDevVestingBalanceError) Error() string {
+	return fmt.Sprintf("developer vesting balance (%s) is smaller than requested distribution of (%s)", e.ActualBalance, e.AttemptedDistribution)
+}
+
+const emptyWeightedAddressReceiver = ""
+
 // NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
@@ -249,27 +260,35 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 // - the balance of mint module is less than totalMintedCoin * developerRewardsProportion.
 // CONTRACT:
 // - weights in developerRewardsReceivers add up to 1.
-// - addresses in developerRewardsReceivers are valid.
+// - addresses in developerRewardsReceivers are valid or empty string.
 func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion sdk.Dec, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
 	devRewardCoin, err := getProportions(ctx, totalMintedCoin, developerRewardsProportion)
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
+	developerRewardsModuleAccountAddress := k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
+	developerAccountBalance := k.bankKeeper.GetBalance(ctx, developerRewardsModuleAccountAddress, totalMintedCoin.Denom)
+	if developerAccountBalance.Amount.LT(devRewardCoin.Amount) {
+		return sdk.Int{}, insufficientDevVestingBalanceError{ActualBalance: developerAccountBalance.Amount, AttemptedDistribution: devRewardCoin.Amount}
+	}
+
 	devRewardCoins := sdk.NewCoins(devRewardCoin)
-	// This is supposed to come from the developer vesting module address, not the mint module address
-	// we over-allocated to the mint module address earlier though, so we burn it right here.
+	// TODO: https://github.com/osmosis-labs/osmosis/issues/2025
+	// Avoid over-allocating from the mint module address and have to later burn it here:
 	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins); err != nil {
 		return sdk.Int{}, err
 	}
 
 	// Take the current balance of the developer rewards pool and remove it from the supply offset
 	// We re-introduce the new supply at the end, in order to avoid any rounding discrepancies.
-	developerAccountBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), totalMintedCoin.Denom)
 	k.bankKeeper.AddSupplyOffset(ctx, totalMintedCoin.Denom, developerAccountBalance.Amount)
 
+	// If no developer rewards receivers provided, fund the community pool from
+	// the developer vesting module account.
 	if len(developerRewardsReceivers) == 0 {
-		// fund community pool when rewards address is empty
-		if err := k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)); err != nil {
+		err = k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, developerRewardsModuleAccountAddress)
+		if err != nil {
 			return sdk.Int{}, err
 		}
 	} else {
@@ -280,7 +299,8 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 				return sdk.Int{}, err
 			}
 			devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
-			if w.Address == "" {
+			// fund community pool when rewards address is empty.
+			if w.Address == emptyWeightedAddressReceiver {
 				err := k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
 					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
 				if err != nil {
@@ -302,7 +322,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	}
 
 	// Take the new balance of the developer rewards pool and add it back to the supply offset deduction
-	developerAccountBalance = k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), totalMintedCoin.Denom)
+	developerAccountBalance = k.bankKeeper.GetBalance(ctx, developerRewardsModuleAccountAddress, totalMintedCoin.Denom)
 	k.bankKeeper.AddSupplyOffset(ctx, totalMintedCoin.Denom, developerAccountBalance.Amount.Neg())
 
 	return devRewardCoin.Amount, nil
