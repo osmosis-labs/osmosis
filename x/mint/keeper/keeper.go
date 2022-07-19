@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
@@ -10,6 +13,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+)
+
+var (
+	errAmountCannotBeNilOrZero               = errors.New("amount cannot be nil or zero")
+	errDevVestingModuleAccountAlreadyCreated = fmt.Errorf("%s module account already exists", types.DeveloperVestingModuleAcctName)
+	errDevVestingModuleAccountNotCreated     = fmt.Errorf("%s module account does not exist", types.DeveloperVestingModuleAcctName)
 )
 
 // Keeper of the mint store.
@@ -54,25 +63,46 @@ func NewKeeper(
 }
 
 // SetInitialSupplyOffsetDuringMigration sets the supply offset based on the balance of the
-// Develop rVesting Module Account.  It should only be called one time during the initial
-// migration to v7.
-func SetInitialSupplyOffsetDuringMigration(ctx sdk.Context, k Keeper) {
+// developer vesting module account. CreateDeveloperVestingModuleAccount must be called
+// prior to calling this method. That is, developer vesting module account must exist when
+// SetInitialSupplyOffsetDuringMigration is called. Also, SetInitialSupplyOffsetDuringMigration
+// should only be called one time during the initial migration to v7. This is done so because
+// we would like to ensure that unvested developer tokens are not returned as part of the supply
+// queries. The method returns an error if current height in ctx is greater than the v7 upgrade height.
+func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
+	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
+		return errDevVestingModuleAccountNotCreated
+	}
+
 	moduleAccBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), k.GetParams(ctx).MintDenom)
 	k.bankKeeper.AddSupplyOffset(ctx, moduleAccBalance.Denom, moduleAccBalance.Amount.Neg())
+	return nil
 }
 
-// CreateDeveloperVestingModuleAccount creates the module account for developer vesting.
-// Should only be called in initial genesis creation, never again.
-func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) {
+// CreateDeveloperVestingModuleAccount creates the developer vesting module account
+// and mints amount of tokens to it.
+// Should only be called during the initial genesis creation, never again. Returns nil on success.
+// Returns error in the following cases:
+// - amount is nil or zero.
+// - if ctx has block height greater than 0.
+// - developer vesting module account is already created prior to calling this method.
+func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
+	if amount.IsNil() || amount.Amount.IsZero() {
+		return errAmountCannotBeNilOrZero
+	}
+	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
+		return errDevVestingModuleAccountAlreadyCreated
+	}
+
 	moduleAcc := authtypes.NewEmptyModuleAccount(
 		types.DeveloperVestingModuleAcctName, authtypes.Minter)
-
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 
 	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 // _____________________________________________________________________
