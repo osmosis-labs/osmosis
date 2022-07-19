@@ -4,6 +4,9 @@ import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
 
 func (k twapkeeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
@@ -27,4 +30,40 @@ func (k twapkeeper) getChangedPools(ctx sdk.Context) []uint64 {
 		alteredPoolIds = append(alteredPoolIds, poolId)
 	}
 	return alteredPoolIds
+}
+
+func (k twapkeeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.FormatHistoricalTWAPKey(twap.PoolId, twap.Time, twap.Asset0Denom, twap.Asset1Denom)
+
+	bz, err := proto.Marshal(&twap)
+	if err != nil {
+		panic(err)
+	}
+
+	store.Set(key, bz)
+}
+
+func (k twapkeeper) getMostRecentTWAP(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.FormatMostRecentTWAPKey(poolId, asset0Denom, asset1Denom)
+	bz := store.Get(key)
+	return types.ParseTwapFromBz(bz)
+}
+
+func (k twapkeeper) getAllMostRecentTWAPsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
+	store := ctx.KVStore(k.storeKey)
+	return types.GetAllMostRecentTwapsForPool(store, poolId)
+}
+
+func (k twapkeeper) storeMostRecentTWAP(ctx sdk.Context, twap types.TwapRecord) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
+
+	bz, err := proto.Marshal(&twap)
+	if err != nil {
+		panic(err)
+	}
+
+	store.Set(key, bz)
 }

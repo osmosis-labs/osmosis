@@ -19,9 +19,9 @@ option go_package = "github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types";
 message TwapRecord {
   uint64 pool_id = 1;
   // Lexicographically smaller denom of the pair
-  string asset_0_denom = 2;
+  string asset0_denom = 2;
   // Lexicographically larger denom of the pair
-  string asset_1_denom = 3;
+  string asset1_denom = 3;
   // height this record corresponds to, for debugging purposes
   uint64 height = 4 [
     (gogoproto.moretags) = "yaml:\"record_height\"",
