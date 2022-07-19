@@ -21,7 +21,7 @@ func NewSendBlockOptions(appOpts servertypes.AppOptions) SendBlockOptions {
 	}
 }
 
-// parsePermittedOnlySendTo parses the mapping PermittedOnlySendTo
+// parsePermittedOnlySendTo parses the mapping PermittedOnlySendTo.
 func parsePermittedOnlySendTo(opts servertypes.AppOptions) map[string]string {
 	valueInterface := opts.Get("permitted-only-send-to")
 	if valueInterface == nil {
