@@ -4,27 +4,15 @@ import (
 	"testing"
 	"time"
 
-<<<<<<< HEAD:x/pool-incentives/genesis_test.go
-=======
-	sdk "github.com/cosmos/cosmos-sdk/types"
->>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631)):x/pool-incentives/keeper/geneis_test.go
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-<<<<<<< HEAD:x/pool-incentives/genesis_test.go
 	simapp "github.com/osmosis-labs/osmosis/v10/app"
 	pool_incentives "github.com/osmosis-labs/osmosis/v10/x/pool-incentives"
 	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-=======
-	pool_incentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
-
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
->>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631)):x/pool-incentives/keeper/geneis_test.go
 )
 
 var (

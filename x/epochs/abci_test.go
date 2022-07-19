@@ -6,13 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-<<<<<<< HEAD
-=======
-
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
->>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631))
 
 	simapp "github.com/osmosis-labs/osmosis/v10/app"
 	"github.com/osmosis-labs/osmosis/v10/x/epochs"

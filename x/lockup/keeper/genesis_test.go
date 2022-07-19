@@ -8,15 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-<<<<<<< HEAD:x/lockup/genesis_test.go
 	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
-=======
-	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
->>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631)):x/lockup/keeper/genesis_test.go
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

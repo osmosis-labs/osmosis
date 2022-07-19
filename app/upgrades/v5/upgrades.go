@@ -10,14 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/app/keepers"
-	"github.com/osmosis-labs/osmosis/v10/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/app/keepers"
-	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
->>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631))
 )
 
 func CreateUpgradeHandler(

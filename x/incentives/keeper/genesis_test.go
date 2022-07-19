@@ -4,28 +4,15 @@ import (
 	"testing"
 	"time"
 
-<<<<<<< HEAD:x/incentives/genesis_test.go
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives"
 	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-=======
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
-
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
->>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631)):x/incentives/keeper/genesis_test.go
 )
 
 func TestIncentivesExportGenesis(t *testing.T) {

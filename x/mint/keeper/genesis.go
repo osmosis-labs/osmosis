@@ -1,15 +1,9 @@
 package keeper
 
 import (
-<<<<<<< HEAD:x/mint/genesis.go
-	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 
-=======
->>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631)):x/mint/keeper/genesis.go
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
 )
 
 // InitGenesis new mint genesis.

@@ -1,12 +1,7 @@
 package keeper
 
 import (
-<<<<<<< HEAD:x/txfees/genesis.go
-	"github.com/osmosis-labs/osmosis/v10/x/txfees/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
->>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631)):x/txfees/keeper/genesis.go
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

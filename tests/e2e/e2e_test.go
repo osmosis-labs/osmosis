@@ -74,5 +74,4 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 		time.Second,
 		"superfluid delegation vote overwrite not working as expected",
 	)
-
 }

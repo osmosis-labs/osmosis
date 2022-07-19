@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-<<<<<<< HEAD:x/mint/genesis_test.go
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -11,15 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-=======
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
->>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631)):x/mint/keeper/genesis_test.go
 )
 
 func TestMintInitGenesis(t *testing.T) {

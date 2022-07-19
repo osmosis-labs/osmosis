@@ -7,15 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-<<<<<<< HEAD:x/epochs/genesis_test.go
 	simapp "github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/x/epochs"
 	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
-=======
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
->>>>>>> 61a207f8 (chore: move init export genesis to keepers (#1631)):x/epochs/keeper/genesis_test.go
 )
 
 func TestEpochsExportGenesis(t *testing.T) {
