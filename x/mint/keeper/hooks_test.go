@@ -116,8 +116,8 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 
 	height := int64(1)
 	lastReductionPeriod := app.MintKeeper.GetLastReductionEpochNum(ctx)
-	// correct rewards
-	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+
+	checkDistribution := func(height int64) {
 		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
 		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
@@ -141,6 +141,11 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 		suite.Equal(devRewardsModuleAfter.Add(expectedDevRewardsCoin), devRewardsModuleOrigin, expectedRewards.String())
 	}
 
+	// correct rewards
+	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+		checkDistribution(height)
+	}
+
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
@@ -148,28 +153,7 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 	suite.Equal(lastReductionPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
 
 	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
-		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
-		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
-
-		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
-		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
-
-		mintParams := app.MintKeeper.GetParams(ctx)
-		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
-		expectedRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards))
-		suite.NoError(err)
-		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsCoin.Amount)
-
-		// check community pool balance increase
-		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		suite.Equal(feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, expectedRewards.String())
-
-		// test that the dev rewards module account balance decreased by the correct amount
-		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
-		suite.NoError(err)
-		suite.Equal(devRewardsModuleAfter.Add(expectedDevRewardsCoin), devRewardsModuleOrigin, expectedRewards.String())
+		checkDistribution(height)
 	}
 }
 
