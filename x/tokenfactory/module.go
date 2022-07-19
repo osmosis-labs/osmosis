@@ -15,8 +15,8 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
-	tokenfactorysimulation "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/simulation"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	simulation "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/simulation"
 
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/client/cli"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
@@ -179,7 +179,7 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 // AppModuleSimulationV2 functions
 
 // GenerateGenesisState creates a randomized GenState of the tokenfactory module.
-func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *simulation.SimCtx) {
+func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 	tfDefaultGen := types.DefaultGenesis()
 	tfDefaultGen.Params.DenomCreationFee = sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000))
 	tfDefaultGenJson := simState.Cdc.MustMarshalJSON(tfDefaultGen)
@@ -187,9 +187,9 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *si
 }
 
 // WeightedOperations returns the all the lockup module operations with their respective weights.
-func (am AppModule) Actions() []simulation.Action {
-	return []simulation.Action{
-		simulation.NewCurriedMsgBasedAction("create token factory token", am.keeper, tokenfactorysimulation.RandomMsgCreateDenom),
-		simulation.NewCurriedMsgBasedAction("mint token factory token", am.keeper, tokenfactorysimulation.RandomMsgMintDenom),
+func (am AppModule) Actions() []simtypes.Action {
+	return []simtypes.Action{
+		simtypes.NewMsgBasedAction("create token factory token", am.keeper, simulation.RandomMsgCreateDenom),
+		simtypes.NewMsgBasedAction("mint token factory token", am.keeper, simulation.RandomMsgMintDenom),
 	}
 }

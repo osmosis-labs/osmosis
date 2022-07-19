@@ -3,7 +3,7 @@ package simulation
 import (
 	"math/rand"
 
-	osmo_simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
@@ -114,7 +114,7 @@ func SimulateMsgSuperfluidDelegate(ak stakingtypes.AccountKeeper, bk stakingtype
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimtypes.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
@@ -140,7 +140,7 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimtypes.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
@@ -176,7 +176,7 @@ func SimulateMsgSuperfluidUndelegate(ak stakingtypes.AccountKeeper, bk stakingty
 // 		}
 
 // 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-// 		return osmo_simulation.GenAndDeliverTxWithRandFees(
+// 		return osmosimtypes.GenAndDeliverTxWithRandFees(
 // 			r, app, txGen, &msg, nil, ctx, simAccount, ak, bk, types.ModuleName)
 // 	}
 // }

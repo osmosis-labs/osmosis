@@ -1,4 +1,4 @@
-package simulation
+package simtypes
 
 // SimulationState is the input parameters used on each of the module's randomized
 // GenesisState generator function

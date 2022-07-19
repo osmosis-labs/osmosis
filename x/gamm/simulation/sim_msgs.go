@@ -9,7 +9,7 @@ import (
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
 	balancertypes "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
@@ -21,9 +21,9 @@ var (
 
 // RandomJoinPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective underlying token denoms, and attempts to execute a join pool transaction
-func RandomJoinPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*types.MsgJoinPool, error) {
+func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgJoinPool, error) {
 	// get random pool
-	pool_id := simulation.RandLTBound(sim, k.GetNextPoolNumber(ctx))
+	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
 		return &types.MsgJoinPool{}, err
@@ -97,9 +97,9 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.Poo
 
 // RandomExitPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective unbonded gamm shares, and attempts to execute an exit pool transaction
-func RandomExitPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*types.MsgExitPool, error) {
+func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgExitPool, error) {
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simulation.RandLTBound(sim, k.GetNextPoolNumber(ctx))
+	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
 		return &types.MsgExitPool{}, err
@@ -122,7 +122,7 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context)
 
 // RandomCreatePoolMsg attempts to find an account with two or more distinct denoms and attempts to send a
 // create pool message composed of those denoms
-func RandomCreateUniV2Msg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
+func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*balancertypes.MsgCreateBalancerPool, error) {
 	var poolAssets []balancertypes.PoolAsset
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
@@ -154,7 +154,7 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Conte
 	}, nil
 }
 
-func createPoolRestriction(k keeper.Keeper, sim *simulation.SimCtx, ctx sdk.Context) simulation.SimAccountConstraint {
+func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
 		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
 		hasTwoCoins := len(accCoins) >= 2

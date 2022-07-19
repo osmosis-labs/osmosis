@@ -16,11 +16,13 @@ import (
 	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
-	simulation2 "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 
 	osmosim "github.com/osmosis-labs/osmosis/v10/simulation/executor"
 	simtypes "github.com/osmosis-labs/osmosis/v10/simulation/types"
 	"github.com/osmosis-labs/osmosis/v10/simulation/types/simlogger"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+  "github.com/osmosis-labs/osmosis/v10/simulation/simtypes/simlogger"
 )
 
 // Profile with:
@@ -92,7 +94,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		fauxMerkleModeOpt)
 
 	initFns := simtypes.InitFunctions{
-		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation2.RandomAccounts, osmosis.ModuleAccountAddrs()),
+		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation.RandomAccounts, osmosis.ModuleAccountAddrs()),
 		AppInitialStateFn: AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
 	}
 
@@ -177,7 +179,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			)
 
 			initFns := simtypes.InitFunctions{
-				RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation2.RandomAccounts, osmosis.ModuleAccountAddrs()),
+				RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation.RandomAccounts, osmosis.ModuleAccountAddrs()),
 				AppInitialStateFn: AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
 			}
 

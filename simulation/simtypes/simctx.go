@@ -1,4 +1,4 @@
-package simulation
+package simtypes
 
 import (
 	"crypto/sha256"

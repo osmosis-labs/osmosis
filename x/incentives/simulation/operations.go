@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	osmo_simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
@@ -142,7 +142,7 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimtypes.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName)
 	}
 }
@@ -175,7 +175,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		}
 
 		txGen := simappparams.MakeTestEncodingConfig().TxConfig
-		return osmo_simulation.GenAndDeliverTxWithRandFees(
+		return osmosimtypes.GenAndDeliverTxWithRandFees(
 			r, app, txGen, &msg, rewards, ctx, simAccount, ak, bk, types.ModuleName,
 		)
 	}

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v10/app"
-	simulation "github.com/osmosis-labs/osmosis/v10/simulation/types"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdksimapp "github.com/cosmos/cosmos-sdk/simapp"
@@ -24,7 +24,7 @@ import (
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(cdc codec.JSONCodec, simManager *simulation.Manager) simtypes.AppStateFn {
+func AppStateFn(cdc codec.JSONCodec, simManager *osmosimtypes.Manager) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if sdksimapp.FlagGenesisTimeValue == 0 {
@@ -138,7 +138,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *simulation.Manager) simtypes.Ap
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
 // and creates the simulation params.
 func AppStateRandomizedFn(
-	simManager *simulation.Manager, r *rand.Rand, cdc codec.JSONCodec,
+	simManager *osmosimtypes.Manager, r *rand.Rand, cdc codec.JSONCodec,
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
@@ -180,7 +180,7 @@ func AppStateRandomizedFn(
 		GenTimestamp: genesisTimestamp,
 	}
 
-	simManager.GenerateGenesisStates(simState, &simulation.SimCtx{})
+	simManager.GenerateGenesisStates(simState, &osmosimtypes.SimCtx{})
 
 	appState, err := json.Marshal(genesisState)
 	if err != nil {
