@@ -27,7 +27,6 @@ func mulCoins(coins sdk.Coins, multiplier sdk.Dec) sdk.Coins {
 }
 
 func TestCalcExitPool(t *testing.T) {
-
 	emptyContext := sdk.Context{}
 
 	twoStablePoolAssets := sdk.NewCoins(

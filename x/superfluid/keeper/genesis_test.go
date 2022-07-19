@@ -1,4 +1,4 @@
-package superfluid_test
+package keeper_test
 
 import (
 	"testing"
@@ -57,9 +57,8 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	encodingConfig := simapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	am := superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper)
-
 	genesis := testGenesis
-	superfluid.InitGenesis(ctx, *app.SuperfluidKeeper, genesis)
+	app.SuperfluidKeeper.InitGenesis(ctx, genesis)
 
 	genesisExported := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
@@ -76,7 +75,7 @@ func TestInitGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	superfluid.InitGenesis(ctx, *app.SuperfluidKeeper, genesis)
+	app.SuperfluidKeeper.InitGenesis(ctx, genesis)
 
 	params := app.SuperfluidKeeper.GetParams(ctx)
 	require.Equal(t, params, genesis.Params)
@@ -99,7 +98,7 @@ func TestExportGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	ctx = ctx.WithBlockTime(now.Add(time.Second))
 	genesis := testGenesis
-	superfluid.InitGenesis(ctx, *app.SuperfluidKeeper, genesis)
+	app.SuperfluidKeeper.InitGenesis(ctx, genesis)
 
 	asset := types.SuperfluidAsset{
 		Denom:     "gamm/pool/2",
@@ -109,7 +108,7 @@ func TestExportGenesis(t *testing.T) {
 	savedAsset := app.SuperfluidKeeper.GetSuperfluidAsset(ctx, "gamm/pool/2")
 	require.Equal(t, savedAsset, asset)
 
-	genesisExported := superfluid.ExportGenesis(ctx, *app.SuperfluidKeeper)
+	genesisExported := app.SuperfluidKeeper.ExportGenesis(ctx)
 	require.Equal(t, genesisExported.Params, genesis.Params)
 	require.Equal(t, genesisExported.SuperfluidAssets, append(genesis.SuperfluidAssets, asset))
 	require.Equal(t, genesis.OsmoEquivalentMultipliers, genesis.OsmoEquivalentMultipliers)

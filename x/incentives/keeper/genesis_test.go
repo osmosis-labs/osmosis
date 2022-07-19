@@ -1,4 +1,4 @@
-package incentives_test
+package keeper_test
 
 import (
 	"testing"
@@ -8,7 +8,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives"
 	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
@@ -19,8 +18,7 @@ import (
 func TestIncentivesExportGenesis(t *testing.T) {
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	genesis := incentives.ExportGenesis(ctx, *app.IncentivesKeeper)
+	genesis := app.IncentivesKeeper.ExportGenesis(ctx)
 	require.Equal(t, genesis.Params.DistrEpochIdentifier, "week")
 	require.Len(t, genesis.Gauges, 0)
 
@@ -43,7 +41,7 @@ func TestIncentivesExportGenesis(t *testing.T) {
 	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, startTime, 1)
 	require.NoError(t, err)
 
-	genesis = incentives.ExportGenesis(ctx, *app.IncentivesKeeper)
+	genesis = app.IncentivesKeeper.ExportGenesis(ctx)
 	require.Equal(t, genesis.Params.DistrEpochIdentifier, "week")
 	require.Len(t, genesis.Gauges, 1)
 
@@ -83,7 +81,7 @@ func TestIncentivesInitGenesis(t *testing.T) {
 		DistributedCoins:  sdk.Coins(nil),
 		StartTime:         startTime.UTC(),
 	}
-	incentives.InitGenesis(ctx, *app.IncentivesKeeper, types.GenesisState{
+	app.IncentivesKeeper.InitGenesis(ctx, types.GenesisState{
 		Params: types.Params{
 			DistrEpochIdentifier: "week",
 		},

@@ -126,9 +126,8 @@ func TestEpochInfoChangesBeginBlockerAndInitGenesis(t *testing.T) {
 		}
 
 		ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
-
 		// check init genesis
-		epochs.InitGenesis(ctx, *app.EpochsKeeper, types.GenesisState{
+		app.EpochsKeeper.InitGenesis(ctx, types.GenesisState{
 			Epochs: []types.EpochInfo{
 				{
 					Identifier:              "monthly",
@@ -171,7 +170,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	initialBlockHeight := int64(1)
 	ctx = ctx.WithBlockHeight(initialBlockHeight).WithBlockTime(now)
 
-	epochs.InitGenesis(ctx, *app.EpochsKeeper, types.GenesisState{
+	app.EpochsKeeper.InitGenesis(ctx, types.GenesisState{
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:              "monthly",
@@ -241,7 +240,7 @@ func TestLegacyEpochSerialization(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
 
 	// check init genesis
-	epochs.InitGenesis(ctx, *app.EpochsKeeper, types.GenesisState{
+	app.EpochsKeeper.InitGenesis(ctx, types.GenesisState{
 		Epochs: []types.EpochInfo{legacyEpochInfo},
 	})
 
