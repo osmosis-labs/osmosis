@@ -1,15 +1,12 @@
 package keeper_test
 
 import (
-	"testing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 )
 
 var customGenesis = types.NewGenesisState(
@@ -38,10 +35,6 @@ var customGenesis = types.NewGenesisState(
 		},
 		2), // minting reward distribution start epoch
 	3) // halven started epoch
-
-func TestMintGenesisTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
 
 // TestMintInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.

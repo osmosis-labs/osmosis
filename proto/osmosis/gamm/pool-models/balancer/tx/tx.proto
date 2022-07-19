@@ -4,7 +4,7 @@ package osmosis.gamm.poolmodels.balancer.v1beta1;
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer";
 
 service Msg {
   rpc CreateBalancerPool(MsgCreateBalancerPool)

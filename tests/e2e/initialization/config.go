@@ -18,14 +18,14 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner

@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {

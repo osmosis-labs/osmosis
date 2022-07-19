@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v10/app/params"
 	dbm "github.com/tendermint/tm-db"
-
-	"github.com/osmosis-labs/osmosis/v7/app/params"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
