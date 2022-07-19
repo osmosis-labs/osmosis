@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
@@ -196,6 +197,12 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 
 // 	return nil
 // }
+
+func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	denoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
+	return denoms, err
+}
 
 // setNextPoolNumber sets next pool number.
 func (k Keeper) setNextPoolNumber(ctx sdk.Context, poolNumber uint64) {

@@ -24,6 +24,7 @@ func (k twapkeeper) GetArithmeticTwap(
 	return sdk.Dec{}, nil
 }
 
+// GetLatestAccumulatorRecord returns a TwapRecord struct that can be stored
 func (k twapkeeper) GetLatestAccumulatorRecord(poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	return types.TwapRecord{}, errors.New("unimplemented")
 }

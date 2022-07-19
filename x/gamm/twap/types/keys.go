@@ -7,6 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
+
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 )
 
 const (
@@ -39,18 +41,7 @@ func FormatHistoricalTWAPKey(poolId uint64, accumulatorWriteTime time.Time, deno
 func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecord, error) {
 	startPrefix := fmt.Sprintf("%s%s%d%s", mostRecentTWAPsPrefix, KeySeparator, poolId, KeySeparator)
 	endPrefix := fmt.Sprintf("%s%s%d%s", mostRecentTWAPsPrefix, KeySeparator, poolId+1, KeySeparator)
-	iter := store.Iterator([]byte(startPrefix), []byte(endPrefix))
-	defer iter.Close()
-	twaps := []TwapRecord{}
-	for ; iter.Valid(); iter.Next() {
-		val := iter.Value()
-		twap, err := ParseTwapFromBz(val)
-		if err != nil {
-			return twaps, err
-		}
-		twaps = append(twaps, twap)
-	}
-	return twaps, nil
+	return osmoutils.GatherValuesFromStore(store, []byte(startPrefix), []byte(endPrefix), ParseTwapFromBz)
 }
 
 func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {
