@@ -36,7 +36,7 @@ func init() {
 	RegisterDenoms()
 }
 
-// RegisterDenoms registers token denoms
+// RegisterDenoms registers token denoms.
 func RegisterDenoms() {
 	err := sdk.RegisterDenom(HumanCoinUnit, sdk.OneDec())
 	if err != nil {
