@@ -52,7 +52,7 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	return poolId
 }
 
-// PrepareBalancerPoolWithPoolParams sets up a Balancer pool with balancer.PoolParams
+// PrepareBalancerPoolWithPoolParams sets up a Balancer pool with poolParams.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
