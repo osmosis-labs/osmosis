@@ -335,7 +335,7 @@ To get started:
 - Inspect the logs of the docker containers and see if something it’s there
 - `docker ps -a #` to list all docker containers
 - Note the container id of the one you want to see the logs
-- And then run `docker logs <CONTAINER_ID>`  to debug via container logs
+- And then run `docker logs <CONTAINER_NAME>`  to debug via container logs
 
 ## Working with the SDK
 
