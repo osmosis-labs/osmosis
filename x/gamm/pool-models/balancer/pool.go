@@ -784,7 +784,7 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 	for _, coin := range tokensIn {
 		_, ok := poolAssetsByDenom[coin.Denom]
 		if !ok {
-			return sdk.ZeroInt(), sdk.NewCoins(), sdk.NewCoins(), fmt.Errorf(errMsgFormatInvalidInputDenoms, coin.Denom)
+			return sdk.ZeroInt(), sdk.NewCoins(), sdk.NewCoins(), sdkerrors.Wrapf(types.ErrDenomAlreadyInPool, invalidInputDenomsErrFormat, coin.Denom)
 		}
 	}
 
