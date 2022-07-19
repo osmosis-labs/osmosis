@@ -1,16 +1,16 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -35,12 +35,6 @@ type invalidRatioError struct {
 func (e invalidRatioError) Error() string {
 	return fmt.Sprintf("mint allocation ratio (%s) is greater than 1", e.ActualRatio)
 }
-
-var (
-	errAmountCannotBeNilOrZero               = errors.New("amount cannot be nil or zero")
-	errDevVestingModuleAccountAlreadyCreated = fmt.Errorf("%s module account already exists", types.DeveloperVestingModuleAcctName)
-	errDevVestingModuleAccountNotCreated     = fmt.Errorf("%s module account does not exist", types.DeveloperVestingModuleAcctName)
-)
 
 // NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
@@ -79,7 +73,7 @@ func NewKeeper(
 // queries. The method returns an error if current height in ctx is greater than the v7 upgrade height.
 func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
-		return errDevVestingModuleAccountNotCreated
+		return sdkerrors.Wrapf(types.ErrModuleDoesnotExist, "%s vesting module account doesnot exist", types.DeveloperVestingModuleAcctName)
 	}
 
 	moduleAccBalance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), k.GetParams(ctx).MintDenom)
@@ -96,10 +90,10 @@ func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 // - developer vesting module account is already created prior to calling this method.
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
 	if amount.IsNil() || amount.Amount.IsZero() {
-		return errAmountCannotBeNilOrZero
+		return sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero")
 	}
 	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
-		return errDevVestingModuleAccountAlreadyCreated
+		return sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName)
 	}
 
 	moduleAcc := authtypes.NewEmptyModuleAccount(

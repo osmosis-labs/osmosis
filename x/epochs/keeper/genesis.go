@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 )
 
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

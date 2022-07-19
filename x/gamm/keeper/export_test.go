@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 // SetParams sets the total set of params.

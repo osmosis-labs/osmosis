@@ -2,16 +2,9 @@ package keeper_test
 
 import (
 	gocontext "context"
-	"testing"
 
-	"github.com/stretchr/testify/suite"
-
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 )
-
-func TestMintGRPCQueryTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
 
 func (suite *KeeperTestSuite) TestGRPCParams() {
 	_, _, queryClient := suite.App, suite.Ctx, suite.queryClient

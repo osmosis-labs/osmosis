@@ -1,34 +1,24 @@
 package keeper_test
 
 import (
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestMintHooksTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
-
 func (suite *KeeperTestSuite) TestEndOfEpochMintedCoinDistribution() {
-	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app := suite.App
+	ctx := suite.Ctx
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	setupGaugeForLPIncentives(suite, app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -115,21 +105,19 @@ func (suite *KeeperTestSuite) TestEndOfEpochMintedCoinDistribution() {
 }
 
 func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmpty() {
-	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app := suite.App
+	ctx := suite.Ctx
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	setupGaugeForLPIncentives(suite, app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
 
 	height := int64(1)
 	lastReductionPeriod := app.MintKeeper.GetLastReductionEpochNum(ctx)
-	// correct rewards
-	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+
+	checkDistribution := func(height int64) {
 		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
 		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
@@ -153,6 +141,11 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 		suite.Equal(devRewardsModuleAfter.Add(expectedDevRewardsCoin), devRewardsModuleOrigin, expectedRewards.String())
 	}
 
+	// correct rewards
+	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
+		checkDistribution(height)
+	}
+
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
@@ -160,34 +153,13 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 	suite.Equal(lastReductionPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
 
 	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
-		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
-		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
-
-		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
-		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
-
-		mintParams := app.MintKeeper.GetParams(ctx)
-		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
-		expectedRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards))
-		suite.NoError(err)
-		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsCoin.Amount)
-
-		// check community pool balance increase
-		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		suite.Equal(feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, expectedRewards.String())
-
-		// test that the dev rewards module account balance decreased by the correct amount
-		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewardsCoin, err := keeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
-		suite.NoError(err)
-		suite.Equal(devRewardsModuleAfter.Add(expectedDevRewardsCoin), devRewardsModuleOrigin, expectedRewards.String())
+		checkDistribution(height)
 	}
 }
 
 func (suite *KeeperTestSuite) TestEndOfEpochNoDistributionWhenIsNotYetStartTime() {
-	app := osmoapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	app := suite.App
+	ctx := suite.Ctx
 
 	mintParams := app.MintKeeper.GetParams(ctx)
 	mintParams.MintingRewardsDistributionStartEpoch = 4
@@ -195,8 +167,6 @@ func (suite *KeeperTestSuite) TestEndOfEpochNoDistributionWhenIsNotYetStartTime(
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	setupGaugeForLPIncentives(suite, app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -435,24 +405,4 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	// Sanity check with the actual value on mainnet.
 	suite.Equal(mainnetThirdenedProvisions, expectedThirdenedProvisions.String())
 	suite.Equal(expectedThirdenedProvisions, app.MintKeeper.GetMinter(ctx).EpochProvisions)
-}
-
-func setupGaugeForLPIncentives(suite *KeeperTestSuite, app *osmoapp.OsmosisApp, ctx sdk.Context) {
-	addr := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	err := simapp.FundAccount(app.BankKeeper, ctx, addr, coins)
-	suite.NoError(err)
-	distrTo := lockuptypes.QueryCondition{
-		LockQueryType: lockuptypes.ByDuration,
-		Denom:         "lptoken",
-		Duration:      time.Second,
-	}
-
-	// mints coins so supply exists on chain
-	mintLPtokens := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
-	err = simapp.FundAccount(app.BankKeeper, ctx, addr, mintLPtokens)
-	suite.NoError(err)
-
-	_, err = app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
-	suite.NoError(err)
 }

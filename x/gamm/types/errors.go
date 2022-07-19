@@ -15,6 +15,7 @@ var (
 	ErrAlreadyInvalidPool  = sdkerrors.Register(ModuleName, 9, "destruction on already invalid pool")
 	ErrInvalidPool         = sdkerrors.Register(ModuleName, 10, "attempting to create an invalid pool")
 	ErrDenomNotFoundInPool = sdkerrors.Register(ModuleName, 11, "denom does not exist in pool")
+	ErrDenomAlreadyInPool  = sdkerrors.Register(ModuleName, 12, "denom already exists in the pool")
 
 	ErrEmptyRoutes              = sdkerrors.Register(ModuleName, 21, "routes not defined")
 	ErrEmptyPoolAssets          = sdkerrors.Register(ModuleName, 22, "PoolAssets not defined")
