@@ -16,14 +16,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
+func (suite *KeeperTestSuite) TestEndOfEpochMintedCoinDistribution() {
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	setupGaugeForLPIncentives(t, app, ctx)
+	setupGaugeForLPIncentives(suite.T(), app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -62,24 +62,24 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 		// ensure post-epoch supply with offset changed by less than the minted coins amount (because of developer vesting account)
 		postsupply := app.BankKeeper.GetSupply(ctx, mintParams.MintDenom)
 		postsupplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, mintParams.MintDenom)
-		require.False(t, postsupply.IsEqual(presupply.Add(mintedCoin)))
-		require.True(t, postsupplyWithOffset.IsEqual(presupplyWithOffset.Add(mintedCoin)))
+		suite.Require().False(postsupply.IsEqual(presupply.Add(mintedCoin)))
+		suite.Require().True(postsupplyWithOffset.IsEqual(presupplyWithOffset.Add(mintedCoin)))
 
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
+		suite.Require().Equal(feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
 
 		// test that the dev rewards module account balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
-		require.Equal(t, devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
+		suite.Require().Equal(devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
 
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
 	lastHalvenPeriod = app.MintKeeper.GetLastHalvenEpochNum(ctx)
-	require.Equal(t, lastHalvenPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
+	suite.Require().Equal(lastHalvenPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
 
 	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
 		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
@@ -96,23 +96,23 @@ func TestEndOfEpochMintedCoinDistribution(t *testing.T) {
 
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
+		suite.Require().Equal(feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
 
 		// test that the balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
-		require.Equal(t, devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
+		suite.Require().Equal(devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
 }
 
-func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
+func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmpty() {
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	setupGaugeForLPIncentives(t, app, ctx)
+	setupGaugeForLPIncentives(suite.T(), app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -134,19 +134,19 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
+		suite.Require().Equal(feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
 
 		// test that the dev rewards module account balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
-		require.Equal(t, devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
+		suite.Require().Equal(devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
 
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
 
 	lastHalvenPeriod = app.MintKeeper.GetLastHalvenEpochNum(ctx)
-	require.Equal(t, lastHalvenPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
+	suite.Require().Equal(lastHalvenPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
 
 	for ; height < lastHalvenPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
 		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
@@ -163,16 +163,16 @@ func TestMintedCoinDistributionWhenDevRewardsAddressEmpty(t *testing.T) {
 
 		// check community pool balance increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		require.Equal(t, feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, expectedRewards.String())
+		suite.Require().Equal(feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, expectedRewards.String())
 
 		// test that the dev rewards module account balance decreased by the correct amount
 		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
 		expectedDevRewards := app.MintKeeper.GetProportions(ctx, mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
-		require.Equal(t, devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
+		suite.Require().Equal(devRewardsModuleAfter.Add(expectedDevRewards), devRewardsModuleOrigin, expectedRewards.String())
 	}
 }
 
-func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
+func (suite *KeeperTestSuite) TestEndOfEpochNoDistributionWhenIsNotYetStartTime() {
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -183,7 +183,7 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	setupGaugeForLPIncentives(t, app, ctx)
+	setupGaugeForLPIncentives(suite.T(), app, ctx)
 
 	params := app.IncentivesKeeper.GetParams(ctx)
 	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
@@ -198,18 +198,18 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 
 		// check community pool balance not increase
 		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		require.Equal(t, feePoolOrigin.CommunityPool, feePoolNew.CommunityPool, "height = %v", height)
+		suite.Equal(feePoolOrigin.CommunityPool, feePoolNew.CommunityPool, "height = %v", height)
 	}
 	// Run through epochs mintParams.MintingRewardsDistributionStartEpoch
 	// ensure tokens distributed
 	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
 	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
-	require.NotEqual(t, sdk.DecCoins{}, app.DistrKeeper.GetFeePool(ctx).CommunityPool,
+	suite.Require().NotEqual(sdk.DecCoins{}, app.DistrKeeper.GetFeePool(ctx).CommunityPool,
 		"Tokens to community pool at start distribution epoch")
 
 	// halven period should be set to mintParams.MintingRewardsDistributionStartEpoch
 	lastHalvenPeriod := app.MintKeeper.GetLastHalvenEpochNum(ctx)
-	require.Equal(t, lastHalvenPeriod, mintParams.MintingRewardsDistributionStartEpoch)
+	suite.Require().Equal(lastHalvenPeriod, mintParams.MintingRewardsDistributionStartEpoch)
 }
 
 func setupGaugeForLPIncentives(t *testing.T, app *osmoapp.OsmosisApp, ctx sdk.Context) {
