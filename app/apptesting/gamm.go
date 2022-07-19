@@ -14,7 +14,7 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin("baz", sdk.NewInt(10000000)),
 )
 
-// PrepareUni2PoolWithAssets returns a Univ2 pool with the initial liquidity being the provided balances
+// PrepareUni2PoolWithAssets returns a Univ2 pool with the initial liquidity being the provided balances.
 func (s *KeeperTestHelper) PrepareUni2PoolWithAssets(asset1, asset2 sdk.Coin) uint64 {
 	return s.PrepareBalancerPoolWithPoolAsset(
 		[]balancer.PoolAsset{
