@@ -202,7 +202,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			}
 
 			assertPoolStateNotModified(t, balancerPool, func() {
-				assertPanic(t, tc.expectPanic, sut)
+				osmoutils.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
 	}

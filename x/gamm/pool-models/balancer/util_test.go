@@ -76,13 +76,3 @@ func assertPoolStateNotModified(t *testing.T, pool *balancer.Pool, sut func()) {
 	require.Equal(t, oldLiquidity, newLiquidity)
 	require.Equal(t, oldShares, newShares)
 }
-
-// assertPanic if expectPanic is true, asserts that sut (system under test)
-// panics. If expectPanic is false, asserts that sut does not panic.
-func assertPanic(t *testing.T, expectPanic bool, sut func()) {
-	if expectPanic {
-		require.Panics(t, sut)
-	} else {
-		require.NotPanics(t, sut)
-	}
-}
