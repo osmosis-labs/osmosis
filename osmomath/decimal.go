@@ -799,7 +799,8 @@ func DecEq(t *testing.T, exp, got BigDec) (*testing.T, bool, string, string, str
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
-// DecApproxEq is intended to be used with require/assert:  require.True(DecEq(...))
+// DecApproxEq returns true if the differences between two given decimals are smaller than the tolerance range.
+// Intended to be used with require/assert:  require.True(t, DecEq(...))
 func DecApproxEq(t *testing.T, d1 BigDec, d2 BigDec, tol BigDec) (*testing.T, bool, string, string, string) {
 	diff := d1.Sub(d2).Abs()
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
