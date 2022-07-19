@@ -1,7 +1,6 @@
-package superfluid
+package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,7 +8,7 @@ import (
 
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 
 	// initialize superfluid assets
@@ -41,7 +40,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 }
 
 // ExportGenesis returns the capability module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		Params:                        k.GetParams(ctx),
 		SuperfluidAssets:              k.GetAllSuperfluidAssets(ctx),

@@ -1,7 +1,6 @@
-package lockup
+package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,7 +8,7 @@ import (
 
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetLastLockID(ctx, genState.LastLockId)
 	if err := k.InitializeAllLocks(ctx, genState.Locks); err != nil {
 		return
@@ -20,7 +19,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 }
 
 // ExportGenesis returns the capability module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	locks, err := k.GetPeriodLocks(ctx)
 	if err != nil {
 		panic(err)
