@@ -10,7 +10,7 @@ func (k twapkeeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.gammkeeper.GetPoolDenoms(ctx, poolId)
 	denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 	for i := 0; i < len(denomPairs0); i++ {
-		record := types.NewTwapRecord(ctx, poolId, denomPairs0[i], denomPairs1[i])
+		record := types.NewTwapRecord(k.gammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
 		k.storeMostRecentTWAP(ctx, record)
 	}
 	return err
@@ -48,16 +48,9 @@ func (k twapkeeper) updateTWAPs(ctx sdk.Context, poolId uint64) error {
 		record.Height = ctx.BlockHeight()
 		record.Time = ctx.BlockTime()
 
-		// TODO: Think about order
-		sp0, err := k.gammkeeper.GetSpotPrice(ctx, poolId, record.Asset0Denom, record.Asset1Denom)
-		// TODO: Document in what situations it can error
-		if err != nil {
-			return err
-		}
-		sp1, err := k.gammkeeper.GetSpotPrice(ctx, poolId, record.Asset0Denom, record.Asset1Denom)
-		if err != nil {
-			return err
-		}
+		// TODO: Ensure order is correct
+		sp0 := types.MustGetSpotPrice(k.gammkeeper, ctx, poolId, record.Asset0Denom, record.Asset1Denom)
+		sp1 := types.MustGetSpotPrice(k.gammkeeper, ctx, poolId, record.Asset1Denom, record.Asset0Denom)
 
 		// TODO: Think about overflow
 		record.P0ArithmeticTwapAccumulator.AddMut(sp0.MulInt64(int64(timeDelta)))
@@ -65,14 +58,4 @@ func (k twapkeeper) updateTWAPs(ctx sdk.Context, poolId uint64) error {
 		k.storeMostRecentTWAP(ctx, record)
 	}
 	return nil
-}
-
-func (k twapkeeper) endBlockLogic(ctx sdk.Context) {
-	// TODO: Update TWAP entries
-	// Step 1: Get all altered pool ids
-	changedPoolIds := k.getChangedPools(ctx)
-	if len(changedPoolIds) == 0 {
-		return
-	}
-	// Step 2:
 }

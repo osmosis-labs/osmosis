@@ -6,19 +6,33 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func NewTwapRecord(ctx sdk.Context, poolId uint64, denom0 string, denom1 string) TwapRecord {
+func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string, denom1 string) TwapRecord {
 	if !(denom0 > denom1) {
 		panic("precondition denom0 > denom1 not satisfied")
 	}
+	sp0 := MustGetSpotPrice(k, ctx, poolId, denom0, denom1)
+	sp1 := MustGetSpotPrice(k, ctx, poolId, denom1, denom0)
 	return TwapRecord{
 		PoolId:                      poolId,
 		Asset0Denom:                 denom0,
 		Asset1Denom:                 denom1,
 		Height:                      ctx.BlockHeight(),
 		Time:                        ctx.BlockTime(),
+		P0LastSpotPrice:             sp0,
+		P1LastSpotPrice:             sp1,
 		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
 		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
 	}
+}
+
+// mustGetSpotPrice returns the spot price for the given pool id, and denom0 in terms of denom1.
+// Panics if the pool state is misconfigured, which will halt any tx that interacts with this.
+func MustGetSpotPrice(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string, denom1 string) sdk.Dec {
+	sp, err := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
+	if err != nil {
+		panic(err)
+	}
+	return sp
 }
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair

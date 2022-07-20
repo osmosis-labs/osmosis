@@ -35,11 +35,22 @@ message TwapRecord {
     (gogoproto.moretags) = "yaml:\"record_time\""
   ];
 
-  string p0_arithmetic_twap_accumulator = 6 [
+  // We store the last spot prices in the struct, so that we can interpolate accumulator values
+  // for times between when accumulator records are stored.
+  string p0_last_spot_price = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  string p1_arithmetic_twap_accumulator = 7 [
+  string p1_last_spot_price = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+
+  string p0_arithmetic_twap_accumulator = 8 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string p1_arithmetic_twap_accumulator = 9 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
