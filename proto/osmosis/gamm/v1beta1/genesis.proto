@@ -21,6 +21,6 @@ option go_package = "github.com/osmosis-labs/osmosis/v10/x/gamm/types";
 message GenesisState {
   repeated google.protobuf.Any pools = 1
       [ (cosmos_proto.accepts_interface) = "PoolI" ];
-  uint64 next_pool_number = 2;
+  uint64 next_pool_id = 2;
   Params params = 3 [ (gogoproto.nullable) = false ];
 }
