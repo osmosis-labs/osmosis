@@ -52,18 +52,21 @@ func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddr
 // given condition does not exist.
 func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sdk.Coin, duration time.Duration) (uint64, error) {
 	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, coin.Denom, duration)
-	// if existing lock with same duration and denom exists, just add there
-	if len(locks) > 0 {
-		// there should only be a single lock with the same duration + token, thus we take the first lock
-		lock := locks[0]
-		_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
-		if err != nil {
-			return 0, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-		}
-		return lock.ID, nil
+
+	// if no lock exists for the given owner + denom + duration, return an error
+	if len(locks) < 1 {
+		return 0, sdkerrors.Wrap(types.ErrLockupNotFound, "lock with given condition does not exist")
 	}
 
-	return 0, nil
+	// if existing lock with same duration and denom exists, add to the existing lock
+	// there should only be a single lock with the same duration + token, thus we take the first lock
+	lock := locks[0]
+	_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
+	if err != nil {
+		return 0, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	return lock.ID, nil
 }
 
 // HasLock returns true if lock with the given condition exists

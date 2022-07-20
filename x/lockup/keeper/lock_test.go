@@ -373,18 +373,21 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 			tokenToAdd:     initialLockCoin,
 			duration:       time.Second,
 			lockingAddress: addr2,
+			expectedError:  true,
 		},
 		{
 			name:           "lock with matching duration not existing",
 			tokenToAdd:     initialLockCoin,
 			duration:       time.Second * 2,
 			lockingAddress: addr1,
+			expectedError:  true,
 		},
 		{
 			name:           "lock invalid tokens",
 			tokenToAdd:     sdk.NewCoin("unknown", sdk.NewInt(10)),
 			duration:       time.Second,
 			lockingAddress: addr1,
+			expectedError:  true,
 		},
 		{
 			name:           "token to add exceeds balance",
