@@ -284,7 +284,7 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 	mockPool := mocks.NewMockPoolI(ctrl)
-	mockPoolId := k.GetNextPoolNumber(suite.Ctx)
+	mockPoolId := k.GetNextPoolNumberAndIncrement(suite.Ctx)
 	mockPool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
 	mockPool.EXPECT().GetId().Return(mockPoolId).AnyTimes()
 	k.SetPool(suite.Ctx, mockPool)
