@@ -262,6 +262,7 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 				}
 				tc.distRecords = append(distRecords, tc.distRecords...)
 
+				// Sort in ascending order of gaugeId
 				distRecords = tc.distRecords
 				sort.Slice(distRecords[:], func(i, j int) bool {
 					return distRecords[i].GaugeId < distRecords[j].GaugeId
