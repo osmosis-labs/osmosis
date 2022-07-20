@@ -273,25 +273,48 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 	}
 }
 
+// Test two pools -- one is active and should have swaps allowed,
+// while the other is inactive and should have swaps frozen.
 func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	// Setup test
 	suite.SetupTest()
-	k := suite.App.GAMMKeeper
 	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))
 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
 
+	// Setup active pool
+	activePoolId := suite.PrepareBalancerPool()
+
 	// Setup mock inactive pool
+	k := suite.App.GAMMKeeper
 	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
-	mockPool := mocks.NewMockPoolI(ctrl)
-	mockPoolId := k.GetNextPoolNumberAndIncrement(suite.Ctx)
-	mockPool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
-	mockPool.EXPECT().GetId().Return(mockPoolId).AnyTimes()
-	k.SetPool(suite.Ctx, mockPool)
+	inactivePool := mocks.NewMockPoolI(ctrl)
+	inactivePoolId := k.GetNextPoolNumberAndIncrement(suite.Ctx)
+	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
+	inactivePool.EXPECT().GetId().Return(inactivePoolId).AnyTimes()
+	k.SetPool(suite.Ctx, inactivePool)
 
-	// Swaps should fail for inactive pool
-	_, err := k.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], mockPoolId, testCoin, "bar", sdk.ZeroInt())
-	suite.Require().Error(err)
-	_, err = k.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], mockPoolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
-	suite.Require().Error(err)
+	type testCase struct {
+		poolId     uint64
+		expectPass bool
+	}
+	testCases := []testCase{
+		{activePoolId, true},
+		{inactivePoolId, false},
+	}
+
+	for _, tc := range testCases {
+		// Check swaps
+		if tc.expectPass {
+			_, err := k.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, testCoin, "bar", sdk.ZeroInt())
+			suite.Require().NoError(err)
+			_, err = k.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
+			suite.Require().NoError(err)
+		} else {
+			_, err := k.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, testCoin, "bar", sdk.ZeroInt())
+			suite.Require().Error(err)
+			_, err = k.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
+			suite.Require().Error(err)
+		}
+	}
 }
