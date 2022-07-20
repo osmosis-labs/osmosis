@@ -23,3 +23,12 @@ func Filter[T interface{}](filter func(T) bool, s []T) []T {
 	}
 	return filteredSlice
 }
+
+func ReverseSlice[T any](s []T) []T {
+	newSlice := make([]T, len(s))
+	maxIndex := len(s) - 1
+	for i := 0; i < len(s); i++ {
+		newSlice[maxIndex-i] = s[i]
+	}
+	return newSlice
+}

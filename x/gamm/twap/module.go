@@ -32,8 +32,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return json.RawMessage{}
-	// return cdc.MustMarshalJSON(types.DefaultGenesis())
+	return cdc.MustMarshalJSON(&types.GenesisState{})
 }
 
 // ValidateGenesis performs genesis state validation for the gamm module.

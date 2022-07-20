@@ -1,14 +1,17 @@
 package types
 
 import (
+	fmt "fmt"
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 )
 
 func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string, denom1 string) TwapRecord {
 	if !(denom0 > denom1) {
-		panic("precondition denom0 > denom1 not satisfied")
+		panic(fmt.Sprintf("precondition denom0 > denom1 not satisfied. denom0 %s | denom1 %s", denom0, denom1))
 	}
 	sp0 := MustGetSpotPrice(k, ctx, poolId, denom0, denom1)
 	sp1 := MustGetSpotPrice(k, ctx, poolId, denom1, denom0)
@@ -42,14 +45,18 @@ func MustGetSpotPrice(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 str
 // NOTE: Sorts the input denoms slice.
 // (Should not be a problem, as this should come from coins.Denoms(), which returns a sorted order)
 func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
+	// get denoms in descending order
 	sort.Strings(denoms)
+	reverseDenoms := osmoutils.ReverseSlice(denoms)
+
 	numPairs := len(denoms) * (len(denoms) - 1) / 2
 	pairGT := make([]string, 0, numPairs)
 	pairLT := make([]string, 0, numPairs)
-	for i := 0; i < len(denoms); i++ {
-		for j := i + 1; j < len(denoms); j++ {
-			pairGT = append(pairGT, denoms[i])
-			pairLT = append(pairLT, denoms[j])
+
+	for i := 0; i < len(reverseDenoms); i++ {
+		for j := i + 1; j < len(reverseDenoms); j++ {
+			pairGT = append(pairGT, reverseDenoms[i])
+			pairLT = append(pairLT, reverseDenoms[j])
 		}
 	}
 	// sanity check
