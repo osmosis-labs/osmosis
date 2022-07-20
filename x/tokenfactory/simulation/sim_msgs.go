@@ -19,7 +19,6 @@ func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 	if !senderExists {
 		return nil, errors.New("no addr has enough to pay for tokenfactory creation fee")
 	}
-	ctx.Logger().Error("acc" + sim.BankKeeper().GetBalance(ctx, acc.Address, "stake").String())
 	return &types.MsgCreateDenom{
 		Sender:   acc.Address.String(),
 		Subdenom: sim.RandStringOfLength(types.MaxSubdenomLength),
