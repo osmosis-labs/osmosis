@@ -196,20 +196,20 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // 	return nil
 // }
 
-// setNextPoolNumber sets next pool number.
-func (k Keeper) setNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
+// setNextPoolId sets next pool Id.
+func (k Keeper) setNextPoolId(ctx sdk.Context, poolNumber uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolNumber})
-	store.Set(types.KeyNextGlobalPoolNumber, bz)
+	store.Set(types.KeyNextGlobalPoolId, bz)
 }
 
-// GetNextPoolNumber returns the next pool number.
-// TODO: Rename NextPoolNumber to NextPoolId
-func (k Keeper) GetNextPoolNumber(ctx sdk.Context) uint64 {
+// GetNextPoolId returns the next pool Id.
+// TODO: Rename NextPoolId to NextPoolId
+func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	var nextPoolId uint64
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(types.KeyNextGlobalPoolNumber)
+	bz := store.Get(types.KeyNextGlobalPoolId)
 	if bz == nil {
 		panic(fmt.Errorf("pool has not been initialized -- Should have been done in InitGenesis"))
 	} else {
@@ -225,9 +225,9 @@ func (k Keeper) GetNextPoolNumber(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
-// getNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
-func (k Keeper) getNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
-	nextPoolId := k.GetNextPoolNumber(ctx)
-	k.setNextPoolNumber(ctx, nextPoolId+1)
+// getNextPoolNumberAndIncrement returns the next pool Id, and increments the corresponding state entry.
+func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
+	nextPoolId := k.GetNextPoolId(ctx)
+	k.setNextPoolId(ctx, nextPoolId+1)
 	return nextPoolId
 }
