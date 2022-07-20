@@ -204,7 +204,6 @@ func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
 }
 
 // GetNextPoolId returns the next pool Id.
-// TODO: Rename NextPoolId to NextPoolId
 func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	var nextPoolId uint64
 	store := ctx.KVStore(k.storeKey)
