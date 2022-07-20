@@ -36,23 +36,22 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 		err     bool
 	}{
 		{
-			desc: "Empty request",
-			request: &types.QueryGaugeIdsRequest{
-			},
-			err: true,
+			desc:    "Empty request",
+			request: &types.QueryGaugeIdsRequest{},
+			err:     true,
 		},
 		{
 			desc: "Unexisted pool",
 			request: &types.QueryGaugeIdsRequest{
 				PoolId: 2,
-			}, 
+			},
 			err: true,
 		},
 		{
 			desc: "Happy case",
 			request: &types.QueryGaugeIdsRequest{
 				PoolId: poolId,
-			}, 
+			},
 			err: false,
 		},
 	} {
@@ -89,27 +88,27 @@ func (suite *KeeperTestSuite) TestDistrInfo() {
 	queryClient := suite.queryClient
 
 	for _, tc := range []struct {
-		desc    				string
-		poolCreated 			bool
-		weights      			[]sdk.Int
-		expectedTotalWeight		sdk.Int
-		expectedRecordLength	int
+		desc                 string
+		poolCreated          bool
+		weights              []sdk.Int
+		expectedTotalWeight  sdk.Int
+		expectedRecordLength int
 	}{
 		{
-			desc: "No pool exist",
-			poolCreated: false,
-			weights: []sdk.Int{},
-			expectedTotalWeight: sdk.NewInt(0),
+			desc:                 "No pool exist",
+			poolCreated:          false,
+			weights:              []sdk.Int{},
+			expectedTotalWeight:  sdk.NewInt(0),
 			expectedRecordLength: 0,
 		},
 		{
-			desc: "Happy case",
-			poolCreated: true,
-			weights: []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
-			expectedTotalWeight: sdk.NewInt(600),
+			desc:                 "Happy case",
+			poolCreated:          true,
+			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			expectedTotalWeight:  sdk.NewInt(600),
 			expectedRecordLength: 3,
 		},
-	}{
+	} {
 		tc := tc
 		suite.Run(tc.desc, func() {
 			if tc.poolCreated {
@@ -196,44 +195,44 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 	suite.NoError(err)
 
 	for _, tc := range []struct {
-		desc    				string
-		poolCreated 			bool
-		distRecords      		[]types.DistrRecord
-		expectedErr				bool
-		expectedRecordLength	int
+		desc                 string
+		poolCreated          bool
+		distRecords          []types.DistrRecord
+		expectedErr          bool
+		expectedRecordLength int
 	}{
 		{
-			desc: "No pool exist",
-			poolCreated: false,
-			distRecords: []types.DistrRecord{},
-			expectedErr: false,
+			desc:                 "No pool exist",
+			poolCreated:          false,
+			distRecords:          []types.DistrRecord{},
+			expectedErr:          false,
 			expectedRecordLength: 0,
 		},
 		{
-			desc: "Normal case",
-			poolCreated: true,
-			distRecords: []types.DistrRecord{},
-			expectedErr: false,
+			desc:                 "Normal case",
+			poolCreated:          true,
+			distRecords:          []types.DistrRecord{},
+			expectedErr:          false,
 			expectedRecordLength: 3,
 		},
 		{
-			desc: "Perpetual",
+			desc:        "Perpetual",
 			poolCreated: true,
-			distRecords: []types.DistrRecord{types.DistrRecord{
+			distRecords: []types.DistrRecord{{
 				GaugeId: gaugePerpetualId,
 				Weight:  sdk.NewInt(300),
 			}},
-			expectedErr: false,
+			expectedErr:          false,
 			expectedRecordLength: 3,
 		},
 		{
-			desc: "Non Perpetual",
+			desc:        "Non Perpetual",
 			poolCreated: true,
-			distRecords: []types.DistrRecord{types.DistrRecord{
+			distRecords: []types.DistrRecord{{
 				GaugeId: gaugeNonPerpetualId,
 				Weight:  sdk.NewInt(100),
 			}},
-			expectedErr: true,
+			expectedErr:          true,
 			expectedRecordLength: 0,
 		},
 	} {
@@ -245,7 +244,7 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 				pool, err := ammKeeper.GetPoolsAndPoke(suite.Ctx)
 				if len(pool) == 0 {
 					poolId = suite.PrepareBalancerPool()
-				}				
+				}
 				// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 				lockableDurations = keeper.GetLockableDurations(suite.Ctx)
 				suite.Equal(3, len(lockableDurations))
@@ -288,7 +287,6 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 					suite.Equal(lockableDurations[i], res.IncentivizedPools[i].LockableDuration)
 				}
 			}
-			
 		})
 	}
 }
