@@ -59,16 +59,18 @@ func (k Keeper) storeMostRecentTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
 	osmoutils.MustSet(store, key, &twap)
+	k.storeHistoricalTWAP(ctx, twap)
 }
 
 // returns an error if theres no historical record at or before time.
 // (Asking for a time too far back)
-func (k Keeper) getTwapBeforeTime(ctx sdk.Context, poolId uint64, time time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, time time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	startKey := types.FormatHistoricalPoolIndexTimePrefix(poolId, time)
 	// TODO: Optimize to cut down search on asset0Denom, asset1denom.
 	// Not really important, since primarily envisioning 2 asset pools
 	stopFn := func(key []byte) bool {
+		// TODO: Make remember first seen time. Currently only works for exact start
 		return types.ParseTimeFromHistoricalPoolIndexKey(key).After(time)
 	}
 

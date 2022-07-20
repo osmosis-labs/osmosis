@@ -3,6 +3,7 @@ package types
 import (
 	fmt "fmt"
 	"sort"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -66,6 +67,14 @@ func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
 		}
 	}
 	return pairGT, pairLT
+}
+
+func SpotPriceTimesDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
+	return sp.MulInt64(int64(timeDelta))
+}
+
+func AccumDiffDivDuration(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
+	return accumDiff.QuoInt64(int64(timeDelta))
 }
 
 // TODO

@@ -21,6 +21,10 @@ func (k Keeper) GetArithmeticTwap(
 	baseAssetDenom string,
 	startTime time.Time,
 	endTime time.Time) (sdk.Dec, error) {
+	if endTime.Equal(ctx.BlockTime()) {
+		return k.GetArithmeticTwapToNow(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime)
+	}
+	// startTwapRecord, err := k.getTwapBeforeTime(ctx, poolId, startTime, quoteAssetDenom, baseAssetDenom)
 	return sdk.Dec{}, nil
 }
 
@@ -30,7 +34,16 @@ func (k Keeper) GetArithmeticTwapToNow(
 	quoteAssetDenom string,
 	baseAssetDenom string,
 	startTime time.Time) (sdk.Dec, error) {
-	return k.GetArithmeticTwap(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime, ctx.BlockTime())
+	startRecord, err := k.getStartRecord(ctx, poolId, startTime, quoteAssetDenom, baseAssetDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	endRecord, err := k.GetLatestAccumulatorRecord(ctx, poolId, quoteAssetDenom, baseAssetDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	twap := k.getArithmeticTwap(startRecord, endRecord)
+	return twap, nil
 }
 
 // GetLatestAccumulatorRecord returns a TwapRecord struct that can be stored

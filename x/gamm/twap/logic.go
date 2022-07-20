@@ -1,6 +1,8 @@
 package twap
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
@@ -36,7 +38,6 @@ func (k Keeper) updateTWAPs(ctx sdk.Context, poolId uint64) error {
 	}
 
 	for _, record := range twaps {
-		k.storeHistoricalTWAP(ctx, record)
 		timeDelta := ctx.BlockTime().Sub(record.Time)
 
 		// no update if were in the same block.
@@ -53,9 +54,46 @@ func (k Keeper) updateTWAPs(ctx sdk.Context, poolId uint64) error {
 		sp1 := types.MustGetSpotPrice(k.ammkeeper, ctx, poolId, record.Asset1Denom, record.Asset0Denom)
 
 		// TODO: Think about overflow
-		record.P0ArithmeticTwapAccumulator.AddMut(sp0.MulInt64(int64(timeDelta)))
-		record.P1ArithmeticTwapAccumulator.AddMut(sp1.MulInt64(int64(timeDelta)))
+		record.P0ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(sp0, timeDelta))
+		record.P1ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(sp1, timeDelta))
 		k.storeMostRecentTWAP(ctx, record)
 	}
 	return nil
+}
+
+func (k Keeper) getStartRecord(ctx sdk.Context, poolId uint64, time time.Time, assetA string, assetB string) (types.TwapRecord, error) {
+	if !(assetA > assetB) {
+		assetA, assetB = assetB, assetA
+	}
+	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, time, assetA, assetB)
+	if err != nil {
+		return types.TwapRecord{}, err
+	}
+	record = interpolateRecord(record, time)
+	return record, nil
+}
+
+// pre-condition: interpolateTime >= record.Time
+func interpolateRecord(record types.TwapRecord, interpolateTime time.Time) types.TwapRecord {
+	if record.Time.Equal(interpolateTime) {
+		return record
+	}
+	interpolatedRecord := record
+	timeDelta := interpolateTime.Sub(record.Time)
+	interpolatedRecord.Time = interpolateTime
+
+	interpolatedRecord.P0ArithmeticTwapAccumulator = interpolatedRecord.P0ArithmeticTwapAccumulator.Add(
+		types.SpotPriceTimesDuration(record.P0LastSpotPrice, timeDelta))
+	interpolatedRecord.P1ArithmeticTwapAccumulator = interpolatedRecord.P1ArithmeticTwapAccumulator.Add(
+		types.SpotPriceTimesDuration(record.P1LastSpotPrice, timeDelta))
+
+	return interpolatedRecord
+}
+
+// For now just assuming p0 price, TODO switch between the two
+// precondition: endRecord.Time > startRecord.Time
+func (k Keeper) getArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord) sdk.Dec {
+	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	accumDiff := endRecord.P0ArithmeticTwapAccumulator.Sub(startRecord.P0ArithmeticTwapAccumulator)
+	return types.AccumDiffDivDuration(accumDiff, timeDelta)
 }

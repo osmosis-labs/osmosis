@@ -48,7 +48,9 @@ type TwapRecord struct {
 	Height int64 `protobuf:"varint,4,opt,name=height,proto3" json:"record_height" yaml:"record_height"`
 	// This field should only exist until we have a global registry in the state
 	// machine, mapping prior block heights within {TIME RANGE} to times.
-	Time                        time.Time                              `protobuf:"bytes,5,opt,name=time,proto3,stdtime" json:"time" yaml:"record_time"`
+	Time time.Time `protobuf:"bytes,5,opt,name=time,proto3,stdtime" json:"time" yaml:"record_time"`
+	// We store the last spot prices in the struct, so that we can interpolate
+	// accumulator values for times between when accumulator records are stored.
 	P0LastSpotPrice             github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=p0_last_spot_price,json=p0LastSpotPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"p0_last_spot_price"`
 	P1LastSpotPrice             github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,7,opt,name=p1_last_spot_price,json=p1LastSpotPrice,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"p1_last_spot_price"`
 	P0ArithmeticTwapAccumulator github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,8,opt,name=p0_arithmetic_twap_accumulator,json=p0ArithmeticTwapAccumulator,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"p0_arithmetic_twap_accumulator"`
