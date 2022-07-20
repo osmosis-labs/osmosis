@@ -1,0 +1,108 @@
+# This workflow runs on every new commit to the latest development branch. 
+# It checks that the new commit didn't break state compatibility by:
+
+# - building the new `osmosisd` binary with the latest changes
+# - replaying a configurable number of previous blocks from chain history
+
+# Currently, the node starts from a snapshot taken some blocks before the last epoch 
+# and waits `DELTA_HALT_HEIGHT` blocks after epoch before finally halting.
+
+# Important Caveat:
+
+# The fact that this workflow succeeds and the binary doesn't fail doesn't 
+# directly imply that the new binary is state-compatible.
+# It could be that the binary is not state-compatible, but the condition 
+# which would break state compatibility was not present in the chunk of block history used.
+
+# On the other hand, if the workflow fails, the binary is not state-compatible.
+
+name: check_state_compatibility
+
+# ************************************ NOTE ************************************
+# 
+# DO NOT TRIGGER THIS WORKFLOW ON PUBLIC FORKS
+#
+# This workflow runs on a self-hosted runner and forks to this repository 
+# can potentially run dangerous code on the self-hosted runner machine 
+# by creating a pull request that executes the code in a workflow.
+# 
+# ******************************************************************************
+
+on:
+  push:
+    branches:
+      - 'v10.x'
+  pull_request:
+    branches:
+      - 'v10.x'
+  workflow_dispatch:
+    branches:
+      - 'v10.x'
+
+env:
+  SNAPSHOT_URL: https://osmosis-snapshot.sfo3.cdn.digitaloceanspaces.com/osmosis.json
+  RPC_ENDPOINT: https://rpc.osmosis.zone
+  LCD_ENDPOINT: https://lcd.osmosis.zone
+  DELTA_HALT_HEIGHT: 20
+ 
+jobs:
+
+  check_state_compatibility:
+    # DO NOT CHANGE THIS: please read the note above
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }} 
+    runs-on: osmo-runner
+    steps:
+      - 
+        name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - 
+        name: Build the osmosisd binary with osmobuilder
+        run: |
+          make -f contrib/images/osmobuilder/Makefile get-binary-amd64
+      - 
+        name: Copy osmosisd binary to PATH and check version
+        run: |
+          VERSION=$(echo $(git describe --tags) | sed 's/^v//')
+          sudo cp osmosisd-$VERSION-linux-amd64 /usr/local/bin/osmosisd
+          sudo chmod +x /usr/local/bin/osmosisd
+          osmosisd version
+        working-directory: release
+      - 
+        name: Download pre-epoch snapshot
+        run:  |
+          rm -rf $HOME/.osmosisd/data
+          SNAPSHOT_URL=$(curl -s ${{ env.SNAPSHOT_URL }}  | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
+          wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C $HOME/.osmosisd/ -xvf - 
+      - 
+        name: 🧪 Configure Osmosis Node
+        run:  |
+          CONFIG_FOLDER=$HOME/.osmosisd/config
+
+          # Get height of most recent epoch
+          LAST_EPOCH_BLOCK_HEIGHT=$(curl -s ${{ env.LCD_ENDPOINT }}/osmosis/epochs/v1beta1/epochs | dasel --plain -r json 'epochs.(identifier=day).current_epoch_start_height')
+          DELTA_HALT_HEIGHT=${{ env.DELTA_HALT_HEIGHT }}
+          HALT_HEIGHT=$(($LAST_EPOCH_BLOCK_HEIGHT + $DELTA_HALT_HEIGHT))
+
+          echo "Last Epoch Height: $LAST_EPOCH_BLOCK_HEIGHT"
+          echo "Halt Height: $HALT_HEIGHT"
+
+          # Edit config.toml
+          dasel put string -f $CONFIG_FOLDER/config.toml '.tx_index.indexer' null
+
+          # Edit app.toml
+          dasel put string -f $CONFIG_FOLDER/app.toml '.halt-height' $HALT_HEIGHT
+          dasel put string -f $CONFIG_FOLDER/app.toml '.pruning' everything
+          dasel put string -f $CONFIG_FOLDER/app.toml '.state-sync.snapshot-interval' 0
+      - 
+        name: 🧪 Start Osmosis Node
+        run: osmosisd start 2>&1 | tee /tmp/osmosisd_start.log
+      -
+        name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: osmosisd_start.log
+          path: /tmp/osmosisd_start.log
+
