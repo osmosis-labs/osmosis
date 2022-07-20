@@ -2,8 +2,12 @@ package e2e
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
+
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
@@ -109,4 +113,98 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 		10*time.Millisecond,
 		"superfluid delegation vote overwrite not working as expected",
 	)
+}
+
+func (s *IntegrationTestSuite) TestStateSync() {
+	if s.skipStateSync {
+		s.T().Skip()
+	}
+
+	chain := s.configurer.GetChainConfig(0)
+	runningNode, err := chain.GetDefaultNode()
+	s.Require().NoError(err)
+
+	persistenrPeers := chain.GetPersistentPeers()
+
+	stateSyncHostPort := fmt.Sprintf("%s:26657", runningNode.Name)
+	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
+
+	// get trust height and trust hash.
+	trustHeight, err := runningNode.QueryCurrentHeight()
+	s.Require().NoError(err)
+
+	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
+	s.Require().NoError(err)
+
+	stateSynchingNodeConfig := &initialization.NodeConfig{
+		Name:               "state-sync",
+		Pruning:            "default",
+		PruningKeepRecent:  "0",
+		PruningInterval:    "0",
+		SnapshotInterval:   1500,
+		SnapshotKeepRecent: 2,
+	}
+
+	tempDir, err := os.MkdirTemp("", "osmosis-e2e-statesync-")
+	s.Require().NoError(err)
+
+	// configure genesis and config files for the state-synchin node.
+	nodeInit, err := initialization.InitSingleNode(
+		chain.Id,
+		tempDir,
+		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
+		stateSynchingNodeConfig,
+		time.Duration(chain.VotingPeriod),
+		trustHeight,
+		trustHash,
+		stateSyncRPCServers,
+		persistenrPeers,
+	)
+	s.Require().NoError(err)
+
+	stateSynchingNode := chain.CreateNode(nodeInit)
+
+	// ensure that the running node has snapshots at a height > trustHeight.
+	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
+		snapshotHeight := runningNode.SnapshotInterval
+		if uint64(syncInfo.LatestBlockHeight) < snapshotHeight {
+			s.T().Logf("snapshot height is not reached yet, current (%d), need (%d)", syncInfo.LatestBlockHeight, snapshotHeight)
+			return false
+		}
+
+		snapshots, err := runningNode.QueryListSnapshots()
+		s.Require().NoError(err)
+
+		for _, snapshot := range snapshots {
+			if snapshot.Height > uint64(trustHeight) {
+				s.T().Log("found state sync snapshot after trust height")
+				return true
+			}
+		}
+		s.T().Log("state sync snashot after trust height is not found")
+		return false
+	}
+	runningNode.WaitUntil(hasSnapshotsAvailable)
+
+	// start the state synchin node.
+	err = stateSynchingNode.Run()
+	s.NoError(err)
+
+	// ensure that the state synching node cathes up to the running node.
+	s.Require().Eventually(func() bool {
+		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
+		s.NoError(err)
+
+		runningNodeHeight, err := runningNode.QueryCurrentHeight()
+		s.NoError(err)
+
+		return stateSyncNodeHeight == runningNodeHeight
+	},
+		3*time.Minute,
+		500*time.Millisecond,
+	)
+
+	// stop the state synching node.
+	err = chain.RemoveNode(stateSynchingNode.Name)
+	s.NoError(err)
 }

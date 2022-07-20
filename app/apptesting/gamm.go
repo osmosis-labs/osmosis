@@ -14,7 +14,7 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin("baz", sdk.NewInt(10000000)),
 )
 
-// Returns a Univ2 pool with the initial liquidity being the provided balances
+// PrepareUni2PoolWithAssets returns a Univ2 pool with the initial liquidity being the provided balances.
 func (s *KeeperTestHelper) PrepareUni2PoolWithAssets(asset1, asset2 sdk.Coin) uint64 {
 	return s.PrepareBalancerPoolWithPoolAsset(
 		[]balancer.PoolAsset{
@@ -30,6 +30,7 @@ func (s *KeeperTestHelper) PrepareUni2PoolWithAssets(asset1, asset2 sdk.Coin) ui
 	)
 }
 
+// PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
 func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 		SwapFee: sdk.NewDec(0),
@@ -51,6 +52,7 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	return poolId
 }
 
+// PrepareBalancerPoolWithPoolParams sets up a Balancer pool with poolParams.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
@@ -75,6 +77,7 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 	return poolId
 }
 
+// PrepareBalancerPoolWithPoolAsset sets up a Balancer pool with an array of assets.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.PoolAsset) uint64 {
 	s.Require().Len(assets, 2)
 

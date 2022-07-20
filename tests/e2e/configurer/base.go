@@ -178,8 +178,8 @@ func (bc *baseConfigurer) initializeChainConfigFromInitChain(initializedChain *i
 	chainConfig.ChainMeta = initializedChain.ChainMeta
 	chainConfig.NodeConfigs = make([]*chain.NodeConfig, 0, len(initializedChain.Nodes))
 	setupTime := time.Now()
-	for _, validator := range initializedChain.Nodes {
-		conf := chain.NewNodeConfig(bc.t, validator, chainConfig.Id, bc.containerManager).WithSetupTime(setupTime)
+	for i, validator := range initializedChain.Nodes {
+		conf := chain.NewNodeConfig(bc.t, validator, chainConfig.ValidatorInitConfigs[i], chainConfig.Id, bc.containerManager).WithSetupTime(setupTime)
 		chainConfig.NodeConfigs = append(chainConfig.NodeConfigs, conf)
 	}
 }

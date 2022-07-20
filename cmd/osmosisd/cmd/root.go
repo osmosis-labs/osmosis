@@ -135,6 +135,7 @@ min-gas-price-for-high-gas-tx = ".0025"
 	return OsmosisAppTemplate, OsmosisAppCfg
 }
 
+// initRootCmd initializes root commands when creating a new root command for simd.
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -179,6 +180,7 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	wasm.AddModuleInitFlags(startCmd)
 }
 
+// queryCommand adds transaction and account querying commands.
 func queryCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",
@@ -203,6 +205,7 @@ func queryCommand() *cobra.Command {
 	return cmd
 }
 
+// txCommand adds transaction signing, encoding / decoding, and broadcasting commands.
 func txCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
@@ -229,6 +232,7 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
+// newApp initializes and returns a new Osmosis app.
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 
@@ -282,6 +286,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	)
 }
 
+// createOsmosisAppAndExport creates and exports the new Osmosis app, returns the state of the new Osmosis app for a genesis file.
 func createOsmosisAppAndExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 	appOpts servertypes.AppOptions,
