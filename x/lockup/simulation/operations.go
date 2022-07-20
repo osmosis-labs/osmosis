@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -21,9 +20,6 @@ func RandomMsgLockTokens(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context)
 		return nil, err
 	}
 	lockCoin := sim.RandExponentialCoin(ctx, sender.Address)
-	if lockCoin.Amount.LTE(sdk.ZeroInt()) {
-		return &types.MsgLockTokens{}, fmt.Errorf("cannot lock coin that is zero or negative")
-	}
 	duration := simtypes.RandSelect(sim, time.Minute, time.Hour, time.Hour*24)
 	return &types.MsgLockTokens{
 		Owner:    sender.Address.String(),
