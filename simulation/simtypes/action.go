@@ -26,6 +26,8 @@ type Action interface {
 	WithFrequency(w Frequency) Action
 }
 
+type selectActionFn func(r *rand.Rand) Action
+
 type weightedOperationAction struct {
 	moduleName string
 	frequency  Frequency
@@ -113,8 +115,6 @@ func totalFrequency(actions []Action) int {
 
 	return totalFrequency
 }
-
-type selectActionFn func(r *rand.Rand) Action
 
 func GetSelectActionFn(actions []Action) selectActionFn {
 	totalOpFrequency := totalFrequency(actions)
