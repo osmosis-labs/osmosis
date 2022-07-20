@@ -87,7 +87,7 @@ func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecor
 }
 
 func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {
-	if len(bz) > 0 {
+	if len(bz) == 0 {
 		return TwapRecord{}, errors.New("twap not found")
 	}
 	err = proto.Unmarshal(bz, &twap)

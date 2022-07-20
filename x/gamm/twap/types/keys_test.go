@@ -4,6 +4,8 @@ import (
 	"testing"
 	time "time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -51,6 +53,35 @@ func TestFormatHistoricalTwapKeys(t *testing.T) {
 			require.Equal(t, tt.time, parsedTime)
 			parsedTime = ParseTimeFromHistoricalPoolIndexKey(gotPoolKey)
 			require.Equal(t, tt.time, parsedTime)
+		})
+	}
+}
+
+func TestParseTwapFromBz(t *testing.T) {
+	baseTime := time.Unix(1257894000, 0).UTC()
+	tests := map[string]struct {
+		record TwapRecord
+	}{
+		"standard": {TwapRecord{
+			PoolId:                      123,
+			Asset0Denom:                 "B",
+			Asset1Denom:                 "A",
+			Height:                      1,
+			Time:                        baseTime,
+			P0LastSpotPrice:             sdk.NewDecWithPrec(1, 5),
+			P1LastSpotPrice:             sdk.NewDecWithPrec(2, 5), // inconsistent value
+			P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
+			P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
+		}},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			bz, err := proto.Marshal(&tt.record)
+			require.NoError(t, err)
+			record, err := ParseTwapFromBz(bz)
+			require.NoError(t, err)
+
+			require.Equal(t, tt.record, record)
 		})
 	}
 }
