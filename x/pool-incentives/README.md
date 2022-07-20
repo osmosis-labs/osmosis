@@ -1,6 +1,7 @@
 # Pool Incentives
 
-The `pool-incentives` module is separate but related to the `incentives` module. When a pool is created using the `GAMM` module, the `pool-incentives` module automatically creates individual gauges in the `incentives` module for every lock duration that exists in that pool. The `pool-incentives` module also takes the `pool_incentives` distributed from the `gov` module and distributes it to the various incentivized gauges.
+The `pool-incentives` module is separate but related to the `incentives` module. When a pool is created using the `GAMM` module, the `pool-incentives` module automatically creates individual gauges in the `incentives` module for every lock duration that exists in that pool. 
+The `pool-incentives` module also takes the `pool_incentives` distributed from the `gov` module and distributes it to the various incentivized gauges.
 
 ## Abstract
 The `pool-incentives` module is separate but related to the `incentives` module. When a pool is created using the `GAMM` module, the `pool-incentives` module automatically creates individual gauges in the `incentives` module for every lock duration that exists in that pool. The `pool-incentives` module also takes takes the `pool_incentives` distributed from the `gov` module and distributes it to the various incentivized gauges.
@@ -28,7 +29,7 @@ selected gauges.
 
 ## State
 
-#### Genesis states
+### Genesis states
 
 ```go
 type GenesisState struct {
@@ -86,7 +87,7 @@ type DistrRecord struct {
 `DistrRecord`. Governance can modify DistrInfo via
 `UpdatePoolIncentivesProposal` proposal.
 
-#### UpdatePoolIncentivesProposal
+### UpdatePoolIncentivesProposal
 
 ```go
 type UpdatePoolIncentivesProposal struct {
@@ -211,7 +212,7 @@ osmosisd query poolincentives distr-info
 
 An example output:
 
-```
+```bash
   - gauge_id: "1877"
     weight: "60707"
   - gauge_id: "1878"
@@ -243,7 +244,7 @@ osmosisd query pool-incentives external-incentivized-gauges
 
 An example output:
 
-```
+```bash
 - coins:
   - amount: "596400000"
     denom: ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0
@@ -298,7 +299,7 @@ osmosisd query poolincentives gauge-ids 1
 
 An example output:
 
-```
+```bash
 gauge_ids_with_duration:
 - duration: 86400s
   gauge_id: "1"
@@ -329,7 +330,7 @@ osmosisd query poolincentives incentivized-pools
 
 An example output:
 
-```
+```bash
 - gauge_id: "1897"
   lockable_duration: 86400s
   pool_id: "602"
@@ -362,7 +363,7 @@ osmosisd query poolincentives lockable-durations
 
 An example output:
 
-```
+```bash
 lockable_durations:
 - 86400s
 - 604800s
@@ -388,7 +389,7 @@ osmosisd query poolincentives params
 
 An example output:
 
-```
+```bash
 params:
   minted_denom: uosmo
 ```
