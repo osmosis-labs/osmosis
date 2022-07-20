@@ -777,20 +777,20 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 	// get all 'pool assets' (aka current pool liquidity + balancer weight)
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), sdk.NewCoins(), err
+		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, err
 	}
 
 	// check to make sure the input denoms exist in the pool
 	for _, coin := range tokensIn {
 		_, ok := poolAssetsByDenom[coin.Denom]
 		if !ok {
-			return sdk.ZeroInt(), sdk.NewCoins(), sdk.NewCoins(), sdkerrors.Wrapf(types.ErrDenomAlreadyInPool, invalidInputDenomsErrFormat, coin.Denom)
+			return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, sdkerrors.Wrapf(types.ErrDenomAlreadyInPool, invalidInputDenomsErrFormat, coin.Denom)
 		}
 	}
 
 	// ensure that there aren't too many or too few assets in `tokensIn`
 	if tokensIn.Len() != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
+		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, errors.New("no-swap joins require LP'ing with all assets in pool")
 	}
 
 	// execute a no-swap join with as many tokens as possible given a perfect ratio:
@@ -798,13 +798,13 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 	// * remainingTokensIn is how many coins we have left to join that have not already been used.
 	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), sdk.NewCoins(), err
+		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, err
 	}
 
 	// ensure that no more tokens have been joined than is possible with the given `tokensIn`
 	tokensJoined = tokensIn.Sub(remainingTokensIn)
 	if tokensJoined.IsAnyGT(tokensIn) {
-		return sdk.ZeroInt(), sdk.NewCoins(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
+		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, errors.New("an error has occurred, more coins joined than token In")
 	}
 
 	return numShares, tokensJoined, remainingTokensIn, nil
