@@ -1,12 +1,13 @@
 package balancer
 
 import (
-	types "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	types "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types
@@ -27,6 +28,11 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgCreateBalancerPool{},
 	)
+	registry.RegisterImplementations(
+		(*proto.Message)(nil),
+		&PoolParams{},
+	)
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 

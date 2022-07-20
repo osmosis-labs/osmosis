@@ -10,7 +10,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/gamm/types";
 
 service Query {
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
@@ -28,49 +28,49 @@ service Query {
 
   // Per Pool gRPC Endpoints
   rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{poolId}";
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{pool_id}";
   }
 
   rpc PoolParams(QueryPoolParamsRequest) returns (QueryPoolParamsResponse) {
     option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/pools/{poolId}/params";
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/params";
   }
 
   rpc TotalPoolLiquidity(QueryTotalPoolLiquidityRequest)
       returns (QueryTotalPoolLiquidityResponse) {
     option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/pools/{poolId}/total_pool_liquidity";
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/total_pool_liquidity";
   }
 
   rpc TotalShares(QueryTotalSharesRequest) returns (QueryTotalSharesResponse) {
     option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/pools/{poolId}/total_shares";
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/total_shares";
   }
 
   // SpotPrice defines a gRPC query handler that returns the spot price given
   // a base denomination and a quote denomination.
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
     option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/pools/{poolId}/prices";
+        "/osmosis/gamm/v1beta1/pools/{pool_id}/prices";
   }
 
   // Estimate the swap.
   rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
       returns (QuerySwapExactAmountInResponse) {
     option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_in";
+        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
   rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
       returns (QuerySwapExactAmountOutResponse) {
     option (google.api.http).get =
-        "/osmosis/gamm/v1beta1/{poolId}/estimate/swap_exact_amount_out";
+        "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
   }
 }
 
 //=============================== Pool
 message QueryPoolRequest {
-  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 message QueryPoolResponse {
   google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
@@ -92,18 +92,18 @@ message QueryPoolsResponse {
 //=============================== NumPools
 message QueryNumPoolsRequest {}
 message QueryNumPoolsResponse {
-  uint64 numPools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
+  uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
 }
 
 //=============================== PoolParams
 message QueryPoolParamsRequest {
-  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 message QueryPoolParamsResponse { google.protobuf.Any params = 1; }
 
 //=============================== PoolLiquidity
 message QueryTotalPoolLiquidityRequest {
-  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 
 message QueryTotalPoolLiquidityResponse {
@@ -116,10 +116,10 @@ message QueryTotalPoolLiquidityResponse {
 
 //=============================== TotalShares
 message QueryTotalSharesRequest {
-  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 message QueryTotalSharesResponse {
-  cosmos.base.v1beta1.Coin totalShares = 1 [
+  cosmos.base.v1beta1.Coin total_shares = 1 [
     (gogoproto.moretags) = "yaml:\"total_shares\"",
     (gogoproto.nullable) = false
   ];
@@ -128,7 +128,7 @@ message QueryTotalSharesResponse {
 // QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice
 // query.
 message QuerySpotPriceRequest {
-  uint64 poolId = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string base_asset_denom = 2
       [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
   string quote_asset_denom = 3
@@ -141,14 +141,14 @@ message QuerySpotPriceRequest {
 // query.
 message QuerySpotPriceResponse {
   // String of the Dec. Ex) 10.203uatom
-  string spotPrice = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
+  string spot_price = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
 }
 
 //=============================== EstimateSwapExactAmountIn
 message QuerySwapExactAmountInRequest {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string tokenIn = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
   repeated SwapAmountInRoute routes = 4 [
     (gogoproto.moretags) = "yaml:\"routes\"",
     (gogoproto.nullable) = false
@@ -156,7 +156,7 @@ message QuerySwapExactAmountInRequest {
 }
 
 message QuerySwapExactAmountInResponse {
-  string tokenOutAmount = 1 [
+  string token_out_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
     (gogoproto.nullable) = false
@@ -166,16 +166,16 @@ message QuerySwapExactAmountInResponse {
 //=============================== EstimateSwapExactAmountOut
 message QuerySwapExactAmountOutRequest {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 poolId = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   repeated SwapAmountOutRoute routes = 3 [
     (gogoproto.moretags) = "yaml:\"routes\"",
     (gogoproto.nullable) = false
   ];
-  string tokenOut = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
+  string token_out = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
 }
 
 message QuerySwapExactAmountOutResponse {
-  string tokenInAmount = 1 [
+  string token_in_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
     (gogoproto.nullable) = false

@@ -4,17 +4,18 @@ package osmosis.mint.v1beta1;
 import "gogoproto/gogo.proto";
 import "osmosis/mint/v1beta1/mint.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/mint/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/mint/types";
 
 // GenesisState defines the mint module's genesis state.
 message GenesisState {
-  // minter is a space for holding current rewards information.
+  // minter is an abstraction for holding current rewards information.
   Minter minter = 1 [ (gogoproto.nullable) = false ];
 
-  // params defines all the paramaters of the module.
+  // params defines all the paramaters of the mint module.
   Params params = 2 [ (gogoproto.nullable) = false ];
 
-  // current halven period start epoch
-  int64 halven_started_epoch = 3
-      [ (gogoproto.moretags) = "yaml:\"halven_started_epoch\"" ];
+  // reduction_started_epoch is the first epoch in which the reduction of mint
+  // begins.
+  int64 reduction_started_epoch = 3
+      [ (gogoproto.moretags) = "yaml:\"reduction_started_epoch\"" ];
 }

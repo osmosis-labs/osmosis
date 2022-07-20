@@ -9,4 +9,6 @@ package tools
 
 import (
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	_ "github.com/zimmski/go-mutesting/cmd/go-mutesting"
+	_ "mvdan.cc/gofumpt"
 )

@@ -6,7 +6,7 @@ import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/lockup/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/lockup/types";
 
 // Msg defines the Msg service.
 service Msg {
@@ -17,6 +17,8 @@ service Msg {
       returns (MsgBeginUnlockingAllResponse);
   // MsgBeginUnlocking begins unlocking tokens by lock ID
   rpc BeginUnlocking(MsgBeginUnlocking) returns (MsgBeginUnlockingResponse);
+  // MsgEditLockup edits the existing lockups by lock ID
+  rpc ExtendLockup(MsgExtendLockup) returns (MsgExtendLockupResponse);
 }
 
 message MsgLockTokens {
@@ -49,3 +51,23 @@ message MsgBeginUnlocking {
   ];
 }
 message MsgBeginUnlockingResponse { bool success = 1; }
+
+// MsgExtendLockup extends the existing lockup's duration.
+// The new duration is longer than the original.
+message MsgExtendLockup {
+  string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  uint64 ID = 2;
+
+  // duration to be set. fails if lower than the current duration, or is
+  // unlocking
+  google.protobuf.Duration duration = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+
+  // extend for other edit, e.g. cancel unlocking
+}
+
+message MsgExtendLockupResponse { bool success = 1; }

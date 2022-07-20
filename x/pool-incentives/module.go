@@ -1,3 +1,13 @@
+/*
+The `pool-incentives` module automatically creates individual gauges
+in the `incentives` module for every lock duration
+that exists in that pool. The `pool-incentives` module also takes
+the `pool_incentives` distributed from the `gov` module
+and distributes it to the various incentivized gauges.
+ - Handles governance proposals impacting pool incentives.
+ - Pool distribution and lockup infos queries.
+ - Distributes incentives to LPs.
+*/
 package pool_incentives
 
 import (
@@ -19,9 +29,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 )
 
 var (
@@ -75,7 +85,7 @@ func (b AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(types.QuerierRoute)
+	return cli.GetQueryCmd()
 }
 
 // RegisterInterfaces registers interfaces and implementations of the pool-incentives module.
@@ -125,21 +135,19 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	InitGenesis(ctx, am.keeper, &genesisState)
+	am.keeper.InitGenesis(ctx, &genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the mint
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
+	gs := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(gs)
 }
 
 // BeginBlock performs a no-op.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	BeginBlocker(ctx, req, am.keeper)
-}
+func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the pool-incentives module. It returns no validator
 // updates.

@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v7/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 )
 
 func TestMsgSwapExactAmountIn(t *testing.T) {
