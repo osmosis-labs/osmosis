@@ -2,15 +2,14 @@ package keeper_test
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 )
 
 var (
@@ -267,7 +266,6 @@ func (suite *KeeperTestSuite) TestIncentivizedPools2() {
 				sort.Slice(distRecords[:], func(i, j int) bool {
 					return distRecords[i].GaugeId < distRecords[j].GaugeId
 				})
-				fmt.Println(distRecords)
 				// Create records
 				err = keeper.UpdateDistrRecords(suite.Ctx, distRecords...)
 				if tc.expectedErr {
