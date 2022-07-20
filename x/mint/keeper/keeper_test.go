@@ -44,6 +44,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+	params := suite.App.MintKeeper.GetParams(suite.Ctx)
+	params.ReductionPeriodInEpochs = 10
+	suite.App.MintKeeper.SetParams(suite.Ctx, params)
 }
 
 // setupDeveloperVestingModuleAccountTest sets up test cases that utilize developer vesting
