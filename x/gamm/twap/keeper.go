@@ -20,3 +20,8 @@ type Keeper struct {
 func NewKeeper(storeKey sdk.StoreKey, transientKey *sdk.TransientStoreKey, paramSpace paramtypes.Subspace, ammKeeper types.AmmInterface) *Keeper {
 	return &Keeper{storeKey: storeKey, transientKey: transientKey, paramSpace: paramSpace, ammkeeper: ammKeeper}
 }
+
+// TODO: make this read from a parameter, or hardcode it.
+func (k *Keeper) PruneEpochIdentifier(ctx sdk.Context) string {
+	return "daily"
+}

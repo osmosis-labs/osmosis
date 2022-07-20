@@ -61,6 +61,11 @@ func (k Keeper) updateTWAPs(ctx sdk.Context, poolId uint64) error {
 	return nil
 }
 
+func (k Keeper) pruneOldTwaps(ctx sdk.Context) {
+	// TODO: Implement this code
+	k.deleteHistoricalTWAP(ctx, types.TwapRecord{})
+}
+
 func (k Keeper) getStartRecord(ctx sdk.Context, poolId uint64, time time.Time, assetA string, assetB string) (types.TwapRecord, error) {
 	if !(assetA > assetB) {
 		assetA, assetB = assetB, assetA

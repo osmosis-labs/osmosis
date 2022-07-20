@@ -15,10 +15,9 @@ type epochhook struct {
 }
 
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	// TODO:
-	// if epochIdentifier == hook.k.PruneIdentifier() {
-	//	 hook.k.pruneOldTwaps(ctx)
-	// }
+	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
+		hook.k.pruneOldTwaps(ctx)
+	}
 }
 
 func (hook *epochhook) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {}
