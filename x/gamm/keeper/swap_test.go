@@ -4,8 +4,10 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v10/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
@@ -269,4 +271,27 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			}
 		}
 	}
+}
+
+func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
+	// Setup test
+	suite.SetupTest()
+	k := suite.App.GAMMKeeper
+	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))
+	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
+
+	// Setup mock inactive pool
+	ctrl := gomock.NewController(suite.T())
+	defer ctrl.Finish()
+	mockPool := mocks.NewMockPoolI(ctrl)
+	mockPoolId := k.GetNextPoolNumber(suite.Ctx)
+	mockPool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
+	mockPool.EXPECT().GetId().Return(mockPoolId).AnyTimes()
+	k.SetPool(suite.Ctx, mockPool)
+
+	// Swaps should fail for inactive pool
+	_, err := k.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], mockPoolId, testCoin, "bar", sdk.ZeroInt())
+	suite.Require().Error(err)
+	_, err = k.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], mockPoolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
+	suite.Require().Error(err)
 }
