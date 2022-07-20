@@ -25,14 +25,14 @@ func mapFrequencyFromInt(intFrequency int) string {
 }
 
 func mapFrequencyFromString(strFrequency Frequency) int {
-	switch {
-	case strFrequency == Rare:
+	switch strFrequency {
+	case Rare:
 		return 5
-	case strFrequency == Infrequent:
+	case Infrequent:
 		return 15
-	case strFrequency == Common:
+	case Common:
 		return 35
-	case strFrequency == Frequent:
+	case Frequent:
 		return 65
 	default:
 		return 35
