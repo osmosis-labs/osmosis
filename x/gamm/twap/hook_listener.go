@@ -39,7 +39,7 @@ func (hook *gammhook) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, p
 	}
 }
 
-func (hook *gammhook) BeforeSwap(ctx sdk.Context, _ sdk.AccAddress, poolId uint64) {
+func (hook *gammhook) BeforeSwap(ctx sdk.Context, poolId uint64) {
 	err := hook.k.updateTwapIfNotRedundant(ctx, poolId)
 	if err != nil {
 		panic(err)

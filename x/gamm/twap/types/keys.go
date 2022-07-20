@@ -24,38 +24,40 @@ const (
 	KeySeparator = "|"
 )
 
-var AlteredPoolIdsPrefix = []byte{0}
+var mostRecentTWAPsNoSeparator = "recent_twap"
+var historicalTWAPTimeIndexNoSeparator = "historical_time_index"
+var historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
 
-var mostRecentTWAPsPrefix = "recent_twap" + KeySeparator
-var historicalTWAPTimeIndexPrefix = "historical_time_index" + KeySeparator
-var historicalTWAPPoolIndexPrefix = "historical_pool_index" + KeySeparator
+var mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
+var historicalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
+var historicalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
 
 // TODO: make utility command to automatically interlace separators
 
 func FormatMostRecentTWAPKey(poolId uint64, denom1 string, denom2 string) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%s%s%s", mostRecentTWAPsPrefix, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2))
+	return []byte(fmt.Sprintf("%s%d%s%s%s%s", mostRecentTWAPsPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2))
 }
 
 // TODO: Replace historical management with ORM, we currently accept 2x write amplification right now.
 func FormatHistoricalTimeIndexTWAPKey(accumulatorWriteTime time.Time, poolId uint64, denom1 string, denom2 string) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%s%s%s%d%s%s%s%s", historicalTWAPTimeIndexPrefix, KeySeparator, timeS, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2))
+	return []byte(fmt.Sprintf("%s%s%s%d%s%s%s%s", historicalTWAPTimeIndexPrefix, timeS, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2))
 }
 
 func FormatHistoricalPoolIndexTWAPKey(poolId uint64, accumulatorWriteTime time.Time, denom1 string, denom2 string) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%s%d%s%s%s%s%s%s", historicalTWAPPoolIndexPrefix, KeySeparator, poolId, KeySeparator, timeS, KeySeparator, denom1, KeySeparator, denom2))
+	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s", historicalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator, denom1, KeySeparator, denom2))
 }
 
 func FormatHistoricalPoolIndexTimePrefix(poolId uint64, accumulatorWriteTime time.Time) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%s%d%s%s%s", historicalTWAPPoolIndexPrefix, KeySeparator, poolId, KeySeparator, timeS, KeySeparator))
+	return []byte(fmt.Sprintf("%s%d%s%s%s", historicalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator))
 }
 
 func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
-	if len(s) != 5 || s[0] != historicalTWAPTimeIndexPrefix {
+	if len(s) != 5 || s[0] != historicalTWAPTimeIndexNoSeparator {
 		panic("Called ParseTimeFromHistoricalTimeIndexKey on incorrectly formatted key")
 	}
 	t, err := osmoutils.ParseTimeString(s[1])
@@ -68,7 +70,7 @@ func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
 func ParseTimeFromHistoricalPoolIndexKey(key []byte) time.Time {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
-	if len(s) != 5 || s[0] != historicalTWAPPoolIndexPrefix {
+	if len(s) != 5 || s[0] != historicalTWAPPoolIndexNoSeparator {
 		panic("Called ParseTimeFromHistoricalPoolIndexKey on incorrectly formatted key")
 	}
 	t, err := osmoutils.ParseTimeString(s[2])
