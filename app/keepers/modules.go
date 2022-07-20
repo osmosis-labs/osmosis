@@ -6,7 +6,6 @@ import (
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/client"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -28,18 +27,18 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 
-	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup"
-	"github.com/osmosis-labs/osmosis/v7/x/mint"
-	poolincentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
-	poolincentivesclient "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/client"
-	superfluid "github.com/osmosis-labs/osmosis/v7/x/superfluid"
-	superfluidclient "github.com/osmosis-labs/osmosis/v7/x/superfluid/client"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees"
+	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm"
+	"github.com/osmosis-labs/osmosis/v10/x/incentives"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup"
+	"github.com/osmosis-labs/osmosis/v10/x/mint"
+	poolincentives "github.com/osmosis-labs/osmosis/v10/x/pool-incentives"
+	poolincentivesclient "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/client"
+	superfluid "github.com/osmosis-labs/osmosis/v10/x/superfluid"
+	superfluidclient "github.com/osmosis-labs/osmosis/v10/x/superfluid/client"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory"
+	"github.com/osmosis-labs/osmosis/v10/x/txfees"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
@@ -82,7 +81,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	epochs.AppModuleBasic{},
 	superfluid.AppModuleBasic{},
 	tokenfactory.AppModuleBasic{},
-	bech32ibc.AppModuleBasic{},
 	wasm.AppModuleBasic{},
 	ica.AppModuleBasic{},
 }

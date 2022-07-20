@@ -1,14 +1,12 @@
 package keeper_test
 
 import (
-	"testing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 )
 
 var customGenesis = types.NewGenesisState(
@@ -37,10 +35,6 @@ var customGenesis = types.NewGenesisState(
 		},
 		2), // minting reward distribution start epoch
 	3) // halven started epoch
-
-func TestMintGenesisTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
 
 // TestMintInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.
@@ -111,16 +105,10 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			originalVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
 
 			// Test.
+			osmoutils.ConditionalPanic(suite.T(), tc.expectPanic, func() { mintKeeper.InitGenesis(ctx, tc.mintGenesis) })
 			if tc.expectPanic {
-				suite.Panics(func() {
-					mintKeeper.InitGenesis(ctx, tc.mintGenesis)
-				})
 				return
 			}
-
-			suite.NotPanics(func() {
-				mintKeeper.InitGenesis(ctx, tc.mintGenesis)
-			})
 
 			// Assertions.
 
@@ -130,25 +118,25 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 
 			// Epoch provisions are set to genesis epoch provisions from params.
 			actualEpochProvisions := mintKeeper.GetMinter(ctx).EpochProvisions
-			suite.Equal(tc.expectedEpochProvisions, actualEpochProvisions)
+			suite.Require().Equal(tc.expectedEpochProvisions, actualEpochProvisions)
 
 			// Supply offset is applied to genesis supply.
 			actualSupplyOffset := bankKeeper.GetSupplyOffset(ctx, tc.mintDenom)
 			expectedSupplyOffset := tc.expectedSupplyOffsetDelta.Add(originalSupplyOffset)
-			suite.Equal(expectedSupplyOffset, actualSupplyOffset)
+			suite.Require().Equal(expectedSupplyOffset, actualSupplyOffset)
 
 			// Supply with offset is as expected.
 			actualSupplyWithOffset := bankKeeper.GetSupplyWithOffset(ctx, tc.mintDenom).Amount
 			expectedSupplyWithOffset := tc.expectedSupplyWithOffsetDelta.Add(originalSupplyWithOffset.Amount)
-			suite.Equal(expectedSupplyWithOffset.Int64(), actualSupplyWithOffset.Int64())
+			suite.Require().Equal(expectedSupplyWithOffset.Int64(), actualSupplyWithOffset.Int64())
 
 			// Developer vesting account has the desired amount of tokens.
 			actualVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
 			expectedDeveloperVestingAmount := tc.expectedDeveloperVestingAmountDelta.Add(originalVestingCoins.Amount)
-			suite.Equal(expectedDeveloperVestingAmount.Int64(), actualVestingCoins.Amount.Int64())
+			suite.Require().Equal(expectedDeveloperVestingAmount.Int64(), actualVestingCoins.Amount.Int64())
 
 			// Last halven epoch num is set to 0.
-			suite.Equal(tc.expectedHalvenStartedEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
+			suite.Require().Equal(tc.expectedHalvenStartedEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
 		})
 	}
 }
@@ -180,7 +168,7 @@ func (suite *KeeperTestSuite) TestMintExportGenesis() {
 			actualGenesis := app.MintKeeper.ExportGenesis(ctx)
 
 			// Assertions.
-			suite.Equal(tc.expectedGenesis, actualGenesis)
+			suite.Require().Equal(tc.expectedGenesis, actualGenesis)
 		})
 	}
 }

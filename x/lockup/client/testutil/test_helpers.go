@@ -3,7 +3,7 @@ package testutil
 import (
 	"fmt"
 
-	lockupcli "github.com/osmosis-labs/osmosis/v7/x/lockup/client/cli"
+	lockupcli "github.com/osmosis-labs/osmosis/v10/x/lockup/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

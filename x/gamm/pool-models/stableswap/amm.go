@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/internal/cfmm_common"
-	types "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/internal/cfmm_common"
+	types "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 var (
@@ -336,21 +336,21 @@ func spotPrice(baseReserve, quoteReserve sdk.Dec) sdk.Dec {
 }
 
 // returns outAmt as a decimal
-func (pa *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := pa.getScaledPoolAmts(tokenIn.Denom, tokenOutDenom)
+func (p *Pool) calcOutAmtGivenIn(tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
+	reserves, err := p.getScaledPoolAmts(tokenIn.Denom, tokenOutDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 	tokenInSupply, tokenOutSupply := reserves[0], reserves[1]
 	// We are solving for the amount of token out, hence x = tokenOutSupply, y = tokenInSupply
 	cfmmOut := solveCfmm(tokenOutSupply, tokenInSupply, tokenIn.Amount.ToDec())
-	outAmt := pa.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
+	outAmt := p.getDescaledPoolAmt(tokenOutDenom, cfmmOut)
 	return outAmt, nil
 }
 
 // returns inAmt as a decimal
-func (pa *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
-	reserves, err := pa.getScaledPoolAmts(tokenInDenom, tokenOut.Denom)
+func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee sdk.Dec) (sdk.Dec, error) {
+	reserves, err := p.getScaledPoolAmts(tokenInDenom, tokenOut.Denom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -358,46 +358,46 @@ func (pa *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFe
 	// We are solving for the amount of token in, cfmm(x,y) = cfmm(x + x_in, y - y_out)
 	// x = tokenInSupply, y = tokenOutSupply, yIn = -tokenOutAmount
 	cfmmIn := solveCfmm(tokenInSupply, tokenOutSupply, tokenOut.Amount.ToDec().Neg())
-	inAmt := pa.getDescaledPoolAmt(tokenInDenom, cfmmIn.NegMut())
+	inAmt := p.getDescaledPoolAmt(tokenInDenom, cfmmIn.NegMut())
 	return inAmt, nil
 }
 
-func (pa *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
+func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
 	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares sdk.Int) types.PoolI {
-		paCopy := pa.Copy()
+		paCopy := p.Copy()
 		paCopy.updatePoolForJoin(sdk.NewCoins(tokenIn), newShares)
 		return &paCopy
 	}
 	// TODO: Correctly handle swap fee
-	return cfmm_common.BinarySearchSingleAssetJoin(pa, tokenIn, poolWithAddedLiquidityAndShares)
+	return cfmm_common.BinarySearchSingleAssetJoin(p, tokenIn, poolWithAddedLiquidityAndShares)
 }
 
 // We can mutate pa here
 // TODO: some day switch this to a COW wrapped pa, for better perf
-func (pa *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
 	if len(tokensIn) == 1 {
-		numShares, err = pa.calcSingleAssetJoinShares(tokensIn[0], swapFee)
+		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
 		newLiquidity = tokensIn
 		return numShares, newLiquidity, err
-	} else if len(tokensIn) != pa.NumAssets() {
+	} else if len(tokensIn) != p.NumAssets() {
 		return sdk.ZeroInt(), sdk.NewCoins(), errors.New(
 			"stableswap pool only supports LP'ing with one asset, or all assets in pool")
 	}
 
 	// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
-	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(pa, sdk.Context{}, tokensIn)
+	numShares, remCoins, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
-	pa.updatePoolForJoin(tokensIn.Sub(remCoins), numShares)
+	p.updatePoolForJoin(tokensIn.Sub(remCoins), numShares)
 
 	for _, coin := range remCoins {
 		// TODO: Perhaps add a method to skip if this is too small.
-		newShare, err := pa.calcSingleAssetJoinShares(coin, swapFee)
+		newShare, err := p.calcSingleAssetJoinShares(coin, swapFee)
 		if err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
-		pa.updatePoolForJoin(sdk.NewCoins(coin), newShare)
+		p.updatePoolForJoin(sdk.NewCoins(coin), newShare)
 		numShares = numShares.Add(newShare)
 	}
 

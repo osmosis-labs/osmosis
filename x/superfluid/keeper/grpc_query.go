@@ -11,10 +11,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -440,7 +440,8 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 	}
 
 	superfluidDelegationResp, err := q.SuperfluidDelegationsByDelegator(goCtx, &types.SuperfluidDelegationsByDelegatorRequest{
-		DelegatorAddress: req.DelegatorAddress})
+		DelegatorAddress: req.DelegatorAddress,
+	})
 	if err != nil {
 		return nil, err
 	}

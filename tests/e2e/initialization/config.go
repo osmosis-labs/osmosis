@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/server"
-	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -18,36 +16,41 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
-	"github.com/spf13/viper"
-	tmconfig "github.com/tendermint/tendermint/config"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
 )
 
-type ValidatorConfig struct {
+// NodeConfig is a confiuration for the node supplied from the test runner
+// to initialization scripts. It should be backwards compatible with earlier
+// versions. If this struct is updated, the change must be backported to earlier
+// branches that might be used for upgrade testing.
+type NodeConfig struct {
+	Name               string // name of the config that will also be assigned to Docke container.
 	Pruning            string // default, nothing, everything, or custom
 	PruningKeepRecent  string // keep all of the last N states (only used with custom pruning)
 	PruningInterval    string // delete old states from every Nth block (only used with custom pruning)
 	SnapshotInterval   uint64 // statesync snapshot every Nth block (0 to disable)
 	SnapshotKeepRecent uint32 // number of recent snapshots to keep and serve (0 to keep all)
+	IsValidator        bool   // flag indicating whether a node should be a validator
 }
 
 const (
 	// common
-	OsmoDenom     = "uosmo"
-	StakeDenom    = "stake"
-	OsmoIBCDenom  = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
-	StakeIBCDenom = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
-	MinGasPrice   = "0.000"
-	IbcSendAmount = 3300000000
+	OsmoDenom           = "uosmo"
+	StakeDenom          = "stake"
+	OsmoIBCDenom        = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+	StakeIBCDenom       = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
+	MinGasPrice         = "0.000"
+	IbcSendAmount       = 3300000000
+	ValidatorWalletName = "val"
 	// chainA
 	ChainAID      = "osmo-test-a"
 	OsmoBalanceA  = 200000000000
@@ -163,12 +166,37 @@ func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage
 	return nil
 }
 
-func initGenesis(c *internalChain, votingPeriod time.Duration) error {
+func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight int) error {
+	// initialize a genesis file
+	configDir := chain.nodes[0].configDir()
+	for _, val := range chain.nodes {
+		if chain.chainMeta.Id == ChainAID {
+			if err := addAccount(configDir, "", InitBalanceStrA, val.keyInfo.GetAddress(), forkHeight); err != nil {
+				return err
+			}
+		} else if chain.chainMeta.Id == ChainBID {
+			if err := addAccount(configDir, "", InitBalanceStrB, val.keyInfo.GetAddress(), forkHeight); err != nil {
+				return err
+			}
+		}
+	}
+
+	// copy the genesis file to the remaining validators
+	for _, val := range chain.nodes[1:] {
+		_, err := util.CopyFile(
+			filepath.Join(configDir, "config", "genesis.json"),
+			filepath.Join(val.configDir(), "config", "genesis.json"),
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
-	config.SetRoot(c.validators[0].configDir())
-	config.Moniker = c.validators[0].getMoniker()
+	config.SetRoot(chain.nodes[0].configDir())
+	config.Moniker = chain.nodes[0].moniker
 
 	genFilePath := config.GenesisFile()
 	appGenState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFilePath)
@@ -186,7 +214,6 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 		return err
 	}
 
-	// pool incentives
 	err = updateModuleGenesis(appGenState, poolitypes.ModuleName, &poolitypes.GenesisState{}, updatePoolIncentiveGenesis)
 	if err != nil {
 		return err
@@ -227,7 +254,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, genutiltypes.ModuleName, &genutiltypes.GenesisState{}, updateGenUtilGenesis(c))
+	err = updateModuleGenesis(appGenState, genutiltypes.ModuleName, &genutiltypes.GenesisState{}, updateGenUtilGenesis(chain))
 	if err != nil {
 		return err
 	}
@@ -245,7 +272,7 @@ func initGenesis(c *internalChain, votingPeriod time.Duration) error {
 	}
 
 	// write the updated genesis file to each validator
-	for _, val := range c.validators {
+	for _, val := range chain.nodes {
 		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), genesisJson); err != nil {
 			return err
 		}
@@ -343,18 +370,22 @@ func updateGovGenesis(votingPeriod time.Duration) func(*govtypes.GenesisState) {
 func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 	return func(genUtilGenState *genutiltypes.GenesisState) {
 		// generate genesis txs
-		genTxs := make([]json.RawMessage, len(c.validators))
-		for i, val := range c.validators {
+		genTxs := make([]json.RawMessage, 0, len(c.nodes))
+		for _, node := range c.nodes {
+			if !node.isValidator {
+				continue
+			}
+
 			stakeAmountCoin := StakeAmountCoinA
 			if c.chainMeta.Id != ChainAID {
 				stakeAmountCoin = StakeAmountCoinB
 			}
-			createValmsg, err := val.buildCreateValidatorMsg(stakeAmountCoin)
+			createValmsg, err := node.buildCreateValidatorMsg(stakeAmountCoin)
 			if err != nil {
 				panic("genutil genesis setup failed: " + err.Error())
 			}
 
-			signedTx, err := val.signMsg(createValmsg)
+			signedTx, err := node.signMsg(createValmsg)
 			if err != nil {
 				panic("genutil genesis setup failed: " + err.Error())
 			}
@@ -363,96 +394,8 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 			if err != nil {
 				panic("genutil genesis setup failed: " + err.Error())
 			}
-			genTxs[i] = txRaw
+			genTxs = append(genTxs, txRaw)
 		}
 		genUtilGenState.GenTxs = genTxs
 	}
-}
-
-func initNodes(c *internalChain, numVal, forkHeight int) error {
-	if err := c.createAndInitValidators(numVal); err != nil {
-		return err
-	}
-
-	// initialize a genesis file for the first validator
-	val0ConfigDir := c.validators[0].configDir()
-	for _, val := range c.validators {
-		if c.chainMeta.Id == ChainAID {
-			if err := addAccount(val0ConfigDir, "", InitBalanceStrA, val.getKeyInfo().GetAddress(), forkHeight); err != nil {
-				return err
-			}
-		} else if c.chainMeta.Id == ChainBID {
-			if err := addAccount(val0ConfigDir, "", InitBalanceStrB, val.getKeyInfo().GetAddress(), forkHeight); err != nil {
-				return err
-			}
-		}
-	}
-
-	// copy the genesis file to the remaining validators
-	for _, val := range c.validators[1:] {
-		_, err := util.CopyFile(
-			filepath.Join(val0ConfigDir, "config", "genesis.json"),
-			filepath.Join(val.configDir(), "config", "genesis.json"),
-		)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func initValidatorConfigs(c *internalChain, validatorConfigs []*ValidatorConfig) error {
-	for i, val := range c.validators {
-		tmCfgPath := filepath.Join(val.configDir(), "config", "config.toml")
-
-		vpr := viper.New()
-		vpr.SetConfigFile(tmCfgPath)
-		if err := vpr.ReadInConfig(); err != nil {
-			return err
-		}
-
-		valConfig := &tmconfig.Config{}
-		if err := vpr.Unmarshal(valConfig); err != nil {
-			return err
-		}
-
-		valConfig.P2P.ListenAddress = "tcp://0.0.0.0:26656"
-		valConfig.P2P.AddrBookStrict = false
-		valConfig.P2P.ExternalAddress = fmt.Sprintf("%s:%d", val.instanceName(), 26656)
-		valConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
-		valConfig.StateSync.Enable = false
-		valConfig.LogLevel = "info"
-
-		var peers []string
-
-		for j := 0; j < len(c.validators); j++ {
-			// skip adding a peer to yourself
-			if i == j {
-				continue
-			}
-
-			peer := c.validators[j]
-			peerID := fmt.Sprintf("%s@%s%d:26656", peer.getNodeKey().ID(), peer.getMoniker(), j)
-			peers = append(peers, peerID)
-		}
-
-		valConfig.P2P.PersistentPeers = strings.Join(peers, ",")
-
-		tmconfig.WriteConfigFile(tmCfgPath, valConfig)
-
-		// set application configuration
-		appCfgPath := filepath.Join(val.configDir(), "config", "app.toml")
-
-		appConfig := srvconfig.DefaultConfig()
-		appConfig.BaseConfig.Pruning = validatorConfigs[i].Pruning
-		appConfig.BaseConfig.PruningKeepRecent = validatorConfigs[i].PruningKeepRecent
-		appConfig.BaseConfig.PruningInterval = validatorConfigs[i].PruningInterval
-		appConfig.API.Enable = true
-		appConfig.MinGasPrices = fmt.Sprintf("%s%s", MinGasPrice, OsmoDenom)
-		appConfig.StateSync.SnapshotInterval = validatorConfigs[i].SnapshotInterval
-		appConfig.StateSync.SnapshotKeepRecent = validatorConfigs[i].SnapshotKeepRecent
-
-		srvconfig.WriteConfigFile(appCfgPath, appConfig)
-	}
-	return nil
 }

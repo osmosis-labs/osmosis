@@ -9,6 +9,13 @@
   - app/upgrades/**/*
   # Also match any module.go update
   - x/**/module.go
+"C:simulator":
+  # Match all of simulation & tests/simulator folder
+  - simulation/**/*
+  - simulation/**/**/*
+  - tests/simulator/**
+  # Match any module update
+  - x/**/simulation/*.go
 "C:wasm":
   - app/wasm/**/*
 "C:x/claim":

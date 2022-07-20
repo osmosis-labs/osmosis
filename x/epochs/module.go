@@ -1,3 +1,15 @@
+/*
+Often in the SDK, we would like to run certain code every-so often. The
+purpose of `epochs` module is to allow other modules to set that they
+would like to be signaled once every period. So another module can
+specify it wants to execute code once a week, starting at UTC-time = x.
+`epochs` creates a generalized epoch interface to other modules so that
+they can easily be signalled upon such events.
+  - Contains functionality for querying epoch.
+  - Events for BeginBlock and EndBlock.
+  - Initialization for epoch-related infos.
+*/
+
 package epochs
 
 import (
@@ -16,10 +28,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/client/cli"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/client/rest"
 )
 
 var (
@@ -45,6 +57,7 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
+// RegisterLegacyAminoCodec registers the module's Amino codec that properly handles protobuf types with Any's.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the module's interface types.
@@ -109,7 +122,7 @@ func (am AppModule) Name() string {
 
 // Route returns the capability module's message routing key.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the capability module's query routing key.

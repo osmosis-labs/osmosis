@@ -1,0 +1,73 @@
+# This is a manua workflow that does the following when trigerred:
+# - Runs a script to find and replace Go import path major version with given version.
+# - Commits and pushes changes to the source-branch.
+# - Opens a PR from the source branch to the target-branch.
+
+name: Update Go Import Paths
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Current Version that we want to change'
+        default: '10'
+        required: true
+      target-branch:
+        description: 'Target Branch'
+        default: 'main'
+        required: true
+      source-branch:
+        description: 'Source Branch'
+        default: 'update-paths'
+        required: true
+
+jobs:
+  update-import-paths:
+    runs-on: ubuntu-latest
+
+    steps:
+      -
+        name: Check out repository code
+        uses: actions/checkout@v2
+      -
+        name: Setup Golang
+        uses: actions/setup-go@v2.1.4
+        with:
+          go-version: 1.18
+      -
+        name: Display go version
+        run: go version
+      -
+        name: Get data from build cache
+        uses: actions/cache@v2
+        with:
+          # In order:
+          # * Module download cache
+          # * Build cache (Linux)
+          # * Build cache (Mac)
+          # * Build cache (Windows)
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            ~\AppData\Local\go-build
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
+      -
+        name: Run find & replace script
+        run: ./scripts/replace_import_paths.sh ${{ inputs.version }}
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          title: "auto: update Go import paths to v${{ inputs.version }}"
+          commit-message: "auto: update Go import paths to v${{ inputs.version }}"
+          body: "**Automated pull request**\n\nUpdating Go import paths to v${{ inputs.version }}"
+          base: ${{ inputs.target-branch }}
+          branch-suffix: random
+          branch: ${{ inputs.source-branch }}
+          delete-branch: true
+          assignees: ${{ github.actor }}
+          draft: true
+          labels: T:auto,T:code-hygiene

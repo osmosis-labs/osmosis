@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v7/osmomath"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/osmomath"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 // subPoolAssetWeights subtracts the weights of two different pool asset slices.
@@ -151,7 +151,7 @@ func getPoolAssetsByDenom(poolAssets []PoolAsset) (map[string]PoolAsset, error) 
 	for _, poolAsset := range poolAssets {
 		_, ok := poolAssetsByDenom[poolAsset.Token.Denom]
 		if ok {
-			return nil, fmt.Errorf(errMsgFormatRepeatingPoolAssetsNotAllowed, poolAsset.Token.Denom)
+			return nil, fmt.Errorf(formatRepeatingPoolAssetsNotAllowedErrFormat, poolAsset.Token.Denom)
 		}
 
 		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
@@ -161,7 +161,7 @@ func getPoolAssetsByDenom(poolAssets []PoolAsset) (map[string]PoolAsset, error) 
 
 // updateIntermediaryPoolAssetsLiquidity updates poolAssetsByDenom with liquidity.
 //
-// all liqidity coins must exist in poolAssetsByDenom. Returns error, if not.
+// all liquidity coins must exist in poolAssetsByDenom. Returns error, if not.
 //
 // This is a helper function that is useful for updating the pool asset amounts
 // as an intermediary step in a multi-join methods such as CalcJoinPoolShares.
@@ -174,7 +174,7 @@ func updateIntermediaryPoolAssetsLiquidity(liquidity sdk.Coins, poolAssetsByDeno
 	for _, coin := range liquidity {
 		poolAsset, ok := poolAssetsByDenom[coin.Denom]
 		if !ok {
-			return fmt.Errorf(errMsgFormatFailedInterimLiquidityUpdate, coin.Denom)
+			return fmt.Errorf(failedInterimLiquidityUpdateErrFormat, coin.Denom)
 		}
 
 		poolAsset.Token.Amount = poolAssetsByDenom[coin.Denom].Token.Amount.Add(coin.Amount)

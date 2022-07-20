@@ -25,6 +25,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -40,9 +41,11 @@ var (
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
+
+	emptyMnemonic = ""
 )
 
-// get cmd to initialize all files for tendermint testnet and application.
+// testnetCmd gets the cmd to initialize all files for tendermint testnet and application.
 func testnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
@@ -102,7 +105,7 @@ Example:
 
 const nodeDirPerm = 0o755
 
-// Initialize the testnet.
+// InitTestnet initializes the testnet.
 func InitTestnet(
 	clientCtx client.Context,
 	cmd *cobra.Command,
@@ -180,7 +183,7 @@ func InitTestnet(
 			return err
 		}
 
-		addr, secret, err := server.GenerateSaveCoinKey(kb, nodeDirName, true, algo)
+		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, emptyMnemonic, true, algo)
 		if err != nil {
 			_ = os.RemoveAll(outputDir)
 			return err
@@ -267,6 +270,7 @@ func InitTestnet(
 	return nil
 }
 
+// initGenFiles initializes genesis files for testnet.
 func initGenFiles(
 	clientCtx client.Context, mbm module.BasicManager, genesisParams GenesisParams, chainID string,
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,

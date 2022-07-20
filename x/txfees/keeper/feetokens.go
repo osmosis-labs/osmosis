@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -32,6 +32,10 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 	return sdk.NewCoin(baseDenom, spotPrice.MulInt(inputFee.Amount).RoundInt()), nil
 }
 
+// CalcFeeSpotPrice converts the provided tx fees into their equivalent value in the base denomination.
+// Spot Price Calculation: spotPrice / (1 - swapFee),
+// where spotPrice is defined as:
+// (tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)
 func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, error) {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
@@ -50,7 +54,8 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, e
 	return spotPrice, nil
 }
 
-// GetFeeToken returns the fee token record for a specific denom
+// GetFeeToken returns the fee token record for a specific denom,
+// In our case the baseDenom is uosmo.
 func (k Keeper) GetBaseDenom(ctx sdk.Context) (denom string, err error) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -99,7 +104,7 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 	return err
 }
 
-// GetFeeToken returns the fee token record for a specific denom.
+// GetFeeToken returns a unique fee token record for a specific denom.
 // If the denom doesn't exist, returns an error.
 func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, error) {
 	prefixStore := k.GetFeeTokensStore(ctx)
@@ -118,6 +123,7 @@ func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, erro
 }
 
 // setFeeToken sets a new fee token record for a specific denom.
+// PoolID is just the pool to swap rate between alt fee token and native fee token.
 // If the feeToken pool ID is 0, deletes the fee Token entry.
 func (k Keeper) setFeeToken(ctx sdk.Context, feeToken types.FeeToken) error {
 	prefixStore := k.GetFeeTokensStore(ctx)

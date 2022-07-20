@@ -6,8 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 type msgServer struct {
@@ -38,6 +38,7 @@ var (
 	// _ stableswap.MsgServer = msgServer{}
 )
 
+// CreateBalancerPool is a create balancer pool message.
 func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.MsgCreateBalancerPool) (*balancer.MsgCreateBalancerPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
@@ -61,6 +62,9 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 // 	return &stableswap.MsgStableSwapAdjustScalingFactorsResponse{}, nil
 // }
 
+// CreatePool attempts to create a pool returning the newly created pool ID or an error upon failure.
+// The pool creation fee is used to fund the community pool.
+// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
 func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMsg) (poolId uint64, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -108,7 +112,7 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 		return nil, err
 	}
 
-	err = server.keeper.JoinPoolNoSwap(ctx, sender, msg.PoolId, msg.ShareOutAmount, msg.TokenInMaxs)
+	neededLp, sharesOut, err := server.keeper.JoinPoolNoSwap(ctx, sender, msg.PoolId, msg.ShareOutAmount, msg.TokenInMaxs)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +129,10 @@ func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) 
 		),
 	})
 
-	return &types.MsgJoinPoolResponse{}, nil
+	return &types.MsgJoinPoolResponse{
+		ShareOutAmount: sharesOut,
+		TokenIn:        neededLp,
+	}, nil
 }
 
 func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) (*types.MsgExitPoolResponse, error) {
@@ -136,7 +143,7 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 		return nil, err
 	}
 
-	_, err = server.keeper.ExitPool(ctx, sender, msg.PoolId, msg.ShareInAmount, msg.TokenOutMins)
+	exitCoins, err := server.keeper.ExitPool(ctx, sender, msg.PoolId, msg.ShareInAmount, msg.TokenOutMins)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +160,9 @@ func (server msgServer) ExitPool(goCtx context.Context, msg *types.MsgExitPool) 
 		),
 	})
 
-	return &types.MsgExitPoolResponse{}, nil
+	return &types.MsgExitPoolResponse{
+		TokenOut: exitCoins,
+	}, nil
 }
 
 func (server msgServer) SwapExactAmountIn(goCtx context.Context, msg *types.MsgSwapExactAmountIn) (*types.MsgSwapExactAmountInResponse, error) {

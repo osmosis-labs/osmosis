@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			for _, del := range tc.superDelegations {
 				valAddr := valAddrs[del.valIndex]
 				delAddr := delAddrs[del.delIndex]
-				lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
+				lock := suite.setupSuperfluidDelegate(delAddr, valAddr, denoms[del.lpIndex], del.lpAmount)
 
 				// save accounts and locks for future use
 				locks = append(locks, lock)
@@ -145,16 +145,13 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			// Generate delegator addresses
-			delAddrs := CreateRandomAccounts(tc.delegatorNumber)
-
 			// setup validators
 			valAddrs := suite.SetupValidators(tc.validatorStats)
 
 			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// setup superfluid delegations
-			intermediaryAccs, _ := suite.SetupSuperfluidDelegations(delAddrs, valAddrs, tc.superDelegations, denoms)
+			_, intermediaryAccs, _ := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
 			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
 			for _, lockId := range tc.superUnbondingLockIds {

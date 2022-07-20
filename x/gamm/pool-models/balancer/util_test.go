@@ -12,9 +12,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...balancer.PoolAsset) types.PoolI {
@@ -75,14 +75,4 @@ func assertPoolStateNotModified(t *testing.T, pool *balancer.Pool, sut func()) {
 	require.Equal(t, oldPoolAssets, newPoolAssets)
 	require.Equal(t, oldLiquidity, newLiquidity)
 	require.Equal(t, oldShares, newShares)
-}
-
-// assertPanic if expectPanic is true, asserts that sut (system under test)
-// panics. If expectPanic is false, asserts that sut does not panic.
-func assertPanic(t *testing.T, expectPanic bool, sut func()) {
-	if expectPanic {
-		require.Panics(t, sut)
-	} else {
-		require.NotPanics(t, sut)
-	}
 }

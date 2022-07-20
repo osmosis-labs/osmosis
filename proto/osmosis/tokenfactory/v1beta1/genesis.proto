@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "osmosis/tokenfactory/v1beta1/authorityMetadata.proto";
 import "osmosis/tokenfactory/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types";
 
 // GenesisState defines the tokenfactory module's genesis state.
 message GenesisState {
@@ -18,6 +18,9 @@ message GenesisState {
   ];
 }
 
+// GenesisDenom defines a tokenfactory denom that is defined within genesis
+// state. The structure contains DenomAuthorityMetadata which defines the
+// denom's admin.
 message GenesisDenom {
   option (gogoproto.equal) = true;
 
