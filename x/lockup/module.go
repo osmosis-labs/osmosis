@@ -1,3 +1,14 @@
+/*
+Lockup module provides an interface for users to lock tokens
+(also known as bonding) into the module to get incentives.
+After tokens have been added to a specific pool and turned into LP shares
+through the GAMM module, users can then lock these LP shares with
+a specific duration in order to begin earing rewards.
+ - Lock and unlock token message handling
+ - Lock token infos and LP shares balance queries
+ - Pool locked denom balance queries
+*/
+
 package lockup
 
 import (

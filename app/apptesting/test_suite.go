@@ -39,6 +39,7 @@ type KeeperTestHelper struct {
 	TestAccs    []sdk.AccAddress
 }
 
+// Setup sets up basic environment for suite (App, Ctx, and test accounts)
 func (s *KeeperTestHelper) Setup() {
 	s.App = app.Setup(false)
 	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
@@ -50,6 +51,7 @@ func (s *KeeperTestHelper) Setup() {
 	s.TestAccs = CreateRandomAccounts(3)
 }
 
+// CreateTestContext creates a test context.
 func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
 	db := dbm.NewMemDB()
 	logger := log.NewNopLogger()
@@ -59,11 +61,13 @@ func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
+// FundAcc funds target address with specified amount.
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
 	s.Require().NoError(err)
 }
 
+// SetupValidator sets up a validator and returns the ValAddress.
 func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
@@ -98,10 +102,12 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	return valAddr
 }
 
+// SetupTokenFactory sets up a token module account for the TokenFactoryKeeper.
 func (s *KeeperTestHelper) SetupTokenFactory() {
 	s.App.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
 }
 
+// BeginNewBlock starts a new block.
 func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	var valAddr []byte
 
@@ -120,6 +126,7 @@ func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	s.BeginNewBlockWithProposer(executeNextEpoch, valAddr)
 }
 
+// BeginNewBlockWithProposer begins a new block with a proposer.
 func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
 	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, proposer)
 	s.Assert().True(found)
@@ -152,11 +159,13 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
 }
 
+// EndBlock ends the block.
 func (s *KeeperTestHelper) EndBlock() {
 	reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
 	s.App.EndBlocker(s.Ctx, reqEndBlock)
 }
 
+// AllocateRewardsToValidator allocates reward tokens to a distribution module then allocates rewards to the validator address.
 func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt sdk.Int) {
 	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
 	s.Require().True(found)
@@ -250,6 +259,7 @@ func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin
 	return spotPrice
 }
 
+// LockTokens funds an account, locks tokens and returns a lockID.
 func (s *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
 	msgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
 	s.FundAcc(addr, coins)
@@ -260,6 +270,7 @@ func (s *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, dura
 	return msgResponse.ID
 }
 
+// BuildTx builds a transaction.
 func (s *KeeperTestHelper) BuildTx(
 	txBuilder client.TxBuilder,
 	msgs []sdk.Msg,

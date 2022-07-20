@@ -18,6 +18,7 @@ type (
 	}
 )
 
+// NewKeeper returns a new keeper by codec and storeKey inputs.
 func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey) *Keeper {
 	return &Keeper{
 		cdc:      cdc,

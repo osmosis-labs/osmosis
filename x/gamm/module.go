@@ -1,3 +1,12 @@
+/*
+Package gamm contains a variety of generalized automated market maker
+functionality which provides the logic to create and interact with
+liquidity pools on the Osmosis DEX.
+ - Has pool creation, join pool, and exit pool logic
+ - Token swap logic
+ - GAMM pool queries
+*/
+
 package gamm
 
 import (
@@ -171,6 +180,6 @@ func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
 		simtypes.NewMsgBasedAction("MsgJoinPool", am.keeper, simulation.RandomJoinPoolMsg),
 		simtypes.NewMsgBasedAction("MsgExitPool", am.keeper, simulation.RandomExitPoolMsg),
-		simtypes.NewMsgBasedAction("CreateUniV2Msg", am.keeper, simulation.RandomCreateUniV2Msg),
+		simtypes.NewMsgBasedAction("CreateUniV2Msg", am.keeper, simulation.RandomCreateUniV2Msg).WithFrequency(simtypes.Rare),
 	}
 }

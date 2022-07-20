@@ -26,6 +26,7 @@ func NewQueryPlugin(gk *gammkeeper.Keeper, tfk *tokenfactorykeeper.Keeper) *Quer
 	}
 }
 
+// GetDenomAdmin is a query to get denom admin.
 func (qp QueryPlugin) GetDenomAdmin(ctx sdk.Context, denom string) (*bindings.DenomAdminResponse, error) {
 	metadata, err := qp.tokenFactoryKeeper.GetAuthorityMetadata(ctx, denom)
 	if err != nil {
@@ -35,6 +36,7 @@ func (qp QueryPlugin) GetDenomAdmin(ctx sdk.Context, denom string) (*bindings.De
 	return &bindings.DenomAdminResponse{Admin: metadata.Admin}, nil
 }
 
+// GetPoolState is a query to get pool liquidity and amount of each denoms' pool shares.
 func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolID uint64) (*bindings.PoolAssets, error) {
 	poolData, err := qp.gammKeeper.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
@@ -50,6 +52,7 @@ func (qp QueryPlugin) GetPoolState(ctx sdk.Context, poolID uint64) (*bindings.Po
 	}, nil
 }
 
+// GetSpotPrice is a query to get spot price of denoms.
 func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *bindings.SpotPrice) (*sdk.Dec, error) {
 	if spotPrice == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm spot price null"}
@@ -77,6 +80,7 @@ func (qp QueryPlugin) GetSpotPrice(ctx sdk.Context, spotPrice *bindings.SpotPric
 	return &price, nil
 }
 
+// EstimateSwap validates each denom (in / out) and performs a swap.
 func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *bindings.EstimateSwap) (*bindings.SwapAmount, error) {
 	if estimateSwap == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate swap null"}

@@ -38,6 +38,7 @@ func (gs GenesisState) Validate() error {
 	return nil
 }
 
+// Validate also validates epoch info.
 func (epoch EpochInfo) Validate() error {
 	if epoch.Identifier == "" {
 		return errors.New("epoch identifier should NOT be empty")
