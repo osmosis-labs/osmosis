@@ -210,7 +210,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
-	selectAction := getSelectActionFn(actions)
+	selectAction := simtypes.GetSelectActionFn(actions)
 
 	return func(
 		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,
