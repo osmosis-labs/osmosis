@@ -102,7 +102,7 @@ func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	}
 	err = msg.ValidateBasic()
 	if err != nil {
-		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("msg did not pass validation: %v", err)), nil, nil
+		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("msg did not pass ValidateBasic: %v", err)), nil, nil
 	}
 	tx, err := sim.txbuilder(ctx, msg, m.name)
 	if err != nil {
