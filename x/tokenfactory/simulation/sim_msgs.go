@@ -54,8 +54,6 @@ func accountCreatedTokenFactoryDenom(k keeper.Keeper, ctx sdk.Context) simtypes.
 	}
 }
 
-// TODO: We are going to need to index the owner of an account as well, rather than creator
-// to simulate admin changes
 func accountCanPayTokenCreationFee(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
 		ctx.Logger().Error("TEST" + sim.BankKeeper().GetBalance(ctx, acc.Address, "stake").String())
