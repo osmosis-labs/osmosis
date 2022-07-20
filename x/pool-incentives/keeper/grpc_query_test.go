@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestLockableDurations() {
 	suite.Equal(time.Hour*7, res.LockableDurations[2])
 }
 
-func (suite *KeeperTestSuite) TestIncentivizedPools2() {
+func (suite *KeeperTestSuite) TestIncentivizedPools() {
 	suite.SetupTest()
 
 	keeper := suite.App.PoolIncentivesKeeper
