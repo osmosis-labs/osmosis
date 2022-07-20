@@ -1,7 +1,6 @@
 package twap
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -16,9 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
-	twaptypes "github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
 
 var (
@@ -27,10 +24,9 @@ var (
 )
 
 type AppModuleBasic struct {
-	cdc codec.Codec
 }
 
-func (AppModuleBasic) Name() string { return twaptypes.ModuleName }
+func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
@@ -55,7 +51,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+	// types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -75,23 +71,16 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	ak types.AccountKeeper
-	bk types.BankKeeper
-	gk keeper.Keeper
-	tk twapkeeper
+	k Keeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
-) AppModule {
+func NewAppModule(twapKeeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		gk:             keeper,
-		ak:             accountKeeper,
-		bk:             bankKeeper,
+		AppModuleBasic: AppModuleBasic{},
+		k:              twapKeeper,
 	}
 }
 

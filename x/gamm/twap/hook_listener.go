@@ -11,7 +11,7 @@ var _ types.GammHooks = &gammhook{}
 var _ epochtypes.EpochHooks = &epochhook{}
 
 type epochhook struct {
-	k twapkeeper
+	k Keeper
 }
 
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
@@ -24,7 +24,11 @@ func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, ep
 func (hook *epochhook) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {}
 
 type gammhook struct {
-	k twapkeeper
+	k Keeper
+}
+
+func (k Keeper) GammHooks() types.GammHooks {
+	return &gammhook{k}
 }
 
 // AfterPoolCreated is called after CreatePool

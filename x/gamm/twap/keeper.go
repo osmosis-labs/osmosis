@@ -3,12 +3,20 @@ package twap
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
 
-type twapkeeper struct {
+type Keeper struct {
 	storeKey     sdk.StoreKey
-	transientKey sdk.TransientStoreKey
+	transientKey *sdk.TransientStoreKey
 
-	gammkeeper types.AmmInterface
+	paramSpace paramtypes.Subspace
+
+	ammkeeper types.AmmInterface
+}
+
+func NewKeeper(storeKey sdk.StoreKey, transientKey *sdk.TransientStoreKey, paramSpace paramtypes.Subspace, ammKeeper types.AmmInterface) *Keeper {
+	return &Keeper{storeKey: storeKey, transientKey: transientKey, paramSpace: paramSpace, ammkeeper: ammKeeper}
 }

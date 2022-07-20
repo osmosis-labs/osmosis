@@ -60,3 +60,8 @@ func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
 	}
 	return pairGT, pairLT
 }
+
+// TODO
+func (g *GenesisState) Validate() error {
+	return nil
+}

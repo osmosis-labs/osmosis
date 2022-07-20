@@ -11,8 +11,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
 
-func (k twapkeeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
-	store := ctx.TransientStore(&k.transientKey)
+func (k Keeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
+	store := ctx.TransientStore(k.transientKey)
 	poolIdBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(poolIdBz, poolId)
 	// just has to not be empty, for store to work / not register as a delete.
@@ -20,14 +20,14 @@ func (k twapkeeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
 	store.Set(poolIdBz, sentinelExistsValue)
 }
 
-func (k twapkeeper) hasPoolChangedThisBlock(ctx sdk.Context, poolId uint64) bool {
-	store := ctx.TransientStore(&k.transientKey)
+func (k Keeper) hasPoolChangedThisBlock(ctx sdk.Context, poolId uint64) bool {
+	store := ctx.TransientStore(k.transientKey)
 	poolIdBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(poolIdBz, poolId)
 	return store.Has(poolIdBz)
 }
 
-func (k twapkeeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
+func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
 	key2 := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Time, twap.Asset0Denom, twap.Asset1Denom)
@@ -35,7 +35,7 @@ func (k twapkeeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) 
 	osmoutils.MustSet(store, key2, &twap)
 }
 
-func (k twapkeeper) deleteHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
+func (k Keeper) deleteHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
 	key2 := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Time, twap.Asset0Denom, twap.Asset1Denom)
@@ -43,19 +43,19 @@ func (k twapkeeper) deleteHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord)
 	store.Delete(key2)
 }
 
-func (k twapkeeper) getMostRecentTWAP(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+func (k Keeper) getMostRecentTWAP(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(poolId, asset0Denom, asset1Denom)
 	bz := store.Get(key)
 	return types.ParseTwapFromBz(bz)
 }
 
-func (k twapkeeper) getAllMostRecentTWAPsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
+func (k Keeper) getAllMostRecentTWAPsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	return types.GetAllMostRecentTwapsForPool(store, poolId)
 }
 
-func (k twapkeeper) storeMostRecentTWAP(ctx sdk.Context, twap types.TwapRecord) {
+func (k Keeper) storeMostRecentTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
 	osmoutils.MustSet(store, key, &twap)
@@ -63,7 +63,7 @@ func (k twapkeeper) storeMostRecentTWAP(ctx sdk.Context, twap types.TwapRecord) 
 
 // returns an error if theres no historical record at or before time.
 // (Asking for a time too far back)
-func (k twapkeeper) getTwapBeforeTime(ctx sdk.Context, poolId uint64, time time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+func (k Keeper) getTwapBeforeTime(ctx sdk.Context, poolId uint64, time time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	startKey := types.FormatHistoricalPoolIndexTimePrefix(poolId, time)
 	// TODO: Optimize to cut down search on asset0Denom, asset1denom.

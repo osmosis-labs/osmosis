@@ -14,7 +14,7 @@ import (
 // this function will interpolate between startTime.
 // if endTime = now, we do {X}
 // startTime must be in time range {X}, recommended parameterization for mainnet is {Y}
-func (k twapkeeper) GetArithmeticTwap(
+func (k Keeper) GetArithmeticTwap(
 	ctx sdk.Context,
 	poolId uint64,
 	quoteAssetDenom string,
@@ -24,7 +24,7 @@ func (k twapkeeper) GetArithmeticTwap(
 	return sdk.Dec{}, nil
 }
 
-func (k twapkeeper) GetArithmeticTwapToNow(
+func (k Keeper) GetArithmeticTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,
 	quoteAssetDenom string,
@@ -34,7 +34,7 @@ func (k twapkeeper) GetArithmeticTwapToNow(
 }
 
 // GetLatestAccumulatorRecord returns a TwapRecord struct that can be stored
-func (k twapkeeper) GetLatestAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+func (k Keeper) GetLatestAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	// correct ordering of args for db
 	if asset1Denom > asset0Denom {
 		asset0Denom, asset1Denom = asset1Denom, asset0Denom
