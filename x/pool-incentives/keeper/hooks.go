@@ -39,6 +39,9 @@ func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 }
 
+func (h Hooks) BeforeSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64)     {}
+func (h Hooks) BeforeJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {}
+
 // Distribute coins after minter module allocate assets to pool-incentives module.
 func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) {
 	// @Sunny, @Tony, @Dev, what comments should we keep after modifying own BeginBlocker to hooks?

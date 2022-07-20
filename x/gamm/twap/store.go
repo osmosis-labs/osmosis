@@ -18,6 +18,13 @@ func (k twapkeeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
 	store.Set(poolIdBz, sentinelExistsValue)
 }
 
+func (k twapkeeper) hasPoolChangedThisBlock(ctx sdk.Context, poolId uint64) bool {
+	store := ctx.TransientStore(&k.transientKey)
+	poolIdBz := make([]byte, 8)
+	binary.LittleEndian.PutUint64(poolIdBz, poolId)
+	return store.Has(poolIdBz)
+}
+
 func (k twapkeeper) getChangedPools(ctx sdk.Context) []uint64 {
 	store := ctx.TransientStore(&k.transientKey)
 	iter := store.Iterator(nil, nil)

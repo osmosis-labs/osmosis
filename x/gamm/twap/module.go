@@ -127,10 +127,8 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// EndBlock returns the end blocker for the gamm module. It returns no validator
-// updates.
+// EndBlock performs a no-op.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	am.tk.endBlockLogic(ctx)
 	return []abci.ValidatorUpdate{}
 }
 

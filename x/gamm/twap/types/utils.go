@@ -1,6 +1,25 @@
 package types
 
-import "sort"
+import (
+	"sort"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+func NewTwapRecord(ctx sdk.Context, poolId uint64, denom0 string, denom1 string) TwapRecord {
+	if !(denom0 > denom1) {
+		panic("precondition denom0 > denom1 not satisfied")
+	}
+	return TwapRecord{
+		PoolId:                      poolId,
+		Asset0Denom:                 denom0,
+		Asset1Denom:                 denom1,
+		Height:                      ctx.BlockHeight(),
+		Time:                        ctx.BlockTime(),
+		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
+		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
+	}
+}
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
 // (X, Y), X >= Y.
