@@ -4,11 +4,8 @@ package simulation
 
 import (
 	"encoding/json"
-	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-
-	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 // entry kinds for use within OperationEntry
@@ -89,34 +86,5 @@ func (simState *simState) queueOperations(futureOps []simulation.FutureOperation
 
 			continue
 		}
-	}
-}
-
-func totalWeight(actions []simtypes.Action) int {
-	totalWeight := 0
-	for _, action := range actions {
-		totalWeight += int(action.Weight())
-	}
-
-	return totalWeight
-}
-
-type selectActionFn func(r *rand.Rand) simtypes.Action
-
-func getSelectActionFn(actions []simtypes.Action) selectActionFn {
-	totalOpWeight := totalWeight(actions)
-
-	return func(r *rand.Rand) simtypes.Action {
-		x := r.Intn(totalOpWeight)
-		// TODO: Change to an accum list approach
-		for i := 0; i < len(actions); i++ {
-			if x <= int(actions[i].Weight()) {
-				return actions[i]
-			}
-
-			x -= int(actions[i].Weight())
-		}
-		// shouldn't happen
-		return actions[0]
 	}
 }
