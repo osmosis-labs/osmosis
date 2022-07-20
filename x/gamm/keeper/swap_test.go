@@ -305,16 +305,14 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 
 	for _, tc := range testCases {
 		// Check swaps
+		_, swapInErr := k.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, testCoin, "bar", sdk.ZeroInt())
+		_, swapOutErr := k.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
 		if tc.expectPass {
-			_, err := k.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, testCoin, "bar", sdk.ZeroInt())
-			suite.Require().NoError(err)
-			_, err = k.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
-			suite.Require().NoError(err)
+			suite.Require().NoError(swapInErr)
+			suite.Require().NoError(swapOutErr)
 		} else {
-			_, err := k.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, testCoin, "bar", sdk.ZeroInt())
-			suite.Require().Error(err)
-			_, err = k.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
-			suite.Require().Error(err)
+			suite.Require().Error(swapInErr)
+			suite.Require().Error(swapOutErr)
 		}
 	}
 }
