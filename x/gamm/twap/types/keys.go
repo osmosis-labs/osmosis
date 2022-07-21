@@ -67,17 +67,17 @@ func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
 	return t
 }
 
-func ParseTimeFromHistoricalPoolIndexKey(key []byte) time.Time {
+func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
 	if len(s) != 5 || s[0] != historicalTWAPPoolIndexNoSeparator {
-		panic("Called ParseTimeFromHistoricalPoolIndexKey on incorrectly formatted key")
+		return time.Time{}, fmt.Errorf("Called ParseTimeFromHistoricalPoolIndexKey on incorrectly formatted key: %v", s)
 	}
 	t, err := osmoutils.ParseTimeString(s[2])
 	if err != nil {
-		panic("incorrectly formatted time string in key")
+		return time.Time{}, fmt.Errorf("incorrectly formatted time string in key %s : %v", keyS, err)
 	}
-	return t
+	return t, nil
 }
 
 func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecord, error) {

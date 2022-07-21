@@ -14,6 +14,7 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	for i := 0; i < len(denomPairs0); i++ {
 		record := types.NewTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
 		k.storeMostRecentTWAP(ctx, record)
+		k.storeHistoricalTWAP(ctx, record)
 	}
 	return err
 }
@@ -61,6 +62,10 @@ func (k Keeper) updateTWAPs(ctx sdk.Context, poolId uint64) error {
 	return nil
 }
 
+func (k Keeper) endBlock(ctx sdk.Context) {
+	// TODO: Update all LastSpotPrice's
+}
+
 func (k Keeper) pruneOldTwaps(ctx sdk.Context) {
 	// TODO: Implement this code
 	k.deleteHistoricalTWAP(ctx, types.TwapRecord{})
@@ -86,6 +91,8 @@ func interpolateRecord(record types.TwapRecord, interpolateTime time.Time) types
 	interpolatedRecord := record
 	timeDelta := interpolateTime.Sub(record.Time)
 	interpolatedRecord.Time = interpolateTime
+
+	// TODO: Were currently using the wrong LastSpotPrice, we need to get it from EndBlock for changed pools.
 
 	interpolatedRecord.P0ArithmeticTwapAccumulator = interpolatedRecord.P0ArithmeticTwapAccumulator.Add(
 		types.SpotPriceTimesDuration(record.P0LastSpotPrice, timeDelta))

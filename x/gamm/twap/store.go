@@ -3,6 +3,7 @@ package twap
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,6 +34,8 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	key2 := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Time, twap.Asset0Denom, twap.Asset1Denom)
 	osmoutils.MustSet(store, key1, &twap)
 	osmoutils.MustSet(store, key2, &twap)
+	fmt.Println(string(key2))
+	fmt.Println(types.ParseTwapFromBz(store.Get(key2)))
 }
 
 func (k Keeper) deleteHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
@@ -59,7 +62,6 @@ func (k Keeper) storeMostRecentTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
 	osmoutils.MustSet(store, key, &twap)
-	k.storeHistoricalTWAP(ctx, twap)
 }
 
 // returns an error if theres no historical record at or before time.
@@ -67,11 +69,17 @@ func (k Keeper) storeMostRecentTWAP(ctx sdk.Context, twap types.TwapRecord) {
 func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, time time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	startKey := types.FormatHistoricalPoolIndexTimePrefix(poolId, time)
+
+	fmt.Println(string(startKey))
 	// TODO: Optimize to cut down search on asset0Denom, asset1denom.
 	// Not really important, since primarily envisioning 2 asset pools
 	stopFn := func(key []byte) bool {
 		// TODO: Make remember first seen time. Currently only works for exact start
-		return types.ParseTimeFromHistoricalPoolIndexKey(key).After(time)
+		t, err := types.ParseTimeFromHistoricalPoolIndexKey(key)
+		if err != nil {
+			return true
+		}
+		return t.After(time)
 	}
 
 	twaps, err := osmoutils.GetValuesUntilDerivedStop(store, startKey, stopFn, types.ParseTwapFromBz)
