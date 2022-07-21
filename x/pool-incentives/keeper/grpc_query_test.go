@@ -24,11 +24,11 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 	lockableDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)
-	suite.Equal(3, len(lockableDurations))
+	suite.Require().Equal(3, len(lockableDurations))
 
 	poolId := suite.PrepareBalancerPool()
 	pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	for _, tc := range []struct {
 		desc    string
@@ -62,19 +62,19 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
-				suite.NoError(err)
-				suite.Equal(3, len(res.GaugeIdsWithDuration))
+				suite.Require().NoError(err)
+				suite.Require().Equal(3, len(res.GaugeIdsWithDuration))
 
 				poolLpDenom := gammtypes.GetPoolShareDenom(pool.GetId())
 				for i := 0; i < len(res.GaugeIdsWithDuration); i++ {
-					suite.Equal(lockableDurations[i], res.GaugeIdsWithDuration[i].Duration)
+					suite.Require().Equal(lockableDurations[i], res.GaugeIdsWithDuration[i].Duration)
 
 					gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, res.GaugeIdsWithDuration[i].GaugeId)
-					suite.NoError(err)
-					suite.Equal(0, len(gauge.Coins))
-					suite.Equal(true, gauge.IsPerpetual)
-					suite.Equal(poolLpDenom, gauge.DistributeTo.Denom)
-					suite.Equal(lockableDurations[i], gauge.DistributeTo.Duration)
+					suite.Require().NoError(err)
+					suite.Require().Equal(0, len(gauge.Coins))
+					suite.Require().Equal(true, gauge.IsPerpetual)
+					suite.Require().Equal(poolLpDenom, gauge.DistributeTo.Denom)
+					suite.Require().Equal(lockableDurations[i], gauge.DistributeTo.Duration)
 				}
 			}
 		})
@@ -116,12 +116,12 @@ func (suite *KeeperTestSuite) TestDistrInfo() {
 
 				// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 				lockableDurations := keeper.GetLockableDurations(suite.Ctx)
-				suite.Equal(3, len(lockableDurations))
+				suite.Require().Equal(3, len(lockableDurations))
 
 				var distRecord []types.DistrRecord
 				for i := 0; i < len(lockableDurations); i++ {
 					gaugeId, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[i])
-					suite.NoError(err)
+					suite.Require().NoError(err)
 					distRecord = append(distRecord, types.DistrRecord{
 						GaugeId: gaugeId,
 						Weight:  tc.weights[i],
@@ -130,14 +130,14 @@ func (suite *KeeperTestSuite) TestDistrInfo() {
 
 				// Create 3 records
 				err := keeper.UpdateDistrRecords(suite.Ctx, distRecord...)
-				suite.NoError(err)
+				suite.Require().NoError(err)
 			}
 
 			res, err := queryClient.DistrInfo(context.Background(), &types.QueryDistrInfoRequest{})
-			suite.NoError(err)
+			suite.Require().NoError(err)
 
-			suite.Equal(tc.expectedTotalWeight, res.DistrInfo.TotalWeight)
-			suite.Equal(tc.expectedRecordLength, len(res.DistrInfo.Records))
+			suite.Require().Equal(tc.expectedTotalWeight, res.DistrInfo.TotalWeight)
+			suite.Require().Equal(tc.expectedRecordLength, len(res.DistrInfo.Records))
 		})
 	}
 }
@@ -148,10 +148,10 @@ func (suite *KeeperTestSuite) TestParams() {
 	queryClient := suite.queryClient
 
 	res, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	// Minted denom set as "stake" from the default genesis state
-	suite.Equal("stake", res.Params.MintedDenom)
+	suite.Require().Equal("stake", res.Params.MintedDenom)
 }
 
 func (suite *KeeperTestSuite) TestLockableDurations() {
@@ -160,13 +160,13 @@ func (suite *KeeperTestSuite) TestLockableDurations() {
 	queryClient := suite.queryClient
 
 	res, err := queryClient.LockableDurations(context.Background(), &types.QueryLockableDurationsRequest{})
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
-	suite.Equal(3, len(res.LockableDurations))
-	suite.Equal(time.Hour, res.LockableDurations[0])
-	suite.Equal(time.Hour*3, res.LockableDurations[1])
-	suite.Equal(time.Hour*7, res.LockableDurations[2])
+	suite.Require().Equal(3, len(res.LockableDurations))
+	suite.Require().Equal(time.Hour, res.LockableDurations[0])
+	suite.Require().Equal(time.Hour*3, res.LockableDurations[1])
+	suite.Require().Equal(time.Hour*7, res.LockableDurations[2])
 }
 
 func (suite *KeeperTestSuite) TestIncentivizedPools() {
@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestIncentivizedPools() {
 			Denom:         "stake",
 			Duration:      time.Hour,
 		}, time.Now(), 1)
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	gaugeNonPerpetualId, err := suite.App.IncentivesKeeper.CreateGauge(
 		suite.Ctx, notPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
@@ -192,7 +192,7 @@ func (suite *KeeperTestSuite) TestIncentivizedPools() {
 			Duration:      time.Hour,
 		}, time.Now(), 1)
 
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	for _, tc := range []struct {
 		desc                 string
@@ -247,12 +247,12 @@ func (suite *KeeperTestSuite) TestIncentivizedPools() {
 				}
 				// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 				lockableDurations = keeper.GetLockableDurations(suite.Ctx)
-				suite.Equal(3, len(lockableDurations))
+				suite.Require().Equal(3, len(lockableDurations))
 
 				var distRecords []types.DistrRecord
 				for i := 0; i < len(lockableDurations); i++ {
 					gaugeId, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[i])
-					suite.NoError(err)
+					suite.Require().NoError(err)
 
 					distRecords = append(distRecords, types.DistrRecord{
 						GaugeId: gaugeId,
@@ -276,15 +276,15 @@ func (suite *KeeperTestSuite) TestIncentivizedPools() {
 			}
 			res, err := queryClient.IncentivizedPools(context.Background(), &types.QueryIncentivizedPoolsRequest{})
 			if !tc.expectedErr {
-				suite.NoError(err)
-				suite.Equal(tc.expectedRecordLength, len(res.IncentivizedPools))
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectedRecordLength, len(res.IncentivizedPools))
 
 				for i := 0; i < 0; i++ {
 					if tc.poolCreated {
-						suite.Equal(poolId, res.IncentivizedPools[i].PoolId)
+						suite.Require().Equal(poolId, res.IncentivizedPools[i].PoolId)
 					}
-					suite.Equal(tc.distRecords[i].GaugeId, res.IncentivizedPools[i].GaugeId)
-					suite.Equal(lockableDurations[i], res.IncentivizedPools[i].LockableDuration)
+					suite.Require().Equal(tc.distRecords[i].GaugeId, res.IncentivizedPools[i].GaugeId)
+					suite.Require().Equal(lockableDurations[i], res.IncentivizedPools[i].LockableDuration)
 				}
 			}
 		})
@@ -300,16 +300,16 @@ func (suite *KeeperTestSuite) TestGaugeIncentivePercentage() {
 	poolId := suite.PrepareBalancerPool()
 	// LockableDurations should be 1, 3, 7 hours from the default genesis state.
 	lockableDurations := keeper.GetLockableDurations(suite.Ctx)
-	suite.Equal(3, len(lockableDurations))
+	suite.Require().Equal(3, len(lockableDurations))
 
 	gauge1Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[0])
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	gauge2Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[1])
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	gauge3Id, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[2])
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	// Create 3 records
 	err = keeper.UpdateDistrRecords(suite.Ctx, types.DistrRecord{
@@ -322,14 +322,14 @@ func (suite *KeeperTestSuite) TestGaugeIncentivePercentage() {
 		GaugeId: gauge3Id,
 		Weight:  sdk.NewInt(300),
 	})
-	suite.NoError(err)
+	suite.Require().NoError(err)
 
 	res, err := queryClient.GaugeIds(context.Background(), &types.QueryGaugeIdsRequest{
 		PoolId: poolId,
 	})
 
-	suite.NoError(err)
-	suite.Equal("16.666666666666666700", res.GaugeIdsWithDuration[0].GaugeIncentivePercentage)
-	suite.Equal("33.333333333333333300", res.GaugeIdsWithDuration[1].GaugeIncentivePercentage)
-	suite.Equal("50.000000000000000000", res.GaugeIdsWithDuration[2].GaugeIncentivePercentage)
+	suite.Require().NoError(err)
+	suite.Require().Equal("16.666666666666666700", res.GaugeIdsWithDuration[0].GaugeIncentivePercentage)
+	suite.Require().Equal("33.333333333333333300", res.GaugeIdsWithDuration[1].GaugeIncentivePercentage)
+	suite.Require().Equal("50.000000000000000000", res.GaugeIdsWithDuration[2].GaugeIncentivePercentage)
 }
