@@ -44,7 +44,6 @@ func MustGetSpotPrice(k AmmInterface, ctx sdk.Context, poolId uint64, baseAssetD
 // The pair (X,Y) should only appear once in the list
 //
 // NOTE: Sorts the input denoms slice.
-// (Should not be a problem, as this should come from coins.Denoms(), which returns a sorted order)
 func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
 	// get denoms in descending order
 	sort.Strings(denoms)
