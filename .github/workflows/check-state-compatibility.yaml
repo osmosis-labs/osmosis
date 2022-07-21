@@ -98,7 +98,7 @@ jobs:
           if [ ! -f "$HOME/snapshots/$SNAPSHOT_FILENAME" ]; then
               wget -q -O $HOME/snapshots/$SNAPSHOT_FILENAME $SNAPSHOT_URL
           fi
-          lz4 -d $HOME/snapshots/$SNAPSHOT_FILENAME | tar -C $HOME/.osmosisd/ -xvf -
+          lz4 -c -d $HOME/snapshots/$SNAPSHOT_FILENAME | tar -C $HOME/.osmosisd/ -xvf -
 
           # Remove old snapshots
           find $HOME/snapshots -type f -not -name '$SNAPSHOT_FILENAME' -delete
