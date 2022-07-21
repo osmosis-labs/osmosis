@@ -39,9 +39,17 @@ func (sim *SimCtx) RandomSimAccountWithConstraint(f SimAccountConstraint) (simul
 	return sim.randomSimAccount(filteredAddrs), true
 }
 
-func (sim *SimCtx) RandomSimAccountWithMinCoins(ctx sdk.Context, denom string, amount int64) (simulation.Account, error) {
+func (sim *SimCtx) RandomSimAccountWithMinCoins(ctx sdk.Context, coins sdk.Coins) (simulation.Account, error) {
 	accHasMinCoins := func(acc simulation.Account) bool {
-		return sim.BankKeeper().GetBalance(ctx, acc.Address, denom).IsGTE(sdk.NewCoin(denom, sdk.NewInt(amount)))
+		spendableCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
+		for _, minCoin := range coins {
+			for _, spendableCoin := range spendableCoins {
+				if minCoin.Denom == spendableCoin.Denom {
+					return spendableCoin.IsGTE(sdk.NewCoin(minCoin.Denom, minCoin.Amount))
+				}
+			}
+		}
+		return false
 	}
 	acc, found := sim.RandomSimAccountWithConstraint(accHasMinCoins)
 	if !found {
@@ -93,6 +101,13 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 		for _, denom := range denoms {
 			if sim.BankKeeper().GetBalance(ctx, acc.Address, denom).Amount.IsZero() {
 				return false
+			}
+			// only return addr if it has spendable coins of requested denom
+			coins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
+			for _, coin := range coins {
+				if denom == coin.Denom {
+					return true
+				}
 			}
 		}
 		return true
@@ -189,9 +204,13 @@ func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) sdk
 func (sim *SimCtx) RandCoinSubset(ctx sdk.Context, addr sdk.AccAddress, denoms []string) sdk.Coins {
 	subsetCoins := sdk.Coins{}
 	for _, denom := range denoms {
-		bal := sim.BankKeeper().GetBalance(ctx, addr, denom)
-		amt := sim.RandPositiveInt(bal.Amount)
-		subsetCoins = subsetCoins.Add(sdk.NewCoin(bal.Denom, amt))
+		coins := sim.BankKeeper().SpendableCoins(ctx, addr)
+		for _, coin := range coins {
+			if denom == coin.Denom {
+				amt := sim.RandPositiveInt(coin.Amount)
+				subsetCoins = subsetCoins.Add(sdk.NewCoin(coin.Denom, amt))
+			}
+		}
 	}
 	return subsetCoins
 }
