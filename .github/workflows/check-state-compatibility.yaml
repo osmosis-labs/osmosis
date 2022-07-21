@@ -96,7 +96,7 @@ jobs:
           lz4 -d $HOME/snapshots/$SNAPSHOT_FILENAME | tar -C $HOME/.osmosisd/ -xvf -
 
           # Remove old snapshots
-          find /snapshots -type f -not -name '$SNAPSHOT_FILENAME' -delete
+          find $HOME/snapshots -type f -not -name '$SNAPSHOT_FILENAME' -delete
       -
         name: 🧪 Configure Osmosis Node
         run:  |
