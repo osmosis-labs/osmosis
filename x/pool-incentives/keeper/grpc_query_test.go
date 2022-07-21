@@ -266,8 +266,9 @@ func (suite *KeeperTestSuite) TestIncentivizedPools() {
 				sort.Slice(distRecords[:], func(i, j int) bool {
 					return distRecords[i].GaugeId < distRecords[j].GaugeId
 				})
-				// Create records
-				err = keeper.UpdateDistrRecords(suite.Ctx, distRecords...)
+				
+				// update records and ensure that non-perpetuals pot cannot get rewards.
+				err = keeper.UpdateDistrRecords(suite.Ctx, tc.distRecords...)
 				if tc.expectedErr {
 					suite.Require().Error(err)
 				} else {
