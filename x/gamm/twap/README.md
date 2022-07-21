@@ -69,7 +69,7 @@ For users who need TWAPs outside the 48 hours stored in the state machine, you c
 
 ## Store layout
 
-We maintain twap accumulation records for every AMM pool on Osmosis.
+We maintain twap accumulation records for every AMM pool on Osmosis. Because Osmosis supports multi-asset pools, a complicating factor is that 
 
 ## Testing Methodology
 
