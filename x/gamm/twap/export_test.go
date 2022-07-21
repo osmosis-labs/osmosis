@@ -19,3 +19,11 @@ func (k Keeper) GetAllMostRecentTWAPsForPool(ctx sdk.Context, poolId uint64) ([]
 func (k Keeper) GetRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, time time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	return k.getRecordAtOrBeforeTime(ctx, poolId, time, asset0Denom, asset1Denom)
 }
+
+func (k Keeper) TrackChangedPool(ctx sdk.Context, poolId uint64) {
+	k.trackChangedPool(ctx, poolId)
+}
+
+func (k Keeper) HasPoolChangedThisBlock(ctx sdk.Context, poolId uint64) bool {
+	return k.hasPoolChangedThisBlock(ctx, poolId)
+}

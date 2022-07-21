@@ -103,6 +103,6 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 			return twap, nil
 		}
 	}
-	return types.TwapRecord{}, errors.New("Something went wrong - TWAP not found, but there are twaps available for this time." +
-		" Were provided asset0denom and asset1denom correct?")
+	return types.TwapRecord{}, errors.New("something went wrong - TWAP not found, but there are twaps available for this time." +
+		" Were provided asset0denom and asset1denom correct, and in order (asset0 > asset1)?")
 }

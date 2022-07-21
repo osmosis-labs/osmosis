@@ -18,5 +18,6 @@ We maintain TWAP entries for every gamm pool.
 - module.go - SDK AppModule interface implementation.
 - store.go - Managing logic for getting and setting things to underlying stores
 
-## Basic architecture notes
+## Store layout
 
+Every pool has a TWAP stored in state for every asset pair.
