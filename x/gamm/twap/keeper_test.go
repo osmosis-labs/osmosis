@@ -36,3 +36,15 @@ func newEmptyPriceRecord(poolId uint64, t time.Time, asset0 string, asset1 strin
 		Asset1Denom: asset1,
 	}
 }
+
+func recordWithUpdatedAccum(record types.TwapRecord, accum0 sdk.Dec, accum1 sdk.Dec) types.TwapRecord {
+	record.P0ArithmeticTwapAccumulator = accum0
+	record.P1ArithmeticTwapAccumulator = accum1
+	return record
+}
+
+func recordWithUpdatedSpotPrice(record types.TwapRecord, sp0 sdk.Dec, sp1 sdk.Dec) types.TwapRecord {
+	record.P0LastSpotPrice = sp0
+	record.P1LastSpotPrice = sp1
+	return record
+}
