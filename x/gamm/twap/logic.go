@@ -13,32 +13,19 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 	for i := 0; i < len(denomPairs0); i++ {
 		record := types.NewTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
-		k.storeMostRecentTWAP(ctx, record)
-		k.storeHistoricalTWAP(ctx, record)
+		k.storeNewRecord(ctx, record)
 	}
 	return err
 }
 
-func (k Keeper) updateTwapIfNotRedundant(ctx sdk.Context, poolId uint64) error {
-	if k.hasPoolChangedThisBlock(ctx, poolId) {
-		return nil
-	}
-	err := k.updateTWAPs(ctx, poolId)
-	if err != nil {
-		return err
-	}
-	k.trackChangedPool(ctx, poolId)
-	return nil
-}
-
 func (k Keeper) updateTWAPs(ctx sdk.Context, poolId uint64) error {
 	// Will only err if pool doesn't have most recent entry set
-	twaps, err := k.getAllMostRecentTWAPsForPool(ctx, poolId)
+	records, err := k.getAllMostRecentRecordsForPool(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
-	for _, record := range twaps {
+	for _, record := range records {
 		timeDelta := ctx.BlockTime().Sub(record.Time)
 
 		// no update if were in the same block.
@@ -51,19 +38,32 @@ func (k Keeper) updateTWAPs(ctx sdk.Context, poolId uint64) error {
 		record.Time = ctx.BlockTime()
 
 		// TODO: Ensure order is correct
-		sp0 := types.MustGetSpotPrice(k.ammkeeper, ctx, poolId, record.Asset0Denom, record.Asset1Denom)
-		sp1 := types.MustGetSpotPrice(k.ammkeeper, ctx, poolId, record.Asset1Denom, record.Asset0Denom)
+		newSp0 := types.MustGetSpotPrice(k.ammkeeper, ctx, poolId, record.Asset0Denom, record.Asset1Denom)
+		newSp1 := types.MustGetSpotPrice(k.ammkeeper, ctx, poolId, record.Asset1Denom, record.Asset0Denom)
 
 		// TODO: Think about overflow
-		record.P0ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(sp0, timeDelta))
-		record.P1ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(sp1, timeDelta))
-		k.storeMostRecentTWAP(ctx, record)
+		// Update accumulators based on last block / update's spot price
+		record.P0ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(record.P0LastSpotPrice, timeDelta))
+		record.P1ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(record.P1LastSpotPrice, timeDelta))
+
+		// set last spot price to be last price of this block. This is what will get used in interpolation.
+		record.P0LastSpotPrice = newSp0
+		record.P1LastSpotPrice = newSp1
+
+		k.storeNewRecord(ctx, record)
 	}
 	return nil
 }
 
 func (k Keeper) endBlock(ctx sdk.Context) {
-	// TODO: Update all LastSpotPrice's
+	changedPoolIds := k.getChangedPools(ctx)
+	for _, id := range changedPoolIds {
+		err := k.updateTWAPs(ctx, id)
+		if err != nil {
+			panic(err)
+		}
+	}
+	// 'altered pool ids' gets automatically cleared by being a transient store
 }
 
 func (k Keeper) pruneOldTwaps(ctx sdk.Context) {
@@ -96,6 +96,8 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA strin
 	return record, nil
 }
 
+// interpolate record updates the record's accumulator values and time to the interpolate time.
+//
 // pre-condition: interpolateTime >= record.Time
 func interpolateRecord(record types.TwapRecord, interpolateTime time.Time) types.TwapRecord {
 	if record.Time.Equal(interpolateTime) {
@@ -105,7 +107,9 @@ func interpolateRecord(record types.TwapRecord, interpolateTime time.Time) types
 	timeDelta := interpolateTime.Sub(record.Time)
 	interpolatedRecord.Time = interpolateTime
 
-	// TODO: Were currently using the wrong LastSpotPrice, we need to get it from EndBlock for changed pools.
+	// record.LastSpotPrice is the last spot price from the block the record was created in,
+	// thus it is treated as the effective spot price at the interpolation time.
+	// (As there was no change until the next block began)
 
 	interpolatedRecord.P0ArithmeticTwapAccumulator = interpolatedRecord.P0ArithmeticTwapAccumulator.Add(
 		types.SpotPriceTimesDuration(record.P0LastSpotPrice, timeDelta))

@@ -53,6 +53,11 @@ func TestInterpolateRecord(t *testing.T) {
 			interpolateTime: time.Unix(55, 0),
 			expRecord:       newExpRecord(oneDec.Add(OneSec.MulInt64(44*10)), twoDec.Add(OneSec.MulInt64(44).QuoInt64(10))),
 		},
+		"same time": {
+			record:          newRecord(time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec),
+			interpolateTime: time.Unix(1, 0),
+			expRecord:       newExpRecord(oneDec, twoDec),
+		},
 		// TODO: Overflow tests
 	}
 

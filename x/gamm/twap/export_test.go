@@ -12,8 +12,8 @@ func (k Keeper) GetMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId u
 	return k.getMostRecentRecordStoreRepresentation(ctx, poolId, asset0Denom, asset1Denom)
 }
 
-func (k Keeper) GetAllMostRecentTWAPsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
-	return k.getAllMostRecentTWAPsForPool(ctx, poolId)
+func (k Keeper) GetAllMostRecentRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
+	return k.getAllMostRecentRecordsForPool(ctx, poolId)
 }
 
 func (k Keeper) GetRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, time time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
@@ -24,8 +24,8 @@ func (k Keeper) TrackChangedPool(ctx sdk.Context, poolId uint64) {
 	k.trackChangedPool(ctx, poolId)
 }
 
-func (k Keeper) HasPoolChangedThisBlock(ctx sdk.Context, poolId uint64) bool {
-	return k.hasPoolChangedThisBlock(ctx, poolId)
+func (k Keeper) GetChangedPools(ctx sdk.Context) []uint64 {
+	return k.getChangedPools(ctx)
 }
 
 func InterpolateRecord(record types.TwapRecord, t time.Time) types.TwapRecord {

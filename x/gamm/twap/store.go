@@ -21,11 +21,18 @@ func (k Keeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
 	store.Set(poolIdBz, sentinelExistsValue)
 }
 
-func (k Keeper) hasPoolChangedThisBlock(ctx sdk.Context, poolId uint64) bool {
+func (k Keeper) getChangedPools(ctx sdk.Context) []uint64 {
 	store := ctx.TransientStore(k.transientKey)
-	poolIdBz := make([]byte, 8)
-	binary.LittleEndian.PutUint64(poolIdBz, poolId)
-	return store.Has(poolIdBz)
+	iter := store.Iterator(nil, nil)
+	defer iter.Close()
+
+	alteredPoolIds := []uint64{}
+	for ; iter.Valid(); iter.Next() {
+		k := iter.Key()
+		poolId := binary.LittleEndian.Uint64(k)
+		alteredPoolIds = append(alteredPoolIds, poolId)
+	}
+	return alteredPoolIds
 }
 
 func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
@@ -41,6 +48,7 @@ func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) {
 	// TODO: Stub
 }
 
+//nolint:unused,deadcode
 func (k Keeper) deleteHistoricalRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
@@ -56,15 +64,16 @@ func (k Keeper) getMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId u
 	return types.ParseTwapFromBz(bz)
 }
 
-func (k Keeper) getAllMostRecentTWAPsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
+func (k Keeper) getAllMostRecentRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	return types.GetAllMostRecentTwapsForPool(store, poolId)
 }
 
-func (k Keeper) storeMostRecentTWAP(ctx sdk.Context, twap types.TwapRecord) {
+func (k Keeper) storeNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
 	osmoutils.MustSet(store, key, &twap)
+	k.storeHistoricalTWAP(ctx, twap)
 }
 
 // returns an error if theres no historical record at or before time.
