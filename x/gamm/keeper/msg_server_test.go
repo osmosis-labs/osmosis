@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 		expectedAddLiquidityEvents int
 		expectedMessageEvents      int
 	}{
-		"successfull join": {
+		"successful join": {
 			poolId:         1,
 			shareOutAmount: sdk.NewInt(shareOut),
 			tokenInMaxs: sdk.NewCoins(
