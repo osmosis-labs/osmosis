@@ -61,6 +61,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          repository: osmosis-labs/osmosis
       - 
         # If workflow was triggered by a schedule, 
         # explicitly checkout the correct branch
@@ -70,6 +71,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: v10.x
+          repository: osmosis-labs/osmosis
       -
         name: 🔨 Build the osmosisd binary with osmobuilder
         run: |
@@ -88,11 +90,14 @@ jobs:
       -
         name: ⏬ Download pre-epoch snapshot
         run:  |
-          SNAPSHOT_URL=$(curl -s ${{ env.SNAPSHOT_URL }}  | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
-          SNAPSHOT_FILENAME=$(curl -s ${{ env.SNAPSHOT_URL }}  | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename')
+          SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.SNAPSHOT_URL }})
+          SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
+          SNAPSHOT_FILENAME=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename')
 
           mkdir -p $HOME/snapshots/
-          wget -q -nc -O $HOME/snapshots/$SNAPSHOT_FILENAME $SNAPSHOT_URL
+          if [ ! -f "$HOME/snapshots/$SNAPSHOT_FILENAME" ]; then
+              wget -q -O $HOME/snapshots/$SNAPSHOT_FILENAME $SNAPSHOT_URL
+          fi
           lz4 -d $HOME/snapshots/$SNAPSHOT_FILENAME | tar -C $HOME/.osmosisd/ -xvf -
 
           # Remove old snapshots
@@ -103,7 +108,7 @@ jobs:
           CONFIG_FOLDER=$HOME/.osmosisd/config
 
           # Get height of most recent epoch
-          LAST_EPOCH_BLOCK_HEIGHT=$(curl -s ${{ env.LCD_ENDPOINT }}/osmosis/epochs/v1beta1/epochs | dasel --plain -r json 'epochs.(identifier=day).current_epoch_start_height')
+          LAST_EPOCH_BLOCK_HEIGHT=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 ${{ env.LCD_ENDPOINT }}/osmosis/epochs/v1beta1/epochs | dasel --plain -r json 'epochs.(identifier=day).current_epoch_start_height')
           DELTA_HALT_HEIGHT=${{ env.DELTA_HALT_HEIGHT }}
           HALT_HEIGHT=$(($LAST_EPOCH_BLOCK_HEIGHT + $DELTA_HALT_HEIGHT))
 
@@ -130,7 +135,7 @@ jobs:
         with:
           payload: |
             {
-              "text": ":State-compatibility check failed!",
+              "text": "State-compatibility check failed!",
               	"blocks": [
                   {
                     "type": "header",
@@ -144,7 +149,7 @@ jobs:
                     "type": "section",
                     "text": {
                       "type": "mrkdwn",
-                      "text": "<${{ github.event.pull_request.html_url || github.event.head_commit.url }}|View workflow run>"
+                      "text": "<${{ github.event.pull_request.html_url || github.event.head_commit.url }}|View code changes>\n\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>"
                     }
                   }
                 ]
