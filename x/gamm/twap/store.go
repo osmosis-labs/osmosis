@@ -35,7 +35,6 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	osmoutils.MustSet(store, key1, &twap)
 	osmoutils.MustSet(store, key2, &twap)
 	fmt.Println(string(key2))
-	fmt.Println(types.ParseTwapFromBz(store.Get(key2)))
 }
 
 func (k Keeper) deleteHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
@@ -66,23 +65,31 @@ func (k Keeper) storeMostRecentTWAP(ctx sdk.Context, twap types.TwapRecord) {
 
 // returns an error if theres no historical record at or before time.
 // (Asking for a time too far back)
-func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, time time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
-	startKey := types.FormatHistoricalPoolIndexTimePrefix(poolId, time)
-
-	fmt.Println(string(startKey))
-	// TODO: Optimize to cut down search on asset0Denom, asset1denom.
-	// Not really important, since primarily envisioning 2 asset pools
+	// We make an iteration from time=t + 1ns, to time=0 for this pool.
+	// Note that we cannot get any time entries from t + 1ns, as the key would be `prefix|t+1ns`
+	// and the end for a reverse iterator is exclusive. Thus the largest key that can be returned
+	// begins with a prefix of `prefix|t`
+	startKey := types.FormatHistoricalPoolIndexTimePrefix(poolId, time.Unix(0, 0))
+	endKey := types.FormatHistoricalPoolIndexTimePrefix(poolId, t.Add(time.Nanosecond))
+	lastParsedTime := time.Time{}
 	stopFn := func(key []byte) bool {
-		// TODO: Make remember first seen time. Currently only works for exact start
-		t, err := types.ParseTimeFromHistoricalPoolIndexKey(key)
+		// halt iteration if we can't parse the time, or we've successfully parsed
+		// a time, and have iterated beyond records for that time.
+		parsedTime, err := types.ParseTimeFromHistoricalPoolIndexKey(key)
 		if err != nil {
 			return true
 		}
-		return t.After(time)
+		if lastParsedTime.After(parsedTime) {
+			return true
+		}
+		lastParsedTime = parsedTime
+		return false
 	}
 
-	twaps, err := osmoutils.GetValuesUntilDerivedStop(store, startKey, stopFn, types.ParseTwapFromBz)
+	reverseIterate := true
+	twaps, err := osmoutils.GetIterValuesWithStop(store, startKey, endKey, reverseIterate, stopFn, types.ParseTwapFromBz)
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
