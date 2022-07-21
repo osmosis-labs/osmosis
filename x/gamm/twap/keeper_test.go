@@ -12,7 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
 
-var defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin("token/B", 100), sdk.NewInt64Coin("token/A", 100))
+var defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin("token/B", 1_000_000_000), sdk.NewInt64Coin("token/A", 1_000_000_000))
 
 type TestSuite struct {
 	apptesting.KeeperTestHelper

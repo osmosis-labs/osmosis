@@ -108,8 +108,7 @@ func (s *TestSuite) TestUpdateTwap() {
 			test.expRecord.Height = s.Ctx.BlockHeight()
 			test.expRecord.Time = s.Ctx.BlockTime()
 
-			newRecord, err := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
-			s.Require().NoError(err)
+			newRecord := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
 			s.Require().Equal(test.expRecord, newRecord)
 		})
 	}

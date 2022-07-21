@@ -37,10 +37,7 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	}
 
 	for _, record := range records {
-		newRecord, err := k.updateRecord(ctx, record)
-		if err != nil {
-			return err
-		}
+		newRecord := k.updateRecord(ctx, record)
 		k.storeNewRecord(ctx, newRecord)
 	}
 	return nil
@@ -48,7 +45,7 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 
 // mutates record argument, but not with all the changes.
 // Use the return value, and drop usage of the argument.
-func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.TwapRecord, error) {
+func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
 	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
 
 	newRecord.Height = ctx.BlockHeight()
@@ -61,7 +58,7 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.Tw
 	newRecord.P0LastSpotPrice = newSp0
 	newRecord.P1LastSpotPrice = newSp1
 
-	return newRecord, nil
+	return newRecord
 }
 
 // interpolate record returns a record, with updated accumulator values and time for provided newTime.
