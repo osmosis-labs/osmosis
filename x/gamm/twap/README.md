@@ -6,9 +6,11 @@ A time weighted average price is a function that takes a sequence of `(time, pri
 
 ## Arithmetic mean TWAP
 
-Using the arithmetic mean, the TWAP of a sequence `(t_i, p_i)`, from `t_0` to `t_n`, indexed by time in ascending order, is: $\frac{1}{t_n - t_0}\sum_{i=0}^{n-1} p_i (t_{i+1} - t_i)$. (Notice that the latest price `p_n` isn't used, as it has lasted for a time interval of `0` seconds in this range!)
+Using the arithmetic mean, the TWAP of a sequence `(t_i, p_i)`, from `t_0` to `t_n`, indexed by time in ascending order, is: $$\frac{1}{t_n - t_0}\sum_{i=0}^{n-1} p_i (t_{i+1} - t_i)$$
+Notice that the latest price `p_n` isn't used, as it has lasted for a time interval of `0` seconds in this range!
 
-To illustrate with an example, given the sequence: `(0s, $1), (4s, $6), (5s, $1)`, the arithmetic mean TWAP is: $\frac{\$1 * (4s - 0s) + \$6 * (5s - 4s)}{5s - 0s} = \frac{\$10}{5} = \$2$.
+To illustrate with an example, given the sequence: `(0s, $1), (4s, $6), (5s, $1)`, the arithmetic mean TWAP is: 
+$$\frac{\$1 * (4s - 0s) + \$6 * (5s - 4s)}{5s - 0s} = \frac{\$10}{5} = \$2$$
 
 ## Computation via accumulators method
 
