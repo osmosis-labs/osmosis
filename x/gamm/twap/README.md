@@ -117,10 +117,10 @@ The pre-release testing methodology planned for the twap module is:
     - Block commit wipes temporary stores
   - logic
     - Make tables of expected input / output cases for:
-        - getMostRecentRecord
-        - getInterpolatedRecord
-        - updateRecord
-        - computeArithmeticTwap
+      - getMostRecentRecord
+      - getInterpolatedRecord
+      - updateRecord
+      - computeArithmeticTwap
     - Test overflow handling in all relevant arithmetic
     - Complete testing code coverage (up to return err lines) for logic.go file
   - API
