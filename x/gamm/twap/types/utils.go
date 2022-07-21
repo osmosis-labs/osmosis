@@ -31,8 +31,8 @@ func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string
 
 // mustGetSpotPrice returns the spot price for the given pool id, and denom0 in terms of denom1.
 // Panics if the pool state is misconfigured, which will halt any tx that interacts with this.
-func MustGetSpotPrice(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string, denom1 string) sdk.Dec {
-	sp, err := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
+func MustGetSpotPrice(k AmmInterface, ctx sdk.Context, poolId uint64, baseAssetDenom string, quoteAssetDenom string) sdk.Dec {
+	sp, err := k.CalculateSpotPrice(ctx, poolId, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +44,6 @@ func MustGetSpotPrice(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 str
 // The pair (X,Y) should only appear once in the list
 //
 // NOTE: Sorts the input denoms slice.
-// (Should not be a problem, as this should come from coins.Denoms(), which returns a sorted order)
 func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
 	// get denoms in descending order
 	sort.Strings(denoms)

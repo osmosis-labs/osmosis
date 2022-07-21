@@ -1,6 +1,7 @@
 package types
 
 import (
+	"strings"
 	"testing"
 	time "time"
 
@@ -51,8 +52,12 @@ func TestFormatHistoricalTwapKeys(t *testing.T) {
 
 			parsedTime := ParseTimeFromHistoricalTimeIndexKey(gotTimeKey)
 			require.Equal(t, tt.time, parsedTime)
-			parsedTime = ParseTimeFromHistoricalPoolIndexKey(gotPoolKey)
+			parsedTime, err := ParseTimeFromHistoricalPoolIndexKey(gotPoolKey)
 			require.Equal(t, tt.time, parsedTime)
+			require.NoError(t, err)
+
+			poolIndexPrefix := FormatHistoricalPoolIndexTimePrefix(tt.poolId, tt.time)
+			require.True(t, strings.HasPrefix(string(gotPoolKey), string(poolIndexPrefix)))
 		})
 	}
 }

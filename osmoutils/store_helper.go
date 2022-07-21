@@ -34,15 +34,34 @@ func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEn
 }
 
 func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, stopFn func([]byte) bool, parseValue func([]byte) (T, error)) ([]T, error) {
-	iterator := storeObj.Iterator(keyStart, nil)
-	defer iterator.Close()
+	// SDK iterator is broken for nil end time, and non-nil start time
+	// https://github.com/cosmos/cosmos-sdk/issues/12661
+	// hence we use []byte{0xff}
+	keyEnd := []byte{0xff}
+	return GetIterValuesWithStop(storeObj, keyStart, keyEnd, false, stopFn, parseValue)
+}
+
+func GetIterValuesWithStop[T any](
+	storeObj store.KVStore,
+	keyStart []byte,
+	keyEnd []byte,
+	reverse bool,
+	stopFn func([]byte) bool,
+	parseValue func([]byte) (T, error)) ([]T, error) {
+	var iter store.Iterator
+	if reverse {
+		iter = storeObj.ReverseIterator(keyStart, keyEnd)
+	} else {
+		iter = storeObj.Iterator(keyStart, keyEnd)
+	}
+	defer iter.Close()
 
 	values := []T{}
-	for ; iterator.Valid(); iterator.Next() {
-		if stopFn(iterator.Key()) {
+	for ; iter.Valid(); iter.Next() {
+		if stopFn(iter.Key()) {
 			break
 		}
-		val, err := parseValue(iterator.Value())
+		val, err := parseValue(iter.Value())
 		if err != nil {
 			return nil, err
 		}
@@ -52,7 +71,10 @@ func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, s
 }
 
 func GetFirstValueAfterPrefix[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
-	iterator := storeObj.Iterator(keyStart, nil)
+	// SDK iterator is broken for nil end time, and non-nil start time
+	// https://github.com/cosmos/cosmos-sdk/issues/12661
+	// hence we use []byte{0xff}
+	iterator := storeObj.Iterator(keyStart, []byte{0xff})
 	defer iterator.Close()
 
 	if !iterator.Valid() {
