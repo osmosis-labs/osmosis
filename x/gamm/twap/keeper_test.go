@@ -4,12 +4,15 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
+
+var defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin("token/B", 100), sdk.NewInt64Coin("token/A", 100))
 
 type TestSuite struct {
 	apptesting.KeeperTestHelper

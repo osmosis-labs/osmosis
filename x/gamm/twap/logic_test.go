@@ -14,25 +14,33 @@ import (
 var zeroDec = sdk.ZeroDec()
 var oneDec = sdk.OneDec()
 var twoDec = oneDec.Add(oneDec)
+var OneSec = sdk.NewDec(1e9)
 
 func newRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
-		Time:                        t,
-		P0LastSpotPrice:             sp0,
-		P1LastSpotPrice:             sdk.OneDec().Quo(sp0),
-		P0ArithmeticTwapAccumulator: accum0,
-		P1ArithmeticTwapAccumulator: accum1,
+		Asset0Denom:     defaultUniV2Coins[0].Denom,
+		Asset1Denom:     defaultUniV2Coins[1].Denom,
+		Time:            t,
+		P0LastSpotPrice: sp0,
+		P1LastSpotPrice: sdk.OneDec().Quo(sp0),
+		// make new copies
+		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
+		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
+	}
+}
+
+// make an expected record for math tests, we adjust other values in the test runner.
+func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
+	return types.TwapRecord{
+		Asset0Denom: defaultUniV2Coins[0].Denom,
+		Asset1Denom: defaultUniV2Coins[1].Denom,
+		// make new copies
+		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
+		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
 	}
 }
 
 func TestInterpolateRecord(t *testing.T) {
-	// make an expected record, we adjust other values in the test case.
-	newExpRecord := func(accum0, accum1 sdk.Dec) types.TwapRecord {
-		return types.TwapRecord{P0ArithmeticTwapAccumulator: accum0,
-			P1ArithmeticTwapAccumulator: accum1}
-	}
-
-	OneSec := sdk.NewDec(1e9)
 	tests := map[string]struct {
 		record          types.TwapRecord
 		interpolateTime time.Time
@@ -70,6 +78,39 @@ func TestInterpolateRecord(t *testing.T) {
 
 			gotRecord := twap.InterpolateRecord(test.record, test.interpolateTime)
 			require.Equal(t, test.expRecord, gotRecord)
+		})
+	}
+}
+
+func (s *TestSuite) TestUpdateTwap() {
+	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
+	newSp := sdk.OneDec()
+
+	tests := map[string]struct {
+		record     types.TwapRecord
+		updateTime time.Time
+		expRecord  types.TwapRecord
+	}{
+		"0 accum start": {
+			record:     newRecord(time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec),
+			updateTime: time.Unix(2, 0),
+			expRecord:  newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
+		},
+	}
+	for name, test := range tests {
+		s.Run(name, func() {
+			// setup common, block time, pool Id, expected spot prices
+			s.Ctx = s.Ctx.WithBlockTime(test.updateTime.UTC())
+			test.record.PoolId = poolId
+			test.expRecord.PoolId = poolId
+			test.expRecord.P0LastSpotPrice = newSp
+			test.expRecord.P1LastSpotPrice = newSp
+			test.expRecord.Height = s.Ctx.BlockHeight()
+			test.expRecord.Time = s.Ctx.BlockTime()
+
+			newRecord, err := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
+			s.Require().NoError(err)
+			s.Require().Equal(test.expRecord, newRecord)
 		})
 	}
 }

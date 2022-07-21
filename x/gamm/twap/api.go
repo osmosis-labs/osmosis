@@ -8,8 +8,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
 
-// GetArithmeticTwap returns an arithmetic TWAP result from (startTime, endTime),
-// for the `quoteAsset / baseAsset` ratio on `poolId`.
+// GetArithmeticTwap returns an arithmetic time weighted average price.
+// The returned twap is the time weighted average price (TWAP) of:
+// * the base asset, in units of the quote asset (1 unit of base = x units of quote)
+// * from (startTime, endTime),
+// * as determined by prices from AMM pool `poolId`.
+//
+// The
+//
 // startTime and endTime do not have to be real block times that occurred,
 // this function will interpolate between startTime.
 // if endTime = now, we do {X}
@@ -42,7 +48,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	twap := k.getArithmeticTwap(startRecord, endRecord)
+	twap := k.getArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
 	return twap, nil
 }
 

@@ -18,7 +18,18 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	return err
 }
 
-func (k Keeper) updateTWAPs(ctx sdk.Context, poolId uint64) error {
+func (k Keeper) endBlock(ctx sdk.Context) {
+	changedPoolIds := k.getChangedPools(ctx)
+	for _, id := range changedPoolIds {
+		err := k.updateRecords(ctx, id)
+		if err != nil {
+			panic(err)
+		}
+	}
+	// 'altered pool ids' gets automatically cleared by being a transient store
+}
+
+func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	// Will only err if pool doesn't have most recent entry set
 	records, err := k.getAllMostRecentRecordsForPool(ctx, poolId)
 	if err != nil {
@@ -26,44 +37,44 @@ func (k Keeper) updateTWAPs(ctx sdk.Context, poolId uint64) error {
 	}
 
 	for _, record := range records {
-		timeDelta := ctx.BlockTime().Sub(record.Time)
-
-		// no update if were in the same block.
-		// should be caught earlier, but secondary check.
-		if int(timeDelta) <= 0 {
-			return nil
+		newRecord, err := k.updateRecord(ctx, record)
+		if err != nil {
+			return err
 		}
-
-		record.Height = ctx.BlockHeight()
-		record.Time = ctx.BlockTime()
-
-		// TODO: Ensure order is correct
-		newSp0 := types.MustGetSpotPrice(k.ammkeeper, ctx, poolId, record.Asset0Denom, record.Asset1Denom)
-		newSp1 := types.MustGetSpotPrice(k.ammkeeper, ctx, poolId, record.Asset1Denom, record.Asset0Denom)
-
-		// TODO: Think about overflow
-		// Update accumulators based on last block / update's spot price
-		record.P0ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(record.P0LastSpotPrice, timeDelta))
-		record.P1ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(record.P1LastSpotPrice, timeDelta))
-
-		// set last spot price to be last price of this block. This is what will get used in interpolation.
-		record.P0LastSpotPrice = newSp0
-		record.P1LastSpotPrice = newSp1
-
-		k.storeNewRecord(ctx, record)
+		k.storeNewRecord(ctx, newRecord)
 	}
 	return nil
 }
 
-func (k Keeper) endBlock(ctx sdk.Context) {
-	changedPoolIds := k.getChangedPools(ctx)
-	for _, id := range changedPoolIds {
-		err := k.updateTWAPs(ctx, id)
-		if err != nil {
-			panic(err)
-		}
+// mutates record argument, but not with all the changes.
+// Use the return value, and drop usage of the argument.
+func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.TwapRecord, error) {
+	timeDelta := ctx.BlockTime().Sub(record.Time)
+
+	// no update if were in the same block.
+	// should be caught earlier, but secondary check.
+	if int(timeDelta) <= 0 {
+		return types.TwapRecord{}, nil
 	}
-	// 'altered pool ids' gets automatically cleared by being a transient store
+
+	record.Height = ctx.BlockHeight()
+	record.Time = ctx.BlockTime()
+
+	// TODO: Ensure order is correct
+	newSp0 := types.MustGetSpotPrice(k.ammkeeper, ctx, record.PoolId, record.Asset0Denom, record.Asset1Denom)
+	newSp1 := types.MustGetSpotPrice(k.ammkeeper, ctx, record.PoolId, record.Asset1Denom, record.Asset0Denom)
+
+	// TODO: Think about overflow
+	// Update accumulators based on last block / update's spot price
+	// TODO: Combine this with interpolateRecord
+	record.P0ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(record.P0LastSpotPrice, timeDelta))
+	record.P1ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(record.P1LastSpotPrice, timeDelta))
+
+	// set last spot price to be last price of this block. This is what will get used in interpolation.
+	record.P0LastSpotPrice = newSp0
+	record.P1LastSpotPrice = newSp1
+
+	return record, nil
 }
 
 func (k Keeper) pruneOldTwaps(ctx sdk.Context) {
@@ -119,10 +130,15 @@ func interpolateRecord(record types.TwapRecord, interpolateTime time.Time) types
 	return interpolatedRecord
 }
 
-// For now just assuming p0 price, TODO switch between the two
+// TODO: Test math, test p0 vs p1 correctness
 // precondition: endRecord.Time > startRecord.Time
-func (k Keeper) getArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord) sdk.Dec {
+func (k Keeper) getArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
-	accumDiff := endRecord.P0ArithmeticTwapAccumulator.Sub(startRecord.P0ArithmeticTwapAccumulator)
+	var accumDiff sdk.Dec
+	if quoteAsset == startRecord.Asset0Denom {
+		accumDiff = endRecord.P0ArithmeticTwapAccumulator.Sub(startRecord.P0ArithmeticTwapAccumulator)
+	} else {
+		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
+	}
 	return types.AccumDiffDivDuration(accumDiff, timeDelta)
 }
