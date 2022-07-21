@@ -90,16 +90,17 @@ jobs:
         run:  |
           SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.SNAPSHOT_URL }})
           SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
-          SNAPSHOT_FILENAME=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename')
+          SNAPSHOT=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename' | cut -f 1 -d '.')
 
           mkdir -p $HOME/snapshots/
-          if [ ! -f "$HOME/snapshots/$SNAPSHOT_FILENAME" ]; then
-              wget -q -O $HOME/snapshots/$SNAPSHOT_FILENAME $SNAPSHOT_URL
+          if [ ! -d "$HOME/snapshots/$SNAPSHOT" ]; then
+              rm -rf $HOME/snapshots/*
+              mkdir $HOME/snapshots/$SNAPSHOT
+              wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C $HOME/snapshots/$SNAPSHOT -xvf -
           fi
-          lz4 -c -d $HOME/snapshots/$SNAPSHOT_FILENAME | tar -C $HOME/.osmosisd/ -xvf -
 
-          # Remove old snapshots
-          find $HOME/snapshots -type f -not -name '$SNAPSHOT_FILENAME' -delete
+          # Copy snapshot in Data folder
+          cp -R $HOME/snapshots/$SNAPSHOT/data $HOME/.osmosisd/
       -
         name: 🧪 Configure Osmosis Node
         run:  |
