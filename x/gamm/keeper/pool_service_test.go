@@ -321,6 +321,12 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 	for _, test := range tests {
 		suite.SetupTest()
 
+<<<<<<< HEAD
+=======
+		ctx := suite.Ctx
+		keeper := suite.App.GAMMKeeper
+
+>>>>>>> 4970f165 (test(x/gamm): add liquidity event tests (#2141))
 		// Mint some assets to the accounts.
 		for _, acc := range suite.TestAccs {
 			suite.FundAcc(acc, defaultAcctFunds)
@@ -334,7 +340,32 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
 		suite.Require().NoError(err)
 
+<<<<<<< HEAD
 		test.fn(poolId)
+=======
+		balancesBefore := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.txSender)
+		_, _, err = keeper.JoinPoolNoSwap(suite.Ctx, test.txSender, poolId, test.sharesRequested, test.tokenInMaxs)
+
+		if test.expectPass {
+			suite.Require().NoError(err, "test: %v", test.name)
+			suite.Require().Equal(test.sharesRequested.String(), suite.App.BankKeeper.GetBalance(suite.Ctx, test.txSender, "gamm/pool/1").Amount.String())
+			balancesAfter := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.txSender)
+			deltaBalances, _ := balancesBefore.SafeSub(balancesAfter)
+			// The pool was created with the 10000foo, 10000bar, and the pool share was minted as 100000000gamm/pool/1.
+			// Thus, to get the 50*OneShare gamm/pool/1, (10000foo, 10000bar) * (1 / 2) balances should be provided.
+			suite.Require().Equal("5000", deltaBalances.AmountOf("foo").String())
+			suite.Require().Equal("5000", deltaBalances.AmountOf("bar").String())
+
+			liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.Ctx)
+			suite.Require().Equal("15000bar,15000foo", liquidity.String())
+
+			assertEventEmitted(suite, ctx, types.TypeEvtPoolJoined, 1)
+		} else {
+			suite.Require().Error(err, "test: %v", test.name)
+
+			assertEventEmitted(suite, ctx, types.TypeEvtPoolJoined, 0)
+		}
+>>>>>>> 4970f165 (test(x/gamm): add liquidity event tests (#2141))
 	}
 }
 
@@ -477,9 +508,18 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 	for _, tc := range testCases {
 		suite.SetupTest()
 
+<<<<<<< HEAD
 		for _, acc := range suite.TestAccs {
 			suite.FundAcc(acc, defaultAcctFunds)
 		}
+=======
+		suite.Run(tc.name, func() {
+			ctx := suite.Ctx
+
+			for _, acc := range suite.TestAccs {
+				suite.FundAcc(acc, defaultAcctFunds)
+			}
+>>>>>>> 4970f165 (test(x/gamm): add liquidity event tests (#2141))
 
 		createPoolAcc := suite.TestAccs[0]
 		joinPoolAcc := suite.TestAccs[1]
@@ -487,6 +527,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 		// test account is set on every test case iteration, we need to manually update address for pool creator
 		tc.pool.Sender = createPoolAcc.String()
 
+<<<<<<< HEAD
 		poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, tc.pool)
 		suite.Require().NoError(err)
 
@@ -500,6 +541,22 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 
 		balanceAfterExit := suite.App.BankKeeper.GetAllBalances(suite.Ctx, joinPoolAcc)
 		deltaBalance, _ := balanceBeforeJoin.SafeSub(balanceAfterExit)
+=======
+			poolId, err := suite.App.GAMMKeeper.CreatePool(ctx, tc.pool)
+			suite.Require().NoError(err)
+
+			balanceBeforeJoin := suite.App.BankKeeper.GetAllBalances(ctx, joinPoolAcc)
+
+			_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+			suite.Require().NoError(err)
+
+			assertEventEmitted(suite, ctx, types.TypeEvtPoolJoined, 1)
+
+			_, err = suite.App.GAMMKeeper.ExitPool(ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+
+			balanceAfterExit := suite.App.BankKeeper.GetAllBalances(ctx, joinPoolAcc)
+			deltaBalance, _ := balanceBeforeJoin.SafeSub(balanceAfterExit)
+>>>>>>> 4970f165 (test(x/gamm): add liquidity event tests (#2141))
 
 		// due to rounding, `balanceBeforeJoin` and `balanceAfterExit` have neglectable difference
 		// coming from rounding in exitPool.Here we test if the difference is within rounding tolerance range
