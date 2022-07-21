@@ -69,7 +69,30 @@ For users who need TWAPs outside the 48 hours stored in the state machine, you c
 
 ## Store layout
 
-We maintain twap accumulation records for every AMM pool on Osmosis. Because Osmosis supports multi-asset pools, a complicating factor is that 
+We maintain twap accumulation records for every AMM pool on Osmosis. 
+
+Because Osmosis supports multi-asset pools, a complicating factor is that we have to store a record for every asset pair in the pool.
+For every pool, at a given point in time, we make one twap record entry per unique pair of denoms in the pool. If a pool has `k` denoms, the number of unique pairs is `k * (k - 1) / 2`.
+
+Each twap record stores [(source)](https://github.com/osmosis-labs/osmosis/tree/main/proto/osmosis/gamm/twap):
+* last spot price of base asset A in terms of quote asset B
+* last spot price of base asset B in terms of quote asset A
+* Accumulation value of base asset A in terms of quote asset B
+* Accumulation value of base asset B in terms of quote asset A
+
+All TWAP records are indexed in state by the time of write.
+
+A new TWAP record is created in two situations:
+* When a pool is created
+* In the `EndBlock`, if the block contains any potentially price changing event for the pool. (Swap, LP, Exit)
+
+When a pool is created, records are created with the current spot price of the pool.
+
+During EndBlock, new records are created, with:
+* The accumulator's updated based upon the most recent prior accumulator's stored last spot price
+* The LastSpotPrice's equal to the EndBlock spot price.
+
+In the event that a pool is created, and has a swap in the same block, the record entries are over written with the end block price.
 
 ## Testing Methodology
 
@@ -98,7 +121,7 @@ The pre-release testing methodology planned for the twap module is:
     - The osmosis simulator, simulates building up complex state machine states, in random ways not seen before. We plan on, in a property check, maintaining expected TWAPs for short time ranges, and seeing that the keeper query will return the same value as what we get off of the raw price history for short history intervals.
     - Not currently in scope for release blocking, but planned: Integration for gas tracking, to ensure gas of reads/writes does not grow with time.
 - [ ] Mutation testing usage
-    - integration of the TWAP module into go mutation testing: https://github.com/osmosis-labs/go-mutesting
+    - integration of the TWAP module into [go mutation testing](https://github.com/osmosis-labs/go-mutesting): 
         - The success we've seen with the tokenfactory module, is it succeeds at surfacing behavior for untested behavior.
           e.g. if you delete a line, or change the direction of a conditional, does a test catch it.
     - We expect to get this to a state, where after mutation testing is ran, the only items it mutates, that is not caught in a test, is: Deleting `return err`, or `panic` lines, in the situation where that error return or panic isn't reachable.

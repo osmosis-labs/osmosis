@@ -15,6 +15,7 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 		record := types.NewTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
 		k.storeNewRecord(ctx, record)
 	}
+	k.trackChangedPool(ctx, poolId)
 	return err
 }
 

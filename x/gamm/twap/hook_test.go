@@ -20,6 +20,8 @@ func (s *TestSuite) TestCreateTwoAssetPoolFlow() {
 	s.Require().Equal(expectedTwap, twap)
 }
 
+// TODO: Write test for create pool, swap, and EndBlock in same block, we use post-swap spot price in record.
+
 // Tests that after a swap, we are triggering internal tracking logic for a pool.
 func (s *TestSuite) TestSwapTriggeringTrackPoolId() {
 	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
