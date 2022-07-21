@@ -40,7 +40,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	quoteAssetDenom string,
 	baseAssetDenom string,
 	startTime time.Time) (sdk.Dec, error) {
-	startRecord, err := k.getStartRecord(ctx, poolId, startTime, quoteAssetDenom, baseAssetDenom)
+	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}

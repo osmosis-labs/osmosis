@@ -6,6 +6,8 @@ MD003:
 # Can't disable MD007 :/
 # MD007: false
 MD009: false
+MD010:
+  code_blocks: false
 MD013:
   code_blocks: false
 MD024: false

@@ -9,8 +9,7 @@ import (
 )
 
 func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
-	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
-	denomA, denomB := defaultUniV2Coins[1].Denom, defaultUniV2Coins[0].Denom
+	poolId, denomA, denomB := s.setupDefaultPool()
 	initStartRecord := newRecord(s.Ctx.BlockTime(), sdk.OneDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	initStartRecord.PoolId, initStartRecord.Height = poolId, s.Ctx.BlockHeight()
 	initStartRecord.Asset0Denom, initStartRecord.Asset1Denom = denomA, denomB
