@@ -1,6 +1,7 @@
 package twap
 
 import (
+	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,12 +15,20 @@ import (
 // * from (startTime, endTime),
 // * as determined by prices from AMM pool `poolId`.
 //
-// The way the arithmetic twap works
-//
 // startTime and endTime do not have to be real block times that occurred,
-// this function will interpolate between startTime.
-// if endTime = now, we do {X}
-// startTime must be in time range {X}, recommended parameterization for mainnet is {Y}
+// the state machine will interpolate the accumulator values for those times
+// from the latest Twap accumulation record prior to the provided time.
+//
+// startTime must be within 48 hours of ctx.BlockTime(), if you need older TWAPs,
+// you will have to maintain the accumulator yourself.
+//
+// This function will error if:
+// * startTime > endTime
+// * endTime in the future
+// * startTime older than 48 hours OR pool creation
+// * pool with id poolId does not exist, or does not contain quoteAssetDenom, baseAssetDenom
+//
+// N.B. If there is a notable use case, the state machine could maintain more historical records, e.g. at one per hour.
 func (k Keeper) GetArithmeticTwap(
 	ctx sdk.Context,
 	poolId uint64,
@@ -29,6 +38,10 @@ func (k Keeper) GetArithmeticTwap(
 	endTime time.Time) (sdk.Dec, error) {
 	if endTime.Equal(ctx.BlockTime()) {
 		return k.GetArithmeticTwapToNow(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime)
+	} else if endTime.After(ctx.BlockTime()) {
+		return sdk.Dec{}, errors.New("called GetArithmeticTwap with an end time in the future")
+	} else if startTime.After(endTime) {
+		return sdk.Dec{}, errors.New("called GetArithmeticTwap with a start time that is after the end time")
 	}
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
