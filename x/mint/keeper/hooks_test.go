@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestEndOfEpochMintedCoinDistribution() {
 		mintParams = app.MintKeeper.GetParams(ctx)
 		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
 		expectedRewardsCoin, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.Staking)
-		suite.NoError(err)
+		suite.Require().NoError(err)
 		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsCoin.Amount)
 
 		// ensure post-epoch supply with offset changed by exactly the minted coins amount
