@@ -39,6 +39,17 @@ func (sim *SimCtx) RandomSimAccountWithConstraint(f SimAccountConstraint) (simul
 	return sim.randomSimAccount(filteredAddrs), true
 }
 
+func (sim *SimCtx) RandomSimAccountWithMinCoins(ctx sdk.Context, denom string, amount int64) (simulation.Account, error) {
+	accHasMinCoins := func(acc simulation.Account) bool {
+		return sim.BankKeeper().GetBalance(ctx, acc.Address, denom).IsGTE(sdk.NewCoin(denom, sdk.NewInt(amount)))
+	}
+	acc, found := sim.RandomSimAccountWithConstraint(accHasMinCoins)
+	if !found {
+		return simulation.Account{}, errors.New("no address with min balance found.")
+	}
+	return acc, nil
+}
+
 func (sim *SimCtx) RandomExistingAddress() sdk.AccAddress {
 	acc := sim.RandomSimAccount()
 	return acc.Address

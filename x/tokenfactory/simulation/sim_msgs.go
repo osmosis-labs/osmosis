@@ -15,9 +15,9 @@ import (
 
 // RandomMsgCreateDenom creates a random tokenfactory denom that is no greater than 44 alphanumeric characters
 func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgCreateDenom, error) {
-	acc, senderExists := sim.RandomSimAccountWithConstraint(accountCanPayTokenCreationFee(k, sim, ctx))
-	if !senderExists {
-		return nil, errors.New("no addr has enough to pay for tokenfactory creation fee")
+	acc, err := sim.RandomSimAccountWithMinCoins(ctx, "stake", 10_000_000)
+	if err != nil {
+		return nil, err
 	}
 	return &types.MsgCreateDenom{
 		Sender:   acc.Address.String(),
@@ -51,12 +51,5 @@ func accountCreatedTokenFactoryDenom(k keeper.Keeper, ctx sdk.Context) simtypes.
 		iterator := store.Iterator(nil, nil)
 		defer iterator.Close()
 		return iterator.Valid()
-	}
-}
-
-func accountCanPayTokenCreationFee(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint {
-	return func(acc legacysimulationtype.Account) bool {
-		ctx.Logger().Error("TEST" + sim.BankKeeper().GetBalance(ctx, acc.Address, "stake").String())
-		return sim.BankKeeper().GetBalance(ctx, acc.Address, "stake").IsGTE(sdk.NewCoin("stake", sdk.NewInt(10_000_000)))
 	}
 }
