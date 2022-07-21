@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
@@ -110,6 +111,62 @@ func (s *TestSuite) TestUpdateTwap() {
 
 			newRecord := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
 			s.Require().Equal(test.expRecord, newRecord)
+		})
+	}
+}
+
+func TestComputeArithmeticTwap(t *testing.T) {
+	denom0, denom1 := "token/B", "token/A"
+	newOneSidedRecord := func(time time.Time, accum sdk.Dec, useP0 bool) types.TwapRecord {
+		record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
+		if useP0 {
+			record.P0ArithmeticTwapAccumulator = accum
+		} else {
+			record.P1ArithmeticTwapAccumulator = accum
+		}
+		return record
+	}
+
+	type testCase struct {
+		startRecord types.TwapRecord
+		endRecord   types.TwapRecord
+		quoteAsset  string
+		expTwap     sdk.Dec
+	}
+
+	baseTime := time.Unix(1257894000, 0).UTC()
+
+	testCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) testCase {
+		return testCase{
+			newOneSidedRecord(baseTime, startAccum, true),
+			newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
+			denom0,
+			expectedTwap,
+		}
+	}
+	plusOneSec := baseTime.Add(time.Second)
+	tests := map[string]testCase{
+		"basic: spot price = 1 for one second, 0 init accumulator": {
+			newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			newOneSidedRecord(plusOneSec, OneSec, true),
+			denom0,
+			sdk.OneDec(),
+		},
+		// "same record: denom0, unset spot price": {
+		// 	newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+		// 	newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+		// 	denom0,
+		// 	nil,
+		// },
+		"accumulator = 10*OneSec, t=5s. 0 base accum":   testCaseFromDeltas(sdk.ZeroDec(), OneSec.MulInt64(10), 5*time.Second, sdk.NewDec(2)),
+		"accumulator = 10*OneSec, t=3s. 0 base accum":   testCaseFromDeltas(sdk.ZeroDec(), OneSec.MulInt64(10), 3*time.Second, osmoutils.OneThird),
+		"accumulator = 10*OneSec, t=100s. 0 base accum": testCaseFromDeltas(sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
+		// TODO: Overflow, rounding, same record tests
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualTwap := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
+			require.Equal(t, test.expTwap, actualTwap)
 		})
 	}
 }

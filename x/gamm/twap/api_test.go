@@ -60,9 +60,8 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 			if tc.expError {
 				s.Require().Error(err)
 				return
-			} else {
-				s.Require().NoError(err)
 			}
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expRecord, actualRecord)
 		})
 	}

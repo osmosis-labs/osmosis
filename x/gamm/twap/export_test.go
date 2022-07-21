@@ -36,6 +36,10 @@ func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	return k.updateRecord(ctx, record)
 }
 
+func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
+}
+
 func InterpolateRecord(record types.TwapRecord, t time.Time) types.TwapRecord {
 	return interpolateRecord(record, t)
 }
