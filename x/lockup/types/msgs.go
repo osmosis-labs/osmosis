@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // constants.
@@ -29,6 +30,11 @@ func NewMsgLockTokens(owner sdk.AccAddress, duration time.Duration, coins sdk.Co
 func (m MsgLockTokens) Route() string { return RouterKey }
 func (m MsgLockTokens) Type() string  { return TypeMsgLockTokens }
 func (m MsgLockTokens) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Owner)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+	}
+
 	if m.Duration <= 0 {
 		return fmt.Errorf("duration should be positive: %d < 0", m.Duration)
 	}
