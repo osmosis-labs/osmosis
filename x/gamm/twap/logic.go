@@ -49,32 +49,41 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 // mutates record argument, but not with all the changes.
 // Use the return value, and drop usage of the argument.
 func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.TwapRecord, error) {
-	timeDelta := ctx.BlockTime().Sub(record.Time)
+	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
 
-	// no update if were in the same block.
-	// should be caught earlier, but secondary check.
-	if int(timeDelta) <= 0 {
-		return types.TwapRecord{}, nil
-	}
-
-	record.Height = ctx.BlockHeight()
-	record.Time = ctx.BlockTime()
+	newRecord.Height = ctx.BlockHeight()
 
 	// TODO: Ensure order is correct
 	newSp0 := types.MustGetSpotPrice(k.ammkeeper, ctx, record.PoolId, record.Asset0Denom, record.Asset1Denom)
 	newSp1 := types.MustGetSpotPrice(k.ammkeeper, ctx, record.PoolId, record.Asset1Denom, record.Asset0Denom)
 
-	// TODO: Think about overflow
-	// Update accumulators based on last block / update's spot price
-	// TODO: Combine this with interpolateRecord
-	record.P0ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(record.P0LastSpotPrice, timeDelta))
-	record.P1ArithmeticTwapAccumulator.AddMut(types.SpotPriceTimesDuration(record.P1LastSpotPrice, timeDelta))
-
 	// set last spot price to be last price of this block. This is what will get used in interpolation.
-	record.P0LastSpotPrice = newSp0
-	record.P1LastSpotPrice = newSp1
+	newRecord.P0LastSpotPrice = newSp0
+	newRecord.P1LastSpotPrice = newSp1
 
-	return record, nil
+	return newRecord, nil
+}
+
+// interpolate record returns a record, with updated accumulator values and time for provided newTime.
+//
+// pre-condition: newTime >= record.Time
+func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
+	if record.Time.Equal(newTime) {
+		return record
+	}
+	newRecord := record
+	timeDelta := newTime.Sub(record.Time)
+	newRecord.Time = newTime
+
+	// record.LastSpotPrice is the last spot price from the block the record was created in,
+	// thus it is treated as the effective spot price until the new time.
+	// (As there was no change until at or after this time)
+	// TODO: Think about overflow
+	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(
+		types.SpotPriceTimesDuration(record.P0LastSpotPrice, timeDelta))
+	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(
+		types.SpotPriceTimesDuration(record.P1LastSpotPrice, timeDelta))
+	return newRecord
 }
 
 func (k Keeper) pruneOldTwaps(ctx sdk.Context) {
@@ -111,23 +120,7 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA strin
 //
 // pre-condition: interpolateTime >= record.Time
 func interpolateRecord(record types.TwapRecord, interpolateTime time.Time) types.TwapRecord {
-	if record.Time.Equal(interpolateTime) {
-		return record
-	}
-	interpolatedRecord := record
-	timeDelta := interpolateTime.Sub(record.Time)
-	interpolatedRecord.Time = interpolateTime
-
-	// record.LastSpotPrice is the last spot price from the block the record was created in,
-	// thus it is treated as the effective spot price at the interpolation time.
-	// (As there was no change until the next block began)
-
-	interpolatedRecord.P0ArithmeticTwapAccumulator = interpolatedRecord.P0ArithmeticTwapAccumulator.Add(
-		types.SpotPriceTimesDuration(record.P0LastSpotPrice, timeDelta))
-	interpolatedRecord.P1ArithmeticTwapAccumulator = interpolatedRecord.P1ArithmeticTwapAccumulator.Add(
-		types.SpotPriceTimesDuration(record.P1LastSpotPrice, timeDelta))
-
-	return interpolatedRecord
+	return recordWithUpdatedAccumulators(record, interpolateTime)
 }
 
 // TODO: Test math, test p0 vs p1 correctness
