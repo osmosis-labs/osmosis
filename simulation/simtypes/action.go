@@ -100,6 +100,10 @@ func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	if err != nil {
 		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build msg due to: %v", err)), nil, nil
 	}
+	err = msg.ValidateBasic()
+	if err != nil {
+		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("msg did not pass ValidateBasic: %v", err)), nil, nil
+	}
 	tx, err := sim.txbuilder(ctx, msg, m.name)
 	if err != nil {
 		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build tx due to: %v", err)), nil, err
