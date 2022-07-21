@@ -6,8 +6,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 )
 
+// InitGenesis sets epoch info from genesis
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
-	// set epoch info from genesis
 	for _, epoch := range genState.Epochs {
 		err := k.AddEpochInfo(ctx, epoch)
 		if err != nil {

@@ -15,8 +15,12 @@ import (
 
 // RandomMsgCreateDenom creates a random tokenfactory denom that is no greater than 44 alphanumeric characters
 func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgCreateDenom, error) {
+	acc, err := sim.RandomSimAccountWithMinCoins(ctx, "stake", 10_000_000)
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgCreateDenom{
-		Sender:   sim.RandomSimAccount().Address.String(),
+		Sender:   acc.Address.String(),
 		Subdenom: sim.RandStringOfLength(types.MaxSubdenomLength),
 	}, nil
 }

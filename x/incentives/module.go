@@ -1,3 +1,11 @@
+/*
+Incentives module provides general interface to give yield to stakers. The yield to be given
+to stakers are stored in gauges and is distributed on epoch basis
+to the stakers who meet specific conditions.
+ - Gauge queries, gauge creation and add tokens to gauge
+ - Upcoming-gauges related queries
+ - Gauge infos and gauge queues
+*/
 package incentives
 
 import (
