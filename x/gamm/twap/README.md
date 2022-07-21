@@ -16,9 +16,17 @@ $$\frac{\$1 * (4s - 0s) + \$6 * (5s - 4s)}{5s - 0s} = \frac{\$10}{5} = \$2$$
 
 The prior example for how to compute the TWAP takes linear time in the number of time entries in a range, which is too inefficient. We require TWAP operations to have constant time complexity (in the number of records).
 
-This is achieved by using an accumulator. In the case of an arithmetic TWAP, we can maintain an accumulator from `a_n`, representing the numerator of the TWAP expression for the interval `t_0...t_n`, namely $a_n = \sum_{i=0}^{n-1} p_i (t_{i+1} - t_i)$. If we maintain such an accumulator for every pool, with `t_0 = pool_creation_time` to `t_n = current_block_time`, we can easily compute the TWAP for any interval. The TWAP for the time interval of price points `t_i` to `t_j` is then $twap = \frac{a_j - a_i}{t_j - t_i}$, which is constant time given the accumulator values.
+This is achieved by using an accumulator. In the case of an arithmetic TWAP, we can maintain an accumulator from `a_n`, representing the numerator of the TWAP expression for the interval `t_0...t_n`, namely 
+$$a_n = \sum_{i=0}^{n-1} p_i (t_{i+1} - t_i)$$
+If we maintain such an accumulator for every pool, with `t_0 = pool_creation_time` to `t_n = current_block_time`, we can easily compute the TWAP for any interval. The TWAP for the time interval of price points `t_i` to `t_j` is then $twap = \frac{a_j - a_i}{t_j - t_i}$, which is constant time given the accumulator values.
 
-In Osmosis, we maintain accumulator records for every pool, for the last 48 hours. We also maintain within each accumulator record in state, the latest spot price. This allows us to interpolate accumulation records between times. Namely, if I want the twap from `t=10s` to `t=15s`, but the time records are at `9s, 13s, 17s`, this is fine. Using the latest spot price in each record, we create the accumulator value for `t=10` by computing `a_10 = a_9 + a_9_latest_spot_price * (10s - 9s)`, and `a_15 = a_13 + a_13_latest_spot_price * (15s - 13s)`. Given these interpolated accumulation values, we can compute the TWAP as before.
+In Osmosis, we maintain accumulator records for every pool, for the last 48 hours.
+We also maintain within each accumulator record in state, the latest spot price.
+This allows us to interpolate accumulation records between times.
+Namely, if I want the twap from `t=10s` to `t=15s`, but the time records are at `9s, 13s, 17s`, this is fine.
+Using the latest spot price in each record, we create the accumulator value for `t=10` by computing
+`a_10 = a_9 + a_9_latest_spot_price * (10s - 9s)`, and `a_15 = a_13 + a_13_latest_spot_price * (15s - 13s)`. 
+Given these interpolated accumulation values, we can compute the TWAP as before.
 
 
 ## Module API
