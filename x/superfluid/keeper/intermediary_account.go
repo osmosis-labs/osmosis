@@ -113,14 +113,14 @@ func (k Keeper) SetIntermediaryAccount(ctx sdk.Context, acc types.SuperfluidInte
 func (k Keeper) DeleteAllEmptyIntermediaryAccounts(ctx sdk.Context) {
 	itermedairyAccounts := k.GetAllIntermediaryAccounts(ctx)
 	for _, intermediaryAccount := range itermedairyAccounts {
-		k.DeleteIntermediaryAccountIfNoDelegation(ctx, intermediaryAccount)
+		k.deleteIntermediaryAccountIfNoDelegation(ctx, intermediaryAccount)
 	}
 }
 
 // DeleteIntermediaryAccount deletes given intermediary account from store
 // Note that intermediary account is highly related to staking and delgation, and this
 // method should be used with caution.
-func (k Keeper) DeleteIntermediaryAccountIfNoDelegation(ctx sdk.Context, intermedairyAcc types.SuperfluidIntermediaryAccount) {
+func (k Keeper) deleteIntermediaryAccountIfNoDelegation(ctx sdk.Context, intermedairyAcc types.SuperfluidIntermediaryAccount) {
 	// check if any delegations or intermediary connections exist
 	if k.IntermediaryAccountDelegationsExists(ctx, intermedairyAcc) {
 		return
@@ -133,12 +133,9 @@ func (k Keeper) DeleteIntermediaryAccountIfNoDelegation(ctx sdk.Context, interme
 	prefixStore.Delete(intermedairyAcc.GetAccAddress())
 }
 
-// IntermediaryAccountDelegationsExists returns true if the gien intermediary account has any delegations.
-// We check this by
-// - using staking keeper to check if actual delegations exist,
-// - checking if there are any intermediary account connection remaining to the intermediaryAcc
-// - if there's no synthetic lock with the intermediaryAccount.Denom + intermediaryAccount.ValAddr combination
+// IntermediaryAccountDelegationsExists returns true if the given intermediary account has any delegations.
 func (k Keeper) IntermediaryAccountDelegationsExists(ctx sdk.Context, intermedairyAcc types.SuperfluidIntermediaryAccount) (delegations bool) {
+	intermedairyAccAddr := intermedairyAcc.GetAccAddress()
 	store := ctx.KVStore(k.storeKey)
 
 	// we first check if the intermediary account does not have any connections
@@ -146,20 +143,20 @@ func (k Keeper) IntermediaryAccountDelegationsExists(ctx sdk.Context, intermedai
 	intermediaryAccConnectionPrefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 	iterator := intermediaryAccConnectionPrefixStore.Iterator(nil, nil)
 
-	intermediaryConnectionExists := false
+	// We determine whether the intermediary account has any delegations by
+	// - using staking keeper to check if actual delegations exist,
+	// - checking if there are any intermediary account connection remaining to the intermediaryAcc
+	// - checking if there's no synthetic lock with the intermediaryAccount.Denom + intermediaryAccount.ValAddr combination
 
+	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		if sdk.AccAddress(iterator.Value()).Equals(intermedairyAcc.GetAccAddress()) {
-			intermediaryConnectionExists = true
+		if sdk.AccAddress(iterator.Value()).Equals(intermedairyAccAddr) {
+			return true
 		}
 	}
 
-	if intermediaryConnectionExists {
-		return true
-	}
-
 	// now check and verify that we don't have any delegations
-	_, found := k.sk.GetDelegation(ctx, intermedairyAcc.GetAccAddress(), sdk.ValAddress(intermedairyAcc.ValAddr))
+	_, found := k.sk.GetDelegation(ctx, intermedairyAccAddr, sdk.ValAddress(intermedairyAcc.ValAddr))
 	if found {
 		return found
 	}

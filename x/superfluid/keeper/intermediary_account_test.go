@@ -1,8 +1,11 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
@@ -134,4 +137,190 @@ func (suite *KeeperTestSuite) TestLockIdIntermediaryAccountConnection() {
 	// get account
 	addr = suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, 1)
 	suite.Require().Equal(addr.String(), "")
+}
+
+func (suite *KeeperTestSuite) TestDeleteAllEmptyIntermediaryAccounts() {
+	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+	testCases := []struct {
+		name             string
+		validatorStats   []stakingtypes.BondStatus
+		superDelegations []superfluidDelegation
+		// each boolean field should account for each superfluid delegation
+		undelegationStart           []bool
+		timePassedBeforeEndblock    time.Duration
+		expInterAccNumAfterDeletion int
+	}{
+		{
+			"single intermediary account deletion upon single superfluid undelegation finish",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]bool{true},
+			unbondingDuration,
+			0,
+		},
+		{
+			"no deletion when undelegation did not start",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]bool{false},
+			unbondingDuration,
+			1,
+		},
+		{
+			"no deletion when unbonding did not finish",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]bool{false},
+			time.Second,
+			1,
+		},
+		{
+			"single intermediary account deletion upon multiple superfluid(different lp pool) undelegation finish",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {0, 0, 1, 1000000}},
+			[]bool{true, false},
+			unbondingDuration,
+			1,
+		},
+		{
+			"single intermediary account deletion upon multiple superfluid(different validator) undelegation finish",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]bool{true, false},
+			unbondingDuration,
+			1,
+		},
+		{
+			"no deletion when remaining superfluid stake postion in intermediary account",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 0, 0, 1000000}},
+			[]bool{true, false},
+			unbondingDuration,
+			1,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			ctx := suite.Ctx
+
+			// setup validators
+			valAddrs := suite.SetupValidators(tc.validatorStats)
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+			_, intermediaryAccs, locks := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
+
+			// balance of intermediary account before epoch
+			balancesBeforeEpoch := []sdk.Coins{}
+
+			for _, intermediaryAccount := range intermediaryAccs {
+				balance := suite.App.BankKeeper.GetAllBalances(ctx, intermediaryAccount.GetAccAddress())
+				balancesBeforeEpoch = append(balancesBeforeEpoch, balance)
+			}
+
+			// start superfluid unstaking
+			for i, lock := range locks {
+				if tc.undelegationStart[i] {
+					err := suite.App.SuperfluidKeeper.SuperfluidUndelegate(ctx, lock.Owner, lock.ID)
+					suite.Require().NoError(err)
+				}
+			}
+
+			// add unbonding duration time to current block time
+			// we set block height to value greater than MinBlockHeightToBeginAutoWithdrawing in lockup module
+			ctx = ctx.WithBlockHeight(7)
+			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.timePassedBeforeEndblock))
+
+			suite.App.EndBlocker(ctx, abci.RequestEndBlock{Height: ctx.BlockHeight()})
+
+			intermediaryAccs = suite.App.SuperfluidKeeper.GetAllIntermediaryAccounts(ctx)
+			suite.Require().Equal(tc.expInterAccNumAfterDeletion, len(intermediaryAccs))
+
+			// check balance after possible deletion
+			for i, intermediaryAccount := range intermediaryAccs {
+				balance := suite.App.BankKeeper.GetAllBalances(ctx, intermediaryAccount.GetAccAddress())
+				suite.Require().True(balancesBeforeEpoch[i].IsEqual(balance))
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestIntermediaryAccountDelegationExists() {
+	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+
+	testCases := []struct {
+		name                                        string
+		validatorStats                              []stakingtypes.BondStatus
+		superDelegations                            []superfluidDelegation
+		undelegationStart                           bool
+		timePassed                                  time.Duration
+		expectedIntermediaryAccountDelegationExists bool
+	}{
+		{
+			"superfluid delegation exists",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			false,
+			time.Duration(0),
+			true,
+		},
+		{
+			"in the process of undelegating",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			true,
+			time.Duration(0),
+			true,
+		},
+		{
+			"finished undelegating",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			true,
+			unbondingDuration,
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			ctx := suite.Ctx
+
+			// setup validators
+			valAddrs := suite.SetupValidators(tc.validatorStats)
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+			_, intermediaryAccs, locks := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
+
+			// ensure that we are only testing one intermediary account and one lock within the test case
+			suite.Require().Equal(1, len(intermediaryAccs))
+			suite.Require().Equal(1, len(locks))
+
+			// assign in a variable after assertion
+			intermediaryAccount := intermediaryAccs[0]
+			lock := locks[0]
+
+			if tc.undelegationStart {
+				err := suite.App.SuperfluidKeeper.SuperfluidUndelegate(ctx, lock.Owner, lock.ID)
+				suite.Require().NoError(err)
+			}
+
+			// add unbonding duration time to current block time
+			// we set block height to value greater than MinBlockHeightToBeginAutoWithdrawing in lockup module
+			ctx = ctx.WithBlockHeight(7)
+			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.timePassed))
+			suite.App.EndBlocker(ctx, abci.RequestEndBlock{Height: ctx.BlockHeight()})
+
+			bool := suite.App.SuperfluidKeeper.IntermediaryAccountDelegationsExists(ctx, intermediaryAccount)
+
+			if tc.expectedIntermediaryAccountDelegationExists {
+				suite.Require().True(bool)
+			} else {
+				suite.Require().False(bool)
+			}
+		})
+	}
 }
