@@ -38,6 +38,10 @@ func (m MsgLockTokens) ValidateBasic() error {
 		return fmt.Errorf("lockups can only have one denom per lock ID, got %v", m.Coins)
 	}
 
+	if !m.Coins.IsAllPositive() {
+		return fmt.Errorf("cannot lock up a zero or negative amount")
+	}
+
 	return nil
 }
 
