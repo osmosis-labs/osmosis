@@ -14,7 +14,7 @@ import (
 // * from (startTime, endTime),
 // * as determined by prices from AMM pool `poolId`.
 //
-// The
+// The way the arithmetic twap works
 //
 // startTime and endTime do not have to be real block times that occurred,
 // this function will interpolate between startTime.

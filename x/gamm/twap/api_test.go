@@ -66,3 +66,23 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 		})
 	}
 }
+
+// func (s *TestSuite) TestGetArithmeticTwapToNow() {
+// 	tests := map[string]struct {
+// 		// if start record is blank, don't do any sets
+// 		setupRecords []types.TwapRecord
+// 		latestRecord types.TwapRecord
+// 		// We set it to have the updated time
+// 		expRecord  types.TwapRecord
+// 		time       time.Time
+// 		poolId     uint64
+// 		quoteDenom string
+// 		baseDenom  string
+// 		expError   bool
+// 	}{}
+// 	for name, tc := range tests {
+// 		s.Run(name, func() {
+
+// 		})
+// 	}
+// }
