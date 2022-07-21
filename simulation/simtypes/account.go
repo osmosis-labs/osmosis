@@ -42,14 +42,7 @@ func (sim *SimCtx) RandomSimAccountWithConstraint(f SimAccountConstraint) (simul
 func (sim *SimCtx) RandomSimAccountWithMinCoins(ctx sdk.Context, coins sdk.Coins) (simulation.Account, error) {
 	accHasMinCoins := func(acc simulation.Account) bool {
 		spendableCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
-		for _, minCoin := range coins {
-			for _, spendableCoin := range spendableCoins {
-				if minCoin.Denom == spendableCoin.Denom {
-					return spendableCoin.IsGTE(sdk.NewCoin(minCoin.Denom, minCoin.Amount))
-				}
-			}
-		}
-		return false
+		return spendableCoins.IsAllGTE(coins) && coins.DenomsSubsetOf(spendableCoins)
 	}
 	acc, found := sim.RandomSimAccountWithConstraint(accHasMinCoins)
 	if !found {
