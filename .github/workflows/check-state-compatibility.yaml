@@ -61,7 +61,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          repository: osmosis-labs/osmosis
       - 
         # If workflow was triggered by a schedule, 
         # explicitly checkout the correct branch
@@ -71,7 +70,6 @@ jobs:
         with:
           fetch-depth: 0
           ref: v10.x
-          repository: osmosis-labs/osmosis
       -
         name: 🔨 Build the osmosisd binary with osmobuilder
         run: |
