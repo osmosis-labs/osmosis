@@ -25,7 +25,7 @@ The primary intended API is `GetArithmeticTwap`, which is documented below, and 
 
 ```go
 // GetArithmeticTwap returns an arithmetic time weighted average price.
-// The returned twap is the time weighted average price (TWAP) of:
+// The returned twap is the time weighted average price (TWAP), using the arithmetic mean, of:
 // * the base asset, in units of the quote asset (1 unit of base = x units of quote)
 // * from (startTime, endTime),
 // * as determined by prices from AMM pool `poolId`.
@@ -51,7 +51,7 @@ func (k Keeper) GetArithmeticTwap(ctx sdk.Context,
 ```
 
 There are convenience methods for `GetArithmeticTwapToNow` which sets `endTime = ctx.BlockTime()`, and has minor gas reduction.
-For users who need TWAPs outside the 48 hours stored in the state machine, you can get the latest accumulation store record from `GetBeginBlockAccumulatorRecord`
+For users who need TWAPs outside the 48 hours stored in the state machine, you can get the latest accumulation store record from `GetBeginBlockAccumulatorRecord`.
 
 ## Code layout
 
@@ -69,13 +69,13 @@ For users who need TWAPs outside the 48 hours stored in the state machine, you c
 
 ## Store layout
 
-Every pool has a TWAP stored in state for every asset pair.
+We maintain twap accumulation records for every AMM pool on Osmosis.
 
 ## Testing Methodology
 
 The pre-release testing methodology planned for the twap module is:
 
-- [ ] Using table driven unit tests to test all foreseen cases the module can be within
+- [ ] Using table driven unit tests to test all foreseen states of the module
     - hook testing
         - All swaps correctly trigger twap record updates
         - Create pools cause records to be created
@@ -92,6 +92,8 @@ The pre-release testing methodology planned for the twap module is:
         - Complete testing code coverage (up to return err lines) for logic.go file
     - API
         - Unit tests for the public API, under foreseeable setup conditions
+- [ ] End to end migration tests
+    - Tests that migration of Osmosis pools created prior to the TWAP upgrade, get TWAPs recorded starting at the v11 upgrade.
 - [ ] Integration into the Osmosis simulator
     - The osmosis simulator, simulates building up complex state machine states, in random ways not seen before. We plan on, in a property check, maintaining expected TWAPs for short time ranges, and seeing that the keeper query will return the same value as what we get off of the raw price history for short history intervals.
     - Not currently in scope for release blocking, but planned: Integration for gas tracking, to ensure gas of reads/writes does not grow with time.
