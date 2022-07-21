@@ -95,7 +95,7 @@ func TestMsgLockTokens(t *testing.T) {
 	}
 }
 
-// NewMsgLockTokens
+// TODO: Complete table driven tests for the remaining messages
 
 // MsgBeginUnlockingAll
 
