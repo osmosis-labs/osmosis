@@ -951,7 +951,7 @@ osmosisd tx gamm swap-exact-amount-out 1000000ibc/27394FB092D2ECCD56123C74F36E4C
 
 ## Events
 
-There are 4 types of events that exist in GAMM:
+There are 5 types of events that exist in GAMM:
 
 * `sdk.EventTypeMessage` - "message"
 * `types.TypeEvtPoolJoined` - "pool_joined"
@@ -964,6 +964,22 @@ There are 4 types of events that exist in GAMM:
 This event is emitted in the message server when any of the gamm messages finish execution.
 
 TBD
+
+### `types.TypeEvtPoolJoined`
+
+This event is emitted after one of `JoinPool` or `JoinPoolNoSwap` complete joining
+the requested pool successfully.
+
+It consists of the following attributes:
+
+* `sdk.AttributeKeyModule` - "module"
+  * The value is the module's name - "gamm".
+* `sdk.AttributeKeySender`
+  * The value is the address of the sender who created the swap message.
+* `types.AttributeKeyPoolId`
+  * The value is the pool id of the pool where swap occurs.
+* `types.AttributeKeyTokensIn`
+  * The value is the string representation of the tokens being swapped in.
 
 ### `types.TypeEvtPoolExited`
 

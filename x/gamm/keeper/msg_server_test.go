@@ -213,6 +213,74 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 	}
 }
 
+// TestJoinPool_Events tests that events are correctly emitted
+// when calling JoinPool.
+func (suite *KeeperTestSuite) TestJoinPool_Events() {
+	const (
+		// Max positive int64.
+		tokenInMaxAmount = int64(^uint64(0) >> 1)
+		shareOut         = 110
+	)
+
+	testcases := map[string]struct {
+		poolId                     uint64
+		shareOutAmount             sdk.Int
+		tokenInMaxs                sdk.Coins
+		expectError                bool
+		expectedAddLiquidityEvents int
+		expectedMessageEvents      int
+	}{
+		"successful join": {
+			poolId:         1,
+			shareOutAmount: sdk.NewInt(shareOut),
+			tokenInMaxs: sdk.NewCoins(
+				sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("bar", sdk.NewInt(tokenInMaxAmount)),
+				sdk.NewCoin("baz", sdk.NewInt(tokenInMaxAmount)),
+			),
+			expectedAddLiquidityEvents: 1,
+			expectedMessageEvents:      3, // 1 gamm + 2 tendermint.
+		},
+		"tokenInMaxs do not match all tokens in pool - invalid join": {
+			poolId:         1,
+			shareOutAmount: sdk.NewInt(shareOut),
+			tokenInMaxs:    sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenInMaxAmount))),
+			expectError:    true,
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			suite.Setup()
+			ctx := suite.Ctx
+
+			suite.PrepareBalancerPool()
+			suite.PrepareBalancerPool()
+
+			msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+
+			// Reset event counts to 0 by creating a new manager.
+			ctx = ctx.WithEventManager(sdk.NewEventManager())
+			suite.Require().Equal(0, len(ctx.EventManager().Events()))
+
+			response, err := msgServer.JoinPool(sdk.WrapSDKContext(ctx), &types.MsgJoinPool{
+				Sender:         suite.TestAccs[0].String(),
+				PoolId:         tc.poolId,
+				ShareOutAmount: tc.shareOutAmount,
+				TokenInMaxs:    tc.tokenInMaxs,
+			})
+
+			if !tc.expectError {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(response)
+			}
+
+			assertEventEmitted(suite, ctx, types.TypeEvtPoolJoined, tc.expectedAddLiquidityEvents)
+			assertEventEmitted(suite, ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+		})
+	}
+}
+
 func assertEventEmitted(suite *KeeperTestSuite, ctx sdk.Context, eventTypeExpected string, numEventsExpected int) {
 	allEvents := ctx.EventManager().Events()
 	// filter out other events
@@ -222,5 +290,5 @@ func assertEventEmitted(suite *KeeperTestSuite, ctx sdk.Context, eventTypeExpect
 			actualEvents = append(actualEvents, event)
 		}
 	}
-	suite.Equal(numEventsExpected, len(actualEvents))
+	suite.Require().Equal(numEventsExpected, len(actualEvents))
 }
