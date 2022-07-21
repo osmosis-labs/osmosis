@@ -38,7 +38,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	endRecord, err := k.GetLatestAccumulatorRecord(ctx, poolId, quoteAssetDenom, baseAssetDenom)
+	endRecord, err := k.GetBeginBlockAccumulatorRecord(ctx, poolId, quoteAssetDenom, baseAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -46,11 +46,15 @@ func (k Keeper) GetArithmeticTwapToNow(
 	return twap, nil
 }
 
-// GetLatestAccumulatorRecord returns a TwapRecord struct that can be stored
-func (k Keeper) GetLatestAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+// GetCurrentAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
+// as of the beginning of the block this is called on.
+// This uses the state of the beginning of the block, as if there were swaps since the block has started,
+// these swaps have had no time to be arbitraged back.
+// This accumulator can be stored, to compute wider ranged twaps.
+func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	// correct ordering of args for db
 	if asset1Denom > asset0Denom {
 		asset0Denom, asset1Denom = asset1Denom, asset0Denom
 	}
-	return k.getMostRecentTWAP(ctx, poolId, asset0Denom, asset1Denom)
+	return k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
 }

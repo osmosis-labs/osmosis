@@ -37,7 +37,11 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	fmt.Println(string(key2))
 }
 
-func (k Keeper) deleteHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
+func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) {
+	// TODO: Stub
+}
+
+func (k Keeper) deleteHistoricalRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
 	key2 := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Time, twap.Asset0Denom, twap.Asset1Denom)
@@ -45,7 +49,7 @@ func (k Keeper) deleteHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store.Delete(key2)
 }
 
-func (k Keeper) getMostRecentTWAP(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+func (k Keeper) getMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(poolId, asset0Denom, asset1Denom)
 	bz := store.Get(key)

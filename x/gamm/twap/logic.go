@@ -67,8 +67,9 @@ func (k Keeper) endBlock(ctx sdk.Context) {
 }
 
 func (k Keeper) pruneOldTwaps(ctx sdk.Context) {
-	// TODO: Implement this code
-	k.deleteHistoricalTWAP(ctx, types.TwapRecord{})
+	// TODO: Read this from parameter
+	lastAllowedTime := ctx.BlockTime().Add(-48 * time.Hour)
+	k.pruneRecordsBeforeTime(ctx, lastAllowedTime)
 }
 
 func (k Keeper) getStartRecord(ctx sdk.Context, poolId uint64, time time.Time, assetA string, assetB string) (types.TwapRecord, error) {
@@ -80,6 +81,18 @@ func (k Keeper) getStartRecord(ctx sdk.Context, poolId uint64, time time.Time, a
 		return types.TwapRecord{}, err
 	}
 	record = interpolateRecord(record, time)
+	return record, nil
+}
+
+func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA string, assetB string) (types.TwapRecord, error) {
+	if !(assetA > assetB) {
+		assetA, assetB = assetB, assetA
+	}
+	record, err := k.getMostRecentRecordStoreRepresentation(ctx, poolId, assetA, assetB)
+	if err != nil {
+		return types.TwapRecord{}, err
+	}
+	record = interpolateRecord(record, ctx.BlockTime())
 	return record, nil
 }
 

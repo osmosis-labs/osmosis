@@ -14,7 +14,7 @@ func (suite *TestSuite) TestCreateTwoAssetPoolFlow() {
 
 	expectedTwap := types.NewTwapRecord(suite.App.GAMMKeeper, suite.Ctx, poolId, "token/B", "token/A")
 
-	twap, err := suite.twapkeeper.GetMostRecentTWAP(suite.Ctx, poolId, "token/B", "token/A")
+	twap, err := suite.twapkeeper.GetMostRecentRecordStoreRepresentation(suite.Ctx, poolId, "token/B", "token/A")
 	suite.Require().NoError(err)
 	suite.Require().Equal(expectedTwap, twap)
 
