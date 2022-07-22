@@ -167,8 +167,8 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 					continue
 				}
 				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, test.args[i].GaugeId)
-				suite.NoError(err)
-				suite.Equal(test.expectedGaugesBalances[i], gauge.Coins)
+				suite.Require().NoError(err)
+				suite.Require().Equal(test.expectedGaugesBalances[i], gauge.Coins)
 			}
 
 			feePoolNew := suite.App.DistrKeeper.GetFeePool(suite.Ctx)
