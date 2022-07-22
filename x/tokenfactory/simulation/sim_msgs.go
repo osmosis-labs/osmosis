@@ -13,9 +13,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var (
+	TokenFactoryCreationFee = sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000))
+)
+
 // RandomMsgCreateDenom creates a random tokenfactory denom that is no greater than 44 alphanumeric characters
 func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgCreateDenom, error) {
-	acc, err := sim.RandomSimAccountWithMinCoins(ctx, "stake", 10_000_000)
+	minCoins := TokenFactoryCreationFee
+	acc, err := sim.RandomSimAccountWithMinCoins(ctx, minCoins)
 	if err != nil {
 		return nil, err
 	}
