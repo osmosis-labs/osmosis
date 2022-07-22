@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k twapkeeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
-	store := ctx.TransientStore(&k.transientKey)
+func (k Keeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
+	store := ctx.TransientStore(k.transientKey)
 	poolIdBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(poolIdBz, poolId)
 	// just has to not be empty, for store to work / not register as a delete.
@@ -15,8 +15,9 @@ func (k twapkeeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
 	store.Set(poolIdBz, sentinelExistsValue)
 }
 
-func (k twapkeeper) getChangedPools(ctx sdk.Context) []uint64 {
-	store := ctx.TransientStore(&k.transientKey)
+//nolint:unused,deadcode
+func (k Keeper) getChangedPools(ctx sdk.Context) []uint64 {
+	store := ctx.TransientStore(k.transientKey)
 	iter := store.Iterator(nil, nil)
 	defer iter.Close()
 
