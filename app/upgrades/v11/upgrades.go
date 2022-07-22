@@ -39,6 +39,14 @@ func CreateUpgradeHandler(
 			bpm.StoreConsensusParams(ctx, cp)
 		}
 
+		// Initialize TWAP state
+		// TODO: Get allPoolIds from gamm keeper, and write test for migration.
+		allPoolIds := []uint64{}
+		err := keepers.TwapKeeper.MigrateExistingPools(ctx, allPoolIds)
+		if err != nil {
+			return nil, err
+		}
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
