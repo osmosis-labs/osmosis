@@ -58,7 +58,7 @@ func SimulateFromSeed(
 	w io.Writer,
 	app simtypes.App,
 	initFunctions simtypes.InitFunctions,
-	actions []simtypes.Action,
+	actions []simtypes.ActionsWithMetadata,
 	config simulation.Config,
 ) (stopEarly bool, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -205,7 +205,7 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
-func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.Action,
+func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.ActionsWithMetadata,
 	simState *simState, config simulation.Config,
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]

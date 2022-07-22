@@ -111,7 +111,7 @@ func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	return sim.deliverTx(tx, msg, m.name)
 }
 
-func totalFrequency(actions []Action) int {
+func totalFrequency(actions []ActionsWithMetadata) int {
 	totalFrequency := 0
 	for _, action := range actions {
 		totalFrequency += mapFrequencyFromString(action.Frequency())
@@ -120,7 +120,7 @@ func totalFrequency(actions []Action) int {
 	return totalFrequency
 }
 
-func GetSelectActionFn(actions []Action) selectActionFn {
+func GetSelectActionFn(actions []ActionsWithMetadata) selectActionFn {
 	totalOpFrequency := totalFrequency(actions)
 
 	return func(r *rand.Rand) Action {
