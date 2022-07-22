@@ -60,6 +60,4 @@ message TwapRecord {
 }
 
 // GenesisState defines the gamm module's genesis state.
-message GenesisState {
-  repeated TwapRecord twaps = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
-}
+message GenesisState { repeated TwapRecord twaps = 1; }
