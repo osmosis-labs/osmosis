@@ -46,7 +46,6 @@ func (s *TestSuite) TestTrackChangedPool() {
 // and runs storeNewRecord for everything in sequence.
 // Then it runs GetAllMostRecentRecordsForPool, and sees if its equal to expected
 func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
-	baseTime := time.Unix(1257894000, 0).UTC()
 	tPlusOne := baseTime.Add(time.Second)
 	baseRecord := newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA")
 	tPlusOneRecord := newEmptyPriceRecord(1, tPlusOne, "tokenB", "tokenA")
@@ -98,6 +97,80 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 			actualRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, test.poolId)
 			s.Require().NoError(err)
 			s.Require().Equal(test.expectedRecords, actualRecords)
+		})
+	}
+}
+
+// TestGetAllMostRecentRecordsForPool takes a list of records as test cases,
+// and runs storeNewRecord for everything in sequence.
+// Then it runs GetRecordAtOrBeforeTime, and sees if its equal to expected
+func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
+	type getRecordInput struct {
+		poolId      uint64
+		t           time.Time
+		asset0Denom string
+		asset1Denom string
+	}
+	defaultInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, "tokenB", "tokenA"} }
+	defaultRevInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, "tokenA", "tokenB"} }
+	baseRecord := newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA")
+	tMin1 := baseTime.Add(-time.Second)
+	tMin1Record := newEmptyPriceRecord(1, tMin1, "tokenB", "tokenA")
+	tPlus1 := baseTime.Add(time.Second)
+	tPlus1Record := newEmptyPriceRecord(1, tPlus1, "tokenB", "tokenA")
+
+	tests := map[string]struct {
+		recordsToSet   []types.TwapRecord
+		input          getRecordInput
+		expectedRecord types.TwapRecord
+		expErr         bool
+	}{
+		"no entries":            {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, true},
+		"get at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultInputAt(baseTime), baseRecord, false},
+		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, true},
+
+		"get latest (exact) w/ past entries": {
+			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(baseTime), baseRecord, false},
+		"get entry (exact) w/ a subsequent entry": {
+			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tMin1), tMin1Record, false},
+		"get sandwitched entry (exact)": {
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, false},
+		"rev sandwitched entry (exact)": {
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, true},
+
+		"get future":                 {[]types.TwapRecord{baseRecord}, defaultInputAt(tPlus1), baseRecord, false},
+		"get future w/ past entries": {[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tPlus1), baseRecord, false},
+
+		"get in between entries (2 entry)": {
+			[]types.TwapRecord{tMin1Record, baseRecord},
+			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, false},
+		"get in between entries (3 entry)": {
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
+			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, false},
+		"get in between entries (3 entry) #2": {
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
+			defaultInputAt(baseTime.Add(time.Millisecond)), baseRecord, false},
+
+		"query too old": {
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
+			defaultInputAt(baseTime.Add(-time.Second * 2)),
+			baseRecord, true},
+	}
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			for _, record := range test.recordsToSet {
+				s.twapkeeper.StoreNewRecord(s.Ctx, record)
+			}
+			record, err := s.twapkeeper.GetRecordAtOrBeforeTime(
+				s.Ctx,
+				test.input.poolId, test.input.t, test.input.asset0Denom, test.input.asset1Denom)
+			if test.expErr {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+			s.Require().Equal(test.expectedRecord, record)
 		})
 	}
 }

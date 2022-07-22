@@ -13,6 +13,7 @@ import (
 )
 
 var defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin("token/B", 1_000_000_000), sdk.NewInt64Coin("token/A", 1_000_000_000))
+var baseTime = time.Unix(1257894000, 0).UTC()
 
 type TestSuite struct {
 	apptesting.KeeperTestHelper
