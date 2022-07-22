@@ -39,10 +39,6 @@ func (hook *gammhook) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, p
 	}
 }
 
-// TODO: delete
-func (hook *gammhook) BeforeSwap(ctx sdk.Context, poolId uint64) {
-}
-
 func (hook *gammhook) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	hook.k.trackChangedPool(ctx, poolId)
 }
