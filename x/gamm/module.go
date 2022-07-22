@@ -180,6 +180,6 @@ func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
 		simtypes.NewMsgBasedAction("MsgJoinPool", am.keeper, simulation.RandomJoinPoolMsg),
 		simtypes.NewMsgBasedAction("MsgExitPool", am.keeper, simulation.RandomExitPoolMsg),
-		simtypes.NewMsgBasedAction("CreateUniV2Msg", am.keeper, simulation.RandomCreateUniV2Msg),
+		simtypes.NewMsgBasedAction("CreateUniV2Msg", am.keeper, simulation.RandomCreateUniV2Msg).WithFrequency(simtypes.Rare),
 	}
 }

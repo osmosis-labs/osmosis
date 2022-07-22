@@ -236,7 +236,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 
 // distributeToModule distributes mintedCoin multiplied by proportion to the recepientModule account.
 func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Int, error) {
-	distributionCoin, err := getProportions(ctx, mintedCoin, proportion)
+	distributionCoin, err := getProportions(mintedCoin, proportion)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -262,7 +262,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 // - weights in developerRewardsReceivers add up to 1.
 // - addresses in developerRewardsReceivers are valid or empty string.
 func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion sdk.Dec, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
-	devRewardCoin, err := getProportions(ctx, totalMintedCoin, developerRewardsProportion)
+	devRewardCoin, err := getProportions(totalMintedCoin, developerRewardsProportion)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -294,7 +294,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range developerRewardsReceivers {
-			devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
+			devPortionCoin, err := getProportions(devRewardCoin, w.Weight)
 			if err != nil {
 				return sdk.Int{}, err
 			}
@@ -332,7 +332,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 // allocation ratio. Returns error if ratio is greater than 1.
 // TODO: this currently rounds down and is the cause of rounding discrepancies.
 // To be fixed in: https://github.com/osmosis-labs/osmosis/issues/1917
-func getProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) (sdk.Coin, error) {
+func getProportions(mintedCoin sdk.Coin, ratio sdk.Dec) (sdk.Coin, error) {
 	if ratio.GT(sdk.OneDec()) {
 		return sdk.Coin{}, invalidRatioError{ratio}
 	}
