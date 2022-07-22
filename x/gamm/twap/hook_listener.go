@@ -1,6 +1,8 @@
 package twap
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
