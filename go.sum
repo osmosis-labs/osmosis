@@ -1046,8 +1046,6 @@ github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220714223138-b81ad24550fa h1:XN0d
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220714223138-b81ad24550fa/go.mod h1:uUkGXyCWol+CHoaMxZA0nKglvlN5uHBCMbMSsZoGSAs=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v7 h1:6KcADC/WhL7yDmNQxUIJt2XmzNt4FfRmq9gRke45w74=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v7/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
-github.com/osmosis-labs/osmosis/v7 v7.3.0 h1:9CrUh2drxa0IKARgI5Cy6KzDHximeD3TxcNivN1TKLI=
-github.com/osmosis-labs/osmosis/v7 v7.3.0/go.mod h1:uyrTFKD4w9hq0EY1PfvCmWNTtiO8X7c0ivRisBKrOA0=
 github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58 h1:15l3Iss2oCGCeJRi2g3CuCnqmEjpAr3Le7cDnoN/LS0=
 github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58/go.mod h1:0h8WBsFhyingomsrN+34JVZe/qRySHYHICyTEokCkYU=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
