@@ -1,12 +1,17 @@
 package types
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 
 	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 )
@@ -865,5 +870,60 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		} else {
 			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 		}
+	}
+}
+
+// Test authz with ledger
+func TestAuthzMsg(t *testing.T) {
+	appParams.SetAddressPrefixes()
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pk1.Address()).String()
+
+	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
+
+	testCases := []struct {
+		expectedRevokeSignByteMsg  string
+		expectedGrantSignByteMsg   string
+		expectedExecStrSignByteMsg string
+		gammMsg                    sdk.Msg
+	}{
+		{
+			expectedRevokeSignByteMsg:  fmt.Sprintf(""),
+			expectedGrantSignByteMsg:   fmt.Sprintf(""),
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/gamm/exit-swap-share-amount-in","value":{"pool_id":"1","sender":"%s","share_in_amount":"100","token_out_denom":"test","token_out_min_amount":"100"}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
+			gammMsg: &MsgExitSwapShareAmountIn{
+				Sender:            addr1,
+				PoolId:            1,
+				TokenOutDenom:     "test",
+				ShareInAmount:     sdk.NewInt(100),
+				TokenOutMinAmount: sdk.NewInt(100),
+			},
+		},
+	}
+	for _, tc := range testCases {
+		// Authz: Grant Msg
+		typeURL := sdk.MsgTypeURL(tc.gammMsg)
+		grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
+		require.NoError(t, err)
+		msgGrant := &authz.MsgGrant{Granter: "cosmos1abc", Grantee: "cosmos1def", Grant: grant}
+		require.Equal(t,
+			`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+			string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgGrant}, "memo")),
+		)
+
+		// Authz: Revoke Msg
+		msgRevoke := &authz.MsgRevoke{Granter: "cosmos1abc", Grantee: "cosmos1def", MsgTypeUrl: typeURL}
+		require.Equal(t,
+			`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn"}}],"sequence":"1","timeout_height":"1"}`,
+			string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgRevoke}, "memo")),
+		)
+
+		// Authz: Exec Msg
+		msgAny, _ := cdctypes.NewAnyWithValue(tc.gammMsg)
+		msgExec := &authz.MsgExec{Grantee: "cosmos1def", Msgs: []*cdctypes.Any{msgAny}}
+		require.Equal(t,
+			tc.expectedExecStrSignByteMsg,
+			string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgExec}, "memo")),
+		)
 	}
 }
