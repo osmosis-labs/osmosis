@@ -41,6 +41,11 @@ func newEmptyPriceRecord(poolId uint64, t time.Time, asset0 string, asset1 strin
 		Time:        t,
 		Asset0Denom: asset0,
 		Asset1Denom: asset1,
+
+		P0LastSpotPrice:             sdk.ZeroDec(),
+		P1LastSpotPrice:             sdk.ZeroDec(),
+		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
+		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
 	}
 }
 

@@ -3,7 +3,6 @@ package twap
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,7 +40,6 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	key2 := types.FormatHistoricalPoolIndexTWAPKey(twap.PoolId, twap.Time, twap.Asset0Denom, twap.Asset1Denom)
 	osmoutils.MustSet(store, key1, &twap)
 	osmoutils.MustSet(store, key2, &twap)
-	fmt.Println(string(key2))
 }
 
 func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) {
