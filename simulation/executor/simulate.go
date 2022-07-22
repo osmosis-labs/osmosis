@@ -233,6 +233,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			// Select and execute tx
 			action := selectAction(actionSimCtx.GetSeededRand("action select"))
 			opMsg, futureOps, err := action.Execute(actionSimCtx, ctx)
+			opMsg.Route = action.ModuleName
 			cleanup()
 
 			simState.logActionResult(header, i, config, blocksize, opMsg, err)

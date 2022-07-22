@@ -26,7 +26,7 @@ type Action interface {
 	WithFrequency(w Frequency) Action
 }
 
-type selectActionFn func(r *rand.Rand) Action
+type selectActionFn func(r *rand.Rand) ActionsWithMetadata
 
 type weightedOperationAction struct {
 	moduleName string
@@ -123,7 +123,7 @@ func totalFrequency(actions []ActionsWithMetadata) int {
 func GetSelectActionFn(actions []ActionsWithMetadata) selectActionFn {
 	totalOpFrequency := totalFrequency(actions)
 
-	return func(r *rand.Rand) Action {
+	return func(r *rand.Rand) ActionsWithMetadata {
 		x := r.Intn(totalOpFrequency)
 		// TODO: Change to an accum list approach
 		for i := 0; i < len(actions); i++ {

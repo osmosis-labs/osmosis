@@ -35,7 +35,7 @@ type SimulatorManagerI interface {
 
 type ActionsWithMetadata struct {
 	Action
-	moduleName string
+	ModuleName string
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility
@@ -116,7 +116,7 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []ActionsWithMet
 			for _, action := range actionsFromWeightedOperations(moduleName, weightedOps) {
 				var actionWithMetaData ActionsWithMetadata
 				actionWithMetaData.Action = action
-				actionWithMetaData.moduleName = moduleName
+				actionWithMetaData.ModuleName = moduleName
 				actions = append(actions, actionWithMetaData)
 			}
 		}
@@ -133,7 +133,7 @@ func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []ActionsWithMetadata 
 		for _, action := range m.Modules[simModuleName].Actions() {
 			var actionWithMetaData ActionsWithMetadata
 			actionWithMetaData.Action = action
-			actionWithMetaData.moduleName = simModuleName
+			actionWithMetaData.ModuleName = simModuleName
 			actions = append(actions, actionWithMetaData)
 		}
 	}
