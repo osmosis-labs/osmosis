@@ -112,6 +112,7 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		asset1Denom string
 	}
 	defaultInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, "tokenB", "tokenA"} }
+	wrongPoolIdInputAt := func(t time.Time) getRecordInput { return getRecordInput{2, t, "tokenB", "tokenA"} }
 	defaultRevInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, "tokenA", "tokenB"} }
 	baseRecord := newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA")
 	tMin1 := baseTime.Add(-time.Second)
@@ -155,6 +156,10 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 			defaultInputAt(baseTime.Add(-time.Second * 2)),
 			baseRecord, true},
+
+		"non-existent pool ID": {
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
+			wrongPoolIdInputAt(baseTime), baseRecord, true},
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
