@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	// "fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
@@ -278,58 +280,90 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() uint64 {
 	return gaugeId
 }
 
-func (suite *KeeperTestSuite) TestUpdateDistrRecords() uint64 {
-	suite.SetupTest()
+func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
+	tests := []struct {
+		name        string
+		args        []types.DistrRecord
+		isPoolPrepared bool
+		expectErr  bool
+	}{
+		{
+			name:        "Not existent gauge.",
+			args:        []types.DistrRecord{{
+				GaugeId: 1,
+				Weight:  sdk.NewInt(100),
+			}},
+			isPoolPrepared: false,
+			expectErr:  true,
+		},
+		{
+			name:        "Adding two of the same gauge id at once should error",
+			args:        []types.DistrRecord{
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(100),
+				},
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(100),
+				},
+			},
+			isPoolPrepared: true,
+			expectErr:  true,
+		},
+		{
+			name:        "Adding unsort gauges at once should error",
+			args:        []types.DistrRecord{
+				{
+					GaugeId: 2,
+					Weight:  sdk.NewInt(100),
+				},
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(100),
+				},
+			},
+			isPoolPrepared: true,
+			expectErr:  true,
+		},
+		{
+			name:        "Happy case",
+			args:        []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  sdk.NewInt(100),
+				},
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(100),
+				},
+			},
+			isPoolPrepared: true,
+			expectErr:  false,
+		},
+	}
 
-	keeper := suite.App.PoolIncentivesKeeper
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			keeper := suite.App.PoolIncentivesKeeper
 
-	// Not existent gauge.
-	err := keeper.UpdateDistrRecords(suite.Ctx, types.DistrRecord{
-		GaugeId: 1,
-		Weight:  sdk.NewInt(100),
-	})
-	suite.Error(err)
+			if test.isPoolPrepared {
+				suite.PrepareBalancerPool()
+			}
 
-	poolId := suite.PrepareBalancerPool()
+			err := keeper.UpdateDistrRecords(suite.Ctx, test.args...)
+			if test.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
 
-	// LockableDurations should be 1, 3, 7 hours from the default genesis state for testing
-	lockableDurations := keeper.GetLockableDurations(suite.Ctx)
-	suite.Equal(3, len(lockableDurations))
-
-	gaugeId, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[0])
-	suite.NoError(err)
-
-	err = keeper.UpdateDistrRecords(suite.Ctx, types.DistrRecord{
-		GaugeId: 0,
-		Weight:  sdk.NewInt(100),
-	}, types.DistrRecord{
-		GaugeId: gaugeId,
-		Weight:  sdk.NewInt(100),
-	})
-	suite.NoError(err)
-	distrInfo := keeper.GetDistrInfo(suite.Ctx)
-	suite.Equal(2, len(distrInfo.Records))
-	suite.Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
-	suite.Equal(sdk.NewInt(100), distrInfo.Records[1].Weight)
-	suite.Equal(sdk.NewInt(200), distrInfo.TotalWeight)
-
-	// adding two of the same gauge id at once should error
-	err = keeper.UpdateDistrRecords(suite.Ctx, types.DistrRecord{
-		GaugeId: 0,
-		Weight:  sdk.NewInt(0),
-	}, types.DistrRecord{
-		GaugeId: gaugeId,
-		Weight:  sdk.NewInt(200),
-	}, types.DistrRecord{
-		GaugeId: gaugeId + 1,
-		Weight:  sdk.NewInt(150),
-	})
-	suite.NoError(err)
-	distrInfo = keeper.GetDistrInfo(suite.Ctx)
-	suite.Equal(2, len(distrInfo.Records))
-	suite.Equal(sdk.NewInt(200), distrInfo.Records[0].Weight)
-	suite.Equal(sdk.NewInt(150), distrInfo.Records[1].Weight)
-	suite.Equal(sdk.NewInt(350), distrInfo.TotalWeight, distrInfo.TotalWeight.String())
-
-	return gaugeId
+				distrInfo := keeper.GetDistrInfo(suite.Ctx)
+				suite.Require().Equal(len(test.args), len(distrInfo.Records))
+				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
+				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[1].Weight)
+				suite.Require().Equal(sdk.NewInt(200), distrInfo.TotalWeight)
+			}
+		})
+	}
 }
