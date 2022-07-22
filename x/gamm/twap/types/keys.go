@@ -24,13 +24,15 @@ const (
 	KeySeparator = "|"
 )
 
-var mostRecentTWAPsNoSeparator = "recent_twap"
-var historicalTWAPTimeIndexNoSeparator = "historical_time_index"
-var historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
+var (
+	mostRecentTWAPsNoSeparator         = "recent_twap"
+	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
+	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
 
-var mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
-var historicalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
-var historicalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
+	mostRecentTWAPsPrefix         = mostRecentTWAPsNoSeparator + KeySeparator
+	historicalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
+	historicalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
+)
 
 // TODO: make utility command to automatically interlace separators
 
