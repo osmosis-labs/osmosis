@@ -318,6 +318,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	supportedFeatures := "iterator,staking,stargate,osmosis"
 
 	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.GAMMKeeper, appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
+	wasmOpts = append(wasmOpts, owasm.RegisterStargateQueries(*bApp.GRPCQueryRouter()))
 
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,

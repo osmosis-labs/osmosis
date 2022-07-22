@@ -1,0 +1,35 @@
+syntax = "proto3";
+package stargate.auth;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v10/wasmbinding/stargate/auth";
+
+// QueryAccountsResponse is the response type for the Query/Accounts RPC method.
+//
+// Since: cosmos-sdk 0.43
+message QueryAccountsResponse {
+  // accounts are the existing accounts
+  repeated google.protobuf.Any accounts = 1
+      [ (cosmos_proto.accepts_interface) = "AccountI" ];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryAccountResponse is the response type for the Query/Account RPC method.
+message QueryAccountResponse {
+  // account defines the account of the corresponding address.
+  google.protobuf.Any account = 1
+      [ (cosmos_proto.accepts_interface) = "AccountI" ];
+}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  cosmos.auth.v1beta1.Params params = 1 [ (gogoproto.nullable) = false ];
+}

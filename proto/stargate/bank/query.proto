@@ -1,0 +1,86 @@
+syntax = "proto3";
+package stargate.bank;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/bank/v1beta1/bank.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v10/wasmbinding/stargate/bank";
+
+// QueryBalanceResponse is the response type for the Query/Balance RPC method.
+message QueryBalanceResponse {
+  // balance is the balance of the coin.
+  cosmos.base.v1beta1.Coin balance = 1;
+}
+
+// QueryAllBalancesResponse is the response type for the Query/AllBalances RPC
+// method.
+message QueryAllBalancesResponse {
+  // balances is the balances of all the coins.
+  repeated cosmos.base.v1beta1.Coin balances = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySpendableBalancesResponse defines the gRPC response structure for
+// querying an account's spendable balances.
+message QuerySpendableBalancesResponse {
+  // balances is the spendable balances of all the coins.
+  repeated cosmos.base.v1beta1.Coin balances = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC
+// method
+message QueryTotalSupplyResponse {
+  // supply is the supply of the coins
+  repeated cosmos.base.v1beta1.Coin supply = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+
+  // pagination defines the pagination in the response.
+  //
+  // Since: cosmos-sdk 0.43
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QuerySupplyOfResponse is the response type for the Query/SupplyOf RPC method.
+message QuerySupplyOfResponse {
+  // amount is the supply of the coin.
+  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryParamsResponse defines the response type for querying x/bank parameters.
+message QueryParamsResponse {
+  cosmos.bank.v1beta1.Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryDenomsMetadataResponse is the response type for the Query/DenomsMetadata
+// RPC method.
+message QueryDenomsMetadataResponse {
+  // metadata provides the client information for all the registered tokens.
+  repeated cosmos.bank.v1beta1.Metadata metadatas = 1
+      [ (gogoproto.nullable) = false ];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryDenomMetadataResponse is the response type for the Query/DenomMetadata
+// RPC method.
+message QueryDenomMetadataResponse {
+  // metadata describes and provides all the client information for the
+  // requested token.
+  cosmos.bank.v1beta1.Metadata metadata = 1 [ (gogoproto.nullable) = false ];
+}

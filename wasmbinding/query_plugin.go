@@ -5,11 +5,45 @@ import (
 	"fmt"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	proto "github.com/gogo/protobuf/proto"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v10/wasmbinding/bindings"
 )
+
+func StarGateQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
+	return func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
+		binding, whitelisted := StargateLayerBindings.Load(request.Path)
+		if !whitelisted {
+			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", request.Path)}
+		}
+
+		route := queryRouter.Route(request.Path)
+		if route == nil {
+			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
+		}
+
+		res, err := route(ctx, abci.RequestQuery{
+			Data: request.Data,
+			Path: request.Path,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		// normalize response to ensure backward compatibility
+		bz, err := NormalizeReponses(binding, res.Value)
+		if err != nil {
+			return nil, err
+		}
+
+		return bz, nil
+	}
+}
 
 // CustomQuerier dispatches custom CosmWasm bindings queries.
 func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
@@ -108,6 +142,31 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown osmosis query variant"}
 		}
 	}
+}
+
+func NormalizeReponses(binding interface{}, bz []byte) ([]byte, error) {
+	// all values are proto message
+	message, ok := binding.(proto.Message)
+	if !ok {
+		return nil, wasmvmtypes.Unknown{}
+	}
+
+	// unmarshal binary into stargate response data structure
+	err := proto.Unmarshal(bz, message)
+	if err != nil {
+		return nil, wasmvmtypes.Unknown{}
+	}
+
+	// build new deterministic response
+	bz, err = proto.Marshal(message)
+	if err != nil {
+		return nil, wasmvmtypes.Unknown{}
+	}
+
+	// clear proto message
+	message.Reset()
+
+	return bz, nil
 }
 
 // ConvertSdkCoinsToWasmCoins converts sdk type coins to wasm vm type coins

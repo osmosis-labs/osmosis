@@ -2,7 +2,10 @@ package wasmbinding
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
@@ -26,5 +29,15 @@ func RegisterCustomPlugins(
 	return []wasm.Option{
 		queryPluginOpt,
 		messengerDecoratorOpt,
+	}
+}
+
+func RegisterStargateQueries(queryRouter baseapp.GRPCQueryRouter) []wasmkeeper.Option {
+	queryPluginOpt := wasmkeeper.WithQueryPlugins(&wasmkeeper.QueryPlugins{
+		Stargate: StarGateQuerier(queryRouter),
+	})
+
+	return []wasm.Option{
+		queryPluginOpt,
 	}
 }
