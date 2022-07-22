@@ -7,7 +7,7 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 func (s *KeeperTestHelper) AssertEventEmitted(ctx sdk.Context, eventTypeExpected string, numEventsExpected int) {
 	allEvents := ctx.EventManager().Events()
 	// filter out other events
-	actualEvents := make([]sdk.Event, 0, 1)
+	actualEvents := make([]sdk.Event, 0)
 	for _, event := range allEvents {
 		if event.Type == eventTypeExpected {
 			actualEvents = append(actualEvents, event)
