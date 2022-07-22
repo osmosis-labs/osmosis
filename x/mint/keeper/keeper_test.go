@@ -133,7 +133,7 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			coin, err := keeper.GetProportions(suite.Ctx, tc.mintedCoin, tc.ratio)
+			coin, err := keeper.GetProportions(tc.mintedCoin, tc.ratio)
 
 			if tc.expectedError != nil {
 				suite.Require().Equal(tc.expectedError, err)
