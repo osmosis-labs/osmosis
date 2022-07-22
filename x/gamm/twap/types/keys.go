@@ -24,27 +24,29 @@ const (
 	KeySeparator = "|"
 )
 
-var mostRecentTWAPsNoSeparator = "recent_twap"
-var historicalTWAPTimeIndexNoSeparator = "historical_time_index"
-var historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
+var (
+	mostRecentTWAPsNoSeparator         = "recent_twap"
+	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
+	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
 
-var mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
-var historicalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
-var historicalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
+	mostRecentTWAPsPrefix         = mostRecentTWAPsNoSeparator + KeySeparator
+	historicalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
+	historicalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
+)
 
 // TODO: make utility command to automatically interlace separators
 
-func FormatMostRecentTWAPKey(poolId uint64, denom1 string, denom2 string) []byte {
+func FormatMostRecentTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 	return []byte(fmt.Sprintf("%s%d%s%s%s%s", mostRecentTWAPsPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2))
 }
 
 // TODO: Replace historical management with ORM, we currently accept 2x write amplification right now.
-func FormatHistoricalTimeIndexTWAPKey(accumulatorWriteTime time.Time, poolId uint64, denom1 string, denom2 string) []byte {
+func FormatHistoricalTimeIndexTWAPKey(accumulatorWriteTime time.Time, poolId uint64, denom1, denom2 string) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
 	return []byte(fmt.Sprintf("%s%s%s%d%s%s%s%s", historicalTWAPTimeIndexPrefix, timeS, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2))
 }
 
-func FormatHistoricalPoolIndexTWAPKey(poolId uint64, accumulatorWriteTime time.Time, denom1 string, denom2 string) []byte {
+func FormatHistoricalPoolIndexTWAPKey(poolId uint64, accumulatorWriteTime time.Time, denom1, denom2 string) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
 	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s", historicalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator, denom1, KeySeparator, denom2))
 }
