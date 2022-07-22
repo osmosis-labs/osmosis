@@ -45,7 +45,6 @@ func (s *TestSuite) TestTrackChangedPool() {
 // TestGetAllMostRecentRecordsForPool takes a list of records as test cases,
 // and runs storeNewRecord for everything in sequence.
 // Then it runs GetAllMostRecentRecordsForPool, and sees if its equal to expected
-
 func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 	baseTime := time.Unix(1257894000, 0).UTC()
 	tPlusOne := baseTime.Add(time.Second)
@@ -71,11 +70,22 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 			1,
 			[]types.TwapRecord{tPlusOneRecord},
 		},
-		"settwo records, reverse order": {
+		"set two records, reverse order": {
 			// The last record, independent of time, takes precedence for most recent.
 			[]types.TwapRecord{tPlusOneRecord, baseRecord},
 			1,
 			[]types.TwapRecord{baseRecord},
+		},
+		"set multi-asset pool record": {
+			[]types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA"),
+				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenB"),
+				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenA")},
+			1,
+			[]types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA"),
+				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenA"),
+				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenB")},
 		},
 	}
 
