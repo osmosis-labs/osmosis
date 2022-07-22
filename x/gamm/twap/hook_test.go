@@ -9,7 +9,8 @@ import (
 func (s *TestSuite) TestCreateTwoAssetPoolFlow() {
 	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
 
-	expectedTwap := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, "token/B", "token/A")
+	expectedTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, "token/B", "token/A")
+	s.Require().NoError(err)
 
 	twap, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, "token/B", "token/A")
 	s.Require().NoError(err)

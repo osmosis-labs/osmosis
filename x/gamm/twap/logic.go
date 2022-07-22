@@ -12,7 +12,11 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
 	denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 	for i := 0; i < len(denomPairs0); i++ {
-		record := types.NewTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
+		record, err := types.NewTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
+		// err should be impossible given GetAllUniqueDenomPairs guarantees
+		if err != nil {
+			return err
+		}
 		k.storeNewRecord(ctx, record)
 	}
 	k.trackChangedPool(ctx, poolId)

@@ -10,9 +10,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 )
 
-func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string, denom1 string) TwapRecord {
+func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string, denom1 string) (TwapRecord, error) {
 	if !(denom0 > denom1) {
-		panic(fmt.Sprintf("precondition denom0 > denom1 not satisfied. denom0 %s | denom1 %s", denom0, denom1))
+		return TwapRecord{}, fmt.Errorf("precondition denom0 > denom1 not satisfied. denom0 %s | denom1 %s", denom0, denom1)
 	}
 	sp0 := MustGetSpotPrice(k, ctx, poolId, denom0, denom1)
 	sp1 := MustGetSpotPrice(k, ctx, poolId, denom1, denom0)
@@ -26,7 +26,7 @@ func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string
 		P1LastSpotPrice:             sp1,
 		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
 		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
-	}
+	}, nil
 }
 
 // mustGetSpotPrice returns the spot price for the given pool id, and denom0 in terms of denom1.
