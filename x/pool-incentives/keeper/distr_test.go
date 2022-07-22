@@ -208,76 +208,93 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	suite.Equal(feePoolOrigin.CommunityPool.Add(sdk.NewDecCoin("stake", sdk.NewInt(40001))), feePoolNew.CommunityPool)
 }
 
-func (suite *KeeperTestSuite) TestReplaceDistrRecords() uint64 {
-	suite.SetupTest()
+func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 
-	keeper := suite.App.PoolIncentivesKeeper
+	tests := []struct {
+		name        string
+		args        []types.DistrRecord
+		isPoolPrepared bool
+		expectErr  bool
+	}{
+		{
+			name:        "Not existent gauge.",
+			args:        []types.DistrRecord{{
+				GaugeId: 1,
+				Weight:  sdk.NewInt(100),
+			}},
+			isPoolPrepared: false,
+			expectErr:  true,
+		},
+		{
+			name:        "Adding two of the same gauge id at once should error",
+			args:        []types.DistrRecord{
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(100),
+				},
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(200),
+				},
+			},
+			isPoolPrepared: true,
+			expectErr:  true,
+		},
+		{
+			name:        "Adding unsort gauges at once should error",
+			args:        []types.DistrRecord{
+				{
+					GaugeId: 2,
+					Weight:  sdk.NewInt(100),
+				},
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(100),
+				},
+			},
+			isPoolPrepared: true,
+			expectErr:  true,
+		},
+		{
+			name:        "Happy case",
+			args:        []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  sdk.NewInt(100),
+				},
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(100),
+				},
+			},
+			isPoolPrepared: true,
+			expectErr:  false,
+		},
+	}
 
-	// Not existent gauge.
-	err := keeper.ReplaceDistrRecords(suite.Ctx, types.DistrRecord{
-		GaugeId: 1,
-		Weight:  sdk.NewInt(100),
-	})
-	suite.Error(err)
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			keeper := suite.App.PoolIncentivesKeeper
 
-	poolId := suite.PrepareBalancerPool()
+			if test.isPoolPrepared {
+				suite.PrepareBalancerPool()
+			}
 
-	// LockableDurations should be 1, 3, 7 hours from the default genesis state for testing
-	lockableDurations := keeper.GetLockableDurations(suite.Ctx)
-	suite.Equal(3, len(lockableDurations))
+			err := keeper.ReplaceDistrRecords(suite.Ctx, test.args...)
+			if test.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
 
-	gaugeId, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[0])
-	suite.NoError(err)
-
-	err = keeper.ReplaceDistrRecords(suite.Ctx, types.DistrRecord{
-		GaugeId: gaugeId,
-		Weight:  sdk.NewInt(100),
-	})
-	suite.NoError(err)
-	distrInfo := keeper.GetDistrInfo(suite.Ctx)
-	suite.Equal(1, len(distrInfo.Records))
-	suite.Equal(gaugeId, distrInfo.Records[0].GaugeId)
-	suite.Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
-	suite.Equal(sdk.NewInt(100), distrInfo.TotalWeight)
-
-	// adding two of the same gauge id at once should error
-	err = keeper.ReplaceDistrRecords(suite.Ctx, types.DistrRecord{
-		GaugeId: gaugeId,
-		Weight:  sdk.NewInt(100),
-	}, types.DistrRecord{
-		GaugeId: gaugeId,
-		Weight:  sdk.NewInt(200),
-	})
-	suite.Error(err)
-
-	gaugeId2 := gaugeId + 1
-	gaugeId3 := gaugeId + 2
-
-	err = keeper.ReplaceDistrRecords(suite.Ctx, types.DistrRecord{
-		GaugeId: gaugeId2,
-		Weight:  sdk.NewInt(100),
-	}, types.DistrRecord{
-		GaugeId: gaugeId3,
-		Weight:  sdk.NewInt(200),
-	})
-	suite.NoError(err)
-
-	distrInfo = keeper.GetDistrInfo(suite.Ctx)
-	suite.Equal(2, len(distrInfo.Records))
-	suite.Equal(gaugeId2, distrInfo.Records[0].GaugeId)
-	suite.Equal(gaugeId3, distrInfo.Records[1].GaugeId)
-	suite.Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
-	suite.Equal(sdk.NewInt(200), distrInfo.Records[1].Weight)
-	suite.Equal(sdk.NewInt(300), distrInfo.TotalWeight)
-
-	// Can replace the registered gauge id
-	err = keeper.ReplaceDistrRecords(suite.Ctx, types.DistrRecord{
-		GaugeId: gaugeId2,
-		Weight:  sdk.NewInt(100),
-	})
-	suite.NoError(err)
-
-	return gaugeId
+				distrInfo := keeper.GetDistrInfo(suite.Ctx)
+				suite.Require().Equal(len(test.args), len(distrInfo.Records))
+				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
+				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[1].Weight)
+				suite.Require().Equal(sdk.NewInt(200), distrInfo.TotalWeight)
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
