@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
@@ -57,18 +56,17 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 }
 
 func (suite *KeeperTestSuite) TestAllocateAsset() {
-
 	tests := []struct {
-		name        			string
-		args        			[]types.DistrRecord
-		mintedCoins 			sdk.Coin
-		expectedGaugesBalances  []sdk.Coins
-		expectedFeeCollector	sdk.Coin
-		expectedCommunityPool	sdk.DecCoin
+		name                   string
+		args                   []types.DistrRecord
+		mintedCoins            sdk.Coin
+		expectedGaugesBalances []sdk.Coins
+		expectedFeeCollector   sdk.Coin
+		expectedCommunityPool  sdk.DecCoin
 	}{
 		{
-			name:        "Allocated to the gauges proportionally",
-			args:        []types.DistrRecord{
+			name: "Allocated to the gauges proportionally",
+			args: []types.DistrRecord{
 				{
 					GaugeId: 1,
 					Weight:  sdk.NewInt(100),
@@ -81,20 +79,19 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 					GaugeId: 3,
 					Weight:  sdk.NewInt(300),
 				},
-
 			},
 			mintedCoins: sdk.NewCoin("stake", sdk.NewInt(50000)),
-			expectedGaugesBalances:  []sdk.Coins{
+			expectedGaugesBalances: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2500))),
 				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(4999))),
 				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(7500))),
 			},
-			expectedFeeCollector: sdk.NewCoin("stake", sdk.NewInt(20000)),
+			expectedFeeCollector:  sdk.NewCoin("stake", sdk.NewInt(20000)),
 			expectedCommunityPool: sdk.NewDecCoin("stake", sdk.NewInt(5000)),
 		},
 		{
-			name:        "Community pool distribution when gaugeId is zero",
-			args:        []types.DistrRecord{
+			name: "Community pool distribution when gaugeId is zero",
+			args: []types.DistrRecord{
 				{
 					GaugeId: 0,
 					Weight:  sdk.NewInt(700),
@@ -109,22 +106,21 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 				},
 			},
 			mintedCoins: sdk.NewCoin("stake", sdk.NewInt(100000)),
-			expectedGaugesBalances:  []sdk.Coins{
+			expectedGaugesBalances: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0))),
 				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(3000))),
 				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(6000))),
 			},
-			expectedFeeCollector: sdk.NewCoin("stake", sdk.NewInt(40000)),
+			expectedFeeCollector:  sdk.NewCoin("stake", sdk.NewInt(40000)),
 			expectedCommunityPool: sdk.NewDecCoin("stake", sdk.NewInt(31000)),
 		},
 		{
-			name:        "community pool distribution when no distribution records are set",
-			args:        []types.DistrRecord{
-			},
-			mintedCoins: sdk.NewCoin("stake", sdk.NewInt(100000)),
-			expectedGaugesBalances:  []sdk.Coins{},
-			expectedFeeCollector: sdk.NewCoin("stake", sdk.NewInt(40000)),
-			expectedCommunityPool: sdk.NewDecCoin("stake", sdk.NewInt(40000)),
+			name:                   "community pool distribution when no distribution records are set",
+			args:                   []types.DistrRecord{},
+			mintedCoins:            sdk.NewCoin("stake", sdk.NewInt(100000)),
+			expectedGaugesBalances: []sdk.Coins{},
+			expectedFeeCollector:   sdk.NewCoin("stake", sdk.NewInt(40000)),
+			expectedCommunityPool:  sdk.NewDecCoin("stake", sdk.NewInt(40000)),
 		},
 	}
 
@@ -167,7 +163,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 
 			suite.Require().Equal(test.expectedFeeCollector, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake"))
 			for i := 0; i < len(test.args); i++ {
-				if(test.args[i].GaugeId == 0) {
+				if test.args[i].GaugeId == 0 {
 					continue
 				}
 				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, test.args[i].GaugeId)
@@ -179,28 +175,27 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 			suite.Require().Equal(feePoolOrigin.CommunityPool.Add(test.expectedCommunityPool), feePoolNew.CommunityPool)
 		})
 	}
-} 
+}
 
 func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
-
 	tests := []struct {
-		name        string
-		args        []types.DistrRecord
+		name           string
+		args           []types.DistrRecord
 		isPoolPrepared bool
-		expectErr  bool
+		expectErr      bool
 	}{
 		{
-			name:        "Not existent gauge.",
-			args:        []types.DistrRecord{{
+			name: "Not existent gauge.",
+			args: []types.DistrRecord{{
 				GaugeId: 1,
 				Weight:  sdk.NewInt(100),
 			}},
 			isPoolPrepared: false,
-			expectErr:  true,
+			expectErr:      true,
 		},
 		{
-			name:        "Adding two of the same gauge id at once should error",
-			args:        []types.DistrRecord{
+			name: "Adding two of the same gauge id at once should error",
+			args: []types.DistrRecord{
 				{
 					GaugeId: 1,
 					Weight:  sdk.NewInt(100),
@@ -211,11 +206,11 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 				},
 			},
 			isPoolPrepared: true,
-			expectErr:  true,
+			expectErr:      true,
 		},
 		{
-			name:        "Adding unsort gauges at once should error",
-			args:        []types.DistrRecord{
+			name: "Adding unsort gauges at once should error",
+			args: []types.DistrRecord{
 				{
 					GaugeId: 2,
 					Weight:  sdk.NewInt(100),
@@ -226,11 +221,11 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 				},
 			},
 			isPoolPrepared: true,
-			expectErr:  true,
+			expectErr:      true,
 		},
 		{
-			name:        "Happy case",
-			args:        []types.DistrRecord{
+			name: "Happy case",
+			args: []types.DistrRecord{
 				{
 					GaugeId: 0,
 					Weight:  sdk.NewInt(100),
@@ -241,7 +236,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 				},
 			},
 			isPoolPrepared: true,
-			expectErr:  false,
+			expectErr:      false,
 		},
 	}
 
@@ -272,23 +267,23 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 
 func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 	tests := []struct {
-		name        string
-		args        []types.DistrRecord
+		name           string
+		args           []types.DistrRecord
 		isPoolPrepared bool
-		expectErr  bool
+		expectErr      bool
 	}{
 		{
-			name:        "Not existent gauge.",
-			args:        []types.DistrRecord{{
+			name: "Not existent gauge.",
+			args: []types.DistrRecord{{
 				GaugeId: 1,
 				Weight:  sdk.NewInt(100),
 			}},
 			isPoolPrepared: false,
-			expectErr:  true,
+			expectErr:      true,
 		},
 		{
-			name:        "Adding two of the same gauge id at once should error",
-			args:        []types.DistrRecord{
+			name: "Adding two of the same gauge id at once should error",
+			args: []types.DistrRecord{
 				{
 					GaugeId: 1,
 					Weight:  sdk.NewInt(100),
@@ -299,11 +294,11 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 				},
 			},
 			isPoolPrepared: true,
-			expectErr:  true,
+			expectErr:      true,
 		},
 		{
-			name:        "Adding unsort gauges at once should error",
-			args:        []types.DistrRecord{
+			name: "Adding unsort gauges at once should error",
+			args: []types.DistrRecord{
 				{
 					GaugeId: 2,
 					Weight:  sdk.NewInt(100),
@@ -314,11 +309,11 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 				},
 			},
 			isPoolPrepared: true,
-			expectErr:  true,
+			expectErr:      true,
 		},
 		{
-			name:        "Happy case",
-			args:        []types.DistrRecord{
+			name: "Happy case",
+			args: []types.DistrRecord{
 				{
 					GaugeId: 0,
 					Weight:  sdk.NewInt(100),
@@ -329,7 +324,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 				},
 			},
 			isPoolPrepared: true,
-			expectErr:  false,
+			expectErr:      false,
 		},
 	}
 
