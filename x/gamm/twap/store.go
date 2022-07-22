@@ -11,6 +11,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
 
+// trackChangedPool places an entry into a transient store,
+// to track that this pool changed this block.
+// This tracking is for use in EndBlock, to create new TWAP records.
 func (k Keeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
 	store := ctx.TransientStore(k.transientKey)
 	poolIdBz := make([]byte, 8)
@@ -20,6 +23,9 @@ func (k Keeper) trackChangedPool(ctx sdk.Context, poolId uint64) {
 	store.Set(poolIdBz, sentinelExistsValue)
 }
 
+// getChangedPools returns all poolIDs that changed this block.
+// This is to be guaranteed by trackChangedPool being called on every
+// price-affecting pool action.
 func (k Keeper) getChangedPools(ctx sdk.Context) []uint64 {
 	store := ctx.TransientStore(k.transientKey)
 	iter := store.Iterator(nil, nil)
@@ -34,6 +40,7 @@ func (k Keeper) getChangedPools(ctx sdk.Context) []uint64 {
 	return alteredPoolIds
 }
 
+// storeHistoricalTWAP writes a twap to the store, in all needed indexing.
 func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
@@ -55,6 +62,11 @@ func (k Keeper) deleteHistoricalRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store.Delete(key2)
 }
 
+// getMostRecentRecordStoreRepresentation returns the most recent twap record in the store
+// for the provided (pool, asset0, asset1) triplet.
+// Its called store representation, because most recent record can refer to it being
+// interpolated to the current block time, or after events in this block.
+// Neither of which apply to the record this returns.
 func (k Keeper) getMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(poolId, asset0Denom, asset1Denom)
@@ -62,11 +74,14 @@ func (k Keeper) getMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId u
 	return types.ParseTwapFromBz(bz)
 }
 
+// getMostRecentRecordStoreRepresentation returns all most recent twap records
+// (in state representation) for the provided pool id.
 func (k Keeper) getAllMostRecentRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	return types.GetAllMostRecentTwapsForPool(store, poolId)
 }
 
+// storeNewRecord stores a record, in both the most recent record store and historical stores.
 func (k Keeper) storeNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
@@ -74,8 +89,17 @@ func (k Keeper) storeNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 	k.storeHistoricalTWAP(ctx, twap)
 }
 
-// returns an error if theres no historical record at or before time.
-// (Asking for a time too far back)
+// getRecordAtOrBeforeTime on a given input (id, t, asset0, asset1)
+// returns the TWAP record from state for (id, t', asset0, asset1),
+// where t' is such that:
+// * t' <= t
+// * there exists no t'' in state, where t'' < t'
+//
+// This returns an error if:
+// * there is no historical record in state at or before t
+//   - Occurs if t is older than pruning period, or pool creation date.
+// * there is no record for the asset pair (asset0, asset1) in particular
+//   - e.g. asset not in pool, or provided in wrong order.
 func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	// We make an iteration from time=t + 1ns, to time=0 for this pool.
