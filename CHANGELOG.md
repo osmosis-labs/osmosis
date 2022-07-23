@@ -86,6 +86,7 @@ This release contains minor CLI bug fixes.
 * [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Add hourly epochs to `x/epochs` DefaultGenesis.
 * [#1665](https://github.com/osmosis-labs/osmosis/pull/1665) Delete app/App interface, instead use simapp.App
 * [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
+* [#2202](https://github.com/osmosis-labs/osmosis/pull/2202) Minimum message fee for `CreateGauge`, `AddToGauge`; feedecorator `IsSufficientFee` API changes.
 
 ### Bug Fixes
 
