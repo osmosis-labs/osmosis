@@ -4,6 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	twaptypes "github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
 
 // GenerateKeys generates new keys (KV Store, Transient store, and memory store).
@@ -13,7 +15,7 @@ func (appKeepers *AppKeepers) GenerateKeys() {
 	appKeepers.keys = sdk.NewKVStoreKeys(KVStoreKeys()...)
 
 	// Define transient store keys
-	appKeepers.tkeys = sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
+	appKeepers.tkeys = sdk.NewTransientStoreKeys(paramstypes.TStoreKey, twaptypes.TransientStoreKey)
 
 	// MemKeys are for information that is stored only in RAM.
 	appKeepers.memKeys = sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)

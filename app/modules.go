@@ -47,6 +47,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v10/x/incentives"
 	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
@@ -121,6 +123,7 @@ func appModules(
 		params.NewAppModule(*app.ParamsKeeper),
 		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
+		twap.NewAppModule(*app.TwapKeeper),
 		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
 		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
@@ -165,7 +168,7 @@ func orderBeginBlockers(allModuleNames []string) []string {
 // OrderEndBlockers returns EndBlockers (crisis, govtypes, staking) with no relative order.
 func OrderEndBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
-	// only Osmosis modules with endblock code are: crisis, govtypes, staking
+	// only Osmosis modules with endblock code are: twap, crisis, govtypes, staking
 	// we don't care about the relative ordering between them.
 	return ord.TotalOrdering()
 }
@@ -190,6 +193,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
+		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,

@@ -39,6 +39,18 @@ func (sim *SimCtx) RandomSimAccountWithConstraint(f SimAccountConstraint) (simul
 	return sim.randomSimAccount(filteredAddrs), true
 }
 
+func (sim *SimCtx) RandomSimAccountWithMinCoins(ctx sdk.Context, coins sdk.Coins) (simulation.Account, error) {
+	accHasMinCoins := func(acc simulation.Account) bool {
+		spendableCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
+		return spendableCoins.IsAllGTE(coins) && coins.DenomsSubsetOf(spendableCoins)
+	}
+	acc, found := sim.RandomSimAccountWithConstraint(accHasMinCoins)
+	if !found {
+		return simulation.Account{}, errors.New("no address with min balance found.")
+	}
+	return acc, nil
+}
+
 func (sim *SimCtx) RandomExistingAddress() sdk.AccAddress {
 	acc := sim.RandomSimAccount()
 	return acc.Address
@@ -82,6 +94,13 @@ func (sim *SimCtx) SelAddrWithDenoms(ctx sdk.Context, denoms []string) (simulati
 		for _, denom := range denoms {
 			if sim.BankKeeper().GetBalance(ctx, acc.Address, denom).Amount.IsZero() {
 				return false
+			}
+			// only return addr if it has spendable coins of requested denom
+			coins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
+			for _, coin := range coins {
+				if denom == coin.Denom {
+					return true
+				}
 			}
 		}
 		return true
@@ -178,9 +197,13 @@ func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) sdk
 func (sim *SimCtx) RandCoinSubset(ctx sdk.Context, addr sdk.AccAddress, denoms []string) sdk.Coins {
 	subsetCoins := sdk.Coins{}
 	for _, denom := range denoms {
-		bal := sim.BankKeeper().GetBalance(ctx, addr, denom)
-		amt := sim.RandPositiveInt(bal.Amount)
-		subsetCoins = subsetCoins.Add(sdk.NewCoin(bal.Denom, amt))
+		coins := sim.BankKeeper().SpendableCoins(ctx, addr)
+		for _, coin := range coins {
+			if denom == coin.Denom {
+				amt := sim.RandPositiveInt(coin.Amount)
+				subsetCoins = subsetCoins.Add(sdk.NewCoin(coin.Denom, amt))
+			}
+		}
 	}
 	return subsetCoins
 }
