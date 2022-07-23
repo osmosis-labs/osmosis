@@ -56,6 +56,7 @@ func (k Keeper) GetArithmeticTwap(
 	return twap, nil
 }
 
+// GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
 func (k Keeper) GetArithmeticTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,

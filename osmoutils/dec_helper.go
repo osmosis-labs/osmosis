@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var OneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
+var ThreePlusOneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
 
 // intended to be used with require/assert:  require.True(DecEq(...))
 // TODO: Replace with function in SDK types package when we update

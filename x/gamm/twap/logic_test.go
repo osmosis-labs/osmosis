@@ -178,15 +178,18 @@ func TestComputeArithmeticTwap(t *testing.T) {
 			denom1,
 			sdk.OneDec(),
 		},
-		"accumulator = 10*OneSec, t=5s. 0 base accum":   testCaseFromDeltas(sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
-		"accumulator = 10*OneSec, t=3s. 0 base accum":   testCaseFromDeltas(sdk.ZeroDec(), tenSecAccum, 3*time.Second, osmoutils.OneThird),
-		"accumulator = 10*OneSec, t=100s. 0 base accum": testCaseFromDeltas(sdk.ZeroDec(), tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
+		"accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
+			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+		"accumulator = 10*OneSec, t=3s. 0 base accum": testCaseFromDeltas(
+			sdk.ZeroDec(), tenSecAccum, 3*time.Second, osmoutils.ThreePlusOneThird),
+		"accumulator = 10*OneSec, t=100s. 0 base accum": testCaseFromDeltas(
+			sdk.ZeroDec(), tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
 
 		// test that base accum has no impact
 		"accumulator = 10*OneSec, t=5s. 10 base accum": testCaseFromDeltas(
 			sdk.NewDec(10), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
 		"accumulator = 10*OneSec, t=3s. 10*second base accum": testCaseFromDeltas(
-			tenSecAccum, tenSecAccum, 3*time.Second, osmoutils.OneThird),
+			tenSecAccum, tenSecAccum, 3*time.Second, osmoutils.ThreePlusOneThird),
 		"accumulator = 10*OneSec, t=100s. .1*second base accum": testCaseFromDeltas(
 			pointOneAccum, tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
 
