@@ -104,7 +104,7 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, tx sdk
 	}
 	feeCoins := tx.GetFee()
 	if len(feeCoins) != 1 {
-		return errors.Wrap(sdkerrors.ErrInsufficientFee, fmt.Sprintf("need one fee coin, got %d, %s", len(feeCoins), feeCoins))
+		return errors.Wrap(sdkerrors.ErrInsufficientFee, fmt.Sprintf("invalid number of fee tokens provided (%s); expected: 1, got: %d", feeCoins, len(feeCoins)))
 	}
 	feeCoin := feeCoins[0]
 
