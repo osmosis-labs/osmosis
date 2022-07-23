@@ -873,23 +873,23 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 	}
 }
 
-// Test authz with ledger
+// Test authz
 func TestAuthzMsg(t *testing.T) {
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
-
+	coin := sdk.NewCoin("stake", sdk.NewInt(1))
 	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
 
 	testCases := []struct {
-		expectedRevokeSignByteMsg  string
 		expectedGrantSignByteMsg   string
+		expectedRevokeSignByteMsg  string
 		expectedExecStrSignByteMsg string
 		gammMsg                    sdk.Msg
 	}{
 		{
-			expectedRevokeSignByteMsg:  fmt.Sprintf(""),
-			expectedGrantSignByteMsg:   fmt.Sprintf(""),
+			expectedGrantSignByteMsg:   `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedRevokeSignByteMsg:  `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn"}}],"sequence":"1","timeout_height":"1"}`,
 			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/gamm/exit-swap-share-amount-in","value":{"pool_id":"1","sender":"%s","share_in_amount":"100","token_out_denom":"test","token_out_min_amount":"100"}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
 			gammMsg: &MsgExitSwapShareAmountIn{
 				Sender:            addr1,
@@ -897,6 +897,96 @@ func TestAuthzMsg(t *testing.T) {
 				TokenOutDenom:     "test",
 				ShareInAmount:     sdk.NewInt(100),
 				TokenOutMinAmount: sdk.NewInt(100),
+			},
+		},
+		{
+			expectedGrantSignByteMsg:   `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedRevokeSignByteMsg:  `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/gamm/exit-swap-extern-amount-out","value":{"pool_id":"1","sender":"%s","share_in_max_amount":"1","token_out":{"amount":"1","denom":"stake"}}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
+			gammMsg: &MsgExitSwapExternAmountOut{
+				Sender:           addr1,
+				PoolId:           1,
+				TokenOut:         coin,
+				ShareInMaxAmount: sdk.NewInt(1),
+			},
+		},
+		{
+			expectedGrantSignByteMsg:   `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.gamm.v1beta1.MsgExitPool"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedRevokeSignByteMsg:  `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.gamm.v1beta1.MsgExitPool"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/gamm/exit-pool","value":{"pool_id":"1","sender":"%s","share_in_amount":"100","token_out_mins":[{"amount":"1","denom":"stake"}]}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
+			gammMsg: &MsgExitPool{
+				Sender:        addr1,
+				PoolId:        1,
+				ShareInAmount: sdk.NewInt(100),
+				TokenOutMins:  sdk.NewCoins(coin),
+			},
+		},
+		{
+			expectedGrantSignByteMsg:   `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.gamm.v1beta1.MsgJoinPool"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedRevokeSignByteMsg:  `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.gamm.v1beta1.MsgJoinPool"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/gamm/join-pool","value":{"pool_id":"1","sender":"%s","share_out_amount":"1","token_in_maxs":[{"amount":"1","denom":"stake"}]}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
+			gammMsg: &MsgJoinPool{
+				Sender:         addr1,
+				PoolId:         1,
+				ShareOutAmount: sdk.NewInt(1),
+				TokenInMaxs:    sdk.NewCoins(coin),
+			},
+		},
+		{
+			expectedGrantSignByteMsg:   `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.gamm.v1beta1.MsgJoinSwapExternAmountIn"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedRevokeSignByteMsg:  `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.gamm.v1beta1.MsgJoinSwapExternAmountIn"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/gamm/join-swap-extern-amount-in","value":{"pool_id":"1","sender":"%s","share_out_min_amount":"1","token_in":{"amount":"1","denom":"stake"}}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
+			gammMsg: &MsgJoinSwapExternAmountIn{
+				Sender:            addr1,
+				PoolId:            1,
+				TokenIn:           coin,
+				ShareOutMinAmount: sdk.NewInt(1),
+			},
+		},
+		{
+			expectedGrantSignByteMsg:   `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOut"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedRevokeSignByteMsg:  `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOut"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/gamm/join-swap-share-amount-out","value":{"pool_id":"1","sender":"%s","share_out_amount":"1","token_in_denom":"denom","token_in_max_amount":"1"}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
+			gammMsg: &MsgJoinSwapShareAmountOut{
+				Sender:           addr1,
+				PoolId:           1,
+				TokenInDenom:     "denom",
+				ShareOutAmount:   sdk.NewInt(1),
+				TokenInMaxAmount: sdk.NewInt(1),
+			},
+		},
+		{
+			expectedGrantSignByteMsg:   `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.gamm.v1beta1.MsgSwapExactAmountIn"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedRevokeSignByteMsg:  `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.gamm.v1beta1.MsgSwapExactAmountIn"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/gamm/swap-exact-amount-in","value":{"routes":[{"token_out_denom":"test"},{"pool_id":"1","token_out_denom":"test2"}],"sender":"%s","token_in":{"amount":"1","denom":"stake"},"token_out_min_amount":"1"}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
+			gammMsg: &MsgSwapExactAmountIn{
+				Sender: addr1,
+				Routes: []SwapAmountInRoute{{
+					PoolId:        0,
+					TokenOutDenom: "test",
+				}, {
+					PoolId:        1,
+					TokenOutDenom: "test2",
+				}},
+				TokenIn:           coin,
+				TokenOutMinAmount: sdk.NewInt(1),
+			},
+		},
+		{
+			expectedGrantSignByteMsg:   `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.gamm.v1beta1.MsgSwapExactAmountOut"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedRevokeSignByteMsg:  `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.gamm.v1beta1.MsgSwapExactAmountOut"}}],"sequence":"1","timeout_height":"1"}`,
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/gamm/swap-exact-amount-out","value":{"routes":[{"token_in_denom":"test"},{"pool_id":"1","token_in_denom":"test2"}],"sender":"%s","token_in_max_amount":"1","token_out":{"amount":"1","denom":"stake"}}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
+			gammMsg: &MsgSwapExactAmountOut{
+				Sender: addr1,
+				Routes: []SwapAmountOutRoute{{
+					PoolId:       0,
+					TokenInDenom: "test",
+				}, {
+					PoolId:       1,
+					TokenInDenom: "test2",
+				}},
+				TokenOut:         coin,
+				TokenInMaxAmount: sdk.NewInt(1),
 			},
 		},
 	}
@@ -907,14 +997,14 @@ func TestAuthzMsg(t *testing.T) {
 		require.NoError(t, err)
 		msgGrant := &authz.MsgGrant{Granter: "cosmos1abc", Grantee: "cosmos1def", Grant: grant}
 		require.Equal(t,
-			`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
+			tc.expectedGrantSignByteMsg,
 			string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgGrant}, "memo")),
 		)
 
 		// Authz: Revoke Msg
 		msgRevoke := &authz.MsgRevoke{Granter: "cosmos1abc", Grantee: "cosmos1def", MsgTypeUrl: typeURL}
 		require.Equal(t,
-			`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn"}}],"sequence":"1","timeout_height":"1"}`,
+			tc.expectedRevokeSignByteMsg,
 			string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgRevoke}, "memo")),
 		)
 
