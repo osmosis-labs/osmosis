@@ -114,7 +114,7 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, tx sdk
 	maxRequiredBaseFee := minBaseGasPrice.Mul(glDec).Ceil()
 
 	for _, msg := range tx.GetMsgs() {
-		if feeMsg, ok := msg.(types.MsgMinFeeExtension); !ok {
+		if feeMsg, ok := msg.(types.MsgMinFeeExtension); ok {
 			maxRequiredBaseFee = sdk.MaxDec(maxRequiredBaseFee, feeMsg.GetRequiredMinBaseFee())
 		}
 	}
