@@ -79,7 +79,7 @@ For users who need TWAPs outside the 48 hours stored in the state machine, you c
 
 ## Store layout
 
-We maintain twap accumulation records for every AMM pool on Osmosis. 
+We maintain TWAP accumulation records for every AMM pool on Osmosis. 
 
 Because Osmosis supports multi-asset pools, a complicating factor is that we have to store a record for every asset pair in the pool.
 For every pool, at a given point in time, we make one twap record entry per unique pair of denoms in the pool. If a pool has `k` denoms, the number of unique pairs is `k * (k - 1) / 2`.
@@ -98,9 +98,9 @@ A new TWAP record is created in two situations:
 
 When a pool is created, records are created with the current spot price of the pool.
 
-During EndBlock, new records are created, with:
-* The accumulator's updated based upon the most recent prior accumulator's stored last spot price
-* The LastSpotPrice's equal to the EndBlock spot price.
+During `EndBlock`, new records are created, with:
+* The accumulator's value is updated based upon the most recent prior accumulator's stored last spot price
+* The `LastSpotPrice` value is equal to the EndBlock spot price.
 
 In the event that a pool is created, and has a swap in the same block, the record entries are over written with the end block price.
 
