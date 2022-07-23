@@ -103,7 +103,7 @@ func TestMsgBeginUnlockingAll(t *testing.T) {
 
 	createMsg := func(after func(msg MsgBeginUnlockingAll) MsgBeginUnlockingAll) MsgBeginUnlockingAll {
 		properMsg := MsgBeginUnlockingAll{
-			Owner:    addr1,
+			Owner: addr1,
 		}
 
 		return after(properMsg)
@@ -160,8 +160,8 @@ func TestMsgBeginUnlocking(t *testing.T) {
 
 	createMsg := func(after func(msg MsgBeginUnlocking) MsgBeginUnlocking) MsgBeginUnlocking {
 		properMsg := MsgBeginUnlocking{
-			Owner:    addr1,
-			ID: 1,
+			Owner: addr1,
+			ID:    1,
 			Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
 		}
 
@@ -248,7 +248,7 @@ func TestMsgExtendLockup(t *testing.T) {
 	createMsg := func(after func(msg MsgExtendLockup) MsgExtendLockup) MsgExtendLockup {
 		properMsg := MsgExtendLockup{
 			Owner:    addr1,
-			ID: 1,
+			ID:       1,
 			Duration: time.Hour,
 		}
 
@@ -316,4 +316,3 @@ func TestMsgExtendLockup(t *testing.T) {
 		}
 	}
 }
-
