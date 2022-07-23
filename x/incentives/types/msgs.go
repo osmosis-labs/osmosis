@@ -18,9 +18,11 @@ const (
 	addToGaugeMinBaseFee  = 25 * 1_000_000
 )
 
-var _ sdk.Msg = &MsgCreateGauge{}
-var _ txfeestypes.MsgMinFeeExtension = &MsgCreateGauge{}
-var _ txfeestypes.MsgMinFeeExtension = &MsgAddToGauge{}
+var (
+	_ sdk.Msg                        = &MsgCreateGauge{}
+	_ txfeestypes.MsgMinFeeExtension = &MsgCreateGauge{}
+	_ txfeestypes.MsgMinFeeExtension = &MsgAddToGauge{}
+)
 
 // NewMsgCreateGauge creates a message to create a gauge with the provided parameters.
 func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64) *MsgCreateGauge {
