@@ -258,7 +258,6 @@ func (k Keeper) distributeSyntheticInternal(
 	}
 
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
-
 }
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
