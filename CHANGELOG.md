@@ -51,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Golang API breaks
 * [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
-* [#2030](https://github.com/osmosis-labs/osmosis/pull/2030) Rename `lockupKeeper.ResetAllLocks` to `InitializeAllLocks` and `.ResetAllSyntheticLocks` to `InitializeAllSyntheticLocks`.
+* [#2030](https://github.com/osmosis-labs/osmosis/pull/2030) Rename lockup keeper `ResetAllLocks` to `InitializeAllLocks` and `ResetAllSyntheticLocks` to `InitializeAllSyntheticLocks`.
 
 #### SDK Upgrades
 * [#2146](https://github.com/osmosis-labs/osmosis/pull/2146) Upgrade SDK for to v0.45.0x-osmo-v9.1. Major changes:
