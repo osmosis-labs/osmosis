@@ -7,7 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/pkg/errors"
 
-	// incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees/keeper/txfee_filters"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
@@ -94,8 +93,10 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
-// IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
-// to pay the gas cost of this tx.
+// IsSufficientFee checks if the tx provided (in any asset), is worth enough osmo at current spot prices
+// to pay the maximum of:
+// - gas cost of this tx
+// - minimum fee associated with any of the messages in this tx. N.B.: not all messages have such a fee.
 func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, tx sdk.FeeTx) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
