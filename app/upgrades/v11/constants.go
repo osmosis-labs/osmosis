@@ -1,6 +1,8 @@
 package v11
 
 import (
+	store "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
 )
 
@@ -10,4 +12,5 @@ const UpgradeName = "v11"
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
+	StoreUpgrades:        store.StoreUpgrades{},
 }
