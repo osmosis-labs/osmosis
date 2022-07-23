@@ -308,7 +308,7 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, ad
 	})
 
 	// when stored
-	storedProposal, err := govKeeper.SubmitProposal(ctx, src, false)
+	storedProposal, err := govKeeper.SubmitProposal(ctx, src)
 	require.NoError(t, err)
 
 	// and proposal execute
