@@ -55,33 +55,33 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 		expectedRecords []types.TwapRecord
 	}{
 		"set single record": {
-			[]types.TwapRecord{baseRecord},
-			1,
-			[]types.TwapRecord{baseRecord},
+			recordsToSet:    []types.TwapRecord{baseRecord},
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord},
 		},
 		"query non-existent pool": {
-			[]types.TwapRecord{baseRecord},
-			2,
-			[]types.TwapRecord{},
+			recordsToSet:    []types.TwapRecord{baseRecord},
+			poolId:          2,
+			expectedRecords: []types.TwapRecord{},
 		},
 		"set two records": {
-			[]types.TwapRecord{baseRecord, tPlusOneRecord},
-			1,
-			[]types.TwapRecord{tPlusOneRecord},
+			recordsToSet:    []types.TwapRecord{baseRecord, tPlusOneRecord},
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{tPlusOneRecord},
 		},
 		"set two records, reverse order": {
 			// The last record, independent of time, takes precedence for most recent.
-			[]types.TwapRecord{tPlusOneRecord, baseRecord},
-			1,
-			[]types.TwapRecord{baseRecord},
+			recordsToSet:    []types.TwapRecord{tPlusOneRecord, baseRecord},
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord},
 		},
 		"set multi-asset pool record": {
-			[]types.TwapRecord{
+			recordsToSet: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA"),
 				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenB"),
 				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenA")},
-			1,
-			[]types.TwapRecord{
+			poolId: 1,
+			expectedRecords: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA"),
 				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenA"),
 				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenB")},
