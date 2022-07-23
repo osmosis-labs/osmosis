@@ -227,20 +227,44 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 func (k Keeper) distributeSyntheticInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
-	denom := gauge.DistributeTo.Denom
+	qualifiedLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, gauge.DistributeTo.Denom, gauge.DistributeTo.Duration)
 
-	qualifiedLocks := make([]lockuptypes.PeriodLock, 0, len(locks))
+	// map from lockID to present index in resultant list
+	// to be state compatible with what we had before, we iterate over locks, to get qualified locks
+	// to be in the same order as what is present in locks.
+	// in a future release, we can just use qualified locks directly.
+	type lockIndexPair struct {
+		lock  lockuptypes.PeriodLock
+		index int
+	}
+	qualifiedLocksMap := make(map[uint64]lockIndexPair, len(qualifiedLocks))
+	for _, lock := range qualifiedLocks {
+		qualifiedLocksMap[lock.ID] = lockIndexPair{lock, -1}
+	}
+	curIndex := 0
 	for _, lock := range locks {
+<<<<<<< HEAD
 		// See if this lock has a synthetic lockup. If so, err == nil, and we add to qualifiedLocks
 		// otherwise it does not, and we continue.
 		_, err := k.lk.GetSyntheticLockup(ctx, lock.ID, denom)
 		if err != nil {
-			continue
+=======
+		if v, ok := qualifiedLocksMap[lock.ID]; ok {
+			qualifiedLocksMap[lock.ID] = lockIndexPair{v.lock, curIndex}
+			curIndex += 1
 		}
-		qualifiedLocks = append(qualifiedLocks, lock)
 	}
 
-	return k.distributeInternal(ctx, gauge, qualifiedLocks, distrInfo)
+	sortedAndTrimmedQualifiedLocks := make([]lockuptypes.PeriodLock, curIndex)
+	for _, v := range qualifiedLocksMap {
+		if v.index < 0 {
+>>>>>>> 3cdfbccd (feat: speedup epoch distribution, superfluid component (#2214))
+			continue
+		}
+		sortedAndTrimmedQualifiedLocks[v.index] = v.lock
+	}
+
+	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
 }
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to

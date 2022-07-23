@@ -42,12 +42,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v10.1.0
 
+<<<<<<< HEAD
 #### Bug Fixes
 * [2011](https://github.com/osmosis-labs/osmosis/pull/2011) Fix bug in TokenFactory initGenesis, relating to denom creation fee param.
 
 #### Improvements
 * [#2130](https://github.com/osmosis-labs/osmosis/pull/2130) Introduce errors in mint types.
 * [#2000](https://github.com/osmosis-labs/osmosis/pull/2000) Update import paths from v9 to v10.
+=======
+* [#1889](https://github.com/osmosis-labs/osmosis/pull/1825) Add proto responses to gamm LP messages:
+  * MsgJoinPoolResponse: share_out_amount and token_in fields 
+  * MsgExitPoolResponse: token_out field 
+* [#1825](https://github.com/osmosis-labs/osmosis/pull/1825) Fixes Interchain Accounts (host side) by adding it to AppModuleBasics
+* [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
+* [#1994](https://github.com/osmosis-labs/osmosis/pull/1994) Removed bech32ibc module
+* [#2016](https://github.com/osmosis-labs/osmosis/pull/2016) Add fixed 10000 gas cost for each Balancer swap
+* [#2147](https://github.com/osmosis-labs/osmosis/pull/2147) Set MaxAgeNumBlocks in v11 Upgrade Handler to two weeks.
+* [#2193](https://github.com/osmosis-labs/osmosis/pull/2193) Add TwapKeeper to the Osmosis app
+>>>>>>> 3cdfbccd (feat: speedup epoch distribution, superfluid component (#2214))
 
 #### Golang API breaks
 * [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
@@ -91,6 +103,8 @@ This release contains minor CLI bug fixes.
 * [1931](https://github.com/osmosis-labs/osmosis/pull/1931) Add explicit check for input denoms to `CalcJoinPoolShares`
 
 
+### Improvements
+* [#2214](https://github.com/osmosis-labs/osmosis/pull/2214) Speedup epoch distribution, superfluid component
 
 ## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
 
