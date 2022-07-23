@@ -243,12 +243,6 @@ func (k Keeper) distributeSyntheticInternal(
 	}
 	curIndex := 0
 	for _, lock := range locks {
-<<<<<<< HEAD
-		// See if this lock has a synthetic lockup. If so, err == nil, and we add to qualifiedLocks
-		// otherwise it does not, and we continue.
-		_, err := k.lk.GetSyntheticLockup(ctx, lock.ID, denom)
-		if err != nil {
-=======
 		if v, ok := qualifiedLocksMap[lock.ID]; ok {
 			qualifiedLocksMap[lock.ID] = lockIndexPair{v.lock, curIndex}
 			curIndex += 1
@@ -258,7 +252,6 @@ func (k Keeper) distributeSyntheticInternal(
 	sortedAndTrimmedQualifiedLocks := make([]lockuptypes.PeriodLock, curIndex)
 	for _, v := range qualifiedLocksMap {
 		if v.index < 0 {
->>>>>>> 3cdfbccd (feat: speedup epoch distribution, superfluid component (#2214))
 			continue
 		}
 		sortedAndTrimmedQualifiedLocks[v.index] = v.lock
