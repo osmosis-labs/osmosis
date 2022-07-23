@@ -67,6 +67,34 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 	}
 }
 
+func (s *TestSuite) TestGetArithmeticTwap() {
+	type getTwapInput struct {
+		poolId          uint64
+		quoteAssetDenom string
+		baseAssetDenom  string
+		startTime       time.Time
+		endTime         time.Time
+	}
+
+	tests := map[string]struct {
+		recordsToSet []types.TwapRecord
+		ctxTime      time.Time
+		input        getTwapInput
+		result       types.TwapRecord
+		expError     bool
+	}{}
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			for _, record := range test.recordsToSet {
+				s.twapkeeper.StoreNewRecord(s.Ctx, record)
+			}
+			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
+
+		})
+	}
+}
+
 // func (s *TestSuite) TestGetArithmeticTwapToNow() {
 // 	tests := map[string]struct {
 // 		// if start record is blank, don't do any sets

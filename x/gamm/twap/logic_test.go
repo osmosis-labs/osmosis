@@ -115,6 +115,10 @@ func (s *TestSuite) TestUpdateTwap() {
 	}
 }
 
+// TestComputeArithmeticTwap tests ComputeArithmeticTwap on various inputs.
+// The test vectors are structured by setting up different start and records,
+// based on time interval, and their accumulator values.
+// Then an expected TWAP is provided in each test case, to compare against computed.
 func TestComputeArithmeticTwap(t *testing.T) {
 	denom0, denom1 := "token/B", "token/A"
 	newOneSidedRecord := func(time time.Time, accum sdk.Dec, useP0 bool) types.TwapRecord {
@@ -124,6 +128,8 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		} else {
 			record.P1ArithmeticTwapAccumulator = accum
 		}
+		record.P0LastSpotPrice = sdk.ZeroDec()
+		record.P1LastSpotPrice = sdk.OneDec()
 		return record
 	}
 
@@ -134,8 +140,6 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		expTwap     sdk.Dec
 	}
 
-	baseTime := time.Unix(1257894000, 0).UTC()
-
 	testCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) testCase {
 		return testCase{
 			newOneSidedRecord(baseTime, startAccum, true),
@@ -144,6 +148,16 @@ func TestComputeArithmeticTwap(t *testing.T) {
 			expectedTwap,
 		}
 	}
+	testCaseFromDeltasAsset1 := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) testCase {
+		return testCase{
+			newOneSidedRecord(baseTime, startAccum, false),
+			newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), false),
+			denom1,
+			expectedTwap,
+		}
+	}
+	tenSecAccum := OneSec.MulInt64(10)
+	pointOneAccum := OneSec.QuoInt64(10)
 	plusOneSec := baseTime.Add(time.Second)
 	tests := map[string]testCase{
 		"basic: spot price = 1 for one second, 0 init accumulator": {
@@ -152,16 +166,33 @@ func TestComputeArithmeticTwap(t *testing.T) {
 			denom0,
 			sdk.OneDec(),
 		},
-		// "same record: denom0, unset spot price": {
-		// 	newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-		// 	newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-		// 	denom0,
-		// 	nil,
-		// },
-		"accumulator = 10*OneSec, t=5s. 0 base accum":   testCaseFromDeltas(sdk.ZeroDec(), OneSec.MulInt64(10), 5*time.Second, sdk.NewDec(2)),
-		"accumulator = 10*OneSec, t=3s. 0 base accum":   testCaseFromDeltas(sdk.ZeroDec(), OneSec.MulInt64(10), 3*time.Second, osmoutils.OneThird),
-		"accumulator = 10*OneSec, t=100s. 0 base accum": testCaseFromDeltas(sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
-		// TODO: Overflow, rounding, same record tests
+		"same record: denom0, end spot price = 0": {
+			newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			denom0,
+			sdk.ZeroDec(),
+		},
+		"same record: denom1, end spot price = 1": {
+			newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			denom1,
+			sdk.OneDec(),
+		},
+		"accumulator = 10*OneSec, t=5s. 0 base accum":   testCaseFromDeltas(sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+		"accumulator = 10*OneSec, t=3s. 0 base accum":   testCaseFromDeltas(sdk.ZeroDec(), tenSecAccum, 3*time.Second, osmoutils.OneThird),
+		"accumulator = 10*OneSec, t=100s. 0 base accum": testCaseFromDeltas(sdk.ZeroDec(), tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
+
+		// test that base accum has no impact
+		"accumulator = 10*OneSec, t=5s. 10 base accum": testCaseFromDeltas(
+			sdk.NewDec(10), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
+		"accumulator = 10*OneSec, t=3s. 10*second base accum": testCaseFromDeltas(
+			tenSecAccum, tenSecAccum, 3*time.Second, osmoutils.OneThird),
+		"accumulator = 10*OneSec, t=100s. .1*second base accum": testCaseFromDeltas(
+			pointOneAccum, tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
+
+		"accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
+
+		// TODO: Overflow, rounding
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {

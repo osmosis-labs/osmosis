@@ -135,9 +135,9 @@ func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRec
 	// if time difference is 0, then return the last spot price based off of start.
 	if timeDelta == time.Duration(0) {
 		if quoteAsset == startRecord.Asset0Denom {
-			return startRecord.P0LastSpotPrice
+			return endRecord.P0LastSpotPrice
 		}
-		return startRecord.P1LastSpotPrice
+		return endRecord.P1LastSpotPrice
 	}
 	var accumDiff sdk.Dec
 	if quoteAsset == startRecord.Asset0Denom {
