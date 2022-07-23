@@ -76,13 +76,67 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 		endTime         time.Time
 	}
 
+	makeSimpleTwapInput := func(startTime time.Time, endTime time.Time, isQuoteTokenA bool) getTwapInput {
+		quoteAssetDenom, baseAssetDenom := denom0, denom1
+		if isQuoteTokenA {
+			baseAssetDenom, quoteAssetDenom = quoteAssetDenom, baseAssetDenom
+		}
+		return getTwapInput{1, quoteAssetDenom, baseAssetDenom, startTime, endTime}
+	}
+
+	quoteAssetA := true
+	quoteAssetB := false
+	tPlusOne := baseTime.Add(time.Second)
+	// base record is a record with t=baseTime, sp0=10, sp1=.1, accumulators set to 0
+	baseRecord := newTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
+
 	tests := map[string]struct {
 		recordsToSet []types.TwapRecord
 		ctxTime      time.Time
 		input        getTwapInput
-		result       types.TwapRecord
-		expError     bool
-	}{}
+		expTwap      sdk.Dec
+		expErrorStr  string
+	}{
+		"(single record) start and end point to same record": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTime.Add(time.Minute),
+			input:        makeSimpleTwapInput(baseTime, tPlusOne, quoteAssetA),
+			expTwap:      sdk.NewDec(10),
+		},
+		"(single record) start and end point to same record, use sp1": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTime.Add(time.Minute),
+			input:        makeSimpleTwapInput(baseTime, tPlusOne, quoteAssetB),
+			expTwap:      sdk.NewDecWithPrec(1, 1),
+		},
+
+		// error catching
+		"end time in future": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTime,
+			input:        makeSimpleTwapInput(baseTime, tPlusOne, quoteAssetA),
+			expErrorStr:  "future",
+		},
+		"start time after end time": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTime,
+			input:        makeSimpleTwapInput(tPlusOne, baseTime, quoteAssetA),
+			expErrorStr:  "after",
+		},
+		"start time too old (end time = now)": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTime,
+			input:        makeSimpleTwapInput(baseTime.Add(-time.Hour), baseTime, quoteAssetA),
+			expErrorStr:  "too old",
+		},
+		"start time too old": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTime.Add(time.Second),
+			input:        makeSimpleTwapInput(baseTime.Add(-time.Hour), baseTime, quoteAssetA),
+			expErrorStr:  "too old",
+		},
+		// TODO: overflow tests, multi-asset pool handling, make more record interpolation cases
+	}
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
@@ -90,7 +144,16 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 				s.twapkeeper.StoreNewRecord(s.Ctx, record)
 			}
 			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
-
+			twap, err := s.twapkeeper.GetArithmeticTwap(s.Ctx, test.input.poolId,
+				test.input.quoteAssetDenom, test.input.baseAssetDenom,
+				test.input.startTime, test.input.endTime)
+			if test.expErrorStr != "" {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), test.expErrorStr)
+				return
+			}
+			s.Require().NoError(err)
+			s.Require().Equal(test.expTwap, twap)
 		})
 	}
 }

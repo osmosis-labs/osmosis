@@ -12,7 +12,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
 
-var defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin("token/B", 1_000_000_000), sdk.NewInt64Coin("token/A", 1_000_000_000))
+// TODO: Consider switching this everywhere
+var denom0 = "token/B"
+var denom1 = "token/A"
+var defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
 var baseTime = time.Unix(1257894000, 0).UTC()
 
 type TestSuite struct {
@@ -34,6 +37,20 @@ func (s *TestSuite) setupDefaultPool() (poolId uint64, denomA, denomB string) {
 	poolId = s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
 	denomA, denomB = defaultUniV2Coins[1].Denom, defaultUniV2Coins[0].Denom
 	return
+}
+
+func newTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
+	return types.TwapRecord{
+		PoolId:      1,
+		Time:        t,
+		Asset0Denom: denom0,
+		Asset1Denom: denom1,
+
+		P0LastSpotPrice:             sp0,
+		P1LastSpotPrice:             sdk.OneDec().Quo(sp0),
+		P0ArithmeticTwapAccumulator: accum0,
+		P1ArithmeticTwapAccumulator: accum1,
+	}
 }
 
 func newEmptyPriceRecord(poolId uint64, t time.Time, asset0 string, asset1 string) types.TwapRecord {

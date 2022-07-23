@@ -32,22 +32,23 @@ import (
 func (k Keeper) GetArithmeticTwap(
 	ctx sdk.Context,
 	poolId uint64,
-	quoteAssetDenom string,
 	baseAssetDenom string,
+	quoteAssetDenom string,
 	startTime time.Time,
 	endTime time.Time) (sdk.Dec, error) {
-	if endTime.Equal(ctx.BlockTime()) {
-		return k.GetArithmeticTwapToNow(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime)
-	} else if endTime.After(ctx.BlockTime()) {
-		return sdk.Dec{}, errors.New("called GetArithmeticTwap with an end time in the future")
-	} else if startTime.After(endTime) {
+	if startTime.After(endTime) {
 		return sdk.Dec{}, errors.New("called GetArithmeticTwap with a start time that is after the end time")
 	}
-	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, quoteAssetDenom, baseAssetDenom)
+	if endTime.Equal(ctx.BlockTime()) {
+		return k.GetArithmeticTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime)
+	} else if endTime.After(ctx.BlockTime()) {
+		return sdk.Dec{}, errors.New("called GetArithmeticTwap with an end time in the future")
+	}
+	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	endRecord, err := k.getInterpolatedRecord(ctx, poolId, endTime, quoteAssetDenom, baseAssetDenom)
+	endRecord, err := k.getInterpolatedRecord(ctx, poolId, endTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -58,14 +59,14 @@ func (k Keeper) GetArithmeticTwap(
 func (k Keeper) GetArithmeticTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,
-	quoteAssetDenom string,
 	baseAssetDenom string,
+	quoteAssetDenom string,
 	startTime time.Time) (sdk.Dec, error) {
-	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, quoteAssetDenom, baseAssetDenom)
+	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	endRecord, err := k.GetBeginBlockAccumulatorRecord(ctx, poolId, quoteAssetDenom, baseAssetDenom)
+	endRecord, err := k.GetBeginBlockAccumulatorRecord(ctx, poolId, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
