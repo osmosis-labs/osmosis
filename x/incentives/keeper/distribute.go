@@ -228,6 +228,7 @@ func (k Keeper) doDistributionSends(ctx sdk.Context, distrs *distributionInfo) e
 func (k Keeper) distributeSyntheticInternal(
 	ctx sdk.Context, gauge types.Gauge, locks []lockuptypes.PeriodLock, distrInfo *distributionInfo,
 ) (sdk.Coins, error) {
+<<<<<<< HEAD
 	totalDistrCoins := sdk.NewCoins()
 	denom := gauge.DistributeTo.Denom
 
@@ -237,11 +238,39 @@ func (k Keeper) distributeSyntheticInternal(
 		// otherwise it does not, and we continue.
 		_, err := k.lk.GetSyntheticLockup(ctx, lock.ID, denom)
 		if err != nil {
-			continue
+=======
+	qualifiedLocks := k.lk.GetLocksLongerThanDurationDenom(ctx, gauge.DistributeTo.Denom, gauge.DistributeTo.Duration)
+
+	// map from lockID to present index in resultant list
+	// to be state compatible with what we had before, we iterate over locks, to get qualified locks
+	// to be in the same order as what is present in locks.
+	// in a future release, we can just use qualified locks directly.
+	type lockIndexPair struct {
+		lock  lockuptypes.PeriodLock
+		index int
+	}
+	qualifiedLocksMap := make(map[uint64]lockIndexPair, len(qualifiedLocks))
+	for _, lock := range qualifiedLocks {
+		qualifiedLocksMap[lock.ID] = lockIndexPair{lock, -1}
+	}
+	curIndex := 0
+	for _, lock := range locks {
+		if v, ok := qualifiedLocksMap[lock.ID]; ok {
+			qualifiedLocksMap[lock.ID] = lockIndexPair{v.lock, curIndex}
+			curIndex += 1
 		}
-		qualifiedLocks = append(qualifiedLocks, lock)
 	}
 
+	sortedAndTrimmedQualifiedLocks := make([]lockuptypes.PeriodLock, curIndex)
+	for _, v := range qualifiedLocksMap {
+		if v.index < 0 {
+>>>>>>> 3cdfbccd (feat: speedup epoch distribution, superfluid component (#2214))
+			continue
+		}
+		sortedAndTrimmedQualifiedLocks[v.index] = v.lock
+	}
+
+<<<<<<< HEAD
 	lockSum := lockuptypes.SumLocksByDenom(qualifiedLocks, lockuptypes.NativeDenom(denom))
 
 	if lockSum.IsZero() {
@@ -286,6 +315,9 @@ func (k Keeper) distributeSyntheticInternal(
 	// increase filled epochs after distribution
 	err := k.updateGaugePostDistribute(ctx, gauge, totalDistrCoins)
 	return totalDistrCoins, err
+=======
+	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
+>>>>>>> 3cdfbccd (feat: speedup epoch distribution, superfluid component (#2214))
 }
 
 // distributeInternal runs the distribution logic for a gauge, and adds the sends to
