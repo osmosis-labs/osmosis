@@ -40,11 +40,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased - v10.1.0
+## v10.1.0
+
+#### Bug Fixes
 * [2011](https://github.com/osmosis-labs/osmosis/pull/2011) Fix bug in TokenFactory initGenesis, relating to denom creation fee param.
+
+#### Improvements
+* [#2130](https://github.com/osmosis-labs/osmosis/pull/2130) Introduce errors in mint types.
+* [#2000](https://github.com/osmosis-labs/osmosis/pull/2000) Update import paths from v9 to v10.
 
 #### Golang API breaks
 * [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
+* [#2030](https://github.com/osmosis-labs/osmosis/pull/2030) Rename `lockupKeeper.ResetAllLocks` to `InitializeAllLocks` and `.ResetAllSyntheticLocks` to `InitializeAllSyntheticLocks`.
 
 #### SDK Upgrades
 * [#2146](https://github.com/osmosis-labs/osmosis/pull/2146) Upgrade SDK for to v0.45.0x-osmo-v9.1. Major changes:
