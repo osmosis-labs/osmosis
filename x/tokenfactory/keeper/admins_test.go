@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 )
@@ -263,6 +264,57 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 				} else {
 					suite.Require().Error(err)
 				}
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestSetDenomMetaData() {
+	for _, tc := range []struct {
+		desc                string
+		msgSetDenomMetadata func(baseDenom string) *types.MsgSetDenomMetadata
+		expectedPass        bool
+	}{
+		{
+			desc: "successful set denom metadata",
+			msgSetDenomMetadata: func(baseDenom string) *types.MsgSetDenomMetadata {
+				md := banktypes.Metadata{
+					Description: "yeehaw",
+					DenomUnits: []*banktypes.DenomUnit{
+						&banktypes.DenomUnit{
+							Denom:    "uosmo",
+							Exponent: 0,
+						},
+					},
+					Base:    "uosmo",
+					Display: "uosmo",
+					Name:    "OSMO",
+					Symbol:  "OSMO",
+				}
+
+				return types.NewMsgSetDenomMetadata(suite.TestAccs[0].String(), md)
+			},
+			expectedPass: true,
+		},
+	} {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			// setup test
+			suite.SetupTest()
+
+			// Create a denom and mint
+			res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
+			suite.Require().NoError(err)
+
+			testDenom := res.GetNewTokenDenom()
+
+			_, err = suite.msgServer.SetDenomMetadata(sdk.WrapSDKContext(suite.Ctx), tc.msgSetDenomMetadata(testDenom))
+			if tc.expectedPass {
+				suite.Require().NoError(err)
+
+				_, found := suite.App.BankKeeper.GetDenomMetaData(suite.Ctx, testDenom)
+				suite.Require().True(found)
+			} else {
+				suite.Require().Error(err)
 			}
 		})
 	}

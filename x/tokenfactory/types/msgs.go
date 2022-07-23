@@ -3,15 +3,18 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // constants
 const (
-	TypeMsgCreateDenom   = "create_denom"
-	TypeMsgMint          = "mint"
-	TypeMsgBurn          = "burn"
-	TypeMsgForceTransfer = "force_transfer"
-	TypeMsgChangeAdmin   = "change_admin"
+	TypeMsgCreateDenom      = "create_denom"
+	TypeMsgMint             = "mint"
+	TypeMsgBurn             = "burn"
+	TypeMsgForceTransfer    = "force_transfer"
+	TypeMsgChangeAdmin      = "change_admin"
+	TypeMsgSetDenomMetadata = "set_denom_metadata"
+	TypeMsgAddSupplyOffset  = "add_supply_offset"
 )
 
 var _ sdk.Msg = &MsgCreateDenom{}
@@ -199,6 +202,76 @@ func (m MsgChangeAdmin) GetSignBytes() []byte {
 }
 
 func (m MsgChangeAdmin) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgAddSupplyOffset{}
+
+// NewMsgChangeAdmin creates a message to burn tokens
+func NewMsgAddSupplyOffset(sender string, offset sdk.Int) *MsgAddSupplyOffset {
+	return &MsgAddSupplyOffset{
+		Sender: sender,
+		Offset: offset,
+	}
+}
+
+func (m MsgAddSupplyOffset) Route() string { return RouterKey }
+func (m MsgAddSupplyOffset) Type() string  { return TypeMsgAddSupplyOffset }
+func (m MsgAddSupplyOffset) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	return nil
+}
+
+func (m MsgAddSupplyOffset) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgAddSupplyOffset) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgSetDenomMetadata{}
+
+// NewMsgChangeAdmin creates a message to burn tokens
+func NewMsgSetDenomMetadata(sender string, metadata banktypes.Metadata) *MsgSetDenomMetadata {
+	return &MsgSetDenomMetadata{
+		Sender:   sender,
+		Metadata: metadata,
+	}
+}
+
+func (m MsgSetDenomMetadata) Route() string { return RouterKey }
+func (m MsgSetDenomMetadata) Type() string  { return TypeMsgSetDenomMetadata }
+func (m MsgSetDenomMetadata) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	err = m.Metadata.Validate()
+	if err != nil {
+		return err
+	}
+
+	_, _, err = DeconstructDenom(m.Metadata.Base)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m MsgSetDenomMetadata) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgSetDenomMetadata) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
 }

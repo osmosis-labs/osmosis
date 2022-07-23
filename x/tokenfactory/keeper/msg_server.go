@@ -158,3 +158,58 @@ func (server msgServer) ChangeAdmin(goCtx context.Context, msg *types.MsgChangeA
 
 	return &types.MsgChangeAdminResponse{}, nil
 }
+
+func (server msgServer) AddSupplyOffset(goCtx context.Context, msg *types.MsgAddSupplyOffset) (*types.MsgAddSupplyOffsetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.Sender != authorityMetadata.GetAdmin() {
+		return nil, types.ErrUnauthorized
+	}
+
+	server.Keeper.bankKeeper.AddSupplyOffset(ctx, msg.Denom, msg.Offset)
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgChangeAdmin,
+			sdk.NewAttribute(types.AttributeDenom, msg.GetDenom()),
+			sdk.NewAttribute(types.AttributeSupplyOffsetted, msg.Offset.String()),
+		),
+	})
+
+	return &types.MsgAddSupplyOffsetResponse{}, nil
+}
+
+func (server msgServer) SetDenomMetadata(goCtx context.Context, msg *types.MsgSetDenomMetadata) (*types.MsgSetDenomMetadataResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Defense in depth validation of metadata
+	err := msg.Metadata.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Metadata.Base)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.Sender != authorityMetadata.GetAdmin() {
+		return nil, types.ErrUnauthorized
+	}
+
+	server.Keeper.bankKeeper.SetDenomMetaData(ctx, msg.Metadata)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgChangeAdmin,
+			sdk.NewAttribute(types.AttributeDenom, msg.Metadata.Base),
+			sdk.NewAttribute(types.AttributeDenomMetadata, msg.Metadata.String()),
+		),
+	})
+
+	return &types.MsgSetDenomMetadataResponse{}, nil
+}

@@ -12,4 +12,6 @@ const (
 	AttributeTransferToAddress   = "transfer_to_address"
 	AttributeDenom               = "denom"
 	AttributeNewAdmin            = "new_admin"
+	AttributeSupplyOffsetted     = "supply_offsetted"
+	AttributeDenomMetadata       = "denom_metadata"
 )
