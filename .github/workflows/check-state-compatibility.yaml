@@ -38,9 +38,12 @@ on:
   workflow_dispatch:
     branches:
       - 'v10.x'
+  schedule:
+      - cron: '0 0 * * *' # Runs at 00:00 UTC every day
 
 env:
   SNAPSHOT_URL: https://osmosis-snapshot.sfo3.cdn.digitaloceanspaces.com/osmosis.json
+  GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
   RPC_ENDPOINT: https://rpc.osmosis.zone
   LCD_ENDPOINT: https://lcd.osmosis.zone
   DELTA_HALT_HEIGHT: 20
@@ -49,39 +52,63 @@ jobs:
 
   check_state_compatibility:
     # DO NOT CHANGE THIS: please read the note above
-    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }} 
+    if: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
     runs-on: osmo-runner
     steps:
       - 
-        name: Checkout repository
+        name: Checkout commit
+        if: ${{ github.event_name != 'schedule' }}
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - 
-        name: Build the osmosisd binary with osmobuilder
-        run: |
-          make -f contrib/images/osmobuilder/Makefile get-binary-amd64
-      - 
-        name: Copy osmosisd binary to PATH and check version
+        # If workflow was triggered by a schedule, 
+        # explicitly checkout the correct branch
+        name: Checkout v10.x branch
+        if: ${{ github.event_name == 'schedule' }}
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: v10.x
+      -
+        name: 🔨 Build the osmosisd binary with osmobuilder
         run: |
           VERSION=$(echo $(git describe --tags) | sed 's/^v//')
-          sudo cp osmosisd-$VERSION-linux-amd64 /usr/local/bin/osmosisd
+          make -f contrib/images/osmobuilder/Makefile get-binary-amd64
+
+          sudo cp release/osmosisd-$VERSION-linux-amd64 /usr/local/bin/osmosisd
           sudo chmod +x /usr/local/bin/osmosisd
           osmosisd version
-        working-directory: release
-      - 
-        name: Download pre-epoch snapshot
+      -
+        name: 🧪 Initialize Osmosis Node
         run:  |
-          rm -rf $HOME/.osmosisd/data
-          SNAPSHOT_URL=$(curl -s ${{ env.SNAPSHOT_URL }}  | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
-          wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C $HOME/.osmosisd/ -xvf - 
-      - 
+          rm -rf $HOME/.osmosisd/ || true
+          osmosisd init osmo-runner -o
+          wget -O $HOME/.osmosisd/config/genesis.json ${{ env.GENESIS_URL }}
+      -
+        name: ⏬ Download pre-epoch snapshot
+        run:  |
+          SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.SNAPSHOT_URL }})
+          SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
+          SNAPSHOT=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename' | cut -f 1 -d '.')
+
+          # Download snapshot if not already present
+          mkdir -p $HOME/snapshots/
+          if [ ! -d "$HOME/snapshots/$SNAPSHOT" ]; then
+              rm -rf $HOME/snapshots/*
+              mkdir $HOME/snapshots/$SNAPSHOT
+              wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C $HOME/snapshots/$SNAPSHOT -xvf -
+          fi
+
+          # Copy snapshot in Data folder
+          cp -R $HOME/snapshots/$SNAPSHOT/data $HOME/.osmosisd/
+      -
         name: 🧪 Configure Osmosis Node
         run:  |
           CONFIG_FOLDER=$HOME/.osmosisd/config
 
           # Get height of most recent epoch
-          LAST_EPOCH_BLOCK_HEIGHT=$(curl -s ${{ env.LCD_ENDPOINT }}/osmosis/epochs/v1beta1/epochs | dasel --plain -r json 'epochs.(identifier=day).current_epoch_start_height')
+          LAST_EPOCH_BLOCK_HEIGHT=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 ${{ env.LCD_ENDPOINT }}/osmosis/epochs/v1beta1/epochs | dasel --plain -r json 'epochs.(identifier=day).current_epoch_start_height')
           DELTA_HALT_HEIGHT=${{ env.DELTA_HALT_HEIGHT }}
           HALT_HEIGHT=$(($LAST_EPOCH_BLOCK_HEIGHT + $DELTA_HALT_HEIGHT))
 
@@ -95,14 +122,38 @@ jobs:
           dasel put string -f $CONFIG_FOLDER/app.toml '.halt-height' $HALT_HEIGHT
           dasel put string -f $CONFIG_FOLDER/app.toml '.pruning' everything
           dasel put string -f $CONFIG_FOLDER/app.toml '.state-sync.snapshot-interval' 0
-      - 
-        name: 🧪 Start Osmosis Node
-        run: osmosisd start 2>&1 | tee /tmp/osmosisd_start.log
       -
-        name: Upload logs
-        if: always()
-        uses: actions/upload-artifact@v2
+        name: 🧪 Start Osmosis Node
+        run: osmosisd start
+      -
+        name: 🧹 Clean up Osmosis Home
+        run:  rm -rf $HOME/.osmosisd/
+      -
+        name: Send alert via Slack message
+        if: failure()
+        uses: slackapi/slack-github-action@v1.19.0
         with:
-          name: osmosisd_start.log
-          path: /tmp/osmosisd_start.log
-
+          payload: |
+            {
+              "text": "State-compatibility check failed!",
+              	"blocks": [
+                  {
+                    "type": "header",
+                    "text": {
+                      "type": "plain_text",
+                      "text": ":warning: State-compatibility check failed!",
+                      "emoji": true
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "<${{ github.event.pull_request.html_url || github.event.head_commit.url }}|View code changes>\n\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>"
+                    }
+                  }
+                ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
