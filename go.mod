@@ -34,13 +34,11 @@ require (
 
 require (
 	github.com/alingse/asasalint v0.0.10 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/sivchari/nosnakecase v1.5.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
-)
-
-require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
