@@ -64,6 +64,11 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 			poolId:          2,
 			expectedRecords: []types.TwapRecord{},
 		},
+		"set single record, different pool ID": {
+			recordsToSet:    []types.TwapRecord{newEmptyPriceRecord(2, baseTime, "tokenB", "tokenA")},
+			poolId:          2,
+			expectedRecords: []types.TwapRecord{newEmptyPriceRecord(2, baseTime, "tokenB", "tokenA")},
+		},
 		"set two records": {
 			recordsToSet:    []types.TwapRecord{baseRecord, tPlusOneRecord},
 			poolId:          1,
@@ -160,6 +165,11 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		"non-existent pool ID": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 			wrongPoolIdInputAt(baseTime), baseRecord, true},
+		"pool2 record get": {
+			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, "tokenB", "tokenA")},
+			input:          wrongPoolIdInputAt(baseTime),
+			expectedRecord: newEmptyPriceRecord(2, baseTime, "tokenB", "tokenA"),
+			expErr:         false},
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
