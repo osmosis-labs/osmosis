@@ -6,6 +6,6 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 // denominated in base denom.
 type MsgMinFeeExtension interface {
 	// GetRequiredMinBaseFee returns minimum fee for a message denominated in the base
-	// fee denom
+	// fee denom.
 	GetRequiredMinBaseFee() sdk.Int
 }
