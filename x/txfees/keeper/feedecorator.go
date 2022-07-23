@@ -93,7 +93,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
-// IsSufficientFee checks if the tx provided (in any asset), is worth enough osmo at current spot prices
+// IsSufficientFee checks if the fee provided (in any asset), is worth enough osmo at current spot prices
 // to pay the maximum of:
 // - gas cost of this tx
 // - minimum fee associated with any of the messages in this tx. N.B.: not all messages have such a fee.
