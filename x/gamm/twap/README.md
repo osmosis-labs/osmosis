@@ -104,6 +104,18 @@ During EndBlock, new records are created, with:
 
 In the event that a pool is created, and has a swap in the same block, the record entries are over written with the end block price.
 
+### Tracking spot-price changing events in a block
+
+The flow by which we currently track spot price changing events in a block is as follows:
+* AMM hook triggers for Swapping, LPing or Exiting a pool
+* TWAP listens for this hook, and adds this pool ID to a local tracker
+* In end block, TWAP iterates over every changed pool that block, based on the local tracker, and updates their TWAP records
+* In end block, TWAP clears the changed pool list, so its blank by the next block.
+
+The mechanism by which we maintain this changed pool list, is the SDK `Transient Store`.
+The transient store is a KV store in the SDK, that stores entries in memory, for the duration of a block,
+and then clears on the block committing. This is done to save on gas (and I/O for the state machine).
+
 ## Testing Methodology
 
 The pre-release testing methodology planned for the twap module is:
