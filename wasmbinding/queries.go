@@ -9,19 +9,22 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v10/wasmbinding/bindings"
 	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
+	twapkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
 )
 
 type QueryPlugin struct {
 	gammKeeper         *gammkeeper.Keeper
+	twapKeeper         *twapkeeper.Keeper
 	tokenFactoryKeeper *tokenfactorykeeper.Keeper
 }
 
 // NewQueryPlugin returns a reference to a new QueryPlugin.
-func NewQueryPlugin(gk *gammkeeper.Keeper, tfk *tokenfactorykeeper.Keeper) *QueryPlugin {
+func NewQueryPlugin(gk *gammkeeper.Keeper, tk *twapkeeper.Keeper, tfk *tokenfactorykeeper.Keeper) *QueryPlugin {
 	return &QueryPlugin{
 		gammKeeper:         gk,
+		twapKeeper:         tk,
 		tokenFactoryKeeper: tfk,
 	}
 }
@@ -102,4 +105,41 @@ func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *bindings.Estim
 
 	estimate, err := PerformSwap(qp.gammKeeper, ctx, senderAddr, estimateSwap.ToSwapMsg())
 	return estimate, err
+}
+
+func (qp QueryPlugin) ArithmeticTwap(ctx sdk.Context, arithmeticTwap *bindings.ArithmeticTwap) (*sdk.Dec, error) {
+	if arithmeticTwap == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm arithmetic twap null"}
+	}
+
+	poolId := arithmeticTwap.PoolId
+	quoteAssetDenom := arithmeticTwap.QuoteAssetDenom
+	baseAssetDenom := arithmeticTwap.BaseAssetDenom
+	startTime := arithmeticTwap.StartTime
+	endTime := arithmeticTwap.EndTime
+
+	twap, err := qp.twapKeeper.GetArithmeticTwap(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime, endTime)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm arithmetic twap")
+	}
+
+	return &twap, nil
+}
+
+func (qp QueryPlugin) ArithmeticTwapToNow(ctx sdk.Context, arithmeticTwap *bindings.ArithmeticTwapToNow) (*sdk.Dec, error) {
+	if arithmeticTwap == nil {
+		return nil, wasmvmtypes.InvalidRequest{Err: "gamm arithmetic twap null"}
+	}
+
+	poolId := arithmeticTwap.PoolId
+	quoteAssetDenom := arithmeticTwap.QuoteAssetDenom
+	baseAssetDenom := arithmeticTwap.BaseAssetDenom
+	startTime := arithmeticTwap.StartTime
+
+	twap, err := qp.twapKeeper.GetArithmeticTwapToNow(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm arithmetic twap")
+	}
+
+	return &twap, nil
 }
