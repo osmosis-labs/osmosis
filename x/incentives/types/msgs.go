@@ -14,8 +14,8 @@ const (
 	TypeMsgCreateGauge = "create_gauge"
 	TypeMsgAddToGauge  = "add_to_gauge"
 
-	createGageMinbaseFee = 2
-	addToGaugeMinBaseFee = 1
+	createGaugeMinBaseFee = 2
+	addToGaugeMinBaseFee  = 1
 )
 
 var _ sdk.Msg = &MsgCreateGauge{}
@@ -35,7 +35,7 @@ func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lock
 }
 
 func (m MsgCreateGauge) GetRequiredMinBaseFee() sdk.Int {
-	return sdk.NewInt(createGageMinbaseFee)
+	return sdk.NewInt(createGaugeMinBaseFee)
 }
 
 func (m MsgAddToGauge) GetRequiredMinBaseFee() sdk.Int {
