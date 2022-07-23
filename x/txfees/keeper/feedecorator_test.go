@@ -1,17 +1,27 @@
 package keeper_test
 
 import (
+	"testing"
+
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	gomock "github.com/golang/mock/gomock"
 
+	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/txfees/keeper/mocks"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 )
+
+func TestTWAPStoreTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
 
 func (suite *KeeperTestSuite) TestFeeDecorator() {
 	suite.SetupTest(false)
@@ -241,11 +251,73 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 	}
 }
 
-// func (suite *KeeperTestSuite) TestIsSufficientFee() {
-// 	suite.SetupTest(false)
+func (suite *KeeperTestSuite) TestIsSufficientFee() {
+	suite.SetupTest(false)
+	ctrl := gomock.NewController(suite.T())
+	defer ctrl.Finish()
 
-// 	ctx := suite.Ctx
-// 	txfeesKeeper := suite.App.TxFeesKeeper
+	ctx := suite.Ctx
+	txfeesKeeper := suite.App.TxFeesKeeper
 
-// 	txfeesKeeper.IsSufficientFee(ctx, sdk.NewCoins(sdk.NewInt64Coin(uion, 1)))
-// }
+	createGaugeFee := incentivestypes.MsgCreateGauge{}.GetRequiredMinBaseFee().RoundInt64()
+
+	testcases := map[string]struct {
+		txFee  int64
+		gasFee int64
+		msg    []sdk.Msg
+
+		minGasFee   int64
+		expectError bool
+	}{
+		"tx fee above gas fee and msg fee - no error": {
+			txFee:  createGaugeFee + 1,
+			gasFee: createGaugeFee - 1,
+			msg:    []sdk.Msg{&incentivestypes.MsgCreateGauge{}},
+		},
+		"tx fee above gas fee but below msg fee - error": {
+			txFee:     createGaugeFee - 2,
+			minGasFee: createGaugeFee - 1,
+			msg:       []sdk.Msg{&incentivestypes.MsgCreateGauge{}},
+
+			expectError: true,
+		},
+		"tx fee above msg fee but below gas fee - error": {
+			txFee:     createGaugeFee + 2,
+			minGasFee: createGaugeFee + 5,
+			msg:       []sdk.Msg{&incentivestypes.MsgCreateGauge{}},
+
+			expectError: true,
+		},
+		// "tx fee below gas fee - error": {
+		// 	txFee: 1,
+		// },
+		// "tx fee below tx fee - error": {
+		// 	txFee: 1,
+		// },
+		// "message with min base gas price and 2 txs that has min fee": {},
+		// "message with min base gas price and 2 txs that has min fee and 1 tx no min fee": {},
+		// "message with min base gas price and 1 tx no min fee": {},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			minBaseGasPrice := sdk.NewDec(tc.minGasFee)
+
+			txMock := mocks.NewMockFeeTx(ctrl)
+
+			txMock.EXPECT().GetFee().Return(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(tc.txFee)))).AnyTimes()
+			txMock.EXPECT().GetGas().Return(uint64(1)).AnyTimes() // minBaseGasPrice = 1 * tc.MinGasFee, for easy comparison with msg fee.
+			txMock.EXPECT().GetMsgs().Return([]sdk.Msg{
+				&incentivestypes.MsgCreateGauge{},
+			}).AnyTimes()
+
+			err := txfeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, txMock)
+
+			if tc.expectError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+			}
+		})
+	}
+}

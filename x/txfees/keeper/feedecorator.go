@@ -111,13 +111,7 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, tx sdk
 	// Determine the required fees by multiplying the required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 	glDec := sdk.NewDec(int64(tx.GetGas()))
-
 	maxRequiredBaseFee := minBaseGasPrice.Mul(glDec).Ceil()
-
-	convertedFee, err := k.ConvertToBaseToken(ctx, tx.GetFee()[0])
-	if err != nil {
-		return err
-	}
 
 	for _, msg := range tx.GetMsgs() {
 		if feeMsg, ok := msg.(types.MsgMinFeeExtension); !ok {
@@ -126,6 +120,11 @@ func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, tx sdk
 	}
 
 	requiredBaseFee := sdk.NewCoin(baseDenom, maxRequiredBaseFee.RoundInt())
+
+	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
+	if err != nil {
+		return err
+	}
 
 	// check to ensure that the convertedFee should always be greater than or equal to the requireBaseFee
 	if !(convertedFee.IsGTE(requiredBaseFee)) {

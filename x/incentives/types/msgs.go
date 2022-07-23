@@ -14,8 +14,8 @@ const (
 	TypeMsgCreateGauge = "create_gauge"
 	TypeMsgAddToGauge  = "add_to_gauge"
 
-	createGaugeMinBaseFee = 2
-	addToGaugeMinBaseFee  = 1
+	createGaugeMinBaseFee = 50
+	addToGaugeMinBaseFee  = 25
 )
 
 var _ sdk.Msg = &MsgCreateGauge{}
