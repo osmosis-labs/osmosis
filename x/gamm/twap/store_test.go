@@ -9,7 +9,7 @@ import (
 // TestTrackChangedPool takes a list of poolIds as test cases, and runs one list per block.
 // Every simulated block, checks that there no changed pools.
 // Then runs k.trackChangedPool on every item in the test case list.
-// Then checks that changed pools returns the list, deduplicated.
+// Then, checks that changed pools return the list, deduplicated.
 //
 // This achieves testing the functionality that we depend on, that this clears every end block.
 func (s *TestSuite) TestTrackChangedPool() {
@@ -101,7 +101,7 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 	}
 }
 
-// TestGetAllMostRecentRecordsForPool takes a list of records as test cases,
+// TestGetRecordAtOrBeforeTime takes a list of records as test cases,
 // and runs storeNewRecord for everything in sequence.
 // Then it runs GetRecordAtOrBeforeTime, and sees if its equal to expected
 func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
