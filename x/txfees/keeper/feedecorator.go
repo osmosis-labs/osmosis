@@ -5,7 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/pkg/errors"
 
+	// incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees/keeper/txfee_filters"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
@@ -82,7 +84,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 			if len(feeCoins) != 1 {
 				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
 			}
-			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
+			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx)
 			if err != nil {
 				return ctx, err
 			}
@@ -94,24 +96,36 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 // IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
 // to pay the gas cost of this tx.
-func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, gasRequested uint64, feeCoin sdk.Coin) error {
+func (k Keeper) IsSufficientFee(ctx sdk.Context, minBaseGasPrice sdk.Dec, tx sdk.FeeTx) error {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
 		return err
 	}
+	feeCoins := tx.GetFee()
+	if len(feeCoins) != 1 {
+		return errors.Wrap(sdkerrors.ErrInsufficientFee, fmt.Sprintf("need one fee coin, got %d, %s", len(feeCoins), feeCoins))
+	}
+	feeCoin := feeCoins[0]
 
 	// Determine the required fees by multiplying the required minimum gas
 	// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-	glDec := sdk.NewDec(int64(gasRequested))
+	glDec := sdk.NewDec(int64(tx.GetGas()))
 	requiredBaseFee := sdk.NewCoin(baseDenom, minBaseGasPrice.Mul(glDec).Ceil().RoundInt())
 
-	convertedFee, err := k.ConvertToBaseToken(ctx, feeCoin)
+	maxBaseFee, err := k.ConvertToBaseToken(ctx, tx.GetFee()[0])
 	if err != nil {
 		return err
 	}
+
+	for _, msg := range tx.GetMsgs() {
+		if feeMsg, ok := msg.(types.MsgMinFeeExtension); !ok {
+			maxBaseFee.Amount = sdk.MaxInt(maxBaseFee.Amount, feeMsg.GetRequiredMinBaseFee())
+		}
+	}
+
 	// check to ensure that the convertedFee should always be greater than or equal to the requireBaseFee
-	if !(convertedFee.IsGTE(requiredBaseFee)) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, convertedFee, requiredBaseFee)
+	if !(maxBaseFee.IsGTE(requiredBaseFee)) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s which converts to %s. required: %s", feeCoin, maxBaseFee, requiredBaseFee)
 	}
 
 	return nil

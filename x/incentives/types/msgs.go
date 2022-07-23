@@ -5,6 +5,7 @@ import (
 	"time"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -12,9 +13,14 @@ import (
 const (
 	TypeMsgCreateGauge = "create_gauge"
 	TypeMsgAddToGauge  = "add_to_gauge"
+
+	createGageMinbaseFee = 2
+	addToGaugeMinBaseFee = 1
 )
 
 var _ sdk.Msg = &MsgCreateGauge{}
+var _ txfeestypes.MsgMinFeeExtension = &MsgCreateGauge{}
+var _ txfeestypes.MsgMinFeeExtension = &MsgAddToGauge{}
 
 // NewMsgCreateGauge creates a message to create a gauge with the provided parameters.
 func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64) *MsgCreateGauge {
@@ -26,6 +32,14 @@ func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lock
 		StartTime:         startTime,
 		NumEpochsPaidOver: numEpochsPaidOver,
 	}
+}
+
+func (m MsgCreateGauge) GetRequiredMinBaseFee() sdk.Int {
+	return sdk.NewInt(createGageMinbaseFee)
+}
+
+func (m MsgAddToGauge) GetRequiredMinBaseFee() sdk.Int {
+	return sdk.NewInt(addToGaugeMinBaseFee)
 }
 
 // Route takes a create gauge message, then returns the RouterKey used for slashing.
