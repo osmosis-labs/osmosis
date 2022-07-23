@@ -240,3 +240,12 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		})
 	}
 }
+
+// func (suite *KeeperTestSuite) TestIsSufficientFee() {
+// 	suite.SetupTest(false)
+
+// 	ctx := suite.Ctx
+// 	txfeesKeeper := suite.App.TxFeesKeeper
+
+// 	txfeesKeeper.IsSufficientFee(ctx, sdk.NewCoins(sdk.NewInt64Coin(uion, 1)))
+// }

@@ -36,8 +36,8 @@ func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lock
 
 // GetRequiredMinBaseFee returns the minimum fee for the message
 // denominated in base fee denom.
-func (m MsgCreateGauge) GetRequiredMinBaseFee() sdk.Int {
-	return sdk.NewInt(createGaugeMinBaseFee)
+func (m MsgCreateGauge) GetRequiredMinBaseFee() sdk.Dec {
+	return sdk.NewDec(createGaugeMinBaseFee)
 }
 
 // Route takes a create gauge message, then returns the RouterKey used for slashing.
@@ -98,8 +98,8 @@ func NewMsgAddToGauge(owner sdk.AccAddress, gaugeId uint64, rewards sdk.Coins) *
 
 // GetRequiredMinBaseFee returns the minimum fee for the message
 // denominated in base fee denom.
-func (m MsgAddToGauge) GetRequiredMinBaseFee() sdk.Int {
-	return sdk.NewInt(addToGaugeMinBaseFee)
+func (m MsgAddToGauge) GetRequiredMinBaseFee() sdk.Dec {
+	return sdk.NewDec(addToGaugeMinBaseFee)
 }
 
 // Route takes an add to gauge message, then returns the RouterKey used for slashing.
