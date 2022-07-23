@@ -92,6 +92,7 @@ jobs:
           SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
           SNAPSHOT=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename' | cut -f 1 -d '.')
 
+          # Download snapshot if not already present
           mkdir -p $HOME/snapshots/
           if [ ! -d "$HOME/snapshots/$SNAPSHOT" ]; then
               rm -rf $HOME/snapshots/*
