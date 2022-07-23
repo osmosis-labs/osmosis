@@ -1,14 +1,11 @@
 package keeper_test
 
 import (
-	"testing"
-
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	gomock "github.com/golang/mock/gomock"
@@ -19,10 +16,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/txfees/keeper/mocks"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 )
-
-func TestTWAPStoreTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
 
 func (suite *KeeperTestSuite) TestFeeDecorator() {
 	suite.SetupTest(false)
