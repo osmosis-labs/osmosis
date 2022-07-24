@@ -451,6 +451,12 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	// e.g. *app.StakingKeeper doesn't appear
 
 	// Recall that SetHooks is a mutative call.
+	appKeepers.BankKeeper.SetHooks(
+		banktypes.NewMultiBankHooks(
+			appKeepers.TokenFactoryKeeper.Hooks(*appKeepers.WasmKeeper),
+		),
+	)
+
 	appKeepers.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
 			appKeepers.DistrKeeper.Hooks(),
