@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.incentives;
 
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v10/x/incentives/types";
 
@@ -11,4 +12,9 @@ message Params {
   // (day, week, etc.)
   string distr_epoch_identifier = 1
       [ (gogoproto.moretags) = "yaml:\"distr_epoch_identifier\"" ];
+  repeated cosmos.base.v1beta1.Coin gauge_creation_fee = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"gauge_creation_fee\"",
+    (gogoproto.nullable) = false
+  ];
 }
