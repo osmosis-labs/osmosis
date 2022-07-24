@@ -44,11 +44,10 @@ var (
 
 // AppModuleBasic implements the AppModuleBasic interface for the capability module.
 type AppModuleBasic struct {
-	cdc codec.Codec
 }
 
-func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
-	return AppModuleBasic{cdc: cdc}
+func NewAppModuleBasic() AppModuleBasic {
+	return AppModuleBasic{}
 }
 
 // Name returns the capability module's name.
@@ -117,7 +116,7 @@ type AppModule struct {
 	epochKeeper   types.EpochKeeper
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
+func NewAppModule(keeper keeper.Keeper,
 	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
 	stakingKeeper types.StakingKeeper,
 	lockupKeeper types.LockupKeeper,
@@ -125,7 +124,7 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
 	epochKeeper types.EpochKeeper,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(cdc),
+		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
 
 		accountKeeper: accountKeeper,
