@@ -151,9 +151,6 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 
 // AddToGaugeRewards adds coins to gauge.
 func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
-	// if err := k.chargeFee(ctx, owner, types.AddToGaugeFee); err != nil {
-	// 	return err
-	// }
 	gauge, err := k.GetGaugeByID(ctx, gaugeID)
 	if err != nil {
 		return err
@@ -292,7 +289,7 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 
 func (k Keeper) chargeFee(ctx sdk.Context, address sdk.AccAddress, fee int64, gaugeCoins sdk.Coins) (err error) {
 	// Send creation fee to community pool
-	feeDenom, err := k.txfk.GetBaseDenom(ctx)
+	feeDenom, err := k.tk.GetBaseDenom(ctx)
 	if err != nil {
 		return err
 	}
