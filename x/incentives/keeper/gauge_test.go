@@ -251,34 +251,52 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 
 		expectError bool
 	}{
-		"charge fee, fee + base denom gauge coin == acount balance, success": {
+		"fee + base denom gauge coin == acount balance, success": {
 			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee / 2,
 			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 		},
-		"charge fee - fee + base denom gauge coin < acount balance, success": {
+		"fee + base denom gauge coin < acount balance, success": {
 			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee/2 - 1,
 			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 		},
-		"charge fee - fee + base denom gauge coin > acount balance, error": {
+		"fee + base denom gauge coin > acount balance, error": {
 			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee/2 + 1,
 			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 
 			expectError: true,
 		},
-		"charge fee - fee + base denom gauge coin < acount balance, custom values, success": {
+		"fee + base denom gauge coin < acount balance, custom values, success": {
 			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(11793193112)),
 			feeToCharge:          55,
 			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(328812))),
 		},
-		"charge fee, account funded with coins other than base denom, error": {
+		"account funded with coins other than base denom, error": {
 			accountBalanceToFund: sdk.NewCoin("usdc", sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee,
 			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 
 			expectError: true,
+		},
+		"fee == account balance, no gauge coins, success": {
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			feeToCharge:          baseFee,
+		},
+		"gauge coins == account balance, no fee, success": {
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee))),
+		},
+		"fee == account balance, gauge coins in denom other than base, success": {
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			feeToCharge:          baseFee,
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(baseFee*2))),
+		},
+		"fee + gauge coins == account balance, multiple gauge coins, one in denom other than base, success": {
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			feeToCharge:          baseFee / 2,
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(baseFee*2)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 		},
 	}
 
