@@ -6,13 +6,20 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 )
 
+const (
+	// CreateGaugeFee is the fee required to create a new gauge.
+	CreateGaugeFee = createGaugeFee
+	// AddToGagugeFee is the fee required to add to gauge.
+	AddToGaugeFee = addToGaugeFee
+)
+
 // AddGaugeRefByKey appends the provided gauge ID into an array associated with the provided key.
-func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) error {
-	return k.addGaugeRefByKey(ctx, key, guageID)
+func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
+	return k.addGaugeRefByKey(ctx, key, gaugeID)
 }
 
-func (k Keeper) DeleteGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) error {
-	return k.deleteGaugeRefByKey(ctx, key, guageID)
+func (k Keeper) DeleteGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
+	return k.deleteGaugeRefByKey(ctx, key, gaugeID)
 }
 
 // GetGaugeRefs returns the gauge IDs specified by the provided key.
