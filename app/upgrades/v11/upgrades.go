@@ -14,6 +14,6 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		return mm.RunMigrations(ctx, configurator, vm)
+		return vm, nil
 	}
 }
