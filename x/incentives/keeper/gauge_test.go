@@ -316,7 +316,7 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 			oldBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
 
 			// System under test.
-			err := incentivesKeepers.ChargeFee(ctx, testAccount, tc.feeToCharge, tc.gaugeCoins)
+			err := incentivesKeepers.ChargeFeeIfSufficientFeeDenomBalance(ctx, testAccount, tc.feeToCharge, tc.gaugeCoins)
 
 			// Assertions.
 			newBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount

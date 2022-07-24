@@ -33,7 +33,7 @@ func (server msgServer) CreateGauge(goCtx context.Context, msg *types.MsgCreateG
 		return nil, err
 	}
 
-	if err := server.keeper.chargeFee(ctx, owner, createGaugeFee, msg.Coins); err != nil {
+	if err := server.keeper.chargeFeeIfSufficientFeeDenomBalance(ctx, owner, createGaugeFee, msg.Coins); err != nil {
 		return nil, err
 	}
 
@@ -61,7 +61,7 @@ func (server msgServer) AddToGauge(goCtx context.Context, msg *types.MsgAddToGau
 		return nil, err
 	}
 
-	if err := server.keeper.chargeFee(ctx, owner, addToGaugeFee, msg.Rewards); err != nil {
+	if err := server.keeper.chargeFeeIfSufficientFeeDenomBalance(ctx, owner, addToGaugeFee, msg.Rewards); err != nil {
 		return nil, err
 	}
 	err = server.keeper.AddToGaugeRewards(ctx, owner, msg.Rewards, msg.GaugeId)

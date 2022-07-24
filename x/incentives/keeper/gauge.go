@@ -287,7 +287,11 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 	return k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
 }
 
-func (k Keeper) chargeFee(ctx sdk.Context, address sdk.AccAddress, fee int64, gaugeCoins sdk.Coins) (err error) {
+// chargeFeeIfSufficientFeeDenomBalance charges fee in the base tx fee denom on the address if the address has
+// balance that is less than fee + amount of the coin from gaugeCoins that is of base tx fee denom.
+// gaugeCoins might not have a coin of tx base fee denom. In that case, only fee is compared to balance.
+// Returns nil on success, error otherwise.
+func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee int64, gaugeCoins sdk.Coins) (err error) {
 	// Send creation fee to community pool
 	feeDenom, err := k.tk.GetBaseDenom(ctx)
 	if err != nil {
