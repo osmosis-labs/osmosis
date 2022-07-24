@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
 )
 
 func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.Duration, forkHeight int) (*Chain, error) {
@@ -36,7 +36,7 @@ func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.
 
 	for _, node := range chain.nodes {
 		if node.isValidator {
-			if err := node.initValidatorConfigs(chain, peers); err != nil {
+			if err := node.initNodeConfigs(peers); err != nil {
 				return nil, err
 			}
 		}
@@ -44,7 +44,7 @@ func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.
 	return chain.export(), nil
 }
 
-func InitSingleNode(chainId, dataDir string, existingGenesisDir string, nodeConfig *NodeConfig, votingPeriod time.Duration, trustHeight int64, trustHash string, stateSyncRPCServers []string) (*Node, error) {
+func InitSingleNode(chainId, dataDir string, existingGenesisDir string, nodeConfig *NodeConfig, votingPeriod time.Duration, trustHeight int64, trustHash string, stateSyncRPCServers []string, persistentPeers []string) (*Node, error) {
 	if nodeConfig.IsValidator {
 		return nil, errors.New("creating individual validator nodes after starting up chain is not currently supported")
 	}
@@ -64,6 +64,10 @@ func InitSingleNode(chainId, dataDir string, existingGenesisDir string, nodeConf
 		filepath.Join(newNode.configDir(), "config", "genesis.json"),
 	)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := newNode.initNodeConfigs(persistentPeers); err != nil {
 		return nil, err
 	}
 

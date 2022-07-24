@@ -6,16 +6,18 @@ import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/superfluid/superfluid.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/superfluid/types";
 
 // Msg defines the Msg service.
 service Msg {
   // Execute superfluid delegation for a lockup
   rpc SuperfluidDelegate(MsgSuperfluidDelegate)
       returns (MsgSuperfluidDelegateResponse);
+
   // Execute superfluid undelegation for a lockup
   rpc SuperfluidUndelegate(MsgSuperfluidUndelegate)
       returns (MsgSuperfluidUndelegateResponse);
+
   // Execute superfluid redelegation for a lockup
   // rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns
   // (MsgSuperfluidRedelegateResponse);
@@ -28,6 +30,7 @@ service Msg {
   // Execute lockup lock and superfluid delegation in a single msg
   rpc LockAndSuperfluidDelegate(MsgLockAndSuperfluidDelegate)
       returns (MsgLockAndSuperfluidDelegateResponse);
+
   rpc UnPoolWhitelistedPool(MsgUnPoolWhitelistedPool)
       returns (MsgUnPoolWhitelistedPoolResponse);
 }

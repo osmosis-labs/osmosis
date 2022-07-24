@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
 type Configurer interface {
@@ -24,15 +24,18 @@ type Configurer interface {
 }
 
 var (
-	// whatever number of validator configs get posted here are how many validators that will spawn on chain A and B respectively
+	// each started validator containers corresponds to one of
+	// the configurations below.
 	validatorConfigsChainA = []*initialization.NodeConfig{
 		{
-			Name:               "prune-default-snapshot",
+			// this is a node that is used to state-sync from so its snapshot-interval
+			// is frequent.
+			Name:               "prune-default-snapshot-state-sync-from",
 			Pruning:            "default",
 			PruningKeepRecent:  "0",
 			PruningInterval:    "0",
-			SnapshotInterval:   1500,
-			SnapshotKeepRecent: 2,
+			SnapshotInterval:   25,
+			SnapshotKeepRecent: 10,
 			IsValidator:        true,
 		},
 		{

@@ -10,8 +10,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v7/store"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/store"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
@@ -182,6 +182,10 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 	// sanity check
 	if !coins.IsAllLTE(lock.Coins) {
 		return fmt.Errorf("requested amount to unlock exceeds locked tokens")
+	}
+
+	if lock.IsUnlocking() {
+		return fmt.Errorf("trying to unlock a lock that is already unlocking")
 	}
 
 	// If the amount were unlocking is empty, or the entire coins amount, unlock the entire lock.

@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	configurer "github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer"
+	configurer "github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer"
 )
 
 const (
@@ -16,6 +16,8 @@ const (
 	skipUpgradeEnv = "OSMOSIS_E2E_SKIP_UPGRADE"
 	// Environment variable name to skip the IBC tests
 	skipIBCEnv = "OSMOSIS_E2E_SKIP_IBC"
+	// Environment variable name to skip state sync testing
+	skipStateSyncEnv = "OSMOSIS_E2E_SKIP_STATE_SYNC"
 	// Environment variable name to determine if this upgrade is a fork
 	forkHeightEnv = "OSMOSIS_E2E_FORK_HEIGHT"
 	// Environment variable name to skip cleaning up Docker resources in teardown
@@ -27,10 +29,11 @@ const (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	configurer  configurer.Configurer
-	skipUpgrade bool
-	skipIBC     bool
-	forkHeight  int
+	configurer    configurer.Configurer
+	skipUpgrade   bool
+	skipIBC       bool
+	skipStateSync bool
+	forkHeight    int
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
@@ -47,11 +50,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// The e2e test flow is as follows:
 	//
 	// 1. Configure two chains - chan A and chain B.
-	//   * For each chain, set up two validators
-	//   * Initialize configs and genesis for all validators.
+	//   * For each chain, set up several validator nodes
+	//   * Initialize configs and genesis for all them.
 	// 2. Start both networks.
 	// 3. Run IBC relayer betweeen the two chains.
-	// 4. Execute various e2e tests, including IBC.
+	// 4. Execute various e2e tests, including IBC, upgrade, superfluid.
 	if str := os.Getenv(skipUpgradeEnv); len(str) > 0 {
 		s.skipUpgrade, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
@@ -70,6 +73,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.skipIBC, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
 		s.T().Log(fmt.Sprintf("%s was true, skipping IBC tests", skipIBCEnv))
+	}
+
+	if str := os.Getenv("OSMOSIS_E2E_SKIP_STATE_SYNC"); len(str) > 0 {
+		s.skipStateSync, err = strconv.ParseBool(str)
+		s.Require().NoError(err)
+		s.T().Log("skipping state sync testing")
 	}
 
 	if str := os.Getenv(upgradeVersionEnv); len(str) > 0 {

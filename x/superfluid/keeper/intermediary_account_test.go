@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) TestIntermediaryAccountCreation() {
@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountCreation() {
 				suite.Require().Equal(uint64(0), interAcc.GaugeId)
 				suite.Require().Equal("", interAcc.ValAddr)
 
-				lock := suite.SetupSuperfluidDelegate(delAddr, valAddr, denom, superDelegation.lpAmount)
+				lock := suite.setupSuperfluidDelegate(delAddr, valAddr, denom, superDelegation.lpAmount)
 
 				// check that intermediary Account connection is established
 				interAccConnection := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)

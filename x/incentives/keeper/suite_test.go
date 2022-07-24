@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -57,8 +57,6 @@ func (suite *KeeperTestSuite) setupAddr(addrNum int, prefix string, balance sdk.
 		prefixBz := make([]byte, 8)
 		_, _ = rand.Read(prefixBz)
 		prefix = string(prefixBz)
-	} else {
-		prefix = fmt.Sprintf("%8.8s", prefix)
 	}
 
 	addr := sdk.AccAddress([]byte(fmt.Sprintf("addr%s%8d", prefix, addrNum)))

@@ -4,17 +4,21 @@ import (
 	"testing"
 	time "time"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TestMsgCreatePool tests if valid/invalid create pool messages are properly validated/invalidated
 func TestMsgCreatePool(t *testing.T) {
+	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
 
+	// make a proper createPool message
 	createMsg := func(after func(msg MsgCreateGauge) MsgCreateGauge) MsgCreateGauge {
 		distributeTo := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
@@ -34,10 +38,10 @@ func TestMsgCreatePool(t *testing.T) {
 		return after(properMsg)
 	}
 
+	// validate createPool message was created as intended
 	msg := createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
 		return msg
 	})
-
 	require.Equal(t, msg.Route(), RouterKey)
 	require.Equal(t, msg.Type(), "create_gauge")
 	signers := msg.GetSigners()
@@ -141,10 +145,13 @@ func TestMsgCreatePool(t *testing.T) {
 	}
 }
 
+// TestMsgAddToGauge tests if valid/invalid add to gauge messages are properly validated/invalidated
 func TestMsgAddToGauge(t *testing.T) {
+	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
 
+	// make a proper addToGauge message
 	createMsg := func(after func(msg MsgAddToGauge) MsgAddToGauge) MsgAddToGauge {
 		properMsg := *NewMsgAddToGauge(
 			addr1,
@@ -155,10 +162,10 @@ func TestMsgAddToGauge(t *testing.T) {
 		return after(properMsg)
 	}
 
+	// validate addToGauge message was created as intended
 	msg := createMsg(func(msg MsgAddToGauge) MsgAddToGauge {
 		return msg
 	})
-
 	require.Equal(t, msg.Route(), RouterKey)
 	require.Equal(t, msg.Type(), "add_to_gauge")
 	signers := msg.GetSigners()

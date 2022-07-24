@@ -1,3 +1,10 @@
+/*
+The superfluid module handles all logic in relation to
+the superfluid staking feature on Osmosis. Namely:
+- Methods to lock funds and mint synthetic osmo for staking
+- Daily minting and burning of the purpose of adjusting synthetic osmo lockups.
+- Staking reward distribution via the intermediary account.
+*/
 package superfluid
 
 import (
@@ -19,11 +26,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/mint/client/rest"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/simulation"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/client/cli"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/simulation"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
 var (

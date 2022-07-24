@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v7/osmoutils/partialord"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils/partialord"
 )
 
 func TestAPI(t *testing.T) {
@@ -51,5 +51,24 @@ func TestNonStandardAPIOrder(t *testing.T) {
 	ord.LastElements("G")
 	ord.After("F", "E")
 	expOrdering = []string{"A", "B", "C", "D", "E", "F", "G"}
+	require.Equal(t, expOrdering, ord.TotalOrdering())
+}
+
+// This test ad-hocly tests combination of multiple sequences, first elements, and an After
+// invokation.
+func TestSequence(t *testing.T) {
+	// This test uses direct ordering before First, and after Last
+	names := []string{"A", "B", "C", "D", "E", "F", "G"}
+	ord := partialord.NewPartialOrdering(names)
+	// Make B A C a sequence
+	ord.Sequence("B", "A", "C")
+	// Make A G E a sub-sequence
+	ord.Sequence("A", "G", "E")
+	// make first elements D B F
+	ord.FirstElements("D", "B", "F")
+	// make C come after E
+	ord.After("C", "G")
+
+	expOrdering := []string{"D", "B", "F", "A", "G", "C", "E"}
 	require.Equal(t, expOrdering, ord.TotalOrdering())
 }

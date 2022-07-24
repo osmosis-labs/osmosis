@@ -8,9 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
@@ -24,6 +25,7 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. Prior
 // to returning the pool, the weights of the pool are updated via PokePool.
+// TODO: Consider rename to GetPool due to downstream API confusion.
 func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
@@ -80,7 +82,7 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.PoolI, err error) 
 	return res, nil
 }
 
-func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
+func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	bz, err := k.MarshalPool(pool)
 	if err != nil {
 		return err
@@ -196,6 +198,12 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // 	return nil
 // }
 
+func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	denoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
+	return denoms, err
+}
+
 // setNextPoolNumber sets next pool number.
 func (k Keeper) setNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
 	store := ctx.KVStore(k.storeKey)
@@ -254,7 +262,7 @@ func (k *Keeper) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []u
 
 	stableswapPool.ScalingFactor = scalingFactors
 
-	if err = k.SetPool(ctx, stableswapPool); err != nil {
+	if err = k.setPool(ctx, stableswapPool); err != nil {
 		return err
 	}
 	return nil

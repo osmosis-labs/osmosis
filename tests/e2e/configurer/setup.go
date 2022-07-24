@@ -38,7 +38,9 @@ func withUpgrade(setupHandler setupFn) setupFn {
 			return fmt.Errorf("to run with upgrade, %v must be set during initialization", &UpgradeConfigurer{})
 		}
 
-		upgradeConfigurer.CreatePreUpgradeState()
+		if err := upgradeConfigurer.CreatePreUpgradeState(); err != nil {
+			return err
+		}
 
 		if err := upgradeConfigurer.RunUpgrade(); err != nil {
 			return err
