@@ -33,6 +33,12 @@ func (server msgServer) CreateGauge(goCtx context.Context, msg *types.MsgCreateG
 		return nil, err
 	}
 
+	// send gauge creation fee to community pool
+	params := server.keeper.GetParams(ctx)
+	if err := server.keeper.distrKeeper.FundCommunityPool(ctx, params.GaugeCreationFee, owner); err != nil {
+		return nil, err
+	}
+
 	gaugeID, err := server.keeper.CreateGauge(ctx, msg.IsPerpetual, owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochsPaidOver)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())

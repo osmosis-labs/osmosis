@@ -15,28 +15,30 @@ import (
 
 // Keeper provides a way to manage incentives module storage.
 type Keeper struct {
-	cdc        codec.Codec
-	storeKey   sdk.StoreKey
-	paramSpace paramtypes.Subspace
-	hooks      types.IncentiveHooks
-	bk         types.BankKeeper
-	lk         types.LockupKeeper
-	ek         types.EpochKeeper
+	cdc         codec.Codec
+	storeKey    sdk.StoreKey
+	paramSpace  paramtypes.Subspace
+	hooks       types.IncentiveHooks
+	bk          types.BankKeeper
+	lk          types.LockupKeeper
+	ek          types.EpochKeeper
+	distrKeeper types.DistrKeeper
 }
 
 // NewKeeper returns a new instance of the incentive module keeper struct.
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper) *Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, dk types.DistrKeeper) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return &Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		paramSpace: paramSpace,
-		bk:         bk,
-		lk:         lk,
-		ek:         ek,
+		cdc:         cdc,
+		storeKey:    storeKey,
+		paramSpace:  paramSpace,
+		bk:          bk,
+		lk:          lk,
+		ek:          ek,
+		distrKeeper: dk,
 	}
 }
 
