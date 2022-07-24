@@ -87,10 +87,9 @@ func (suite *KeeperTestSuite) TestMintDenom() {
 	}{
 		{
 			desc: "denom does not exist",
-			mintMsg: *types.NewMsgMintTo(
+			mintMsg: *types.NewMsgMint(
 				suite.TestAccs[0].String(),
 				sdk.NewInt64Coin("factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos", 10),
-				suite.TestAccs[0].String(),
 			),
 			expectPass: false,
 		},
@@ -99,16 +98,15 @@ func (suite *KeeperTestSuite) TestMintDenom() {
 			mintMsg: *types.NewMsgMintTo(
 				suite.TestAccs[1].String(),
 				sdk.NewInt64Coin(suite.defaultDenom, 10),
-				suite.TestAccs[1].String(),
+				suite.TestAccs[0].String(),
 			),
 			expectPass: false,
 		},
 		{
 			desc: "success case - mint to self",
-			mintMsg: *types.NewMsgMintTo(
+			mintMsg: *types.NewMsgMint(
 				suite.TestAccs[0].String(),
 				sdk.NewInt64Coin(suite.defaultDenom, 10),
-				suite.TestAccs[0].String(),
 			),
 			expectPass: true,
 		},
@@ -157,10 +155,9 @@ func (suite *KeeperTestSuite) TestBurnDenom() {
 	}{
 		{
 			desc: "denom does not exist",
-			burnMsg: *types.NewMsgBurnFrom(
+			burnMsg: *types.NewMsgBurn(
 				suite.TestAccs[0].String(),
 				sdk.NewInt64Coin("factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos", 10),
-				suite.TestAccs[0].String(),
 			),
 			expectPass: false,
 		},
@@ -169,25 +166,23 @@ func (suite *KeeperTestSuite) TestBurnDenom() {
 			burnMsg: *types.NewMsgBurnFrom(
 				suite.TestAccs[1].String(),
 				sdk.NewInt64Coin(suite.defaultDenom, 10),
-				suite.TestAccs[1].String(),
+				suite.TestAccs[0].String(),
 			),
 			expectPass: false,
 		},
 		{
 			desc: "burn more than balance",
-			burnMsg: *types.NewMsgBurnFrom(
+			burnMsg: *types.NewMsgBurn(
 				suite.TestAccs[0].String(),
 				sdk.NewInt64Coin(suite.defaultDenom, 10000),
-				suite.TestAccs[0].String(),
 			),
 			expectPass: false,
 		},
 		{
 			desc: "success case - burn from self",
-			burnMsg: *types.NewMsgBurnFrom(
+			burnMsg: *types.NewMsgBurn(
 				suite.TestAccs[0].String(),
 				sdk.NewInt64Coin(suite.defaultDenom, 10),
-				suite.TestAccs[0].String(),
 			),
 			expectPass: true,
 		},
