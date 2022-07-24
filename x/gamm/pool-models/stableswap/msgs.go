@@ -21,12 +21,14 @@ func NewMsgCreateStableswapPool(
 	sender sdk.AccAddress,
 	poolParams PoolParams,
 	initialLiquidity sdk.Coins,
+	scalingFactors []uint64,
 	futurePoolGovernor string,
 ) MsgCreateStableswapPool {
 	return MsgCreateStableswapPool{
 		Sender:               sender.String(),
 		PoolParams:           &poolParams,
 		InitialPoolLiquidity: initialLiquidity,
+		ScalingFactors:       scalingFactors,
 		FuturePoolGovernor:   futurePoolGovernor,
 	}
 }
@@ -50,6 +52,11 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 		return types.ErrTooFewPoolAssets
 	} else if len(msg.InitialPoolLiquidity) > 2 {
 		return types.ErrTooManyPoolAssets
+	}
+	if len(msg.ScalingFactors) != 2 {
+		return types.ErrInvalidScalingFactors
+	} else if msg.ScalingFactors[0] == 0 || msg.ScalingFactors[1] == 0 {
+		return types.ErrInvalidScalingFactors
 	}
 
 	// validation for future owner
@@ -91,7 +98,7 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity, msg.FuturePoolGovernor)
+	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity, msg.ScalingFactors, msg.FuturePoolGovernor)
 	if err != nil {
 		return nil, err
 	}
