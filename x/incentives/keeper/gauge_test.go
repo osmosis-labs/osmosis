@@ -308,17 +308,29 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 
 			ctx := suite.Ctx
 			incentivesKeepers := suite.App.IncentivesKeeper
+			bankKeeper := suite.App.BankKeeper
 
 			// Pre-fund account.
 			suite.FundAcc(testAccount, sdk.NewCoins(tc.accountBalanceToFund))
 
+			oldBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
+
 			// System under test.
 			err := incentivesKeepers.ChargeFee(ctx, testAccount, tc.feeToCharge, tc.gaugeCoins)
 
+			// Assertions.
+			newBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
 			if tc.expectError {
 				suite.Require().Error(err)
+
+				// check account balance unchanged
+				suite.Require().Equal(oldBalanceAmount, newBalanceAmount)
 			} else {
 				suite.Require().NoError(err)
+
+				// check account balance changed.
+				expectedNewBalanceAmount := oldBalanceAmount.Sub(sdk.NewInt(tc.feeToCharge))
+				suite.Require().Equal(expectedNewBalanceAmount.String(), newBalanceAmount.String())
 			}
 		})
 	}

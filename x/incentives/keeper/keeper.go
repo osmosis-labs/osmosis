@@ -24,7 +24,7 @@ type Keeper struct {
 	lk         types.LockupKeeper
 	ek         types.EpochKeeper
 	dk         types.DistrKeeper
-	txfk       types.TxFeesKeeper
+	tk         types.TxFeesKeeper
 }
 
 // NewKeeper returns a new instance of the incentive module keeper struct.
@@ -42,7 +42,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Sub
 		lk:         lk,
 		ek:         ek,
 		dk:         dk,
-		txfk:       txfk,
+		tk:         txfk,
 	}
 }
 
