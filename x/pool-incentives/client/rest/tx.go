@@ -47,7 +47,7 @@ func newUpdatePoolIncentivesHandler(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		content := types.NewUpdatePoolIncentivesProposal(req.Title, req.Description, req.Records)
-		msg, err := govtypes.NewMsgSubmitProposalWithExpedited(content, req.Deposit, fromAddr, false)
+		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}
@@ -93,7 +93,7 @@ func newReplacePoolIncentivesHandler(clientCtx client.Context) http.HandlerFunc 
 		}
 
 		content := types.NewReplacePoolIncentivesProposal(req.Title, req.Description, req.Records)
-		msg, err := govtypes.NewMsgSubmitProposalWithExpedited(content, req.Deposit, fromAddr, false)
+		msg, err := govtypes.NewMsgSubmitProposal(content, req.Deposit, fromAddr)
 		if rest.CheckBadRequestError(w, err) {
 			return
 		}

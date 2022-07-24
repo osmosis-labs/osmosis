@@ -209,7 +209,7 @@ func NewCmdSubmitSetSuperfluidAssetsProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposalWithExpedited(content, deposit, from, false)
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -258,7 +258,7 @@ func NewCmdSubmitRemoveSuperfluidAssetsProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := govtypes.NewMsgSubmitProposalWithExpedited(content, deposit, from, false)
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
