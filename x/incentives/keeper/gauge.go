@@ -17,6 +17,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	createGaugeMinBaseFee = 50 * 1_000_000
+	addToGaugeMinBaseFee  = 25 * 1_000_000
+)
+
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
 func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Gauge {
 	gauges := []types.Gauge{}
@@ -91,6 +96,9 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 // CreateGauge creates a gauge and sends coins to the gauge.
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
+	if err := k.chargeFee(ctx, owner, createGaugeMinBaseFee); err != nil {
+		return 0, err
+	}
 	// Ensure that this gauge's duration is one of the allowed durations on chain
 	durations := k.GetLockableDurations(ctx)
 	if distrTo.LockQueryType == lockuptypes.ByDuration {
@@ -143,6 +151,9 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 
 // AddToGaugeRewards adds coins to gauge.
 func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
+	if err := k.chargeFee(ctx, owner, addToGaugeMinBaseFee); err != nil {
+		return err
+	}
 	gauge, err := k.GetGaugeByID(ctx, gaugeID)
 	if err != nil {
 		return err
@@ -277,4 +288,17 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 	params := k.GetParams(ctx)
 	return k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
+}
+
+func (k Keeper) chargeFee(ctx sdk.Context, address sdk.AccAddress, fee int64) (err error) {
+	// Send creation fee to community pool
+	feeDenom, err := k.txfk.GetBaseDenom(ctx)
+	if err != nil {
+		return err
+	}
+	creationFee := sdk.NewCoins(sdk.NewCoin(feeDenom, sdk.NewInt(fee)))
+	if err := k.dk.FundCommunityPool(ctx, creationFee, address); err != nil {
+		return err
+	}
+	return nil
 }

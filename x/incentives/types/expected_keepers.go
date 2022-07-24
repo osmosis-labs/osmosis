@@ -36,3 +36,13 @@ type LockupKeeper interface {
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
 }
+
+// DistrKeeper defines the contract needed to be fulfilled for distribution keeper.
+type DistrKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
+// TxFeesKeeper defines the expected interface needed to managing transaction fees.
+type TxFeesKeeper interface {
+	GetBaseDenom(ctx sdk.Context) (denom string, err error)
+}

@@ -11,7 +11,6 @@ func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) er
 	return k.addGaugeRefByKey(ctx, key, guageID)
 }
 
-// DeleteGaugeRefByKey removes the provided gauge ID from an array associated with the provided key.
 func (k Keeper) DeleteGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) error {
 	return k.deleteGaugeRefByKey(ctx, key, guageID)
 }
@@ -34,4 +33,8 @@ func (k Keeper) MoveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gaug
 // MoveActiveGaugeToFinishedGauge moves a gauge that has completed its distribution from an active to a finished status.
 func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gauge) error {
 	return k.moveActiveGaugeToFinishedGauge(ctx, gauge)
+}
+
+func (k Keeper) ChargeFee(ctx sdk.Context, address sdk.AccAddress, fee int64) error {
+	return k.chargeFee(ctx, address, fee)
 }

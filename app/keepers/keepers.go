@@ -267,6 +267,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.LockupKeeper,
 		appKeepers.EpochsKeeper,
+		appKeepers.DistrKeeper,
+		appKeepers.TxFeesKeeper,
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(

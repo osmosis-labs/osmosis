@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -11,7 +12,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ = suite.TestingSuite(nil)
+func TestGaugeTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
 
 // TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
 func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
@@ -237,3 +240,40 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 		}
 	}
 }
+
+// func (suite *KeeperTestSuite) TestChargeFee() {
+
+// 	testcases := map[string]struct {
+// 		accountBalanceToFund sdk.Coin
+// 		feeToCharge          int64
+
+// 		expectErr bool
+// 	}{
+// 		"charge fee": {
+// 			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+// 			feeToCharge:          100,
+// 		},
+// 	}
+
+// 	for name, tc := range testcases {
+// 		suite.Run(name, func() {
+// 			suite.SetupTest()
+
+// 			testAccount := suite.TestAccs[0]
+
+// 			ctx := suite.Ctx
+// 			incentivesKeepers := suite.App.IncentivesKeeper
+
+// 			suite.FundAcc(testAccount, sdk.NewCoins(tc.accountBalanceToFund))
+
+// 			// System under test.
+// 			err := incentivesKeepers.ChargeFee(ctx, testAccount, tc.feeToCharge)
+
+// 			if tc.expectErr {
+// 				suite.Require().Error(err)
+// 			} else {
+// 				suite.Require().NoError(err)
+// 			}
+// 		})
+// 	}
+// }
