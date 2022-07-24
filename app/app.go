@@ -50,6 +50,7 @@ import (
 	v6 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v6"
 	v7 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v7"
 	v8 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v8"
+	v11 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v9"
 	v9 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v9"
 	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
 )
@@ -88,7 +89,7 @@ var (
 
 	_ App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
