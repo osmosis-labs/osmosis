@@ -74,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM
 * [#1539] Superfluid: Combine superfluid and staking query on querying delegation by delegator
+* [#2223] Tokenfactory: Add SetMetadata functionality
 
 ### Bug Fixes
 
