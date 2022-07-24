@@ -10,6 +10,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// AccountKeeper defines the expected interface needed for managing accounts.
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 }
