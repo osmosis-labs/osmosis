@@ -55,7 +55,7 @@ type chainConfig struct {
 
 const (
 	// osmosis version being upgraded to (folder must exist here https://github.com/osmosis-labs/osmosis/tree/main/app/upgrades)
-	upgradeVersion = "v9"
+	upgradeVersion = "v11"
 	// estimated number of blocks it takes to submit for a proposal
 	propSubmitBlocks float32 = 10
 	// estimated number of blocks it takes to deposit for a proposal
