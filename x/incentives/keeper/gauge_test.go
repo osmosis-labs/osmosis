@@ -242,16 +242,37 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 }
 
 func (suite *KeeperTestSuite) TestChargeFee() {
+	const baseFee = int64(100)
 
 	testcases := map[string]struct {
 		accountBalanceToFund sdk.Coin
 		feeToCharge          int64
 
-		expectErr bool
+		expectError bool
 	}{
-		"charge fee": {
-			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			feeToCharge:          100,
+		"charge fee, fee == acount balance, success": {
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			feeToCharge:          baseFee,
+		},
+		"charge fee - fee < acount balance, success": {
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			feeToCharge:          baseFee - 1,
+		},
+		"charge fee - fee > acount balance, error": {
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			feeToCharge:          baseFee + 1,
+
+			expectError: true,
+		},
+		"charge fee - fee < acount balance, custom values, success": {
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(11793193112)),
+			feeToCharge:          55,
+		},
+		"charge fee, account funded with coins other than base denom, error": {
+			accountBalanceToFund: sdk.NewCoin("usdc", sdk.NewInt(baseFee)),
+			feeToCharge:          baseFee,
+
+			expectError: true,
 		},
 	}
 
@@ -269,7 +290,7 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 			// System under test.
 			err := incentivesKeepers.ChargeFee(ctx, testAccount, tc.feeToCharge)
 
-			if tc.expectErr {
+			if tc.expectError {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
