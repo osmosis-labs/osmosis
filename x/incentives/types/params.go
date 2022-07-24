@@ -1,7 +1,10 @@
 package types
 
 import (
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
 	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -27,6 +30,8 @@ func NewParams(distrEpochIdentifier string) Params {
 func DefaultParams() Params {
 	return Params{
 		DistrEpochIdentifier: "week",
+		GaugeCreationFee:     sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 100_000_000)}, // 100 OSMO
+
 	}
 }
 
