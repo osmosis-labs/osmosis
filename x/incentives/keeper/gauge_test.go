@@ -6,6 +6,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
@@ -249,6 +252,7 @@ func (suite *KeeperTestSuite) TestCreateGaugeFee() {
 		gaugeAddition        sdk.Coins
 		expectedEndBalance   sdk.Coins
 		isPerpetual          bool
+		isModuleAccount      bool
 		expectErr            bool
 	}{
 		{
@@ -256,24 +260,26 @@ func (suite *KeeperTestSuite) TestCreateGaugeFee() {
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(60000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000))),
 			expectedEndBalance:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))),
-			isPerpetual:          false,
-			expectErr:            false,
 		},
 		{
 			name:                 "user creates a non-perpetual gauge and fills gauge with some remaining tokens",
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(70000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000))),
 			expectedEndBalance:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000))),
-			isPerpetual:          false,
-			expectErr:            false,
 		},
 		{
 			name:                 "user with multiple denoms creates a non-perpetual gauge and fills gauge with some remaining tokens",
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(70000000)), sdk.NewCoin("foo", sdk.NewInt(70000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000))),
 			expectedEndBalance:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)), sdk.NewCoin("foo", sdk.NewInt(70000000))),
-			isPerpetual:          false,
-			expectErr:            false,
+		},
+		{
+			name:                 "module account creates a perpetual gauge and fills gauge with some remaining tokens",
+			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(70000000)), sdk.NewCoin("foo", sdk.NewInt(70000000))),
+			gaugeAddition:        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000))),
+			expectedEndBalance:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)), sdk.NewCoin("foo", sdk.NewInt(70000000))),
+			isPerpetual:          true,
+			isModuleAccount:      true,
 		},
 		{
 			name:                 "user with multiple denoms creates a perpetual gauge and fills gauge with some remaining tokens",
@@ -281,14 +287,12 @@ func (suite *KeeperTestSuite) TestCreateGaugeFee() {
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000))),
 			expectedEndBalance:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)), sdk.NewCoin("foo", sdk.NewInt(70000000))),
 			isPerpetual:          true,
-			expectErr:            false,
 		},
 		{
 			name:                 "user tries to create a non-perpetual gauge but does not have enough funds to pay for the create gauge fee",
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000))),
 			expectedEndBalance:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40000000))),
-			isPerpetual:          false,
 			expectErr:            true,
 		},
 		{
@@ -296,7 +300,6 @@ func (suite *KeeperTestSuite) TestCreateGaugeFee() {
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(60000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000000))),
 			expectedEndBalance:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(60000000))),
-			isPerpetual:          false,
 			expectErr:            true,
 		},
 		// TODO: This is unexpected behavior
@@ -314,12 +317,22 @@ func (suite *KeeperTestSuite) TestCreateGaugeFee() {
 	for _, tc := range tests {
 		suite.SetupTest()
 
-		testAccount := suite.TestAccs[0]
+		//testAccount := suite.TestAccs[0]
+		testAccountPubkey := secp256k1.GenPrivKeyFromSecret([]byte("acc")).PubKey()
+		testAccountAddress := sdk.AccAddress(testAccountPubkey.Address())
 
 		ctx := suite.Ctx
 		incentivesKeepers := suite.App.IncentivesKeeper
 
-		suite.FundAcc(testAccount, tc.accountBalanceToFund)
+		suite.FundAcc(testAccountAddress, tc.accountBalanceToFund)
+
+		if tc.isModuleAccount {
+			modAcc := authtypes.NewModuleAccount(authtypes.NewBaseAccount(testAccountAddress, testAccountPubkey, 1, 0),
+				"module",
+				"permission",
+			)
+			suite.App.AccountKeeper.SetModuleAccount(ctx, modAcc)
+		}
 
 		suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
 		distrTo := lockuptypes.QueryCondition{
@@ -330,7 +343,7 @@ func (suite *KeeperTestSuite) TestCreateGaugeFee() {
 
 		// System under test.
 
-		_, err := incentivesKeepers.CreateGauge(ctx, tc.isPerpetual, testAccount, tc.gaugeAddition, distrTo, time.Time{}, 1)
+		_, err := incentivesKeepers.CreateGauge(ctx, tc.isPerpetual, testAccountAddress, tc.gaugeAddition, distrTo, time.Time{}, 1)
 
 		if tc.expectErr {
 			suite.Require().Error(err)
@@ -338,7 +351,7 @@ func (suite *KeeperTestSuite) TestCreateGaugeFee() {
 			suite.Require().NoError(err)
 		}
 
-		bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, testAccount)
+		bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, testAccountAddress)
 		suite.Require().Equal(tc.expectedEndBalance.String(), bal.String(), "test: %v", tc.name)
 
 	}
