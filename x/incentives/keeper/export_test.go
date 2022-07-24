@@ -35,6 +35,6 @@ func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 	return k.moveActiveGaugeToFinishedGauge(ctx, gauge)
 }
 
-func (k Keeper) ChargeFee(ctx sdk.Context, address sdk.AccAddress, fee int64) error {
-	return k.chargeFee(ctx, address, fee)
+func (k Keeper) ChargeFee(ctx sdk.Context, address sdk.AccAddress, fee int64, gaugeCoins sdk.Coins) error {
+	return k.chargeFee(ctx, address, fee, gaugeCoins)
 }

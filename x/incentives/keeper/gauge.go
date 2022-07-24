@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
@@ -18,8 +19,10 @@ import (
 )
 
 const (
-	createGaugeMinBaseFee = 50 * 1_000_000
-	addToGaugeMinBaseFee  = 25 * 1_000_000
+	// CreateGaugeFee is the fee required to create a new gauge.
+	createGaugeFee = 50 * 1_000_000
+	// AddToGagugeFee is the fee required to add to gauge.
+	addToGaugeFee = 25 * 1_000_000
 )
 
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
@@ -96,9 +99,6 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 
 // CreateGauge creates a gauge and sends coins to the gauge.
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
-	if err := k.chargeFee(ctx, owner, createGaugeMinBaseFee); err != nil {
-		return 0, err
-	}
 	// Ensure that this gauge's duration is one of the allowed durations on chain
 	durations := k.GetLockableDurations(ctx)
 	if distrTo.LockQueryType == lockuptypes.ByDuration {
@@ -151,9 +151,9 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 
 // AddToGaugeRewards adds coins to gauge.
 func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
-	if err := k.chargeFee(ctx, owner, addToGaugeMinBaseFee); err != nil {
-		return err
-	}
+	// if err := k.chargeFee(ctx, owner, types.AddToGaugeFee); err != nil {
+	// 	return err
+	// }
 	gauge, err := k.GetGaugeByID(ctx, gaugeID)
 	if err != nil {
 		return err
@@ -290,14 +290,21 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 	return k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
 }
 
-func (k Keeper) chargeFee(ctx sdk.Context, address sdk.AccAddress, fee int64) (err error) {
+func (k Keeper) chargeFee(ctx sdk.Context, address sdk.AccAddress, fee int64, gaugeCoins sdk.Coins) (err error) {
 	// Send creation fee to community pool
 	feeDenom, err := k.txfk.GetBaseDenom(ctx)
 	if err != nil {
 		return err
 	}
-	creationFee := sdk.NewCoins(sdk.NewCoin(feeDenom, sdk.NewInt(fee)))
-	if err := k.dk.FundCommunityPool(ctx, creationFee, address); err != nil {
+	feeInt := sdk.NewInt(fee)
+
+	totalCost := gaugeCoins.AmountOf(feeDenom).Add(feeInt)
+	accountBalance := k.bk.GetBalance(ctx, address, feeDenom).Amount
+	if accountBalance.LT(totalCost) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "account's balance of %s (%s) is less than the total cost of the message (%s)", feeDenom, accountBalance, totalCost)
+	}
+
+	if err := k.dk.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(feeDenom, feeInt)), address); err != nil {
 		return err
 	}
 	return nil

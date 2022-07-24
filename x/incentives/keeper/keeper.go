@@ -19,6 +19,7 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 	hooks      types.IncentiveHooks
+	ak         types.AccountKeeper
 	bk         types.BankKeeper
 	lk         types.LockupKeeper
 	ek         types.EpochKeeper
@@ -27,7 +28,7 @@ type Keeper struct {
 }
 
 // NewKeeper returns a new instance of the incentive module keeper struct.
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, dk types.DistrKeeper, txfk types.TxFeesKeeper) *Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, dk types.DistrKeeper, txfk types.TxFeesKeeper) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
@@ -36,6 +37,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Sub
 		cdc:        cdc,
 		storeKey:   storeKey,
 		paramSpace: paramSpace,
+		ak:         ak,
 		bk:         bk,
 		lk:         lk,
 		ek:         ek,
