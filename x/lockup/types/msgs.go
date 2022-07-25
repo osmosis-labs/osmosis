@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // constants.
@@ -29,6 +30,11 @@ func NewMsgLockTokens(owner sdk.AccAddress, duration time.Duration, coins sdk.Co
 func (m MsgLockTokens) Route() string { return RouterKey }
 func (m MsgLockTokens) Type() string  { return TypeMsgLockTokens }
 func (m MsgLockTokens) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Owner)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+	}
+
 	if m.Duration <= 0 {
 		return fmt.Errorf("duration should be positive: %d < 0", m.Duration)
 	}
@@ -36,6 +42,10 @@ func (m MsgLockTokens) ValidateBasic() error {
 	// we only allow locks with one denom for now
 	if m.Coins.Len() != 1 {
 		return fmt.Errorf("lockups can only have one denom per lock ID, got %v", m.Coins)
+	}
+
+	if !m.Coins.IsAllPositive() {
+		return fmt.Errorf("cannot lock up a zero or negative amount")
 	}
 
 	return nil
