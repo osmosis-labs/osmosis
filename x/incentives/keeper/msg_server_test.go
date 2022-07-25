@@ -10,7 +10,6 @@ import (
 
 	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
 	"github.com/osmosis-labs/osmosis/v10/x/incentives/keeper"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v10/x/incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
@@ -85,6 +84,7 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 
 		ctx := suite.Ctx
 		bankKeeper := suite.App.BankKeeper
+		accountKeeper := suite.App.AccountKeeper
 		msgServer := keeper.NewMsgServerImpl(suite.App.IncentivesKeeper)
 
 		suite.FundAcc(testAccountAddress, tc.accountBalanceToFund)
@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 				"module",
 				"permission",
 			)
-			suite.App.AccountKeeper.SetModuleAccount(ctx, modAcc)
+			accountKeeper.SetModuleAccount(ctx, modAcc)
 		}
 
 		suite.SetupManyLocks(1, defaultLiquidTokens, defaultLPTokens, defaultLockDuration)
@@ -126,12 +126,11 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 		if tc.expectErr {
 			suite.Require().Equal(tc.accountBalanceToFund.String(), balanceAmount.String(), "test: %v", tc.name)
 		} else {
-			fee := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, incentiveskeeper.CreateGaugeFee))
+			fee := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, keeper.CreateGaugeFee))
 			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition)
 			finalAccountBalance := accountBalance.Sub(fee)
 			suite.Require().Equal(finalAccountBalance.String(), balanceAmount.String(), "test: %v", tc.name)
 		}
-
 	}
 }
 
@@ -186,14 +185,6 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000000))),
 			expectErr:            true,
 		},
-		// {
-		// 	name:                 "user tries to add to a perpetual gauge but the gauge does not exist",
-		// 	accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(60000000))),
-		// 	gaugeAddition:        sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(10000000))),
-		// 	nonexistentGauge:     true,
-		// 	isPerpetual:          true,
-		// 	expectErr:            true,
-		// },
 	}
 
 	for _, tc := range tests {
@@ -204,7 +195,9 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 
 		ctx := suite.Ctx
 		bankKeeper := suite.App.BankKeeper
-		msgServer := keeper.NewMsgServerImpl(suite.App.IncentivesKeeper)
+		incentivesKeeper := suite.App.IncentivesKeeper
+		accountKeeper := suite.App.AccountKeeper
+		msgServer := keeper.NewMsgServerImpl(incentivesKeeper)
 
 		suite.FundAcc(testAccountAddress, tc.accountBalanceToFund)
 
@@ -213,14 +206,14 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 				"module",
 				"permission",
 			)
-			suite.App.AccountKeeper.SetModuleAccount(ctx, modAcc)
+			accountKeeper.SetModuleAccount(ctx, modAcc)
 		}
 
 		// System under test.
 		coins := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(500000000)))
 		gaugeID, _, _, _ := suite.SetupNewGauge(true, coins)
 		if tc.nonexistentGauge {
-			gaugeID = suite.App.IncentivesKeeper.GetLastGaugeID(ctx) + 1
+			gaugeID = incentivesKeeper.GetLastGaugeID(ctx) + 1
 		}
 		msg := &types.MsgAddToGauge{
 			Owner:   testAccountAddress.String(),
@@ -228,7 +221,6 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 			Rewards: tc.gaugeAddition,
 		}
 
-		//_, err := incentivesKeepers.CreateGauge(ctx, tc.isPerpetual, testAccountAddress, tc.gaugeAddition, distrTo, time.Time{}, 1)
 		_, err := msgServer.AddToGauge(sdk.WrapSDKContext(ctx), msg)
 
 		if tc.expectErr {
@@ -242,11 +234,10 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 		if tc.expectErr {
 			suite.Require().Equal(tc.accountBalanceToFund.String(), bal.String(), "test: %v", tc.name)
 		} else {
-			fee := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, incentiveskeeper.AddToGaugeFee))
+			fee := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, keeper.AddToGaugeFee))
 			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition)
 			finalAccountBalance := accountBalance.Sub(fee)
 			suite.Require().Equal(finalAccountBalance.String(), bal.String(), "test: %v", tc.name)
 		}
-
 	}
 }
