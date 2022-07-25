@@ -11,6 +11,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
 	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
@@ -290,22 +291,16 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 // chargeFeeIfSufficientFeeDenomBalance charges fee in the base tx fee denom on the address if the address has
 // balance that is less than fee + amount of the coin from gaugeCoins that is of base tx fee denom.
 // gaugeCoins might not have a coin of tx base fee denom. In that case, only fee is compared to balance.
+// The fee is sent to the community pool.
 // Returns nil on success, error otherwise.
 func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee int64, gaugeCoins sdk.Coins) (err error) {
-	// Send creation fee to community pool
-	feeDenom, err := k.tk.GetBaseDenom(ctx)
-	if err != nil {
-		return err
-	}
 	feeInt := sdk.NewInt(fee)
-
-	totalCost := gaugeCoins.AmountOf(feeDenom).Add(feeInt)
-	accountBalance := k.bk.GetBalance(ctx, address, feeDenom).Amount
+	totalCost := gaugeCoins.AmountOf(appparams.BaseCoinUnit).Add(feeInt)
+	accountBalance := k.bk.GetBalance(ctx, address, appparams.BaseCoinUnit).Amount
 	if accountBalance.LT(totalCost) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "account's balance of %s (%s) is less than the total cost of the message (%s)", feeDenom, accountBalance, totalCost)
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "account's balance of %s (%s) is less than the total cost of the message (%s)", appparams.BaseCoinUnit, accountBalance, totalCost)
 	}
-
-	if err := k.dk.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(feeDenom, feeInt)), address); err != nil {
+	if err := k.dk.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, feeInt)), address); err != nil {
 		return err
 	}
 	return nil
