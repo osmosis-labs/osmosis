@@ -163,7 +163,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.Len() <= 0 || simCoins.AmountOf(appparams.BaseCoinUnit).LT(createGaugeFee) {
+		if simCoins.Len() <= 0 || simCoins.AmountOf(appparams.BaseCoinUnit).LT(addToGaugeFee) {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgAddToGauge, "Account have no coin"), nil, nil
 		}
