@@ -7,6 +7,10 @@
     "binaries": {
       "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v10.0.0/osmosis-10.0.0-linux-amd64",
       "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v10.0.0/osmosis-10.0.0-linux-arm64"
-    }
+    },
+      "cosmos_sdk_version": "0.45",
+      "tendermint_version": "0.34",
+      "cosmwasm_version": "0.24",
+      "cosmwasm_enabled": true
   }
 }
