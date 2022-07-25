@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 )
 
-const (
+var (
 	// CreateGaugeFee is the fee required to create a new gauge.
 	CreateGaugeFee = createGaugeFee
 	// AddToGagugeFee is the fee required to add to gauge.
@@ -44,6 +44,6 @@ func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 }
 
 // ChargeFeeIfSufficientFeeDenomBalance see chargeFeeIfSufficientFeeDenomBalance spec.
-func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee int64, gaugeCoins sdk.Coins) error {
+func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) error {
 	return k.chargeFeeIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
 }

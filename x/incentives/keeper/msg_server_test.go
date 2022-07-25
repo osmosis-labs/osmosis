@@ -257,7 +257,7 @@ func (suite *KeeperTestSuite) TestAddToGaugeFee() {
 		if tc.expectErr {
 			suite.Require().Equal(tc.accountBalanceToFund.String(), bal.String(), "test: %v", tc.name)
 		} else {
-			finalAccountBalalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition.Add(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(incentiveskeeper.CreateGaugeFee))))
+			finalAccountBalalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition.Add(sdk.NewCoin(appparams.BaseCoinUnit, incentiveskeeper.CreateGaugeFee)))
 			suite.Require().Equal(finalAccountBalalance.String(), bal.String(), "test: %v", tc.name)
 		}
 

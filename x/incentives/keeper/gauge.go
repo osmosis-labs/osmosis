@@ -19,11 +19,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
+var (
 	// CreateGaugeFee is the fee required to create a new gauge.
-	createGaugeFee = 50 * 1_000_000
+	createGaugeFee = sdk.NewInt(50 * 1_000_000)
 	// AddToGagugeFee is the fee required to add to gauge.
-	addToGaugeFee = 25 * 1_000_000
+	addToGaugeFee = sdk.NewInt(25 * 1_000_000)
 )
 
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
@@ -293,14 +293,13 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 // gaugeCoins might not have a coin of tx base fee denom. In that case, only fee is compared to balance.
 // The fee is sent to the community pool.
 // Returns nil on success, error otherwise.
-func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee int64, gaugeCoins sdk.Coins) (err error) {
-	feeInt := sdk.NewInt(fee)
-	totalCost := gaugeCoins.AmountOf(appparams.BaseCoinUnit).Add(feeInt)
+func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) (err error) {
+	totalCost := gaugeCoins.AmountOf(appparams.BaseCoinUnit).Add(fee)
 	accountBalance := k.bk.GetBalance(ctx, address, appparams.BaseCoinUnit).Amount
 	if accountBalance.LT(totalCost) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "account's balance of %s (%s) is less than the total cost of the message (%s)", appparams.BaseCoinUnit, accountBalance, totalCost)
 	}
-	if err := k.dk.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, feeInt)), address); err != nil {
+	if err := k.dk.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, fee)), address); err != nil {
 		return err
 	}
 	return nil
