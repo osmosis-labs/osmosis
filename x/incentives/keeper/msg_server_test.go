@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestAddToGaugeFee() {
 		coins := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(500000000)))
 		gaugeID, _, _, _ := suite.SetupNewGauge(true, coins)
 		if tc.nonexistentGauge {
-			gaugeID = gaugeID + 50
+			gaugeID = suite.App.IncentivesKeeper.GetLastGaugeID(ctx) + 1
 		}
 		msg := &types.MsgAddToGauge{
 			Owner:   testAccountAddress.String(),
