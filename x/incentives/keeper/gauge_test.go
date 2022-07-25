@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -13,9 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestGaugeTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
+var _ = suite.TestingSuite(nil)
 
 // TestInvalidDurationGaugeCreationValidation tests error handling for creating a gauge with an invalid duration.
 func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {

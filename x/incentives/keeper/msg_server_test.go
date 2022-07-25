@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -18,9 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestMsgServerTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
+var _ = suite.TestingSuite(nil)
 
 func (suite *KeeperTestSuite) TestCreateGaugeFee() {
 	tests := []struct {
