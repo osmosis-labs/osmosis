@@ -239,7 +239,7 @@ func (suite *KeeperTestSuite) TestGaugeOperations() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestChargeFee() {
+func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 	const baseFee = int64(100)
 
 	testcases := map[string]struct {
