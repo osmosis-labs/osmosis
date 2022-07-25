@@ -23,7 +23,6 @@ func TestMsgServerTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) TestCreateGaugeFee() {
-
 	tests := []struct {
 		name                 string
 		accountBalanceToFund sdk.Coins
