@@ -7,13 +7,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-// AccountKeeper defines the expected interface needed for managing accounts.
-type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-}
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
@@ -47,9 +41,4 @@ type EpochKeeper interface {
 // DistrKeeper defines the contract needed to be fulfilled for distribution keeper.
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
-}
-
-// TxFeesKeeper defines the expected interface needed to managing transaction fees.
-type TxFeesKeeper interface {
-	GetBaseDenom(ctx sdk.Context) (denom string, err error)
 }
