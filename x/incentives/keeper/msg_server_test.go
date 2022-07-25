@@ -19,7 +19,7 @@ import (
 
 var _ = suite.TestingSuite(nil)
 
-func (suite *KeeperTestSuite) TestCreateGaugeFee() {
+func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 	tests := []struct {
 		name                 string
 		accountBalanceToFund sdk.Coins
@@ -141,7 +141,7 @@ func (suite *KeeperTestSuite) TestCreateGaugeFee() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestAddToGaugeFee() {
+func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 
 	tests := []struct {
 		name                 string
