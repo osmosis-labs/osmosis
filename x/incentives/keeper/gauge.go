@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	// CreateGaugeFee is the fee required to create a new gauge.
+	// createGaugeFee is the fee required to create a new gauge.
 	createGaugeFee = sdk.NewInt(50 * 1_000_000)
 	// AddToGagugeFee is the fee required to add to gauge.
 	addToGaugeFee = sdk.NewInt(25 * 1_000_000)
