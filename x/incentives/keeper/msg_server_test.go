@@ -51,7 +51,6 @@ func (suite *KeeperTestSuite) TestCreateGaugeFee() {
 			name:                 "module account creates a perpetual gauge and fills gauge with some remaining tokens",
 			accountBalanceToFund: sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(70000000)), sdk.NewCoin("foo", sdk.NewInt(70000000))),
 			gaugeAddition:        sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(10000000))),
-			expectedEndBalance:   sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(10000000)), sdk.NewCoin("foo", sdk.NewInt(70000000))),
 			isPerpetual:          true,
 			isModuleAccount:      true,
 		},
@@ -145,7 +144,6 @@ func (suite *KeeperTestSuite) TestAddToGaugeFee() {
 		name                 string
 		accountBalanceToFund sdk.Coins
 		gaugeAddition        sdk.Coins
-		expectedEndBalance   sdk.Coins
 		nonexistentGauge     bool
 		isPerpetual          bool
 		isModuleAccount      bool
