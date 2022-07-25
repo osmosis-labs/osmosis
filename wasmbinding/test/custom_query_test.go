@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -172,6 +173,42 @@ func TestQuerySpotPrice(t *testing.T) {
 	require.InEpsilonf(t, expected+swapFee, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
 }
 
+func TestQueryArithmeticTwap(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 12000000),
+		sdk.NewInt64Coin("ustar", 240000000),
+	}
+	// 20 star to 1 osmo
+	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	require.NotEmpty(t, reflect)
+
+	oldBlockTime := ctx.BlockTime()
+	ctx = ctx.WithBlockTime(oldBlockTime.Add(time.Minute * 10))
+
+	_, err := osmosis.GAMMKeeper.SwapExactAmountIn(ctx, actor, starPool, sdk.NewCoin("uosmo", sdk.NewInt(10000)), "ustar", sdk.NewInt(1))
+	require.NoError(t, err)
+
+	// // osmosis.TwapKeeper.GetArithmeticTwap(ctx, starPool)
+	query := bindings.OsmosisQuery{
+		ArithmeticTwap: &bindings.ArithmeticTwap{
+			PoolId:          starPool,
+			QuoteAssetDenom: "ustar",
+			BaseAssetDenom:  "uosmo",
+			StartTime:       oldBlockTime,
+			EndTime:         ctx.BlockTime(),
+		},
+	}
+
+	resp := bindings.ArithmeticTwapResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+}
 func TestQueryEstimateSwap(t *testing.T) {
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
