@@ -6,8 +6,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 )
 
-func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) error {
-	return k.addGaugeRefByKey(ctx, key, guageID)
+// AddGaugeRefByKey appends the provided gauge ID into an array associated with the provided key.
+func (k Keeper) AddGaugeRefByKey(ctx sdk.Context, key []byte, gaugeID uint64) error {
+	return k.addGaugeRefByKey(ctx, key, gaugeID)
 }
 
 func (k Keeper) DeleteGaugeRefByKey(ctx sdk.Context, key []byte, guageID uint64) error {
@@ -28,4 +29,9 @@ func (k Keeper) MoveUpcomingGaugeToActiveGauge(ctx sdk.Context, gauge types.Gaug
 
 func (k Keeper) MoveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gauge) error {
 	return k.moveActiveGaugeToFinishedGauge(ctx, gauge)
+}
+
+// ChargeFeeIfSufficientFeeDenomBalance see chargeFeeIfSufficientFeeDenomBalance spec.
+func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) error {
+	return k.chargeFeeIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
 }
