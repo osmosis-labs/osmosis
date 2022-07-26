@@ -30,13 +30,6 @@ const (
 	OpWeightMsgAddToGauge           = "op_weight_msg_add_to_gauge"
 )
 
-var (
-	// createGaugeFee is the fee required to create a new gauge.
-	createGaugeFee = sdk.NewInt(50 * 1_000_000)
-	// addToGagugeFee is the fee required to add to gauge.
-	addToGaugeFee = sdk.NewInt(25 * 1_000_000)
-)
-
 // WeightedOperations returns all the operations from the module with their respective weights.
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak stakingTypes.AccountKeeper,
@@ -124,7 +117,7 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.Len() <= 0 || simCoins.AmountOf(appparams.BaseCoinUnit).LT(createGaugeFee) {
+		if simCoins.Len() <= 0 || simCoins.AmountOf(appparams.BaseCoinUnit).LT(types.CreateGaugeFee) {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgCreateGauge, "Account have no coin"), nil, nil
 		}
@@ -163,7 +156,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.Len() <= 0 || simCoins.AmountOf(appparams.BaseCoinUnit).LT(addToGaugeFee) {
+		if simCoins.Len() <= 0 || simCoins.AmountOf(appparams.BaseCoinUnit).LT(types.AddToGaugeFee) {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgAddToGauge, "Account have no coin"), nil, nil
 		}
