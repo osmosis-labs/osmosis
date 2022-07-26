@@ -19,13 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	// createGaugeFee is the fee required to create a new gauge.
-	createGaugeFee = sdk.NewInt(50 * 1_000_000)
-	// addToGagugeFee is the fee required to add to gauge.
-	addToGaugeFee = sdk.NewInt(25 * 1_000_000)
-)
-
 // getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
 func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Gauge {
 	gauges := []types.Gauge{}

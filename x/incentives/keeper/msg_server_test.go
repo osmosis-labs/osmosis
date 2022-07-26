@@ -126,7 +126,7 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 		if tc.expectErr {
 			suite.Require().Equal(tc.accountBalanceToFund.String(), balanceAmount.String(), "test: %v", tc.name)
 		} else {
-			fee := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, keeper.CreateGaugeFee))
+			fee := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, types.CreateGaugeFee))
 			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition)
 			finalAccountBalance := accountBalance.Sub(fee)
 			suite.Require().Equal(finalAccountBalance.String(), balanceAmount.String(), "test: %v", tc.name)
@@ -234,7 +234,7 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 		if tc.expectErr {
 			suite.Require().Equal(tc.accountBalanceToFund.String(), bal.String(), "test: %v", tc.name)
 		} else {
-			fee := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, keeper.AddToGaugeFee))
+			fee := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, types.AddToGaugeFee))
 			accountBalance := tc.accountBalanceToFund.Sub(tc.gaugeAddition)
 			finalAccountBalance := accountBalance.Sub(fee)
 			suite.Require().Equal(finalAccountBalance.String(), bal.String(), "test: %v", tc.name)
