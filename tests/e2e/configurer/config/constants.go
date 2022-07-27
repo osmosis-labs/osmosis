@@ -13,4 +13,8 @@ const (
 	PropBufferBlocks float32 = 5
 	// max retries for json unmarshalling
 	MaxRetries = 60
+	// Minimum deposit value for a proposal to enter a voting period.
+	MinDepositValue = 500000000
+	// Minimum deposit value for proposal to be submitted.
+	InitialMinDeposit = MinDepositValue / 4
 )
