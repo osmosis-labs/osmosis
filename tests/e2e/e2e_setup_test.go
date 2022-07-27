@@ -14,12 +14,14 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/suite"
 
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
 	dockerconfig "github.com/osmosis-labs/osmosis/v10/tests/e2e/docker"
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
@@ -66,6 +68,10 @@ const (
 	propBufferBlocks float32 = 5
 	// max retries for json unmarshalling
 	maxRetries = 60
+	// minimum deposit value for a proposal to enter a voting period.
+	minDepositValue = 500000000
+	// minimum deposit value for proposal to be submitted.
+	initialMinDeposit = minDepositValue / 4
 )
 
 var (
@@ -507,7 +513,7 @@ func (s *IntegrationTestSuite) upgrade() {
 	for _, chainConfig := range s.chainConfigs {
 		currentHeight := s.getCurrentChainHeight(chainConfig, 0)
 		chainConfig.propHeight = currentHeight + int(chainConfig.votingPeriod) + int(propSubmitBlocks) + int(propBufferBlocks)
-		s.submitUpgradeProposal(chainConfig)
+		s.submitUpgradeProposal(chainConfig, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(initialMinDeposit)))
 		s.depositProposal(chainConfig)
 		s.voteProposal(chainConfig)
 	}
