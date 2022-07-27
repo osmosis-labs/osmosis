@@ -198,8 +198,14 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // 	return nil
 // }
 
+// GetPoolDenom retrieves the pool based on PoolId and
+// returns the coin denoms that it holds.
 func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
 	denoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
 	return denoms, err
 }
