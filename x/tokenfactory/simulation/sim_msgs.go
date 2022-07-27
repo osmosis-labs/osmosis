@@ -18,7 +18,7 @@ func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 	minCoins := sim.TokenFactoryKeeper().GetParams(ctx).DenomCreationFee
 	acc, err := sim.RandomSimAccountWithMinCoins(ctx, minCoins)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("no account has enough coins to pay the denom creation fee")
 	}
 
 	return &types.MsgCreateDenom{
@@ -27,6 +27,7 @@ func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 	}, nil
 }
 
+// RandomMsgMintDenom takes a random denom that has been created and uses the denom's admin to mint a random amount
 func RandomMsgMintDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgMint, error) {
 	acc, senderExists := sim.RandomSimAccountWithConstraint(accountCreatedTokenFactoryDenom(k, ctx))
 	if !senderExists {
@@ -49,6 +50,7 @@ func RandomMsgMintDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) 
 	}, nil
 }
 
+// RandomMsgBurnDenom takes a random denom that has been created and uses the denom's admin to burn a random amount
 func RandomMsgBurnDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgBurn, error) {
 	acc, senderExists := sim.RandomSimAccountWithConstraint(accountCreatedTokenFactoryDenom(k, ctx))
 	if !senderExists {
@@ -76,6 +78,7 @@ func RandomMsgBurnDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) 
 	}, nil
 }
 
+// RandomMsgChangeAdmin takes a random denom that has been created and changes the admin to another random account
 func RandomMsgChangeAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgChangeAdmin, error) {
 	acc, senderExists := sim.RandomSimAccountWithConstraint(accountCreatedTokenFactoryDenom(k, ctx))
 	if !senderExists {
@@ -102,8 +105,6 @@ func RandomMsgChangeAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 	}, nil
 }
 
-// TODO: We are going to need to index the owner of an account as well, rather than creator
-// to simulate admin changes
 func accountCreatedTokenFactoryDenom(k keeper.Keeper, ctx sdk.Context) simtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
 		store := k.GetCreatorPrefixStore(ctx, acc.Address.String())
