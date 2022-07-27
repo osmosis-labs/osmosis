@@ -246,3 +246,7 @@ func (app *OsmosisApp) GetAccountKeeper() simtypes.AccountKeeper {
 func (app *OsmosisApp) GetBankKeeper() simtypes.BankKeeper {
 	return app.AppKeepers.BankKeeper
 }
+
+func (app *OsmosisApp) GetTokenFactoryKeeper() simtypes.TokenFactoryKeeper {
+	return app.AppKeepers.TokenFactoryKeeper
+}

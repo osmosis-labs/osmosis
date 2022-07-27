@@ -13,17 +13,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	TokenFactoryCreationFee = sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000))
-)
-
 // RandomMsgCreateDenom creates a random tokenfactory denom that is no greater than 44 alphanumeric characters
 func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgCreateDenom, error) {
-	minCoins := TokenFactoryCreationFee
+	minCoins := sim.TokenFactoryKeeper().GetParams(ctx).DenomCreationFee
 	acc, err := sim.RandomSimAccountWithMinCoins(ctx, minCoins)
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.MsgCreateDenom{
 		Sender:   acc.Address.String(),
 		Subdenom: sim.RandStringOfLength(types.MaxSubdenomLength),
@@ -35,16 +32,73 @@ func RandomMsgMintDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) 
 	if !senderExists {
 		return nil, errors.New("no addr has created a tokenfactory coin")
 	}
-	// Pick denom
-	store := k.GetCreatorPrefixStore(ctx, acc.Address.String())
-	denoms := osmoutils.GatherAllKeysFromStore(store)
-	denom := simtypes.RandSelect(sim, denoms...)
+
+	denom, addr, err := getTokenFactoryDenomAndItsAdmin(k, sim, ctx, acc)
+	if err != nil {
+		return nil, errors.New("cannot find factory denom or admin")
+	}
+	if addr == nil {
+		return nil, errors.New("denom has no admin")
+	}
 
 	// TODO: Replace with an improved rand exponential coin
 	mintAmount := sim.RandPositiveInt(sdk.NewIntFromUint64(1000_000000))
 	return &types.MsgMint{
-		Sender: acc.Address.String(),
+		Sender: addr.String(),
 		Amount: sdk.NewCoin(denom, mintAmount),
+	}, nil
+}
+
+func RandomMsgBurnDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgBurn, error) {
+	acc, senderExists := sim.RandomSimAccountWithConstraint(accountCreatedTokenFactoryDenom(k, ctx))
+	if !senderExists {
+		return nil, errors.New("no addr has created a tokenfactory coin")
+	}
+
+	denom, addr, err := getTokenFactoryDenomAndItsAdmin(k, sim, ctx, acc)
+	if err != nil {
+		return nil, errors.New("cannot find factory denom or admin")
+	}
+	if addr == nil {
+		return nil, errors.New("denom has no admin")
+	}
+
+	denomBal := sim.BankKeeper().GetBalance(ctx, addr, denom)
+	if denomBal.IsZero() {
+		return nil, errors.New("addr does not have enough balance to burn")
+	}
+
+	// TODO: Replace with an improved rand exponential coin
+	burnAmount := sim.RandPositiveInt(denomBal.Amount)
+	return &types.MsgBurn{
+		Sender: addr.String(),
+		Amount: sdk.NewCoin(denom, burnAmount),
+	}, nil
+}
+
+func RandomMsgChangeAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgChangeAdmin, error) {
+	acc, senderExists := sim.RandomSimAccountWithConstraint(accountCreatedTokenFactoryDenom(k, ctx))
+	if !senderExists {
+		return nil, errors.New("no addr has created a tokenfactory coin")
+	}
+
+	denom, addr, err := getTokenFactoryDenomAndItsAdmin(k, sim, ctx, acc)
+	if err != nil {
+		return nil, errors.New("cannot find factory denom or admin")
+	}
+	if addr == nil {
+		return nil, errors.New("denom has no admin")
+	}
+
+	newAdmin := sim.RandomSimAccount()
+	if newAdmin.Address.String() == addr.String() {
+		return nil, errors.New("new admin cannot be the same as current admin")
+	}
+
+	return &types.MsgChangeAdmin{
+		Sender:   addr.String(),
+		Denom:    denom,
+		NewAdmin: newAdmin.Address.String(),
 	}, nil
 }
 
@@ -57,4 +111,15 @@ func accountCreatedTokenFactoryDenom(k keeper.Keeper, ctx sdk.Context) simtypes.
 		defer iterator.Close()
 		return iterator.Valid()
 	}
+}
+
+func getTokenFactoryDenomAndItsAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, acc legacysimulationtype.Account) (string, sdk.AccAddress, error) {
+	store := k.GetCreatorPrefixStore(ctx, acc.Address.String())
+	denoms := osmoutils.GatherAllKeysFromStore(store)
+	denom := simtypes.RandSelect(sim, denoms...)
+
+	authData, _ := k.GetAuthorityMetadata(ctx, denom)
+	admin := authData.Admin
+	addr, err := sdk.AccAddressFromBech32(admin)
+	return denom, addr, err
 }
