@@ -12,6 +12,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
+// The AccountKeeper interface contains functions for getting accounts and the module address
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 
@@ -19,16 +20,19 @@ type AccountKeeper interface {
 	GetModuleAccount(ctx sdk.Context, name string) authtypes.ModuleAccountI
 }
 
+// The BankKeeper sends tokens across modules and is able to get account balances.
 type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
 }
 
+// The GAMMKeeper gets the pool from poolID.
 type GAMMKeeper interface {
 	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 }
 
+// The IncentivesKeeper creates and gets gauges, and also allows additions to gauge rewards.
 type IncentivesKeeper interface {
 	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error)
 	GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*incentivestypes.Gauge, error)
@@ -37,6 +41,7 @@ type IncentivesKeeper interface {
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
 }
 
+// The DistrKeeper handles pool-fees functionality - setting / getting fees and funding the community pool.
 type DistrKeeper interface {
 	GetFeePool(ctx sdk.Context) (feePool distrtypes.FeePool)
 	SetFeePool(ctx sdk.Context, feePool distrtypes.FeePool)

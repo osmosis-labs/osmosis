@@ -19,6 +19,7 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
+//SetupSuite sets up an integration test suite.
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
@@ -30,6 +31,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
+//TearDownSuite tears down the integration test suite.
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()

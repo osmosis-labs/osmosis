@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 )
 
+//NewPoolIncentivesProposalHandler is a handler for governance proposals on new pool incentives.
 func NewPoolIncentivesProposalHandler(k keeper.Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {

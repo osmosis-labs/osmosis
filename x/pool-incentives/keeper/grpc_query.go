@@ -76,6 +76,7 @@ func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDu
 	return &types.QueryLockableDurationsResponse{LockableDurations: q.Keeper.GetLockableDurations(sdkCtx)}, nil
 }
 
+// IncentivizedPools iterates over all gauges, returns default gauges created with pool.
 func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivizedPoolsRequest) (*types.QueryIncentivizedPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
