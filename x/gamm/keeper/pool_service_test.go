@@ -759,31 +759,32 @@ func (suite *KeeperTestSuite) TestGetPoolDenom() {
 	suite.Require().NoError(err)
 
 	for _, tc := range []struct {
-		desc        string
-		poolId      uint64
-		expectDenom []string
-		expectErr   bool
+		desc         string
+		poolId       uint64
+		expectDenoms []string
+		expectErr    bool
 	}{
 		{
-			desc:        "Valid Pool denoms",
-			poolId:      1,
-			expectDenom: []string{"foo", "bar"},
-			expectErr:   false,
+			desc:         "Valid PoolId",
+			poolId:       1,
+			expectDenoms: []string{"bar", "foo"},
+			expectErr:    false,
 		},
 		{
-			desc:        "Invalid Pool denoms",
-			poolId:      2,
-			expectDenom: []string{},
-			expectErr:   true,
+			desc:         "Invalid PoolId",
+			poolId:       2,
+			expectDenoms: []string{"bar", "foo"},
+			expectErr:    true,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			_, err := suite.App.GAMMKeeper.GetPoolDenoms(suite.Ctx, tc.poolId)
+			denoms, err := suite.App.GAMMKeeper.GetPoolDenoms(suite.Ctx, tc.poolId)
 
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
+				suite.Require().Equal(denoms, tc.expectDenoms)
 			}
 		})
 	}
