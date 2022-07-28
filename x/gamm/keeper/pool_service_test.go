@@ -777,7 +777,7 @@ func (suite *KeeperTestSuite) TestGetPoolDenom() {
 			expectErr:    true,
 		},
 	} {
-		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+		suite.Run(tc.desc, func() {
 			denoms, err := suite.App.GAMMKeeper.GetPoolDenoms(suite.Ctx, tc.poolId)
 
 			if tc.expectErr {
