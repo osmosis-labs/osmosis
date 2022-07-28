@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +13,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper/internal/events"
 )
 
 type msgServer struct {
@@ -46,12 +46,8 @@ func (server msgServer) SuperfluidDelegate(goCtx context.Context, msg *types.Msg
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := server.keeper.SuperfluidDelegate(ctx, msg.Sender, msg.LockId, msg.ValAddr)
-	if err != nil {
-		ctx.EventManager().EmitEvent(sdk.NewEvent(
-			types.TypeEvtSuperfluidDelegate,
-			sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", msg.LockId)),
-			sdk.NewAttribute(types.AttributeValidator, msg.ValAddr),
-		))
+	if err == nil {
+		events.EmitSuperfluidDelegateEvent(ctx, msg.LockId, msg.ValAddr)
 	}
 	return &types.MsgSuperfluidDelegateResponse{}, err
 }
@@ -65,11 +61,8 @@ func (server msgServer) SuperfluidUndelegate(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := server.keeper.SuperfluidUndelegate(ctx, msg.Sender, msg.LockId)
-	if err != nil {
-		ctx.EventManager().EmitEvent(sdk.NewEvent(
-			types.TypeEvtSuperfluidUndelegate,
-			sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", msg.LockId)),
-		))
+	if err == nil {
+		events.EmitSuperfluidUndelegateEvent(ctx, msg.LockId)
 	}
 	return &types.MsgSuperfluidUndelegateResponse{}, err
 }
@@ -92,11 +85,8 @@ func (server msgServer) SuperfluidUnbondLock(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := server.keeper.SuperfluidUnbondLock(ctx, msg.LockId, msg.Sender)
-	if err != nil {
-		ctx.EventManager().EmitEvent(sdk.NewEvent(
-			types.TypeEvtSuperfluidUnbondLock,
-			sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", msg.LockId)),
-		))
+	if err == nil {
+		events.EmitSuperfluidUnbondLockEvent(ctx, msg.LockId)
 	}
 	return &types.MsgSuperfluidUnbondLockResponse{}, err
 }
@@ -157,14 +147,7 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 	}
 
 	allExitedLockIDsSerialized, _ := json.Marshal(allExitedLockIDs)
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtUnpoolId,
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeDenom, lpShareDenom),
-			sdk.NewAttribute(types.AttributeNewLockIds, string(allExitedLockIDsSerialized)),
-		),
-	})
+	events.EmitUnpoolIdEvent(ctx, msg.Sender, lpShareDenom, allExitedLockIDsSerialized)
 
 	return &types.MsgUnPoolWhitelistedPoolResponse{ExitedLockIds: allExitedLockIDs}, nil
 }
