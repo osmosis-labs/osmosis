@@ -1,10 +1,10 @@
-# v10 to v11 Upgrade Guide
+# v10 to v11 Testnet Upgrade Guide
 
-Osmosis v11 Gov Prop: <https://www.mintscan.io/osmosis/proposals/296>
+Osmosis v11 Gov Prop: <https://testnet.mintscan.io/osmosis-testnet/proposals/56843>
 
-Countdown: <https://www.mintscan.io/osmosis/blocks/5432450>
+Countdown: <https://testnet.mintscan.io/osmosis-testnet/blocks/5865000>
 
-Height: 5432450
+Height: 5865000
 
 ## Memory Requirements
 
@@ -100,7 +100,7 @@ Now, at the upgrade height, Cosmovisor will upgrade to the v11 binary
 
 For those of you that like to do things completely manually:
 
-1. Wait for Osmosis to reach the upgrade height (5432450)
+1. Wait for Osmosis to reach the upgrade height (5865000)
 
 2. Look for a panic message, followed by endless peer logs. Stop the daemon
 
