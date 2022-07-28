@@ -18,6 +18,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
 )
 
 // Simulation operation weights constants.
@@ -115,7 +117,7 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.Len() <= 0 {
+		if simCoins.Len() <= 0 || simCoins.AmountOf(appparams.BaseCoinUnit).LT(types.CreateGaugeFee) {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgCreateGauge, "Account have no coin"), nil, nil
 		}
@@ -154,7 +156,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.Len() <= 0 {
+		if simCoins.Len() <= 0 || simCoins.AmountOf(appparams.BaseCoinUnit).LT(types.AddToGaugeFee) {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgAddToGauge, "Account have no coin"), nil, nil
 		}

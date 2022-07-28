@@ -124,13 +124,12 @@ func appModules(
 		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		twap.NewAppModule(*app.TwapKeeper),
-		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
-		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
-		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
-		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
-		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
+		txfees.NewAppModule(*app.TxFeesKeeper),
+		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
+		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
+		poolincentives.NewAppModule(*app.PoolIncentivesKeeper),
+		epochs.NewAppModule(*app.EpochsKeeper),
 		superfluid.NewAppModule(
-			appCodec,
 			*app.SuperfluidKeeper,
 			app.AccountKeeper,
 			app.BankKeeper,
@@ -139,7 +138,7 @@ func appModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
-		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
 
