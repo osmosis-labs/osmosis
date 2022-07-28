@@ -185,5 +185,7 @@ func (am AppModule) Actions() []simtypes.Action {
 		simtypes.NewMsgBasedAction("SwapExactAmountOut", am.keeper, simulation.RandomSwapExactAmountOut),
 		simtypes.NewMsgBasedAction("JoinSwapExternAmountIn", am.keeper, simulation.RandomJoinSwapExternAmountIn),
 		simtypes.NewMsgBasedAction("JoinSwapShareAmountOut", am.keeper, simulation.RandomJoinSwapShareAmountOut),
+		simtypes.NewMsgBasedAction("ExitSwapExternAmountOut", am.keeper, simulation.RandomExitSwapExternAmountOut),
+		simtypes.NewMsgBasedAction("ExitSwapShareAmountIn", am.keeper, simulation.RandomExitSwapShareAmountIn),
 	}
 }
