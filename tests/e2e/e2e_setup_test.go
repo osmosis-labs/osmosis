@@ -69,7 +69,7 @@ const (
 	// max retries for json unmarshalling
 	maxRetries = 60
 	// minimum deposit value for a proposal to enter a voting period.
-	minDepositValue = 500000000
+	minDepositValue = 10000000
 	// minimum deposit value for proposal to be submitted.
 	initialMinDeposit = minDepositValue / 4
 )
@@ -514,7 +514,7 @@ func (s *IntegrationTestSuite) upgrade() {
 		currentHeight := s.getCurrentChainHeight(chainConfig, 0)
 		chainConfig.propHeight = currentHeight + int(chainConfig.votingPeriod) + int(propSubmitBlocks) + int(propBufferBlocks)
 		s.submitUpgradeProposal(chainConfig, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(initialMinDeposit)))
-		//s.depositProposal(chainConfig)
+		s.depositProposal(chainConfig)
 		s.voteProposal(chainConfig)
 	}
 
