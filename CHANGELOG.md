@@ -88,6 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Improvements
 * [#2214](https://github.com/osmosis-labs/osmosis/pull/2214) Speedup epoch distribution, superfluid component
 
+### SDK Upgrades
+* [#2245](https://github.com/osmosis-labs/osmosis/pull/2244) Upgrade SDK with the following major changes:
+   * Minimum deposit on proposer at submission time: https://github.com/osmosis-labs/cosmos-sdk/pull/296
+
 ## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
 
 The Nitrogen release brings with it a number of features enabling further cosmwasm development work in Osmosis.
