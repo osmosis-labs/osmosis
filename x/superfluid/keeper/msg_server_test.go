@@ -63,8 +63,8 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 // when calling SuperfluidDelegate.
 func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate_Event() {
 	type param struct {
-		lockOwner           sdk.AccAddress
-		duration            time.Duration
+		lockOwner sdk.AccAddress
+		duration  time.Duration
 	}
 
 	tests := []struct {
@@ -75,16 +75,16 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate_Event() {
 		{
 			name: "basic valid",
 			param: param{
-				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:            time.Hour * 504,
+				lockOwner: sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:  time.Hour * 504,
 			},
 			expectPass: true,
 		},
 		{
 			name: "invalid",
 			param: param{
-				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:            time.Second,
+				lockOwner: sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:  time.Second,
 			},
 			expectPass: false,
 		},

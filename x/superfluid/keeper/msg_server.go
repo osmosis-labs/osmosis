@@ -12,8 +12,8 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
 type msgServer struct {

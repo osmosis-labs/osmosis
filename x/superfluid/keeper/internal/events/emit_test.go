@@ -32,14 +32,13 @@ func TestSuperfluidEventsTestSuite(t *testing.T) {
 func (suite *SuperfluidEventsTestSuite) TestEmitSetSuperfluidAssetEvent() {
 	testcases := map[string]struct {
 		ctx       sdk.Context
-		denom 	  string
+		denom     string
 		assetType types.SuperfluidAssetType
 	}{
 		"basic valid": {
-			ctx:        suite.CreateTestContext(),
-			denom: 		testDenomA,
-			assetType:  types.SuperfluidAssetTypeNative,
-			
+			ctx:       suite.CreateTestContext(),
+			denom:     testDenomA,
+			assetType: types.SuperfluidAssetTypeNative,
 		},
 		"context with no event manager": {
 			ctx: sdk.Context{},
@@ -76,13 +75,12 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSetSuperfluidAssetEvent() {
 
 func (suite *SuperfluidEventsTestSuite) TestEmitRemoveSuperfluidAsset() {
 	testcases := map[string]struct {
-		ctx       sdk.Context
-		denom 	  string
+		ctx   sdk.Context
+		denom string
 	}{
 		"basic valid": {
-			ctx:        suite.CreateTestContext(),
-			denom: 		testDenomA,
-			
+			ctx:   suite.CreateTestContext(),
+			denom: testDenomA,
 		},
 		"context with no event manager": {
 			ctx: sdk.Context{},
@@ -118,13 +116,13 @@ func (suite *SuperfluidEventsTestSuite) TestEmitRemoveSuperfluidAsset() {
 
 func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 	testcases := map[string]struct {
-		ctx       sdk.Context
-		lockID 	  uint64
-		valAddr		string
+		ctx     sdk.Context
+		lockID  uint64
+		valAddr string
 	}{
 		"basic valid": {
-			ctx:        suite.CreateTestContext(),
-			lockID: 		1,
+			ctx:     suite.CreateTestContext(),
+			lockID:  1,
 			valAddr: sdk.AccAddress([]byte(addressString)).String(),
 		},
 		"context with no event manager": {
@@ -162,21 +160,21 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 
 func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidIncreaseDelegationEvent() {
 	testcases := map[string]struct {
-		ctx       sdk.Context
-		lockID 	  uint64
-		amount		sdk.Coins
+		ctx    sdk.Context
+		lockID uint64
+		amount sdk.Coins
 	}{
 		"basic valid": {
-			ctx:        suite.CreateTestContext(),
-			lockID: 		1,
+			ctx:    suite.CreateTestContext(),
+			lockID: 1,
 			amount: sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(100))),
 		},
 		"context with no event manager": {
 			ctx: sdk.Context{},
 		},
 		"valid with multiple tokens in and out": {
-			ctx:        suite.CreateTestContext(),
-			lockID: 		1,
+			ctx:    suite.CreateTestContext(),
+			lockID: 1,
 			amount: sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(100)), sdk.NewCoin(testDenomB, sdk.NewInt(10))),
 		},
 	}
@@ -211,17 +209,16 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidIncreaseDelegationEven
 
 func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidUndelegateEvent() {
 	testcases := map[string]struct {
-		ctx       sdk.Context
-		lockID 	  uint64
+		ctx    sdk.Context
+		lockID uint64
 	}{
 		"basic valid": {
-			ctx:        suite.CreateTestContext(),
-			lockID: 		1,
+			ctx:    suite.CreateTestContext(),
+			lockID: 1,
 		},
 		"context with no event manager": {
 			ctx: sdk.Context{},
 		},
-		
 	}
 
 	for name, tc := range testcases {
@@ -253,17 +250,16 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidUndelegateEvent() {
 
 func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidUnbondLockEvent() {
 	testcases := map[string]struct {
-		ctx       sdk.Context
-		lockID 	  uint64
+		ctx    sdk.Context
+		lockID uint64
 	}{
 		"basic valid": {
-			ctx:        suite.CreateTestContext(),
-			lockID: 		1,
+			ctx:    suite.CreateTestContext(),
+			lockID: 1,
 		},
 		"context with no event manager": {
 			ctx: sdk.Context{},
 		},
-		
 	}
 
 	for name, tc := range testcases {
@@ -297,15 +293,15 @@ func (suite *SuperfluidEventsTestSuite) TestEmitUnpoolIdEvent() {
 	testAllExitedLockIDsSerialized, _ := json.Marshal([]uint64{1})
 
 	testcases := map[string]struct {
-		ctx       sdk.Context
-		sender 	  string
-		lpShareDenom string
+		ctx                        sdk.Context
+		sender                     string
+		lpShareDenom               string
 		allExitedLockIDsSerialized []byte
 	}{
 		"basic valid": {
-			ctx:        suite.CreateTestContext(),
-			sender: 		sdk.AccAddress([]byte(addressString)).String(),
-			lpShareDenom: "pool1",
+			ctx:                        suite.CreateTestContext(),
+			sender:                     sdk.AccAddress([]byte(addressString)).String(),
+			lpShareDenom:               "pool1",
 			allExitedLockIDsSerialized: testAllExitedLockIDsSerialized,
 		},
 		"context with no event manager": {
@@ -341,6 +337,3 @@ func (suite *SuperfluidEventsTestSuite) TestEmitUnpoolIdEvent() {
 		})
 	}
 }
-
-
-
