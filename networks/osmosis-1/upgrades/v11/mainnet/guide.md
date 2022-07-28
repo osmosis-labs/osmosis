@@ -97,9 +97,7 @@ cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v11/bin
 
 Now, at the upgrade height, Cosmovisor will upgrade to the v11 binary
 
-## Completely Manual Option
-
-For those of you that like to do things completely manually:
+## Manual Option
 
 1. Wait for Osmosis to reach the upgrade height (5432450)
 
