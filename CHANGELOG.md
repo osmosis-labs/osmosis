@@ -40,6 +40,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v11
+#### SDK Upgrades
+* [#2245](https://github.com/osmosis-labs/osmosis/pull/2245) Upgrade SDK for to v0.45.0x-osmo-v9.2. Major changes:
+   * Minimum deposit on proposer at submission time: https://github.com/osmosis-labs/cosmos-sdk/pull/302
+
 ## v10.1.1
 
 #### Improvements

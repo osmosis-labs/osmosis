@@ -18,10 +18,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ory/dockertest/v3/docker"
 
-	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
-
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
 func (s *IntegrationTestSuite) ExecTx(chainId string, validatorIndex int, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
@@ -144,26 +143,26 @@ func (s *IntegrationTestSuite) sendIBC(srcChain *chainConfig, dstChain *chainCon
 	s.T().Log("successfully sent IBC tokens")
 }
 
-func (s *IntegrationTestSuite) submitUpgradeProposal(c *chainConfig) {
+func (s *IntegrationTestSuite) submitUpgradeProposal(c *chainConfig, initialDeposit sdk.Coin) {
 	upgradeHeightStr := strconv.Itoa(c.propHeight)
 	s.T().Logf("submitting upgrade proposal on %s container: %s", s.valResources[c.meta.Id][0].Container.Name[1:], s.valResources[c.meta.Id][0].Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.meta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%s", upgradeHeightStr), "--upgrade-info=\"\"", fmt.Sprintf("--chain-id=%s", c.meta.Id), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	s.ExecTx(c.meta.Id, 0, cmd, "code: 0")
 	s.T().Log("successfully submitted upgrade proposal")
 	c.latestProposalNumber = c.latestProposalNumber + 1
 }
 
-func (s *IntegrationTestSuite) submitSuperfluidProposal(c *chainConfig, asset string) {
+func (s *IntegrationTestSuite) submitSuperfluidProposal(c *chainConfig, asset string, initialDeposit sdk.Coin) {
 	s.T().Logf("submitting superfluid proposal for asset %s on %s container: %s", asset, s.valResources[c.meta.Id][0].Container.Name[1:], s.valResources[c.meta.Id][0].Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.meta.Id)}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.meta.Id), fmt.Sprintf("--deposit=%s", initialDeposit)}
 	s.ExecTx(c.meta.Id, 0, cmd, "code: 0")
 	s.T().Log("successfully submitted superfluid proposal")
 	c.latestProposalNumber = c.latestProposalNumber + 1
 }
 
-func (s *IntegrationTestSuite) submitTextProposal(c *chainConfig, text string) {
+func (s *IntegrationTestSuite) submitTextProposal(c *chainConfig, text string, initialDeposit sdk.Coin) {
 	s.T().Logf("submitting text proposal on %s container: %s", s.valResources[c.meta.Id][0].Container.Name[1:], s.valResources[c.meta.Id][0].Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.meta.Id)}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", fmt.Sprintf("--chain-id=%s", c.meta.Id), fmt.Sprintf("--deposit=%s", initialDeposit)}
 	s.ExecTx(c.meta.Id, 0, cmd, "code: 0")
 	s.T().Log("successfully submitted text proposal")
 	c.latestProposalNumber = c.latestProposalNumber + 1

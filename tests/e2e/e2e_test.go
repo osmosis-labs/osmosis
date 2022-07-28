@@ -5,6 +5,9 @@ import (
 	"strconv"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
@@ -19,7 +22,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	const walletName = "wallet"
 	chainA := s.chainConfigs[0]
-	s.submitSuperfluidProposal(chainA, "gamm/pool/1")
+	s.submitSuperfluidProposal(chainA, "gamm/pool/1", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(initialMinDeposit)))
 	s.depositProposal(chainA)
 	s.voteProposal(chainA)
 	walletAddr := s.createWallet(chainA, 0, walletName)
@@ -30,7 +33,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	// superfluid delegate from validator 0 non self-delegation wallet to validator 1 on chain A
 	s.superfluidDelegate(chainA, chainA.validators[1].operatorAddress, walletName)
 	// create a text prop, deposit and vote yes
-	s.submitTextProposal(chainA, "superfluid vote overwrite test")
+	s.submitTextProposal(chainA, "superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(initialMinDeposit)))
 	s.depositProposal(chainA)
 	s.voteProposal(chainA)
 	// set delegator vote to no
