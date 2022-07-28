@@ -514,7 +514,7 @@ func (s *IntegrationTestSuite) upgrade() {
 		currentHeight := s.getCurrentChainHeight(chainConfig, 0)
 		chainConfig.propHeight = currentHeight + int(chainConfig.votingPeriod) + int(propSubmitBlocks) + int(propBufferBlocks)
 		s.submitUpgradeProposal(chainConfig, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(initialMinDeposit)))
-		s.depositProposal(chainConfig)
+		//s.depositProposal(chainConfig)
 		s.voteProposal(chainConfig)
 	}
 

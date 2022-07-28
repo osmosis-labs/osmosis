@@ -23,7 +23,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	const walletName = "wallet"
 	chainA := s.chainConfigs[0]
 	s.submitSuperfluidProposal(chainA, "gamm/pool/1", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(initialMinDeposit)))
-	s.depositProposal(chainA)
+	//s.depositProposal(chainA)
 	s.voteProposal(chainA)
 	walletAddr := s.createWallet(chainA, 0, walletName)
 	// send gamm tokens to validator's other wallet (non self-delegation wallet)
@@ -34,7 +34,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	s.superfluidDelegate(chainA, chainA.validators[1].operatorAddress, walletName)
 	// create a text prop, deposit and vote yes
 	s.submitTextProposal(chainA, "superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(initialMinDeposit)))
-	s.depositProposal(chainA)
+	//s.depositProposal(chainA)
 	s.voteProposal(chainA)
 	// set delegator vote to no
 	s.voteNoProposal(chainA, 0, walletName)
