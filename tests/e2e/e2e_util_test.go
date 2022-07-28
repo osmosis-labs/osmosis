@@ -18,7 +18,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ory/dockertest/v3/docker"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
@@ -172,7 +171,7 @@ func (s *IntegrationTestSuite) submitTextProposal(c *chainConfig, text string, i
 func (s *IntegrationTestSuite) depositProposal(c *chainConfig) {
 	propStr := strconv.Itoa(c.latestProposalNumber)
 	s.T().Logf("depositing to proposal from %s container: %s", s.valResources[c.meta.Id][0].Container.Name[1:], s.valResources[c.meta.Id][0].Container.ID)
-	cmd := []string{"osmosisd", "tx", "gov", "deposit", propStr, "500000000uosmo", "--from=val", fmt.Sprintf("--chain-id=%s", c.meta.Id), "-b=block", "--yes", "--keyring-backend=test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(minDepositValue)).String()}
+	cmd := []string{"osmosisd", "tx", "gov", "deposit", propStr, "500000000uosmo", "--from=val", fmt.Sprintf("--chain-id=%s", c.meta.Id), "-b=block", "--yes", "--keyring-backend=test"}
 	s.ExecTx(c.meta.Id, 0, cmd, "code: 0")
 	s.T().Log("successfully deposited to proposal")
 }
