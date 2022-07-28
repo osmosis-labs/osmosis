@@ -62,10 +62,11 @@ mkdir -p ~/.osmosisd/cosmovisor/upgrades
 ```
 
 Copy the current osmosisd binary into the
-cosmovisor/genesis folder.
+cosmovisor/genesis folder and v9 folder.
 
 ```{.sh}
 cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/genesis/bin
+cp $GOPATH/bin/osmosisd ~/.osmosisd/cosmovisor/upgrades/v9/bin
 ```
 
 Cosmovisor is now ready to be started. We will now set up Cosmovisor for the upgrade
