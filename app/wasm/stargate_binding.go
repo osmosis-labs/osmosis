@@ -39,7 +39,7 @@ func StargateQuerier(queryRouter *baseapp.GRPCQueryRouter, codec codec.Codec) fu
 			return nil, err
 		}
 
-		resBinding, whitelisted := StargateLayerRequestBindings.Load(request.Path)
+		resBinding, whitelisted := StargateLayerResponseBindings.Load(request.Path)
 		if !whitelisted {
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", request.Path)}
 		}
@@ -95,6 +95,11 @@ func NormalizeReponsesAndJsonfy(binding interface{}, bz []byte, codec codec.Code
 
 	// clear proto message
 	message.Reset()
+
+	err = proto.Unmarshal(bz, message)
+	if err != nil {
+		return nil, wasmvmtypes.Unknown{}
+	}
 
 	// jsonfy
 	bz, err = codec.MarshalJSON(message)
