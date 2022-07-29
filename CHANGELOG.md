@@ -44,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
-
+* [#2086](https://github.com/osmosis-labs/osmosis/pull/2086) `ReplacePoolIncentivesProposal` ProposalType() returns ProposalTypeReplacePoolIncentives instead of ProposalTypeUpdatePoolIncentives
 * [#1889](https://github.com/osmosis-labs/osmosis/pull/1825) Add proto responses to gamm LP messages:
   * MsgJoinPoolResponse: share_out_amount and token_in fields 
   * MsgExitPoolResponse: token_out field 
@@ -73,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
+* [#2086](https://github.com/osmosis-labs/osmosis/pull/2086) `ReplacePoolIncentivesProposal` ProposalType() returns correct value of `ProposalTypeReplacePoolIncentives` instead of `ProposalTypeUpdatePoolIncentives`
 * [1930](https://github.com/osmosis-labs/osmosis/pull/1930) Ensure you can't `JoinPoolNoSwap` tokens that are not in the pool
 * [1700](https://github.com/osmosis-labs/osmosis/pull/1700) Upgrade sdk fork with missing snapshot manager fix.
 * [1716](https://github.com/osmosis-labs/osmosis/pull/1716) Fix secondary over-LP shares bug with uneven swap amounts in `CalcJoinPoolShares`.
