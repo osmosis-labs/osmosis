@@ -2,10 +2,8 @@ package keeper_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
@@ -18,59 +16,6 @@ import (
 
 func TestMintHooksTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
-}
-
-func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmpty() {
-	app := suite.App
-	ctx := suite.Ctx
-
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	params := app.IncentivesKeeper.GetParams(ctx)
-	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
-
-	height := int64(1)
-	lastReductionPeriod := app.MintKeeper.GetLastReductionEpochNum(ctx)
-
-	checkDistribution := func(height int64) {
-		devRewardsModuleAcc := app.AccountKeeper.GetModuleAccount(ctx, types.DeveloperVestingModuleAcctName)
-		devRewardsModuleOrigin := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
-		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
-		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
-
-		mintParams := app.MintKeeper.GetParams(ctx)
-		mintedCoin := app.MintKeeper.GetMinter(ctx).EpochProvision(mintParams)
-		expectedRewardsCoin, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.Staking.Add(mintParams.DistributionProportions.DeveloperRewards))
-		suite.Require().NoError(err)
-		expectedRewards := sdk.NewDecCoin("stake", expectedRewardsCoin.Amount)
-
-		// check community pool balance increase
-		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		suite.Require().Equal(feePoolOrigin.CommunityPool.Add(expectedRewards), feePoolNew.CommunityPool, height)
-
-		// test that the dev rewards module account balance decreased by the correct amount
-		devRewardsModuleAfter := app.BankKeeper.GetAllBalances(ctx, devRewardsModuleAcc.GetAddress())
-		expectedDevRewardsCoin, err := keeper.GetProportions(mintedCoin, mintParams.DistributionProportions.DeveloperRewards)
-		suite.Require().NoError(err)
-		suite.Require().Equal(devRewardsModuleAfter.Add(expectedDevRewardsCoin), devRewardsModuleOrigin, expectedRewards.String())
-	}
-
-	// correct rewards
-	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
-		checkDistribution(height)
-	}
-
-	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
-	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
-
-	lastReductionPeriod = app.MintKeeper.GetLastReductionEpochNum(ctx)
-	suite.Require().Equal(lastReductionPeriod, app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs)
-
-	for ; height < lastReductionPeriod+app.MintKeeper.GetParams(ctx).ReductionPeriodInEpochs; height++ {
-		checkDistribution(height)
-	}
 }
 
 // TestAfterEpochEnd tests that the after epoch end hook correctly
