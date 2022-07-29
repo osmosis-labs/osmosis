@@ -275,6 +275,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 		// Expected results.
 		expectedLastReductionEpochNum int64
 		expectedDistribution          sdk.Dec
+		expectedPanic                 bool
 	}{
 		"before start epoch - no distributions": {
 			hookArgEpochNum: defaultMintingRewardsDistributionStartEpoch - 1,
@@ -498,6 +499,22 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			expectedDistribution:          defaultGenesisEpochProvisionsDec,
 			expectedLastReductionEpochNum: defaultMintingRewardsDistributionStartEpoch,
 		},
+		"failed to hook due to developer vesting module account not having enough balance - panic": {
+			hookArgEpochNum: defaultMintingRewardsDistributionStartEpoch,
+
+			mintDenom:               sdk.DefaultBondDenom,
+			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
+			epochIdentifier:         defaultEpochIdentifier,
+			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
+			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
+			distributionProportions: testDistributionProportions,
+			weightedAddresses:       testWeightedAddresses,
+			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
+
+			expectedDistribution:          defaultGenesisEpochProvisionsDec,
+			expectedLastReductionEpochNum: defaultMintingRewardsDistributionStartEpoch,
+			expectedPanic:                 true,
+		},
 	}
 
 	for name, tc := range testcases {
@@ -517,6 +534,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 			mintKeeper := app.MintKeeper
+			distrKeeper := app.DistrKeeper
 			accountKeeper := app.AccountKeeper
 
 			// Pre-set parameters and minter.
@@ -530,8 +548,16 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 
 			developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
 
-			// System under test.
-			mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum)
+			if tc.expectedPanic {
+				// If panic is expected, burn developer module account balance so that it causes an error that leads to a
+				// panic in the hook.
+				distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(developerAccountBalanceBeforeHook), accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+			}
+
+			osmoutils.ConditionalPanic(suite.T(), tc.expectedPanic, func() {
+				// System under test.
+				mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum)
+			})
 
 			// Validate developer account balance.
 			developerAccountBalanceAfterHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
