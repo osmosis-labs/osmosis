@@ -478,7 +478,7 @@ It consists of the following attributes:
 
 ### `types.TypeEvtRemoveSuperfluidAsset`
 
-This event is emitted in the proposal which remove superfluid asset
+This event is emitted in the proposal which removes the superfluid asset
 
 It consists of the following attributes:
 
@@ -487,7 +487,7 @@ It consists of the following attributes:
 
 ### `types.TypeEvtSuperfluidDelegate`
 
-This event is emitted in the message server after succesfully create a delegation for the given lock ID and the validator to delegate to.
+This event is emitted in the message server after successfully creating a delegation for the given lock ID and the validator to delegate to.
 
 It consists of the following attributes:
 
@@ -509,7 +509,7 @@ It consists of the following attributes:
 
 ### `types.TypeEvtSuperfluidUndelegate`
 
-This event is emitted in the message server after undelegating currently superfluid delegated position given by lock ID.
+This event is emitted in the message server after undelegating the currently superfluid delegated position given by lock ID.
 
 It consists of the following attributes:
 
@@ -518,7 +518,7 @@ It consists of the following attributes:
 
 ### `types.TypeEvtSuperfluidUnbondLock`
 
-This event is emitted in the message server after starting unbonding for currently superfluid undelegating lock.
+This event is emitted in the message server after starting unbonding for the currently superfluid undelegating lock.
 
 It consists of the following attributes:
 
