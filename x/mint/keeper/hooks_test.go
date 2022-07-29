@@ -1,9 +1,6 @@
 package keeper_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
@@ -13,10 +10,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-func TestMintHooksTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
 
 // TestAfterEpochEnd tests that the after epoch end hook correctly
 // distributes the rewards depending on what epoch it is in.
