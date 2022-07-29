@@ -14,9 +14,7 @@ import (
 
 func TestMsgLockTokens(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
+	addr1, invalidAddr := generateTestAddrs()
 
 	createMsg := func(after func(msg MsgLockTokens) MsgLockTokens) MsgLockTokens {
 		properMsg := MsgLockTokens{
@@ -55,10 +53,9 @@ func TestMsgLockTokens(t *testing.T) {
 		{
 			name: "invalid owner",
 			msg: createMsg(func(msg MsgLockTokens) MsgLockTokens {
-				msg.Owner = invalidAddr.String()
+				msg.Owner = invalidAddr
 				return msg
 			}),
-			expectPass: false,
 		},
 		{
 			name: "invalid duration",
@@ -66,7 +63,6 @@ func TestMsgLockTokens(t *testing.T) {
 				msg.Duration = -1
 				return msg
 			}),
-			expectPass: false,
 		},
 		{
 			name: "invalid coin length",
@@ -74,7 +70,6 @@ func TestMsgLockTokens(t *testing.T) {
 				msg.Coins = sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(100000)), sdk.NewCoin("test2", sdk.NewInt(100000)))
 				return msg
 			}),
-			expectPass: false,
 		},
 		{
 			name: "zero token amount",
@@ -82,7 +77,6 @@ func TestMsgLockTokens(t *testing.T) {
 				msg.Coins = sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(0)))
 				return msg
 			}),
-			expectPass: false,
 		},
 	}
 
@@ -97,9 +91,7 @@ func TestMsgLockTokens(t *testing.T) {
 
 func TestMsgBeginUnlockingAll(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
+	addr1, invalidAddr := generateTestAddrs()
 
 	createMsg := func(after func(msg MsgBeginUnlockingAll) MsgBeginUnlockingAll) MsgBeginUnlockingAll {
 		properMsg := MsgBeginUnlockingAll{
@@ -136,10 +128,9 @@ func TestMsgBeginUnlockingAll(t *testing.T) {
 		{
 			name: "invalid owner",
 			msg: createMsg(func(msg MsgBeginUnlockingAll) MsgBeginUnlockingAll {
-				msg.Owner = invalidAddr.String()
+				msg.Owner = invalidAddr
 				return msg
 			}),
-			expectPass: false,
 		},
 	}
 
@@ -154,9 +145,7 @@ func TestMsgBeginUnlockingAll(t *testing.T) {
 
 func TestMsgBeginUnlocking(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
+	addr1, invalidAddr := generateTestAddrs()
 
 	createMsg := func(after func(msg MsgBeginUnlocking) MsgBeginUnlocking) MsgBeginUnlocking {
 		properMsg := MsgBeginUnlocking{
@@ -195,11 +184,10 @@ func TestMsgBeginUnlocking(t *testing.T) {
 		{
 			name: "invalid owner",
 			msg: createMsg(func(msg MsgBeginUnlocking) MsgBeginUnlocking {
-				msg.Owner = invalidAddr.String()
+				msg.Owner = invalidAddr
 
 				return msg
 			}),
-			expectPass: false,
 		},
 		{
 			name: "invalid lockup ID",
@@ -208,7 +196,6 @@ func TestMsgBeginUnlocking(t *testing.T) {
 
 				return msg
 			}),
-			expectPass: false,
 		},
 		{
 			name: "invalid coins length",
@@ -217,7 +204,6 @@ func TestMsgBeginUnlocking(t *testing.T) {
 
 				return msg
 			}),
-			expectPass: false,
 		},
 		{
 			name: "not positive coins amount",
@@ -226,7 +212,6 @@ func TestMsgBeginUnlocking(t *testing.T) {
 
 				return msg
 			}),
-			expectPass: false,
 		},
 	}
 
@@ -241,9 +226,7 @@ func TestMsgBeginUnlocking(t *testing.T) {
 
 func TestMsgExtendLockup(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
+	addr1, invalidAddr := generateTestAddrs()
 
 	createMsg := func(after func(msg MsgExtendLockup) MsgExtendLockup) MsgExtendLockup {
 		properMsg := MsgExtendLockup{
@@ -282,11 +265,10 @@ func TestMsgExtendLockup(t *testing.T) {
 		{
 			name: "invalid owner",
 			msg: createMsg(func(msg MsgExtendLockup) MsgExtendLockup {
-				msg.Owner = invalidAddr.String()
+				msg.Owner = invalidAddr
 
 				return msg
 			}),
-			expectPass: false,
 		},
 		{
 			name: "invalid lockup ID",
@@ -295,7 +277,6 @@ func TestMsgExtendLockup(t *testing.T) {
 
 				return msg
 			}),
-			expectPass: false,
 		},
 		{
 			name: "invalid duration",
@@ -304,7 +285,6 @@ func TestMsgExtendLockup(t *testing.T) {
 
 				return msg
 			}),
-			expectPass: false,
 		},
 	}
 
@@ -315,4 +295,11 @@ func TestMsgExtendLockup(t *testing.T) {
 			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 		}
 	}
+}
+
+func generateTestAddrs() (string, string) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	validAddr := sdk.AccAddress(pk1.Address()).String()
+	invalidAddr := sdk.AccAddress("invalid").String()
+	return validAddr, invalidAddr 
 }
