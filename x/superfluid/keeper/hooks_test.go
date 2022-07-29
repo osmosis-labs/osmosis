@@ -1,8 +1,14 @@
 package keeper_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
@@ -301,5 +307,33 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 				suite.Require().Equal(sdk.NewInt(1000000).String(), gotLock.Coins.AmountOf(denoms[0]).String())
 			}
 		})
+	}
+}
+
+// TestAfterAddTokensToLock_Event tests that events are correctly emitted
+// when calling AfterAddTokensToLock.
+func (suite *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
+	suite.SetupTest()
+
+	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded},)
+
+	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+
+	// setup superfluid delegations
+	_, intermediaryAccs, locks := suite.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
+	suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+
+	for index, lock := range locks {
+		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
+		c := sdk.WrapSDKContext(suite.Ctx)
+		coinsToLock := sdk.NewCoins(sdk.NewCoin(denoms[index], sdk.NewInt(100)))
+		sender, _ := sdk.AccAddressFromBech32(lock.Owner)
+		suite.FundAcc(sender, coinsToLock)
+		
+		_, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(sender, time.Hour * 504, coinsToLock))
+		suite.Require().NoError(err)
+
+		// should call AfterAddTokensToLock hook and emit event here
+		assertEventEmitted(suite, suite.Ctx, types.TypeEvtSuperfluidIncreaseDelegation, 1)
 	}
 }

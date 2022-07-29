@@ -83,7 +83,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false, types.TypeEvtSetSuperfluidAsset,
 				},
 				{
-					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1}, true, types.TypeEvtSetSuperfluidAsset,
+					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1}, true, types.TypeEvtRemoveSuperfluidAsset,
 				},
 			},
 		},
