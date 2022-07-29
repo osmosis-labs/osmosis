@@ -28,10 +28,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		return
 	}
 
-	if epochNumber == params.MintingRewardsDistributionStartEpoch {
-		k.SetLastReductionEpochNum(ctx, epochNumber)
-	}
-
 	// fetch stored minter & params
 	minter := k.GetMinter(ctx)
 
@@ -40,10 +36,15 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	// This avoids issues with measuring in block numbers, as epochs have fixed intervals, with very
 	// low variance at the relevant sizes. As a result, it is safe to store the epoch number
 	// of the last reduction to be later retrieved for comparison.
-	if epochNumber >= k.GetParams(ctx).ReductionPeriodInEpochs+k.GetLastReductionEpochNum(ctx) {
+	nextReductionEpoch := params.ReductionPeriodInEpochs + k.GetLastReductionEpochNum(ctx)
+	isReductionEpoch := epochNumber >= nextReductionEpoch
+	if isReductionEpoch {
 		// Reduce the reward per reduction period
 		minter.EpochProvisions = minter.NextEpochProvisions(params)
 		k.SetMinter(ctx, minter)
+	}
+
+	if isReductionEpoch || epochNumber == params.MintingRewardsDistributionStartEpoch {
 		k.SetLastReductionEpochNum(ctx, epochNumber)
 	}
 
