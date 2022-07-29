@@ -9,11 +9,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
 )
 
 func TestMsgLockTokens(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	addr1, invalidAddr := generateTestAddrs()
+	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
 	tests := []struct {
 		name       string
@@ -82,7 +83,7 @@ func TestMsgLockTokens(t *testing.T) {
 
 func TestMsgBeginUnlockingAll(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	addr1, invalidAddr := generateTestAddrs()
+	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
 	tests := []struct {
 		name       string
@@ -123,7 +124,7 @@ func TestMsgBeginUnlockingAll(t *testing.T) {
 
 func TestMsgBeginUnlocking(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	addr1, invalidAddr := generateTestAddrs()
+	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
 	tests := []struct {
 		name       string
@@ -192,7 +193,7 @@ func TestMsgBeginUnlocking(t *testing.T) {
 
 func TestMsgExtendLockup(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	addr1, invalidAddr := generateTestAddrs()
+	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
 	tests := []struct {
 		name       string
