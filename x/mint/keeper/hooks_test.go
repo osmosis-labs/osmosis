@@ -245,7 +245,9 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 				Weight:  sdk.NewDecWithPrec(217, 3),
 			},
 		}
-		maxArithmeticTolerance = sdk.NewDec(5)
+		maxArithmeticTolerance   = sdk.NewDec(5)
+		expectedSupplyWithOffset = sdk.NewDec(0)
+		expectedSupply           = sdk.NewDec(keeper.DeveloperVestingAmount)
 	)
 
 	suite.assertAddressWeightsAddUpToOne(testWeightedAddresses)
@@ -517,54 +519,37 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			mintKeeper := app.MintKeeper
 			accountKeeper := app.AccountKeeper
 
-			// Test setup parameters are not identical with mainnet.
-			// Therefore, we set them here to the desired mainnet values.
+			// Pre-set parameters and minter.
 			mintKeeper.SetParams(ctx, mintParams)
 			mintKeeper.SetLastReductionEpochNum(ctx, tc.preExistingEpochNum)
 			mintKeeper.SetMinter(ctx, types.Minter{
 				EpochProvisions: defaultGenesisEpochProvisionsDec,
 			})
 
-			expectedSupplyWithOffset := sdk.NewDec(0)
-			expectedSupply := sdk.NewDec(keeper.DeveloperVestingAmount)
-
-			supplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
-			suite.Require().Equal(expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
-
-			supply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
-			suite.Require().Equal(expectedSupply.TruncateInt64(), supply.Amount.Int64())
+			expectedDevRewards := tc.expectedDistribution.Mul(mintParams.DistributionProportions.DeveloperRewards)
 
 			developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
 
-			// System undert test.
+			// System under test.
 			mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum)
 
-			// System truncates EpochProvisions because bank takes an Int.
-			// This causes rounding errors. Let's refer to this source as #1.
-			//
-			// Since this is truncated, our total supply calculation at the end will
-			// be off by reductionPeriodInEpochs * (genesisEpochProvisionsDec - truncatedEpochProvisions)
-			// Therefore, we store this delta in epochProvisionsDelta to add to the actual supply to compare
-			// to expected at the end.
-
-			// We want supply with offset to exclude unvested developer rewards
-			// Truncation also happens when subtracting dev rewards.
-			devRewards := tc.expectedDistribution.Mul(mintParams.DistributionProportions.DeveloperRewards)
-
-			// Validate developer accunt balance.
+			// Validate developer account balance.
 			developerAccountBalanceAfterHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
-			osmoutils.DecApproxEq(suite.T(), developerAccountBalanceBeforeHook.Amount.Sub(devRewards.TruncateInt()).ToDec(), developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
+			osmoutils.DecApproxEq(suite.T(), developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewards.TruncateInt()).ToDec(), developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
 
-			expectedSupply = expectedSupply.Add(tc.expectedDistribution).Sub(devRewards)
+			// Validate supply.
+			expectedSupply = expectedSupply.Add(tc.expectedDistribution).Sub(expectedDevRewards)
 			osmoutils.DecApproxEq(suite.T(), expectedSupply, developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
 
+			// Validate supply with offset.
 			expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalanceAfterHook.Amount.ToDec())
 			osmoutils.DecApproxEq(suite.T(), expectedSupplyWithOffset, app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
 
-			// Validate that the epoch provisions have not been reduced.
+			// Validate epoch provisions.
 			suite.Require().Equal(tc.expectedLastReductionEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
 
 			if !tc.expectedDistribution.IsZero() {
+				// Validate distribution.
 				osmoutils.DecApproxEq(suite.T(), tc.expectedDistribution, mintKeeper.GetMinter(ctx).EpochProvisions, sdk.NewDecWithPrec(1, 18))
 			}
 		})
