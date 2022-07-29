@@ -6,16 +6,18 @@ import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/superfluid/superfluid.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/superfluid/types";
 
 // Msg defines the Msg service.
 service Msg {
   // Execute superfluid delegation for a lockup
   rpc SuperfluidDelegate(MsgSuperfluidDelegate)
       returns (MsgSuperfluidDelegateResponse);
+
   // Execute superfluid undelegation for a lockup
   rpc SuperfluidUndelegate(MsgSuperfluidUndelegate)
       returns (MsgSuperfluidUndelegateResponse);
+
   // Execute superfluid redelegation for a lockup
   // rpc SuperfluidRedelegate(MsgSuperfluidRedelegate) returns
   // (MsgSuperfluidRedelegateResponse);
@@ -28,6 +30,9 @@ service Msg {
   // Execute lockup lock and superfluid delegation in a single msg
   rpc LockAndSuperfluidDelegate(MsgLockAndSuperfluidDelegate)
       returns (MsgLockAndSuperfluidDelegateResponse);
+
+  rpc UnPoolWhitelistedPool(MsgUnPoolWhitelistedPool)
+      returns (MsgUnPoolWhitelistedPoolResponse);
 }
 
 message MsgSuperfluidDelegate {
@@ -68,3 +73,20 @@ message MsgLockAndSuperfluidDelegate {
   string val_addr = 3;
 }
 message MsgLockAndSuperfluidDelegateResponse { uint64 ID = 1; }
+
+// MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is
+// associated with pool pool_id. If pool_id is not approved for unpooling by
+// governance, this is a no-op. Unpooling takes the locked gamm shares, and runs
+// "ExitPool" on it, to get the constituent tokens. e.g. z gamm/pool/1 tokens
+// ExitPools into constituent tokens x uatom, y uosmo. Then it creates a new
+// lock for every constituent token, with the duration associated with the lock.
+// If the lock was unbonding, the new lockup durations should be the time left
+// until unbond completion.
+message MsgUnPoolWhitelistedPool {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message MsgUnPoolWhitelistedPoolResponse {
+  repeated uint64 exited_lock_ids = 1;
+}

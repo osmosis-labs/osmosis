@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -13,7 +14,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module.
-func GetQueryCmd(queryRoute string) *cobra.Command {
+func GetQueryCmd() *cobra.Command {
 	// Group epochs queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,

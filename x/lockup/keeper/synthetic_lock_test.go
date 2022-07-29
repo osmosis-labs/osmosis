@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -276,7 +276,7 @@ func (suite *KeeperTestSuite) TestResetAllSyntheticLocks() {
 	suite.Require().Len(locks, 1)
 	suite.Require().Equal(locks[0].Coins, coins)
 
-	suite.App.LockupKeeper.ResetAllSyntheticLocks(suite.Ctx, []types.SyntheticLock{
+	suite.App.LockupKeeper.InitializeAllSyntheticLocks(suite.Ctx, []types.SyntheticLock{
 		{
 			UnderlyingLockId: 1,
 			SynthDenom:       "synthstakestakedtovalidator1",

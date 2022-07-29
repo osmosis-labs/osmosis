@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	transfer "github.com/cosmos/ibc-go/v2/modules/apps/transfer"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -20,6 +19,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -29,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -37,17 +36,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
-	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
-	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v10/app/keepers"
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v11"
+	v3 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 const appName = "OsmosisApp"
@@ -59,7 +64,7 @@ var (
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
 	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(appModuleBasics...)
+	ModuleBasics = module.NewBasicManager(keepers.AppModuleBasics...)
 
 	// module account permissions
 	maccPerms = moduleAccountPermissions
@@ -82,7 +87,10 @@ var (
 	// EmptyWasmOpts defines a type alias for a list of wasm options.
 	EmptyWasmOpts []wasm.Option
 
-	_ App = (*OsmosisApp)(nil)
+	// _ sdksimapp.App = (*OsmosisApp)(nil)
+
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade}
+	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
 // GetWasmEnabledProposals parses the WasmProposalsEnabled and
@@ -112,24 +120,19 @@ func GetWasmEnabledProposals() []wasm.ProposalType {
 // capabilities aren't needed for testing.
 type OsmosisApp struct {
 	*baseapp.BaseApp
-	appKeepers
+	keepers.AppKeepers
 
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
 	invCheckPeriod    uint
 
-	// keys to access the substores
-	keys    map[string]*sdk.KVStoreKey
-	tkeys   map[string]*sdk.TransientStoreKey
-	memKeys map[string]*sdk.MemoryStoreKey
-
-	transferModule transfer.AppModule
-	mm             *module.Manager
-	sm             *module.SimulationManager
-	configurator   module.Configurator
+	mm           *module.Manager
+	sm           *simtypes.Manager
+	configurator module.Configurator
 }
 
+// init sets DefaultNodeHome to default osmosisd install location.
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -163,26 +166,13 @@ func NewOsmosisApp(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
-	// Define what keys will be used in the cosmos-sdk key/value store.
-	// Cosmos-SDK modules each have a "key" that allows the application to reference what they've stored on the chain.
-	// Keys are in keys.go to kep app.go as brief as possible.
-	keys := sdk.NewKVStoreKeys(KVStoreKeys()...)
-
-	// Define transient store keys
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-
-	// MemKeys are for information that is stored only in RAM.
-	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
-
 	app := &OsmosisApp{
+		AppKeepers:        keepers.AppKeepers{},
 		BaseApp:           bApp,
 		cdc:               cdc,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
-		keys:              keys,
-		tkeys:             tkeys,
-		memKeys:           memKeys,
 	}
 
 	wasmDir := filepath.Join(homePath, "wasm")
@@ -190,10 +180,27 @@ func NewOsmosisApp(
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
-
-	app.InitSpecialKeepers(skipUpgradeHeights, homePath, invCheckPeriod)
+	app.InitSpecialKeepers(
+		appCodec,
+		bApp,
+		wasmDir,
+		cdc,
+		invCheckPeriod,
+		skipUpgradeHeights,
+		homePath,
+	)
 	app.setupUpgradeStoreLoaders()
-	app.InitNormalKeepers(wasmDir, wasmConfig, wasmEnabledProposals, wasmOpts)
+	app.InitNormalKeepers(
+		appCodec,
+		bApp,
+		maccPerms,
+		wasmDir,
+		wasmConfig,
+		wasmEnabledProposals,
+		wasmOpts,
+		app.BlockedAddrs(),
+	)
+
 	app.SetupHooks()
 
 	/****  Module Options ****/
@@ -220,17 +227,12 @@ func NewOsmosisApp(
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 
 	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block.
-	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
+	app.mm.SetOrderBeginBlockers(orderBeginBlockers(app.mm.ModuleNames())...)
 
 	// Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
-	app.mm.SetOrderEndBlockers(orderEndBlockers...)
+	app.mm.SetOrderEndBlockers(OrderEndBlockers(app.mm.ModuleNames())...)
 
-	// NOTE: The genutils moodule must occur after staking so that pools are
-	// properly initialized with tokens from genesis accounts.
-	// NOTE: Capability module must occur first so that it can initialize any capabilities
-	// so that other modules that want to create or claim capabilities afterwards in InitChain
-	// can do so safely.
-	app.mm.SetOrderInitGenesis(modulesOrderInitGenesis...)
+	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
@@ -240,20 +242,17 @@ func NewOsmosisApp(
 	app.setupUpgradeHandlers()
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
-	//
-	// NOTE: this is not required apps that don't use the simulator for fuzz testing
-	// transactions
-	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig, skipGenesisInvariants)...)
+	app.sm = createSimulationManager(app, encodingConfig, skipGenesisInvariants)
 
-	app.sm.RegisterStoreDecoders()
+	// app.sm.RegisterStoreDecoders()
 
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
 
 	// initialize stores
-	app.MountKVStores(keys)
-	app.MountTransientStores(tkeys)
-	app.MountMemoryStores(memKeys)
+	app.MountKVStores(app.GetKVStoreKey())
+	app.MountTransientStores(app.GetTransientStoreKey())
+	app.MountMemoryStores(app.GetMemoryStoreKey())
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -262,17 +261,27 @@ func NewOsmosisApp(
 		NewAnteHandler(
 			appOpts,
 			wasmConfig,
-			keys[wasm.StoreKey],
+			app.GetKey(wasm.StoreKey),
 			app.AccountKeeper,
 			app.BankKeeper,
 			app.TxFeesKeeper,
 			app.GAMMKeeper,
 			ante.DefaultSigVerificationGasConsumer,
 			encodingConfig.TxConfig.SignModeHandler(),
-			app.IBCKeeper.ChannelKeeper,
+			app.IBCKeeper,
 		),
 	)
 	app.SetEndBlocker(app.EndBlocker)
+
+	// Register snapshot extensions to enable state-sync for wasm.
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(
+			wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), app.WasmKeeper),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -294,6 +303,10 @@ func NewOsmosisApp(
 func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 	config := MakeEncodingConfig()
 	return config.Marshaler, config.Amino
+}
+
+func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
+	return app.BaseApp
 }
 
 // Name returns the name of the App.
@@ -348,37 +361,8 @@ func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
-// GetKey returns the KVStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *OsmosisApp) GetKey(storeKey string) *sdk.KVStoreKey {
-	return app.keys[storeKey]
-}
-
-// GetTKey returns the TransientStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *OsmosisApp) GetTKey(storeKey string) *sdk.TransientStoreKey {
-	return app.tkeys[storeKey]
-}
-
-// GetMemKey returns the MemStoreKey for the provided mem key.
-//
-// NOTE: This is solely used for testing purposes.
-func (app *OsmosisApp) GetMemKey(storeKey string) *sdk.MemoryStoreKey {
-	return app.memKeys[storeKey]
-}
-
-// GetSubspace returns a param subspace for a given module name.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *OsmosisApp) GetSubspace(moduleName string) paramstypes.Subspace {
-	subspace, _ := app.ParamsKeeper.GetSubspace(moduleName)
-	return subspace
-}
-
 // SimulationManager implements the SimulationApp interface.
-func (app *OsmosisApp) SimulationManager() *module.SimulationManager {
+func (app *OsmosisApp) SimulationManager() *simtypes.Manager {
 	return app.sm
 }
 
@@ -415,62 +399,36 @@ func (app *OsmosisApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
 
+// configure store loader that checks if version == upgradeHeight and applies store upgrades
 func (app *OsmosisApp) setupUpgradeStoreLoaders() {
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(fmt.Sprintf("failed to read upgrade info from disk %s", err))
 	}
 
-	if upgradeInfo.Name == v7.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		// @Frey do we do this for Cosmwasm?
-		storeUpgrades := store.StoreUpgrades{
-			Added: []string{wasm.ModuleName, superfluidtypes.ModuleName},
-		}
+	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		return
+	}
 
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	for _, upgrade := range Upgrades {
+		if upgradeInfo.Name == upgrade.UpgradeName {
+			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
+		}
 	}
 }
 
 func (app *OsmosisApp) setupUpgradeHandlers() {
-	// this configures a no-op upgrade handler for the v4 upgrade,
-	// which improves the lockup module's store management.
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v4.UpgradeName,
-		v4.CreateUpgradeHandler(
-			app.mm,
-			app.configurator,
-			*app.BankKeeper,
-			app.DistrKeeper,
-			app.GAMMKeeper,
-		),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v5.UpgradeName,
-		v5.CreateUpgradeHandler(
-			app.mm,
-			app.configurator,
-			&app.IBCKeeper.ConnectionKeeper,
-			app.TxFeesKeeper,
-			app.GAMMKeeper,
-			app.StakingKeeper,
-		),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v7.UpgradeName,
-		v7.CreateUpgradeHandler(
-			app.mm,
-			app.configurator,
-			app.WasmKeeper,
-			app.SuperfluidKeeper,
-			app.EpochsKeeper,
-			app.LockupKeeper,
-			app.MintKeeper,
-			app.AccountKeeper,
-		),
-	)
+	for _, upgrade := range Upgrades {
+		app.UpgradeKeeper.SetUpgradeHandler(
+			upgrade.UpgradeName,
+			upgrade.CreateUpgradeHandler(
+				app.mm,
+				app.configurator,
+				app.BaseApp,
+				&app.AppKeepers,
+			),
+		)
+	}
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server.

@@ -197,6 +197,12 @@ $RECYCLE.BIN/
 /.idea/
 /artifacts/
 /.vscode/
+/.VSCodeCounter/
 /scripts/local/
 /x/incentives/keeper/osmosis_testing/
 tools-stamp
+/tests/localosmosis/.osmosisd/*
+*.save
+*.save.*
+
+mutation_test_result.txt

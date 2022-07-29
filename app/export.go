@@ -152,7 +152,7 @@ func (app *OsmosisApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 
 	// Iterate through validators by power descending, reset bond heights, and
 	// update bond intra-tx counters.
-	store := ctx.KVStore(app.keys[stakingtypes.StoreKey])
+	store := ctx.KVStore(app.GetKey(stakingtypes.StoreKey))
 	iter := sdk.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
 	counter := int16(0)
 
@@ -172,9 +172,12 @@ func (app *OsmosisApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 		counter++
 	}
 
-	iter.Close()
+	err := iter.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	_, err = app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}

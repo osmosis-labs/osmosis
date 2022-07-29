@@ -1,36 +1,31 @@
 package v5
 
 import (
-	connectionkeeper "github.com/cosmos/ibc-go/v2/modules/core/03-connection/keeper"
-	ibcconnectiontypes "github.com/cosmos/ibc-go/v2/modules/core/03-connection/types"
-	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v3/modules/core/03-connection/types"
+	// bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v10/app/keepers"
+	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
+	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 )
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	ibcConnections *connectionkeeper.Keeper,
-	txFeesKeeper *txfeeskeeper.Keeper,
-	gamm *gammkeeper.Keeper,
-	staking *stakingkeeper.Keeper,
+	_ upgrades.BaseAppParamManager,
+	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// Set IBC updates from {inside SDK} to v1
 		//
 		// See: https://github.com/cosmos/ibc-go/blob/main/docs/migrations/ibc-migration-043.md#in-place-store-migrations
-		ibcConnections.SetParams(ctx, ibcconnectiontypes.DefaultParams())
+		keepers.IBCKeeper.ConnectionKeeper.SetParams(ctx, ibcconnectiontypes.DefaultParams())
 
 		// Set all modules "old versions" to 1. Then the run migrations logic will
 		// handle running their upgrade logics.
@@ -51,7 +46,7 @@ func CreateUpgradeHandler(
 		// Override versions for authz & bech32ibctypes module as to not skip their
 		// InitGenesis for txfees module, we will override txfees ourselves.
 		delete(fromVM, authz.ModuleName)
-		delete(fromVM, bech32ibctypes.ModuleName)
+		// delete(fromVM, bech32ibctypes.ModuleName)
 
 		newVM, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
@@ -60,9 +55,9 @@ func CreateUpgradeHandler(
 
 		// Override txfees genesis here
 		ctx.Logger().Info("Setting txfees module genesis with actual v5 desired genesis")
-		feeTokens := InitialWhitelistedFeetokens(ctx, gamm)
-		txfees.InitGenesis(ctx, *txFeesKeeper, txfeestypes.GenesisState{
-			Basedenom: staking.BondDenom(ctx),
+		feeTokens := InitialWhitelistedFeetokens(ctx, keepers.GAMMKeeper)
+		keepers.TxFeesKeeper.InitGenesis(ctx, txfeestypes.GenesisState{
+			Basedenom: keepers.StakingKeeper.BondDenom(ctx),
 			Feetokens: feeTokens,
 		})
 

@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v7/app/params"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 func TestMsgCreateBalancerPool(t *testing.T) {

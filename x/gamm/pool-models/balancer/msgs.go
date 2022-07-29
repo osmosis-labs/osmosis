@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 const (
@@ -38,7 +38,7 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-	err = ValidateUserSpecifiedPoolAssets(msg.PoolAssets)
+	err = validateUserSpecifiedPoolAssets(msg.PoolAssets)
 	if err != nil {
 		return err
 	}

@@ -7,7 +7,7 @@ import "google/protobuf/duration.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/pool-incentives/v1beta1/incentives.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types";
 
 service Query {
   // GaugeIds takes the pool id and returns the matching gauge ids and durations
@@ -15,27 +15,32 @@ service Query {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/gauge-ids/{pool_id}";
   }
-
+  // DistrInfo returns the pool's matching gauge ids and weights.
   rpc DistrInfo(QueryDistrInfoRequest) returns (QueryDistrInfoResponse) {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/distr_info";
   }
 
+  // Params returns pool incentives params.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/osmosis/pool-incentives/v1beta1/params";
   }
 
+  // LockableDurations returns lock durations for pools.
   rpc LockableDurations(QueryLockableDurationsRequest)
       returns (QueryLockableDurationsResponse) {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/lockable_durations";
   }
 
+  // IncentivizedPools returns currently incentivized pools
   rpc IncentivizedPools(QueryIncentivizedPoolsRequest)
       returns (QueryIncentivizedPoolsResponse) {
     option (google.api.http).get =
         "/osmosis/pool-incentives/v1beta1/incentivized_pools";
   }
+
+  // ExternalIncentiveGauges returns external incentive gauges.
   rpc ExternalIncentiveGauges(QueryExternalIncentiveGaugesRequest)
       returns (QueryExternalIncentiveGaugesResponse) {
     option (google.api.http).get =
@@ -51,6 +56,7 @@ message QueryGaugeIdsResponse {
     uint64 gauge_id = 1 [ (gogoproto.moretags) = "yaml:\"gauge_id\"" ];
     google.protobuf.Duration duration = 2
         [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+    string gauge_incentive_percentage = 3;
   }
 
   repeated GaugeIdWithDuration gauge_ids_with_duration = 1

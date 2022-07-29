@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) measureJoinPoolGas(
 	shareOutAmountMax sdk.Int, maxCoins sdk.Coins,
 ) uint64 {
 	alreadySpent := suite.Ctx.GasMeter().GasConsumed()
-	err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, addr, poolID, shareOutAmountMax, maxCoins)
+	_, _, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, addr, poolID, shareOutAmountMax, maxCoins)
 	suite.Require().NoError(err)
 	newSpent := suite.Ctx.GasMeter().GasConsumed()
 	spentNow := newSpent - alreadySpent
@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 	suite.Assert().LessOrEqual(int(firstJoinGas), 100000)
 
 	for i := 1; i < startAveragingAt; i++ {
-		err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
+		_, _, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, defaultAddr, poolId, minShareOutAmount, sdk.Coins{})
 		suite.Require().NoError(err)
 	}
 
@@ -133,7 +133,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	firstJoinGas := suite.measureJoinPoolGas(defaultAddr, initialPoolId, minShareOutAmount, defaultCoins)
 
 	for i := 2; i < denomNumber; i++ {
-		err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, defaultAddr, uint64(i), minShareOutAmount, sdk.Coins{})
+		_, _, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, defaultAddr, uint64(i), minShareOutAmount, sdk.Coins{})
 		suite.Require().NoError(err)
 	}
 

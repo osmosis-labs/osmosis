@@ -1,5 +1,8 @@
 syntax = "proto3";
-// this is a temporary package setup, needs migration logic
+// this is a legacy package that requires additional migration logic
+// in order to use the correct packge. Decision made to use legacy package path
+// until clear steps for migration logic and the unknowns for state breaking are
+// investigated for changing proto package.
 package osmosis.gamm.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
@@ -11,7 +14,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer";
 
 // Parameters for changing the weights in a balancer pool smoothly from
 // a start weight and end weight over a period of time.
@@ -45,7 +48,7 @@ message SmoothWeightChangeParams {
   // The amount PoolAsset.token.amount field is ignored if present,
   // future type refactorings should just have a type with the denom & weight
   // here.
-  repeated osmosis.gamm.v1beta1.PoolAsset initialPoolWeights = 3 [
+  repeated osmosis.gamm.v1beta1.PoolAsset initial_pool_weights = 3 [
     (gogoproto.moretags) = "yaml:\"initial_pool_weights\"",
     (gogoproto.nullable) = false
   ];
@@ -53,7 +56,7 @@ message SmoothWeightChangeParams {
   // to time between start_time, and start_time + duration. The amount
   // PoolAsset.token.amount field is ignored if present, future type
   // refactorings should just have a type with the denom & weight here.
-  repeated osmosis.gamm.v1beta1.PoolAsset targetPoolWeights = 4 [
+  repeated osmosis.gamm.v1beta1.PoolAsset target_pool_weights = 4 [
     (gogoproto.moretags) = "yaml:\"target_pool_weights\"",
     (gogoproto.nullable) = false
   ];
@@ -71,17 +74,17 @@ message SmoothWeightChangeParams {
 // governance. Instead they will be managed by the token holders of the pool.
 // The pool's token holders are specified in future_pool_governor.
 message PoolParams {
-  string swapFee = 1 [
+  string swap_fee = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
-  string exitFee = 2 [
+  string exit_fee = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"exit_fee\"",
     (gogoproto.nullable) = false
   ];
-  SmoothWeightChangeParams smoothWeightChangeParams = 3 [
+  SmoothWeightChangeParams smooth_weight_change_params = 3 [
     (gogoproto.moretags) = "yaml:\"smooth_weight_change_params\"",
     (gogoproto.nullable) = true
   ];
@@ -112,7 +115,7 @@ message Pool {
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 id = 2;
 
-  PoolParams poolParams = 3 [
+  PoolParams pool_params = 3 [
     (gogoproto.moretags) = "yaml:\"balancer_pool_params\"",
     (gogoproto.nullable) = false
   ];
@@ -129,18 +132,18 @@ message Pool {
   string future_pool_governor = 4
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
   // sum of all LP tokens sent out
-  cosmos.base.v1beta1.Coin totalShares = 5 [
+  cosmos.base.v1beta1.Coin total_shares = 5 [
     (gogoproto.moretags) = "yaml:\"total_shares\"",
     (gogoproto.nullable) = false
   ];
   // These are assumed to be sorted by denomiation.
   // They contain the pool asset and the information about the weight
-  repeated osmosis.gamm.v1beta1.PoolAsset poolAssets = 6 [
+  repeated osmosis.gamm.v1beta1.PoolAsset pool_assets = 6 [
     (gogoproto.moretags) = "yaml:\"pool_assets\"",
     (gogoproto.nullable) = false
   ];
   // sum of all non-normalized pool weights
-  string totalWeight = 7 [
+  string total_weight = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"total_weight\"",
     (gogoproto.nullable) = false
