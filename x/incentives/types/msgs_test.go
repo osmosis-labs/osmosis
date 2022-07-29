@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	time "time"
 
@@ -217,6 +218,7 @@ func TestMsgAddToGauge(t *testing.T) {
 	}
 }
 
+// // Test authz serialize and de-serializes for incentives msg.
 func TestAuthzMsg(t *testing.T) {
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
@@ -224,16 +226,110 @@ func TestAuthzMsg(t *testing.T) {
 	coin := sdk.NewCoin("stake", sdk.NewInt(1))
 	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
 
+	const (
+		mockGranter string = "cosmos1abc"
+		mockGrantee string = "cosmos1xyz"
+	)
+
 	testCases := []struct {
+		name                       string
 		expectedGrantSignByteMsg   string
 		expectedRevokeSignByteMsg  string
 		expectedExecStrSignByteMsg string
 		incentivesMsg              sdk.Msg
 	}{
 		{
-			expectedGrantSignByteMsg:   `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.incentives.MsgAddToGauge"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
-			expectedRevokeSignByteMsg:  `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.incentives.MsgAddToGauge"}}],"sequence":"1","timeout_height":"1"}`,
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/incentives/add-to-gauge","value":{"gauge_id":"1","owner":"%s","rewards":[{"amount":"1","denom":"stake"}]}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
+			name: "MsgAddToGauge",
+			expectedGrantSignByteMsg: fmt.Sprintf(`{
+				"account_number":"1",
+				"chain_id":"foo",
+				"fee":{
+				   "amount":[
+					  
+				   ],
+				   "gas":"0"
+				},
+				"memo":"memo",
+				"msgs":[
+				   {
+					  "type":"cosmos-sdk/MsgGrant",
+					  "value":{
+						 "grant":{
+							"authorization":{
+							   "type":"cosmos-sdk/GenericAuthorization",
+							   "value":{
+								  "msg":"/osmosis.incentives.MsgAddToGauge"
+							   }
+							},
+							"expiration":"0001-01-01T02:01:01.000000001Z"
+						 },
+						 "grantee":"%s",
+						 "granter":"%s"
+					  }
+				   }
+				],
+				"sequence":"1",
+				"timeout_height":"1"
+			 }`, mockGrantee, mockGranter),
+			expectedRevokeSignByteMsg: fmt.Sprintf(`{
+				"account_number":"1",
+				"chain_id":"foo",
+				"fee":{
+					"amount":[
+						
+					],
+					"gas":"0"
+				},
+				"memo":"memo",
+				"msgs":[
+					{
+						"type":"cosmos-sdk/MsgRevoke",
+						"value":{
+							"grantee":"%s",
+							"granter":"%s",
+							"msg_type_url":"/osmosis.incentives.MsgAddToGauge"
+						}
+					}
+				],
+				"sequence":"1",
+				"timeout_height":"1"
+			}`, mockGrantee, mockGranter),
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{
+				"account_number":"1",
+				"chain_id":"foo",
+				"fee":{
+					"amount":[
+						
+					],
+					"gas":"0"
+				},
+				"memo":"memo",
+				"msgs":[
+					{
+						"type":"cosmos-sdk/MsgExec",
+						"value":{
+							"grantee":"%s",
+							"msgs":[
+								{
+									"type":"osmosis/incentives/add-to-gauge",
+									"value":{
+										"gauge_id":"1",
+										"owner":"%s",
+										"rewards":[
+											{
+												"amount":"1",
+												"denom":"stake"
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"sequence":"1",
+				"timeout_height":"1"
+			}`, mockGrantee, addr1),
 			incentivesMsg: &MsgAddToGauge{
 				Owner:   addr1,
 				GaugeId: 1,
@@ -241,9 +337,103 @@ func TestAuthzMsg(t *testing.T) {
 			},
 		},
 		{
-			expectedGrantSignByteMsg:   `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgGrant","value":{"grant":{"authorization":{"type":"cosmos-sdk/GenericAuthorization","value":{"msg":"/osmosis.incentives.MsgCreateGauge"}},"expiration":"0001-01-01T02:01:01.000000001Z"},"grantee":"cosmos1def","granter":"cosmos1abc"}}],"sequence":"1","timeout_height":"1"}`,
-			expectedRevokeSignByteMsg:  `{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgRevoke","value":{"grantee":"cosmos1def","granter":"cosmos1abc","msg_type_url":"/osmosis.incentives.MsgCreateGauge"}}],"sequence":"1","timeout_height":"1"}`,
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"cosmos1def","msgs":[{"type":"osmosis/incentives/create-gauge","value":{"coins":[{"amount":"1","denom":"stake"}],"distribute_to":{"denom":"lptoken","duration":"1000000000","timestamp":"0001-01-01T00:00:00Z"},"num_epochs_paid_over":"1","owner":"%s","start_time":"0001-01-01T01:01:01.000000001Z"}}]}}],"sequence":"1","timeout_height":"1"}`, addr1),
+			name: "MsgCreateGauge",
+			expectedGrantSignByteMsg: fmt.Sprintf(`{
+				"account_number":"1",
+				"chain_id":"foo",
+				"fee":{
+					"amount":[
+						
+					],
+					"gas":"0"
+				},
+				"memo":"memo",
+				"msgs":[
+					{
+						"type":"cosmos-sdk/MsgGrant",
+						"value":{
+							"grant":{
+								"authorization":{
+									"type":"cosmos-sdk/GenericAuthorization",
+									"value":{
+										"msg":"/osmosis.incentives.MsgCreateGauge"
+									}
+								},
+								"expiration":"0001-01-01T02:01:01.000000001Z"
+							},
+							"grantee":"%s",
+							"granter":"%s"
+						}
+					}
+				],
+				"sequence":"1",
+				"timeout_height":"1"
+			}`, mockGrantee, mockGranter),
+			expectedRevokeSignByteMsg: fmt.Sprintf(`{
+				"account_number":"1",
+				"chain_id":"foo",
+				"fee":{
+					"amount":[
+						
+					],
+					"gas":"0"
+				},
+				"memo":"memo",
+				"msgs":[
+					{
+						"type":"cosmos-sdk/MsgRevoke",
+						"value":{
+							"grantee":"%s",
+							"granter":"%s",
+							"msg_type_url":"/osmosis.incentives.MsgCreateGauge"
+						}
+					}
+				],
+				"sequence":"1",
+				"timeout_height":"1"
+			}`, mockGrantee, mockGranter),
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{
+				"account_number":"1",
+				"chain_id":"foo",
+				"fee":{
+					"amount":[
+						
+					],
+					"gas":"0"
+				},
+				"memo":"memo",
+				"msgs":[
+					{
+						"type":"cosmos-sdk/MsgExec",
+						"value":{
+							"grantee":"%s",
+							"msgs":[
+								{
+									"type":"osmosis/incentives/create-gauge",
+									"value":{
+										"coins":[
+											{
+												"amount":"1",
+												"denom":"stake"
+											}
+										],
+										"distribute_to":{
+											"denom":"lptoken",
+											"duration":"1000000000",
+											"timestamp":"0001-01-01T00:00:00Z"
+										},
+										"num_epochs_paid_over":"1",
+										"owner":"%s",
+										"start_time":"0001-01-01T01:01:01.000000001Z"
+									}
+								}
+							]
+						}
+					}
+				],
+				"sequence":"1",
+				"timeout_height":"1"
+			}`, mockGrantee, addr1),
 			incentivesMsg: &MsgCreateGauge{
 				IsPerpetual: false,
 				Owner:       addr1,
@@ -259,29 +449,42 @@ func TestAuthzMsg(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		// Authz: Grant Msg
-		typeURL := sdk.MsgTypeURL(tc.incentivesMsg)
-		grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
-		require.NoError(t, err)
-		msgGrant := &authz.MsgGrant{Granter: "cosmos1abc", Grantee: "cosmos1def", Grant: grant}
-		require.Equal(t,
-			tc.expectedGrantSignByteMsg,
-			string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgGrant}, "memo")),
-		)
+		t.Run(tc.name, func(t *testing.T) {
+			// Authz: Grant Msg
+			typeURL := sdk.MsgTypeURL(tc.incentivesMsg)
+			grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
+			require.NoError(t, err)
+			msgGrant := &authz.MsgGrant{Granter: mockGranter, Grantee: mockGrantee, Grant: grant}
 
-		// Authz: Revoke Msg
-		msgRevoke := &authz.MsgRevoke{Granter: "cosmos1abc", Grantee: "cosmos1def", MsgTypeUrl: typeURL}
-		require.Equal(t,
-			tc.expectedRevokeSignByteMsg,
-			string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgRevoke}, "memo")),
-		)
+			require.Equal(t,
+				formatJsonStr(tc.expectedGrantSignByteMsg),
+				string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgGrant}, "memo")),
+			)
 
-		// Authz: Exec Msg
-		msgAny, _ := cdctypes.NewAnyWithValue(tc.incentivesMsg)
-		msgExec := &authz.MsgExec{Grantee: "cosmos1def", Msgs: []*cdctypes.Any{msgAny}}
-		require.Equal(t,
-			tc.expectedExecStrSignByteMsg,
-			string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgExec}, "memo")),
-		)
+			// Authz: Revoke Msg
+			msgRevoke := &authz.MsgRevoke{Granter: mockGranter, Grantee: mockGrantee, MsgTypeUrl: typeURL}
+
+			require.Equal(t,
+				formatJsonStr(tc.expectedRevokeSignByteMsg),
+				string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgRevoke}, "memo")),
+			)
+
+			// Authz: Exec Msg
+			msgAny, _ := cdctypes.NewAnyWithValue(tc.incentivesMsg)
+			msgExec := &authz.MsgExec{Grantee: mockGrantee, Msgs: []*cdctypes.Any{msgAny}}
+
+			require.Equal(t,
+				formatJsonStr(tc.expectedExecStrSignByteMsg),
+				string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgExec}, "memo")),
+			)
+		})
 	}
+}
+
+func formatJsonStr(jsonStrMsg string) string {
+	ans := strings.ReplaceAll(jsonStrMsg, "\n", "")
+	ans = strings.ReplaceAll(ans, "\t", "")
+	ans = strings.ReplaceAll(ans, " ", "")
+
+	return ans
 }
