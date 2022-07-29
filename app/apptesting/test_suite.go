@@ -316,5 +316,5 @@ func GenerateTestAddrs() (string, string) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	validAddr := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid").String()
-	return validAddr, invalidAddr 
+	return validAddr, invalidAddr
 }

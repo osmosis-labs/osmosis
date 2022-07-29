@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -8,8 +8,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
 func TestMsgLockTokens(t *testing.T) {
@@ -18,12 +19,12 @@ func TestMsgLockTokens(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgLockTokens
+		msg        types.MsgLockTokens
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: MsgLockTokens{
+			msg: types.MsgLockTokens{
 				Owner:    addr1,
 				Duration: time.Hour,
 				Coins:    sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
@@ -32,7 +33,7 @@ func TestMsgLockTokens(t *testing.T) {
 		},
 		{
 			name: "invalid owner",
-			msg: MsgLockTokens{
+			msg: types.MsgLockTokens{
 				Owner:    invalidAddr,
 				Duration: time.Hour,
 				Coins:    sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
@@ -40,7 +41,7 @@ func TestMsgLockTokens(t *testing.T) {
 		},
 		{
 			name: "invalid duration",
-			msg: MsgLockTokens{
+			msg: types.MsgLockTokens{
 				Owner:    addr1,
 				Duration: -1,
 				Coins:    sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
@@ -48,7 +49,7 @@ func TestMsgLockTokens(t *testing.T) {
 		},
 		{
 			name: "invalid coin length",
-			msg: MsgLockTokens{
+			msg: types.MsgLockTokens{
 				Owner:    addr1,
 				Duration: time.Hour,
 				Coins:    sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(100000)), sdk.NewCoin("test2", sdk.NewInt(100000))),
@@ -56,7 +57,7 @@ func TestMsgLockTokens(t *testing.T) {
 		},
 		{
 			name: "zero token amount",
-			msg: MsgLockTokens{
+			msg: types.MsgLockTokens{
 				Owner:    addr1,
 				Duration: time.Hour,
 				Coins:    sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(0))),
@@ -68,7 +69,7 @@ func TestMsgLockTokens(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-				require.Equal(t, test.msg.Route(), RouterKey)
+				require.Equal(t, test.msg.Route(), types.RouterKey)
 				require.Equal(t, test.msg.Type(), "lock_tokens")
 				signers := test.msg.GetSigners()
 				require.Equal(t, len(signers), 1)
@@ -77,7 +78,6 @@ func TestMsgLockTokens(t *testing.T) {
 				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 			}
 		})
-		
 	}
 }
 
@@ -87,19 +87,19 @@ func TestMsgBeginUnlockingAll(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgBeginUnlockingAll
+		msg        types.MsgBeginUnlockingAll
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: MsgBeginUnlockingAll{
+			msg: types.MsgBeginUnlockingAll{
 				Owner: addr1,
 			},
 			expectPass: true,
 		},
 		{
 			name: "invalid owner",
-			msg: MsgBeginUnlockingAll{
+			msg: types.MsgBeginUnlockingAll{
 				Owner: invalidAddr,
 			},
 		},
@@ -109,7 +109,7 @@ func TestMsgBeginUnlockingAll(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-				require.Equal(t, test.msg.Route(), RouterKey)
+				require.Equal(t, test.msg.Route(), types.RouterKey)
 				require.Equal(t, test.msg.Type(), "begin_unlocking_all")
 				signers := test.msg.GetSigners()
 				require.Equal(t, len(signers), 1)
@@ -118,7 +118,6 @@ func TestMsgBeginUnlockingAll(t *testing.T) {
 				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 			}
 		})
-		
 	}
 }
 
@@ -128,12 +127,12 @@ func TestMsgBeginUnlocking(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgBeginUnlocking
+		msg        types.MsgBeginUnlocking
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: MsgBeginUnlocking{
+			msg: types.MsgBeginUnlocking{
 				Owner: addr1,
 				ID:    1,
 				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
@@ -142,7 +141,7 @@ func TestMsgBeginUnlocking(t *testing.T) {
 		},
 		{
 			name: "invalid owner",
-			msg: MsgBeginUnlocking{
+			msg: types.MsgBeginUnlocking{
 				Owner: invalidAddr,
 				ID:    1,
 				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
@@ -150,7 +149,7 @@ func TestMsgBeginUnlocking(t *testing.T) {
 		},
 		{
 			name: "invalid lockup ID",
-			msg: MsgBeginUnlocking{
+			msg: types.MsgBeginUnlocking{
 				Owner: addr1,
 				ID:    0,
 				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
@@ -158,7 +157,7 @@ func TestMsgBeginUnlocking(t *testing.T) {
 		},
 		{
 			name: "invalid coins length",
-			msg: MsgBeginUnlocking{
+			msg: types.MsgBeginUnlocking{
 				Owner: addr1,
 				ID:    1,
 				Coins: sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(100000)), sdk.NewCoin("test2", sdk.NewInt(100000))),
@@ -166,7 +165,7 @@ func TestMsgBeginUnlocking(t *testing.T) {
 		},
 		{
 			name: "not positive coins amount",
-			msg: MsgBeginUnlocking{
+			msg: types.MsgBeginUnlocking{
 				Owner: addr1,
 				ID:    1,
 				Coins: sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(0))),
@@ -178,7 +177,7 @@ func TestMsgBeginUnlocking(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-				require.Equal(t, test.msg.Route(), RouterKey)
+				require.Equal(t, test.msg.Route(), types.RouterKey)
 				require.Equal(t, test.msg.Type(), "begin_unlocking")
 				signers := test.msg.GetSigners()
 				require.Equal(t, len(signers), 1)
@@ -187,7 +186,6 @@ func TestMsgBeginUnlocking(t *testing.T) {
 				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 			}
 		})
-		
 	}
 }
 
@@ -197,12 +195,12 @@ func TestMsgExtendLockup(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgExtendLockup
+		msg        types.MsgExtendLockup
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: MsgExtendLockup{
+			msg: types.MsgExtendLockup{
 				Owner:    addr1,
 				ID:       1,
 				Duration: time.Hour,
@@ -211,7 +209,7 @@ func TestMsgExtendLockup(t *testing.T) {
 		},
 		{
 			name: "invalid owner",
-			msg: MsgExtendLockup{
+			msg: types.MsgExtendLockup{
 				Owner:    invalidAddr,
 				ID:       1,
 				Duration: time.Hour,
@@ -219,7 +217,7 @@ func TestMsgExtendLockup(t *testing.T) {
 		},
 		{
 			name: "invalid lockup ID",
-			msg: MsgExtendLockup{
+			msg: types.MsgExtendLockup{
 				Owner:    addr1,
 				ID:       0,
 				Duration: time.Hour,
@@ -227,7 +225,7 @@ func TestMsgExtendLockup(t *testing.T) {
 		},
 		{
 			name: "invalid duration",
-			msg: MsgExtendLockup{
+			msg: types.MsgExtendLockup{
 				Owner:    addr1,
 				ID:       1,
 				Duration: -1,
@@ -239,7 +237,7 @@ func TestMsgExtendLockup(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			if test.expectPass {
 				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-				require.Equal(t, test.msg.Route(), RouterKey)
+				require.Equal(t, test.msg.Route(), types.RouterKey)
 				require.Equal(t, test.msg.Type(), "edit_lockup")
 				signers := test.msg.GetSigners()
 				require.Equal(t, len(signers), 1)
