@@ -25,15 +25,16 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v7/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 )
 
 //nolint:ineffassign
+// PrepareGenesisCmd returns prepare-genesis cobra Command.
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare-genesis",

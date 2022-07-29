@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -17,7 +17,6 @@ import (
 
 type (
 	Keeper struct {
-		cdc      codec.Codec
 		storeKey sdk.StoreKey
 
 		paramSpace paramtypes.Subspace
@@ -42,7 +41,6 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:        cdc,
 		storeKey:   storeKey,
 		paramSpace: paramSpace,
 

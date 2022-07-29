@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool types.PoolI, joiner sdk.AccAddress, numShares sdk.Int, joinCoins sdk.Coins) error {
@@ -18,7 +18,7 @@ func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool types.PoolI, join
 		return err
 	}
 
-	err = k.SetPool(ctx, pool)
+	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (k Keeper) applyExitPoolStateChange(ctx sdk.Context, pool types.PoolI, exit
 		return err
 	}
 
-	err = k.SetPool(ctx, pool)
+	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err
 	}

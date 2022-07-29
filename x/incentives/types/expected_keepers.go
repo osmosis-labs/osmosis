@@ -3,8 +3,8 @@ package types
 import (
 	time "time"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -12,6 +12,7 @@ import (
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
 	HasSupply(ctx sdk.Context, denom string) bool
 
@@ -35,4 +36,9 @@ type LockupKeeper interface {
 // EpochKeeper defines the expected interface needed to retrieve epoch info.
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
+}
+
+// DistrKeeper defines the contract needed to be fulfilled for distribution keeper.
+type DistrKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }

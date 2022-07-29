@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
 const forkHeight = 10
@@ -109,7 +109,7 @@ func TestSingleNodeInit(t *testing.T) {
 	existingChain, err := initialization.InitChain(id, dataDir, existingChainNodeConfigs, time.Second*3, forkHeight)
 	require.NoError(t, err)
 
-	actualNode, err := initialization.InitSingleNode(existingChain.ChainMeta.Id, dataDir, filepath.Join(existingChain.Nodes[0].ConfigDir, "config", "genesis.json"), expectedConfig, time.Second*3, 3, "testHash", []string{"some server"})
+	actualNode, err := initialization.InitSingleNode(existingChain.ChainMeta.Id, dataDir, filepath.Join(existingChain.Nodes[0].ConfigDir, "config", "genesis.json"), expectedConfig, time.Second*3, 3, "testHash", []string{"some server"}, []string{"some server"})
 	require.NoError(t, err)
 
 	validateNode(t, id, dataDir, expectedConfig, actualNode)

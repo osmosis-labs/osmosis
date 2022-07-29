@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 var (
@@ -377,6 +377,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 	for _, test := range tests {
 		suite.SetupTest()
 
+		ctx := suite.Ctx
 		keeper := suite.App.GAMMKeeper
 
 		// Mint some assets to the accounts.
@@ -407,8 +408,12 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 			liquidity := suite.App.GAMMKeeper.GetTotalLiquidity(suite.Ctx)
 			suite.Require().Equal("15000bar,15000foo", liquidity.String())
+
+			assertEventEmitted(suite, ctx, types.TypeEvtPoolJoined, 1)
 		} else {
 			suite.Require().Error(err, "test: %v", test.name)
+
+			assertEventEmitted(suite, ctx, types.TypeEvtPoolJoined, 0)
 		}
 	}
 }
@@ -566,6 +571,8 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 		suite.SetupTest()
 
 		suite.Run(tc.name, func() {
+			ctx := suite.Ctx
+
 			for _, acc := range suite.TestAccs {
 				suite.FundAcc(acc, defaultAcctFunds)
 			}
@@ -576,17 +583,19 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			// test account is set on every test case iteration, we need to manually update address for pool creator
 			tc.pool.Sender = createPoolAcc.String()
 
-			poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, tc.pool)
+			poolId, err := suite.App.GAMMKeeper.CreatePool(ctx, tc.pool)
 			suite.Require().NoError(err)
 
-			balanceBeforeJoin := suite.App.BankKeeper.GetAllBalances(suite.Ctx, joinPoolAcc)
+			balanceBeforeJoin := suite.App.BankKeeper.GetAllBalances(ctx, joinPoolAcc)
 
-			_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+			_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
 			suite.Require().NoError(err)
 
-			_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+			assertEventEmitted(suite, ctx, types.TypeEvtPoolJoined, 1)
 
-			balanceAfterExit := suite.App.BankKeeper.GetAllBalances(suite.Ctx, joinPoolAcc)
+			_, err = suite.App.GAMMKeeper.ExitPool(ctx, joinPoolAcc, poolId, tc.joinPoolShareAmt, sdk.Coins{})
+
+			balanceAfterExit := suite.App.BankKeeper.GetAllBalances(ctx, joinPoolAcc)
 			deltaBalance, _ := balanceBeforeJoin.SafeSub(balanceAfterExit)
 
 			// due to rounding, `balanceBeforeJoin` and `balanceAfterExit` have neglectable difference
@@ -738,6 +747,45 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 				"expected out amount %s, actual out amount %s",
 				swapFeeAdjustedAmount, tokenOutAmt,
 			)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetPoolDenom() {
+	// setup pool with denoms
+	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
+	poolCreateMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
+	_, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, poolCreateMsg)
+	suite.Require().NoError(err)
+
+	for _, tc := range []struct {
+		desc         string
+		poolId       uint64
+		expectDenoms []string
+		expectErr    bool
+	}{
+		{
+			desc:         "Valid PoolId",
+			poolId:       1,
+			expectDenoms: []string{"bar", "foo"},
+			expectErr:    false,
+		},
+		{
+			desc:         "Invalid PoolId",
+			poolId:       2,
+			expectDenoms: []string{"bar", "foo"},
+			expectErr:    true,
+		},
+	} {
+		suite.Run(tc.desc, func() {
+			denoms, err := suite.App.GAMMKeeper.GetPoolDenoms(suite.Ctx, tc.poolId)
+
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(denoms, tc.expectDenoms)
+			}
 		})
 	}
 }
