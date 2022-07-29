@@ -49,6 +49,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v10/wasmbinding"
+	arbitragekeeper "github.com/osmosis-labs/osmosis/v10/x/arbitrage-solver/keeper"
+	arbitragetypes "github.com/osmosis-labs/osmosis/v10/x/arbitrage-solver/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/v10/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
@@ -90,6 +92,7 @@ type AppKeepers struct {
 
 	// "Normal" keepers
 	AccountKeeper        *authkeeper.AccountKeeper
+	ArbitrageKeeper      *arbitragekeeper.Keeper
 	BankKeeper           *bankkeeper.BaseKeeper
 	AuthzKeeper          *authzkeeper.Keeper
 	StakingKeeper        *stakingkeeper.Keeper
@@ -354,6 +357,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
+	arbitrageKeeper := arbitragekeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[arbitragetypes.StoreKey],
+		appKeepers.GetSubspace(arbitragetypes.ModuleName),
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.GAMMKeeper,
+	)
+	appKeepers.ArbitrageKeeper = &arbitrageKeeper
+
 	// register the proposal types
 	govRouter := govtypes.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
@@ -441,6 +454,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
+	paramsKeeper.Subspace(arbitragetypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -465,6 +479,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			// insert gamm hooks receivers here
 			appKeepers.PoolIncentivesKeeper.Hooks(),
 			appKeepers.TwapKeeper.GammHooks(),
+			appKeepers.ArbitrageKeeper.Hooks(),
 		),
 	)
 
@@ -533,5 +548,6 @@ func KVStoreKeys() []string {
 		superfluidtypes.StoreKey,
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
+		arbitragetypes.StoreKey,
 	}
 }
