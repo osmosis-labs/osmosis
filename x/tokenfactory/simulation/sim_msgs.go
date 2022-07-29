@@ -122,5 +122,8 @@ func getTokenFactoryDenomAndItsAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx 
 	authData, _ := k.GetAuthorityMetadata(ctx, denom)
 	admin := authData.Admin
 	addr, err := sdk.AccAddressFromBech32(admin)
-	return denom, addr, err
+	if err != nil {
+	     return "", sdk.AccAddress{}, err
+	}
+	return denom, addr, nil
 }
