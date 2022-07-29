@@ -538,10 +538,6 @@ It consists of the following attributes:
 * `types.AttributeNewLockIds`
   * The value is the exited lock ids in byte[].
 
-sdk.NewAttribute(sdk.AttributeKeySender, sender),
-		sdk.NewAttribute(types.AttributeDenom, lpShareDenom),
-		sdk.NewAttribute(types.AttributeNewLockIds, string(allExitedLockIDsSerialized)),
-
 ### Messages
 
 ### MsgSuperfluidDelegate
