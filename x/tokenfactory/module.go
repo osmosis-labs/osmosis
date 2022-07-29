@@ -23,6 +23,8 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+
 	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 	simulation "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/simulation"
 
@@ -189,7 +191,12 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 // GenerateGenesisState creates a randomized GenState of the tokenfactory module.
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 	tfDefaultGen := types.DefaultGenesis()
-	tfDefaultGen.Params.DenomCreationFee = sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10_000_000))
+	denomCreationFeeCoins := tfDefaultGen.Params.DenomCreationFee
+	for _, coin := range denomCreationFeeCoins {
+		if coin.Denom == appparams.BaseCoinUnit {
+			coin.Denom = sdk.DefaultBondDenom
+		}
+	}
 	tfDefaultGenJson := simState.Cdc.MustMarshalJSON(tfDefaultGen)
 	simState.GenState[types.ModuleName] = tfDefaultGenJson
 }
