@@ -37,6 +37,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
+//TestGetCmdGaugeIds tests gaugeID CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdGaugeIds() {
 	val := s.network.Validators[0]
 
@@ -71,6 +72,7 @@ func (s *IntegrationTestSuite) TestGetCmdGaugeIds() {
 	}
 }
 
+//TestGetCmdDistrInfo tests distribution info CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdDistrInfo() {
 	val := s.network.Validators[0]
 
@@ -105,6 +107,7 @@ func (s *IntegrationTestSuite) TestGetCmdDistrInfo() {
 	}
 }
 
+//TestGetCmdParams tests module params CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdParams() {
 	val := s.network.Validators[0]
 
@@ -139,6 +142,7 @@ func (s *IntegrationTestSuite) TestGetCmdParams() {
 	}
 }
 
+//TestGetCmdLockableDurations tests lockable duration CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdLockableDurations() {
 	val := s.network.Validators[0]
 
@@ -173,6 +177,7 @@ func (s *IntegrationTestSuite) TestGetCmdLockableDurations() {
 	}
 }
 
+//TestGetCmdIncentivizedPools tests incentivized pools CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdIncentivizedPools() {
 	val := s.network.Validators[0]
 
@@ -207,6 +212,7 @@ func (s *IntegrationTestSuite) TestGetCmdIncentivizedPools() {
 	}
 }
 
+//TestGetCmdExternalIncentiveGauges tests incentivized pools CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdExternalIncentiveGauges() {
 	val := s.network.Validators[0]
 
