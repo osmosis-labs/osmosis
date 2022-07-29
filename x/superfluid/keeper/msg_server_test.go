@@ -10,6 +10,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	v8constants "github.com/osmosis-labs/osmosis/v10/app/upgrades/v8/constants"
 )
 
 func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
@@ -296,6 +297,32 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
 		_, err = msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(suite.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
 		suite.Require().NoError(err)
 		assertEventEmitted(suite, suite.Ctx, types.TypeEvtSuperfluidUnbondLock, 1)
+	}
+}
+
+// TestMsgUnPoolWhitelistedPool_Event tests that events are correctly emitted
+// when calling UnPoolWhitelistedPool.
+func (suite *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
+	suite.SetupTest()
+	msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+
+	// setup validators
+	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+
+	denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+
+	// whitelist designated pools
+	suite.App.SuperfluidKeeper.SetUnpoolAllowedPools(suite.Ctx, poolIds)
+
+	// setup superfluid delegations
+	_, _, locks := suite.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 1000000}}, denoms)
+
+	for index, poolId := range poolIds {
+		sender, _ := sdk.AccAddressFromBech32(locks[index].Owner)
+		suite.Ctx = suite.Ctx.WithBlockHeight(v8constants.UpgradeHeight)
+		_, err := msgServer.UnPoolWhitelistedPool(sdk.WrapSDKContext(suite.Ctx), types.NewMsgUnPoolWhitelistedPool(sender, poolId))
+		suite.Require().NoError(err)
+		assertEventEmitted(suite, suite.Ctx, types.TypeEvtUnpoolId, 1)
 	}
 }
 
