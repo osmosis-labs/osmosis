@@ -164,44 +164,6 @@ func (suite *KeeperTestSuite) TestMintedCoinDistributionWhenDevRewardsAddressEmp
 	}
 }
 
-func (suite *KeeperTestSuite) TestEndOfEpochNoDistributionWhenIsNotYetStartTime() {
-	app := suite.App
-	ctx := suite.Ctx
-
-	mintParams := app.MintKeeper.GetParams(ctx)
-	mintParams.MintingRewardsDistributionStartEpoch = 4
-	app.MintKeeper.SetParams(ctx, mintParams)
-
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-
-	params := app.IncentivesKeeper.GetParams(ctx)
-	futureCtx := ctx.WithBlockTime(time.Now().Add(time.Minute))
-
-	height := int64(1)
-	// Run through epochs 0 through mintParams.MintingRewardsDistributionStartEpoch - 1
-	// ensure no rewards sent out
-	for ; height < mintParams.MintingRewardsDistributionStartEpoch; height++ {
-		feePoolOrigin := app.DistrKeeper.GetFeePool(ctx)
-		app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
-		app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
-
-		// check community pool balance not increase
-		feePoolNew := app.DistrKeeper.GetFeePool(ctx)
-		suite.Require().Equal(feePoolOrigin.CommunityPool, feePoolNew.CommunityPool, "height = %v", height)
-	}
-	// Run through epochs mintParams.MintingRewardsDistributionStartEpoch
-	// ensure tokens distributed
-	app.EpochsKeeper.BeforeEpochStart(futureCtx, params.DistrEpochIdentifier, height)
-	app.EpochsKeeper.AfterEpochEnd(futureCtx, params.DistrEpochIdentifier, height)
-	suite.Require().NotEqual(sdk.DecCoins{}, app.DistrKeeper.GetFeePool(ctx).CommunityPool,
-		"Tokens to community pool at start distribution epoch")
-
-	// reduction period should be set to mintParams.MintingRewardsDistributionStartEpoch
-	lastReductionPeriod := app.MintKeeper.GetLastReductionEpochNum(ctx)
-	suite.Require().Equal(lastReductionPeriod, mintParams.MintingRewardsDistributionStartEpoch)
-}
-
 // TestAfterEpochEnd tests that the after epoch end hook correctly
 // distributes the rewards depending on what epoch it is in.
 func (suite *KeeperTestSuite) TestAfterEpochEnd() {
