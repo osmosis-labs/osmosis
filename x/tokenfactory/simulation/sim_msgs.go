@@ -18,7 +18,7 @@ func RandomMsgCreateDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 	minCoins := sim.TokenFactoryKeeper().GetParams(ctx).DenomCreationFee
 	acc, err := sim.RandomSimAccountWithMinCoins(ctx, minCoins)
 	if err != nil {
-		return nil, errors.New("no account has enough coins to pay the denom creation fee")
+		return nil, err
 	}
 
 	return &types.MsgCreateDenom{
@@ -36,7 +36,7 @@ func RandomMsgMintDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) 
 
 	denom, addr, err := getTokenFactoryDenomAndItsAdmin(k, sim, ctx, acc)
 	if err != nil {
-		return nil, errors.New("cannot find factory denom or admin")
+		return nil, err
 	}
 	if addr == nil {
 		return nil, errors.New("denom has no admin")
@@ -59,7 +59,7 @@ func RandomMsgBurnDenom(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) 
 
 	denom, addr, err := getTokenFactoryDenomAndItsAdmin(k, sim, ctx, acc)
 	if err != nil {
-		return nil, errors.New("cannot find factory denom or admin")
+		return nil, err
 	}
 	if addr == nil {
 		return nil, errors.New("denom has no admin")
@@ -87,7 +87,7 @@ func RandomMsgChangeAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 
 	denom, addr, err := getTokenFactoryDenomAndItsAdmin(k, sim, ctx, acc)
 	if err != nil {
-		return nil, errors.New("cannot find factory denom or admin")
+		return nil, err
 	}
 	if addr == nil {
 		return nil, errors.New("denom has no admin")
@@ -119,7 +119,10 @@ func getTokenFactoryDenomAndItsAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx 
 	denoms := osmoutils.GatherAllKeysFromStore(store)
 	denom := simtypes.RandSelect(sim, denoms...)
 
-	authData, _ := k.GetAuthorityMetadata(ctx, denom)
+	authData, err := k.GetAuthorityMetadata(ctx, denom)
+	if err != nil {
+		return "", nil, err
+	}
 	admin := authData.Admin
 	addr, err := sdk.AccAddressFromBech32(admin)
 	return denom, addr, err
