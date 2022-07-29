@@ -455,7 +455,92 @@ Disable multiple assets from being used for superfluid staking.
 
 ## Events
 
------;
+There are 7 types of events that exist in Superfluid module:
+
+* `types.TypeEvtSetSuperfluidAsset` - "set_superfluid_asset"
+* `types.TypeEvtRemoveSuperfluidAsset` - "remove_superfluid_asset"
+* `types.TypeEvtSuperfluidDelegate` - "superfluid_delegate"
+* `types.TypeEvtSuperfluidIncreaseDelegation` - "superfluid_increase_delegation"
+* `types.TypeEvtSuperfluidUndelegate` - "superfluid_undelegate"
+* `types.TypeEvtSuperfluidUnbondLock` - "superfluid_unbond_lock"
+* `types.TypeEvtUnpoolId` - "unpool_pool_id"
+
+### `types.TypeEvtSetSuperfluidAsset`
+
+This event is emitted in the proposal which set new superfluid asset
+
+It consists of the following attributes:
+
+* `types.AttributeDenom`
+  * The value is the asset denom.
+* `types.AttributeSuperfluidAssetType`
+  * The value is the type of asset.
+
+### `types.TypeEvtRemoveSuperfluidAsset`
+
+This event is emitted in the proposal which remove superfluid asset
+
+It consists of the following attributes:
+
+* `types.AttributeDenom`
+  * The value is the asset denom.
+
+### `types.TypeEvtSuperfluidDelegate`
+
+This event is emitted in the message server after succesfully create a delegation for the given lock ID and the validator to delegate to.
+
+It consists of the following attributes:
+
+* `types.AttributeLockId`
+  * The value is the given lock ID.
+* `types.AttributeValidator`
+  * The value is the validator address to delegate to.
+
+### `types.TypeEvtSuperfluidIncreaseDelegation`
+
+This event is emitted in the hook after adding more token to the existing lock
+
+It consists of the following attributes:
+
+* `types.AttributeLockId`
+  * The value is the given lock ID.
+* `types.AttributeAmount`
+  * The value is the token amount added to the lock.
+
+### `types.TypeEvtSuperfluidUndelegate`
+
+This event is emitted in the message server after undelegating currently superfluid delegated position given by lock ID.
+
+It consists of the following attributes:
+
+* `types.AttributeLockId`
+  * The value is the given lock ID.
+
+### `types.TypeEvtSuperfluidUnbondLock`
+
+This event is emitted in the message server after starting unbonding for currently superfluid undelegating lock.
+
+It consists of the following attributes:
+
+* `types.AttributeLockId`
+  * The value is the given lock ID.
+
+### `types.TypeEvtUnpoolId`
+
+This event is emitted in the message server `UnPoolWhitelistedPool`
+
+It consists of the following attributes:
+
+* `types.AttributeKeySender`
+  * The value is the msg sender address.
+* `types.AttributeLockId`
+  * The value is the pool lpShareDenom.
+* `types.AttributeNewLockIds`
+  * The value is the exited lock ids in byte[].
+
+sdk.NewAttribute(sdk.AttributeKeySender, sender),
+		sdk.NewAttribute(types.AttributeDenom, lpShareDenom),
+		sdk.NewAttribute(types.AttributeNewLockIds, string(allExitedLockIDsSerialized)),
 
 ### Messages
 
