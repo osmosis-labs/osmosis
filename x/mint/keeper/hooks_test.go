@@ -11,31 +11,32 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	// Most values here are taken from mainnet genesis to mimic real-world behavior:
+	// https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
+	defaultGenesisEpochProvisions = "821917808219.178082191780821917"
+	defaultEpochIdentifier        = "day"
+	// actual value taken from mainnet for sanity checking calculations.
+	defaultMainnetThirdenedProvisions                 = "547945205479.452055068493150684"
+	defaultReductionPeriodInEpochs                    = 365
+	defaultMintingRewardsDistributionStartEpoch int64 = 1
+	defaultThirdeningEpochNum                   int64 = defaultReductionPeriodInEpochs + defaultMintingRewardsDistributionStartEpoch
+)
+
+var (
+	defaultReductionFactor         = sdk.NewDec(2).Quo(sdk.NewDec(3))
+	defaultDistributionProportions = types.DistributionProportions{
+		Staking:          sdk.NewDecWithPrec(25, 2),
+		PoolIncentives:   sdk.NewDecWithPrec(45, 2),
+		DeveloperRewards: sdk.NewDecWithPrec(25, 2),
+		CommunityPool:    sdk.NewDecWithPrec(0o5, 2),
+	}
+)
+
 // TestAfterEpochEnd tests that the after epoch end hook correctly
 // distributes the rewards depending on what epoch it is in.
 func (suite *KeeperTestSuite) TestAfterEpochEnd() {
-	// Most values in this test are taken from mainnet genesis to mimic real-world behavior:
-	// https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
-	const (
-		defaultReductionPeriodInEpochs                    = 365
-		defaultMintingRewardsDistributionStartEpoch int64 = 1
-		defaultThirdeningEpochNum                   int64 = defaultReductionPeriodInEpochs + defaultMintingRewardsDistributionStartEpoch
-
-		// different from mainnet since the difference is insignificant for testing purposes.
-		defaultGenesisEpochProvisions = "821917808219.178082191780821917"
-		defaultEpochIdentifier        = "day"
-
-		// actual value taken from mainnet for sanity checking calculations.
-		defaultMainnetThirdenedProvisions = "547945205479.452055068493150684"
-	)
-
 	var (
-		testDistributionProportions = types.DistributionProportions{
-			Staking:          sdk.NewDecWithPrec(25, 2),
-			PoolIncentives:   sdk.NewDecWithPrec(45, 2),
-			DeveloperRewards: sdk.NewDecWithPrec(25, 2),
-			CommunityPool:    sdk.NewDecWithPrec(0o5, 2),
-		}
 		testWeightedAddresses = []types.WeightedAddress{
 			{
 				Address: testAddressOne.String(),
@@ -93,8 +94,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
@@ -107,8 +108,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
@@ -123,8 +124,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
@@ -139,8 +140,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
@@ -156,8 +157,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
@@ -171,8 +172,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
@@ -186,8 +187,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultReductionPeriodInEpochs,
 
@@ -201,8 +202,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultReductionPeriodInEpochs + 1,
 
@@ -218,8 +219,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         "week",
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
@@ -232,8 +233,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  sdk.NewDec(1_000_000_000),
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
@@ -248,7 +249,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
 			reductionFactor:         sdk.NewDec(43).Quo(sdk.NewDec(55)),
-			distributionProportions: testDistributionProportions,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
@@ -262,7 +263,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
+			reductionFactor:         defaultReductionFactor,
 			distributionProportions: types.DistributionProportions{
 				Staking:          sdk.NewDecWithPrec(11, 2),
 				PoolIncentives:   sdk.NewDecWithPrec(22, 2),
@@ -283,8 +284,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses: []types.WeightedAddress{
 				{
 					Address: testAddressOne.String(),
@@ -315,8 +316,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
 			epochIdentifier:         defaultEpochIdentifier,
 			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
-			reductionFactor:         sdk.NewDec(2).Quo(sdk.NewDec(3)),
-			distributionProportions: testDistributionProportions,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
@@ -397,36 +398,20 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 //
 // Ref: https://github.com/osmosis-labs/osmosis/issues/1917
 func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters() {
-	// Most values in this test are taken from mainnet genesis to mimic real-world behavior:
-	// https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
-	const (
-		reductionPeriodInEpochs                    = 365
-		mintingRewardsDistributionStartEpoch int64 = 1
-		thirdeningEpochNum                   int64 = reductionPeriodInEpochs + mintingRewardsDistributionStartEpoch
-
-		genesisEpochProvisions = "821917808219.178082191780821917"
-		epochIdentifier        = "day"
-
-		// actual value taken from mainnet for sanity checking calculations.
-		mainnetThirdenedProvisions = "547945205479.452055068493150684"
-	)
-
-	reductionFactor := sdk.NewDec(2).Quo(sdk.NewDec(3))
-
 	app := osmoapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	mintKeeper := app.MintKeeper
 	accountKeeper := app.AccountKeeper
 
-	genesisEpochProvisionsDec, err := sdk.NewDecFromStr(genesisEpochProvisions)
+	genesisEpochProvisionsDec, err := sdk.NewDecFromStr(defaultGenesisEpochProvisions)
 	suite.Require().NoError(err)
 
 	mintParams := types.Params{
 		MintDenom:               sdk.DefaultBondDenom,
 		GenesisEpochProvisions:  genesisEpochProvisionsDec,
-		EpochIdentifier:         epochIdentifier,
-		ReductionPeriodInEpochs: reductionPeriodInEpochs,
-		ReductionFactor:         reductionFactor,
+		EpochIdentifier:         defaultEpochIdentifier,
+		ReductionPeriodInEpochs: defaultReductionPeriodInEpochs,
+		ReductionFactor:         defaultReductionFactor,
 		DistributionProportions: types.DistributionProportions{
 			Staking:          sdk.NewDecWithPrec(25, 2),
 			PoolIncentives:   sdk.NewDecWithPrec(45, 2),
@@ -495,7 +480,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 				Weight:  sdk.NewDecWithPrec(8, 1).Quo(sdk.NewDec(1000)), // 0.0008
 			},
 		},
-		MintingRewardsDistributionStartEpoch: mintingRewardsDistributionStartEpoch,
+		MintingRewardsDistributionStartEpoch: defaultMintingRewardsDistributionStartEpoch,
 	}
 
 	suite.assertAddressWeightsAddUpToOne(mintParams.WeightedDeveloperRewardsReceivers)
@@ -518,14 +503,14 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	suite.Require().Equal(expectedSupply.TruncateInt64(), supply.Amount.Int64())
 
 	devRewardsDelta := sdk.ZeroDec()
-	epochProvisionsDelta := genesisEpochProvisionsDec.Sub(genesisEpochProvisionsDec.TruncateInt().ToDec()).Mul(sdk.NewDec(reductionPeriodInEpochs))
+	epochProvisionsDelta := genesisEpochProvisionsDec.Sub(genesisEpochProvisionsDec.TruncateInt().ToDec()).Mul(sdk.NewDec(defaultReductionPeriodInEpochs))
 
 	// Actual test for running AfterEpochEnd hook thirdeningEpoch times.
-	for i := int64(1); i <= reductionPeriodInEpochs; i++ {
+	for i := int64(1); i <= defaultReductionPeriodInEpochs; i++ {
 		developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
 
 		// System undert test.
-		mintKeeper.AfterEpochEnd(ctx, epochIdentifier, i)
+		mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, i)
 
 		// System truncates EpochProvisions because bank takes an Int.
 		// This causes rounding errors. Let's refer to this source as #1.
@@ -565,8 +550,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 		suite.Require().Equal(expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 
 		// Validate that the epoch provisions have not been reduced.
-		suite.Require().Equal(mintingRewardsDistributionStartEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
-		suite.Require().Equal(genesisEpochProvisions, mintKeeper.GetMinter(ctx).EpochProvisions.String())
+		suite.Require().Equal(defaultMintingRewardsDistributionStartEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
+		suite.Require().Equal(defaultGenesisEpochProvisions, mintKeeper.GetMinter(ctx).EpochProvisions.String())
 	}
 
 	// Validate total supply.
@@ -575,7 +560,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	// Here, we add the deltas to the actual supply and compare against expected.
 	//
 	// expectedTotalProvisionedSupply = 365 * 821917808219.178082191780821917 = 299_999_999_999_999.999999999999999705
-	expectedTotalProvisionedSupply := sdk.NewDec(reductionPeriodInEpochs).Mul(genesisEpochProvisionsDec)
+	expectedTotalProvisionedSupply := sdk.NewDec(defaultReductionPeriodInEpochs).Mul(genesisEpochProvisionsDec)
 	// actualTotalProvisionedSupply = 299_999_999_997_380 (off by 2619.999999999999999705)
 	// devRewardsDelta = 2555 (hard to estimate but the source is from truncating dev rewards )
 	// epochProvisionsDelta = 0.178082191780821917 * 365 = 64.999999999999999705
@@ -586,13 +571,13 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 
 	// This end of epoch should trigger thirdening. It will utilize the updated
 	// (reduced) provisions.
-	mintKeeper.AfterEpochEnd(ctx, epochIdentifier, thirdeningEpochNum)
+	mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, defaultThirdeningEpochNum)
 
-	suite.Require().Equal(thirdeningEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
+	suite.Require().Equal(defaultThirdeningEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
 
 	expectedThirdenedProvisions := mintParams.ReductionFactor.Mul(genesisEpochProvisionsDec)
 	// Sanity check with the actual value on mainnet.
-	suite.Require().Equal(mainnetThirdenedProvisions, expectedThirdenedProvisions.String())
+	suite.Require().Equal(defaultMainnetThirdenedProvisions, expectedThirdenedProvisions.String())
 	suite.Require().Equal(expectedThirdenedProvisions, mintKeeper.GetMinter(ctx).EpochProvisions)
 }
 
