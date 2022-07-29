@@ -884,6 +884,8 @@ github.com/mattn/go-sqlite3 v1.14.9/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 h1:I0XW9+e1XWDxdcEniV4rQAIOPUGDq67JSCiRCgGCZLI=
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
+github.com/mattverse/wasmd v0.27.3-hackatom.0 h1:+Zgmqc1omVBbmq1xtt4ZyFr+IeZjhSYrhTKZno970Aw=
+github.com/mattverse/wasmd v0.27.3-hackatom.0/go.mod h1:0h8WBsFhyingomsrN+34JVZe/qRySHYHICyTEokCkYU=
 github.com/mbilski/exhaustivestruct v1.2.0 h1:wCBmUnSYufAHO6J4AVWY6ff+oxWxsVFrwgOdMUQePUo=
 github.com/mbilski/exhaustivestruct v1.2.0/go.mod h1:OeTBVxQWoEmB2J2JCHmXWPJ0aksxSUOUy+nvtVEfzXc=
 github.com/mgechev/dots v0.0.0-20210922191527-e955255bf517/go.mod h1:KQ7+USdGKfpPjXk4Ga+5XxQM4Lm4e3gAogrreFAYpOg=
@@ -1038,8 +1040,6 @@ github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220709005907-f37e34d99505 h1:vrTG
 github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220709005907-f37e34d99505/go.mod h1:pMiEr6WR7drhXAXK1FOdAKPazWCi7b+WOyWOF4O0OXY=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v7 h1:6KcADC/WhL7yDmNQxUIJt2XmzNt4FfRmq9gRke45w74=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v7/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
-github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58 h1:15l3Iss2oCGCeJRi2g3CuCnqmEjpAr3Le7cDnoN/LS0=
-github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58/go.mod h1:0h8WBsFhyingomsrN+34JVZe/qRySHYHICyTEokCkYU=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
