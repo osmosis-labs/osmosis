@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
@@ -249,11 +248,4 @@ func TestMsgExtendLockup(t *testing.T) {
 			}
 		})
 	}
-}
-
-func generateTestAddrs() (string, string) {
-	pk1 := ed25519.GenPrivKey().PubKey()
-	validAddr := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid").String()
-	return validAddr, invalidAddr 
 }
