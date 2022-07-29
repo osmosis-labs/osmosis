@@ -315,7 +315,7 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 func (suite *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 	suite.SetupTest()
 
-	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded},)
+	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
 	denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
 
@@ -329,8 +329,8 @@ func (suite *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 		coinsToLock := sdk.NewCoins(sdk.NewCoin(denoms[index], sdk.NewInt(100)))
 		sender, _ := sdk.AccAddressFromBech32(lock.Owner)
 		suite.FundAcc(sender, coinsToLock)
-		
-		_, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(sender, time.Hour * 504, coinsToLock))
+
+		_, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(sender, time.Hour*504, coinsToLock))
 		suite.Require().NoError(err)
 
 		// should call AfterAddTokensToLock hook and emit event here
