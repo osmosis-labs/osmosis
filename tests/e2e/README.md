@@ -188,6 +188,8 @@ This debug configuration helps to run e2e tests locally and skip the desired tes
         "-test.run",
         "IntegrationTestSuite",
         "-test.v"
+        "-test.tags"
+        "e2e"
     ],
     "env": {
         "OSMOSIS_E2E_SKIP_IBC": "true",
