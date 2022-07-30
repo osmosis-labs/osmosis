@@ -17,7 +17,11 @@ import (
 
 func StargateQuerier(queryRouter *baseapp.GRPCQueryRouter, codec codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
-		reqBinding, whitelisted := StargateLayerRequestBindings.Load(request.Path)
+		// reqBinding, whitelisted := StargateLayerRequestBindings.Load(request.Path)
+		// if !whitelisted {
+		// 	return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", request.Path)}
+		// }
+		_, whitelisted := StargateLayerRequestBindings.Load(request.Path)
 		if !whitelisted {
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", request.Path)}
 		}
@@ -27,74 +31,25 @@ func StargateQuerier(queryRouter *baseapp.GRPCQueryRouter, codec codec.Codec) fu
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
 		}
 
-		switch request.Path {
-		case "/osmosis.gamm.v1beta1.Query/Pools":
-			route := queryRouter.Route(request.Path)
-			if route == nil {
-				return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
-			}
-			req := abci.RequestQuery{
-				Data: request.Data,
-				Path: request.Path,
-			}
-			res, err := route(ctx, req)
-			if err != nil {
-				return nil, err
-			}
-
-			resBinding, whitelisted := StargateLayerResponseBindings.Load(request.Path)
-			if !whitelisted {
-				return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", request.Path)}
-			}
-
-			bz, err := NormalizeReponsesAndJsonfy(resBinding, res.Value, codec)
-			if err != nil {
-				return nil, err
-			}
-			return bz, nil
-
-		case "/osmosis.incentives.v1beta1.Query/LockableDurations":
-			route := queryRouter.Route(request.Path)
-			if route == nil {
-				return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query '%s'", request.Path)}
-			}
-			req := abci.RequestQuery{
-				Data: request.Data,
-				Path: request.Path,
-			}
-			res, err := route(ctx, req)
-			if err != nil {
-				return nil, err
-			}
-
-			return res.Value, nil
-
-		default:
-			data, err := NormalizeRequestsAndUnjsonfy(reqBinding, request.Data, codec)
-			if err != nil {
-				return nil, err
-			}
-			res, err := route(ctx, abci.RequestQuery{
-				Data: data,
-				Path: request.Path,
-			})
-
-			if err != nil {
-				return nil, err
-			}
-
-			resBinding, whitelisted := StargateLayerResponseBindings.Load(request.Path)
-			if !whitelisted {
-				return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", request.Path)}
-			}
-
-			// normalize response to ensure backward compatibility
-			bz, err := NormalizeReponsesAndJsonfy(resBinding, res.Value, codec)
-			if err != nil {
-				return nil, err
-			}
-			return bz, nil
+		req := abci.RequestQuery{
+			Data: request.Data,
+			Path: request.Path,
 		}
+		res, err := route(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		resBinding, whitelisted := StargateLayerResponseBindings.Load(request.Path)
+		if !whitelisted {
+			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", request.Path)}
+		}
+
+		bz, err := NormalizeReponsesAndJsonfy(resBinding, res.Value, codec)
+		if err != nil {
+			return nil, err
+		}
+		return bz, nil
 	}
 }
 
