@@ -209,7 +209,6 @@ sync-docs:
 ###############################################################################
 
 PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'tests/simulator|e2e')
-PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
 
@@ -232,10 +231,10 @@ test-sim:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
 
 test-e2e:
-	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v11" go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v11" go test ./... -tags=e2e -mod=readonly -timeout=25m  
 
 test-e2e-skip-upgrade:
-	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test ./... -tags=e2e -mod=readonly -timeout=25m 
 
 test-mutation:
 	@bash scripts/mutation-test.sh
