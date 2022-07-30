@@ -110,8 +110,11 @@ func TestAuthzMsg(t *testing.T) {
 							"grantee":"%s",
 							"msgs":[
 								{
-									"sender":"%s",
-									"subdenom":"valoper1xyz"
+									"type":"osmosis/tokenfactory/create-denom",
+									"value":{
+										"sender":"%s",
+										"subdenom":"valoper1xyz"
+									}
 								}
 							]
 						}
@@ -198,11 +201,14 @@ func TestAuthzMsg(t *testing.T) {
 							"grantee":"%s",
 							"msgs":[
 								{
-									"amount":{
-										"amount":"1",
-										"denom":"denom"
-									},
-									"sender":"%s"
+									"type":"osmosis/tokenfactory/burn",
+									"value":{
+										"amount":{
+											"amount":"1",
+											"denom":"denom"
+										},
+										"sender":"%s"
+									}
 								}
 							]
 						}
@@ -289,11 +295,14 @@ func TestAuthzMsg(t *testing.T) {
 							"grantee":"%s",
 							"msgs":[
 								{
-									"amount":{
-										"amount":"1",
-										"denom":"denom"
-									},
-									"sender":"%s"
+									"type":"osmosis/tokenfactory/mint",
+									"value":{
+										"amount":{
+											"amount":"1",
+											"denom":"denom"
+										},
+										"sender":"%s"
+									}
 								}
 							]
 						}
@@ -363,7 +372,37 @@ func TestAuthzMsg(t *testing.T) {
 				"sequence":"1",
 				"timeout_height":"1"
 			}`, mockGrantee, mockGranter),
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{"account_number":"1","chain_id":"foo","fee":{"amount":[],"gas":"0"},"memo":"memo","msgs":[{"type":"cosmos-sdk/MsgExec","value":{"grantee":"%s","msgs":[{"denom":"denom","new_admin":"osmo1q8tq5qhrhw6t970egemuuwywhlhpnmdmts6xnu","sender":"%s"}]}}],"sequence":"1","timeout_height":"1"}`, mockGrantee, addr1),
+			expectedExecStrSignByteMsg: fmt.Sprintf(`{
+				"account_number":"1",
+				"chain_id":"foo",
+				"fee":{
+					"amount":[
+						
+					],
+					"gas":"0"
+				},
+				"memo":"memo",
+				"msgs":[
+					{
+						"type":"cosmos-sdk/MsgExec",
+						"value":{
+							"grantee":"%s",
+							"msgs":[
+								{
+									"type":"osmosis/tokenfactory/change-admin",
+									"value":{
+										"denom":"denom",
+										"new_admin":"osmo1q8tq5qhrhw6t970egemuuwywhlhpnmdmts6xnu",
+										"sender":"%s"
+									}
+								}
+							]
+						}
+					}
+				],
+				"sequence":"1",
+				"timeout_height":"1"
+			}`, mockGrantee, addr1),
 			msg: &MsgChangeAdmin{
 				Sender:   addr1,
 				Denom:    "denom",
