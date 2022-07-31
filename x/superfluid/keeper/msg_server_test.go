@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate_Event() {
 			expectPass: true,
 		},
 		{
-			name: "invalid",
+			name: "invalid duration",
 			param: param{
 				lockOwner: sdk.AccAddress([]byte("addr1---------------")), // setup wallet
 				duration:  time.Second,

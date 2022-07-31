@@ -59,33 +59,35 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		assets         []types.SuperfluidAsset
 		expectedAssets []types.SuperfluidAsset
 		expectErr      bool
-		expectedEvent  string
 	}
 	testCases := []struct {
 		name    string
 		actions []Action
+		expectedEvent []string
 	}{
 		{
 			"happy path flow",
 			[]Action{
 				{
-					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false, types.TypeEvtSetSuperfluidAsset,
+					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false,
 				},
 				{
-					false, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{}, false, types.TypeEvtRemoveSuperfluidAsset,
+					false, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{}, false,
 				},
 			},
+			[]string{types.TypeEvtSetSuperfluidAsset, types.TypeEvtRemoveSuperfluidAsset},
 		},
 		{
 			"token does not exist",
 			[]Action{
 				{
-					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false, types.TypeEvtSetSuperfluidAsset,
+					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false,
 				},
 				{
-					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1}, true, types.TypeEvtRemoveSuperfluidAsset,
+					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1}, true,
 				},
 			},
+			[]string{types.TypeEvtSetSuperfluidAsset, types.TypeEvtRemoveSuperfluidAsset},
 		},
 	}
 
@@ -133,7 +135,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 					suite.Require().Error(err)
 				} else {
 					suite.Require().NoError(err)
-					assertEventEmitted(suite, suite.ctx, action.expectedEvent, 1)
+					assertEventEmitted(suite, suite.ctx, tc.expectedEvent[i], 1)
 				}
 
 				// check assets individually
