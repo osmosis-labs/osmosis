@@ -27,6 +27,7 @@ RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 
 # build
 FROM golang
+
 RUN --mount=type=cache,target=/root/.cache/go-build \
   BUILD_TAGS=muslc LINK_STATICALLY=true make build
 
