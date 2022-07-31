@@ -25,7 +25,10 @@ RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep f6282df732a13dec836cda1f399dd
 # CosmWasm: copy the right library according to architecture. The final location will be found by the linker flag `-lwasmvm_muslc`
 RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 
-RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
+# build
+FROM golang
+RUN --mount=type=cache,target=/root/.cache/go-build \
+  BUILD_TAGS=muslc LINK_STATICALLY=true make build
 
 # --------------------------------------------------------
 # Runner
