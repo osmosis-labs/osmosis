@@ -27,8 +27,8 @@ COPY . /osmosis
 # build
 # FROM golang
 
-RUN --mount=type=cache,target=~/.cache/go-build \
-  --mount=type=cache,target=~/go/pkg/mod \
+RUN --mount=type=cache,target=/root/.cache/go-build \
+  --mount=type=cache,target=/root/go/pkg/mod \
   BUILD_TAGS=muslc LINK_STATICALLY=true make build
 
 # --------------------------------------------------------
