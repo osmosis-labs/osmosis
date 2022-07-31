@@ -189,12 +189,7 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 // GenerateGenesisState creates a randomized GenState of the tokenfactory module.
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 	tfDefaultGen := types.DefaultGenesis()
-	denomCreationFeeCoins := tfDefaultGen.Params.DenomCreationFee
-	for _, coin := range denomCreationFeeCoins {
-		if coin.Denom == "uosmo" {
-			coin.Denom = sdk.DefaultBondDenom
-		}
-	}
+	tfDefaultGen.Params.DenomCreationFee = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)))
 	tfDefaultGenJson := simState.Cdc.MustMarshalJSON(tfDefaultGen)
 	simState.GenState[types.ModuleName] = tfDefaultGenJson
 }
