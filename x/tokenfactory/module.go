@@ -23,8 +23,6 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-
 	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 	simulation "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/simulation"
 
@@ -193,7 +191,7 @@ func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *s
 	tfDefaultGen := types.DefaultGenesis()
 	denomCreationFeeCoins := tfDefaultGen.Params.DenomCreationFee
 	for _, coin := range denomCreationFeeCoins {
-		if coin.Denom == appparams.BaseCoinUnit {
+		if coin.Denom == "uosmo" {
 			coin.Denom = sdk.DefaultBondDenom
 		}
 	}
