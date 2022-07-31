@@ -109,8 +109,8 @@ In the event that a pool is created, and has a swap in the same block, the recor
 The flow by which we currently track spot price changing events in a block is as follows:
 * AMM hook triggers for Swapping, LPing or Exiting a pool
 * TWAP listens for this hook, and adds this pool ID to a local tracker
-* In end block, TWAP iterates over every changed pool that block, based on the local tracker, and updates their TWAP records
-* In end block, TWAP clears the changed pool list, so its blank by the next block.
+* In end block, TWAP iterates over every changed pool in that block, based on the local tracker, and updates their TWAP records
+* In end block, TWAP clears the changed pool list, so it is blank by the next block.
 
 The mechanism by which we maintain this changed pool list, is the SDK `Transient Store`.
 The transient store is a KV store in the SDK, that stores entries in memory, for the duration of a block,
