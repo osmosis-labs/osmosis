@@ -26,7 +26,7 @@ RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep f6282df732a13dec836cda1f399dd
 RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 
 # build
-FROM golang
+# FROM golang
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
   BUILD_TAGS=muslc LINK_STATICALLY=true make build
