@@ -245,7 +245,7 @@ benchmark:
 
 build-e2e-script:
 	mkdir -p $(BUILDDIR)
-	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
+	go build -v -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
 
 docker-build-debug:
 	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
