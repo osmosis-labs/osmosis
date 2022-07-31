@@ -123,9 +123,6 @@ jobs:
           build-args: |
             BASE_IMG_TAG=debug
       -
-        name: Test e2e and Upgrade
-        run: make test-e2e
-      -
         # Temp fix
         # https://github.com/docker/build-push-action/issues/252
         # https://github.com/moby/buildkit/issues/1896
@@ -133,3 +130,6 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      -
+        name: Test e2e and Upgrade
+        run: make test-e2e
