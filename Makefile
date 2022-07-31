@@ -90,7 +90,7 @@ BUILD_TARGETS := build install
 build: BUILD_ARGS=-o $(BUILDDIR)/
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
-	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
+	go $@ -v -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
@@ -245,7 +245,7 @@ benchmark:
 
 build-e2e-script:
 	mkdir -p $(BUILDDIR)
-	go build -v -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
+	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
 
 docker-build-debug:
 	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
