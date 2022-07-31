@@ -87,10 +87,6 @@ func (sim SimCtx) BankKeeper() BankKeeper {
 	return sim.app.GetBankKeeper()
 }
 
-func (sim SimCtx) TokenFactoryKeeper() TokenFactoryKeeper {
-	return sim.app.GetTokenFactoryKeeper()
-}
-
 // randManager is built to give API's for randomness access
 // which allow the caller to avoid "butterfly effects".
 // e.g. in the Simulator, I don't want adding one new rand call to a message
