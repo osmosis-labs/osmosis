@@ -76,7 +76,7 @@ func (k Keeper) getMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId u
 	return types.ParseTwapFromBz(bz)
 }
 
-// getMostRecentRecordStoreRepresentation returns all most recent twap records
+// getAllMostRecentRecordsForPool returns all most recent twap records
 // (in state representation) for the provided pool id.
 func (k Keeper) getAllMostRecentRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
