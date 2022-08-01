@@ -21,10 +21,12 @@ RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep f6282df732a13dec836cda1f399dd
 # Copy the right library according to architecture. The final location will be found by the linker flag `-lwasmvm_muslc`
 RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 
+# Get go dependencies first
+COPY go.mod go.lock /osmosis/
 WORKDIR /osmosis
-
 RUN go mod download
-# TODO: Document what this is for
+
+# Copy all files into our docker repo
 COPY . /osmosis
 
 # build
@@ -39,7 +41,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM gcr.io/distroless/base-debian11:${BASE_IMG_TAG}
 
-COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
+COPY --from=build /osmosis-copy/build/osmosisd /bin/osmosisd
 
 ENV HOME /osmosis
 WORKDIR $HOME
