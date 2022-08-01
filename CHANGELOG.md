@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Bug Fixes
 * [2011](https://github.com/osmosis-labs/osmosis/pull/2011) Fix bug in TokenFactory initGenesis, relating to denom creation fee param.
 
+<<<<<<< HEAD
 #### Improvements
 * [#2130](https://github.com/osmosis-labs/osmosis/pull/2130) Introduce errors in mint types.
 * [#2000](https://github.com/osmosis-labs/osmosis/pull/2000) Update import paths from v9 to v10.
@@ -66,6 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    * Bring back the cliff vesting command: https://github.com/osmosis-labs/cosmos-sdk/pull/272
    * Allow ScheduleUpgrade to come from same block: https://github.com/osmosis-labs/cosmos-sdk/pull/261
 
+=======
+>>>>>>> parent of bd32316c (x/lock: Fix `ExtendLockup` API  (backport #1937) (#2030))
 
 ## v10.0.1
 
