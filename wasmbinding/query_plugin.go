@@ -110,7 +110,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap query")
 			}
 
-			res := bindings.ArithmeticTwapResponse{Twap: *twap}
+			res := bindings.ArithmeticTwapResponse{Twap: twap.String()}
 			bz, err := json.Marshal(res)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap query response")
@@ -124,7 +124,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap to now query")
 			}
 
-			res := bindings.ArithmeticTwapToNowResponse{Twap: *twap}
+			res := bindings.ArithmeticTwapToNowResponse{Twap: twap.String()}
 			bz, err := json.Marshal(res)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap query response")

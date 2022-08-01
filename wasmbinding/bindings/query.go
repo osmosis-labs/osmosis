@@ -4,8 +4,6 @@ import (
 	"time"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // OsmosisQuery contains osmosis custom queries.
@@ -106,9 +104,9 @@ type EstimatePriceResponse struct {
 }
 
 type ArithmeticTwapResponse struct {
-	Twap sdk.Dec `json:"arithmetic_twap"`
+	Twap string `json:"arithmetic_twap"`
 }
 
 type ArithmeticTwapToNowResponse struct {
-	Twap sdk.Dec `json:"arithmetic_twap_to_now"`
+	Twap string `json:"arithmetic_twap_to_now"`
 }
