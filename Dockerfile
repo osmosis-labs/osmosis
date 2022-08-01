@@ -41,7 +41,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM gcr.io/distroless/base-debian11:${BASE_IMG_TAG}
 
-COPY --from=build /osmosis-copy/build/osmosisd /bin/osmosisd
+COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
 
 ENV HOME /osmosis
 WORKDIR $HOME
