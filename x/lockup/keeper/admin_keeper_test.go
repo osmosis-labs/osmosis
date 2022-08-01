@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -13,10 +14,11 @@ func (suite *KeeperTestSuite) TestRelock() {
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	lock := types.NewPeriodLock(1, addr1, time.Second, suite.Ctx.BlockTime().Add(time.Second), coins)
 
 	// lock with balance
 	suite.FundAcc(addr1, coins)
-	lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
+	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock)
 	suite.Require().NoError(err)
 
 	// lock with balance with same id
@@ -36,12 +38,12 @@ func (suite *KeeperTestSuite) BreakLock() {
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	lock := types.NewPeriodLock(1, addr1, time.Second, suite.Ctx.BlockTime().Add(time.Second), coins)
 
 	// lock with balance
 	suite.FundAcc(addr1, coins)
 
-	lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coins, time.Second)
-
+	err := suite.App.LockupKeeper.Lock(suite.Ctx, lock)
 	suite.Require().NoError(err)
 
 	// break lock
