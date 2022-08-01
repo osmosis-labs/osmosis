@@ -103,9 +103,10 @@ jobs:
             ~\AppData\Local\go-build
             /tmp/.buildx-cache
             /var/lib/docker/buildkit
-          key: ${{ runner.os }}-go-docker-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-docker-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-docker-${{ matrix.go-version }}-
+            ${{ runner.os }}-docker-${{ hashFiles('**/go.sum') }}
+            ${{ runner.os }}-docker-
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
