@@ -101,6 +101,7 @@ jobs:
             ~/Library/Caches/go-build
             ~\AppData\Local\go-build
             /tmp/.buildx-cache
+            /var/lib/docker/buildkit
           key: ${{ runner.os }}-go-docker-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-docker-${{ matrix.go-version }}-
@@ -113,20 +114,6 @@ jobs:
         with:
           install: true
           driver-opts: image=moby/buildkit:buildx-stable-1
-      - 
-        name: Enable buildkit cache
-        uses: actions/cache@v2
-        with:
-          path: /tmp/buildkit-cache/buildkit-state.tar
-          key: ${{ runner.os }}-buildkit-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildkit-
-      - name: Load buildkit state from cache
-        uses: dashevo/gh-action-cache-buildkit-state@v1
-        with:
-          builder: buildx_buildkit_${{ steps.buildx.outputs.name }}0
-          cache-path: /tmp/buildkit-cache
-          cache-max-size: 2g
       -
         name: Build e2e image
         uses: docker/build-push-action@v3
