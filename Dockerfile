@@ -22,10 +22,12 @@ RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep f6282df732a13dec836cda1f399dd
 RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 
 WORKDIR /osmosis
+
+RUN go mod download
+# TODO: Document what this is for
 COPY . /osmosis
 
 # build
-# FROM golang
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/root/go/pkg/mod \
