@@ -1,4 +1,4 @@
-name: Tests
+name: Tests & Code Coverage
 
 on:
   pull_request:
@@ -59,9 +59,9 @@ jobs:
             ~/.cache/go-build
             ~/Library/Caches/go-build
             ~\AppData\Local\go-build
-          key: ${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
       -
         name: Run all tests
         run: make test-unit
@@ -100,11 +100,9 @@ jobs:
             ~/.cache/go-build
             ~/Library/Caches/go-build
             ~\AppData\Local\go-build
-            /tmp/.buildx-cache
-            /var/lib/docker/buildkit
-          key: ${{ runner.os }}-docker-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-docker-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-docker-
+            ${{ runner.os }}-go-docker-${{ matrix.go-version }}-
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
