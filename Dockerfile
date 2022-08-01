@@ -22,7 +22,7 @@ RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep f6282df732a13dec836cda1f399dd
 RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
 
 # Get go dependencies first
-COPY go.mod go.lock /osmosis/
+COPY go.mod go.sum /osmosis/
 WORKDIR /osmosis
 RUN go mod download
 
