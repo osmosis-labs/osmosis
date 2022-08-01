@@ -3,12 +3,12 @@ package balancer
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
 const (
-	ErrMsgFormatRepeatingPoolAssetsNotAllowed = formatRepeatingPoolAssetsNotAllowedErrFormat
-	ErrMsgFormatNoPoolAssetFound              = formatNoPoolAssetFoundErrFormat
+	ErrMsgFormatRepeatingPoolAssetsNotAllowed = errMsgFormatRepeatingPoolAssetsNotAllowed
+	ErrMsgFormatNoPoolAssetFound              = errMsgFormatNoPoolAssetFound
 )
 
 var (
-	ErrMsgFormatFailedInterimLiquidityUpdate = failedInterimLiquidityUpdateErrFormat
+	ErrMsgFormatFailedInterimLiquidityUpdate = errMsgFormatFailedInterimLiquidityUpdate
 
 	CalcPoolSharesOutGivenSingleAssetIn   = calcPoolSharesOutGivenSingleAssetIn
 	CalcSingleAssetInGivenPoolSharesOut   = calcSingleAssetInGivenPoolSharesOut

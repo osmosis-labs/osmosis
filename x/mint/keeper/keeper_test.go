@@ -171,8 +171,7 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin_ToDeveloperRewardsAddr() 
 				{
 					Address: testAddressOne.String(),
 					Weight:  sdk.NewDec(1),
-				},
-			},
+				}},
 			mintCoin: sdk.NewCoin("stake", sdk.NewInt(10000)),
 		},
 		{
@@ -185,8 +184,7 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin_ToDeveloperRewardsAddr() 
 				{
 					Address: testAddressFour.String(),
 					Weight:  sdk.NewDecWithPrec(4, 1),
-				},
-			},
+				}},
 			mintCoin: sdk.NewCoin("stake", sdk.NewInt(100000)),
 		},
 		{
@@ -318,18 +316,18 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 		},
 		"nil amount": {
 			blockHeight:   0,
-			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
+			expectedError: keeper.ErrAmountCannotBeNilOrZero,
 		},
 		"zero amount": {
 			blockHeight:   0,
 			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
-			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
+			expectedError: keeper.ErrAmountCannotBeNilOrZero,
 		},
 		"module account is already created": {
 			blockHeight:                     0,
 			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
 			isDeveloperModuleAccountCreated: true,
-			expectedError:                   sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName),
+			expectedError:                   keeper.ErrDevVestingModuleAccountAlreadyCreated,
 		},
 	}
 
@@ -364,7 +362,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 		},
 		"dev vesting module account does not exist": {
 			blockHeight:   1,
-			expectedError: sdkerrors.Wrapf(types.ErrModuleDoesnotExist, "%s vesting module account doesnot exist", types.DeveloperVestingModuleAcctName),
+			expectedError: keeper.ErrDevVestingModuleAccountNotCreated,
 		},
 	}
 

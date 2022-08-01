@@ -151,7 +151,7 @@ func getPoolAssetsByDenom(poolAssets []PoolAsset) (map[string]PoolAsset, error) 
 	for _, poolAsset := range poolAssets {
 		_, ok := poolAssetsByDenom[poolAsset.Token.Denom]
 		if ok {
-			return nil, fmt.Errorf(formatRepeatingPoolAssetsNotAllowedErrFormat, poolAsset.Token.Denom)
+			return nil, fmt.Errorf(errMsgFormatRepeatingPoolAssetsNotAllowed, poolAsset.Token.Denom)
 		}
 
 		poolAssetsByDenom[poolAsset.Token.Denom] = poolAsset
@@ -174,7 +174,7 @@ func updateIntermediaryPoolAssetsLiquidity(liquidity sdk.Coins, poolAssetsByDeno
 	for _, coin := range liquidity {
 		poolAsset, ok := poolAssetsByDenom[coin.Denom]
 		if !ok {
-			return fmt.Errorf(failedInterimLiquidityUpdateErrFormat, coin.Denom)
+			return fmt.Errorf(errMsgFormatFailedInterimLiquidityUpdate, coin.Denom)
 		}
 
 		poolAsset.Token.Amount = poolAssetsByDenom[coin.Denom].Token.Amount.Add(coin.Amount)
