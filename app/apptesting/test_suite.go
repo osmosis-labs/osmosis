@@ -61,6 +61,16 @@ func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
+// CreateTestContext creates a test context.
+func (s *KeeperTestHelper) Commit() {
+	oldHeight := s.Ctx.BlockHeight()
+	oldHeader := s.Ctx.BlockHeader()
+	s.App.Commit()
+	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: time.Now().UTC()}
+	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
+	s.Ctx = s.App.GetBaseApp().NewContext(false, newHeader)
+}
+
 // FundAcc funds target address with specified amount.
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
@@ -300,4 +310,11 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	}
 
 	return testAddrs
+}
+
+func GenerateTestAddrs() (string, string) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	validAddr := sdk.AccAddress(pk1.Address()).String()
+	invalidAddr := sdk.AccAddress("invalid").String()
+	return validAddr, invalidAddr
 }

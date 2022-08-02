@@ -32,7 +32,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 	if !senderExists {
 		return &types.MsgJoinPool{}, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
-	// cap joining pool to double the pool liquidity
+	// cap joining pool to the pool liquidity
 	tokenIn = osmoutils.MinCoins(tokenIn, pool.GetTotalPoolLiquidity(ctx))
 
 	// TODO: Fix API so this is a one liner, pool.CalcJoinPoolNoSwapShares()

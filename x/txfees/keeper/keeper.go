@@ -13,7 +13,6 @@ import (
 )
 
 type Keeper struct {
-	cdc      codec.Codec
 	storeKey sdk.StoreKey
 
 	accountKeeper             types.AccountKeeper
@@ -37,7 +36,6 @@ func NewKeeper(
 	nonNativeFeeCollectorName string,
 ) Keeper {
 	return Keeper{
-		cdc:                       cdc,
 		accountKeeper:             accountKeeper,
 		bankKeeper:                bankKeeper,
 		epochKeeper:               epochKeeper,

@@ -96,7 +96,7 @@ process is found below:
 
 <p style="text-align:center;">
 
-<img src="https://raw.githubusercontent.com/osmosis-labs/osmosis/main/x/superfluid/spec/superfluiddiagram.png" height="300"/>
+<img src="https://raw.githubusercontent.com/osmosis-labs/osmosis/main/x/superfluid/superfluiddiagram.png" height="300"/>
 
 </p>
 
