@@ -321,6 +321,9 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 	for _, test := range tests {
 		suite.SetupTest()
 
+		ctx := suite.Ctx
+		keeper := suite.App.GAMMKeeper
+
 		// Mint some assets to the accounts.
 		for _, acc := range suite.TestAccs {
 			suite.FundAcc(acc, defaultAcctFunds)
@@ -331,7 +334,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, defaultPoolAssets, defaultFutureGovernor)
-		poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+		poolId, err := keeper.CreatePool(ctx, msg)
 		suite.Require().NoError(err)
 
 		test.fn(poolId)
