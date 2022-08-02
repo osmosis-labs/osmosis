@@ -390,8 +390,8 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 				return
 			}
 			suite.Require().NoError(actualError)
-			suite.Require().Equal(supplyWithOffsetBefore.Amount.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), sdk.ZeroInt())
-			suite.Require().Equal(supplyOffsetBefore.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), sdk.ZeroInt())
+			suite.Require().Equal(sdk.ZeroInt(), bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+			suite.Require().Equal(sdk.ZeroInt(), bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
 		})
 	}
 }
