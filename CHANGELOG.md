@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#2147](https://github.com/osmosis-labs/osmosis/pull/2147) Set MaxAgeNumBlocks in v11 Upgrade Handler to two weeks.
 * [#2193](https://github.com/osmosis-labs/osmosis/pull/2193) Add TwapKeeper to the Osmosis app
 * [#2227](https://github.com/osmosis-labs/osmosis/pull/2227) Enable charging fee in base denom for `CreateGauge` and `AddToGauge`.
+* [#2283](https://github.com/osmosis-labs/osmosis/pull/2283) x/incentives: refactor `createGauge` and `AddToGauge` fees to use txfees denom
 
 #### Golang API breaks
 
