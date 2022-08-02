@@ -8,7 +8,7 @@ import (
 	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 )
 
-// StargateLayerWhitelist keeps whitelist and its deterministic
+// StargateWhitelist keeps whitelist and its deterministic
 // response binding for stargate queries.
 //
 // The query can be multi-thread, so we have to use
