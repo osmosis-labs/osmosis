@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v10.2.0
 
+In v10.1.0 a refactor did changed the ordering of certain function calls in a message execution.
+The data read and written to in state were the same, but re-ordered.
+This unknowingly caused gas_used incompatabilities, because you could out-of-gas error at any intermediate step, and end in a different gas_used quantity. cref: https://github.com/cosmos/cosmos-sdk/issues/12788
+
 The v10.2 line reverts the gas limit state incompatabilities introduced due to function ordering.
 Namely this reverts 
 
