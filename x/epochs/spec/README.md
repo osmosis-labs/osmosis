@@ -17,7 +17,6 @@ they can easily be signalled upon such events.
 4. **[Keeper](#keeper)**
 5. **[Hooks](#hooks)**
 6. **[Queries](#queries)**
-7. **[Downtime Recovery](#downtime-recovery)**
 
 ## Concepts
 
@@ -59,7 +58,7 @@ The `epochs` module emits the following events:
 |  ------------| ---------------| -----------------|
 |  epoch\_end  | epoch\_number  | {epoch\_number} |
 
-## Keepers
+## Keeper
 
 ### Keeper functions
 
