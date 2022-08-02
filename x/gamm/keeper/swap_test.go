@@ -275,6 +275,10 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 
 // Test two pools -- one is active and should have swaps allowed,
 // while the other is inactive and should have swaps frozen.
+// As shown in the following test, we can mock a pool by calling
+// `mocks.NewMockPool()`, then adding `EXPECT` statements to
+// match argument calls, add return values, and more.
+// More info at https://github.com/golang/mock
 func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	// Setup test
 	suite.SetupTest()
@@ -290,6 +294,8 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	defer ctrl.Finish()
 	inactivePool := mocks.NewMockPoolI(ctrl)
 	inactivePoolId := gammKeeper.GetNextPoolNumberAndIncrement(suite.Ctx)
+	// Add mock return values for pool -- we need to do this because
+	// mock objects don't have interface functions implemented by default.
 	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
 	inactivePool.EXPECT().GetId().Return(inactivePoolId).AnyTimes()
 	gammKeeper.SetPool(suite.Ctx, inactivePool)
