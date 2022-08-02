@@ -16,7 +16,6 @@
 # * Database performance when synchronizing (will add variables for different DB's after a successful run)
 # * Size on disk for archives when using different databases
 
-go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
 
 export OSMOSISD_PRUNING=nothing
 export OSMOSISD_DB_BACKEND=pebbledb
