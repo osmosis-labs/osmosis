@@ -371,7 +371,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			})
 
 			// Validate developer account balance.
-			developerAccountBalanceAfterHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
+			developerAccountBalanceAfterHook := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
 			osmoutils.DecApproxEq(suite.T(), developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewards.TruncateInt()).ToDec(), developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
 
 			// Validate supply.
