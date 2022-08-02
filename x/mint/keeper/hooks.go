@@ -16,7 +16,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 }
 
 // AfterEpochEnd is a hook which is executed after the end of an epoch.
-// This hook should attempt to mint and distributed coins according to
+// This hook should attempt to mint and distribute coins according to
 // the configuration set via parameters. In addition, it handles the logic
 // for reducing minted coins according to the parameters.
 // For an attempt to mint to occur:
