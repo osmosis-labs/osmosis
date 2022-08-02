@@ -11,31 +11,58 @@
 # if you do not use the ldflags thing you won't use the chosen db for everything, so best use it.
 
 
+# The goal of this script is to provide a way to audit:
+# * Data availability
+# * Database performance when synchronizing (will add variables for different DB's after a successful run)
+# * Size on disk for archives when using different databases
+
+go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
+
 export OSMOSISD_PRUNING=nothing
-export OSMOSISD_DB_BACKEND=goleveldb
+export OSMOSISD_DB_BACKEND=pebbledb
 
 # VERSION THREE
 echo "v3 took" > howlong
 git checkout v3.x
+go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
 osmosisd init speedrun
 wget -O ~/.osmosisd/config/addrbook.json https://quicksync.io/addrbook.osmosis.json
 wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
-time osmosisd start 
-make install
+time osmosisd start --db_backend pebbledb >> howlong
 
 # VERSION FOUR
 echo "v4 took" >> howlong
 git checkout v4.x
-make install
-osmosisd start 
+go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
+time osmosisd start --db_backend pebbledb >> howlong
 
 # VERSION SIX
 echo "v6 took" >> howlong
 git checkout v6.x
-make install
-osmosisd start
+go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
+time osmosisd start --db_backend pebbledb >> howlong
 
 # VERSION SEVEN
 echo "v7 took" >> howlong
 git checkout v7.x
-make install
+go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
+time osmosisd start --db_backend pebbledb >> howlong
+
+# VERSION EIGHT
+echo "v8 took" >> howlong
+git checkout v8.x
+go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
+time osmosisd start --db_backend pebbledb >> howlong
+
+# VERSION NINE
+echo "v9 took" >> howlong
+git checkout v8.x
+go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
+time osmosisd start --db_backend pebbledb
+
+# VERSION TEN
+echo "v10 took" >> howlong
+git checkout v9.x
+go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
+time osmosisd start --db_backend pebbledb
+
