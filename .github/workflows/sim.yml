@@ -16,9 +16,9 @@ jobs:
           go-version: 1.18
       - name: Display go version
         run: go version
-      - name: Run simulation
+      - name: Run full application simulation
         run: |
           make test-sim-app
-      - name: Run simulation determinism
+      - name: Run simulation determinism check
         run: |
           make test-sim-determinism
