@@ -7,19 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/internal/test_helpers"
 )
 
 type StableSwapTestSuite struct {
 	test_helpers.CfmmCommonTestSuite
-}
-
-// Replace with https://github.com/cosmos/cosmos-sdk/blob/master/types/decimal.go#L892-L895
-// once our SDK branch is up to date with it
-func decApproxEq(t *testing.T, exp sdk.Dec, actual sdk.Dec, errTolerance sdk.Dec) {
-	// We want |exp - actual| < errTolerance
-	diff := exp.Sub(actual).Abs()
-	require.True(t, diff.LTE(errTolerance), "expected %s, got %s, maximum errTolerance %s", exp, actual, errTolerance)
 }
 
 func TestCFMMInvariantTwoAssets(t *testing.T) {
@@ -53,15 +46,15 @@ func TestCFMMInvariantTwoAssets(t *testing.T) {
 		xOut := solveCfmm(test.xReserve, test.yReserve, test.yIn)
 
 		k1 := cfmmConstant(test.xReserve.Sub(xOut), test.yReserve.Add(test.yIn))
-		decApproxEq(t, k0, k1, kErrTolerance)
+		osmoutils.DecApproxEq(t, k0, k1, kErrTolerance)
 
 		// using multi-asset cfmm (should be equivalent with u = 1, w = 0)
 		k2 := cfmmConstantMulti(test.xReserve, test.yReserve, sdk.OneDec(), sdk.ZeroDec())
-		decApproxEq(t, k2, k0, kErrTolerance)
+		osmoutils.DecApproxEq(t, k2, k0, kErrTolerance)
 		xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, sdk.ZeroDec(), test.yIn)
 		fmt.Println(xOut2)
 		k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), sdk.OneDec(), sdk.ZeroDec())
-		decApproxEq(t, k2, k3, kErrTolerance)
+		osmoutils.DecApproxEq(t, k2, k3, kErrTolerance)
 	}
 }
 
@@ -103,7 +96,7 @@ func TestCFMMInvariantMultiAssets(t *testing.T) {
 		xOut2 := solveCfmmMulti(test.xReserve, test.yReserve, test.wSumSquares, test.yIn)
 		fmt.Println(xOut2)
 		k3 := cfmmConstantMulti(test.xReserve.Sub(xOut2), test.yReserve.Add(test.yIn), test.uReserve, test.wSumSquares)
-		decApproxEq(t, k2, k3, kErrTolerance)
+		osmoutils.DecApproxEq(t, k2, k3, kErrTolerance)
 	}
 }
 
