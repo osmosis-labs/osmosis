@@ -307,7 +307,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.EpochsKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
 		appKeepers.GAMMKeeper,
-		appKeepers.GAMMKeeper,
 		txfeestypes.FeeCollectorName,
 		txfeestypes.NonNativeFeeCollectorName,
 	)

@@ -42,3 +42,8 @@ type EpochKeeper interface {
 type DistrKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
+
+// TxFeesKeeper defines the expected interface needed to managing transaction fees.
+type TxFeesKeeper interface {
+	GetBaseDenom(ctx sdk.Context) (denom string, err error)
+}

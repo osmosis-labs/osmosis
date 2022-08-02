@@ -287,11 +287,19 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 // The fee is sent to the community pool.
 // Returns nil on success, error otherwise.
 func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) (err error) {
-	totalCost := gaugeCoins.AmountOf(appparams.BaseCoinUnit).Add(fee)
-	accountBalance := k.bk.GetBalance(ctx, address, appparams.BaseCoinUnit).Amount
+	// Send creation fee to community pool
+	feeDenom, err := k.tk.GetBaseDenom(ctx)
+	if err != nil {
+		return err
+	}
+
+	totalCost := gaugeCoins.AmountOf(feeDenom).Add(fee)
+	accountBalance := k.bk.GetBalance(ctx, address, feeDenom).Amount
+
 	if accountBalance.LT(totalCost) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "account's balance of %s (%s) is less than the total cost of the message (%s)", appparams.BaseCoinUnit, accountBalance, totalCost)
 	}
+
 	if err := k.dk.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, fee)), address); err != nil {
 		return err
 	}
