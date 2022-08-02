@@ -41,7 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-<<<<<<< HEAD
 ## [v7.3.0](https://github.com/osmosis-labs/osmosis/releases/tag/v7.3.0)
 
 ### Bug Fixes
@@ -49,79 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [1390](https://github.com/osmosis-labs/osmosis/pull/1390) Upgrade sdk to v0.45.0x-osmo-v7.9, fixing data races with GRPC
 and simulation queries; simulation queries are concurrent with ABCI commit flow
 * [1395](https://github.com/osmosis-labs/osmosis/pull/1395/) Add chain-id to PrepareGenesis command
-=======
-### Breaking Changes
-
-* [#1889](https://github.com/osmosis-labs/osmosis/pull/1825) Add proto responses to gamm LP messages:
-  * MsgJoinPoolResponse: share_out_amount and token_in fields 
-  * MsgExitPoolResponse: token_out field 
-* [#1825](https://github.com/osmosis-labs/osmosis/pull/1825) Fixes Interchain Accounts (host side) by adding it to AppModuleBasics
-* [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
-* [#1994](https://github.com/osmosis-labs/osmosis/pull/1994) Removed bech32ibc module
-* [#2016](https://github.com/osmosis-labs/osmosis/pull/2016) Add fixed 10000 gas cost for each Balancer swap
-* [#2147](https://github.com/osmosis-labs/osmosis/pull/2147) Set MaxAgeNumBlocks in v11 Upgrade Handler to two weeks.
-* [#2193](https://github.com/osmosis-labs/osmosis/pull/2193) Add TwapKeeper to the Osmosis app
-
-#### Golang API breaks
-
-* [#1987](https://github.com/osmosis-labs/osmosis/pull/1987) Remove `GammKeeper.GetNextPoolNumberAndIncrement` in favor of the non-mutative `GammKeeper.GetNextPoolNumber`.
-* [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
-* [#1893](https://github.com/osmosis-labs/osmosis/pull/1893) Change `EpochsKeeper.SetEpochInfo` to `AddEpochInfo`, which has more safety checks with it. (Makes it suitable to be called within upgrades)
-* [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Remove methods that constitute AppModuleSimulation APIs for several modules' AppModules, which implemented no-ops
-* [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Add hourly epochs to `x/epochs` DefaultGenesis.
-* [#1665](https://github.com/osmosis-labs/osmosis/pull/1665) Delete app/App interface, instead use simapp.App
-* [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
-* [#1667](https://github.com/osmosis-labs/osmosis/pull/1673) Move wasm-bindings code out of app package into its own root level package.
-* [#2013](https://github.com/osmosis-labs/osmosis/pull/2013) Make `SetParams`, `SetPool`, `SetTotalLiquidity`, and `SetDenomLiquidity` GAMM APIs private
-* [#1857](https://github.com/osmosis-labs/osmosis/pull/1857) x/mint rename GetLastHalvenEpochNum to GetLastReductionEpochNum
-
-### Features
-
-* [#1312] Stableswap: Createpool logic 
-* [#1230] Stableswap CFMM equations
-* [#1429] solver for multi-asset CFMM
-* [#1539] Superfluid: Combine superfluid and staking query on querying delegation by delegator
-
-### Bug Fixes
-
-* [1930](https://github.com/osmosis-labs/osmosis/pull/1930) Ensure you can't `JoinPoolNoSwap` tokens that are not in the pool
-* [1700](https://github.com/osmosis-labs/osmosis/pull/1700) Upgrade sdk fork with missing snapshot manager fix.
-* [1716](https://github.com/osmosis-labs/osmosis/pull/1716) Fix secondary over-LP shares bug with uneven swap amounts in `CalcJoinPoolShares`.
-* [1759](https://github.com/osmosis-labs/osmosis/pull/1759) Fix pagination filter in incentives query.
-* [1698](https://github.com/osmosis-labs/osmosis/pull/1698) Register wasm snapshotter extension.
-* [1931](https://github.com/osmosis-labs/osmosis/pull/1931) Add explicit check for input denoms to `CalcJoinPoolShares`
-* [2011](https://github.com/osmosis-labs/osmosis/pull/2011) Fix bug in TokenFactory initGenesis, relating to denom creation fee param.
-
-### Improvements
-* [#2214](https://github.com/osmosis-labs/osmosis/pull/2214) Speedup epoch distribution, superfluid component
-
-## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
-
-The Nitrogen release brings with it a number of features enabling further cosmwasm development work in Osmosis.
-It including breaking changes to the GAMM API's, many developer and node operator improvements for Cosmwasm & IBC, along with new txfee and governance features. In addition to various bug fixes and code quality improvements.
-
-#### GAMM API changes
-
-API changes were done to enable more CFMM's to be implemented within the existing framework.
-Integrators will have to update their messages and queries to adapt, please see https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/breaking_changes_notes.md
-
-#### Governance Changes
-
-* [#1191](https://github.com/osmosis-labs/osmosis/pull/1191), [#1555](https://github.com/osmosis-labs/osmosis/pull/1555) Superfluid stakers now have their votes override their validators votes
-* [sdk #239](https://github.com/osmosis-labs/cosmos-sdk/pull/239) Governance can set a distinct voting period for every proposal type.
-
-#### IBC
-
-* [#1535](https://github.com/osmosis-labs/osmosis/pull/1535) Upgrade to [IBC v3](https://github.com/cosmos/ibc-go/releases/tag/v3.0.0)
-* [#1564](https://github.com/osmosis-labs/osmosis/pull/1564) Enable Interchain account host module
-  * See [here](https://github.com/osmosis-labs/osmosis/blob/main/app/upgrades/v9/upgrades.go#L49-L71) for the supported messages
-
-#### Txfees
-
-[#1145](https://github.com/osmosis-labs/osmosis/pull/1145) Non-osmo txfees now get swapped into osmo everyday at epoch, and then distributed to stakers.
-
-#### Cosmwasm
->>>>>>> 3cdfbccd (feat: speedup epoch distribution, superfluid component (#2214))
 
 ## [v7.2.1](https://github.com/osmosis-labs/osmosis/releases/tag/v7.2.1)
 
