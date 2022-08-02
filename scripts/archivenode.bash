@@ -19,6 +19,10 @@
 
 export OSMOSISD_PRUNING=nothing
 export OSMOSISD_DB_BACKEND=pebbledb
+export OSMOSISD_P2P_MAX_NUM_OUTBOUND_PEERS=500
+export OSMOSISD_P2P_MAX_NUM_INBOUND_PEERS=500
+export OSMOSISD_P2P_SEEDS=$(curl -s https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/chain.json | jq -r '[foreach .peers.seeds[] as $item (""; "\($item.id)@\($item.address)")] | join(",")')
+
 
 # VERSION THREE
 echo "v3 took" > howlong
@@ -27,7 +31,6 @@ go mod edit -replace github.com/tendermint/tm-db=github.com/notional-labs/tm-db@
 go mod tidy
 go install -ldflags '-w -s -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb' -tags pebbledb ./...
 osmosisd init speedrun
-wget -O ~/.osmosisd/config/addrbook.json https://quicksync.io/addrbook.osmosis.json
 wget -O ~/.osmosisd/config/genesis.json https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
 time osmosisd start --db_backend pebbledb >> howlong
 
