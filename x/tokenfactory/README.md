@@ -45,7 +45,7 @@ message MsgCreateDenom {
 ### Mint
 
 Minting of a specific denom is only allowed for the creator of the denom
-registered during `CreateDenom`.
+registered during `CreateDenom`, or the current admin.
 
 ```go
 message MsgMint {
@@ -67,7 +67,7 @@ message MsgMint {
 ### Burn
 
 Burning of a specific denom is only allowed for the creator of the denom
-registered during `CreateDenom`.
+registered during `CreateDenom`, or the current admin.
 
 ```go
 message MsgBurn {
@@ -88,8 +88,8 @@ message MsgBurn {
 
 ### ChangeAdmin
 
-Burning of a specific denom is only allowed for the creator of the denom
-registered during `CreateDenom`.
+Change the admin is only allowed for the creator of the denom
+registered during `CreateDenom`, or the current admin.
 
 ```go
 message MsgChangeAdmin {
