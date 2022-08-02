@@ -285,14 +285,14 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	activePoolId := suite.PrepareBalancerPool()
 
 	// Setup mock inactive pool
-	k := suite.App.GAMMKeeper
+	gammKeeper := suite.App.GAMMKeeper
 	ctrl := gomock.NewController(suite.T())
 	defer ctrl.Finish()
 	inactivePool := mocks.NewMockPoolI(ctrl)
-	inactivePoolId := k.GetNextPoolNumberAndIncrement(suite.Ctx)
+	inactivePoolId := gammKeeper.GetNextPoolNumberAndIncrement(suite.Ctx)
 	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
 	inactivePool.EXPECT().GetId().Return(inactivePoolId).AnyTimes()
-	k.SetPool(suite.Ctx, inactivePool)
+	gammKeeper.SetPool(suite.Ctx, inactivePool)
 
 	type testCase struct {
 		poolId     uint64
@@ -305,8 +305,8 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 
 	for _, tc := range testCases {
 		// Check swaps
-		_, swapInErr := k.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, testCoin, "bar", sdk.ZeroInt())
-		_, swapOutErr := k.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
+		_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, testCoin, "bar", sdk.ZeroInt())
+		_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
 		if tc.expectPass {
 			suite.Require().NoError(swapInErr)
 			suite.Require().NoError(swapOutErr)
