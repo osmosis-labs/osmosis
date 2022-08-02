@@ -346,6 +346,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			mintKeeper := app.MintKeeper
 			distrKeeper := app.DistrKeeper
 			accountKeeper := app.AccountKeeper
+			bankKeeper := app.BankKeeper
 
 			// Pre-set parameters and minter.
 			mintKeeper.SetParams(ctx, mintParams)
