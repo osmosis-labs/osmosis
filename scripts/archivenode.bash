@@ -22,7 +22,7 @@ export OSMOSISD_DB_BACKEND=pebbledb
 export OSMOSISD_P2P_MAX_NUM_OUTBOUND_PEERS=500
 export OSMOSISD_P2P_MAX_NUM_INBOUND_PEERS=500
 export OSMOSISD_P2P_SEEDS=$(curl -s https://raw.githubusercontent.com/cosmos/chain-registry/master/osmosis/chain.json | jq -r '[foreach .peers.seeds[] as $item (""; "\($item.id)@\($item.address)")] | join(",")')
-export OSMOSISD_P2P_LADDR=2001
+export OSMOSISD_P2P_LADDR=tcp://0.0.0.0:2001
 
 # VERSION THREE
 echo "v3 took" > howlong
