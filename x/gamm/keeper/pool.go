@@ -9,7 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
@@ -196,19 +195,42 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // 	return nil
 // }
 
+<<<<<<< HEAD
 // SetNextPoolNumber sets next pool number.
 func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolNumber})
-	store.Set(types.KeyNextGlobalPoolNumber, bz)
+=======
+// GetPoolDenom retrieves the pool based on PoolId and
+// returns the coin denoms that it holds.
+func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	denoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
+	return denoms, err
 }
 
+// setNextPoolId sets next pool Id.
+func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
+>>>>>>> 8cac0906 (gamm keeper delete obsolete files (#2160))
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolId})
+	store.Set(types.KeyNextGlobalPoolId, bz)
+}
+
+<<<<<<< HEAD
 // GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
 func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 	var poolNumber uint64
+=======
+// GetNextPoolId returns the next pool Id.
+func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
+	var nextPoolId uint64
+>>>>>>> 8cac0906 (gamm keeper delete obsolete files (#2160))
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(types.KeyNextGlobalPoolNumber)
+	bz := store.Get(types.KeyNextGlobalPoolId)
 	if bz == nil {
 		panic(fmt.Errorf("pool has not been initialized -- Should have been done in InitGenesis"))
 	} else {
@@ -222,6 +244,7 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 		poolNumber = val.GetValue()
 	}
 
+<<<<<<< HEAD
 	k.SetNextPoolNumber(ctx, poolNumber+1)
 	return poolNumber
 }
@@ -253,3 +276,11 @@ func (k *Keeper) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []u
 	}
 	return nil
 }
+=======
+// getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
+func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
+	nextPoolId := k.GetNextPoolId(ctx)
+	k.setNextPoolId(ctx, nextPoolId+1)
+	return nextPoolId
+}
+>>>>>>> 8cac0906 (gamm keeper delete obsolete files (#2160))

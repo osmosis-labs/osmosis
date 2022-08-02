@@ -1199,7 +1199,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		return updatedCases
 	}
 
-	for poolNum, tc := range tests {
+	for poolId, tc := range tests {
 		paramsCopy := tc.params
 		// First we create the initial pool assets we will use
 		initialPoolAssets := make([]balancer.PoolAsset, len(paramsCopy.InitialPoolWeights))
@@ -1211,12 +1211,12 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 			initialPoolAssets[i] = assetCopy
 		}
 		// Initialize the pool
-		pacc, err := balancer.NewBalancerPool(uint64(poolNum), balancer.PoolParams{
+		pacc, err := balancer.NewBalancerPool(uint64(poolId), balancer.PoolParams{
 			SwapFee:                  defaultSwapFee,
 			ExitFee:                  defaultExitFee,
 			SmoothWeightChangeParams: &tc.params,
 		}, initialPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
-		require.NoError(t, err, "poolNumber %v", poolNum)
+		require.NoError(t, err, "poolId %v", poolId)
 
 		// Consistency check that SmoothWeightChangeParams params are set
 		require.NotNil(t, pacc.PoolParams.SmoothWeightChangeParams)
@@ -1229,8 +1229,8 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 
 			for assetNum, asset := range pacc.GetAllPoolAssets() {
 				require.Equal(t, testCase.expectedWeights[assetNum], asset.Weight,
-					"Didn't get the expected weights, poolNumber %v, caseNumber %v, assetNumber %v",
-					poolNum, caseNum, assetNum)
+					"Didn't get the expected weights, poolId %v, caseNumber %v, assetNumber %v",
+					poolId, caseNum, assetNum)
 
 				totalWeight = totalWeight.Add(asset.Weight)
 			}

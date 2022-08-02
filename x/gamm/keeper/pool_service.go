@@ -105,7 +105,11 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
+<<<<<<< HEAD
 	poolId := k.GetNextPoolNumberAndIncrement(ctx)
+=======
+	poolId := k.getNextPoolIdAndIncrement(ctx)
+>>>>>>> 8cac0906 (gamm keeper delete obsolete files (#2160))
 	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
 		return 0, err

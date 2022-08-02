@@ -74,9 +74,10 @@ func (m *Params) GetPoolCreationFee() github_com_cosmos_cosmos_sdk_types.Coins {
 
 // GenesisState defines the gamm module's genesis state.
 type GenesisState struct {
-	Pools          []*types1.Any `protobuf:"bytes,1,rep,name=pools,proto3" json:"pools,omitempty"`
-	NextPoolNumber uint64        `protobuf:"varint,2,opt,name=next_pool_number,json=nextPoolNumber,proto3" json:"next_pool_number,omitempty"`
-	Params         Params        `protobuf:"bytes,3,opt,name=params,proto3" json:"params"`
+	Pools []*types1.Any `protobuf:"bytes,1,rep,name=pools,proto3" json:"pools,omitempty"`
+	// will be renamed to next_pool_id in an upcoming version
+	NextPoolNumber uint64 `protobuf:"varint,2,opt,name=next_pool_number,json=nextPoolNumber,proto3" json:"next_pool_number,omitempty"`
+	Params         Params `protobuf:"bytes,3,opt,name=params,proto3" json:"params"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }

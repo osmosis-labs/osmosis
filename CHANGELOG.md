@@ -59,11 +59,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Bug Fixes
 * [2011](https://github.com/osmosis-labs/osmosis/pull/2011) Fix bug in TokenFactory initGenesis, relating to denom creation fee param.
 
+<<<<<<< HEAD
 #### Improvements
 * [#2130](https://github.com/osmosis-labs/osmosis/pull/2130) Introduce errors in mint types.
 * [#2000](https://github.com/osmosis-labs/osmosis/pull/2000) Update import paths from v9 to v10.
 
 #### Golang API breaks
+=======
+* [#2160](https://github.com/osmosis-labs/osmosis/pull/2160) Clean up GAMM keeper (move `x/gamm/keeper/params.go` contents into `x/gamm/keeper/keeper.go`, replace all uses of `PoolNumber` with `PoolId`, move `SetStableSwapScalingFactors` to stableswap package, and delete marshal_bench_test.go and grpc_query_internal_test.go)
+* [#1987](https://github.com/osmosis-labs/osmosis/pull/1987) Remove `GammKeeper.GetNextPoolNumberAndIncrement` in favor of the non-mutative `GammKeeper.GetNextPoolNumber`.
+>>>>>>> 8cac0906 (gamm keeper delete obsolete files (#2160))
 * [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
 * [#2030](https://github.com/osmosis-labs/osmosis/pull/2030) Rename lockup keeper `ResetAllLocks` to `InitializeAllLocks` and `ResetAllSyntheticLocks` to `InitializeAllSyntheticLocks`.
 

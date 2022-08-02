@@ -120,7 +120,11 @@ func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
+<<<<<<< HEAD
 		NumPools: q.Keeper.GetNextPoolNumberAndIncrement(sdkCtx) - 1,
+=======
+		NumPools: q.Keeper.GetNextPoolId(sdkCtx) - 1,
+>>>>>>> 8cac0906 (gamm keeper delete obsolete files (#2160))
 	}, nil
 }
 
