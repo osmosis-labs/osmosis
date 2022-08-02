@@ -1,18 +1,16 @@
 package types
 
 import (
-	"fmt"
-	"strings"
+	"encoding/json"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/require"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+	"github.com/stretchr/testify/require"
 
 	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 )
@@ -888,95 +886,11 @@ func TestAuthzMsg(t *testing.T) {
 	)
 
 	testCases := []struct {
-		name                       string
-		expectedGrantSignByteMsg   string
-		expectedRevokeSignByteMsg  string
-		expectedExecStrSignByteMsg string
-		gammMsg                    sdk.Msg
+		name    string
+		gammMsg sdk.Msg
 	}{
 		{
 			name: "MsgExitSwapExternAmountOut",
-			expectedGrantSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgGrant",
-					  "value":{
-						 "grant":{
-							"authorization":{
-							   "type":"cosmos-sdk/GenericAuthorization",
-							   "value":{
-								  "msg":"/osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn"
-							   }
-							},
-							"expiration":"0001-01-01T02:01:01.000000001Z"
-						 },
-						 "grantee":"%s",
-						 "granter":"%s"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedRevokeSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgRevoke",
-					  "value":{
-						 "grantee":"%s",
-						 "granter":"%s",
-						 "msg_type_url":"/osmosis.gamm.v1beta1.MsgExitSwapShareAmountIn"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgExec",
-					  "value":{
-						 "grantee":"%s",
-						 "msgs":[
-							{
-							   "type":"osmosis/gamm/exit-swap-share-amount-in",
-							   "value":{
-								  "pool_id":"1",
-								  "sender":"%s",
-								  "share_in_amount":"100",
-								  "token_out_denom":"test",
-								  "token_out_min_amount":"100"
-							   }
-							}
-						 ]
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, addr1),
 			gammMsg: &MsgExitSwapShareAmountIn{
 				Sender:            addr1,
 				PoolId:            1,
@@ -987,89 +901,6 @@ func TestAuthzMsg(t *testing.T) {
 		},
 		{
 			name: `MsgExitSwapExternAmountOut`,
-			expectedGrantSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgGrant",
-					  "value":{
-						 "grant":{
-							"authorization":{
-							   "type":"cosmos-sdk/GenericAuthorization",
-							   "value":{
-								  "msg":"/osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut"
-							   }
-							},
-							"expiration":"0001-01-01T02:01:01.000000001Z"
-						 },
-						 "grantee":"%s",
-						 "granter":"%s"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedRevokeSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgRevoke",
-					  "value":{
-						 "grantee":"%s",
-						 "granter":"%s",
-						 "msg_type_url":"/osmosis.gamm.v1beta1.MsgExitSwapExternAmountOut"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgExec",
-					  "value":{
-						 "grantee":"%s",
-						 "msgs":[
-							{
-							   "type":"osmosis/gamm/exit-swap-extern-amount-out",
-							   "value":{
-								  "pool_id":"1",
-								  "sender":"%s",
-								  "share_in_max_amount":"1",
-								  "token_out":{
-									 "amount":"1",
-									 "denom":"stake"
-								  }
-							   }
-							}
-						 ]
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, addr1),
 			gammMsg: &MsgExitSwapExternAmountOut{
 				Sender:           addr1,
 				PoolId:           1,
@@ -1079,91 +910,6 @@ func TestAuthzMsg(t *testing.T) {
 		},
 		{
 			name: "MsgExitPool",
-			expectedGrantSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgGrant",
-					  "value":{
-						 "grant":{
-							"authorization":{
-							   "type":"cosmos-sdk/GenericAuthorization",
-							   "value":{
-								  "msg":"/osmosis.gamm.v1beta1.MsgExitPool"
-							   }
-							},
-							"expiration":"0001-01-01T02:01:01.000000001Z"
-						 },
-						 "grantee":"%s",
-						 "granter":"%s"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedRevokeSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgRevoke",
-					  "value":{
-						 "grantee":"%s",
-						 "granter":"%s",
-						 "msg_type_url":"/osmosis.gamm.v1beta1.MsgExitPool"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgExec",
-					  "value":{
-						 "grantee":"%s",
-						 "msgs":[
-							{
-							   "type":"osmosis/gamm/exit-pool",
-							   "value":{
-								  "pool_id":"1",
-								  "sender":"%s",
-								  "share_in_amount":"100",
-								  "token_out_mins":[
-									 {
-										"amount":"1",
-										"denom":"stake"
-									 }
-								  ]
-							   }
-							}
-						 ]
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, addr1),
 			gammMsg: &MsgExitPool{
 				Sender:        addr1,
 				PoolId:        1,
@@ -1173,91 +919,6 @@ func TestAuthzMsg(t *testing.T) {
 		},
 		{
 			name: "MsgJoinPool",
-			expectedGrantSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgGrant",
-					  "value":{
-						 "grant":{
-							"authorization":{
-							   "type":"cosmos-sdk/GenericAuthorization",
-							   "value":{
-								  "msg":"/osmosis.gamm.v1beta1.MsgJoinPool"
-							   }
-							},
-							"expiration":"0001-01-01T02:01:01.000000001Z"
-						 },
-						 "grantee":"%s",
-						 "granter":"%s"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedRevokeSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgRevoke",
-					  "value":{
-						 "grantee":"%s",
-						 "granter":"%s",
-						 "msg_type_url":"/osmosis.gamm.v1beta1.MsgJoinPool"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgExec",
-					  "value":{
-						 "grantee":"%s",
-						 "msgs":[
-							{
-							   "type":"osmosis/gamm/join-pool",
-							   "value":{
-								  "pool_id":"1",
-								  "sender":"%s",
-								  "share_out_amount":"1",
-								  "token_in_maxs":[
-									 {
-										"amount":"1",
-										"denom":"stake"
-									 }
-								  ]
-							   }
-							}
-						 ]
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, addr1),
 			gammMsg: &MsgJoinPool{
 				Sender:         addr1,
 				PoolId:         1,
@@ -1267,89 +928,6 @@ func TestAuthzMsg(t *testing.T) {
 		},
 		{
 			name: "MsgJoinSwapExternAmountIn",
-			expectedGrantSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgGrant",
-					  "value":{
-						 "grant":{
-							"authorization":{
-							   "type":"cosmos-sdk/GenericAuthorization",
-							   "value":{
-								  "msg":"/osmosis.gamm.v1beta1.MsgJoinSwapExternAmountIn"
-							   }
-							},
-							"expiration":"0001-01-01T02:01:01.000000001Z"
-						 },
-						 "grantee":"%s",
-						 "granter":"%s"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedRevokeSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgRevoke",
-					  "value":{
-						 "grantee":"%s",
-						 "granter":"%s",
-						 "msg_type_url":"/osmosis.gamm.v1beta1.MsgJoinSwapExternAmountIn"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgExec",
-					  "value":{
-						 "grantee":"%s",
-						 "msgs":[
-							{
-							   "type":"osmosis/gamm/join-swap-extern-amount-in",
-							   "value":{
-								  "pool_id":"1",
-								  "sender":"%s",
-								  "share_out_min_amount":"1",
-								  "token_in":{
-									 "amount":"1",
-									 "denom":"stake"
-								  }
-							   }
-							}
-						 ]
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, addr1),
 			gammMsg: &MsgJoinSwapExternAmountIn{
 				Sender:            addr1,
 				PoolId:            1,
@@ -1359,188 +937,6 @@ func TestAuthzMsg(t *testing.T) {
 		},
 		{
 			name: "MsgJoinSwapShareAmountOut",
-			expectedGrantSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgGrant",
-					  "value":{
-						 "grant":{
-							"authorization":{
-							   "type":"cosmos-sdk/GenericAuthorization",
-							   "value":{
-								  "msg":"/osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOut"
-							   }
-							},
-							"expiration":"0001-01-01T02:01:01.000000001Z"
-						 },
-						 "grantee":"%s",
-						 "granter":"%s"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedRevokeSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgRevoke",
-					  "value":{
-						 "grantee":"%s",
-						 "granter":"%s",
-						 "msg_type_url":"/osmosis.gamm.v1beta1.MsgJoinSwapShareAmountOut"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgExec",
-					  "value":{
-						 "grantee":"%s",
-						 "msgs":[
-							{
-							   "type":"osmosis/gamm/join-swap-share-amount-out",
-							   "value":{
-								  "pool_id":"1",
-								  "sender":"%s",
-								  "share_out_amount":"1",
-								  "token_in_denom":"denom",
-								  "token_in_max_amount":"1"
-							   }
-							}
-						 ]
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, addr1),
-			gammMsg: &MsgJoinSwapShareAmountOut{
-				Sender:           addr1,
-				PoolId:           1,
-				TokenInDenom:     "denom",
-				ShareOutAmount:   sdk.NewInt(1),
-				TokenInMaxAmount: sdk.NewInt(1),
-			},
-		},
-		{
-			name: "MsgSwapExactAmountIn",
-			expectedGrantSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgGrant",
-					  "value":{
-						 "grant":{
-							"authorization":{
-							   "type":"cosmos-sdk/GenericAuthorization",
-							   "value":{
-								  "msg":"/osmosis.gamm.v1beta1.MsgSwapExactAmountIn"
-							   }
-							},
-							"expiration":"0001-01-01T02:01:01.000000001Z"
-						 },
-						 "grantee":"%s",
-						 "granter":"%s"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedRevokeSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgRevoke",
-					  "value":{
-						 "grantee":"%s",
-						 "granter":"%s",
-						 "msg_type_url":"/osmosis.gamm.v1beta1.MsgSwapExactAmountIn"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgExec",
-					  "value":{
-						 "grantee":"%s",
-						 "msgs":[
-							{
-							   "type":"osmosis/gamm/swap-exact-amount-in",
-							   "value":{
-								  "routes":[
-									 {
-										"token_out_denom":"test"
-									 },
-									 {
-										"pool_id":"1",
-										"token_out_denom":"test2"
-									 }
-								  ],
-								  "sender":"%s",
-								  "token_in":{
-									 "amount":"1",
-									 "denom":"stake"
-								  },
-								  "token_out_min_amount":"1"
-							   }
-							}
-						 ]
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, addr1),
 			gammMsg: &MsgSwapExactAmountIn{
 				Sender: addr1,
 				Routes: []SwapAmountInRoute{{
@@ -1556,97 +952,6 @@ func TestAuthzMsg(t *testing.T) {
 		},
 		{
 			name: "MsgSwapExactAmountOut",
-			expectedGrantSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgGrant",
-					  "value":{
-						 "grant":{
-							"authorization":{
-							   "type":"cosmos-sdk/GenericAuthorization",
-							   "value":{
-								  "msg":"/osmosis.gamm.v1beta1.MsgSwapExactAmountOut"
-							   }
-							},
-							"expiration":"0001-01-01T02:01:01.000000001Z"
-						 },
-						 "grantee":"%s",
-						 "granter":"%s"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedRevokeSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgRevoke",
-					  "value":{
-						 "grantee":"%s",
-						 "granter":"%s",
-						 "msg_type_url":"/osmosis.gamm.v1beta1.MsgSwapExactAmountOut"
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, mockGranter),
-			expectedExecStrSignByteMsg: fmt.Sprintf(`{
-				"account_number":"1",
-				"chain_id":"foo",
-				"fee":{
-				   "amount":[],
-				   "gas":"0"
-				},
-				"memo":"memo",
-				"msgs":[
-				   {
-					  "type":"cosmos-sdk/MsgExec",
-					  "value":{
-						 "grantee":"%s",
-						 "msgs":[
-							{
-							   "type":"osmosis/gamm/swap-exact-amount-out",
-							   "value":{
-								  "routes":[
-									 {
-										"token_in_denom":"test"
-									 },
-									 {
-										"pool_id":"1",
-										"token_in_denom":"test2"
-									 }
-								  ],
-								  "sender":"%s",
-								  "token_in_max_amount":"1",
-								  "token_out":{
-									 "amount":"1",
-									 "denom":"stake"
-								  }
-							   }
-							}
-						 ]
-					  }
-				   }
-				],
-				"sequence":"1",
-				"timeout_height":"1"
-			 }`, mockGrantee, addr1),
 			gammMsg: &MsgSwapExactAmountOut{
 				Sender: addr1,
 				Routes: []SwapAmountOutRoute{{
@@ -1663,41 +968,35 @@ func TestAuthzMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			var (
+				mockMsgGrant  authz.MsgGrant
+				mockMsgRevoke authz.MsgRevoke
+				mockMsgExec   authz.MsgExec
+			)
+
 			// Authz: Grant Msg
 			typeURL := sdk.MsgTypeURL(tc.gammMsg)
 			grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
 			require.NoError(t, err)
-			msgGrant := &authz.MsgGrant{Granter: mockGranter, Grantee: mockGrantee, Grant: grant}
 
-			require.Equal(t,
-				formatJsonStr(tc.expectedGrantSignByteMsg),
-				string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgGrant}, "memo")),
-			)
+			msgGrant := authz.MsgGrant{Granter: mockGranter, Grantee: mockGrantee, Grant: grant}
+			msgGrantBytes := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgGrant)))
+			err = authzcodec.ModuleCdc.UnmarshalJSON(msgGrantBytes, &mockMsgGrant)
+			require.NoError(t, err)
 
 			// Authz: Revoke Msg
-			msgRevoke := &authz.MsgRevoke{Granter: mockGranter, Grantee: mockGrantee, MsgTypeUrl: typeURL}
-
-			require.Equal(t,
-				formatJsonStr(tc.expectedRevokeSignByteMsg),
-				string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgRevoke}, "memo")),
-			)
+			msgRevoke := authz.MsgRevoke{Granter: mockGranter, Grantee: mockGrantee, MsgTypeUrl: typeURL}
+			msgRevokeByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgRevoke)))
+			err = authzcodec.ModuleCdc.UnmarshalJSON(msgRevokeByte, &mockMsgRevoke)
+			require.NoError(t, err)
 
 			// Authz: Exec Msg
 			msgAny, _ := cdctypes.NewAnyWithValue(tc.gammMsg)
-			msgExec := &authz.MsgExec{Grantee: mockGrantee, Msgs: []*cdctypes.Any{msgAny}}
-
-			require.Equal(t,
-				formatJsonStr(tc.expectedExecStrSignByteMsg),
-				string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{msgExec}, "memo")),
-			)
+			msgExec := authz.MsgExec{Grantee: mockGrantee, Msgs: []*cdctypes.Any{msgAny}}
+			execMsgByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgExec)))
+			err = authzcodec.ModuleCdc.UnmarshalJSON(execMsgByte, &mockMsgExec)
+			require.NoError(t, err)
+			require.Equal(t, msgExec.Msgs[0].Value, mockMsgExec.Msgs[0].Value)
 		})
 	}
-}
-
-func formatJsonStr(jsonStrMsg string) string {
-	ans := strings.ReplaceAll(jsonStrMsg, "\n", "")
-	ans = strings.ReplaceAll(ans, "\t", "")
-	ans = strings.ReplaceAll(ans, " ", "")
-
-	return ans
 }
