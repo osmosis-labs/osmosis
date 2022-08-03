@@ -166,6 +166,7 @@ docs:
 	@echo
 	@echo "=========== Generate Complete ============"
 	@echo
+.PHONY: docs
 
 protoVer=v0.7
 protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
