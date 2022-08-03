@@ -25,15 +25,15 @@ type KeeperTestSuite struct {
 	queryClient types.QueryClient
 }
 
-type hooksMock struct {
+type mintHooksMock struct {
 	hookCallCount int
 }
 
-func (hm *hooksMock) AfterDistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) {
+func (hm *mintHooksMock) AfterDistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) {
 	hm.hookCallCount++
 }
 
-var _ types.MintHooks = (*hooksMock)(nil)
+var _ types.MintHooks = (*mintHooksMock)(nil)
 
 var (
 	testAddressOne   = sdk.AccAddress([]byte("addr1---------------"))
@@ -211,7 +211,7 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			// about the results of the call to DistributeMintedCoin.
 			// The goal is to assert that AfterDistributeMintedCoin
 			// is called once.
-			mintKeeper.SetMintHooksUnsafe(&hooksMock{})
+			mintKeeper.SetMintHooksUnsafe(&mintHooksMock{})
 
 			mintAmount := tc.mintCoin.Amount.ToDec()
 
@@ -233,7 +233,7 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			suite.Require().NoError(err)
 
 			// validate that AfterDistributeMintedCoin hook was called once.
-			suite.Require().Equal(1, mintKeeper.GetMintHooksUnsafe().(*hooksMock).hookCallCount)
+			suite.Require().Equal(1, mintKeeper.GetMintHooksUnsafe().(*mintHooksMock).hookCallCount)
 
 			// validate distributions to fee collector.
 			feeCollectorBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(authtypes.FeeCollectorName), sdk.DefaultBondDenom).Amount.ToDec()
