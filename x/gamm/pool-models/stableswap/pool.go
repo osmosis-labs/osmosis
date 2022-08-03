@@ -21,6 +21,12 @@ var _ types.PoolI = &Pool{}
 // * FutureGovernor is valid
 // * poolID doesn't already exist
 func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, scalingFactors []uint64, futureGovernor string) (Pool, error) {
+	if len(scalingFactors) == 0 {
+		scalingFactors = []uint64{1, 1}
+	} else if scalingFactors[0] == 0 || scalingFactors[1] == 0 {
+		return Pool{}, types.ErrInvalidStableswapScalingFactors
+	}
+
 	pool := Pool{
 		Address:            types.NewPoolAddress(poolId).String(),
 		Id:                 poolId,

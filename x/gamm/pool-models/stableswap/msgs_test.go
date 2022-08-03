@@ -114,25 +114,9 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 			expectPass: false,
 		},
 		{
-			name: "nil scaling factors",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
-				msg.ScalingFactors = nil
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
 			name: "scaling factors with invalid lenght",
 			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
 				msg.ScalingFactors = []uint64{1, 2, 3}
-				return msg
-			}),
-			expectPass: false,
-		},
-		{
-			name: "scaling factors has zero value",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
-				msg.ScalingFactors = []uint64{0, 1}
 				return msg
 			}),
 			expectPass: false,
