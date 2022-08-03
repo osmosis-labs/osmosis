@@ -632,7 +632,6 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 
 	testCases := []testCase{
 		{time.Unix(1000, 0), true},
-		// {time.Unix(2000, 0), true},
 	}
 
 	for _, tc := range testCases {
