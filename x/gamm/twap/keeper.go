@@ -23,5 +23,5 @@ func NewKeeper(storeKey sdk.StoreKey, transientKey *sdk.TransientStoreKey, param
 
 // TODO: make this read from a parameter, or hardcode it.
 func (k *Keeper) PruneEpochIdentifier(ctx sdk.Context) string {
-	return "daily"
+	return "day"
 }
