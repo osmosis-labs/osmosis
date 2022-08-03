@@ -289,7 +289,7 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 func (suite *KeeperTestSuite) TestExitPool_Events() {
 	const (
 		tokenOutMinAmount = 1
-		shareIn          = 110
+		shareIn           = 110
 	)
 
 	testcases := map[string]struct {
@@ -302,14 +302,14 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 	}{
 		"successful exit": {
 			poolId:                        1,
-			shareInAmount:                 sdk.NewInt(shareOut),
+			shareInAmount:                 sdk.NewInt(shareIn),
 			tokenOutMins:                  sdk.NewCoins(),
 			expectedRemoveLiquidityEvents: 1,
 			expectedMessageEvents:         3, // 1 gamm + 2 tendermint.
 		},
 		"invalid tokenOutMins": {
 			poolId:        1,
-			shareInAmount: sdk.NewInt(shareOut),
+			shareInAmount: sdk.NewInt(shareIn),
 			tokenOutMins:  sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenOutMinAmount))),
 			expectError:   true,
 		},
@@ -329,7 +329,7 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 			joinPoolResponse, err := msgServer.JoinPool(sdk.WrapSDKContext(ctx), &types.MsgJoinPool{
 				Sender:         sender,
 				PoolId:         tc.poolId,
-				ShareOutAmount: sdk.NewInt(shareOut),
+				ShareOutAmount: sdk.NewInt(shareIn),
 				TokenInMaxs: sdk.NewCoins(
 					sdk.NewCoin("foo", sdk.NewInt(int64Max)),
 					sdk.NewCoin("bar", sdk.NewInt(int64Max)),
