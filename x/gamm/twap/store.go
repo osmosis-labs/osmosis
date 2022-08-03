@@ -141,5 +141,5 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 		}
 	}
 	return types.TwapRecord{}, fmt.Errorf("TWAP not found, but there are other twaps available for this time."+
-		" The provided asset0denom and asset1denom (%s, %s) are correct, and in order (asset0 > asset1)?", asset0Denom, asset1Denom)
+		" Were provided asset0denom and asset1denom (%s, %s) are correct, and in order (asset0 > asset1)?", asset0Denom, asset1Denom)
 }
