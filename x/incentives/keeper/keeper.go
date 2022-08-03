@@ -23,10 +23,11 @@ type Keeper struct {
 	lk         types.LockupKeeper
 	ek         types.EpochKeeper
 	dk         types.DistrKeeper
+	tk         types.TxFeesKeeper
 }
 
 // NewKeeper returns a new instance of the incentive module keeper struct.
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, dk types.DistrKeeper) *Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, dk types.DistrKeeper, txfk types.TxFeesKeeper) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
@@ -39,6 +40,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Sub
 		lk:         lk,
 		ek:         ek,
 		dk:         dk,
+		tk:         txfk,
 	}
 }
 
