@@ -985,6 +985,17 @@ It consists of the following attributes:
 
 TBD
 
+It consists of the following attributes:
+
+* `sdk.AttributeKeyModule` - "module"
+  * The value is the module's name - "gamm".
+* `sdk.AttributeKeySender`
+  * The value is the address of the sender who created the swap message.
+* `types.AttributeKeyPoolId`
+  * The value is the pool id of the pool where swap occurs.
+* `types.AttributeKeyTokensOut`
+  * The value is the string representation of the tokens being swapped out.
+
 ### `types.TypeEvtPoolCreated`
 
 TBD

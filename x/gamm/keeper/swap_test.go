@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				suite.NoError(err, "test: %v", test.name)
 				suite.True(tokenOutAmount.Equal(test.param.expectedTokenOut), "test: %v", test.name)
 
-				assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, 1)
+				suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, 1)
 
 				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 				suite.NoError(err, "test: %v", test.name)
@@ -205,7 +205,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 					"test: %v\n expect_eq actual: %s, expected: %s",
 					test.name, tokenInAmount, test.param.expectedTokenInAmount)
 
-				assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, 1)
+				suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, 1)
 
 				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
 				suite.NoError(err, "test: %v", test.name)

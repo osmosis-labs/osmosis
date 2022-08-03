@@ -140,3 +140,57 @@ func (suite *GammEventsTestSuite) TestEmitAddLiquidityEvent() {
 		})
 	}
 }
+
+func (suite *GammEventsTestSuite) TestEmitRemoveLiquidityEvent() {
+	testcases := map[string]struct {
+		ctx             sdk.Context
+		testAccountAddr sdk.AccAddress
+		poolId          uint64
+		tokensOut       sdk.Coins
+	}{
+		"basic valid": {
+			ctx:             suite.CreateTestContext(),
+			testAccountAddr: sdk.AccAddress([]byte(addressString)),
+			poolId:          1,
+			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(1234))),
+		},
+		"context with no event manager": {
+			ctx: sdk.Context{},
+		},
+		"valid with multiple tokens out": {
+			ctx:             suite.CreateTestContext(),
+			testAccountAddr: sdk.AccAddress([]byte(addressString)),
+			poolId:          200,
+			tokensOut:       sdk.NewCoins(sdk.NewCoin(testDenomA, sdk.NewInt(12)), sdk.NewCoin(testDenomB, sdk.NewInt(99))),
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			expectedEvents := sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtPoolExited,
+					sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+					sdk.NewAttribute(sdk.AttributeKeySender, tc.testAccountAddr.String()),
+					sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(tc.poolId, 10)),
+					sdk.NewAttribute(types.AttributeKeyTokensOut, tc.tokensOut.String()),
+				),
+			}
+
+			hasNoEventManager := tc.ctx.EventManager() == nil
+
+			// System under test.
+			events.EmitRemoveLiquidityEvent(tc.ctx, tc.testAccountAddr, tc.poolId, tc.tokensOut)
+
+			// Assertions
+			if hasNoEventManager {
+				// If there is no event manager on context, this is a no-op.
+				return
+			}
+
+			eventManager := tc.ctx.EventManager()
+			actualEvents := eventManager.Events()
+			suite.Equal(expectedEvents, actualEvents)
+		})
+	}
+}
