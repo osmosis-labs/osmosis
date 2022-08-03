@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use cw_storage_plus::{Item, Map};
 
+pub const RESET_TIME: u64 = 60 * 60 * 24 * 7;
+
 pub enum FlowType {
     In,
     Out,
@@ -17,12 +19,27 @@ pub struct Flow {
 }
 
 impl Flow {
-    pub fn new(inflow: impl Into<u128>, outflow: impl Into<u128>) -> Self {
+    pub fn new(inflow: impl Into<u128>, outflow: impl Into<u128>, now: Timestamp) -> Self {
         Self {
             inflow: inflow.into(),
             outflow: outflow.into(),
-            period_end: Timestamp::from_nanos(1),
+            period_end: now.plus_seconds(RESET_TIME),
         }
+    }
+
+    pub fn balance(&self) -> u128 {
+        self.inflow.abs_diff(self.outflow)
+    }
+
+    pub fn is_expired(&self, now: Timestamp) -> bool {
+        self.period_end < now
+    }
+
+    // Mutating methods
+    pub fn expire(&mut self, now: Timestamp) {
+        self.inflow = 0;
+        self.outflow = 0;
+        self.period_end = now.plus_seconds(RESET_TIME);
     }
 
     pub fn add_flow(&mut self, direction: FlowType, value: u128) {
@@ -30,10 +47,6 @@ impl Flow {
             FlowType::In => self.inflow = self.inflow.saturating_add(value),
             FlowType::Out => self.outflow = self.outflow.saturating_add(value),
         }
-    }
-
-    pub fn volume(&self) -> u128 {
-        self.inflow.abs_diff(self.outflow)
     }
 }
 
@@ -43,7 +56,8 @@ pub struct Quota {
 }
 
 impl Quota {
-    pub fn apply(&self, total_value: &u128) -> u128 {
+    /// Calculates the max capacity based on the total value of the channel
+    pub fn capacity_at(&self, total_value: &u128) -> u128 {
         total_value * (self.max_percentage as u128) / 100_u128
     }
 }
