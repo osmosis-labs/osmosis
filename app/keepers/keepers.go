@@ -260,6 +260,19 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 
+	txFeesKeeper := txfeeskeeper.NewKeeper(
+		appCodec,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.EpochsKeeper,
+		appKeepers.keys[txfeestypes.StoreKey],
+		appKeepers.GAMMKeeper,
+		appKeepers.GAMMKeeper,
+		txfeestypes.FeeCollectorName,
+		txfeestypes.NonNativeFeeCollectorName,
+	)
+	appKeepers.TxFeesKeeper = &txFeesKeeper
+
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[incentivestypes.StoreKey],
@@ -268,6 +281,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.LockupKeeper,
 		appKeepers.EpochsKeeper,
 		appKeepers.DistrKeeper,
+		appKeepers.TxFeesKeeper,
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
@@ -299,19 +313,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authtypes.FeeCollectorName,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
-
-	txFeesKeeper := txfeeskeeper.NewKeeper(
-		appCodec,
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.EpochsKeeper,
-		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.GAMMKeeper,
-		appKeepers.GAMMKeeper,
-		txfeestypes.FeeCollectorName,
-		txfeestypes.NonNativeFeeCollectorName,
-	)
-	appKeepers.TxFeesKeeper = &txFeesKeeper
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appCodec,
