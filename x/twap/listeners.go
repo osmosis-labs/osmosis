@@ -28,9 +28,9 @@ type epochhook struct {
 
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
-		// TODO: configure lastAllowedTime via parameter.
-		lastAllowedTime := ctx.BlockTime().Add(-48 * time.Hour)
-		if err := hook.k.pruneRecordsBeforeTime(ctx, lastAllowedTime); err != nil {
+		// TODO: configure lastKeptTime via parameter.
+		lastKeptTime := ctx.BlockTime().Add(-48 * time.Hour)
+		if err := hook.k.pruneRecordsBeforeTime(ctx, lastKeptTime); err != nil {
 			ctx.Logger().Error("Error pruning old twaps at the epoch end", err)
 		}
 	}
