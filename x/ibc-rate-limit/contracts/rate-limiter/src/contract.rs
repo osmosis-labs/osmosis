@@ -87,16 +87,10 @@ pub fn try_transfer(
     let quota = QUOTA.load(deps.storage, channel_id.clone())?;
     let max = quota.capacity_at(&channel_value);
     let mut flow = FLOW.load(deps.storage, channel_id.clone())?;
-    println!("{flow:?}");
     if flow.is_expired(now) {
-        println!("EXPIRED!");
         flow.expire(now)
-    } else {
-        println!("NOT EXPIRED...");
     }
-    println!("{flow:?}");
     flow.add_flow(direction, funds);
-    println!("{flow:?}");
 
     if flow.balance() > max {
         return Err(ContractError::RateLimitExceded {

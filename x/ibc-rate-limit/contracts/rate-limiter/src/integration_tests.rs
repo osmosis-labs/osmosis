@@ -61,16 +61,10 @@ mod tests {
     }
 
     mod expiration {
-        use cosmwasm_std::{Attribute, BlockInfo, Timestamp};
+        use cosmwasm_std::Attribute;
 
         use super::*;
         use crate::{msg::ExecuteMsg, state::RESET_TIME};
-
-        fn next_block(block: &mut BlockInfo) {
-            block.height += 800 / 5;
-            block.time = block.time.plus_seconds(80000);
-            println!("HERE {block:?}");
-        }
 
         #[test]
         fn expiration() {
@@ -104,37 +98,31 @@ mod tests {
                 .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
                 .unwrap_err();
 
-            // // TODO: how do we check the error type here?
-            // println!("{err:?}");
+            // TODO: how do we check the error type here?
+            println!("{err:?}");
 
-            // println!("=================HERE===============");
+            // ... Time passes
+            app.update_block(|b| {
+                b.height += 1000;
+                b.time = b.time.plus_seconds(RESET_TIME + 1)
+            });
 
-            // // ... Time passes
-            // let block_info = app.block_info();
-            // println!("{block_info:?}");
-            // app.set_block(BlockInfo {
-            //     height: block_info.height + (RESET_TIME / 5),
-            //     time: Timestamp::from_seconds(block_info.time.plus_seconds(RESET_TIME).seconds()),
-            //     chain_id: block_info.chain_id,
-            // });
-            // let x = app.block_info();
-            // println!("{x:?}");
-            // // Sending the packet should work now
-            // let msg = ExecuteMsg::SendPacket {
-            //     channel_id: "channel".to_string(),
-            //     channel_value: 3_000,
-            //     funds: 300,
-            // };
+            // Sending the packet should work now
+            let msg = ExecuteMsg::SendPacket {
+                channel_id: "channel".to_string(),
+                channel_value: 3_000,
+                funds: 300,
+            };
 
-            // let cosmos_msg = cw_template_contract.call(msg).unwrap();
-            // let res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+            let cosmos_msg = cw_template_contract.call(msg).unwrap();
+            let res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
 
-            // let Attribute { key, value } = &res.custom_attrs(1)[2];
-            // assert_eq!(key, "used");
-            // assert_eq!(value, "300");
-            // let Attribute { key, value } = &res.custom_attrs(1)[3];
-            // assert_eq!(key, "max");
-            // assert_eq!(value, "300");
+            let Attribute { key, value } = &res.custom_attrs(1)[2];
+            assert_eq!(key, "used");
+            assert_eq!(value, "300");
+            let Attribute { key, value } = &res.custom_attrs(1)[3];
+            assert_eq!(key, "max");
+            assert_eq!(value, "300");
         }
     }
 }
