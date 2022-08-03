@@ -224,6 +224,11 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			expectedPoolIncentivesAmount := mintAmount.Mul(params.DistributionProportions.PoolIncentives)
 			expectedStakingAmount := tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.Staking)
 
+			// distributions go to community pool because nil dev reward addresses.
+			if tc.weightedAddresses == nil {
+				expectedCommunityPoolAmount = expectedCommunityPoolAmount.Add(expectedDevRewardsAmount)
+			}
+
 			// mints coins so supply exists on chain
 			err := mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.mintCoin))
 			suite.Require().NoError(err)
@@ -241,25 +246,19 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 				expectedStakingAmount,
 				feeCollectorBalanceAmount)
 
-			// validate distributions to community pool.
-			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount.ToDec()
-
-			// distributions go to community pool because nil dev reward addresses.
-			if tc.weightedAddresses == nil {
-				expectedCommunityPoolAmount = expectedCommunityPoolAmount.Add(expectedDevRewardsAmount)
-			}
-
-			// If gauges are not created, all pool incentive rewards go to community pool.
+			// validate pool incentives distributions.
 			actualPoolIncentivesBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(poolincentivestypes.ModuleName), sdk.DefaultBondDenom).Amount.ToDec()
 			suite.Require().Equal(expectedPoolIncentivesAmount, actualPoolIncentivesBalance)
 
+			// validate distributions to community pool.
+			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount.ToDec()
 			suite.Require().Equal(expectedCommunityPoolAmount, actualCommunityPoolBalanceAmount)
 
 			// validate distributions to developer addresses.
 			for i, weightedAddress := range tc.weightedAddresses {
 				devRewardsReceiver, _ := sdk.AccAddressFromBech32(weightedAddress.GetAddress())
 				suite.Require().Equal(
-					tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).Mul(params.WeightedDeveloperRewardsReceivers[i].Weight).TruncateInt(),
+					expectedDevRewardsAmount.Mul(params.WeightedDeveloperRewardsReceivers[i].Weight).TruncateInt(),
 					bankKeeper.GetBalance(ctx, devRewardsReceiver, sdk.DefaultBondDenom).Amount)
 			}
 		})
