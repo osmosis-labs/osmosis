@@ -95,7 +95,7 @@ func (k Keeper) storeNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 // returns the TWAP record from state for (id, t', asset0, asset1),
 // where t' is such that:
 // * t' <= t
-// * there exists no t'' in state, where t'' < t'
+// * there exists no `t'' <= t` in state, where `t' < t''`
 //
 // This returns an error if:
 // * there is no historical record in state at or before t
@@ -140,6 +140,6 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 			return twap, nil
 		}
 	}
-	return types.TwapRecord{}, fmt.Errorf("TWAP not found, but there are twaps available for this time."+
+	return types.TwapRecord{}, fmt.Errorf("TWAP not found, but there are other twaps available for this time."+
 		" Were provided asset0denom and asset1denom (%s, %s) correct, and in order (asset0 > asset1)?", asset0Denom, asset1Denom)
 }
