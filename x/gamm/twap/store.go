@@ -95,7 +95,7 @@ func (k Keeper) storeNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 // returns the TWAP record from state for (id, t', asset0, asset1),
 // where t' is such that:
 // * t' <= t
-// * there exists no t'' in state, where t' < t''
+// * there exists no `t'' <= t` in state, where `t' < t''`
 //
 // This returns an error if:
 // * there is no historical record in state at or before t
