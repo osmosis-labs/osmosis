@@ -53,9 +53,8 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	} else if len(msg.InitialPoolLiquidity) > 2 {
 		return types.ErrTooManyPoolAssets
 	}
-	if len(msg.ScalingFactors) != 2 {
-		return types.ErrInvalidScalingFactors
-	} else if msg.ScalingFactors[0] == 0 || msg.ScalingFactors[1] == 0 {
+	// valid scaling factor lengths are 0, or one factor for each asset
+	if len(msg.ScalingFactors) != 0 && len(msg.ScalingFactors) != len(msg.InitialPoolLiquidity) {
 		return types.ErrInvalidScalingFactors
 	}
 
