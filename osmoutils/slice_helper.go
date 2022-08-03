@@ -26,22 +26,12 @@ func Filter[T interface{}](filter func(T) bool, s []T) []T {
 
 // Reverse slice reverses the input slice in place.
 // Does mutate argument.
-func ReverseSlice[T any](s []T) {
+func ReverseSlice[T any](s []T) []T {
 	maxIndex := len(s)
 	for i := 0; i < maxIndex/2; i++ {
 		temp := s[i]
 		s[i] = s[maxIndex-i-1]
 		s[maxIndex-1-i] = temp
 	}
+	return s
 }
-
-// // ReverseSlice returns a reversed copy of the input slice.
-// // Does not mutate argument.
-// func ReverseSlice[T any](s []T) []T {
-// 	newSlice := make([]T, len(s))
-// 	maxIndex := len(s) - 1
-// 	for i := 0; i < len(s); i++ {
-// 		newSlice[maxIndex-i] = s[i]
-// 	}
-// 	return newSlice
-// }
