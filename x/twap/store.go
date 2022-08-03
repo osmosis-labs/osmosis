@@ -55,7 +55,7 @@ func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) erro
 	iter := store.Iterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastTime, 0, "", ""))
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
- 		twapToRemove, err := types.ParseTwapFromBz(iter.Value())
+		twapToRemove, err := types.ParseTwapFromBz(iter.Value())
 		if err != nil {
 			return err
 		}
