@@ -24,7 +24,7 @@ func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLi
 	if len(scalingFactors) == 0 {
 		scalingFactors = []uint64{1, 1}
 	} else if scalingFactors[0] == 0 || scalingFactors[1] == 0 {
-		return Pool{}, types.ErrInvalidStableswapScalingFactors
+		scalingFactors = []uint64{1, 1}
 	}
 
 	pool := Pool{
