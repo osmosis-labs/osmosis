@@ -40,6 +40,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v10.2.0
+
+In v10.1.0 a refactor did changed the ordering of certain function calls in a message execution.
+The data read and written to in state were the same, but re-ordered.
+This unknowingly caused gas_used incompatabilities, because you could out-of-gas error at any intermediate step, and end in a different gas_used quantity. cref: https://github.com/cosmos/cosmos-sdk/issues/12788
+
+The v10.2 line reverts the gas limit state incompatabilities introduced due to function ordering.
+Namely this reverts 
+
+* [#1937](https://github.com/osmosis-labs/osmosis/pull/1937) Change `lockupKeeper.ExtendLock` to take in lockID instead of the direct lock struct.
+* [#2030](https://github.com/osmosis-labs/osmosis/pull/2030) Rename lockup keeper `ResetAllLocks` to `InitializeAllLocks` and `ResetAllSyntheticLocks` to `InitializeAllSyntheticLocks`.
+
 ## v10.1.1
 
 #### Improvements
