@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
 			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 3, // 1 gamm + 2 tendermint.
+			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []types.SwapAmountInRoute{
@@ -68,7 +68,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
 			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 5, // 1 gamm + 4 tendermint.
+			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []types.SwapAmountInRoute{
@@ -151,7 +151,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
 			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 3, // 1 gamm + 2 tendermint.
+			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []types.SwapAmountOutRoute{
@@ -167,7 +167,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
 			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 5, // 1 gamm + 4 tendermint.
+			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []types.SwapAmountOutRoute{
@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 				sdk.NewCoin("baz", sdk.NewInt(tokenInMaxAmount)),
 			),
 			expectedAddLiquidityEvents: 1,
-			expectedMessageEvents:      3, // 1 gamm + 2 tendermint.
+			expectedMessageEvents:      3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"tokenInMaxs do not match all tokens in pool - invalid join": {
 			poolId:         1,
@@ -305,7 +305,7 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 			shareInAmount:                 sdk.NewInt(shareIn),
 			tokenOutMins:                  sdk.NewCoins(),
 			expectedRemoveLiquidityEvents: 1,
-			expectedMessageEvents:         3, // 1 gamm + 2 tendermint.
+			expectedMessageEvents:         3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"invalid tokenOutMins": {
 			poolId:        1,
