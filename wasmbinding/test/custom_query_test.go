@@ -15,6 +15,7 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v10/app"
 	"github.com/osmosis-labs/osmosis/v10/wasmbinding"
@@ -190,19 +191,21 @@ func TestQueryArithmeticTwap(t *testing.T) {
 	require.NotEmpty(t, reflect)
 
 	oldBlockTime := ctx.BlockTime()
-	ctx = ctx.WithBlockTime(oldBlockTime.Add(time.Minute * 10))
 
 	_, err := osmosis.GAMMKeeper.SwapExactAmountIn(ctx, actor, starPool, sdk.NewCoin("uosmo", sdk.NewInt(10000)), "ustar", sdk.NewInt(1))
 	require.NoError(t, err)
+	reqEndBlock := abci.RequestEndBlock{Height: ctx.BlockHeight()}
+	osmosis.EndBlocker(ctx, reqEndBlock)
 
-	// // osmosis.TwapKeeper.GetArithmeticTwap(ctx, starPool)
+	ctx = ctx.WithBlockTime(oldBlockTime.Add(time.Minute * 10))
+
 	query := bindings.OsmosisQuery{
 		ArithmeticTwap: &bindings.ArithmeticTwap{
 			PoolId:          starPool,
 			QuoteAssetDenom: "ustar",
 			BaseAssetDenom:  "uosmo",
-			StartTime:       oldBlockTime,
-			EndTime:         ctx.BlockTime(),
+			StartTime:       oldBlockTime.Unix(),
+			EndTime:         ctx.BlockTime().Unix(),
 		},
 	}
 

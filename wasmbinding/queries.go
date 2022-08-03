@@ -2,6 +2,7 @@ package wasmbinding
 
 import (
 	"fmt"
+	"time"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,8 +116,8 @@ func (qp QueryPlugin) ArithmeticTwap(ctx sdk.Context, arithmeticTwap *bindings.A
 	poolId := arithmeticTwap.PoolId
 	quoteAssetDenom := arithmeticTwap.QuoteAssetDenom
 	baseAssetDenom := arithmeticTwap.BaseAssetDenom
-	startTime := arithmeticTwap.StartTime
-	endTime := arithmeticTwap.EndTime
+	startTime := time.Unix(arithmeticTwap.StartTime, 0)
+	endTime := time.Unix(arithmeticTwap.EndTime, 0)
 
 	twap, err := qp.twapKeeper.GetArithmeticTwap(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime, endTime)
 	if err != nil {
@@ -134,7 +135,7 @@ func (qp QueryPlugin) ArithmeticTwapToNow(ctx sdk.Context, arithmeticTwap *bindi
 	poolId := arithmeticTwap.PoolId
 	quoteAssetDenom := arithmeticTwap.QuoteAssetDenom
 	baseAssetDenom := arithmeticTwap.BaseAssetDenom
-	startTime := arithmeticTwap.StartTime
+	startTime := time.Unix(arithmeticTwap.StartTime, 0)
 
 	twap, err := qp.twapKeeper.GetArithmeticTwapToNow(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime)
 	if err != nil {

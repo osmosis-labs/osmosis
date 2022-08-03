@@ -1,8 +1,6 @@
 package bindings
 
 import (
-	"time"
-
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 )
 
@@ -59,18 +57,18 @@ type EstimateSwap struct {
 }
 
 type ArithmeticTwap struct {
-	PoolId          uint64    `json:"id"`
-	QuoteAssetDenom string    `json:"quote_asset_denom"`
-	BaseAssetDenom  string    `json:"base_asset_denom"`
-	StartTime       time.Time `json:"start_time"`
-	EndTime         time.Time `json:"end_time"`
+	PoolId          uint64 `json:"id"`
+	QuoteAssetDenom string `json:"quote_asset_denom"`
+	BaseAssetDenom  string `json:"base_asset_denom"`
+	StartTime       int64  `json:"start_time"`
+	EndTime         int64  `json:"end_time"`
 }
 
 type ArithmeticTwapToNow struct {
-	PoolId          uint64    `json:"id"`
-	QuoteAssetDenom string    `json:"quote_asset_denom"`
-	BaseAssetDenom  string    `json:"base_asset_denom"`
-	StartTime       time.Time `json:"start_time"`
+	PoolId          uint64 `json:"id"`
+	QuoteAssetDenom string `json:"quote_asset_denom"`
+	BaseAssetDenom  string `json:"base_asset_denom"`
+	StartTime       int64  `json:"start_time"`
 }
 
 func (e *EstimateSwap) ToSwapMsg() *SwapMsg {
