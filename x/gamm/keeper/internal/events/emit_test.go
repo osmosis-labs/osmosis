@@ -156,7 +156,7 @@ func (suite *GammEventsTestSuite) TestEmitRemoveLiquidityEvent() {
 		"context with no event manager": {
 			ctx: sdk.Context{},
 		},
-		"valid with multiple tokens in": {
+		"valid with multiple tokens out": {
 			ctx:             suite.CreateTestContext(),
 			testAccountAddr: sdk.AccAddress([]byte(addressString)),
 			poolId:          200,
