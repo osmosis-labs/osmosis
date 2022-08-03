@@ -5,13 +5,13 @@ go 1.18
 require (
 	github.com/CosmWasm/wasmd v0.24.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
-	github.com/cosmos/cosmos-sdk v0.45.6
+	github.com/cosmos/cosmos-sdk v0.46.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
 	github.com/cosmos/ibc-go/v3 v3.0.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
-	github.com/golangci/golangci-lint v1.47.1
+	github.com/golangci/golangci-lint v1.47.2
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/ory/dockertest/v3 v3.9.1
@@ -285,8 +285,8 @@ require (
 replace (
 	// branch: v0.27.0.rc3-osmo, current tag: v0.27.0.rc3-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk osmosis-main, current tag: v0.45.0x-osmo-v11.rc1
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220714223138-b81ad24550fa
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current tag: 0.45.0x-osmo-v11-alpha.5 current branch: osmosis-main
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220727221653-51bfa90799ee
 	// Use Osmosis fast iavl
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7
 	// use cosmos-compatible protobufs

@@ -105,7 +105,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	poolId := k.getNextPoolNumberAndIncrement(ctx)
+	poolId := k.getNextPoolIdAndIncrement(ctx)
 	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
 		return 0, err

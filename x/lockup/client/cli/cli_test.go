@@ -253,6 +253,7 @@ func (s *IntegrationTestSuite) TestNewBeginUnlockPeriodLockCmd() {
 			"begin unlocking by id",
 			[]string{
 				lockID,
+				fmt.Sprintf("--%s=%s", cli.FlagAmount, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(100))).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				// common args
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),

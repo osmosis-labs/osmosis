@@ -778,6 +778,45 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestGetPoolDenom() {
+	// setup pool with denoms
+	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
+	poolCreateMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
+	_, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, poolCreateMsg)
+	suite.Require().NoError(err)
+
+	for _, tc := range []struct {
+		desc         string
+		poolId       uint64
+		expectDenoms []string
+		expectErr    bool
+	}{
+		{
+			desc:         "Valid PoolId",
+			poolId:       1,
+			expectDenoms: []string{"bar", "foo"},
+			expectErr:    false,
+		},
+		{
+			desc:         "Invalid PoolId",
+			poolId:       2,
+			expectDenoms: []string{"bar", "foo"},
+			expectErr:    true,
+		},
+	} {
+		suite.Run(tc.desc, func() {
+			denoms, err := suite.App.GAMMKeeper.GetPoolDenoms(suite.Ctx, tc.poolId)
+
+			if tc.expectErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(denoms, tc.expectDenoms)
+			}
+		})
+	}
+}
+
 // func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 // 	stableSwapPoolParams := stableswap.PoolParams{
 // 		SwapFee: defaultSwapFee,
