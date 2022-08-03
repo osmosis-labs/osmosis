@@ -289,7 +289,7 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 func (suite *KeeperTestSuite) TestExitPool_Events() {
 	const (
 		tokenOutMinAmount = 1
-		shareOut          = 110
+		shareIn          = 110
 	)
 
 	testcases := map[string]struct {
