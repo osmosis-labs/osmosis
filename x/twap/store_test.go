@@ -189,3 +189,196 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		})
 	}
 }
+
+// TestPruneRecordsBeforeTime prunes all twap records before the given time
+// from store.
+func (s *TestSuite) TestPruneRecordsBeforeTime() {
+	const basePoolId = 1
+
+	baseRecord := newEmptyPriceRecord(basePoolId, baseTime, "tokenB", "tokenA")
+
+	tMin1 := baseTime.Add(-time.Second)
+	tMin1Record := newEmptyPriceRecord(basePoolId+1, tMin1, "tokenB", "tokenA")
+
+	tMin2 := baseTime.Add(-time.Second * 2)
+	tMin2Record := newEmptyPriceRecord(basePoolId+2, tMin2, "tokenB", "tokenA")
+
+	tPlus1 := baseTime.Add(time.Second)
+	tPlus1Record := newEmptyPriceRecord(basePoolId+3, tPlus1, "tokenB", "tokenA")
+
+	// non-ascending inserton order.
+	allTestRecords := []types.TwapRecord{tPlus1Record, tMin1Record, baseRecord, tMin2Record}
+
+	tests := map[string]struct {
+		recordsToPreSet []types.TwapRecord
+
+		beforeTime time.Time
+
+		expectedKeptRecords []types.TwapRecord
+
+		expErr bool
+	}{
+		"base time, 1 record before base time (deleted)": {
+			recordsToPreSet: []types.TwapRecord{tMin1Record},
+
+			beforeTime: baseTime,
+
+			expectedKeptRecords: []types.TwapRecord{},
+		},
+		"base time, 2 records before base time (both deleted)": {
+			recordsToPreSet: []types.TwapRecord{tMin1Record, tMin2Record},
+
+			beforeTime: baseTime,
+
+			expectedKeptRecords: []types.TwapRecord{},
+		},
+		"base time, 1 record at base time (not deleted)": {
+			recordsToPreSet: []types.TwapRecord{baseRecord},
+
+			beforeTime: baseTime,
+
+			expectedKeptRecords: []types.TwapRecord{baseRecord},
+		},
+		"base time, 1 record after base time (not deleted)": {
+			recordsToPreSet: []types.TwapRecord{tPlus1Record},
+
+			beforeTime: baseTime,
+
+			expectedKeptRecords: []types.TwapRecord{tPlus1Record},
+		},
+		"base time minus 1, 2 records before (deleted), 1 records at (deleted), 1 records after (not deleted)": {
+			recordsToPreSet: allTestRecords,
+
+			beforeTime: tMin1,
+
+			expectedKeptRecords: []types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
+		},
+		"base time minus 2 - 0 records before - all kept": {
+			recordsToPreSet: allTestRecords,
+
+			beforeTime: tMin2,
+
+			expectedKeptRecords: []types.TwapRecord{tMin2Record, tMin1Record, baseRecord, tPlus1Record},
+		},
+		"base time plus 2 - all records before - all deleted": {
+			recordsToPreSet: allTestRecords,
+
+			beforeTime: tPlus1.Add(time.Second),
+
+			expectedKeptRecords: []types.TwapRecord{},
+		},
+		"no pre-set records - no error": {
+			recordsToPreSet: []types.TwapRecord{},
+
+			beforeTime: baseTime,
+
+			expectedKeptRecords: []types.TwapRecord{},
+		},
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.preSetRecords(tc.recordsToPreSet)
+
+			ctx := s.Ctx
+			twapKeeper := s.twapkeeper
+
+			err := twapKeeper.PruneRecordsBeforeTime(ctx, tc.beforeTime)
+			if tc.expErr {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// validate that the time indexed TWAPs are cleared.
+			timeIndexedTwaps, err := twapKeeper.GetAllHistoricalTimeIndexedTWAPs(ctx)
+			s.Require().NoError(err)
+			s.Require().Len(timeIndexedTwaps, len(tc.expectedKeptRecords))
+			s.Require().Equal(timeIndexedTwaps, tc.expectedKeptRecords)
+
+			// validate that the pool indexed TWAPs are cleared.
+			poolIndexedTwaps, err := twapKeeper.GetAllHistoricalPoolIndexedTWAPs(ctx)
+			s.Require().NoError(err)
+			s.Require().Len(poolIndexedTwaps, len(tc.expectedKeptRecords))
+			// N.B.: ElementsMatch is used here because order might differ from expected due to
+			// diverging indexing structure.
+			s.Require().ElementsMatch(poolIndexedTwaps, tc.expectedKeptRecords)
+		})
+	}
+}
+
+func (s *TestSuite) TestGetAllHistoricalTimeIndexedTWAPs() {
+	tests := map[string]struct {
+		expectedRecords []types.TwapRecord
+	}{
+		"no records": {
+			expectedRecords: []types.TwapRecord{},
+		},
+		"one record": {
+			expectedRecords: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA"),
+			},
+		},
+		"multiple records": {
+			expectedRecords: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA"),
+				newEmptyPriceRecord(2, baseTime, "tokenA", "tokenC"),
+				newEmptyPriceRecord(3, baseTime, "tokenB", "tokenC"),
+			},
+		},
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
+			// Setup.
+			s.SetupTest()
+			ctx := s.Ctx
+			twapKeeper := s.twapkeeper
+			s.preSetRecords(tc.expectedRecords)
+
+			// System under test.
+			actualRecords, err := twapKeeper.GetAllHistoricalPoolIndexedTWAPs(ctx)
+			s.NoError(err)
+
+			// Assertions.
+			s.Equal(tc.expectedRecords, actualRecords)
+		})
+	}
+}
+
+func (s *TestSuite) TestGetAllHistoricalPoolIndexedTWAPs() {
+	tests := map[string]struct {
+		expectedRecords []types.TwapRecord
+	}{
+		"no records": {
+			expectedRecords: []types.TwapRecord{},
+		},
+		"one record": {
+			expectedRecords: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA"),
+			},
+		},
+		"multiple records": {
+			expectedRecords: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA"),
+				newEmptyPriceRecord(2, baseTime, "tokenA", "tokenC"),
+				newEmptyPriceRecord(3, baseTime, "tokenB", "tokenC"),
+			},
+		},
+	}
+	for name, tc := range tests {
+		s.Run(name, func() {
+			// Setup.
+			s.SetupTest()
+			ctx := s.Ctx
+			twapKeeper := s.twapkeeper
+			s.preSetRecords(tc.expectedRecords)
+
+			// System under test.
+			actualRecords, err := twapKeeper.GetAllHistoricalPoolIndexedTWAPs(ctx)
+			s.NoError(err)
+
+			// Assertions.
+			s.Equal(tc.expectedRecords, actualRecords)
+		})
+	}
+}

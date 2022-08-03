@@ -92,12 +92,6 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	return newRecord
 }
 
-func (k Keeper) pruneOldTwaps(ctx sdk.Context) {
-	// TODO: Read this from parameter
-	lastAllowedTime := ctx.BlockTime().Add(-48 * time.Hour)
-	k.pruneRecordsBeforeTime(ctx, lastAllowedTime)
-}
-
 // getInterpolatedRecord returns a record for this pool, representing its accumulator state at time `t`.
 // This is achieved by getting the record `r` that is at, or immediately preceding in state time `t`.
 // To be clear: the record r s.t. `t - r.Time` is minimized AND `t >= r.Time`
