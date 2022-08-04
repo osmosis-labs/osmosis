@@ -34,91 +34,6 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 		blockHeightTimePairs map[int]time.Time
 		expEpochInfo         types.EpochInfo
 	}{
-<<<<<<< HEAD:x/epochs/abci_test.go
-		{
-			// Only advance 2 seconds, do not increment epoch
-			expCurrentEpochStartHeight: 2,
-			expCurrentEpochStartTime:   now,
-			expCurrentEpoch:            1,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-			},
-		},
-		{
-			expCurrentEpochStartHeight: 2,
-			expCurrentEpochStartTime:   now,
-			expCurrentEpoch:            1,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-			},
-		},
-		{
-			expCurrentEpochStartHeight: 2,
-			expCurrentEpochStartTime:   now,
-			expCurrentEpoch:            1,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 31))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-			},
-		},
-		// Test that incrementing _exactly_ 1 month increments the epoch count.
-		{
-			expCurrentEpochStartHeight: 3,
-			expCurrentEpochStartTime:   now.Add(time.Hour * 24 * 31),
-			expCurrentEpoch:            2,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-			},
-		},
-		{
-			expCurrentEpochStartHeight: 3,
-			expCurrentEpochStartTime:   now.Add(time.Hour * 24 * 31),
-			expCurrentEpoch:            2,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				ctx.WithBlockHeight(4).WithBlockTime(now.Add(time.Hour * 24 * 33))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-			},
-		},
-		{
-			expCurrentEpochStartHeight: 3,
-			expCurrentEpochStartTime:   now.Add(time.Hour * 24 * 31),
-			expCurrentEpoch:            2,
-			expInitialEpochStartTime:   now,
-			fn: func() {
-				ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				numBlocksSinceStart, _ := app.EpochsKeeper.NumBlocksSinceEpochStart(ctx, "monthly")
-				require.Equal(t, int64(0), numBlocksSinceStart)
-				ctx = ctx.WithBlockHeight(4).WithBlockTime(now.Add(time.Hour * 24 * 33))
-				app.EpochsKeeper.BeginBlocker(ctx)
-				epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-				numBlocksSinceStart, _ = app.EpochsKeeper.NumBlocksSinceEpochStart(ctx, "monthly")
-				require.Equal(t, int64(1), numBlocksSinceStart)
-			},
-=======
 		"First block running at exactly start time sets epoch tick": {
 			initialEpochInfo: types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
 			expEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
@@ -166,7 +81,6 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 		"StartTime in past will get ticked on first block": {
 			initialEpochInfo: types.EpochInfo{StartTime: block1Time.Add(-time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
 			expEpochInfo:     types.EpochInfo{StartTime: block1Time.Add(-time.Second), CurrentEpoch: 1, CurrentEpochStartTime: block1Time.Add(-time.Second), CurrentEpochStartHeight: 1},
->>>>>>> 21f7f981 (Fix epochs modules tests (#1893)):x/epochs/keeper/abci_test.go
 		},
 	}
 	for name, test := range tests {
@@ -264,48 +178,3 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
 }
-<<<<<<< HEAD:x/epochs/abci_test.go
-
-// This test ensures legacy EpochInfo messages will not throw errors via InitGenesis and BeginBlocker
-func TestLegacyEpochSerialization(t *testing.T) {
-	// Legacy Epoch Info message - without CurrentEpochStartHeight property
-	legacyEpochInfo := types.EpochInfo{
-		Identifier:            "monthly",
-		StartTime:             time.Time{},
-		Duration:              time.Hour * 24 * 31,
-		CurrentEpoch:          0,
-		CurrentEpochStartTime: time.Time{},
-		EpochCountingStarted:  false,
-	}
-
-	now := time.Now()
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
-	// On init genesis, default epochs information is set
-	// To check init genesis again, should make it fresh status
-	epochInfos := app.EpochsKeeper.AllEpochInfos(ctx)
-	for _, epochInfo := range epochInfos {
-		app.EpochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
-	}
-
-	ctx = ctx.WithBlockHeight(1).WithBlockTime(now)
-
-	// check init genesis
-	app.EpochsKeeper.InitGenesis(ctx, types.GenesisState{
-		Epochs: []types.EpochInfo{legacyEpochInfo},
-	})
-
-	// Do not increment epoch
-	ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(time.Second))
-	app.EpochsKeeper.BeginBlocker(ctx)
-
-	// Increment epoch
-	ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(time.Hour * 24 * 32))
-	app.EpochsKeeper.BeginBlocker(ctx)
-	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
-
-	require.NotEqual(t, epochInfo.CurrentEpochStartHeight, int64(0))
-}
-=======
->>>>>>> 21f7f981 (Fix epochs modules tests (#1893)):x/epochs/keeper/abci_test.go

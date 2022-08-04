@@ -1,12 +1,7 @@
 package keeper_test
 
 import (
-<<<<<<< HEAD
-	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
->>>>>>> 21f7f981 (Fix epochs modules tests (#1893))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
