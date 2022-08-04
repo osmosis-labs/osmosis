@@ -4,12 +4,8 @@ import (
 	"fmt"
 	"time"
 
-<<<<<<< HEAD:x/epochs/abci.go
 	"github.com/osmosis-labs/osmosis/v10/x/epochs/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
->>>>>>> 982aa0ef (Move epochs begin block code to keeper (#1870)):x/epochs/keeper/abci.go
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
