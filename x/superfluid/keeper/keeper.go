@@ -5,11 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
->>>>>>> 21f7f981 (Fix epochs modules tests (#1893))
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

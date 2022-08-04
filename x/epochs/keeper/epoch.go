@@ -6,11 +6,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
->>>>>>> 21f7f981 (Fix epochs modules tests (#1893))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

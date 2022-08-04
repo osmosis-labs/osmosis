@@ -1,13 +1,7 @@
 package keeper
 
 import (
-<<<<<<< HEAD
-	"time"
-
 	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
-=======
-	sdk "github.com/cosmos/cosmos-sdk/types"
->>>>>>> 21f7f981 (Fix epochs modules tests (#1893))
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
