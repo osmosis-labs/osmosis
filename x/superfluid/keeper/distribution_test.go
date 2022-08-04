@@ -55,6 +55,14 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			[]int64{0},
 			[]gaugeChecker{{0, 0, 0, true}, {1, 1, 0, false}},
 		},
+		{
+			"add unbonding validator case",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
+			2,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]int64{0},
+			[]gaugeChecker{{0, 0, 0, true}, {1, 1, 0, false}},
+		},
 	}
 
 	for _, tc := range testCases {

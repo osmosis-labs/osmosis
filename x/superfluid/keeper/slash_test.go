@@ -25,6 +25,22 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			[]int64{0},
 			[]int64{0},
 		},
+		{
+			"with an unbonding validator and single superfluid delegation",
+			[]stakingtypes.BondStatus{stakingtypes.Unbonding},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]int64{0},
+			[]int64{0},
+		},
+		{
+			"with single validator and single superfluid delegation",
+			[]stakingtypes.BondStatus{stakingtypes.Unbonded},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			[]int64{0},
+			[]int64{0},
+		},
 		// {
 		// 	"with single validator and multiple superfluid delegations",
 		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
@@ -87,6 +103,13 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 				suite.Require().NoError(err)
 				// slash by slash factor
 				power := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
+
+				// should not be slashing unbonded validator
+				defer func() {
+					if r := recover(); r != nil {
+						suite.Require().Equal(true, validator.IsUnbonded())
+					}
+				}()
 				suite.App.StakingKeeper.Slash(suite.Ctx, consAddr, 80, power, slashFactor)
 				// Note: this calls BeforeValidatorSlashed hook
 			}
@@ -133,6 +156,20 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 		{
 			"with multiple validators and multiple superfluid delegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			2,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]uint64{1, 2},
+		},
+		{
+			"add unbonding validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
+			2,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]uint64{1, 2},
+		},
+		{
+			"add unbonded validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
 			2,
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
