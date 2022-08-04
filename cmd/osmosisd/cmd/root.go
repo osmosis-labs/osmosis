@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -74,7 +75,11 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
+
 			customAppTemplate, customAppConfig := initAppConfig()
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx.Config.Consensus.TimeoutCommit = 2 * time.Second
+
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
 		},
 		SilenceUsage: true,
