@@ -200,12 +200,12 @@ func randomDoubleSignEvidence(r *rand.Rand, params Params,
 	var n float64 = 1
 	// TODO: Change this to be markov based & clean this up
 	// Right now we incrementally lower the evidence fraction to make
-	// it less likely to jail many validators in one run
+	// it less likely to jail many validators in one run.
 	// We should also add some method of including new validators into the set
-	// instead of being stuck with the ones we start with during initialization
+	// instead of being stuck with the ones we start with during initialization.
 	for r.Float64() < (params.EvidenceFraction() / n) {
 		// if only one validator remaining, don't jail any more validators
-		if len(voteInfos)-int(n) == 0 {
+		if len(voteInfos)-int(n) <= 0 {
 			return nil
 		}
 		height := header.Height
