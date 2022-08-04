@@ -3,9 +3,9 @@ module github.com/osmosis-labs/osmosis/v10
 go 1.18
 
 require (
-	github.com/CosmWasm/wasmd v0.24.0
+	github.com/CosmWasm/wasmd v0.27.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
-	github.com/cosmos/cosmos-sdk v0.45.6
+	github.com/cosmos/cosmos-sdk v0.46.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
 	github.com/cosmos/ibc-go/v3 v3.0.0
@@ -285,8 +285,8 @@ require (
 replace (
 	// branch: v0.27.0.rc3-osmo, current tag: v0.27.0.rc3-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current tag: v0.45.0x-osmo-v11-alpha.2, current branch: osmosis-main
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220721082708-0aca1df58871
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current tag: 0.45.0x-osmo-v11-alpha.5 current branch: osmosis-main
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220727221653-51bfa90799ee
 	// Use Osmosis fast iavl
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7
 	// use cosmos-compatible protobufs

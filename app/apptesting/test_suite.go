@@ -48,7 +48,19 @@ func (s *KeeperTestHelper) Setup() {
 		Ctx:             s.Ctx,
 	}
 
+	s.SetEpochStartTime()
 	s.TestAccs = CreateRandomAccounts(3)
+}
+
+func (s *KeeperTestHelper) SetEpochStartTime() {
+	epochsKeeper := s.App.EpochsKeeper
+
+	for _, epoch := range epochsKeeper.AllEpochInfos(s.Ctx) {
+		epoch.StartTime = s.Ctx.BlockTime()
+		epochsKeeper.DeleteEpochInfo(s.Ctx, epoch.Identifier)
+		err := epochsKeeper.AddEpochInfo(s.Ctx, epoch)
+		s.Require().NoError(err)
+	}
 }
 
 // CreateTestContext creates a test context.
@@ -150,8 +162,7 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	epoch := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, epochIdentifier)
 	newBlockTime := s.Ctx.BlockTime().Add(5 * time.Second)
 	if executeNextEpoch {
-		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
-		newBlockTime = endEpochTime.Add(time.Second)
+		newBlockTime = s.Ctx.BlockTime().Add(epoch.Duration).Add(time.Second)
 	}
 
 	header := tmtypes.Header{Height: s.Ctx.BlockHeight() + 1, Time: newBlockTime}
@@ -310,4 +321,11 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	}
 
 	return testAddrs
+}
+
+func GenerateTestAddrs() (string, string) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	validAddr := sdk.AccAddress(pk1.Address()).String()
+	invalidAddr := sdk.AccAddress("invalid").String()
+	return validAddr, invalidAddr
 }
