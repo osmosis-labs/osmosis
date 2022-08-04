@@ -161,7 +161,11 @@ func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins) {
 }
 
 func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdk.Int) {
+	numTokens := p.NumAssets()
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...)
+	if len(p.PoolLiquidity) != numTokens { 
+		panic("updatePoolForJoin changed number of tokens in pool") 
+	} 
 	p.TotalShares.Amount = p.TotalShares.Amount.Add(newShares)
 }
 
