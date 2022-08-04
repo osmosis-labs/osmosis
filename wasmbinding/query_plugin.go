@@ -14,7 +14,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/wasmbinding/bindings"
 )
 
-func StarGateQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
+// StargateQuerier dispatches whitelisted stargate queries
+func StargateQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 		binding, whitelisted := StargateWhitelist.Load(request.Path)
 		if !whitelisted {
@@ -30,7 +31,6 @@ func StarGateQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, 
 			Data: request.Data,
 			Path: request.Path,
 		})
-
 		if err != nil {
 			return nil, err
 		}
@@ -144,6 +144,8 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 	}
 }
 
+// NormalizeReponses normalizes the responses by unmarshalling the response then marshalling them again.
+// Normalizing the response is specifically important for responses that contain type of Any.
 func NormalizeReponses(binding interface{}, bz []byte) ([]byte, error) {
 	// all values are proto message
 	message, ok := binding.(proto.Message)
