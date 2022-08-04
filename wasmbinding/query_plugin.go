@@ -36,7 +36,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, 
 		}
 
 		// normalize response to ensure backward compatibility
-		bz, err := NormalizeReponses(binding, res.Value)
+		bz, err := NormalizeReponse(binding, res.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -146,7 +146,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 // NormalizeReponses normalizes the responses by unmarshalling the response then marshalling them again.
 // Normalizing the response is specifically important for responses that contain type of Any.
-func NormalizeReponses(binding interface{}, bz []byte) ([]byte, error) {
+func NormalizeReponse(binding interface{}, bz []byte) ([]byte, error) {
 	// all values are proto message
 	message, ok := binding.(proto.Message)
 	if !ok {
@@ -154,17 +154,20 @@ func NormalizeReponses(binding interface{}, bz []byte) ([]byte, error) {
 	}
 
 	// unmarshal binary into stargate response data structure
+	fmt.Println("=======2")
 	err := proto.Unmarshal(bz, message)
 	if err != nil {
 		return nil, wasmvmtypes.Unknown{}
 	}
 
 	// build new deterministic response
+	fmt.Println("=======3")
 	bz, err = proto.Marshal(message)
 	if err != nil {
 		return nil, wasmvmtypes.Unknown{}
 	}
 
+	fmt.Println("=======4")
 	// clear proto message
 	message.Reset()
 
