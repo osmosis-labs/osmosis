@@ -47,7 +47,19 @@ func (s *KeeperTestHelper) Setup() {
 		Ctx:             s.Ctx,
 	}
 
+	s.SetEpochStartTime()
 	s.TestAccs = CreateRandomAccounts(3)
+}
+
+func (s *KeeperTestHelper) SetEpochStartTime() {
+	epochsKeeper := s.App.EpochsKeeper
+
+	for _, epoch := range epochsKeeper.AllEpochInfos(s.Ctx) {
+		epoch.StartTime = s.Ctx.BlockTime()
+		epochsKeeper.DeleteEpochInfo(s.Ctx, epoch.Identifier)
+		err := epochsKeeper.AddEpochInfo(s.Ctx, epoch)
+		s.Require().NoError(err)
+	}
 }
 
 // CreateTestContext creates a test context.
@@ -134,8 +146,7 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	epoch := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, epochIdentifier)
 	newBlockTime := s.Ctx.BlockTime().Add(5 * time.Second)
 	if executeNextEpoch {
-		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
-		newBlockTime = endEpochTime.Add(time.Second)
+		newBlockTime = s.Ctx.BlockTime().Add(epoch.Duration).Add(time.Second)
 	}
 
 	header := tmproto.Header{Height: s.Ctx.BlockHeight() + 1, Time: newBlockTime}
