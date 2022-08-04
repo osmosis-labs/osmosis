@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -105,14 +105,6 @@ func syntheticLockRefKeys(lock types.PeriodLock, synthLock types.SyntheticLock) 
 	refKeys = append(refKeys, combineKeys(types.KeyPrefixAccountDenomLockDuration, owner, denomBz, durationKey))
 
 	return refKeys, nil
-}
-
-func syntheticCoins(coins sdk.Coins, suffix string) sdk.Coins {
-	syntheticCoins := sdk.Coins{}
-	for _, coin := range coins {
-		syntheticCoins = syntheticCoins.Add(sdk.NewCoin(coin.Denom+suffix, coin.Amount))
-	}
-	return syntheticCoins
 }
 
 func combineLocks(pl1 []types.PeriodLock, pl2 []types.PeriodLock) []types.PeriodLock {

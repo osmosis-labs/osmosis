@@ -13,7 +13,7 @@ linters:
     #    - bodyclose <- needs go 1.18 support
     # - contextcheck <- needs go 1.18 support
     #    - cyclop
-    #    - deadcode <- re-enable in another pr
+    - deadcode
     - depguard
     #    - dogsled <- disabled because we would like to participate in the iditerod
     # - dupl <- really just catches cli stub text
@@ -38,16 +38,16 @@ linters:
     #    - godox <- detects TODO/BUG/FIXME and we may wantnthis later but isn't appropriate now
     #    - goerr113 <- disabled due to lack of comprehension
     - gofmt
-    - gofumpt
+    # - gofumpt <- disabled https://github.com/osmosis-labs/osmosis/issues/1309
     - goheader
     - goimports
     #    - gomoddirectives <- disables replaces
     - gomodguard
     - goprintffuncname
 #    - gosec <- triggers too much for this round and should be re-enabled later
-#    - gosimple <- later
+    - gosimple # specializes in simplifying code, subset of staticcheck binary.
     - govet
-    #   - ifshort <- seems to be of questionable value
+    #   - ifshort <- questionable value, unclear if globally helping readability.
     - importas
     - ineffassign
     #    - ireturn <- disabled because we want to return interfaces
@@ -68,9 +68,9 @@ linters:
 #    - revive <- temporarily disabled while jacob figures out how to make poolId not trigger it.
     # - rowserrcheck <- needs go 1.18 support
     # - sqlclosecheck <- needs go 1.18 support
-#    - staticcheck <- later
+    - staticcheck # set of rules from staticcheck, subset of staticcheck binary.
 #    - structcheck <- later
-#    - stylecheck <- enable later, atriggers on underscores in variable names and on poolId
+    - stylecheck # replacement of golint, subset of staticcheck binary.
     #    - tagliatelle <- disabled for defying cosmos idiom
     - tenv
     - testpackage
@@ -79,7 +79,7 @@ linters:
     - typecheck
     - unconvert
 #    - unparam <- looks for unused parameters (enable later)
-#    - unused <- looks for unused variables (enable later)
+    - unused # looks for unused variables, subset of staticcheck binary.
 #    - varcheck <- later
     #    - varnamelen <- disabled because defies idiom
     #    - wastedassign
@@ -95,5 +95,24 @@ issues:
     - path: client/docs
       linters:
         - all
+    - path: x/gamm/pool-models/stableswap
+      linters:
+        # Stableswap is in development.
+        # We should re-enable deadcode and unused linting
+        # across its files, once stableswap is fully complete.
+        - unused
+        - deadcode
+    - linters:
+      - staticcheck
+      text: "SA1024: cutset contains duplicate characters" # proved to not provide much value, only false positives.
+    - linters:
+      - staticcheck
+      text: "SA9004: only the first constant in this group has an explicit type" # explicitly recommended in go syntax
+    - linters:
+      - stylecheck
+      text: "ST1003:" # requires identifiers with "id" to be "ID".
+    - linters:
+      - stylecheck
+      text: "ST1005:" # punctuation in error messages
   max-issues-per-linter: 10000
   max-same-issues: 10000

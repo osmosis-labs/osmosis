@@ -3,16 +3,25 @@ package keeper
 import (
 	"fmt"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// BeforeEpochStart is a hook which is executed before the start of an epoch. It is a no-op for mint module.
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+	// no-op
 }
 
+// AfterEpochEnd is a hook which is executed after the end of an epoch.
+// This hook should attempt to mint and distribute coins according to
+// the configuration set via parameters. In addition, it handles the logic
+// for reducing minted coins according to the parameters.
+// For an attempt to mint to occur:
+// - given epochIdentifier must be equal to the mint epoch identifier set via parameters.
+// - given epochNumber must be greater than or equal to the mint start epoch set via parameters.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	params := k.GetParams(ctx)
 
@@ -21,20 +30,21 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		if epochNumber < params.MintingRewardsDistributionStartEpoch {
 			return
 		} else if epochNumber == params.MintingRewardsDistributionStartEpoch {
-			k.SetLastHalvenEpochNum(ctx, epochNumber)
+			k.SetLastReductionEpochNum(ctx, epochNumber)
 		}
 		// fetch stored minter & params
 		minter := k.GetMinter(ctx)
-		params := k.GetParams(ctx)
 
 		// Check if we have hit an epoch where we update the inflation parameter.
-		// Since epochs only update based on BFT time data, it is safe to store the "halvening period time"
-		// in terms of the number of epochs that have transpired.
-		if epochNumber >= k.GetParams(ctx).ReductionPeriodInEpochs+k.GetLastHalvenEpochNum(ctx) {
-			// Halven the reward per halven period
+		// We measure time between reductions in number of epochs.
+		// This avoids issues with measuring in block numbers, as epochs have fixed intervals, with very
+		// low variance at the relevant sizes. As a result, it is safe to store the epoch number
+		// of the last reduction to be later retrieved for comparison.
+		if epochNumber >= params.ReductionPeriodInEpochs+k.GetLastReductionEpochNum(ctx) {
+			// Reduce the reward per reduction period
 			minter.EpochProvisions = minter.NextEpochProvisions(params)
 			k.SetMinter(ctx, minter)
-			k.SetLastHalvenEpochNum(ctx, epochNumber)
+			k.SetLastReductionEpochNum(ctx, epochNumber)
 		}
 
 		// mint coins, update supply
@@ -59,7 +69,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				types.EventTypeMint,
+				types.ModuleName,
 				sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochNumber)),
 				sdk.NewAttribute(types.AttributeKeyEpochProvisions, minter.EpochProvisions.String()),
 				sdk.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),

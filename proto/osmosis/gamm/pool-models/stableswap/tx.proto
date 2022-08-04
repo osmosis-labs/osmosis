@@ -1,21 +1,24 @@
 syntax = "proto3";
-package osmosis.gamm.stableswap.v1beta1;
+package osmosis.gamm.poolmodels.stableswap.v1beta1;
 
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "osmosis/gamm/pool-models/stableswap/stableswap_pool.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/stableswap";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/stableswap";
 
 service Msg {
   rpc CreateStableswapPool(MsgCreateStableswapPool)
       returns (MsgCreateStableswapPoolResponse);
+  rpc StableSwapAdjustScalingFactors(MsgStableSwapAdjustScalingFactors)
+      returns (MsgStableSwapAdjustScalingFactorsResponse);
 }
 
+// ===================== MsgCreatePool
 message MsgCreateStableswapPool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
-  PoolParams poolParams = 2 [ (gogoproto.moretags) = "yaml:\"pool_params\"" ];
+  PoolParams pool_params = 2 [ (gogoproto.moretags) = "yaml:\"pool_params\"" ];
 
   repeated cosmos.base.v1beta1.Coin initial_pool_liquidity = 3 [
     (gogoproto.nullable) = false,
@@ -26,6 +29,21 @@ message MsgCreateStableswapPool {
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
 }
 
+// Returns a poolID with custom poolName.
 message MsgCreateStableswapPoolResponse {
   uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
 }
+
+// Sender must be the pool's scaling_factor_governor in order for the tx to
+// succeed. Adjusts stableswap scaling factors.
+message MsgStableSwapAdjustScalingFactors {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 pool_id = 2 [ (gogoproto.customname) = "PoolID" ];
+
+  repeated uint64 scaling_factors = 3 [
+    (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgStableSwapAdjustScalingFactorsResponse {}

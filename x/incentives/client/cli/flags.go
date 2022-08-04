@@ -6,20 +6,19 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-// flags for lockup module tx commands.
+// Flags for incentives module tx commands.
 const (
 	FlagDuration  = "duration"
 	FlagStartTime = "start-time"
 	FlagEpochs    = "epochs"
 	FlagPerpetual = "perpetual"
-
 	FlagTimestamp = "timestamp"
 	FlagOwner     = "owner"
 	FlagLockIds   = "lock-ids"
 	FlagEndEpoch  = "end-epoch"
 )
 
-// FlagSetCreateGauge returns flags for creating gauge.
+// FlagSetCreateGauge returns flags for creating gauges.
 func FlagSetCreateGauge() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 

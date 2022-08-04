@@ -44,6 +44,7 @@ type printInfo struct {
 	AppMessage json.RawMessage `json:"app_message" yaml:"app_message"`
 }
 
+// newPrintInfo initializes a printInfo struct.
 func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.RawMessage) printInfo {
 	return printInfo{
 		Moniker:    moniker,
@@ -54,6 +55,7 @@ func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.Ra
 	}
 }
 
+// displayInfo displays printInfo in JSON format.
 func displayInfo(info printInfo) error {
 	out, err := json.MarshalIndent(info, "", " ")
 	if err != nil {
@@ -93,6 +95,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				"77bb5fb9b6964d6e861e91c1d55cf82b67d838b5@bd-osmosis-seed-mainnet-us-01.bdnodes.net:26656", // Blockdaemon US
 				"3243426ab56b67f794fa60a79cc7f11bc7aa752d@bd-osmosis-seed-mainnet-eu-02.bdnodes.net:26656", // Blockdaemon EU
 				"6fc23ee451a5969853825d861532676b84d7bf0c@osmosis.mainnet.seed.blockngine.io:26716",        // BlockNgine Validators
+				"7c66126b64cd66bafd9ccfc721f068df451d31a3@osmosis-seed.sunshinevalidation.io:9393",         // Sunshine Validation
 			}
 			config.P2P.Seeds = strings.Join(seeds, ",")
 			config.P2P.MaxNumInboundPeers = 320

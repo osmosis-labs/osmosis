@@ -5,9 +5,13 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
@@ -15,13 +19,15 @@ import (
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/app"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
 type KeeperTestHelper struct {
@@ -33,85 +39,124 @@ type KeeperTestHelper struct {
 	TestAccs    []sdk.AccAddress
 }
 
-func (keeperTestHelper *KeeperTestHelper) Setup() {
-	keeperTestHelper.App = app.Setup(false)
-	keeperTestHelper.Ctx = keeperTestHelper.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
-	keeperTestHelper.QueryHelper = &baseapp.QueryServiceTestHelper{
-		GRPCQueryRouter: keeperTestHelper.App.GRPCQueryRouter(),
-		Ctx:             keeperTestHelper.Ctx,
+// Setup sets up basic environment for suite (App, Ctx, and test accounts)
+func (s *KeeperTestHelper) Setup() {
+	s.App = app.Setup(false)
+	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	s.QueryHelper = &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: s.App.GRPCQueryRouter(),
+		Ctx:             s.Ctx,
 	}
-	keeperTestHelper.TestAccs = CreateRandomAccounts(3)
+
+	s.TestAccs = CreateRandomAccounts(3)
 }
 
-func (keeperTestHelper *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
-	err := simapp.FundAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, acc, amounts)
-	keeperTestHelper.Require().NoError(err)
+// CreateTestContext creates a test context.
+func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
+	db := dbm.NewMemDB()
+	logger := log.NewNopLogger()
+
+	ms := rootmulti.NewStore(db, logger)
+
+	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
-func (keeperTestHelper *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
+// CreateTestContext creates a test context.
+func (s *KeeperTestHelper) Commit() {
+	oldHeight := s.Ctx.BlockHeight()
+	oldHeader := s.Ctx.BlockHeader()
+	s.App.Commit()
+	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: time.Now().UTC()}
+	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
+	s.Ctx = s.App.GetBaseApp().NewContext(false, newHeader)
+}
+
+// FundAcc funds target address with specified amount.
+func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
+	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
+	s.Require().NoError(err)
+}
+
+// SetupValidator sets up a validator and returns the ValAddress.
+func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
 	valPub := secp256k1.GenPrivKey().PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
-	bondDenom := keeperTestHelper.App.StakingKeeper.GetParams(keeperTestHelper.Ctx).BondDenom
+	bondDenom := s.App.StakingKeeper.GetParams(s.Ctx).BondDenom
 	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
 
-	keeperTestHelper.FundAcc(sdk.AccAddress(valAddr), selfBond)
+	s.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
-	sh := teststaking.NewHelper(keeperTestHelper.Suite.T(), keeperTestHelper.Ctx, *keeperTestHelper.App.StakingKeeper)
+	sh := teststaking.NewHelper(s.Suite.T(), s.Ctx, *s.App.StakingKeeper)
 	msg := sh.CreateValidatorMsg(valAddr, valPub, selfBond[0].Amount)
 	sh.Handle(msg, true)
-	val, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddr)
-	keeperTestHelper.Require().True(found)
+
+	val, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+	s.Require().True(found)
+
 	val = val.UpdateStatus(bondStatus)
-	keeperTestHelper.App.StakingKeeper.SetValidator(keeperTestHelper.Ctx, val)
+	s.App.StakingKeeper.SetValidator(s.Ctx, val)
 
 	consAddr, err := val.GetConsAddr()
-	keeperTestHelper.Suite.Require().NoError(err)
+	s.Suite.Require().NoError(err)
+
 	signingInfo := slashingtypes.NewValidatorSigningInfo(
 		consAddr,
-		keeperTestHelper.Ctx.BlockHeight(),
+		s.Ctx.BlockHeight(),
 		0,
 		time.Unix(0, 0),
 		false,
 		0,
 	)
-	keeperTestHelper.App.SlashingKeeper.SetValidatorSigningInfo(keeperTestHelper.Ctx, consAddr, signingInfo)
+	s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
 
 	return valAddr
 }
 
-func (keeperTestHelper *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
+// SetupTokenFactory sets up a token module account for the TokenFactoryKeeper.
+func (s *KeeperTestHelper) SetupTokenFactory() {
+	s.App.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
+}
+
+// BeginNewBlock starts a new block.
+func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	var valAddr []byte
-	validators := keeperTestHelper.App.StakingKeeper.GetAllValidators(keeperTestHelper.Ctx)
+
+	validators := s.App.StakingKeeper.GetAllValidators(s.Ctx)
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
-		keeperTestHelper.Require().NoError(err)
+		s.Require().NoError(err)
 		valAddr = valAddrFancy.Bytes()
 	} else {
-		valAddrFancy := keeperTestHelper.SetupValidator(stakingtypes.Bonded)
-		validator, _ := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddrFancy)
+		valAddrFancy := s.SetupValidator(stakingtypes.Bonded)
+		validator, _ := s.App.StakingKeeper.GetValidator(s.Ctx, valAddrFancy)
 		valAddr2, _ := validator.GetConsAddr()
 		valAddr = valAddr2.Bytes()
 	}
-	keeperTestHelper.BeginNewBlockWithProposer(executeNextEpoch, valAddr)
+
+	s.BeginNewBlockWithProposer(executeNextEpoch, valAddr)
 }
 
-func (keeperTestHelper *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
-	validator, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, proposer)
-	keeperTestHelper.Assert().True(found)
+// BeginNewBlockWithProposer begins a new block with a proposer.
+func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, proposer sdk.ValAddress) {
+	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, proposer)
+	s.Assert().True(found)
+
 	valConsAddr, err := validator.GetConsAddr()
-	keeperTestHelper.Require().NoError(err)
+	s.Require().NoError(err)
+
 	valAddr := valConsAddr.Bytes()
 
-	epochIdentifier := keeperTestHelper.App.SuperfluidKeeper.GetEpochIdentifier(keeperTestHelper.Ctx)
-	epoch := keeperTestHelper.App.EpochsKeeper.GetEpochInfo(keeperTestHelper.Ctx, epochIdentifier)
-	newBlockTime := keeperTestHelper.Ctx.BlockTime().Add(5 * time.Second)
+	epochIdentifier := s.App.SuperfluidKeeper.GetEpochIdentifier(s.Ctx)
+	epoch := s.App.EpochsKeeper.GetEpochInfo(s.Ctx, epochIdentifier)
+	newBlockTime := s.Ctx.BlockTime().Add(5 * time.Second)
 	if executeNextEpoch {
 		endEpochTime := epoch.CurrentEpochStartTime.Add(epoch.Duration)
 		newBlockTime = endEpochTime.Add(time.Second)
 	}
-	header := tmproto.Header{Height: keeperTestHelper.Ctx.BlockHeight() + 1, Time: newBlockTime}
-	newCtx := keeperTestHelper.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
-	keeperTestHelper.Ctx = newCtx
+
+	header := tmtypes.Header{Height: s.Ctx.BlockHeight() + 1, Time: newBlockTime}
+	newCtx := s.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(s.Ctx.BlockHeight() + 1)
+	s.Ctx = newCtx
 	lastCommitInfo := abci.LastCommitInfo{
 		Votes: []abci.VoteInfo{{
 			Validator:       abci.Validator{Address: valAddr, Power: 1000},
@@ -120,112 +165,140 @@ func (keeperTestHelper *KeeperTestHelper) BeginNewBlockWithProposer(executeNextE
 	}
 	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
 
-	fmt.Println("beginning block ", keeperTestHelper.Ctx.BlockHeight())
-	keeperTestHelper.App.BeginBlocker(keeperTestHelper.Ctx, reqBeginBlock)
+	fmt.Println("beginning block ", s.Ctx.BlockHeight())
+	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
 }
 
-func (keeperTestHelper *KeeperTestHelper) EndBlock() {
-	reqEndBlock := abci.RequestEndBlock{Height: keeperTestHelper.Ctx.BlockHeight()}
-	keeperTestHelper.App.EndBlocker(keeperTestHelper.Ctx, reqEndBlock)
+// EndBlock ends the block.
+func (s *KeeperTestHelper) EndBlock() {
+	reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
+	s.App.EndBlocker(s.Ctx, reqEndBlock)
 }
 
-func (keeperTestHelper *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt sdk.Int) {
-	validator, found := keeperTestHelper.App.StakingKeeper.GetValidator(keeperTestHelper.Ctx, valAddr)
-	keeperTestHelper.Require().True(found)
+// AllocateRewardsToValidator allocates reward tokens to a distribution module then allocates rewards to the validator address.
+func (s *KeeperTestHelper) AllocateRewardsToValidator(valAddr sdk.ValAddress, rewardAmt sdk.Int) {
+	validator, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
+	s.Require().True(found)
 
 	// allocate reward tokens to distribution module
 	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, rewardAmt)}
-	err := simapp.FundModuleAccount(keeperTestHelper.App.BankKeeper, keeperTestHelper.Ctx, distrtypes.ModuleName, coins)
-	keeperTestHelper.Require().NoError(err)
+	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, distrtypes.ModuleName, coins)
+	s.Require().NoError(err)
 
 	// allocate rewards to validator
-	keeperTestHelper.Ctx = keeperTestHelper.Ctx.WithBlockHeight(keeperTestHelper.Ctx.BlockHeight() + 1)
+	s.Ctx = s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1)
 	decTokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(20000)}}
-	keeperTestHelper.App.DistrKeeper.AllocateTokensToValidator(keeperTestHelper.Ctx, validator, decTokens)
+	s.App.DistrKeeper.AllocateTokensToValidator(s.Ctx, validator, decTokens)
 }
 
 // SetupGammPoolsWithBondDenomMultiplier uses given multipliers to set initial pool supply of bond denom.
-func (keeperTestHelper *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
-	keeperTestHelper.App.GAMMKeeper.SetParams(keeperTestHelper.Ctx, gammtypes.Params{
-		PoolCreationFee: sdk.Coins{},
-	})
-
-	bondDenom := keeperTestHelper.App.StakingKeeper.BondDenom(keeperTestHelper.Ctx)
+func (s *KeeperTestHelper) SetupGammPoolsWithBondDenomMultiplier(multipliers []sdk.Dec) []gammtypes.PoolI {
+	bondDenom := s.App.StakingKeeper.BondDenom(s.Ctx)
 	// TODO: use sdk crypto instead of tendermint to generate address
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
-	poolCreationFee := keeperTestHelper.App.GAMMKeeper.GetParams(keeperTestHelper.Ctx)
-	keeperTestHelper.FundAcc(acc1, poolCreationFee.PoolCreationFee)
+	params := s.App.GAMMKeeper.GetParams(s.Ctx)
 
 	pools := []gammtypes.PoolI{}
-
 	for index, multiplier := range multipliers {
 		token := fmt.Sprintf("token%d", index)
-
 		uosmoAmount := gammtypes.InitPoolSharesSupply.ToDec().Mul(multiplier).RoundInt()
 
-		keeperTestHelper.FundAcc(acc1, sdk.NewCoins(
+		s.FundAcc(acc1, sdk.NewCoins(
 			sdk.NewCoin(bondDenom, uosmoAmount.Mul(sdk.NewInt(10))),
 			sdk.NewInt64Coin(token, 100000),
-		))
+		).Add(params.PoolCreationFee...))
 
 		var (
 			defaultFutureGovernor = ""
 
 			// pool assets
-			defaultFooAsset balancer.PoolAsset = balancer.PoolAsset{
+			defaultFooAsset = balancer.PoolAsset{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(bondDenom, uosmoAmount),
 			}
-			defaultBarAsset balancer.PoolAsset = balancer.PoolAsset{
+			defaultBarAsset = balancer.PoolAsset{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin(token, sdk.NewInt(10000)),
 			}
-			poolAssets []balancer.PoolAsset = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
+
+			poolAssets = []balancer.PoolAsset{defaultFooAsset, defaultBarAsset}
 		)
+
 		poolParams := balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
-		poolId, err := keeperTestHelper.App.GAMMKeeper.CreatePool(keeperTestHelper.Ctx, msg)
-		keeperTestHelper.Require().NoError(err)
 
-		pool, err := keeperTestHelper.App.GAMMKeeper.GetPoolAndPoke(keeperTestHelper.Ctx, poolId)
-		keeperTestHelper.Require().NoError(err)
+		poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
+		s.Require().NoError(err)
+
+		pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+		s.Require().NoError(err)
 
 		pools = append(pools, pool)
 	}
+
 	return pools
 }
 
 // SwapAndSetSpotPrice runs a swap to set Spot price of a pool using arbitrary values
 // returns spot price after the arbitrary swap.
-func (keeperTestHelper *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin, toAsset sdk.Coin) sdk.Dec {
+func (s *KeeperTestHelper) SwapAndSetSpotPrice(poolId uint64, fromAsset sdk.Coin, toAsset sdk.Coin) sdk.Dec {
 	// create a dummy account
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 
 	// fund dummy account with tokens to swap
 	coins := sdk.Coins{sdk.NewInt64Coin(fromAsset.Denom, 100000000000000)}
-	keeperTestHelper.FundAcc(acc1, coins)
+	s.FundAcc(acc1, coins)
 
-	_, err := keeperTestHelper.App.GAMMKeeper.SwapExactAmountOut(
-		keeperTestHelper.Ctx, acc1,
-		poolId, fromAsset.Denom, fromAsset.Amount,
-		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))))
-	keeperTestHelper.Require().NoError(err)
+	_, err := s.App.GAMMKeeper.SwapExactAmountOut(
+		s.Ctx,
+		acc1,
+		poolId,
+		fromAsset.Denom,
+		fromAsset.Amount,
+		sdk.NewCoin(toAsset.Denom, toAsset.Amount.Quo(sdk.NewInt(4))),
+	)
+	s.Require().NoError(err)
 
-	spotPrice, err := keeperTestHelper.App.GAMMKeeper.CalculateSpotPrice(keeperTestHelper.Ctx, poolId, toAsset.Denom, fromAsset.Denom)
-	keeperTestHelper.Require().NoError(err)
+	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, toAsset.Denom, fromAsset.Denom)
+	s.Require().NoError(err)
+
 	return spotPrice
 }
 
-func (keeperTestHelper *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
-	msgServer := lockupkeeper.NewMsgServerImpl(keeperTestHelper.App.LockupKeeper)
-	keeperTestHelper.FundAcc(addr, coins)
-	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(keeperTestHelper.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
-	keeperTestHelper.Require().NoError(err)
+// LockTokens funds an account, locks tokens and returns a lockID.
+func (s *KeeperTestHelper) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockID uint64) {
+	msgServer := lockupkeeper.NewMsgServerImpl(s.App.LockupKeeper)
+	s.FundAcc(addr, coins)
+
+	msgResponse, err := msgServer.LockTokens(sdk.WrapSDKContext(s.Ctx), lockuptypes.NewMsgLockTokens(addr, duration, coins))
+	s.Require().NoError(err)
+
 	return msgResponse.ID
+}
+
+// BuildTx builds a transaction.
+func (s *KeeperTestHelper) BuildTx(
+	txBuilder client.TxBuilder,
+	msgs []sdk.Msg,
+	sigV2 signing.SignatureV2,
+	memo string, txFee sdk.Coins,
+	gasLimit uint64,
+) authsigning.Tx {
+	err := txBuilder.SetMsgs(msgs[0])
+	s.Require().NoError(err)
+
+	err = txBuilder.SetSignatures(sigV2)
+	s.Require().NoError(err)
+
+	txBuilder.SetMemo(memo)
+	txBuilder.SetFeeAmount(txFee)
+	txBuilder.SetGasLimit(gasLimit)
+
+	return txBuilder.GetTx()
 }
 
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses
@@ -237,4 +310,11 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	}
 
 	return testAddrs
+}
+
+func GenerateTestAddrs() (string, string) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	validAddr := sdk.AccAddress(pk1.Address()).String()
+	invalidAddr := sdk.AccAddress("invalid").String()
+	return validAddr, invalidAddr
 }

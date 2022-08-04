@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "osmosis/mint/v1beta1/mint.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/mint/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/mint/types";
 
 // Query provides defines the gRPC querier service.
 service Query {
@@ -14,7 +14,7 @@ service Query {
     option (google.api.http).get = "/osmosis/mint/v1beta1/params";
   }
 
-  // EpochProvisions current minting epoch provisions value.
+  // EpochProvisions returns the current minting epoch provisions value.
   rpc EpochProvisions(QueryEpochProvisionsRequest)
       returns (QueryEpochProvisionsResponse) {
     option (google.api.http).get = "/osmosis/mint/v1beta1/epoch_provisions";

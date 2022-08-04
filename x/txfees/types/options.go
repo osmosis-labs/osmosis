@@ -12,7 +12,8 @@ import (
 // If Options are not set in a config somewhere,
 // use defaults to preserve functionality with old node software
 
-// TODO: Bump after next minor version. (in 6.2+).
+// DefaultMinGasPriceForArbitrageTx represents minimum gas price
+// for arbitrage transactions.
 var DefaultMinGasPriceForArbitrageTx = sdk.ZeroDec()
 
 var (

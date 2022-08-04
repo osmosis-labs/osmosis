@@ -7,35 +7,43 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/incentives/types";
 
+// Gauge is an object that stores and distributes yields to recipients who
+// satisfy certain conditions. Currently gauges support conditions around the
+// duration for which a given denom is locked.
 message Gauge {
-  // unique ID of a Gauge
+  // id is the unique ID of a Gauge
   uint64 id = 1;
-  // flag to show if it's perpetual or multi-epoch
-  // distribution incentives by third party
+  // is_perpetual is a flag to show if it's a perpetual or non-perpetual gauge
+  // Non-perpetual gauges distribute their tokens equally per epoch while the
+  // gauge is in the active period. Perpetual gauges distribute all their tokens
+  // at a single time and only distribute their tokens again once the gauge is
+  // refilled, Intended for use with incentives that get refilled daily.
   bool is_perpetual = 2;
-  // Rewards are distributed to lockups that are are returned by at least one of
-  // these queries
+  // distribute_to is where the gauge rewards are distributed to.
+  // This is queried via lock duration or by timestamp
   osmosis.lockup.QueryCondition distribute_to = 3
       [ (gogoproto.nullable) = false ];
-  // total amount of Coins that has been in the gauge.
-  // can distribute multiple coins
+  // coins is the total amount of coins that have been in the gauge
+  // Can distribute multiple coin denoms
   repeated cosmos.base.v1beta1.Coin coins = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-  // distribution start time
+  // start_time is the distribution start time
   google.protobuf.Timestamp start_time = 5 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"start_time\""
   ];
-  // number of epochs distribution will be done
+  // num_epochs_paid_over is the number of total epochs distribution will be
+  // completed over
   uint64 num_epochs_paid_over = 6;
-  // number of epochs distributed already
+  // filled_epochs is the number of epochs distribution has been completed on
+  // already
   uint64 filled_epochs = 7;
-  // already distributed coins
+  // distributed_coins are coins that have been distributed already
   repeated cosmos.base.v1beta1.Coin distributed_coins = 8 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
@@ -43,6 +51,7 @@ message Gauge {
 }
 
 message LockableDurationsInfo {
+  // List of incentivised durations that gauges will pay out to
   repeated google.protobuf.Duration lockable_durations = 1 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,

@@ -4,11 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 const (
-	TypeMsgCreateStableswapPool = "create_stableswap_pool"
+	TypeMsgCreateStableswapPool           = "create_stableswap_pool"
+	TypeMsgStableSwapAdjustScalingFactors = "stable_swap_adjust_scaling_factors"
 )
 
 var (
@@ -43,7 +44,13 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 		return err
 	}
 
-	// TODO: Add validation for pool initial liquidity
+	// validation for pool initial liquidity
+	// TO DO: expand this check to accommodate multi-asset pools for stableswap
+	if len(msg.InitialPoolLiquidity) < 2 {
+		return types.ErrTooFewPoolAssets
+	} else if len(msg.InitialPoolLiquidity) > 2 {
+		return types.ErrTooManyPoolAssets
+	}
 
 	// validation for future owner
 	if err = types.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
@@ -83,6 +90,55 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 	return msg.InitialPoolLiquidity
 }
 
-func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolID uint64) (types.PoolI, error) {
-	return &Pool{}, types.ErrNotImplemented
+func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity, msg.FuturePoolGovernor)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stableswapPool, nil
+}
+
+var _ sdk.Msg = &MsgStableSwapAdjustScalingFactors{}
+
+// Implement sdk.Msg
+func NewMsgStableSwapAdjustScalingFactors(
+	sender string,
+	poolID uint64,
+) MsgStableSwapAdjustScalingFactors {
+	return MsgStableSwapAdjustScalingFactors{
+		Sender: sender,
+		PoolID: poolID,
+	}
+}
+
+func (msg MsgStableSwapAdjustScalingFactors) Route() string {
+	return types.RouterKey
+}
+
+func (msg MsgStableSwapAdjustScalingFactors) Type() string { return TypeMsgCreateStableswapPool }
+func (msg MsgStableSwapAdjustScalingFactors) ValidateBasic() error {
+	if msg.Sender == "" {
+		return nil
+	}
+
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	return nil
+}
+
+func (msg MsgStableSwapAdjustScalingFactors) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgStableSwapAdjustScalingFactors) GetSigners() []sdk.AccAddress {
+	scalingFactorGovernor, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.AccAddress{scalingFactorGovernor}
 }

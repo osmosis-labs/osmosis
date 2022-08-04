@@ -1,9 +1,11 @@
 package types
 
-// Minting module event types.
+// Minting module event constants.
 const (
-	EventTypeMint = ModuleName
-
+	// AttributeKeyEpochProvisions is the string representation of the
+	// epoch provisions event attribute.
 	AttributeKeyEpochProvisions = "epoch_provisions"
-	AttributeEpochNumber        = "epoch_number"
+	// AttributeEpochNumber is the string representation of the
+	// epoch number event attribute.
+	AttributeEpochNumber = "epoch_number"
 )

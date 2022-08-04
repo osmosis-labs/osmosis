@@ -25,16 +25,16 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v7/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 
-	claimtypes "github.com/osmosis-labs/osmosis/v7/x/claim/types"
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 )
 
 //nolint:ineffassign
+// PrepareGenesisCmd returns prepare-genesis cobra Command.
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare-genesis",
@@ -79,6 +79,9 @@ Example:
 
 			// run Prepare Genesis
 			appState, genDoc, err = PrepareGenesis(clientCtx, appState, genDoc, genesisParams, chainID)
+			if err != nil {
+				return err
+			}
 
 			// validate genesis state
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, appState); err != nil {
@@ -108,6 +111,7 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	cdc := depCdc
 
 	// chain params genesis
+	genDoc.ChainID = chainID
 	genDoc.GenesisTime = genesisParams.GenesisTime
 
 	genDoc.ConsensusParams = genesisParams.ConsensusParams
@@ -193,15 +197,6 @@ func PrepareGenesis(clientCtx client.Context, appState map[string]json.RawMessag
 	}
 	appState[epochstypes.ModuleName] = epochsGenStateBz
 
-	// claim module genesis
-	claimGenState := claimtypes.GetGenesisStateFromAppState(depCdc, appState)
-	claimGenState.Params = genesisParams.ClaimParams
-	claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal claim genesis state: %w", err)
-	}
-	appState[claimtypes.ModuleName] = claimGenStateBz
-
 	// poolincentives module genesis
 	poolincentivesGenState := &genesisParams.PoolIncentivesGenesis
 	poolincentivesGenStateBz, err := cdc.MarshalJSON(poolincentivesGenState)
@@ -237,8 +232,6 @@ type GenesisParams struct {
 	PoolIncentivesGenesis poolincentivestypes.GenesisState
 
 	Epochs []epochstypes.EpochInfo
-
-	ClaimParams claimtypes.Params
 }
 
 func MainnetGenesisParams() GenesisParams {
@@ -496,13 +489,6 @@ func MainnetGenesisParams() GenesisParams {
 		time.Hour * 24 * 14, // 14 days
 	}
 
-	genParams.ClaimParams = claimtypes.Params{
-		AirdropStartTime:   genParams.GenesisTime,
-		DurationUntilDecay: time.Hour * 24 * 60,  // 60 days = ~2 months
-		DurationOfDecay:    time.Hour * 24 * 120, // 120 days = ~4 months
-		ClaimDenom:         genParams.NativeCoinMetadatas[0].Base,
-	}
-
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
 	genParams.ConsensusParams.Block.MaxBytes = 5 * 1024 * 1024
 	genParams.ConsensusParams.Block.MaxGas = 6_000_000
@@ -563,10 +549,6 @@ func TestnetGenesisParams() GenesisParams {
 		time.Hour * 1,    // 1 hour
 		time.Hour * 2,    // 2 hours
 	}
-
-	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime
-	genParams.ClaimParams.DurationUntilDecay = time.Hour * 48 // 2 days
-	genParams.ClaimParams.DurationOfDecay = time.Hour * 48    // 2 days
 
 	genParams.PoolIncentivesGenesis.LockableDurations = genParams.IncentivesGenesis.LockableDurations
 

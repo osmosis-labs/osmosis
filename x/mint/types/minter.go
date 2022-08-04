@@ -1,7 +1,14 @@
 package types
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	errNilEpochProvisions      = errors.New("epoch provisions was nil in genesis")
+	errNegativeEpochProvisions = errors.New("epoch provisions should be non-negative")
 )
 
 // NewMinter returns a new Minter object with the given epoch
@@ -22,8 +29,15 @@ func DefaultInitialMinter() Minter {
 	return InitialMinter()
 }
 
-// validate minter.
-func ValidateMinter(minter Minter) error {
+// Validate validates minter. Returns nil on success, error otherewise.
+func (m Minter) Validate() error {
+	if m.EpochProvisions.IsNil() {
+		return errNilEpochProvisions
+	}
+
+	if m.EpochProvisions.IsNegative() {
+		return errNegativeEpochProvisions
+	}
 	return nil
 }
 

@@ -3,8 +3,9 @@ package keeper
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	db "github.com/tendermint/tm-db"
+
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +18,7 @@ func unlockingPrefix(isUnlocking bool) []byte {
 	return types.KeyPrefixNotUnlocking
 }
 
+// iteratorAfterTime iterates through keys between that use prefix, and have a time.
 func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	timeKey := getTimeKey(time)
@@ -26,7 +28,7 @@ func (k Keeper) iteratorAfterTime(ctx sdk.Context, prefix []byte, time time.Time
 	return store.Iterator(storetypes.PrefixEndBytes(key), storetypes.PrefixEndBytes(prefix))
 }
 
-// iterate through keys between that use prefix, and have a time LTE max time.
+// iteratorBeforeTime iterates through keys between that use prefix, and have a time LTE max time.
 func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, maxTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	timeKey := getTimeKey(maxTime)
@@ -36,13 +38,15 @@ func (k Keeper) iteratorBeforeTime(ctx sdk.Context, prefix []byte, maxTime time.
 	return store.Iterator(prefix, storetypes.PrefixEndBytes(key))
 }
 
+// iteratorDuration iterates over a domain of keys for a specified duration.
 func (k Keeper) iteratorDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
-	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
 	key := combineKeys(prefix, durationKey)
+	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(store, key)
 }
 
+// iteratorLongerDuration iterates over a domain of keys for longer than a specified duration.
 func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
@@ -51,6 +55,7 @@ func (k Keeper) iteratorLongerDuration(ctx sdk.Context, prefix []byte, duration 
 	return store.Iterator(key, storetypes.PrefixEndBytes(prefix))
 }
 
+// iteratorShorterDuration iterates over a domain of keys for shorter than a specified duration.
 func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration time.Duration) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	durationKey := getDurationKey(duration)
@@ -59,6 +64,7 @@ func (k Keeper) iteratorShorterDuration(ctx sdk.Context, prefix []byte, duration
 	return store.Iterator(prefix, key)
 }
 
+// iterator iterates over a domain of keys.
 func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(store, prefix)
@@ -148,7 +154,13 @@ func (k Keeper) AccountLockIteratorLongerDuration(ctx sdk.Context, isUnlocking b
 	return k.iteratorLongerDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)
 }
 
-// AccountLockIteratorShorterThanDuration returns iterator used for getting all locks by account longer than duration.
+// AccountLockIteratorDuration returns an iterator used for getting all locks for a given account, isUnlocking, and specific duration.
+func (k Keeper) AccountLockIteratorDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) sdk.Iterator {
+	unlockingPrefix := unlockingPrefix(isUnlocking)
+	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)
+}
+
+// AccountLockIteratorShorterThanDuration returns an iterator used for getting all locks by account shorter than the specified duration.
 func (k Keeper) AccountLockIteratorShorterThanDuration(ctx sdk.Context, isUnlocking bool, addr sdk.AccAddress, duration time.Duration) sdk.Iterator {
 	unlockingPrefix := unlockingPrefix(isUnlocking)
 	return k.iteratorShorterDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountLockDuration, addr), duration)
@@ -166,6 +178,7 @@ func (k Keeper) AccountLockIteratorDurationDenom(ctx sdk.Context, isUnlocking bo
 	return k.iteratorDuration(ctx, combineKeys(unlockingPrefix, types.KeyPrefixAccountDenomLockDuration, addr, []byte(denom)), duration)
 }
 
+// getLocksFromIterator returns an array of single lock unit by period defined by the x/lockup module.
 func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []types.PeriodLock {
 	locks := []types.PeriodLock{}
 	defer iterator.Close()
@@ -180,6 +193,7 @@ func (k Keeper) getLocksFromIterator(ctx sdk.Context, iterator db.Iterator) []ty
 	return locks
 }
 
+// unlockFromIterator gets locks from the iterator, then unlocks all matured locks. Returns locks unlocked and sum of coins unlocked.
 func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, sdk.Coins) {
 	// Note: this function is only used for an account
 	// and this has no conflicts with synthetic lockups
@@ -187,7 +201,7 @@ func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]typ
 	coins := sdk.Coins{}
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
-		err := k.Unlock(ctx, lock.ID)
+		err := k.UnlockMaturedLock(ctx, lock.ID)
 		if err != nil {
 			panic(err)
 		}
@@ -197,6 +211,7 @@ func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]typ
 	return locks, coins
 }
 
+// beginUnlockFromIterator starts unlocking coins from NotUnlocking queue.
 func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]types.PeriodLock, error) {
 	// Note: this function is only used for an account
 	// and this has no conflicts with synthetic lockups
@@ -211,6 +226,7 @@ func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) (
 	return locks, nil
 }
 
+// getCoinsFromIterator gets coins from locks using the iterator.
 func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getCoinsFromLocks(k.getLocksFromIterator(ctx, iterator))
 }

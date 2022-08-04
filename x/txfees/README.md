@@ -9,6 +9,10 @@ Currently the only supported metadata & spot price calculator is using a GAMM po
 
 * Adds a whitelist of tokens that can be used as fees on the chain.
   * Any token not on this list cannot be provided as a tx fee.
+  * Any fee that is paid with a token that is on this list but is
+        not the base denom will be collected in a separate module
+        account to be batched and swapped into the base denom at the end
+        of each epoch.
 * Adds a new SDK message for creating governance proposals for adding new TxFee denoms.
 
 ## Local Mempool Filters Added
@@ -31,21 +35,16 @@ Currently the only supported metadata & spot price calculator is using a GAMM po
 * A max wanted gas per any tx can be set to filter out attack txes.
 * If tx wanted gas > than predefined threshold of 1M, then separate 'min-gas-price-for-high-gas-tx' option used to calculate min gas price.
 
-## New SDK messages
-
-TODO: Describe
-
-## CLI commands
-
-TODO: Describe
-
 ## Queries
 
-TODO: Describe
+base-denom
+- Query the base fee denom
 
-## Code structure
+denom-pool-id
+- Query the pool id associated with a specific whitelisted fee token
 
-TODO: Describe
+fee-tokens
+- Query the list of non-basedenom fee tokens and their associated pool ids
 
 ## Future directions
 

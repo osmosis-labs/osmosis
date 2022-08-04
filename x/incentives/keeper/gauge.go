@@ -3,19 +3,22 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
-	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
 	db "github.com/tendermint/tm-db"
+
+	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Iterate over everything in a gauges iterator, until it reaches the end. Return all gauges iterated over.
+// getGaugesFromIterator iterates over everything in a gauge's iterator, until it reaches the end. Return all gauges iterated over.
 func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []types.Gauge {
 	gauges := []types.Gauge{}
 	defer iterator.Close()
@@ -36,19 +39,6 @@ func (k Keeper) getGaugesFromIterator(ctx sdk.Context, iterator db.Iterator) []t
 	return gauges
 }
 
-// Compute the total amount of coins in all the gauges.
-func (k Keeper) getCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
-	coins := sdk.Coins{}
-	for _, gauge := range gauges {
-		coins = coins.Add(gauge.Coins...)
-	}
-	return coins
-}
-
-func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
-}
-
 // setGauge set the gauge inside store.
 func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	store := ctx.KVStore(k.storeKey)
@@ -60,7 +50,9 @@ func (k Keeper) setGauge(ctx sdk.Context, gauge *types.Gauge) error {
 	return nil
 }
 
-// CreateGaugeRefKeys adds gauge references as needed. Used to consolidate codepaths for InitGenesis and CreateGauge.
+// CreateGaugeRefKeys takes combinedKey (the keyPrefix for upcoming, active, or finished gauges combined with gauge start time) and adds a reference to the respective gauge ID.
+// If gauge is active or upcoming, creates reference between the denom and gauge ID.
+// Used to consolidate codepaths for InitGenesis and CreateGauge.
 func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, combinedKeys []byte, activeOrUpcomingGauge bool) error {
 	if err := k.addGaugeRefByKey(ctx, combinedKeys, gauge.Id); err != nil {
 		return err
@@ -73,6 +65,9 @@ func (k Keeper) CreateGaugeRefKeys(ctx sdk.Context, gauge *types.Gauge, combined
 	return nil
 }
 
+// SetGaugeWithRefKey takes a single gauge and assigns a key.
+// Takes combinedKey (the keyPrefix for upcoming, active, or finished gauges combined with gauge start time) and adds a reference to the respective gauge ID.
+// If this gauge is active or upcoming, creates reference between the denom and gauge ID.
 func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 	err := k.setGauge(ctx, gauge)
 	if err != nil {
@@ -95,7 +90,7 @@ func (k Keeper) SetGaugeWithRefKey(ctx sdk.Context, gauge *types.Gauge) error {
 	}
 }
 
-// CreateGauge create a gauge and send coins to the gauge.
+// CreateGauge creates a gauge and sends coins to the gauge.
 func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error) {
 	// Ensure that this gauge's duration is one of the allowed durations on chain
 	durations := k.GetLockableDurations(ctx)
@@ -136,7 +131,6 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	}
 	k.SetLastGaugeID(ctx, gauge.Id)
 
-	// TODO: Do we need to be concerned with case where this should be ActiveGauges?
 	combinedKeys := combineKeys(types.KeyPrefixUpcomingGauges, getTimeKey(gauge.StartTime))
 	activeOrUpcomingGauge := true
 
@@ -148,7 +142,7 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	return gauge.Id, nil
 }
 
-// AddToGauge add coins to gauge.
+// AddToGaugeRewards adds coins to gauge.
 func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error {
 	gauge, err := k.GetGaugeByID(ctx, gaugeID)
 	if err != nil {
@@ -167,7 +161,7 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 	return nil
 }
 
-// GetGaugeByID Returns gauge from gauge ID.
+// GetGaugeByID returns gauge from gauge ID.
 func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, error) {
 	gauge := types.Gauge{}
 	store := ctx.KVStore(k.storeKey)
@@ -182,7 +176,7 @@ func (k Keeper) GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*types.Gauge, err
 	return &gauge, nil
 }
 
-// GetGaugeFromIDs returns gauges from gauge ids reference.
+// GetGaugeFromIDs returns multiple gauges from a gaugeIDs array.
 func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gauge, error) {
 	gauges := []types.Gauge{}
 	for _, gaugeID := range gaugeIDs {
@@ -195,11 +189,12 @@ func (k Keeper) GetGaugeFromIDs(ctx sdk.Context, gaugeIDs []uint64) ([]types.Gau
 	return gauges, nil
 }
 
-// GetGauges returns gauges both upcoming and active.
+// GetGauges returns upcoming, active, and finished gauges.
 func (k Keeper) GetGauges(ctx sdk.Context) []types.Gauge {
 	return k.getGaugesFromIterator(ctx, k.GaugesIterator(ctx))
 }
 
+// GetNotFinishedGauges returns both upcoming and active gauges.
 func (k Keeper) GetNotFinishedGauges(ctx sdk.Context) []types.Gauge {
 	return append(k.GetActiveGauges(ctx), k.GetUpcomingGauges(ctx)...)
 }
@@ -209,7 +204,7 @@ func (k Keeper) GetActiveGauges(ctx sdk.Context) []types.Gauge {
 	return k.getGaugesFromIterator(ctx, k.ActiveGaugesIterator(ctx))
 }
 
-// GetUpcomingGauges returns scheduled gauges.
+// GetUpcomingGauges returns upcoming gauges.
 func (k Keeper) GetUpcomingGauges(ctx sdk.Context) []types.Gauge {
 	return k.getGaugesFromIterator(ctx, k.UpcomingGaugesIterator(ctx))
 }
@@ -219,16 +214,16 @@ func (k Keeper) GetFinishedGauges(ctx sdk.Context) []types.Gauge {
 	return k.getGaugesFromIterator(ctx, k.FinishedGaugesIterator(ctx))
 }
 
-// GetRewardsEst returns rewards estimation at a future specific time
+// GetRewardsEst returns rewards estimation at a future specific time (by epoch)
 // If locks are nil, it returns the rewards between now and the end epoch associated with address.
 // If locks are not nil, it returns all the rewards for the given locks between now and end epoch.
 func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lockuptypes.PeriodLock, endEpoch int64) sdk.Coins {
-	// If locks are nil, populate with all locks associated with the address
+	// if locks are nil, populate with all locks associated with the address
 	if len(locks) == 0 {
 		locks = k.lk.GetAccountPeriodLocks(ctx, addr)
 	}
-	// Get all gauges that reward to these locks
-	// First get all the denominations being locked up
+	// get all gauges that reward to these locks
+	// first get all the denominations being locked up
 	denomSet := map[string]bool{}
 	for _, l := range locks {
 		for _, c := range l.Coins {
@@ -239,10 +234,10 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	// initialize gauges to active and upcomings if not set
 	for s := range denomSet {
 		gaugeIDs := k.getAllGaugeIDsByDenom(ctx, s)
-		// Each gauge only rewards locks to one denom, so no duplicates
+		// each gauge only rewards locks to one denom, so no duplicates
 		for _, id := range gaugeIDs {
 			gauge, err := k.GetGaugeByID(ctx, id)
-			// Shouldn't happen
+			// shouldn't happen
 			if err != nil {
 				return sdk.Coins{}
 			}
@@ -254,7 +249,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	estimatedRewards := sdk.Coins{}
 	epochInfo := k.GetEpochInfo(ctx)
 
-	// no need to change storage while doing estimation and we use cached context
+	// no need to change storage while doing estimation as we use cached context
 	cacheCtx, _ := ctx.CacheContext()
 	for _, gauge := range gauges {
 		distrBeginEpoch := epochInfo.CurrentEpoch
@@ -264,9 +259,12 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 		}
 
 		for epoch := distrBeginEpoch; epoch <= endEpoch; epoch++ {
-			newGauge, distrCoins, err := k.FilteredLocksDistributionEst(cacheCtx, gauge, locks)
+			newGauge, distrCoins, isBuggedGauge, err := k.FilteredLocksDistributionEst(cacheCtx, gauge, locks)
 			if err != nil {
 				continue
+			}
+			if isBuggedGauge {
+				ctx.Logger().Error("Reward estimation does not include gauge " + strconv.Itoa(int(gauge.Id)) + " due to accumulation store bug")
 			}
 			estimatedRewards = estimatedRewards.Add(distrCoins...)
 			gauge = newGauge
@@ -276,7 +274,32 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 	return estimatedRewards
 }
 
+// GetEpochInfo returns EpochInfo struct given context.
 func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 	params := k.GetParams(ctx)
 	return k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
+}
+
+// chargeFeeIfSufficientFeeDenomBalance charges fee in the base denom on the address if the address has
+// balance that is less than fee + amount of the coin from gaugeCoins that is of base denom.
+// gaugeCoins might not have a coin of tx base denom. In that case, fee is only compared to balance.
+// The fee is sent to the community pool.
+// Returns nil on success, error otherwise.
+func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) (err error) {
+	feeDenom, err := k.tk.GetBaseDenom(ctx)
+	if err != nil {
+		return err
+	}
+
+	totalCost := gaugeCoins.AmountOf(feeDenom).Add(fee)
+	accountBalance := k.bk.GetBalance(ctx, address, feeDenom).Amount
+
+	if accountBalance.LT(totalCost) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "account's balance of %s (%s) is less than the total cost of the message (%s)", feeDenom, accountBalance, totalCost)
+	}
+
+	if err := k.dk.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(feeDenom, fee)), address); err != nil {
+		return err
+	}
+	return nil
 }

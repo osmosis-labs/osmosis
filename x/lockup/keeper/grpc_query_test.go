@@ -5,12 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
 	suite.FundAcc(addr, coins)
-	_, err := suite.querier.LockTokens(suite.Ctx, addr, coins, duration)
+	_, err := suite.querier.CreateLock(suite.Ctx, addr, coins, duration)
 	suite.Require().NoError(err)
 }
 

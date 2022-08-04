@@ -2,131 +2,212 @@ package e2e
 
 import (
 	"fmt"
-	"io"
-	"net/http"
-	"strings"
+	"os"
+	"path/filepath"
+	"strconv"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
-func (s *IntegrationTestSuite) TestQueryBalances() {
-	var (
-		expectedDenomsA   = []string{osmoDenom, stakeDenom}
-		expectedDenomsB   = []string{osmoDenom, stakeDenom, ibcDenom}
-		expectedBalancesA = []uint64{osmoBalanceA - ibcSendAmount, stakeBalanceA - stakeAmountA}
-		expectedBalancesB = []uint64{osmoBalanceB, stakeBalanceB - stakeAmountB, ibcSendAmount}
-	)
-
-	chainAAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainA.id][0].GetHostPort("1317/tcp"))
-	balancesA, err := queryBalances(chainAAPIEndpoint, s.chainA.validators[0].keyInfo.GetAddress().String())
-	s.Require().NoError(err)
-	s.Require().NotNil(balancesA)
-	s.Require().Equal(2, len(balancesA))
-
-	chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
-	balancesB, err := queryBalances(chainBAPIEndpoint, s.chainB.validators[0].keyInfo.GetAddress().String())
-	s.Require().NoError(err)
-	s.Require().NotNil(balancesB)
-	s.Require().Equal(3, len(balancesB))
-
-	actualDenomsA := make([]string, 0, 2)
-	actualBalancesA := make([]uint64, 0, 2)
-	actualDenomsB := make([]string, 0, 2)
-	actualBalancesB := make([]uint64, 0, 2)
-
-	for _, balanceA := range balancesA {
-		actualDenomsA = append(actualDenomsA, balanceA.GetDenom())
-		actualBalancesA = append(actualBalancesA, balanceA.Amount.Uint64())
+func (s *IntegrationTestSuite) TestCreatePoolPostUpgrade() {
+	if s.skipUpgrade {
+		s.T().Skip("pool creation tests are broken when upgrade is skipped. To be fixed in #1843")
 	}
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
 
-	for _, balanceB := range balancesB {
-		actualDenomsB = append(actualDenomsB, balanceB.GetDenom())
-		actualBalancesB = append(actualBalancesB, balanceB.Amount.Uint64())
-	}
-
-	s.Require().ElementsMatch(expectedDenomsA, actualDenomsA)
-	s.Require().ElementsMatch(expectedBalancesA, actualBalancesA)
-	s.Require().ElementsMatch(expectedDenomsB, actualDenomsB)
-	s.Require().ElementsMatch(expectedBalancesB, actualBalancesB)
-}
-
-func queryBalances(endpoint, addr string) (sdk.Coins, error) {
-	path := fmt.Sprintf(
-		"%s/cosmos/bank/v1beta1/balances/%s",
-		endpoint, addr,
-	)
-	var err error
-	var resp *http.Response
-	retriesLeft := 5
-	for {
-		resp, err = http.Get(path)
-
-		if resp.StatusCode == http.StatusServiceUnavailable {
-			retriesLeft--
-			if retriesLeft == 0 {
-				return nil, fmt.Errorf("exceeded retry limit of %d with %d", retriesLeft, http.StatusServiceUnavailable)
-			}
-			time.Sleep(10 * time.Second)
-		} else {
-			break
-		}
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	bz, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var balancesResp banktypes.QueryAllBalancesResponse
-	if err := cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
-		return nil, err
-	}
-
-	return balancesResp.GetBalances(), nil
+	node.CreatePool("pool2A.json", initialization.ValidatorWalletName)
+	node.CreatePool("pool2B.json", initialization.ValidatorWalletName)
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
-	var ibcStakeDenom string
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
 
-	s.Run("send_uosmo_to_chainB", func() {
-		recipient := s.chainB.validators[0].keyInfo.GetAddress().String()
-		token := sdk.NewInt64Coin(osmoDenom, ibcSendAmount) // 3,300uosmo
-		s.sendIBC(s.chainA.id, s.chainB.id, recipient, token)
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
 
-		chainBAPIEndpoint := fmt.Sprintf("http://%s", s.valResources[s.chainB.id][0].GetHostPort("1317/tcp"))
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+}
 
-		// require the recipient account receives the IBC tokens (IBC packets ACKd)
-		var (
-			balances sdk.Coins
-			err      error
-		)
-		s.Require().Eventually(
-			func() bool {
-				balances, err = queryBalances(chainBAPIEndpoint, recipient)
-				s.Require().NoError(err)
+func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+	if s.skipUpgrade {
+		// TODO: https://github.com/osmosis-labs/osmosis/issues/1843
+		s.T().Skip("Superfluid tests are broken when upgrade is skipped. To be fixed in #1843")
+	}
+	const walletName = "superfluid-wallet"
 
-				return balances.Len() == 3
-			},
-			time.Minute,
-			5*time.Second,
-		)
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
 
-		for _, c := range balances {
-			if strings.Contains(c.Denom, "ibc/") {
-				ibcStakeDenom = c.Denom
-				s.Require().Equal(token.Amount.Int64(), c.Amount.Int64())
-				break
+	// enable superfluid via proposal.
+	node.SubmitSuperfluidProposal("gamm/pool/1", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	chain.LatestProposalNumber += 1
+	node.DepositProposal(chain.LatestProposalNumber)
+	for _, node := range chain.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	}
+
+	walletAddr := node.CreateWallet(walletName)
+	// send gamm tokens to node's other wallet (non self-delegation wallet)
+	node.BankSend("100000000000000000000gamm/pool/1", chain.NodeConfigs[0].PublicAddress, walletAddr)
+	// lock tokens from node 0 on chain A
+	node.LockTokens("100000000000000000000gamm/pool/1", "240s", walletName)
+	chain.LatestLockNumber += 1
+	// superfluid delegate from non self-delegation wallet to validator 1 on chain.
+	node.SuperfluidDelegate(chain.LatestLockNumber, chain.NodeConfigs[1].OperatorAddress, walletName)
+
+	// create a text prop, deposit and vote yes
+	node.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	chain.LatestProposalNumber += 1
+	node.DepositProposal(chain.LatestProposalNumber)
+	for _, node := range chain.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	}
+
+	// set delegator vote to no
+	node.VoteNoProposal(walletName, chain.LatestProposalNumber)
+
+	s.Eventually(
+		func() bool {
+			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := node.QueryPropTally(chain.LatestProposalNumber)
+			if err != nil {
+				return false
 			}
+			if abstainTotal.Int64()+noTotal.Int64()+noWithVetoTotal.Int64()+yesTotal.Int64() <= 0 {
+				return false
+			}
+			return true
+		},
+		1*time.Minute,
+		10*time.Millisecond,
+		"Osmosis node failed to retrieve prop tally",
+	)
+	noTotal, _, _, _, _ := node.QueryPropTally(chain.LatestProposalNumber)
+	noTotalFinal, err := strconv.Atoi(noTotal.String())
+	s.NoError(err)
+
+	s.Eventually(
+		func() bool {
+			intAccountBalance, err := node.QueryIntermediaryAccount("gamm/pool/1", chain.NodeConfigs[1].OperatorAddress)
+			s.Require().NoError(err)
+			if err != nil {
+				return false
+			}
+			if noTotalFinal != intAccountBalance {
+				fmt.Printf("noTotalFinal %v does not match intAccountBalance %v", noTotalFinal, intAccountBalance)
+				return false
+			}
+			return true
+		},
+		1*time.Minute,
+		10*time.Millisecond,
+		"superfluid delegation vote overwrite not working as expected",
+	)
+}
+
+func (s *IntegrationTestSuite) TestStateSync() {
+	if s.skipStateSync {
+		s.T().Skip()
+	}
+
+	chain := s.configurer.GetChainConfig(0)
+	runningNode, err := chain.GetDefaultNode()
+	s.Require().NoError(err)
+
+	persistenrPeers := chain.GetPersistentPeers()
+
+	stateSyncHostPort := fmt.Sprintf("%s:26657", runningNode.Name)
+	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
+
+	// get trust height and trust hash.
+	trustHeight, err := runningNode.QueryCurrentHeight()
+	s.Require().NoError(err)
+
+	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
+	s.Require().NoError(err)
+
+	stateSynchingNodeConfig := &initialization.NodeConfig{
+		Name:               "state-sync",
+		Pruning:            "default",
+		PruningKeepRecent:  "0",
+		PruningInterval:    "0",
+		SnapshotInterval:   1500,
+		SnapshotKeepRecent: 2,
+	}
+
+	tempDir, err := os.MkdirTemp("", "osmosis-e2e-statesync-")
+	s.Require().NoError(err)
+
+	// configure genesis and config files for the state-synchin node.
+	nodeInit, err := initialization.InitSingleNode(
+		chain.Id,
+		tempDir,
+		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
+		stateSynchingNodeConfig,
+		time.Duration(chain.VotingPeriod),
+		trustHeight,
+		trustHash,
+		stateSyncRPCServers,
+		persistenrPeers,
+	)
+	s.Require().NoError(err)
+
+	stateSynchingNode := chain.CreateNode(nodeInit)
+
+	// ensure that the running node has snapshots at a height > trustHeight.
+	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
+		snapshotHeight := runningNode.SnapshotInterval
+		if uint64(syncInfo.LatestBlockHeight) < snapshotHeight {
+			s.T().Logf("snapshot height is not reached yet, current (%d), need (%d)", syncInfo.LatestBlockHeight, snapshotHeight)
+			return false
 		}
 
-		s.Require().NotEmpty(ibcStakeDenom)
-	})
+		snapshots, err := runningNode.QueryListSnapshots()
+		s.Require().NoError(err)
+
+		for _, snapshot := range snapshots {
+			if snapshot.Height > uint64(trustHeight) {
+				s.T().Log("found state sync snapshot after trust height")
+				return true
+			}
+		}
+		s.T().Log("state sync snashot after trust height is not found")
+		return false
+	}
+	runningNode.WaitUntil(hasSnapshotsAvailable)
+
+	// start the state synchin node.
+	err = stateSynchingNode.Run()
+	s.NoError(err)
+
+	// ensure that the state synching node cathes up to the running node.
+	s.Require().Eventually(func() bool {
+		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
+		s.NoError(err)
+
+		runningNodeHeight, err := runningNode.QueryCurrentHeight()
+		s.NoError(err)
+
+		return stateSyncNodeHeight == runningNodeHeight
+	},
+		3*time.Minute,
+		500*time.Millisecond,
+	)
+
+	// stop the state synching node.
+	err = chain.RemoveNode(stateSynchingNode.Name)
+	s.NoError(err)
 }

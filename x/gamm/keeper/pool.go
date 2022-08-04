@@ -8,8 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
@@ -23,6 +24,7 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. Prior
 // to returning the pool, the weights of the pool are updated via PokePool.
+// TODO: Consider rename to GetPool due to downstream API confusion.
 func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
@@ -42,7 +44,7 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, err
 	return pool, nil
 }
 
-// Get pool, and check if the pool is active / allowed to be swapped against
+// Get pool and check if the pool is active, i.e. allowed to be swapped against.
 func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
@@ -79,7 +81,7 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.PoolI, err error) 
 	return res, nil
 }
 
-func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
+func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	bz, err := k.MarshalPool(pool)
 	if err != nil {
 		return err
@@ -195,19 +197,31 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // 	return nil
 // }
 
-// SetNextPoolNumber sets next pool number.
-func (k Keeper) SetNextPoolNumber(ctx sdk.Context, poolNumber uint64) {
-	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolNumber})
-	store.Set(types.KeyNextGlobalPoolNumber, bz)
+// GetPoolDenom retrieves the pool based on PoolId and
+// returns the coin denoms that it holds.
+func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	denoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
+	return denoms, err
 }
 
-// GetNextPoolNumberAndIncrement returns the next pool number, and increments the corresponding state entry.
-func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
-	var poolNumber uint64
+// setNextPoolId sets next pool Id.
+func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolId})
+	store.Set(types.KeyNextGlobalPoolId, bz)
+}
+
+// GetNextPoolId returns the next pool Id.
+func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
+	var nextPoolId uint64
 	store := ctx.KVStore(k.storeKey)
 
-	bz := store.Get(types.KeyNextGlobalPoolNumber)
+	bz := store.Get(types.KeyNextGlobalPoolId)
 	if bz == nil {
 		panic(fmt.Errorf("pool has not been initialized -- Should have been done in InitGenesis"))
 	} else {
@@ -218,9 +232,14 @@ func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
 			panic(err)
 		}
 
-		poolNumber = val.GetValue()
+		nextPoolId = val.GetValue()
 	}
+	return nextPoolId
+}
 
-	k.SetNextPoolNumber(ctx, poolNumber+1)
-	return poolNumber
+// getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
+func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
+	nextPoolId := k.GetNextPoolId(ctx)
+	k.setNextPoolId(ctx, nextPoolId+1)
+	return nextPoolId
 }
