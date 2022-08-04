@@ -7,14 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-<<<<<<< HEAD:x/epochs/abci_test.go
 	simapp "github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/x/epochs"
 	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
-=======
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
->>>>>>> 982aa0ef (Move epochs begin block code to keeper (#1870)):x/epochs/keeper/abci_test.go
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
