@@ -181,36 +181,43 @@ func TestQueryArithmeticTwap(t *testing.T) {
 	fundAccount(t, ctx, osmosis, actor, defaultFunds)
 
 	poolFunds := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 12000000),
-		sdk.NewInt64Coin("ustar", 240000000),
+		sdk.NewInt64Coin("uosmo", 100000000),
+		sdk.NewInt64Coin("ustar", 200000000),
 	}
 	// 20 star to 1 osmo
-	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
+	starPoolID := preparePool(t, ctx, osmosis, actor, poolFunds)
 
 	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
 	require.NotEmpty(t, reflect)
 
-	oldBlockTime := ctx.BlockTime()
+	// TODO: figure out why it errors when we use start time without second
+	startTime := ctx.BlockTime().Add(time.Second)
 
-	_, err := osmosis.GAMMKeeper.SwapExactAmountIn(ctx, actor, starPool, sdk.NewCoin("uosmo", sdk.NewInt(10000)), "ustar", sdk.NewInt(1))
+	_, err := osmosis.GAMMKeeper.SwapExactAmountIn(ctx, actor, starPoolID, sdk.NewCoin("uosmo", sdk.NewInt(100000000)), "ustar", sdk.NewInt(1))
 	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 20))
 	reqEndBlock := abci.RequestEndBlock{Height: ctx.BlockHeight()}
 	osmosis.EndBlocker(ctx, reqEndBlock)
 
-	ctx = ctx.WithBlockTime(oldBlockTime.Add(time.Minute * 10))
-
 	query := bindings.OsmosisQuery{
 		ArithmeticTwap: &bindings.ArithmeticTwap{
-			PoolId:          starPool,
+			PoolId:          starPoolID,
 			QuoteAssetDenom: "ustar",
 			BaseAssetDenom:  "uosmo",
-			StartTime:       oldBlockTime.Unix(),
+			StartTime:       startTime.Unix(),
 			EndTime:         ctx.BlockTime().Unix(),
 		},
 	}
 
 	resp := bindings.ArithmeticTwapResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	require.NotNil(t, resp.Twap)
+
+	twap, err := strconv.ParseFloat(resp.Twap, 32)
+	require.NoError(t, err)
+
+	require.Equal(t, 0.5, twap)
 }
 func TestQueryEstimateSwap(t *testing.T) {
 	actor := RandomAccountAddress()
