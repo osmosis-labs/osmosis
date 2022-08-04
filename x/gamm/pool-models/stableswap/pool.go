@@ -164,7 +164,7 @@ func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdk.Int) {
 	numTokens := p.NumAssets()
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...)
 	if len(p.PoolLiquidity) != numTokens {
-		panic("updatePoolForJoin changed number of tokens in pool")
+		panic(fmt.Sprintf("updatePoolForJoin changed number of tokens in pool from %d to %d", numTokens, len(p.PoolLiquidity)))
 	}
 	p.TotalShares.Amount = p.TotalShares.Amount.Add(newShares)
 }
