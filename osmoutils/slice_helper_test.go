@@ -1,9 +1,11 @@
-package osmoutils
+package osmoutils_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 )
 
 func TestReverseSlice(t *testing.T) {
@@ -21,7 +23,7 @@ func TestReverseSlice(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actualSolvedInput := ReverseSlice(tc.s)
+			actualSolvedInput := osmoutils.ReverseSlice(tc.s)
 			require.Equal(t, tc.expectedSolvedInput, actualSolvedInput)
 		})
 	}
