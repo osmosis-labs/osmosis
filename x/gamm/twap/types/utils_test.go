@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 )
 
 func TestGetAllUniqueDenomPairs(t *testing.T) {

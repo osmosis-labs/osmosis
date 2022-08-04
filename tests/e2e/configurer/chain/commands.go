@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/config"
+	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/config"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
