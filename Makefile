@@ -229,8 +229,17 @@ test-race:
 test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
 
-test-sim:
+test-sim-suite:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
+
+test-sim-app:
+	@VERSION=$(VERSION) go test -mod=readonly -run ^TestFullAppSimulation -v $(PACKAGES_SIM)
+
+test-sim-determinism:
+	@VERSION=$(VERSION) go test -mod=readonly -run ^TestAppStateDeterminism -v $(PACKAGES_SIM)
+
+test-sim-benchmark:
+	@VERSION=$(VERSION) go test -benchmem -run ^BenchmarkFullAppSimulation -bench ^BenchmarkFullAppSimulation -cpuprofile cpu.out $(PACKAGES_SIM)
 
 test-e2e:
 	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
