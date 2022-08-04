@@ -1,10 +1,9 @@
-package epochs
+package keeper
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v10/x/epochs/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -12,7 +11,7 @@ import (
 )
 
 // BeginBlocker of epochs module.
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
 		logger := k.Logger(ctx)
