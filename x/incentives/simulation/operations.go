@@ -67,8 +67,10 @@ func genRewardCoins(r *rand.Rand, coins sdk.Coins, fee sdk.Int) (res sdk.Coins) 
 	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
 	for i := 0; i < numCoins; i++ {
-		var amt sdk.Int
-		var err error
+		var (
+			amt sdk.Int
+			err error
+		)
 		denom := coins[denomIndices[i]].Denom
 		if denom == sdk.DefaultBondDenom {
 			amt, err = simtypes.RandPositiveInt(r, coins[i].Amount.Sub(fee))
