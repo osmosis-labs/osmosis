@@ -294,9 +294,6 @@ func updateBankGenesis(bankGenState *banktypes.GenesisState) {
 			},
 		},
 	})
-	if len(bankGenState.SupplyOffsets) == 0 {
-		bankGenState.SupplyOffsets = []banktypes.GenesisSupplyOffset{}
-	}
 }
 
 func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {

@@ -82,9 +82,11 @@ func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
 	return t, nil
 }
 
+// GetAllMostRecentTwapsForPool returns all of the most recent twap records for a pool id.
+// if the pool id doesn't exist, then this returns a blank list.
 func GetAllMostRecentTwapsForPool(store sdk.KVStore, poolId uint64) ([]TwapRecord, error) {
-	startPrefix := fmt.Sprintf("%s%s%d%s", mostRecentTWAPsPrefix, KeySeparator, poolId, KeySeparator)
-	endPrefix := fmt.Sprintf("%s%s%d%s", mostRecentTWAPsPrefix, KeySeparator, poolId+1, KeySeparator)
+	startPrefix := fmt.Sprintf("%s%d%s", mostRecentTWAPsPrefix, poolId, KeySeparator)
+	endPrefix := fmt.Sprintf("%s%d%s", mostRecentTWAPsPrefix, poolId+1, KeySeparator)
 	return osmoutils.GatherValuesFromStore(store, []byte(startPrefix), []byte(endPrefix), ParseTwapFromBz)
 }
 

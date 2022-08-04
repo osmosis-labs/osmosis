@@ -72,6 +72,10 @@ func NewMsgBeginUnlockingAll(owner sdk.AccAddress) *MsgBeginUnlockingAll {
 func (m MsgBeginUnlockingAll) Route() string { return RouterKey }
 func (m MsgBeginUnlockingAll) Type() string  { return TypeMsgBeginUnlockingAll }
 func (m MsgBeginUnlockingAll) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Owner)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+	}
 	return nil
 }
 
@@ -98,6 +102,24 @@ func NewMsgBeginUnlocking(owner sdk.AccAddress, id uint64, coins sdk.Coins) *Msg
 func (m MsgBeginUnlocking) Route() string { return RouterKey }
 func (m MsgBeginUnlocking) Type() string  { return TypeMsgBeginUnlocking }
 func (m MsgBeginUnlocking) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Owner)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
+	}
+
+	if m.ID == 0 {
+		return fmt.Errorf("invalid lockup ID, got %v", m.ID)
+	}
+
+	// only allow unlocks with a single denom
+	if m.Coins.Len() != 1 {
+		return fmt.Errorf("can only unlock one denom per lock ID, got %v", m.Coins)
+	}
+
+	if !m.Coins.IsAllPositive() {
+		return fmt.Errorf("cannot unlock a zero or negative amount")
+	}
+
 	return nil
 }
 
@@ -122,8 +144,9 @@ func NewMsgExtendLockup(owner sdk.AccAddress, id uint64, duration time.Duration)
 func (m MsgExtendLockup) Route() string { return RouterKey }
 func (m MsgExtendLockup) Type() string  { return TypeMsgExtendLockup }
 func (m MsgExtendLockup) ValidateBasic() error {
-	if len(m.Owner) == 0 {
-		return fmt.Errorf("owner is empty")
+	_, err := sdk.AccAddressFromBech32(m.Owner)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
 	if m.ID == 0 {
 		return fmt.Errorf("id is empty")

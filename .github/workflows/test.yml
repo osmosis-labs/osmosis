@@ -1,4 +1,4 @@
-name: Tests & Code Coverage
+name: Tests
 
 on:
   pull_request:
@@ -29,7 +29,7 @@ jobs:
         name: Skipping test
         run: echo Should I skip tests? ${{ steps.skip_check.outputs.should_skip }}
 
-  go_test:
+  go:
     needs: should_run_go_test
     if: ${{ needs.should_run_test.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
@@ -66,7 +66,7 @@ jobs:
         name: Run all tests
         run: make test-unit
   
-  e2e_test:
+  e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
