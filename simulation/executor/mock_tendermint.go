@@ -194,7 +194,7 @@ func randomDoubleSignEvidence(r *rand.Rand, params Params,
 	event func(route, op, evResult string), header tmproto.Header, voteInfos []abci.VoteInfo) []abci.Evidence {
 	evidence := []abci.Evidence{}
 	// return if no past times or if only 10 validators remaining in the active set
-	if len(pastTimes) == 0 || len(voteInfos) <= 10 {
+	if len(pastTimes) == 0 {
 		return evidence
 	}
 	var n float64 = 1
@@ -204,6 +204,10 @@ func randomDoubleSignEvidence(r *rand.Rand, params Params,
 	// We should also add some method of including new validators into the set
 	// instead of being stuck with the ones we start with during initialization
 	for r.Float64() < (params.EvidenceFraction() / n) {
+		// if only one validator remaining, don't jail any more validators
+		if len(voteInfos)-int(n) == 0 {
+			return nil
+		}
 		height := header.Height
 		time := header.Time
 		vals := voteInfos
