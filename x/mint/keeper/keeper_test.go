@@ -3,22 +3,18 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/cosmos/btcutil/bech32"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
@@ -28,6 +24,16 @@ type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 	queryClient types.QueryClient
 }
+
+type mintHooksMock struct {
+	hookCallCount int
+}
+
+func (hm *mintHooksMock) AfterDistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) {
+	hm.hookCallCount++
+}
+
+var _ types.MintHooks = (*mintHooksMock)(nil)
 
 var (
 	testAddressOne   = sdk.AccAddress([]byte("addr1---------------"))
@@ -147,17 +153,13 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDistributeMintedCoin_ToDeveloperRewardsAddr() {
+func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
+	const (
+		mintAmount = 10000
+	)
+
 	var (
-		distrTo = lockuptypes.QueryCondition{
-			LockQueryType: lockuptypes.ByDuration,
-			Denom:         "lptoken",
-			Duration:      time.Second,
-		}
-		params       = suite.App.MintKeeper.GetParams(suite.Ctx)
-		gaugeCoins   = sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-		gaugeCreator = testAddressTwo
-		mintLPtokens = sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+		params = types.DefaultParams()
 	)
 
 	tests := []struct {
@@ -173,7 +175,7 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin_ToDeveloperRewardsAddr() 
 					Weight:  sdk.NewDec(1),
 				},
 			},
-			mintCoin: sdk.NewCoin("stake", sdk.NewInt(10000)),
+			mintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(mintAmount)),
 		},
 		{
 			name: "multiple dev reward addresses",
@@ -187,121 +189,80 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin_ToDeveloperRewardsAddr() 
 					Weight:  sdk.NewDecWithPrec(4, 1),
 				},
 			},
-			mintCoin: sdk.NewCoin("stake", sdk.NewInt(100000)),
+			mintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(mintAmount)),
 		},
 		{
-			name:              "nil dev reward address",
+			name:              "nil dev reward address - dev rewards go to community pool",
 			weightedAddresses: nil,
-			mintCoin:          sdk.NewCoin("stake", sdk.NewInt(100000)),
+			mintCoin:          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(mintAmount)),
 		},
 	}
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			suite.Setup()
 
-			mintKeeper := suite.App.MintKeeper
+			ctx := suite.Ctx
+
 			bankKeeper := suite.App.BankKeeper
-			intencentivesKeeper := suite.App.IncentivesKeeper
-			poolincentivesKeeper := suite.App.PoolIncentivesKeeper
-			distrKeeper := suite.App.DistrKeeper
 			accountKeeper := suite.App.AccountKeeper
+
+			mintKeeper := suite.App.MintKeeper
+			// We reset the hooks with a mock to simplify the assertions
+			// about the results of the call to DistributeMintedCoin.
+			// The goal is to assert that AfterDistributeMintedCoin
+			// is called once.
+			mintKeeper.SetMintHooksUnsafe(&mintHooksMock{})
+
+			mintAmount := tc.mintCoin.Amount.ToDec()
 
 			// set WeightedDeveloperRewardsReceivers
 			params.WeightedDeveloperRewardsReceivers = tc.weightedAddresses
-			mintKeeper.SetParams(suite.Ctx, params)
+			mintKeeper.SetParams(ctx, params)
 
-			// mints coins so supply exists on chain
-			suite.FundAcc(gaugeCreator, gaugeCoins)
-			suite.FundAcc(gaugeCreator, mintLPtokens)
+			expectedCommunityPoolAmount := mintAmount.Mul((params.DistributionProportions.CommunityPool))
+			expectedDevRewardsAmount := mintAmount.Mul(params.DistributionProportions.DeveloperRewards)
+			expectedPoolIncentivesAmount := mintAmount.Mul(params.DistributionProportions.PoolIncentives)
+			expectedStakingAmount := tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.Staking)
 
-			gaugeId, err := intencentivesKeeper.CreateGauge(suite.Ctx, true, gaugeCreator, gaugeCoins, distrTo, time.Now(), 1)
-			suite.Require().NoError(err)
-			err = poolincentivesKeeper.UpdateDistrRecords(suite.Ctx, poolincentivestypes.DistrRecord{
-				GaugeId: gaugeId,
-				Weight:  sdk.NewInt(100),
-			})
-			suite.Require().NoError(err)
-
-			err = mintKeeper.MintCoins(suite.Ctx, sdk.NewCoins(tc.mintCoin))
-			suite.Require().NoError(err)
-
-			err = mintKeeper.DistributeMintedCoin(suite.Ctx, tc.mintCoin)
-			suite.Require().NoError(err)
-
-			// check feePool
-			feePool := distrKeeper.GetFeePool(suite.Ctx)
-			feeCollector := accountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-			suite.Require().Equal(
-				tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
-				bankKeeper.GetAllBalances(suite.Ctx, feeCollector).AmountOf("stake"))
-
-			if tc.weightedAddresses != nil {
-				suite.Require().Equal(
-					tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.CommunityPool),
-					feePool.CommunityPool.AmountOf("stake"))
-			} else {
-				suite.Require().Equal(
-					// distribution go to community pool because nil dev reward addresses.
-					tc.mintCoin.Amount.ToDec().Mul((params.DistributionProportions.DeveloperRewards).Add(params.DistributionProportions.CommunityPool)),
-					feePool.CommunityPool.AmountOf("stake"))
+			// distributions go to community pool because nil dev reward addresses.
+			if tc.weightedAddresses == nil {
+				expectedCommunityPoolAmount = expectedCommunityPoolAmount.Add(expectedDevRewardsAmount)
 			}
 
-			// check devAddress balances
+			// mints coins so supply exists on chain
+			err := mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.mintCoin))
+			suite.Require().NoError(err)
+
+			// System under test.
+			err = mintKeeper.DistributeMintedCoin(ctx, tc.mintCoin)
+			suite.Require().NoError(err)
+
+			// validate that AfterDistributeMintedCoin hook was called once.
+			suite.Require().Equal(1, mintKeeper.GetMintHooksUnsafe().(*mintHooksMock).hookCallCount)
+
+			// validate distributions to fee collector.
+			feeCollectorBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(authtypes.FeeCollectorName), sdk.DefaultBondDenom).Amount.ToDec()
+			suite.Require().Equal(
+				expectedStakingAmount,
+				feeCollectorBalanceAmount)
+
+			// validate pool incentives distributions.
+			actualPoolIncentivesBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(poolincentivestypes.ModuleName), sdk.DefaultBondDenom).Amount.ToDec()
+			suite.Require().Equal(expectedPoolIncentivesAmount, actualPoolIncentivesBalance)
+
+			// validate distributions to community pool.
+			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount.ToDec()
+			suite.Require().Equal(expectedCommunityPoolAmount, actualCommunityPoolBalanceAmount)
+
+			// validate distributions to developer addresses.
 			for i, weightedAddress := range tc.weightedAddresses {
 				devRewardsReceiver, _ := sdk.AccAddressFromBech32(weightedAddress.GetAddress())
 				suite.Require().Equal(
-					tc.mintCoin.Amount.ToDec().Mul(params.DistributionProportions.DeveloperRewards).Mul(params.WeightedDeveloperRewardsReceivers[i].Weight).TruncateInt(),
-					bankKeeper.GetBalance(suite.Ctx, devRewardsReceiver, "stake").Amount)
+					expectedDevRewardsAmount.Mul(params.WeightedDeveloperRewardsReceivers[i].Weight).TruncateInt(),
+					bankKeeper.GetBalance(ctx, devRewardsReceiver, sdk.DefaultBondDenom).Amount)
 			}
 		})
 	}
-}
-
-func (suite *KeeperTestSuite) TestDistrAssetToCommunityPoolWhenNoDeveloperRewardsAddr() {
-	mintKeeper := suite.App.MintKeeper
-	bankKeeper := suite.App.BankKeeper
-	distrKeeper := suite.App.DistrKeeper
-	accountKeeper := suite.App.AccountKeeper
-
-	params := suite.App.MintKeeper.GetParams(suite.Ctx)
-	// At this time, there is no distr record, so the asset should be allocated to the community pool.
-	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
-	mintCoins := sdk.Coins{mintCoin}
-	err := mintKeeper.MintCoins(suite.Ctx, mintCoins)
-	suite.Require().NoError(err)
-	err = mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin)
-	suite.Require().NoError(err)
-
-	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *distrKeeper)
-
-	feePool := distrKeeper.GetFeePool(suite.Ctx)
-	feeCollector := accountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-	// PoolIncentives + DeveloperRewards + CommunityPool => CommunityPool
-	proportionToCommunity := params.DistributionProportions.PoolIncentives.
-		Add(params.DistributionProportions.DeveloperRewards).
-		Add(params.DistributionProportions.CommunityPool)
-	suite.Require().Equal(
-		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt(),
-		bankKeeper.GetBalance(suite.Ctx, feeCollector, "stake").Amount)
-	suite.Require().Equal(
-		mintCoins[0].Amount.ToDec().Mul(proportionToCommunity),
-		feePool.CommunityPool.AmountOf("stake"))
-
-	// Mint more and community pool should be increased
-	err = mintKeeper.MintCoins(suite.Ctx, mintCoins)
-	suite.Require().NoError(err)
-	err = mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin)
-	suite.Require().NoError(err)
-
-	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *distrKeeper)
-
-	feePool = distrKeeper.GetFeePool(suite.Ctx)
-	suite.Require().Equal(
-		mintCoins[0].Amount.ToDec().Mul(params.DistributionProportions.Staking).TruncateInt().Mul(sdk.NewInt(2)),
-		bankKeeper.GetBalance(suite.Ctx, feeCollector, "stake").Amount)
-	suite.Require().Equal(
-		mintCoins[0].Amount.ToDec().Mul(proportionToCommunity).Mul(sdk.NewDec(2)),
-		feePool.CommunityPool.AmountOf("stake"))
 }
 
 func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
