@@ -142,7 +142,7 @@ func (s *IntegrationTestSuite) TestGetCmdParams() {
 	}
 }
 
-//TestGetCmdLockableDurations tests lockable duration CLI query commands
+// TestGetCmdLockableDurations tests lockable duration CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdLockableDurations() {
 	val := s.network.Validators[0]
 
