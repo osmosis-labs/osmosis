@@ -139,7 +139,8 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
-	sdkSimapp.FlagExcludeLongInvariantProbability = 0.9
+	config.Commit = true
+  sdkSimapp.FlagExcludeLongInvariantProbability = 0.9
 
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.

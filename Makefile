@@ -229,8 +229,17 @@ test-race:
 test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
 
-test-sim:
+test-sim-suite:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
+
+test-sim-app:
+	@VERSION=$(VERSION) go test -mod=readonly -run ^TestFullAppSimulation -v $(PACKAGES_SIM)
+
+test-sim-determinism:
+	@VERSION=$(VERSION) go test -mod=readonly -run ^TestAppStateDeterminism -v $(PACKAGES_SIM)
+
+test-sim-benchmark:
+	@VERSION=$(VERSION) go test -benchmem -run ^BenchmarkFullAppSimulation -bench ^BenchmarkFullAppSimulation -cpuprofile cpu.out $(PACKAGES_SIM)
 
 test-e2e:
 	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
@@ -249,13 +258,13 @@ build-e2e-script:
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
 
 docker-build-debug:
-	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
 
 docker-build-e2e-init-chain:
-	@docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
 
 docker-build-e2e-init-node:
-	@docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
 
 .PHONY: test-mutation
 
