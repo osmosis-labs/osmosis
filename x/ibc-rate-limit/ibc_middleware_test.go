@@ -2,7 +2,7 @@ package ibc_rate_limit_test
 
 import (
 	"encoding/json"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
@@ -62,58 +62,12 @@ func TestMiddlewareTestSuite(t *testing.T) {
 	suite.Run(t, new(MiddlewareTestSuite))
 }
 
-func (suite *MiddlewareTestSuite) DontRunTestSendPacketNoIBC() {
-	// This does the same as ibctesting but manually (to not depend on the extra methods on OsmosisApp)
-
-	channel := channeltypes.NewChannel(
-		channeltypes.OPEN, channeltypes.ORDERED,
-		channeltypes.NewCounterparty("sourcePort", "sourceChannel"),
-		[]string{"sourceConnection"}, ibctesting.DefaultChannelVersion)
-
-	suite.App.IBCKeeper.ChannelKeeper.SetChannel(suite.Ctx, "sourcePort", "sourceChannel", channel)
-
-	suite.App.IBCKeeper.ChannelKeeper.SetNextChannelSequence(suite.Ctx, 2)
-	suite.App.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.Ctx, "sourcePort", "sourceChannel", 2)
-	suite.App.IBCKeeper.ChannelKeeper.SetNextSequenceRecv(suite.Ctx, "sourcePort", "sourceChannel", 2)
-	suite.App.IBCKeeper.ChannelKeeper.SetNextSequenceAck(suite.Ctx, "sourcePort", "sourceChannel", 2)
-
-	suite.T().Log("scopped", suite.App.TransferKeeper.IsBound(suite.Ctx, "sourcePort"))
-
-	//_, ok := suite.App.ScopedTransferKeeper.GetCapability(suite.Ctx, host.PortPath("sourcePort2"))
-	//if !ok {
-	//	// create capability using the IBC capability keeper
-	//	suite.T().Log("creating")
-	//	cap, err := suite.App.ScopedTransferKeeper.NewCapability(suite.Ctx, host.PortPath("sourcePort"))
-	//	suite.T().Log("cap", cap)
-	//	require.NoError(suite.T(), err)
-	//
-	//	// claim capability using the scopedKeeper
-	//	err = suite.App.ScopedTransferKeeper.ClaimCapability(suite.Ctx, cap, host.PortPath("sourcePort"))
-	//	require.NoError(suite.T(), err)
-	//	suite.T().Log("created")
-	//
-	//}
-
-	err := suite.App.TransferKeeper.SendTransfer(
-		suite.Ctx,
-		"sourcePort",
-		"sourceChannel",
-		sdk.NewCoin("nosmo", sdk.NewInt(1)),
-		suite.TestAccs[0],
-		"receiver",
-		clienttypes.NewHeight(100, 100),
-		100,
-	)
-	suite.T().Log("Transfer sent")
-
-	suite.Require().NoError(err)
-}
-
 func NewTransferPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA, chainB)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
-
+	path.EndpointA.ChannelConfig.Version = transfertypes.Version
+	path.EndpointB.ChannelConfig.Version = transfertypes.Version
 	return path
 }
 
