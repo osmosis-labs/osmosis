@@ -41,6 +41,13 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 }
 
+func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
+	// TODO: Add E2E tests for this
+}
+
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	if s.skipUpgrade {
 		// TODO: https://github.com/osmosis-labs/osmosis/issues/1843

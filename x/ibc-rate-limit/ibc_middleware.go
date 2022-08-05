@@ -1,6 +1,7 @@
 package ibc_rate_limit
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
@@ -18,6 +19,7 @@ type RateLimitMiddleware struct {
 }
 
 func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLimitMiddleware {
+	fmt.Println("Initializing middleware")
 	return RateLimitMiddleware{
 		app:    app,
 		keeper: k,
@@ -134,6 +136,7 @@ func (im RateLimitMiddleware) SendPacket(
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 ) error {
+	fmt.Println("Sending package through middleware")
 	return im.keeper.ChannelKeeper.SendPacket(ctx, chanCap, packet)
 }
 
