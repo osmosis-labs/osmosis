@@ -1,12 +1,13 @@
-package types
+package types_test
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 
 	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 )
@@ -17,10 +18,10 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn) MsgSwapExactAmountIn {
-		properMsg := MsgSwapExactAmountIn{
+	createMsg := func(after func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
+		properMsg := gammtypes.MsgSwapExactAmountIn{
 			Sender: addr1,
-			Routes: []SwapAmountInRoute{{
+			Routes: []gammtypes.SwapAmountInRoute{{
 				PoolId:        0,
 				TokenOutDenom: "test",
 			}, {
@@ -34,12 +35,12 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+	msg := createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Route(), gammtypes.RouterKey)
 	require.Equal(t, msg.Type(), "swap_exact_amount_in")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -47,12 +48,12 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgSwapExactAmountIn
+		msg        gammtypes.MsgSwapExactAmountIn
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 				// Do nothing
 				return msg
 			}),
@@ -60,7 +61,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -68,7 +69,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "empty routes",
-			msg: createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 				msg.Routes = nil
 				return msg
 			}),
@@ -76,15 +77,15 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "empty routes2",
-			msg: createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
-				msg.Routes = []SwapAmountInRoute{}
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
+				msg.Routes = []gammtypes.SwapAmountInRoute{}
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
 			name: "invalid denom",
-			msg: createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 				msg.Routes[1].TokenOutDenom = "1"
 				return msg
 			}),
@@ -92,7 +93,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "invalid denom2",
-			msg: createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 				msg.TokenIn.Denom = "1"
 				return msg
 			}),
@@ -100,7 +101,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "zero amount token",
-			msg: createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 				msg.TokenIn.Amount = sdk.NewInt(0)
 				return msg
 			}),
@@ -108,7 +109,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "negative amount token",
-			msg: createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 				msg.TokenIn.Amount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -116,7 +117,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "zero amount criteria",
-			msg: createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 				msg.TokenOutMinAmount = sdk.NewInt(0)
 				return msg
 			}),
@@ -124,7 +125,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "negative amount criteria",
-			msg: createMsg(func(msg MsgSwapExactAmountIn) MsgSwapExactAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountIn) gammtypes.MsgSwapExactAmountIn {
 				msg.TokenOutMinAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -147,10 +148,10 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut) MsgSwapExactAmountOut {
-		properMsg := MsgSwapExactAmountOut{
+	createMsg := func(after func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
+		properMsg := gammtypes.MsgSwapExactAmountOut{
 			Sender: addr1,
-			Routes: []SwapAmountOutRoute{{
+			Routes: []gammtypes.SwapAmountOutRoute{{
 				PoolId:       0,
 				TokenInDenom: "test",
 			}, {
@@ -164,12 +165,12 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+	msg := createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Route(), gammtypes.RouterKey)
 	require.Equal(t, msg.Type(), "swap_exact_amount_out")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -177,12 +178,12 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgSwapExactAmountOut
+		msg        gammtypes.MsgSwapExactAmountOut
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 				// Do nothing
 				return msg
 			}),
@@ -190,7 +191,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -198,7 +199,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "empty routes",
-			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 				msg.Routes = nil
 				return msg
 			}),
@@ -206,15 +207,15 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "empty routes2",
-			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
-				msg.Routes = []SwapAmountOutRoute{}
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
+				msg.Routes = []gammtypes.SwapAmountOutRoute{}
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
 			name: "invalid denom",
-			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 				msg.Routes[1].TokenInDenom = "1"
 				return msg
 			}),
@@ -222,7 +223,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "invalid denom",
-			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 				msg.TokenOut.Denom = "1"
 				return msg
 			}),
@@ -230,7 +231,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "zero amount token",
-			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 				msg.TokenOut.Amount = sdk.NewInt(0)
 				return msg
 			}),
@@ -238,7 +239,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "negative amount token",
-			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 				msg.TokenOut.Amount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -246,7 +247,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "zero amount criteria",
-			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 				msg.TokenInMaxAmount = sdk.NewInt(0)
 				return msg
 			}),
@@ -254,7 +255,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "negative amount criteria",
-			msg: createMsg(func(msg MsgSwapExactAmountOut) MsgSwapExactAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgSwapExactAmountOut) gammtypes.MsgSwapExactAmountOut {
 				msg.TokenInMaxAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -277,8 +278,8 @@ func TestMsgJoinPool(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg MsgJoinPool) MsgJoinPool) MsgJoinPool {
-		properMsg := MsgJoinPool{
+	createMsg := func(after func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
+		properMsg := gammtypes.MsgJoinPool{
 			Sender:         addr1,
 			PoolId:         1,
 			ShareOutAmount: sdk.NewInt(10),
@@ -288,12 +289,12 @@ func TestMsgJoinPool(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgJoinPool) MsgJoinPool {
+	msg := createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Route(), gammtypes.RouterKey)
 	require.Equal(t, msg.Type(), "join_pool")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -301,12 +302,12 @@ func TestMsgJoinPool(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgJoinPool
+		msg        gammtypes.MsgJoinPool
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+			msg: createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
 				// Do nothing
 				return msg
 			}),
@@ -314,7 +315,7 @@ func TestMsgJoinPool(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+			msg: createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -322,7 +323,7 @@ func TestMsgJoinPool(t *testing.T) {
 		},
 		{
 			name: "negative requirement",
-			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+			msg: createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
 				msg.ShareOutAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -330,7 +331,7 @@ func TestMsgJoinPool(t *testing.T) {
 		},
 		{
 			name: "zero amount",
-			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+			msg: createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
 				msg.TokenInMaxs[1].Amount = sdk.NewInt(0)
 				return msg
 			}),
@@ -338,7 +339,7 @@ func TestMsgJoinPool(t *testing.T) {
 		},
 		{
 			name: "negative amount",
-			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+			msg: createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
 				msg.TokenInMaxs[1].Amount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -346,7 +347,7 @@ func TestMsgJoinPool(t *testing.T) {
 		},
 		{
 			name: "'empty token max in' can pass",
-			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+			msg: createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
 				msg.TokenInMaxs = nil
 				return msg
 			}),
@@ -354,7 +355,7 @@ func TestMsgJoinPool(t *testing.T) {
 		},
 		{
 			name: "'empty token max in' can pass 2",
-			msg: createMsg(func(msg MsgJoinPool) MsgJoinPool {
+			msg: createMsg(func(msg gammtypes.MsgJoinPool) gammtypes.MsgJoinPool {
 				msg.TokenInMaxs = sdk.Coins{}
 				return msg
 			}),
@@ -377,8 +378,8 @@ func TestMsgExitPool(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg MsgExitPool) MsgExitPool) MsgExitPool {
-		properMsg := MsgExitPool{
+	createMsg := func(after func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool) gammtypes.MsgExitPool {
+		properMsg := gammtypes.MsgExitPool{
 			Sender:        addr1,
 			PoolId:        1,
 			ShareInAmount: sdk.NewInt(10),
@@ -387,12 +388,12 @@ func TestMsgExitPool(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgExitPool) MsgExitPool {
+	msg := createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Route(), gammtypes.RouterKey)
 	require.Equal(t, msg.Type(), "exit_pool")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -400,12 +401,12 @@ func TestMsgExitPool(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgExitPool
+		msg        gammtypes.MsgExitPool
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+			msg: createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
 				// Do nothing
 				return msg
 			}),
@@ -413,7 +414,7 @@ func TestMsgExitPool(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+			msg: createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -421,7 +422,7 @@ func TestMsgExitPool(t *testing.T) {
 		},
 		{
 			name: "negative requirement",
-			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+			msg: createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
 				msg.ShareInAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -429,7 +430,7 @@ func TestMsgExitPool(t *testing.T) {
 		},
 		{
 			name: "zero amount",
-			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+			msg: createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
 				msg.TokenOutMins[1].Amount = sdk.NewInt(0)
 				return msg
 			}),
@@ -437,7 +438,7 @@ func TestMsgExitPool(t *testing.T) {
 		},
 		{
 			name: "negative amount",
-			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+			msg: createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
 				msg.TokenOutMins[1].Amount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -445,7 +446,7 @@ func TestMsgExitPool(t *testing.T) {
 		},
 		{
 			name: "'empty token min out' can pass",
-			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+			msg: createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
 				msg.TokenOutMins = nil
 				return msg
 			}),
@@ -453,7 +454,7 @@ func TestMsgExitPool(t *testing.T) {
 		},
 		{
 			name: "'empty token min out' can pass 2",
-			msg: createMsg(func(msg MsgExitPool) MsgExitPool {
+			msg: createMsg(func(msg gammtypes.MsgExitPool) gammtypes.MsgExitPool {
 				msg.TokenOutMins = sdk.Coins{}
 				return msg
 			}),
@@ -476,8 +477,8 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
-		properMsg := MsgJoinSwapExternAmountIn{
+	createMsg := func(after func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
+		properMsg := gammtypes.MsgJoinSwapExternAmountIn{
 			Sender:            addr1,
 			PoolId:            1,
 			TokenIn:           sdk.NewCoin("test", sdk.NewInt(100)),
@@ -486,12 +487,12 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+	msg := createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Route(), gammtypes.RouterKey)
 	require.Equal(t, msg.Type(), "join_swap_extern_amount_in")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -499,12 +500,12 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgJoinSwapExternAmountIn
+		msg        gammtypes.MsgJoinSwapExternAmountIn
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
 				// Do nothing
 				return msg
 			}),
@@ -512,7 +513,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -520,7 +521,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		},
 		{
 			name: "invalid denom",
-			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
 				msg.TokenIn.Denom = "1"
 				return msg
 			}),
@@ -528,7 +529,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		},
 		{
 			name: "zero amount",
-			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
 				msg.TokenIn.Amount = sdk.NewInt(0)
 				return msg
 			}),
@@ -536,7 +537,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		},
 		{
 			name: "negative amount",
-			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
 				msg.TokenIn.Amount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -544,7 +545,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		},
 		{
 			name: "zero criteria",
-			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
 				msg.ShareOutMinAmount = sdk.NewInt(0)
 				return msg
 			}),
@@ -552,7 +553,7 @@ func TestMsgJoinSwapExternAmountIn(t *testing.T) {
 		},
 		{
 			name: "negative criteria",
-			msg: createMsg(func(msg MsgJoinSwapExternAmountIn) MsgJoinSwapExternAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapExternAmountIn) gammtypes.MsgJoinSwapExternAmountIn {
 				msg.ShareOutMinAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -575,8 +576,8 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
-		properMsg := MsgJoinSwapShareAmountOut{
+	createMsg := func(after func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
+		properMsg := gammtypes.MsgJoinSwapShareAmountOut{
 			Sender:           addr1,
 			PoolId:           1,
 			TokenInDenom:     "test",
@@ -586,12 +587,12 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+	msg := createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Route(), gammtypes.RouterKey)
 	require.Equal(t, msg.Type(), "join_swap_share_amount_out")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -599,12 +600,12 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgJoinSwapShareAmountOut
+		msg        gammtypes.MsgJoinSwapShareAmountOut
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
 				// Do nothing
 				return msg
 			}),
@@ -612,7 +613,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -620,7 +621,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		},
 		{
 			name: "invalid denom",
-			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
 				msg.TokenInDenom = "1"
 				return msg
 			}),
@@ -628,7 +629,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		},
 		{
 			name: "zero amount",
-			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
 				msg.ShareOutAmount = sdk.NewInt(0)
 				return msg
 			}),
@@ -636,7 +637,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		},
 		{
 			name: "negative amount",
-			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
 				msg.ShareOutAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -644,7 +645,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		},
 		{
 			name: "zero criteria",
-			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
 				msg.TokenInMaxAmount = sdk.NewInt(0)
 				return msg
 			}),
@@ -652,7 +653,7 @@ func TestMsgJoinSwapShareAmountOut(t *testing.T) {
 		},
 		{
 			name: "negative criteria",
-			msg: createMsg(func(msg MsgJoinSwapShareAmountOut) MsgJoinSwapShareAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgJoinSwapShareAmountOut) gammtypes.MsgJoinSwapShareAmountOut {
 				msg.TokenInMaxAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -675,8 +676,8 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
-		properMsg := MsgExitSwapExternAmountOut{
+	createMsg := func(after func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
+		properMsg := gammtypes.MsgExitSwapExternAmountOut{
 			Sender:           addr1,
 			PoolId:           1,
 			TokenOut:         sdk.NewCoin("test", sdk.NewInt(100)),
@@ -685,12 +686,12 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+	msg := createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Route(), gammtypes.RouterKey)
 	require.Equal(t, msg.Type(), "exit_swap_extern_amount_out")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -698,12 +699,12 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgExitSwapExternAmountOut
+		msg        gammtypes.MsgExitSwapExternAmountOut
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
 				// Do nothing
 				return msg
 			}),
@@ -711,7 +712,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -719,7 +720,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		},
 		{
 			name: "invalid denom",
-			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
 				msg.TokenOut.Denom = "1"
 				return msg
 			}),
@@ -727,7 +728,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		},
 		{
 			name: "zero amount",
-			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
 				msg.TokenOut.Amount = sdk.NewInt(0)
 				return msg
 			}),
@@ -735,7 +736,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		},
 		{
 			name: "negative amount",
-			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
 				msg.TokenOut.Amount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -743,7 +744,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		},
 		{
 			name: "zero criteria",
-			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
 				msg.ShareInMaxAmount = sdk.NewInt(0)
 				return msg
 			}),
@@ -751,7 +752,7 @@ func TestMsgExitSwapExternAmountOut(t *testing.T) {
 		},
 		{
 			name: "negative criteria",
-			msg: createMsg(func(msg MsgExitSwapExternAmountOut) MsgExitSwapExternAmountOut {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapExternAmountOut) gammtypes.MsgExitSwapExternAmountOut {
 				msg.ShareInMaxAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -774,8 +775,8 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
-		properMsg := MsgExitSwapShareAmountIn{
+	createMsg := func(after func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
+		properMsg := gammtypes.MsgExitSwapShareAmountIn{
 			Sender:            addr1,
 			PoolId:            1,
 			TokenOutDenom:     "test",
@@ -785,12 +786,12 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		return after(properMsg)
 	}
 
-	msg := createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+	msg := createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
 		// Do nothing
 		return msg
 	})
 
-	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Route(), gammtypes.RouterKey)
 	require.Equal(t, msg.Type(), "exit_swap_share_amount_in")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -798,12 +799,12 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgExitSwapShareAmountIn
+		msg        gammtypes.MsgExitSwapShareAmountIn
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
 				// Do nothing
 				return msg
 			}),
@@ -811,7 +812,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -819,7 +820,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		},
 		{
 			name: "invalid denom",
-			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
 				msg.TokenOutDenom = "1"
 				return msg
 			}),
@@ -827,7 +828,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		},
 		{
 			name: "zero amount",
-			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
 				msg.ShareInAmount = sdk.NewInt(0)
 				return msg
 			}),
@@ -835,7 +836,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		},
 		{
 			name: "negative amount",
-			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
 				msg.ShareInAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -843,7 +844,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		},
 		{
 			name: "zero criteria",
-			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
 				msg.TokenOutMinAmount = sdk.NewInt(0)
 				return msg
 			}),
@@ -851,7 +852,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		},
 		{
 			name: "negative criteria",
-			msg: createMsg(func(msg MsgExitSwapShareAmountIn) MsgExitSwapShareAmountIn {
+			msg: createMsg(func(msg gammtypes.MsgExitSwapShareAmountIn) gammtypes.MsgExitSwapShareAmountIn {
 				msg.TokenOutMinAmount = sdk.NewInt(-10)
 				return msg
 			}),
