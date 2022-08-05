@@ -164,6 +164,14 @@ func TestComputeArithmeticTwap(t *testing.T) {
 			quoteAsset:  denom0,
 			expTwap:     sdk.OneDec(),
 		},
+		// this test just shows what happens in case the records are reversed.
+		// It should return the correct result, even though this is incorrect internal API usage
+		"invalid call: reversed records of above": {
+			startRecord: newOneSidedRecord(tPlusOne, OneSec, true),
+			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			quoteAsset:  denom0,
+			expTwap:     sdk.OneDec(),
+		},
 		"same record: denom0, end spot price = 0": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
