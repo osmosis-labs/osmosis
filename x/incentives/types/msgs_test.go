@@ -1,18 +1,17 @@
-package types
+package types_test
 
 import (
-	"encoding/json"
 	"testing"
 	time "time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+
+	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
 
 	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
@@ -25,14 +24,14 @@ func TestMsgCreatePool(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address())
 
 	// make a proper createPool message
-	createMsg := func(after func(msg MsgCreateGauge) MsgCreateGauge) MsgCreateGauge {
+	createMsg := func(after func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 		distributeTo := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
 			Duration:      time.Second,
 		}
 
-		properMsg := *NewMsgCreateGauge(
+		properMsg := *incentivestypes.NewMsgCreateGauge(
 			false,
 			addr1,
 			distributeTo,
@@ -45,10 +44,10 @@ func TestMsgCreatePool(t *testing.T) {
 	}
 
 	// validate createPool message was created as intended
-	msg := createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+	msg := createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 		return msg
 	})
-	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Route(), incentivestypes.RouterKey)
 	require.Equal(t, msg.Type(), "create_gauge")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -56,19 +55,19 @@ func TestMsgCreatePool(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgCreateGauge
+		msg        incentivestypes.MsgCreateGauge
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				return msg
 			}),
 			expectPass: true,
 		},
 		{
 			name: "empty owner",
-			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.Owner = ""
 				return msg
 			}),
@@ -76,7 +75,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "empty distribution denom",
-			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.DistributeTo.Denom = ""
 				return msg
 			}),
@@ -84,7 +83,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid distribution denom",
-			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.DistributeTo.Denom = "111"
 				return msg
 			}),
@@ -92,7 +91,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid lock query type",
-			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = -1
 				return msg
 			}),
@@ -100,7 +99,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid lock query type",
-			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.DistributeTo.LockQueryType = -1
 				return msg
 			}),
@@ -108,7 +107,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid distribution start time",
-			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.StartTime = time.Time{}
 				return msg
 			}),
@@ -116,7 +115,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid num epochs paid over",
-			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.NumEpochsPaidOver = 0
 				return msg
 			}),
@@ -124,7 +123,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "invalid num epochs paid over for perpetual gauge",
-			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.NumEpochsPaidOver = 2
 				msg.IsPerpetual = true
 				return msg
@@ -133,7 +132,7 @@ func TestMsgCreatePool(t *testing.T) {
 		},
 		{
 			name: "valid num epochs paid over for perpetual gauge",
-			msg: createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
+			msg: createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 				msg.NumEpochsPaidOver = 1
 				msg.IsPerpetual = true
 				return msg
@@ -158,8 +157,8 @@ func TestMsgAddToGauge(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address())
 
 	// make a proper addToGauge message
-	createMsg := func(after func(msg MsgAddToGauge) MsgAddToGauge) MsgAddToGauge {
-		properMsg := *NewMsgAddToGauge(
+	createMsg := func(after func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
+		properMsg := *incentivestypes.NewMsgAddToGauge(
 			addr1,
 			1,
 			sdk.Coins{sdk.NewInt64Coin("stake", 10)},
@@ -169,10 +168,10 @@ func TestMsgAddToGauge(t *testing.T) {
 	}
 
 	// validate addToGauge message was created as intended
-	msg := createMsg(func(msg MsgAddToGauge) MsgAddToGauge {
+	msg := createMsg(func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
 		return msg
 	})
-	require.Equal(t, msg.Route(), RouterKey)
+	require.Equal(t, msg.Route(), incentivestypes.RouterKey)
 	require.Equal(t, msg.Type(), "add_to_gauge")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -180,19 +179,19 @@ func TestMsgAddToGauge(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgAddToGauge
+		msg        incentivestypes.MsgAddToGauge
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgAddToGauge) MsgAddToGauge {
+			msg: createMsg(func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
 				return msg
 			}),
 			expectPass: true,
 		},
 		{
 			name: "empty owner",
-			msg: createMsg(func(msg MsgAddToGauge) MsgAddToGauge {
+			msg: createMsg(func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
 				msg.Owner = ""
 				return msg
 			}),
@@ -200,7 +199,7 @@ func TestMsgAddToGauge(t *testing.T) {
 		},
 		{
 			name: "empty rewards",
-			msg: createMsg(func(msg MsgAddToGauge) MsgAddToGauge {
+			msg: createMsg(func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
 				msg.Rewards = sdk.Coins{}
 				return msg
 			}),
@@ -236,7 +235,7 @@ func TestAuthzMsg(t *testing.T) {
 	}{
 		{
 			name: "MsgAddToGauge",
-			incentivesMsg: &MsgAddToGauge{
+			incentivesMsg: &incentivestypes.MsgAddToGauge{
 				Owner:   addr1,
 				GaugeId: 1,
 				Rewards: sdk.NewCoins(coin),
@@ -244,7 +243,7 @@ func TestAuthzMsg(t *testing.T) {
 		},
 		{
 			name: "MsgCreateGauge",
-			incentivesMsg: &MsgCreateGauge{
+			incentivesMsg: &incentivestypes.MsgCreateGauge{
 				IsPerpetual: false,
 				Owner:       addr1,
 				DistributeTo: lockuptypes.QueryCondition{
@@ -260,36 +259,7 @@ func TestAuthzMsg(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var (
-				mockMsgGrant  authz.MsgGrant
-				mockMsgRevoke authz.MsgRevoke
-				mockMsgExec   authz.MsgExec
-			)
-
-			// Authz: Grant Msg
-			typeURL := sdk.MsgTypeURL(tc.incentivesMsg)
-			grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
-			require.NoError(t, err)
-
-			msgGrant := authz.MsgGrant{Granter: mockGranter, Grantee: mockGrantee, Grant: grant}
-			msgGrantBytes := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgGrant)))
-			err = authzcodec.ModuleCdc.UnmarshalJSON(msgGrantBytes, &mockMsgGrant)
-			require.NoError(t, err)
-
-			// Authz: Revoke Msg
-			msgRevoke := authz.MsgRevoke{Granter: mockGranter, Grantee: mockGrantee, MsgTypeUrl: typeURL}
-			msgRevokeByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgRevoke)))
-			err = authzcodec.ModuleCdc.UnmarshalJSON(msgRevokeByte, &mockMsgRevoke)
-			require.NoError(t, err)
-
-			// Authz: Exec Msg
-			msgAny, _ := cdctypes.NewAnyWithValue(tc.incentivesMsg)
-			msgExec := authz.MsgExec{Grantee: mockGrantee, Msgs: []*cdctypes.Any{msgAny}}
-			execMsgByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgExec)))
-			err = authzcodec.ModuleCdc.UnmarshalJSON(execMsgByte, &mockMsgExec)
-			require.NoError(t, err)
-			require.Equal(t, msgExec.Msgs[0].Value, mockMsgExec.Msgs[0].Value)
-
+			apptesting.TestMessageAuthzSerialization(t, tc.incentivesMsg)
 		})
 	}
 }
