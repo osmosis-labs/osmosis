@@ -69,7 +69,8 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	return newRecord
 }
 
-// interpolate record returns a record, with updated accumulator values and time for provided newTime.
+// recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime.
+// otherwise referred to as "interpolating the record" to the target time.
 //
 // pre-condition: newTime >= record.Time
 func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
@@ -108,7 +109,7 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
-	record = interpolateRecord(record, t)
+	record = recordWithUpdatedAccumulators(record, t)
 	return record, nil
 }
 
@@ -120,15 +121,8 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
-	record = interpolateRecord(record, ctx.BlockTime())
+	record = recordWithUpdatedAccumulators(record, ctx.BlockTime())
 	return record, nil
-}
-
-// interpolate record updates the record's accumulator values and time to the interpolate time.
-//
-// pre-condition: interpolateTime >= record.Time
-func interpolateRecord(record types.TwapRecord, interpolateTime time.Time) types.TwapRecord {
-	return recordWithUpdatedAccumulators(record, interpolateTime)
 }
 
 // precondition: endRecord.Time >= startRecord.Time

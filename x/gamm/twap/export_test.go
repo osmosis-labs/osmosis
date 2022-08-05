@@ -40,6 +40,6 @@ func ComputeArithmeticTwap(startRecord, endRecord types.TwapRecord, quoteAsset s
 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
 }
 
-func InterpolateRecord(record types.TwapRecord, t time.Time) types.TwapRecord {
-	return interpolateRecord(record, t)
+func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
+	return recordWithUpdatedAccumulators(record, t)
 }

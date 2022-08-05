@@ -41,7 +41,7 @@ func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
 	}
 }
 
-func TestInterpolateRecord(t *testing.T) {
+func TestRecordWithUpdatedAccumulators(t *testing.T) {
 	tests := map[string]struct {
 		record          types.TwapRecord
 		interpolateTime time.Time
@@ -77,7 +77,7 @@ func TestInterpolateRecord(t *testing.T) {
 			test.expRecord.P0LastSpotPrice = test.record.P0LastSpotPrice
 			test.expRecord.P1LastSpotPrice = test.record.P1LastSpotPrice
 
-			gotRecord := twap.InterpolateRecord(test.record, test.interpolateTime)
+			gotRecord := twap.RecordWithUpdatedAccumulators(test.record, test.interpolateTime)
 			require.Equal(t, test.expRecord, gotRecord)
 		})
 	}
