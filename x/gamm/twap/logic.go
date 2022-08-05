@@ -132,8 +132,10 @@ func interpolateRecord(record types.TwapRecord, interpolateTime time.Time) types
 	return recordWithUpdatedAccumulators(record, interpolateTime)
 }
 
-// TODO: Test math, test p0 vs p1 correctness
-// precondition: endRecord.Time > startRecord.Time
+// precondition: endRecord.Time >= startRecord.Time
+// if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
+// else returns
+// (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
 func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	// if time difference is 0, then return the last spot price based off of start.
