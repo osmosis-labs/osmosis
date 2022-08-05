@@ -42,7 +42,7 @@ func (k Keeper) AllocateAsset(ctx sdk.Context) error {
 	totalWeightDec := distrInfo.TotalWeight.ToDec()
 	for _, record := range distrInfo.Records {
 		allocatingAmount := assetAmountDec.Mul(record.Weight.ToDec().Quo(totalWeightDec)).TruncateInt()
-		
+
 		// when weight is too small and no amount is allocated, just skip this to avoid zero coin send issues
 		if !allocatingAmount.IsPositive() {
 			logger.Info(fmt.Sprintf("allocating amount for (%d, %s) record is not positive", record.GaugeId, record.Weight.String()))
