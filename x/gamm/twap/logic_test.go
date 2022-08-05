@@ -157,11 +157,10 @@ func TestComputeArithmeticTwap(t *testing.T) {
 	}
 	tenSecAccum := OneSec.MulInt64(10)
 	pointOneAccum := OneSec.QuoInt64(10)
-	plusOneSec := baseTime.Add(time.Second)
 	tests := map[string]testCase{
 		"basic: spot price = 1 for one second, 0 init accumulator": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecord(plusOneSec, OneSec, true),
+			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
 			quoteAsset:  denom0,
 			expTwap:     sdk.OneDec(),
 		},
