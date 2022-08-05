@@ -1,7 +1,7 @@
 package twap
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,12 +37,14 @@ func (k Keeper) GetArithmeticTwap(
 	startTime time.Time,
 	endTime time.Time) (sdk.Dec, error) {
 	if startTime.After(endTime) {
-		return sdk.Dec{}, errors.New("called GetArithmeticTwap with a start time that is after the end time")
+		return sdk.Dec{}, fmt.Errorf("called GetArithmeticTwap with a start time that is after the end time."+
+			" (start time %s, end time %s)", startTime, endTime)
 	}
 	if endTime.Equal(ctx.BlockTime()) {
 		return k.GetArithmeticTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime)
 	} else if endTime.After(ctx.BlockTime()) {
-		return sdk.Dec{}, errors.New("called GetArithmeticTwap with an end time in the future")
+		return sdk.Dec{}, fmt.Errorf("called GetArithmeticTwap with an end time in the future."+
+			" (end time %s, current time %s)", endTime, ctx.BlockTime())
 	}
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
