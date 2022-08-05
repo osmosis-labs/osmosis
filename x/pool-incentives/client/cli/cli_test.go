@@ -19,7 +19,7 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
-//SetupSuite sets up an integration test suite.
+// SetupSuite sets up an integration test suite.
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
