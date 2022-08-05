@@ -161,7 +161,11 @@ func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins) {
 }
 
 func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdk.Int) {
+	numTokens := p.NumAssets()
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...)
+	if len(p.PoolLiquidity) != numTokens {
+		panic(fmt.Sprintf("updatePoolForJoin changed number of tokens in pool from %d to %d", numTokens, len(p.PoolLiquidity)))
+	}
 	p.TotalShares.Amount = p.TotalShares.Amount.Add(newShares)
 }
 
@@ -270,3 +274,20 @@ func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int
 
 // no-op for stableswap
 func (p *Pool) PokePool(blockTime time.Time) {}
+
+// SetStableSwapScalingFactors sets scaling factors for pool to the given amount
+// It should only be able to be successfully called by the pool's ScalingFactorGovernor
+// TODO: move commented test for this function from x/gamm/keeper/pool_service_test.go once a pool_test.go file has been created for stableswap
+func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, scalingFactorGovernor string) error {
+	if scalingFactorGovernor != p.ScalingFactorGovernor {
+		return types.ErrNotScalingFactorGovernor
+	}
+
+	if len(scalingFactors) != p.PoolLiquidity.Len() {
+		return types.ErrInvalidStableswapScalingFactors
+	}
+
+	p.ScalingFactor = scalingFactors
+
+	return nil
+}

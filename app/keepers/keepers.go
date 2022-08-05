@@ -52,6 +52,8 @@ import (
 	epochskeeper "github.com/osmosis-labs/osmosis/v10/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v10/x/incentives/keeper"
 	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
@@ -98,6 +100,7 @@ type AppKeepers struct {
 	TransferKeeper       *ibctransferkeeper.Keeper
 	EvidenceKeeper       *evidencekeeper.Keeper
 	GAMMKeeper           *gammkeeper.Keeper
+	TwapKeeper           *twap.Keeper
 	LockupKeeper         *lockupkeeper.Keeper
 	EpochsKeeper         *epochskeeper.Keeper
 	IncentivesKeeper     *incentiveskeeper.Keeper
@@ -241,6 +244,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.DistrKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
+	appKeepers.TwapKeeper = twap.NewKeeper(
+		appKeepers.keys[twaptypes.StoreKey],
+		appKeepers.tkeys[twaptypes.TransientStoreKey],
+		appKeepers.GetSubspace(twaptypes.ModuleName),
+		appKeepers.GAMMKeeper)
+
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[lockuptypes.StoreKey],
@@ -251,6 +260,19 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 
+	txFeesKeeper := txfeeskeeper.NewKeeper(
+		appCodec,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.EpochsKeeper,
+		appKeepers.keys[txfeestypes.StoreKey],
+		appKeepers.GAMMKeeper,
+		appKeepers.GAMMKeeper,
+		txfeestypes.FeeCollectorName,
+		txfeestypes.NonNativeFeeCollectorName,
+	)
+	appKeepers.TxFeesKeeper = &txFeesKeeper
+
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[incentivestypes.StoreKey],
@@ -258,6 +280,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.LockupKeeper,
 		appKeepers.EpochsKeeper,
+		appKeepers.DistrKeeper,
+		appKeepers.TxFeesKeeper,
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
@@ -289,19 +313,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		authtypes.FeeCollectorName,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
-
-	txFeesKeeper := txfeeskeeper.NewKeeper(
-		appCodec,
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.EpochsKeeper,
-		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.GAMMKeeper,
-		appKeepers.GAMMKeeper,
-		txfeestypes.FeeCollectorName,
-		txfeestypes.NonNativeFeeCollectorName,
-	)
-	appKeepers.TxFeesKeeper = &txFeesKeeper
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appCodec,
@@ -454,6 +465,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		gammtypes.NewMultiGammHooks(
 			// insert gamm hooks receivers here
 			appKeepers.PoolIncentivesKeeper.Hooks(),
+			appKeepers.TwapKeeper.GammHooks(),
 		),
 	)
 
@@ -512,6 +524,7 @@ func KVStoreKeys() []string {
 		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
 		gammtypes.StoreKey,
+		twaptypes.StoreKey,
 		lockuptypes.StoreKey,
 		incentivestypes.StoreKey,
 		epochstypes.StoreKey,

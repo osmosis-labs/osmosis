@@ -10,9 +10,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// BeforeEpochStart is a hook which is executed before the start of an epoch. It is a no-op for mint module.
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+	// no-op
 }
 
+// AfterEpochEnd is a hook which is executed after the end of an epoch.
+// This hook should attempt to mint and distribute coins according to
+// the configuration set via parameters. In addition, it handles the logic
+// for reducing minted coins according to the parameters.
+// For an attempt to mint to occur:
+// - given epochIdentifier must be equal to the mint epoch identifier set via parameters.
+// - given epochNumber must be greater than or equal to the mint start epoch set via parameters.
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	params := k.GetParams(ctx)
 
@@ -25,14 +34,13 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 		// fetch stored minter & params
 		minter := k.GetMinter(ctx)
-		params := k.GetParams(ctx)
 
 		// Check if we have hit an epoch where we update the inflation parameter.
 		// We measure time between reductions in number of epochs.
 		// This avoids issues with measuring in block numbers, as epochs have fixed intervals, with very
 		// low variance at the relevant sizes. As a result, it is safe to store the epoch number
 		// of the last reduction to be later retrieved for comparison.
-		if epochNumber >= k.GetParams(ctx).ReductionPeriodInEpochs+k.GetLastReductionEpochNum(ctx) {
+		if epochNumber >= params.ReductionPeriodInEpochs+k.GetLastReductionEpochNum(ctx) {
 			// Reduce the reward per reduction period
 			minter.EpochProvisions = minter.NextEpochProvisions(params)
 			k.SetMinter(ctx, minter)
