@@ -20,13 +20,13 @@ func TestDecimalTestSuite(t *testing.T) {
 	suite.Run(t, new(decimalTestSuite))
 }
 
-func TestAssertDecApproxEq(t *testing.T) {
+func TestDecApproxEq(t *testing.T) {
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
 	d1 := NewDecWithPrec(55, 2)
 	d2 := NewDecWithPrec(6, 1)
 	tol := NewDecWithPrec(1, 1)
 
-	DecApproxEq(t, d1, d2, tol)
+	require.True(DecApproxEq(t, d1, d2, tol))
 
 	// d1 = 0.55, d2 = 0.6, tol = 1E-5
 	d1 = NewDecWithPrec(55, 2)
