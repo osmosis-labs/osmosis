@@ -18,12 +18,8 @@ func TestMsgCreatePool(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
 
-<<<<<<< HEAD
-	createMsg := func(after func(msg MsgCreateGauge) MsgCreateGauge) MsgCreateGauge {
-=======
 	// make a proper createPool message
 	createMsg := func(after func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
->>>>>>> 5ebcd61b (Msg test (#2316))
 		distributeTo := lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByDuration,
 			Denom:         "lptoken",
@@ -42,19 +38,11 @@ func TestMsgCreatePool(t *testing.T) {
 		return after(properMsg)
 	}
 
-<<<<<<< HEAD
-	msg := createMsg(func(msg MsgCreateGauge) MsgCreateGauge {
-		return msg
-	})
-
-	require.Equal(t, msg.Route(), RouterKey)
-=======
 	// validate createPool message was created as intended
 	msg := createMsg(func(msg incentivestypes.MsgCreateGauge) incentivestypes.MsgCreateGauge {
 		return msg
 	})
 	require.Equal(t, msg.Route(), incentivestypes.RouterKey)
->>>>>>> 5ebcd61b (Msg test (#2316))
 	require.Equal(t, msg.Type(), "create_gauge")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
@@ -161,14 +149,9 @@ func TestMsgAddToGauge(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address())
 
-<<<<<<< HEAD
-	createMsg := func(after func(msg MsgAddToGauge) MsgAddToGauge) MsgAddToGauge {
-		properMsg := *NewMsgAddToGauge(
-=======
 	// make a proper addToGauge message
 	createMsg := func(after func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
 		properMsg := *incentivestypes.NewMsgAddToGauge(
->>>>>>> 5ebcd61b (Msg test (#2316))
 			addr1,
 			1,
 			sdk.Coins{sdk.NewInt64Coin("stake", 10)},
@@ -177,19 +160,11 @@ func TestMsgAddToGauge(t *testing.T) {
 		return after(properMsg)
 	}
 
-<<<<<<< HEAD
-	msg := createMsg(func(msg MsgAddToGauge) MsgAddToGauge {
-		return msg
-	})
-
-	require.Equal(t, msg.Route(), RouterKey)
-=======
 	// validate addToGauge message was created as intended
 	msg := createMsg(func(msg incentivestypes.MsgAddToGauge) incentivestypes.MsgAddToGauge {
 		return msg
 	})
 	require.Equal(t, msg.Route(), incentivestypes.RouterKey)
->>>>>>> 5ebcd61b (Msg test (#2316))
 	require.Equal(t, msg.Type(), "add_to_gauge")
 	signers := msg.GetSigners()
 	require.Equal(t, len(signers), 1)
