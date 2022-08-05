@@ -9,8 +9,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 )
 
 func TestMsgLockTokens(t *testing.T) {
@@ -245,6 +248,53 @@ func TestMsgExtendLockup(t *testing.T) {
 			} else {
 				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 			}
+		})
+	}
+}
+
+// // Test authz serialize and de-serializes for lockup msg.
+func TestAuthzMsg(t *testing.T) {
+	appParams.SetAddressPrefixes()
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pk1.Address()).String()
+	coin := sdk.NewCoin("denom", sdk.NewInt(1))
+	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
+
+	const (
+		mockGranter string = "cosmos1abc"
+		mockGrantee string = "cosmos1xyz"
+	)
+
+	testCases := []struct {
+		name string
+		msg  sdk.Msg
+	}{
+		{
+			name: "MsgLockTokens",
+			msg: &types.MsgLockTokens{
+				Owner:    addr1,
+				Duration: time.Hour,
+				Coins:    sdk.NewCoins(coin),
+			},
+		},
+		{
+			name: "MsgBeginUnlocking",
+			msg: &types.MsgBeginUnlocking{
+				Owner: addr1,
+				ID:    1,
+				Coins: sdk.NewCoins(coin),
+			},
+		},
+		{
+			name: "MsgBeginUnlockingAll",
+			msg: &types.MsgBeginUnlockingAll{
+				Owner: addr1,
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			apptesting.TestMessageAuthzSerialization(t, tc.msg)
 		})
 	}
 }
