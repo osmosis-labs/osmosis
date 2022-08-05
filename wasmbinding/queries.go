@@ -135,7 +135,7 @@ func (qp QueryPlugin) ArithmeticTwapToNow(ctx sdk.Context, arithmeticTwap *bindi
 	poolId := arithmeticTwap.PoolId
 	quoteAssetDenom := arithmeticTwap.QuoteAssetDenom
 	baseAssetDenom := arithmeticTwap.BaseAssetDenom
-	startTime := time.Unix(arithmeticTwap.StartTime, 0)
+	startTime := time.UnixMilli(arithmeticTwap.StartTime)
 
 	twap, err := qp.twapKeeper.GetArithmeticTwapToNow(ctx, poolId, quoteAssetDenom, baseAssetDenom, startTime)
 	if err != nil {

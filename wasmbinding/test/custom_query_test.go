@@ -254,7 +254,7 @@ func TestQueryArithmeticTwapToNow(t *testing.T) {
 			PoolId:          starPoolID,
 			QuoteAssetDenom: "ustar",
 			BaseAssetDenom:  "uosmo",
-			StartTime:       startTime.Unix(),
+			StartTime:       startTime.UnixMilli(),
 		},
 	}
 
