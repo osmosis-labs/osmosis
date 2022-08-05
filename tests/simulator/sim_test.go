@@ -47,6 +47,7 @@ func TestFullAppSimulation(t *testing.T) {
 	sdkSimapp.FlagVerboseValue = true
 	sdkSimapp.FlagPeriodValue = 10
 	sdkSimapp.FlagSeedValue = 10
+	sdkSimapp.FlagExcludeLongInvariantProbability = 0.9
 	fullAppSimulation(t, true)
 }
 
@@ -91,6 +92,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		interBlockCacheOpt(),
 		fauxMerkleModeOpt)
 
+	defaultInvarRoutes := osmosis.AppKeepers.CrisisKeeper.Routes()
 	initFns := simtypes.InitFunctions{
 		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(simulation.RandomAccounts, osmosis.ModuleAccountAddrs()),
 		AppInitialStateFn: AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
@@ -101,6 +103,8 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		tb,
 		os.Stdout,
 		osmosis,
+		osmosis,
+		defaultInvarRoutes,
 		initFns,
 		osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 		config,
@@ -135,6 +139,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
+	sdkSimapp.FlagExcludeLongInvariantProbability = 0.9
 
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
@@ -181,11 +186,15 @@ func TestAppStateDeterminism(t *testing.T) {
 				AppInitialStateFn: AppStateFn(osmosis.AppCodec(), osmosis.SimulationManager()),
 			}
 
+			defaultInvarRoutes := osmosis.AppKeepers.CrisisKeeper.Routes()
+
 			// Run randomized simulation:
 			_, simErr := osmosim.SimulateFromSeed(
 				t,
 				os.Stdout,
 				osmosis,
+				osmosis,
+				defaultInvarRoutes,
 				initFns,
 				osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 				config,

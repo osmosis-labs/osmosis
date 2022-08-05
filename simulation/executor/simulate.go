@@ -15,9 +15,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 
+	"github.com/osmosis-labs/osmosis/v10/app"
 	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
@@ -57,6 +60,8 @@ func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
 	app simtypes.App,
+	osmosis *app.OsmosisApp,
+	defaultInvarRoutes []crisistypes.InvarRoute,
 	initFunctions simtypes.InitFunctions,
 	actions []simtypes.ActionsWithMetadata,
 	config simulation.Config,
@@ -82,7 +87,7 @@ func SimulateFromSeed(
 	}()
 
 	testingMode, _, b := getTestingMode(tb)
-	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config)
+	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config, osmosis, defaultInvarRoutes)
 
 	if !testingMode {
 		b.ResetTimer()
@@ -206,7 +211,7 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.ActionsWithMetadata,
-	simState *simState, config simulation.Config,
+	simState *simState, config simulation.Config, osmosis *app.OsmosisApp, defaultInvarRoutes []crisistypes.InvarRoute,
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
@@ -229,6 +234,26 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			// We can also use this to limit which operations we run, in debugging a simulator run.
 			actionSeed := fmt.Sprintf("%s operation %d", blockNumStr, i)
 			actionSimCtx, cleanup := simCtx.WrapRand(actionSeed)
+
+			r := rand.New(rand.NewSource(config.Seed))
+			// utilize long invariant probability flag to run delegator-shares
+			// invariant at semi-random intervals
+			if header.Height%int64(sdkSimapp.FlagPeriodValue) == 0 {
+				if r.Float64() < sdkSimapp.FlagExcludeLongInvariantProbability {
+					var invarRouteSlice []crisistypes.InvarRoute
+
+					for _, route := range defaultInvarRoutes {
+						if route.Route == "delegator-shares" {
+							continue
+						} else {
+							invarRouteSlice = append(invarRouteSlice, route)
+						}
+					}
+					osmosis.AppKeepers.CrisisKeeper.NewRoutes(invarRouteSlice)
+				} else {
+					osmosis.AppKeepers.CrisisKeeper.NewRoutes(defaultInvarRoutes)
+				}
+			}
 
 			// Select and execute tx
 			action := selectAction(actionSimCtx.GetSeededRand("action select"))
