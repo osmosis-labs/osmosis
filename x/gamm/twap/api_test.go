@@ -80,8 +80,11 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 	// base record is a record with t=baseTime, sp0=10, sp1=.1, accumulators set to 0
 	baseRecord := newTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
 	// record with t=baseTime+10, sp0=5, sp1=.2, accumulators updated from baseRecord
+	// accum0 = 10 seconds * (spot price = 10), accum1 = 10 seconds * (spot price = .1)
+	accum0, accum1 := OneSec.MulInt64(10*10), OneSec
 	tPlus10sp5Record := newTwapRecordWithDefaults(
-		baseTime.Add(10*time.Second), sdk.NewDec(5), OneSec.MulInt64(10*10), OneSec)
+		baseTime.Add(10*time.Second), sdk.NewDec(5), accum0, accum1)
+	// TODO: Make use of the below for test cases:
 	// record with t=baseTime+20, sp0=2, sp1=.5, accumulators updated from tPlus10sp5Record
 	// tPlus20sp2Record := newTwapRecordWithDefaults(
 	// 	baseTime.Add(20*time.Second), sdk.NewDec(2), OneSec.MulInt64(10*10+5*10), OneSec.MulInt64(3))
