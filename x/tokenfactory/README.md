@@ -66,7 +66,6 @@ message MsgMint {
 
 ### Burn
 
-
 Burning of a specific denom is only allowed for the current admin.
 Note, the current admin is defaulted to the creator of the denom.
 
