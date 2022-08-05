@@ -359,7 +359,8 @@ func TestMessageAuthzSerialization(t *testing.T, msg sdk.Msg) {
 	require.NoError(t, err)
 
 	// Authz: Exec Msg
-	msgAny, _ := cdctypes.NewAnyWithValue(msg)
+	msgAny, err := cdctypes.NewAnyWithValue(msg)
+	require.NoError(t, err)
 	msgExec := authz.MsgExec{Grantee: mockGrantee, Msgs: []*cdctypes.Any{msgAny}}
 	execMsgByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgExec)))
 	err = authzcodec.ModuleCdc.UnmarshalJSON(execMsgByte, &mockMsgExec)
