@@ -46,9 +46,9 @@ func (s *TestSuite) TestTrackChangedPool() {
 // and runs storeNewRecord for everything in sequence.
 // Then it runs GetAllMostRecentRecordsForPool, and sees if its equal to expected
 func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
-	tPlusOne := baseTime.Add(time.Second)
-	baseRecord := newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA")
-	tPlusOneRecord := newEmptyPriceRecord(1, tPlusOne, "tokenB", "tokenA")
+	denomA, denomB, denomC := "tokenA", "tokenB", "tokenC"
+	baseRecord := newEmptyPriceRecord(1, baseTime, denomB, denomA)
+	tPlusOneRecord := newEmptyPriceRecord(1, tPlusOne, denomB, denomA)
 	tests := map[string]struct {
 		recordsToSet    []types.TwapRecord
 		poolId          uint64
@@ -65,9 +65,9 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 			expectedRecords: []types.TwapRecord{},
 		},
 		"set single record, different pool ID": {
-			recordsToSet:    []types.TwapRecord{newEmptyPriceRecord(2, baseTime, "tokenB", "tokenA")},
+			recordsToSet:    []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denomB, denomA)},
 			poolId:          2,
-			expectedRecords: []types.TwapRecord{newEmptyPriceRecord(2, baseTime, "tokenB", "tokenA")},
+			expectedRecords: []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denomB, denomA)},
 		},
 		"set two records": {
 			recordsToSet:    []types.TwapRecord{baseRecord, tPlusOneRecord},
@@ -82,14 +82,14 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 		},
 		"set multi-asset pool record": {
 			recordsToSet: []types.TwapRecord{
-				newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA"),
-				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenB"),
-				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenA")},
+				newEmptyPriceRecord(1, baseTime, denomB, denomA),
+				newEmptyPriceRecord(1, baseTime, denomC, denomB),
+				newEmptyPriceRecord(1, baseTime, denomC, denomA)},
 			poolId: 1,
 			expectedRecords: []types.TwapRecord{
-				newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA"),
-				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenA"),
-				newEmptyPriceRecord(1, baseTime, "tokenC", "tokenB")},
+				newEmptyPriceRecord(1, baseTime, denomB, denomA),
+				newEmptyPriceRecord(1, baseTime, denomC, denomA),
+				newEmptyPriceRecord(1, baseTime, denomC, denomB)},
 		},
 	}
 
@@ -116,14 +116,14 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		asset0Denom string
 		asset1Denom string
 	}
-	defaultInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, "tokenB", "tokenA"} }
-	wrongPoolIdInputAt := func(t time.Time) getRecordInput { return getRecordInput{2, t, "tokenB", "tokenA"} }
-	defaultRevInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, "tokenA", "tokenB"} }
-	baseRecord := newEmptyPriceRecord(1, baseTime, "tokenB", "tokenA")
+	defaultInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom0, denom1} }
+	wrongPoolIdInputAt := func(t time.Time) getRecordInput { return getRecordInput{2, t, denom0, denom1} }
+	defaultRevInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom1, denom0} }
+	baseRecord := newEmptyPriceRecord(1, baseTime, denom0, denom1)
 	tMin1 := baseTime.Add(-time.Second)
-	tMin1Record := newEmptyPriceRecord(1, tMin1, "tokenB", "tokenA")
+	tMin1Record := newEmptyPriceRecord(1, tMin1, denom0, denom1)
 	tPlus1 := baseTime.Add(time.Second)
-	tPlus1Record := newEmptyPriceRecord(1, tPlus1, "tokenB", "tokenA")
+	tPlus1Record := newEmptyPriceRecord(1, tPlus1, denom0, denom1)
 
 	tests := map[string]struct {
 		recordsToSet   []types.TwapRecord
@@ -166,9 +166,9 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 			wrongPoolIdInputAt(baseTime), baseRecord, true},
 		"pool2 record get": {
-			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, "tokenB", "tokenA")},
+			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
 			input:          wrongPoolIdInputAt(baseTime),
-			expectedRecord: newEmptyPriceRecord(2, baseTime, "tokenB", "tokenA"),
+			expectedRecord: newEmptyPriceRecord(2, baseTime, denom0, denom1),
 			expErr:         false},
 	}
 	for name, test := range tests {

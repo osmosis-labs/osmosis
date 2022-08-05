@@ -6,6 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var ThreePlusOneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
+
 // intended to be used with require/assert:  require.True(DecEq(...))
 // TODO: Replace with function in SDK types package when we update
 func DecApproxEq(t *testing.T, d1 sdk.Dec, d2 sdk.Dec, tol sdk.Dec) (*testing.T, bool, string, string, string) {

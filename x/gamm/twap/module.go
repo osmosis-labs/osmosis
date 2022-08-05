@@ -117,7 +117,7 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock performs a no-op.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	// am.k.endBlock(ctx)
+	am.k.endBlock(ctx)
 	return []abci.ValidatorUpdate{}
 }
 

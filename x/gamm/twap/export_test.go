@@ -32,14 +32,14 @@ func (k Keeper) GetChangedPools(ctx sdk.Context) []uint64 {
 	return k.getChangedPools(ctx)
 }
 
-// func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
-// 	return k.updateRecord(ctx, record)
-// }
+func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
+	return k.updateRecord(ctx, record)
+}
 
-// func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-// 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
-// }
+func ComputeArithmeticTwap(startRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
+}
 
-// func InterpolateRecord(record types.TwapRecord, t time.Time) types.TwapRecord {
-// 	return interpolateRecord(record, t)
-// }
+func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
+	return recordWithUpdatedAccumulators(record, t)
+}
