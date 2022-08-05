@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -14,7 +13,6 @@ import (
 
 // // Test authz serialize and de-serializes for tokenfactory msg.
 func TestAuthzMsg(t *testing.T) {
-	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	coin := sdk.NewCoin("denom", sdk.NewInt(1))
