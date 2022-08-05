@@ -26,21 +26,21 @@ func TestAssertDecApproxEq(t *testing.T) {
 	d2 := NewDecWithPrec(6, 1)
 	tol := NewDecWithPrec(1, 1)
 
-	AssertDecApproxEq(t, d1, d2, tol)
+	DecApproxEq(t, d1, d2, tol)
 
 	// d1 = 0.55, d2 = 0.6, tol = 1E-5
 	d1 = NewDecWithPrec(55, 2)
 	d2 = NewDecWithPrec(6, 1)
 	tol = NewDecWithPrec(1, 5)
 
-	require.False(AssertDecApproxEq(t, d1, d2, tol))
+	require.False(DecApproxEq(t, d1, d2, tol))
 
 	// d1 = 0.6, d2 = 0.61, tol = 0.01
 	d1 = NewDecWithPrec(6, 1)
 	d2 = NewDecWithPrec(61, 2)
 	tol = NewDecWithPrec(1, 2)
 
-	require.True(AssertDecApproxEq(t, d1, d2, tol))
+	require.True(DecApproxEq(t, d1, d2, tol))
 }
 
 // create a decimal from a decimal string (ex. "1234.5678")
