@@ -1,0 +1,11 @@
+syntax = "proto3";
+package osmosis.alias.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types";
+
+// GenesisState defines the alias module's genesis state.
+message GenesisState {
+  //  string contract_address = 1 [ (gogoproto.nullable) = true ];
+}

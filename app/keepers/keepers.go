@@ -116,7 +116,8 @@ type AppKeepers struct {
 	TokenFactoryKeeper   *tokenfactorykeeper.Keeper
 	// IBC modules
 	// transfer module
-	TransferModule transfer.AppModule
+	TransferModule     transfer.AppModule
+	RateLimitingModule ibcratelimit.AppModule
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -205,6 +206,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IBCKeeper.PortKeeper,
 	)
 	appKeepers.RateLimitingKeeper = &rateLimitKeeper
+	appKeepers.RateLimitingModule = ibcratelimit.NewAppModule(*appKeepers.RateLimitingKeeper)
 
 	// Create Transfer Keeper
 	transferKeeper := ibctransferkeeper.NewKeeper(

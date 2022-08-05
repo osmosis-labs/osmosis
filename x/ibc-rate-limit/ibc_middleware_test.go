@@ -2,9 +2,10 @@ package ibc_rate_limit_test
 
 import (
 	"encoding/json"
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 	"github.com/osmosis-labs/osmosis/v10/app"
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
@@ -78,12 +79,29 @@ func (suite *MiddlewareTestSuite) TestSendPacket() {
 	//suite.Require().Equal("connection-0", path.EndpointA.ConnectionID)
 	//suite.Require().Equal("channel-0", path.EndpointA.ChannelID)
 
-	disabledTimeoutTimestamp := uint64(0)
+	//disabledTimeoutTimestamp := uint64(0)
 	timeoutHeight := clienttypes.NewHeight(0, 100)
-	packet := channeltypes.NewPacket(ibctesting.MockPacketData, 1, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, timeoutHeight, disabledTimeoutTimestamp)
-	channelCap := suite.chainA.GetChannelCapability(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID)
-	err := suite.chainA.App.GetIBCKeeper().ChannelKeeper.SendPacket(suite.chainA.GetContext(), channelCap, packet)
+	//packet := channeltypes.NewPacket(ibctesting.MockPacketData, 1, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, timeoutHeight, disabledTimeoutTimestamp)
+	//channelCap := suite.chainA.GetChannelCapability(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID)
 
+	coinToSendToB := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
+	coinSentFromAToB := transfertypes.GetTransferCoin(path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, sdk.DefaultBondDenom, sdk.NewInt(1))
+	coinSentFromBToA := transfertypes.GetTransferCoin(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.DefaultBondDenom, sdk.NewInt(1))
+	fmt.Println(coinToSendToB)
+	fmt.Println(coinSentFromAToB)
+	fmt.Println(coinSentFromBToA)
+	msg := transfertypes.NewMsgTransfer(
+		path.EndpointA.ChannelConfig.PortID,
+		path.EndpointA.ChannelID,
+		coinToSendToB,
+		suite.chainA.SenderAccount.GetAddress().String(),
+		suite.chainB.SenderAccount.GetAddress().String(),
+		timeoutHeight,
+		0,
+	)
+
+	result, err := suite.chainA.SendMsgs(msg)
+	//fmt.Println(result)
 	suite.Require().NoError(err)
 
 	// receive on endpointB
