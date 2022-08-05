@@ -874,7 +874,7 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 func TestAuthzMsg(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
-	coin := sdk.NewCoin("stake", sdk.NewInt(1))
+	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
 
 	testCases := []struct {
 		name    string

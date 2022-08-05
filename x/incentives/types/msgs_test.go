@@ -221,7 +221,7 @@ func TestAuthzMsg(t *testing.T) {
 	appParams.SetAddressPrefixes()
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()
-	coin := sdk.NewCoin("stake", sdk.NewInt(1))
+	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
 	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
 
 	const (
