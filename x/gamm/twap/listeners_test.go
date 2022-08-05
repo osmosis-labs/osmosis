@@ -11,14 +11,14 @@ import (
 func (s *TestSuite) TestCreateTwoAssetPoolFlow() {
 	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
 
-	expectedTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, "token/B", "token/A")
+	expectedTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
-	twap, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, "token/B", "token/A")
+	twap, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 	s.Require().Equal(expectedTwap, twap)
 
-	twap, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), "token/B", "token/A")
+	twap, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
 	s.Require().NoError(err)
 	s.Require().Equal(expectedTwap, twap)
 }
@@ -43,7 +43,7 @@ func (s *TestSuite) TestSwapTriggeringTrackPoolId() {
 func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
-	expectedHistoricalTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, "token/B", "token/A")
+	expectedHistoricalTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
 	s.EndBlock()
@@ -53,7 +53,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.RunBasicSwap(poolId)
 
 	// accumulators are default right here
-	expectedLatestTwapUpToAccum, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, "token/B", "token/A")
+	expectedLatestTwapUpToAccum, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 	// ensure different spot prices
 	s.Require().NotEqual(expectedHistoricalTwap.P0LastSpotPrice, expectedLatestTwapUpToAccum.P0LastSpotPrice)
@@ -62,16 +62,16 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.EndBlock()
 
 	// check records
-	historicalOldTwap, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, baseTime, "token/B", "token/A")
+	historicalOldTwap, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, baseTime, denom0, denom1)
 	s.Require().NoError(err)
 	s.Require().Equal(expectedHistoricalTwap, historicalOldTwap)
 
-	latestTwap, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, "token/B", "token/A")
+	latestTwap, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 	s.Require().Equal(latestTwap.P0LastSpotPrice, expectedLatestTwapUpToAccum.P0LastSpotPrice)
 	s.Require().Equal(latestTwap.P1LastSpotPrice, expectedLatestTwapUpToAccum.P1LastSpotPrice)
 
-	latestTwap2, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), "token/B", "token/A")
+	latestTwap2, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
 	s.Require().NoError(err)
 	s.Require().Equal(latestTwap, latestTwap2)
 

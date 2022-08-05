@@ -120,7 +120,6 @@ func (s *TestSuite) TestUpdateTwap() {
 // based on time interval, and their accumulator values.
 // Then an expected TWAP is provided in each test case, to compare against computed.
 func TestComputeArithmeticTwap(t *testing.T) {
-	denom0, denom1 := "token/B", "token/A"
 	newOneSidedRecord := func(time time.Time, accum sdk.Dec, useP0 bool) types.TwapRecord {
 		record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
 		if useP0 {

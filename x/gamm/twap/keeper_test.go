@@ -13,11 +13,13 @@ import (
 )
 
 // TODO: Consider switching this everywhere
-var denom0 = "token/B"
-var denom1 = "token/A"
-var defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
-var baseTime = time.Unix(1257894000, 0).UTC()
-var tPlusOne = baseTime.Add(time.Second)
+var (
+	denom0            = "token/B"
+	denom1            = "token/A"
+	defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
+	baseTime          = time.Unix(1257894000, 0).UTC()
+	tPlusOne          = baseTime.Add(time.Second)
+)
 
 type TestSuite struct {
 	apptesting.KeeperTestHelper
