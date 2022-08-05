@@ -160,22 +160,22 @@ func TestComputeArithmeticTwap(t *testing.T) {
 	plusOneSec := baseTime.Add(time.Second)
 	tests := map[string]testCase{
 		"basic: spot price = 1 for one second, 0 init accumulator": {
-			newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			newOneSidedRecord(plusOneSec, OneSec, true),
-			denom0,
-			sdk.OneDec(),
+			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newOneSidedRecord(plusOneSec, OneSec, true),
+			quoteAsset:  denom0,
+			expTwap:     sdk.OneDec(),
 		},
 		"same record: denom0, end spot price = 0": {
-			newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			denom0,
-			sdk.ZeroDec(),
+			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			quoteAsset:  denom0,
+			expTwap:     sdk.ZeroDec(),
 		},
 		"same record: denom1, end spot price = 1": {
-			newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			denom1,
-			sdk.OneDec(),
+			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			quoteAsset:  denom1,
+			expTwap:     sdk.OneDec(),
 		},
 		"accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
 			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
