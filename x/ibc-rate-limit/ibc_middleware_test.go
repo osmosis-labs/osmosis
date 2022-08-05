@@ -100,7 +100,7 @@ func (suite *MiddlewareTestSuite) TestSendPacket() {
 		0,
 	)
 
-	result, err := suite.chainA.SendMsgs(msg)
+	_, err := suite.chainA.SendMsgs(msg)
 	//fmt.Println(result)
 	suite.Require().NoError(err)
 
