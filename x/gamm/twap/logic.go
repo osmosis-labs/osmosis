@@ -125,6 +125,8 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 	return record, nil
 }
 
+// computeArithmeticTwap computes and returns an arithmetic TWAP between
+// two records given the quote asset.
 // precondition: endRecord.Time >= startRecord.Time
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
