@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
@@ -187,7 +186,7 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		"accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
 			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
 		"accumulator = 10*OneSec, t=3s. 0 base accum": testCaseFromDeltas(
-			sdk.ZeroDec(), tenSecAccum, 3*time.Second, osmoutils.ThreePlusOneThird),
+			sdk.ZeroDec(), tenSecAccum, 3*time.Second, ThreePlusOneThird),
 		"accumulator = 10*OneSec, t=100s. 0 base accum": testCaseFromDeltas(
 			sdk.ZeroDec(), tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
 
@@ -195,7 +194,7 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		"accumulator = 10*OneSec, t=5s. 10 base accum": testCaseFromDeltas(
 			sdk.NewDec(10), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
 		"accumulator = 10*OneSec, t=3s. 10*second base accum": testCaseFromDeltas(
-			tenSecAccum, tenSecAccum, 3*time.Second, osmoutils.ThreePlusOneThird),
+			tenSecAccum, tenSecAccum, 3*time.Second, ThreePlusOneThird),
 		"accumulator = 10*OneSec, t=100s. .1*second base accum": testCaseFromDeltas(
 			pointOneAccum, tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
 

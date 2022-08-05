@@ -5,9 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
+
+var ThreePlusOneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
 
 func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 	poolId, denomA, denomB := s.setupDefaultPool()
@@ -144,7 +145,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			ctxTime:      baseTime.Add(time.Minute),
 			input:        makeSimpleTwapInput(baseTime.Add(5*time.Second), baseTime.Add(20*time.Second), quoteAssetA),
 			// 10 for 5s, 5 for 10s = 100/15 = 6 + 2/3 = 6.66666666
-			expTwap: osmoutils.ThreePlusOneThird.MulInt64(2),
+			expTwap: ThreePlusOneThird.MulInt64(2),
 		},
 
 		// error catching

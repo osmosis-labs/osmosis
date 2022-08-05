@@ -20,27 +20,27 @@ func TestDecimalTestSuite(t *testing.T) {
 	suite.Run(t, new(decimalTestSuite))
 }
 
-func TestDecApproxEq(t *testing.T) {
+func TestAssertDecApproxEq(t *testing.T) {
 	// d1 = 0.55, d2 = 0.6, tol = 0.1
 	d1 := NewDecWithPrec(55, 2)
 	d2 := NewDecWithPrec(6, 1)
 	tol := NewDecWithPrec(1, 1)
 
-	require.True(DecApproxEq(t, d1, d2, tol))
+	AssertDecApproxEq(t, d1, d2, tol)
 
 	// d1 = 0.55, d2 = 0.6, tol = 1E-5
 	d1 = NewDecWithPrec(55, 2)
 	d2 = NewDecWithPrec(6, 1)
 	tol = NewDecWithPrec(1, 5)
 
-	require.False(DecApproxEq(t, d1, d2, tol))
+	require.False(AssertDecApproxEq(t, d1, d2, tol))
 
 	// d1 = 0.6, d2 = 0.61, tol = 0.01
 	d1 = NewDecWithPrec(6, 1)
 	d2 = NewDecWithPrec(61, 2)
 	tol = NewDecWithPrec(1, 2)
 
-	require.True(DecApproxEq(t, d1, d2, tol))
+	require.True(AssertDecApproxEq(t, d1, d2, tol))
 }
 
 // create a decimal from a decimal string (ex. "1234.5678")
