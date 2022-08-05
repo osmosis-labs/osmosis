@@ -17,6 +17,7 @@ var denom0 = "token/B"
 var denom1 = "token/A"
 var defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
 var baseTime = time.Unix(1257894000, 0).UTC()
+var tPlusOne = baseTime.Add(time.Second)
 
 type TestSuite struct {
 	apptesting.KeeperTestHelper
@@ -30,6 +31,7 @@ func TestSuiteRun(t *testing.T) {
 func (s *TestSuite) SetupTest() {
 	s.Setup()
 	s.twapkeeper = s.App.TwapKeeper
+	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 }
 
 // sets up a new two asset pool, with spot price 1

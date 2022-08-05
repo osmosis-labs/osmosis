@@ -17,11 +17,6 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 
 	zeroAccumTenPoint1Record := recordWithUpdatedSpotPrice(initStartRecord, sdk.NewDec(10), sdk.NewDecWithPrec(1, 1))
 
-	blankRecord := types.TwapRecord{}
-	defaultTime := s.Ctx.BlockTime()
-
-	tPlusOneSec := defaultTime.Add(time.Second)
-
 	tests := map[string]struct {
 		// if start record is blank, don't do any sets
 		startRecord types.TwapRecord
@@ -33,14 +28,14 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 		baseDenom  string
 		expError   bool
 	}{
-		"no record (wrong pool ID)": {blankRecord, blankRecord, defaultTime, 4, denomA, denomB, true},
-		"default record":            {blankRecord, initStartRecord, defaultTime, 1, denomA, denomB, false},
-		"one second later record":   {blankRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOneSec, 1, denomA, denomB, false},
-		"idempotent overwrite":      {initStartRecord, initStartRecord, defaultTime, 1, denomA, denomB, false},
-		"idempotent overwrite2":     {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOneSec, 1, denomA, denomB, false},
+		"no record (wrong pool ID)": {initStartRecord, initStartRecord, baseTime, 4, denomA, denomB, true},
+		"default record":            {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, false},
+		"one second later record":   {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, false},
+		"idempotent overwrite":      {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, false},
+		"idempotent overwrite2":     {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, false},
 		"diff spot price": {zeroAccumTenPoint1Record,
 			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
-			tPlusOneSec, 1, denomA, denomB, false},
+			tPlusOne, 1, denomA, denomB, false},
 		// TODO: Overflow
 	}
 	for name, tc := range tests {
@@ -49,12 +44,7 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 			s.Ctx = s.Ctx.WithBlockTime(tc.time)
 			tc.expRecord.Time = tc.time
 
-			// setup record
-			initSetRecord := tc.startRecord
-			if (tc.startRecord == types.TwapRecord{}) {
-				initSetRecord = initStartRecord
-			}
-			s.twapkeeper.StoreNewRecord(s.Ctx, initSetRecord)
+			s.twapkeeper.StoreNewRecord(s.Ctx, tc.startRecord)
 
 			actualRecord, err := s.twapkeeper.GetBeginBlockAccumulatorRecord(s.Ctx, tc.poolId, tc.baseDenom, tc.quoteDenom)
 
@@ -87,7 +77,6 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 
 	quoteAssetA := true
 	quoteAssetB := false
-	tPlusOne := baseTime.Add(time.Second)
 	// base record is a record with t=baseTime, sp0=10, sp1=.1, accumulators set to 0
 	baseRecord := newTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
 	// record with t=baseTime+10, sp0=5, sp1=.2, accumulators updated from baseRecord
