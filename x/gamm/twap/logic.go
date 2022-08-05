@@ -17,6 +17,10 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 		if err != nil {
 			return err
 		}
+		// we create a record here, because we need the record to exist in the event
+		// that there is a swap against this pool in this same block.
+		// furthermore, this protects against an edge case where a pool is created
+		// during EndBlock, after twapkeeper's endblock.
 		k.storeNewRecord(ctx, record)
 	}
 	k.trackChangedPool(ctx, poolId)
