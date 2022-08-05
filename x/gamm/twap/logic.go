@@ -57,10 +57,8 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 // Use the return value, and drop usage of the argument.
 func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
 	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
-
 	newRecord.Height = ctx.BlockHeight()
 
-	// TODO: Ensure order is correct
 	newSp0 := types.MustGetSpotPrice(k.ammkeeper, ctx, record.PoolId, record.Asset0Denom, record.Asset1Denom)
 	newSp1 := types.MustGetSpotPrice(k.ammkeeper, ctx, record.PoolId, record.Asset1Denom, record.Asset0Denom)
 
