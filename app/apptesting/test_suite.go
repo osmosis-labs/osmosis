@@ -331,12 +331,15 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 
 func TestMessageAuthzSerialization(t *testing.T, msg sdk.Msg) {
 	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
+	const (
+		mockGranter string = "cosmos1abc"
+		mockGrantee string = "cosmos1xyz"
+	)
+
 	var (
 		mockMsgGrant  authz.MsgGrant
 		mockMsgRevoke authz.MsgRevoke
 		mockMsgExec   authz.MsgExec
-		mockGranter   string = "cosmos1abc"
-		mockGrantee   string = "cosmos1xyz"
 	)
 
 	// Authz: Grant Msg
