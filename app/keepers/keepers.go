@@ -285,7 +285,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
-		appCodec, appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
+		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
 		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
 		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper))
 
@@ -309,13 +309,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
-		distrtypes.ModuleName,
-		authtypes.FeeCollectorName,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
-		appCodec,
 		appKeepers.keys[tokenfactorytypes.StoreKey],
 		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
 		appKeepers.AccountKeeper,
