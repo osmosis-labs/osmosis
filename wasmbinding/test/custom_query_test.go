@@ -175,38 +175,41 @@ func TestQuerySpotPrice(t *testing.T) {
 }
 
 func TestQueryArithmeticTwap(t *testing.T) {
+	// preamble boilerplate
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
-
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Round(time.Millisecond))
+	startTime := ctx.BlockTime()
 	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	require.NotEmpty(t, reflect)
 
 	poolFunds := []sdk.Coin{
 		sdk.NewInt64Coin("uosmo", 100000000),
 		sdk.NewInt64Coin("ustar", 200000000),
 	}
-	// 20 star to 1 osmo
+	// 2 star to 1 osmo
 	starPoolID := preparePool(t, ctx, osmosis, actor, poolFunds)
+	osmosis.EndBlocker(ctx, abci.RequestEndBlock{Height: ctx.BlockHeight()})
 
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
-	require.NotEmpty(t, reflect)
-
-	// TODO: figure out why it errors when we use start time without second
-	startTime := ctx.BlockTime().Add(time.Second)
-
-	_, err := osmosis.GAMMKeeper.SwapExactAmountIn(ctx, actor, starPoolID, sdk.NewCoin("uosmo", sdk.NewInt(100000000)), "ustar", sdk.NewInt(1))
+	// swap to make price 1 star to 2 osmo
+	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 10))
+	outTokens, err := osmosis.GAMMKeeper.SwapExactAmountIn(ctx, actor, starPoolID, sdk.NewCoin("uosmo", sdk.NewInt(100000000)), "ustar", sdk.NewInt(1))
+	require.Equal(t, outTokens, sdk.NewInt(100000000))
 	require.NoError(t, err)
+	osmosis.EndBlocker(ctx, abci.RequestEndBlock{Height: ctx.BlockHeight()})
 
 	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 20))
-	reqEndBlock := abci.RequestEndBlock{Height: ctx.BlockHeight()}
-	osmosis.EndBlocker(ctx, reqEndBlock)
+	osmosis.EndBlocker(ctx, abci.RequestEndBlock{Height: ctx.BlockHeight()})
 
+	// twap is .5 for half the time, and 2 for half the time, so on average 1.25
 	query := bindings.OsmosisQuery{
 		ArithmeticTwap: &bindings.ArithmeticTwap{
 			PoolId:          starPoolID,
 			QuoteAssetDenom: "ustar",
 			BaseAssetDenom:  "uosmo",
-			StartTime:       startTime.Unix(),
-			EndTime:         ctx.BlockTime().Unix(),
+			StartTime:       startTime.UnixMilli(),
+			EndTime:         ctx.BlockTime().UnixMilli(),
 		},
 	}
 
@@ -214,10 +217,10 @@ func TestQueryArithmeticTwap(t *testing.T) {
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 	require.NotNil(t, resp.Twap)
 
-	twap, err := strconv.ParseFloat(resp.Twap, 32)
+	twap, err := sdk.NewDecFromStr(resp.Twap)
 	require.NoError(t, err)
 
-	require.Equal(t, 0.5, twap)
+	require.Equal(t, sdk.NewDecWithPrec(125, 2), twap)
 }
 
 func TestQueryArithmeticTwapToNow(t *testing.T) {
