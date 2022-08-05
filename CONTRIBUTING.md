@@ -78,39 +78,39 @@ This type of test is mainly for functions that would be triggered by incoming me
 
 ```go
 func(suite *KeeperTestSuite) TestCreateDenom() {
-    testCases: = map[string] struct {
+    testCases := map[string] struct {
         setup       func()
         subdenom    string
         valid       bool
     } {
 
         "subdenom too long": {
-            subdenom: "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
-            valid: false,
+            subdenom:   "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
+            valid:      false,
         },
         "subdenom and creator pair already exists": {
             setup: func() {
-                _, err: = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
+                _, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
                 suite.Require().NoError(err)
             },
-            subdenom: "bitcoin",
-            valid: false,
+            subdenom:   "bitcoin",
+            valid:      false,
         },
     }
 
-    for name, tc: = range testCases {
+    for name, tc := range testCases {
         suite.Run(name, func() {
             if tc.setup != nil {
                 tc.setup()
             }
             
             // Create a denom
-            res, err: = suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
+            res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
             if tc.valid {
                 suite.Require().NoError(err)
 
                 // Make sure that the admin is set correctly
-                queryRes, err: = suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), & types.QueryDenomAuthorityMetadataRequest {
+                queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), & types.QueryDenomAuthorityMetadataRequest {
                     Denom: res.GetNewTokenDenom(),
                 })
 
@@ -152,7 +152,7 @@ func(suite *KeeperTestSuite) TestMintExportGenesis() {
             app.MintKeeper.InitGenesis(ctx, tc.expectedGenesis)
 
             // Test.
-            actualGenesis: = app.MintKeeper.ExportGenesis(ctx)
+            actualGenesis := app.MintKeeper.ExportGenesis(ctx)
 
             // Assertions.
             suite.Require().Equal(tc.expectedGenesis, actualGenesis)
@@ -169,19 +169,19 @@ func TestGetPoolAssetsByDenom(t * testing.T) {
     testCases: = map[string] struct {
         poolAssets                  []balancer.PoolAsset
         expectedPoolAssetsByDenom   map[string]balancer.PoolAsset
-        err error
+        err                         error
     } {
 
         "one pool asset": {
             poolAssets: []balancer.PoolAsset {
                 {
-                    Token: sdk.NewInt64Coin("uosmo", 1e12),
+                    Token:  sdk.NewInt64Coin("uosmo", 1e12),
                     Weight: sdk.NewInt(100),
                 },
             },
             expectedPoolAssetsByDenom: map[string]balancer.PoolAsset {
                 "uosmo": {
-                    Token: sdk.NewInt64Coin("uosmo", 1e12),
+                    Token:  sdk.NewInt64Coin("uosmo", 1e12),
                     Weight: sdk.NewInt(100),
                 },
             },
@@ -190,10 +190,10 @@ func TestGetPoolAssetsByDenom(t * testing.T) {
         "duplicate pool assets": {
             poolAssets: []balancer.PoolAsset {
                 {
-                    Token: sdk.NewInt64Coin("uosmo", 1e12),
+                    Token:  sdk.NewInt64Coin("uosmo", 1e12),
                     Weight: sdk.NewInt(100),
                 }, {
-                    Token: sdk.NewInt64Coin("uosmo", 123),
+                    Token:  sdk.NewInt64Coin("uosmo", 123),
                     Weight: sdk.NewInt(400),
                 },
             },
@@ -201,9 +201,9 @@ func TestGetPoolAssetsByDenom(t * testing.T) {
         },
     }
 
-    for name, tc: = range testCases {
+    for name, tc := range testCases {
         t.Run(name, func(t *testing.T) {
-            actualPoolAssetsByDenom, err: = balancer.GetPoolAssetsByDenom(tc.poolAssets)
+            actualPoolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
 
             require.Equal(t, tc.err, err)
 
