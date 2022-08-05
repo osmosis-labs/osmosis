@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 var (
@@ -1150,7 +1150,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		return updatedCases
 	}
 
-	for poolNum, tc := range tests {
+	for poolId, tc := range tests {
 		paramsCopy := tc.params
 		// First we create the initial pool assets we will use
 		initialPoolAssets := make([]balancer.PoolAsset, len(paramsCopy.InitialPoolWeights))
@@ -1162,12 +1162,12 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 			initialPoolAssets[i] = assetCopy
 		}
 		// Initialize the pool
-		pacc, err := balancer.NewBalancerPool(uint64(poolNum), balancer.PoolParams{
+		pacc, err := balancer.NewBalancerPool(uint64(poolId), balancer.PoolParams{
 			SwapFee:                  defaultSwapFee,
 			ExitFee:                  defaultExitFee,
 			SmoothWeightChangeParams: &tc.params,
 		}, initialPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
-		require.NoError(t, err, "poolNumber %v", poolNum)
+		require.NoError(t, err, "poolId %v", poolId)
 
 		// Consistency check that SmoothWeightChangeParams params are set
 		require.NotNil(t, pacc.PoolParams.SmoothWeightChangeParams)
@@ -1180,8 +1180,8 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 
 			for assetNum, asset := range pacc.GetAllPoolAssets() {
 				require.Equal(t, testCase.expectedWeights[assetNum], asset.Weight,
-					"Didn't get the expected weights, poolNumber %v, caseNumber %v, assetNumber %v",
-					poolNum, caseNum, assetNum)
+					"Didn't get the expected weights, poolId %v, caseNumber %v, assetNumber %v",
+					poolId, caseNum, assetNum)
 
 				totalWeight = totalWeight.Add(asset.Weight)
 			}
@@ -1196,7 +1196,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 // This test (currently trivially) checks to make sure that `IsActive` returns true for balancer pools.
 // This is mainly to make sure that if IsActive is ever used as an emergency switch, it is not accidentally left off for any (or all) pools.
 // TODO: create a test with mocks to make sure IsActive works as intended when flipped for specific pools/all pools
-func (suite *BalancerTestSuite) TestIsActive(t *testing.T) {
+func TestIsActive(t *testing.T) {
 	tests := map[string]struct {
 		expectedIsActive bool
 	}{
@@ -1207,7 +1207,7 @@ func (suite *BalancerTestSuite) TestIsActive(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := suite.CreateTestContext()
+			ctx := sdk.Context{}
 
 			// Initialize a pool
 			pool, err := balancer.NewBalancerPool(defaultPoolId, defaultBalancerPoolParams, dummyPoolAssets, defaultFutureGovernor, defaultCurBlockTime)

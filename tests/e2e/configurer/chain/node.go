@@ -12,27 +12,33 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
 	initialization.Node
 
 	OperatorAddress  string
+	SnapshotInterval uint64
 	chainId          string
 	rpcClient        *rpchttp.HTTP
 	t                *testing.T
 	containerManager *containers.Manager
+
+	// Add this to help with logging / tracking time since start.
+	setupTime time.Time
 }
 
 // NewNodeConfig returens new initialized NodeConfig.
-func NewNodeConfig(t *testing.T, initNode *initialization.Node, chainId string, containerManager *containers.Manager) *NodeConfig {
+func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *initialization.NodeConfig, chainId string, containerManager *containers.Manager) *NodeConfig {
 	return &NodeConfig{
 		Node:             *initNode,
+		SnapshotInterval: initConfig.SnapshotInterval,
 		chainId:          chainId,
 		containerManager: containerManager,
 		t:                t,
+		setupTime:        time.Now(),
 	}
 }
 
@@ -40,7 +46,7 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, chainId string, 
 // The node configuration must be already added to the chain config prior to calling this
 // method.
 func (n *NodeConfig) Run() error {
-	n.t.Logf("starting %s validator container: %s", n.chainId, n.Name)
+	n.t.Logf("starting node container: %s", n.Name)
 	resource, err := n.containerManager.RunNodeResource(n.chainId, n.Name, n.ConfigDir)
 	if err != nil {
 		return err
@@ -59,10 +65,10 @@ func (n *NodeConfig) Run() error {
 				return false
 			}
 
-			n.t.Logf("started %s node container: %s", resource.Container.Name[1:], resource.Container.ID)
+			n.t.Logf("started node container: %s", n.Name)
 			return true
 		},
-		5*time.Minute,
+		2*time.Minute,
 		time.Second,
 		"Osmosis node failed to produce blocks",
 	)
@@ -73,6 +79,16 @@ func (n *NodeConfig) Run() error {
 		return err
 	}
 
+	return nil
+}
+
+// Stop stops the node from running and removes its container.
+func (n *NodeConfig) Stop() error {
+	n.t.Logf("stopping node container: %s", n.Name)
+	if err := n.containerManager.RemoveNodeResource(n.Name); err != nil {
+		return err
+	}
+	n.t.Logf("stopped node container: %s", n.Name)
 	return nil
 }
 
@@ -112,4 +128,19 @@ func (n *NodeConfig) extractOperatorAddressIfValidator() error {
 	operAddr := fmt.Sprintf("%s\n", re.FindString(errBuf.String()))
 	n.OperatorAddress = strings.TrimSuffix(operAddr, "\n")
 	return nil
+}
+
+func (n *NodeConfig) GetHostPort(portId string) (string, error) {
+	return n.containerManager.GetHostPort(n.Name, portId)
+}
+
+func (n *NodeConfig) WithSetupTime(t time.Time) *NodeConfig {
+	n.setupTime = t
+	return n
+}
+
+func (n *NodeConfig) LogActionF(msg string, args ...interface{}) {
+	timeSinceStart := time.Since(n.setupTime).Round(time.Millisecond)
+	s := fmt.Sprintf(msg, args...)
+	n.t.Logf("[%s] %s. From container %s", timeSinceStart, s, n.Name)
 }

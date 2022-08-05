@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,9 +14,10 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
+	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
@@ -26,24 +28,15 @@ func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
 	fullQueryPath := fmt.Sprintf("%s/%s", endpoint, path)
 
 	var resp *http.Response
-	retriesLeft := 5
-	for {
+	require.Eventually(n.t, func() bool {
 		resp, err = http.Get(fullQueryPath)
-
-		if resp.StatusCode == http.StatusServiceUnavailable {
-			retriesLeft--
-			if retriesLeft == 0 {
-				return nil, err
-			}
-			time.Sleep(10 * time.Second)
-		} else {
-			break
+		if err != nil {
+			n.t.Logf("error while executing HTTP request: %s", err.Error())
+			return false
 		}
-	}
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute HTTP request: %w", err)
-	}
+		return resp.StatusCode != http.StatusServiceUnavailable
+	}, time.Minute, time.Millisecond*10, "failed to execute HTTP request")
 
 	defer resp.Body.Close()
 
@@ -120,4 +113,19 @@ func (n *NodeConfig) QueryCurrentHeight() (int64, error) {
 		return 0, err
 	}
 	return status.SyncInfo.LatestBlockHeight, nil
+}
+
+// QueryListSnapshots gets all snapshots currently created for a node.
+func (n *NodeConfig) QueryListSnapshots() ([]*tmabcitypes.Snapshot, error) {
+	abciResponse, err := n.rpcClient.ABCIQuery(context.Background(), "/app/snapshots", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var listSnapshots tmabcitypes.ResponseListSnapshots
+	if err := json.Unmarshal(abciResponse.Response.Value, &listSnapshots); err != nil {
+		return nil, err
+	}
+
+	return listSnapshots.Snapshots, nil
 }

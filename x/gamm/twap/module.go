@@ -1,7 +1,6 @@
 package twap
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -16,9 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	twaptypes "github.com/osmosis-labs/osmosis/v7/x/gamm/twap/types"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 )
 
 var (
@@ -27,27 +24,24 @@ var (
 )
 
 type AppModuleBasic struct {
-	cdc codec.Codec
 }
 
-func (AppModuleBasic) Name() string { return twaptypes.ModuleName }
+func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return json.RawMessage{}
-	// return cdc.MustMarshalJSON(types.DefaultGenesis())
+	return cdc.MustMarshalJSON(&types.GenesisState{})
 }
 
 // ValidateGenesis performs genesis state validation for the gamm module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	// var genState types.GenesisState
-	// if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
-	// 	return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	// }
-	// return genState.Validate()
-	return nil
+	var genState types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+	return genState.Validate()
 }
 
 //---------------------------------------
@@ -56,7 +50,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+	// types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -76,23 +70,16 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	ak types.AccountKeeper
-	bk types.BankKeeper
-	gk keeper.Keeper
-	tk twapkeeper
+	k Keeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
-) AppModule {
+func NewAppModule(twapKeeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		gk:             keeper,
-		ak:             accountKeeper,
-		bk:             bankKeeper,
+		AppModuleBasic: AppModuleBasic{},
+		k:              twapKeeper,
 	}
 }
 
@@ -128,10 +115,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // BeginBlock performs a no-op.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// EndBlock returns the end blocker for the gamm module. It returns no validator
-// updates.
+// EndBlock performs a no-op.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	am.tk.endBlockLogic(ctx)
+	// am.k.endBlock(ctx)
 	return []abci.ValidatorUpdate{}
 }
 

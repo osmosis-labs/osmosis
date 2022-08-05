@@ -48,7 +48,7 @@ func (es EventStats) ExportJSON(path string) {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile(path, bz, 0600)
+	err = ioutil.WriteFile(path, bz, 0o600)
 	if err != nil {
 		panic(err)
 	}
@@ -56,9 +56,10 @@ func (es EventStats) ExportJSON(path string) {
 
 func (es EventStats) exportEvents(ExportStatsPath string, w io.Writer) {
 	if ExportStatsPath != "" {
-		fmt.Println("Exporting simulation statistics...")
+		fmt.Printf("Exporting simulation statistics to %s...", ExportStatsPath)
 		es.ExportJSON(ExportStatsPath)
 	} else {
+		// TODO: Don't print, also export to a file of timestamp'd path
 		es.Print(w)
 	}
 }

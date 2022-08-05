@@ -3,17 +3,9 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simulation "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
@@ -63,67 +55,4 @@ func mustMarshalJSONIndent(o interface{}) []byte {
 	}
 
 	return bz
-}
-
-// OperationInput is a struct that holds all the needed values to generate a tx and deliver it
-type OperationInput struct {
-	R               *rand.Rand
-	App             *baseapp.BaseApp
-	TxGen           client.TxConfig
-	Cdc             *codec.ProtoCodec
-	Msg             sdk.Msg
-	MsgType         string
-	CoinsSpentInMsg sdk.Coins
-	Context         sdk.Context
-	SimAccount      simulation.Account
-	AccountKeeper   AccountKeeper
-	Bankkeeper      BankKeeper
-	ModuleName      string
-}
-
-// GenAndDeliverTxWithRandFees generates a transaction with a random fee and delivers it.
-func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
-	spendable := txCtx.Bankkeeper.SpendableCoins(txCtx.Context, account.GetAddress())
-
-	var fees sdk.Coins
-	var err error
-
-	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg)
-	if hasNeg {
-		return simulation.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "message doesn't leave room for fees"), nil, err
-	}
-
-	spendableFeeCoins := coins.FilterDenoms([]string{sdk.DefaultBondDenom})
-	fees, err = simulation.RandomFees(txCtx.R, txCtx.Context, spendableFeeCoins)
-	if err != nil {
-		return simulation.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate fees"), nil, err
-	}
-	return GenAndDeliverTx(txCtx, fees)
-}
-
-// GenAndDeliverTx generates a transactions and delivers it.
-func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simulation.OperationMsg, []simulation.FutureOperation, error) {
-	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
-	tx, err := helpers.GenTx(
-		txCtx.TxGen,
-		[]sdk.Msg{txCtx.Msg},
-		fees,
-		helpers.DefaultGenTxGas,
-		txCtx.Context.ChainID(),
-		[]uint64{account.GetAccountNumber()},
-		[]uint64{account.GetSequence()},
-		txCtx.SimAccount.PrivKey,
-	)
-
-	if err != nil {
-		return simulation.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate mock tx"), nil, err
-	}
-
-	_, _, err = txCtx.App.Deliver(txCtx.TxGen.TxEncoder(), tx)
-	if err != nil {
-		return simulation.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to deliver tx"), nil, err
-	}
-
-	return simulation.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil, nil
 }

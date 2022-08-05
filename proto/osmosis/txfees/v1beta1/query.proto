@@ -7,27 +7,30 @@ import "google/protobuf/duration.proto";
 
 import "osmosis/txfees/v1beta1/feetoken.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/txfees/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/txfees/types";
 
 service Query {
   // FeeTokens returns a list of all the whitelisted fee tokens and their
-  // corresponding pools It does not include the BaseDenom, which has its own
+  // corresponding pools. It does not include the BaseDenom, which has its own
   // query endpoint
   rpc FeeTokens(QueryFeeTokensRequest) returns (QueryFeeTokensResponse) {
     option (google.api.http).get = "/osmosis/txfees/v1beta1/fee_tokens";
   }
 
+  // DenomSpotPrice returns all spot prices by each registered token denom.
   rpc DenomSpotPrice(QueryDenomSpotPriceRequest)
       returns (QueryDenomSpotPriceResponse) {
     option (google.api.http).get =
         "/osmosis/txfees/v1beta1/spot_price_by_denom";
   }
 
+  // Returns the poolID for a specified denom input.
   rpc DenomPoolId(QueryDenomPoolIdRequest) returns (QueryDenomPoolIdResponse) {
     option (google.api.http).get =
         "/osmosis/txfees/v1beta1/denom_pool_id/{denom}";
   }
 
+  // Returns a list of all base denom tokens and their corresponding pools.
   rpc BaseDenom(QueryBaseDenomRequest) returns (QueryBaseDenomResponse) {
     option (google.api.http).get = "/osmosis/txfees/v1beta1/base_denom";
   }

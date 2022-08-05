@@ -39,7 +39,7 @@ Conceptually, we can split the e2e setup into 2 parts:
 
 1. Chain Initialization
 
-    The chain can either be initailized off of the current branch, or off the prior mainnet release and then upgraded to the current branch.
+    The chain can either be initialized off of the current branch, or off the prior mainnet release and then upgraded to the current branch.
 
     If current, we run chain initialization off of the current Git branch
     by calling `chain.Init(...)` method in the `configurer/current.go`.
@@ -161,6 +161,8 @@ tests require IBC logic.
 
 - `OSMOSIS_E2E_SKIP_IBC` - when true, skips the IBC tests tests.
 
+- `OSMOSIS_E2E_SKIP_STATE_SYNC` - when true, skips the state sync tests.
+
 - `OSMOSIS_E2E_SKIP_CLEANUP` - when true, avoids cleaning up the e2e Docker
 containers.
 
@@ -191,6 +193,7 @@ This debug configuration helps to run e2e tests locally and skip the desired tes
         "OSMOSIS_E2E_SKIP_IBC": "true",
         "OSMOSIS_E2E_SKIP_UPGRADE": "true",
         "OSMOSIS_E2E_SKIP_CLEANUP": "true",
+        "OSMOSIS_E2E_SKIP_STATE_SYNC": "true",
         "OSMOSIS_E2E_UPGRADE_VERSION": "v10",
         "OSMOSIS_E2E_FORK_HEIGHT": "4713065" # this is v10 fork height.
     }

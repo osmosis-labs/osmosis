@@ -204,3 +204,5 @@ tools-stamp
 /tests/localosmosis/.osmosisd/*
 *.save
 *.save.*
+
+mutation_test_result.txt

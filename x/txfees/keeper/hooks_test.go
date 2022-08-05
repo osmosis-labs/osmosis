@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 )
 
 var defaultPooledAssetAmount = int64(500)
@@ -64,7 +64,7 @@ func (suite *KeeperTestSuite) TestTxFeesAfterEpochEnd() {
 		},
 	}
 
-	var finalOutputAmount = sdk.NewInt(0)
+	finalOutputAmount := sdk.NewInt(0)
 
 	for _, tc := range tests {
 		tc := tc

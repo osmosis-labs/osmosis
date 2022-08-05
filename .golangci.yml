@@ -111,5 +111,8 @@ issues:
     - linters:
       - stylecheck
       text: "ST1003:" # requires identifiers with "id" to be "ID".
+    - linters:
+      - stylecheck
+      text: "ST1005:" # punctuation in error messages
   max-issues-per-linter: 10000
   max-same-issues: 10000

@@ -29,8 +29,8 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	osmosisApp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/util"
+	osmosisApp "github.com/osmosis-labs/osmosis/v10/app"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
 )
 
 type internalNode struct {
@@ -289,7 +289,7 @@ func (n *internalNode) createMnemonic() (string, error) {
 	return mnemonic, nil
 }
 
-func (n *internalNode) initValidatorConfigs(c *internalChain, persistentPeers []string) error {
+func (n *internalNode) initNodeConfigs(persistentPeers []string) error {
 	tmCfgPath := filepath.Join(n.configDir(), "config", "config.toml")
 
 	vpr := viper.New()

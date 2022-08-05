@@ -40,28 +40,30 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v7/osmoutils/partialord"
-	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
-	"github.com/osmosis-labs/osmosis/v7/x/epochs"
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives"
-	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v7/x/mint"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
-	superfluid "github.com/osmosis-labs/osmosis/v7/x/superfluid"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees"
-	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils/partialord"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs"
+	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/incentives"
+	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint"
+	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v10/x/pool-incentives"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	superfluid "github.com/osmosis-labs/osmosis/v10/x/superfluid"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v10/x/txfees"
+	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 )
 
 // moduleAccountPermissions defines module account permissions
@@ -121,13 +123,13 @@ func appModules(
 		params.NewAppModule(*app.ParamsKeeper),
 		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
-		txfees.NewAppModule(appCodec, *app.TxFeesKeeper),
-		incentives.NewAppModule(appCodec, *app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
-		lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
-		poolincentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper),
-		epochs.NewAppModule(appCodec, *app.EpochsKeeper),
+		twap.NewAppModule(*app.TwapKeeper),
+		txfees.NewAppModule(*app.TxFeesKeeper),
+		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
+		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),
+		poolincentives.NewAppModule(*app.PoolIncentivesKeeper),
+		epochs.NewAppModule(*app.EpochsKeeper),
 		superfluid.NewAppModule(
-			appCodec,
 			*app.SuperfluidKeeper,
 			app.AccountKeeper,
 			app.BankKeeper,
@@ -136,7 +138,7 @@ func appModules(
 			app.GAMMKeeper,
 			app.EpochsKeeper,
 		),
-		tokenfactory.NewAppModule(appCodec, *app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
 
@@ -162,9 +164,10 @@ func orderBeginBlockers(allModuleNames []string) []string {
 	return ord.TotalOrdering()
 }
 
+// OrderEndBlockers returns EndBlockers (crisis, govtypes, staking) with no relative order.
 func OrderEndBlockers(allModuleNames []string) []string {
 	ord := partialord.NewPartialOrdering(allModuleNames)
-	// only Osmosis modules with endblock code are: crisis, govtypes, staking
+	// only Osmosis modules with endblock code are: twap, crisis, govtypes, staking
 	// we don't care about the relative ordering between them.
 	return ord.TotalOrdering()
 }
@@ -189,6 +192,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		gammtypes.ModuleName,
+		twaptypes.ModuleName,
 		txfeestypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -214,13 +218,13 @@ func createSimulationManager(
 	app *OsmosisApp,
 	encodingConfig appparams.EncodingConfig,
 	skipGenesisInvariants bool,
-) *simulation.Manager {
+) *simtypes.Manager {
 	appCodec := encodingConfig.Marshaler
 
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(appCodec, *app.AccountKeeper, authsims.RandomGenesisAccounts),
 	}
-	simulationManager := simulation.NewSimulationManager(*app.mm, overrideModules)
+	simulationManager := simtypes.NewSimulationManager(*app.mm, overrideModules)
 	return &simulationManager
 }
 
@@ -234,10 +238,10 @@ func (app *OsmosisApp) ModuleAccountAddrs() map[string]bool {
 	return modAccAddrs
 }
 
-func (app *OsmosisApp) GetAccountKeeper() simulation.AccountKeeper {
+func (app *OsmosisApp) GetAccountKeeper() simtypes.AccountKeeper {
 	return app.AppKeepers.AccountKeeper
 }
 
-func (app *OsmosisApp) GetBankKeeper() simulation.BankKeeper {
+func (app *OsmosisApp) GetBankKeeper() simtypes.BankKeeper {
 	return app.AppKeepers.BankKeeper
 }

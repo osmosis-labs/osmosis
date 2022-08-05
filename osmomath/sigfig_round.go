@@ -4,6 +4,7 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 var pointOne = sdk.OneDec().QuoInt64(10)
 
+// SigFigRound rounds to a specified significant figure.
 func SigFigRound(d sdk.Dec, tenToSigFig sdk.Int) sdk.Dec {
 	// for d > .1, we do round(d * 10^sigfig) / 10^sigfig
 	// for k, where 10^k*d > .1 && 10^{k-1}*d < .1, we do:

@@ -16,12 +16,16 @@ func newIntegerFromString(s string) (*big.Int, bool) {
 
 func equal(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 0 }
 
+// Greater than
 func gt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 1 }
 
+// Greater than or equal to
 func gte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) >= 0 }
 
+// Less than
 func lt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == -1 }
 
+// Less than or equal to
 func lte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) <= 0 }
 
 func add(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Add(i, i2) }

@@ -7,10 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v7/tests/e2e/initialization"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -71,7 +74,6 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	}
 
 	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.Id, int(chainConfig.VotingPeriod), validatorConfigBytes, tmpDir, int(forkHeight))
-
 	if err != nil {
 		return err
 	}
@@ -143,21 +145,19 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 	// submit, deposit, and vote for upgrade proposal
 	// prop height = current height + voting period + time it takes to submit proposal + small buffer
 	for _, chainConfig := range uc.chainConfigs {
-		node, err := chainConfig.GetDefaultNode()
-		if err != nil {
-			return err
+		for validatorIdx, node := range chainConfig.NodeConfigs {
+			if validatorIdx == 0 {
+				currentHeight, err := node.QueryCurrentHeight()
+				if err != nil {
+					return err
+				}
+				chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
+				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+				chainConfig.LatestProposalNumber += 1
+				node.DepositProposal(chainConfig.LatestProposalNumber)
+			}
+			node.VoteYesProposal(initialization.ValidatorWalletName, chainConfig.LatestProposalNumber)
 		}
-		currentHeight, err := node.QueryCurrentHeight()
-		if err != nil {
-			return err
-		}
-
-		chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
-		node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight)
-		chainConfig.LatestProposalNumber += 1
-
-		node.DepositProposal(chainConfig.LatestProposalNumber)
-		node.VoteYesProposal(initialization.ValidatorWalletName, chainConfig.LatestProposalNumber)
 	}
 
 	// wait till all chains halt at upgrade height

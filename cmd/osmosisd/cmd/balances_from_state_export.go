@@ -11,10 +11,10 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -43,6 +43,7 @@ type DerivedAccount struct {
 	TotalBalances       sdk.Coins            `json:"total_balances"`
 }
 
+// newDerivedAccount returns a new derived account.
 func newDerivedAccount(address string) DerivedAccount {
 	return DerivedAccount{
 		Address:        address,
@@ -53,6 +54,7 @@ func newDerivedAccount(address string) DerivedAccount {
 	}
 }
 
+// underlyingCoins returns liquidity pool's underlying coin balances.
 func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sdk.Coins {
 	balances := sdk.Coins{}
 	convertAgain := false
@@ -115,6 +117,7 @@ func underlyingCoinsForSelectPools(
 	return balancesByPool
 }
 
+// getGenStateFromPath returns a JSON genState message from inputted path.
 func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, error) {
 	genState := make(map[string]json.RawMessage)
 

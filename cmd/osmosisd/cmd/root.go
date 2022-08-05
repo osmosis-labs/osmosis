@@ -4,10 +4,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/osmosis-labs/osmosis/v7/app/params"
+	"github.com/osmosis-labs/osmosis/v10/app/params"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -40,7 +41,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	osmosis "github.com/osmosis-labs/osmosis/v7/app"
+	osmosis "github.com/osmosis-labs/osmosis/v10/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -74,7 +75,11 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
+
 			customAppTemplate, customAppConfig := initAppConfig()
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx.Config.Consensus.TimeoutCommit = 2 * time.Second
+
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
 		},
 		SilenceUsage: true,
@@ -135,6 +140,7 @@ min-gas-price-for-high-gas-tx = ".0025"
 	return OsmosisAppTemplate, OsmosisAppCfg
 }
 
+// initRootCmd initializes root commands when creating a new root command for simd.
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
@@ -179,6 +185,7 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	wasm.AddModuleInitFlags(startCmd)
 }
 
+// queryCommand adds transaction and account querying commands.
 func queryCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",
@@ -203,6 +210,7 @@ func queryCommand() *cobra.Command {
 	return cmd
 }
 
+// txCommand adds transaction signing, encoding / decoding, and broadcasting commands.
 func txCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
@@ -229,6 +237,7 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
+// newApp initializes and returns a new Osmosis app.
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 
@@ -282,6 +291,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	)
 }
 
+// createOsmosisAppAndExport creates and exports the new Osmosis app, returns the state of the new Osmosis app for a genesis file.
 func createOsmosisAppAndExport(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 	appOpts servertypes.AppOptions,

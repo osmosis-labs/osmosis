@@ -10,7 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simtypes "github.com/osmosis-labs/osmosis/v7/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 type simState struct {
@@ -20,8 +20,7 @@ type simState struct {
 
 	// These are operations which have been queued by previous operations
 	// TODO: Replace with new action syntax
-	operationQueue     map[int][]simulation.Operation
-	timeOperationQueue []simulation.FutureOperation
+	operationQueue map[int][]simulation.Operation
 
 	curValidators  mockValidators
 	nextValidators mockValidators
@@ -49,25 +48,52 @@ type simState struct {
 
 func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testing.TB, w io.Writer, validators mockValidators) *simState {
 	return &simState{
-		simParams:          simParams,
-		header:             initialHeader,
-		operationQueue:     NewOperationQueue(),
-		timeOperationQueue: []simulation.FutureOperation{},
-		curValidators:      validators.Clone(),
-		nextValidators:     validators.Clone(),
-		tb:                 tb,
-		pastTimes:          []time.Time{},
-		pastVoteInfos:      [][]abci.VoteInfo{},
-		logWriter:          NewLogWriter(tb),
-		w:                  w,
-		eventStats:         NewEventStats(),
-		opCount:            0,
+		simParams:      simParams,
+		header:         initialHeader,
+		operationQueue: NewOperationQueue(),
+		curValidators:  validators.Clone(),
+		nextValidators: validators.Clone(),
+		tb:             tb,
+		pastTimes:      []time.Time{},
+		pastVoteInfos:  [][]abci.VoteInfo{},
+		logWriter:      NewLogWriter(tb),
+		w:              w,
+		eventStats:     NewEventStats(),
+		opCount:        0,
 	}
 }
 
 func (simState *simState) WithLogParam(leanLogs bool) *simState {
 	simState.leanLogs = leanLogs
 	return simState
+}
+
+func (simState *simState) SimulateAllBlocks(
+	w io.Writer,
+	simCtx *simtypes.SimCtx,
+	blockSimulator blockSimFn,
+	config simulation.Config) (stopEarly bool) {
+	stopEarly = false
+	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
+		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)
+		if stopEarly {
+			break
+		}
+
+		if config.Commit {
+			simCtx.BaseApp().Commit()
+		}
+	}
+
+	if !stopEarly {
+		fmt.Fprintf(
+			w,
+			"\nSimulation complete; Final height (blocks): %d, final time (seconds): %v, operations ran: %d\n",
+			simState.header.Height, simState.header.Time, simState.opCount,
+		)
+		simState.logWriter.PrintLogs()
+	}
+	return stopEarly
 }
 
 // simulate a block, update state
@@ -78,16 +104,16 @@ func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator 
 	}
 
 	requestBeginBlock := simState.beginBlock(simCtx)
-	ctx := simCtx.App.GetBaseApp().NewContext(false, simState.header)
+	ctx := simCtx.BaseApp().NewContext(false, simState.header)
 
 	// Run queued operations. Ignores blocksize if blocksize is too small
 	numQueuedOpsRan := simState.runQueuedOperations(simCtx, ctx)
-	numQueuedTimeOpsRan := simState.runQueuedTimeOperations(simCtx, ctx)
+	// numQueuedTimeOpsRan := simState.runQueuedTimeOperations(simCtx, ctx)
 
 	// run standard operations
 	// TODO: rename blockSimulator arg
 	operations := blockSimulator(simCtx, ctx, simState.header)
-	simState.opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
+	simState.opCount += operations + numQueuedOpsRan // + numQueuedTimeOpsRan
 
 	responseEndBlock := simState.endBlock(simCtx)
 
@@ -101,12 +127,12 @@ func (simState *simState) beginBlock(simCtx *simtypes.SimCtx) abci.RequestBeginB
 	requestBeginBlock := RandomRequestBeginBlock(simCtx.GetRand(), simState.simParams, simState.curValidators, simState.pastTimes, simState.pastVoteInfos, simState.eventStats.Tally, simState.header)
 	// Run the BeginBlock handler
 	simState.logWriter.AddEntry(BeginBlockEntry(simState.header.Height))
-	simCtx.App.GetBaseApp().BeginBlock(requestBeginBlock)
+	simCtx.BaseApp().BeginBlock(requestBeginBlock)
 	return requestBeginBlock
 }
 
 func (simState *simState) endBlock(simCtx *simtypes.SimCtx) abci.ResponseEndBlock {
-	res := simCtx.App.GetBaseApp().EndBlock(abci.RequestEndBlock{})
+	res := simCtx.BaseApp().EndBlock(abci.RequestEndBlock{})
 	simState.logWriter.AddEntry(EndBlockEntry(simState.header.Height))
 	return res
 }

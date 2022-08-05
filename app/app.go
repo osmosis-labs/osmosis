@@ -39,20 +39,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/keepers"
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v11"
-	v3 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	simulation "github.com/osmosis-labs/osmosis/v7/simulation/types"
+	"github.com/osmosis-labs/osmosis/v10/app/keepers"
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v12"
+	v3 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 const appName = "OsmosisApp"
@@ -89,7 +90,7 @@ var (
 
 	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
@@ -128,10 +129,11 @@ type OsmosisApp struct {
 	invCheckPeriod    uint
 
 	mm           *module.Manager
-	sm           *simulation.Manager
+	sm           *simtypes.Manager
 	configurator module.Configurator
 }
 
+// init sets DefaultNodeHome to default osmosisd install location.
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -361,7 +363,7 @@ func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
 }
 
 // SimulationManager implements the SimulationApp interface.
-func (app *OsmosisApp) SimulationManager() *simulation.Manager {
+func (app *OsmosisApp) SimulationManager() *simtypes.Manager {
 	return app.sm
 }
 
