@@ -24,7 +24,7 @@ type MiddlewareTestSuite struct {
 
 	//path *ibctesting.Path
 
-	RateLimitMiddlware ibc_rate_limit.RateLimitMiddleware
+	RateLimitMiddlware ibc_rate_limit.IBCMiddleware
 }
 
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {

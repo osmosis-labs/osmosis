@@ -6,28 +6,28 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/keeper"
 )
 
-var _ porttypes.Middleware = &RateLimitMiddleware{}
+var _ porttypes.Middleware = &IBCMiddleware{}
 
-type RateLimitMiddleware struct {
+type IBCMiddleware struct {
 	porttypes.IBCModule
 
 	app    porttypes.IBCModule
-	keeper *ibckeeper.Keeper
+	keeper keeper.Keeper
 }
 
-func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLimitMiddleware {
+func NewIBCMiddleware(app porttypes.IBCModule, k keeper.Keeper) IBCMiddleware {
 	fmt.Println("Initializing middleware")
-	return RateLimitMiddleware{
+	return IBCMiddleware{
 		app:    app,
 		keeper: k,
 	}
 }
 
-//// OnChanOpenInit implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanOpenInit(ctx sdk.Context,
+//// OnChanOpenInit implements the IBCMiddleware interface
+//func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context,
 //	order channeltypes.Order,
 //	connectionHops []string,
 //	portID string,
@@ -48,8 +48,8 @@ func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLi
 //	)
 //}
 //
-//// OnChanOpenTry implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanOpenTry(
+//// OnChanOpenTry implements the IBCMiddleware interface
+//func (im IBCMiddleware) OnChanOpenTry(
 //	ctx sdk.Context,
 //	order channeltypes.Order,
 //	connectionHops []string,
@@ -63,8 +63,8 @@ func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLi
 //	return im.app.OnChanOpenTry(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, counterpartyVersion)
 //}
 //
-//// OnChanOpenAck implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanOpenAck(
+//// OnChanOpenAck implements the IBCMiddleware interface
+//func (im IBCMiddleware) OnChanOpenAck(
 //	ctx sdk.Context,
 //	portID,
 //	channelID string,
@@ -74,8 +74,8 @@ func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLi
 //	return im.app.OnChanOpenAck(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
 //}
 //
-//// OnChanOpenConfirm implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanOpenConfirm(
+//// OnChanOpenConfirm implements the IBCMiddleware interface
+//func (im IBCMiddleware) OnChanOpenConfirm(
 //	ctx sdk.Context,
 //	portID,
 //	channelID string,
@@ -84,8 +84,8 @@ func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLi
 //	return im.app.OnChanOpenConfirm(ctx, portID, channelID)
 //}
 //
-//// OnChanCloseInit implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanCloseInit(
+//// OnChanCloseInit implements the IBCMiddleware interface
+//func (im IBCMiddleware) OnChanCloseInit(
 //	ctx sdk.Context,
 //	portID,
 //	channelID string,
@@ -93,8 +93,8 @@ func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLi
 //	return im.app.OnChanCloseInit(ctx, portID, channelID)
 //}
 //
-//// OnChanCloseConfirm implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanCloseConfirm(
+//// OnChanCloseConfirm implements the IBCMiddleware interface
+//func (im IBCMiddleware) OnChanCloseConfirm(
 //	ctx sdk.Context,
 //	portID,
 //	channelID string,
@@ -102,8 +102,8 @@ func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLi
 //	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
 //}
 //
-//// OnRecvPacket implements the IBCModule interface
-//func (im RateLimitMiddleware) OnRecvPacket(
+//// OnRecvPacket implements the IBCMiddleware interface
+//func (im IBCMiddleware) OnRecvPacket(
 //	ctx sdk.Context,
 //	packet channeltypes.Packet,
 //	relayer sdk.AccAddress,
@@ -111,8 +111,8 @@ func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLi
 //	return im.app.OnRecvPacket(ctx, packet, relayer)
 //}
 //
-//// OnAcknowledgementPacket implements the IBCModule interface
-//func (im RateLimitMiddleware) OnAcknowledgementPacket(
+//// OnAcknowledgementPacket implements the IBCMiddleware interface
+//func (im IBCMiddleware) OnAcknowledgementPacket(
 //	ctx sdk.Context,
 //	packet channeltypes.Packet,
 //	acknowledgement []byte,
@@ -121,8 +121,8 @@ func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLi
 //	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 //}
 //
-//// OnTimeoutPacket implements the IBCModule interface
-//func (im RateLimitMiddleware) OnTimeoutPacket(
+//// OnTimeoutPacket implements the IBCMiddleware interface
+//func (im IBCMiddleware) OnTimeoutPacket(
 //	ctx sdk.Context,
 //	packet channeltypes.Packet,
 //	relayer sdk.AccAddress,
@@ -131,17 +131,17 @@ func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLi
 //}
 
 // SendPacket implements the ICS4 Wrapper interface
-func (im RateLimitMiddleware) SendPacket(
+func (im IBCMiddleware) SendPacket(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 ) error {
 	fmt.Println("Sending package through middleware")
-	return im.keeper.ChannelKeeper.SendPacket(ctx, chanCap, packet)
+	return im.keeper.Ics4Wrapper.SendPacket(ctx, chanCap, packet)
 }
 
 // WriteAcknowledgement implements the ICS4 Wrapper interface
-func (im RateLimitMiddleware) WriteAcknowledgement(
+func (im IBCMiddleware) WriteAcknowledgement(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
