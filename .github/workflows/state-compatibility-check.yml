@@ -90,24 +90,35 @@ jobs:
       -
         name: ⏬ Download last pre-epoch snapshot
         run:  |
-          MAJOR_VERSION=$(echo $(git describe --tags) | cut -f 1 -d '.') # with v prefix
+          REPO_MAJOR_VERSION=$(echo $(git describe --tags) | cut -f 1 -d '.') # with v prefix
+
+          # Find current major version via rpc.osmosis.zone/abci_info
+          RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
+          CHAIN_MAJOR_VERSION=$(echo $RPC_ABCI_INFO | dasel --plain -r json  'result.response.version' | cut -f 1 -d '.') # no v prefix
+
+          # Get correct url to fetch snapshot comparing versions
+          if [ $REPO_MAJOR_VERSION == v$CHAIN_MAJOR_VERSION ]; then
+            # I'm in the latest major
+            SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/osmosis.json
+          else
+            SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/osmosis.json
+          fi
 
           # Get the latest pre-epoch snapshot information from bucket
-          SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$MAJOR_VERSION/osmosis.json
           SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
           SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
           SNAPSHOT_ID=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename' | cut -f 1 -d '.')
 
           # Download snapshot if not already present
-          mkdir -p $HOME/snapshots/$MAJOR_VERSION/
-          if [ ! -d "$HOME/snapshots/$MAJOR_VERSION/$SNAPSHOT_ID" ]; then
-              rm -rf $HOME/snapshots/$MAJOR_VERSION/*
-              mkdir $HOME/snapshots/$MAJOR_VERSION/$SNAPSHOT_ID
-              wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C $HOME/snapshots/$MAJOR_VERSION/$SNAPSHOT_ID -xvf -
+          mkdir -p $HOME/snapshots/$REPO_MAJOR_VERSION/
+          if [ ! -d "$HOME/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID" ]; then
+              rm -rf $HOME/snapshots/$REPO_MAJOR_VERSION/*
+              mkdir $HOME/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID
+              wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C $HOME/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID -xvf -
           fi
 
           # Copy snapshot in Data folder
-          cp -R $HOME/snapshots/$MAJOR_VERSION/$SNAPSHOT_ID/data $HOME/.osmosisd/
+          cp -R $HOME/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID/data $HOME/.osmosisd/
       -
         name: 🧪 Configure Osmosis Node
         run:  |
