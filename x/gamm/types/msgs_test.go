@@ -9,6 +9,7 @@ import (
 
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 )
 
@@ -866,5 +867,99 @@ func TestMsgExitSwapShareAmountIn(t *testing.T) {
 		} else {
 			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 		}
+	}
+}
+
+// Test authz serialize and de-serializes for gamm msg.
+func TestAuthzMsg(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pk1.Address()).String()
+	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
+
+	testCases := []struct {
+		name    string
+		gammMsg sdk.Msg
+	}{
+		{
+			name: "MsgExitSwapExternAmountOut",
+			gammMsg: &gammtypes.MsgExitSwapShareAmountIn{
+				Sender:            addr1,
+				PoolId:            1,
+				TokenOutDenom:     "test",
+				ShareInAmount:     sdk.NewInt(100),
+				TokenOutMinAmount: sdk.NewInt(100),
+			},
+		},
+		{
+			name: `MsgExitSwapExternAmountOut`,
+			gammMsg: &gammtypes.MsgExitSwapExternAmountOut{
+				Sender:           addr1,
+				PoolId:           1,
+				TokenOut:         coin,
+				ShareInMaxAmount: sdk.NewInt(1),
+			},
+		},
+		{
+			name: "MsgExitPool",
+			gammMsg: &gammtypes.MsgExitPool{
+				Sender:        addr1,
+				PoolId:        1,
+				ShareInAmount: sdk.NewInt(100),
+				TokenOutMins:  sdk.NewCoins(coin),
+			},
+		},
+		{
+			name: "MsgJoinPool",
+			gammMsg: &gammtypes.MsgJoinPool{
+				Sender:         addr1,
+				PoolId:         1,
+				ShareOutAmount: sdk.NewInt(1),
+				TokenInMaxs:    sdk.NewCoins(coin),
+			},
+		},
+		{
+			name: "MsgJoinSwapExternAmountIn",
+			gammMsg: &gammtypes.MsgJoinSwapExternAmountIn{
+				Sender:            addr1,
+				PoolId:            1,
+				TokenIn:           coin,
+				ShareOutMinAmount: sdk.NewInt(1),
+			},
+		},
+		{
+			name: "MsgJoinSwapShareAmountOut",
+			gammMsg: &gammtypes.MsgSwapExactAmountIn{
+				Sender: addr1,
+				Routes: []gammtypes.SwapAmountInRoute{{
+					PoolId:        0,
+					TokenOutDenom: "test",
+				}, {
+					PoolId:        1,
+					TokenOutDenom: "test2",
+				}},
+				TokenIn:           coin,
+				TokenOutMinAmount: sdk.NewInt(1),
+			},
+		},
+		{
+			name: "MsgSwapExactAmountOut",
+			gammMsg: &gammtypes.MsgSwapExactAmountOut{
+				Sender: addr1,
+				Routes: []gammtypes.SwapAmountOutRoute{{
+					PoolId:       0,
+					TokenInDenom: "test",
+				}, {
+					PoolId:       1,
+					TokenInDenom: "test2",
+				}},
+				TokenOut:         coin,
+				TokenInMaxAmount: sdk.NewInt(1),
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			apptesting.TestMessageAuthzSerialization(t, tc.gammMsg)
+		})
 	}
 }

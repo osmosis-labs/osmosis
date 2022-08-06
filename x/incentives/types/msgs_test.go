@@ -11,6 +11,9 @@ import (
 
 	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
 
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+
+	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
@@ -210,5 +213,53 @@ func TestMsgAddToGauge(t *testing.T) {
 		} else {
 			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 		}
+	}
+}
+
+// // Test authz serialize and de-serializes for incentives msg.
+func TestAuthzMsg(t *testing.T) {
+	appParams.SetAddressPrefixes()
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pk1.Address()).String()
+	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
+	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
+
+	const (
+		mockGranter string = "cosmos1abc"
+		mockGrantee string = "cosmos1xyz"
+	)
+
+	testCases := []struct {
+		name          string
+		incentivesMsg sdk.Msg
+	}{
+		{
+			name: "MsgAddToGauge",
+			incentivesMsg: &incentivestypes.MsgAddToGauge{
+				Owner:   addr1,
+				GaugeId: 1,
+				Rewards: sdk.NewCoins(coin),
+			},
+		},
+		{
+			name: "MsgCreateGauge",
+			incentivesMsg: &incentivestypes.MsgCreateGauge{
+				IsPerpetual: false,
+				Owner:       addr1,
+				DistributeTo: lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         "lptoken",
+					Duration:      time.Second,
+				},
+				Coins:             sdk.NewCoins(coin),
+				StartTime:         someDate,
+				NumEpochsPaidOver: 1,
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			apptesting.TestMessageAuthzSerialization(t, tc.incentivesMsg)
+		})
 	}
 }
