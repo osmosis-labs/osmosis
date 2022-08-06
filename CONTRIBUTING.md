@@ -79,7 +79,6 @@ This type of test is mainly for functions that would be triggered by incoming me
 ```go
 func(suite *KeeperTestSuite) TestCreateDenom() {
     testCases := map[string] struct {
-        setup       func()
         subdenom    string
         valid       bool
     } {
@@ -88,22 +87,14 @@ func(suite *KeeperTestSuite) TestCreateDenom() {
             subdenom:   "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
             valid:      false,
         },
-        "subdenom and creator pair already exists": {
-            setup: func() {
-                _, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
-                suite.Require().NoError(err)
-            },
-            subdenom:   "bitcoin",
-            valid:      false,
+        "success case": {
+            subdenom: "evmos",
+			valid:    true,
         },
     }
 
     for name, tc := range testCases {
         suite.Run(name, func() {
-            if tc.setup != nil {
-                tc.setup()
-            }
-            
             // Create a denom
             res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
             if tc.valid {
