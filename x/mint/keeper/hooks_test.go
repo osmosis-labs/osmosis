@@ -1,10 +1,13 @@
 package keeper_test
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 
@@ -32,6 +35,10 @@ var (
 		CommunityPool:    sdk.NewDecWithPrec(0o5, 2),
 	}
 )
+
+func TestHooksTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
 
 // TestAfterEpochEnd tests that the after epoch end hook correctly
 // distributes the rewards depending on what epoch it is in.
@@ -63,6 +70,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 	suite.assertAddressWeightsAddUpToOne(testWeightedAddresses)
 
 	defaultGenesisEpochProvisionsDec, err := sdk.NewDecFromStr(defaultGenesisEpochProvisions)
+	suite.Require().NoError(err)
 
 	defaultMainnetThirdenedProvisionsDec, err := sdk.NewDecFromStr(defaultMainnetThirdenedProvisions)
 	suite.Require().NoError(err)
@@ -192,6 +200,21 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultReductionPeriodInEpochs,
 
+			expectedDistribution:          defaultGenesisEpochProvisionsDec,
+			expectedLastReductionEpochNum: defaultReductionPeriodInEpochs,
+		},
+		"start epoch == curEpoch + 1 && reduction epoch == curEpoch": {
+			hookArgEpochNum: defaultReductionPeriodInEpochs,
+
+			mintDenom:               sdk.DefaultBondDenom,
+			genesisEpochProvisions:  defaultGenesisEpochProvisionsDec,
+			epochIdentifier:         defaultEpochIdentifier,
+			reductionPeriodInEpochs: defaultReductionPeriodInEpochs,
+			reductionFactor:         defaultReductionFactor,
+			distributionProportions: defaultDistributionProportions,
+			weightedAddresses:       testWeightedAddresses,
+			mintStartEpoch:          defaultReductionPeriodInEpochs - 1,
+
 			expectedDistribution:          defaultMainnetThirdenedProvisionsDec,
 			expectedLastReductionEpochNum: defaultReductionPeriodInEpochs,
 		},
@@ -224,7 +247,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
-			expectedDistribution: defaultGenesisEpochProvisionsDec,
+			expectedDistribution: sdk.ZeroDec(),
 		},
 		"custom genesisEpochProvisions, at start epoch": {
 			hookArgEpochNum: defaultMintingRewardsDistributionStartEpoch,
@@ -321,7 +344,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			weightedAddresses:       testWeightedAddresses,
 			mintStartEpoch:          defaultMintingRewardsDistributionStartEpoch,
 
-			expectedDistribution:          defaultGenesisEpochProvisionsDec,
+			expectedDistribution:          sdk.ZeroDec(),
 			expectedLastReductionEpochNum: defaultMintingRewardsDistributionStartEpoch,
 			expectedPanic:                 true,
 		},
@@ -362,32 +385,40 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			if tc.expectedPanic {
 				// If panic is expected, burn developer module account balance so that it causes an error that leads to a
 				// panic in the hook.
-				distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(developerAccountBalanceBeforeHook), accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
+				suite.Require().NoError(distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(developerAccountBalanceBeforeHook), accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)))
+				developerAccountBalanceBeforeHook.Amount = sdk.ZeroInt()
 			}
 
-			osmoutils.ConditionalPanic(suite.T(), tc.expectedPanic, func() {
+			// Old supply
+			oldSupply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount
+			suite.Require().Equal(sdk.NewInt(keeper.DeveloperVestingAmount), oldSupply)
+
+			osmoassert.ConditionalPanic(suite.T(), tc.expectedPanic, func() {
 				// System under test.
 				mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum)
 			})
 
+			// If panics, the behavior is undefined.
+			if tc.expectedPanic {
+				return
+			}
+
 			// Validate developer account balance.
 			developerAccountBalanceAfterHook := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
-			osmoutils.DecApproxEq(suite.T(), developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewards.TruncateInt()).ToDec(), developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
+			osmoassert.DecApproxEq(suite.T(), developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewards.TruncateInt()).ToDec(), developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
 
 			// Validate supply.
-			expectedSupply = expectedSupply.Add(tc.expectedDistribution).Sub(expectedDevRewards)
-			osmoutils.DecApproxEq(suite.T(), expectedSupply, developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
+			osmoassert.DecApproxEq(suite.T(), expectedSupply.Add(tc.expectedDistribution).Sub(expectedDevRewards), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
 
 			// Validate supply with offset.
-			expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalanceAfterHook.Amount.ToDec())
-			osmoutils.DecApproxEq(suite.T(), expectedSupplyWithOffset, app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
+			osmoassert.DecApproxEq(suite.T(), expectedSupplyWithOffset.Add(tc.expectedDistribution), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
 
 			// Validate epoch provisions.
 			suite.Require().Equal(tc.expectedLastReductionEpochNum, mintKeeper.GetLastHalvenEpochNum(ctx))
 
 			if !tc.expectedDistribution.IsZero() {
 				// Validate distribution.
-				osmoutils.DecApproxEq(suite.T(), tc.expectedDistribution, mintKeeper.GetMinter(ctx).EpochProvisions, sdk.NewDecWithPrec(1, 18))
+				osmoassert.DecApproxEq(suite.T(), tc.expectedDistribution, mintKeeper.GetMinter(ctx).EpochProvisions, sdk.NewDecWithPrec(1, 6))
 			}
 		})
 	}

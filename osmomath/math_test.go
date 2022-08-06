@@ -5,6 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+<<<<<<< HEAD
+=======
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting/osmoassert"
+
+>>>>>>> 91141514 (refactor/test: improve DecApproxEq, fix misuse in mint hooks, create osmoassert package (#2322))
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,6 +43,7 @@ func TestPowApprox(t *testing.T) {
 		"expected value & actual value's difference should less than precision",
 	)
 
+<<<<<<< HEAD
 	base, err = sdk.NewDecFromStr("0.8")
 	require.NoError(t, err)
 	exp = sdk.ZeroDec()
@@ -52,6 +58,20 @@ func TestPowApprox(t *testing.T) {
 		expectedDec.Sub(s).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
+=======
+	for i, tc := range testCases {
+		var actualResult sdk.Dec
+		osmoassert.ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
+			fmt.Println(tc.base)
+			actualResult = PowApprox(tc.base, tc.exp, tc.powPrecision)
+			require.True(
+				t,
+				tc.expectedResult.Sub(actualResult).Abs().LTE(tc.powPrecision),
+				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
+			)
+		})
+	}
+>>>>>>> 91141514 (refactor/test: improve DecApproxEq, fix misuse in mint hooks, create osmoassert package (#2322))
 }
 
 func TestPow(t *testing.T) {
@@ -64,9 +84,23 @@ func TestPow(t *testing.T) {
 	expectedDec, err := sdk.NewDecFromStr("1.18058965")
 	require.NoError(t, err)
 
+<<<<<<< HEAD
 	require.True(
 		t,
 		expectedDec.Sub(s).Abs().LTE(powPrecision),
 		"expected value & actual value's difference should less than precision",
 	)
+=======
+	for i, tc := range testCases {
+		var actualResult sdk.Dec
+		osmoassert.ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
+			actualResult = Pow(tc.base, tc.exp)
+			require.True(
+				t,
+				tc.expectedResult.Sub(actualResult).Abs().LTE(powPrecision),
+				fmt.Sprintf("test %d failed: expected value & actual value's difference should be less than precision", i),
+			)
+		})
+	}
+>>>>>>> 91141514 (refactor/test: improve DecApproxEq, fix misuse in mint hooks, create osmoassert package (#2322))
 }

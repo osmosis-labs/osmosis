@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 )
@@ -105,7 +105,7 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			originalVestingCoins := bankKeeper.GetBalance(ctx, developerAccount, tc.mintDenom)
 
 			// Test.
-			osmoutils.ConditionalPanic(suite.T(), tc.expectPanic, func() { mintKeeper.InitGenesis(ctx, tc.mintGenesis) })
+			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() { mintKeeper.InitGenesis(ctx, tc.mintGenesis) })
 			if tc.expectPanic {
 				return
 			}
