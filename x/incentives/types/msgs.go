@@ -5,7 +5,6 @@ import (
 	"time"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -13,16 +12,9 @@ import (
 const (
 	TypeMsgCreateGauge = "create_gauge"
 	TypeMsgAddToGauge  = "add_to_gauge"
-
-	createGaugeMinBaseFee = 50 * 1_000_000
-	addToGaugeMinBaseFee  = 25 * 1_000_000
 )
 
-var (
-	_ sdk.Msg                        = &MsgCreateGauge{}
-	_ txfeestypes.MsgMinFeeExtension = &MsgCreateGauge{}
-	_ txfeestypes.MsgMinFeeExtension = &MsgAddToGauge{}
-)
+var _ sdk.Msg = &MsgCreateGauge{}
 
 // NewMsgCreateGauge creates a message to create a gauge with the provided parameters.
 func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lockuptypes.QueryCondition, coins sdk.Coins, startTime time.Time, numEpochsPaidOver uint64) *MsgCreateGauge {
@@ -34,12 +26,6 @@ func NewMsgCreateGauge(isPerpetual bool, owner sdk.AccAddress, distributeTo lock
 		StartTime:         startTime,
 		NumEpochsPaidOver: numEpochsPaidOver,
 	}
-}
-
-// GetRequiredMinBaseFee returns the minimum fee for the message
-// denominated in base fee denom.
-func (m MsgCreateGauge) GetRequiredMinBaseFee() sdk.Dec {
-	return sdk.NewDec(createGaugeMinBaseFee)
 }
 
 // Route takes a create gauge message, then returns the RouterKey used for slashing.
@@ -96,12 +82,6 @@ func NewMsgAddToGauge(owner sdk.AccAddress, gaugeId uint64, rewards sdk.Coins) *
 		GaugeId: gaugeId,
 		Rewards: rewards,
 	}
-}
-
-// GetRequiredMinBaseFee returns the minimum fee for the message
-// denominated in base fee denom.
-func (m MsgAddToGauge) GetRequiredMinBaseFee() sdk.Dec {
-	return sdk.NewDec(addToGaugeMinBaseFee)
 }
 
 // Route takes an add to gauge message, then returns the RouterKey used for slashing.

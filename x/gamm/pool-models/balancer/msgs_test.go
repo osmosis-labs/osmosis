@@ -1,4 +1,4 @@
-package balancer
+package balancer_test
 
 import (
 	"testing"
@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
+	balancer "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
@@ -18,8 +19,8 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg MsgCreateBalancerPool) MsgCreateBalancerPool) MsgCreateBalancerPool {
-		testPoolAsset := []PoolAsset{
+	createMsg := func(after func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
+		testPoolAsset := []balancer.PoolAsset{
 			{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("test", sdk.NewInt(100)),
@@ -30,12 +31,12 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 			},
 		}
 
-		poolParams := &PoolParams{
+		poolParams := &balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}
 
-		msg := &MsgCreateBalancerPool{
+		msg := &balancer.MsgCreateBalancerPool{
 			Sender:             addr1,
 			PoolParams:         poolParams,
 			PoolAssets:         testPoolAsset,
@@ -45,7 +46,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		return after(*msg)
 	}
 
-	default_msg := createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+	default_msg := createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 		// Do nothing
 		return msg
 	})
@@ -58,12 +59,12 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgCreateBalancerPool
+		msg        balancer.MsgCreateBalancerPool
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				// Do nothing
 				return msg
 			}),
@@ -71,7 +72,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -79,7 +80,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "has no PoolAsset",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolAssets = nil
 				return msg
 			}),
@@ -87,16 +88,16 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "has no PoolAsset2",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolAssets = []PoolAsset{}
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
+				msg.PoolAssets = []balancer.PoolAsset{}
 				return msg
 			}),
 			expectPass: false,
 		},
 		{
 			name: "has one Pool Asset",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolAssets = []PoolAsset{
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
+				msg.PoolAssets = []balancer.PoolAsset{
 					msg.PoolAssets[0],
 				}
 				return msg
@@ -105,7 +106,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "has the PoolAsset that includes 0 weight",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolAssets[0].Weight = sdk.NewInt(0)
 				return msg
 			}),
@@ -113,7 +114,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "has a PoolAsset that includes a negative weight",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
 				return msg
 			}),
@@ -121,7 +122,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "has a PoolAsset that includes a negative weight",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolAssets[0].Weight = sdk.NewInt(-10)
 				return msg
 			}),
@@ -129,7 +130,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "has a PoolAsset that includes a zero coin",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolAssets[0].Token = sdk.NewCoin("test1", sdk.NewInt(0))
 				return msg
 			}),
@@ -137,7 +138,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "has a PoolAsset that includes a negative coin",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolAssets[0].Token = sdk.Coin{
 					Denom:  "test1",
 					Amount: sdk.NewInt(-10),
@@ -148,8 +149,8 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "negative swap fee with zero exit fee",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolParams = &PoolParams{
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
+				msg.PoolParams = &balancer.PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
 					ExitFee: sdk.NewDecWithPrec(0, 0),
 				}
@@ -159,7 +160,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "invalid governor",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.FuturePoolGovernor = "invalid_cosmos_address"
 				return msg
 			}),
@@ -167,7 +168,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "valid governor: lptoken and lock",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.FuturePoolGovernor = "lptoken,1000h"
 				return msg
 			}),
@@ -175,7 +176,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "valid governor: just lock duration for pool token",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.FuturePoolGovernor = "1000h"
 				return msg
 			}),
@@ -183,7 +184,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "valid governor: address",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.FuturePoolGovernor = "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 				return msg
 			}),
@@ -191,8 +192,8 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "zero swap fee, zero exit fee",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
-				msg.PoolParams = &PoolParams{
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
+				msg.PoolParams = &balancer.PoolParams{
 					ExitFee: sdk.NewDecWithPrec(0, 0),
 					SwapFee: sdk.NewDecWithPrec(0, 0),
 				}
@@ -202,7 +203,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		{
 			name: "too large of a weight",
-			msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+			msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 				msg.PoolAssets[0].Weight = sdk.NewInt(1 << 21)
 				return msg
 			}),
@@ -210,7 +211,7 @@ func TestMsgCreateBalancerPool(t *testing.T) {
 		},
 		// {
 		// 	name: "Create an LBP",
-		// 	msg: createMsg(func(msg MsgCreateBalancerPool) MsgCreateBalancerPool {
+		// 	msg: createMsg(func(msg balancer.MsgCreateBalancerPool) balancer.MsgCreateBalancerPool {
 		// 		msg.PoolParams.SmoothWeightChangeParams = &SmoothWeightChangeParams{
 		// 			StartTime: time.Now(),
 		// 			Duration:  time.Hour,
