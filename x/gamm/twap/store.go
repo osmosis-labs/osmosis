@@ -3,7 +3,6 @@ package twap
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"time"
 
@@ -131,8 +130,8 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 		return types.TwapRecord{}, err
 	}
 	if len(twaps) == 0 {
-		return types.TwapRecord{}, errors.New("looking for a time thats too old, not in the historical index. " +
-			" Try storing the accumulator value.")
+		return types.TwapRecord{}, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+			" Try storing the accumulator value. (requested time %s)", t)
 	}
 
 	for _, twap := range twaps {

@@ -1,13 +1,21 @@
 package twap
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
+
+func (k Keeper) MigrateExistingPools(ctx sdk.Context, poolIds []uint64) error {
+	for _, pool := range poolIds {
+		err := k.afterCreatePool(ctx, pool)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 var _ types.GammHooks = &gammhook{}
 var _ epochtypes.EpochHooks = &epochhook{}
@@ -18,8 +26,7 @@ type epochhook struct {
 
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
-		fmt.Println("restore logic in subsequent PR")
-		// hook.k.pruneOldTwaps(ctx)
+		hook.k.pruneOldTwaps(ctx)
 	}
 }
 
@@ -35,11 +42,11 @@ func (k Keeper) GammHooks() types.GammHooks {
 
 // AfterPoolCreated is called after CreatePool
 func (hook *gammhook) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	// err := hook.k.afterCreatePool(ctx, poolId)
-	// // Will halt pool creation
-	// if err != nil {
-	// 	panic(err)
-	// }
+	err := hook.k.afterCreatePool(ctx, poolId)
+	// Will halt pool creation
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (hook *gammhook) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
