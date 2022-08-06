@@ -116,7 +116,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "scaling factors with invalid lenght",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.ScalingFactors = []uint64{1, 2, 3}
 				return msg
 			}),
