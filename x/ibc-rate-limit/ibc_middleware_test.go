@@ -28,11 +28,13 @@ type MiddlewareTestSuite struct {
 }
 
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	return app.Setup(false), map[string]json.RawMessage{}
+	osmosisApp := app.Setup(false)
+	return osmosisApp, app.NewDefaultGenesisState()
 }
 
 func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.Setup()
+	ibctesting.DefaultTestingAppInit = SetupTestingApp
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 3)
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1))
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2))
@@ -40,7 +42,6 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	//path := NewTransferPath(suite.chainA, suite.chainB)
 	//suite.coordinator.SetupConnections(path)
 	//
-	ibctesting.DefaultTestingAppInit = SetupTestingApp
 
 	//path.EndpointA.ChannelID = ibctesting.FirstChannelID
 	//counterparty := channeltypes.NewCounterparty(path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID)
