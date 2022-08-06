@@ -4,148 +4,177 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 )
 
-var _ porttypes.Middleware = &RateLimitMiddleware{}
+var _ porttypes.Middleware = &IBCModule{}
+var _ porttypes.ICS4Wrapper = &ICS4Middleware{}
 
-type RateLimitMiddleware struct {
-	porttypes.IBCModule
-
-	app    porttypes.IBCModule
-	keeper *ibckeeper.Keeper
+type ICS4Middleware struct {
+	channel porttypes.ICS4Wrapper
 }
 
-func NewRateLimitMiddleware(app porttypes.IBCModule, k *ibckeeper.Keeper) RateLimitMiddleware {
-	fmt.Println("Initializing middleware")
-	return RateLimitMiddleware{
-		app:    app,
-		keeper: k,
+func NewICS4Middleware(channel porttypes.ICS4Wrapper) ICS4Middleware {
+	fmt.Println("Initializing ics4")
+	return ICS4Middleware{
+		channel: channel,
 	}
 }
 
-//// OnChanOpenInit implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanOpenInit(ctx sdk.Context,
-//	order channeltypes.Order,
-//	connectionHops []string,
-//	portID string,
-//	channelID string,
-//	channelCap *capabilitytypes.Capability,
-//	counterparty channeltypes.Counterparty,
-//	version string,
-//) error {
-//	return im.app.OnChanOpenInit(
-//		ctx,
-//		order,
-//		connectionHops,
-//		portID,
-//		channelID,
-//		channelCap,
-//		counterparty,
-//		version, // note we only pass app version here
-//	)
-//}
-//
-//// OnChanOpenTry implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanOpenTry(
-//	ctx sdk.Context,
-//	order channeltypes.Order,
-//	connectionHops []string,
-//	portID,
-//	channelID string,
-//	channelCap *capabilitytypes.Capability,
-//	counterparty channeltypes.Counterparty,
-//	counterpartyVersion string,
-//) (string, error) {
-//	// call underlying app's OnChanOpenTry callback with the app versions
-//	return im.app.OnChanOpenTry(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, counterpartyVersion)
-//}
-//
-//// OnChanOpenAck implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanOpenAck(
-//	ctx sdk.Context,
-//	portID,
-//	channelID string,
-//	counterpartyChannelID string,
-//	counterpartyVersion string,
-//) error {
-//	return im.app.OnChanOpenAck(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
-//}
-//
-//// OnChanOpenConfirm implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanOpenConfirm(
-//	ctx sdk.Context,
-//	portID,
-//	channelID string,
-//) error {
-//	//doCustomLogic()
-//	return im.app.OnChanOpenConfirm(ctx, portID, channelID)
-//}
-//
-//// OnChanCloseInit implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanCloseInit(
-//	ctx sdk.Context,
-//	portID,
-//	channelID string,
-//) error {
-//	return im.app.OnChanCloseInit(ctx, portID, channelID)
-//}
-//
-//// OnChanCloseConfirm implements the IBCModule interface
-//func (im RateLimitMiddleware) OnChanCloseConfirm(
-//	ctx sdk.Context,
-//	portID,
-//	channelID string,
-//) error {
-//	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
-//}
-//
-//// OnRecvPacket implements the IBCModule interface
-//func (im RateLimitMiddleware) OnRecvPacket(
-//	ctx sdk.Context,
-//	packet channeltypes.Packet,
-//	relayer sdk.AccAddress,
-//) exported.Acknowledgement {
-//	return im.app.OnRecvPacket(ctx, packet, relayer)
-//}
-//
-//// OnAcknowledgementPacket implements the IBCModule interface
-//func (im RateLimitMiddleware) OnAcknowledgementPacket(
-//	ctx sdk.Context,
-//	packet channeltypes.Packet,
-//	acknowledgement []byte,
-//	relayer sdk.AccAddress,
-//) error {
-//	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
-//}
-//
-//// OnTimeoutPacket implements the IBCModule interface
-//func (im RateLimitMiddleware) OnTimeoutPacket(
-//	ctx sdk.Context,
-//	packet channeltypes.Packet,
-//	relayer sdk.AccAddress,
-//) error {
-//	return im.app.OnTimeoutPacket(ctx, packet, relayer)
-//}
+func (i ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
+	fmt.Println("Sending package through middleware")
+	//return sdkerrors.Wrap(types.ErrRateLimitExceeded, "test")
+	return i.channel.SendPacket(ctx, chanCap, packet)
+}
+
+func (i ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI, ack exported.Acknowledgement) error {
+	fmt.Println("WriteAcknowledgement middleware")
+	return i.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
+}
+
+type IBCModule struct {
+	app            porttypes.IBCModule
+	ics4Middleware ICS4Middleware
+}
+
+func NewIBCModule(app porttypes.IBCModule, ics4 ICS4Middleware) IBCModule {
+	fmt.Println("Initializing middleware")
+	return IBCModule{
+		app:            app,
+		ics4Middleware: ics4,
+	}
+}
+
+// OnChanOpenInit implements the IBCModule interface
+func (im IBCModule) OnChanOpenInit(ctx sdk.Context,
+	order channeltypes.Order,
+	connectionHops []string,
+	portID string,
+	channelID string,
+	channelCap *capabilitytypes.Capability,
+	counterparty channeltypes.Counterparty,
+	version string,
+) error {
+	fmt.Println("OnChanOpenInit Middleware")
+	return im.app.OnChanOpenInit(
+		ctx,
+		order,
+		connectionHops,
+		portID,
+		channelID,
+		channelCap,
+		counterparty,
+		version, // note we only pass app version here
+	)
+}
+
+// OnChanOpenTry implements the IBCModule interface
+func (im IBCModule) OnChanOpenTry(
+	ctx sdk.Context,
+	order channeltypes.Order,
+	connectionHops []string,
+	portID,
+	channelID string,
+	channelCap *capabilitytypes.Capability,
+	counterparty channeltypes.Counterparty,
+	counterpartyVersion string,
+) (string, error) {
+	fmt.Println("OnChanOpenTry Middleware")
+	return im.app.OnChanOpenTry(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, counterpartyVersion)
+}
+
+// OnChanOpenAck implements the IBCModule interface
+func (im IBCModule) OnChanOpenAck(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+	counterpartyChannelID string,
+	counterpartyVersion string,
+) error {
+	fmt.Println("OnChanOpenAck Middleware")
+	return im.app.OnChanOpenAck(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
+}
+
+// OnChanOpenConfirm implements the IBCModule interface
+func (im IBCModule) OnChanOpenConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	fmt.Println("OnChanOpenConfirm Middleware")
+	return im.app.OnChanOpenConfirm(ctx, portID, channelID)
+}
+
+// OnChanCloseInit implements the IBCModule interface
+func (im IBCModule) OnChanCloseInit(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	fmt.Println("OnChanCloseInit Middleware")
+	return im.app.OnChanCloseInit(ctx, portID, channelID)
+}
+
+// OnChanCloseConfirm implements the IBCModule interface
+func (im IBCModule) OnChanCloseConfirm(
+	ctx sdk.Context,
+	portID,
+	channelID string,
+) error {
+	fmt.Println("OnChanCloseConfirm Middleware")
+	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
+}
+
+// OnRecvPacket implements the IBCModule interface
+func (im IBCModule) OnRecvPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	relayer sdk.AccAddress,
+) exported.Acknowledgement {
+	fmt.Println("OnRecvPacket Middleware")
+	return im.app.OnRecvPacket(ctx, packet, relayer)
+}
+
+// OnAcknowledgementPacket implements the IBCModule interface
+func (im IBCModule) OnAcknowledgementPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	acknowledgement []byte,
+	relayer sdk.AccAddress,
+) error {
+	fmt.Println("OnAcknowledgementPacket Middleware")
+	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+}
+
+// OnTimeoutPacket implements the IBCModule interface
+func (im IBCModule) OnTimeoutPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	relayer sdk.AccAddress,
+) error {
+	fmt.Println("OnTimeoutPacket Middleware")
+	return im.app.OnTimeoutPacket(ctx, packet, relayer)
+}
 
 // SendPacket implements the ICS4 Wrapper interface
-func (im RateLimitMiddleware) SendPacket(
+func (im IBCModule) SendPacket(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 ) error {
 	fmt.Println("Sending package through middleware")
-	return im.keeper.ChannelKeeper.SendPacket(ctx, chanCap, packet)
+	return im.ics4Middleware.SendPacket(ctx, chanCap, packet)
 }
 
 // WriteAcknowledgement implements the ICS4 Wrapper interface
-func (im RateLimitMiddleware) WriteAcknowledgement(
+func (im IBCModule) WriteAcknowledgement(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 	ack exported.Acknowledgement,
 ) error {
-	return im.keeper.ChannelKeeper.WriteAcknowledgement(ctx, chanCap, packet, ack)
+	fmt.Println("WriteAcknowledgement middleware")
+	return im.ics4Middleware.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }

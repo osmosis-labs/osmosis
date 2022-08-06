@@ -32,7 +32,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ibc_rate_limit "github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
@@ -196,12 +196,15 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedIBCKeeper,
 	)
 
+	// ChannelKeeper wrapper for rate limiting SendPacket()
+	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(appKeepers.IBCKeeper.ChannelKeeper)
+
 	// Create Transfer Keepers
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[ibctransfertypes.StoreKey],
 		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		appKeepers.IBCKeeper.ChannelKeeper,
+		rateLimitingICS4Wrapper, // The ICS4Wrapper is replaced by the rateLimitingICS4Wrapper instead of the channel
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
@@ -212,7 +215,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.TransferModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
 
-	rateLimitingTransferStack := ibc_rate_limit.NewRateLimitMiddleware(transferIBCModule, appKeepers.IBCKeeper)
+	// RateLimiting IBC Middleware
+	rateLimitingTransferMiddleware := ibcratelimit.NewIBCModule(transferIBCModule, rateLimitingICS4Wrapper)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -229,7 +233,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(ibctransfertypes.ModuleName, rateLimitingTransferStack)
+		AddRoute(ibctransfertypes.ModuleName, rateLimitingTransferMiddleware)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router
@@ -481,7 +485,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.IncentivesKeeper.SetHooks(
 		incentivestypes.NewMultiIncentiveHooks(
-			// insert incentive hooks receivers here
+		// insert incentive hooks receivers here
 		),
 	)
 
@@ -504,7 +508,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// insert governance hooks receivers here
+		// insert governance hooks receivers here
 		),
 	)
 }
