@@ -1,0 +1,38 @@
+syntax = "proto3";
+package osmosis.gamm.poolmodels.cosmwasm.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/cosmwasm";
+
+// PoolParams defined the parameters that will be managed by the pool
+// governance in the future. This params are not managed by the chain
+// governance. Instead they will be managed by the token holders of the pool.
+// The pool's token holders are specified in future_pool_governor.
+message PoolParams {
+  string cosmwasm_address = 1 [
+    (gogoproto.moretags) = "yaml:\"cosmwasm_address\""
+  ];
+}
+
+// Pool is the cosmwasm Pool struct
+message Pool {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (cosmos_proto.implements_interface) = "PoolI";
+
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  uint64 id = 2;
+
+  PoolParams pool_params = 3 [
+    (gogoproto.moretags) = "yaml:\"cosmwasm_pool_params\"",
+    (gogoproto.nullable) = false
+  ];
+}
