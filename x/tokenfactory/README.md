@@ -98,6 +98,18 @@ message MsgChangeAdmin {
 }
 ```
 
+### SetDenomMetadata
+
+Setting of metadata for a specific denom is only allowed for the admin of the denom.
+It allows the overwriting of the denom metadata in the bank module.
+
+```go
+message MsgChangeAdmin {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.bank.v1beta1.Metadata metadata = 2 [ (gogoproto.moretags) = "yaml:\"metadata\"", (gogoproto.nullable)   = false ];
+}
+```
+
 **State Modifications:**
 
 - Check that sender of the message is the admin of denom
