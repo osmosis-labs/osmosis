@@ -409,6 +409,7 @@ func (suite *KeeperTestSuite) TestAddSupplyOffset() {
 	suite.Require().NoError(err)
 
 	expectedTotalOffset := int64(0)
+	expectedSupplyWithOffset := int64(100)
 
 	for _, tc := range []struct {
 		desc               string
@@ -455,8 +456,20 @@ func (suite *KeeperTestSuite) TestAddSupplyOffset() {
 				// check to make sure total offset changed correctly
 				expectedTotalOffset += tc.msgAddSupplyOffset.Offset.Int64()
 				suite.Require().Equal(expectedTotalOffset, res.NewTotalOffset.Int64())
+
+				// updated expected supply_with_offset
+				expectedSupplyWithOffset += tc.msgAddSupplyOffset.Offset.Int64()
 			} else {
 				suite.Require().Error(err)
+			}
+
+			// make sure that supply_with_offset matches expectation
+			if expectedSupplyWithOffset < 0 {
+				suite.Require().Equal(0,
+					suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, suite.defaultDenom).Amount.Int64())
+			} else {
+				suite.Require().Equal(expectedSupplyWithOffset,
+					suite.App.BankKeeper.GetSupplyWithOffset(suite.Ctx, suite.defaultDenom).Amount.Int64())
 			}
 		})
 	}
