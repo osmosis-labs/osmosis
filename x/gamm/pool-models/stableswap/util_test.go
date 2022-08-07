@@ -13,7 +13,7 @@ func createTestPool(t *testing.T, poolLiquidity sdk.Coins, swapFee, exitFee sdk.
 	pool, err := NewStableswapPool(1, PoolParams{
 		SwapFee: swapFee,
 		ExitFee: exitFee,
-	}, poolLiquidity, "")
+	}, poolLiquidity, []uint64{1, 1}, "")
 
 	require.NoError(t, err)
 

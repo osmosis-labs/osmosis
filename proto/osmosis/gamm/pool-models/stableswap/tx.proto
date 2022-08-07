@@ -25,7 +25,12 @@ message MsgCreateStableswapPool {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
-  string future_pool_governor = 4
+  repeated uint64 scaling_factors = 4 [
+    (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"",
+    (gogoproto.nullable) = false
+  ];
+
+  string future_pool_governor = 5
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
 }
 
