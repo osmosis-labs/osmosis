@@ -181,7 +181,7 @@ func (server msgServer) SetDenomMetadata(goCtx context.Context, msg *types.MsgSe
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.TypeMsgChangeAdmin,
+			types.TypeMsgSetDenomMetadata,
 			sdk.NewAttribute(types.AttributeDenom, msg.Metadata.Base),
 			sdk.NewAttribute(types.AttributeDenomMetadata, msg.Metadata.String()),
 		),
