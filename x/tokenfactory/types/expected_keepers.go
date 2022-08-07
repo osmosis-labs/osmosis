@@ -12,6 +12,8 @@ type BankKeeper interface {
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
 
 	HasSupply(ctx sdk.Context, denom string) bool
+	AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int)
+	GetSupplyOffset(ctx sdk.Context, denom string) sdk.Int
 
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error

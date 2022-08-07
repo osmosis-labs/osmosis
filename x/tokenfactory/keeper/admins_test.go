@@ -397,3 +397,67 @@ func (suite *KeeperTestSuite) TestSetDenomMetaData() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestAddSupplyOffset() {
+
+	// setup test
+	suite.SetupTest()
+	suite.CreateDefaultDenom()
+
+	// mint 100 of the default denom with test acc 0 as the admin
+	_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 100)))
+	suite.Require().NoError(err)
+
+	expectedTotalOffset := int64(0)
+
+	for _, tc := range []struct {
+		desc               string
+		msgAddSupplyOffset types.MsgAddSupplyOffset
+		expectedPass       bool
+	}{
+		{
+			desc:               "successful set positive offset",
+			msgAddSupplyOffset: *types.NewMsgAddSupplyOffset(suite.TestAccs[0].String(), suite.defaultDenom, sdk.NewInt(10)),
+			expectedPass:       true,
+		},
+		{
+			desc:               "successful set negative offset",
+			msgAddSupplyOffset: *types.NewMsgAddSupplyOffset(suite.TestAccs[0].String(), suite.defaultDenom, sdk.NewInt(-30)),
+			expectedPass:       true,
+		},
+		{
+			desc:               "let supply_with_offset go negative",
+			msgAddSupplyOffset: *types.NewMsgAddSupplyOffset(suite.TestAccs[0].String(), suite.defaultDenom, sdk.NewInt(-1000)),
+			expectedPass:       true,
+		},
+		{
+			desc:               "let supply_with_offset remain negative",
+			msgAddSupplyOffset: *types.NewMsgAddSupplyOffset(suite.TestAccs[0].String(), suite.defaultDenom, sdk.NewInt(1)),
+			expectedPass:       true,
+		},
+		{
+			desc:               "bring supply_with_offset back positive",
+			msgAddSupplyOffset: *types.NewMsgAddSupplyOffset(suite.TestAccs[0].String(), suite.defaultDenom, sdk.NewInt(1000)),
+			expectedPass:       true,
+		},
+		{
+			desc:               "don't allow non admin to change offset",
+			msgAddSupplyOffset: *types.NewMsgAddSupplyOffset(suite.TestAccs[1].String(), suite.defaultDenom, sdk.NewInt(1000)),
+			expectedPass:       false,
+		},
+	} {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			res, err := suite.msgServer.AddSupplyOffset(sdk.WrapSDKContext(suite.Ctx), &tc.msgAddSupplyOffset)
+			if tc.expectedPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+
+				// check to make sure total offset changed correctly
+				expectedTotalOffset += tc.msgAddSupplyOffset.Offset.Int64()
+				suite.Require().Equal(expectedTotalOffset, res.NewTotalOffset.Int64())
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}

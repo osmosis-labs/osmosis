@@ -13,4 +13,5 @@ const (
 	AttributeDenom               = "denom"
 	AttributeNewAdmin            = "new_admin"
 	AttributeDenomMetadata       = "denom_metadata"
+	AttributeSupplyOffsetted     = "supply_offsetted"
 )

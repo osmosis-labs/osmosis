@@ -189,3 +189,32 @@ func (server msgServer) SetDenomMetadata(goCtx context.Context, msg *types.MsgSe
 
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }
+
+func (server msgServer) AddSupplyOffset(goCtx context.Context, msg *types.MsgAddSupplyOffset) (*types.MsgAddSupplyOffsetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authorityMetadata, err := server.Keeper.GetAuthorityMetadata(ctx, msg.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.Sender != authorityMetadata.GetAdmin() {
+		return nil, types.ErrUnauthorized
+	}
+
+	server.Keeper.bankKeeper.AddSupplyOffset(ctx, msg.Denom, msg.Offset)
+
+	total_supply_offset := server.Keeper.bankKeeper.GetSupplyOffset(ctx, msg.Denom)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeMsgChangeAdmin,
+			sdk.NewAttribute(types.AttributeDenom, msg.GetDenom()),
+			sdk.NewAttribute(types.AttributeSupplyOffsetted, msg.Offset.String()),
+		),
+	})
+
+	return &types.MsgAddSupplyOffsetResponse{
+		NewTotalOffset: total_supply_offset,
+	}, nil
+}

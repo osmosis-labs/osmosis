@@ -14,6 +14,7 @@ const (
 	TypeMsgForceTransfer    = "force_transfer"
 	TypeMsgChangeAdmin      = "change_admin"
 	TypeMsgSetDenomMetadata = "set_denom_metadata"
+	TypeMsgAddSupplyOffset  = "add_supply_offset"
 )
 
 var _ sdk.Msg = &MsgCreateDenom{}
@@ -241,6 +242,37 @@ func (m MsgSetDenomMetadata) GetSignBytes() []byte {
 }
 
 func (m MsgSetDenomMetadata) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgAddSupplyOffset{}
+
+// NewMsgChangeAdmin creates a message to burn tokens
+func NewMsgAddSupplyOffset(sender string, denom string, offset sdk.Int) *MsgAddSupplyOffset {
+	return &MsgAddSupplyOffset{
+		Sender: sender,
+		Denom:  denom,
+		Offset: offset,
+	}
+}
+
+func (m MsgAddSupplyOffset) Route() string { return RouterKey }
+func (m MsgAddSupplyOffset) Type() string  { return TypeMsgAddSupplyOffset }
+func (m MsgAddSupplyOffset) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	return nil
+}
+
+func (m MsgAddSupplyOffset) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgAddSupplyOffset) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
 }

@@ -14,6 +14,7 @@ service Msg {
   rpc Burn(MsgBurn) returns (MsgBurnResponse);
   rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
   rpc SetDenomMetadata(MsgSetDenomMetadata) returns (MsgSetDenomMetadataResponse);
+  rpc AddSupplyOffset(MsgAddSupplyOffset) returns (MsgAddSupplyOffsetResponse);
 
   // ForceTransfer is deactivated for now because we need to think through edge
   // cases rpc ForceTransfer(MsgForceTransfer) returns
@@ -102,3 +103,26 @@ message MsgSetDenomMetadata {
 // MsgSetDenomMetadataResponse defines the response structure for an executed
 // MsgSetDenomMetadata message.
 message MsgSetDenomMetadataResponse {}
+
+// MsgAddSupplyOffset is the sdk.Msg type for allowing an admin account to change a
+// denom's "supply offset"
+message MsgAddSupplyOffset {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string offset       = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.jsontag)    = "offset",
+    (gogoproto.moretags) = "yaml:\"offset\"",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// MsgAddSupplyOffsetResponse defines the response structure for an executed
+// MsgAddSupplyOffset message.
+message MsgAddSupplyOffsetResponse {
+  string new_total_offset =1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.jsontag)    = "offset",
+     (gogoproto.moretags) = "yaml:\"new_total_offset\"",
+     (gogoproto.nullable)   = false ];
+}
