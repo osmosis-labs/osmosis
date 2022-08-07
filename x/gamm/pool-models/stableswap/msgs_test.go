@@ -1,4 +1,4 @@
-package stableswap
+package stableswap_test
 
 import (
 	"testing"
@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
+	stableswap "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
@@ -18,18 +19,18 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 	addr1 := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg MsgCreateStableswapPool) MsgCreateStableswapPool) MsgCreateStableswapPool {
+	createMsg := func(after func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 		testPoolAsset := sdk.Coins{
 			sdk.NewCoin("osmo", sdk.NewInt(100)),
 			sdk.NewCoin("atom", sdk.NewInt(100)),
 		}
 
-		poolParams := &PoolParams{
+		poolParams := &stableswap.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
 			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}
 
-		msg := &MsgCreateStableswapPool{
+		msg := &stableswap.MsgCreateStableswapPool{
 			Sender:               addr1,
 			PoolParams:           poolParams,
 			InitialPoolLiquidity: testPoolAsset,
@@ -39,7 +40,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		return after(*msg)
 	}
 
-	default_msg := createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+	default_msg := createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 		// Do nothing
 		return msg
 	})
@@ -52,12 +53,12 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		msg        MsgCreateStableswapPool
+		msg        stableswap.MsgCreateStableswapPool
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				// Do nothing
 				return msg
 			}),
@@ -65,7 +66,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -73,7 +74,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "has nil InitialPoolLiquidity ",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = nil
 				return msg
 			}),
@@ -81,7 +82,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "has one coin in InitialPoolLiquidity",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
 					sdk.NewCoin("osmo", sdk.NewInt(100)),
 				}
@@ -91,7 +92,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "has three coins in InitialPoolLiquidity",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.InitialPoolLiquidity = sdk.Coins{
 					sdk.NewCoin("osmo", sdk.NewInt(100)),
 					sdk.NewCoin("atom", sdk.NewInt(100)),
@@ -103,8 +104,8 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "negative swap fee with zero exit fee",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
-				msg.PoolParams = &PoolParams{
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
+				msg.PoolParams = &stableswap.PoolParams{
 					SwapFee: sdk.NewDecWithPrec(-1, 2),
 					ExitFee: sdk.NewDecWithPrec(0, 0),
 				}
@@ -114,7 +115,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "invalid governor",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.FuturePoolGovernor = "invalid_cosmos_address"
 				return msg
 			}),
@@ -122,7 +123,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "invalid governor : len governor > 2",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.FuturePoolGovernor = "lptoken,1000h,invalid_cosmos_address"
 				return msg
 			}),
@@ -130,7 +131,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "invalid governor : len governor > 2",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.FuturePoolGovernor = "lptoken,1000h,invalid_cosmos_address"
 				return msg
 			}),
@@ -138,7 +139,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "valid governor: err when parse duration ",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.FuturePoolGovernor = "lptoken, invalid_duration"
 				return msg
 			}),
@@ -146,7 +147,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "valid governor: just lock duration for pool token",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.FuturePoolGovernor = "1000h"
 				return msg
 			}),
@@ -154,7 +155,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "valid governor: address",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.FuturePoolGovernor = "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 				return msg
 			}),
@@ -162,7 +163,7 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "valid governor: address",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
 				msg.FuturePoolGovernor = ""
 				return msg
 			}),
@@ -170,8 +171,8 @@ func TestMsgCreateStableswapPool(t *testing.T) {
 		},
 		{
 			name: "zero swap fee, zero exit fee",
-			msg: createMsg(func(msg MsgCreateStableswapPool) MsgCreateStableswapPool {
-				msg.PoolParams = &PoolParams{
+			msg: createMsg(func(msg stableswap.MsgCreateStableswapPool) stableswap.MsgCreateStableswapPool {
+				msg.PoolParams = &stableswap.PoolParams{
 					ExitFee: sdk.NewDecWithPrec(0, 0),
 					SwapFee: sdk.NewDecWithPrec(0, 0),
 				}

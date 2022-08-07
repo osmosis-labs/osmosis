@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -6,99 +6,293 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
 )
 
 func TestMsgLockTokens(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
-
-	createMsg := func(after func(msg MsgLockTokens) MsgLockTokens) MsgLockTokens {
-		properMsg := MsgLockTokens{
-			Owner:    addr1,
-			Duration: time.Hour,
-			Coins:    sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
-		}
-
-		return after(properMsg)
-	}
-
-	msg := createMsg(func(msg MsgLockTokens) MsgLockTokens {
-		// Do nothing
-		return msg
-	})
-
-	require.Equal(t, msg.Route(), RouterKey)
-	require.Equal(t, msg.Type(), "lock_tokens")
-	signers := msg.GetSigners()
-	require.Equal(t, len(signers), 1)
-	require.Equal(t, signers[0].String(), addr1)
+	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
 	tests := []struct {
 		name       string
-		msg        MsgLockTokens
+		msg        types.MsgLockTokens
 		expectPass bool
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg MsgLockTokens) MsgLockTokens {
-				// Do nothing
-				return msg
-			}),
+			msg: types.MsgLockTokens{
+				Owner:    addr1,
+				Duration: time.Hour,
+				Coins:    sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
+			},
 			expectPass: true,
 		},
 		{
 			name: "invalid owner",
-			msg: createMsg(func(msg MsgLockTokens) MsgLockTokens {
-				msg.Owner = invalidAddr.String()
-				return msg
-			}),
-			expectPass: false,
+			msg: types.MsgLockTokens{
+				Owner:    invalidAddr,
+				Duration: time.Hour,
+				Coins:    sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
+			},
 		},
 		{
 			name: "invalid duration",
-			msg: createMsg(func(msg MsgLockTokens) MsgLockTokens {
-				msg.Duration = -1
-				return msg
-			}),
-			expectPass: false,
+			msg: types.MsgLockTokens{
+				Owner:    addr1,
+				Duration: -1,
+				Coins:    sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
+			},
 		},
 		{
 			name: "invalid coin length",
-			msg: createMsg(func(msg MsgLockTokens) MsgLockTokens {
-				msg.Coins = sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(100000)), sdk.NewCoin("test2", sdk.NewInt(100000)))
-				return msg
-			}),
-			expectPass: false,
+			msg: types.MsgLockTokens{
+				Owner:    addr1,
+				Duration: time.Hour,
+				Coins:    sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(100000)), sdk.NewCoin("test2", sdk.NewInt(100000))),
+			},
 		},
 		{
 			name: "zero token amount",
-			msg: createMsg(func(msg MsgLockTokens) MsgLockTokens {
-				msg.Coins = sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(0)))
-				return msg
-			}),
-			expectPass: false,
+			msg: types.MsgLockTokens{
+				Owner:    addr1,
+				Duration: time.Hour,
+				Coins:    sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(0))),
+			},
 		},
 	}
 
 	for _, test := range tests {
-		if test.expectPass {
-			require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
-		} else {
-			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
-		}
+		t.Run(test.name, func(t *testing.T) {
+			if test.expectPass {
+				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+				require.Equal(t, test.msg.Route(), types.RouterKey)
+				require.Equal(t, test.msg.Type(), "lock_tokens")
+				signers := test.msg.GetSigners()
+				require.Equal(t, len(signers), 1)
+				require.Equal(t, signers[0].String(), addr1)
+			} else {
+				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			}
+		})
 	}
 }
 
-// TODO: Complete table driven tests for the remaining messages
+func TestMsgBeginUnlockingAll(t *testing.T) {
+	appParams.SetAddressPrefixes()
+	addr1, invalidAddr := apptesting.GenerateTestAddrs()
 
-// MsgBeginUnlockingAll
+	tests := []struct {
+		name       string
+		msg        types.MsgBeginUnlockingAll
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: types.MsgBeginUnlockingAll{
+				Owner: addr1,
+			},
+			expectPass: true,
+		},
+		{
+			name: "invalid owner",
+			msg: types.MsgBeginUnlockingAll{
+				Owner: invalidAddr,
+			},
+		},
+	}
 
-// MsgBeginUnlocking
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.expectPass {
+				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+				require.Equal(t, test.msg.Route(), types.RouterKey)
+				require.Equal(t, test.msg.Type(), "begin_unlocking_all")
+				signers := test.msg.GetSigners()
+				require.Equal(t, len(signers), 1)
+				require.Equal(t, signers[0].String(), addr1)
+			} else {
+				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			}
+		})
+	}
+}
 
-// MsgExtendLockup
+func TestMsgBeginUnlocking(t *testing.T) {
+	appParams.SetAddressPrefixes()
+	addr1, invalidAddr := apptesting.GenerateTestAddrs()
+
+	tests := []struct {
+		name       string
+		msg        types.MsgBeginUnlocking
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: types.MsgBeginUnlocking{
+				Owner: addr1,
+				ID:    1,
+				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
+			},
+			expectPass: true,
+		},
+		{
+			name: "invalid owner",
+			msg: types.MsgBeginUnlocking{
+				Owner: invalidAddr,
+				ID:    1,
+				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
+			},
+		},
+		{
+			name: "invalid lockup ID",
+			msg: types.MsgBeginUnlocking{
+				Owner: addr1,
+				ID:    0,
+				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
+			},
+		},
+		{
+			name: "invalid coins length",
+			msg: types.MsgBeginUnlocking{
+				Owner: addr1,
+				ID:    1,
+				Coins: sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(100000)), sdk.NewCoin("test2", sdk.NewInt(100000))),
+			},
+		},
+		{
+			name: "not positive coins amount",
+			msg: types.MsgBeginUnlocking{
+				Owner: addr1,
+				ID:    1,
+				Coins: sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(0))),
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.expectPass {
+				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+				require.Equal(t, test.msg.Route(), types.RouterKey)
+				require.Equal(t, test.msg.Type(), "begin_unlocking")
+				signers := test.msg.GetSigners()
+				require.Equal(t, len(signers), 1)
+				require.Equal(t, signers[0].String(), addr1)
+			} else {
+				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			}
+		})
+	}
+}
+
+func TestMsgExtendLockup(t *testing.T) {
+	appParams.SetAddressPrefixes()
+	addr1, invalidAddr := apptesting.GenerateTestAddrs()
+
+	tests := []struct {
+		name       string
+		msg        types.MsgExtendLockup
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: types.MsgExtendLockup{
+				Owner:    addr1,
+				ID:       1,
+				Duration: time.Hour,
+			},
+			expectPass: true,
+		},
+		{
+			name: "invalid owner",
+			msg: types.MsgExtendLockup{
+				Owner:    invalidAddr,
+				ID:       1,
+				Duration: time.Hour,
+			},
+		},
+		{
+			name: "invalid lockup ID",
+			msg: types.MsgExtendLockup{
+				Owner:    addr1,
+				ID:       0,
+				Duration: time.Hour,
+			},
+		},
+		{
+			name: "invalid duration",
+			msg: types.MsgExtendLockup{
+				Owner:    addr1,
+				ID:       1,
+				Duration: -1,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.expectPass {
+				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+				require.Equal(t, test.msg.Route(), types.RouterKey)
+				require.Equal(t, test.msg.Type(), "edit_lockup")
+				signers := test.msg.GetSigners()
+				require.Equal(t, len(signers), 1)
+				require.Equal(t, signers[0].String(), addr1)
+			} else {
+				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			}
+		})
+	}
+}
+
+// // Test authz serialize and de-serializes for lockup msg.
+func TestAuthzMsg(t *testing.T) {
+	pk1 := ed25519.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pk1.Address()).String()
+	coin := sdk.NewCoin("denom", sdk.NewInt(1))
+
+	const (
+		mockGranter string = "cosmos1abc"
+		mockGrantee string = "cosmos1xyz"
+	)
+
+	testCases := []struct {
+		name string
+		msg  sdk.Msg
+	}{
+		{
+			name: "MsgLockTokens",
+			msg: &types.MsgLockTokens{
+				Owner:    addr1,
+				Duration: time.Hour,
+				Coins:    sdk.NewCoins(coin),
+			},
+		},
+		{
+			name: "MsgBeginUnlocking",
+			msg: &types.MsgBeginUnlocking{
+				Owner: addr1,
+				ID:    1,
+				Coins: sdk.NewCoins(coin),
+			},
+		},
+		{
+			name: "MsgBeginUnlockingAll",
+			msg: &types.MsgBeginUnlockingAll{
+				Owner: addr1,
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			apptesting.TestMessageAuthzSerialization(t, tc.msg)
+		})
+	}
+}

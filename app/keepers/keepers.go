@@ -260,6 +260,19 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 
+	txFeesKeeper := txfeeskeeper.NewKeeper(
+		appCodec,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.EpochsKeeper,
+		appKeepers.keys[txfeestypes.StoreKey],
+		appKeepers.GAMMKeeper,
+		appKeepers.GAMMKeeper,
+		txfeestypes.FeeCollectorName,
+		txfeestypes.NonNativeFeeCollectorName,
+	)
+	appKeepers.TxFeesKeeper = &txFeesKeeper
+
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[incentivestypes.StoreKey],
@@ -267,6 +280,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.LockupKeeper,
 		appKeepers.EpochsKeeper,
+		appKeepers.DistrKeeper,
+		appKeepers.TxFeesKeeper,
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
@@ -294,26 +309,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
-		distrtypes.ModuleName,
-		authtypes.FeeCollectorName,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 
-	txFeesKeeper := txfeeskeeper.NewKeeper(
-		appCodec,
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.EpochsKeeper,
-		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.GAMMKeeper,
-		appKeepers.GAMMKeeper,
-		txfeestypes.FeeCollectorName,
-		txfeestypes.NonNativeFeeCollectorName,
-	)
-	appKeepers.TxFeesKeeper = &txFeesKeeper
-
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
-		appCodec,
 		appKeepers.keys[tokenfactorytypes.StoreKey],
 		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
 		appKeepers.AccountKeeper,
@@ -326,7 +325,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis"
 
-	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.GAMMKeeper, appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
+	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.GAMMKeeper, appKeepers.BankKeeper, appKeepers.TwapKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,
