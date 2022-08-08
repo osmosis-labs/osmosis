@@ -22,7 +22,7 @@ service Msg {
 
   // Subscribe to a token sale. Any use at any time before the sale end can join
   // the sale by sending `token_in` to the Sale through the Subscribe msg.
-  // During the salem user `token_in` will be automatically charged every
+  // During the sale, user `token_in` will be automatically charged every
   // epoch to purchase `token_out`.
   rpc Subscribe(MsgSubscribe) returns (google.protobuf.Empty);
 
@@ -56,8 +56,8 @@ message MsgCreateSale {
 
   // Maximum fee the creator is going to pay for creating a sale. The creator
   // will be charged params.SaleCreationFee. Transaction will fail if
-  // max_fee is smaller than params.SaleCreationFee. If empty, creator
-  // accepts doesn't accept any fee.
+  // max_fee is smaller than params.SaleCreationFee. If empty, the creator
+  // doesn't accept any fee.
   repeated cosmos.base.v1beta1.Coin max_fee = 4
       [ (gogoproto.nullable) = false ];
 
@@ -88,7 +88,7 @@ message MsgCreateSaleResponse {
 message MsgSubscribe {
   // sender is an account address adding a deposit
   string sender = 1;
-  // sale_id is a valid ID of this module Sale
+  // ID of an existing sale.
   uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
   // number of sale.token_in staked by a user.
   string amount = 3 [
@@ -100,9 +100,10 @@ message MsgSubscribe {
 message MsgWithdraw {
   // sender is an account address subscribed to the sale_id
   string sender = 1;
+  // ID of a sale.
   uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
-  // amount of in_tokens to withdraw, must be at most the amount of not spent
-  // tokens, unless set to null - then all remaining balance will be withdrawn
+  // amount of tokens_in to withdraw. Must be at most the amount of not spent
+  // tokens, unless set to null - then all remaining balance will be withdrawn.
   string amount = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = true
@@ -112,6 +113,7 @@ message MsgWithdraw {
 message MsgExitSale {
   // sender is an account address exiting a sale
   string sender = 1;
+  // ID of an existing sale.
   uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
 }
 
@@ -126,6 +128,7 @@ message MsgExitSaleResponse {
 message MsgFinalizeSale {
   // sender is an account signing the message and triggering the finalization.
   string sender = 1;
+  // ID of an existing sale.
   uint64 sale_id = 2 [ (gogoproto.moretags) = "yaml:\"sale_id\"" ];
 }
 

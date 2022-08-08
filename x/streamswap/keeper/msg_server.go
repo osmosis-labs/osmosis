@@ -48,7 +48,7 @@ func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*ty
 }
 
 func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, params types.Params, store storetypes.KVStore) (uint64, sdk.AccAddress, error) {
-	creator, err := msg.Validate(now, params.MinimumSaleDuration, params.MinimumDurationUntilStartTime, params.SaleCreationFee)
+	creator, err := msg.Validate(now, params.MinSaleDuration, params.MinDurationUntilStartTime, params.SaleCreationFee)
 	if err != nil {
 		return 0, nil, err
 	}

@@ -26,19 +26,19 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(saleCreationFee sdk.Coins, saleCreationFeeRecipient string, minimumDurationUntilStartTime, minimumSaleDuration time.Duration) Params {
 	return Params{
-		SaleCreationFee:               saleCreationFee,
-		SaleCreationFeeRecipient:      saleCreationFeeRecipient,
-		MinimumDurationUntilStartTime: minimumDurationUntilStartTime,
-		MinimumSaleDuration:           minimumSaleDuration,
+		SaleCreationFee:           saleCreationFee,
+		SaleCreationFeeRecipient:  saleCreationFeeRecipient,
+		MinDurationUntilStartTime: minimumDurationUntilStartTime,
+		MinSaleDuration:           minimumSaleDuration,
 	}
 }
 
 // default streamswap module parameters
 func DefaultParams() Params {
 	return Params{
-		SaleCreationFee:               sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 200_000_000)}, // 200 OSMO
-		MinimumDurationUntilStartTime: time.Hour * 24,                                                   // 1 Day
-		MinimumSaleDuration:           time.Hour * 24,                                                   // 1 Day
+		SaleCreationFee:           sdk.Coins{sdk.NewInt64Coin(appparams.BaseCoinUnit, 200_000_000)}, // 200 OSMO
+		MinDurationUntilStartTime: time.Hour * 24,                                                   // 1 Day
+		MinSaleDuration:           time.Hour * 24,                                                   // 1 Day
 	}
 }
 
@@ -47,10 +47,10 @@ func (p Params) Validate() error {
 	if err := validateSaleCreationFee(p.SaleCreationFee); err != nil {
 		return err
 	}
-	if err := validateDuration(p.MinimumDurationUntilStartTime); err != nil {
+	if err := validateDuration(p.MinDurationUntilStartTime); err != nil {
 		return err
 	}
-	if err := validateDuration(p.MinimumSaleDuration); err != nil {
+	if err := validateDuration(p.MinSaleDuration); err != nil {
 		return err
 	}
 	return nil
@@ -62,8 +62,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeySaleCreationFee, &p.SaleCreationFee, validateSaleCreationFee),
 		paramtypes.NewParamSetPair(KeySaleCreationFeeRecipient, &p.SaleCreationFeeRecipient, validateSaleCreationFeeRecipient),
-		paramtypes.NewParamSetPair(KeyMinimumDurationUntilStartTime, &p.MinimumDurationUntilStartTime, validateDuration),
-		paramtypes.NewParamSetPair(KeyMinimumSaleDuration, &p.MinimumSaleDuration, validateDuration),
+		paramtypes.NewParamSetPair(KeyMinimumDurationUntilStartTime, &p.MinDurationUntilStartTime, validateDuration),
+		paramtypes.NewParamSetPair(KeyMinimumSaleDuration, &p.MinSaleDuration, validateDuration),
 	}
 }
 func validateSaleCreationFeeRecipient(i interface{}) error {

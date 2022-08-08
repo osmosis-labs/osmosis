@@ -8,7 +8,6 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v10/x/streamswap/types";
 option (gogoproto.goproto_getters_all) = false;
-// option (gogoproto.goproto_stringer_all) = false;
 
 message Sale {
   // Destination for the earned token_in

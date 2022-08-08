@@ -18,6 +18,8 @@ message GenesisState {
   Params params = 4 [ (gogoproto.nullable) = false ];
 }
 
+// UserPositionKV is a record in genesis representing acc_address user position
+// of a sale_id sale.
 message UserPositionKV {
   // user account address
   string acc_address = 1;
