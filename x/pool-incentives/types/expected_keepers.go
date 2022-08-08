@@ -12,7 +12,7 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
-// The AccountKeeper interface contains functions for getting accounts and the module address
+// AccountKeeper interface contains functions for getting accounts and the module address
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 
