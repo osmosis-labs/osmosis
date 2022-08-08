@@ -170,8 +170,8 @@ docs:
 
 protoVer=v0.7
 protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
-containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
+containerProtoGen=osmosis-proto-gen-$(protoVer)
+containerProtoFmt=osmosis-proto-fmt-$(protoVer)
 
 proto-gen:
 	@echo "Generating Protobuf files"
