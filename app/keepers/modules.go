@@ -40,7 +40,7 @@ import (
 	superfluidclient "github.com/osmosis-labs/osmosis/v10/x/superfluid/client"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees"
-	launchpadmodule "github.com/osmosis-labs/osmosis/v10/x/launchpad/module"
+	streamswapmodule "github.com/osmosis-labs/osmosis/v10/x/streamswap/module"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.
@@ -86,5 +86,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	tokenfactory.AppModuleBasic{},
 	wasm.AppModuleBasic{},
 	ica.AppModuleBasic{},
-	launchpadmodule.AppModuleBasic{},
+	streamswapmodule.AppModuleBasic{},
 }

@@ -1,0 +1,74 @@
+package cli
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/pflag"
+
+	"github.com/osmosis-labs/osmosis/v10/x/streamswap/types"
+)
+
+type CreateSaleInputs createSaleInputs
+
+// UnmarshalJSON should error if there are fields unexpected.
+func (inputs *createSaleInputs) UnmarshalJSON(data []byte) error {
+	var saleInputs CreateSaleInputs
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields() // Force
+
+	if err := dec.Decode(&saleInputs); err != nil {
+		return err
+	}
+
+	*inputs = createSaleInputs(saleInputs)
+	return nil
+}
+
+func (inputs *createSaleInputs) ToMsgCreateSale(creator string) (*types.MsgCreateSale, error) {
+	_, err := sdk.AccAddressFromBech32(inputs.Recipient)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse recipient address: %s", inputs.Recipient)
+	}
+	var fee = sdk.Coins{}
+	for i := range inputs.MaxFee {
+		fee = append(fee, inputs.MaxFee[i].Coin)
+	}
+	msg := &types.MsgCreateSale{
+		TokenIn:   inputs.TokenIn,
+		TokenOut:  inputs.TokenOut.Coin,
+		MaxFee:    fee,
+		StartTime: inputs.StartTime,
+		Duration:  inputs.Duration.Duration,
+		Recipient: inputs.Recipient,
+		Creator:   creator,
+		Name:      inputs.Name,
+		Url:       inputs.Url,
+	}
+	return msg, msg.ValidateBasic()
+}
+
+func parseCreateSaleFlags(fs *pflag.FlagSet) (*createSaleInputs, error) {
+	sale := &createSaleInputs{}
+	saleFile, _ := fs.GetString(FlagSaleFile)
+
+	if saleFile == "" {
+		return nil, fmt.Errorf("must pass in a sale json using the --%s flag", FlagSaleFile)
+	}
+
+	contents, err := ioutil.ReadFile(saleFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// make exception if unknown field exists
+	err = sale.UnmarshalJSON(contents)
+	if err != nil {
+		return nil, err
+	}
+
+	return sale, nil
+}

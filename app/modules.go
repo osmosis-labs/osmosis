@@ -65,8 +65,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/launchpad"
-	launchpadmodule "github.com/osmosis-labs/osmosis/v10/x/launchpad/module"
+	"github.com/osmosis-labs/osmosis/v10/x/streamswap"
+	streamswapmodule "github.com/osmosis-labs/osmosis/v10/x/streamswap/module"
 )
 
 // moduleAccountPermissions defines module account permissions
@@ -90,7 +90,7 @@ var moduleAccountPermissions = map[string][]string{
 	txfeestypes.NonNativeFeeCollectorName:    nil,
 	wasm.ModuleName:                          {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
-	launchpad.ModuleName:                     nil,
+	streamswap.ModuleName:                     nil,
 }
 
 // appModules return modules to initialize module manager.
@@ -143,7 +143,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		launchpadmodule.NewAppModule(appCodec, *app.LaunchpadKeeper, *app.BankKeeper, app.interfaceRegistry),
+		streamswapmodule.NewAppModule(appCodec, *app.StreamswapKeeper, *app.BankKeeper, app.interfaceRegistry),
 	}
 }
 
@@ -214,7 +214,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		authz.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
-		launchpad.ModuleName,
+		streamswap.ModuleName,
 	}
 }
 

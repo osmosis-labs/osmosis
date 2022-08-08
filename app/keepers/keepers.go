@@ -73,8 +73,8 @@ import (
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v10/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/launchpad"
-	launchpadkeeper "github.com/osmosis-labs/osmosis/v10/x/launchpad/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/streamswap"
+	streamswapkeeper "github.com/osmosis-labs/osmosis/v10/x/streamswap/keeper"
 )
 
 type AppKeepers struct {
@@ -117,7 +117,7 @@ type AppKeepers struct {
 	// IBC modules
 	// transfer module
 	TransferModule  transfer.AppModule
-	LaunchpadKeeper *launchpadkeeper.Keeper
+	StreamswapKeeper *streamswapkeeper.Keeper
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -325,9 +325,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
-	launchpadKeeper := launchpadkeeper.NewKeeper(
-		appKeepers.keys[launchpadkeeper.StoreKey], appCodec, bankKeeper, appKeepers.GetSubspace(launchpad.ModuleName))
-	appKeepers.LaunchpadKeeper = &launchpadKeeper
+	streamswapKeeper := streamswapkeeper.NewKeeper(
+		appKeepers.keys[streamswapkeeper.StoreKey], appCodec, bankKeeper, appKeepers.GetSubspace(streamswap.ModuleName))
+	appKeepers.StreamswapKeeper = &streamswapKeeper
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
@@ -447,7 +447,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
-	paramsKeeper.Subspace(launchpad.ModuleName)
+	paramsKeeper.Subspace(streamswap.ModuleName)
 
 	return paramsKeeper
 }
@@ -540,6 +540,6 @@ func KVStoreKeys() []string {
 		superfluidtypes.StoreKey,
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
-		launchpadkeeper.StoreKey,
+		streamswapkeeper.StoreKey,
 	}
 }
