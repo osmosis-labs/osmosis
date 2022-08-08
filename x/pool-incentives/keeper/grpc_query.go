@@ -62,7 +62,7 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 	return &types.QueryGaugeIdsResponse{GaugeIdsWithDuration: gaugeIdsWithDuration}, nil
 }
 
-// DistrInfo iterates over all gauges, returns distribution info.
+// DistrInfo returns gauges receiving pool rewards and their respective weights.
 func (q Querier) DistrInfo(ctx context.Context, _ *types.QueryDistrInfoRequest) (*types.QueryDistrInfoResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return &types.QueryDistrInfoResponse{DistrInfo: q.Keeper.GetDistrInfo(sdkCtx)}, nil
