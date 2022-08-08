@@ -15,6 +15,7 @@ var (
 	UpdateIntermediaryPoolAssetsLiquidity = updateIntermediaryPoolAssetsLiquidity
 
 	GetPoolAssetsByDenom = getPoolAssetsByDenom
+	EnsureDenomInPool = ensureDenomInPool
 )
 
 func (p *Pool) CalcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoolAsset PoolAsset, totalShares sdk.Int) (numShares sdk.Int, err error) {

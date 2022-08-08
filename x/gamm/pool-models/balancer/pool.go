@@ -776,12 +776,9 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, err
 	}
 
-	// check to make sure the input denoms exist in the pool
-	for _, coin := range tokensIn {
-		_, ok := poolAssetsByDenom[coin.Denom]
-		if !ok {
-			return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, sdkerrors.Wrapf(types.ErrDenomAlreadyInPool, invalidInputDenomsErrFormat, coin.Denom)
-		}
+	err = ensureDenomInPool(poolAssetsByDenom, tokensIn)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, err
 	}
 
 	// ensure that there aren't too many or too few assets in `tokensIn`
