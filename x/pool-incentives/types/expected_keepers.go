@@ -41,7 +41,7 @@ type IncentivesKeeper interface {
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
 }
 
-// The DistrKeeper handles pool-fees functionality - setting / getting fees and funding the community pool.
+// DistrKeeper handles pool-fees functionality - setting / getting fees and funding the community pool.
 type DistrKeeper interface {
 	GetFeePool(ctx sdk.Context) (feePool distrtypes.FeePool)
 	SetFeePool(ctx sdk.Context, feePool distrtypes.FeePool)
