@@ -3,10 +3,12 @@ package ibc_rate_limit
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
+	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
 )
 
 var _ porttypes.Middleware = &IBCModule{}
@@ -25,8 +27,8 @@ func NewICS4Middleware(channel porttypes.ICS4Wrapper) ICS4Middleware {
 
 func (i ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
 	fmt.Println("Sending package through middleware")
-	//return sdkerrors.Wrap(types.ErrRateLimitExceeded, "test")
-	return i.channel.SendPacket(ctx, chanCap, packet)
+	return sdkerrors.Wrap(types.ErrRateLimitExceeded, "test")
+	//return i.channel.SendPacket(ctx, chanCap, packet)
 }
 
 func (i ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI, ack exported.Acknowledgement) error {
