@@ -12,7 +12,7 @@ const (
 	ProposalTypeReplacePoolIncentives = "ReplacePoolIncentives"
 )
 
-//Init registers proposals to update and replace pool incentives.
+// Init registers proposals to update and replace pool incentives.
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdatePoolIncentives)
 	govtypes.RegisterProposalTypeCodec(&UpdatePoolIncentivesProposal{}, "osmosis/UpdatePoolIncentivesProposal")
