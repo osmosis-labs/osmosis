@@ -13,8 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
+// TODO: Contemplate name better
+//
 //nolint:structcheck
-//TODO: Contemplate name better
 type SimCtx struct {
 	rm randManager
 

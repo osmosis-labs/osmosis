@@ -97,7 +97,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 
 // CreateLock creates a new lock with the specified duration for the owner.
 // Returns an error in the following conditions:
-//  - account does not have enough balance
+//   - account does not have enough balance
 func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is initially set without a value, gets set as unlock start time + duration

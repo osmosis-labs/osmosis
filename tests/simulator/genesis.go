@@ -3,11 +3,12 @@ package simapp
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
+	"os"
 
-	"github.com/osmosis-labs/osmosis/v10/app"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/v10/app"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -18,7 +19,7 @@ import (
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
 func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account) {
-	bytes, err := ioutil.ReadFile(genesisFile)
+	bytes, err := os.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}

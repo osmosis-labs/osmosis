@@ -94,11 +94,12 @@ func (k Keeper) storeNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 // returns the TWAP record from state for (id, t', asset0, asset1),
 // where t' is such that:
 // * t' <= t
-// * there exists no `t'' <= t` in state, where `t' < t''`
+// * there exists no `t” <= t` in state, where `t' < t”`
 //
 // This returns an error if:
 // * there is no historical record in state at or before t
 //   - Occurs if t is older than pruning period, or pool creation date.
+//
 // * there is no record for the asset pair (asset0, asset1) in particular
 //   - e.g. asset not in pool, or provided in wrong order.
 func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {

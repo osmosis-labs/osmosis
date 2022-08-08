@@ -33,8 +33,9 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 )
 
-//nolint:ineffassign
 // PrepareGenesisCmd returns prepare-genesis cobra Command.
+//
+//nolint:ineffassign
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare-genesis",

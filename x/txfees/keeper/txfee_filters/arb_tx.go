@@ -9,11 +9,13 @@ import (
 // We check if a tx is an arbitrage for the mempool right now by seeing:
 // 1) does start token of a msg = final token of msg (definitionally correct)
 // 2) does it have multiple swap messages, with different tx ins. If so, we assume its an arb.
-//    - This has false positives, but is intended to avoid the obvious solution of splitting
-//      an arb into multiple messages.
+//   - This has false positives, but is intended to avoid the obvious solution of splitting
+//     an arb into multiple messages.
+//
 // 3) We record all denoms seen across all swaps, and see if any duplicates. (TODO)
 // 4) Contains both JoinPool and ExitPool messages in one tx.
-//    - Has some false positives, but they seem relatively contrived.
+//   - Has some false positives, but they seem relatively contrived.
+//
 // TODO: Move the first component to a future router module.
 func IsArbTxLoose(tx sdk.Tx) bool {
 	msgs := tx.GetMsgs()

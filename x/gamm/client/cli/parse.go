@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/spf13/pflag"
 )
@@ -38,7 +38,7 @@ func parseCreatePoolFlags(fs *pflag.FlagSet) (*createPoolInputs, error) {
 		return nil, fmt.Errorf("must pass in a pool json using the --%s flag", FlagPoolFile)
 	}
 
-	contents, err := ioutil.ReadFile(poolFile)
+	contents, err := os.ReadFile(poolFile)
 	if err != nil {
 		return nil, err
 	}

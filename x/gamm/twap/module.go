@@ -44,7 +44,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return genState.Validate()
 }
 
-//---------------------------------------
+// ---------------------------------------
 // Interfaces.
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
