@@ -24,9 +24,12 @@ message Params {
   // bech32 address of the fee recipient
   string sale_creation_fee_recipient = 2;
 
-  google.protobuf.Duration minimumDurationUntilStartTime = 3
+  // minimum amount duration of time between the sale cration and the sale
+  // start time.
+  google.protobuf.Duration min_duration_until_start_time = 3
       [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 
-  google.protobuf.Duration minimumSaleDuration = 4
+  // minimum duration for every new sale.
+  google.protobuf.Duration min_sale_duration = 4
       [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
 }

@@ -49,8 +49,8 @@ type MsgCreateSale struct {
 	TokenOut types.Coin `protobuf:"bytes,3,opt,name=token_out,json=tokenOut,proto3" json:"token_out"`
 	// Maximum fee the creator is going to pay for creating a sale. The creator
 	// will be charged params.SaleCreationFee. Transaction will fail if
-	// max_fee is smaller than params.SaleCreationFee. If empty, creator
-	// accepts doesn't accept any fee.
+	// max_fee is smaller than params.SaleCreationFee. If empty, the creator
+	// doesn't accept any fee.
 	MaxFee []types.Coin `protobuf:"bytes,4,rep,name=max_fee,json=maxFee,proto3" json:"max_fee"`
 	// start time when the token sale starts.
 	StartTime time.Time `protobuf:"bytes,5,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
@@ -141,7 +141,7 @@ var xxx_messageInfo_MsgCreateSaleResponse proto.InternalMessageInfo
 type MsgSubscribe struct {
 	// sender is an account address adding a deposit
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-	// sale_id is a valid ID of this module Sale
+	// ID of an existing sale.
 	SaleId uint64 `protobuf:"varint,2,opt,name=sale_id,json=saleId,proto3" json:"sale_id,omitempty" yaml:"sale_id"`
 	// number of sale.token_in staked by a user.
 	Amount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
@@ -183,9 +183,10 @@ var xxx_messageInfo_MsgSubscribe proto.InternalMessageInfo
 type MsgWithdraw struct {
 	// sender is an account address subscribed to the sale_id
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	// ID of a sale.
 	SaleId uint64 `protobuf:"varint,2,opt,name=sale_id,json=saleId,proto3" json:"sale_id,omitempty" yaml:"sale_id"`
-	// amount of in_tokens to withdraw, must be at most the amount of not spent
-	// tokens, unless set to null - then all remaining balance will be withdrawn
+	// amount of tokens_in to withdraw. Must be at most the amount of not spent
+	// tokens, unless set to null - then all remaining balance will be withdrawn.
 	Amount *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount,omitempty"`
 }
 
@@ -225,6 +226,7 @@ var xxx_messageInfo_MsgWithdraw proto.InternalMessageInfo
 type MsgExitSale struct {
 	// sender is an account address exiting a sale
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	// ID of an existing sale.
 	SaleId uint64 `protobuf:"varint,2,opt,name=sale_id,json=saleId,proto3" json:"sale_id,omitempty" yaml:"sale_id"`
 }
 
@@ -302,6 +304,7 @@ var xxx_messageInfo_MsgExitSaleResponse proto.InternalMessageInfo
 type MsgFinalizeSale struct {
 	// sender is an account signing the message and triggering the finalization.
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	// ID of an existing sale.
 	SaleId uint64 `protobuf:"varint,2,opt,name=sale_id,json=saleId,proto3" json:"sale_id,omitempty" yaml:"sale_id"`
 }
 
@@ -460,7 +463,7 @@ type MsgClient interface {
 	CreateSale(ctx context.Context, in *MsgCreateSale, opts ...grpc.CallOption) (*MsgCreateSaleResponse, error)
 	// Subscribe to a token sale. Any use at any time before the sale end can join
 	// the sale by sending `token_in` to the Sale through the Subscribe msg.
-	// During the salem user `token_in` will be automatically charged every
+	// During the sale, user `token_in` will be automatically charged every
 	// epoch to purchase `token_out`.
 	Subscribe(ctx context.Context, in *MsgSubscribe, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Withdraw sends back `amount` of unspent tokens_in to the user.
@@ -540,7 +543,7 @@ type MsgServer interface {
 	CreateSale(context.Context, *MsgCreateSale) (*MsgCreateSaleResponse, error)
 	// Subscribe to a token sale. Any use at any time before the sale end can join
 	// the sale by sending `token_in` to the Sale through the Subscribe msg.
-	// During the salem user `token_in` will be automatically charged every
+	// During the sale, user `token_in` will be automatically charged every
 	// epoch to purchase `token_out`.
 	Subscribe(context.Context, *MsgSubscribe) (*emptypb.Empty, error)
 	// Withdraw sends back `amount` of unspent tokens_in to the user.

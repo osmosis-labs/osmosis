@@ -95,6 +95,8 @@ func (m *GenesisState) GetParams() Params {
 	return Params{}
 }
 
+// UserPositionKV is a record in genesis representing acc_address user position
+// of a sale_id sale.
 type UserPositionKV struct {
 	// user account address
 	AccAddress string       `protobuf:"bytes,1,opt,name=acc_address,json=accAddress,proto3" json:"acc_address,omitempty"`
