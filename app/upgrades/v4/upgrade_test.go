@@ -7,11 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/v10/app"
+	v4 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v4"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -107,9 +108,11 @@ func (suite *UpgradeTestSuite) TestUpgradePayments() {
 				suite.Require().Equal(feePool.GetCommunityPool(), sdk.NewDecCoins(sdk.NewInt64DecCoin("uosmo", expectedBal)))
 
 				// Check that gamm Minimum Fee has been set correctly
-				gammParams := suite.app.GAMMKeeper.GetParams(suite.ctx)
-				expectedCreationFee := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.OneInt()))
-				suite.Require().Equal(gammParams.PoolCreationFee, expectedCreationFee)
+
+				// Kept as comments for recordkeeping. Since SetParams is now private, the changes being tested for can no longer be made:
+				//  	gammParams := suite.app.GAMMKeeper.GetParams(suite.ctx)
+				//  	expectedCreationFee := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.OneInt()))
+				//  	suite.Require().Equal(gammParams.PoolCreationFee, expectedCreationFee)
 			},
 			true,
 		},

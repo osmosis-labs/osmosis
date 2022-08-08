@@ -3,8 +3,8 @@ package v9
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
+	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 )
 
 // Executes prop214, https://www.mintscan.io/osmosis/proposals/214
@@ -25,8 +25,9 @@ func ExecuteProp214(ctx sdk.Context, gamm *gammkeeper.Keeper) {
 
 	balancerPool.PoolParams.SwapFee = sdk.MustNewDecFromStr("0.002")
 
-	err = gamm.SetPool(ctx, balancerPool)
-	if err != nil {
-		panic(err)
-	}
+	// Kept as comments for recordkeeping. SetPool is now private:
+	// 		err = gamm.SetPool(ctx, balancerPool)
+	// 		if err != nil {
+	//	 		panic(err)
+	//  	}
 }

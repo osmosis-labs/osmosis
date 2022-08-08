@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 // MultihopSwapExactAmountIn defines the input denom and input amount for the first pool,
@@ -51,6 +51,9 @@ func (k Keeper) MultihopSwapExactAmountOut(
 	insExpected, err := k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
 	if err != nil {
 		return sdk.Int{}, err
+	}
+	if len(insExpected) == 0 {
+		return sdk.Int{}, nil
 	}
 
 	insExpected[0] = tokenInMaxAmount

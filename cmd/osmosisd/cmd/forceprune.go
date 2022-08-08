@@ -30,7 +30,7 @@ const (
 	defaultMinHeight  = "1000"
 )
 
-// get cmd to convert any bech32 address to an osmo prefix.
+// forceprune gets cmd to convert any bech32 address to an osmo prefix.
 func forceprune() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "forceprune",
@@ -94,6 +94,7 @@ func forceprune() *cobra.Command {
 	return cmd
 }
 
+// pruneBlockStoreAndGetHeights prunes blockstore and returns the startHeight and currentHeight.
 func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	startHeight int64, currentHeight int64, err error,
 ) {
@@ -105,6 +106,8 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	if err != nil {
 		return 0, 0, err
 	}
+
+	// nolint: staticcheck
 	defer db_bs.Close()
 
 	bs := tmstore.NewBlockStore(db_bs)
@@ -117,10 +120,20 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 		return 0, 0, err
 	}
 	fmt.Println("Pruned Block Store ...", prunedBlocks)
+
+	// N.B: We duplicate the call to db_bs.Close() on top of
+	// the call in defer statement above to make sure that the resources
+	// are properly released and any potential error from Close()
+	// is handled. Close() should be idempotent so this is acceptable.
+	if err := db_bs.Close(); err != nil {
+		return 0, 0, err
+	}
+
 	return startHeight, currentHeight, nil
 }
 
-func compactBlockStore(dbPath string) error {
+// compactBlockStore compacts block storage.
+func compactBlockStore(dbPath string) (err error) {
 	compactOpts := opt.Options{
 		DisableSeeksCompaction: true,
 	}
@@ -128,7 +141,9 @@ func compactBlockStore(dbPath string) error {
 	fmt.Println("Compacting Block Store ...")
 
 	db, err := leveldb.OpenFile(dbPath+"/blockstore.db", &compactOpts)
-	defer db.Close()
+	defer func() {
+		err = db.Close()
+	}()
 	if err != nil {
 		return err
 	}
@@ -138,6 +153,7 @@ func compactBlockStore(dbPath string) error {
 	return nil
 }
 
+// forcepruneStateStore prunes and compacts state storage.
 func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, fullHeight int64) error {
 	opts := opt.Options{
 		DisableSeeksCompaction: true,

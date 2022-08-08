@@ -7,7 +7,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/tokenfactory/v1beta1/authorityMetadata.proto";
 import "osmosis/tokenfactory/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types";
 
 // Query defines the gRPC querier service.
 service Query {

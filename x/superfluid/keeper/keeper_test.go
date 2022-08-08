@@ -10,13 +10,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
-	epochtypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
 type KeeperTestSuite struct {
@@ -150,6 +151,98 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 	}
 
 	return denoms, poolIds
+}
+
+func (suite *KeeperTestSuite) setupSuperfluidDelegations(valAddrs []sdk.ValAddress, superDelegations []superfluidDelegation, denoms []string) ([]sdk.AccAddress, []types.SuperfluidIntermediaryAccount, []lockuptypes.PeriodLock) {
+	flagIntermediaryAcc := make(map[string]bool)
+	intermediaryAccs := []types.SuperfluidIntermediaryAccount{}
+	locks := []lockuptypes.PeriodLock{}
+	delAddrs := []sdk.AccAddress{}
+
+	// we do sanity check on the test cases.
+	// if superfluid staking is happening with single val and multiple superfluid delegations,
+	// we should be running `AddTokensToLockByID`, instead of creating new locks
+	delegatorAddressMap := make(map[int64]sdk.AccAddress)
+	for _, superDelegation := range superDelegations {
+		// either create or use existing delegator address
+		var delAddr sdk.AccAddress
+		if cachedAddr, ok := delegatorAddressMap[superDelegation.delIndex]; ok {
+			delAddr = cachedAddr
+		} else {
+			pk := ed25519.GenPrivKey().PubKey()
+			delAddr = sdk.AccAddress(pk.Address())
+			delegatorAddressMap[superDelegation.delIndex] = delAddr
+			delAddrs = append(delAddrs, delAddr)
+		}
+
+		valAddr := valAddrs[superDelegation.valIndex]
+		lock := suite.setupSuperfluidDelegate(delAddr, valAddr, denoms[superDelegation.lpIndex], superDelegation.lpAmount)
+		address := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)
+		gotAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, address)
+
+		// save accounts for future use
+		if flagIntermediaryAcc[gotAcc.String()] == false {
+			flagIntermediaryAcc[gotAcc.String()] = true
+			intermediaryAccs = append(intermediaryAccs, gotAcc)
+		}
+		// save locks for future use
+		locks = append(locks, lock)
+	}
+	return delAddrs, intermediaryAccs, locks
+}
+
+func (suite *KeeperTestSuite) checkIntermediaryAccountDelegations(intermediaryAccs []types.SuperfluidIntermediaryAccount) {
+	for _, acc := range intermediaryAccs {
+		valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
+		suite.Require().NoError(err)
+
+		// check delegation from intermediary account to validator
+		delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, acc.GetAccAddress(), valAddr)
+		suite.Require().True(found)
+		suite.Require().True(delegation.Shares.GTE(sdk.NewDec(10000000)))
+
+		// check delegated tokens
+		validator, found := suite.App.StakingKeeper.GetValidator(suite.Ctx, valAddr)
+		suite.Require().True(found)
+		delegatedTokens := validator.TokensFromShares(delegation.Shares).TruncateInt()
+		suite.Require().True(delegatedTokens.GTE(sdk.NewInt(10000000)))
+	}
+}
+
+func (suite *KeeperTestSuite) setupSuperfluidDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, denom string, amount int64) lockuptypes.PeriodLock {
+	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+
+	// create lockup of LP token
+	coins := sdk.Coins{sdk.NewInt64Coin(denom, amount)}
+	lastLockID := suite.App.LockupKeeper.GetLastLockID(suite.Ctx)
+
+	lockID := suite.LockTokens(delAddr, coins, unbondingDuration)
+	lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
+	suite.Require().NoError(err)
+
+	// here we check if check `LockTokens` added to existing locks or created a new lock.
+	// if `LockTokens` created a new lock, we continue SuperfluidDelegate
+	// if lock has been existing before, we wouldn't have to call SuperfluidDelegate separately, as hooks on LockTokens would have automatically called IncreaseSuperfluidDelegation
+	if lastLockID != lockID {
+		err = suite.App.SuperfluidKeeper.SuperfluidDelegate(suite.Ctx, lock.Owner, lock.ID, valAddr.String())
+		suite.Require().NoError(err)
+	} else {
+		// here we handle two cases.
+		// 1. the lock has existed before but has not been superflud staking
+		// 2. the lock has existed before and has been superfluid staking
+
+		// we check if synth lock that has existed before, if it did, it means that the lock has been superfluid staked
+		// we do not care about unbonding synthlocks, as superfluid delegation has no effect
+
+		_, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
+		// if lock has existed before but has not been superfluid staked, we do initial superfluid staking
+		if err != nil {
+			err = suite.App.SuperfluidKeeper.SuperfluidDelegate(suite.Ctx, lock.Owner, lock.ID, valAddr.String())
+			suite.Require().NoError(err)
+		}
+	}
+
+	return *lock
 }
 
 func TestKeeperTestSuite(t *testing.T) {

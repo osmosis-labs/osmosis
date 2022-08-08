@@ -1,3 +1,12 @@
+/*
+The `mint` module is responsible for creating tokens in a
+flexible way to reward validators, incentivize providing pool
+liquidity, provide funds for Osmosis governance,
+and pay developers to maintain and improve Osmosis.
+ - Denom minting; reduction and reserve ratio settings
+ - Token distribution proportions
+ - Epoch start distribution settings
+*/
 package mint
 
 import (
@@ -18,11 +27,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v7/x/mint/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/client/rest"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/simulation"
-	"github.com/osmosis-labs/osmosis/v7/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/client/cli"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
 )
 
 var (

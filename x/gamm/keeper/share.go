@@ -3,7 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool types.PoolI, joiner sdk.AccAddress, numShares sdk.Int, joinCoins sdk.Coins) error {
@@ -17,12 +18,12 @@ func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool types.PoolI, join
 		return err
 	}
 
-	err = k.SetPool(ctx, pool)
+	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err
 	}
 
-	ctx.EventManager().EmitEvent(types.CreateAddLiquidityEvent(ctx, joiner, pool.GetId(), joinCoins))
+	events.EmitAddLiquidityEvent(ctx, joiner, pool.GetId(), joinCoins)
 	k.hooks.AfterJoinPool(ctx, joiner, pool.GetId(), joinCoins, numShares)
 	k.RecordTotalLiquidityIncrease(ctx, joinCoins)
 	return nil
@@ -39,12 +40,12 @@ func (k Keeper) applyExitPoolStateChange(ctx sdk.Context, pool types.PoolI, exit
 		return err
 	}
 
-	err = k.SetPool(ctx, pool)
+	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err
 	}
 
-	ctx.EventManager().EmitEvent(types.CreateRemoveLiquidityEvent(ctx, exiter, pool.GetId(), exitCoins))
+	events.EmitRemoveLiquidityEvent(ctx, exiter, pool.GetId(), exitCoins)
 	k.hooks.AfterExitPool(ctx, exiter, pool.GetId(), numShares, exitCoins)
 	k.RecordTotalLiquidityDecrease(ctx, exitCoins)
 	return nil

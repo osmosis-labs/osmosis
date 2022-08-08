@@ -46,34 +46,32 @@ import (
 
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
-	"github.com/osmosis-labs/bech32-ibc/x/bech32ibc"
-	bech32ibckeeper "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/keeper"
-	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
-	bech32ics20keeper "github.com/osmosis-labs/bech32-ibc/x/bech32ics20/keeper"
 
-	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
-	owasm "github.com/osmosis-labs/osmosis/v7/wasmbinding"
-	epochskeeper "github.com/osmosis-labs/osmosis/v7/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/v7/x/epochs/types"
-	gammkeeper "github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v7/x/incentives/keeper"
-	incentivestypes "github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
-	mintkeeper "github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
-	minttypes "github.com/osmosis-labs/osmosis/v7/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v7/x/pool-incentives"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v7/x/pool-incentives/types"
-	"github.com/osmosis-labs/osmosis/v7/x/superfluid"
-	superfluidkeeper "github.com/osmosis-labs/osmosis/v7/x/superfluid/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
+	owasm "github.com/osmosis-labs/osmosis/v10/wasmbinding"
+	epochskeeper "github.com/osmosis-labs/osmosis/v10/x/epochs/keeper"
+	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v10/x/incentives/keeper"
+	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	mintkeeper "github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
+	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v10/x/pool-incentives"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v10/x/superfluid"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v10/x/txfees"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v10/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 )
 
 type AppKeepers struct {
@@ -100,10 +98,9 @@ type AppKeepers struct {
 	IBCKeeper            *ibckeeper.Keeper
 	ICAHostKeeper        *icahostkeeper.Keeper
 	TransferKeeper       *ibctransferkeeper.Keeper
-	Bech32IBCKeeper      *bech32ibckeeper.Keeper
-	Bech32ICS20Keeper    *bech32ics20keeper.Keeper
 	EvidenceKeeper       *evidencekeeper.Keeper
 	GAMMKeeper           *gammkeeper.Keeper
+	TwapKeeper           *twap.Keeper
 	LockupKeeper         *lockupkeeper.Keeper
 	EpochsKeeper         *epochskeeper.Keeper
 	IncentivesKeeper     *incentiveskeeper.Keeper
@@ -124,6 +121,7 @@ type AppKeepers struct {
 	memKeys map[string]*sdk.MemoryStoreKey
 }
 
+// InitNormalKeepers initializes all 'normal' keepers (account, app, bank, auth, staking, distribution, slashing, transfer, gamm, IBC router, pool incentives, governance, mint, txfees keepers).
 func (appKeepers *AppKeepers) InitNormalKeepers(
 	appCodec codec.Codec,
 	bApp *baseapp.BaseApp,
@@ -231,22 +229,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
-	appKeepers.Bech32IBCKeeper = bech32ibckeeper.NewKeeper(
-		appKeepers.IBCKeeper.ChannelKeeper, appCodec, appKeepers.keys[bech32ibctypes.StoreKey],
-		appKeepers.TransferKeeper,
-	)
-
-	// TODO: Should we be passing this instead of bank in many places?
-	// Where do we want send coins to be cross-chain?
-	appKeepers.Bech32ICS20Keeper = bech32ics20keeper.NewKeeper(
-		appKeepers.IBCKeeper.ChannelKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.TransferKeeper,
-		appKeepers.Bech32IBCKeeper,
-		appKeepers.TransferKeeper,
-		appCodec,
-	)
-
 	// create evidence keeper with router
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	appKeepers.EvidenceKeeper = evidencekeeper.NewKeeper(
@@ -261,6 +243,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(gammtypes.ModuleName),
 		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.DistrKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
+
+	appKeepers.TwapKeeper = twap.NewKeeper(
+		appKeepers.keys[twaptypes.StoreKey],
+		appKeepers.tkeys[twaptypes.TransientStoreKey],
+		appKeepers.GetSubspace(twaptypes.ModuleName),
+		appKeepers.GAMMKeeper)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appCodec,
@@ -279,6 +267,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.LockupKeeper,
 		appKeepers.EpochsKeeper,
+		appKeepers.DistrKeeper,
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
@@ -374,7 +363,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(*appKeepers.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
-		AddRoute(bech32ibctypes.RouterKey, bech32ibc.NewBech32IBCProposalHandler(*appKeepers.Bech32IBCKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper))
 
@@ -390,6 +378,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.GovKeeper = &govKeeper
 }
 
+// InitSpecialKeepers initiates special keepers (crisis appkeeper, upgradekeeper, params keeper)
 func (appKeepers *AppKeepers) InitSpecialKeepers(
 	appCodec codec.Codec,
 	bApp *baseapp.BaseApp,
@@ -456,6 +445,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	return paramsKeeper
 }
 
+// SetupHooks sets up hooks for modules.
 func (appKeepers *AppKeepers) SetupHooks() {
 	// For every module that has hooks set on it,
 	// you must check InitNormalKeepers to ensure that its not passed by de-reference
@@ -474,6 +464,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		gammtypes.NewMultiGammHooks(
 			// insert gamm hooks receivers here
 			appKeepers.PoolIncentivesKeeper.Hooks(),
+			appKeepers.TwapKeeper.GammHooks(),
 		),
 	)
 
@@ -532,6 +523,7 @@ func KVStoreKeys() []string {
 		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
 		gammtypes.StoreKey,
+		twaptypes.StoreKey,
 		lockuptypes.StoreKey,
 		incentivestypes.StoreKey,
 		epochstypes.StoreKey,
@@ -539,7 +531,6 @@ func KVStoreKeys() []string {
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,
 		superfluidtypes.StoreKey,
-		bech32ibctypes.StoreKey,
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
 	}
