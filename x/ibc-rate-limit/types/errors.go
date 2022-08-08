@@ -5,5 +5,6 @@ import (
 )
 
 var (
-	ErrRateLimitExceeded = sdkerrors.Register(ModuleName, 2, "rate limit exceeded")
+	RateLimitExceededMsg = "rate limit exceeded"
+	ErrRateLimitExceeded = sdkerrors.Register(ModuleName, 2, RateLimitExceededMsg)
 )

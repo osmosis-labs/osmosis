@@ -1,7 +1,6 @@
 package osmosisibctesting
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/ibc-go/v3/testing"
 	"github.com/cosmos/ibc-go/v3/testing/simapp"
@@ -12,9 +11,8 @@ type TestChain struct {
 }
 
 // SendMsgsNoCheck overrides ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
-func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
+func (chain *TestChain) SendMsgsWithExpect(expectPass bool, msgs ...sdk.Msg) (*sdk.Result, error) {
 	// ensure the chain has the latest time
-	fmt.Println("HERE")
 	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
 
 	_, r, err := simapp.SignAndDeliver(
@@ -26,7 +24,8 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 		chain.ChainID,
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
-		false, false, chain.SenderPrivKey,
+		expectPass, expectPass,
+		chain.SenderPrivKey,
 	)
 	if err != nil {
 		return nil, err
