@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -29,7 +29,8 @@ func (q Querier) ModuleBalance(goCtx context.Context, _ *types.ModuleBalanceRequ
 	return &types.ModuleBalanceResponse{Coins: q.Keeper.GetModuleBalance(ctx)}, nil
 }
 
-// ModuleLockedAmount Returns locked balance of the module.
+// ModuleLockedAmount returns locked balance of the module,
+// which are all the tokens not unlocking + tokens that are not finished unlocking.
 func (q Querier) ModuleLockedAmount(goCtx context.Context, _ *types.ModuleLockedAmountRequest) (*types.ModuleLockedAmountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.ModuleLockedAmountResponse{Coins: q.Keeper.GetModuleLockedCoins(ctx)}, nil
@@ -54,7 +55,7 @@ func (q Querier) AccountUnlockableCoins(goCtx context.Context, req *types.Accoun
 	return &types.AccountUnlockableCoinsResponse{Coins: q.Keeper.GetAccountUnlockableCoins(ctx, owner)}, nil
 }
 
-// AccountUnlockingCoins returns whole unlocking coins.
+// AccountUnlockingCoins returns the total amount of unlocking coins for a specific account.
 func (q Querier) AccountUnlockingCoins(goCtx context.Context, req *types.AccountUnlockingCoinsRequest) (*types.AccountUnlockingCoinsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -73,7 +74,7 @@ func (q Querier) AccountUnlockingCoins(goCtx context.Context, req *types.Account
 	return &types.AccountUnlockingCoinsResponse{Coins: q.Keeper.GetAccountUnlockingCoins(ctx, owner)}, nil
 }
 
-// AccountLockedCoins Returns a locked coins that can't be withdrawn.
+// AccountLockedCoins returns the total amount of locked coins that can't be withdrawn for a specific account.
 func (q Querier) AccountLockedCoins(goCtx context.Context, req *types.AccountLockedCoinsRequest) (*types.AccountLockedCoinsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -92,7 +93,7 @@ func (q Querier) AccountLockedCoins(goCtx context.Context, req *types.AccountLoc
 	return &types.AccountLockedCoinsResponse{Coins: q.Keeper.GetAccountLockedCoins(ctx, owner)}, nil
 }
 
-// AccountLockedPastTime Returns the total locks of an account whose unlock time is beyond timestamp.
+// AccountLockedPastTime returns the locks of an account whose unlock time is beyond provided timestamp.
 func (q Querier) AccountLockedPastTime(goCtx context.Context, req *types.AccountLockedPastTimeRequest) (*types.AccountLockedPastTimeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -111,7 +112,7 @@ func (q Querier) AccountLockedPastTime(goCtx context.Context, req *types.Account
 	return &types.AccountLockedPastTimeResponse{Locks: q.Keeper.GetAccountLockedPastTime(ctx, owner, req.Timestamp)}, nil
 }
 
-// AccountUnlockedBeforeTime Returns the total unlocks of an account whose unlock time is before timestamp.
+// AccountUnlockedBeforeTime returns locks of an account of which unlock time is before the provided timestamp.
 func (q Querier) AccountUnlockedBeforeTime(goCtx context.Context, req *types.AccountUnlockedBeforeTimeRequest) (*types.AccountUnlockedBeforeTimeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -130,7 +131,8 @@ func (q Querier) AccountUnlockedBeforeTime(goCtx context.Context, req *types.Acc
 	return &types.AccountUnlockedBeforeTimeResponse{Locks: q.Keeper.GetAccountUnlockedBeforeTime(ctx, owner, req.Timestamp)}, nil
 }
 
-// AccountLockedPastTimeDenom is equal to GetAccountLockedPastTime but denom specific.
+// AccountLockedPastTimeDenom returns the locks of an account whose unlock time is beyond provided timestamp, limited to locks with
+// the specified denom. Equivalent to `AccountLockedPastTime` but denom specific.
 func (q Querier) AccountLockedPastTimeDenom(goCtx context.Context, req *types.AccountLockedPastTimeDenomRequest) (*types.AccountLockedPastTimeDenomResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -149,7 +151,7 @@ func (q Querier) AccountLockedPastTimeDenom(goCtx context.Context, req *types.Ac
 	return &types.AccountLockedPastTimeDenomResponse{Locks: q.Keeper.GetAccountLockedPastTimeDenom(ctx, owner, req.Denom, req.Timestamp)}, nil
 }
 
-// LockedByID Returns lock by lock ID.
+// LockedByID returns lock by lock ID.
 func (q Querier) LockedByID(goCtx context.Context, req *types.LockedRequest) (*types.LockedResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -171,7 +173,7 @@ func (q Querier) SyntheticLockupsByLockupID(goCtx context.Context, req *types.Sy
 	return &types.SyntheticLockupsByLockupIDResponse{SyntheticLocks: synthLocks}, nil
 }
 
-// AccountLockedLongerDuration Returns account locked with duration longer than specified.
+// AccountLockedLongerDuration returns locks of an account with duration longer than specified.
 func (q Querier) AccountLockedLongerDuration(goCtx context.Context, req *types.AccountLockedLongerDurationRequest) (*types.AccountLockedLongerDurationResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -191,7 +193,7 @@ func (q Querier) AccountLockedLongerDuration(goCtx context.Context, req *types.A
 	return &types.AccountLockedLongerDurationResponse{Locks: locks}, nil
 }
 
-// AccountLockedLongerDurationDenom Returns account locked with duration longer than specified with specific denom.
+// AccountLockedLongerDurationDenom returns locks of an account with duration longer than specified with specific denom.
 func (q Querier) AccountLockedLongerDurationDenom(goCtx context.Context, req *types.AccountLockedLongerDurationDenomRequest) (*types.AccountLockedLongerDurationDenomResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -231,7 +233,8 @@ func (q Querier) AccountLockedDuration(goCtx context.Context, req *types.Account
 	return &types.AccountLockedDurationResponse{Locks: locks}, nil
 }
 
-// AccountLockedPastTimeNotUnlockingOnly Returns locked records of an account with unlock time beyond timestamp excluding tokens started unlocking.
+// AccountLockedPastTimeNotUnlockingOnly returns locks of an account with unlock time beyond
+// given timestamp excluding locks that has started unlocking.
 func (q Querier) AccountLockedPastTimeNotUnlockingOnly(goCtx context.Context, req *types.AccountLockedPastTimeNotUnlockingOnlyRequest) (*types.AccountLockedPastTimeNotUnlockingOnlyResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -250,7 +253,8 @@ func (q Querier) AccountLockedPastTimeNotUnlockingOnly(goCtx context.Context, re
 	return &types.AccountLockedPastTimeNotUnlockingOnlyResponse{Locks: q.Keeper.GetAccountLockedPastTimeNotUnlockingOnly(ctx, owner, req.Timestamp)}, nil
 }
 
-// AccountLockedLongerDurationNotUnlockingOnly Returns account locked records with longer duration excluding tokens started unlocking.
+// AccountLockedLongerDurationNotUnlockingOnly returns locks of an account with longer duration
+// than the specified duration, excluding tokens that has started unlocking.
 func (q Querier) AccountLockedLongerDurationNotUnlockingOnly(goCtx context.Context, req *types.AccountLockedLongerDurationNotUnlockingOnlyRequest) (*types.AccountLockedLongerDurationNotUnlockingOnlyResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -269,6 +273,7 @@ func (q Querier) AccountLockedLongerDurationNotUnlockingOnly(goCtx context.Conte
 	return &types.AccountLockedLongerDurationNotUnlockingOnlyResponse{Locks: q.Keeper.GetAccountLockedLongerDurationNotUnlockingOnly(ctx, owner, req.Duration)}, nil
 }
 
+// LockedDenom returns the total amount of denom locked throughout all locks.
 func (q Querier) LockedDenom(goCtx context.Context, req *types.LockedDenomRequest) (*types.LockedDenomResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

@@ -19,6 +19,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -36,20 +37,23 @@ import (
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/keepers"
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
-	v3 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v7/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v7/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v10/app/keepers"
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v12"
+	v3 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
 )
 
 const appName = "OsmosisApp"
@@ -84,10 +88,10 @@ var (
 	// EmptyWasmOpts defines a type alias for a list of wasm options.
 	EmptyWasmOpts []wasm.Option
 
-	_ App = (*OsmosisApp)(nil)
+	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade}
-	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade}
+	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
 // GetWasmEnabledProposals parses the WasmProposalsEnabled and
@@ -125,10 +129,11 @@ type OsmosisApp struct {
 	invCheckPeriod    uint
 
 	mm           *module.Manager
-	sm           *module.SimulationManager
+	sm           *simtypes.Manager
 	configurator module.Configurator
 }
 
+// init sets DefaultNodeHome to default osmosisd install location.
 func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -223,16 +228,11 @@ func NewOsmosisApp(
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 
 	// Tell the app's module manager how to set the order of BeginBlockers, which are run at the beginning of every block.
-	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
+	app.mm.SetOrderBeginBlockers(orderBeginBlockers(app.mm.ModuleNames())...)
 
 	// Tell the app's module manager how to set the order of EndBlockers, which are run at the end of every block.
 	app.mm.SetOrderEndBlockers(OrderEndBlockers(app.mm.ModuleNames())...)
 
-	// NOTE: The genutils moodule must occur after staking so that pools are
-	// properly initialized with tokens from genesis accounts.
-	// NOTE: Capability module must occur first so that it can initialize any capabilities
-	// so that other modules that want to create or claim capabilities afterwards in InitChain
-	// can do so safely.
 	app.mm.SetOrderInitGenesis(OrderInitGenesis(app.mm.ModuleNames())...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -243,12 +243,9 @@ func NewOsmosisApp(
 	app.setupUpgradeHandlers()
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
-	//
-	// NOTE: this is not required apps that don't use the simulator for fuzz testing
-	// transactions
-	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig, skipGenesisInvariants)...)
+	app.sm = createSimulationManager(app, encodingConfig, skipGenesisInvariants)
 
-	app.sm.RegisterStoreDecoders()
+	// app.sm.RegisterStoreDecoders()
 
 	// add test gRPC service for testing gRPC queries in isolation
 	testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
@@ -277,6 +274,16 @@ func NewOsmosisApp(
 	)
 	app.SetEndBlocker(app.EndBlocker)
 
+	// Register snapshot extensions to enable state-sync for wasm.
+	if manager := app.SnapshotManager(); manager != nil {
+		err := manager.RegisterExtensions(
+			wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), app.WasmKeeper),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+		}
+	}
+
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
@@ -297,6 +304,10 @@ func NewOsmosisApp(
 func MakeCodecs() (codec.Codec, *codec.LegacyAmino) {
 	config := MakeEncodingConfig()
 	return config.Marshaler, config.Amino
+}
+
+func (app *OsmosisApp) GetBaseApp() *baseapp.BaseApp {
+	return app.BaseApp
 }
 
 // Name returns the name of the App.
@@ -351,16 +362,8 @@ func (app *OsmosisApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
-// GetSubspace returns a param subspace for a given module name.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *OsmosisApp) GetSubspace(moduleName string) paramstypes.Subspace {
-	subspace, _ := app.ParamsKeeper.GetSubspace(moduleName)
-	return subspace
-}
-
 // SimulationManager implements the SimulationApp interface.
-func (app *OsmosisApp) SimulationManager() *module.SimulationManager {
+func (app *OsmosisApp) SimulationManager() *simtypes.Manager {
 	return app.sm
 }
 

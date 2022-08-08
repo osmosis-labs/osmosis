@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v7/app"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,12 +61,14 @@ func TestInitGenesis(t *testing.T) {
 	coins = app.LockupKeeper.GetAccountLockedCoins(ctx, acc2)
 	require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 5000000).String())
 
-	// TODO: module account balance is kept by bank keeper and no need to check here
-	// coins = app.LockupKeeper.GetModuleBalance(ctx)
-	// require.Equal(t, coins.String(), sdk.NewInt64Coin("foo", 30000000).String())
-
 	lastLockId := app.LockupKeeper.GetLastLockID(ctx)
 	require.Equal(t, lastLockId, uint64(10))
+
+	acc := app.LockupKeeper.GetPeriodLocksAccumulation(ctx, types.QueryCondition{
+		Denom:    "foo",
+		Duration: time.Second,
+	})
+	require.Equal(t, sdk.NewInt(30000000), acc)
 }
 
 func TestExportGenesis(t *testing.T) {
@@ -125,7 +127,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	encodingConfig := osmoapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	am := lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
+	am := lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 
 	err := simapp.FundAccount(app.BankKeeper, ctx, acc2, sdk.Coins{sdk.NewInt64Coin("foo", 5000000)})
 	require.NoError(t, err)
@@ -137,7 +139,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		app := osmoapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := lockup.NewAppModule(appCodec, *app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
+		am := lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }

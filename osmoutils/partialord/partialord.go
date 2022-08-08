@@ -3,7 +3,7 @@ package partialord
 import (
 	"sort"
 
-	"github.com/osmosis-labs/osmosis/v7/osmoutils/partialord/internal/dag"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils/partialord/internal/dag"
 )
 
 type PartialOrdering struct {
@@ -74,6 +74,18 @@ func (ord *PartialOrdering) LastElements(elems ...string) {
 	err := ord.dag.AddLastElements(elems...)
 	handleDAGErr(err)
 	ord.lastSealed = true
+}
+
+// Sequence sets a sequence of ordering constraints.
+// So if were making an ordering over {A, B, C, D, E}, and elems provided is {D, B, A}
+// then we are guaranteed that the total ordering will have D comes before B comes before A.
+// (They're may be elements interspersed, e.g. {D, C, E, B, A} is a valid ordering)
+func (ord *PartialOrdering) Sequence(seq ...string) {
+	// We make every node in the sequence have a prior node
+	for i := 0; i < (len(seq) - 1); i++ {
+		err := ord.dag.AddEdge(seq[i], seq[i+1])
+		handleDAGErr(err)
+	}
 }
 
 // TotalOrdering returns a deterministically chosen total ordering that satisfies all specified

@@ -7,11 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/keepers"
-	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v7/x/lockup/keeper"
-	mintkeeper "github.com/osmosis-labs/osmosis/v7/x/mint/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v7/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v10/app/keepers"
+	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
 func CreateUpgradeHandler(
@@ -56,7 +55,9 @@ func CreateUpgradeHandler(
 		keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
 
 		// Set the supply offset from the developer vesting account
-		mintkeeper.SetInitialSupplyOffsetDuringMigration(ctx, *keepers.MintKeeper)
+		if err := keepers.MintKeeper.SetInitialSupplyOffsetDuringMigration(ctx); err != nil {
+			panic(err)
+		}
 
 		return newVM, err
 	}

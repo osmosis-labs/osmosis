@@ -2,51 +2,23 @@ package keeper_test
 
 import (
 	gocontext "context"
-	"time"
 
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryEpochInfos() {
 	suite.SetupTest()
 	queryClient := suite.queryClient
 
-	chainStartTime := suite.Ctx.BlockHeader().Time
-	epochInfo := types.EpochInfo{
-		Identifier:            "day",
-		StartTime:             chainStartTime,
-		Duration:              time.Hour * 24,
-		CurrentEpoch:          0,
-		CurrentEpochStartTime: chainStartTime,
-		EpochCountingStarted:  false,
-	}
-	suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochInfo)
-	epochInfo = types.EpochInfo{
-		Identifier:            "week",
-		StartTime:             chainStartTime,
-		Duration:              time.Hour * 24 * 7,
-		CurrentEpoch:          0,
-		CurrentEpochStartTime: chainStartTime,
-		EpochCountingStarted:  false,
-	}
-	suite.App.EpochsKeeper.SetEpochInfo(suite.Ctx, epochInfo)
-
-	// Invalid param
+	// Check that querying epoch infos on default genesis returns the default genesis epoch infos
 	epochInfosResponse, err := queryClient.EpochInfos(gocontext.Background(), &types.QueryEpochsInfoRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Len(epochInfosResponse.Epochs, 2)
+	suite.Require().Len(epochInfosResponse.Epochs, 3)
+	expectedEpochs := types.DefaultGenesis().Epochs
+	for id := range expectedEpochs {
+		expectedEpochs[id].StartTime = suite.Ctx.BlockTime()
+		expectedEpochs[id].CurrentEpochStartHeight = suite.Ctx.BlockHeight()
+	}
 
-	// check if EpochInfos are correct
-	suite.Require().Equal(epochInfosResponse.Epochs[0].Identifier, "day")
-	suite.Require().Equal(epochInfosResponse.Epochs[0].StartTime, chainStartTime)
-	suite.Require().Equal(epochInfosResponse.Epochs[0].Duration, time.Hour*24)
-	suite.Require().Equal(epochInfosResponse.Epochs[0].CurrentEpoch, int64(0))
-	suite.Require().Equal(epochInfosResponse.Epochs[0].CurrentEpochStartTime, chainStartTime)
-	suite.Require().Equal(epochInfosResponse.Epochs[0].EpochCountingStarted, false)
-	suite.Require().Equal(epochInfosResponse.Epochs[1].Identifier, "week")
-	suite.Require().Equal(epochInfosResponse.Epochs[1].StartTime, chainStartTime)
-	suite.Require().Equal(epochInfosResponse.Epochs[1].Duration, time.Hour*24*7)
-	suite.Require().Equal(epochInfosResponse.Epochs[1].CurrentEpoch, int64(0))
-	suite.Require().Equal(epochInfosResponse.Epochs[1].CurrentEpochStartTime, chainStartTime)
-	suite.Require().Equal(epochInfosResponse.Epochs[1].EpochCountingStarted, false)
+	suite.Require().Equal(expectedEpochs, epochInfosResponse.Epochs)
 }

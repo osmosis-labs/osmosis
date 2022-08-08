@@ -1,10 +1,18 @@
+/*
+The txfees modules allows nodes to easily support many
+tokens for usage as txfees, while letting node operators
+only specify their tx fee parameters for a single "base" asset.
+
+- Adds a whitelist of tokens that can be used as fees on the chain.
+- Any token not on this list cannot be provided as a tx fee.
+- Adds a new SDK message for creating governance proposals for adding new TxFee denoms.
+*/
 package txfees
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -16,11 +24,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v10/x/txfees/client/cli"
+	"github.com/osmosis-labs/osmosis/v10/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 )
 
 var (
@@ -36,11 +43,10 @@ const ModuleName = types.ModuleName
 
 // AppModuleBasic implements the AppModuleBasic interface for the txfees module.
 type AppModuleBasic struct {
-	cdc codec.Codec
 }
 
-func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
-	return AppModuleBasic{cdc: cdc}
+func NewAppModuleBasic() AppModuleBasic {
+	return AppModuleBasic{}
 }
 
 // Name returns the txfees module's name.
@@ -101,9 +107,9 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(cdc),
+		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
 	}
 }
@@ -165,36 +171,6 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // returns no validator updates.
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
-}
-
-// ___________________________________________________________________________
-
-// AppModuleSimulation functions
-
-// GenerateGenesisState creates a randomized GenState of the pool-incentives module.
-func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// gen := types.DefaultGenesis()
-	// gen.Basedenom = sdk.DefaultBondDenom
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(types.DefaultGenesis())
-}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-// RandomizedParams creates randomized txfees param changes for the simulator.
-func (am AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return nil
-}
-
-// RegisterStoreDecoder registers a decoder for supply module's types.
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-}
-
-// WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return nil // TODO
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

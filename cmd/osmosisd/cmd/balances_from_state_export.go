@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v7/app/params"
-	"github.com/osmosis-labs/osmosis/v7/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -43,6 +43,7 @@ type DerivedAccount struct {
 	TotalBalances       sdk.Coins            `json:"total_balances"`
 }
 
+// newDerivedAccount returns a new derived account.
 func newDerivedAccount(address string) DerivedAccount {
 	return DerivedAccount{
 		Address:        address,
@@ -53,6 +54,7 @@ func newDerivedAccount(address string) DerivedAccount {
 	}
 }
 
+// underlyingCoins returns liquidity pool's underlying coin balances.
 func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sdk.Coins {
 	balances := sdk.Coins{}
 	convertAgain := false
@@ -115,10 +117,11 @@ func underlyingCoinsForSelectPools(
 	return balancesByPool
 }
 
+// getGenStateFromPath returns a JSON genState message from inputted path.
 func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, error) {
 	genState := make(map[string]json.RawMessage)
 
-	genesisFile, err := os.Open(genesisFilePath)
+	genesisFile, err := os.Open(filepath.Clean(genesisFilePath))
 	if err != nil {
 		return genState, err
 	}
@@ -140,7 +143,6 @@ func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, er
 }
 
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json.
-//nolint:ineffassign // because of  accounts = authtypes.SanitizeGenesisAccounts(accounts)
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-derive-balances [input-genesis-file] [output-snapshot-json]",
@@ -175,14 +177,6 @@ Example:
 					return err
 				}
 			}
-
-			authGenesis := authtypes.GenesisState{}
-			clientCtx.Codec.MustUnmarshalJSON(genState["auth"], &authGenesis)
-			accounts, err := authtypes.UnpackAccounts(authGenesis.Accounts)
-			if err != nil {
-				panic(err)
-			}
-			accounts = authtypes.SanitizeGenesisAccounts(accounts)
 
 			// Produce the map of address to total atom balance, both staked and UnbondingStake
 			snapshotAccs := make(map[string]DerivedAccount)

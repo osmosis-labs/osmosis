@@ -6,14 +6,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v7/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 )
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
 	queryClient types.QueryClient
+	msgServer   types.MsgServer
+	// defaultDenom is on the suite, as it depends on the creator test address.
+	defaultDenom string
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -32,4 +36,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.SetupTokenFactory()
 
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+	suite.msgServer = keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)
+}
+
+func (suite *KeeperTestSuite) CreateDefaultDenom() {
+	res, _ := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
+	suite.defaultDenom = res.GetNewTokenDenom()
 }

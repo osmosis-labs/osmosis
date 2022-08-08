@@ -7,41 +7,51 @@ import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v7/x/incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v10/x/incentives/types";
 
 service Msg {
   rpc CreateGauge(MsgCreateGauge) returns (MsgCreateGaugeResponse);
   rpc AddToGauge(MsgAddToGauge) returns (MsgAddToGaugeResponse);
 }
 
+// MsgCreateGauge creates a gague to distribute rewards to users
 message MsgCreateGauge {
-  // flag to show if it's perpetual or multi-epoch
-  // distribution incentives by third party
+  // is_perpetual shows if it's a perpetual or non-perpetual gauge
+  // Non-perpetual gauges distribute their tokens equally per epoch while the
+  // gauge is in the active period. Perpetual gauges distribute all their tokens
+  // at a single time and only distribute their tokens again once the gauge is
+  // refilled
   bool is_perpetual = 1;
-
+  // owner is the address of gauge creator
   string owner = 2 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
-  // distribute condition of a lock which meet one of these conditions
+  // distribute_to show which lock the gauge should distribute to by time
+  // duration or by timestamp
   osmosis.lockup.QueryCondition distribute_to = 3
       [ (gogoproto.nullable) = false ];
-  // can distribute multiple coins
+  // coins are coin(s) to be distributed by the gauge
   repeated cosmos.base.v1beta1.Coin coins = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-  // distribution start time
+  // start_time is the distribution start time
   google.protobuf.Timestamp start_time = 5 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"timestamp\""
   ];
-  // number of epochs distribution will be done
+  // num_epochs_paid_over is the number of epochs distribution will be completed
+  // over
   uint64 num_epochs_paid_over = 6;
 }
 message MsgCreateGaugeResponse {}
 
+// MsgAddToGauge adds coins to a previously created gauge
 message MsgAddToGauge {
+  // owner is the gauge owner's address
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
+  // gauge_id is the ID of gauge that rewards are getting added to
   uint64 gauge_id = 2;
+  // rewards are the coin(s) to add to gauge
   repeated cosmos.base.v1beta1.Coin rewards = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"

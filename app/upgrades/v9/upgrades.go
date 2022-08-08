@@ -10,15 +10,15 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icacontrollertypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/keepers"
-	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v10/app/keepers"
+	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
 )
 
 const preUpgradeAppVersion = 8
@@ -37,6 +37,9 @@ func CreateUpgradeHandler(
 		if err := keepers.UpgradeKeeper.SetAppVersion(ctx, preUpgradeAppVersion); err != nil {
 			return nil, err
 		}
+
+		// save oldIcaVersion, so we can skip icahost.InitModule in longer term tests.
+		oldIcaVersion := fromVM[icatypes.ModuleName]
 
 		// Add Interchain Accounts host module
 		// set the ICS27 consensus version so InitGenesis is not run
@@ -79,7 +82,10 @@ func CreateUpgradeHandler(
 			panic("mm.Modules[icatypes.ModuleName] is not of type ica.AppModule")
 		}
 
-		icamodule.InitModule(ctx, controllerParams, hostParams)
+		// skip InitModule in upgrade tests after the upgrade has gone through.
+		if oldIcaVersion != fromVM[icatypes.ModuleName] {
+			icamodule.InitModule(ctx, controllerParams, hostParams)
+		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}

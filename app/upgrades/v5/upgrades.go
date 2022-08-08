@@ -2,7 +2,7 @@ package v5
 
 import (
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v3/modules/core/03-connection/types"
-	bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
+	// bech32ibctypes "github.com/osmosis-labs/bech32-ibc/x/bech32ibc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -10,9 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app/keepers"
-	"github.com/osmosis-labs/osmosis/v7/app/upgrades"
-	txfeestypes "github.com/osmosis-labs/osmosis/v7/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v10/app/keepers"
+	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
+	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 )
 
 func CreateUpgradeHandler(
@@ -46,7 +46,7 @@ func CreateUpgradeHandler(
 		// Override versions for authz & bech32ibctypes module as to not skip their
 		// InitGenesis for txfees module, we will override txfees ourselves.
 		delete(fromVM, authz.ModuleName)
-		delete(fromVM, bech32ibctypes.ModuleName)
+		// delete(fromVM, bech32ibctypes.ModuleName)
 
 		newVM, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {

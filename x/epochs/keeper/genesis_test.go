@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/osmosis-labs/osmosis/v7/app"
+	simapp "github.com/osmosis-labs/osmosis/v10/app"
 
-	"github.com/osmosis-labs/osmosis/v7/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 )
 
 func TestEpochsExportGenesis(t *testing.T) {
@@ -20,22 +20,14 @@ func TestEpochsExportGenesis(t *testing.T) {
 	chainStartHeight := ctx.BlockHeight()
 
 	genesis := app.EpochsKeeper.ExportGenesis(ctx)
-	require.Len(t, genesis.Epochs, 2)
+	require.Len(t, genesis.Epochs, 3)
 
-	require.Equal(t, genesis.Epochs[0].Identifier, "day")
-	require.Equal(t, genesis.Epochs[0].StartTime, chainStartTime)
-	require.Equal(t, genesis.Epochs[0].Duration, time.Hour*24)
-	require.Equal(t, genesis.Epochs[0].CurrentEpoch, int64(0))
-	require.Equal(t, genesis.Epochs[0].CurrentEpochStartHeight, chainStartHeight)
-	require.Equal(t, genesis.Epochs[0].CurrentEpochStartTime, chainStartTime)
-	require.Equal(t, genesis.Epochs[0].EpochCountingStarted, false)
-	require.Equal(t, genesis.Epochs[1].Identifier, "week")
-	require.Equal(t, genesis.Epochs[1].StartTime, chainStartTime)
-	require.Equal(t, genesis.Epochs[1].Duration, time.Hour*24*7)
-	require.Equal(t, genesis.Epochs[1].CurrentEpoch, int64(0))
-	require.Equal(t, genesis.Epochs[1].CurrentEpochStartHeight, chainStartHeight)
-	require.Equal(t, genesis.Epochs[1].CurrentEpochStartTime, chainStartTime)
-	require.Equal(t, genesis.Epochs[1].EpochCountingStarted, false)
+	expectedEpochs := types.DefaultGenesis().Epochs
+	for i := 0; i < len(expectedEpochs); i++ {
+		expectedEpochs[i].CurrentEpochStartHeight = chainStartHeight
+		expectedEpochs[i].CurrentEpochStartTime = chainStartTime
+	}
+	require.Equal(t, expectedEpochs, genesis.Epochs)
 }
 
 func TestEpochsInitGenesis(t *testing.T) {

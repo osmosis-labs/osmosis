@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/utils"
-	"github.com/osmosis-labs/osmosis/v7/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/utils"
+	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -24,6 +24,11 @@ func NewMsgServerImpl(keeper *Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+// LockTokens locks tokens in either two ways.
+// 1. Add to an existing lock if a lock with the same owner and same duration exists.
+// 2. Create a new lock if not.
+// A sanity check to ensure given tokens is a single token is done in ValidateBaic.
+// That is, a lock with multiple tokens cannot be created.
 func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockTokens) (*types.MsgLockTokensResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -32,25 +37,27 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 		return nil, err
 	}
 
-	// if there is an existing lock
-	if len(msg.Coins) == 1 {
-		locks, err := server.keeper.AddToExistingLock(ctx, owner, msg.Coins[0], msg.Duration)
-		if err != nil {
-			return nil, err
-		}
-		if len(locks) > 0 {
-			ctx.EventManager().EmitEvents(sdk.Events{
-				sdk.NewEvent(
-					types.TypeEvtAddTokensToLock,
-					sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(locks[0].ID)),
-					sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner),
-					sdk.NewAttribute(types.AttributePeriodLockAmount, msg.Coins.String()),
-				),
-			})
-			return &types.MsgLockTokensResponse{ID: locks[0].ID}, nil
-		}
+	// check if there's an existing lock from the same owner with the same duration.
+	// If so, simply add tokens to the existing lock.
+	locks, err := server.keeper.AddToExistingLock(ctx, owner, msg.Coins[0], msg.Duration)
+	if err != nil {
+		return nil, err
 	}
 
+	// return the lock id of the existing lock when successfully added to the existing lock.
+	if len(locks) > 0 {
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtAddTokensToLock,
+				sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(locks[0].ID)),
+				sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner),
+				sdk.NewAttribute(types.AttributePeriodLockAmount, msg.Coins.String()),
+			),
+		})
+		return &types.MsgLockTokensResponse{ID: locks[0].ID}, nil
+	}
+
+	// if the owner + duration combination is new, create a new lock.
 	lock, err := server.keeper.CreateLock(ctx, owner, msg.Coins, msg.Duration)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
@@ -70,6 +77,8 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 	return &types.MsgLockTokensResponse{ID: lock.ID}, nil
 }
 
+// BeginUnlocking begins unlocking of the specified lock.
+// The lock would enter the unlocking queue, with the endtime of the lock set as block time + duration.
 func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBeginUnlocking) (*types.MsgBeginUnlockingResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -99,6 +108,7 @@ func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBegi
 	return &types.MsgBeginUnlockingResponse{}, nil
 }
 
+// BeginUnlockingAll begins unlocking for all the locks that the account has by iterating all the not-unlocking locks the account holds.
 func (server msgServer) BeginUnlockingAll(goCtx context.Context, msg *types.MsgBeginUnlockingAll) (*types.MsgBeginUnlockingAllResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -122,6 +132,7 @@ func (server msgServer) BeginUnlockingAll(goCtx context.Context, msg *types.MsgB
 		),
 	}
 	for _, lock := range unlocks {
+		lock := lock
 		events = events.AppendEvent(createBeginUnlockEvent(&lock))
 	}
 	ctx.EventManager().EmitEvents(events)
@@ -139,21 +150,25 @@ func createBeginUnlockEvent(lock *types.PeriodLock) sdk.Event {
 	)
 }
 
+// ExtendLockup extends the duration of the existing lock.
+// ExtendLockup would fail if the original lock's duration is longer than the new duration,
+// OR if the lock is currently unlocking OR if the original lock has a synthetic lock.
 func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtendLockup) (*types.MsgExtendLockupResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	err = server.keeper.ExtendLockup(ctx, msg.ID, owner, msg.Duration)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
 	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
-	}
-
-	if msg.Owner != lock.Owner {
-		return nil, sdkerrors.Wrapf(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
-	}
-
-	err = server.keeper.ExtendLockup(ctx, *lock, msg.Duration)
-	if err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

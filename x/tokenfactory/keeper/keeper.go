@@ -5,11 +5,10 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -17,48 +16,35 @@ import (
 
 type (
 	Keeper struct {
-		cdc      codec.Codec
 		storeKey sdk.StoreKey
 
 		paramSpace paramtypes.Subspace
 
-		accountKeeper types.AccountKeeper
-		bankKeeper    types.BankKeeper
-		distrKeeper   types.DistrKeeper
+		accountKeeper       types.AccountKeeper
+		bankKeeper          types.BankKeeper
+		communityPoolKeeper types.CommunityPoolKeeper
 	}
 )
 
-func permContains(perms []string, perm string) bool {
-	for _, v := range perms {
-		if v == perm {
-			return true
-		}
-	}
-
-	return false
-}
-
 // NewKeeper returns a new instance of the x/tokenfactory keeper
 func NewKeeper(
-	cdc codec.Codec,
 	storeKey sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	distrKeeper types.DistrKeeper,
+	communityPoolKeeper types.CommunityPoolKeeper,
 ) Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return Keeper{
-		cdc:        cdc,
 		storeKey:   storeKey,
 		paramSpace: paramSpace,
 
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
-		distrKeeper:   distrKeeper,
+		accountKeeper:       accountKeeper,
+		bankKeeper:          bankKeeper,
+		communityPoolKeeper: communityPoolKeeper,
 	}
 }
 

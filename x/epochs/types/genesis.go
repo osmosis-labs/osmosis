@@ -15,8 +15,9 @@ func NewGenesisState(epochs []EpochInfo) *GenesisState {
 // DefaultGenesis returns the default Capability genesis state.
 func DefaultGenesis() *GenesisState {
 	epochs := []EpochInfo{
+		NewGenesisEpochInfo("day", time.Hour*24), // alphabetical order
+		NewGenesisEpochInfo("hour", time.Hour),
 		NewGenesisEpochInfo("week", time.Hour*24*7),
-		NewGenesisEpochInfo("day", time.Hour*24),
 	}
 	return NewGenesisState(epochs)
 }
@@ -24,19 +25,32 @@ func DefaultGenesis() *GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	// TODO: Epochs identifiers should be unique
 	epochIdentifiers := map[string]bool{}
 	for _, epoch := range gs.Epochs {
-		if epoch.Identifier == "" {
-			return errors.New("epoch identifier should NOT be empty")
+		if err := epoch.Validate(); err != nil {
+			return err
 		}
 		if epochIdentifiers[epoch.Identifier] {
 			return errors.New("epoch identifier should be unique")
 		}
-		if epoch.Duration == 0 {
-			return errors.New("epoch duration should NOT be 0")
-		}
 		epochIdentifiers[epoch.Identifier] = true
+	}
+	return nil
+}
+
+// Validate also validates epoch info.
+func (epoch EpochInfo) Validate() error {
+	if epoch.Identifier == "" {
+		return errors.New("epoch identifier should NOT be empty")
+	}
+	if epoch.Duration == 0 {
+		return errors.New("epoch duration should NOT be 0")
+	}
+	if epoch.CurrentEpoch < 0 {
+		return errors.New("epoch CurrentEpoch must be non-negative")
+	}
+	if epoch.CurrentEpochStartHeight < 0 {
+		return errors.New("epoch CurrentEpoch must be non-negative")
 	}
 	return nil
 }

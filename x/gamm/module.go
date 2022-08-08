@@ -1,10 +1,18 @@
+/*
+Package gamm contains a variety of generalized automated market maker
+functionality which provides the logic to create and interact with
+liquidity pools on the Osmosis DEX.
+ - Has pool creation, join pool, and exit pool logic
+ - Token swap logic
+ - GAMM pool queries
+*/
+
 package gamm
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -16,20 +24,18 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	simulation "github.com/osmosis-labs/osmosis/v10/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
 
 var (
-	_ module.AppModule           = AppModule{}
-	_ module.AppModuleBasic      = AppModuleBasic{}
-	_ module.AppModuleSimulation = AppModule{}
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
 type AppModuleBasic struct {
@@ -91,9 +97,6 @@ type AppModule struct {
 	ak     types.AccountKeeper
 	bk     types.BankKeeper
 	keeper keeper.Keeper
-
-	accountKeeper stakingtypes.AccountKeeper
-	bankKeeper    stakingtypes.BankKeeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -121,7 +124,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // Route returns the message routing key for the gamm module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(&am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the gamm module's querier route name.
@@ -160,36 +163,23 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-// ___________________________________________________________________________
-
-// AppModuleSimulation functions
-
-// GenerateGenesisState creates a randomized GenState of the gamm module.
-// However, at launch the gamm module has no state, hence this is a no-op.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// simulation.RandomizedGenState(simState)
-}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-// RandomizedParams creates randomized gamm param changes for the simulator.
-// There are no params that we view as sensible to randomize at the moment.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return nil
-	// return simulation.ParamChanges(r)
-}
-
-// RegisterStoreDecoder registers a decoder for supply module's types.
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-}
-
-// WeightedOperations returns all the simulation operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(simState.AppParams, simState.Cdc, am.ak, am.bk, am.keeper)
-}
-
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// **** simulation implementation ****
+// GenerateGenesisState creates a randomized GenState of the gamm module.
+func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
+	DefaultGen := types.DefaultGenesis()
+	// change the pool creation fee denom from uosmo to stake
+	DefaultGen.Params.PoolCreationFee = sdk.NewCoins(simulation.PoolCreationFee)
+	DefaultGenJson := simState.Cdc.MustMarshalJSON(DefaultGen)
+	simState.GenState[types.ModuleName] = DefaultGenJson
+}
+
+func (am AppModule) Actions() []simtypes.Action {
+	return []simtypes.Action{
+		simtypes.NewMsgBasedAction("MsgJoinPool", am.keeper, simulation.RandomJoinPoolMsg),
+		simtypes.NewMsgBasedAction("MsgExitPool", am.keeper, simulation.RandomExitPoolMsg),
+		simtypes.NewMsgBasedAction("CreateUniV2Msg", am.keeper, simulation.RandomCreateUniV2Msg).WithFrequency(simtypes.Rare),
+	}
+}
