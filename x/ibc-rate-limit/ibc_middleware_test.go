@@ -142,3 +142,9 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithoutRateLimitingContract() 
 func (suite *MiddlewareTestSuite) TestReceiveTransferWithoutRateLimitingContract() {
 	suite.AssertReceiveSucceeds(true, suite.NewValidMessage(false))
 }
+
+func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() {
+	suite.chainA.StoreContractCode(&suite.Suite)
+	suite.chainA.InstantiateContract(&suite.Suite)
+	suite.AssertSendSucceeds(true, suite.NewValidMessage(true))
+}
