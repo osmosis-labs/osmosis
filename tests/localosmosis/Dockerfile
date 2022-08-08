@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Build stage
-FROM golang:1.18.2-alpine3.15 as build
+FROM golang:1.19-alpine3.15 as build
 
 RUN set -eux; apk add --no-cache ca-certificates build-base;
 RUN apk add git

@@ -1,5 +1,5 @@
 
-FROM golang:1.18.2-alpine3.15
+FROM golang:1.19-alpine3.15
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apk add pciutils build-base git wget linux-headers \

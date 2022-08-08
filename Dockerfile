@@ -6,7 +6,7 @@ ARG BASE_IMG_TAG=nonroot
 # Build 
 # --------------------------------------------------------
 
-FROM golang:1.18.2-alpine3.15 as build
+FROM golang:1.19-alpine3.15 as build
 
 # linux-headers needed by github.com/zondax/hid
 RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers
