@@ -68,7 +68,7 @@ func (q Querier) DistrInfo(ctx context.Context, _ *types.QueryDistrInfoRequest) 
 	return &types.QueryDistrInfoResponse{DistrInfo: q.Keeper.GetDistrInfo(sdkCtx)}, nil
 }
 
-// Params iterates over all gauges, returns lock params.
+// Params return pool-incentives module params.
 func (q Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(sdkCtx)}, nil
