@@ -81,7 +81,7 @@ func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 	store.Set(types.DistrInfoKey, bz)
 }
 
-// validateRecords Validates a list of records to ensure that:
+// validateRecords validates a list of records to ensure that:
 // 1) there are no duplicates,
 // 2) the records are in sorted order.
 // 3) the records only pay to gauges that exist.
