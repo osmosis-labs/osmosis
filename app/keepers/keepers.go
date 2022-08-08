@@ -73,8 +73,8 @@ import (
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v10/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
-	launchpadkeeper "github.com/osmosis-labs/osmosis/v7/x/launchpad/keeper"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad"
+	launchpadkeeper "github.com/osmosis-labs/osmosis/v10/x/launchpad/keeper"
 )
 
 type AppKeepers struct {

@@ -4,7 +4,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad/types"
 )
 
 // RegisterInterfaces registers the interfaces types with the interface registry

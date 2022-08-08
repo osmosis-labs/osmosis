@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad/types"
 )
 
 func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*types.MsgCreateSaleResponse, error) {

@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad/types"
 )
 
 func TestSuites(t *testing.T) {

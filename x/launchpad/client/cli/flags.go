@@ -5,7 +5,7 @@ import (
 
 	flag "github.com/spf13/pflag"
 
-	"github.com/osmosis-labs/osmosis/v7/osmoutils/jsontypes"
+	"github.com/osmosis-labs/osmosis/v10/osmoutils/jsontypes"
 )
 
 const (

@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"

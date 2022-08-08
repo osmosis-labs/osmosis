@@ -65,8 +65,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
-	launchpadmodule "github.com/osmosis-labs/osmosis/v7/x/launchpad/module"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad"
+	launchpadmodule "github.com/osmosis-labs/osmosis/v10/x/launchpad/module"
 )
 
 // moduleAccountPermissions defines module account permissions

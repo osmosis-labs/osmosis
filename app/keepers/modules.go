@@ -40,7 +40,7 @@ import (
 	superfluidclient "github.com/osmosis-labs/osmosis/v10/x/superfluid/client"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees"
-	launchpadmodule "github.com/osmosis-labs/osmosis/v7/x/launchpad/module"
+	launchpadmodule "github.com/osmosis-labs/osmosis/v10/x/launchpad/module"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.

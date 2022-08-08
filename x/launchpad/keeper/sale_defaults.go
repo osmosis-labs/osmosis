@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad/types"
 )
 
 func newSale(treasury string, id uint64, tokenIn string, tokenOut sdk.Coin, start, end time.Time, name, url string) types.Sale {

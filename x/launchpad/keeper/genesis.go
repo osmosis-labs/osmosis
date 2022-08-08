@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

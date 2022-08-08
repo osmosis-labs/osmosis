@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad"
-	"github.com/osmosis-labs/osmosis/v7/x/launchpad/types"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad"
+	"github.com/osmosis-labs/osmosis/v10/x/launchpad/types"
 )
 
 // StoreKey is the store key string for launchpad
