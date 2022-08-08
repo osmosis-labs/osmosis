@@ -27,7 +27,7 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
 }
 
-// The GAMMKeeper gets the pool from poolID.
+// GAMMKeeper gets the pool interface from poolID.
 type GAMMKeeper interface {
 	GetPool(ctx sdk.Context, poolId uint64) (gammtypes.PoolI, error)
 }
