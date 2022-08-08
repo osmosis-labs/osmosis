@@ -25,7 +25,7 @@ func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
 }
 
-// GaugeIds iterates over all gauges,returns gaugeIDs.
+// GaugeIds takes provided gauge request and returns the respective gaugeIDs.
 func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) (*types.QueryGaugeIdsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
