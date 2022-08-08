@@ -94,8 +94,8 @@ func (suite *MiddlewareTestSuite) NewValidMessage(forward bool) sdk.Msg {
 	)
 }
 
-func (suite *MiddlewareTestSuite) TestReceiveTransfer() {
-	res, err := suite.chainB.SendMsgsWithExpect(true, suite.NewValidMessage(false))
+func (suite *MiddlewareTestSuite) ExecuteReceive(msg sdk.Msg) (string, error) {
+	res, err := suite.chainB.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err)
 
 	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
@@ -108,21 +108,37 @@ func (suite *MiddlewareTestSuite) TestReceiveTransfer() {
 	suite.Require().NoError(err)
 
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
-	suite.Require().NoError(err)
-	suite.Require().NotContains(string(ack), "error",
-		"acknoledgment is an error")
-
-	// Error
-	//suite.Require().Contains(string(ack), "error",
-	//	"acknoledgment is not an error")
-	//suite.Require().Contains(string(ack), types.RateLimitExceededMsg,
-	//	"acknoledgment error is not of the right type")
+	return string(ack), err
 }
 
-func (suite *MiddlewareTestSuite) TestSendTransfer() {
-	_, err := suite.chainA.SendMsgsWithExpect(false, suite.NewValidMessage(true))
-	//suite.Require().NoError(err)
-	suite.Require().Error(err)
-	suite.ErrorContains(err, types.RateLimitExceededMsg)
+func (suite *MiddlewareTestSuite) AssertReceiveSucceeds(success bool, msg sdk.Msg) {
+	ack, err := suite.ExecuteReceive(msg)
+	if success {
+		suite.Require().NoError(err)
+		suite.Require().NotContains(string(ack), "error",
+			"acknoledgment is an error")
+	} else {
+		suite.Require().Contains(string(ack), "error",
+			"acknoledgment is not an error")
+		suite.Require().Contains(string(ack), types.RateLimitExceededMsg,
+			"acknoledgment error is not of the right type")
+	}
+}
 
+func (suite *MiddlewareTestSuite) AssertSendSucceeds(success bool, msg sdk.Msg) {
+	_, err := suite.chainA.SendMsgsNoCheck(msg)
+	if success {
+		suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
+	} else {
+		suite.Require().Error(err, "IBC send succeeded. Expected failure")
+		suite.ErrorContains(err, types.RateLimitExceededMsg)
+	}
+}
+
+func (suite *MiddlewareTestSuite) TestSendTransferWithoutRateLimitingContract() {
+	suite.AssertSendSucceeds(true, suite.NewValidMessage(true))
+}
+
+func (suite *MiddlewareTestSuite) TestReceiveTransferWithoutRateLimitingContract() {
+	suite.AssertReceiveSucceeds(true, suite.NewValidMessage(false))
 }

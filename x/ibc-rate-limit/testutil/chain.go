@@ -1,9 +1,14 @@
 package osmosisibctesting
 
 import (
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/ibc-go/v3/testing"
-	"github.com/cosmos/ibc-go/v3/testing/simapp"
+	"github.com/cosmos/ibc-go/v3/testing/simapp/helpers"
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type TestChain struct {
@@ -11,12 +16,11 @@ type TestChain struct {
 }
 
 // SendMsgsNoCheck overrides ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
-func (chain *TestChain) SendMsgsWithExpect(expectPass bool, msgs ...sdk.Msg) (*sdk.Result, error) {
+func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
 
-	_, r, err := simapp.SignAndDeliver(
-		chain.T,
+	_, r, err := SignAndDeliver(
 		chain.TxConfig,
 		chain.App.GetBaseApp(),
 		chain.GetContext().BlockHeader(),
@@ -24,7 +28,6 @@ func (chain *TestChain) SendMsgsWithExpect(expectPass bool, msgs ...sdk.Msg) (*s
 		chain.ChainID,
 		[]uint64{chain.SenderAccount.GetAccountNumber()},
 		[]uint64{chain.SenderAccount.GetSequence()},
-		expectPass, expectPass,
 		chain.SenderPrivKey,
 	)
 	if err != nil {
@@ -40,4 +43,32 @@ func (chain *TestChain) SendMsgsWithExpect(expectPass bool, msgs ...sdk.Msg) (*s
 	chain.Coordinator.IncrementTime()
 
 	return r, nil
+}
+
+// SignAndDeliver signs and delivers a transaction without asserting the results. This overrides the function
+// from ibctesting
+func SignAndDeliver(
+	txCfg client.TxConfig, app *baseapp.BaseApp, header tmproto.Header, msgs []sdk.Msg,
+	chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey,
+) (sdk.GasInfo, *sdk.Result, error) {
+
+	tx, err := helpers.GenTx(
+		txCfg,
+		msgs,
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+		helpers.DefaultGenTxGas,
+		chainID,
+		accNums,
+		accSeqs,
+		priv...,
+	)
+
+	// Simulate a sending a transaction and committing a block
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	gInfo, res, err := app.Deliver(txCfg.TxEncoder(), tx)
+
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
+
+	return gInfo, res, err
 }

@@ -135,7 +135,6 @@ func (im IBCModule) OnRecvPacket(
 ) exported.Acknowledgement {
 	fmt.Println("OnRecvPacket Middleware")
 	//return channeltypes.NewErrorAcknowledgement(types.RateLimitExceededMsg)
-
 	return im.app.OnRecvPacket(ctx, packet, relayer)
 }
 
