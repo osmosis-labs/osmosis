@@ -24,7 +24,7 @@ func NewPoolIncentivesProposalHandler(k keeper.Keeper) govtypes.Handler {
 	}
 }
 
-//handleReplacePoolIncentivesProposal is a handler for replacing pool incentives governance proposals
+// handleReplacePoolIncentivesProposal is a handler for replacing pool incentives governance proposals
 func handleReplacePoolIncentivesProposal(ctx sdk.Context, k keeper.Keeper, p *types.ReplacePoolIncentivesProposal) error {
 	return k.HandleReplacePoolIncentivesProposal(ctx, p)
 }
