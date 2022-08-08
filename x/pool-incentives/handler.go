@@ -29,7 +29,7 @@ func handleReplacePoolIncentivesProposal(ctx sdk.Context, k keeper.Keeper, p *ty
 	return k.HandleReplacePoolIncentivesProposal(ctx, p)
 }
 
-//handleUpdatePoolIncentivesProposal is a handler for updating pool incentives governance proposals
+// handleUpdatePoolIncentivesProposal is a handler for updating pool incentives governance proposals
 func handleUpdatePoolIncentivesProposal(ctx sdk.Context, k keeper.Keeper, p *types.UpdatePoolIncentivesProposal) error {
 	return k.HandleUpdatePoolIncentivesProposal(ctx, p)
 }
