@@ -2,6 +2,7 @@ package ibc_rate_limit_test
 
 import (
 	"encoding/json"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
@@ -144,7 +145,10 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferWithoutRateLimitingContract
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() {
+	fmt.Println("Running this once")
 	suite.chainA.StoreContractCode(&suite.Suite)
-	suite.chainA.InstantiateContract(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite)
+	addrJson, _ := addr.MarshalJSON()
+	fmt.Println(string(addrJson))
 	suite.AssertSendSucceeds(true, suite.NewValidMessage(true))
 }

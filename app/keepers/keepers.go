@@ -112,9 +112,11 @@ type AppKeepers struct {
 	GovKeeper            *govkeeper.Keeper
 	WasmKeeper           *wasm.Keeper
 	TokenFactoryKeeper   *tokenfactorykeeper.Keeper
+
 	// IBC modules
 	// transfer module
-	TransferModule transfer.AppModule
+	TransferModule          transfer.AppModule
+	RateLimitingICS4Wrapper *ibcratelimit.ICS4Middleware
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -196,15 +198,19 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.ScopedIBCKeeper,
 	)
 
-	// ChannelKeeper wrapper for rate limiting SendPacket()
-	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(appKeepers.IBCKeeper.ChannelKeeper)
-
+	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
+	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
+		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.AccountKeeper,
+		nil,
+	)
+	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
 	// Create Transfer Keepers
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[ibctransfertypes.StoreKey],
 		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		rateLimitingICS4Wrapper, // The ICS4Wrapper is replaced by the rateLimitingICS4Wrapper instead of the channel
+		appKeepers.RateLimitingICS4Wrapper, // The ICS4Wrapper is replaced by the rateLimitingICS4Wrapper instead of the channel
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
@@ -216,7 +222,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
 
 	// RateLimiting IBC Middleware
-	rateLimitingTransferMiddleware := ibcratelimit.NewIBCModule(transferIBCModule, rateLimitingICS4Wrapper)
+	rateLimitingTransferMiddleware := ibcratelimit.NewIBCModule(transferIBCModule, *appKeepers.RateLimitingICS4Wrapper)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -357,6 +363,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		wasmOpts...,
 	)
 	appKeepers.WasmKeeper = &wasmKeeper
+	// Update the ICS4Wrapper with the right WasmKeeper
+	appKeepers.RateLimitingICS4Wrapper.WasmKeeper = appKeepers.WasmKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper))

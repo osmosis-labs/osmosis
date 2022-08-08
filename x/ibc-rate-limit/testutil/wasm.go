@@ -39,7 +39,7 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite) sdk.AccAddress {
 	osmosisApp := chain.App.(*app.OsmosisApp)
 	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
 
-	initMsgBz := []byte(fmt.Sprintf(`{"ibc_module": "%s", "channel_quotas": []}`, transferModule))
+	initMsgBz := []byte(fmt.Sprintf(`{"ibc_module": "%s", "channel_quotas": [["test", 10]]}`, transferModule))
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 	codeID := uint64(1)
 	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)

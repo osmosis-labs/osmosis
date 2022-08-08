@@ -1,31 +1,56 @@
 package ibc_rate_limit
 
 import (
+	"errors"
 	"fmt"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
+	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
 )
 
 var _ porttypes.Middleware = &IBCModule{}
 var _ porttypes.ICS4Wrapper = &ICS4Middleware{}
 
 type ICS4Middleware struct {
-	channel porttypes.ICS4Wrapper
+	channel       porttypes.ICS4Wrapper
+	accountKeeper *authkeeper.AccountKeeper
+	WasmKeeper    *wasmkeeper.Keeper
 }
 
-func NewICS4Middleware(channel porttypes.ICS4Wrapper) ICS4Middleware {
-	fmt.Println("Initializing ics4")
+func NewICS4Middleware(channel porttypes.ICS4Wrapper, accountKeeper *authkeeper.AccountKeeper, wasmKeeper *wasmkeeper.Keeper) ICS4Middleware {
 	return ICS4Middleware{
-		channel: channel,
+		channel:       channel,
+		accountKeeper: accountKeeper,
+		WasmKeeper:    wasmKeeper,
 	}
 }
 
 func (i ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
 	fmt.Println("Sending package through middleware")
-	//return sdkerrors.Wrap(types.ErrRateLimitExceeded, "test")
+	contractAddr, _ := sdk.AccAddressFromBech32("osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9")
+	sendPacketMsg := `{"send_packet": {"channel_id": "test", "channel_value": "100", "funds": "1"}}`
+	sender := i.accountKeeper.GetModuleAccount(ctx, transfertypes.ModuleName)
+
+	// ToDo: This shoiuld probably be done through the message dispatcher
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(i.WasmKeeper)
+	response, err := contractKeeper.Execute(ctx, contractAddr, sender.GetAddress(), []byte(sendPacketMsg), sdk.Coins{})
+	fmt.Println("err", err)
+	if err != nil {
+		// Handle potential errors
+		if !errors.Is(err, wasmtypes.ErrNotFound) { // Contract not found. This means the rate limiter is not configured
+			// ToDo: Improve error handling here
+			return sdkerrors.Wrap(types.ErrRateLimitExceeded, "SendPacket")
+		}
+	}
+	fmt.Println(string(response))
 	return i.channel.SendPacket(ctx, chanCap, packet)
 }
 
