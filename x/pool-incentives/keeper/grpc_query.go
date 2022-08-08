@@ -74,7 +74,7 @@ func (q Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*type
 	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(sdkCtx)}, nil
 }
 
-// LockableDurations iterates over all gauges, returns gauges' lock duration
+// LockableDurations returns the lock durations that are incentivized through pool-incentives.
 func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDurationsRequest) (*types.QueryLockableDurationsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return &types.QueryLockableDurationsResponse{LockableDurations: q.Keeper.GetLockableDurations(sdkCtx)}, nil
