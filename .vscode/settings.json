@@ -3,10 +3,6 @@
   "go.lintTool": "golangci-lint",
   "go.formatTool": "goimports",
   "go.useLanguageServer": true,
-  "go.generateTestsFlags": [
-    "-template_dir",
-    "/Users/alpinyukseloglu1/Documents/GitHub/osmosis/.vscode/templates"
-  ],
   "[go.mod]": {
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
