@@ -471,21 +471,21 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 
 func (suite *KeeperTestSuite) TestEnsureDenomInPool() {
 	tests := map[string]struct {
-		poolAssets 		  []balancer.PoolAsset
-		tokensIn          sdk.Coins
-		expectPass        bool
-		expectedErr 	  error
+		poolAssets  []balancer.PoolAsset
+		tokensIn    sdk.Coins
+		expectPass  bool
+		expectedErr error
 	}{
 		"all of tokensIn is in pool asset map": {
-			poolAssets: []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
-			tokensIn: sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())),
-			expectPass: true,
+			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())),
+			expectPass:  true,
 			expectedErr: nil,
 		},
 		"none of tokensIn is in pool asset map": {
-			poolAssets: []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
-			tokensIn: sdk.NewCoins(sdk.NewCoin("foo", sdk.OneInt())),
-			expectPass: false,
+			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.OneInt())),
+			expectPass:  false,
 			expectedErr: types.ErrDenomNotFoundInPool,
 		},
 	}

@@ -701,12 +701,14 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
+	// check to make sure the input denom exists in the pool
+	err = ensureDenomInPool(poolAssetsByDenom, tokensIn)
+	if err != nil {
+		return sdk.ZeroInt(), sdk.NewCoins(), err
+	}
+
 	totalShares := p.GetTotalShares()
 	if tokensIn.Len() == 1 {
-		// check to make sure the input denom exists in the pool
-		if _, ok := poolAssetsByDenom[tokensIn[0].Denom]; !ok {
-			return sdk.ZeroInt(), sdk.NewCoins(), sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, invalidInputDenomsErrFormat, tokensIn[0].Denom)
-		}
 		// 2) Single token provided, so do single asset join and exit.
 		numShares, err = p.calcSingleAssetJoin(tokensIn[0], swapFee, poolAssetsByDenom[tokensIn[0].Denom], totalShares)
 		if err != nil {
