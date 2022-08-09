@@ -187,6 +187,7 @@ func (suite *KeeperTestSuite) TestSyntheticDistribute() {
 // TestGetModuleToDistributeCoins tests the sum of coins yet to be distributed
 func (suite *KeeperTestSuite) TestWeirdCaseGetModuleToDistributeCoins() {
 	suite.SetupTest()
+	suite.Ctx = suite.Ctx.WithBlockTime(time.Unix(123456789, 0))
 
 	incentivesKeeper := suite.App.IncentivesKeeper
 
