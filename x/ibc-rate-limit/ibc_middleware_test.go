@@ -46,7 +46,7 @@ func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Pa
 func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.Setup()
 	ibctesting.DefaultTestingAppInit = SetupTestingApp
-	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 3)
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	suite.chainA = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),
 	}
@@ -57,12 +57,12 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.coordinator.Setup(suite.path)
 }
 
-func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount int64) sdk.Msg {
+func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) sdk.Msg {
 	var coins sdk.Coin
 	var port, channel, accountFrom, accountTo string
 
 	if forward {
-		coins = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(amount))
+		coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
 		port = suite.path.EndpointA.ChannelConfig.PortID
 		channel = suite.path.EndpointA.ChannelID
 		accountFrom = suite.chainA.SenderAccount.GetAddress().String()
@@ -75,7 +75,7 @@ func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount int64) sd
 			sdk.DefaultBondDenom,
 			sdk.NewInt(1),
 		)
-		coins = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(amount))
+		coins = sdk.NewCoin(sdk.DefaultBondDenom, amount)
 		port = suite.path.EndpointB.ChannelConfig.PortID
 		channel = suite.path.EndpointB.ChannelID
 		accountFrom = suite.chainB.SenderAccount.GetAddress().String()
@@ -131,24 +131,35 @@ func (suite *MiddlewareTestSuite) AssertSendSucceeds(success bool, msg sdk.Msg) 
 		suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 	} else {
 		suite.Require().Error(err, "IBC send succeeded. Expected failure")
-		suite.ErrorContains(err, types.RateLimitExceededMsg)
+		suite.ErrorContains(err, types.RateLimitExceededMsg, "Bad error type")
 	}
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithoutRateLimitingContract() {
-	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, 1))
+	one := sdk.NewInt(1)
+	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, one))
 }
 
 func (suite *MiddlewareTestSuite) TestReceiveTransferWithoutRateLimitingContract() {
-	suite.AssertReceiveSucceeds(true, suite.NewValidMessage(false, 1))
+	one := sdk.NewInt(1)
+	suite.AssertReceiveSucceeds(true, suite.NewValidMessage(false, one))
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() {
 	suite.chainA.StoreContractCode(&suite.Suite)
 	addr := suite.chainA.InstantiateContract(&suite.Suite)
 	suite.chainA.RegisterRateLimitingContract(addr)
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	// Each user has approximately 10% of the supply
+	balance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), sdk.DefaultBondDenom)
+	half := balance.Amount.Quo(sdk.NewInt(2))
+	// sending money to the first user so that it has enough to test rate limiting
+	addr2 := suite.chainA.SenderAccounts[1].SenderAccount.GetAddress()
+	osmosisApp.BankKeeper.SendCoins(suite.chainA.GetContext(), addr2, suite.chainA.SenderAccount.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, half)))
+	addr3 := suite.chainA.SenderAccounts[2].SenderAccount.GetAddress()
+	osmosisApp.BankKeeper.SendCoins(suite.chainA.GetContext(), addr3, suite.chainA.SenderAccount.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, half)))
 
-	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, 5))
-	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, 5))
-	suite.AssertSendSucceeds(false, suite.NewValidMessage(true, 1))
+	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, half))
+	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, half))
+	suite.AssertSendSucceeds(false, suite.NewValidMessage(true, half))
 }

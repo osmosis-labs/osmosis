@@ -2,13 +2,12 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
@@ -16,6 +15,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
 	"strings"
 )
 
@@ -25,21 +25,29 @@ var _ porttypes.ICS4Wrapper = &ICS4Middleware{}
 type ICS4Middleware struct {
 	channel       porttypes.ICS4Wrapper
 	accountKeeper *authkeeper.AccountKeeper
-	ParamSpace    paramtypes.Subspace
+	BankKeeper    *bankkeeper.BaseKeeper
 	WasmKeeper    *wasmkeeper.Keeper
+	LockupKeeper  *lockupkeeper.Keeper
+	ParamSpace    paramtypes.Subspace
 }
 
-func NewICS4Middleware(channel porttypes.ICS4Wrapper, accountKeeper *authkeeper.AccountKeeper, wasmKeeper *wasmkeeper.Keeper, paramSpace paramtypes.Subspace) ICS4Middleware {
+func NewICS4Middleware(
+	channel porttypes.ICS4Wrapper,
+	accountKeeper *authkeeper.AccountKeeper, wasmKeeper *wasmkeeper.Keeper,
+	bankKeeper *bankkeeper.BaseKeeper, lockupKeeper *lockupkeeper.Keeper,
+	paramSpace paramtypes.Subspace,
+) ICS4Middleware {
 	return ICS4Middleware{
 		channel:       channel,
 		accountKeeper: accountKeeper,
 		WasmKeeper:    wasmKeeper,
+		BankKeeper:    bankKeeper,
+		LockupKeeper:  lockupKeeper,
 		ParamSpace:    paramSpace,
 	}
 }
 
 func (i ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
-	fmt.Println("Sending package through middleware")
 	contractRaw := i.ParamSpace.GetRaw(ctx, []byte("contract"))
 	if contractRaw == nil {
 		// The contract has not been configured. Continue as usual
@@ -58,28 +66,24 @@ func (i ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Cap
 		return err
 	}
 
-	// ToDo: Do this with a struct
-	sendPacketMsg := fmt.Sprintf(
-		`{"send_packet": {"channel_id": "%s", "channel_value": "100", "funds": "%s"}}`,
+	sendPacketMsg := i.BuildWasmExecMsg(
+		ctx,
 		packet.GetSourceChannel(),
-		packetData["amount"],
+		packetData["denom"].(string),
+		packetData["amount"].(string),
 	)
-
 	sender := i.accountKeeper.GetModuleAccount(ctx, transfertypes.ModuleName)
 
-	// ToDo: This should probably be done through the message dispatcher
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(i.WasmKeeper)
-	response, err := contractKeeper.Execute(ctx, contractAddr, sender.GetAddress(), []byte(sendPacketMsg), sdk.Coins{})
-	fmt.Println(err)
+	// ToDo: Why doesn't this return a response
+	_, err = contractKeeper.Execute(ctx, contractAddr, sender.GetAddress(), []byte(sendPacketMsg), sdk.Coins{})
 
 	if err != nil {
-		// Handle potential errors
-		if !errors.Is(err, wasmtypes.ErrNotFound) { // Contract not found. This means the rate limiter is not configured
-			// ToDo: Improve error handling here
-			return sdkerrors.Wrap(types.ErrRateLimitExceeded, "SendPacket")
-		}
+		// ToDo: catch the wasm error and return err if it's something unexpected
+		fmt.Println(err)
+		return sdkerrors.Wrap(types.ErrRateLimitExceeded, "SendPacket")
 	}
-	fmt.Println(string(response))
+
 	return i.channel.SendPacket(ctx, chanCap, packet)
 }
 
@@ -88,13 +92,30 @@ func (i ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilit
 	return i.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }
 
+func (i *ICS4Middleware) BuildWasmExecMsg(ctx sdk.Context, sourceChannel, denom, amount string) string {
+	// ToDo: Do this with a struct
+	return fmt.Sprintf(
+		`{"send_packet": {"channel_id": "%s", "channel_value": "%s", "funds": "%s"}}`,
+		sourceChannel,
+		i.CalculateChannelValue(ctx, denom),
+		amount,
+	)
+}
+
+// CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
+//  if the denom is not correct, the transfer should fail somewhere else on the call chain
+func (i *ICS4Middleware) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
+	supply := i.BankKeeper.GetSupply(ctx, denom)
+	locked := i.LockupKeeper.GetModuleLockedCoins(ctx)
+	return supply.Amount.Add(locked.AmountOf(denom))
+}
+
 type IBCModule struct {
 	app            porttypes.IBCModule
 	ics4Middleware ICS4Middleware
 }
 
 func NewIBCModule(app porttypes.IBCModule, ics4 ICS4Middleware) IBCModule {
-	fmt.Println("Initializing middleware")
 	return IBCModule{
 		app:            app,
 		ics4Middleware: ics4,
