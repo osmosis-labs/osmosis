@@ -2,7 +2,6 @@ package ibc_rate_limit_test
 
 import (
 	"encoding/json"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
@@ -145,10 +144,13 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferWithoutRateLimitingContract
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() {
-	fmt.Println("Running this once")
 	suite.chainA.StoreContractCode(&suite.Suite)
 	addr := suite.chainA.InstantiateContract(&suite.Suite)
-	addrJson, _ := addr.MarshalJSON()
-	fmt.Println(string(addrJson))
+	addrStr, _ := sdk.Bech32ifyAddressBytes("osmo", addr)
+	params, _ := types.NewParams(addrStr)
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	paramSpace, _ := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
+	paramSpace.SetParamSet(suite.chainA.GetContext(), &params)
+
 	suite.AssertSendSucceeds(true, suite.NewValidMessage(true))
 }

@@ -13,7 +13,7 @@ import (
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite) {
-	osmosisApp := chain.App.(*app.OsmosisApp)
+	osmosisApp := chain.GetOsmosisApp()
 
 	govKeeper := osmosisApp.GovKeeper
 	wasmCode, err := ioutil.ReadFile("./testdata/rate_limiter.wasm")
@@ -36,7 +36,7 @@ func (chain *TestChain) StoreContractCode(suite *suite.Suite) {
 }
 
 func (chain *TestChain) InstantiateContract(suite *suite.Suite) sdk.AccAddress {
-	osmosisApp := chain.App.(*app.OsmosisApp)
+	osmosisApp := chain.GetOsmosisApp()
 	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
 
 	initMsgBz := []byte(fmt.Sprintf(`{"ibc_module": "%s", "channel_quotas": [["test", 10]]}`, transferModule))
@@ -46,4 +46,8 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite) sdk.AccAddress {
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, initMsgBz, "rate limiting contract", nil)
 	suite.Require().NoError(err)
 	return addr
+}
+
+func (chain *TestChain) GetOsmosisApp() *app.OsmosisApp {
+	return chain.App.(*app.OsmosisApp)
 }

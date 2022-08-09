@@ -33,6 +33,7 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
@@ -199,12 +200,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 
 	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
+	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
+	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
 	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		appKeepers.AccountKeeper,
 		nil,
+		rateLimitingParams,
 	)
 	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
+
 	// Create Transfer Keepers
 	transferKeeper := ibctransferkeeper.NewKeeper(
 		appCodec,
@@ -457,6 +462,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
+	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 
 	return paramsKeeper
 }
