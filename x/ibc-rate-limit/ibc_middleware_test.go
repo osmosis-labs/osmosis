@@ -2,7 +2,6 @@ package ibc_rate_limit_test
 
 import (
 	"encoding/json"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
@@ -174,31 +173,9 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() 
 
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
-	max, _ := sdk.NewIntFromString(attrs["max"])
 	used, _ := sdk.NewIntFromString(attrs["used"])
-	remaining := max.Sub(used)
-	fmt.Println(max, used, remaining)
+	suite.Require().Equal(used, half.MulRaw(2))
 
 	// Sending above the quota should fail. Adding some extra here because the cap is increasing. See test bellow.
-	suite.AssertSendSuccess(false, suite.NewValidMessage(true, remaining))
-}
-
-func (suite *MiddlewareTestSuite) TestWeirdBalanceIssue() {
-	// Setup contract
-	suite.chainA.StoreContractCode(&suite.Suite)
-	addr := suite.chainA.InstantiateContract(&suite.Suite)
-	suite.chainA.RegisterRateLimitingContract(addr)
-
-	osmosisApp := suite.chainA.GetOsmosisApp()
-	// Get the total supply
-	oldSupply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
-	fmt.Println(oldSupply)
-
-	// Send some money via IBC
-	suite.AssertSendSuccess(true, suite.NewValidMessage(true, sdk.NewInt(10_000_000)))
-
-	// Total supply should decrease, not increase
-	newSupply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
-	fmt.Println(newSupply)
-	suite.Require().True(newSupply.Amount.LTE(oldSupply.Amount))
+	suite.AssertSendSuccess(false, suite.NewValidMessage(true, sdk.NewInt(1)))
 }

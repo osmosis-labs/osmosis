@@ -1,7 +1,6 @@
 package osmosisibctesting
 
 import (
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -82,7 +81,6 @@ func (chain *TestChain) MoveEpochsToTheFuture() {
 	ctx := chain.GetContext()
 	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
 		epoch.StartTime = ctx.BlockTime().Add(time.Hour * 24 * 30)
-		fmt.Println(epoch)
 		epochsKeeper.DeleteEpochInfo(chain.GetContext(), epoch.Identifier)
 		epochsKeeper.AddEpochInfo(ctx, epoch)
 	}
