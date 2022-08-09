@@ -51,7 +51,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		mintedCoin := minter.EpochProvision(params)
 		mintedCoins := sdk.NewCoins(mintedCoin)
 
-		// We over-allocate by the developer vesting portion, and burn this later
 		err := k.MintCoins(ctx, mintedCoins)
 		if err != nil {
 			panic(err)
@@ -63,8 +62,29 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			panic(err)
 		}
 
+		developerVestingCoin := minter.DeveloperVestingEpochProvision(params)
+		developerRewardsDistributionProportion := params.DistributionProportions.DeveloperRewards
+		// allocate dev rewards to respective accounts from developer vesting module account.
+		developerVestingAmount, err := k.distributeDeveloperRewards(ctx, developerVestingCoin, params.WeightedDeveloperRewardsReceivers)
+		if err != nil {
+			panic(err)
+		}
+
+		// TODO: add logic for getting this from the store
+		expectedTotalMintedByCurrentEpoch := minter.LastMintedTotalAmount.Add(minter.EpochProvisions)
+
+		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, mintedCoin.Denom, expectedTotalMintedByCurrentEpoch, developerRewardsDistributionProportion)
+		if err != nil {
+			panic(err)
+		}
+
+		totalDistributed := mintedCoin.Amount.Add(developerVestingAmount).Add(distributedTruncationDelta)
+
+		// call an hook after the minting and distribution of new coins
+		k.hooks.AfterDistributeMintedCoin(ctx)
+
 		if mintedCoin.Amount.IsInt64() {
-			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
+			defer telemetry.ModuleSetGauge(types.ModuleName, float32(totalDistributed.Int64()), "minted_tokens")
 		}
 
 		ctx.EventManager().EmitEvent(
@@ -72,7 +92,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				types.ModuleName,
 				sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochNumber)),
 				sdk.NewAttribute(types.AttributeKeyEpochProvisions, minter.EpochProvisions.String()),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
+				sdk.NewAttribute(sdk.AttributeKeyAmount, totalDistributed.String()),
 			),
 		)
 	}

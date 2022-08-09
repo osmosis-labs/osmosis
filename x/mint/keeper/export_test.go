@@ -24,8 +24,8 @@ func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, mint
 	return k.distributeToModule(ctx, recipientModule, mintedCoin, proportion)
 }
 
-func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion sdk.Dec, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
-	return k.distributeDeveloperRewards(ctx, totalMintedCoin, developerRewardsProportion, developerRewardsReceivers)
+func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin sdk.Coin, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
+	return k.distributeDeveloperRewards(ctx, developerRewardsCoin, developerRewardsReceivers)
 }
 
 // Set the mint hooks. This is used for testing purposes only.

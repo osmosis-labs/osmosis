@@ -1,12 +1,20 @@
 package types
 
-// MinterKey is the key to use for the keeper store at which
-// the Minter and its EpochProvisions are stored.
-var MinterKey = []byte{0x00}
+var (
+	// MinterKey is the key to use for the keeper store at which
+	// the Minter and its EpochProvisions are stored.
+	MinterKey = []byte{0x00}
 
-// LastReductionEpochKey is the key to use for the keeper store
-// for storing the last epoch at which reduction occurred.
-var LastReductionEpochKey = []byte{0x03}
+	// LastReductionEpochKey is the key to use for the keeper store
+	// for storing the last epoch at which reduction occurred.
+	LastReductionEpochKey = []byte{0x03}
+
+	// LastMintedTotalAmount is the key to use for the keeper store
+	// for storing the last minted accumulator value.
+	// It representes the total amount of tokens minted since the
+	// chain launched.
+	LastMintedTotalAmount = []byte{0x04}
+)
 
 const (
 	// ModuleName is the module name.

@@ -47,8 +47,17 @@ func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
 }
 
 // EpochProvision returns the provisions for a block based on the epoch
-// provisions rate.
+// provisions rate. It excludes developer rewards as they are
+// handled by the developer vesting module account.
 func (m Minter) EpochProvision(params Params) sdk.Coin {
-	provisionAmt := m.EpochProvisions
-	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
+	provisionAmt := m.EpochProvisions.Mul(sdk.OneDec().Sub(params.DistributionProportions.DeveloperRewards)).TruncateInt()
+	return sdk.NewCoin(params.MintDenom, provisionAmt)
+}
+
+// EpochProvision returns the provisions for a block based on the epoch
+// provisions rate. It excludes developer rewards as they are
+// handled by the developer vesting module account.
+func (m Minter) DeveloperVestingEpochProvision(params Params) sdk.Coin {
+	provisionAmt := m.EpochProvisions.Mul(params.DistributionProportions.DeveloperRewards).TruncateInt()
+	return sdk.NewCoin(params.MintDenom, provisionAmt)
 }

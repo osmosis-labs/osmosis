@@ -9,8 +9,6 @@ type MintHooks interface {
 	AfterDistributeMintedCoin(ctx sdk.Context)
 }
 
-var _ MintHooks = MultiMintHooks{}
-
 // MultiMintHooks is a container for mint hooks.
 // All hooks are run in sequence.
 type MultiMintHooks []MintHooks

@@ -16,6 +16,15 @@ message Minter {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+
+  // last_minted_total_amount represents the total amount of tokens minted since
+  // the chain launched.
+  // TODO: explain the difference from supply and supply with offset.
+  string last_minted_total_amount = 2 [
+    (gogoproto.moretags) = "yaml:\"last_minted_total_amount\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // WeightedAddress represents an address with a weight assigned to it.
