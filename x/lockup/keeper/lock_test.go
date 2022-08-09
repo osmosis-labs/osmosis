@@ -342,7 +342,6 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 		duration                     time.Duration
 		lockingAddress               sdk.AccAddress
 		expectAddTokensToLockSuccess bool
-		expectedError                bool
 	}{
 		{
 			name:                         "normal add tokens to lock case",
@@ -356,28 +355,24 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 			tokenToAdd:     initialLockCoin,
 			duration:       time.Second,
 			lockingAddress: addr2,
-			expectedError:  true,
 		},
 		{
 			name:           "lock with matching duration not existing",
 			tokenToAdd:     initialLockCoin,
 			duration:       time.Second * 2,
 			lockingAddress: addr1,
-			expectedError:  true,
 		},
 		{
 			name:           "lock invalid tokens",
 			tokenToAdd:     sdk.NewCoin("unknown", sdk.NewInt(10)),
 			duration:       time.Second,
 			lockingAddress: addr1,
-			expectedError:  true,
 		},
 		{
 			name:           "token to add exceeds balance",
 			tokenToAdd:     sdk.NewCoin("stake", sdk.NewInt(20)),
 			duration:       time.Second,
 			lockingAddress: addr1,
-			expectedError:  true,
 		},
 	}
 
@@ -392,11 +387,6 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 		balanceBeforeLock := suite.App.BankKeeper.GetAllBalances(suite.Ctx, tc.lockingAddress)
 
 		lockID, err := suite.App.LockupKeeper.AddToExistingLock(suite.Ctx, tc.lockingAddress, tc.tokenToAdd, tc.duration)
-		if tc.expectedError {
-			suite.Require().Error(err)
-		} else {
-			suite.Require().NoError(err)
-		}
 
 		if tc.expectAddTokensToLockSuccess {
 			suite.Require().NoError(err)
@@ -420,6 +410,7 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 			})
 			suite.Require().Equal(initialLockCoin.Amount.Add(tc.tokenToAdd.Amount), accum)
 		} else {
+			suite.Require().Error(err)
 			suite.Require().Equal(uint64(0), lockID)
 
 			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, originalLock.ID)
