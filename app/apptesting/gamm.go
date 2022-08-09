@@ -114,3 +114,26 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	_, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, msg.TokenIn, denoms[1], msg.TokenOutMinAmount)
 	s.Require().NoError(err)
 }
+
+func (s *KeeperTestHelper) RunCustomSwap(poolId uint64, tokenIn sdk.Coin) {
+	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	var outDenom string
+	if denoms[0] != tokenIn.Denom {
+		outDenom = denoms[0]
+	} else {
+		outDenom = denoms[1]
+	}
+	s.FundAcc(s.TestAccs[0], sdk.Coins{tokenIn})
+
+	msg := gammtypes.MsgSwapExactAmountIn{
+		Sender:            string(s.TestAccs[0]),
+		Routes:            []gammtypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: outDenom}},
+		TokenIn:           tokenIn,
+		TokenOutMinAmount: sdk.ZeroInt(),
+	}
+	// TODO: switch to message
+	_, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, msg.TokenIn, outDenom, msg.TokenOutMinAmount)
+	s.Require().NoError(err)
+}
