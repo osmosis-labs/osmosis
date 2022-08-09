@@ -8,6 +8,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/osmosis-labs/osmosis/v10/app"
+	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
 )
@@ -46,6 +47,14 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite) sdk.AccAddress {
 	addr, _, err := contractKeeper.Instantiate(chain.GetContext(), codeID, creator, creator, initMsgBz, "rate limiting contract", nil)
 	suite.Require().NoError(err)
 	return addr
+}
+
+func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
+	addrStr, _ := sdk.Bech32ifyAddressBytes("osmo", addr)
+	params, _ := types.NewParams(addrStr)
+	osmosisApp := chain.GetOsmosisApp()
+	paramSpace, _ := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
+	paramSpace.SetParamSet(chain.GetContext(), &params)
 }
 
 func (chain *TestChain) GetOsmosisApp() *app.OsmosisApp {
