@@ -2,6 +2,7 @@ package ibc_rate_limit_test
 
 import (
 	"encoding/json"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
@@ -111,7 +112,7 @@ func (suite *MiddlewareTestSuite) ExecuteReceive(msg sdk.Msg) (string, error) {
 	return string(ack), err
 }
 
-func (suite *MiddlewareTestSuite) AssertReceiveSucceeds(success bool, msg sdk.Msg) {
+func (suite *MiddlewareTestSuite) AssertReceiveSuccess(success bool, msg sdk.Msg) (string, error) {
 	ack, err := suite.ExecuteReceive(msg)
 	if success {
 		suite.Require().NoError(err)
@@ -123,43 +124,80 @@ func (suite *MiddlewareTestSuite) AssertReceiveSucceeds(success bool, msg sdk.Ms
 		suite.Require().Contains(string(ack), types.RateLimitExceededMsg,
 			"acknoledgment error is not of the right type")
 	}
+	return ack, err
 }
 
-func (suite *MiddlewareTestSuite) AssertSendSucceeds(success bool, msg sdk.Msg) {
-	_, err := suite.chainA.SendMsgsNoCheck(msg)
+func (suite *MiddlewareTestSuite) AssertSendSuccess(success bool, msg sdk.Msg) (*sdk.Result, error) {
+	r, err := suite.chainA.SendMsgsNoCheck(msg)
 	if success {
 		suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 	} else {
 		suite.Require().Error(err, "IBC send succeeded. Expected failure")
 		suite.ErrorContains(err, types.RateLimitExceededMsg, "Bad error type")
 	}
+	return r, err
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithoutRateLimitingContract() {
 	one := sdk.NewInt(1)
-	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, one))
+	suite.AssertSendSuccess(true, suite.NewValidMessage(true, one))
 }
 
 func (suite *MiddlewareTestSuite) TestReceiveTransferWithoutRateLimitingContract() {
 	one := sdk.NewInt(1)
-	suite.AssertReceiveSucceeds(true, suite.NewValidMessage(false, one))
+	suite.AssertReceiveSuccess(true, suite.NewValidMessage(false, one))
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() {
+	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
 	addr := suite.chainA.InstantiateContract(&suite.Suite)
 	suite.chainA.RegisterRateLimitingContract(addr)
-	osmosisApp := suite.chainA.GetOsmosisApp()
-	// Each user has approximately 10% of the supply
-	balance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), suite.chainA.SenderAccount.GetAddress(), sdk.DefaultBondDenom)
-	half := balance.Amount.Quo(sdk.NewInt(2))
-	// sending money to the first user so that it has enough to test rate limiting
-	addr2 := suite.chainA.SenderAccounts[1].SenderAccount.GetAddress()
-	osmosisApp.BankKeeper.SendCoins(suite.chainA.GetContext(), addr2, suite.chainA.SenderAccount.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, half)))
-	addr3 := suite.chainA.SenderAccounts[2].SenderAccount.GetAddress()
-	osmosisApp.BankKeeper.SendCoins(suite.chainA.GetContext(), addr3, suite.chainA.SenderAccount.GetAddress(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, half)))
 
-	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, half))
-	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, half))
-	suite.AssertSendSucceeds(false, suite.NewValidMessage(true, half))
+	// Setup sender's balance
+	osmosisApp := suite.chainA.GetOsmosisApp()
+
+	// Each user has approximately 10% of the supply
+	supply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	quota := supply.Amount.QuoRaw(20)
+	half := quota.QuoRaw(2)
+
+	// send 2.5% (quota is 5%)
+	suite.AssertSendSuccess(true, suite.NewValidMessage(true, half))
+	//supply = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+
+	// send 2.5% (quota is 5%)
+	r, _ := suite.AssertSendSuccess(true, suite.NewValidMessage(true, half))
+	//supply = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+
+	// Calculate remaining allowance in the quota
+	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
+	max, _ := sdk.NewIntFromString(attrs["max"])
+	used, _ := sdk.NewIntFromString(attrs["used"])
+	remaining := max.Sub(used)
+	fmt.Println(max, used, remaining)
+
+	// Sending above the quota should fail. Adding some extra here because the cap is increasing. See test bellow.
+	suite.AssertSendSuccess(false, suite.NewValidMessage(true, remaining.AddRaw(50000000)))
+
+}
+
+func (suite *MiddlewareTestSuite) TestWeirdBalanceIssue() {
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite)
+	suite.chainA.RegisterRateLimitingContract(addr)
+
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	// Get the total supply
+	oldSupply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	fmt.Println(oldSupply)
+
+	// Send some money via IBC
+	suite.AssertSendSuccess(true, suite.NewValidMessage(true, sdk.NewInt(10_000_000)))
+
+	// Total supply should decrease, not increase
+	newSupply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	fmt.Println(newSupply)
+	suite.Require().True(newSupply.Amount.LT(oldSupply.Amount))
 }

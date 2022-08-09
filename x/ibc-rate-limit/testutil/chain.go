@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/ibc-go/v3/testing"
 	"github.com/cosmos/ibc-go/v3/testing/simapp/helpers"
+	"github.com/osmosis-labs/osmosis/v10/app"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
@@ -71,4 +72,8 @@ func SignAndDeliver(
 	app.Commit()
 
 	return gInfo, res, err
+}
+
+func (chain *TestChain) GetOsmosisApp() *app.OsmosisApp {
+	return chain.App.(*app.OsmosisApp)
 }

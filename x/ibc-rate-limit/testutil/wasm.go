@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	"github.com/osmosis-labs/osmosis/v10/app"
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
 	"io/ioutil"
@@ -40,7 +39,7 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite) sdk.AccAddress {
 	osmosisApp := chain.GetOsmosisApp()
 	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
 
-	initMsgBz := []byte(fmt.Sprintf(`{"ibc_module": "%s", "channel_quotas": [["channel-0", 10]]}`, transferModule))
+	initMsgBz := []byte(fmt.Sprintf(`{"ibc_module": "%s", "channel_quotas": [["channel-0", 5]]}`, transferModule))
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 	codeID := uint64(1)
 	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
@@ -55,8 +54,4 @@ func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
 	osmosisApp := chain.GetOsmosisApp()
 	paramSpace, _ := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
 	paramSpace.SetParamSet(chain.GetContext(), &params)
-}
-
-func (chain *TestChain) GetOsmosisApp() *app.OsmosisApp {
-	return chain.App.(*app.OsmosisApp)
 }
