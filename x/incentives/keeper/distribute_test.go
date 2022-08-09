@@ -191,9 +191,10 @@ func (suite *KeeperTestSuite) TestWeirdCaseGetModuleToDistributeCoins() {
 	incentivesKeeper := suite.App.IncentivesKeeper
 
 	// check that the sum of coins yet to be distributed is nil
+	fmt.Println("gauge start time:", suite.Ctx.BlockTime().Add(time.Second*10).Unix())
+	fmt.Println("")
 
 	fmt.Println("block 1 time", suite.Ctx.BlockTime().Unix())
-	fmt.Println("gauge start time:", suite.Ctx.BlockTime().Add(time.Second*10).Unix())
 	suite.SetupGaugeWithStartTime(false, sdk.NewCoins(sdk.NewInt64Coin("uosmo", 99999999)), suite.Ctx.BlockTime().Add(time.Second*10))
 
 	fmt.Println("GetModuleToDistributeCoins at block 1:", incentivesKeeper.GetModuleToDistributeCoins(suite.Ctx))
