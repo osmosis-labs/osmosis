@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) setupNewGaugeWithDuration(isPerpetual bool, coins 
 	uint64, *types.Gauge, sdk.Coins, time.Time,
 ) {
 	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
-	startTime2 := time.Now()
+	startTime2 := suite.Ctx.BlockTime()
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         denom,
@@ -170,12 +170,40 @@ func (suite *KeeperTestSuite) SetupNewGauge(isPerpetual bool, coins sdk.Coins, n
 	return suite.setupNewGaugeWithDuration(isPerpetual, coins, defaultLockDuration, "lptoken", numEpochsPaidOver)
 }
 
+//
+func (suite *KeeperTestSuite) SetupGaugeWithStartTime(isPerpetual bool, coins sdk.Coins, startTime time.Time) (uint64, *types.Gauge, sdk.Coins, time.Time) {
+	return suite.setupNewGaugeWithStartTime(isPerpetual, coins, defaultLockDuration, "lptoken", startTime)
+}
+
+// setupNewGaugeWithDuration creates a gauge with the specified duration.
+func (suite *KeeperTestSuite) setupNewGaugeWithStartTime(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string, startTime time.Time) (
+	uint64, *types.Gauge, sdk.Coins, time.Time,
+) {
+	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
+	distrTo := lockuptypes.QueryCondition{
+		LockQueryType: lockuptypes.ByDuration,
+		Denom:         denom,
+		Duration:      duration,
+	}
+
+	// mints coins so supply exists on chain
+	mintCoins := sdk.Coins{sdk.NewInt64Coin(distrTo.Denom, 200)}
+	suite.FundAcc(addr, mintCoins)
+
+	numEpochsPaidOver := uint64(2)
+	if isPerpetual {
+		numEpochsPaidOver = uint64(1)
+	}
+	gaugeID, gauge := suite.CreateGauge(isPerpetual, addr, coins, distrTo, startTime, numEpochsPaidOver)
+	return gaugeID, gauge, coins, startTime
+}
+
 // setupNewGaugeWithDenom creates a gauge with the specified duration and denom.
 func (suite *KeeperTestSuite) setupNewGaugeWithDenom(isPerpetual bool, coins sdk.Coins, duration time.Duration, denom string, numEpochsPaidOver uint64) (
 	uint64, *types.Gauge, sdk.Coins, time.Time,
 ) {
 	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
-	startTime2 := time.Now()
+	startTime2 := suite.Ctx.BlockTime()
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         denom,

@@ -210,7 +210,7 @@ func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
 
 		// System under test.
 		coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(500000000)))
-		gaugeID, _, _, _ := suite.SetupNewGauge(true, coins)
+		gaugeID, _, _, _ := suite.SetupNewGauge(true, coins, 2)
 		if tc.nonexistentGauge {
 			gaugeID = incentivesKeeper.GetLastGaugeID(ctx) + 1
 		}
