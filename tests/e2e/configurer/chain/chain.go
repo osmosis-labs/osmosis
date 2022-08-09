@@ -18,7 +18,8 @@ type Config struct {
 
 	ValidatorInitConfigs []*initialization.NodeConfig
 	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, and a buffer.
-	VotingPeriod float32
+	VotingPeriod          float32
+	ExpeditedVotingPeriod float32
 	// upgrade proposal height for chain.
 	UpgradePropHeight    int64
 	LatestProposalNumber int

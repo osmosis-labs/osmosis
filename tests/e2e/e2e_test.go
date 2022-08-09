@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,7 +56,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	// enable superfluid via proposal.
 	node.SubmitSuperfluidProposal("gamm/pool/1", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	chain.LatestProposalNumber += 1
-	node.DepositProposal(chain.LatestProposalNumber)
+	node.DepositProposal(chain.LatestProposalNumber, false)
 	for _, node := range chain.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
 	}
@@ -70,9 +71,9 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	node.SuperfluidDelegate(chain.LatestLockNumber, chain.NodeConfigs[1].OperatorAddress, walletName)
 
 	// create a text prop, deposit and vote yes
-	node.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	node.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
 	chain.LatestProposalNumber += 1
-	node.DepositProposal(chain.LatestProposalNumber)
+	node.DepositProposal(chain.LatestProposalNumber, false)
 	for _, node := range chain.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
 	}
@@ -210,4 +211,34 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	// stop the state synching node.
 	err = chain.RemoveNode(stateSynchingNode.Name)
 	s.NoError(err)
+}
+
+func (s *IntegrationTestSuite) TestExpeditedProposals() {
+	if !s.skipUpgrade {
+		s.T().Skip("this can be re-enabled post v12")
+	}
+
+	var wg sync.WaitGroup
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
+
+	node.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
+	chain.LatestProposalNumber += 1
+	node.DepositProposal(chain.LatestProposalNumber, true)
+	wg.Add(1)
+	totalTime := make(chan time.Duration, 1)
+	go node.QueryPropStatusTimed(&wg, chain.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTime)
+	for _, node := range chain.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	}
+	// wait till prop status reaches desired pass status
+	wg.Wait()
+	elapsed := <-totalTime
+	// compare the time it took to reach pass status to expected expedited voting period
+	expeditedVotingPeriodDuration := time.Duration(chain.ExpeditedVotingPeriod * 1000000000)
+	timeDelta := elapsed - expeditedVotingPeriodDuration
+	// ensure delta is within one second of expected time
+	s.Require().Less(timeDelta, time.Second)
+	close(totalTime)
 }
