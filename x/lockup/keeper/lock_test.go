@@ -439,6 +439,77 @@ func (suite *KeeperTestSuite) TestAddTokensToLock() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestHasLock() {
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+	addr2 := sdk.AccAddress([]byte("addr2---------------"))
+
+	testCases := []struct {
+		name            string
+		tokenLocked     sdk.Coin
+		durationLocked  time.Duration
+		lockAddr        sdk.AccAddress
+		denomToQuery    string
+		durationToQuery time.Duration
+		expectedHas     bool
+	}{
+		{
+			name:            "same token, same duration",
+			tokenLocked:     sdk.NewInt64Coin("stake", 10),
+			durationLocked:  time.Minute,
+			lockAddr:        addr1,
+			denomToQuery:    "stake",
+			durationToQuery: time.Minute,
+			expectedHas:     true,
+		},
+		{
+			name:            "same token, shorter duration",
+			tokenLocked:     sdk.NewInt64Coin("stake", 10),
+			durationLocked:  time.Minute,
+			lockAddr:        addr1,
+			denomToQuery:    "stake",
+			durationToQuery: time.Second,
+			expectedHas:     false,
+		},
+		{
+			name:            "same token, longer duration",
+			tokenLocked:     sdk.NewInt64Coin("stake", 10),
+			durationLocked:  time.Minute,
+			lockAddr:        addr1,
+			denomToQuery:    "stake",
+			durationToQuery: time.Minute * 2,
+			expectedHas:     false,
+		},
+		{
+			name:            "different token, same duration",
+			tokenLocked:     sdk.NewInt64Coin("stake", 10),
+			durationLocked:  time.Minute,
+			lockAddr:        addr1,
+			denomToQuery:    "uosmo",
+			durationToQuery: time.Minute,
+			expectedHas:     false,
+		},
+		{
+			name:            "same token, same duration, different address",
+			tokenLocked:     sdk.NewInt64Coin("stake", 10),
+			durationLocked:  time.Minute,
+			lockAddr:        addr2,
+			denomToQuery:    "uosmo",
+			durationToQuery: time.Minute,
+			expectedHas:     false,
+		},
+	}
+	for _, tc := range testCases {
+		suite.SetupTest()
+
+		suite.FundAcc(tc.lockAddr, sdk.Coins{tc.tokenLocked})
+		_, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, tc.lockAddr, sdk.Coins{tc.tokenLocked}, tc.durationLocked)
+		suite.Require().NoError(err)
+
+		hasLock := suite.App.LockupKeeper.HasLock(suite.Ctx, addr1, tc.denomToQuery, tc.durationToQuery)
+		suite.Require().Equal(tc.expectedHas, hasLock)
+	}
+}
+
 func (suite *KeeperTestSuite) TestLock() {
 	suite.SetupTest()
 

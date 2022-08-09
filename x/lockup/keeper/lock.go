@@ -55,7 +55,7 @@ func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sd
 
 	// if no lock exists for the given owner + denom + duration, return an error
 	if len(locks) < 1 {
-		return 0, sdkerrors.Wrap(types.ErrLockupNotFound, "lock with given condition does not exist")
+		return 0, sdkerrors.Wrapf(types.ErrLockupNotFound, "lock with denom %s before duration %s does not exist", coin.Denom, duration.String())
 	}
 
 	// if existing lock with same duration and denom exists, add to the existing lock
@@ -63,15 +63,15 @@ func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sd
 	lock := locks[0]
 	_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
 	if err != nil {
-		return 0, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	return lock.ID, nil
 }
 
 // HasLock returns true if lock with the given condition exists
-func (k Keeper) HasLock(ctx sdk.Context, owner sdk.AccAddress, coin sdk.Coin, duration time.Duration) bool {
-	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, coin.Denom, duration)
+func (k Keeper) HasLock(ctx sdk.Context, owner sdk.AccAddress, denom string, duration time.Duration) bool {
+	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, denom, duration)
 	return len(locks) > 0
 }
 
