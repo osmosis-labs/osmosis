@@ -51,6 +51,8 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.chainA = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),
 	}
+	// Remove epochs to prevent  minting
+	suite.chainA.MoveEpochsToTheFuture()
 	suite.chainB = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2)),
 	}
@@ -178,8 +180,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() 
 	fmt.Println(max, used, remaining)
 
 	// Sending above the quota should fail. Adding some extra here because the cap is increasing. See test bellow.
-	suite.AssertSendSuccess(false, suite.NewValidMessage(true, remaining.AddRaw(50000000)))
-
+	suite.AssertSendSuccess(false, suite.NewValidMessage(true, remaining))
 }
 
 func (suite *MiddlewareTestSuite) TestWeirdBalanceIssue() {
@@ -199,5 +200,5 @@ func (suite *MiddlewareTestSuite) TestWeirdBalanceIssue() {
 	// Total supply should decrease, not increase
 	newSupply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	fmt.Println(newSupply)
-	suite.Require().True(newSupply.Amount.LT(oldSupply.Amount))
+	suite.Require().True(newSupply.Amount.LTE(oldSupply.Amount))
 }

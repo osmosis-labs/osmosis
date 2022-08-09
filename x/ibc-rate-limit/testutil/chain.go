@@ -1,6 +1,7 @@
 package osmosisibctesting
 
 import (
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -10,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/app"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"time"
 )
 
 type TestChain struct {
@@ -74,6 +76,19 @@ func SignAndDeliver(
 	return gInfo, res, err
 }
 
+// Move epochs to the future to avoid issues with minting
+func (chain *TestChain) MoveEpochsToTheFuture() {
+	epochsKeeper := chain.GetOsmosisApp().EpochsKeeper
+	ctx := chain.GetContext()
+	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
+		epoch.StartTime = ctx.BlockTime().Add(time.Hour * 24 * 30)
+		fmt.Println(epoch)
+		epochsKeeper.DeleteEpochInfo(chain.GetContext(), epoch.Identifier)
+		epochsKeeper.AddEpochInfo(ctx, epoch)
+	}
+}
+
+// GetOsmosisApp returns the current chain's app as an OsmosisApp
 func (chain *TestChain) GetOsmosisApp() *app.OsmosisApp {
 	return chain.App.(*app.OsmosisApp)
 }
