@@ -34,8 +34,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-require mvdan.cc/gofumpt v0.3.1 // indirect
-
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
@@ -55,7 +53,7 @@ require (
 	github.com/OpenPeeDeeP/depguard v1.1.0 // indirect
 	github.com/Workiva/go-datastructures v1.0.53 // indirect
 	github.com/alexkohler/prealloc v1.0.0 // indirect
-	github.com/armon/go-metrics v0.3.11 // indirect
+	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/ashanbrown/forbidigo v1.3.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -220,7 +218,7 @@ require (
 	github.com/shazow/go-diff v0.0.0-20160112020656-b6b7b6733b8c // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/sivchari/containedctx v1.0.2 // indirect
-	github.com/sivchari/tenv v1.7.0 // indirect
+	github.com/sivchari/tenv v1.5.0 // indirect
 	github.com/sonatard/noctx v0.0.1 // indirect
 	github.com/sourcegraph/go-diff v0.6.1 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
@@ -250,19 +248,20 @@ require (
 	github.com/zondax/hid v0.9.0 // indirect
 	gitlab.com/bosi/decorder v0.2.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/exp/typeparams v0.0.0-20220613132600-b0d781184e0d // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
+	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
+	golang.org/x/exp/typeparams v0.0.0-20220218215828-6cf2b201936e // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
-	golang.org/x/sys v0.0.0-20220702020025-31831981b65f // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/term v0.0.0-20220411215600-e5f449aeb171 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/tools v0.1.12-0.20220628192153-7743d1d949f1 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gopkg.in/ini.v1 v1.66.6 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-	honnef.co/go/tools v0.3.2 // indirect
+	golang.org/x/tools v0.1.11-0.20220316014157-77aa08bb151a // indirect
+	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
+	gopkg.in/ini.v1 v1.66.4 // indirect
+	gopkg.in/yaml.v3 v3.0.0 // indirect
+	honnef.co/go/tools v0.3.1 // indirect
+	mvdan.cc/gofumpt v0.3.1 // indirect
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
 	mvdan.cc/unparam v0.0.0-20211214103731-d0ef000c54e5 // indirect
