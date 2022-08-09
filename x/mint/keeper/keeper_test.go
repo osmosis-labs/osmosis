@@ -495,7 +495,6 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 // - all developer addressed are updated with correct proportions.
 // - mint module account balance is updated - burn over allocations.
 // - if recepients are empty - community pool us updated.
-// TODO: test for supply offsets
 func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 	const (
 		invalidAddress = "invalid"
@@ -658,6 +657,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.distribution.Denom).Amount
 			oldDeveloperVestingModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), tc.distribution.Denom).Amount
 			oldCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), tc.distribution.Denom).Amount
+			oldSupplyOffsetAmount := bankKeeper.GetSupplyOffset(ctx, tc.distribution.Denom)
 			oldDeveloperRewardsBalanceAmounts := make([]sdk.Int, len(tc.recepientAddresses))
 			for i, weightedAddress := range tc.recepientAddresses {
 				if weightedAddress.Address == keeper.EmptyWeightedAddressReceiver {
@@ -683,6 +683,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			actualMintModuleBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.distribution.Denom)
 			actualDeveloperVestingModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), tc.distribution.Denom).Amount
 			actualCommunityPoolModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), tc.distribution.Denom).Amount
+			actualSupplyOffsetAmount := bankKeeper.GetSupplyOffset(ctx, tc.distribution.Denom)
 
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
@@ -715,8 +716,10 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			expectedDistributedCommunityPool := sdk.NewInt(0)
 			expectedTruncationDelta := sdk.ZeroDec()
 
+			// Suppply offset delta is equal to the dev rewards
+			suite.Require().Equal(oldSupplyOffsetAmount.Add(tc.distribution.Amount).Int64(), actualSupplyOffsetAmount.Int64())
+
 			for i, weightedAddress := range tc.recepientAddresses {
-				// TODO: truncation should not occur: https://github.com/osmosis-labs/osmosis/issues/1917
 				expectedAllocation := expectedDistributed.Mul(tc.recepientAddresses[i].Weight)
 				expectedAllocationTruncated := expectedAllocation.TruncateInt()
 				expectedTruncationDelta = expectedTruncationDelta.Add(expectedAllocation.Sub(expectedAllocationTruncated.ToDec()))

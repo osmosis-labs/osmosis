@@ -324,7 +324,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 	// from the developer rewards module account address.
 	k.bankKeeper.AddSupplyOffset(ctx, developerRewardsCoin.Denom, oldDeveloperAccountBalance.Amount)
 	// Re-introduce the new supply offset
-	k.bankKeeper.AddSupplyOffset(ctx, developerRewardsCoin.Denom, newDeveloperAccountBalance.Amount.Add(truncationDelta.AmountOf(developerRewardsCoin.Denom)).Neg())
+	k.bankKeeper.AddSupplyOffset(ctx, developerRewardsCoin.Denom, newDeveloperAccountBalance.Amount.Sub(truncationDelta.AmountOf(developerRewardsCoin.Denom)).Neg())
 
 	// Return the amount of coins distributed to the developer rewards module account.
 	// We truncate because the same is done to the delta that is distributed to the community pool.
