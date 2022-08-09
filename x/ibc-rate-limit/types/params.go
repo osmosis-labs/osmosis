@@ -47,7 +47,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 func validateContractAddress(i interface{}) error {
 	v, ok := i.(string)
-	fmt.Println(v)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
@@ -58,7 +57,7 @@ func validateContractAddress(i interface{}) error {
 
 	}
 
-	err = sdk.VerifyAddressFormat([]byte(bech32))
+	err = sdk.VerifyAddressFormat(bech32)
 	if err != nil {
 		return err
 	}

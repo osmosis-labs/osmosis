@@ -57,12 +57,12 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	suite.coordinator.Setup(suite.path)
 }
 
-func (suite *MiddlewareTestSuite) NewValidMessage(forward bool) sdk.Msg {
+func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount int64) sdk.Msg {
 	var coins sdk.Coin
 	var port, channel, accountFrom, accountTo string
 
 	if forward {
-		coins = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
+		coins = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(amount))
 		port = suite.path.EndpointA.ChannelConfig.PortID
 		channel = suite.path.EndpointA.ChannelID
 		accountFrom = suite.chainA.SenderAccount.GetAddress().String()
@@ -75,7 +75,7 @@ func (suite *MiddlewareTestSuite) NewValidMessage(forward bool) sdk.Msg {
 			sdk.DefaultBondDenom,
 			sdk.NewInt(1),
 		)
-		coins = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
+		coins = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(amount))
 		port = suite.path.EndpointB.ChannelConfig.PortID
 		channel = suite.path.EndpointB.ChannelID
 		accountFrom = suite.chainB.SenderAccount.GetAddress().String()
@@ -136,11 +136,11 @@ func (suite *MiddlewareTestSuite) AssertSendSucceeds(success bool, msg sdk.Msg) 
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithoutRateLimitingContract() {
-	suite.AssertSendSucceeds(true, suite.NewValidMessage(true))
+	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, 1))
 }
 
 func (suite *MiddlewareTestSuite) TestReceiveTransferWithoutRateLimitingContract() {
-	suite.AssertReceiveSucceeds(true, suite.NewValidMessage(false))
+	suite.AssertReceiveSucceeds(true, suite.NewValidMessage(false, 1))
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() {
@@ -148,5 +148,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() 
 	addr := suite.chainA.InstantiateContract(&suite.Suite)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	suite.AssertSendSucceeds(true, suite.NewValidMessage(true))
+	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, 5))
+	suite.AssertSendSucceeds(true, suite.NewValidMessage(true, 5))
+	suite.AssertSendSucceeds(false, suite.NewValidMessage(true, 1))
 }

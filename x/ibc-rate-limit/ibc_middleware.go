@@ -1,6 +1,7 @@
 package ibc_rate_limit
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -15,6 +16,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
+	"strings"
 )
 
 var _ porttypes.Middleware = &IBCModule{}
@@ -38,18 +40,37 @@ func NewICS4Middleware(channel porttypes.ICS4Wrapper, accountKeeper *authkeeper.
 
 func (i ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
 	fmt.Println("Sending package through middleware")
-	contract := i.ParamSpace.GetRaw(ctx, []byte("contract"))
-	if contract == nil {
+	contractRaw := i.ParamSpace.GetRaw(ctx, []byte("contract"))
+	if contractRaw == nil {
 		// The contract has not been configured. Continue as usual
 		return i.channel.SendPacket(ctx, chanCap, packet)
 	}
 
-	sendPacketMsg := `{"send_packet": {"channel_id": "test", "channel_value": "100", "funds": "1"}}`
+	contract := strings.Trim(string(contractRaw), `"`) // ToDo: Why is this stored with ""
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return err
+	}
+
+	var packetData map[string]interface{} // ToDo: Do this with a struct
+	err = json.Unmarshal(packet.GetData(), &packetData)
+	if err != nil {
+		return err
+	}
+
+	// ToDo: Do this with a struct
+	sendPacketMsg := fmt.Sprintf(
+		`{"send_packet": {"channel_id": "%s", "channel_value": "100", "funds": "%s"}}`,
+		packet.GetSourceChannel(),
+		packetData["amount"],
+	)
+
 	sender := i.accountKeeper.GetModuleAccount(ctx, transfertypes.ModuleName)
 
-	// ToDo: This shoiuld probably be done through the message dispatcher
+	// ToDo: This should probably be done through the message dispatcher
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(i.WasmKeeper)
-	response, err := contractKeeper.Execute(ctx, contract, sender.GetAddress(), []byte(sendPacketMsg), sdk.Coins{})
+	response, err := contractKeeper.Execute(ctx, contractAddr, sender.GetAddress(), []byte(sendPacketMsg), sdk.Coins{})
+	fmt.Println(err)
 
 	if err != nil {
 		// Handle potential errors
