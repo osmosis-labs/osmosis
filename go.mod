@@ -1,6 +1,6 @@
 module github.com/osmosis-labs/osmosis/v10
 
-go 1.19
+go 1.18
 
 require (
 	github.com/CosmWasm/wasmd v0.27.0
