@@ -63,7 +63,6 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 				Weight:  sdk.NewDecWithPrec(217, 3),
 			},
 		}
-		developerVestingModuleAccountStartingBalance = sdk.NewInt(keeper.DeveloperVestingAmount)
 	)
 
 	suite.assertAddressWeightsAddUpToOne(testWeightedAddresses)
@@ -361,14 +360,13 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 				WeightedDeveloperRewardsReceivers:    tc.weightedAddresses,
 				MintingRewardsDistributionStartEpoch: tc.mintStartEpoch,
 			}
-
-			app := osmoapp.Setup(false)
+			suite.Setup()
+			app := suite.App
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 			mintKeeper := app.MintKeeper
 			distrKeeper := app.DistrKeeper
 			accountKeeper := app.AccountKeeper
-			bankKeeper := app.BankKeeper
 
 			// Pre-set parameters and minter.
 			mintKeeper.SetParams(ctx, mintParams)
@@ -380,6 +378,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			expectedDevRewards := tc.expectedDistribution.Mul(mintParams.DistributionProportions.DeveloperRewards)
 
 			developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
+			// mintAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), sdk.DefaultBondDenom)
 
 			if tc.expectedPanic {
 				// If panic is expected, burn developer module account balance so that it causes an error that leads to a
@@ -405,25 +404,13 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			expectedMintedTruncated := tc.expectedDistribution.Mul(sdk.OneDec().Sub(tc.distributionProportions.DeveloperRewards)).TruncateInt()
 			expectedDevRewardsTruncated := expectedDevRewards.TruncateInt()
 			expectedDeveloperVestingAccountBalance := developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewardsTruncated)
+			expectedMintModuleAccountBalance := sdk.ZeroInt()
 
-			// Validate developer account balance.
-			developerAccountBalanceAfterHook := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
-			suite.Require().Equal(expectedDeveloperVestingAccountBalance, developerAccountBalanceAfterHook.Amount)
-
-			// Validate supply offset.
-			supplyOffsetAfterHook := bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
-			suite.Require().Equal(expectedDeveloperVestingAccountBalance.Neg(), supplyOffsetAfterHook)
-
-			// Validate supply.
-			// We mint the prortion of non-developer rewards provisions since developer rewards are pre-minted at genesis
-			// and are distributed by the developer vesting module account.
-			suite.Require().Equal(developerVestingModuleAccountStartingBalance.Add(expectedMintedTruncated).String(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.String())
-
-			// Validate supply with offset.
-			// Supply with offset = initial developer vesting module account balance + minted provisions - developer vesting module account balance after.
-			expectedSupplyWithOffset := developerVestingModuleAccountStartingBalance.Add(expectedMintedTruncated).Sub(expectedDeveloperVestingAccountBalance)
-			suite.Require().Equal(expectedSupplyWithOffset, app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
-			suite.Require().Equal(expectedDevRewardsTruncated.Add(expectedMintedTruncated).String(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.String())
+			// N.B:
+			// Developer vesting module account balance decreases by the distribution amount.
+			// Mint module account balance is unchanged because we distribute everything originally minted
+			// We mint the expectedMintedTruncated amount that affects the supply.
+			suite.ValidateSupplyAndMintModuleAccounts(expectedDeveloperVestingAccountBalance, expectedMintModuleAccountBalance, expectedMintedTruncated)
 
 			// Validate epoch provisions.
 			suite.Require().Equal(tc.expectedLastReductionEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))

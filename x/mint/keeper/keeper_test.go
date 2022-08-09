@@ -54,6 +54,31 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.App.MintKeeper.SetParams(suite.Ctx, params)
 }
 
+func (suite *KeeperTestSuite) ValidateSupplyAndMintModuleAccounts(expectedDeveloperVestingAccountBalance sdk.Int, expectedMintModuleAccountBalance, expectedMintedTruncated sdk.Int) {
+	bankKeeper := suite.App.BankKeeper
+	accountKeeper := suite.App.AccountKeeper
+	ctx := suite.Ctx
+
+	// Developer vesting module account balance
+	actualDeveloperVestingAccountBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
+	suite.Require().Equal(expectedDeveloperVestingAccountBalance.String(), actualDeveloperVestingAccountBalance.Amount.String())
+
+	// Mint module account balance
+	actualMintModuleAccountBalance := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), sdk.DefaultBondDenom)
+	suite.Require().Equal(expectedMintModuleAccountBalance.String(), actualMintModuleAccountBalance.Amount.String())
+
+	// Supply offset.
+	actualSupplyOffset := bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
+	suite.Require().Equal(expectedDeveloperVestingAccountBalance.Neg(), actualSupplyOffset)
+
+	// Minted supply.
+	suite.Require().Equal(sdk.NewInt(keeper.DeveloperVestingAmount).Add(expectedMintedTruncated).String(), bankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.String())
+
+	// Supply with offset (minted supply - supply offset)
+	expectedSupplyWithOffset := sdk.NewInt(keeper.DeveloperVestingAmount).Add(expectedMintedTruncated).Sub(expectedDeveloperVestingAccountBalance)
+	suite.Require().Equal(expectedSupplyWithOffset, bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+}
+
 // setupDeveloperVestingModuleAccountTest sets up test cases that utilize developer vesting
 // module account logic. It reverts some default logic added by suite.Setup()
 // Specifically, it removes the developer vesting module account
@@ -250,6 +275,8 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			err := mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.preMintCoin))
 			suite.Require().NoError(err)
 
+			oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintCoin.Denom).Amount
+
 			// System under test.
 			err = mintKeeper.DistributeMintedCoin(ctx, tc.mintCoin)
 
@@ -274,6 +301,12 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			// validate distributions to community pool.
 			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount
 			suite.Require().Equal(expectedCommunityPoolAmount, actualCommunityPoolBalanceAmount)
+
+			// N.B:
+			// Developer vesting module account is unaffected.
+			// Mint module account balance is decreased by the distributed amount.
+			// We mint the amount equal to tc.preMintCoin that increases the supply
+			suite.ValidateSupplyAndMintModuleAccounts(sdk.NewInt(keeper.DeveloperVestingAmount), oldMintModuleBalanceAmount.Sub(tc.mintCoin.Amount), tc.preMintCoin.Amount)
 		})
 	}
 }
@@ -481,8 +514,12 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(expectedDistributed, actualDistributed)
 
-				// Updated balances.
-				suite.Require().Equal(oldMintModuleBalanceAmount.Sub(actualDistributed).Int64(), actualMintModuleBalanceAmount.Int64())
+				// N.B:
+				// Developer vesting module account is unaffected.
+				// Mint module account balance is decreased by the distributed amount.
+				// We mint the amount equal to tc.preMintCoin that increases the supply
+				suite.ValidateSupplyAndMintModuleAccounts(sdk.NewInt(keeper.DeveloperVestingAmount), oldMintModuleBalanceAmount.Sub(actualDistributed), tc.preMintCoin.Amount)
+
 				suite.Require().Equal(oldRecepientModuleBalanceAmount.Add(actualDistributed).Int64(), actualRecepientModuleBalanceAmount.Int64())
 			})
 		})
@@ -743,13 +780,17 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 				suite.Require().Equal(oldDeveloperRewardsBalanceAmounts[i].Add(expectedAllocationTruncated).Int64(), actualDeveloperRewardsBalanceAmounts.Int64())
 			}
 
+			// N.B:
+			// Developer vesting module account balance decreases by the distribution amount.
+			// Mint module account balance is unchanged.
+			// We do not mint any amount from mint module account.
+			suite.ValidateSupplyAndMintModuleAccounts(oldDeveloperVestingModuleBalanceAmount.Sub(expectedDistributed.TruncateInt()), oldMintModuleBalanceAmount, sdk.ZeroInt())
+
 			// All truncation delta gets rounded down and set to community pool.
 			expectedDistributedCommunityPool = expectedTruncationDelta.TruncateInt()
 
-			// Mint module account balance is unchanged.
-			suite.Require().Equal(oldMintModuleBalanceAmount.Int64(), actualMintModuleBalance.Amount.Int64())
-
-			suite.Require().Equal(oldDeveloperVestingModuleBalanceAmount.Sub(expectedDistributed.TruncateInt()).Int64(), actualDeveloperVestingModuleBalanceAmount.Int64())
+			// Supply should not change since all distributions are from the developer vesting module account.
+			// suite.ValidateSupply(sdk.ZeroInt())
 			suite.Require().Equal(oldCommunityPoolBalanceAmount.Add(expectedDistributedCommunityPool).Add(sdk.NewInt(tc.expectedCommunityPoolNonTruncationDistributions)).Int64(), actualCommunityPoolModuleBalanceAmount.Int64())
 		})
 	}
