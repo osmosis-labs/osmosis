@@ -18,6 +18,9 @@ func (app *OsmosisApp) BlockedAddrs() map[string]bool {
 	// The list is sourced from: https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
 	// List updated with tornado cash addresses Aug 9 2022
 	// we should ensure that each build of osmosis contains all blocked addresses in this file.
+	// tooling to parse the 55mb ofac list is available here: https://github.com/0xB10C/ofac-sanctioned-digital-currency-addresses
+	// an updated list of ethereum addresses is available here: https://raw.githubusercontent.com/0xB10C/ofac-sanctioned-digital-currency-addresses/lists/sanctioned_addresses_ETH.txt
+	// as of Aug 9 2022, this file contains all 68 sanctioned ethereum addresses.
 	ofacRawEthAddrs := []string{
 		"0x7F367cC41522cE07553e823bf3be79A889DEbe1B",
 		"0xd882cfc20f52f2599d84b8e8d58c7fb62cfe344b",
