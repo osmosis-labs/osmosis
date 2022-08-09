@@ -48,8 +48,8 @@ func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddr
 }
 
 // AddToExistingLock adds the given coin to the existing lock with the same owner and duration.
-// Returns the updated lock ID if successfully added coin, returns 0 when a lock with
-// given condition does not exist.
+// Returns the updated lock ID if successfully added coin, returns 0 and error when a lock with
+// given condition does not exist, or if fails to add to lock.
 func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sdk.Coin, duration time.Duration) (uint64, error) {
 	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, coin.Denom, duration)
 
