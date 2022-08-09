@@ -92,7 +92,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 				Duration:      test.param.duration,
 			})
 			suite.Require().Equal(accum.String(), "20")
-
+			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtLockTokens, 1)
 		} else {
 			// Fail simple lock token
 			suite.Require().Error(err)
@@ -184,6 +184,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 
 		if test.expectPass {
 			suite.Require().NoError(err)
+			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtBeginUnlock, 1)
 		} else {
 			suite.Require().Error(err)
 		}
@@ -247,6 +248,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlockingAll() {
 
 		if test.expectPass {
 			suite.Require().NoError(err)
+			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtBeginUnlockAll, 1)
 		} else {
 			suite.Require().Error(err)
 		}
@@ -322,6 +324,7 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 
 		if test.expectPass {
 			suite.Require().NoError(err, test.name)
+			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtLockTokens, 2)
 		} else {
 			suite.Require().Error(err, test.name)
 		}
