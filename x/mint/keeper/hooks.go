@@ -70,12 +70,15 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			panic(err)
 		}
 
-		// TODO: add logic for getting this from the store
-		expectedTotalMintedByCurrentEpoch := minter.LastMintedTotalAmount.Add(minter.EpochProvisions)
-
-		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, mintedCoin.Denom, expectedTotalMintedByCurrentEpoch, developerRewardsDistributionProportion)
-		if err != nil {
-			panic(err)
+		distributedTruncationDelta := sdk.NewInt(0)
+		if epochNumber%params.ReductionPeriodInEpochs+k.GetLastReductionEpochNum(ctx) == 0 {
+			// TODO: add logic for getting this from the store
+			expectedTotalMintedByCurrentEpoch := minter.LastMintedTotalAmount.Add(minter.EpochProvisions)
+			k.SetMinter(ctx, minter)
+			distributedTruncationDelta, err = k.distributeTruncationDelta(ctx, mintedCoin.Denom, expectedTotalMintedByCurrentEpoch, developerRewardsDistributionProportion)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		totalDistributed := mintedCoin.Amount.Add(developerVestingAmount).Add(distributedTruncationDelta)

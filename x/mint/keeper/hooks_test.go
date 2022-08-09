@@ -42,6 +42,7 @@ func TestHooksTestSuite(t *testing.T) {
 
 // TestAfterEpochEnd tests that the after epoch end hook correctly
 // distributes the rewards depending on what epoch it is in.
+// TODO: validate supply offset
 func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 	var (
 		testWeightedAddresses = []types.WeightedAddress{
@@ -62,9 +63,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 				Weight:  sdk.NewDecWithPrec(217, 3),
 			},
 		}
-		maxArithmeticTolerance   = sdk.NewDec(5)
-		expectedSupplyWithOffset = sdk.NewDec(0)
-		expectedSupply           = sdk.NewDec(keeper.DeveloperVestingAmount)
+		developerVestingModuleAccountStartingBalance = sdk.NewInt(keeper.DeveloperVestingAmount)
 	)
 
 	suite.assertAddressWeightsAddUpToOne(testWeightedAddresses)
@@ -403,15 +402,28 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 				return
 			}
 
+			expectedMintedTruncated := tc.expectedDistribution.Mul(sdk.OneDec().Sub(tc.distributionProportions.DeveloperRewards)).TruncateInt()
+			expectedDevRewardsTruncated := expectedDevRewards.TruncateInt()
+			expectedDeveloperVestingAccountBalance := developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewardsTruncated)
+
 			// Validate developer account balance.
 			developerAccountBalanceAfterHook := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
-			osmoassert.DecApproxEq(suite.T(), developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewards.TruncateInt()).ToDec(), developerAccountBalanceAfterHook.Amount.ToDec(), maxArithmeticTolerance)
+			suite.Require().Equal(expectedDeveloperVestingAccountBalance, developerAccountBalanceAfterHook.Amount)
+
+			// Validate supply offset.
+			supplyOffsetAfterHook := bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
+			suite.Require().Equal(expectedDeveloperVestingAccountBalance.Neg(), supplyOffsetAfterHook)
 
 			// Validate supply.
-			osmoassert.DecApproxEq(suite.T(), expectedSupply.Add(tc.expectedDistribution).Sub(expectedDevRewards), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
+			// We mint the prortion of non-developer rewards provisions since developer rewards are pre-minted at genesis
+			// and are distributed by the developer vesting module account.
+			suite.Require().Equal(developerVestingModuleAccountStartingBalance.Add(expectedMintedTruncated).String(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.String())
 
 			// Validate supply with offset.
-			osmoassert.DecApproxEq(suite.T(), expectedSupplyWithOffset.Add(tc.expectedDistribution), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec(), maxArithmeticTolerance)
+			// Supply with offset = initial developer vesting module account balance + minted provisions - developer vesting module account balance after.
+			expectedSupplyWithOffset := developerVestingModuleAccountStartingBalance.Add(expectedMintedTruncated).Sub(expectedDeveloperVestingAccountBalance)
+			suite.Require().Equal(expectedSupplyWithOffset, app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+			suite.Require().Equal(expectedDevRewardsTruncated.Add(expectedMintedTruncated).String(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.String())
 
 			// Validate epoch provisions.
 			suite.Require().Equal(tc.expectedLastReductionEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
@@ -763,10 +775,10 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 		devRewardsDelta = devRewardsDelta.Add(actualDeveloperAccountBalanceAfterHook.Sub(expectedDeveloperAccountBalanceAfterHook))
 
 		expectedSupply = expectedSupply.Add(truncatedEpochProvisions).Sub(devRewards)
-		suite.Require().Equal(expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount)
+		suite.Require().Equal(expectedSupply.RoundInt().String(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.String())
 
 		expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalance.Amount.ToDec())
-		suite.Require().Equal(expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
+		suite.Require().Equal(expectedSupplyWithOffset.RoundInt().String(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.String())
 
 		// Validate that the epoch provisions have not been reduced.
 		suite.Require().Equal(defaultMintingRewardsDistributionStartEpoch, mintKeeper.GetLastReductionEpochNum(ctx))

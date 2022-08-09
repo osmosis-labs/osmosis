@@ -337,13 +337,11 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 // To use these interfaces, we always round down to the nearest integer by truncating decimals.
 // As a result, it is possible to undermint. To mitigate that, we distirbute any delta to the community pool.
 func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, expectedTotalMintedByCurrentEpoch sdk.Dec, developerRewardsProportion sdk.Dec) (sdk.Int, error) {
-	mintedSupplyAmount := k.bankKeeper.GetSupplyWithOffset(ctx, mintedDenom).Amount.ToDec()
+	totalMintedSupplyAmount := k.bankKeeper.GetSupplyWithOffset(ctx, mintedDenom).Amount.ToDec()
 
 	developerRewardsModuleAccountAddress := k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
 
-	totalDistributed := mintedSupplyAmount
-
-	delta := expectedTotalMintedByCurrentEpoch.Sub(totalDistributed)
+	delta := expectedTotalMintedByCurrentEpoch.Sub(totalMintedSupplyAmount)
 
 	mintProportion := sdk.OneDec().Sub(developerRewardsProportion)
 
