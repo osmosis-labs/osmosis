@@ -12,6 +12,11 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestAllocateAsset() {
+	// We have the proportions when DistributeMintedCoin:
+	// 	commnity_pool = 10%
+	//	staking = 40%
+	//	pool_incentive = 30%
+	//	dev_reward = 20%
 	tests := []struct {
 		name                   string
 		testingDistrRecord     []types.DistrRecord
@@ -20,6 +25,18 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		expectedFeeCollector   sdk.Coin
 		expectedCommunityPool  sdk.DecCoin
 	}{
+		// We have the proportions when DistributeMintedCoin:
+		// 	commnity_pool = 10%
+		//	staking = 40%
+		//	pool_incentive = 30%
+		//	dev_reward = 20%
+		// With minting 50000 stake, we get:
+		// 	expectedFeeCollector = 50000 * 0.4 = 20000 stake
+		// 	expectedCommunityPool = 50000 * 0.1 = 5000 stake
+		// 	expectedGaugesBalances in order:
+		//    gaue1_balance = 5000 * 0.3 * 100/(100+200+300) = 2500
+		//    gaue2_balance = 5000 * 0.3 * 200/(100+200+300) = 5000 (using the formula in the function gives the exact result 4999,9999999999995000. But TruncateInt return 4999. Is this the issue?)
+		//    gaue3_balance = 5000 * 0.3 * 300/(100+200+300) = 7500
 		{
 			name: "Allocated to the gauges proportionally",
 			testingDistrRecord: []types.DistrRecord{
@@ -45,6 +62,13 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 			expectedFeeCollector:  sdk.NewCoin("stake", sdk.NewInt(20000)),
 			expectedCommunityPool: sdk.NewDecCoin("stake", sdk.NewInt(5000)),
 		},
+		
+		// With minting 100000 stake, we get:
+		// 	expectedFeeCollector = 100000 * 0.4 = 40000 stake
+		// 	expectedCommunityPool = 100000 * 0.1 + 100000 * 0.3 * 700/(700+200+100) = 31000 stake (Cause gaugeId=0 the reward will be transferred to the community pool)
+		// 	expectedGaugesBalances in order:
+		//    gaue1_balance = 100000 * 0.3 * 100/(700+200+100) = 3000
+		//    gaue2_balance = 100000 * 0.3 * 200/(700+200+100) = 6000
 		{
 			name: "Community pool distribution when gaugeId is zero",
 			testingDistrRecord: []types.DistrRecord{
@@ -70,6 +94,9 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 			expectedFeeCollector:  sdk.NewCoin("stake", sdk.NewInt(40000)),
 			expectedCommunityPool: sdk.NewDecCoin("stake", sdk.NewInt(31000)),
 		},
+		// With minting 100000 stake, we get:
+		// 	expectedFeeCollector = 100000 * 0.4 = 40000 stake
+		// 	expectedCommunityPool = 100000 * 0.1 + 100000 * 0.3 (Cause there are no gauges, all rewards are transferred to the community pool)
 		{
 			name:                   "community pool distribution when no distribution records are set",
 			testingDistrRecord:                   []types.DistrRecord{},
