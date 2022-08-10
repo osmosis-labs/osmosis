@@ -336,6 +336,12 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 			bankKeeper := suite.App.BankKeeper
 			mintKeeper := suite.App.MintKeeper
 
+			// in order to ensure the offset is correctly calculated, we need to mint the supply + 1
+			// this is because a negative supply offset will always return zero
+			// by setting this to the supply + 1, we ensure we are correctly calculating the offset by keeping it delta positive
+			supply := bankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
+			mintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, supply.Amount.Add(sdk.NewInt(1)))))
+
 			supplyWithOffsetBefore := bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
 			supplyOffsetBefore := bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
 
