@@ -2,11 +2,11 @@
 // source: osmosis/twap/v1beta1/query.proto
 
 /*
-Package grpcproto is a reverse proxy.
+Package queryproto is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package grpcproto
+package queryproto
 
 import (
 	"context"

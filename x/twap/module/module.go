@@ -16,7 +16,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v10/x/twap/client/grpc/grpcproto"
+	"github.com/osmosis-labs/osmosis/v10/x/twap"
+	twapclient "github.com/osmosis-labs/osmosis/v10/x/twap/client"
+	"github.com/osmosis-labs/osmosis/v10/x/twap/client/grpc"
+	"github.com/osmosis-labs/osmosis/v10/x/twap/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
 )
 
@@ -52,7 +55,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	grpcproto.RegisterQueryHandlerClient(context.Background(), mux, grpcproto.NewQueryClient(clientCtx)) //nolint:errcheck
+	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -72,13 +75,14 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	k Keeper
+	k twap.Keeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{twapclient.Querier{am.k}})
 }
 
-func NewAppModule(twapKeeper Keeper) AppModule {
+func NewAppModule(twapKeeper twap.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		k:              twapKeeper,
@@ -119,7 +123,7 @@ func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock performs a no-op.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	am.k.endBlock(ctx)
+	am.k.EndBlock(ctx)
 	return []abci.ValidatorUpdate{}
 }
 
