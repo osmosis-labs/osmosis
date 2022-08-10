@@ -79,8 +79,8 @@ This type of test is mainly for functions that would be triggered by incoming me
 ```go
 func(suite *KeeperTestSuite) TestCreateDenom() {
     testCases := map[string] struct {
-        subdenom    string
-        valid       bool
+        subdenom            string
+        expectError         bool
     } {
 
         "subdenom too long": {
@@ -95,13 +95,18 @@ func(suite *KeeperTestSuite) TestCreateDenom() {
 
     for name, tc := range testCases {
         suite.Run(name, func() {
+            ctx := suite.Ctx
+            msgServer := suite.msgServer
+            queryClient := suite.queryClient
+
             // Create a denom
-            res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
-            if tc.valid {
+            res, err := msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
+            
+            if !tc.expectError {
                 suite.Require().NoError(err)
 
                 // Make sure that the admin is set correctly
-                queryRes, err := suite.queryClient.DenomAuthorityMetadata(suite.Ctx.Context(), & types.QueryDenomAuthorityMetadataRequest {
+                queryRes, err := queryClient.DenomAuthorityMetadata(ctx.Context(), & types.QueryDenomAuthorityMetadataRequest {
                     Denom: res.GetNewTokenDenom(),
                 })
 
@@ -123,7 +128,7 @@ This type of test is mainly for functions that would be triggered by other modul
 // It first initializes genesis to the expected value. Then, attempts
 // to export it. Lastly, compares exported to the expected.
 func(suite *KeeperTestSuite) TestMintExportGenesis() {
-    testCases: = map[string] struct {
+    testCases := map[string] struct {
         expectedGenesis *types.GenesisState
     } {
         "default genesis": {
@@ -134,11 +139,11 @@ func(suite *KeeperTestSuite) TestMintExportGenesis() {
         },
     }
 
-    for name, tc: = range testCases {
+    for name, tc := range testCases {
         suite.Run(name, func() {
             // Setup.
-            app: = suite.App
-            ctx: = suite.Ctx
+            app := suite.App
+            ctx := suite.Ctx
 
             app.MintKeeper.InitGenesis(ctx, tc.expectedGenesis)
 
@@ -156,11 +161,11 @@ func(suite *KeeperTestSuite) TestMintExportGenesis() {
 Since the GAMM module is core to the Osmosis repo, it might be useful to have a good example of a well-structured GAMM-specific test. This example covers a simple getter function and validates the specific error messages around the function (as opposed to merely the presence of an error):
 
 ```go
-func TestGetPoolAssetsByDenom(t * testing.T) {
-    testCases: = map[string] struct {
-        poolAssets                  []balancer.PoolAsset
-        expectedPoolAssetsByDenom   map[string]balancer.PoolAsset
-        err                         error
+func TestGetPoolAssetsByDenom(t *testing.T) {
+    testCases := map[string] struct {
+        poolAssets                          []balancer.PoolAsset
+        expectedPoolAssetsByDenom           map[string]balancer.PoolAsset
+        expectedErr                         error
     } {
 
         "one pool asset": {
@@ -196,7 +201,7 @@ func TestGetPoolAssetsByDenom(t * testing.T) {
         t.Run(name, func(t *testing.T) {
             actualPoolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
 
-            require.Equal(t, tc.err, err)
+            require.Equal(t, tc.expectedErr, err)
 
             if tc.err != nil {
                 return
