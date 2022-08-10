@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * MsgExitPoolResponse: token_out field 
 * [#1825](https://github.com/osmosis-labs/osmosis/pull/1825) Fixes Interchain Accounts (host side) by adding it to AppModuleBasics
 * [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
+* [#1699](https://github.com/osmosis-labs/osmosis/pull/1979) `AddToExistingLock` returns error when lock with matching conditions does not exist.
 * [#1994](https://github.com/osmosis-labs/osmosis/pull/1994) Removed bech32ibc module
 * [#2016](https://github.com/osmosis-labs/osmosis/pull/2016) Add fixed 10000 gas cost for each Balancer swap
 * [#2147](https://github.com/osmosis-labs/osmosis/pull/2147) Set MaxAgeNumBlocks in v11 Upgrade Handler to two weeks.
