@@ -8,10 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
-
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -458,21 +454,4 @@ func GetMaccPerms() map[string][]string {
 	}
 
 	return dupMaccPerms
-}
-
-// Required for ibctesting
-func (app *OsmosisApp) GetStakingKeeper() stakingkeeper.Keeper {
-	return *app.AppKeepers.StakingKeeper
-}
-
-func (app *OsmosisApp) GetIBCKeeper() *ibckeeper.Keeper {
-	return app.AppKeepers.IBCKeeper
-}
-
-func (app *OsmosisApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
-	return app.AppKeepers.ScopedIBCKeeper
-}
-
-func (app *OsmosisApp) GetTxConfig() client.TxConfig {
-	return app.txConfig
 }
