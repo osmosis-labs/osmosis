@@ -339,8 +339,6 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, expectedTotalMintedByCurrentEpoch sdk.Dec, developerRewardsProportion sdk.Dec) (sdk.Int, error) {
 	totalMintedSupplyAmount := k.bankKeeper.GetSupplyWithOffset(ctx, mintedDenom).Amount.ToDec()
 
-	developerRewardsModuleAccountAddress := k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
-
 	delta := expectedTotalMintedByCurrentEpoch.Sub(totalMintedSupplyAmount)
 
 	mintProportion := sdk.OneDec().Sub(developerRewardsProportion)
@@ -349,18 +347,11 @@ func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, e
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	deltaFromDeveloperRewards, err := getProportions(delta, developerRewardsProportion)
-	if err != nil {
-		return sdk.Int{}, err
-	}
 
 	deltaFromMintInt := deltaFromMint.TruncateInt()
-	deltaFromDeveloperRewardsInt := deltaFromDeveloperRewards.TruncateInt()
 
-	// Distribute both to the community pool.
-	// We only distribute when both are greater than 0 so that the proportions
-	// are less likely to be skewed.
-	// Truncation is acceptable in both cases because we check delta at the end of every epoch.
+	// Distribute to the community pool.
+	// Truncation is acceptable because we check delta at the end of every epoch.
 	// As a result, actual minted distributions always approach the expected value.
 	// For distributing delta from mint module account, we have to pre-mint first.
 	if err := k.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, deltaFromMintInt))); err != nil {
@@ -371,11 +362,7 @@ func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, e
 		return sdk.Int{}, err
 	}
 
-	if err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, deltaFromDeveloperRewardsInt)), developerRewardsModuleAccountAddress); err != nil {
-		return sdk.Int{}, err
-	}
-
-	return deltaFromMintInt.Add(deltaFromDeveloperRewardsInt), nil
+	return deltaFromMintInt, nil
 }
 
 // getProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the

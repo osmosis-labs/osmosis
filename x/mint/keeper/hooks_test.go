@@ -895,6 +895,38 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 
 	suite.assertAddressWeightsAddUpToOne(mintParams.WeightedDeveloperRewardsReceivers)
 
+	testcases := map[int]struct {
+		expectedTotalProvisionedSupply string
+	}{
+		1: {
+			expectedTotalProvisionedSupply: "300000000000000.000000000000000000",
+		},
+		2: {
+			expectedTotalProvisionedSupply: "500000000000000.000000000000000000",
+		},
+		3: {
+			expectedTotalProvisionedSupply: "633333333333333.200000000000000000",
+		},
+		4: {
+			expectedTotalProvisionedSupply: "722222222222222.100000000000000000",
+		},
+		5: {
+			expectedTotalProvisionedSupply: "781481481481481.400000000000000000",
+		},
+		6: {
+			expectedTotalProvisionedSupply: "820987654320987.500000000000000000",
+		},
+		11: {
+			expectedTotalProvisionedSupply: "889595082050500.200000000000000000",
+		},
+		20: {
+			expectedTotalProvisionedSupply: "899729344206160.400000000000000000",
+		},
+		30: {
+			expectedTotalProvisionedSupply: "899995306414454.100000000000000000",
+		},
+	}
+
 	// Test setup parameters are not identical with mainnet.
 	// Therfore, we set them here to the desired mainnet values.
 	mintKeeper.SetParams(ctx, mintParams)
@@ -913,37 +945,23 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	suite.Require().Equal(expectedSupply.TruncateInt64(), supply.Amount.Int64())
 
 	// Actual test for running AfterEpochEnd hook thirdeningEpoch times.
-	for i := int64(1); i <= defaultReductionPeriodInEpochs*3; i++ {
+	for i := int64(1); i <= defaultReductionPeriodInEpochs*30; i++ {
 		// System undert test.
 		mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, i)
+
+		testcase, found := testcases[int(i/365)]
+		if !found || i%365 != 0 {
+			continue
+		}
+		expectedTotalProvisionedSupply, err := sdk.NewDecFromStr(testcase.expectedTotalProvisionedSupply)
+		suite.Require().NoError(err, i)
+		actualTotalProvisionedSupply := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec()
+		osmoassert.DecApproxEq(suite.T(), expectedTotalProvisionedSupply, actualTotalProvisionedSupply, sdk.NewDec(2))
+
+		expectedDeveloperRewardsShare := expectedTotalProvisionedSupply.Mul(mintParams.DistributionProportions.DeveloperRewards)
+		actualVestedDevRewards := sdk.NewDec(keeper.DeveloperVestingAmount).Add(app.BankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom).ToDec())
+		osmoassert.DecApproxEq(suite.T(), expectedDeveloperRewardsShare, actualVestedDevRewards, sdk.NewDec(2), "dev rewards do not match. epoch num: %d, year: %d", i, i/365)
 	}
-
-	// Validate total supply.
-	// This test check is now failing due to rounding errors.
-	// Every epoch, we accumulate the rounding delta from every problematic component
-	// Here, we add the deltas to the actual supply and compare against expected.
-	//
-	// expectedTotalProvisionedSupply = 365 * 821917808219.178082191780821917 = 299_999_999_999_999.999999999999999705
-	expectedTotalProvisionedSupply, err := sdk.NewDecFromStr("885000000000000.000000000000000000")
-	suite.Require().NoError(err)
-	// actualTotalProvisionedSupply = 299_999_999_997_380 (off by 2619.999999999999999705)
-	// devRewardsDelta = 2555 (hard to estimate but the source is from truncating dev rewards )
-	// epochProvisionsDelta = 0.178082191780821917 * 365 = 64.999999999999999705
-	actualTotalProvisionedSupply := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec()
-
-	// 299_999_999_999_999.999999999999999705
-	suite.Require().Equal(expectedTotalProvisionedSupply, actualTotalProvisionedSupply)
-
-	// This end of epoch should trigger thirdening. It will utilize the updated
-	// (reduced) provisions.
-	mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, defaultThirdeningEpochNum)
-
-	suite.Require().Equal(defaultThirdeningEpochNum, mintKeeper.GetLastReductionEpochNum(ctx))
-
-	expectedThirdenedProvisions := mintParams.ReductionFactor.Mul(genesisEpochProvisionsDec)
-	// Sanity check with the actual value on mainnet.
-	suite.Require().Equal(defaultMainnetThirdenedProvisions, expectedThirdenedProvisions.String())
-	suite.Require().Equal(expectedThirdenedProvisions, mintKeeper.GetMinter(ctx).EpochProvisions)
 }
 
 func (suite KeeperTestSuite) assertAddressWeightsAddUpToOne(receivers []types.WeightedAddress) {
