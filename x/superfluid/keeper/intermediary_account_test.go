@@ -26,14 +26,15 @@ func (suite *KeeperTestSuite) TestIntermediaryAccountCreation() {
 			2,
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 		},
+		// Can create intermediary account with unbonded, unbonding validators
 		{
-			"add unbonded validator",
+			"test intermediary account with unbonded validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
 			2,
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 		},
 		{
-			"add unbonding validator",
+			"test intermediary account with unbonding validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
 			2,
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},

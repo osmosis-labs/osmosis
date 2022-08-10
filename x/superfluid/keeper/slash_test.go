@@ -34,7 +34,7 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			[]int64{0},
 		},
 		{
-			"with single validator and single superfluid delegation",
+			"with an unbonded validator and single superfluid delegation",
 			[]stakingtypes.BondStatus{stakingtypes.Unbonded},
 			1,
 			[]superfluidDelegation{{0, 0, 0, 1000000}},

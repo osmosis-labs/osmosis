@@ -47,16 +47,19 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 			[]int64{0},
 			[]gaugeChecker{{0, 0, 0, true}},
 		},
+		// In this case, allocate reward to validators with different stat. 
+		// There is no difference between Bonded, Unbonding, Unbonded
 		{
-			"add unbonded validator case",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
-			2,
-			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-			[]int64{0},
-			[]gaugeChecker{{0, 0, 0, true}, {1, 1, 0, false}},
+			"add unbonded, unbonding validator case",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded, stakingtypes.Unbonding},
+			3,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}, {2, 2, 0, 1000000}},
+			[]int64{0,1,2},
+			[]gaugeChecker{{0, 0, 0, true}, {1, 1, 0, true}, {2, 2, 0, true}},
 		},
+		// Do not allocate rewards to the Unbonded validator. Therefore gauges are not distributed
 		{
-			"add unbonding validator case",
+			"Unallocate to Unbonded validator",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
 			2,
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
