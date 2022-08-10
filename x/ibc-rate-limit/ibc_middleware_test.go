@@ -151,16 +151,16 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	suite.AssertReceiveSuccess(true, suite.NewValidMessage(false, one))
 }
 
-func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimitingContract() map[string]string {
+func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]string {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, `["channel-0", 5]`)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
-	// Setup sender's balance
+	// Setup sender chain's quota
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
-	// Each user has approximately 10% of the supply
+	// Each user has 10% of the supply
 	supply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := supply.Amount.QuoRaw(20)
 	half := quota.QuoRaw(2)
@@ -178,18 +178,18 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimitingContract() map
 	used, _ := sdk.NewIntFromString(attrs["used"])
 	suite.Require().Equal(used, half.MulRaw(2))
 
-	// Sending above the quota should fail. Adding some extra here because the cap is increasing. See test bellow.
+	// Sending above the quota should fail.
 	suite.AssertSendSuccess(false, suite.NewValidMessage(true, sdk.NewInt(1)))
 	return attrs
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	// Same test as above, but the quotas get reset after time passes
-	attrs := suite.TestSendTransferWithRateLimitingContract()
+	attrs := suite.TestSendTransferWithRateLimiting()
 	nanos, _ := strconv.ParseInt(attrs["period_end"], 10, 64)
 	resetTime := time.Unix(0, nanos)
 
-	// Move bothe chains one block
+	// Move both chains one block
 	suite.chainA.NextBlock()
 	suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
 	suite.chainB.NextBlock()
@@ -201,4 +201,28 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 
 	// Sending should succeed again
 	suite.AssertSendSuccess(true, suite.NewValidMessage(true, sdk.NewInt(1)))
+}
+
+func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `["channel-0", 5]`)
+	suite.chainA.RegisterRateLimitingContract(addr)
+
+	// Setup receiver chain's quota
+	osmosisApp := suite.chainA.GetOsmosisApp()
+
+	// Each user has 10% of the supply
+	supply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	quota := supply.Amount.QuoRaw(20)
+	half := quota.QuoRaw(2)
+
+	// receive 2.5% (quota is 5%)
+	suite.AssertReceiveSuccess(true, suite.NewValidMessage(false, half))
+
+	// receive 2.5% (quota is 5%)
+	suite.AssertReceiveSuccess(true, suite.NewValidMessage(false, half))
+
+	// Sending above the quota should fail. Adding some extra here because the cap is increasing. See test bellow.
+	suite.AssertReceiveSuccess(false, suite.NewValidMessage(false, sdk.NewInt(1)))
 }

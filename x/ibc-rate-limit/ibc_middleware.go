@@ -1,8 +1,6 @@
 package ibc_rate_limit
 
 import (
-	"encoding/json"
-	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -16,7 +14,6 @@ import (
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
-	"strings"
 )
 
 var _ porttypes.Middleware = &IBCModule{}
@@ -54,52 +51,31 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 		return i.channel.SendPacket(ctx, chanCap, packet)
 	}
 
-	contract := strings.Trim(string(contractRaw), `"`) // ToDo: Why is this stored with ""
-	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	amount, denom, err := GetFundsFromPacket(packet)
 	if err != nil {
-		return err
+		return sdkerrors.Wrap(err, "Rate limited SendPacket")
 	}
-
-	var packetData map[string]interface{} // ToDo: Do this with a struct
-	err = json.Unmarshal(packet.GetData(), &packetData)
-	if err != nil {
-		return err
-	}
-
-	sendPacketMsg := i.BuildWasmExecMsg(
-		ctx,
-		packet.GetSourceChannel(),
-		packetData["denom"].(string),
-		packetData["amount"].(string),
-	)
+	channelValue := i.CalculateChannelValue(ctx, denom)
 	sender := i.accountKeeper.GetModuleAccount(ctx, transfertypes.ModuleName)
-
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(i.WasmKeeper)
-	// ToDo: Why doesn't this return a response
-	_, err = contractKeeper.Execute(ctx, contractAddr, sender.GetAddress(), []byte(sendPacketMsg), sdk.Coins{})
-
+	err = CheckRateLimits(
+		ctx,
+		i.WasmKeeper,
+		"send_packet",
+		string(contractRaw),
+		channelValue.String(),
+		packet.GetSourceChannel(),
+		sender.GetAddress(),
+		amount,
+	)
 	if err != nil {
-		// ToDo: catch the wasm error and return err if it's something unexpected
-		fmt.Println(err)
-		return sdkerrors.Wrap(types.ErrRateLimitExceeded, "SendPacket")
+		return sdkerrors.Wrap(err, "Rate limited SendPacket")
 	}
 
 	return i.channel.SendPacket(ctx, chanCap, packet)
 }
 
 func (i *ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI, ack exported.Acknowledgement) error {
-	fmt.Println("WriteAcknowledgement middleware")
 	return i.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
-}
-
-func (i *ICS4Middleware) BuildWasmExecMsg(ctx sdk.Context, sourceChannel, denom, amount string) string {
-	// ToDo: Do this with a struct
-	return fmt.Sprintf(
-		`{"send_packet": {"channel_id": "%s", "channel_value": "%s", "funds": "%s"}}`,
-		sourceChannel,
-		i.CalculateChannelValue(ctx, denom),
-		amount,
-	)
 }
 
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
@@ -112,10 +88,10 @@ func (i *ICS4Middleware) CalculateChannelValue(ctx sdk.Context, denom string) sd
 
 type IBCModule struct {
 	app            porttypes.IBCModule
-	ics4Middleware ICS4Middleware
+	ics4Middleware *ICS4Middleware
 }
 
-func NewIBCModule(app porttypes.IBCModule, ics4 ICS4Middleware) IBCModule {
+func NewIBCModule(app porttypes.IBCModule, ics4 *ICS4Middleware) IBCModule {
 	return IBCModule{
 		app:            app,
 		ics4Middleware: ics4,
@@ -123,7 +99,7 @@ func NewIBCModule(app porttypes.IBCModule, ics4 ICS4Middleware) IBCModule {
 }
 
 // OnChanOpenInit implements the IBCModule interface
-func (im IBCModule) OnChanOpenInit(ctx sdk.Context,
+func (im *IBCModule) OnChanOpenInit(ctx sdk.Context,
 	order channeltypes.Order,
 	connectionHops []string,
 	portID string,
@@ -132,7 +108,6 @@ func (im IBCModule) OnChanOpenInit(ctx sdk.Context,
 	counterparty channeltypes.Counterparty,
 	version string,
 ) error {
-	fmt.Println("OnChanOpenInit Middleware")
 	return im.app.OnChanOpenInit(
 		ctx,
 		order,
@@ -141,12 +116,12 @@ func (im IBCModule) OnChanOpenInit(ctx sdk.Context,
 		channelID,
 		channelCap,
 		counterparty,
-		version, // note we only pass app version here
+		version,
 	)
 }
 
 // OnChanOpenTry implements the IBCModule interface
-func (im IBCModule) OnChanOpenTry(
+func (im *IBCModule) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
 	connectionHops []string,
@@ -156,101 +131,120 @@ func (im IBCModule) OnChanOpenTry(
 	counterparty channeltypes.Counterparty,
 	counterpartyVersion string,
 ) (string, error) {
-	fmt.Println("OnChanOpenTry Middleware")
 	return im.app.OnChanOpenTry(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, counterpartyVersion)
 }
 
 // OnChanOpenAck implements the IBCModule interface
-func (im IBCModule) OnChanOpenAck(
+func (im *IBCModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
 	counterpartyChannelID string,
 	counterpartyVersion string,
 ) error {
-	fmt.Println("OnChanOpenAck Middleware")
+	// ToDo: Add initial rate limits to new channels
 	return im.app.OnChanOpenAck(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
 }
 
 // OnChanOpenConfirm implements the IBCModule interface
-func (im IBCModule) OnChanOpenConfirm(
+func (im *IBCModule) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
 ) error {
-	fmt.Println("OnChanOpenConfirm Middleware")
+	// ToDo: Add initial rate limits to new channels
 	return im.app.OnChanOpenConfirm(ctx, portID, channelID)
 }
 
 // OnChanCloseInit implements the IBCModule interface
-func (im IBCModule) OnChanCloseInit(
+func (im *IBCModule) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
 	channelID string,
 ) error {
-	fmt.Println("OnChanCloseInit Middleware")
+	// ToDo: Remove  rate limits when closing channels
 	return im.app.OnChanCloseInit(ctx, portID, channelID)
 }
 
 // OnChanCloseConfirm implements the IBCModule interface
-func (im IBCModule) OnChanCloseConfirm(
+func (im *IBCModule) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
 	channelID string,
 ) error {
-	fmt.Println("OnChanCloseConfirm Middleware")
+	// ToDo: Remove  rate limits when closing channels
 	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
 }
 
 // OnRecvPacket implements the IBCModule interface
-func (im IBCModule) OnRecvPacket(
+func (im *IBCModule) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
-	fmt.Println("OnRecvPacket Middleware")
-	//return channeltypes.NewErrorAcknowledgement(types.RateLimitExceededMsg)
+	contractRaw := im.ics4Middleware.ParamSpace.GetRaw(ctx, []byte("contract"))
+	if contractRaw == nil {
+		// The contract has not been configured. Continue as usual
+		return im.app.OnRecvPacket(ctx, packet, relayer)
+	}
+	amount, denom, err := GetFundsFromPacket(packet)
+	if err != nil {
+		return channeltypes.NewErrorAcknowledgement("bad packet")
+	}
+	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom)
+	sender := im.ics4Middleware.accountKeeper.GetModuleAccount(ctx, transfertypes.ModuleName)
+
+	err = CheckRateLimits(
+		ctx,
+		im.ics4Middleware.WasmKeeper,
+		"recv_packet",
+		string(contractRaw),
+		channelValue.String(),
+		packet.GetSourceChannel(),
+		sender.GetAddress(),
+		amount,
+	)
+	if err != nil {
+		return channeltypes.NewErrorAcknowledgement(types.RateLimitExceededMsg)
+	}
+
 	return im.app.OnRecvPacket(ctx, packet, relayer)
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface
-func (im IBCModule) OnAcknowledgementPacket(
+func (im *IBCModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
-	fmt.Println("OnAcknowledgementPacket Middleware")
 	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
 }
 
 // OnTimeoutPacket implements the IBCModule interface
-func (im IBCModule) OnTimeoutPacket(
+func (im *IBCModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
-	fmt.Println("OnTimeoutPacket Middleware")
 	return im.app.OnTimeoutPacket(ctx, packet, relayer)
 }
 
 // SendPacket implements the ICS4 Wrapper interface
-func (im IBCModule) SendPacket(
+func (im *IBCModule) SendPacket(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 ) error {
-	fmt.Println("Sending package through middleware")
 	return im.ics4Middleware.SendPacket(ctx, chanCap, packet)
 }
 
 // WriteAcknowledgement implements the ICS4 Wrapper interface
-func (im IBCModule) WriteAcknowledgement(
+func (im *IBCModule) WriteAcknowledgement(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
 	packet exported.PacketI,
 	ack exported.Acknowledgement,
 ) error {
-	fmt.Println("WriteAcknowledgement middleware")
 	return im.ics4Middleware.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }
