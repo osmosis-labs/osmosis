@@ -210,15 +210,10 @@ sync-docs:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
-<<<<<<< HEAD
-PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'simapp|e2e')
-PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
-PACKAGES_SIM=$(shell go list ./... | grep '/simapp')
-=======
+
 PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'tests/simulator|e2e')
 PACKAGES_E2E=$(shell go list -tags e2e ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
->>>>>>> 5e2bb89f (Chore: add build tags to e2etest (#2231))
 TEST_PACKAGES=./...
 
 include sims.mk
@@ -240,11 +235,7 @@ test-sim:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
 
 test-e2e:
-<<<<<<< HEAD
-	@VERSION=$(VERSION) go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
-=======
-	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
->>>>>>> 5e2bb89f (Chore: add build tags to e2etest (#2231))
+	@VERSION=$(VERSION) go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)

@@ -53,8 +53,6 @@ Please refer to `tests/e2e/initialization/README.md`
 
 ```sh
     make docker-build-e2e-debug
-<<<<<<< HEAD
-=======
 
 ### Environment variables
 
@@ -107,5 +105,3 @@ This debug configuration helps to run e2e tests locally and skip the desired tes
         "OSMOSIS_E2E_FORK_HEIGHT": "4713065" # this is v10 fork height.
     }
 }
->>>>>>> 5e2bb89f (Chore: add build tags to e2etest (#2231))
-```
