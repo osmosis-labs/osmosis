@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting/osmoassert"
 	v10 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v10"
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
@@ -722,7 +722,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			require.True(t, ok)
 
 			assertPoolStateNotModified(t, balancerPool, func() {
-				osmoutils.ConditionalPanic(t, tc.expectPanic, sut)
+				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
 	}

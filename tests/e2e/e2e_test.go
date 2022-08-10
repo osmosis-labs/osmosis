@@ -1,3 +1,6 @@
+//go:build e2e
+// +build e2e
+
 package e2e
 
 import (
@@ -7,8 +10,11 @@ import (
 	"strconv"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
 
@@ -50,7 +56,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	s.NoError(err)
 
 	// enable superfluid via proposal.
-	node.SubmitSuperfluidProposal("gamm/pool/1")
+	node.SubmitSuperfluidProposal("gamm/pool/1", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	chain.LatestProposalNumber += 1
 	node.DepositProposal(chain.LatestProposalNumber)
 	for _, node := range chain.NodeConfigs {
@@ -67,7 +73,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	node.SuperfluidDelegate(chain.LatestLockNumber, chain.NodeConfigs[1].OperatorAddress, walletName)
 
 	// create a text prop, deposit and vote yes
-	node.SubmitTextProposal("superfluid vote overwrite test")
+	node.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	chain.LatestProposalNumber += 1
 	node.DepositProposal(chain.LatestProposalNumber)
 	for _, node := range chain.NodeConfigs {

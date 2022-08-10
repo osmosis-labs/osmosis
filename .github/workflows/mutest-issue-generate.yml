@@ -1,0 +1,45 @@
+name: Generate Mutation Test Errors 
+
+on:
+  schedule:
+    - cron: '0 13 * * 1' # Every Monday at 1PM UTC (9AM EST)
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: checkout repo
+        uses: actions/checkout@v2
+      -
+        name: Run mutation test
+        continue-on-error: true
+        run: make test-mutation
+      -
+        name: Execute mutation test format script
+        id: mutest-formatted
+        run: |
+          cat mutation_test_result.txt | grep -Ev "PASS" | grep -Ev "SKIP" | tee mutation_test_result.txt
+      -
+        name: Generate code blocks 
+        id: gen-code-blocks
+        run: |
+          cat mutation_test_result.txt  | sed "s# @@# @@\n\`\`\`go\n#g " | sed "s#FAIL#\`\`\`\nFAIL\n\n\n#g " > mutation_test_result.txt 
+      -
+        name: Get today's date
+        id: date
+        run: |
+          echo "::set-output name=today::$(date "+%Y/%m/%d")" 
+      - 
+        name: Read mutation_test_result file
+        id: result
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: mutation_test_result.txt
+      -
+        name: Create an issue
+        uses: dacbd/create-issue-action@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: Mutation test ${{ steps.date.outputs.today }}
+          body: ${{steps.result.outputs.content}}
