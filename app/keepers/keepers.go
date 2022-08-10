@@ -307,6 +307,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
+		distrtypes.ModuleName,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 

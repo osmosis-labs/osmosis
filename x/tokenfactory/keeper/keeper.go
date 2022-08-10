@@ -16,7 +16,6 @@ import (
 
 type (
 	Keeper struct {
-		cdc      codec.Codec
 		storeKey sdk.StoreKey
 
 		paramSpace paramtypes.Subspace
@@ -50,7 +49,6 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:        cdc,
 		storeKey:   storeKey,
 		paramSpace: paramSpace,
 
