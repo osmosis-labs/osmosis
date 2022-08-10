@@ -47,7 +47,7 @@ func NewICS4Middleware(
 	}
 }
 
-func (i ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
+func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
 	contractRaw := i.ParamSpace.GetRaw(ctx, []byte("contract"))
 	if contractRaw == nil {
 		// The contract has not been configured. Continue as usual
@@ -87,7 +87,7 @@ func (i ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Cap
 	return i.channel.SendPacket(ctx, chanCap, packet)
 }
 
-func (i ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI, ack exported.Acknowledgement) error {
+func (i *ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI, ack exported.Acknowledgement) error {
 	fmt.Println("WriteAcknowledgement middleware")
 	return i.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }

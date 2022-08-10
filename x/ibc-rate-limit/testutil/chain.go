@@ -40,7 +40,10 @@ func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 	chain.NextBlock()
 
 	// increment sequence for successful transaction execution
-	chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
+	err = chain.SenderAccount.SetSequence(chain.SenderAccount.GetSequence() + 1)
+	if err != nil {
+		return nil, err
+	}
 
 	chain.Coordinator.IncrementTime()
 
@@ -54,7 +57,7 @@ func SignAndDeliver(
 	chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey,
 ) (sdk.GasInfo, *sdk.Result, error) {
 
-	tx, err := helpers.GenTx(
+	tx, _ := helpers.GenTx(
 		txCfg,
 		msgs,
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
@@ -82,11 +85,12 @@ func (chain *TestChain) MoveEpochsToTheFuture() {
 	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
 		epoch.StartTime = ctx.BlockTime().Add(time.Hour * 24 * 30)
 		epochsKeeper.DeleteEpochInfo(chain.GetContext(), epoch.Identifier)
-		epochsKeeper.AddEpochInfo(ctx, epoch)
+		_ = epochsKeeper.AddEpochInfo(ctx, epoch)
 	}
 }
 
 // GetOsmosisApp returns the current chain's app as an OsmosisApp
 func (chain *TestChain) GetOsmosisApp() *app.OsmosisApp {
-	return chain.App.(*app.OsmosisApp)
+	v, _ := chain.App.(*app.OsmosisApp)
+	return v
 }
