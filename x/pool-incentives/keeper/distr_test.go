@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func (suite *KeeperTestSuite) TestAllocateAsset() {
@@ -140,6 +139,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 		testingDistrRecord           []types.DistrRecord
 		isPoolPrepared bool
 		expectErr      bool
+		expectTotalWeight sdk.Int
 	}{
 		{
 			name: "Not existent gauge.",
@@ -170,18 +170,18 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 2,
-					Weight:  sdk.NewInt(100),
+					Weight:  sdk.NewInt(200),
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(100),
+					Weight:  sdk.NewInt(250),
 				},
 			},
 			isPoolPrepared: true,
 			expectErr:      true,
 		},
 		{
-			name: "Happy case",
+			name: "Normal case with same weights",
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 0,
@@ -194,6 +194,23 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 			},
 			isPoolPrepared: true,
 			expectErr:      false,
+			expectTotalWeight: sdk.NewInt(200),
+		},
+		{
+			name: "With different weights",
+			testingDistrRecord: []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  sdk.NewInt(100),
+				},
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(200),
+				},
+			},
+			isPoolPrepared: true,
+			expectErr:      false,
+			expectTotalWeight: sdk.NewInt(300),
 		},
 	}
 
@@ -214,9 +231,10 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 
 				distrInfo := keeper.GetDistrInfo(suite.Ctx)
 				suite.Require().Equal(len(test.testingDistrRecord), len(distrInfo.Records))
-				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
-				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[1].Weight)
-				suite.Require().Equal(sdk.NewInt(200), distrInfo.TotalWeight)
+				for i, record := range test.testingDistrRecord {
+					suite.Require().Equal(record.Weight, distrInfo.Records[i].Weight)
+				}
+				suite.Require().Equal(test.expectTotalWeight, distrInfo.TotalWeight)
 			}
 		})
 	}
@@ -228,6 +246,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 		testingDistrRecord           []types.DistrRecord
 		isPoolPrepared bool
 		expectErr      bool
+		expectTotalWeight sdk.Int
 	}{
 		{
 			name: "Not existent gauge.",
@@ -262,14 +281,14 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 				},
 				{
 					GaugeId: 1,
-					Weight:  sdk.NewInt(100),
+					Weight:  sdk.NewInt(200),
 				},
 			},
 			isPoolPrepared: true,
 			expectErr:      true,
 		},
 		{
-			name: "Happy case",
+			name: "Normal case with same weights",
 			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 0,
@@ -282,6 +301,23 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 			},
 			isPoolPrepared: true,
 			expectErr:      false,
+			expectTotalWeight: sdk.NewInt(200),
+		},
+		{
+			name: "With different weights",
+			testingDistrRecord: []types.DistrRecord{
+				{
+					GaugeId: 0,
+					Weight:  sdk.NewInt(100),
+				},
+				{
+					GaugeId: 1,
+					Weight:  sdk.NewInt(200),
+				},
+			},
+			isPoolPrepared: true,
+			expectErr:      false,
+			expectTotalWeight: sdk.NewInt(300),
 		},
 	}
 
@@ -302,9 +338,10 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 
 				distrInfo := keeper.GetDistrInfo(suite.Ctx)
 				suite.Require().Equal(len(test.testingDistrRecord), len(distrInfo.Records))
-				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
-				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[1].Weight)
-				suite.Require().Equal(sdk.NewInt(200), distrInfo.TotalWeight)
+				for i, record := range test.testingDistrRecord {
+					suite.Require().Equal(record.Weight, distrInfo.Records[i].Weight)
+				}
+				suite.Require().Equal(test.expectTotalWeight, distrInfo.TotalWeight)
 			}
 		})
 	}
