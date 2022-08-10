@@ -160,13 +160,13 @@ func NormalizeReponseAndJsonMarshal(binding interface{}, bz []byte, codec codec.
 		return nil, wasmvmtypes.Unknown{}
 	}
 
-	// clear proto message
-	message.Reset()
-
 	bz, err = codec.MarshalJSON(message)
 	if err != nil {
 		return nil, wasmvmtypes.Unknown{}
 	}
+
+	// clear proto message
+	message.Reset()
 
 	return bz, nil
 }
