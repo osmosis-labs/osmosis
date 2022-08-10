@@ -26,11 +26,13 @@ const (
 	kABCIResponses    = "abciResponsesKey:"
 	fullHeight        = "full_height"
 	minHeight         = "min_height"
+	recreateAppDB     = "recreate_app_db"
 	defaultFullHeight = "188000"
 	defaultMinHeight  = "1000"
+	defaultRecreateAppDb = "1"
 )
 
-// get cmd to convert any bech32 address to an osmo prefix.
+// forceprune gets cmd to convert any bech32 address to an osmo prefix.
 func forceprune() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "forceprune",
@@ -43,6 +45,11 @@ func forceprune() *cobra.Command {
 			}
 
 			minHeightFlag, err := cmd.Flags().GetString(minHeight)
+			if err != nil {
+				return err
+			}
+
+			recreateAppDbFlag, err := cmd.Flags().GetString(recreateAppDB)
 			if err != nil {
 				return err
 			}
@@ -83,6 +90,13 @@ func forceprune() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+            recreateAppDb, err := strconv.ParseInt(recreateAppDbFlag, 10, 64)
+			if recreateAppDb == 0 {
+				// It will not reclaim soft deletes
+				err = forcePruneAppDB(dbPath)
+			}
+
 			fmt.Println("Done ...")
 
 			return nil
@@ -91,9 +105,11 @@ func forceprune() *cobra.Command {
 
 	cmd.Flags().StringP(fullHeight, "f", defaultFullHeight, "Full height to chop to")
 	cmd.Flags().StringP(minHeight, "m", defaultMinHeight, "Min height for ABCI to chop to")
+	cmd.Flags().StringP(recreateAppDB, "a", defaultRecreateAppDb, "Re-create applicaiton DB (0 for True and 1 for False")
 	return cmd
 }
 
+// pruneBlockStoreAndGetHeights prunes blockstore and returns the startHeight and currentHeight.
 func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	startHeight int64, currentHeight int64, err error,
 ) {
@@ -105,6 +121,8 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	if err != nil {
 		return 0, 0, err
 	}
+
+	// nolint: staticcheck
 	defer db_bs.Close()
 
 	bs := tmstore.NewBlockStore(db_bs)
@@ -117,10 +135,20 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 		return 0, 0, err
 	}
 	fmt.Println("Pruned Block Store ...", prunedBlocks)
+
+	// N.B: We duplicate the call to db_bs.Close() on top of
+	// the call in defer statement above to make sure that the resources
+	// are properly released and any potential error from Close()
+	// is handled. Close() should be idempotent so this is acceptable.
+	if err := db_bs.Close(); err != nil {
+		return 0, 0, err
+	}
+
 	return startHeight, currentHeight, nil
 }
 
-func compactBlockStore(dbPath string) error {
+// compactBlockStore compacts block storage.
+func compactBlockStore(dbPath string) (err error) {
 	compactOpts := opt.Options{
 		DisableSeeksCompaction: true,
 	}
@@ -128,7 +156,9 @@ func compactBlockStore(dbPath string) error {
 	fmt.Println("Compacting Block Store ...")
 
 	db, err := leveldb.OpenFile(dbPath+"/blockstore.db", &compactOpts)
-	defer db.Close()
+	defer func() {
+		err = db.Close()
+	}()
 	if err != nil {
 		return err
 	}
@@ -138,6 +168,33 @@ func compactBlockStore(dbPath string) error {
 	return nil
 }
 
+
+func forcePruneAppDB(dbPath string) error {
+	fmt.Println("Open application db")
+	appDb, err := leveldb.OpenFile(dbPath+"/application.db", nil)
+	if err != nil {
+		return err
+	}
+	prunedAppDb, err := leveldb.OpenFile(dbPath+"/temp_application.db", nil)
+	if err != nil {
+		return err
+	}
+	// Iterating all keys and creating new application DB.
+	// Purpose of iterating is we get rid of all soft deletes
+	iter := appDb.NewIterator(nil, nil)
+	for iter.Next() {
+		key := iter.Key()
+		value := iter.Value()
+		err = prunedAppDb.Put(key, value, nil)
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Println("Reclaimed disk space for application db")
+	return nil
+}
+
+// forcepruneStateStore prunes and compacts state storage.
 func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, fullHeight int64) error {
 	opts := opt.Options{
 		DisableSeeksCompaction: true,
