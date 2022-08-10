@@ -5,7 +5,7 @@ import (
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
+	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
 )
 
 type Keeper struct {
