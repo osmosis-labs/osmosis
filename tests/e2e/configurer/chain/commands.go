@@ -125,10 +125,8 @@ func (n *NodeConfig) QueryPropStatusTimed(wg *sync.WaitGroup, proposalNumber int
 			if err != nil {
 				return false
 			}
-			if status != desiredStatus {
-				return false
-			}
-			return true
+
+			return status == desiredStatus
 		},
 		1*time.Minute,
 		10*time.Millisecond,
