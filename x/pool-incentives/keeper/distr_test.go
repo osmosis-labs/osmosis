@@ -12,49 +12,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords() {
-	mintKeeper := suite.App.MintKeeper
-	params := suite.App.MintKeeper.GetParams(suite.Ctx)
-	params.WeightedDeveloperRewardsReceivers = []minttypes.WeightedAddress{
-		{
-			Address: sdk.AccAddress([]byte("addr1---------------")).String(),
-			Weight:  sdk.NewDec(1),
-		},
-	}
-	suite.App.MintKeeper.SetParams(suite.Ctx, params)
-
-	// At this time, there is no distr record, so the asset should be allocated to the community pool.
-	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
-	mintCoins := sdk.Coins{mintCoin}
-	err := mintKeeper.MintCoins(suite.Ctx, mintCoins)
-	suite.NoError(err)
-
-	err = mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin) // this calls AllocateAsset via hook
-	suite.NoError(err)
-
-	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *suite.App.DistrKeeper)
-
-	feePool := suite.App.DistrKeeper.GetFeePool(suite.Ctx)
-	suite.Equal("40000stake", suite.App.BankKeeper.GetBalance(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
-	suite.Equal(sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(40000))).String(), feePool.CommunityPool.String())
-	suite.Equal("40000stake", suite.App.BankKeeper.GetBalance(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName), "stake").String())
-
-	// Community pool should be increased
-	mintCoin = sdk.NewCoin("stake", sdk.NewInt(100000))
-	mintCoins = sdk.Coins{mintCoin}
-	err = mintKeeper.MintCoins(suite.Ctx, mintCoins)
-	suite.NoError(err)
-	err = mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin) // this calls AllocateAsset via hook
-	suite.NoError(err)
-
-	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *suite.App.DistrKeeper)
-
-	feePool = suite.App.DistrKeeper.GetFeePool(suite.Ctx)
-	suite.Equal("80000stake", suite.App.BankKeeper.GetBalance(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake").String())
-	suite.Equal(feePool.CommunityPool.String(), sdk.NewDecCoinsFromCoins(sdk.NewCoin("stake", sdk.NewInt(80000))).String())
-	suite.Equal(sdk.NewCoin("stake", sdk.NewInt(80000)), suite.App.BankKeeper.GetBalance(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName), "stake"))
-}
-
 func (suite *KeeperTestSuite) TestAllocateAsset() {
 	tests := []struct {
 		name                   string
