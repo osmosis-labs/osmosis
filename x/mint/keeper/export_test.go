@@ -20,6 +20,14 @@ var (
 	GetProportions = getProportions
 )
 
+func (k Keeper) GetDeveloperVestedAmount(ctx sdk.Context, denom string) sdk.Int {
+	return k.getDeveloperVestedAmount(ctx, denom)
+}
+
+func (k Keeper) GetMintedAmount(ctx sdk.Context, denom string) sdk.Int {
+	return k.getMintedAmount(ctx, denom)
+}
+
 func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Int, error) {
 	return k.distributeToModule(ctx, recipientModule, mintedCoin, proportion)
 }

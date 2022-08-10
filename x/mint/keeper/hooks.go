@@ -70,10 +70,12 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			panic(err)
 		}
 
-		minter.LastMintedTotalAmount = minter.LastMintedTotalAmount.Add(minter.EpochProvisions)
+		devRewardsProportion := minter.EpochProvisions.Mul(params.DistributionProportions.DeveloperRewards)
+		minter.LastTotalVestedAmount = minter.LastTotalVestedAmount.Add(devRewardsProportion)
+		minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(minter.EpochProvisions.Sub(devRewardsProportion))
 		k.SetMinter(ctx, minter)
 
-		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, mintedCoin.Denom, minter.LastMintedTotalAmount, developerRewardsDistributionProportion)
+		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, mintedCoin.Denom, minter.LastTotalMintedAmount, minter.LastTotalVestedAmount, developerRewardsDistributionProportion)
 		if err != nil {
 			panic(err)
 		}

@@ -807,7 +807,13 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	suite.Require().Equal(expectedThirdenedProvisions, mintKeeper.GetMinter(ctx).EpochProvisions)
 }
 
-func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParameters3() {
+// TestAfterEpochEnd_MultiEpoch_Inflation tests that inflation is functioning as expected.
+// https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db
+// The formula for estimating provisions at year N is given by the sum of the geometric sequence:
+// P{n} = EpochsPerPeriod * InitialRewardsPerEpoch * { (1 - ReductionFactor^{n+1}) /  (1 - ReductionFactor) }
+//
+// Total Expected Supply = InitialSupply + EpochsPerPeriod * { InitialRewardsPerEpoch / (1 - ReductionFactor) }
+func (suite *KeeperTestSuite) TestAfterEpochEnd_MultiEpoch_Inflation() {
 	suite.Setup()
 	app := suite.App
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -895,9 +901,12 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 
 	suite.assertAddressWeightsAddUpToOne(mintParams.WeightedDeveloperRewardsReceivers)
 
+	// Map from years completed to total provisions for that year.
 	testcases := map[int]struct {
 		expectedTotalProvisionedSupply string
 	}{
+		// N.B.: this test case implies that at the end of year 1, we expect
+		// 300000000000000 OSMO to be minted.
 		1: {
 			expectedTotalProvisionedSupply: "300000000000000.000000000000000000",
 		},
@@ -953,15 +962,35 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 		if !found || i%365 != 0 {
 			continue
 		}
+
 		expectedTotalProvisionedSupply, err := sdk.NewDecFromStr(testcase.expectedTotalProvisionedSupply)
 		suite.Require().NoError(err, i)
-		actualTotalProvisionedSupply := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec()
-		osmoassert.DecApproxEq(suite.T(), expectedTotalProvisionedSupply, actualTotalProvisionedSupply, sdk.NewDec(2))
 
-		expectedDeveloperRewardsShare := expectedTotalProvisionedSupply.Mul(mintParams.DistributionProportions.DeveloperRewards)
-		actualVestedDevRewards := sdk.NewDec(keeper.DeveloperVestingAmount).Add(app.BankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom).ToDec())
-		osmoassert.DecApproxEq(suite.T(), expectedDeveloperRewardsShare, actualVestedDevRewards, sdk.NewDec(2), "dev rewards do not match. epoch num: %d, year: %d", i, i/365)
+		// Validate the amount minted from the mint module account.
+		expectedMintedAmount := expectedTotalProvisionedSupply.Mul(sdk.OneDec().Sub(mintParams.DistributionProportions.DeveloperRewards))
+		mintedAmount := mintKeeper.GetMintedAmount(ctx, sdk.DefaultBondDenom).ToDec()
+		osmoassert.DecApproxEq(suite.T(), expectedMintedAmount, mintedAmount, sdk.NewDec(1))
+
+		// Validate the amount distributed from the developer vesting module account.
+		expectedDeveloperVestedAmount := expectedTotalProvisionedSupply.Mul(mintParams.DistributionProportions.DeveloperRewards)
+		developerVestedAmount := mintKeeper.GetDeveloperVestedAmount(ctx, sdk.DefaultBondDenom).ToDec()
+		osmoassert.DecApproxEq(suite.T(), expectedDeveloperVestedAmount, developerVestedAmount, sdk.NewDec(1))
+
+		osmoassert.DecApproxEq(suite.T(), expectedTotalProvisionedSupply, mintedAmount.Add(developerVestedAmount), sdk.NewDec(2))
 	}
+
+	// Validate that the total supply is approaching the 1 billion limit.
+
+	// The upper bound for total supply is 1 billion osmo.
+	// Given that 100_000_000_000_000 was distributed at genesis, we expect emissions to be 900_000_000_000_000.
+	// expectedTotalProvisions approx = 900_000_000_000_000 approx = 365 * 821917808219.178082191780821917 / (1 - 2/3)
+	expectedTotalProvisions, err := sdk.NewDecFromStr("899999999999999.9")
+	suite.Require().NoError(err)
+
+	supplyAmount := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.ToDec()
+
+	suite.Require().True(supplyAmount.LT(expectedTotalProvisions))
+	suite.Require().Greater(int64(4_000_000_000), expectedTotalProvisions.Sub(supplyAmount).TruncateInt64())
 }
 
 func (suite KeeperTestSuite) assertAddressWeightsAddUpToOne(receivers []types.WeightedAddress) {

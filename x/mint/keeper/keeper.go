@@ -336,33 +336,43 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 // from the expected total epoch mint provisions.
 // To use these interfaces, we always round down to the nearest integer by truncating decimals.
 // As a result, it is possible to undermint. To mitigate that, we distirbute any delta to the community pool.
-func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, expectedTotalMintedByCurrentEpoch sdk.Dec, developerRewardsProportion sdk.Dec) (sdk.Int, error) {
-	totalMintedSupplyAmount := k.bankKeeper.GetSupplyWithOffset(ctx, mintedDenom).Amount.ToDec()
+func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, expectedTotalMintedByCurrentEpoch sdk.Dec, expectedTotalVestedByCurrentEpoch sdk.Dec, developerRewardsProportion sdk.Dec) (sdk.Int, error) {
+	developerVestedAmount := k.getDeveloperVestedAmount(ctx, mintedDenom)
 
-	delta := expectedTotalMintedByCurrentEpoch.Sub(totalMintedSupplyAmount)
+	mintedAmount := k.getMintedAmount(ctx, mintedDenom)
 
-	mintProportion := sdk.OneDec().Sub(developerRewardsProportion)
+	developerVestingDelta := expectedTotalVestedByCurrentEpoch.Sub(developerVestedAmount.ToDec()).TruncateInt()
+	mintedDelta := expectedTotalMintedByCurrentEpoch.Sub(mintedAmount.ToDec()).TruncateInt()
 
-	deltaFromMint, err := getProportions(delta, mintProportion)
-	if err != nil {
+	if err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, developerVestingDelta)), k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)); err != nil {
 		return sdk.Int{}, err
 	}
-
-	deltaFromMintInt := deltaFromMint.TruncateInt()
 
 	// Distribute to the community pool.
 	// Truncation is acceptable because we check delta at the end of every epoch.
 	// As a result, actual minted distributions always approach the expected value.
 	// For distributing delta from mint module account, we have to pre-mint first.
-	if err := k.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, deltaFromMintInt))); err != nil {
+	if err := k.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta))); err != nil {
 		return sdk.Int{}, err
 	}
 
-	if err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, deltaFromMintInt)), k.accountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
+	if err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta)), k.accountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
 		return sdk.Int{}, err
 	}
 
-	return deltaFromMintInt, nil
+	return developerVestingDelta.Add(mintedDelta), nil
+}
+
+// TODO: test and description
+func (k Keeper) getDeveloperVestedAmount(ctx sdk.Context, denom string) sdk.Int {
+	unvestedAmount := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), denom).Amount
+	return sdk.NewInt(developerVestingAmount).Sub(unvestedAmount)
+}
+
+// TODO: test and description
+func (k Keeper) getMintedAmount(ctx sdk.Context, denom string) sdk.Int {
+	totalSupply := k.bankKeeper.GetSupply(ctx, denom).Amount
+	return totalSupply.Sub(sdk.NewInt(developerVestingAmount))
 }
 
 // getProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the
