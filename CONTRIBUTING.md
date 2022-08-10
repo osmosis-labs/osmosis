@@ -66,6 +66,28 @@ Making table-driven tests in an environment built on the Cosmos SDK has some qui
 
 We'll lay out three examples below (one that uses our format for messages, one that applies to keeper methods, and one that applies to our GAMM module), each of which will hopefully be simple enough to copy-paste into a test file and use as a starting point for your test-writing in the Osmosis Core repo.
 
+### Generating unit tests using our Gotest template
+
+To simplify (and speed up) the process of writing unit tests that fit our standard, we have put together a Gotest template that allows you to easily generate unit tests using built-in functionality for the Vscode Go plugin (complete with parameters listed, basic error checking logic etc.). The following two sections lay out how to generate a unit test automatically using this method.
+
+#### 1. Setup
+Note: this section assumes you already have the Go plugin for Vscode installed. Please refer to our [IDE setup docs](https://docs.osmosis.zone/developing/osmosis-core/ide-guide.html) if you haven't done any IDE setup yet.
+
+Copy the `templates` folder into your `.vscode` folder from our main repo [here](https://github.com/osmosis-labs/osmosis/tree/main/.vscode). This folder has our custom templates for generating tests that fit our testing standards as accurately as possible.
+
+Then, go to your `settings.json` file in your `.vscode` folder and add the following to it:
+
+```go
+    "go.generateTestsFlags": [
+        "-template_dir",
+        "[ABSOLUTE PATH TO TEMPLATES FOLDER]"
+    ],
+```
+where `"[ABSOLUTE PATH TO TEMPLATES FOLDER]"` should look something like: `"User/ExampleUser/osmosis/.vscode/templates"`
+
+#### 2. Generating a unit test
+On the function you want to generate a unit test for, right click the function name and select `Go: Generate Unit Tests For Function`. This should take you to an automatically generated template test in the corresponding test file for the file your function is in. If there isn't a corresponding test file, it should automatically generate one, define its package and imports, and generate the test there.
+
 ### Rules of thumb for table-driven tests
 
 1. Each test case should test one thing

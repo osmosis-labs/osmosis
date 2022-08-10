@@ -12,6 +12,7 @@ const (
 	ProposalTypeReplacePoolIncentives = "ReplacePoolIncentives"
 )
 
+// Init registers proposals to update and replace pool incentives.
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeUpdatePoolIncentives)
 	govtypes.RegisterProposalTypeCodec(&UpdatePoolIncentivesProposal{}, "osmosis/UpdatePoolIncentivesProposal")
@@ -24,6 +25,7 @@ var (
 	_ govtypes.Content = &ReplacePoolIncentivesProposal{}
 )
 
+// NewReplacePoolIncentivesProposal returns a new instance of a replace pool incentives proposal struct.
 func NewReplacePoolIncentivesProposal(title, description string, records []DistrRecord) govtypes.Content {
 	return &ReplacePoolIncentivesProposal{
 		Title:       title,
@@ -32,16 +34,21 @@ func NewReplacePoolIncentivesProposal(title, description string, records []Distr
 	}
 }
 
+// GetTitle gets the title of the proposal
 func (p *ReplacePoolIncentivesProposal) GetTitle() string { return p.Title }
 
+// GetDescription gets the description of the proposal
 func (p *ReplacePoolIncentivesProposal) GetDescription() string { return p.Description }
 
+// ProposalRoute returns the router key for the proposal
 func (p *ReplacePoolIncentivesProposal) ProposalRoute() string { return RouterKey }
 
+// ProposalType returns the type of the proposal
 func (p *ReplacePoolIncentivesProposal) ProposalType() string {
 	return ProposalTypeUpdatePoolIncentives
 }
 
+// ValidateBasic validates a governance proposal's abstract and basic contents
 func (p *ReplacePoolIncentivesProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {
@@ -60,6 +67,7 @@ func (p *ReplacePoolIncentivesProposal) ValidateBasic() error {
 	return nil
 }
 
+// String returns a string containing the pool incentives proposal.
 func (p ReplacePoolIncentivesProposal) String() string {
 	// TODO: Make this prettier
 	recordsStr := ""
@@ -76,6 +84,7 @@ func (p ReplacePoolIncentivesProposal) String() string {
 	return b.String()
 }
 
+// NewReplacePoolIncentivesProposal returns a new instance of a replace pool incentives proposal struct.
 func NewUpdatePoolIncentivesProposal(title, description string, records []DistrRecord) govtypes.Content {
 	return &UpdatePoolIncentivesProposal{
 		Title:       title,
@@ -84,14 +93,19 @@ func NewUpdatePoolIncentivesProposal(title, description string, records []DistrR
 	}
 }
 
+// GetTitle gets the title of the proposal
 func (p *UpdatePoolIncentivesProposal) GetTitle() string { return p.Title }
 
+// GetDescription gets the description of the proposal
 func (p *UpdatePoolIncentivesProposal) GetDescription() string { return p.Description }
 
+// ProposalRoute returns the router key for the proposal
 func (p *UpdatePoolIncentivesProposal) ProposalRoute() string { return RouterKey }
 
+// ProposalType returns the type of the proposal
 func (p *UpdatePoolIncentivesProposal) ProposalType() string { return ProposalTypeUpdatePoolIncentives }
 
+// ValidateBasic validates a governance proposal's abstract and basic contents.
 func (p *UpdatePoolIncentivesProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(p)
 	if err != nil {
@@ -110,6 +124,7 @@ func (p *UpdatePoolIncentivesProposal) ValidateBasic() error {
 	return nil
 }
 
+// String returns a string containing the pool incentives proposal.
 func (p UpdatePoolIncentivesProposal) String() string {
 	// TODO: Make this prettier
 	recordsStr := ""

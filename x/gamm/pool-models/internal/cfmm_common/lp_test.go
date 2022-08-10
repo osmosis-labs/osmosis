@@ -45,6 +45,7 @@ func TestCalcExitPool(t *testing.T) {
 		1,
 		stableswap.PoolParams{ExitFee: sdk.ZeroDec()},
 		twoStablePoolAssets,
+		[]uint64{1, 1},
 		"",
 	)
 	require.NoError(t, err)
@@ -62,6 +63,7 @@ func TestCalcExitPool(t *testing.T) {
 		1,
 		stableswap.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
 		twoStablePoolAssets,
+		[]uint64{1, 1},
 		"",
 	)
 	require.NoError(t, err)

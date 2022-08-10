@@ -104,6 +104,34 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			return bz, nil
 
+		case contractQuery.ArithmeticTwap != nil:
+			twap, err := qp.ArithmeticTwap(ctx, contractQuery.ArithmeticTwap)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap query")
+			}
+
+			res := bindings.ArithmeticTwapResponse{Twap: twap.String()}
+			bz, err := json.Marshal(res)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap query response")
+			}
+
+			return bz, nil
+
+		case contractQuery.ArithmeticTwapToNow != nil:
+			twap, err := qp.ArithmeticTwapToNow(ctx, contractQuery.ArithmeticTwapToNow)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap to now query")
+			}
+
+			res := bindings.ArithmeticTwapToNowResponse{Twap: twap.String()}
+			bz, err := json.Marshal(res)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap query response")
+			}
+
+			return bz, nil
+
 		default:
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: "unknown osmosis query variant"}
 		}

@@ -27,3 +27,14 @@ func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, mint
 func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion sdk.Dec, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
 	return k.distributeDeveloperRewards(ctx, totalMintedCoin, developerRewardsProportion, developerRewardsReceivers)
 }
+
+// Set the mint hooks. This is used for testing purposes only.
+func (k *Keeper) SetMintHooksUnsafe(h types.MintHooks) *Keeper {
+	k.hooks = h
+	return k
+}
+
+// Get the mint hooks. This is used for testing purposes only.
+func (k *Keeper) GetMintHooksUnsafe() types.MintHooks {
+	return k.hooks
+}

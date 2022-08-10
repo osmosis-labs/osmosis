@@ -607,7 +607,8 @@ func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 // this is equivalent to spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
 // but cancels out the common term in weight.
 //
-// panics if pool is misconfigured and has any weight as 0.
+// panics if the pool in state is incorrect, and has any weight that is 0.
+// TODO: Come back and improve docs for this.
 func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec, error) {
 	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
 	if err != nil {

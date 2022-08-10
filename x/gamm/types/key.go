@@ -19,8 +19,8 @@ const (
 )
 
 var (
-	// KeyNextGlobalPoolNumber defines key to store the next Pool ID to be used.
-	KeyNextGlobalPoolNumber = []byte{0x01}
+	// KeyNextGlobalPoolId defines key to store the next Pool ID to be used.
+	KeyNextGlobalPoolId = []byte{0x01}
 	// KeyPrefixPools defines prefix to store pools.
 	KeyPrefixPools = []byte{0x02}
 	// KeyTotalLiquidity defines key to store total liquidity.
