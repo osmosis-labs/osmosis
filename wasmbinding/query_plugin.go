@@ -6,6 +6,7 @@ import (
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	proto "github.com/gogo/protobuf/proto"
@@ -15,7 +16,7 @@ import (
 )
 
 // StargateQuerier dispatches whitelisted stargate queries
-func StargateQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
+func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, codec codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 		binding, whitelisted := StargateWhitelist.Load(request.Path)
 		if !whitelisted {
@@ -36,7 +37,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter) func(ctx sdk.Context, 
 		}
 
 		// normalize response to ensure backward compatibility
-		bz, err := NormalizeReponse(binding, res.Value)
+		bz, err := NormalizeReponseAndJsonMarshal(binding, res.Value, codec)
 		if err != nil {
 			return nil, err
 		}
@@ -146,7 +147,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 // NormalizeReponses normalizes the responses by unmarshalling the response then marshalling them again.
 // Normalizing the response is specifically important for responses that contain type of Any.
-func NormalizeReponse(binding interface{}, bz []byte) ([]byte, error) {
+func NormalizeReponseAndJsonMarshal(binding interface{}, bz []byte, codec codec.Codec) ([]byte, error) {
 	// all values are proto message
 	message, ok := binding.(proto.Message)
 	if !ok {
@@ -159,14 +160,13 @@ func NormalizeReponse(binding interface{}, bz []byte) ([]byte, error) {
 		return nil, wasmvmtypes.Unknown{}
 	}
 
-	// build new deterministic response
-	bz, err = proto.Marshal(message)
+	// clear proto message
+	message.Reset()
+
+	bz, err = codec.MarshalJSON(message)
 	if err != nil {
 		return nil, wasmvmtypes.Unknown{}
 	}
-
-	// clear proto message
-	message.Reset()
 
 	return bz, nil
 }
