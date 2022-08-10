@@ -2,6 +2,10 @@ package ibc_rate_limit_test
 
 import (
 	"encoding/json"
+	"strconv"
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
@@ -11,9 +15,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/testutil"
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
-	"strconv"
-	"testing"
-	"time"
 )
 
 type MiddlewareTestSuite struct {
@@ -72,7 +73,6 @@ func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) 
 		accountFrom = suite.chainA.SenderAccount.GetAddress().String()
 		accountTo = suite.chainB.SenderAccount.GetAddress().String()
 	} else {
-		//coinSentFromAToB := transfertypes.GetTransferCoin(path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, sdk.DefaultBondDenom, sdk.NewInt(1))
 		coins = transfertypes.GetTransferCoin(
 			suite.path.EndpointB.ChannelConfig.PortID,
 			suite.path.EndpointB.ChannelID,
@@ -167,11 +167,9 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]
 
 	// send 2.5% (quota is 5%)
 	suite.AssertSendSuccess(true, suite.NewValidMessage(true, half))
-	//supply = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 
 	// send 2.5% (quota is 5%)
 	r, _ := suite.AssertSendSuccess(true, suite.NewValidMessage(true, half))
-	//supply = osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
@@ -225,4 +223,15 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 
 	// Sending above the quota should fail. Adding some extra here because the cap is increasing. See test bellow.
 	suite.AssertReceiveSuccess(false, suite.NewValidMessage(false, sdk.NewInt(1)))
+}
+
+func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, ``)
+	suite.chainA.RegisterRateLimitingContract(addr)
+
+	// send 1 token.
+	// ToDo: What's the desired behaviour if the contract doesn't have a quota for the current channel?
+	suite.AssertSendSuccess(false, suite.NewValidMessage(true, sdk.NewInt(1)))
 }
