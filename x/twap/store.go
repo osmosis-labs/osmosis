@@ -3,14 +3,13 @@ package twap
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
+	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
 )
 
 // trackChangedPool places an entry into a transient store,
@@ -131,8 +130,8 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 		return types.TwapRecord{}, err
 	}
 	if len(twaps) == 0 {
-		return types.TwapRecord{}, errors.New("looking for a time thats too old, not in the historical index. " +
-			" Try storing the accumulator value.")
+		return types.TwapRecord{}, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+			" Try storing the accumulator value. (requested time %s)", t)
 	}
 
 	for _, twap := range twaps {

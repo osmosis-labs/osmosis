@@ -19,6 +19,7 @@ type IntegrationTestSuite struct {
 	network *network.Network
 }
 
+// SetupSuite sets up an integration test suite.
 func (s *IntegrationTestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
@@ -30,11 +31,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 }
 
+// TearDownSuite tears down the integration test suite.
 func (s *IntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down integration test suite")
 	s.network.Cleanup()
 }
 
+// TestGetCmdGaugeIds tests gaugeID CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdGaugeIds() {
 	val := s.network.Validators[0]
 
@@ -69,6 +72,7 @@ func (s *IntegrationTestSuite) TestGetCmdGaugeIds() {
 	}
 }
 
+// TestGetCmdDistrInfo tests distribution info CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdDistrInfo() {
 	val := s.network.Validators[0]
 
@@ -103,6 +107,7 @@ func (s *IntegrationTestSuite) TestGetCmdDistrInfo() {
 	}
 }
 
+// TestGetCmdParams tests module params CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdParams() {
 	val := s.network.Validators[0]
 
@@ -137,6 +142,7 @@ func (s *IntegrationTestSuite) TestGetCmdParams() {
 	}
 }
 
+// TestGetCmdLockableDurations tests lockable duration CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdLockableDurations() {
 	val := s.network.Validators[0]
 
@@ -171,6 +177,7 @@ func (s *IntegrationTestSuite) TestGetCmdLockableDurations() {
 	}
 }
 
+// TestGetCmdIncentivizedPools tests incentivized pools CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdIncentivizedPools() {
 	val := s.network.Validators[0]
 
@@ -205,6 +212,7 @@ func (s *IntegrationTestSuite) TestGetCmdIncentivizedPools() {
 	}
 }
 
+// TestGetCmdExternalIncentiveGauges tests incentivized pools CLI query commands
 func (s *IntegrationTestSuite) TestGetCmdExternalIncentiveGauges() {
 	val := s.network.Validators[0]
 

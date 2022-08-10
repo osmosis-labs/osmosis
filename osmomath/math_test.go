@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting/osmoassert"
 
 	"github.com/stretchr/testify/require"
 )
@@ -92,7 +92,7 @@ func TestPowApprox(t *testing.T) {
 
 	for i, tc := range testCases {
 		var actualResult sdk.Dec
-		osmoutils.ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
+		osmoassert.ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
 			fmt.Println(tc.base)
 			actualResult = PowApprox(tc.base, tc.exp, tc.powPrecision)
 			require.True(
@@ -156,7 +156,7 @@ func TestPow(t *testing.T) {
 
 	for i, tc := range testCases {
 		var actualResult sdk.Dec
-		osmoutils.ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
+		osmoassert.ConditionalPanic(t, tc.base.Equal(sdk.ZeroDec()), func() {
 			actualResult = Pow(tc.base, tc.exp)
 			require.True(
 				t,

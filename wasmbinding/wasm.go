@@ -7,14 +7,16 @@ import (
 
 	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
+	twap "github.com/osmosis-labs/osmosis/v10/x/twap"
 )
 
 func RegisterCustomPlugins(
 	gammKeeper *gammkeeper.Keeper,
 	bank *bankkeeper.BaseKeeper,
+	twap *twap.Keeper,
 	tokenFactory *tokenfactorykeeper.Keeper,
 ) []wasmkeeper.Option {
-	wasmQueryPlugin := NewQueryPlugin(gammKeeper, tokenFactory)
+	wasmQueryPlugin := NewQueryPlugin(gammKeeper, twap, tokenFactory)
 
 	queryPluginOpt := wasmkeeper.WithQueryPlugins(&wasmkeeper.QueryPlugins{
 		Custom: CustomQuerier(wasmQueryPlugin),

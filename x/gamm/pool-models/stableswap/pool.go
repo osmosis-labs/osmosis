@@ -20,13 +20,20 @@ var _ types.PoolI = &Pool{}
 // * len(initialLiquidity) = 2
 // * FutureGovernor is valid
 // * poolID doesn't already exist
-func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, futureGovernor string) (Pool, error) {
+func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, scalingFactors []uint64, futureGovernor string) (Pool, error) {
+	if len(scalingFactors) == 0 {
+		scalingFactors = []uint64{1, 1}
+	} else if scalingFactors[0] == 0 || scalingFactors[1] == 0 {
+		return Pool{}, types.ErrInvalidStableswapScalingFactors
+	}
+
 	pool := Pool{
 		Address:            types.NewPoolAddress(poolId).String(),
 		Id:                 poolId,
 		PoolParams:         stableswapPoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
 		PoolLiquidity:      initialLiquidity,
+		ScalingFactor:      scalingFactors,
 		FuturePoolGovernor: futureGovernor,
 	}
 

@@ -44,17 +44,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* [#2222](https://github.com/osmosis-labs/osmosis/pull/2222) Add scaling factors to MsgCreateStableswapPool
 * [#1889](https://github.com/osmosis-labs/osmosis/pull/1825) Add proto responses to gamm LP messages:
   * MsgJoinPoolResponse: share_out_amount and token_in fields 
   * MsgExitPoolResponse: token_out field 
 * [#1825](https://github.com/osmosis-labs/osmosis/pull/1825) Fixes Interchain Accounts (host side) by adding it to AppModuleBasics
 * [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
+* [#1699](https://github.com/osmosis-labs/osmosis/pull/1979) `AddToExistingLock` returns error when lock with matching conditions does not exist.
 * [#1994](https://github.com/osmosis-labs/osmosis/pull/1994) Removed bech32ibc module
 * [#2016](https://github.com/osmosis-labs/osmosis/pull/2016) Add fixed 10000 gas cost for each Balancer swap
 * [#2147](https://github.com/osmosis-labs/osmosis/pull/2147) Set MaxAgeNumBlocks in v11 Upgrade Handler to two weeks.
 * [#2193](https://github.com/osmosis-labs/osmosis/pull/2193) Add TwapKeeper to the Osmosis app
 * [#2227](https://github.com/osmosis-labs/osmosis/pull/2227) Enable charging fee in base denom for `CreateGauge` and `AddToGauge`.
 * [#2283](https://github.com/osmosis-labs/osmosis/pull/2283) x/incentives: refactor `CreateGauge` and `AddToGauge` fees to use txfees denom
+* [#2206](https://github.com/osmosis-labs/osmosis/pull/2283) Register all Amino interfaces and concrete types on the authz Amino codec. This will allow the authz module to properly serialize and de-serializes instances using Amino.
 
 #### Golang API breaks
 
@@ -77,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1230] Stableswap CFMM equations
 * [#1429] solver for multi-asset CFMM
 * [#1539] Superfluid: Combine superfluid and staking query on querying delegation by delegator
+* [#2223] Tokenfactory: Add SetMetadata functionality
 
 ### Bug Fixes
 

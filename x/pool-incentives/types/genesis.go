@@ -60,6 +60,7 @@ func ValidateGenesis(data *GenesisState) error {
 	return validateLockableDurations(data.LockableDurations)
 }
 
+// validateLockableDurations ensures the provided lockable duration is a valid parameter.
 func validateLockableDurations(i interface{}) error {
 	_, ok := i.([]time.Duration)
 	if !ok {
