@@ -154,20 +154,17 @@ func NormalizeReponse(binding interface{}, bz []byte) ([]byte, error) {
 	}
 
 	// unmarshal binary into stargate response data structure
-	fmt.Println("=======2")
 	err := proto.Unmarshal(bz, message)
 	if err != nil {
 		return nil, wasmvmtypes.Unknown{}
 	}
 
 	// build new deterministic response
-	fmt.Println("=======3")
 	bz, err = proto.Marshal(message)
 	if err != nil {
 		return nil, wasmvmtypes.Unknown{}
 	}
 
-	fmt.Println("=======4")
 	// clear proto message
 	message.Reset()
 
