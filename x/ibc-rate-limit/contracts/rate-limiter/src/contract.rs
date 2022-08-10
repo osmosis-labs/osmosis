@@ -109,7 +109,8 @@ pub fn try_transfer(
         .add_attribute("method", "try_transfer")
         .add_attribute("channel_id", channel_id)
         .add_attribute("used", flow.balance().to_string())
-        .add_attribute("max", max.to_string()))
+        .add_attribute("max", max.to_string())
+        .add_attribute("period_end", flow.period_end.nanos().to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

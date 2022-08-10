@@ -35,11 +35,11 @@ func (chain *TestChain) StoreContractCode(suite *suite.Suite) {
 	suite.Require().NoError(err)
 }
 
-func (chain *TestChain) InstantiateContract(suite *suite.Suite) sdk.AccAddress {
+func (chain *TestChain) InstantiateContract(suite *suite.Suite, quotas string) sdk.AccAddress {
 	osmosisApp := chain.GetOsmosisApp()
 	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
 
-	initMsgBz := []byte(fmt.Sprintf(`{"ibc_module": "%s", "channel_quotas": [["channel-0", 5]]}`, transferModule))
+	initMsgBz := []byte(fmt.Sprintf(`{"ibc_module": "%s", "channel_quotas": [%s]}`, transferModule, quotas))
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 	codeID := uint64(1)
 	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)

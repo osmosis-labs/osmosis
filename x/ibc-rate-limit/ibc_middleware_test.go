@@ -11,7 +11,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/testutil"
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
+	"strconv"
 	"testing"
+	"time"
 )
 
 type MiddlewareTestSuite struct {
@@ -139,20 +141,20 @@ func (suite *MiddlewareTestSuite) AssertSendSuccess(success bool, msg sdk.Msg) (
 	return r, err
 }
 
-func (suite *MiddlewareTestSuite) TestSendTransferWithoutRateLimitingContract() {
+func (suite *MiddlewareTestSuite) TestSendTransferNoContract() {
 	one := sdk.NewInt(1)
 	suite.AssertSendSuccess(true, suite.NewValidMessage(true, one))
 }
 
-func (suite *MiddlewareTestSuite) TestReceiveTransferWithoutRateLimitingContract() {
+func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	one := sdk.NewInt(1)
 	suite.AssertReceiveSuccess(true, suite.NewValidMessage(false, one))
 }
 
-func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() {
+func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimitingContract() map[string]string {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	addr := suite.chainA.InstantiateContract(&suite.Suite)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `["channel-0", 5]`)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Setup sender's balance
@@ -178,4 +180,25 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithNewRateLimitingContract() 
 
 	// Sending above the quota should fail. Adding some extra here because the cap is increasing. See test bellow.
 	suite.AssertSendSuccess(false, suite.NewValidMessage(true, sdk.NewInt(1)))
+	return attrs
+}
+
+func (suite *MiddlewareTestSuite) TestSendTransferReset() {
+	// Same test as above, but the quotas get reset after time passes
+	attrs := suite.TestSendTransferWithRateLimitingContract()
+	nanos, _ := strconv.ParseInt(attrs["period_end"], 10, 64)
+	resetTime := time.Unix(0, nanos)
+
+	// Move bothe chains one block
+	suite.chainA.NextBlock()
+	suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	suite.chainB.NextBlock()
+	suite.chainB.SenderAccount.SetSequence(suite.chainB.SenderAccount.GetSequence() + 1)
+
+	// Reset time + one second
+	oneSecAfterReset := resetTime.Add(time.Second)
+	suite.coordinator.IncrementTimeBy(oneSecAfterReset.Sub(suite.coordinator.CurrentTime))
+
+	// Sending should succeed again
+	suite.AssertSendSuccess(true, suite.NewValidMessage(true, sdk.NewInt(1)))
 }
