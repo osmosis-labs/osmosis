@@ -42,7 +42,8 @@ const ModuleName = types.ModuleName
 // ----------------------------------------------------------------------------
 
 // AppModuleBasic implements the AppModuleBasic interface for the txfees module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+}
 
 func NewAppModuleBasic() AppModuleBasic {
 	return AppModuleBasic{}

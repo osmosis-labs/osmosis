@@ -134,6 +134,7 @@ func (suite *KeeperTestSuite) TestCreateGauge_Fee() {
 }
 
 func (suite *KeeperTestSuite) TestAddToGauge_Fee() {
+
 	tests := []struct {
 		name                 string
 		accountBalanceToFund sdk.Coins

@@ -158,7 +158,9 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 		mintAmount = 10000
 	)
 
-	params := types.DefaultParams()
+	var (
+		params = types.DefaultParams()
+	)
 
 	tests := []struct {
 		name              string

@@ -23,7 +23,8 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+}
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 

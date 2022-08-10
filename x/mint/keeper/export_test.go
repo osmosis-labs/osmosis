@@ -16,7 +16,9 @@ const (
 	DeveloperVestingAmount       = developerVestingAmount
 )
 
-var GetProportions = getProportions
+var (
+	GetProportions = getProportions
+)
 
 func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Int, error) {
 	return k.distributeToModule(ctx, recipientModule, mintedCoin, proportion)

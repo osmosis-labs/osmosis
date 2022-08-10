@@ -47,7 +47,8 @@ var (
 // ----------------------------------------------------------------------------
 
 // AppModuleBasic implements the AppModuleBasic interface for the capability module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+}
 
 func NewAppModuleBasic() AppModuleBasic {
 	return AppModuleBasic{}

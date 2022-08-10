@@ -3,14 +3,13 @@ package ibc_rate_limit
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
+	"strings"
 )
 
 func CheckRateLimits(ctx sdk.Context, wasmKeeper *wasmkeeper.Keeper, msgType, contractParam, channelValue, sourceChannel string, sender sdk.AccAddress, amount string) error {
