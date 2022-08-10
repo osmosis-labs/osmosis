@@ -9,6 +9,7 @@ import (
 	status "google.golang.org/grpc/status"
 
 	"github.com/osmosis-labs/osmosis/v10/x/twap"
+	"github.com/osmosis-labs/osmosis/v10/x/twap/client/grpc/grpcproto"
 )
 
 // This file should evolve to being code gen'd, off of `proto/twap/v1beta/query.yml`
@@ -17,11 +18,11 @@ type Querier struct {
 	K twap.Keeper
 }
 
-var _ QueryServer = Querier{}
+var _ grpcproto.QueryServer = Querier{}
 
 func (q Querier) GetArithmeticTwap(grpcCtx context.Context,
-	req *GetArithmeticTwapRequest,
-) (*GetArithmeticTwapResponse, error) {
+	req *grpcproto.GetArithmeticTwapRequest,
+) (*grpcproto.GetArithmeticTwapResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -34,5 +35,5 @@ func (q Querier) GetArithmeticTwap(grpcCtx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	return &GetArithmeticTwapResponse{twap}, nil
+	return &grpcproto.GetArithmeticTwapResponse{ArithmeticTwap: twap}, nil
 }

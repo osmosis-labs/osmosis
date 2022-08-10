@@ -1,6 +1,7 @@
 package twap
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -15,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	"github.com/osmosis-labs/osmosis/v10/x/twap/client/grpc/grpcproto"
 	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
 )
 
@@ -50,7 +52,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	// types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+	grpcproto.RegisterQueryHandlerClient(context.Background(), mux, grpcproto.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
