@@ -28,7 +28,7 @@ type Keeper struct {
 	incentivesKeeper types.IncentivesKeeper
 	distrKeeper      types.DistrKeeper
 
-	communityPoolName string
+	communityPoolName string // name of the Community pool ModuleAccount (Maybe the distribution module)
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, communityPoolName string) Keeper {
