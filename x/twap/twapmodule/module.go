@@ -79,7 +79,7 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{twapclient.Querier{am.k}})
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: twapclient.Querier{K: am.k}})
 }
 
 func NewAppModule(twapKeeper twap.Keeper) AppModule {
