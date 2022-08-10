@@ -211,9 +211,9 @@ sync-docs:
 ###############################################################################
 
 
-PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'tests/simulator|e2e')
+PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'simapp|e2e')
 PACKAGES_E2E=$(shell go list -tags e2e ./... | grep '/e2e')
-PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
+PACKAGES_SIM=$(shell go list ./... | grep '/simapp')
 TEST_PACKAGES=./...
 
 include sims.mk
