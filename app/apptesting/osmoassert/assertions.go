@@ -40,7 +40,11 @@ func messageFromMsgAndArgs(msgAndArgs ...interface{}) string {
 		return fmt.Sprintf("%+v", msg)
 	}
 	if len(msgAndArgs) > 1 {
-		return fmt.Sprintf(msgAndArgs[0].(string), msgAndArgs[1:]...)
+		msgFormat, ok := msgAndArgs[0].(string)
+		if !ok {
+			return "error formatting additional arguments for DecApproxEq, please disregard."
+		}
+		return fmt.Sprintf(msgFormat, msgAndArgs[1:]...)
 	}
 	return ""
 }
