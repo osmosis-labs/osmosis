@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 func (suite *KeeperTestSuite) TestAllocateAsset() {
 	tests := []struct {
 		name                   string
-		args                   []types.DistrRecord
+		testingDistrRecord     []types.DistrRecord
 		mintedCoins            sdk.Coin
 		expectedGaugesBalances []sdk.Coins
 		expectedFeeCollector   sdk.Coin
@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 	}{
 		{
 			name: "Allocated to the gauges proportionally",
-			args: []types.DistrRecord{
+			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 1,
 					Weight:  sdk.NewInt(100),
@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		},
 		{
 			name: "Community pool distribution when gaugeId is zero",
-			args: []types.DistrRecord{
+			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 0,
 					Weight:  sdk.NewInt(700),
@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		},
 		{
 			name:                   "community pool distribution when no distribution records are set",
-			args:                   []types.DistrRecord{},
+			testingDistrRecord:                   []types.DistrRecord{},
 			mintedCoins:            sdk.NewCoin("stake", sdk.NewInt(100000)),
 			expectedGaugesBalances: []sdk.Coins{},
 			expectedFeeCollector:   sdk.NewCoin("stake", sdk.NewInt(40000)),
@@ -151,7 +151,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 			feePoolOrigin := suite.App.DistrKeeper.GetFeePool(suite.Ctx)
 
 			// Create record
-			err := keeper.ReplaceDistrRecords(suite.Ctx, test.args...)
+			err := keeper.ReplaceDistrRecords(suite.Ctx, test.testingDistrRecord...)
 			suite.Require().NoError(err)
 
 			err = mintKeeper.MintCoins(suite.Ctx, sdk.NewCoins(test.mintedCoins))
@@ -162,11 +162,11 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 			distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *suite.App.DistrKeeper)
 
 			suite.Require().Equal(test.expectedFeeCollector, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake"))
-			for i := 0; i < len(test.args); i++ {
-				if test.args[i].GaugeId == 0 {
+			for i := 0; i < len(test.testingDistrRecord); i++ {
+				if test.testingDistrRecord[i].GaugeId == 0 {
 					continue
 				}
-				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, test.args[i].GaugeId)
+				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, test.testingDistrRecord[i].GaugeId)
 				suite.Require().NoError(err)
 				suite.Require().Equal(test.expectedGaugesBalances[i], gauge.Coins)
 			}
@@ -180,13 +180,13 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 	tests := []struct {
 		name           string
-		args           []types.DistrRecord
+		testingDistrRecord           []types.DistrRecord
 		isPoolPrepared bool
 		expectErr      bool
 	}{
 		{
 			name: "Not existent gauge.",
-			args: []types.DistrRecord{{
+			testingDistrRecord: []types.DistrRecord{{
 				GaugeId: 1,
 				Weight:  sdk.NewInt(100),
 			}},
@@ -195,7 +195,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 		},
 		{
 			name: "Adding two of the same gauge id at once should error",
-			args: []types.DistrRecord{
+			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 1,
 					Weight:  sdk.NewInt(100),
@@ -210,7 +210,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 		},
 		{
 			name: "Adding unsort gauges at once should error",
-			args: []types.DistrRecord{
+			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 2,
 					Weight:  sdk.NewInt(100),
@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 		},
 		{
 			name: "Happy case",
-			args: []types.DistrRecord{
+			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 0,
 					Weight:  sdk.NewInt(100),
@@ -249,14 +249,14 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 				suite.PrepareBalancerPool()
 			}
 
-			err := keeper.ReplaceDistrRecords(suite.Ctx, test.args...)
+			err := keeper.ReplaceDistrRecords(suite.Ctx, test.testingDistrRecord...)
 			if test.expectErr {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
 
 				distrInfo := keeper.GetDistrInfo(suite.Ctx)
-				suite.Require().Equal(len(test.args), len(distrInfo.Records))
+				suite.Require().Equal(len(test.testingDistrRecord), len(distrInfo.Records))
 				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
 				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[1].Weight)
 				suite.Require().Equal(sdk.NewInt(200), distrInfo.TotalWeight)
@@ -268,13 +268,13 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 	tests := []struct {
 		name           string
-		args           []types.DistrRecord
+		testingDistrRecord           []types.DistrRecord
 		isPoolPrepared bool
 		expectErr      bool
 	}{
 		{
 			name: "Not existent gauge.",
-			args: []types.DistrRecord{{
+			testingDistrRecord: []types.DistrRecord{{
 				GaugeId: 1,
 				Weight:  sdk.NewInt(100),
 			}},
@@ -283,7 +283,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 		},
 		{
 			name: "Adding two of the same gauge id at once should error",
-			args: []types.DistrRecord{
+			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 1,
 					Weight:  sdk.NewInt(100),
@@ -298,7 +298,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 		},
 		{
 			name: "Adding unsort gauges at once should error",
-			args: []types.DistrRecord{
+			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 2,
 					Weight:  sdk.NewInt(100),
@@ -313,7 +313,7 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 		},
 		{
 			name: "Happy case",
-			args: []types.DistrRecord{
+			testingDistrRecord: []types.DistrRecord{
 				{
 					GaugeId: 0,
 					Weight:  sdk.NewInt(100),
@@ -337,14 +337,14 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 				suite.PrepareBalancerPool()
 			}
 
-			err := keeper.UpdateDistrRecords(suite.Ctx, test.args...)
+			err := keeper.UpdateDistrRecords(suite.Ctx, test.testingDistrRecord...)
 			if test.expectErr {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
 
 				distrInfo := keeper.GetDistrInfo(suite.Ctx)
-				suite.Require().Equal(len(test.args), len(distrInfo.Records))
+				suite.Require().Equal(len(test.testingDistrRecord), len(distrInfo.Records))
 				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[0].Weight)
 				suite.Require().Equal(sdk.NewInt(100), distrInfo.Records[1].Weight)
 				suite.Require().Equal(sdk.NewInt(200), distrInfo.TotalWeight)
