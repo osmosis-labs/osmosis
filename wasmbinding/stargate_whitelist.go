@@ -128,7 +128,7 @@ func init() {
 	StargateWhitelist.Store("/osmosis.gamm.v1beta1.Query/TotalLiquidity", &gammtypes.QueryTotalLiquidityResponse{})
 	StargateWhitelist.Store("/osmosis.gamm.v1beta1.Query/Pool", &gammtypes.QueryPoolResponse{})
 	StargateWhitelist.Store("/osmosis.gamm.v1beta1.Query/PoolParams", &gammtypes.QueryPoolParamsResponse{})
-	StargateWhitelist.Store("/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", &gammtypes.QueryTotalPoolLiquidityRequest{})
+	StargateWhitelist.Store("/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", &gammtypes.QueryTotalPoolLiquidityResponse{})
 	StargateWhitelist.Store("/osmosis.gamm.v1beta1.Query/TotalShares", &gammtypes.QueryTotalSharesResponse{})
 	StargateWhitelist.Store("/osmosis.gamm.v1beta1.Query/SpotPrice", &gammtypes.QuerySpotPriceResponse{})
 	StargateWhitelist.Store("/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountIn", &gammtypes.QuerySwapExactAmountInResponse{})
