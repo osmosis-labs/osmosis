@@ -154,7 +154,7 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]string {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `["channel-0", 5]`)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `["channel-0", [5, 5]]`)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Setup sender chain's quota
@@ -204,7 +204,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `["channel-0", 5]`)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, `["channel-0", [5, 5]]`)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Setup receiver chain's quota

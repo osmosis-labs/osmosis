@@ -5,7 +5,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{Flow, FlowType, FLOW, IBCMODULE, QUOTA, GOVMODULE};
+use crate::state::{Flow, FlowType, FLOW, GOVMODULE, IBCMODULE, QUOTA};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:rate-limiter";
@@ -55,7 +55,7 @@ pub fn execute(
             channel_id,
             channel_value,
             funds,
-            FlowType::In,
+            FlowType::Out,
             env.block.time,
         ),
         ExecuteMsg::RecvPacket {
@@ -68,7 +68,7 @@ pub fn execute(
             channel_id,
             channel_value,
             funds,
-            FlowType::Out,
+            FlowType::In,
             env.block.time,
         ),
         ExecuteMsg::AddChannel {} => todo!(),
@@ -91,17 +91,19 @@ pub fn try_transfer(
         return Err(ContractError::Unauthorized {});
     }
     let quota = QUOTA.may_load(deps.storage, channel_id.clone())?;
-    let quota = if quota.is_none(){
+    let quota = if quota.is_none() {
         // No Quota configured for the current channel. Allowing all messages.
         return Ok(Response::new()
             .add_attribute("method", "try_transfer")
             .add_attribute("channel_id", channel_id)
-            .add_attribute("quota", "none"))
+            .add_attribute("quota", "none"));
     } else {
         quota.unwrap()
     };
 
-    let max = quota.capacity_at(&channel_value);
+    println!("{quota:?}");
+
+    let max = quota.capacity_at(&channel_value, &direction);
     let mut flow = FLOW.load(deps.storage, channel_id.clone())?;
     if flow.is_expired(now) {
         flow.expire(now)
@@ -168,7 +170,7 @@ mod tests {
         let msg = InstantiateMsg {
             gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
-            channel_quotas: vec![("channel".to_string(), 10)],
+            channel_quotas: vec![("channel".to_string(), (10, 10))],
         };
         let info = mock_info(IBC_ADDR, &vec![]);
         instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
@@ -200,7 +202,7 @@ mod tests {
         let msg = InstantiateMsg {
             gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
-            channel_quotas: vec![("channel".to_string(), 10)],
+            channel_quotas: vec![("channel".to_string(), (10, 10))],
         };
         let info = mock_info(GOV_ADDR, &vec![]);
         let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
@@ -232,7 +234,7 @@ mod tests {
         let msg = InstantiateMsg {
             gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
-            channel_quotas: vec![("channel".to_string(), 10)],
+            channel_quotas: vec![("channel".to_string(), (10, 10))],
         };
         let info = mock_info(GOV_ADDR, &vec![]);
         let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
@@ -271,5 +273,53 @@ mod tests {
 
         assert!(matches!(err, ContractError::RateLimitExceded { .. }));
         //assert_eq!(18, value.count);
+    }
+
+    #[test]
+    fn asymetric_quotas() {
+        let mut deps = mock_dependencies();
+
+        let msg = InstantiateMsg {
+            gov_module: Addr::unchecked(GOV_ADDR),
+            ibc_module: Addr::unchecked(IBC_ADDR),
+            channel_quotas: vec![("channel".to_string(), (10, 1))],
+        };
+        let info = mock_info(GOV_ADDR, &vec![]);
+        let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+
+        // Sending 2%
+        let msg = ExecuteMsg::SendPacket {
+            channel_id: "channel".to_string(),
+            channel_value: 3_000,
+            funds: 60,
+        };
+        let info = mock_info(IBC_ADDR, &vec![]);
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        let Attribute { key, value } = &res.attributes[2];
+        assert_eq!(key, "used");
+        assert_eq!(value, "60");
+
+        // Sending 1% more. Allowed, as sending has a 10% allowance
+        let msg = ExecuteMsg::SendPacket {
+            channel_id: "channel".to_string(),
+            channel_value: 3_000,
+            funds: 30,
+        };
+
+        let info = mock_info(IBC_ADDR, &vec![]);
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        let Attribute { key, value } = &res.attributes[2];
+        assert_eq!(key, "used");
+        assert_eq!(value, "90");
+
+        // Receiving 1% should fail. 3% already executed through the channel
+        let recv_msg = ExecuteMsg::RecvPacket {
+            channel_id: "channel".to_string(),
+            channel_value: 3_000,
+            funds: 30,
+        };
+
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap_err();
+        assert!(matches!(err, ContractError::RateLimitExceded { .. }));
     }
 }

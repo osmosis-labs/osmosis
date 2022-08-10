@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct InstantiateMsg {
     pub gov_module: Addr,
     pub ibc_module: Addr,
-    pub channel_quotas: Vec<(String, u32)>,
+    pub channel_quotas: Vec<(String, (u32, u32))>,
 }
 
 /// The caller (IBC module) is responsibble for correctly calculating the funds

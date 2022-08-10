@@ -35,7 +35,9 @@ mod tests {
         })
     }
 
-    fn proper_instantiate(channel_quotas: Vec<(String, u32)>) -> (App, RateLimitingContract) {
+    fn proper_instantiate(
+        channel_quotas: Vec<(String, (u32, u32))>,
+    ) -> (App, RateLimitingContract) {
         let mut app = mock_app();
         let cw_template_id = app.store_code(contract_template());
 
@@ -70,7 +72,7 @@ mod tests {
         #[test]
         fn expiration() {
             let (mut app, cw_template_contract) =
-                proper_instantiate(vec![("channel".to_string(), 10)]);
+                proper_instantiate(vec![("channel".to_string(), (10, 10))]);
 
             // Using all the allowance
             let msg = ExecuteMsg::SendPacket {

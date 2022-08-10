@@ -1,6 +1,7 @@
 use cosmwasm_std::{Addr, Timestamp};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::cmp;
 
 use cw_storage_plus::{Item, Map};
 
@@ -52,24 +53,27 @@ impl Flow {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Quota {
-    max_percentage: u32,
+    max_percentage_send: u32,
+    max_percentage_recv: u32,
 }
 
 impl Quota {
     /// Calculates the max capacity based on the total value of the channel
-    pub fn capacity_at(&self, total_value: &u128) -> u128 {
-        total_value * (self.max_percentage as u128) / 100_u128
+    pub fn capacity_at(&self, total_value: &u128, direction: &FlowType) -> u128 {
+        let max_percentage = match direction {
+            FlowType::In => self.max_percentage_recv,
+            FlowType::Out => self.max_percentage_send,
+        };
+        total_value * (max_percentage as u128) / 100_u128
     }
 }
 
-impl From<u32> for Quota {
-    fn from(max_percentage: u32) -> Self {
-        if max_percentage > 100 {
-            Quota {
-                max_percentage: 100,
-            }
-        } else {
-            Quota { max_percentage }
+impl From<(u32, u32)> for Quota {
+    fn from(send_recv: (u32, u32)) -> Self {
+        let send_recv = (cmp::min(send_recv.0, 100), cmp::min(send_recv.1, 100));
+        Quota {
+            max_percentage_send: send_recv.0,
+            max_percentage_recv: send_recv.1,
         }
     }
 }
