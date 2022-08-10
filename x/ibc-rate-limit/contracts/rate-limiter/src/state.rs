@@ -74,6 +74,9 @@ impl From<u32> for Quota {
     }
 }
 
+/// Only this module can manage the contract
+pub const GOVMODULE: Item<Addr> = Item::new("gov_module");
+/// Only this module can execute transfers
 pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 // For simplicity, the map keys (ibc channel) refers to the "host" channel on the
 // osmosis side. This means that on PacketSend it will refer to the source

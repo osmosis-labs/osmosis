@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 /// Only the ibc module is allowed to execute actions on this contract
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
+    pub gov_module: Addr,
     pub ibc_module: Addr,
     pub channel_quotas: Vec<(String, u32)>,
 }

@@ -1,11 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Timestamp};
+use cosmwasm_std::{Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Timestamp};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{Flow, FlowType, FLOW, IBCMODULE, QUOTA};
+use crate::state::{Flow, FlowType, FLOW, IBCMODULE, QUOTA, GOVMODULE};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:rate-limiter";
@@ -20,6 +20,7 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
     IBCMODULE.save(deps.storage, &msg.ibc_module)?;
+    GOVMODULE.save(deps.storage, &msg.gov_module)?;
 
     for (channel, quota) in msg.channel_quotas {
         QUOTA.save(deps.storage, channel.clone(), &quota.into())?;
@@ -32,7 +33,8 @@ pub fn instantiate(
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
-        .add_attribute("ibc_module", msg.ibc_module.to_string()))
+        .add_attribute("ibc_module", msg.ibc_module.to_string())
+        .add_attribute("gov_module", msg.gov_module.to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -42,10 +44,6 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
-    let ibc_module = IBCMODULE.load(deps.storage)?;
-    if info.sender != ibc_module {
-        return Err(ContractError::Unauthorized {});
-    }
     match msg {
         ExecuteMsg::SendPacket {
             channel_id,
@@ -53,6 +51,7 @@ pub fn execute(
             funds,
         } => try_transfer(
             deps,
+            info.sender,
             channel_id,
             channel_value,
             funds,
@@ -65,6 +64,7 @@ pub fn execute(
             funds,
         } => try_transfer(
             deps,
+            info.sender,
             channel_id,
             channel_value,
             funds,
@@ -78,13 +78,29 @@ pub fn execute(
 
 pub fn try_transfer(
     deps: DepsMut,
+    sender: Addr,
     channel_id: String,
     channel_value: u128,
     funds: u128,
     direction: FlowType,
     now: Timestamp,
 ) -> Result<Response, ContractError> {
-    let quota = QUOTA.load(deps.storage, channel_id.clone())?;
+    // Only the IBCMODULE can execute transfers
+    let ibc_module = IBCMODULE.load(deps.storage)?;
+    if sender != ibc_module {
+        return Err(ContractError::Unauthorized {});
+    }
+    let quota = QUOTA.may_load(deps.storage, channel_id.clone())?;
+    let quota = if quota.is_none(){
+        // No Quota configured for the current channel. Allowing all messages.
+        return Ok(Response::new()
+            .add_attribute("method", "try_transfer")
+            .add_attribute("channel_id", channel_id)
+            .add_attribute("quota", "none"))
+    } else {
+        quota.unwrap()
+    };
+
     let max = quota.capacity_at(&channel_value);
     let mut flow = FLOW.load(deps.storage, channel_id.clone())?;
     if flow.is_expired(now) {
@@ -132,6 +148,7 @@ mod tests {
         let mut deps = mock_dependencies();
 
         let msg = InstantiateMsg {
+            gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
             channel_quotas: vec![],
         };
@@ -149,6 +166,7 @@ mod tests {
         let mut deps = mock_dependencies();
 
         let msg = InstantiateMsg {
+            gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
             channel_quotas: vec![("channel".to_string(), 10)],
         };
@@ -180,6 +198,7 @@ mod tests {
         let mut deps = mock_dependencies();
 
         let msg = InstantiateMsg {
+            gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
             channel_quotas: vec![("channel".to_string(), 10)],
         };
@@ -211,6 +230,7 @@ mod tests {
         let mut deps = mock_dependencies();
 
         let msg = InstantiateMsg {
+            gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
             channel_quotas: vec![("channel".to_string(), 10)],
         };

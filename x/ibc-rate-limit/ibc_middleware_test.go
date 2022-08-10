@@ -232,6 +232,6 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// send 1 token.
-	// ToDo: What's the desired behaviour if the contract doesn't have a quota for the current channel?
-	suite.AssertSendSuccess(false, suite.NewValidMessage(true, sdk.NewInt(1)))
+	// If the contract doesn't have a quota for the current channel, all transfers are allowed
+	suite.AssertSendSuccess(true, suite.NewValidMessage(true, sdk.NewInt(1)))
 }

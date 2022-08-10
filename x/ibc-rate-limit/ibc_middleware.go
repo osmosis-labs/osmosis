@@ -202,7 +202,7 @@ func (im *IBCModule) OnRecvPacket(
 		"recv_packet",
 		string(contractRaw),
 		channelValue.String(),
-		packet.GetSourceChannel(),
+		packet.GetDestChannel(),
 		sender.GetAddress(),
 		amount,
 	)

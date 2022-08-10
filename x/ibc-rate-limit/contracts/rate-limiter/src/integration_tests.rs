@@ -40,6 +40,7 @@ mod tests {
         let cw_template_id = app.store_code(contract_template());
 
         let msg = InstantiateMsg {
+            gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
             channel_quotas,
         };
