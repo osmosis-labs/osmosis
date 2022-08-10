@@ -1,4 +1,4 @@
-package twap
+package twapmodule
 
 import (
 	"context"
