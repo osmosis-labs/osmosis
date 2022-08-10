@@ -37,7 +37,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, codec codec.Codec) fun
 		}
 
 		// normalize response to ensure backward compatibility
-		bz, err := NormalizeReponseAndJsonMarshal(binding, res.Value, codec)
+		bz, err := NormalizeResponseAndJsonMarshal(binding, res.Value, codec)
 		if err != nil {
 			return nil, err
 		}
@@ -175,7 +175,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 // NormalizeReponses normalizes the responses by unmarshalling the response then marshalling them again.
 // Normalizing the response is specifically important for responses that contain type of Any.
-func NormalizeReponseAndJsonMarshal(binding interface{}, bz []byte, codec codec.Codec) ([]byte, error) {
+func NormalizeResponseAndJsonMarshal(binding interface{}, bz []byte, codec codec.Codec) ([]byte, error) {
 	// all values are proto message
 	message, ok := binding.(proto.Message)
 	if !ok {

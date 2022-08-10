@@ -94,12 +94,12 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 
 			originVersionBz, err := hex.DecodeString(tc.originalResponse)
 			suite.Require().NoError(err)
-			jsonMarshalledOriginalBz, err := wasmbinding.NormalizeReponseAndJsonMarshal(binding, originVersionBz, suite.app.AppCodec())
+			jsonMarshalledOriginalBz, err := wasmbinding.NormalizeResponseAndJsonMarshal(binding, originVersionBz, suite.app.AppCodec())
 			suite.Require().NoError(err)
 
 			newVersionBz, err := hex.DecodeString(tc.updatedResponse)
 			suite.Require().NoError(err)
-			jsonMarshalledUpdatedBz, err := wasmbinding.NormalizeReponseAndJsonMarshal(binding, newVersionBz, suite.app.AppCodec())
+			jsonMarshalledUpdatedBz, err := wasmbinding.NormalizeResponseAndJsonMarshal(binding, newVersionBz, suite.app.AppCodec())
 			suite.Require().NoError(err)
 
 			// json marshalled bytes should be the same since we use the same proto sturct for unmarshalling
