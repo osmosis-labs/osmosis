@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
+	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
 )
 
 // trackChangedPool places an entry into a transient store,
