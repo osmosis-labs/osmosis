@@ -40,8 +40,7 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 )
 
-type AppModuleBasic struct {
-}
+type AppModuleBasic struct{}
 
 // Name returns the pool-incentives module's name.
 func (AppModuleBasic) Name() string { return types.ModuleName }

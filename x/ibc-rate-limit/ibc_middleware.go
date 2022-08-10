@@ -16,8 +16,10 @@ import (
 	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
 )
 
-var _ porttypes.Middleware = &IBCModule{}
-var _ porttypes.ICS4Wrapper = &ICS4Middleware{}
+var (
+	_ porttypes.Middleware  = &IBCModule{}
+	_ porttypes.ICS4Wrapper = &ICS4Middleware{}
+)
 
 type ICS4Middleware struct {
 	channel       porttypes.ICS4Wrapper

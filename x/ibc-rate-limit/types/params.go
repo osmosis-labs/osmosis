@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -54,7 +55,6 @@ func validateContractAddress(i interface{}) error {
 	bech32, err := sdk.AccAddressFromBech32(v)
 	if err != nil {
 		return err
-
 	}
 
 	err = sdk.VerifyAddressFormat(bech32)

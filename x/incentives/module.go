@@ -44,8 +44,7 @@ var (
 // ----------------------------------------------------------------------------
 
 // Implements the AppModuleBasic interface for the module.
-type AppModuleBasic struct {
-}
+type AppModuleBasic struct{}
 
 // NewAppModuleBasic creates a new AppModuleBasic struct.
 func NewAppModuleBasic() AppModuleBasic {
