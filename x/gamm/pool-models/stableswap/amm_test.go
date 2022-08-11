@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/internal/test_helpers"
@@ -13,6 +14,10 @@ import (
 
 type StableSwapTestSuite struct {
 	test_helpers.CfmmCommonTestSuite
+}
+
+func TestStableSwapTestSuite(t *testing.T) {
+	suite.Run(t, new(StableSwapTestSuite))
 }
 
 func TestCFMMInvariantTwoAssets(t *testing.T) {
@@ -100,7 +105,7 @@ func TestCFMMInvariantMultiAssets(t *testing.T) {
 	}
 }
 
-func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
+func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_InverseRelationship() {
 	type testcase struct {
 		denomOut         string
 		initialPoolOut   int64
@@ -179,7 +184,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+			suite.T().Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
 				ctx := suite.CreateTestContext()
 
 				poolLiquidityIn := sdk.NewInt64Coin(tc.denomOut, tc.initialPoolOut)
@@ -195,7 +200,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				pool := createTestPool(t, poolLiquidity, swapFeeDec, exitFeeDec)
 				require.NotNil(t, pool)
 
-				suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
+				suite.ValidateCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolLiquidityIn.Denom, poolLiquidityOut.Denom, tc.initialCalcOut, swapFeeDec)
 			})
 		}
 	}

@@ -29,7 +29,7 @@ func (suite *CfmmCommonTestSuite) CreateTestContext() sdk.Context {
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
-func (suite *CfmmCommonTestSuite) TestCalculateAmountOutAndIn_InverseRelationship(
+func (suite *CfmmCommonTestSuite) ValidateCalculateAmountOutAndIn_InverseRelationship(
 	ctx sdk.Context,
 	pool types.PoolI,
 	assetInDenom string,

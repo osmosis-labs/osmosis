@@ -471,7 +471,7 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
 
 // TestCalculateAmountOutAndIn_InverseRelationship tests that the same amount of token is guaranteed upon
 // sequential operation of CalcInAmtGivenOut and CalcOutAmtGivenIn.
-func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelationship(t *testing.T) {
+func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelationship() {
 	type testcase struct {
 		denomOut         string
 		initialPoolOut   int64
@@ -550,7 +550,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 
 	for _, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
-			t.Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
+			suite.T().Run(getTestCaseName(tc, swapFee), func(t *testing.T) {
 				ctx := suite.CreateTestContext()
 
 				poolAssetOut := balancer.PoolAsset{
@@ -573,7 +573,7 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 				require.NotNil(t, pool)
 
 				sut := func() {
-					suite.TestCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
+					suite.ValidateCalculateAmountOutAndIn_InverseRelationship(ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec)
 				}
 
 				balancerPool, ok := pool.(*balancer.Pool)
