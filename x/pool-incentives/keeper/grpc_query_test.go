@@ -68,7 +68,6 @@ func (suite *KeeperTestSuite) TestGaugeIds() {
 }
 
 func (suite *KeeperTestSuite) TestDistrInfo() {
-
 	for _, tc := range []struct {
 		desc                 string
 		poolCreated          bool
@@ -156,39 +155,38 @@ func (suite *KeeperTestSuite) TestLockableDurations() {
 }
 
 func (suite *KeeperTestSuite) TestIncentivizedPools() {
-
 	for _, tc := range []struct {
 		desc                 string
 		poolCreated          bool
 		weights              []sdk.Int
-		perpetual		     bool
-		nonPerpetual		 bool
+		perpetual            bool
+		nonPerpetual         bool
 		expectedRecordLength int
 	}{
 		{
 			desc:                 "No pool exist",
 			poolCreated:          false,
-			weights:          	  []sdk.Int{},
+			weights:              []sdk.Int{},
 			expectedRecordLength: 0,
 		},
 		{
 			desc:                 "Normal case",
 			poolCreated:          true,
-			weights:          	  []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
 			expectedRecordLength: 3,
 		},
 		{
-			desc:        "Perpetual",
-			poolCreated: true,
-			weights:          	  []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
-			perpetual: true,
+			desc:                 "Perpetual",
+			poolCreated:          true,
+			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			perpetual:            true,
 			expectedRecordLength: 3,
 		},
 		{
-			desc:        "Non Perpetual",
-			poolCreated: true,
-			weights:          	  []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
-			nonPerpetual: true,
+			desc:                 "Non Perpetual",
+			poolCreated:          true,
+			weights:              []sdk.Int{sdk.NewInt(100), sdk.NewInt(200), sdk.NewInt(300)},
+			nonPerpetual:         true,
 			expectedRecordLength: 0,
 		},
 	} {
@@ -212,39 +210,39 @@ func (suite *KeeperTestSuite) TestIncentivizedPools() {
 					gaugeId, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[i])
 					suite.Require().NoError(err)
 					distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeId, Weight: tc.weights[i]})
-		
-				if (tc.perpetual) {
-					gaugePerpetualId, err := suite.App.IncentivesKeeper.CreateGauge(
-						suite.Ctx, isPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
-							LockQueryType: lockuptypes.ByDuration,
-							Denom:         "stake",
-							Duration:      time.Hour,
-						}, time.Now(), 1)
-					suite.Require().NoError(err)
-					distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugePerpetualId, Weight: sdk.NewInt(300)})
-				}
-				if(tc.nonPerpetual) {
-					gaugeNonPerpetualId, err := suite.App.IncentivesKeeper.CreateGauge(
-						suite.Ctx, notPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
-							LockQueryType: lockuptypes.ByDuration,
-							Denom:         "stake",
-							Duration:      time.Hour,
-					}, time.Now(), 1)
-					suite.Require().NoError(err)
-					distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeNonPerpetualId, Weight: sdk.NewInt(100)})
-				}
 
-				// Sort in ascending order of gaugeId
-				sort.Slice(distRecords[:], func(i, j int) bool {
-					return distRecords[i].GaugeId < distRecords[j].GaugeId
-				})
-				
-				// update records and ensure that non-perpetuals pot cannot get rewards.
-				keeper.UpdateDistrRecords(suite.Ctx, distRecords...)
-			}
-			res, err := queryClient.IncentivizedPools(context.Background(), &types.QueryIncentivizedPoolsRequest{})
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedRecordLength, len(res.IncentivizedPools))
+					if tc.perpetual {
+						gaugePerpetualId, err := suite.App.IncentivesKeeper.CreateGauge(
+							suite.Ctx, isPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
+								LockQueryType: lockuptypes.ByDuration,
+								Denom:         "stake",
+								Duration:      time.Hour,
+							}, time.Now(), 1)
+						suite.Require().NoError(err)
+						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugePerpetualId, Weight: sdk.NewInt(300)})
+					}
+					if tc.nonPerpetual {
+						gaugeNonPerpetualId, err := suite.App.IncentivesKeeper.CreateGauge(
+							suite.Ctx, notPerpetual, sdk.AccAddress{}, sdk.Coins{}, lockuptypes.QueryCondition{
+								LockQueryType: lockuptypes.ByDuration,
+								Denom:         "stake",
+								Duration:      time.Hour,
+							}, time.Now(), 1)
+						suite.Require().NoError(err)
+						distRecords = append(distRecords, types.DistrRecord{GaugeId: gaugeNonPerpetualId, Weight: sdk.NewInt(100)})
+					}
+
+					// Sort in ascending order of gaugeId
+					sort.Slice(distRecords[:], func(i, j int) bool {
+						return distRecords[i].GaugeId < distRecords[j].GaugeId
+					})
+
+					// update records and ensure that non-perpetuals pot cannot get rewards.
+					keeper.UpdateDistrRecords(suite.Ctx, distRecords...)
+				}
+				res, err := queryClient.IncentivizedPools(context.Background(), &types.QueryIncentivizedPoolsRequest{})
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectedRecordLength, len(res.IncentivizedPools))
 			}
 		})
 	}
