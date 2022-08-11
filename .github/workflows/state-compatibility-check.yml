@@ -50,8 +50,8 @@ jobs:
     runs-on: osmo-runner 
     steps:
       - 
-        # If workflow was triggered by a schedule, 
-        # explicitly checkout the latest branch
+        # If workflow was triggered by a schedule, explicitly checkout the latest branch
+        # otherwise checkout the release branch were targetting
         name: Checkout v11.x branch
         if: ${{ github.event_name == 'schedule' }}
         uses: actions/checkout@v3
