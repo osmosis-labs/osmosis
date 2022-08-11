@@ -1,6 +1,7 @@
 package templates
 
 type GrpcTemplate struct {
+	ProtoPath  string
 	ClientPath string
 	Queries    []GrpcQuery
 }
@@ -15,6 +16,7 @@ func GrpcTemplateFromQueryYml(queryYml QueryYml) GrpcTemplate {
 		GrpcQueries = append(GrpcQueries, GrpcQuery{QueryName: queryName})
 	}
 	return GrpcTemplate{
+		ProtoPath:  queryYml.protoPath,
 		ClientPath: queryYml.ClientPath,
 		Queries:    GrpcQueries,
 	}

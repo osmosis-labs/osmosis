@@ -14,6 +14,8 @@ type QueryYml struct {
 	ClientPath string `yaml:"client_path"`
 	// list of all queries, key is the query name, e.g. `GetArithmeticTwap`
 	Queries map[string]YmlQueryDescriptor `yaml:"queries"`
+
+	protoPath string
 }
 
 type Keeper struct {
@@ -36,7 +38,11 @@ func ReadYmlFile(filepath string) (QueryYml, error) {
 	}
 	var query QueryYml
 	err = yaml.Unmarshal(content, &query)
-	return query, err
+	if err != nil {
+		return QueryYml{}, err
+	}
+	query.protoPath = filepath
+	return query, nil
 }
 
 // input is of form github.com/osmosis-labs/osmosis/vXX/{PATH}

@@ -65,7 +65,7 @@ func codegenQueryYml(filepath string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%v\n", queryYml)
+
 	err = codegenGrpcPackage(queryYml)
 	if err != nil {
 		return err
@@ -75,7 +75,6 @@ func codegenQueryYml(filepath string) error {
 
 func codegenGrpcPackage(queryYml templates.QueryYml) error {
 	grpcTemplateData := templates.GrpcTemplateFromQueryYml(queryYml)
-	fmt.Printf("grpcData %v\n", grpcTemplateData)
 
 	// create directory
 	fsClientPath := templates.ParseFilePathFromImportPath(grpcTemplateData.ClientPath)
