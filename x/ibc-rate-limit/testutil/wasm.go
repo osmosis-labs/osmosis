@@ -2,15 +2,14 @@ package osmosisibctesting
 
 import (
 	"fmt"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	"io/ioutil"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
+	"io/ioutil"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite) {
