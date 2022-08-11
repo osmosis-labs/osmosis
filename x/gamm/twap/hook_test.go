@@ -17,13 +17,10 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 
 	tests := []struct {
 		name string
-
 		// this pool will be created at height 1
 		createPoolFunc func() uint64
-
 		// token to be swaped in at each block height
 		tokenInAtBlock map[int64]sdk.Coin
-
 		// block height to stop at
 		stopHeight int64
 	}{
