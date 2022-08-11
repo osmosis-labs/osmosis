@@ -120,7 +120,7 @@ func (s *TestSuite) TestUpdateTwap() {
 // Then an expected TWAP is provided in each test case, to compare against computed.
 func TestComputeArithmeticTwap(t *testing.T) {
 	newOneSidedRecord := func(time time.Time, accum sdk.Dec, useP0 bool) types.TwapRecord {
-		record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
+		record := types.TwapRecord{Time: time, Asset0Denom: denom1, Asset1Denom: denom0}
 		if useP0 {
 			record.P0ArithmeticTwapAccumulator = accum
 		} else {
@@ -142,7 +142,7 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		return testCase{
 			newOneSidedRecord(baseTime, startAccum, true),
 			newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
-			denom0,
+			denom1,
 			expectedTwap,
 		}
 	}
@@ -150,7 +150,7 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		return testCase{
 			newOneSidedRecord(baseTime, startAccum, false),
 			newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), false),
-			denom1,
+			denom0,
 			expectedTwap,
 		}
 	}
@@ -160,7 +160,7 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		"basic: spot price = 1 for one second, 0 init accumulator": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
-			quoteAsset:  denom0,
+			quoteAsset:  denom1,
 			expTwap:     sdk.OneDec(),
 		},
 		// this test just shows what happens in case the records are reversed.
@@ -168,19 +168,19 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		"invalid call: reversed records of above": {
 			startRecord: newOneSidedRecord(tPlusOne, OneSec, true),
 			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  denom0,
+			quoteAsset:  denom1,
 			expTwap:     sdk.OneDec(),
 		},
 		"same record: denom0, end spot price = 0": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  denom0,
+			quoteAsset:  denom1,
 			expTwap:     sdk.ZeroDec(),
 		},
 		"same record: denom1, end spot price = 1": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			quoteAsset:  denom1,
+			quoteAsset:  denom0,
 			expTwap:     sdk.OneDec(),
 		},
 		"accumulator = 10*OneSec, t=5s. 0 base accum": testCaseFromDeltas(
