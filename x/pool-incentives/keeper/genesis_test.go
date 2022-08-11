@@ -46,7 +46,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	encodingConfig := simapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	am := pool_incentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper)
+	am := pool_incentives.NewAppModule(*app.PoolIncentivesKeeper)
 
 	genesis := testGenesis
 	app.PoolIncentivesKeeper.InitGenesis(ctx, &genesis)
@@ -57,7 +57,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		app := simapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := pool_incentives.NewAppModule(appCodec, *app.PoolIncentivesKeeper)
+		am := pool_incentives.NewAppModule(*app.PoolIncentivesKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }

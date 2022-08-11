@@ -52,8 +52,6 @@ import (
 	epochskeeper "github.com/osmosis-labs/osmosis/v10/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
-	twaptypes "github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v10/x/incentives/keeper"
 	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
@@ -69,6 +67,8 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v10/x/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v10/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v10/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
@@ -260,6 +260,19 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 
+	txFeesKeeper := txfeeskeeper.NewKeeper(
+		appCodec,
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.EpochsKeeper,
+		appKeepers.keys[txfeestypes.StoreKey],
+		appKeepers.GAMMKeeper,
+		appKeepers.GAMMKeeper,
+		txfeestypes.FeeCollectorName,
+		txfeestypes.NonNativeFeeCollectorName,
+	)
+	appKeepers.TxFeesKeeper = &txFeesKeeper
+
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[incentivestypes.StoreKey],
@@ -268,6 +281,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.LockupKeeper,
 		appKeepers.EpochsKeeper,
 		appKeepers.DistrKeeper,
+		appKeepers.TxFeesKeeper,
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
@@ -295,26 +309,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
-		distrtypes.ModuleName,
-		authtypes.FeeCollectorName,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 
-	txFeesKeeper := txfeeskeeper.NewKeeper(
-		appCodec,
-		appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.EpochsKeeper,
-		appKeepers.keys[txfeestypes.StoreKey],
-		appKeepers.GAMMKeeper,
-		appKeepers.GAMMKeeper,
-		txfeestypes.FeeCollectorName,
-		txfeestypes.NonNativeFeeCollectorName,
-	)
-	appKeepers.TxFeesKeeper = &txFeesKeeper
-
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
-		appCodec,
 		appKeepers.keys[tokenfactorytypes.StoreKey],
 		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
 		appKeepers.AccountKeeper,
@@ -327,7 +325,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis"
 
-	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.GAMMKeeper, appKeepers.BankKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
+	wasmOpts = append(owasm.RegisterCustomPlugins(appKeepers.GAMMKeeper, appKeepers.BankKeeper, appKeepers.TwapKeeper, appKeepers.TokenFactoryKeeper), wasmOpts...)
 
 	wasmKeeper := wasm.NewKeeper(
 		appCodec,

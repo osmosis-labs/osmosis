@@ -15,5 +15,10 @@ func (suite *KeeperTestSuite) TestQueryEpochInfos() {
 	suite.Require().NoError(err)
 	suite.Require().Len(epochInfosResponse.Epochs, 3)
 	expectedEpochs := types.DefaultGenesis().Epochs
+	for id := range expectedEpochs {
+		expectedEpochs[id].StartTime = suite.Ctx.BlockTime()
+		expectedEpochs[id].CurrentEpochStartHeight = suite.Ctx.BlockHeight()
+	}
+
 	suite.Require().Equal(expectedEpochs, epochInfosResponse.Epochs)
 }

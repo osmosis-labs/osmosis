@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting/osmoassert"
 )
 
 func TestGetAllUniqueDenomPairs(t *testing.T) {
@@ -24,7 +24,7 @@ func TestGetAllUniqueDenomPairs(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			osmoutils.ConditionalPanic(t, tt.panics, func() {
+			osmoassert.ConditionalPanic(t, tt.panics, func() {
 				pairGT, pairLT := GetAllUniqueDenomPairs(tt.denoms)
 				require.Equal(t, pairGT, tt.wantedPairGT)
 				require.Equal(t, pairLT, tt.wantedPairLT)

@@ -135,6 +135,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = helpers.SimAppChainID
+	config.Commit = true
 
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.

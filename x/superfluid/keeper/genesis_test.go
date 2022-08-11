@@ -56,7 +56,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	encodingConfig := simapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	am := superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper)
+	am := superfluid.NewAppModule(*app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper)
 	genesis := testGenesis
 	app.SuperfluidKeeper.InitGenesis(ctx, genesis)
 
@@ -65,7 +65,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		app := simapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := superfluid.NewAppModule(appCodec, *app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper)
+		am := superfluid.NewAppModule(*app.SuperfluidKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.LockupKeeper, app.GAMMKeeper, app.EpochsKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }
