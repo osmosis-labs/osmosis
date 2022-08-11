@@ -1,4 +1,7 @@
-package grpc
+package grpc 
+
+// THIS FILE IS GENERATED CODE, DO NOT EDIT
+// SOURCE AT `proto/twap/v1beta/query.yml`
 
 import (
 	context "context"
@@ -8,8 +11,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/twap/client"
 	"github.com/osmosis-labs/osmosis/v10/x/twap/client/queryproto"
 )
-
-// This file should evolve to being code gen'd, off of `proto/twap/v1beta/query.yml`
 
 type Querier struct {
 	Q client.Querier
@@ -21,6 +22,5 @@ func (q Querier) GetArithmeticTwap(grpcCtx context.Context,
 	req *queryproto.GetArithmeticTwapRequest,
 ) (*queryproto.GetArithmeticTwapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-
 	return q.Q.GetArithmeticTwap(ctx, req)
 }
