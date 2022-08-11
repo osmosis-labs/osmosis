@@ -111,7 +111,7 @@ func(suite *KeeperTestSuite) TestCreateDenom() {
         },
         "success case": {
             subdenom: "evmos",
-	    valid:    true,
+            valid:    true,
         },
     }
 
