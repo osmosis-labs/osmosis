@@ -23,14 +23,12 @@ var (
 // respective underlying token denoms, and attempts to execute a join pool transaction
 func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgJoinPool, error) {
 	// get random pool
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	pool_id, pool, _, _, poolDenoms, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// get address that has all denoms from the randomly selected pool
-	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
 	sender, tokenIn, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
 	if !senderExists {
 		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
@@ -59,15 +57,13 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 // RandomExitPoolMsg pseudo-randomly selects an existing pool ID, attempts to find an account with the
 // respective unbonded gamm shares, and attempts to execute an exit pool transaction
 func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgExitPool, error) {
-	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	// get random pool
+	pool_id, pool, _, _, _, gammDenom, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// select an address that has gamm shares of the selected pool
-	gammDenom := types.GetPoolShareDenom(pool_id)
 	sender, gammShares, senderExists := sim.SelAddrWithDenom(ctx, gammDenom)
 	if !senderExists {
 		return nil, fmt.Errorf("no sender with denom %s exists", gammDenom)
@@ -112,10 +108,10 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 
 	// from the above selected account, determine the token type and respective weight needed to make the pool
 	for i := 0; i < len(poolCoins); i++ {
-		poolAssets = append(poolAssets, balancertypes.PoolAsset{
+		poolAssets = []balancertypes.PoolAsset{{
 			Weight: sdk.OneInt(),
 			Token:  poolCoins[i],
-		})
+		}}
 	}
 
 	return &balancertypes.MsgCreateBalancerPool{
@@ -128,28 +124,17 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 // RandomSwapExactAmountIn utilizes a random pool and swaps and exact amount in for minimum of the secondary pool token
 // TODO: Improve this to swap through multiple pools
 func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountIn, error) {
-	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
+	pool_id, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
-	poolCoins := pool.GetTotalPoolLiquidity(ctx)
-
-	// TODO: Improve this, don't just assume two asset pools
-	// randomly select one of the pool denoms to be the coinIn and on to be the coinOut
-	r := sim.GetSeededRand("select random seed")
-	index := r.Intn(len(poolCoins) - 1)
-	coinIn := poolCoins[index]
-	poolCoins = simtypes.RemoveIndex(poolCoins, index)
-	coinOut := poolCoins[0]
 
 	// set the swap route to use this pool
-	route := []types.SwapAmountInRoute{}
-	route = append(route, types.SwapAmountInRoute{
+	route := []types.SwapAmountInRoute{{
 		PoolId:        pool_id,
 		TokenOutDenom: coinOut.Denom,
-	})
+	}}
 
 	// find an address that has a balance of the coinIn
 	sender, accCoinIn, senderExists := sim.SelAddrWithDenom(ctx, coinIn.Denom)
@@ -158,11 +143,10 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	}
 
 	// select a random amount that is upper-bound by the address's balance of coinIn
-	randomSubset := sim.RandomAmount(accCoinIn.Amount)
-	if randomSubset.IsZero() {
+	randomCoinSubset := sdk.NewCoins(sdk.NewCoin(accCoinIn.Denom, sim.RandomAmount(accCoinIn.Amount)))
+	if randomCoinSubset.IsZero() {
 		return nil, errors.New("cannot make a swap with zero amount")
 	}
-	randomCoinSubset := sdk.NewCoins(sdk.NewCoin(accCoinIn.Denom, randomSubset))
 
 	// calculate the minimum number of tokens received from input of tokenIn
 	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, randomCoinSubset, coinOut.Denom, pool.GetSwapFee(ctx))
@@ -181,28 +165,17 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 // RandomSwapExactAmountOut utilizes a random pool and swaps a max amount amount in for an exact amount of the secondary pool token
 // TODO: Improve this to swap through multiple pools
 func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountOut, error) {
-	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
+	pool_id, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
-	poolCoins := pool.GetTotalPoolLiquidity(ctx)
-
-	// TODO: Improve this, don't just assume two asset pools
-	// randomly select one of the pool denoms to be the coinIn and one to be the coinOut
-	r := sim.GetSeededRand("select random seed")
-	index := r.Intn(len(poolCoins) - 1)
-	coinIn := poolCoins[index]
-	poolCoins = simtypes.RemoveIndex(poolCoins, index)
-	coinOut := poolCoins[0]
 
 	// set the swap route to use this pool
-	route := []types.SwapAmountOutRoute{}
-	route = append(route, types.SwapAmountOutRoute{
+	route := []types.SwapAmountOutRoute{{
 		PoolId:       pool_id,
 		TokenInDenom: coinIn.Denom,
-	})
+	}}
 
 	// find an address that has a balance of the coinIn
 	senderAcc, accCoin, senderExists := sim.SelAddrWithDenom(ctx, coinIn.Denom)
@@ -234,18 +207,11 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 // RandomJoinSwapExternAmountIn utilizes a random pool and with a random account does a single asset join with an exact
 // amount of an asset for a minimum number of LP shares
 func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgJoinSwapExternAmountIn, error) {
-	// get random pool
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
+	pool_id, pool, coinIn, _, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
-	poolCoins := pool.GetTotalPoolLiquidity(ctx)
-
-	// randomly select one of the pool denoms to be the coinIn
-	r := sim.GetSeededRand("select random seed")
-	index := r.Intn(len(poolCoins) - 1)
-	coinIn := poolCoins[index]
 
 	// find an address with the coinIn denom and randomly select a subset of the coin
 	sender, tokenIn, senderExists := sim.SelAddrWithDenom(ctx, coinIn.Denom)
@@ -273,18 +239,11 @@ func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 // RandomJoinSwapShareAmountOut utilizes a random pool and with a random account and swaps a maximum of a specified token
 // for an exact amount of LP shares
 func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgJoinSwapShareAmountOut, error) {
-	// get random pool
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
+	pool_id, pool, coinIn, _, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
-	poolCoins := pool.GetTotalPoolLiquidity(ctx)
-
-	// randomly select one of the pool denoms to be the coinIn
-	r := sim.GetSeededRand("select random seed")
-	index := r.Intn(len(poolCoins) - 1)
-	coinIn := poolCoins[index]
 
 	// find an address with the coinIn denom and randomly select a subset of the coin
 	sender, tokenIn, senderExists := sim.SelAddrWithDenom(ctx, coinIn.Denom)
@@ -323,26 +282,17 @@ func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 // RandomExitSwapExternAmountOut utilizes a random pool and with a random account and swaps a maximum number of LP shares
 // for an exact amount of one of the token pairs
 func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgExitSwapExternAmountOut, error) {
-	// get random pool
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
+	pool_id, pool, coinIn, coinOut, _, gammDenom, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// select an address that has gamm shares of the selected pool
-	gammDenom := types.GetPoolShareDenom(pool_id)
 	sender, gammShares, senderExists := sim.SelAddrWithDenom(ctx, gammDenom)
 	if !senderExists {
 		return nil, fmt.Errorf("no sender with denom %s exists", gammDenom)
 	}
-
-	// randomly select one of the pool denoms to be the coinIn
-	poolCoins := pool.GetTotalPoolLiquidity(ctx)
-	r := sim.GetSeededRand("select random seed")
-	index := r.Intn(len(poolCoins) - 1)
-	coinIn := poolCoins[index]
-	coinOut := poolCoins[0]
 
 	// select a random amount of the account's gamm shares
 	gammShares.Amount = sim.RandomAmount(gammShares.Amount)
@@ -374,26 +324,17 @@ func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sd
 // RandomExitSwapShareAmountIn utilizes a random pool and with a random account and swaps an number of LP shares
 // for a minimum amount of one of the token pairs
 func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgExitSwapShareAmountIn, error) {
-	// get random pool
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
+	pool_id, pool, coinIn, coinOut, _, gammDenom, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// select an address that has gamm shares of the selected pool
-	gammDenom := types.GetPoolShareDenom(pool_id)
 	sender, gammShares, senderExists := sim.SelAddrWithDenom(ctx, gammDenom)
 	if !senderExists {
 		return nil, fmt.Errorf("no sender with denom %s exists", gammDenom)
 	}
-
-	// randomly select one of the pool denoms to be the coinIn
-	poolCoins := pool.GetTotalPoolLiquidity(ctx)
-	r := sim.GetSeededRand("select random seed")
-	index := r.Intn(len(poolCoins) - 1)
-	coinIn := poolCoins[index]
-	coinOut := poolCoins[0]
 
 	// select a random amount of the account's gamm shares
 	gammShares.Amount = sim.RandomAmount(gammShares.Amount)
@@ -442,7 +383,6 @@ func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.Poo
 	neededLpLiquidity := sdk.Coins{}
 
 	for _, coin := range poolLiquidity {
-		// (coin.Amt * shareRatio).Ceil()
 		neededAmt := coin.Amount.ToDec().Mul(shareRatio).Ceil().RoundInt()
 		if neededAmt.LTE(sdk.ZeroInt()) {
 			return sdk.Int{}, fmt.Errorf("Too few shares out wanted")
@@ -471,4 +411,25 @@ func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Contex
 		hasPoolCreationFee := accCoins.AmountOf("stake").GT(PoolCreationFee.Amount)
 		return hasTwoCoins && hasPoolCreationFee
 	}
+}
+
+func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.PoolI, sdk.Coin, sdk.Coin, []string, string, error) {
+	// select a pseudo-random pool ID, max bound by the upcoming pool ID
+	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
+	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	if err != nil {
+		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
+	}
+	poolCoins := pool.GetTotalPoolLiquidity(ctx)
+
+	// TODO: Improve this, don't just assume two asset pools
+	// randomly select one of the pool denoms to be the coinIn and one to be the coinOut
+	r := sim.GetSeededRand("select random seed")
+	index := r.Intn(len(poolCoins) - 1)
+	coinIn := poolCoins[index]
+	poolCoins = simtypes.RemoveIndex(poolCoins, index)
+	coinOut := poolCoins[0]
+	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
+	gammDenom := types.GetPoolShareDenom(pool_id)
+	return pool_id, pool, coinIn, coinOut, poolDenoms, gammDenom, err
 }
