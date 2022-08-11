@@ -13,7 +13,6 @@ import (
 // * swap in block 2
 // then after block 2 end block, we have saved records for the pool,
 // for both block 1 & 2, with distinct spot prices in their records, and accumulators incremented.
-// TODO: Abstract this to be more table driven, and test more pool / block setups.
 func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 
 	tests := []struct {
