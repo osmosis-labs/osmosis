@@ -26,10 +26,17 @@ type Keeper struct {
 }
 
 type YmlQueryDescriptor struct {
-	CodegenProtoWrapper bool              `default:"true" yaml:"codegen_proto_wrapper,omitempty"`
-	DefaultValues       map[string]string `yaml:"default_values"`
-	QueryFunc           string            `yaml:"query_func"`
-	Response            string
+	ProtoWrapper *ProtoWrapperDescriptor `yaml:"proto_wrapper,omitempty"`
+	Cli          *CliDescriptor
+}
+
+type ProtoWrapperDescriptor struct {
+	DefaultValues map[string]string `yaml:"default_values"`
+	QueryFunc     string            `yaml:"query_func"`
+	Response      string
+}
+
+type CliDescriptor struct {
 }
 
 func ReadYmlFile(filepath string) (QueryYml, error) {

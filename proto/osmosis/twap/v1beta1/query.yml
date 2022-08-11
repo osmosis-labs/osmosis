@@ -4,7 +4,9 @@ keeper:
 client_path: "github.com/osmosis-labs/osmosis/v10/x/twap/client"
 queries:
   GetArithmeticTwap:
-    default_values:
-      Req.end_time: "time.Now()"
-    query_func: "twap, err := k.GetArithmeticTwap(Req.pool_id, Req.base_asset, Req.quote_asset, Req.start_time, Req.end_time)"
-    response: "Response{twap}"
+    proto_wrapper:
+      default_values:
+        Req.end_time: "time.Now()"
+      query_func: "k.GetArithmeticTwap"
+    cli:
+      cmd: "GetArithmeticTwap"
