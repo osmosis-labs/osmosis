@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	// "fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +19,6 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 		coinsToLock         sdk.Coins
 		lockOwner           sdk.AccAddress
 		duration            time.Duration
-		coinsInOwnerAddress sdk.Coins
 	}
 
 	tests := []struct {
@@ -31,32 +31,56 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 			param: param{
 				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)},       // setup wallet
 				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:            time.Second,
-				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+				duration:            time.Hour * 504,
 			},
 			expectPass: false,
+		},
+		{
+			name: "invalid duration",
+			param: param{
+				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:            time.Second,
+			},
+			expectPass: false,
+		},
+		{
+			name: "happy case",
+			param: param{
+				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:            time.Hour * 504,
+			},
+			expectPass: true,
 		},
 	}
 
 	for _, test := range tests {
-		suite.SetupTest()
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
+			c := sdk.WrapSDKContext(suite.Ctx)
 
-		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
-		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
-		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+			// If there is no coinsToLock in the param, use pool denom
+			if(test.param.coinsToLock.Empty()) {
+				test.param.coinsToLock = sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(20)))
+			}
+			suite.FundAcc(test.param.lockOwner, test.param.coinsToLock)
+			resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
 
-		valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+			valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
-		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
-		_, err = msgServer.SuperfluidDelegate(c, types.NewMsgSuperfluidDelegate(test.param.lockOwner, resp.ID, valAddrs[0]))
+			msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+			_, err = msgServer.SuperfluidDelegate(c, types.NewMsgSuperfluidDelegate(test.param.lockOwner, resp.ID, valAddrs[0]))
 
-		if test.expectPass {
-			suite.Require().NoError(err)
-		} else {
-			suite.Require().Error(err)
-		}
+			if test.expectPass {
+				suite.Require().NoError(err)
+				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtSuperfluidDelegate, 1)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+		
 	}
 }
 
@@ -188,62 +212,6 @@ func (suite *KeeperTestSuite) TestMsgLockAndSuperfluidDelegate() {
 
 		if test.expectPass {
 			suite.Require().NoError(err)
-		} else {
-			suite.Require().Error(err)
-		}
-	}
-}
-
-// TestMsgSuperfluidDelegate_Event tests that events are correctly emitted
-// when calling SuperfluidDelegate.
-func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate_Event() {
-	type param struct {
-		lockOwner sdk.AccAddress
-		duration  time.Duration
-	}
-
-	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
-	}{
-		{
-			name: "basic valid",
-			param: param{
-				lockOwner: sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:  time.Hour * 504,
-			},
-			expectPass: true,
-		},
-		{
-			name: "invalid duration",
-			param: param{
-				lockOwner: sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:  time.Second,
-			},
-			expectPass: false,
-		},
-	}
-
-	for _, test := range tests {
-		suite.SetupTest()
-
-		denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
-		coinsToLock := sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(20)))
-		suite.FundAcc(test.param.lockOwner, coinsToLock)
-
-		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
-		c := sdk.WrapSDKContext(suite.Ctx)
-		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, coinsToLock))
-
-		valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
-
-		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
-		_, err = msgServer.SuperfluidDelegate(c, types.NewMsgSuperfluidDelegate(test.param.lockOwner, resp.ID, valAddrs[0]))
-
-		if test.expectPass {
-			suite.Require().NoError(err)
-			assertEventEmitted(suite, suite.Ctx, types.TypeEvtSuperfluidDelegate, 1)
 		} else {
 			suite.Require().Error(err)
 		}
