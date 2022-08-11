@@ -106,10 +106,10 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 
 	// from the above selected account, determine the token type and respective weight needed to make the pool
 	for i := 0; i < len(poolCoins); i++ {
-		poolAssets = []balancertypes.PoolAsset{{
+		poolAssets = append(poolAssets, balancertypes.PoolAsset{
 			Weight: sdk.OneInt(),
 			Token:  poolCoins[i],
-		}}
+		})
 	}
 
 	return &balancertypes.MsgCreateBalancerPool{
@@ -141,10 +141,7 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	}
 
 	// select a random amount that is upper-bound by the address's balance of coinIn
-	randomCoinSubset := sdk.NewCoins(sdk.NewCoin(accCoinIn.Denom, sim.RandomAmount(accCoinIn.Amount)))
-	if randomCoinSubset.IsZero() {
-		return nil, errors.New("cannot make a swap with zero amount")
-	}
+	randomCoinSubset := sim.RandSubsetCoins(sdk.NewCoins(sdk.NewCoin(accCoinIn.Denom, accCoinIn.Amount)))
 
 	// calculate the minimum number of tokens received from input of tokenIn
 	tokenOutMin, err := pool.CalcOutAmtGivenIn(ctx, randomCoinSubset, coinOut.Denom, pool.GetSwapFee(ctx))
