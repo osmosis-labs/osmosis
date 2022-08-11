@@ -16,9 +16,9 @@ import (
 
 func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 	type param struct {
-		coinsToLock         sdk.Coins
-		lockOwner           sdk.AccAddress
-		duration            time.Duration
+		coinsToLock sdk.Coins
+		lockOwner   sdk.AccAddress
+		duration    time.Duration
 	}
 
 	tests := []struct {
@@ -29,25 +29,25 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 		{
 			name: "superfluid delegation for not allowed asset",
 			param: param{
-				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)},       // setup wallet
-				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:            time.Hour * 504,
+				coinsToLock: sdk.Coins{sdk.NewInt64Coin("stake", 10)},       // setup wallet
+				lockOwner:   sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:    time.Hour * 504,
 			},
 			expectPass: false,
 		},
 		{
 			name: "invalid duration",
 			param: param{
-				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:            time.Second,
+				lockOwner: sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:  time.Second,
 			},
 			expectPass: false,
 		},
 		{
 			name: "happy case",
 			param: param{
-				lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
-				duration:            time.Hour * 504,
+				lockOwner: sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+				duration:  time.Hour * 504,
 			},
 			expectPass: true,
 		},
@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 			// If there is no coinsToLock in the param, use pool denom
-			if(test.param.coinsToLock.Empty()) {
+			if test.param.coinsToLock.Empty() {
 				test.param.coinsToLock = sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(20)))
 			}
 			suite.FundAcc(test.param.lockOwner, test.param.coinsToLock)
@@ -80,7 +80,6 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {
 				suite.Require().Error(err)
 			}
 		})
-		
 	}
 }
 
