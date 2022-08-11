@@ -152,13 +152,3 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 	return types.TwapRecord{}, fmt.Errorf("TWAP not found, but there are other twaps available for this time."+
 		" Were provided asset0denom and asset1denom (%s, %s) correct, and in order (asset0 > asset1)?", asset0Denom, asset1Denom)
 }
-
-// GetAllHistoricalTimeIndexedTWAPs returns all historical TWAPs indexed by time.
-func (k Keeper) GetAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
-	return osmoutils.GatherValuesFromStore(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPTimeIndexPrefix), []byte(types.HistoricalTWAPTimeIndexPrefix+"a"), types.ParseTwapFromBz)
-}
-
-// GetAllHistoricalPoolIndexedTWAPs returns all historical TWAPs indexed by pool.
-func (k Keeper) GetAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
-	return osmoutils.GatherValuesFromStore(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), []byte(types.HistoricalTWAPPoolIndexPrefix+"a"), types.ParseTwapFromBz)
-}
