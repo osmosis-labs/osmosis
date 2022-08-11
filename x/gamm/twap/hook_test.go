@@ -64,7 +64,6 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 				2: sdk.NewInt64Coin(denom1, 120718932),
 				4: sdk.NewInt64Coin(denom1, 9345734),
 			},
-
 			stopHeight: 4,
 		},
 	}
