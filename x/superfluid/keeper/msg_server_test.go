@@ -271,7 +271,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate_Event() {
 				continue
 			} else {
 				suite.Require().NoError(err)
-				assertEventEmitted(suite, suite.Ctx, types.TypeEvtSuperfluidUndelegate, 1)
+				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtSuperfluidUndelegate, 1)
 			}
 		}
 	}
@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock_Event() {
 		suite.Ctx = suite.Ctx.WithBlockTime(unbondLockStartTime)
 		_, err = msgServer.SuperfluidUnbondLock(sdk.WrapSDKContext(suite.Ctx), types.NewMsgSuperfluidUnbondLock(sender, lock.ID))
 		suite.Require().NoError(err)
-		assertEventEmitted(suite, suite.Ctx, types.TypeEvtSuperfluidUnbondLock, 1)
+		suite.AssertEventEmitted(suite.Ctx, types.TypeEvtSuperfluidUnbondLock, 1)
 	}
 }
 
@@ -334,18 +334,6 @@ func (suite *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 		suite.Ctx = suite.Ctx.WithBlockHeight(v8constants.UpgradeHeight)
 		_, err := msgServer.UnPoolWhitelistedPool(sdk.WrapSDKContext(suite.Ctx), types.NewMsgUnPoolWhitelistedPool(sender, poolId))
 		suite.Require().NoError(err)
-		assertEventEmitted(suite, suite.Ctx, types.TypeEvtUnpoolId, 1)
+		suite.AssertEventEmitted(suite.Ctx, types.TypeEvtUnpoolId, 1)
 	}
-}
-
-func assertEventEmitted(suite *KeeperTestSuite, ctx sdk.Context, eventTypeExpected string, numEventsExpected int) {
-	allEvents := ctx.EventManager().Events()
-	// filter out other events
-	actualEvents := make([]sdk.Event, 0, 1)
-	for _, event := range allEvents {
-		if event.Type == eventTypeExpected {
-			actualEvents = append(actualEvents, event)
-		}
-	}
-	suite.Require().Equal(numEventsExpected, len(actualEvents))
 }
