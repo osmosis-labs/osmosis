@@ -74,6 +74,7 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 //
 // pre-condition: newTime >= record.Time
 func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
+	// return the given record: no need to calculate and update the accumulator if record time matches.
 	if record.Time.Equal(newTime) {
 		return record
 	}
