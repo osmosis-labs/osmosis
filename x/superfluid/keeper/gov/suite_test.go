@@ -11,10 +11,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v10/app"
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
 )
 
 type KeeperTestSuite struct {
-	suite.Suite
+	apptesting.KeeperTestHelper
 
 	ctx     sdk.Context
 	querier keeper.Querier
@@ -29,16 +30,4 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
-}
-
-func assertEventEmitted(suite *KeeperTestSuite, ctx sdk.Context, eventTypeExpected string, numEventsExpected int) {
-	allEvents := ctx.EventManager().Events()
-	// filter out other events
-	actualEvents := make([]sdk.Event, 0, 1)
-	for _, event := range allEvents {
-		if event.Type == eventTypeExpected {
-			actualEvents = append(actualEvents, event)
-		}
-	}
-	suite.Require().Equal(numEventsExpected, len(actualEvents))
 }

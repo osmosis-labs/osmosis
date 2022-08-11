@@ -135,7 +135,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 					suite.Require().Error(err)
 				} else {
 					suite.Require().NoError(err)
-					assertEventEmitted(suite, suite.ctx, tc.expectedEvent[i], 1)
+					suite.AssertEventEmitted(suite.ctx, tc.expectedEvent[i], 1)
 				}
 
 				// check assets individually
