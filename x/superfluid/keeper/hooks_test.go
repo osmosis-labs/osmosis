@@ -334,6 +334,6 @@ func (suite *KeeperTestSuite) TestAfterAddTokensToLock_Event() {
 		suite.Require().NoError(err)
 
 		// should call AfterAddTokensToLock hook and emit event here
-		assertEventEmitted(suite, suite.Ctx, types.TypeEvtSuperfluidIncreaseDelegation, 1)
+		suite.AssertEventEmitted(suite.Ctx, types.TypeEvtSuperfluidIncreaseDelegation, 1)
 	}
 }
