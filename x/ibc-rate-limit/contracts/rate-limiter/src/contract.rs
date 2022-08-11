@@ -103,15 +103,23 @@ pub fn try_transfer(
         return Err(ContractError::Unauthorized {});
     }
 
-    let mut channels = CHANNEL_FLOWS.load(deps.storage, &channel_id)?;
+    let channels = CHANNEL_FLOWS.may_load(deps.storage, &channel_id)?;
 
-    if channels.len() == 0 {
+    let configured = match channels {
+        None => false,
+        Some(ref x) if x.len() == 0 => false,
+        _ => true,
+    };
+
+    if !configured {
         // No Quota configured for the current channel. Allowing all messages.
         return Ok(Response::new()
             .add_attribute("method", "try_transfer")
             .add_attribute("channel_id", channel_id)
             .add_attribute("quota", "none"));
     }
+
+    let mut channels = channels.unwrap();
 
     let results: Result<Vec<ChannelFlowResponse>, _> = channels
         .iter_mut()

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -152,16 +153,16 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	suite.AssertReceiveSuccess(true, suite.NewValidMessage(false, one))
 }
 
-func (suite *MiddlewareTestSuite) BuildQuota(name string, duration, send_precentage, recv_percentage uint32) string {
+func (suite *MiddlewareTestSuite) BuildChannelQuota(name string, duration, send_precentage, recv_percentage uint32) string {
 	return fmt.Sprintf(`
-          ["channel-0", {"name":"%s", "duration": {"time":%d}, "send_recv":[%d, %d]}]
+          {"name": "channel-0", "quotas": [{"name":"%s", "duration": %d, "send_recv":[%d, %d]}] }
     `, name, duration, send_precentage, recv_percentage)
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]string {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildQuota("Weekly", 604800, 5, 5)
+	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
@@ -181,7 +182,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]
 
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
-	used, _ := sdk.NewIntFromString(attrs["used"])
+	used, _ := sdk.NewIntFromString(attrs["weekly_used"])
 	suite.Require().Equal(used, half.MulRaw(2))
 
 	// Sending above the quota should fail.
@@ -192,8 +193,10 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]
 func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	// Same test as above, but the quotas get reset after time passes
 	attrs := suite.TestSendTransferWithRateLimiting()
-	nanos, _ := strconv.ParseInt(attrs["period_end"], 10, 64)
-	resetTime := time.Unix(0, nanos)
+	parts := strings.Split(attrs["weekly_period_end"], ".") // Splitting timestamp into secs and nanos
+	secs, _ := strconv.ParseInt(parts[0], 10, 64)
+	nanos, _ := strconv.ParseInt(parts[1], 10, 64)
+	resetTime := time.Unix(secs, nanos)
 
 	// Move both chains one block
 	suite.chainA.NextBlock()
@@ -212,7 +215,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	quotas := suite.BuildQuota("Weekly", 604800, 5, 5)
+	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
 	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 

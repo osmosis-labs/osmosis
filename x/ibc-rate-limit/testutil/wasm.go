@@ -44,7 +44,7 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, quotas string) s
 	initMsgBz := []byte(fmt.Sprintf(`{
            "gov_module":  "%s",
            "ibc_module":"%s",
-           "channel_quotas": [%s]
+           "channels": [%s]
         }`,
 		govModule, transferModule, quotas))
 
