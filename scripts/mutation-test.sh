@@ -17,7 +17,7 @@ MUTATION_SOURCES=$(echo "$MUTATION_SOURCES" | grep './x/tokenfactory')
 # Collect multiple lines into a single line to be fed into go-mutesting
 MUTATION_SOURCES=$(echo $MUTATION_SOURCES | tr '\n' ' ')
 
-OUTPUT=$(go run github.com/zimmski/go-mutesting/cmd/go-mutesting --disable=$DISABLED_MUTATORS $MUTATION_SOURCES)
+OUTPUT=$(go run github.com/osmosis-labs/go-mutesting/cmd/go-mutesting --disable=$DISABLED_MUTATORS $MUTATION_SOURCES)
 
 # Fetch the final result output and the overall mutation testing score
 RESULT=$(echo "$OUTPUT" | grep 'The mutation score')
