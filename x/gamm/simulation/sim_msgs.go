@@ -413,7 +413,7 @@ func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Contex
 
 func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.PoolI, sdk.Coin, sdk.Coin, []string, string, error) {
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolNumber(ctx))
+	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolId(ctx))
 	pool, err := k.GetPoolAndPoke(ctx, pool_id)
 	if err != nil {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
