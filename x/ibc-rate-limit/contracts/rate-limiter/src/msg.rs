@@ -49,8 +49,17 @@ pub enum ExecuteMsg {
         channel_value: u128,
         funds: u128,
     },
-    AddChannel {},    // TODO: Who is allowed to do this?
-    RemoveChannel {}, // TODO: Who is allowed to do this?
+    AddChannel {
+        channel_id: String,
+        quotas: Vec<QuotaMsg>,
+    },
+    RemoveChannel {
+        channel_id: String,
+    },
+    ResetChannelQuota {
+        channel_id: String,
+        quota_id: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

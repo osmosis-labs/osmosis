@@ -12,6 +12,12 @@ pub enum ContractError {
     #[error("IBC Rate Limit exceded for channel {channel:?}. Try again after {reset:?}")]
     RateLimitExceded { channel: String, reset: Timestamp },
 
+    #[error("Quota {quota_id} not found for channel {channel_id}")]
+    QuotaNotFound {
+        quota_id: String,
+        channel_id: String,
+    },
+
     #[error("Custom Error val: {val:?}")]
     CustomError { val: String },
     // Add any other custom errors you like here.
