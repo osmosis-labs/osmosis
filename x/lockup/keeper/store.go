@@ -9,7 +9,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -98,15 +97,6 @@ func accumulationKey(duration time.Duration) (res []byte) {
 	res = make([]byte, 8)
 	binary.BigEndian.PutUint64(res[:8], uint64(duration))
 	return
-}
-
-func (k Keeper) ClearAllAccumulationStores(ctx sdk.Context) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLockAccumulation)
-	iter := store.Iterator(nil, nil)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
-	}
 }
 
 // GetAccountUnlockableCoins Returns whole unlockable coins which are not withdrawn yet.
