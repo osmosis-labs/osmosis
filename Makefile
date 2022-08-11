@@ -214,8 +214,6 @@ PACKAGES_E2E=$(shell go list -tags e2e ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
 
-include sims.mk
-
 test: test-unit test-build
 
 test-all: check test-race test-cover
