@@ -5,7 +5,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg};
-use crate::state::{Flow, FlowType, FLOW, GOVMODULE, IBCMODULE, QUOTA};
+use crate::state::{Flow, FlowType, Quota, FLOW, GOVMODULE, IBCMODULE, QUOTAS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:rate-limiter";
@@ -22,8 +22,8 @@ pub fn instantiate(
     IBCMODULE.save(deps.storage, &msg.ibc_module)?;
     GOVMODULE.save(deps.storage, &msg.gov_module)?;
 
-    for (channel, quota) in msg.channel_quotas {
-        QUOTA.save(deps.storage, channel.clone(), &quota.into())?;
+    for (channel, quotas) in msg.channel_quotas {
+        QUOTAS.save(deps.storage, channel.clone(), &vec![quotas.into()])?;
         FLOW.save(
             deps.storage,
             channel,
@@ -76,6 +76,31 @@ pub fn execute(
     }
 }
 
+fn check_quota(
+    quota: &Quota,
+    flow: &mut Flow,
+    direction: FlowType,
+    channel_id: &str,
+    channel_value: u128,
+    funds: u128,
+    now: Timestamp,
+) -> Result<(u128, u128, Timestamp), ContractError> {
+    let max = quota.capacity_at(&channel_value, &direction);
+    if flow.is_expired(now) {
+        flow.expire(now)
+    }
+    flow.add_flow(direction, funds);
+
+    let balance = flow.balance();
+    if balance > max {
+        return Err(ContractError::RateLimitExceded {
+            channel: channel_id.to_string(),
+            reset: flow.period_end,
+        });
+    }
+    return Ok((balance, max, flow.period_end));
+}
+
 pub fn try_transfer(
     deps: DepsMut,
     sender: Addr,
@@ -90,32 +115,32 @@ pub fn try_transfer(
     if sender != ibc_module {
         return Err(ContractError::Unauthorized {});
     }
-    let quota = QUOTA.may_load(deps.storage, channel_id.clone())?;
-    let quota = if quota.is_none() {
+    let quotas = QUOTAS.load(deps.storage, channel_id.clone())?;
+    if quotas.len() == 0 {
         // No Quota configured for the current channel. Allowing all messages.
         return Ok(Response::new()
             .add_attribute("method", "try_transfer")
             .add_attribute("channel_id", channel_id)
             .add_attribute("quota", "none"));
-    } else {
-        quota.unwrap()
-    };
+    }
 
-    println!("{quota:?}");
-
-    let max = quota.capacity_at(&channel_value, &direction);
     let mut flow = FLOW.load(deps.storage, channel_id.clone())?;
-    if flow.is_expired(now) {
-        flow.expire(now)
-    }
-    flow.add_flow(direction, funds);
 
-    if flow.balance() > max {
-        return Err(ContractError::RateLimitExceded {
-            channel: channel_id.clone(),
-            reset: flow.period_end,
-        });
-    }
+    let quotas: Result<Vec<(u128, u128, Timestamp)>, _> = quotas
+        .iter()
+        .map(|quota| {
+            check_quota(
+                &quota,
+                &mut flow,
+                direction.clone(),
+                &channel_id,
+                channel_value,
+                funds,
+                now,
+            )
+        })
+        .collect();
+    let quotas = quotas?;
 
     FLOW.update(
         deps.storage,
@@ -123,12 +148,22 @@ pub fn try_transfer(
         |_| -> Result<_, ContractError> { Ok(flow) },
     )?;
 
-    Ok(Response::new()
+    let response = Response::new()
         .add_attribute("method", "try_transfer")
-        .add_attribute("channel_id", channel_id)
-        .add_attribute("used", flow.balance().to_string())
-        .add_attribute("max", max.to_string())
-        .add_attribute("period_end", flow.period_end.nanos().to_string()))
+        .add_attribute("channel_id", channel_id);
+
+    // Adding the attributes from each quota to the response
+    quotas.iter().fold(Ok(response), |acc, quota| {
+        Ok(acc?
+            .add_attribute("used", quota.0.to_string())
+            .add_attribute("max", quota.1.to_string())
+            .add_attribute("period_end", quota.2.to_string()))
+    })
+
+    // Ok(response
+    //     .add_attribute("used", balance.to_string())
+    //     .add_attribute("max", max.to_string())
+    //     .add_attribute("period_end", flow.period_end.nanos().to_string()))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -138,6 +173,9 @@ pub fn query(_deps: Deps, _env: Env, _msg: ExecuteMsg) -> StdResult<Binary> {
 
 #[cfg(test)]
 mod tests {
+    use crate::msg::QuotaMsg;
+    use crate::state::RESET_TIME_WEEKLY;
+
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cosmwasm_std::{Addr, Attribute};
@@ -167,10 +205,11 @@ mod tests {
     fn permissions() {
         let mut deps = mock_dependencies();
 
+        let quota = QuotaMsg::new("Weekly", RESET_TIME_WEEKLY, 10, 10);
         let msg = InstantiateMsg {
             gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
-            channel_quotas: vec![("channel".to_string(), (10, 10))],
+            channel_quotas: vec![("channel".to_string(), quota)],
         };
         let info = mock_info(IBC_ADDR, &vec![]);
         instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
@@ -199,10 +238,11 @@ mod tests {
     fn consume_allowance() {
         let mut deps = mock_dependencies();
 
+        let quota = QuotaMsg::new("Weekly", RESET_TIME_WEEKLY, 10, 10);
         let msg = InstantiateMsg {
             gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
-            channel_quotas: vec![("channel".to_string(), (10, 10))],
+            channel_quotas: vec![("channel".to_string(), quota)],
         };
         let info = mock_info(GOV_ADDR, &vec![]);
         let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
@@ -231,10 +271,11 @@ mod tests {
     fn symetric_flows_dont_consume_allowance() {
         let mut deps = mock_dependencies();
 
+        let quota = QuotaMsg::new("Weekly", RESET_TIME_WEEKLY, 10, 10);
         let msg = InstantiateMsg {
             gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
-            channel_quotas: vec![("channel".to_string(), (10, 10))],
+            channel_quotas: vec![("channel".to_string(), quota)],
         };
         let info = mock_info(GOV_ADDR, &vec![]);
         let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
@@ -279,10 +320,11 @@ mod tests {
     fn asymetric_quotas() {
         let mut deps = mock_dependencies();
 
+        let quota = QuotaMsg::new("Weekly", RESET_TIME_WEEKLY, 10, 1);
         let msg = InstantiateMsg {
             gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
-            channel_quotas: vec![("channel".to_string(), (10, 1))],
+            channel_quotas: vec![("channel".to_string(), quota)],
         };
         let info = mock_info(GOV_ADDR, &vec![]);
         let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();

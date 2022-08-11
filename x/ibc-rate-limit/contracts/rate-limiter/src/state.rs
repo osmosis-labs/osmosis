@@ -5,8 +5,11 @@ use std::cmp;
 
 use cw_storage_plus::{Item, Map};
 
-pub const RESET_TIME: u64 = 60 * 60 * 24 * 7;
+use crate::msg::QuotaMsg;
 
+pub const RESET_TIME_WEEKLY: u64 = 60 * 60 * 24 * 7;
+
+#[derive(Debug, Clone)]
 pub enum FlowType {
     In,
     Out,
@@ -24,7 +27,7 @@ impl Flow {
         Self {
             inflow: inflow.into(),
             outflow: outflow.into(),
-            period_end: now.plus_seconds(RESET_TIME),
+            period_end: now.plus_seconds(RESET_TIME_WEEKLY),
         }
     }
 
@@ -40,7 +43,7 @@ impl Flow {
     pub fn expire(&mut self, now: Timestamp) {
         self.inflow = 0;
         self.outflow = 0;
-        self.period_end = now.plus_seconds(RESET_TIME);
+        self.period_end = now.plus_seconds(RESET_TIME_WEEKLY);
     }
 
     pub fn add_flow(&mut self, direction: FlowType, value: u128) {
@@ -53,8 +56,10 @@ impl Flow {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Quota {
+    name: String,
     max_percentage_send: u32,
     max_percentage_recv: u32,
+    duration: cw_utils::Duration,
 }
 
 impl Quota {
@@ -68,12 +73,17 @@ impl Quota {
     }
 }
 
-impl From<(u32, u32)> for Quota {
-    fn from(send_recv: (u32, u32)) -> Self {
-        let send_recv = (cmp::min(send_recv.0, 100), cmp::min(send_recv.1, 100));
+impl From<QuotaMsg> for Quota {
+    fn from(msg: QuotaMsg) -> Self {
+        let send_recv = (
+            cmp::min(msg.send_recv.0, 100),
+            cmp::min(msg.send_recv.1, 100),
+        );
         Quota {
+            name: msg.name,
             max_percentage_send: send_recv.0,
             max_percentage_recv: send_recv.1,
+            duration: msg.duration,
         }
     }
 }
@@ -88,5 +98,5 @@ pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 //
 // It is the responsibility of the go module to pass the appropriate channel
 // when sending the messages
-pub const QUOTA: Map<String, Quota> = Map::new("quota");
+pub const QUOTAS: Map<String, Vec<Quota>> = Map::new("quotas");
 pub const FLOW: Map<String, Flow> = Map::new("flow");

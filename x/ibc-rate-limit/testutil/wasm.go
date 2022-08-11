@@ -2,13 +2,13 @@ package osmosisibctesting
 
 import (
 	"fmt"
+	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"io/ioutil"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
 )
@@ -41,7 +41,13 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, quotas string) s
 	transferModule := osmosisApp.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
 	govModule := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 
-	initMsgBz := []byte(fmt.Sprintf(`{"ibc_module": "%s", "gov_module": "%s", "channel_quotas": [%s]}`, transferModule, govModule, quotas))
+	initMsgBz := []byte(fmt.Sprintf(`{
+           "gov_module":  "%s",
+           "ibc_module":"%s",
+           "channel_quotas": [%s]
+        }`,
+		govModule, transferModule, quotas))
+
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 	codeID := uint64(1)
 	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)

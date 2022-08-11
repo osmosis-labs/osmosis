@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::helpers::RateLimitingContract;
     use crate::msg::InstantiateMsg;
+    use crate::{helpers::RateLimitingContract, msg::QuotaMsg};
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
@@ -35,9 +35,7 @@ mod tests {
         })
     }
 
-    fn proper_instantiate(
-        channel_quotas: Vec<(String, (u32, u32))>,
-    ) -> (App, RateLimitingContract) {
+    fn proper_instantiate(channel_quotas: Vec<(String, QuotaMsg)>) -> (App, RateLimitingContract) {
         let mut app = mock_app();
         let cw_template_id = app.store_code(contract_template());
 
@@ -67,12 +65,16 @@ mod tests {
         use cosmwasm_std::Attribute;
 
         use super::*;
-        use crate::{msg::ExecuteMsg, state::RESET_TIME};
+        use crate::{
+            msg::{ExecuteMsg, QuotaMsg},
+            state::RESET_TIME_WEEKLY,
+        };
 
         #[test]
         fn expiration() {
+            let quota = QuotaMsg::new("Weekly", RESET_TIME_WEEKLY, 10, 10);
             let (mut app, cw_template_contract) =
-                proper_instantiate(vec![("channel".to_string(), (10, 10))]);
+                proper_instantiate(vec![("channel".to_string(), quota)]);
 
             // Using all the allowance
             let msg = ExecuteMsg::SendPacket {
@@ -107,7 +109,7 @@ mod tests {
             // ... Time passes
             app.update_block(|b| {
                 b.height += 1000;
-                b.time = b.time.plus_seconds(RESET_TIME + 1)
+                b.time = b.time.plus_seconds(RESET_TIME_WEEKLY + 1)
             });
 
             // Sending the packet should work now

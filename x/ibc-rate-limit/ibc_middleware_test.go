@@ -2,6 +2,7 @@ package ibc_rate_limit_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -151,10 +152,17 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	suite.AssertReceiveSuccess(true, suite.NewValidMessage(false, one))
 }
 
+func (suite *MiddlewareTestSuite) BuildQuota(name string, duration, send_precentage, recv_percentage uint32) string {
+	return fmt.Sprintf(`
+          ["channel-0", {"name":"%s", "duration": {"time":%d}, "send_recv":[%d, %d]}]
+    `, name, duration, send_precentage, recv_percentage)
+}
+
 func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]string {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `["channel-0", [5, 5]]`)
+	quotas := suite.BuildQuota("Weekly", 604800, 5, 5)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Setup sender chain's quota
@@ -204,7 +212,8 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
-	addr := suite.chainA.InstantiateContract(&suite.Suite, `["channel-0", [5, 5]]`)
+	quotas := suite.BuildQuota("Weekly", 604800, 5, 5)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
 	suite.chainA.RegisterRateLimitingContract(addr)
 
 	// Setup receiver chain's quota
