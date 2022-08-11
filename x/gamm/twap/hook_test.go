@@ -35,7 +35,6 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 			tokenInAtBlock: map[int64]sdk.Coin{
 				2: sdk.NewInt64Coin(denom1, 120718932),
 			},
-
 			stopHeight: 2,
 		},
 		{
