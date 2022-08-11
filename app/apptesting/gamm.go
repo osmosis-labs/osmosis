@@ -3,6 +3,7 @@ package apptesting
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 )
@@ -110,8 +111,9 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 		TokenIn:           swapIn[0],
 		TokenOutMinAmount: sdk.ZeroInt(),
 	}
-	// TODO: switch to message
-	_, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, msg.TokenIn, denoms[1], msg.TokenOutMinAmount)
+
+	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
+	_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
 	s.Require().NoError(err)
 }
 
@@ -133,7 +135,8 @@ func (s *KeeperTestHelper) RunCustomSwap(poolId uint64, tokenIn sdk.Coin) {
 		TokenIn:           tokenIn,
 		TokenOutMinAmount: sdk.ZeroInt(),
 	}
-	// TODO: switch to message
-	_, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, msg.TokenIn, outDenom, msg.TokenOutMinAmount)
+
+	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
+	_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
 	s.Require().NoError(err)
 }
