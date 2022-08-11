@@ -86,10 +86,10 @@ func codegenGrpcPackage(queryYml templates.QueryYml) error {
 	}
 	// generate file
 	f, err := os.Create(fsClientPath + "/grpc/grpc_query.go")
-	defer f.Close()
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	return grpcTemplate.Execute(f, grpcTemplateData)
 }
