@@ -4,8 +4,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/osmosis-labs/osmosis/v10/x/twap"
 	"github.com/osmosis-labs/osmosis/v10/x/twap/client/queryproto"
@@ -18,11 +16,8 @@ type Querier struct {
 }
 
 func (q Querier) GetArithmeticTwap(ctx sdk.Context,
-	req *queryproto.GetArithmeticTwapRequest,
+	req queryproto.GetArithmeticTwapRequest,
 ) (*queryproto.GetArithmeticTwapResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
 	if (req.EndTime == nil || *req.EndTime == time.Time{}) {
 		*req.EndTime = time.Now()
 	}

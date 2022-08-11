@@ -6,8 +6,10 @@ package grpc
 import (
 	context "context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v10/x/twap/client"
 	"github.com/osmosis-labs/osmosis/v10/x/twap/client/queryproto"
 )
@@ -21,6 +23,9 @@ var _ queryproto.QueryServer = Querier{}
 func (q Querier) GetArithmeticTwap(grpcCtx context.Context,
 	req *queryproto.GetArithmeticTwapRequest,
 ) (*queryproto.GetArithmeticTwapResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.GetArithmeticTwap(ctx, req)
+	return q.Q.GetArithmeticTwap(ctx, *req)
 }
