@@ -7,7 +7,9 @@ use cw_storage_plus::{Item, Map};
 
 use crate::msg::QuotaMsg;
 
+pub const RESET_TIME_DAILY: u64 = 60 * 60 * 24;
 pub const RESET_TIME_WEEKLY: u64 = 60 * 60 * 24 * 7;
+pub const RESET_TIME_MONTHLY: u64 = 60 * 60 * 24 * 30;
 
 #[derive(Debug, Clone)]
 pub enum FlowType {
@@ -23,11 +25,16 @@ pub struct Flow {
 }
 
 impl Flow {
-    pub fn new(inflow: impl Into<u128>, outflow: impl Into<u128>, now: Timestamp) -> Self {
+    pub fn new(
+        inflow: impl Into<u128>,
+        outflow: impl Into<u128>,
+        now: Timestamp,
+        duration: u64,
+    ) -> Self {
         Self {
             inflow: inflow.into(),
             outflow: outflow.into(),
-            period_end: now.plus_seconds(RESET_TIME_WEEKLY),
+            period_end: now.plus_seconds(duration),
         }
     }
 
@@ -40,10 +47,10 @@ impl Flow {
     }
 
     // Mutating methods
-    pub fn expire(&mut self, now: Timestamp) {
+    pub fn expire(&mut self, now: Timestamp, duration: u64) {
         self.inflow = 0;
         self.outflow = 0;
-        self.period_end = now.plus_seconds(RESET_TIME_WEEKLY);
+        self.period_end = now.plus_seconds(duration);
     }
 
     pub fn add_flow(&mut self, direction: FlowType, value: u128) {
@@ -56,10 +63,10 @@ impl Flow {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Quota {
-    name: String,
-    max_percentage_send: u32,
-    max_percentage_recv: u32,
-    duration: cw_utils::Duration,
+    pub name: String,
+    pub max_percentage_send: u32,
+    pub max_percentage_recv: u32,
+    pub duration: u64,
 }
 
 impl Quota {
@@ -73,19 +80,25 @@ impl Quota {
     }
 }
 
-impl From<QuotaMsg> for Quota {
-    fn from(msg: QuotaMsg) -> Self {
+impl From<&QuotaMsg> for Quota {
+    fn from(msg: &QuotaMsg) -> Self {
         let send_recv = (
             cmp::min(msg.send_recv.0, 100),
             cmp::min(msg.send_recv.1, 100),
         );
         Quota {
-            name: msg.name,
+            name: msg.name.clone(),
             max_percentage_send: send_recv.0,
             max_percentage_recv: send_recv.1,
             duration: msg.duration,
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct ChannelFlow {
+    pub quota: Quota,
+    pub flow: Flow,
 }
 
 /// Only this module can manage the contract
@@ -98,5 +111,4 @@ pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 //
 // It is the responsibility of the go module to pass the appropriate channel
 // when sending the messages
-pub const QUOTAS: Map<String, Vec<Quota>> = Map::new("quotas");
-pub const FLOW: Map<String, Flow> = Map::new("flow");
+pub const CHANNEL_FLOWS: Map<&str, Vec<ChannelFlow>> = Map::new("flow");

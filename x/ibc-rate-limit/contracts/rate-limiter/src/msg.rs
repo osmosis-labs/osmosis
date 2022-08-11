@@ -3,9 +3,15 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct Channel {
+    pub name: String,
+    pub quotas: Vec<QuotaMsg>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct QuotaMsg {
     pub name: String,
-    pub duration: cw_utils::Duration,
+    pub duration: u64,
     pub send_recv: (u32, u32),
 }
 
@@ -13,7 +19,7 @@ impl QuotaMsg {
     pub fn new(name: &str, seconds: u64, send_percentage: u32, recv_percentage: u32) -> Self {
         QuotaMsg {
             name: name.to_string(),
-            duration: cw_utils::Duration::Time(seconds),
+            duration: seconds,
             send_recv: (send_percentage, recv_percentage),
         }
     }
@@ -25,7 +31,7 @@ impl QuotaMsg {
 pub struct InstantiateMsg {
     pub gov_module: Addr,
     pub ibc_module: Addr,
-    pub channel_quotas: Vec<(String, QuotaMsg)>,
+    pub channels: Vec<Channel>,
 }
 
 /// The caller (IBC module) is responsibble for correctly calculating the funds
