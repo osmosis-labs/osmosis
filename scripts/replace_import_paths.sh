@@ -10,7 +10,7 @@ version_to_replace=$(echo $import_path_to_replace | sed 's/g.*v//')
 echo Current import paths are $version_to_replace, replacing with $NEXT_MAJOR_VERSION
 
 # list all folders containing Go modules.
-modules=$(go list ./... | sed "s/g.*v${version_to_replace}\///")
+modules=$(go list -tags e2e ./... | sed "s/g.*v${version_to_replace}\///")
 
 replace_paths() {
     file="${1}"
