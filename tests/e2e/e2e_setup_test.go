@@ -84,12 +84,19 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Log("skipping state sync testing")
 	}
 
+	isDebugLogEnabled := false
+	if str := os.Getenv("OSMOSIS_E2E_DEBUG_LOG"); len(str) > 0 {
+		isDebugLogEnabled, err = strconv.ParseBool(str)
+		s.Require().NoError(err)
+		s.T().Log("debug logging is enabled. container logs from running cli commands will be printed to stdout")
+	}
+
 	if str := os.Getenv(upgradeVersionEnv); len(str) > 0 {
 		upgradeSettings.Version = str
 		s.T().Log(fmt.Sprintf("upgrade version set to %s", upgradeSettings.Version))
 	}
 
-	s.configurer, err = configurer.New(s.T(), !s.skipIBC, upgradeSettings)
+	s.configurer, err = configurer.New(s.T(), !s.skipIBC, isDebugLogEnabled, upgradeSettings)
 	s.Require().NoError(err)
 
 	err = s.configurer.ConfigureChains()

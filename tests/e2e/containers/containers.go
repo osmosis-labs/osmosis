@@ -15,7 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const hermesContainerName = "hermes-relayer"
+const (
+	hermesContainerName    = "hermes-relayer"
+	maxDebugLogsPerCommand = 3
+)
 
 var errRegex = regexp.MustCompile(`(E|e)rror`)
 
@@ -23,17 +26,19 @@ var errRegex = regexp.MustCompile(`(E|e)rror`)
 // It provides utilities to run and interact with all Docker containers used within e2e testing.
 type Manager struct {
 	ImageConfig
-	pool      *dockertest.Pool
-	network   *dockertest.Network
-	resources map[string]*dockertest.Resource
+	pool              *dockertest.Pool
+	network           *dockertest.Network
+	resources         map[string]*dockertest.Resource
+	isDebugLogEnabled bool
 }
 
 // NewManager creates a new Manager instance and initializes
 // all Docker specific utilies. Returns an error if initialiation fails.
-func NewManager(isUpgrade bool, isFork bool) (docker *Manager, err error) {
+func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Manager, err error) {
 	docker = &Manager{
-		ImageConfig: NewImageConfig(isUpgrade, isFork),
-		resources:   make(map[string]*dockertest.Resource),
+		ImageConfig:       NewImageConfig(isUpgrade, isFork),
+		resources:         make(map[string]*dockertest.Resource),
+		isDebugLogEnabled: isDebugLogEnabled,
 	}
 	docker.pool, err = dockertest.NewPool("")
 	if err != nil {
@@ -79,6 +84,12 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
+
+	if m.isDebugLogEnabled {
+		t.Logf("\n\nRunning: \"%s\", success condition is \"%s\"", command, success)
+	}
+	maxDebugLogTriesLeft := maxDebugLogsPerCommand
+
 	// We use the `require.Eventually` function because it is only allowed to do one transaction per block without
 	// sequence numbers. For simplicity, we avoid keeping track of the sequence number and just use the `require.Eventually`.
 	require.Eventually(
@@ -108,14 +119,18 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			// Note that this does not match all errors.
 			// This only works if CLI outpurs "Error" or "error"
 			// to stderr.
-			if errRegex.MatchString(errBufString) {
-				t.Log("Potential error in stderr:")
+			if (errRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 {
+				t.Log("\nstderr:")
 				t.Log(errBufString)
+
+				t.Log("\nstdout:")
+				t.Log(outBuf.String())
 				// N.B: We should not be returning false here
 				// because some applications such as Hermes might log
 				// "error" to stderr when they function correctly,
 				// causing test flakiness. This log is needed only for
 				// debugging purposes.
+				maxDebugLogTriesLeft--
 			}
 
 			if success != "" {
