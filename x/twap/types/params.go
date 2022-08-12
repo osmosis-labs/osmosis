@@ -11,6 +11,8 @@ var (
 	KeyPruneEpochIdentifier = []byte("PruneEpochIdentifier")
 )
 
+const defaultPruneEpochIdentifier = "day"
+
 // ParamTable for twap module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
@@ -25,7 +27,7 @@ func NewParams(pruneEpochIdentifier string) Params {
 // default twap module parameters.
 func DefaultParams() Params {
 	return Params{
-		PruneEpochIdentifier: "day",
+		PruneEpochIdentifier: defaultPruneEpochIdentifier,
 	}
 }
 
