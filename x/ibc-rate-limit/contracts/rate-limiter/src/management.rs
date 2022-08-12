@@ -105,8 +105,9 @@ pub fn try_reset_channel_quota(
 
 #[cfg(test)]
 mod tests {
+
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{from_binary, Addr};
+    use cosmwasm_std::{from_binary, Addr, StdError};
 
     use crate::contract::{execute, query};
     use crate::helpers::tests::verify_query_response;
@@ -117,7 +118,7 @@ mod tests {
     const GOV_ADDR: &str = "GOV_MODULE";
 
     #[test]
-    fn management_add_channel() {
+    fn management_add_and_remove_channel() {
         let mut deps = mock_dependencies();
         IBCMODULE
             .save(deps.as_mut().storage, &Addr::unchecked(IBC_ADDR))
@@ -155,6 +156,43 @@ mod tests {
             0,
             0,
             env.block.time.plus_seconds(1600),
-        )
+        );
+
+        assert_eq!(value.len(), 1);
+
+        // Add another channel
+        let msg = ExecuteMsg::AddChannel {
+            channel_id: "channel2".to_string(),
+            quotas: vec![QuotaMsg {
+                name: "daily".to_string(),
+                duration: 1600,
+                send_recv: (3, 5),
+            }],
+        };
+        let info = mock_info(IBC_ADDR, &vec![]);
+
+        let env = mock_env();
+        execute(deps.as_mut(), env.clone(), info, msg).unwrap();
+
+        // remove the first one
+        let msg = ExecuteMsg::RemoveChannel {
+            channel_id: "channel".to_string(),
+        };
+
+        let info = mock_info(IBC_ADDR, &vec![]);
+        let env = mock_env();
+        execute(deps.as_mut(), env.clone(), info, msg).unwrap();
+
+        // The channel is not there anymore
+        let err = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap_err();
+        assert!(matches!(err, StdError::NotFound { .. }));
+
+        // The second channel is still there
+        let query_msg = QueryMsg::GetQuotas {
+            channel_id: "channel2".to_string(),
+        };
+        let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
+        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        assert_eq!(value.len(), 1);
     }
 }
