@@ -216,7 +216,9 @@ mod tests {
         let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
         assert_eq!(0, res.messages.len());
 
-        // TODO: Check initialization values are correct
+        // The ibc and gov modules are properly stored
+        assert_eq!(IBCMODULE.load(deps.as_ref().storage).unwrap(), IBC_ADDR);
+        assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap(), GOV_ADDR);
     }
 
     #[test]
