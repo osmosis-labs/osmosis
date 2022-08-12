@@ -17,13 +17,22 @@ type Keeper struct {
 	ammkeeper types.AmmInterface
 }
 
-const pruneEpochIdentifier = "day"
-
 func NewKeeper(storeKey sdk.StoreKey, transientKey *sdk.TransientStoreKey, paramSpace paramtypes.Subspace, ammKeeper types.AmmInterface) *Keeper {
 	return &Keeper{storeKey: storeKey, transientKey: transientKey, paramSpace: paramSpace, ammkeeper: ammKeeper}
 }
 
+// GetParams returns the total set of minting parameters.
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+	k.paramSpace.GetParamSet(ctx, &params)
+	return params
+}
+
+// SetParams sets the total set of minting parameters.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramSpace.SetParamSet(ctx, &params)
+}
+
 // TODO: make this read from a parameter, or hardcode it.
 func (k *Keeper) PruneEpochIdentifier(ctx sdk.Context) string {
-	return pruneEpochIdentifier
+	return k.GetParams(ctx).PruneEpochIdentifier
 }
