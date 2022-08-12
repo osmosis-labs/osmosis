@@ -4,7 +4,9 @@
 package e2e
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -44,11 +46,30 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 }
 
+func (s *IntegrationTestSuite) TestRateLimitingTestsSetupCorrectly() {
+	// Checking the rate limiting tests are setup correctly
+	f1, err := ioutil.ReadFile("../../x/ibc-rate-limit/testdata/rate-limiter.wasm")
+	s.NoError(err)
+	f2, err := ioutil.ReadFile("./scripts/rate-limiter.wasm")
+	s.NoError(err)
+	s.Require().True(bytes.Equal(f1, f2))
+}
+
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
+	// TODO: Add E2E tests for this
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-	// TODO: Add E2E tests for this
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
+
+	//node, err := chainA.GetDefaultNode()
+	//s.NoError(err)
+	// This doesn't work. Why?
+	//node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
+
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+
 }
 
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {

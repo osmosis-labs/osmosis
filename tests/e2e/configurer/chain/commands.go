@@ -21,6 +21,15 @@ func (n *NodeConfig) CreatePool(poolFile, from string) {
 	n.LogActionF("successfully created pool")
 }
 
+func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
+	n.LogActionF("storing wasm code from file %s", wasmFile)
+	cmd := []string{"osmosisd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto"}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	n.LogActionF(err.Error())
+	require.NoError(n.t, err)
+	n.LogActionF("successfully stored")
+}
+
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {
 	n.LogActionF("submitting upgrade proposal %s for height %d", upgradeVersion, upgradeHeight)
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
