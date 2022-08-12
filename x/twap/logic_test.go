@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v10/x/twap"
-	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v11/x/twap"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
 var zeroDec = sdk.ZeroDec()

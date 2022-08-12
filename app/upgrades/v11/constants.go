@@ -3,7 +3,7 @@ package v11
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v11/app/upgrades"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v11 upgrade.
