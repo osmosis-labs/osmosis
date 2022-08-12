@@ -64,7 +64,6 @@ func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) erro
 	return nil
 }
 
-//nolint:unused,deadcode
 func (k Keeper) deleteHistoricalRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
@@ -90,6 +89,16 @@ func (k Keeper) getMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId u
 func (k Keeper) getAllMostRecentRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	return types.GetAllMostRecentTwapsForPool(store, poolId)
+}
+
+// getAllHistoricalTimeIndexedTWAPs returns all historical TWAPs indexed by time.
+func (k Keeper) getAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
+	return osmoutils.GatherValuesFromStore(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPTimeIndexPrefix), []byte(types.HistoricalTWAPTimeIndexPrefix+"a"), types.ParseTwapFromBz)
+}
+
+// getAllHistoricalPoolIndexedTWAPs returns all historical TWAPs indexed by pool.
+func (k Keeper) getAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
+	return osmoutils.GatherValuesFromStore(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), []byte(types.HistoricalTWAPPoolIndexPrefix+"a"), types.ParseTwapFromBz)
 }
 
 // storeNewRecord stores a record, in both the most recent record store and historical stores.
