@@ -194,6 +194,7 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cosmwasm_std::{from_binary, Addr, Attribute};
 
+    use crate::helpers::tests::verify_query_response;
     use crate::msg::{Channel, QuotaMsg};
     use crate::state::RESET_TIME_WEEKLY;
 
@@ -446,15 +447,14 @@ mod tests {
         // Query
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
         let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
-        assert_eq!(value[0].quota.name, "weekly");
-        assert_eq!(value[0].quota.max_percentage_send, 10);
-        assert_eq!(value[0].quota.max_percentage_recv, 10);
-        assert_eq!(value[0].quota.duration, RESET_TIME_WEEKLY);
-        assert_eq!(value[0].flow.inflow, 30);
-        assert_eq!(value[0].flow.outflow, 300);
-        assert_eq!(
-            value[0].flow.period_end,
-            env.block.time.plus_seconds(RESET_TIME_WEEKLY)
+        verify_query_response(
+            &value[0],
+            "weekly",
+            (10, 10),
+            RESET_TIME_WEEKLY,
+            30,
+            300,
+            env.block.time.plus_seconds(RESET_TIME_WEEKLY),
         );
     }
 }

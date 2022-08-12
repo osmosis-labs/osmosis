@@ -25,3 +25,28 @@ impl RateLimitingContract {
         .into())
     }
 }
+
+#[cfg(test)]
+pub mod tests {
+    use cosmwasm_std::Timestamp;
+
+    use crate::state::ChannelFlow;
+
+    pub fn verify_query_response(
+        value: &ChannelFlow,
+        quota_name: &str,
+        send_recv: (u32, u32),
+        duration: u64,
+        inflow: u128,
+        outflow: u128,
+        period_end: Timestamp,
+    ) {
+        assert_eq!(value.quota.name, quota_name);
+        assert_eq!(value.quota.max_percentage_send, send_recv.0);
+        assert_eq!(value.quota.max_percentage_recv, send_recv.1);
+        assert_eq!(value.quota.duration, duration);
+        assert_eq!(value.flow.inflow, inflow);
+        assert_eq!(value.flow.outflow, outflow);
+        assert_eq!(value.flow.period_end, period_end);
+    }
+}

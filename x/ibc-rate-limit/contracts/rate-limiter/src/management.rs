@@ -1,7 +1,7 @@
-use cosmwasm_std::{Addr, DepsMut, Response, Timestamp};
-use crate::ContractError;
 use crate::msg::{Channel, QuotaMsg};
-use crate::state::{CHANNEL_FLOWS, ChannelFlow, Flow, GOVMODULE, IBCMODULE};
+use crate::state::{ChannelFlow, Flow, CHANNEL_FLOWS, GOVMODULE, IBCMODULE};
+use crate::ContractError;
+use cosmwasm_std::{Addr, DepsMut, Response, Timestamp};
 
 pub fn add_new_channels(
     deps: DepsMut,
@@ -101,4 +101,60 @@ pub fn try_reset_channel_quota(
     Ok(Response::new()
         .add_attribute("method", "try_reset_channel")
         .add_attribute("channel_id", channel_id))
+}
+
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+    use cosmwasm_std::{from_binary, Addr};
+
+    use crate::contract::{execute, query};
+    use crate::helpers::tests::verify_query_response;
+    use crate::msg::{ExecuteMsg, QueryMsg, QuotaMsg};
+    use crate::state::{ChannelFlow, GOVMODULE, IBCMODULE};
+
+    const IBC_ADDR: &str = "IBC_MODULE";
+    const GOV_ADDR: &str = "GOV_MODULE";
+
+    #[test]
+    fn management_add_channel() {
+        let mut deps = mock_dependencies();
+        IBCMODULE
+            .save(deps.as_mut().storage, &Addr::unchecked(IBC_ADDR))
+            .unwrap();
+        GOVMODULE
+            .save(deps.as_mut().storage, &Addr::unchecked(GOV_ADDR))
+            .unwrap();
+
+        let msg = ExecuteMsg::AddChannel {
+            channel_id: "channel".to_string(),
+            quotas: vec![QuotaMsg {
+                name: "daily".to_string(),
+                duration: 1600,
+                send_recv: (3, 5),
+            }],
+        };
+        let info = mock_info(IBC_ADDR, &vec![]);
+
+        let env = mock_env();
+        let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
+        assert_eq!(0, res.messages.len());
+
+        let query_msg = QueryMsg::GetQuotas {
+            channel_id: "channel".to_string(),
+        };
+
+        let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
+
+        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        verify_query_response(
+            &value[0],
+            "daily",
+            (3, 5),
+            1600,
+            0,
+            0,
+            env.block.time.plus_seconds(1600),
+        )
+    }
 }
