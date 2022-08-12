@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
@@ -115,8 +114,7 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 	return walletAddr
 }
 
-func (n *NodeConfig) QueryPropStatusTimed(wg *sync.WaitGroup, proposalNumber int, desiredStatus string, totalTime chan time.Duration) {
-	defer wg.Done()
+func (n *NodeConfig) QueryPropStatusTimed(proposalNumber int, desiredStatus string, totalTime chan time.Duration) {
 	start := time.Now()
 	require.Eventually(
 		n.t,

@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -159,6 +158,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
 		stateSynchingNodeConfig,
 		time.Duration(chain.VotingPeriod),
+		//time.Duration(chain.ExpeditedVotingPeriod),
 		trustHeight,
 		trustHash,
 		stateSyncRPCServers,
@@ -218,7 +218,6 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 		s.T().Skip("this can be re-enabled post v12")
 	}
 
-	var wg sync.WaitGroup
 	chain := s.configurer.GetChainConfig(0)
 	node, err := chain.GetDefaultNode()
 	s.NoError(err)
@@ -226,19 +225,18 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	node.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
 	chain.LatestProposalNumber += 1
 	node.DepositProposal(chain.LatestProposalNumber, true)
-	wg.Add(1)
-	totalTime := make(chan time.Duration, 1)
-	go node.QueryPropStatusTimed(&wg, chain.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTime)
+	totalTimeChan := make(chan time.Duration, 1)
+	go node.QueryPropStatusTimed(chain.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
 	for _, node := range chain.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
 	}
 	// wait till prop status reaches desired pass status
-	wg.Wait()
-	elapsed := <-totalTime
+	elapsed := <-totalTimeChan
 	// compare the time it took to reach pass status to expected expedited voting period
 	expeditedVotingPeriodDuration := time.Duration(chain.ExpeditedVotingPeriod * 1000000000)
 	timeDelta := elapsed - expeditedVotingPeriodDuration
 	// ensure delta is within one second of expected time
 	s.Require().Less(timeDelta, time.Second)
-	close(totalTime)
+	s.T().Logf("expeditedVotingPeriodDuration within one second of expected time: %v", timeDelta)
+	close(totalTimeChan)
 }

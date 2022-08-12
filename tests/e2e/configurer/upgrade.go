@@ -60,10 +60,6 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 		return err
 	}
 
-	numVal := float32(len(chainConfig.ValidatorInitConfigs))
-	chainConfig.VotingPeriod = config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks
-	chainConfig.ExpeditedVotingPeriod = config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks - 1
-
 	validatorConfigBytes, err := json.Marshal(chainConfig.ValidatorInitConfigs)
 	if err != nil {
 		return err

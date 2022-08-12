@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/config"
+
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
 )
@@ -41,13 +43,16 @@ const (
 )
 
 func New(t *testing.T, containerManager *containers.Manager, id string, initValidatorConfigs []*initialization.NodeConfig) *Config {
+	numVal := float32(len(initValidatorConfigs))
 	return &Config{
 		ChainMeta: initialization.ChainMeta{
 			Id: id,
 		},
-		ValidatorInitConfigs: initValidatorConfigs,
-		t:                    t,
-		containerManager:     containerManager,
+		ValidatorInitConfigs:  initValidatorConfigs,
+		VotingPeriod:          config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks,
+		ExpeditedVotingPeriod: config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks - 1,
+		t:                     t,
+		containerManager:      containerManager,
 	}
 }
 
