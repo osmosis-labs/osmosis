@@ -482,6 +482,12 @@ func (suite *KeeperTestSuite) TestEnsureDenomInPool() {
 			expectPass:  true,
 			expectedErr: nil,
 		},
+		"one of tokensIn is in pool asset map": {
+			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt()), sdk.NewCoin("foo", sdk.OneInt())),
+			expectPass:  false,
+			expectedErr: types.ErrDenomNotFoundInPool,
+		},
 		"none of tokensIn is in pool asset map": {
 			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
 			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.OneInt())),
@@ -1277,7 +1283,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 		expNumShare     sdk.Int
 		expTokensJoined sdk.Coins
 		expPoolAssets   sdk.Coins
-		expRemCoin      sdk.Coins
+		expRemainingCoins      sdk.Coins
 		expectPass      bool
 	}{
 		"two asset pool, same tokenIn ratio": {
@@ -1285,7 +1291,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			expNumShare:     sdk.NewIntFromUint64(10000000000000000000),
 			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
 			expPoolAssets:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expRemCoin:      sdk.Coins{},
+			expRemainingCoins:      sdk.Coins{},
 			expectPass:      true,
 		},
 		"two asset pool, different tokenIn ratio with pool": {
@@ -1293,7 +1299,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			expNumShare:     sdk.NewIntFromUint64(10000000000000000000),
 			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
 			expPoolAssets:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expRemCoin:      sdk.NewCoins(sdk.NewCoin("bar", sdk.NewIntFromUint64(1))),
+			expRemainingCoins:      sdk.NewCoins(sdk.NewCoin("bar", sdk.NewIntFromUint64(1))),
 			expectPass:      true,
 		},
 		"two asset pool, no-swap join attempt with one asset": {
@@ -1301,7 +1307,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			expNumShare:     sdk.NewIntFromUint64(0),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expRemCoin:      sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10))),
+			expRemainingCoins:      sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10))),
 			expectPass:      false,
 		},
 		"two asset pool, no-swap join attempt with one valid and one invalid asset": {
@@ -1309,7 +1315,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			expNumShare:     sdk.NewIntFromUint64(0),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expRemCoin:      sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("baz", sdk.NewInt(10))),
+			expRemainingCoins:      sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("baz", sdk.NewInt(10))),
 			expectPass:      false,
 		},
 		"two asset pool, no-swap join attempt with two invalid assets": {
@@ -1317,7 +1323,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			expNumShare:     sdk.NewIntFromUint64(0),
 			expTokensJoined: sdk.Coins{},
 			expPoolAssets:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expRemCoin:      sdk.NewCoins(sdk.NewCoin("baz", sdk.NewInt(10)), sdk.NewCoin("qux", sdk.NewInt(10))),
+			expRemainingCoins:      sdk.NewCoins(sdk.NewCoin("baz", sdk.NewInt(10)), sdk.NewCoin("qux", sdk.NewInt(10))),
 			expectPass:      false,
 		},
 	}
@@ -1334,7 +1340,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			numShare, tokensJoined, remCoins, err := balancerPool.CalcJoinPoolNoSwapShares(ctx, test.tokensIn, balancerPool.GetSwapFee(ctx))
+			numShare, tokensJoined, remainingCoins, err := balancerPool.CalcJoinPoolNoSwapShares(ctx, test.tokensIn, balancerPool.GetSwapFee(ctx))
 			poolAssets := sdk.NewCoins(balancerPool.PoolAssets[0].Token, balancerPool.PoolAssets[1].Token)
 
 			if test.expectPass {
@@ -1342,13 +1348,13 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 				require.Equal(t, test.expPoolAssets, poolAssets)
 				require.Equal(t, test.expNumShare, numShare)
 				require.Equal(t, test.expTokensJoined, tokensJoined)
-				require.Equal(t, test.expRemCoin, remCoins)
+				require.Equal(t, test.expRemainingCoins, remainingCoins)
 			} else {
 				require.Error(t, err)
 				require.Equal(t, test.expPoolAssets, poolAssets)
 				require.Equal(t, test.expNumShare, numShare)
 				require.Equal(t, test.expTokensJoined, tokensJoined)
-				require.Equal(t, test.expRemCoin, remCoins)
+				require.Equal(t, test.expRemainingCoins, remainingCoins)
 			}
 		})
 	}
