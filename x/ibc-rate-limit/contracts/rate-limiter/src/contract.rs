@@ -190,12 +190,12 @@ fn get_quotas(deps: Deps, channel_id: impl Into<String>) -> StdResult<Binary> {
 
 #[cfg(test)]
 mod tests {
-    use crate::msg::{Channel, QuotaMsg};
-    use crate::state::RESET_TIME_WEEKLY;
-
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     use cosmwasm_std::{from_binary, Addr, Attribute};
+
+    use crate::msg::{Channel, QuotaMsg};
+    use crate::state::RESET_TIME_WEEKLY;
 
     const IBC_ADDR: &str = "IBC_MODULE";
     const GOV_ADDR: &str = "GOV_MODULE";

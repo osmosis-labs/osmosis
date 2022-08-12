@@ -112,3 +112,38 @@ pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 // It is the responsibility of the go module to pass the appropriate channel
 // when sending the messages
 pub const CHANNEL_FLOWS: Map<&str, Vec<ChannelFlow>> = Map::new("flow");
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn flow() {
+        let epoch = Timestamp::from_seconds(0);
+        let mut flow = Flow::new(0_u32, 0_u32, epoch, RESET_TIME_WEEKLY);
+
+        assert!(!flow.is_expired(epoch));
+        assert!(!flow.is_expired(epoch.plus_seconds(RESET_TIME_DAILY)));
+        assert!(!flow.is_expired(epoch.plus_seconds(RESET_TIME_WEEKLY)));
+        assert!(flow.is_expired(epoch.plus_seconds(RESET_TIME_WEEKLY).plus_nanos(1)));
+
+        assert_eq!(flow.balance(), 0_u128);
+        flow.add_flow(FlowType::In, 5);
+        assert_eq!(flow.balance(), 5_u128);
+        flow.add_flow(FlowType::Out, 2);
+        assert_eq!(flow.balance(), 3_u128);
+        // Adding flow doesn't affect expiration
+        assert!(!flow.is_expired(epoch.plus_seconds(RESET_TIME_DAILY)));
+
+        flow.expire(epoch.plus_seconds(RESET_TIME_WEEKLY), RESET_TIME_WEEKLY);
+        assert_eq!(flow.balance(), 0_u128);
+        assert_eq!(flow.inflow, 0_u128);
+        assert_eq!(flow.outflow, 0_u128);
+        assert_eq!(flow.period_end, epoch.plus_seconds(RESET_TIME_WEEKLY * 2));
+
+        // Expiration has moved
+        assert!(!flow.is_expired(epoch.plus_seconds(RESET_TIME_WEEKLY).plus_nanos(1)));
+        assert!(!flow.is_expired(epoch.plus_seconds(RESET_TIME_WEEKLY * 2)));
+        assert!(flow.is_expired(epoch.plus_seconds(RESET_TIME_WEEKLY * 2).plus_nanos(1)));
+    }
+}
