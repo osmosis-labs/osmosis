@@ -24,9 +24,7 @@ files=$(find ./ -type f -and -not \( -path './vendor*' -or -path './.git*' -or -
 
 echo "Updating all files"
 for file in $files; do
-    if [ -f "${file}" ]; then
-        replace_paths ${file}
-    fi
+    replace_paths ${file}
 done
 
 echo "Updating go.mod and vendoring"
@@ -34,8 +32,9 @@ echo "Updating go.mod and vendoring"
 replace_paths "go.mod"
 go mod vendor >/dev/null
 
-echo "running make proto-gen"
 # ensure that generated files are updated.
 # N.B.: This must be run after go mod vendor.
+echo "running make proto-gen"
 make proto-gen >/dev/null
+echo "running make run-querygen"
 make run-querygen >/dev/null
