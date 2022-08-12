@@ -1,11 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Timestamp};
+use cosmwasm_std::{
+    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Timestamp,
+};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::management::{add_new_channels, try_add_channel, try_remove_channel, try_reset_channel_quota};
-use crate::msg::{ExecuteMsg, InstantiateMsg};
+use crate::management::{
+    add_new_channels, try_add_channel, try_remove_channel, try_reset_channel_quota,
+};
+use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{ChannelFlow, FlowType, CHANNEL_FLOWS, GOVMODULE, IBCMODULE};
 
 // version info for migration info
@@ -174,8 +178,14 @@ pub fn try_transfer(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(_deps: Deps, _env: Env, _msg: ExecuteMsg) -> StdResult<Binary> {
-    todo!()
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg::GetQuotas { channel_id } => get_quotas(deps, channel_id),
+    }
+}
+
+fn get_quotas(deps: Deps, channel_id: impl Into<String>) -> StdResult<Binary> {
+    to_binary(&CHANNEL_FLOWS.load(deps.storage, &channel_id.into())?)
 }
 
 #[cfg(test)]
@@ -185,7 +195,7 @@ mod tests {
 
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-    use cosmwasm_std::{Addr, Attribute};
+    use cosmwasm_std::{from_binary, Addr, Attribute};
 
     const IBC_ADDR: &str = "IBC_MODULE";
     const GOV_ADDR: &str = "GOV_MODULE";
@@ -245,7 +255,7 @@ mod tests {
     }
 
     #[test]
-    fn consume_allowance1() {
+    fn consume_allowance() {
         let mut deps = mock_dependencies();
 
         let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10);
@@ -382,5 +392,69 @@ mod tests {
 
         let err = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap_err();
         assert!(matches!(err, ContractError::RateLimitExceded { .. }));
+    }
+
+    #[test]
+    fn query_state() {
+        let mut deps = mock_dependencies();
+
+        let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10);
+        let msg = InstantiateMsg {
+            gov_module: Addr::unchecked(GOV_ADDR),
+            ibc_module: Addr::unchecked(IBC_ADDR),
+            channels: vec![Channel {
+                name: "channel".to_string(),
+                quotas: vec![quota],
+            }],
+        };
+        let info = mock_info(GOV_ADDR, &vec![]);
+        let env = mock_env();
+        let _res = instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
+
+        let query_msg = QueryMsg::GetQuotas {
+            channel_id: "channel".to_string(),
+        };
+
+        let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
+        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        assert_eq!(value[0].quota.name, "weekly");
+        assert_eq!(value[0].quota.max_percentage_send, 10);
+        assert_eq!(value[0].quota.max_percentage_recv, 10);
+        assert_eq!(value[0].quota.duration, RESET_TIME_WEEKLY);
+        assert_eq!(value[0].flow.inflow, 0);
+        assert_eq!(value[0].flow.outflow, 0);
+        assert_eq!(
+            value[0].flow.period_end,
+            env.block.time.plus_seconds(RESET_TIME_WEEKLY)
+        );
+
+        let info = mock_info(IBC_ADDR, &vec![]);
+        let send_msg = ExecuteMsg::SendPacket {
+            channel_id: "channel".to_string(),
+            channel_value: 3_000,
+            funds: 300,
+        };
+        execute(deps.as_mut(), mock_env(), info.clone(), send_msg.clone()).unwrap();
+
+        let recv_msg = ExecuteMsg::RecvPacket {
+            channel_id: "channel".to_string(),
+            channel_value: 3_000,
+            funds: 30,
+        };
+        execute(deps.as_mut(), mock_env(), info, recv_msg.clone()).unwrap();
+
+        // Query
+        let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
+        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        assert_eq!(value[0].quota.name, "weekly");
+        assert_eq!(value[0].quota.max_percentage_send, 10);
+        assert_eq!(value[0].quota.max_percentage_recv, 10);
+        assert_eq!(value[0].quota.duration, RESET_TIME_WEEKLY);
+        assert_eq!(value[0].flow.inflow, 30);
+        assert_eq!(value[0].flow.outflow, 300);
+        assert_eq!(
+            value[0].flow.period_end,
+            env.block.time.plus_seconds(RESET_TIME_WEEKLY)
+        );
     }
 }
