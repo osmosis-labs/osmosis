@@ -21,7 +21,7 @@ func NewKeeper(storeKey sdk.StoreKey, transientKey *sdk.TransientStoreKey, param
 	return &Keeper{storeKey: storeKey, transientKey: transientKey, paramSpace: paramSpace, ammkeeper: ammKeeper}
 }
 
-// GetParams returns the total set of minting parameters.
+// GetParams returns the total set of twap parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
