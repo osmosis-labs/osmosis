@@ -18,7 +18,6 @@ replace_paths() {
 }
 
 echo "Replacing import paths in all files"
-pwd
 
 files=$(find ./ -type f -and -not \( -path './vendor*' -or -path './.git*' -or -name '*.md' \))
 
