@@ -30,7 +30,6 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v10/x/epochs"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
 	"github.com/osmosis-labs/osmosis/v10/x/incentives"
 	"github.com/osmosis-labs/osmosis/v10/x/lockup"
 	"github.com/osmosis-labs/osmosis/v10/x/mint"
@@ -39,6 +38,7 @@ import (
 	superfluid "github.com/osmosis-labs/osmosis/v10/x/superfluid"
 	superfluidclient "github.com/osmosis-labs/osmosis/v10/x/superfluid/client"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory"
+	"github.com/osmosis-labs/osmosis/v10/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees"
 )
 
@@ -75,7 +75,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	transfer.AppModuleBasic{},
 	vesting.AppModuleBasic{},
 	gamm.AppModuleBasic{},
-	twap.AppModuleBasic{},
+	twapmodule.AppModuleBasic{},
 	txfees.AppModuleBasic{},
 	incentives.AppModuleBasic{},
 	lockup.AppModuleBasic{},

@@ -1,0 +1,193 @@
+# This workflow checks that a specific commit / branch / tag is state compatible 
+# with the latest osmosis version by:
+
+# - building the new `osmosisd` binary with the latest changes
+# - replaying a configurable number of previous blocks from chain history
+
+# Currently, the node starts from a snapshot taken some blocks before the last epoch 
+# and waits `DELTA_HALT_HEIGHT` blocks after epoch before finally halting.
+
+# Important Caveat:
+
+# The fact that this workflow succeeds and the binary doesn't fail doesn't 
+# directly imply that the new binary is state-compatible.
+# It could be that the binary is not state-compatible, but the condition 
+# which would break state compatibility was not present in the chunk of block history used.
+
+# On the other hand, if the workflow fails, the binary is not state-compatible.
+
+name: Check state compatibility
+
+# ************************************ NOTE ************************************
+# 
+# DO NOT TRIGGER THIS WORKFLOW ON PUBLIC FORKS
+#
+# This workflow runs on a self-hosted runner and forks to this repository 
+# can potentially run dangerous code on the self-hosted runner machine 
+# by creating a pull request that executes the code in a workflow.
+# 
+# ******************************************************************************
+
+on:
+  pull_request:
+    branches:
+      - 'v[0-9]+.x'
+  schedule:
+      - cron: '01 23 * * *' # Runs at 01:23 UTC every day
+
+env:
+  GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
+  SNAPSHOT_BUCKET: https://osmosis-snapshot.sfo3.cdn.digitaloceanspaces.com
+  RPC_ENDPOINT: https://rpc.osmosis.zone
+  LCD_ENDPOINT: https://lcd.osmosis.zone
+  DELTA_HALT_HEIGHT: 25
+ 
+jobs:
+
+  check_state_compatibility:
+    # DO NOT CHANGE THIS: please read the note above
+    if: ${{ github.event_name == 'schedule' || github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
+    runs-on: osmo-runner 
+    steps:
+      - 
+        # If workflow was triggered by a schedule, explicitly checkout the latest branch
+        # otherwise checkout the release branch were targetting
+        name: Checkout v11.x branch
+        if: ${{ github.event_name == 'schedule' }}
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: v11.x
+      - 
+        name: Checkout branch
+        if: ${{ github.event_name != 'schedule' }}
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      -
+        name: 🔨 Build the osmosisd binary with osmobuilder
+        run: |
+          VERSION=$(echo $(git describe --tags) | sed 's/^v//')
+          make -f contrib/images/osmobuilder/Makefile get-binary-amd64
+
+          sudo cp release/osmosisd-$VERSION-linux-amd64 /usr/local/bin/osmosisd
+          sudo chmod +x /usr/local/bin/osmosisd
+          osmosisd version
+      -
+        name: 🧪 Initialize Osmosis Node
+        run:  |
+          rm -rf $HOME/.osmosisd/ || true
+          osmosisd init osmo-runner -o
+
+          # Download genesis file if not present
+          mkdir -p $HOME/genesis/osmosis-1/
+          if [ ! -f "$HOME/genesis/osmosis-1/genesis.json" ]; then
+            wget -O $HOME/genesis/osmosis-1/genesis.json ${{ env.GENESIS_URL }}
+          fi
+
+          # Copy genesis to config folder
+          cp $HOME/genesis/osmosis-1/genesis.json $HOME/.osmosisd/config/genesis.json
+      -
+        name: ⏬ Download last pre-epoch snapshot
+        run:  |
+          REPO_MAJOR_VERSION=$(echo $(git describe --tags) | cut -f 1 -d '.') # with v prefix
+
+          # Find current major version via rpc.osmosis.zone/abci_info
+          RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
+          CHAIN_MAJOR_VERSION=$(echo $RPC_ABCI_INFO | dasel --plain -r json  'result.response.version' | cut -f 1 -d '.') # no v prefix
+
+          # Get correct url to fetch snapshot comparing versions
+          if [ $REPO_MAJOR_VERSION == v$CHAIN_MAJOR_VERSION ]; then
+            # I'm in the latest major
+            SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/osmosis.json
+          else
+            SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/osmosis.json
+          fi
+
+          # Get the latest pre-epoch snapshot information from bucket
+          SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
+          SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
+          SNAPSHOT_ID=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename' | cut -f 1 -d '.')
+
+          # Download snapshot if not already present
+          mkdir -p $HOME/snapshots/$REPO_MAJOR_VERSION/
+          if [ ! -d "$HOME/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID" ]; then
+              rm -rf $HOME/snapshots/$REPO_MAJOR_VERSION/*
+              mkdir $HOME/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID
+              wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C $HOME/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID -xvf -
+          fi
+
+          # Copy snapshot in Data folder
+          cp -R $HOME/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID/data $HOME/.osmosisd/
+      -
+        name: 🧪 Configure Osmosis Node
+        run:  |
+          CONFIG_FOLDER=$HOME/.osmosisd/config
+
+          # Find current major version via rpc.osmosis.zone/abci_info
+          RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
+          CHAIN_MAJOR_VERSION=$(echo $RPC_ABCI_INFO | dasel --plain -r json  'result.response.version' | cut -f 1 -d '.')
+          
+          # Find last epoch block comparing repo version to current chain version
+          REPO_MAJOR_VERSION=$(echo $(git describe --tags) | sed 's/^v//' | cut -f 1 -d '.') # without v prefix
+
+          if [ $REPO_MAJOR_VERSION == $CHAIN_MAJOR_VERSION ]; then
+            # I'm in the latest major, fetch the epoch info from the lcd endpoint
+            LAST_EPOCH_BLOCK_HEIGHT=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 ${{ env.LCD_ENDPOINT }}/osmosis/epochs/v1beta1/epochs | dasel --plain -r json 'epochs.(identifier=day).current_epoch_start_height')
+          else
+            # Get hardcoded epoch height for previous versions
+            if [ $REPO_MAJOR_VERSION == "10" ]; then
+              LAST_EPOCH_BLOCK_HEIGHT=5418098
+            else
+              echo "Unrecognized version: $REPO_MAJOR_VERSION"
+            fi
+          fi
+
+          HALT_HEIGHT=$(($LAST_EPOCH_BLOCK_HEIGHT + ${{ env.DELTA_HALT_HEIGHT }}))
+
+          echo "Osmosis repo version: $REPO_MAJOR_VERSION"
+          echo "Last Epoch Height: $LAST_EPOCH_BLOCK_HEIGHT"
+          echo "Halt Height: $HALT_HEIGHT"
+
+          # Edit config.toml
+          dasel put string -f $CONFIG_FOLDER/config.toml '.tx_index.indexer' null
+
+          # Edit app.toml
+          dasel put string -f $CONFIG_FOLDER/app.toml '.halt-height' $HALT_HEIGHT
+          dasel put string -f $CONFIG_FOLDER/app.toml '.pruning' everything
+          dasel put string -f $CONFIG_FOLDER/app.toml '.state-sync.snapshot-interval' 0
+      -
+        name: 🧪 Start Osmosis Node
+        run: osmosisd start
+      -
+        name: 🧹 Clean up Osmosis Home
+        run:  rm -rf $HOME/.osmosisd/
+      -
+        name: Send alert via Slack message
+        if: failure()
+        uses: slackapi/slack-github-action@v1.19.0
+        with:
+          payload: |
+            {
+              "text": "State-compatibility check failed!",
+              	"blocks": [
+                  {
+                    "type": "header",
+                    "text": {
+                      "type": "plain_text",
+                      "text": ":warning: State-compatibility check failed!",
+                      "emoji": true
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "<${{ github.event.pull_request.html_url || github.event.head_commit.url }}|View code changes>\n\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>"
+                    }
+                  }
+                ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

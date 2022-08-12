@@ -25,10 +25,8 @@ message MsgCreateStableswapPool {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
-  repeated uint64 scaling_factors = 4 [
-    (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"",
-    (gogoproto.nullable) = false
-  ];
+  repeated uint64 scaling_factors = 4
+      [ (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"" ];
 
   string future_pool_governor = 5
       [ (gogoproto.moretags) = "yaml:\"future_pool_governor\"" ];
@@ -45,10 +43,8 @@ message MsgStableSwapAdjustScalingFactors {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.customname) = "PoolID" ];
 
-  repeated uint64 scaling_factors = 3 [
-    (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"",
-    (gogoproto.nullable) = false
-  ];
+  repeated uint64 scaling_factors = 3
+      [ (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"" ];
 }
 
 message MsgStableSwapAdjustScalingFactorsResponse {}

@@ -1,3 +1,6 @@
+//go:build e2e
+// +build e2e
+
 package e2e
 
 import (
@@ -58,27 +61,41 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	if str := os.Getenv(skipUpgradeEnv); len(str) > 0 {
 		s.skipUpgrade, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
-		s.T().Log(fmt.Sprintf("%s was true, skipping upgrade tests", skipIBCEnv))
+		if s.skipUpgrade {
+			s.T().Log(fmt.Sprintf("%s was true, skipping upgrade tests", skipIBCEnv))
+		}
 	}
 	upgradeSettings.IsEnabled = !s.skipUpgrade
 
 	if str := os.Getenv(forkHeightEnv); len(str) > 0 {
 		upgradeSettings.ForkHeight, err = strconv.ParseInt(str, 0, 64)
 		s.Require().NoError(err)
-
 		s.T().Log(fmt.Sprintf("fork upgrade is enabled, %s was set to height %d", forkHeightEnv, upgradeSettings.ForkHeight))
 	}
 
 	if str := os.Getenv(skipIBCEnv); len(str) > 0 {
 		s.skipIBC, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
-		s.T().Log(fmt.Sprintf("%s was true, skipping IBC tests", skipIBCEnv))
+		if s.skipIBC {
+			s.T().Log(fmt.Sprintf("%s was true, skipping IBC tests", skipIBCEnv))
+		}
 	}
 
 	if str := os.Getenv("OSMOSIS_E2E_SKIP_STATE_SYNC"); len(str) > 0 {
 		s.skipStateSync, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
-		s.T().Log("skipping state sync testing")
+		if s.skipStateSync {
+			s.T().Log("skipping state sync testing")
+		}
+	}
+
+	isDebugLogEnabled := false
+	if str := os.Getenv("OSMOSIS_E2E_DEBUG_LOG"); len(str) > 0 {
+		isDebugLogEnabled, err = strconv.ParseBool(str)
+		s.Require().NoError(err)
+		if isDebugLogEnabled {
+			s.T().Log("debug logging is enabled. container logs from running cli commands will be printed to stdout")
+		}
 	}
 
 	if str := os.Getenv(upgradeVersionEnv); len(str) > 0 {
@@ -86,7 +103,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Log(fmt.Sprintf("upgrade version set to %s", upgradeSettings.Version))
 	}
 
-	s.configurer, err = configurer.New(s.T(), !s.skipIBC, upgradeSettings)
+	s.configurer, err = configurer.New(s.T(), !s.skipIBC, isDebugLogEnabled, upgradeSettings)
 	s.Require().NoError(err)
 
 	err = s.configurer.ConfigureChains()

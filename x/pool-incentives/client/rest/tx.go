@@ -21,6 +21,7 @@ type UpdatePoolIncentivesRequest struct {
 	Records     []types.DistrRecord `json:"records" yaml:"records"`
 }
 
+// ProposalUpdatePoolIncentivesRESTHandler returns pool incentives update governance proposal handler.
 func ProposalUpdatePoolIncentivesRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "update-pool-incentives",
@@ -28,6 +29,7 @@ func ProposalUpdatePoolIncentivesRESTHandler(clientCtx client.Context) govrest.P
 	}
 }
 
+// newUpdatePoolIncentivesHandler creates a handler for pool incentives updates.
 func newUpdatePoolIncentivesHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req UpdatePoolIncentivesRequest
@@ -74,6 +76,7 @@ func ProposalReplacePoolIncentivesRESTHandler(clientCtx client.Context) govrest.
 	}
 }
 
+// newReplacePoolIncentivesHandler creates a handler for pool incentives replacements.
 func newReplacePoolIncentivesHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ReplacePoolIncentivesRequest

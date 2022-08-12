@@ -10,9 +10,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v10/wasmbinding/bindings"
 	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
-	twapkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
+	twapkeeper "github.com/osmosis-labs/osmosis/v10/x/twap"
 )
 
 type QueryPlugin struct {

@@ -39,22 +39,22 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 
 	// check if there's an existing lock from the same owner with the same duration.
 	// If so, simply add tokens to the existing lock.
-	locks, err := server.keeper.AddToExistingLock(ctx, owner, msg.Coins[0], msg.Duration)
-	if err != nil {
-		return nil, err
-	}
+	lockExists := server.keeper.HasLock(ctx, owner, msg.Coins[0].Denom, msg.Duration)
+	if lockExists {
+		lockID, err := server.keeper.AddToExistingLock(ctx, owner, msg.Coins[0], msg.Duration)
+		if err != nil {
+			return nil, err
+		}
 
-	// return the lock id of the existing lock when successfully added to the existing lock.
-	if len(locks) > 0 {
 		ctx.EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(
 				types.TypeEvtAddTokensToLock,
-				sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(locks[0].ID)),
+				sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lockID)),
 				sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner),
 				sdk.NewAttribute(types.AttributePeriodLockAmount, msg.Coins.String()),
 			),
 		})
-		return &types.MsgLockTokensResponse{ID: locks[0].ID}, nil
+		return &types.MsgLockTokensResponse{ID: lockID}, nil
 	}
 
 	// if the owner + duration combination is new, create a new lock.

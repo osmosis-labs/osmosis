@@ -47,8 +47,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v10/x/gamm"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
-	twaptypes "github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v10/x/incentives"
 	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
@@ -62,6 +60,8 @@ import (
 	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory"
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v10/x/twap/twapmodule"
+	twaptypes "github.com/osmosis-labs/osmosis/v10/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v10/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
 )
@@ -123,7 +123,7 @@ func appModules(
 		params.NewAppModule(*app.ParamsKeeper),
 		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
-		twap.NewAppModule(*app.TwapKeeper),
+		twapmodule.NewAppModule(*app.TwapKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),

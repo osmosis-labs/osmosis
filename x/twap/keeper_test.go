@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/twap/types"
+	"github.com/osmosis-labs/osmosis/v10/x/twap"
+	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere

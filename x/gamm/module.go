@@ -178,8 +178,14 @@ func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *s
 
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
-		simtypes.NewMsgBasedAction("MsgJoinPool", am.keeper, simulation.RandomJoinPoolMsg),
+		simtypes.NewMsgBasedAction("MsgJoinPool", am.keeper, simulation.RandomJoinPoolMsg).WithFrequency(simtypes.Frequent),
 		simtypes.NewMsgBasedAction("MsgExitPool", am.keeper, simulation.RandomExitPoolMsg),
-		simtypes.NewMsgBasedAction("CreateUniV2Msg", am.keeper, simulation.RandomCreateUniV2Msg).WithFrequency(simtypes.Rare),
+		simtypes.NewMsgBasedAction("CreateUniV2Msg", am.keeper, simulation.RandomCreateUniV2Msg).WithFrequency(simtypes.Frequent),
+		simtypes.NewMsgBasedAction("SwapExactAmountIn", am.keeper, simulation.RandomSwapExactAmountIn),
+		simtypes.NewMsgBasedAction("SwapExactAmountOut", am.keeper, simulation.RandomSwapExactAmountOut),
+		simtypes.NewMsgBasedAction("JoinSwapExternAmountIn", am.keeper, simulation.RandomJoinSwapExternAmountIn),
+		simtypes.NewMsgBasedAction("JoinSwapShareAmountOut", am.keeper, simulation.RandomJoinSwapShareAmountOut),
+		simtypes.NewMsgBasedAction("ExitSwapExternAmountOut", am.keeper, simulation.RandomExitSwapExternAmountOut),
+		simtypes.NewMsgBasedAction("ExitSwapShareAmountIn", am.keeper, simulation.RandomExitSwapShareAmountIn),
 	}
 }
