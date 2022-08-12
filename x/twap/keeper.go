@@ -32,7 +32,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-// TODO: make this read from a parameter, or hardcode it.
 func (k *Keeper) PruneEpochIdentifier(ctx sdk.Context) string {
 	return k.GetParams(ctx).PruneEpochIdentifier
 }
