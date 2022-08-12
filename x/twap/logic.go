@@ -8,7 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
 )
 
-// TODO: configure lastKeptTime via parameter.
+// TODO: configure recordHistoryKeepPeriod via parameter.
 const recordHistoryKeepPeriod = 48 * time.Hour
 
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
