@@ -64,7 +64,7 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 		i.WasmKeeper,
 		"send_packet",
 		string(contractRaw),
-		channelValue.String(),
+		channelValue,
 		packet.GetSourceChannel(),
 		sender.GetAddress(),
 		amount,
@@ -144,7 +144,7 @@ func (im *IBCModule) OnChanOpenAck(
 	counterpartyChannelID string,
 	counterpartyVersion string,
 ) error {
-	// ToDo: Add initial rate limits to new channels
+	// Here we can add initial limits when a new channel is open. For now, they can be added manually on the contract
 	return im.app.OnChanOpenAck(ctx, portID, channelID, counterpartyChannelID, counterpartyVersion)
 }
 
@@ -154,7 +154,7 @@ func (im *IBCModule) OnChanOpenConfirm(
 	portID,
 	channelID string,
 ) error {
-	// ToDo: Add initial rate limits to new channels
+	// Here we can add initial limits when a new channel is open. For now, they can be added manually on the contract
 	return im.app.OnChanOpenConfirm(ctx, portID, channelID)
 }
 
@@ -164,7 +164,7 @@ func (im *IBCModule) OnChanCloseInit(
 	portID,
 	channelID string,
 ) error {
-	// ToDo: Remove  rate limits when closing channels
+	// Here we can remove the limits when a new channel is closed. For now, they can remove them  manually on the contract
 	return im.app.OnChanCloseInit(ctx, portID, channelID)
 }
 
@@ -174,7 +174,7 @@ func (im *IBCModule) OnChanCloseConfirm(
 	portID,
 	channelID string,
 ) error {
-	// ToDo: Remove  rate limits when closing channels
+	// Here we can remove the limits when a new channel is closed. For now, they can remove them  manually on the contract
 	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
 }
 
@@ -201,7 +201,7 @@ func (im *IBCModule) OnRecvPacket(
 		im.ics4Middleware.WasmKeeper,
 		"recv_packet",
 		string(contractRaw),
-		channelValue.String(),
+		channelValue,
 		packet.GetDestChannel(),
 		sender.GetAddress(),
 		amount,
