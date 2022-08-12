@@ -56,7 +56,7 @@ func EmitSuperfluidDelegateEvent(ctx sdk.Context, lockId uint64, valAddress stri
 func newSuperfluidDelegateEvent(lockId uint64, valAddress string) sdk.Event {
 	return sdk.NewEvent(
 		types.TypeEvtSuperfluidDelegate,
-		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockId)),
+		sdk.NewAttribute(types.AttributeLockId, utils.Uint64ToString(lockId)),
 		sdk.NewAttribute(types.AttributeValidator, valAddress),
 	)
 }
