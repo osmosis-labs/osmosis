@@ -19,7 +19,7 @@ replace_paths() {
 
 echo "Replacing import paths in all files"
 
-files=$(find ./ -type f -and -not \( -path './vendor*' -or -path './.git*' -or -name '*.md' \))
+files=$(find ./ -type f -and -not \( -path "./vendor*" -or -path "./.git*" -or -name "*.md" \))
 
 echo "Updating all files"
 for file in $files; do
