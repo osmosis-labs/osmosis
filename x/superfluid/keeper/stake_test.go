@@ -45,6 +45,18 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]sdk.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
 		},
+		{
+			"add unbonding validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]sdk.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
+		},
+		{
+			"add unbonded validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]sdk.Dec{sdk.NewDec(10000000), sdk.NewDec(10000000)}, // 50% x 20 x 1000000
+		},
 	}
 
 	for _, tc := range testCases {
@@ -174,6 +186,22 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 		{
 			"with multiple validators and multiple superfluid delegations and multiple undelegations",
 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]uint64{1, 2},
+			[]bool{false, false},
+			[]sdk.Dec{sdk.ZeroDec()},
+		},
+		{
+			"add unbonding validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]uint64{1, 2},
+			[]bool{false, false},
+			[]sdk.Dec{sdk.ZeroDec()},
+		},
+		{
+			"add unbonded validator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]uint64{1, 2},
 			[]bool{false, false},
