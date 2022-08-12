@@ -34,6 +34,7 @@ require (
 
 require (
 	github.com/alingse/asasalint v0.0.11 // indirect
+	github.com/osmosis-labs/go-mutesting v0.0.0-20220811235203-65a53b4ea8e3 // indirect
 	github.com/sashamelentyev/usestdlibvars v1.8.0 // indirect
 	github.com/sivchari/nosnakecase v1.7.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
