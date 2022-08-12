@@ -21,8 +21,6 @@ const (
 	addressString = "addr1---------------"
 	testDenomA    = "denoma"
 	testDenomB    = "denomb"
-	testDenomC    = "denomc"
-	testDenomD    = "denomd"
 )
 
 func TestSuperfluidEventsTestSuite(t *testing.T) {

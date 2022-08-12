@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v10/x/gamm/utils"
 	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
 )
 
