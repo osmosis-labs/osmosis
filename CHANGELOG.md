@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
+* [#2387](https://github.com/osmosis-labs/osmosis/pull/2387) Upgrade to IBC v3.2.0, which allows for sending/receiving IBC tokens with slashes.
 * [#2057](https://github.com/osmosis-labs/osmosis/pull/2057) Reduce block times to about three seconds
 * [#1312] Stableswap: Createpool logic 
 * [#1230] Stableswap CFMM equations
