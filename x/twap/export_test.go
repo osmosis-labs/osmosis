@@ -8,6 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
 )
 
+const RecordHistoryKeepPeriod = recordHistoryKeepPeriod
+
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
 }
@@ -46,6 +48,10 @@ func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 
 func (k Keeper) PruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) error {
 	return k.pruneRecordsBeforeTime(ctx, lastTime)
+}
+
+func (k Keeper) PruneRecords(ctx sdk.Context) error {
+	return k.pruneRecords(ctx)
 }
 
 func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {

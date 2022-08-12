@@ -189,21 +189,10 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 	}
 }
 
-// TestPruneRecordsBeforeTime prunes all twap records before the given time
-// from store.
+// TestPruneRecordsBeforeTime tests that all twap records earlier than
+// current block time - given time are pruned from the store.
 func (s *TestSuite) TestPruneRecordsBeforeTime() {
-	const basePoolId = 1
-
-	baseRecord := newEmptyPriceRecord(basePoolId, baseTime, "tokenB", "tokenA")
-
-	tMin1 := baseTime.Add(-time.Second)
-	tMin1Record := newEmptyPriceRecord(basePoolId+1, tMin1, "tokenB", "tokenA")
-
-	tMin2 := baseTime.Add(-time.Second * 2)
-	tMin2Record := newEmptyPriceRecord(basePoolId+2, tMin2, "tokenB", "tokenA")
-
-	tPlus1 := baseTime.Add(time.Second)
-	tPlus1Record := newEmptyPriceRecord(basePoolId+3, tPlus1, "tokenB", "tokenA")
+	tMin2Record, tMin1Record, baseRecord, tPlus1Record := s.createTestRecordsFromTime(baseTime)
 
 	// non-ascending inserton order.
 	allTestRecords := []types.TwapRecord{tPlus1Record, tMin1Record, baseRecord, tMin2Record}
@@ -248,21 +237,21 @@ func (s *TestSuite) TestPruneRecordsBeforeTime() {
 		"base time minus 1, 2 records before (deleted), 1 records at (deleted), 1 records after (not deleted)": {
 			recordsToPreSet: allTestRecords,
 
-			beforeTime: tMin1,
+			beforeTime: tMin1Record.Time,
 
 			expectedKeptRecords: []types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 		},
 		"base time minus 2 - 0 records before - all kept": {
 			recordsToPreSet: allTestRecords,
 
-			beforeTime: tMin2,
+			beforeTime: tMin2Record.Time,
 
 			expectedKeptRecords: []types.TwapRecord{tMin2Record, tMin1Record, baseRecord, tPlus1Record},
 		},
 		"base time plus 2 - all records before - all deleted": {
 			recordsToPreSet: allTestRecords,
 
-			beforeTime: tPlus1.Add(time.Second),
+			beforeTime: tPlus1Record.Time.Add(time.Second),
 
 			expectedKeptRecords: []types.TwapRecord{},
 		},
@@ -289,19 +278,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTime() {
 			}
 			s.Require().NoError(err)
 
-			// validate that the time indexed TWAPs are cleared.
-			timeIndexedTwaps, err := twapKeeper.GetAllHistoricalTimeIndexedTWAPs(ctx)
-			s.Require().NoError(err)
-			s.Require().Len(timeIndexedTwaps, len(tc.expectedKeptRecords))
-			s.Require().Equal(timeIndexedTwaps, tc.expectedKeptRecords)
-
-			// validate that the pool indexed TWAPs are cleared.
-			poolIndexedTwaps, err := twapKeeper.GetAllHistoricalPoolIndexedTWAPs(ctx)
-			s.Require().NoError(err)
-			s.Require().Len(poolIndexedTwaps, len(tc.expectedKeptRecords))
-			// N.B.: ElementsMatch is used here because order might differ from expected due to
-			// diverging indexing structure.
-			s.Require().ElementsMatch(poolIndexedTwaps, tc.expectedKeptRecords)
+			s.validateExpectedRecords(tc.expectedKeptRecords)
 		})
 	}
 }
