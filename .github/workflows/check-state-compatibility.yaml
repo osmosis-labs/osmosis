@@ -83,8 +83,21 @@ jobs:
         name: 🧪 Initialize Osmosis Node
         run:  |
           rm -rf $HOME/.osmosisd/ || true
+<<<<<<< HEAD:.github/workflows/check-state-compatibility.yaml
           osmosisd init osmo-runner -o
           wget -O $HOME/.osmosisd/config/genesis.json ${{ env.GENESIS_URL }}
+=======
+          osmosisd init runner -o
+
+          # Download genesis file if not present
+          mkdir -p /mnt/data/genesis/osmosis-1/
+          if [ ! -f "/mnt/data/genesis/osmosis-1/genesis.json" ]; then
+            wget -O /mnt/data/genesis/osmosis-1/genesis.json ${{ env.GENESIS_URL }}
+          fi
+
+          # Copy genesis to config folder
+          cp /mnt/data/genesis/osmosis-1/genesis.json $HOME/.osmosisd/config/genesis.json
+>>>>>>> c5b74241 (Use external volume as cache && fix backporting height (#2383)):.github/workflows/state-compatibility-check.yml
       -
         name: ⏬ Download pre-epoch snapshot
         run:  |
@@ -93,6 +106,7 @@ jobs:
           SNAPSHOT=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename' | cut -f 1 -d '.')
 
           # Download snapshot if not already present
+<<<<<<< HEAD:.github/workflows/check-state-compatibility.yaml
           mkdir -p $HOME/snapshots/
           if [ ! -d "$HOME/snapshots/$SNAPSHOT" ]; then
               rm -rf $HOME/snapshots/*
@@ -102,15 +116,55 @@ jobs:
 
           # Copy snapshot in Data folder
           cp -R $HOME/snapshots/$SNAPSHOT/data $HOME/.osmosisd/
+=======
+          mkdir -p /mnt/data/snapshots/$REPO_MAJOR_VERSION/
+          if [ ! -d "/mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID" ]; then
+              rm -rf /mnt/data/snapshots/$REPO_MAJOR_VERSION/*
+              mkdir /mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID
+              wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C /mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID -xvf -
+          fi
+
+          # Copy snapshot in Data folder
+          cp -R /mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID/* $HOME/.osmosisd/
+>>>>>>> c5b74241 (Use external volume as cache && fix backporting height (#2383)):.github/workflows/state-compatibility-check.yml
       -
         name: 🧪 Configure Osmosis Node
         run:  |
           CONFIG_FOLDER=$HOME/.osmosisd/config
 
+<<<<<<< HEAD:.github/workflows/check-state-compatibility.yaml
           # Get height of most recent epoch
           LAST_EPOCH_BLOCK_HEIGHT=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 ${{ env.LCD_ENDPOINT }}/osmosis/epochs/v1beta1/epochs | dasel --plain -r json 'epochs.(identifier=day).current_epoch_start_height')
           DELTA_HALT_HEIGHT=${{ env.DELTA_HALT_HEIGHT }}
           HALT_HEIGHT=$(($LAST_EPOCH_BLOCK_HEIGHT + $DELTA_HALT_HEIGHT))
+=======
+          # Find current major version via rpc.osmosis.zone/abci_info
+          RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
+          CHAIN_MAJOR_VERSION=$(echo $RPC_ABCI_INFO | dasel --plain -r json  'result.response.version' | cut -f 1 -d '.')
+          
+          # Find last epoch block comparing repo version to current chain version
+          REPO_MAJOR_VERSION=$(echo $(git describe --tags) | sed 's/^v//' | cut -f 1 -d '.') # without v prefix
+
+          if [ $REPO_MAJOR_VERSION == $CHAIN_MAJOR_VERSION ]; then
+            # I'm in the latest major, fetch the epoch info from the lcd endpoint
+            LAST_EPOCH_BLOCK_HEIGHT=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 ${{ env.LCD_ENDPOINT }}/osmosis/epochs/v1beta1/epochs | dasel --plain -r json 'epochs.(identifier=day).current_epoch_start_height')
+          else
+            # Hardcoded epoch for v10 (waiting for snapshot service to catch up)
+            if [ $REPO_MAJOR_VERSION == "10" ]; then
+              LAST_EPOCH_BLOCK_HEIGHT=5418098
+            else
+              # I'm in a previous major, fetch the epoch info from the snapshot
+              SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/osmosis.json
+              SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
+
+              # Snapshot is taken 100 blocks before epoch
+              SNAPSHOT_HEIGHT=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).height')
+              LAST_EPOCH_BLOCK_HEIGHT=$(($SNAPSHOT_HEIGHT + 100 ))
+            fi
+          fi
+
+          HALT_HEIGHT=$(($LAST_EPOCH_BLOCK_HEIGHT + ${{ env.DELTA_HALT_HEIGHT }}))
+>>>>>>> c5b74241 (Use external volume as cache && fix backporting height (#2383)):.github/workflows/state-compatibility-check.yml
 
           echo "Last Epoch Height: $LAST_EPOCH_BLOCK_HEIGHT"
           echo "Halt Height: $HALT_HEIGHT"
@@ -127,7 +181,8 @@ jobs:
         run: osmosisd start
       -
         name: 🧹 Clean up Osmosis Home
-        run:  rm -rf $HOME/.osmosisd/
+        if: always()
+        run: rm -rf $HOME/.osmosisd/ || true
       -
         name: Send alert via Slack message
         if: failure()
