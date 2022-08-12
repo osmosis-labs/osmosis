@@ -16,7 +16,9 @@ import (
 )
 
 const (
-	hermesContainerName    = "hermes-relayer"
+	hermesContainerName = "hermes-relayer"
+	// The maximum number of times debug logs are printed to console
+	// per CLI command.
 	maxDebugLogsPerCommand = 3
 )
 
