@@ -1104,8 +1104,10 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/ory/dockertest/v3 v3.9.1 h1:v4dkG+dlu76goxMiTT2j8zV7s4oPPEppKT8K8p2f1kY=
 github.com/ory/dockertest/v3 v3.9.1/go.mod h1:42Ir9hmvaAPm0Mgibk6mBPi7SFvTXxEcnztDYOJ//uM=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220727221653-51bfa90799ee h1:JUWaacaNfxC0IxxkpC/MsJozi1eKQztZX+Wa9OU6+cw=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220727221653-51bfa90799ee/go.mod h1:uUkGXyCWol+CHoaMxZA0nKglvlN5uHBCMbMSsZoGSAs=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220808173601-02273b880e44 h1:mjsR4jDM16FYVkh5ZQv6IRcPheU3yG60t1KetG8FEPU=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220808173601-02273b880e44/go.mod h1:uUkGXyCWol+CHoaMxZA0nKglvlN5uHBCMbMSsZoGSAs=
+github.com/osmosis-labs/go-mutesting v0.0.0-20220811235203-65a53b4ea8e3 h1:/imbKy8s1I+z7wx4FbRHOXK2v82xesUCz2EPUqfBDIg=
+github.com/osmosis-labs/go-mutesting v0.0.0-20220811235203-65a53b4ea8e3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v7 h1:6KcADC/WhL7yDmNQxUIJt2XmzNt4FfRmq9gRke45w74=
 github.com/osmosis-labs/iavl v0.17.3-osmo-v7/go.mod h1:lJEOIlsd3sVO0JDyXWIXa9/Ur5FBscP26zJx0KxHjto=
 github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58 h1:15l3Iss2oCGCeJRi2g3CuCnqmEjpAr3Le7cDnoN/LS0=
