@@ -18,7 +18,7 @@ const (
 // RandomizedGenState generates a random GenesisState for the incentives module.
 func RandomizedGenState(simState *module.SimulationState) {
 	// TODO: Make this read off of what mint set for its genesis value.
-	distrEpochIdentifier := "hourly"
+	distrEpochIdentifier := "day"
 
 	incentivesGenesis := types.GenesisState{
 		Params: types.Params{
