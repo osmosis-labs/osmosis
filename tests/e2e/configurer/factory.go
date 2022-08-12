@@ -105,8 +105,8 @@ var (
 // at the previous Osmosis version.
 // - If !isIBCEnabled and !isUpgradeEnabled, we only need one chain at the current
 // Git branch version of the Osmosis code.
-func New(t *testing.T, isIBCEnabled bool, upgradeSettings UpgradeSettings) (Configurer, error) {
-	containerManager, err := containers.NewManager(upgradeSettings.IsEnabled, upgradeSettings.ForkHeight > 0)
+func New(t *testing.T, isIBCEnabled, isDebugLogEnabled bool, upgradeSettings UpgradeSettings) (Configurer, error) {
+	containerManager, err := containers.NewManager(upgradeSettings.IsEnabled, upgradeSettings.ForkHeight > 0, isDebugLogEnabled)
 	if err != nil {
 		return nil, err
 	}
