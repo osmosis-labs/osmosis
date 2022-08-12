@@ -154,22 +154,24 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
-	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{
-		tokenIn,
-	})
-	if err != nil {
-		return err
+	if sender != nil {
+		err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{
+			tokenIn,
+		})
+		if err != nil {
+			return err
+		}
+
+		err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
+			tokenOut,
+		})
+		if err != nil {
+			return err
+		}
+		events.EmitSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut)
+		k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
 	}
 
-	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
-		tokenOut,
-	})
-	if err != nil {
-		return err
-	}
-
-	events.EmitSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut)
-	k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
 	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
 	k.RecordTotalLiquidityDecrease(ctx, tokensOut)
 
