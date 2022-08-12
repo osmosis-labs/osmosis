@@ -459,4 +459,43 @@ mod tests {
             env.block.time.plus_seconds(RESET_TIME_WEEKLY),
         );
     }
+
+    #[test]
+    fn bad_quotas() {
+        let mut deps = mock_dependencies();
+
+        let msg = InstantiateMsg {
+            gov_module: Addr::unchecked(GOV_ADDR),
+            ibc_module: Addr::unchecked(IBC_ADDR),
+            channels: vec![Channel {
+                name: "channel".to_string(),
+                quotas: vec![QuotaMsg {
+                    name: "bad_quota".to_string(),
+                    duration: 200,
+                    send_recv: (5000, 101),
+                }],
+            }],
+        };
+        let info = mock_info(IBC_ADDR, &vec![]);
+
+        // we can just call .unwrap() to assert this was a success
+        let env = mock_env();
+        instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
+
+        // If a quota is higher than 100%, we set it to 100%
+        let query_msg = QueryMsg::GetQuotas {
+            channel_id: "channel".to_string(),
+        };
+        let res = query(deps.as_ref(), env.clone(), query_msg).unwrap();
+        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        verify_query_response(
+            &value[0],
+            "bad_quota",
+            (100, 100),
+            200,
+            0,
+            0,
+            env.block.time.plus_seconds(200),
+        );
+    }
 }

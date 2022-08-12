@@ -194,5 +194,45 @@ mod tests {
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
         let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
         assert_eq!(value.len(), 1);
+        verify_query_response(
+            &value[0],
+            "daily",
+            (3, 5),
+            1600,
+            0,
+            0,
+            env.block.time.plus_seconds(1600),
+        );
+
+        // Channels are overriden if they share a name
+        let msg = ExecuteMsg::AddChannel {
+            channel_id: "channel2".to_string(),
+            quotas: vec![QuotaMsg {
+                name: "different".to_string(),
+                duration: 5000,
+                send_recv: (50, 30),
+            }],
+        };
+        let info = mock_info(IBC_ADDR, &vec![]);
+
+        let env = mock_env();
+        execute(deps.as_mut(), env.clone(), info, msg).unwrap();
+
+        let query_msg = QueryMsg::GetQuotas {
+            channel_id: "channel2".to_string(),
+        };
+        let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
+        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        assert_eq!(value.len(), 1);
+        println!("{value:?}");
+        verify_query_response(
+            &value[0],
+            "different",
+            (50, 30),
+            5000,
+            0,
+            0,
+            env.block.time.plus_seconds(5000),
+        );
     }
 }
