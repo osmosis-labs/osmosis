@@ -60,7 +60,7 @@ func (suite *KeeperTestSuite) TestMoveSuperfluidDelegationRewardToGauges() {
 		// Do not allocate rewards to the Unbonded validator. Therefore gauges are not distributed
 		{
 			"Unallocate to Unbonded validator",
-			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonding},
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Unbonded},
 			2,
 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
 			[]int64{0},

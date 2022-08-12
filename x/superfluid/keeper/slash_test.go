@@ -41,30 +41,6 @@ func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
 			[]int64{0},
 			[]int64{0},
 		},
-		// {
-		// 	"with single validator and multiple superfluid delegations",
-		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded},
-		// 	2,
-		// 	[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 0, 0, 1000000}},
-		// 	[]int64{0},
-		// 	[]int64{0, 1},
-		// },
-		// {
-		// 	"with multiple validators and multiple superfluid delegations with single validator slash",
-		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-		// 	2,
-		// 	[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-		// 	[]int64{0},
-		// 	[]int64{0},
-		// },
-		// {
-		// 	"with multiple validators and multiple superfluid delegations with two validators slash",
-		// 	[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-		// 	2,
-		// 	[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-		// 	[]int64{0, 1},
-		// 	[]int64{0, 1},
-		// },
 	}
 
 	for _, tc := range testCases {
