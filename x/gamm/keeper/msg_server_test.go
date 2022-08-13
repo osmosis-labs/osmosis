@@ -6,12 +6,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 const (
 	doesNotExistDenom = "nodenom"
+	// Max positive int64.
+	int64Max = int64(^uint64(0) >> 1)
 )
 
 func TestMsgServerTestSuite(t *testing.T) {
@@ -50,7 +52,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
 			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 3, // 1 gamm + 2 tendermint.
+			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []types.SwapAmountInRoute{
@@ -66,7 +68,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			tokenIn:               sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
 			tokenOutMinAmount:     sdk.NewInt(tokenInMinAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 5, // 1 gamm + 4 tendermint.
+			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []types.SwapAmountInRoute{
@@ -111,8 +113,8 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 				suite.NotNil(response)
 			}
 
-			assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
-			assertEventEmitted(suite, ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
+			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
 	}
 }
@@ -121,8 +123,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 // when calling SwapExactAmountOut.
 func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 	const (
-		// Max positive int64.
-		tokenInMaxAmount = int64(^uint64(0) >> 1)
+		tokenInMaxAmount = int64Max
 		tokenOut         = 5
 	)
 
@@ -150,7 +151,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
 			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    1,
-			expectedMessageEvents: 3, // 1 gamm + 2 tendermint.
+			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"two hops": {
 			routes: []types.SwapAmountOutRoute{
@@ -166,7 +167,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			tokenOut:              sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
 			tokenInMaxAmount:      sdk.NewInt(tokenInMaxAmount),
 			expectedSwapEvents:    2,
-			expectedMessageEvents: 5, // 1 gamm + 4 tendermint.
+			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
 			routes: []types.SwapAmountOutRoute{
@@ -211,8 +212,8 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 				suite.NotNil(response)
 			}
 
-			assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
-			assertEventEmitted(suite, ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, tc.expectedSwapEvents)
+			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
 	}
 }
@@ -221,8 +222,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 // when calling JoinPool.
 func (suite *KeeperTestSuite) TestJoinPool_Events() {
 	const (
-		// Max positive int64.
-		tokenInMaxAmount = int64(^uint64(0) >> 1)
+		tokenInMaxAmount = int64Max
 		shareOut         = 110
 	)
 
@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 				sdk.NewCoin("baz", sdk.NewInt(tokenInMaxAmount)),
 			),
 			expectedAddLiquidityEvents: 1,
-			expectedMessageEvents:      3, // 1 gamm + 2 tendermint.
+			expectedMessageEvents:      3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"tokenInMaxs do not match all tokens in pool - invalid join": {
 			poolId:         1,
@@ -258,7 +258,6 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 			suite.Setup()
 			ctx := suite.Ctx
 
-			suite.PrepareBalancerPool()
 			suite.PrepareBalancerPool()
 
 			msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
@@ -279,20 +278,85 @@ func (suite *KeeperTestSuite) TestJoinPool_Events() {
 				suite.Require().NotNil(response)
 			}
 
-			assertEventEmitted(suite, ctx, types.TypeEvtPoolJoined, tc.expectedAddLiquidityEvents)
-			assertEventEmitted(suite, ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			suite.AssertEventEmitted(ctx, types.TypeEvtPoolJoined, tc.expectedAddLiquidityEvents)
+			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
 	}
 }
 
-func assertEventEmitted(suite *KeeperTestSuite, ctx sdk.Context, eventTypeExpected string, numEventsExpected int) {
-	allEvents := ctx.EventManager().Events()
-	// filter out other events
-	actualEvents := make([]sdk.Event, 0, 1)
-	for _, event := range allEvents {
-		if event.Type == eventTypeExpected {
-			actualEvents = append(actualEvents, event)
-		}
+// TestExitPool_Events tests that events are correctly emitted
+// when calling ExitPool.
+func (suite *KeeperTestSuite) TestExitPool_Events() {
+	const (
+		tokenOutMinAmount = 1
+		shareIn           = 110
+	)
+
+	testcases := map[string]struct {
+		poolId                        uint64
+		shareInAmount                 sdk.Int
+		tokenOutMins                  sdk.Coins
+		expectError                   bool
+		expectedRemoveLiquidityEvents int
+		expectedMessageEvents         int
+	}{
+		"successful exit": {
+			poolId:                        1,
+			shareInAmount:                 sdk.NewInt(shareIn),
+			tokenOutMins:                  sdk.NewCoins(),
+			expectedRemoveLiquidityEvents: 1,
+			expectedMessageEvents:         3, // 1 gamm + 2 events emitted by other keeper methods.
+		},
+		"invalid tokenOutMins": {
+			poolId:        1,
+			shareInAmount: sdk.NewInt(shareIn),
+			tokenOutMins:  sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(tokenOutMinAmount))),
+			expectError:   true,
+		},
 	}
-	suite.Require().Equal(numEventsExpected, len(actualEvents))
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			suite.Setup()
+			ctx := suite.Ctx
+
+			suite.PrepareBalancerPool()
+			msgServer := keeper.NewMsgServerImpl(suite.App.GAMMKeeper)
+
+			sender := suite.TestAccs[0].String()
+
+			// Pre-join pool to be able to ExitPool.
+			joinPoolResponse, err := msgServer.JoinPool(sdk.WrapSDKContext(ctx), &types.MsgJoinPool{
+				Sender:         sender,
+				PoolId:         tc.poolId,
+				ShareOutAmount: sdk.NewInt(shareIn),
+				TokenInMaxs: sdk.NewCoins(
+					sdk.NewCoin("foo", sdk.NewInt(int64Max)),
+					sdk.NewCoin("bar", sdk.NewInt(int64Max)),
+					sdk.NewCoin("baz", sdk.NewInt(int64Max)),
+				),
+			})
+			suite.Require().NoError(err)
+
+			// Reset event counts to 0 by creating a new manager.
+			ctx = ctx.WithEventManager(sdk.NewEventManager())
+			suite.Require().Equal(0, len(ctx.EventManager().Events()))
+
+			// System under test.
+			response, err := msgServer.ExitPool(sdk.WrapSDKContext(ctx), &types.MsgExitPool{
+				Sender:        sender,
+				PoolId:        tc.poolId,
+				ShareInAmount: joinPoolResponse.ShareOutAmount,
+				TokenOutMins:  tc.tokenOutMins,
+			})
+
+			if !tc.expectError {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(response)
+			}
+
+			suite.AssertEventEmitted(ctx, types.TypeEvtPoolExited, tc.expectedRemoveLiquidityEvents)
+			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+		})
+	}
 }

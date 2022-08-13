@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
 				suite.Assert().Greater(gasConsumedForSwap, uint64(types.BalancerGasFeeForSwap))
 
-				assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, 1)
+				suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, 1)
 
 				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 				suite.NoError(err, "test: %v", test.name)
@@ -213,7 +213,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
 				suite.Assert().Greater(gasConsumedForSwap, uint64(types.BalancerGasFeeForSwap))
 
-				assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, 1)
+				suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, 1)
 
 				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
 				suite.NoError(err, "test: %v", test.name)

@@ -1,0 +1,44 @@
+syntax = "proto3";
+package osmosis.gamm.twap.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/twap/v1beta1/twap_record.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v11/x/twap/client/queryproto";
+
+service Query {
+  rpc GetArithmeticTwap(GetArithmeticTwapRequest)
+      returns (GetArithmeticTwapResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/pools";
+  }
+}
+
+message GetArithmeticTwapRequest {
+  uint64 pool_id = 1;
+  string base_asset = 2;
+  string quote_asset = 3;
+  google.protobuf.Timestamp start_time = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"start_time\""
+  ];
+  google.protobuf.Timestamp end_time = 5 [
+    (gogoproto.nullable) = true,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"end_time\""
+  ];
+}
+message GetArithmeticTwapResponse {
+  string arithmetic_twap = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"arithmetic_twap\"",
+    (gogoproto.nullable) = false
+  ];
+}

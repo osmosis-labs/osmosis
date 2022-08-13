@@ -12,8 +12,8 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
@@ -68,7 +68,7 @@ func (n *NodeConfig) Run() error {
 			n.t.Logf("started node container: %s", n.Name)
 			return true
 		},
-		5*time.Minute,
+		2*time.Minute,
 		time.Second,
 		"Osmosis node failed to produce blocks",
 	)

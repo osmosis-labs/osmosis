@@ -10,8 +10,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v10/store"
-	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/store"
+	"github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 )
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
@@ -48,18 +48,31 @@ func (k Keeper) BeginUnlockAllNotUnlockings(ctx sdk.Context, account sdk.AccAddr
 }
 
 // AddToExistingLock adds the given coin to the existing lock with the same owner and duration.
-// Returns an empty array of period lock when a lock with the given condition does not exist.
-func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sdk.Coin, duration time.Duration) ([]types.PeriodLock, error) {
+// Returns the updated lock ID if successfully added coin, returns 0 and error when a lock with
+// given condition does not exist, or if fails to add to lock.
+func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sdk.Coin, duration time.Duration) (uint64, error) {
 	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, coin.Denom, duration)
-	// if existing lock with same duration and denom exists, just add there
-	if len(locks) > 0 {
-		lock := locks[0]
-		_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-		}
+
+	// if no lock exists for the given owner + denom + duration, return an error
+	if len(locks) < 1 {
+		return 0, sdkerrors.Wrapf(types.ErrLockupNotFound, "lock with denom %s before duration %s does not exist", coin.Denom, duration.String())
 	}
-	return locks, nil
+
+	// if existing lock with same duration and denom exists, add to the existing lock
+	// there should only be a single lock with the same duration + token, thus we take the first lock
+	lock := locks[0]
+	_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
+	if err != nil {
+		return 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+	}
+
+	return lock.ID, nil
+}
+
+// HasLock returns true if lock with the given condition exists
+func (k Keeper) HasLock(ctx sdk.Context, owner sdk.AccAddress, denom string, duration time.Duration) bool {
+	locks := k.GetAccountLockedDurationNotUnlockingOnly(ctx, owner, denom, duration)
+	return len(locks) > 0
 }
 
 // AddTokensToLock locks additional tokens into an existing lock with the given ID.
@@ -556,7 +569,7 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 	}
 
 	modAddr := k.ak.GetModuleAddress(types.ModuleName)
-	err = k.dk.FundCommunityPool(ctx, coins, modAddr)
+	err = k.ck.FundCommunityPool(ctx, coins, modAddr)
 	if err != nil {
 		return nil, err
 	}

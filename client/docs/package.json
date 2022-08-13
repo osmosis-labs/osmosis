@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "redoc-cli": "^0.9.12",
-    "swagger-combine": "^1.3.0",
+    "swagger-combine": "^1.4.0",
     "swagger2openapi": "^7.0.3"
   }
 }

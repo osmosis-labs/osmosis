@@ -14,8 +14,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 var sdkIntMaxValue = sdk.NewInt(0)
@@ -123,7 +123,7 @@ func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
-		NumPools: q.Keeper.GetNextPoolNumber(sdkCtx) - 1,
+		NumPools: q.Keeper.GetNextPoolId(sdkCtx) - 1,
 	}, nil
 }
 

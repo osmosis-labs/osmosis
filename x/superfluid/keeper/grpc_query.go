@@ -11,10 +11,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
+	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 )
 
 var _ types.QueryServer = Querier{}

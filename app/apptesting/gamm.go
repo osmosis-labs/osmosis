@@ -3,8 +3,8 @@ package apptesting
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
@@ -95,4 +95,22 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.Po
 	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
+}
+
+func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
+	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	swapIn := sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(1000)))
+	s.FundAcc(s.TestAccs[0], swapIn)
+
+	msg := gammtypes.MsgSwapExactAmountIn{
+		Sender:            string(s.TestAccs[0]),
+		Routes:            []gammtypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: denoms[1]}},
+		TokenIn:           swapIn[0],
+		TokenOutMinAmount: sdk.ZeroInt(),
+	}
+	// TODO: switch to message
+	_, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, msg.TokenIn, denoms[1], msg.TokenOutMinAmount)
+	s.Require().NoError(err)
 }
