@@ -240,7 +240,7 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	case elapsed = <-totalTimeChan:
 	case <-time.After(timeoutPeriod):
 		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
-		s.NoError(err)
+		s.Require().NoError(err)
 	}
 
 	// compare the time it took to reach pass status to expected expedited voting period
