@@ -3,7 +3,7 @@ package types
 import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 )
 
 // Parameter store keys.
