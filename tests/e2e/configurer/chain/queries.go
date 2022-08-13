@@ -77,6 +77,20 @@ func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.I
 	return noTotal, yesTotal, noWithVetoTotal, abstainTotal, nil
 }
 
+func (n *NodeConfig) QueryPropStatus(proposalNumber int) (string, error) {
+	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%d", proposalNumber)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var propResp govtypes.QueryProposalResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &propResp); err != nil {
+		return "", err
+	}
+	proposalStatus := propResp.Proposal.Status
+
+	return proposalStatus.String(), nil
+}
+
 func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (int, error) {
 	intAccount := superfluidtypes.GetSuperfluidIntermediaryAccountAddr(denom, valAddr)
 	path := fmt.Sprintf(

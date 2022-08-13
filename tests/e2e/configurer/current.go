@@ -44,7 +44,8 @@ func (cb *CurrentBranchConfigurer) ConfigureChain(chainConfig *chain.Config) err
 		return err
 	}
 	cb.t.Logf("temp directory for chain-id %v: %v", chainConfig.Id, tmpDir)
-	initializedChain, err := initialization.InitChain(chainConfig.Id, tmpDir, chainConfig.ValidatorInitConfigs, time.Duration(chainConfig.VotingPeriod), 0)
+
+	initializedChain, err := initialization.InitChain(chainConfig.Id, tmpDir, chainConfig.ValidatorInitConfigs, time.Duration(chainConfig.VotingPeriod*1000000000), time.Duration(chainConfig.ExpeditedVotingPeriod*1000000000), 0)
 	if err != nil {
 		return err
 	}
