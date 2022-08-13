@@ -233,8 +233,16 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	for _, node := range chain.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
 	}
-	// wait till prop status reaches desired pass status
-	elapsed := <-totalTimeChan
+	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
+	var elapsed time.Duration
+	timeoutPeriod := time.Duration(2 * time.Minute)
+	select {
+	case elapsed = <-totalTimeChan:
+	case <-time.After(timeoutPeriod):
+		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
+		s.NoError(err)
+	}
+
 	// compare the time it took to reach pass status to expected expedited voting period
 	expeditedVotingPeriodDuration := time.Duration(chain.ExpeditedVotingPeriod * 1000000000)
 	timeDelta := elapsed - expeditedVotingPeriodDuration
