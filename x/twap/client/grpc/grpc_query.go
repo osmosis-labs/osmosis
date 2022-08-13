@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v10/x/twap/client"
-	"github.com/osmosis-labs/osmosis/v10/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/client"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/client/queryproto"
 )
 
 type Querier struct {

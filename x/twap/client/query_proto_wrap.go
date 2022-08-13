@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/twap"
-	"github.com/osmosis-labs/osmosis/v10/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v11/x/twap"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/client/queryproto"
 )
 
 // This file should evolve to being code gen'd, off of `proto/twap/v1beta/query.yml`

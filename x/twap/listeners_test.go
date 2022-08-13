@@ -3,7 +3,7 @@ package twap_test
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
 // TestCreatePoolFlow tests that upon a pool being created,

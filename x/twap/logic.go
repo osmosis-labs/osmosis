@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {

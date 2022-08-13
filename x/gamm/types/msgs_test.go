@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v11/app/params"
 )
 
 func TestMsgSwapExactAmountIn(t *testing.T) {

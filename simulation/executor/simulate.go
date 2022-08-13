@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
 )
 
 const AverageBlockTime = 6 * time.Second
