@@ -16,9 +16,9 @@ func (k Keeper) FundCommunityPoolFromModule(ctx sdk.Context, asset sdk.Coin) err
 		return err
 	}
 
-	feePool := k.distrKeeper.GetFeePool(ctx)
+	feePool := k.communityPoolKeeper.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(asset)...)
-	k.distrKeeper.SetFeePool(ctx, feePool)
+	k.communityPoolKeeper.SetFeePool(ctx, feePool)
 	return nil
 }
 
