@@ -29,9 +29,9 @@ type Keeper struct {
 	hooks      types.GammHooks
 
 	// keepers
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
-	distrKeeper   types.CommunityPoolKeeper
+	accountKeeper       types.AccountKeeper
+	bankKeeper          types.BankKeeper
+	communityPoolKeeper types.CommunityPoolKeeper
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper) Keeper {
@@ -54,9 +54,9 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		cdc:        cdc,
 		paramSpace: paramSpace,
 		// keepers
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
-		distrKeeper:   communityPoolKeeper,
+		accountKeeper:       accountKeeper,
+		bankKeeper:          bankKeeper,
+		communityPoolKeeper: communityPoolKeeper,
 	}
 }
 

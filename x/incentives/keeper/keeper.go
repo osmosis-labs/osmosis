@@ -22,7 +22,7 @@ type Keeper struct {
 	bk         types.BankKeeper
 	lk         types.LockupKeeper
 	ek         types.EpochKeeper
-	dk         types.CommunityPoolKeeper
+	ck         types.CommunityPoolKeeper
 	tk         types.TxFeesKeeper
 }
 
@@ -39,7 +39,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Sub
 		bk:         bk,
 		lk:         lk,
 		ek:         ek,
-		dk:         ck,
+		ck:         ck,
 		tk:         txfk,
 	}
 }

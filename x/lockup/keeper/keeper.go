@@ -19,7 +19,7 @@ type Keeper struct {
 
 	ak types.AccountKeeper
 	bk types.BankKeeper
-	dk types.CommunityPoolKeeper
+	ck types.CommunityPoolKeeper
 }
 
 // NewKeeper returns an instance of Keeper.
@@ -28,7 +28,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ak types.AccountKeeper, b
 		storeKey: storeKey,
 		ak:       ak,
 		bk:       bk,
-		dk:       ck,
+		ck:       ck,
 	}
 }
 

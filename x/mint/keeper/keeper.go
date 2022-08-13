@@ -50,7 +50,7 @@ const emptyWeightedAddressReceiver = ""
 // NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ak types.AccountKeeper, bk types.BankKeeper, dk types.CommunityPoolKeeper, epochKeeper types.EpochKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper, epochKeeper types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
@@ -69,7 +69,7 @@ func NewKeeper(
 		paramSpace:          paramSpace,
 		accountKeeper:       ak,
 		bankKeeper:          bk,
-		communityPoolKeeper: dk,
+		communityPoolKeeper: ck,
 		epochKeeper:         epochKeeper,
 		feeCollectorName:    feeCollectorName,
 	}
