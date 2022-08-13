@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

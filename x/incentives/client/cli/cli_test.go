@@ -6,9 +6,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"

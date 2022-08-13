@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app/keepers"
+	"github.com/osmosis-labs/osmosis/v11/app/keepers"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"time"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

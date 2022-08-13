@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/x/mint/client/cli"
+	"github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"

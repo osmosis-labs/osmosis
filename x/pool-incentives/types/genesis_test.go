@@ -7,7 +7,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

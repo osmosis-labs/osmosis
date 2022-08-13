@@ -3,8 +3,8 @@ package superfluid
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

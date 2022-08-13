@@ -35,5 +35,3 @@ go mod vendor >/dev/null
 # N.B.: This must be run after go mod vendor.
 echo "running make proto-gen"
 make proto-gen >/dev/null
-echo "running make run-querygen"
-make run-querygen >/dev/null

@@ -9,9 +9,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 )
 
 func TestMsgCreatePool(t *testing.T) {

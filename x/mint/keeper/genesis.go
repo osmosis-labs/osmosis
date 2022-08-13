@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

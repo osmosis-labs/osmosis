@@ -10,8 +10,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
 )
 
 func (s *IntegrationTestSuite) TestIBCTokenTransfer() {

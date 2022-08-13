@@ -5,8 +5,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
 )
 
 func NewPoolIncentivesProposalHandler(k keeper.Keeper) govtypes.Handler {
