@@ -315,7 +315,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appCodec,
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
-		appKeepers.EpochsKeeper,
 		appKeepers.keys[txfeestypes.StoreKey],
 		appKeepers.GAMMKeeper,
 		appKeepers.GAMMKeeper,

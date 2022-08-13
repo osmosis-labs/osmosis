@@ -552,7 +552,7 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 	}
 
 	modAddr := k.ak.GetModuleAddress(types.ModuleName)
-	err = k.dk.FundCommunityPool(ctx, coins, modAddr)
+	err = k.ck.FundCommunityPool(ctx, coins, modAddr)
 	if err != nil {
 		return nil, err
 	}

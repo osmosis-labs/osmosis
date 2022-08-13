@@ -295,7 +295,7 @@ func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 	if accountBalance.LT(totalCost) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "account's balance of %s (%s) is less than the total cost of the message (%s)", appparams.BaseCoinUnit, accountBalance, totalCost)
 	}
-	if err := k.dk.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, fee)), address); err != nil {
+	if err := k.ck.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, fee)), address); err != nil {
 		return err
 	}
 	return nil

@@ -14,8 +14,6 @@ import (
 )
 
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, name string) authtypes.ModuleAccountI
 }
@@ -38,7 +36,7 @@ type IncentivesKeeper interface {
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
 }
 
-type DistrKeeper interface {
+type CommunityPoolKeeper interface {
 	GetFeePool(ctx sdk.Context) (feePool distrtypes.FeePool)
 	SetFeePool(ctx sdk.Context, feePool distrtypes.FeePool)
 }
