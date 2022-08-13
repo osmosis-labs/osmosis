@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/osmosis-labs/osmosis/v10/cmd/querygen/templates"
+	"github.com/osmosis-labs/osmosis/v11/cmd/querygen/templates"
 )
 
 var (

@@ -3,7 +3,7 @@ package keeper_test
 import (
 	gocontext "context"
 
-	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 )
 
 func (suite *KeeperTestSuite) TestQueryEpochInfos() {
