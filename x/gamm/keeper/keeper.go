@@ -31,10 +31,10 @@ type Keeper struct {
 	// keepers
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	distrKeeper   types.DistrKeeper
+	distrKeeper   types.CommunityPoolKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, distrKeeper types.DistrKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -56,7 +56,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		// keepers
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
-		distrKeeper:   distrKeeper,
+		distrKeeper:   communityPoolKeeper,
 	}
 }
 

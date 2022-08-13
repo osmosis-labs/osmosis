@@ -17,7 +17,6 @@ type Keeper struct {
 
 	accountKeeper             types.AccountKeeper
 	bankKeeper                types.BankKeeper
-	epochKeeper               types.EpochKeeper
 	gammKeeper                types.GammKeeper
 	spotPriceCalculator       types.SpotPriceCalculator
 	feeCollectorName          string
@@ -28,7 +27,6 @@ func NewKeeper(
 	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	epochKeeper types.EpochKeeper,
 	storeKey sdk.StoreKey,
 	gammKeeper types.GammKeeper,
 	spotPriceCalculator types.SpotPriceCalculator,
@@ -38,7 +36,6 @@ func NewKeeper(
 	return Keeper{
 		accountKeeper:             accountKeeper,
 		bankKeeper:                bankKeeper,
-		epochKeeper:               epochKeeper,
 		storeKey:                  storeKey,
 		gammKeeper:                gammKeeper,
 		spotPriceCalculator:       spotPriceCalculator,
