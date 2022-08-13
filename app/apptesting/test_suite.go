@@ -67,6 +67,12 @@ func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	s.Require().NoError(err)
 }
 
+// FundModuleAcc funds target modules with specified amount.
+func (s *KeeperTestHelper) FundModuleAcc(moduleName string, amounts sdk.Coins) {
+	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
+	s.Require().NoError(err)
+}
+
 // SetupValidator sets up a validator and returns the ValAddress.
 func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
 	valPub := secp256k1.GenPrivKey().PubKey()

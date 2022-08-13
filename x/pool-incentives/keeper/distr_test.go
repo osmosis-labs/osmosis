@@ -1,42 +1,25 @@
 package keeper_test
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
 func (suite *KeeperTestSuite) TestAllocateAsset() {
-	// We have the proportions when DistributeMintedCoin:
-	// 	commnity_pool = 10%
-	//	staking = 40%
-	//	pool_incentive = 30%
-	//	dev_reward = 20%
 	tests := []struct {
 		name                   string
 		testingDistrRecord     []types.DistrRecord
 		mintedCoins            sdk.Coin
 		expectedGaugesBalances []sdk.Coins
-		expectedFeeCollector   sdk.Coin
 		expectedCommunityPool  sdk.DecCoin
 	}{
-		// We have the proportions when DistributeMintedCoin:
-		// 	commnity_pool = 10%
-		//	staking = 40%
-		//	pool_incentive = 30%
-		//	dev_reward = 20%
-		// With minting 50000 stake, we get:
-		// 	expectedFeeCollector = 50000 * 0.4 = 20000 stake
-		// 	expectedCommunityPool = 50000 * 0.1 = 5000 stake
+		// With minting 15000 stake to module, after AllocateAsset we get:
+		// expectedCommunityPool = 0 (All reward will be transferred to the gauges)
 		// 	expectedGaugesBalances in order:
-		//    gaue1_balance = 5000 * 0.3 * 100/(100+200+300) = 2500
-		//    gaue2_balance = 5000 * 0.3 * 200/(100+200+300) = 5000 (using the formula in the function gives the exact result 4999,9999999999995000. But TruncateInt return 4999. Is this the issue?)
-		//    gaue3_balance = 5000 * 0.3 * 300/(100+200+300) = 7500
+		//    gaue1_balance = 15000 * 100/(100+200+300) = 2500
+		//    gaue2_balance = 15000 * 200/(100+200+300) = 5000 (using the formula in the function gives the exact result 4999,9999999999995000. But TruncateInt return 4999. Is this the issue?)
+		//    gaue3_balance = 15000 * 300/(100+200+300) = 7500
 		{
 			name: "Allocated to the gauges proportionally",
 			testingDistrRecord: []types.DistrRecord{
@@ -53,22 +36,20 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 					Weight:  sdk.NewInt(300),
 				},
 			},
-			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(50000)),
+			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(15000)),
 			expectedGaugesBalances: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2500))),
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(4999))),
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(7500))),
 			},
-			expectedFeeCollector:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000)),
-			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(5000)),
+			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
 		},
-		
-		// With minting 100000 stake, we get:
-		// 	expectedFeeCollector = 100000 * 0.4 = 40000 stake
-		// 	expectedCommunityPool = 100000 * 0.1 + 100000 * 0.3 * 700/(700+200+100) = 31000 stake (Cause gaugeId=0 the reward will be transferred to the community pool)
+
+		// With minting 30000 stake to module, after AllocateAsset we get:
+		// 	expectedCommunityPool = 30000 * 700/(700+200+100) = 21000 stake (Cause gaugeId=0 the reward will be transferred to the community pool)
 		// 	expectedGaugesBalances in order:
-		//    gaue1_balance = 100000 * 0.3 * 100/(700+200+100) = 3000
-		//    gaue2_balance = 100000 * 0.3 * 200/(700+200+100) = 6000
+		//    gaue1_balance = 30000 * 100/(700+200+100) = 3000
+		//    gaue2_balance = 30000 * 200/(700+200+100) = 6000
 		{
 			name: "Community pool distribution when gaugeId is zero",
 			testingDistrRecord: []types.DistrRecord{
@@ -85,25 +66,22 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 					Weight:  sdk.NewInt(200),
 				},
 			},
-			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000)),
+			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30000)),
 			expectedGaugesBalances: []sdk.Coins{
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))),
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000))),
 				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(6000))),
 			},
-			expectedFeeCollector:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40000)),
-			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(31000)),
+			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(21000)),
 		},
-		// With minting 100000 stake, we get:
-		// 	expectedFeeCollector = 100000 * 0.4 = 40000 stake
-		// 	expectedCommunityPool = 100000 * 0.1 + 100000 * 0.3 (Cause there are no gauges, all rewards are transferred to the community pool)
+		// With minting 30000 stake to module, after AllocateAsset we get:
+		// 	expectedCommunityPool = 30000 (Cause there are no gauges, all rewards are transferred to the community pool)
 		{
 			name:                   "community pool distribution when no distribution records are set",
-			testingDistrRecord:                   []types.DistrRecord{},
-			mintedCoins:            sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000)),
+			testingDistrRecord:     []types.DistrRecord{},
+			mintedCoins:            sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30000)),
 			expectedGaugesBalances: []sdk.Coins{},
-			expectedFeeCollector:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40000)),
-			expectedCommunityPool:  sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(40000)),
+			expectedCommunityPool:  sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(30000)),
 		},
 	}
 
@@ -111,16 +89,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		suite.Run(test.name, func() {
 			suite.Setup()
 			keeper := suite.App.PoolIncentivesKeeper
-			mintKeeper := suite.App.MintKeeper
-			params := suite.App.MintKeeper.GetParams(suite.Ctx)
-			params.WeightedDeveloperRewardsReceivers = []minttypes.WeightedAddress{
-				{
-					Address: sdk.AccAddress([]byte("addr1---------------")).String(),
-					Weight:  sdk.NewDec(1),
-				},
-			}
-			suite.App.MintKeeper.SetParams(suite.Ctx, params)
-
+			suite.FundModuleAcc(types.ModuleName, sdk.NewCoins(test.mintedCoins))
 			suite.PrepareBalancerPool()
 
 			// LockableDurations should be 1, 3, 7 hours from the default genesis state.
@@ -137,14 +106,9 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 			err := keeper.ReplaceDistrRecords(suite.Ctx, test.testingDistrRecord...)
 			suite.Require().NoError(err)
 
-			err = mintKeeper.MintCoins(suite.Ctx, sdk.NewCoins(test.mintedCoins))
+			err = keeper.AllocateAsset(suite.Ctx)
 			suite.Require().NoError(err)
 
-			err = mintKeeper.DistributeMintedCoin(suite.Ctx, test.mintedCoins) // this calls AllocateAsset via hook
-			suite.Require().NoError(err)
-			distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *suite.App.DistrKeeper)
-
-			suite.Require().Equal(test.expectedFeeCollector, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), sdk.DefaultBondDenom))
 			for i := 0; i < len(test.testingDistrRecord); i++ {
 				if test.testingDistrRecord[i].GaugeId == 0 {
 					continue
@@ -162,11 +126,11 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 
 func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 	tests := []struct {
-		name           string
-		testingDistrRecord           []types.DistrRecord
-		isPoolPrepared bool
-		expectErr      bool
-		expectTotalWeight sdk.Int
+		name               string
+		testingDistrRecord []types.DistrRecord
+		isPoolPrepared     bool
+		expectErr          bool
+		expectTotalWeight  sdk.Int
 	}{
 		{
 			name: "Not existent gauge.",
@@ -219,8 +183,8 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 					Weight:  sdk.NewInt(100),
 				},
 			},
-			isPoolPrepared: true,
-			expectErr:      false,
+			isPoolPrepared:    true,
+			expectErr:         false,
 			expectTotalWeight: sdk.NewInt(200),
 		},
 		{
@@ -235,8 +199,8 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 					Weight:  sdk.NewInt(200),
 				},
 			},
-			isPoolPrepared: true,
-			expectErr:      false,
+			isPoolPrepared:    true,
+			expectErr:         false,
 			expectTotalWeight: sdk.NewInt(300),
 		},
 	}
@@ -269,11 +233,11 @@ func (suite *KeeperTestSuite) TestReplaceDistrRecords() {
 
 func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 	tests := []struct {
-		name           string
-		testingDistrRecord           []types.DistrRecord
-		isPoolPrepared bool
-		expectErr      bool
-		expectTotalWeight sdk.Int
+		name               string
+		testingDistrRecord []types.DistrRecord
+		isPoolPrepared     bool
+		expectErr          bool
+		expectTotalWeight  sdk.Int
 	}{
 		{
 			name: "Not existent gauge.",
@@ -326,8 +290,8 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 					Weight:  sdk.NewInt(100),
 				},
 			},
-			isPoolPrepared: true,
-			expectErr:      false,
+			isPoolPrepared:    true,
+			expectErr:         false,
 			expectTotalWeight: sdk.NewInt(200),
 		},
 		{
@@ -342,8 +306,8 @@ func (suite *KeeperTestSuite) TestUpdateDistrRecords() {
 					Weight:  sdk.NewInt(200),
 				},
 			},
-			isPoolPrepared: true,
-			expectErr:      false,
+			isPoolPrepared:    true,
+			expectErr:         false,
 			expectTotalWeight: sdk.NewInt(300),
 		},
 	}
