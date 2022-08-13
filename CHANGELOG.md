@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * MsgExitPoolResponse: token_out field 
 * [#1825](https://github.com/osmosis-labs/osmosis/pull/1825) Fixes Interchain Accounts (host side) by adding it to AppModuleBasics
 * [#1699](https://github.com/osmosis-labs/osmosis/pull/1699) Fixes bug in sig fig rounding on spot price queries for small values
+* [#1699](https://github.com/osmosis-labs/osmosis/pull/1979) `AddToExistingLock` returns error when lock with matching conditions does not exist.
 * [#1994](https://github.com/osmosis-labs/osmosis/pull/1994) Removed bech32ibc module
 * [#2016](https://github.com/osmosis-labs/osmosis/pull/2016) Add fixed 10000 gas cost for each Balancer swap
 * [#2147](https://github.com/osmosis-labs/osmosis/pull/2147) Set MaxAgeNumBlocks in v11 Upgrade Handler to two weeks.
@@ -72,9 +73,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#2013](https://github.com/osmosis-labs/osmosis/pull/2013) Make `SetParams`, `SetPool`, `SetTotalLiquidity`, and `SetDenomLiquidity` GAMM APIs private
 * [#1857](https://github.com/osmosis-labs/osmosis/pull/1857) x/mint rename GetLastHalvenEpochNum to GetLastReductionEpochNum
 * [#2133](https://github.com/osmosis-labs/osmosis/pull/2133) Add `JoinPoolNoSwap` and `CalcJoinPoolNoSwapShares` to GAMM pool interface and route `JoinPoolNoSwap` in pool_service.go to new method in pool interface
+* [#2394](https://github.com/osmosis-labs/osmosis/pull/2394) Remove unused interface methods from expected keepers of each module
+* [#2390](https://github.com/osmosis-labs/osmosis/pull/2390) x/mint remove unused mintCoins parameter from AfterDistributeMintedCoin
 
 ### Features
 
+* [#2387](https://github.com/osmosis-labs/osmosis/pull/2387) Upgrade to IBC v3.2.0, which allows for sending/receiving IBC tokens with slashes.
 * [#2057](https://github.com/osmosis-labs/osmosis/pull/2057) Reduce block times to about three seconds
 * [#1312] Stableswap: Createpool logic 
 * [#1230] Stableswap CFMM equations

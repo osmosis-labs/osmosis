@@ -184,6 +184,13 @@ proto-format:
 		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
 
 ###############################################################################
+###                                Querygen                                 ###
+###############################################################################
+
+run-querygen:
+	@go run cmd/querygen/main.go
+
+###############################################################################
 ###                                 Devdoc                                  ###
 ###############################################################################
 
@@ -210,11 +217,9 @@ sync-docs:
 ###############################################################################
 
 PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'tests/simulator|e2e')
-PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
+PACKAGES_E2E=$(shell go list -tags e2e ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
-
-include sims.mk
 
 test: test-unit test-build
 
@@ -238,14 +243,14 @@ test-sim-app:
 test-sim-determinism:
 	@VERSION=$(VERSION) go test -mod=readonly -run ^TestAppStateDeterminism -v $(PACKAGES_SIM)
 
-test-sim-benchmark:
+test-sim-bench:
 	@VERSION=$(VERSION) go test -benchmem -run ^BenchmarkFullAppSimulation -bench ^BenchmarkFullAppSimulation -cpuprofile cpu.out $(PACKAGES_SIM)
 
 test-e2e:
-	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" OSMOSIS_E2E_DEBUG_LOG=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-e2e-skip-upgrade:
-	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-mutation:
 	@bash scripts/mutation-test.sh
