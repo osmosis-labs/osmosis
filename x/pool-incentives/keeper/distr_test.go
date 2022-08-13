@@ -53,14 +53,14 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 					Weight:  sdk.NewInt(300),
 				},
 			},
-			mintedCoins: sdk.NewCoin("stake", sdk.NewInt(50000)),
+			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(50000)),
 			expectedGaugesBalances: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2500))),
-				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(4999))),
-				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(7500))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2500))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(4999))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(7500))),
 			},
-			expectedFeeCollector:  sdk.NewCoin("stake", sdk.NewInt(20000)),
-			expectedCommunityPool: sdk.NewDecCoin("stake", sdk.NewInt(5000)),
+			expectedFeeCollector:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(20000)),
+			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(5000)),
 		},
 		
 		// With minting 100000 stake, we get:
@@ -85,14 +85,14 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 					Weight:  sdk.NewInt(200),
 				},
 			},
-			mintedCoins: sdk.NewCoin("stake", sdk.NewInt(100000)),
+			mintedCoins: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000)),
 			expectedGaugesBalances: []sdk.Coins{
-				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0))),
-				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(3000))),
-				sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(6000))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000))),
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(6000))),
 			},
-			expectedFeeCollector:  sdk.NewCoin("stake", sdk.NewInt(40000)),
-			expectedCommunityPool: sdk.NewDecCoin("stake", sdk.NewInt(31000)),
+			expectedFeeCollector:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40000)),
+			expectedCommunityPool: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(31000)),
 		},
 		// With minting 100000 stake, we get:
 		// 	expectedFeeCollector = 100000 * 0.4 = 40000 stake
@@ -100,10 +100,10 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		{
 			name:                   "community pool distribution when no distribution records are set",
 			testingDistrRecord:                   []types.DistrRecord{},
-			mintedCoins:            sdk.NewCoin("stake", sdk.NewInt(100000)),
+			mintedCoins:            sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000)),
 			expectedGaugesBalances: []sdk.Coins{},
-			expectedFeeCollector:   sdk.NewCoin("stake", sdk.NewInt(40000)),
-			expectedCommunityPool:  sdk.NewDecCoin("stake", sdk.NewInt(40000)),
+			expectedFeeCollector:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(40000)),
+			expectedCommunityPool:  sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(40000)),
 		},
 	}
 
@@ -144,7 +144,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 			suite.Require().NoError(err)
 			distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *suite.App.DistrKeeper)
 
-			suite.Require().Equal(test.expectedFeeCollector, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), "stake"))
+			suite.Require().Equal(test.expectedFeeCollector, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName), sdk.DefaultBondDenom))
 			for i := 0; i < len(test.testingDistrRecord); i++ {
 				if test.testingDistrRecord[i].GaugeId == 0 {
 					continue
