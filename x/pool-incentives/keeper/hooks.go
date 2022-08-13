@@ -40,7 +40,7 @@ func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, 
 }
 
 // Distribute coins after minter module allocate assets to pool-incentives module.
-func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) {
+func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context) {
 	// @Sunny, @Tony, @Dev, what comments should we keep after modifying own BeginBlocker to hooks?
 
 	// WARNING: The order of how modules interact with the default distribution module matters if the distribution module is used in a similar way to:

@@ -29,7 +29,7 @@ type mintHooksMock struct {
 	hookCallCount int
 }
 
-func (hm *mintHooksMock) AfterDistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) {
+func (hm *mintHooksMock) AfterDistributeMintedCoin(ctx sdk.Context) {
 	hm.hookCallCount++
 }
 
