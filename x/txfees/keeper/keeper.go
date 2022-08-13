@@ -23,6 +23,8 @@ type Keeper struct {
 	nonNativeFeeCollectorName string
 }
 
+var _ types.TxFeesKeeper = (*Keeper)(nil)
+
 func NewKeeper(
 	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
