@@ -578,6 +578,18 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 		},
 		{
 			// test int overflows
+			name: "max spot price with unequal weights",
+			// 2^196, as >= 2^197 trips max bitlen of 256
+			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206336").TruncateInt()),
+			baseDenomWeight:     sdk.NewInt(10),
+			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.NewInt(90),
+			expectError:         false,
+			// doesn't work bc exceeds max bitlen
+			expectedOutput:      sdk.MustNewDecFromStr("903902649895682029992353676941903963918739184002820969857024.000000000000000000"),
+		},
+		{
+			// test int overflows
 			name: "max spot price with extreme weights",
 			// 2^196, as >= 2^197 trips max bitlen of 256
 			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206336").TruncateInt()),
