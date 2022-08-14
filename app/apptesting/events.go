@@ -1,6 +1,8 @@
 package apptesting
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // AssertEventEmitted asserts that ctx's event manager has emitted the given number of events
 // of the given type.
@@ -13,5 +15,6 @@ func (s *KeeperTestHelper) AssertEventEmitted(ctx sdk.Context, eventTypeExpected
 			actualEvents = append(actualEvents, event)
 		}
 	}
-	s.Equal(numEventsExpected, len(actualEvents))
+
+	s.Require().Equal(numEventsExpected, len(actualEvents))
 }

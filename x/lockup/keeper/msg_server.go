@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v11/x/lockup/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/utils"
 	"github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,7 +46,14 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 			return nil, err
 		}
 
-		events.EmitAddTokenToLock(ctx, lockID, msg.Owner, msg.Coins.String())
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtAddTokensToLock,
+				sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lockID)),
+				sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner),
+				sdk.NewAttribute(types.AttributePeriodLockAmount, msg.Coins.String()),
+			),
+		})
 		return &types.MsgLockTokensResponse{ID: lockID}, nil
 	}
 
@@ -56,7 +63,17 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	events.EmitLockToken(ctx, &lock)
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtLockTokens,
+			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
+			sdk.NewAttribute(types.AttributePeriodLockAmount, lock.Coins.String()),
+			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
+			sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
+		),
+	})
+
 	return &types.MsgLockTokensResponse{ID: lock.ID}, nil
 }
 
@@ -84,7 +101,10 @@ func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBegi
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	events.EmitBeginUnlock(ctx, lock)
+	ctx.EventManager().EmitEvents(sdk.Events{
+		createBeginUnlockEvent(lock),
+	})
+
 	return &types.MsgBeginUnlockingResponse{}, nil
 }
 
@@ -104,7 +124,7 @@ func (server msgServer) BeginUnlockingAll(goCtx context.Context, msg *types.MsgB
 
 	// Create the events for this message
 	unlockedCoins := server.keeper.getCoinsFromLocks(unlocks)
-	allEvents := sdk.Events{
+	events := sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtBeginUnlockAll,
 			sdk.NewAttribute(types.AttributePeriodLockOwner, msg.Owner),
@@ -113,11 +133,21 @@ func (server msgServer) BeginUnlockingAll(goCtx context.Context, msg *types.MsgB
 	}
 	for _, lock := range unlocks {
 		lock := lock
-		allEvents = allEvents.AppendEvent(events.BeginUnlockEvent(&lock))
+		events = events.AppendEvent(createBeginUnlockEvent(&lock))
 	}
+	ctx.EventManager().EmitEvents(events)
 
-	ctx.EventManager().EmitEvents(allEvents)
 	return &types.MsgBeginUnlockingAllResponse{}, nil
+}
+
+func createBeginUnlockEvent(lock *types.PeriodLock) sdk.Event {
+	return sdk.NewEvent(
+		types.TypeEvtBeginUnlock,
+		sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
+		sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
+		sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
+		sdk.NewAttribute(types.AttributePeriodLockUnlockTime, lock.EndTime.String()),
+	)
 }
 
 // ExtendLockup extends the duration of the existing lock.
@@ -141,6 +171,14 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	events.EmitExtendLockToken(ctx, lock)
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtLockTokens,
+			sdk.NewAttribute(types.AttributePeriodLockID, utils.Uint64ToString(lock.ID)),
+			sdk.NewAttribute(types.AttributePeriodLockOwner, lock.Owner),
+			sdk.NewAttribute(types.AttributePeriodLockDuration, lock.Duration.String()),
+		),
+	})
+
 	return &types.MsgExtendLockupResponse{}, nil
 }

@@ -92,6 +92,7 @@ func (suite *KeeperTestSuite) TestMsgLockTokens() {
 				Duration:      test.param.duration,
 			})
 			suite.Require().Equal(accum.String(), "20")
+			// check to see if events are emitted properly
 			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtLockTokens, 1)
 		} else {
 			// Fail simple lock token
@@ -328,5 +329,103 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 		} else {
 			suite.Require().Error(err, test.name)
 		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestMsgLockToken_EmitEvent() {
+	type param struct {
+		coinsToLock         sdk.Coins
+		lockOwner           sdk.AccAddress
+		duration            time.Duration
+		coinsInOwnerAddress sdk.Coins
+	}
+
+	type events struct {
+		Id       string
+		Owner    string
+		Coins    string
+		Duration string
+		EndTime  string
+	}
+
+	defaultLocParams := param{
+		coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)},       // setup wallet
+		lockOwner:           sdk.AccAddress([]byte("addr1---------------")), // setup wallet
+		duration:            time.Second,
+		coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+	}
+
+	testCases := map[string]struct {
+		events     events
+		expectPass bool
+	}{
+		"events emitted correctly": {
+			events: events{
+				Id:       "1",
+				Owner:    "osmo1v9jxgu3395kj6tfd95kj6tfd95kj6tfd0hptum",
+				Coins:    "10stake",
+				Duration: "1s",
+				EndTime:  "0001-01-01 00:00:00 +0000 UTC",
+			},
+			expectPass: true,
+		},
+		"events emitted with incorrect values": {
+			events: events{
+				Id:       "1",
+				Owner:    "osmo1v9jxgu3395kj6tfd95kj6tfd95kj6tfd0hptum",
+				Coins:    "11stake",
+				Duration: "1s",
+				EndTime:  "0001-01-01 00:00:00 +0000 UTC",
+			},
+			expectPass: false,
+		},
+		"events emitted with missing values": {
+			events: events{
+				Id:       "1",
+				Coins:    "10stake",
+				Duration: "1s",
+			},
+			expectPass: false,
+		},
+	}
+
+	for name, tc := range testCases {
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			suite.FundAcc(defaultLocParams.lockOwner, defaultLocParams.coinsInOwnerAddress)
+
+			msgServer := keeper.NewMsgServerImpl(suite.App.LockupKeeper)
+			c := sdk.WrapSDKContext(suite.Ctx)
+			_, err := msgServer.LockTokens(c, types.NewMsgLockTokens(defaultLocParams.lockOwner, defaultLocParams.duration, defaultLocParams.coinsToLock))
+			suite.Require().NoError(err)
+
+			expectedEvents := sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtLockTokens,
+					sdk.NewAttribute(types.AttributePeriodLockID, tc.events.Id),
+					sdk.NewAttribute(types.AttributePeriodLockOwner, tc.events.Owner),
+					sdk.NewAttribute(types.AttributePeriodLockAmount, tc.events.Coins),
+					sdk.NewAttribute(types.AttributePeriodLockDuration, tc.events.Duration),
+					sdk.NewAttribute(types.AttributePeriodLockUnlockTime, tc.events.EndTime),
+				),
+			}
+
+			allEvents := suite.Ctx.EventManager().Events()
+			// filter out other events
+			actualEvents := make([]sdk.Event, 0)
+			for _, event := range allEvents {
+				if event.Type == types.TypeEvtLockTokens {
+					actualEvents = append(actualEvents, event)
+				}
+			}
+
+			if tc.expectPass {
+				suite.Require().Equal(expectedEvents[0], actualEvents[0])
+			} else {
+				suite.Require().NotEqual(expectedEvents[0], actualEvents[0])
+			}
+
+		})
 	}
 }
