@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/app"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -28,30 +27,30 @@ import (
 func BenchmarkFullAppSimulation(b *testing.B) {
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
-	sdkSimapp.FlagEnabledValue = true
-	sdkSimapp.FlagNumBlocksValue = 1000
-	sdkSimapp.FlagBlockSizeValue = 200
-	sdkSimapp.FlagCommitValue = true
-	sdkSimapp.FlagVerboseValue = true
-	// sdkSimapp.FlagPeriodValue = 1000
+	osmosim.FlagEnabledValue = true
+	osmosim.FlagNumBlocksValue = 1000
+	osmosim.FlagBlockSizeValue = 200
+	osmosim.FlagCommitValue = true
+	osmosim.FlagVerboseValue = true
+	// osmosim.FlagPeriodValue = 1000
 	fullAppSimulation(b, false)
 }
 
 func TestFullAppSimulation(t *testing.T) {
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
-	sdkSimapp.FlagEnabledValue = true
-	sdkSimapp.FlagNumBlocksValue = 200
-	sdkSimapp.FlagBlockSizeValue = 25
-	sdkSimapp.FlagCommitValue = true
-	sdkSimapp.FlagVerboseValue = true
-	sdkSimapp.FlagPeriodValue = 10
-	sdkSimapp.FlagSeedValue = 11
+	osmosim.FlagEnabledValue = true
+	osmosim.FlagNumBlocksValue = 200
+	osmosim.FlagBlockSizeValue = 25
+	osmosim.FlagCommitValue = true
+	osmosim.FlagVerboseValue = true
+	osmosim.FlagPeriodValue = 10
+	osmosim.FlagSeedValue = 11
 	fullAppSimulation(t, true)
 }
 
 func fullAppSimulation(tb testing.TB, is_testing bool) {
-	config, db, dir, logger, _, err := sdkSimapp.SetupSimulation("goleveldb-app-sim", "Simulation")
+	config, db, dir, logger, _, err := osmosim.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
@@ -83,9 +82,9 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		true, // load latest
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		sdkSimapp.FlagPeriodValue,
+		osmosim.FlagPeriodValue,
 		app.MakeEncodingConfig(),
-		sdkSimapp.EmptyAppOptions{},
+		osmosim.EmptyAppOptions{},
 		app.GetWasmEnabledProposals(),
 		app.EmptyWasmOpts,
 		interBlockCacheOpt(),
@@ -111,7 +110,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	}
 
 	if config.Commit {
-		sdkSimapp.PrintStats(db)
+		osmosim.PrintStats(db)
 	}
 }
 
@@ -124,11 +123,11 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on the application.
 func TestAppStateDeterminism(t *testing.T) {
-	// if !sdkSimapp.FlagEnabledValue {
+	// if !osmosim.FlagEnabledValue {
 	// 	t.Skip("skipping application simulation")
 	// }
 
-	config := sdkSimapp.NewConfigFromFlags()
+	config := osmosim.NewConfigFromFlags()
 	config.ExportParamsPath = ""
 	config.NumBlocks = 50
 	config.BlockSize = 5
@@ -151,7 +150,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
 			logger = simlogger.NewSimLogger(log.TestingLogger())
-			// if sdkSimapp.FlagVerboseValue {
+			// if osmosim.FlagVerboseValue {
 			// 	logger = log.TestingLogger()
 			// } else {
 			// 	logger = log.NewNopLogger()
@@ -165,9 +164,9 @@ func TestAppStateDeterminism(t *testing.T) {
 				true,
 				map[int64]bool{},
 				app.DefaultNodeHome,
-				sdkSimapp.FlagPeriodValue,
+				osmosim.FlagPeriodValue,
 				app.MakeEncodingConfig(),
-				sdkSimapp.EmptyAppOptions{},
+				osmosim.EmptyAppOptions{},
 				app.GetWasmEnabledProposals(),
 				app.EmptyWasmOpts,
 				interBlockCacheOpt())
