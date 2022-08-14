@@ -5,16 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"io/ioutil"
-
-	osmosim "github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
-
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
 )
 
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
@@ -37,7 +28,7 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 //  - "over stuffed" blocks with average size of 2 * avgblocksize,
 //  - normal sized blocks, hitting avgBlocksize on average,
 //  - and empty blocks, with no txs / only txs scheduled from the past.
-func getBlockSize(simCtx *osmosim.SimCtx, params Params, lastBlockSizeState, avgBlockSize int) (state, blockSize int) {
+func getBlockSize(simCtx *simtypes.SimCtx, params Params, lastBlockSizeState, avgBlockSize int) (state, blockSize int) {
 	r := simCtx.GetSeededRand("get block size")
 	// TODO: Make default blocksize transition matrix actually make the average
 	// blocksize equal to avgBlockSize.
@@ -64,42 +55,4 @@ func mustMarshalJSONIndent(o interface{}) []byte {
 	}
 
 	return bz
-}
-
-// SetupSimulation creates the config, db (levelDB), temporary directory and logger for
-// the simulation tests. If `FlagEnabledValue` is false it skips the current test.
-// Returns error on an invalid db intantiation or temp dir creation.
-func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) {
-	if !FlagEnabledValue {
-		return simtypes.Config{}, nil, "", nil, true, nil
-	}
-
-	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
-
-	var logger log.Logger
-	if FlagVerboseValue {
-		logger = log.TestingLogger()
-	} else {
-		logger = log.NewNopLogger()
-	}
-
-	dir, err := ioutil.TempDir("", dirPrefix)
-	if err != nil {
-		return simtypes.Config{}, nil, "", nil, false, err
-	}
-
-	db, err := sdk.NewLevelDB(dbName, dir)
-	if err != nil {
-		return simtypes.Config{}, nil, "", nil, false, err
-	}
-
-	return config, db, dir, logger, false, nil
-}
-
-// PrintStats prints the corresponding statistics from the app DB.
-func PrintStats(db dbm.DB) {
-	fmt.Println("\nLevelDB Stats")
-	fmt.Println(db.Stats()["leveldb.stats"])
-	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 }

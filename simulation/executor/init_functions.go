@@ -1,4 +1,4 @@
-package simtypes
+package simulation
 
 import (
 	"math/rand"
@@ -12,8 +12,8 @@ import (
 // TODO: Consider adding consensus parameters / simulator params / tendermint params to this.
 type InitFunctions struct {
 	// Why does this take in Numkeys / why isn't this part of the initial state function / config to decide?
-	RandomAccountFn   simulation.RandomAccountFn
-	AppInitialStateFn simulation.AppStateFn
+	RandomAccountFn   RandomAccountFn
+	AppInitialStateFn AppStateFn
 }
 
 // TODO: cleanup args in the future, should ideally just be a slice.
@@ -23,7 +23,7 @@ func DefaultSimInitFunctions(moduleAccountAddresses map[string]bool) InitFunctio
 	}
 }
 
-func WrapRandAccFnForResampling(randFn simulation.RandomAccountFn, blockList map[string]bool) simulation.RandomAccountFn {
+func WrapRandAccFnForResampling(randFn RandomAccountFn, blockList map[string]bool) RandomAccountFn {
 	// TODO: do resampling
 	return func(r *rand.Rand, n int) []simulation.Account {
 		initAccs := randFn(r, n)
