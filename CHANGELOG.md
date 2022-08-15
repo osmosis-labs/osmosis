@@ -45,7 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v11.0.1
 
 #### Golang API breaks
-https://github.com/osmosis-labs/osmosis/pull/2288
 * [#1893](https://github.com/osmosis-labs/osmosis/pull/1893) Change `EpochsKeeper.SetEpochInfo` to `AddEpochInfo`, which has more safety checks with it. (Makes it suitable to be called within upgrades)
 * [#2396](https://github.com/osmosis-labs/osmosis/pull/2396) x/mint remove unused mintCoins parameter from AfterDistributeMintedCoin
 * [#2399](https://github.com/osmosis-labs/osmosis/pull/2399) Remove unused interface methods from expected keepers of each module
