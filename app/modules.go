@@ -2,9 +2,13 @@ package app
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
+	"github.com/cosmos/cosmos-sdk/client"
+	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
@@ -244,4 +248,21 @@ func (app *OsmosisApp) GetAccountKeeper() simtypes.AccountKeeper {
 
 func (app *OsmosisApp) GetBankKeeper() simtypes.BankKeeper {
 	return app.AppKeepers.BankKeeper
+}
+
+// Required for ibctesting
+func (app *OsmosisApp) GetStakingKeeper() stakingkeeper.Keeper {
+	return *app.AppKeepers.StakingKeeper
+}
+
+func (app *OsmosisApp) GetIBCKeeper() *ibckeeper.Keeper {
+	return app.AppKeepers.IBCKeeper
+}
+
+func (app *OsmosisApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
+	return app.AppKeepers.ScopedIBCKeeper
+}
+
+func (app *OsmosisApp) GetTxConfig() client.TxConfig {
+	return app.txConfig
 }
