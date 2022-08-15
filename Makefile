@@ -243,11 +243,11 @@ test-sim-app:
 test-sim-determinism:
 	@VERSION=$(VERSION) go test -mod=readonly -run ^TestAppStateDeterminism -v $(PACKAGES_SIM)
 
-test-sim-benchmark:
+test-sim-bench:
 	@VERSION=$(VERSION) go test -benchmem -run ^BenchmarkFullAppSimulation -bench ^BenchmarkFullAppSimulation -cpuprofile cpu.out $(PACKAGES_SIM)
 
 test-e2e:
-	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" OSMOSIS_E2E_DEBUG_LOG=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)

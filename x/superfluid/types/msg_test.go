@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )

@@ -17,10 +17,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/wasmbinding"
-	"github.com/osmosis-labs/osmosis/v10/wasmbinding/bindings"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v11/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
 )
 
 // we must pay this many uosmo for every pool we create
