@@ -1,4 +1,3 @@
-//test comment
 package app
 
 import (
