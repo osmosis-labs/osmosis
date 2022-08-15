@@ -25,9 +25,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v10/x/txfees/client/cli"
-	"github.com/osmosis-labs/osmosis/v10/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v11/x/txfees/client/cli"
+	"github.com/osmosis-labs/osmosis/v11/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/txfees/types"
 )
 
 var (
@@ -43,11 +43,10 @@ const ModuleName = types.ModuleName
 
 // AppModuleBasic implements the AppModuleBasic interface for the txfees module.
 type AppModuleBasic struct {
-	cdc codec.Codec
 }
 
-func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
-	return AppModuleBasic{cdc: cdc}
+func NewAppModuleBasic() AppModuleBasic {
+	return AppModuleBasic{}
 }
 
 // Name returns the txfees module's name.
@@ -108,9 +107,9 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(cdc),
+		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
 	}
 }

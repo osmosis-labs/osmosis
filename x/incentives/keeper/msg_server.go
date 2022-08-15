@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/utils"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/utils"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -33,6 +33,10 @@ func (server msgServer) CreateGauge(goCtx context.Context, msg *types.MsgCreateG
 		return nil, err
 	}
 
+	if err := server.keeper.chargeFeeIfSufficientFeeDenomBalance(ctx, owner, types.CreateGaugeFee, msg.Coins); err != nil {
+		return nil, err
+	}
+
 	gaugeID, err := server.keeper.CreateGauge(ctx, msg.IsPerpetual, owner, msg.Coins, msg.DistributeTo, msg.StartTime, msg.NumEpochsPaidOver)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
@@ -54,6 +58,10 @@ func (server msgServer) AddToGauge(goCtx context.Context, msg *types.MsgAddToGau
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := server.keeper.chargeFeeIfSufficientFeeDenomBalance(ctx, owner, types.AddToGaugeFee, msg.Rewards); err != nil {
 		return nil, err
 	}
 	err = server.keeper.AddToGaugeRewards(ctx, owner, msg.Rewards, msg.GaugeId)

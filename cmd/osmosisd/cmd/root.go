@@ -4,10 +4,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/osmosis-labs/osmosis/v10/app/params"
+	"github.com/osmosis-labs/osmosis/v11/app/params"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -40,7 +41,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	osmosis "github.com/osmosis-labs/osmosis/v10/app"
+	osmosis "github.com/osmosis-labs/osmosis/v11/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -74,7 +75,11 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
+
 			customAppTemplate, customAppConfig := initAppConfig()
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx.Config.Consensus.TimeoutCommit = 2 * time.Second
+
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig)
 		},
 		SilenceUsage: true,

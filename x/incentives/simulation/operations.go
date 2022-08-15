@@ -4,13 +4,13 @@ import (
 	"math/rand"
 	"time"
 
-	osmosimtypes "github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -63,14 +63,25 @@ func WeightedOperations(
 }
 
 // genRewardCoins generates a random number of coin denoms with a respective random value for each coin.
-func genRewardCoins(r *rand.Rand, coins sdk.Coins) (res sdk.Coins) {
+func genRewardCoins(r *rand.Rand, coins sdk.Coins, fee sdk.Int) (res sdk.Coins) {
 	numCoins := 1 + r.Intn(Min(coins.Len(), 1))
 	denomIndices := r.Perm(numCoins)
 	for i := 0; i < numCoins; i++ {
+		var (
+			amt sdk.Int
+			err error
+		)
 		denom := coins[denomIndices[i]].Denom
-		amt, err := simtypes.RandPositiveInt(r, coins[i].Amount)
-		if err != nil {
-			panic(err)
+		if denom == sdk.DefaultBondDenom {
+			amt, err = simtypes.RandPositiveInt(r, coins[i].Amount.Sub(fee))
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			amt, err = simtypes.RandPositiveInt(r, coins[i].Amount)
+			if err != nil {
+				panic(err)
+			}
 		}
 		res = append(res, sdk.Coin{Denom: denom, Amount: amt})
 	}
@@ -115,14 +126,14 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.Len() <= 0 {
+		if simCoins.AmountOf(sdk.DefaultBondDenom).LT(types.CreateGaugeFee) {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgCreateGauge, "Account have no coin"), nil, nil
 		}
 
 		isPerpetual := r.Int()%2 == 0
 		distributeTo := genQueryCondition(r, ctx.BlockTime(), simCoins, types.DefaultGenesis().LockableDurations)
-		rewards := genRewardCoins(r, simCoins)
+		rewards := genRewardCoins(r, simCoins, types.CreateGaugeFee)
 		startTimeSecs := r.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 		startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs) * time.Second)
 		durationSecs := r.Intn(1*60*60*24*7) + 1*60*60*24 // range of 1 week, min 1 day
@@ -154,7 +165,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
-		if simCoins.Len() <= 0 {
+		if simCoins.AmountOf(sdk.DefaultBondDenom).LT(types.AddToGaugeFee) {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgAddToGauge, "Account have no coin"), nil, nil
 		}
@@ -166,7 +177,7 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		}
 		gaugeId := RandomGauge(ctx, r, k).Id
 
-		rewards := genRewardCoins(r, simCoins)
+		rewards := genRewardCoins(r, simCoins, types.AddToGaugeFee)
 
 		msg := types.MsgAddToGauge{
 			Owner:   simAccount.Address.String(),

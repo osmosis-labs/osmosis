@@ -28,10 +28,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v10/x/epochs/client/cli"
-	"github.com/osmosis-labs/osmosis/v10/x/epochs/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v10/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v11/x/epochs/client/cli"
+	"github.com/osmosis-labs/osmosis/v11/x/epochs/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/client/rest"
 )
 
 var (
@@ -45,11 +45,10 @@ var (
 
 // AppModuleBasic implements the AppModuleBasic interface for the capability module.
 type AppModuleBasic struct {
-	cdc codec.Codec
 }
 
-func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
-	return AppModuleBasic{cdc: cdc}
+func NewAppModuleBasic() AppModuleBasic {
+	return AppModuleBasic{}
 }
 
 // Name returns the capability module's name.
@@ -108,9 +107,9 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(cdc),
+		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
 	}
 }

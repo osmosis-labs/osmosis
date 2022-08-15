@@ -66,6 +66,28 @@ Making table-driven tests in an environment built on the Cosmos SDK has some qui
 
 We'll lay out three examples below (one that uses our format for messages, one that applies to keeper methods, and one that applies to our GAMM module), each of which will hopefully be simple enough to copy-paste into a test file and use as a starting point for your test-writing in the Osmosis Core repo.
 
+### Generating unit tests using our Gotest template
+
+To simplify (and speed up) the process of writing unit tests that fit our standard, we have put together a Gotest template that allows you to easily generate unit tests using built-in functionality for the Vscode Go plugin (complete with parameters listed, basic error checking logic etc.). The following two sections lay out how to generate a unit test automatically using this method.
+
+#### 1. Setup
+Note: this section assumes you already have the Go plugin for Vscode installed. Please refer to our [IDE setup docs](https://docs.osmosis.zone/developing/osmosis-core/ide-guide.html) if you haven't done any IDE setup yet.
+
+Copy the `templates` folder into your `.vscode` folder from our main repo [here](https://github.com/osmosis-labs/osmosis/tree/main/.vscode). This folder has our custom templates for generating tests that fit our testing standards as accurately as possible.
+
+Then, go to your `settings.json` file in your `.vscode` folder and add the following to it:
+
+```go
+    "go.generateTestsFlags": [
+        "-template_dir",
+        "[ABSOLUTE PATH TO TEMPLATES FOLDER]"
+    ],
+```
+where `"[ABSOLUTE PATH TO TEMPLATES FOLDER]"` should look something like: `"User/ExampleUser/osmosis/.vscode/templates"`
+
+#### 2. Generating a unit test
+On the function you want to generate a unit test for, right click the function name and select `Go: Generate Unit Tests For Function`. This should take you to an automatically generated template test in the corresponding test file for the file your function is in. If there isn't a corresponding test file, it should automatically generate one, define its package and imports, and generate the test there.
+
 ### Rules of thumb for table-driven tests
 
 1. Each test case should test one thing
@@ -73,226 +95,122 @@ We'll lay out three examples below (one that uses our format for messages, one t
 3. Functions should not be set as fields for a test case (this usually means that the table-driven approach is being sidestepped and that the logic in the function should probably be factored out to cover multiple/all test cases)
 4. Avoid verbosity by creating local variables instead of constantly referring to struct field (e.g. doing `lockupKeeper := suite.App.LockupKeeper` instead of using `suite.App.LockupKeeper` every time).
 
-### Example #1: [Message-Related Test](https://github.com/osmosis-labs/osmosis/blob/f0270d04bd77cc5e1c23f7913118b3c2ba737e97/x/tokenfactory/keeper/admins_test.go#L122-L181) 
+### Example #1: [Message-Related Test]
 This type of test is mainly for functions that would be triggered by incoming messages (we interact directly with the message server since all other metadata is stripped from a message by the time it hits the msg_server):
 
 ```go
-func (suite *KeeperTestSuite) TestBurnDenom() {
-    var addr0bal int64
-
-    // Create a denom.
-    suite.CreateDefaultDenom()
-
-    // mint 10 default token for testAcc[0]
-    suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 10)))
-    addr0bal += 10
-
-    for _, tc := range []struct {
-        desc      string
-        amount    int64
-        burnDenom string
-        admin     string
-        valid     bool
-    }{
-        {
-            desc:      "denom does not exist",
-            amount:    10,
-            burnDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
-            admin:     suite.TestAccs[0].String(),
-            valid:     false,
-        },
-        {
-            desc:      "burn is not by the admin",
-            amount:    10,
-            burnDenom: suite.defaultDenom,
-            admin:     suite.TestAccs[1].String(),
-            valid:     false,
-        },
-        {
-            desc:      "burn amount is bigger than minted amount",
-            amount:    1000,
-            burnDenom: suite.defaultDenom,
-            admin:     suite.TestAccs[1].String(),
-            valid:     false,
-        },
-        {
-            desc:      "success case",
-            amount:    10,
-            burnDenom: suite.defaultDenom,
-            admin:     suite.TestAccs[0].String(),
-            valid:     true,
-        },
+func(suite *KeeperTestSuite) TestCreateDenom() {
+    testCases := map[string] struct {
+        subdenom            string
+        expectError         bool
     } {
-        suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-            // Test minting to admins own account
-            _, err := suite.msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
-            if tc.valid {
-                addr0bal -= 10
+
+        "subdenom too long": {
+            subdenom:   "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
+            valid:      false,
+        },
+        "success case": {
+            subdenom: "evmos",
+			valid:    true,
+        },
+    }
+
+    for name, tc := range testCases {
+        suite.Run(name, func() {
+            ctx := suite.Ctx
+            msgServer := suite.msgServer
+            queryClient := suite.queryClient
+
+            // Create a denom
+            res, err := msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
+            
+            if !tc.expectError {
                 suite.Require().NoError(err)
-                suite.Require().True(suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
+
+                // Make sure that the admin is set correctly
+                queryRes, err := queryClient.DenomAuthorityMetadata(ctx.Context(), & types.QueryDenomAuthorityMetadataRequest {
+                    Denom: res.GetNewTokenDenom(),
+                })
+
+                suite.Require().NoError(err)
+                suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
+
             } else {
                 suite.Require().Error(err)
-                suite.Require().True(suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
             }
         })
     }
 }
 ```
-### Example #2: [Keeper-Related Test](https://github.com/osmosis-labs/osmosis/blob/f0270d04bd77cc5e1c23f7913118b3c2ba737e97/x/epochs/keeper/abci_test.go#L20-L105) 
+### Example #2: [Keeper-Related Test]
 This type of test is mainly for functions that would be triggered by other modules calling public keeper methods (or just to unit-test keeper methods in general):
 
 ```go
-func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
-    block1Time := time.Unix(1656907200, 0).UTC()
-    const defaultIdentifier = "hourly"
-    const defaultDuration = time.Hour
-    // eps is short for epsilon - in this case a negligible amount of time.
-    const eps = time.Nanosecond
-
-    tests := map[string]struct {
-        // if identifier, duration is not set, we make it defaultIdentifier and defaultDuration.
-        // EpochCountingStarted, if unspecified, is inferred by CurrentEpoch == 0
-        // StartTime is inferred to be block1Time if left blank.
-        initialEpochInfo     types.EpochInfo
-        blockHeightTimePairs map[int]time.Time
-        expEpochInfo         types.EpochInfo
-    }{
-        "First block running at exactly start time sets epoch tick": {
-            initialEpochInfo: types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-            expEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
+// TestMintExportGenesis tests that genesis is exported correctly.
+// It first initializes genesis to the expected value. Then, attempts
+// to export it. Lastly, compares exported to the expected.
+func(suite *KeeperTestSuite) TestMintExportGenesis() {
+    testCases := map[string] struct {
+        expectedGenesis *types.GenesisState
+    } {
+        "default genesis": {
+            expectedGenesis: types.DefaultGenesisState(),
         },
-        "First block run sets start time, subsequent blocks within timer interval do not cause timer tick": {
-            initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-            blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(time.Second), 3: block1Time.Add(time.Minute), 4: block1Time.Add(30 * time.Minute)},
-            expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
-        },
-        "Second block at exactly timer interval later does not tick": {
-            initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-            blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(defaultDuration)},
-            expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time, CurrentEpochStartHeight: 1},
-        },
-        "Second block at timer interval + epsilon later does tick": {
-            initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-            blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(defaultDuration).Add(eps)},
-            expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 2, CurrentEpochStartTime: block1Time.Add(time.Hour), CurrentEpochStartHeight: 2},
-        },
-        "Downtime recovery (many intervals), first block causes 1 tick and sets current start time 1 interval ahead": {
-            initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-            blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(24 * time.Hour)},
-            expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 2, CurrentEpochStartTime: block1Time.Add(time.Hour), CurrentEpochStartHeight: 2},
-        },
-        "Downtime recovery (many intervals), second block is at tick 2, w/ start time 2 intervals ahead": {
-            initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-            blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(24 * time.Hour), 3: block1Time.Add(24 * time.Hour).Add(eps)},
-            expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 3, CurrentEpochStartTime: block1Time.Add(2 * time.Hour), CurrentEpochStartHeight: 3},
-        },
-        "Many blocks between first and second tick": {
-            initialEpochInfo:     types.EpochInfo{StartTime: block1Time, CurrentEpoch: 1, CurrentEpochStartTime: block1Time},
-            blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(time.Second), 3: block1Time.Add(2 * time.Second), 4: block1Time.Add(time.Hour).Add(eps)},
-            expEpochInfo:         types.EpochInfo{StartTime: block1Time, CurrentEpoch: 2, CurrentEpochStartTime: block1Time.Add(time.Hour), CurrentEpochStartHeight: 4},
-        },
-        "Distinct identifier and duration still works": {
-            initialEpochInfo:     types.EpochInfo{Identifier: "hello", Duration: time.Minute, StartTime: block1Time, CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-            blockHeightTimePairs: map[int]time.Time{2: block1Time.Add(time.Second), 3: block1Time.Add(time.Minute).Add(eps)},
-            expEpochInfo:         types.EpochInfo{Identifier: "hello", Duration: time.Minute, StartTime: block1Time, CurrentEpoch: 2, CurrentEpochStartTime: block1Time.Add(time.Minute), CurrentEpochStartHeight: 3},
-        },
-        "StartTime in future won't get ticked on first block": {
-            initialEpochInfo: types.EpochInfo{StartTime: block1Time.Add(time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-            // currentEpochStartHeight is 1 because thats when the timer was created on-chain
-            expEpochInfo: types.EpochInfo{StartTime: block1Time.Add(time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}, CurrentEpochStartHeight: 1},
-        },
-        "StartTime in past will get ticked on first block": {
-            initialEpochInfo: types.EpochInfo{StartTime: block1Time.Add(-time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-            expEpochInfo:     types.EpochInfo{StartTime: block1Time.Add(-time.Second), CurrentEpoch: 1, CurrentEpochStartTime: block1Time.Add(-time.Second), CurrentEpochStartHeight: 1},
+        "custom genesis": {
+            expectedGenesis: customGenesis,
         },
     }
-    for name, test := range tests {
-        suite.Run(name, func() {
-            suite.SetupTest()
-            suite.Ctx = suite.Ctx.WithBlockHeight(1).WithBlockTime(block1Time)
-            initialEpoch := initializeBlankEpochInfoFields(test.initialEpochInfo, defaultIdentifier, defaultDuration)
-            suite.App.EpochsKeeper.AddEpochInfo(suite.Ctx, initialEpoch)
-            suite.App.EpochsKeeper.BeginBlocker(suite.Ctx)
 
-            // get sorted heights
-            heights := maps.Keys(test.blockHeightTimePairs)
-            osmoutils.SortSlice(heights)
-            for _, h := range heights {
-                // for each height in order, run begin block
-                suite.Ctx = suite.Ctx.WithBlockHeight(int64(h)).WithBlockTime(test.blockHeightTimePairs[h])
-                suite.App.EpochsKeeper.BeginBlocker(suite.Ctx)
-            }
-            expEpoch := initializeBlankEpochInfoFields(test.expEpochInfo, initialEpoch.Identifier, initialEpoch.Duration)
-            actEpoch := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, initialEpoch.Identifier)
-            suite.Require().Equal(expEpoch, actEpoch)
+    for name, tc := range testCases {
+        suite.Run(name, func() {
+            // Setup.
+            app := suite.App
+            ctx := suite.Ctx
+
+            app.MintKeeper.InitGenesis(ctx, tc.expectedGenesis)
+
+            // Test.
+            actualGenesis := app.MintKeeper.ExportGenesis(ctx)
+
+            // Assertions.
+            suite.Require().Equal(tc.expectedGenesis, actualGenesis)
         })
     }
 }
 ```
 
-### Example #3: [Gamm-Related Test](https://github.com/osmosis-labs/osmosis/blob/5be82920fa67a97c2c2dff1c06edd10e0ab66319/x/gamm/pool-models/balancer/pool_test.go#L423-L503) 
+### Example #3: [Gamm-Related Test] 
 Since the GAMM module is core to the Osmosis repo, it might be useful to have a good example of a well-structured GAMM-specific test. This example covers a simple getter function and validates the specific error messages around the function (as opposed to merely the presence of an error):
 
 ```go
 func TestGetPoolAssetsByDenom(t *testing.T) {
-    testCases := []struct {
-        name                      string
-        poolAssets                []balancer.PoolAsset
-        expectedPoolAssetsByDenom map[string]balancer.PoolAsset
+    testCases := map[string] struct {
+        poolAssets                          []balancer.PoolAsset
+        expectedPoolAssetsByDenom           map[string]balancer.PoolAsset
+        expectedErr                         error
+    } {
 
-        err error
-    }{
-        {
-            name:                      "zero pool assets",
-            poolAssets:                []balancer.PoolAsset{},
-            expectedPoolAssetsByDenom: make(map[string]balancer.PoolAsset),
-        },
-        {
-            name: "one pool asset",
-            poolAssets: []balancer.PoolAsset{
+        "one pool asset": {
+            poolAssets: []balancer.PoolAsset {
                 {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
                     Weight: sdk.NewInt(100),
                 },
             },
-            expectedPoolAssetsByDenom: map[string]balancer.PoolAsset{
+            expectedPoolAssetsByDenom: map[string]balancer.PoolAsset {
                 "uosmo": {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
                     Weight: sdk.NewInt(100),
                 },
             },
         },
-        {
-            name: "two pool assets",
-            poolAssets: []balancer.PoolAsset{
+
+        "duplicate pool assets": {
+            poolAssets: []balancer.PoolAsset {
                 {
                     Token:  sdk.NewInt64Coin("uosmo", 1e12),
                     Weight: sdk.NewInt(100),
-                },
-                {
-                    Token:  sdk.NewInt64Coin("atom", 123),
-                    Weight: sdk.NewInt(400),
-                },
-            },
-            expectedPoolAssetsByDenom: map[string]balancer.PoolAsset{
-                "uosmo": {
-                    Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
-                },
-                "atom": {
-                    Token:  sdk.NewInt64Coin("atom", 123),
-                    Weight: sdk.NewInt(400),
-                },
-            },
-        },
-        {
-            name: "duplicate pool assets",
-            poolAssets: []balancer.PoolAsset{
-                {
-                    Token:  sdk.NewInt64Coin("uosmo", 1e12),
-                    Weight: sdk.NewInt(100),
-                },
-                {
+                }, {
                     Token:  sdk.NewInt64Coin("uosmo", 123),
                     Weight: sdk.NewInt(400),
                 },
@@ -301,11 +219,11 @@ func TestGetPoolAssetsByDenom(t *testing.T) {
         },
     }
 
-    for _, tc := range testCases {
-        t.Run(tc.name, func(t *testing.T) {
+    for name, tc := range testCases {
+        t.Run(name, func(t *testing.T) {
             actualPoolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
 
-            require.Equal(t, tc.err, err)
+            require.Equal(t, tc.expectedErr, err)
 
             if tc.err != nil {
                 return

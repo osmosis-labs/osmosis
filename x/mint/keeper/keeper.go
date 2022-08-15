@@ -5,8 +5,8 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,15 +17,15 @@ import (
 
 // Keeper of the mint store.
 type Keeper struct {
-	cdc              codec.BinaryCodec
-	storeKey         sdk.StoreKey
-	paramSpace       paramtypes.Subspace
-	accountKeeper    types.AccountKeeper
-	bankKeeper       types.BankKeeper
-	distrKeeper      types.DistrKeeper
-	epochKeeper      types.EpochKeeper
-	hooks            types.MintHooks
-	feeCollectorName string
+	cdc                 codec.BinaryCodec
+	storeKey            sdk.StoreKey
+	paramSpace          paramtypes.Subspace
+	accountKeeper       types.AccountKeeper
+	bankKeeper          types.BankKeeper
+	communityPoolKeeper types.CommunityPoolKeeper
+	epochKeeper         types.EpochKeeper
+	hooks               types.MintHooks
+	feeCollectorName    string
 }
 
 type invalidRatioError struct {
@@ -50,7 +50,7 @@ const emptyWeightedAddressReceiver = ""
 // NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper, epochKeeper types.EpochKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper, epochKeeper types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
@@ -64,14 +64,14 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:              cdc,
-		storeKey:         key,
-		paramSpace:       paramSpace,
-		accountKeeper:    ak,
-		bankKeeper:       bk,
-		distrKeeper:      dk,
-		epochKeeper:      epochKeeper,
-		feeCollectorName: feeCollectorName,
+		cdc:                 cdc,
+		storeKey:            key,
+		paramSpace:          paramSpace,
+		accountKeeper:       ak,
+		bankKeeper:          bk,
+		communityPoolKeeper: ck,
+		epochKeeper:         epochKeeper,
+		feeCollectorName:    feeCollectorName,
 	}
 }
 
@@ -223,20 +223,20 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 
 	// subtract from original provision to ensure no coins left over after the allocations
 	communityPoolAmount := mintedCoin.Amount.Sub(stakingIncentivesAmount).Sub(poolIncentivesAmount).Sub(devRewardAmount)
-	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(params.MintDenom, communityPoolAmount)), k.accountKeeper.GetModuleAddress(types.ModuleName))
+	err = k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(params.MintDenom, communityPoolAmount)), k.accountKeeper.GetModuleAddress(types.ModuleName))
 	if err != nil {
 		return err
 	}
 
 	// call an hook after the minting and distribution of new coins
-	k.hooks.AfterDistributeMintedCoin(ctx, mintedCoin)
+	k.hooks.AfterDistributeMintedCoin(ctx)
 
 	return err
 }
 
 // distributeToModule distributes mintedCoin multiplied by proportion to the recepientModule account.
 func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Int, error) {
-	distributionCoin, err := getProportions(ctx, mintedCoin, proportion)
+	distributionCoin, err := getProportions(mintedCoin, proportion)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -262,7 +262,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 // - weights in developerRewardsReceivers add up to 1.
 // - addresses in developerRewardsReceivers are valid or empty string.
 func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion sdk.Dec, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
-	devRewardCoin, err := getProportions(ctx, totalMintedCoin, developerRewardsProportion)
+	devRewardCoin, err := getProportions(totalMintedCoin, developerRewardsProportion)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -287,21 +287,21 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	// If no developer rewards receivers provided, fund the community pool from
 	// the developer vesting module account.
 	if len(developerRewardsReceivers) == 0 {
-		err = k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, developerRewardsModuleAccountAddress)
+		err = k.communityPoolKeeper.FundCommunityPool(ctx, devRewardCoins, developerRewardsModuleAccountAddress)
 		if err != nil {
 			return sdk.Int{}, err
 		}
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range developerRewardsReceivers {
-			devPortionCoin, err := getProportions(ctx, devRewardCoin, w.Weight)
+			devPortionCoin, err := getProportions(devRewardCoin, w.Weight)
 			if err != nil {
 				return sdk.Int{}, err
 			}
 			devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
 			// fund community pool when rewards address is empty.
 			if w.Address == emptyWeightedAddressReceiver {
-				err := k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
+				err := k.communityPoolKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
 					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
 				if err != nil {
 					return sdk.Int{}, err
@@ -332,7 +332,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 // allocation ratio. Returns error if ratio is greater than 1.
 // TODO: this currently rounds down and is the cause of rounding discrepancies.
 // To be fixed in: https://github.com/osmosis-labs/osmosis/issues/1917
-func getProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) (sdk.Coin, error) {
+func getProportions(mintedCoin sdk.Coin, ratio sdk.Dec) (sdk.Coin, error) {
 	if ratio.GT(sdk.OneDec()) {
 		return sdk.Coin{}, invalidRatioError{ratio}
 	}

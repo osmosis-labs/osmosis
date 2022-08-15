@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -14,11 +15,12 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/wasmbinding"
-	"github.com/osmosis-labs/osmosis/v10/wasmbinding/bindings"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/wasmbinding"
+	"github.com/osmosis-labs/osmosis/v11/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
 )
 
 // we must pay this many uosmo for every pool we create
@@ -170,6 +172,100 @@ func TestQuerySpotPrice(t *testing.T) {
 
 	expected = 1. / expected
 	require.InEpsilonf(t, expected+swapFee, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
+}
+
+func TestQueryArithmeticTwap(t *testing.T) {
+	// preamble boilerplate
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Round(time.Millisecond))
+	startTime := ctx.BlockTime()
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	require.NotEmpty(t, reflect)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 100000000),
+		sdk.NewInt64Coin("ustar", 200000000),
+	}
+	// 2 star to 1 osmo
+	starPoolID := preparePool(t, ctx, osmosis, actor, poolFunds)
+	osmosis.EndBlocker(ctx, abci.RequestEndBlock{Height: ctx.BlockHeight()})
+
+	// swap to make price 1 star to 2 osmo
+	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 10))
+	outTokens, err := osmosis.GAMMKeeper.SwapExactAmountIn(ctx, actor, starPoolID, sdk.NewCoin("uosmo", sdk.NewInt(100000000)), "ustar", sdk.NewInt(1))
+	require.Equal(t, outTokens, sdk.NewInt(100000000))
+	require.NoError(t, err)
+	osmosis.EndBlocker(ctx, abci.RequestEndBlock{Height: ctx.BlockHeight()})
+
+	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 20))
+	osmosis.EndBlocker(ctx, abci.RequestEndBlock{Height: ctx.BlockHeight()})
+
+	// twap is .5 for half the time, and 2 for half the time, so on average 1.25
+	query := bindings.OsmosisQuery{
+		ArithmeticTwap: &bindings.ArithmeticTwap{
+			PoolId:          starPoolID,
+			QuoteAssetDenom: "ustar",
+			BaseAssetDenom:  "uosmo",
+			StartTime:       startTime.UnixMilli(),
+			EndTime:         ctx.BlockTime().UnixMilli(),
+		},
+	}
+
+	resp := bindings.ArithmeticTwapResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	require.NotNil(t, resp.Twap)
+
+	twap, err := sdk.NewDecFromStr(resp.Twap)
+	require.NoError(t, err)
+
+	require.Equal(t, sdk.NewDecWithPrec(125, 2), twap)
+}
+
+func TestQueryArithmeticTwapToNow(t *testing.T) {
+	actor := RandomAccountAddress()
+	osmosis, ctx := SetupCustomApp(t, actor)
+
+	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+
+	poolFunds := []sdk.Coin{
+		sdk.NewInt64Coin("uosmo", 100000000),
+		sdk.NewInt64Coin("ustar", 200000000),
+	}
+	// 20 star to 1 osmo
+	starPoolID := preparePool(t, ctx, osmosis, actor, poolFunds)
+
+	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	require.NotEmpty(t, reflect)
+
+	// TODO: figure out why it errors when we use start time without second
+	startTime := ctx.BlockTime().Add(time.Second)
+
+	_, err := osmosis.GAMMKeeper.SwapExactAmountIn(ctx, actor, starPoolID, sdk.NewCoin("uosmo", sdk.NewInt(100000000)), "ustar", sdk.NewInt(1))
+	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 20))
+	reqEndBlock := abci.RequestEndBlock{Height: ctx.BlockHeight()}
+	osmosis.EndBlocker(ctx, reqEndBlock)
+
+	query := bindings.OsmosisQuery{
+		ArithmeticTwapToNow: &bindings.ArithmeticTwapToNow{
+			PoolId:          starPoolID,
+			QuoteAssetDenom: "ustar",
+			BaseAssetDenom:  "uosmo",
+			StartTime:       startTime.UnixMilli(),
+		},
+	}
+
+	resp := bindings.ArithmeticTwapToNowResponse{}
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	require.NotNil(t, resp.Twap)
+
+	twap, err := strconv.ParseFloat(resp.Twap, 32)
+	require.NoError(t, err)
+
+	require.Equal(t, 0.5, twap)
 }
 
 func TestQueryEstimateSwap(t *testing.T) {

@@ -10,37 +10,30 @@ version_to_replace=$(echo $import_path_to_replace | sed 's/g.*v//')
 echo Current import paths are $version_to_replace, replacing with $NEXT_MAJOR_VERSION
 
 # list all folders containing Go modules.
-modules=$(go list ./... | sed "s/g.*v${version_to_replace}\///")
+modules=$(go list -tags e2e ./... | sed "s/g.*v${version_to_replace}\///")
 
 replace_paths() {
     file="${1}"
     sed -i "s/github.com\/osmosis-labs\/osmosis\/v${version_to_replace}/github.com\/osmosis-labs\/osmosis\/v${NEXT_MAJOR_VERSION}/g" ${file}
 }
 
-echo "Replacing import paths in Go files"
-for mod in $modules;
-do
-    for file in $mod/*; do
-        if [ -f "${file}" ]; then
-            replace_paths $file
-        fi
-    done
-done
+echo "Replacing import paths in all files"
 
-echo "Replacing import paths in proto files"
-for file in $(find proto/osmosis -type f -name "*.proto"); do
-    replace_paths $file
-done
+files=$(find ./ -type f -and -not \( -path "./vendor*" -or -path "./.git*" -or -name "*.md" \))
 
-# protocgen.sh
-replace_paths "scripts/protocgen.sh"
+echo "Updating all files"
+for file in $files; do
+    replace_paths ${file}
+done
 
 echo "Updating go.mod and vendoring"
 # go.mod
 replace_paths "go.mod"
 go mod vendor >/dev/null
 
-echo "running make proto-gen"
-# ensure protos match generated Go files
+# ensure that generated files are updated.
 # N.B.: This must be run after go mod vendor.
+echo "running make proto-gen"
 make proto-gen >/dev/null
+echo "running make run-querygen"
+make run-querygen >/dev/null

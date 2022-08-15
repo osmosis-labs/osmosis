@@ -166,6 +166,7 @@ docs:
 	@echo
 	@echo "=========== Generate Complete ============"
 	@echo
+.PHONY: docs
 
 protoVer=v0.7
 protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
@@ -181,6 +182,13 @@ proto-format:
 	@echo "Formatting Protobuf files"
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
 		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
+
+###############################################################################
+###                                Querygen                                 ###
+###############################################################################
+
+run-querygen:
+	@go run cmd/querygen/main.go
 
 ###############################################################################
 ###                                 Devdoc                                  ###
@@ -209,11 +217,9 @@ sync-docs:
 ###############################################################################
 
 PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'tests/simulator|e2e')
-PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
+PACKAGES_E2E=$(shell go list -tags e2e ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
-
-include sims.mk
 
 test: test-unit test-build
 
@@ -228,14 +234,23 @@ test-race:
 test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 30m -coverprofile=coverage.txt -tags='norace' -covermode=atomic $(PACKAGES_UNIT)
 
-test-sim:
+test-sim-suite:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
 
+test-sim-app:
+	@VERSION=$(VERSION) go test -mod=readonly -run ^TestFullAppSimulation -v $(PACKAGES_SIM)
+
+test-sim-determinism:
+	@VERSION=$(VERSION) go test -mod=readonly -run ^TestAppStateDeterminism -v $(PACKAGES_SIM)
+
+test-sim-bench:
+	@VERSION=$(VERSION) go test -benchmem -run ^BenchmarkFullAppSimulation -bench ^BenchmarkFullAppSimulation -cpuprofile cpu.out $(PACKAGES_SIM)
+
 test-e2e:
-	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v11" go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" OSMOSIS_E2E_DEBUG_LOG=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-e2e-skip-upgrade:
-	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-mutation:
 	@bash scripts/mutation-test.sh
@@ -248,13 +263,13 @@ build-e2e-script:
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
 
 docker-build-debug:
-	@docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis:debug --build-arg BASE_IMG_TAG=debug -f Dockerfile .
 
 docker-build-e2e-init-chain:
-	@docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain -f tests/e2e/initialization/init.Dockerfile .
 
 docker-build-e2e-init-node:
-	@docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node -f tests/e2e/initialization/init.Dockerfile .
 
 .PHONY: test-mutation
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -27,11 +27,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/simulation"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v10/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/simulation"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/client/rest"
 )
 
 var (
@@ -45,12 +45,11 @@ var (
 
 // Implements the AppModuleBasic interface for the module.
 type AppModuleBasic struct {
-	cdc codec.Codec
 }
 
 // NewAppModuleBasic creates a new AppModuleBasic struct.
-func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
-	return AppModuleBasic{cdc: cdc}
+func NewAppModuleBasic() AppModuleBasic {
+	return AppModuleBasic{}
 }
 
 // Name returns the module's name.
@@ -120,12 +119,12 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule struct.
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,
+func NewAppModule(keeper keeper.Keeper,
 	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
 	epochKeeper types.EpochKeeper,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(cdc),
+		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,

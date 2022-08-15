@@ -7,14 +7,6 @@
   },
   "apis": [
     {
-      "url": "../../tmp-swagger-gen/osmosis/gamm/v1beta1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "GAMMParams"
-        }
-      }
-    },
-    {
       "url": "../../tmp-swagger-gen/osmosis/epochs/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -23,18 +15,10 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/osmosis/pool-incentives/v1beta1/query.swagger.json",
+      "url": "../../tmp-swagger-gen/osmosis/gamm/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "PoolIncentivesParams"
-        }
-      }
-    },
-    {
-      "url": "../../tmp-swagger-gen/osmosis/lockup/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "LockupParams"
+          "Params": "GAMMParams"
         }
       }
     },
@@ -47,10 +31,10 @@
       }
     },
     {
-      "url": "../../tmp-swagger-gen/osmosis/claim/v1beta1/query.swagger.json",
+      "url": "../../tmp-swagger-gen/osmosis/lockup/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "ClaimParams"
+          "Params": "LockupParams"
         }
       }
     },
@@ -63,6 +47,40 @@
       }
     },
     {
+      "url": "../../tmp-swagger-gen/osmosis/pool-incentives/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "LockableDurations": "PoolLockableDurations",
+          "Params": "PoolIncentivesParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/osmosis/superfluid/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "SuperfluidParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/osmosis/tokenfactory/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "TokenfactoryParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/osmosis/txfees/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "TxFeesParams",
+          "BaseDenom": "TxFeesBaseDenom"
+        }
+      }
+    },
+    {
       "url": "../../tmp-swagger-gen/cosmos/auth/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -71,10 +89,26 @@
       }
     },
     {
+      "url": "../../tmp-swagger-gen/cosmos/authz/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "AuthzParams"
+        }
+      }
+    },
+    {
       "url": "../../tmp-swagger-gen/cosmos/bank/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "BankParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/cosmos/base/tendermint/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "BaseParams"
         }
       }
     },
@@ -95,10 +129,26 @@
       }
     },
     {
+      "url": "../../tmp-swagger-gen/cosmos/feegrant/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "FeegrantParams"
+        }
+      }
+    },
+    {
       "url": "../../tmp-swagger-gen/cosmos/gov/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "GovParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/cosmos/mint/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "CosmosMintParams"
         }
       }
     },
@@ -129,42 +179,16 @@
       }
     },
     {
+      "url": "../../tmp-swagger-gen/cosmos/tx/v1beta1/service.swagger.json",
+      "dereference": {
+        "circular": "ignore"
+      }
+    },
+    {
       "url": "../../tmp-swagger-gen/cosmos/upgrade/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "UpgradeParams"
-        }
-      }
-    },
-    {
-      "url": "../../tmp-swagger-gen/ibc/core/channel/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "IBCChannelParams"
-        }
-      }
-    },
-    {
-      "url": "../../tmp-swagger-gen/ibc/core/client/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "IBCClientParams"
-        }
-      }
-    },
-    {
-      "url": "../../tmp-swagger-gen/ibc/core/connection/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "IBCConnectionParams"
-        }
-      }
-    },
-    {
-      "url": "../../tmp-swagger-gen/ibc/applications/transfer/v1/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "IBCTransferParams"
         }
       }
     }

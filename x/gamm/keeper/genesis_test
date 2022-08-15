@@ -11,10 +11,10 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 func TestGammInitGenesis(t *testing.T) {
@@ -41,13 +41,13 @@ func TestGammInitGenesis(t *testing.T) {
 
 	gamm.InitGenesis(ctx, *app.GAMMKeeper, types.GenesisState{
 		Pools:          []*codectypes.Any{any},
-		NextPoolNumber: 2,
+		NextPoolId: 2,
 		Params: types.Params{
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)},
 		},
 	}, app.AppCodec())
 
-	require.Equal(t, app.GAMMKeeper.GetNextPoolNumberAndIncrement(ctx), uint64(2))
+	require.Equal(t, app.GAMMKeeper.GetNextPoolIdAndIncrement(ctx), uint64(2))
 	poolStored, err := app.GAMMKeeper.GetPoolAndPoke(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
@@ -105,7 +105,7 @@ func TestGammExportGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	genesis := gamm.ExportGenesis(ctx, *app.GAMMKeeper)
-	require.Equal(t, genesis.NextPoolNumber, uint64(3))
+	require.Equal(t, genesis.NextPoolId, uint64(3))
 	require.Len(t, genesis.Pools, 2)
 }
 
