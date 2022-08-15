@@ -47,8 +47,9 @@ func NewICS4Middleware(
 }
 
 func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
-	contractRaw := i.ParamSpace.GetRaw(ctx, []byte("contract"))
-	if contractRaw == nil {
+	var params types.Params
+	i.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
+	if params.ContractAddress == "" {
 		// The contract has not been configured. Continue as usual
 		return i.channel.SendPacket(ctx, chanCap, packet)
 	}
@@ -63,7 +64,7 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 		ctx,
 		i.WasmKeeper,
 		"send_packet",
-		string(contractRaw),
+		params.ContractAddress,
 		channelValue,
 		packet.GetSourceChannel(),
 		sender.GetAddress(),
@@ -184,8 +185,9 @@ func (im *IBCModule) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
-	contractRaw := im.ics4Middleware.ParamSpace.GetRaw(ctx, []byte("contract"))
-	if contractRaw == nil {
+	var params types.Params
+	im.ics4Middleware.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
+	if params.ContractAddress == "" {
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
@@ -200,7 +202,7 @@ func (im *IBCModule) OnRecvPacket(
 		ctx,
 		im.ics4Middleware.WasmKeeper,
 		"recv_packet",
-		string(contractRaw),
+		params.ContractAddress,
 		channelValue,
 		packet.GetDestChannel(),
 		sender.GetAddress(),
