@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis/v10
+module github.com/osmosis-labs/osmosis/v11
 
 go 1.18
 
@@ -6,7 +6,7 @@ require (
 	github.com/CosmWasm/wasmd v0.27.0
 	github.com/CosmWasm/wasmvm v1.0.0
 	github.com/cosmos/btcutil v1.0.4
-	github.com/cosmos/cosmos-sdk v0.45.6
+	github.com/cosmos/cosmos-sdk v0.46.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.17.3
 	github.com/cosmos/ibc-go/v3 v3.0.0

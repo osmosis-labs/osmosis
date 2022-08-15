@@ -24,10 +24,10 @@ import (
 
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-	dockerconfig "github.com/osmosis-labs/osmosis/v10/tests/e2e/docker"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
+	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
+	dockerconfig "github.com/osmosis-labs/osmosis/v11/tests/e2e/docker"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/util"
 )
 
 type status struct {

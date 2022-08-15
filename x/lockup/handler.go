@@ -3,8 +3,8 @@ package lockup
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )

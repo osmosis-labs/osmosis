@@ -9,12 +9,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	wasmbindings "github.com/osmosis-labs/osmosis/v10/app/wasm/bindings"
-	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	wasmbindings "github.com/osmosis-labs/osmosis/v11/app/wasm/bindings"
+	gammkeeper "github.com/osmosis-labs/osmosis/v11/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v11/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
 )
 
 func CustomMessageDecorator(gammKeeper *gammkeeper.Keeper, bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
