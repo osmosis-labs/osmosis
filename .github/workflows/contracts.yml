@@ -1,0 +1,67 @@
+name: Cosmwasm Contracts
+on:
+  pull_request:
+  push:
+
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workdir: [./x/ibc-rate-limit]
+#        output: [./x/ibc-rate-limit/testdata/rate_limit.wasm]
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          target: wasm32-unknown-unknown
+
+      - name: Build
+        working-directory: ${{ matrix.workdir }}
+        run: >
+          rustup target add wasm32-unknown-unknown;
+          cargo build --release --target wasm32-unknown-unknown
+
+      - name: Test
+        working-directory: ${{ matrix.workdir }}
+        run: >
+          cargo test
+
+#      - name: Check Test Data
+#        working-directory: ${{ matrix.workdir }}
+#        if: ${{ matrix.output != null }}
+#        run: >
+#          ls ${{ matrix.output }};
+#          ls ${{ matrix.output }}/artifacts;
+#          diff ${{ matrix.output }} ./artifacts/*.wasm
+  
+
+  lints:
+    name: Cosmwasm Lints
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workdir: [./x/ibc-rate-limit]
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          components: rustfmt
+          target: wasm32-unknown-unknown
+
+      - name: Format
+        working-directory: ${{ matrix.workdir }}
+        run: >
+          cargo fmt --all -- --check
