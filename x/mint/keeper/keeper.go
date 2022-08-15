@@ -17,15 +17,15 @@ import (
 
 // Keeper of the mint store.
 type Keeper struct {
-	cdc              codec.BinaryCodec
-	storeKey         sdk.StoreKey
-	paramSpace       paramtypes.Subspace
-	accountKeeper    types.AccountKeeper
-	bankKeeper       types.BankKeeper
-	distrKeeper      types.DistrKeeper
-	epochKeeper      types.EpochKeeper
-	hooks            types.MintHooks
-	feeCollectorName string
+	cdc                 codec.BinaryCodec
+	storeKey            sdk.StoreKey
+	paramSpace          paramtypes.Subspace
+	accountKeeper       types.AccountKeeper
+	bankKeeper          types.BankKeeper
+	communityPoolKeeper types.CommunityPoolKeeper
+	epochKeeper         types.EpochKeeper
+	hooks               types.MintHooks
+	feeCollectorName    string
 }
 
 type invalidRatioError struct {
@@ -50,7 +50,7 @@ const emptyWeightedAddressReceiver = ""
 // NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
 	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper, epochKeeper types.EpochKeeper,
+	ak types.AccountKeeper, bk types.BankKeeper, ck types.CommunityPoolKeeper, epochKeeper types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
@@ -64,14 +64,14 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:              cdc,
-		storeKey:         key,
-		paramSpace:       paramSpace,
-		accountKeeper:    ak,
-		bankKeeper:       bk,
-		distrKeeper:      dk,
-		epochKeeper:      epochKeeper,
-		feeCollectorName: feeCollectorName,
+		cdc:                 cdc,
+		storeKey:            key,
+		paramSpace:          paramSpace,
+		accountKeeper:       ak,
+		bankKeeper:          bk,
+		communityPoolKeeper: ck,
+		epochKeeper:         epochKeeper,
+		feeCollectorName:    feeCollectorName,
 	}
 }
 
@@ -222,7 +222,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 
 	// subtract from original provision to ensure no coins left over after the allocations
 	communityPoolAmount := mintedCoin.Amount.Sub(stakingIncentivesAmount).Sub(poolIncentivesAmount)
-	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(params.MintDenom, communityPoolAmount)), k.accountKeeper.GetModuleAddress(types.ModuleName))
+	err = k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(params.MintDenom, communityPoolAmount)), k.accountKeeper.GetModuleAddress(types.ModuleName))
 	if err != nil {
 		return err
 	}
@@ -279,7 +279,8 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 	// If no developer rewards receivers provided, fund the community pool from
 	// the developer vesting module account.
 	if len(developerRewardsReceivers) == 0 {
-		if err := k.distrKeeper.FundCommunityPool(ctx, devRewardCoins, developerRewardsModuleAccountAddress); err != nil {
+		err := k.communityPoolKeeper.FundCommunityPool(ctx, devRewardCoins, developerRewardsModuleAccountAddress)
+		if err != nil {
 			return sdk.Int{}, err
 		}
 	} else {
@@ -292,7 +293,8 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 			devRewardPortionCoins := sdk.NewCoins(sdk.NewCoin(developerRewardsCoin.Denom, devPortionAmount.TruncateInt()))
 			// fund community pool when rewards address is empty.
 			if w.Address == emptyWeightedAddressReceiver {
-				err := k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins, developerRewardsModuleAccountAddress)
+				err := k.communityPoolKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
+					k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
 				if err != nil {
 					return sdk.Int{}, err
 				}
@@ -315,7 +317,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 	// stemming from the distribution of developer rewards to each of the accounts.
 	newDeveloperAccountBalance := k.bankKeeper.GetBalance(ctx, developerRewardsModuleAccountAddress, developerRewardsCoin.Denom)
 	truncationDelta := devRewardCoins.Sub(sdk.NewCoins(oldDeveloperAccountBalance.Sub(newDeveloperAccountBalance)))
-	if err := k.distrKeeper.FundCommunityPool(ctx, truncationDelta, developerRewardsModuleAccountAddress); err != nil {
+	if err := k.communityPoolKeeper.FundCommunityPool(ctx, truncationDelta, developerRewardsModuleAccountAddress); err != nil {
 		return sdk.Int{}, err
 	}
 
@@ -344,7 +346,7 @@ func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, e
 	developerVestingDelta := expectedTotalVestedByCurrentEpoch.Sub(developerVestedAmount.ToDec()).TruncateInt()
 	mintedDelta := expectedTotalMintedByCurrentEpoch.Sub(mintedAmount.ToDec()).TruncateInt()
 
-	if err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, developerVestingDelta)), k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)); err != nil {
+	if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, developerVestingDelta)), k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)); err != nil {
 		return sdk.Int{}, err
 	}
 
@@ -356,7 +358,7 @@ func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, e
 		return sdk.Int{}, err
 	}
 
-	if err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta)), k.accountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
+	if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta)), k.accountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
 		return sdk.Int{}, err
 	}
 

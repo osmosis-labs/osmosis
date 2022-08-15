@@ -14,8 +14,6 @@ import (
 
 // AccountKeeper interface contains functions for getting accounts and the module address
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
-
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, name string) authtypes.ModuleAccountI
 }
@@ -23,8 +21,6 @@ type AccountKeeper interface {
 // BankKeeper sends tokens across modules and is able to get account balances.
 type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
 }
 
 // GAMMKeeper gets the pool interface from poolID.
@@ -43,7 +39,6 @@ type IncentivesKeeper interface {
 
 // DistrKeeper handles pool-fees functionality - setting / getting fees and funding the community pool.
 type DistrKeeper interface {
-	GetFeePool(ctx sdk.Context) (feePool distrtypes.FeePool)
 	SetFeePool(ctx sdk.Context, feePool distrtypes.FeePool)
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
