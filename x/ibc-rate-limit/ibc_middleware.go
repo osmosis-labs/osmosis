@@ -12,8 +12,8 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
-	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
 )
 
 var (

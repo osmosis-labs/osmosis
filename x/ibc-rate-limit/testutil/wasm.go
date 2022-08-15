@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
 )
 

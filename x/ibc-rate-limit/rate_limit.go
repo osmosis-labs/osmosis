@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
-	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
 )
 
 func CheckRateLimits(ctx sdk.Context, wasmKeeper *wasmkeeper.Keeper,

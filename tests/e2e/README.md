@@ -171,6 +171,9 @@ of the height in which the network should fork. This should match the ForkHeight
 
 - `OSMOSIS_E2E_UPGRADE_VERSION` - string of what version will be upgraded to (for example, "v10")
 
+- `OSMOSIS_E2E_DEBUG_LOG` - when true, prints debug logs from executing CLI commands
+via Docker containers. Set to trus in CI by default.
+
 #### VS Code Debug Configuration
 
 This debug configuration helps to run e2e tests locally and skip the desired tests.
@@ -197,6 +200,7 @@ This debug configuration helps to run e2e tests locally and skip the desired tes
         "OSMOSIS_E2E_SKIP_CLEANUP": "true",
         "OSMOSIS_E2E_SKIP_STATE_SYNC": "true",
         "OSMOSIS_E2E_UPGRADE_VERSION": "v10",
+        "OSMOSIS_E2E_DEBUG_LOG": "true",
         "OSMOSIS_E2E_FORK_HEIGHT": "4713065" # this is v10 fork height.
     }
 }

@@ -16,10 +16,10 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	"github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/testutil"
-	"github.com/osmosis-labs/osmosis/v10/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/testutil"
+	"github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
 )
 
