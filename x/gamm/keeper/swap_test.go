@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-  "github.com/osmosis-labs/osmosis/v11/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v11/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
@@ -313,9 +313,9 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	for _, test := range testCases {
 		suite.Run(test.name, func() {
 			// Check swaps
-			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, testCoin, "bar", sdk.ZeroInt())
-			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
-			if tc.expectPass {
+			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.poolId, testCoin, "bar", sdk.ZeroInt())
+			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
+			if test.expectPass {
 				suite.Require().NoError(swapInErr)
 				suite.Require().NoError(swapOutErr)
 			} else {
