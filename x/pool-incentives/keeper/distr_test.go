@@ -21,7 +21,8 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 			Weight:  sdk.NewDec(1),
 		},
 	}
-	suite.App.MintKeeper.SetParams(suite.Ctx, params)
+	mintKeeper.SetParams(suite.Ctx, params)
+	mintKeeper.SetMinter(suite.Ctx, minttypes.NewMinter(sdk.NewDec(1)))
 
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
 	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
@@ -29,7 +30,9 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 	err := mintKeeper.MintCoins(suite.Ctx, mintCoins)
 	suite.NoError(err)
 
-	err = mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin) // this calls AllocateAsset via hook
+	mintKeeper.AfterEpochEnd(suite.Ctx, params.GetEpochIdentifier(), 1)
+
+	// err = mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin) // this calls AllocateAsset via hook
 	suite.NoError(err)
 
 	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *suite.App.DistrKeeper)

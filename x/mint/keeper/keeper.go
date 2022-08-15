@@ -350,12 +350,14 @@ func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, e
 	// Truncation is acceptable because we check delta at the end of every epoch.
 	// As a result, actual minted distributions always approach the expected value.
 	// For distributing delta from mint module account, we have to pre-mint first.
-	if err := k.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta))); err != nil {
-		return sdk.Int{}, err
-	}
+	if mintedDelta.IsPositive() {
+		if err := k.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta))); err != nil {
+			return sdk.Int{}, err
+		}
 
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta)), k.accountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
-		return sdk.Int{}, err
+		if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta)), k.accountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
+			return sdk.Int{}, err
+		}
 	}
 
 	return developerVestingDelta.Add(mintedDelta), nil
