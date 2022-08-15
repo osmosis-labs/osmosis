@@ -10,8 +10,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 // CfmmCommonTestSuite is the common test suite struct of Constant Function Market Maker,
@@ -53,8 +53,7 @@ func (suite *CfmmCommonTestSuite) TestCalculateAmountOutAndIn_InverseRelationshi
 
 	// allow a rounding error of up to 1 for this relation
 	tol := sdk.NewDec(1)
-	_, approxEqual, _, _, _ := osmoutils.DecApproxEq(suite.T(), expected, actual, tol)
-	suite.Require().True(approxEqual)
+	osmoassert.DecApproxEq(suite.T(), expected, actual, tol)
 }
 
 func TestCfmmCommonTestSuite(t *testing.T) {

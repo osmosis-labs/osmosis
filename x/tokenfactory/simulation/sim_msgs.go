@@ -5,10 +5,10 @@ import (
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

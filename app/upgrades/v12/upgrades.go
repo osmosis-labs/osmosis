@@ -5,8 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app/keepers"
-	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v11/app/keepers"
+	"github.com/osmosis-labs/osmosis/v11/app/upgrades"
 )
 
 // We set the app version to pre-upgrade because it will be incremented by one
@@ -40,6 +40,14 @@ func CreateUpgradeHandler(
 			evParams.MaxAgeNumBlocks = 186_092
 
 			bpm.StoreConsensusParams(ctx, cp)
+		}
+
+		// Initialize TWAP state
+		// TODO: Get allPoolIds from gamm keeper, and write test for migration.
+		allPoolIds := []uint64{}
+		err := keepers.TwapKeeper.MigrateExistingPools(ctx, allPoolIds)
+		if err != nil {
+			return nil, err
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)

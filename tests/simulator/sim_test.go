@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v10/app"
+	"github.com/osmosis-labs/osmosis/v11/app"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkSimapp "github.com/cosmos/cosmos-sdk/simapp"
@@ -18,9 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	osmosim "github.com/osmosis-labs/osmosis/v10/simulation/executor"
-	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes/simlogger"
+	osmosim "github.com/osmosis-labs/osmosis/v11/simulation/executor"
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes/simlogger"
 )
 
 // Profile with:
@@ -46,7 +46,7 @@ func TestFullAppSimulation(t *testing.T) {
 	sdkSimapp.FlagCommitValue = true
 	sdkSimapp.FlagVerboseValue = true
 	sdkSimapp.FlagPeriodValue = 10
-	sdkSimapp.FlagSeedValue = 10
+	sdkSimapp.FlagSeedValue = 11
 	fullAppSimulation(t, true)
 }
 

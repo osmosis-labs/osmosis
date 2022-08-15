@@ -44,8 +44,8 @@ message MsgCreateDenom {
 
 ### Mint
 
-Minting of a specific denom is only allowed for the creator of the denom
-registered during `CreateDenom`.
+Minting of a specific denom is only allowed for the current admin.
+Note, the current admin is defaulted to the creator of the denom.
 
 ```go
 message MsgMint {
@@ -66,8 +66,8 @@ message MsgMint {
 
 ### Burn
 
-Burning of a specific denom is only allowed for the creator of the denom
-registered during `CreateDenom`.
+Burning of a specific denom is only allowed for the current admin.
+Note, the current admin is defaulted to the creator of the denom.
 
 ```go
 message MsgBurn {
@@ -88,14 +88,25 @@ message MsgBurn {
 
 ### ChangeAdmin
 
-Burning of a specific denom is only allowed for the creator of the denom
-registered during `CreateDenom`.
+Change the admin of a denom. Note, this is only allowed to be called by the current admin of the denom.
 
 ```go
 message MsgChangeAdmin {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
   string newAdmin = 3 [ (gogoproto.moretags) = "yaml:\"new_admin\"" ];
+}
+```
+
+### SetDenomMetadata
+
+Setting of metadata for a specific denom is only allowed for the admin of the denom.
+It allows the overwriting of the denom metadata in the bank module.
+
+```go
+message MsgChangeAdmin {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.bank.v1beta1.Metadata metadata = 2 [ (gogoproto.moretags) = "yaml:\"metadata\"", (gogoproto.nullable)   = false ];
 }
 ```
 

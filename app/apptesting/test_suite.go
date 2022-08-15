@@ -1,21 +1,27 @@
 package apptesting
 
 import (
+	"encoding/json"
 	"fmt"
+	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -23,11 +29,11 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 )
 
 type KeeperTestHelper struct {
@@ -78,7 +84,7 @@ func (s *KeeperTestHelper) Commit() {
 	oldHeight := s.Ctx.BlockHeight()
 	oldHeader := s.Ctx.BlockHeader()
 	s.App.Commit()
-	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: time.Now().UTC()}
+	newHeader := tmtypes.Header{Height: oldHeight + 1, ChainID: oldHeader.ChainID, Time: oldHeader.Time.Add(time.Second)}
 	s.App.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
 	s.Ctx = s.App.GetBaseApp().NewContext(false, newHeader)
 }
@@ -321,6 +327,45 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	}
 
 	return testAddrs
+}
+
+func TestMessageAuthzSerialization(t *testing.T, msg sdk.Msg) {
+	someDate := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
+	const (
+		mockGranter string = "cosmos1abc"
+		mockGrantee string = "cosmos1xyz"
+	)
+
+	var (
+		mockMsgGrant  authz.MsgGrant
+		mockMsgRevoke authz.MsgRevoke
+		mockMsgExec   authz.MsgExec
+	)
+
+	// Authz: Grant Msg
+	typeURL := sdk.MsgTypeURL(msg)
+	grant, err := authz.NewGrant(someDate, authz.NewGenericAuthorization(typeURL), someDate.Add(time.Hour))
+	require.NoError(t, err)
+
+	msgGrant := authz.MsgGrant{Granter: mockGranter, Grantee: mockGrantee, Grant: grant}
+	msgGrantBytes := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgGrant)))
+	err = authzcodec.ModuleCdc.UnmarshalJSON(msgGrantBytes, &mockMsgGrant)
+	require.NoError(t, err)
+
+	// Authz: Revoke Msg
+	msgRevoke := authz.MsgRevoke{Granter: mockGranter, Grantee: mockGrantee, MsgTypeUrl: typeURL}
+	msgRevokeByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgRevoke)))
+	err = authzcodec.ModuleCdc.UnmarshalJSON(msgRevokeByte, &mockMsgRevoke)
+	require.NoError(t, err)
+
+	// Authz: Exec Msg
+	msgAny, err := cdctypes.NewAnyWithValue(msg)
+	require.NoError(t, err)
+	msgExec := authz.MsgExec{Grantee: mockGrantee, Msgs: []*cdctypes.Any{msgAny}}
+	execMsgByte := json.RawMessage(sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msgExec)))
+	err = authzcodec.ModuleCdc.UnmarshalJSON(execMsgByte, &mockMsgExec)
+	require.NoError(t, err)
+	require.Equal(t, msgExec.Msgs[0].Value, mockMsgExec.Msgs[0].Value)
 }
 
 func GenerateTestAddrs() (string, string) {

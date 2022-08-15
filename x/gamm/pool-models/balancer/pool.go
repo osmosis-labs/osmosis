@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v10/osmomath"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/osmomath"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 //nolint:deadcode
@@ -607,7 +607,8 @@ func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 // this is equivalent to spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
 // but cancels out the common term in weight.
 //
-// panics if pool is misconfigured and has any weight as 0.
+// panics if the pool in state is incorrect, and has any weight that is 0.
+// TODO: Come back and improve docs for this.
 func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec, error) {
 	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
 	if err != nil {
@@ -723,8 +724,9 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 		return numShares, tokensJoined, nil
 	}
 
-	// 4) Still more coins to join, so we update the effective pool state here to account for
-	// join that just happened.
+	// 4) Still more coins to join, so we update our pool tracker map here to account for
+	// join that just happened. Importantly, this step does not actually change the pool state.
+	// Instead, it mutates the pool assets argument to be further used by the caller.
 	// * We add the joined coins to our "current pool liquidity" object (poolAssetsByDenom)
 	// * We increment a variable for our "newTotalShares" to add in the shares that've been added.
 	tokensJoined = tokensIn.Sub(remainingTokensIn)
