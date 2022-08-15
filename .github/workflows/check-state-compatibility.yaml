@@ -1,5 +1,5 @@
-# This workflow runs on every new commit to the latest development branch. 
-# It checks that the new commit didn't break state compatibility by:
+# This workflow checks that a specific commit / branch / tag is state compatible 
+# with the latest osmosis version by:
 
 # - building the new `osmosisd` binary with the latest changes
 # - replaying a configurable number of previous blocks from chain history
@@ -16,7 +16,7 @@
 
 # On the other hand, if the workflow fails, the binary is not state-compatible.
 
-name: check_state_compatibility
+name: Check state compatibility
 
 # ************************************ NOTE ************************************
 # 
@@ -29,47 +29,41 @@ name: check_state_compatibility
 # ******************************************************************************
 
 on:
-  push:
-    branches:
-      - 'v10.x'
   pull_request:
     branches:
-      - 'v10.x'
-  workflow_dispatch:
-    branches:
-      - 'v10.x'
+      - 'v[0-9]+.x'
   schedule:
-      - cron: '0 0 * * *' # Runs at 00:00 UTC every day
+      - cron: '01 23 * * *' # Runs at 01:23 UTC every day
 
 env:
-  SNAPSHOT_URL: https://osmosis-snapshot.sfo3.cdn.digitaloceanspaces.com/osmosis.json
   GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
+  SNAPSHOT_BUCKET: https://osmosis-snapshot.sfo3.cdn.digitaloceanspaces.com
   RPC_ENDPOINT: https://rpc.osmosis.zone
   LCD_ENDPOINT: https://lcd.osmosis.zone
-  DELTA_HALT_HEIGHT: 20
+  DELTA_HALT_HEIGHT: 25
  
 jobs:
 
   check_state_compatibility:
     # DO NOT CHANGE THIS: please read the note above
-    if: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
-    runs-on: osmo-runner
+    if: ${{ github.event_name == 'schedule' || github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
+    runs-on: osmo-runner 
     steps:
       - 
-        name: Checkout commit
-        if: ${{ github.event_name != 'schedule' }}
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - 
-        # If workflow was triggered by a schedule, 
-        # explicitly checkout the correct branch
-        name: Checkout v10.x branch
+        # If workflow was triggered by a schedule, explicitly checkout the latest branch
+        # otherwise checkout the release branch were targetting
+        name: Checkout v11.x branch
         if: ${{ github.event_name == 'schedule' }}
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: v10.x
+          ref: v11.x
+      - 
+        name: Checkout branch
+        if: ${{ github.event_name != 'schedule' }}
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       -
         name: 🔨 Build the osmosisd binary with osmobuilder
         run: |
@@ -83,10 +77,6 @@ jobs:
         name: 🧪 Initialize Osmosis Node
         run:  |
           rm -rf $HOME/.osmosisd/ || true
-<<<<<<< HEAD:.github/workflows/check-state-compatibility.yaml
-          osmosisd init osmo-runner -o
-          wget -O $HOME/.osmosisd/config/genesis.json ${{ env.GENESIS_URL }}
-=======
           osmosisd init runner -o
 
           # Download genesis file if not present
@@ -97,26 +87,29 @@ jobs:
 
           # Copy genesis to config folder
           cp /mnt/data/genesis/osmosis-1/genesis.json $HOME/.osmosisd/config/genesis.json
->>>>>>> c5b74241 (Use external volume as cache && fix backporting height (#2383)):.github/workflows/state-compatibility-check.yml
       -
-        name: ⏬ Download pre-epoch snapshot
+        name: ⏬ Download last pre-epoch snapshot
         run:  |
-          SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.SNAPSHOT_URL }})
-          SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
-          SNAPSHOT=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename' | cut -f 1 -d '.')
+          REPO_MAJOR_VERSION=$(echo $(git describe --tags) | cut -f 1 -d '.') # with v prefix
 
-          # Download snapshot if not already present
-<<<<<<< HEAD:.github/workflows/check-state-compatibility.yaml
-          mkdir -p $HOME/snapshots/
-          if [ ! -d "$HOME/snapshots/$SNAPSHOT" ]; then
-              rm -rf $HOME/snapshots/*
-              mkdir $HOME/snapshots/$SNAPSHOT
-              wget -q -O - $SNAPSHOT_URL | lz4 -d | tar -C $HOME/snapshots/$SNAPSHOT -xvf -
+          # Find current major version via rpc.osmosis.zone/abci_info
+          RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
+          CHAIN_MAJOR_VERSION=$(echo $RPC_ABCI_INFO | dasel --plain -r json  'result.response.version' | cut -f 1 -d '.') # no v prefix
+
+          # Get correct url to fetch snapshot comparing versions
+          if [ $REPO_MAJOR_VERSION == v$CHAIN_MAJOR_VERSION ]; then
+            # I'm in the latest major
+            SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/osmosis.json
+          else
+            SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/osmosis.json
           fi
 
-          # Copy snapshot in Data folder
-          cp -R $HOME/snapshots/$SNAPSHOT/data $HOME/.osmosisd/
-=======
+          # Get the latest pre-epoch snapshot information from bucket
+          SNAPSHOT_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" $SNAPSHOT_INFO_URL)
+          SNAPSHOT_URL=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).url')
+          SNAPSHOT_ID=$(echo $SNAPSHOT_INFO | dasel --plain -r json  '(file=osmosis-1-pre-epoch).filename' | cut -f 1 -d '.')
+
+          # Download snapshot if not already present
           mkdir -p /mnt/data/snapshots/$REPO_MAJOR_VERSION/
           if [ ! -d "/mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID" ]; then
               rm -rf /mnt/data/snapshots/$REPO_MAJOR_VERSION/*
@@ -126,18 +119,11 @@ jobs:
 
           # Copy snapshot in Data folder
           cp -R /mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID/* $HOME/.osmosisd/
->>>>>>> c5b74241 (Use external volume as cache && fix backporting height (#2383)):.github/workflows/state-compatibility-check.yml
       -
         name: 🧪 Configure Osmosis Node
         run:  |
           CONFIG_FOLDER=$HOME/.osmosisd/config
 
-<<<<<<< HEAD:.github/workflows/check-state-compatibility.yaml
-          # Get height of most recent epoch
-          LAST_EPOCH_BLOCK_HEIGHT=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 ${{ env.LCD_ENDPOINT }}/osmosis/epochs/v1beta1/epochs | dasel --plain -r json 'epochs.(identifier=day).current_epoch_start_height')
-          DELTA_HALT_HEIGHT=${{ env.DELTA_HALT_HEIGHT }}
-          HALT_HEIGHT=$(($LAST_EPOCH_BLOCK_HEIGHT + $DELTA_HALT_HEIGHT))
-=======
           # Find current major version via rpc.osmosis.zone/abci_info
           RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
           CHAIN_MAJOR_VERSION=$(echo $RPC_ABCI_INFO | dasel --plain -r json  'result.response.version' | cut -f 1 -d '.')
@@ -164,8 +150,8 @@ jobs:
           fi
 
           HALT_HEIGHT=$(($LAST_EPOCH_BLOCK_HEIGHT + ${{ env.DELTA_HALT_HEIGHT }}))
->>>>>>> c5b74241 (Use external volume as cache && fix backporting height (#2383)):.github/workflows/state-compatibility-check.yml
 
+          echo "Osmosis repo version: $REPO_MAJOR_VERSION"
           echo "Last Epoch Height: $LAST_EPOCH_BLOCK_HEIGHT"
           echo "Halt Height: $HALT_HEIGHT"
 
