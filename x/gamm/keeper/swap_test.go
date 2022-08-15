@@ -282,7 +282,7 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	// Setup test
 	suite.SetupTest()
-	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))
+	testCoin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))
 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
 
 	// Setup active pool
@@ -303,22 +303,26 @@ func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
 	type testCase struct {
 		poolId     uint64
 		expectPass bool
+		name       string
 	}
 	testCases := []testCase{
-		{activePoolId, true},
-		{inactivePoolId, false},
+		{activePoolId, true, "swap succeeds on active pool"},
+		{inactivePoolId, false, "swap fails on inactive pool"},
 	}
 
-	for _, tc := range testCases {
-		// Check swaps
-		_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, testCoin, "bar", sdk.ZeroInt())
-		_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
-		if tc.expectPass {
-			suite.Require().NoError(swapInErr)
-			suite.Require().NoError(swapOutErr)
-		} else {
-			suite.Require().Error(swapInErr)
-			suite.Require().Error(swapOutErr)
-		}
+	for _, test := range testCases {
+		suite.Run(test.name, func() {
+			// Check swaps
+			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], tc.poolId, testCoin, "bar", sdk.ZeroInt())
+			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], tc.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
+			if tc.expectPass {
+				suite.Require().NoError(swapInErr)
+				suite.Require().NoError(swapOutErr)
+			} else {
+				suite.Require().Error(swapInErr)
+				suite.Require().Error(swapOutErr)
+			}
+		})
 	}
+
 }
