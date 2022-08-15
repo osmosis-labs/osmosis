@@ -307,7 +307,7 @@ func getProportions(mintedCoin sdk.Coin, ratio sdk.Dec) (sdk.Coin, error) {
 	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt()), nil
 }
 
-// CreateDeveloperVestingModuleAccount creates the developer vesting module account
+// createDeveloperVestingModuleAccount creates the developer vesting module account
 // and mints amount of tokens to it.
 // Should only be called during the initial genesis creation, never again. Returns nil on success.
 // Returns error in the following cases:
