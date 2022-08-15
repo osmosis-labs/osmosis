@@ -44,15 +44,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 }
 
-func (s *IntegrationTestSuite) TestRateLimitingTestsSetupCorrectly() {
-	// Checking the rate limiting tests are setup correctly
-	//f1, err := ioutil.ReadFile("../../x/ibc-rate-limit/testdata/rate-limiter.wasm")
-	//s.NoError(err)
-	//f2, err := ioutil.ReadFile("./scripts/rate-limiter.wasm")
-	//s.NoError(err)
-	//s.Require().True(bytes.Equal(f1, f2))
-}
-
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	// TODO: Add E2E tests for this
 	if s.skipIBC {

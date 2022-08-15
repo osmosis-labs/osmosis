@@ -1,8 +1,12 @@
 package ibc_rate_limit_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -246,4 +250,15 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	// send 1 token.
 	// If the contract doesn't have a quota for the current channel, all transfers are allowed
 	suite.AssertSendSuccess(true, suite.NewValidMessage(true, sdk.NewInt(1)))
+}
+
+func (s *MiddlewareTestSuite) TestRateLimitingE2ETestsSetupCorrectly() {
+	// Checking the rate limiting e2e tests are setup correctly
+	_, filename, _, _ := runtime.Caller(0)
+	dir := filepath.Dir(filename)
+	f1, err := ioutil.ReadFile(fmt.Sprintf("%s/testdata/rate_limiter.wasm", dir))
+	s.Require().NoError(err)
+	f2, err := ioutil.ReadFile(fmt.Sprintf("%s/../../tests/e2e/scripts/rate_limiter.wasm", dir))
+	s.Require().NoError(err)
+	s.Require().True(bytes.Equal(f1, f2))
 }
