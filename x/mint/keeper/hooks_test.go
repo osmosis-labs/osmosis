@@ -13,6 +13,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type mintHooksMock struct {
+	hookCallCount int
+}
+
+func (hm *mintHooksMock) AfterDistributeMintedCoin(ctx sdk.Context) {
+	hm.hookCallCount++
+}
+
+var _ types.MintHooks = (*mintHooksMock)(nil)
+
 const (
 	// Most values here are taken from mainnet genesis to mimic real-world behavior:
 	// https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
@@ -372,6 +382,11 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			mintKeeper.SetMinter(ctx, types.Minter{
 				EpochProvisions: defaultGenesisEpochProvisionsDec,
 			})
+			// We reset the hooks with a mock to simplify the assertions
+			// about the results of the call to DistributeMintedCoin.
+			// The goal is to assert that AfterDistributeMintedCoin
+			// is called once.
+			mintKeeper.SetMintHooksUnsafe(&mintHooksMock{})
 
 			expectedDevRewards := tc.expectedDistribution.Mul(mintParams.DistributionProportions.DeveloperRewards)
 
@@ -403,6 +418,11 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			expectedDevRewardsTruncated := expectedDevRewards.TruncateInt()
 			expectedDeveloperVestingAccountBalance := developerAccountBalanceBeforeHook.Amount.Sub(expectedDevRewardsTruncated)
 			expectedMintModuleAccountBalance := sdk.ZeroInt()
+
+			if !tc.expectedDistribution.IsZero() {
+				// Validate that AfterDistributeMintedCoin hook was called once.
+				suite.Require().Equal(1, mintKeeper.GetMintHooksUnsafe().(*mintHooksMock).hookCallCount)
+			}
 
 			// N.B:
 			// Developer vesting module account balance decreases by the distribution amount.

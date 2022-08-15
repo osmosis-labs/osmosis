@@ -51,7 +51,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		mintedCoin := minter.EpochProvision(params)
 		mintedCoins := sdk.NewCoins(mintedCoin)
 
-		err := k.MintCoins(ctx, mintedCoins)
+		err := k.bankKeeper.MintCoins(ctx, types.ModuleName, mintedCoins)
 		if err != nil {
 			panic(err)
 		}
