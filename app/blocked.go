@@ -14,8 +14,8 @@ func (app *OsmosisApp) BlockedAddrs() map[string]bool {
 		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
 	}
 
-	// We block all OFAC-blocked ETH addresses from receiving tokens as well
-	// The list is sourced from: https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml
+	// Deleted all OFAC blocked addresses. To be decentralized, access should remain permissionless. Preemptive compliance
+	// is a dangerous precedent that will destroy the philosophical underpinnings of decentralized applications.
 	ofacRawEthAddrs := []string{}
 	for _, addr := range ofacRawEthAddrs {
 		blockedAddrs[addr] = true
