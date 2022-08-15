@@ -138,7 +138,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-// DistributeMintedCoins implements distribution of minted coins from mint to external modules.
+// DistributeMintedCoin implements distribution of a minted coin from mint to external modules.
 func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
 	params := k.GetParams(ctx)
 	proportions := params.DistributionProportions
