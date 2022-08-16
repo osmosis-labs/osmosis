@@ -230,11 +230,10 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			}
 
 			// mints coins so supply exists on chain
-			err := mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.mintCoin))
-			suite.Require().NoError(err)
+			suite.MintCoins(sdk.NewCoins(tc.mintCoin))
 
 			// System under test.
-			err = mintKeeper.DistributeMintedCoin(ctx, tc.mintCoin)
+			err := mintKeeper.DistributeMintedCoin(ctx, tc.mintCoin)
 			suite.Require().NoError(err)
 
 			// validate that AfterDistributeMintedCoin hook was called once.
@@ -391,7 +390,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 				ctx := suite.Ctx
 
 				// Setup.
-				suite.Require().NoError(mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.preMintCoin)))
+				suite.MintCoins(sdk.NewCoins(tc.preMintCoin))
 
 				// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
 				// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
