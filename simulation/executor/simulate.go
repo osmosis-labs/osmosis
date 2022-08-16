@@ -66,6 +66,19 @@ func SimulateFromSeed(
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
 
+	// Set up sql table
+	if config.WriteStatsToDB {
+		sts := `
+		DROP TABLE IF EXISTS blocks;
+		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT);
+		`
+		_, err := db.Exec(sts)
+
+		if err != nil {
+			tb.Fatal(err)
+		}
+	}
+
 	// Encapsulate the bizarre initialization logic that must be cleaned.
 	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config)
 	if err != nil {
@@ -258,18 +271,8 @@ func (simState *simState) logActionResult(
 	opMsg simulation.OperationMsg, db *sql.DB, actionErr error) {
 	opMsg.LogEvent(simState.eventStats.Tally)
 	if config.WriteStatsToDB {
-		sts := `
-		DROP TABLE IF EXISTS blocks;
-		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT);
-		`
-		_, err := db.Exec(sts)
-
-		if err != nil {
-			simState.tb.Fatal(err)
-		}
-
-		sts = "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed) VALUES($1,$2,$3,$4,$5,$6,$7);"
-		_, err = db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed)
+		sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed) VALUES($1,$2,$3,$4,$5,$6,$7);"
+		_, err := db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed)
 		if err != nil {
 			simState.tb.Fatal(err)
 		}
