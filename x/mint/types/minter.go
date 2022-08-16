@@ -15,7 +15,9 @@ var (
 // provisions values.
 func NewMinter(epochProvisions sdk.Dec) Minter {
 	return Minter{
-		EpochProvisions: epochProvisions,
+		EpochProvisions:       epochProvisions,
+		LastTotalMintedAmount: sdk.ZeroDec(),
+		LastTotalVestedAmount: sdk.ZeroDec(),
 	}
 }
 
