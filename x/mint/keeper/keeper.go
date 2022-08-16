@@ -299,7 +299,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	return developerRewardsCoin.Amount, nil
 }
 
-// getProportion returns value multipled by ratio or error if ratio is greater than 1.
+// getProportion returns value multiplied by ratio or error if ratio is greater than 1.
 func getProportion(value sdk.Dec, ratio sdk.Dec) (sdk.Dec, error) {
 	if ratio.GT(sdk.OneDec()) {
 		return sdk.Dec{}, invalidRatioError{ratio}
