@@ -148,7 +148,6 @@ func TestAppStateDeterminism(t *testing.T) {
 	// if !osmosim.FlagEnabledValue {
 	// 	t.Skip("skipping application simulation")
 	// }
-	var sqlDB *sql.DB
 
 	config := osmosim.NewConfigFromFlags()
 	config.ExportParamsPath = ""
@@ -212,7 +211,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				initFns,
 				osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 				config,
-				sqlDB,
+				nil,
 			)
 
 			require.NoError(t, simErr)
