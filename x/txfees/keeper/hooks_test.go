@@ -15,7 +15,7 @@ var defaultPooledAssetAmount = int64(500)
 
 func (suite *KeeperTestSuite) preparePool(denom string) (poolID uint64, pool gammtypes.PoolI) {
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
-	poolID = suite.PrepareUni2PoolWithAssets(
+	poolID = suite.PrepareUni2PoolWithCoins(
 		sdk.NewInt64Coin(baseDenom, defaultPooledAssetAmount),
 		sdk.NewInt64Coin(denom, defaultPooledAssetAmount),
 	)

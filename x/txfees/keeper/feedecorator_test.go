@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 	uion := "uion"
 
-	uionPoolId := suite.PrepareUni2PoolWithAssets(
+	uionPoolId := suite.PrepareUni2PoolWithCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin(uion, 500),
 	)
@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		// reset pool and accounts for each test
 		suite.SetupTest(false)
 		suite.Run(tc.name, func() {
-			uionPoolId := suite.PrepareUni2PoolWithAssets(
+			uionPoolId := suite.PrepareUni2PoolWithCoins(
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 				sdk.NewInt64Coin(uion, 500),
 			)

@@ -14,11 +14,13 @@ import (
 
 // TODO: Consider switching this everywhere
 var (
-	denom0            = "token/B"
-	denom1            = "token/A"
-	defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
-	baseTime          = time.Unix(1257894000, 0).UTC()
-	tPlusOne          = baseTime.Add(time.Second)
+	denom0                 = "token/B"
+	denom1                 = "token/A"
+	denom2                 = "token/C"
+	defaultUniV2Coins      = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
+	defaultThreeAssetCoins = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000), sdk.NewInt64Coin(denom2, 1_000_000_000))
+	baseTime               = time.Unix(1257894000, 0).UTC()
+	tPlusOne               = baseTime.Add(time.Second)
 )
 
 type TestSuite struct {
@@ -38,7 +40,7 @@ func (s *TestSuite) SetupTest() {
 
 // sets up a new two asset pool, with spot price 1
 func (s *TestSuite) setupDefaultPool() (poolId uint64, denomA, denomB string) {
-	poolId = s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
+	poolId = s.PrepareUni2PoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
 	denomA, denomB = defaultUniV2Coins[1].Denom, defaultUniV2Coins[0].Denom
 	return
 }

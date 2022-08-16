@@ -501,7 +501,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 	for _, tc := range tests {
 		suite.SetupTest()
 		suite.Run(tc.name, func() {
-			poolId := suite.PrepareUni2PoolWithAssets(
+			poolId := suite.PrepareUni2PoolWithCoins(
 				tc.baseDenomPoolInput,
 				tc.quoteDenomPoolInput,
 			)
