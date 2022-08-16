@@ -75,32 +75,6 @@ func NewKeeper(
 	}
 }
 
-// CreateDeveloperVestingModuleAccount creates the developer vesting module account
-// and mints amount of tokens to it.
-// Should only be called during the initial genesis creation, never again. Returns nil on success.
-// Returns error in the following cases:
-// - amount is nil or zero.
-// - if ctx has block height greater than 0.
-// - developer vesting module account is already created prior to calling this method.
-func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
-	if amount.IsNil() || amount.Amount.IsZero() {
-		return sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero")
-	}
-	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
-		return sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName)
-	}
-
-	moduleAcc := authtypes.NewEmptyModuleAccount(
-		types.DeveloperVestingModuleAcctName, authtypes.Minter)
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
-
-	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
