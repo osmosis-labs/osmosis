@@ -1,11 +1,13 @@
 package simapp
 
 import (
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"os"
 	"testing"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -45,14 +47,34 @@ func TestFullAppSimulation(t *testing.T) {
 	osmosim.FlagVerboseValue = true
 	osmosim.FlagPeriodValue = 10
 	osmosim.FlagSeedValue = 11
+	osmosim.FlagWriteStatsToDB = true
 	fullAppSimulation(t, true)
 }
 
 func fullAppSimulation(tb testing.TB, is_testing bool) {
+	var sqlDB *sql.DB
 	config, db, dir, logger, _, err := osmosim.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
+	if config.WriteStatsToDB {
+		sqlDB, err = sql.Open("sqlite3", "./blocks.db")
+		if err != nil {
+			tb.Fatal(err)
+		}
+		defer sqlDB.Close()
+		sts := `
+	DROP TABLE IF EXISTS blocks;
+	CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT);
+	`
+
+		_, err = sqlDB.Exec(sts)
+
+		if err != nil {
+			tb.Fatal(err)
+		}
+	}
+
 	logger = simlogger.NewSimLogger(logger)
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
@@ -102,6 +124,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		initFns,
 		osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 		config,
+		sqlDB,
 	)
 
 	if simErr != nil {
@@ -125,6 +148,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	// if !osmosim.FlagEnabledValue {
 	// 	t.Skip("skipping application simulation")
 	// }
+	var sqlDB *sql.DB
 
 	config := osmosim.NewConfigFromFlags()
 	config.ExportParamsPath = ""
@@ -188,6 +212,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				initFns,
 				osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 				config,
+				sqlDB,
 			)
 
 			require.NoError(t, simErr)

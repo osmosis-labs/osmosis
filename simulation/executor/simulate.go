@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"math/rand"
@@ -60,6 +61,7 @@ func SimulateFromSeed(
 	initFunctions InitFunctions,
 	actions []simtypes.ActionsWithMetadata,
 	config Config,
+	db *sql.DB,
 ) (stopEarly bool, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
@@ -82,7 +84,7 @@ func SimulateFromSeed(
 	}()
 
 	testingMode, _, b := getTestingMode(tb)
-	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config)
+	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config, db)
 
 	if !testingMode {
 		b.ResetTimer()
@@ -206,7 +208,7 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.ActionsWithMetadata,
-	simState *simState, config Config,
+	simState *simState, config Config, db *sql.DB,
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
@@ -236,7 +238,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			opMsg.Route = action.ModuleName
 			cleanup()
 
-			simState.logActionResult(header, i, config, blocksize, opMsg, err)
+			simState.logActionResult(header, i, config, blocksize, opMsg, db, err)
 
 			simState.queueOperations(futureOps)
 
@@ -253,8 +255,22 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 // This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
 func (simState *simState) logActionResult(
 	header tmproto.Header, actionIndex int, config Config, blocksize int,
-	opMsg simulation.OperationMsg, actionErr error) {
+	opMsg simulation.OperationMsg, db *sql.DB, actionErr error) {
 	opMsg.LogEvent(simState.eventStats.Tally)
+	var sts string
+	var err error
+	if config.WriteStatsToDB && opMsg.OK {
+		sts = "INSERT INTO blocks(height,module,name,passed, gasWanted, gasUsed) VALUES($1,$2,$3,$4,$5,$6);"
+		_, err = db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed)
+	} else if config.WriteStatsToDB && !opMsg.OK {
+		sts = "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed) VALUES($1,$2,$3,$4,$5,$6,$7);"
+		_, err = db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed)
+	}
+
+	if err != nil {
+		panic(err)
+	}
+
 	if !simState.leanLogs || opMsg.OK {
 		simState.logWriter.AddEntry(MsgEntry(header.Height, int64(actionIndex), opMsg))
 	}
