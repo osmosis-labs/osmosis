@@ -92,6 +92,13 @@ func (s *KeeperTestHelper) Commit() {
 
 // FundAcc funds target address with specified amount.
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
+	minter := s.App.MintKeeper.GetMinter(s.Ctx)
+	for _, coin := range amounts {
+		if coin.Denom == sdk.DefaultBondDenom {
+			minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(coin.Amount.ToDec())
+		}
+	}
+	s.App.MintKeeper.SetMinter(s.Ctx, minter)
 	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
 	s.Require().NoError(err)
 }
@@ -188,7 +195,6 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 	}
 	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
 
-	fmt.Println("beginning block ", s.Ctx.BlockHeight())
 	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
 }
 

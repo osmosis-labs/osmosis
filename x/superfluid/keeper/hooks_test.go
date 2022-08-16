@@ -5,97 +5,97 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
-// 	testCases := []struct {
-// 		name             string
-// 		validatorStats   []stakingtypes.BondStatus
-// 		delegatorNumber  int
-// 		superDelegations []superfluidDelegation
-// 		expRewards       []sdk.Coins
-// 	}{
-// 		{
-// 			"happy path with single validator and delegator",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded},
-// 			1,
-// 			[]superfluidDelegation{{0, 0, 0, 1000000}},
-// 			// bond denom staked in pool = 15_000_000
-// 			// with risk adjustment, the actual bond denom staked via superfluid would be 15_000_000 * (1 - 0.5) = 7_500_000
-// 			// we do an arbitrary swap to set spot price, which adjusts superfluid staked equivalent base denom 20_000_000 * (1 - 0.5) = 10_000_000 during begin block
-// 			// delegation rewards are calculated using the equation (current period cumulative reward ratio - last period cumulative reward ratio) * asset amount
-// 			// in this test case, the calculation for expected reward would be the following (0.99999 - 0) * 10_000_000
-// 			// thus we expect 999_990 stake as rewards
-// 			[]sdk.Coins{{sdk.NewCoin("stake", sdk.NewInt(999990))}},
-// 		},
-// 		{
-// 			"happy path with two validator and delegator each",
-// 			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
-// 			2,
-// 			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
-// 			// reward for the first block propser / lock 0 that has been superfluid staked would be equivalent to calculations done above
-// 			// 999_990 stake as rewards.
-// 			// reward for the second delegation is expected to be different. Amount superfluid staked would be equivalently 7_500_000 stake.
-// 			// This would be the first block propsed by the second validator, current period cumulative reward ratio being 999_86.66684,
-// 			// last period cumulative reward ratio being 0
-// 			// Thus as rewards, we expect 999986stake, calculted using the following equation: (999_86.66684 - 0) * 7_500_000
-// 			[]sdk.Coins{{sdk.NewCoin("stake", sdk.NewInt(999990))}, {sdk.NewCoin("stake", sdk.NewInt(999986))}},
-// 		},
-// 	}
+func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
+	testCases := []struct {
+		name             string
+		validatorStats   []stakingtypes.BondStatus
+		delegatorNumber  int
+		superDelegations []superfluidDelegation
+		expRewards       []sdk.Coins
+	}{
+		{
+			"happy path with single validator and delegator",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded},
+			1,
+			[]superfluidDelegation{{0, 0, 0, 1000000}},
+			// bond denom staked in pool = 15_000_000
+			// with risk adjustment, the actual bond denom staked via superfluid would be 15_000_000 * (1 - 0.5) = 7_500_000
+			// we do an arbitrary swap to set spot price, which adjusts superfluid staked equivalent base denom 20_000_000 * (1 - 0.5) = 10_000_000 during begin block
+			// delegation rewards are calculated using the equation (current period cumulative reward ratio - last period cumulative reward ratio) * asset amount
+			// in this test case, the calculation for expected reward would be the following (0.99999 - 0) * 10_000_000
+			// thus we expect 999_990 stake as rewards
+			[]sdk.Coins{{sdk.NewCoin("stake", sdk.NewInt(999990))}},
+		},
+		{
+			"happy path with two validator and delegator each",
+			[]stakingtypes.BondStatus{stakingtypes.Bonded, stakingtypes.Bonded},
+			2,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			// reward for the first block propser / lock 0 that has been superfluid staked would be equivalent to calculations done above
+			// 999_990 stake as rewards.
+			// reward for the second delegation is expected to be different. Amount superfluid staked would be equivalently 7_500_000 stake.
+			// This would be the first block propsed by the second validator, current period cumulative reward ratio being 999_86.66684,
+			// last period cumulative reward ratio being 0
+			// Thus as rewards, we expect 999986stake, calculted using the following equation: (999_86.66684 - 0) * 7_500_000
+			[]sdk.Coins{{sdk.NewCoin("stake", sdk.NewInt(999990))}, {sdk.NewCoin("stake", sdk.NewInt(999986))}},
+		},
+	}
 
-// 	for _, tc := range testCases {
-// 		suite.Run(tc.name, func() {
-// 			suite.SetupTest()
-// 			valAddrs := suite.SetupValidators(tc.validatorStats)
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			valAddrs := suite.SetupValidators(tc.validatorStats)
 
-// 			denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+			denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
 
-// 			// Generate delegator addresses
-// 			// delAddrs, intermediaryAccs, locks := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
-// 			// suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+			// Generate delegator addresses
+			delAddrs, intermediaryAccs, locks := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
+			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
 
-// 			// run swap and set spot price
-// 			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolIds[0])
-// 			suite.Require().NoError(err)
-// 			coins := pool.GetTotalPoolLiquidity(suite.Ctx)
-// 			suite.SwapAndSetSpotPrice(poolIds[0], coins[1], coins[0])
+			// run swap and set spot price
+			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolIds[0])
+			suite.Require().NoError(err)
+			coins := pool.GetTotalPoolLiquidity(suite.Ctx)
+			suite.SwapAndSetSpotPrice(poolIds[0], coins[1], coins[0])
 
-// 			// run epoch actions
-// 			// run begin block for each validator so that both validator gets block rewards
-// 			for _, valAddr := range valAddrs {
-// 				suite.BeginNewBlockWithProposer(true, valAddr)
-// 			}
+			// run epoch actions
+			// run begin block for each validator so that both validator gets block rewards
+			for _, valAddr := range valAddrs {
+				suite.BeginNewBlockWithProposer(true, valAddr)
+			}
 
-// 			// check lptoken twap value set
-// 			newEpochMultiplier := suite.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[0])
-// 			suite.Require().Equal(newEpochMultiplier, sdk.NewDec(15))
+			// check lptoken twap value set
+			newEpochMultiplier := suite.App.SuperfluidKeeper.GetOsmoEquivalentMultiplier(suite.Ctx, denoms[0])
+			suite.Require().Equal(newEpochMultiplier, sdk.NewDec(15))
 
-// 			for _, lock := range locks {
-// 				// check gauge creation in new block
-// 				intermediaryAccAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)
-// 				intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, intermediaryAccAddr)
-// 				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, intermediaryAcc.GaugeId)
-// 				suite.Require().NoError(err)
-// 				suite.Require().Equal(gauge.Id, intermediaryAcc.GaugeId)
-// 				suite.Require().Equal(gauge.IsPerpetual, true)
-// 				// suite.Require().Equal(tc.expRewards[index], gauge.Coins)
-// 				// suite.Require().Equal(gauge.DistributedCoins.String(), tc.expRewards[index].String())
-// 			}
+			for index, lock := range locks {
+				// check gauge creation in new block
+				intermediaryAccAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)
+				intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, intermediaryAccAddr)
+				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, intermediaryAcc.GaugeId)
+				suite.Require().NoError(err)
+				suite.Require().Equal(gauge.Id, intermediaryAcc.GaugeId)
+				suite.Require().Equal(gauge.IsPerpetual, true)
+				suite.Require().Equal(tc.expRewards[index], gauge.Coins)
+				suite.Require().Equal(gauge.DistributedCoins.String(), tc.expRewards[index].String())
+			}
 
-// 			// check delegation changes
-// 			for _, acc := range intermediaryAccs {
-// 				valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
-// 				suite.Require().NoError(err)
-// 				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, acc.GetAccAddress(), valAddr)
-// 				suite.Require().True(found)
-// 				suite.Require().Equal(sdk.NewDec(7500000), delegation.Shares)
-// 			}
+			// check delegation changes
+			for _, acc := range intermediaryAccs {
+				valAddr, err := sdk.ValAddressFromBech32(acc.ValAddr)
+				suite.Require().NoError(err)
+				delegation, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, acc.GetAccAddress(), valAddr)
+				suite.Require().True(found)
+				suite.Require().Equal(sdk.NewDec(7500000), delegation.Shares)
+			}
 
-// 			// for index, delAddr := range delAddrs {
-// 			// 	balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, delAddr)
-// 			// 	// suite.Require().Equal(tc.expRewards[index], balance)
-// 			// }
-// 		})
-// 	}
-// }
+			for index, delAddr := range delAddrs {
+				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, delAddr)
+				suite.Require().Equal(tc.expRewards[index], balance)
+			}
+		})
+	}
+}
 
 // func (suite *KeeperTestSuite) TestOnStartUnlock() {
 // 	testCases := []struct {
