@@ -28,6 +28,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
 )
 
 type KeeperTestHelper struct {
@@ -74,6 +75,11 @@ func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
 
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestHelper) MintCoins(coins sdk.Coins) {
+	err := s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, coins)
 	s.Require().NoError(err)
 }
 
