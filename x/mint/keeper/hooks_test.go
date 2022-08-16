@@ -1,9 +1,6 @@
 package keeper_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v11/app"
@@ -35,10 +32,6 @@ var (
 		CommunityPool:    sdk.NewDecWithPrec(0o5, 2),
 	}
 )
-
-func TestHooksTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
-}
 
 // TestAfterEpochEnd tests that the after epoch end hook correctly
 // distributes the rewards depending on what epoch it is in.

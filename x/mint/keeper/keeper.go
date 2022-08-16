@@ -204,14 +204,15 @@ func (k Keeper) mintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 
 // distributeToModule distributes mintedCoin multiplied by proportion to the recepientModule account.
 func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Int, error) {
-	distributionCoin, err := getProportions(mintedCoin, proportion)
+	distributionAmount, err := getProportions(mintedCoin.Amount.ToDec(), proportion)
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, sdk.NewCoins(distributionCoin)); err != nil {
+	truncatedDistributionAmount := distributionAmount.TruncateInt()
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, recipientModule, sdk.NewCoins(sdk.NewCoin(mintedCoin.Denom, truncatedDistributionAmount))); err != nil {
 		return sdk.Int{}, err
 	}
-	return distributionCoin.Amount, nil
+	return truncatedDistributionAmount, nil
 }
 
 // distributeDeveloperRewards distributes developer rewards from developer vesting module account
@@ -230,18 +231,20 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 // - weights in developerRewardsReceivers add up to 1.
 // - addresses in developerRewardsReceivers are valid or empty string.
 func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion sdk.Dec, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
-	devRewardCoin, err := getProportions(totalMintedCoin, developerRewardsProportion)
+	devRewardsAmount, err := getProportions(totalMintedCoin.Amount.ToDec(), developerRewardsProportion)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
+	developerRewardsCoin := sdk.NewCoin(totalMintedCoin.Denom, devRewardsAmount.TruncateInt())
+
 	developerRewardsModuleAccountAddress := k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
 	developerAccountBalance := k.bankKeeper.GetBalance(ctx, developerRewardsModuleAccountAddress, totalMintedCoin.Denom)
-	if developerAccountBalance.Amount.LT(devRewardCoin.Amount) {
-		return sdk.Int{}, insufficientDevVestingBalanceError{ActualBalance: developerAccountBalance.Amount, AttemptedDistribution: devRewardCoin.Amount}
+	if developerAccountBalance.Amount.LT(developerRewardsCoin.Amount) {
+		return sdk.Int{}, insufficientDevVestingBalanceError{ActualBalance: developerAccountBalance.Amount, AttemptedDistribution: developerRewardsCoin.Amount}
 	}
 
-	devRewardCoins := sdk.NewCoins(devRewardCoin)
+	devRewardCoins := sdk.NewCoins(developerRewardsCoin)
 	// TODO: https://github.com/osmosis-labs/osmosis/issues/2025
 	// Avoid over-allocating from the mint module address and have to later burn it here:
 	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, devRewardCoins); err != nil {
@@ -262,11 +265,11 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range developerRewardsReceivers {
-			devPortionCoin, err := getProportions(devRewardCoin, w.Weight)
+			devPortionAmount, err := getProportions(developerRewardsCoin.Amount.ToDec(), w.Weight)
 			if err != nil {
 				return sdk.Int{}, err
 			}
-			devRewardPortionCoins := sdk.NewCoins(devPortionCoin)
+			devRewardPortionCoins := sdk.NewCoins(sdk.NewCoin(developerRewardsCoin.Denom, devPortionAmount.TruncateInt()))
 			// fund community pool when rewards address is empty.
 			if w.Address == emptyWeightedAddressReceiver {
 				err := k.communityPoolKeeper.FundCommunityPool(ctx, devRewardPortionCoins,
@@ -293,18 +296,15 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	developerAccountBalance = k.bankKeeper.GetBalance(ctx, developerRewardsModuleAccountAddress, totalMintedCoin.Denom)
 	k.bankKeeper.AddSupplyOffset(ctx, totalMintedCoin.Denom, developerAccountBalance.Amount.Neg())
 
-	return devRewardCoin.Amount, nil
+	return developerRewardsCoin.Amount, nil
 }
 
-// getProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the
-// allocation ratio. Returns error if ratio is greater than 1.
-// TODO: this currently rounds down and is the cause of rounding discrepancies.
-// To be fixed in: https://github.com/osmosis-labs/osmosis/issues/1917
-func getProportions(mintedCoin sdk.Coin, ratio sdk.Dec) (sdk.Coin, error) {
+// getProportions returns value multipled by ratio or error if ratio is greater than 1.
+func getProportions(value sdk.Dec, ratio sdk.Dec) (sdk.Dec, error) {
 	if ratio.GT(sdk.OneDec()) {
-		return sdk.Coin{}, invalidRatioError{ratio}
+		return sdk.Dec{}, invalidRatioError{ratio}
 	}
-	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt()), nil
+	return value.Mul(ratio), nil
 }
 
 // createDeveloperVestingModuleAccount creates the developer vesting module account

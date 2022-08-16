@@ -92,63 +92,67 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 	tests := []struct {
 		name          string
 		ratio         sdk.Dec
-		expectedCoin  sdk.Coin
+		expected      sdk.Dec
 		expectedError error
-		mintedCoin    sdk.Coin
+		minted        sdk.Dec
 	}{
 		{
-			name:         "0 * 0.2 = 0",
-			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
-			ratio:        sdk.NewDecWithPrec(2, 1),
-			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
+			name:     "0 * 0.2 = 0",
+			minted:   sdk.ZeroDec(),
+			ratio:    sdk.NewDecWithPrec(2, 1),
+			expected: sdk.ZeroDec(),
 		},
 		{
-			name:         "100000 * 0.2 = 20000",
-			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000)),
-			ratio:        sdk.NewDecWithPrec(2, 1),
-			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000).Quo(sdk.NewInt(5))),
+			name:     "100000 * 0.2 = 20000",
+			minted:   sdk.NewDec(100000),
+			ratio:    sdk.NewDecWithPrec(2, 1),
+			expected: sdk.NewDec(100000).Quo(sdk.NewDec(5)),
 		},
 		{
-			name:         "123456 * 2/3 = 82304",
-			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(123456)),
-			ratio:        sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
-			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(82304)),
+			name:     "123456 * 2/3 = 82304",
+			minted:   sdk.NewDec(123456),
+			ratio:    sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
+			expected: sdk.NewDec(123456).Mul(sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1))),
 		},
 		{
-			name:       "54617981 * .131/.273 approx = 2.62",
-			mintedCoin: sdk.NewCoin("uosmo", sdk.NewInt(54617981)),
-			ratio:      complexRatioDec, // .131/.273
-			// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
-			// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-			expectedCoin: sdk.NewCoin("uosmo", sdk.NewInt(54617981).ToDec().Mul(complexRatioDec).TruncateInt()),
+			name:     "54617981 * .131/.273 approx = 2.62",
+			minted:   sdk.NewDec(54617981),
+			ratio:    complexRatioDec, // .131/.273
+			expected: sdk.NewDec(54617981).Mul(complexRatioDec),
 		},
 		{
-			name:         "1 * 1 = 1",
-			mintedCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
-			ratio:        sdk.NewDec(1),
-			expectedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+			name:     "1 * 1 = 1",
+			minted:   sdk.OneDec(),
+			ratio:    sdk.OneDec(),
+			expected: sdk.OneDec(),
 		},
 		{
-			name:       "1 * 1.01 - error, ratio must be <= 1",
-			mintedCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
-			ratio:      sdk.NewDecWithPrec(101, 2),
+			name:   "1 * 1.01 - error, ratio must be <= 1",
+			minted: sdk.ZeroDec(),
+			ratio:  sdk.NewDecWithPrec(101, 2),
 
 			expectedError: keeper.ErrInvalidRatio{ActualRatio: sdk.NewDecWithPrec(101, 2)},
+		},
+		{
+			name:     "123456.789 * .131/.273 = 59241.1698",
+			minted:   sdk.NewDec(123456789).Quo(sdk.NewDec(1000)),
+			ratio:    complexRatioDec, // .131/.273
+			expected: sdk.NewDec(123456789).Quo(sdk.NewDec(1000)).Mul(complexRatioDec),
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			coin, err := keeper.GetProportions(tc.mintedCoin, tc.ratio)
+			actual, err := keeper.GetProportions(tc.minted, tc.ratio)
 
 			if tc.expectedError != nil {
 				suite.Require().Equal(tc.expectedError, err)
-				suite.Require().Equal(sdk.Coin{}, coin)
+				suite.Require().Equal(sdk.Dec{}, actual)
 				return
 			}
 
 			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedCoin, coin)
+			suite.Require().Equal(tc.expected, actual)
 		})
 	}
 }
