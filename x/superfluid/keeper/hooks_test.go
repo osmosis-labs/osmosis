@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestSuperfluidAfterEpochEnd() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(gauge.Id, intermediaryAcc.GaugeId)
 				suite.Require().Equal(gauge.IsPerpetual, true)
-				suite.Require().Equal(tc.expRewards[index], gauge.Coins)
+				suite.Require().Equal(gauge.Coins, tc.expRewards[index])
 				suite.Require().Equal(gauge.DistributedCoins.String(), tc.expRewards[index].String())
 			}
 
