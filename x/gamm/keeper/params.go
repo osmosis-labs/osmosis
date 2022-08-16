@@ -16,3 +16,12 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
+
+// SetPool adds an existing pool to the keeper store.
+func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
+	return k.setPool(ctx, pool)
+}
+
+func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
+	return k.getNextPoolIdAndIncrement(ctx)
+}
