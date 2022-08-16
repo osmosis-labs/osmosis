@@ -257,13 +257,12 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			expectedCommunityPoolAmount := mintAmount.Sub(expectedPoolIncentivesAmount.ToDec()).Sub(expectedStakingAmount.ToDec()).TruncateInt()
 
 			// mints coins so supply exists on chain
-			err := mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.preMintCoin))
-			suite.Require().NoError(err)
+			suite.MintCoins(sdk.NewCoins(tc.preMintCoin))
 
 			oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintCoin.Denom).Amount
 
 			// System under test.
-			err = mintKeeper.DistributeMintedCoin(ctx, tc.mintCoin)
+			err := mintKeeper.DistributeMintedCoin(ctx, tc.mintCoin)
 
 			if tc.expectError {
 				suite.Require().Error(err)
@@ -366,7 +365,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 			// in order to ensure the offset is correctly calculated, we need to mint the supply + 1
 			// this is because a negative supply offset will always return zero
 			// by setting this to the supply + 1, we ensure we are correctly calculating the offset by keeping it delta positive
-			mintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount+1))))
+			suite.MintCoins(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount+1))))
 
 			supplyWithOffsetBefore := bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
 			supplyOffsetBefore := bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
@@ -468,7 +467,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 				ctx := suite.Ctx
 
 				// Setup.
-				suite.Require().NoError(mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.preMintCoin)))
+				suite.MintCoins(sdk.NewCoins(tc.preMintCoin))
 
 				// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
 				// Ref: https://github.com/osmosis-labs/osmosis/issues/1917

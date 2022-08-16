@@ -30,7 +30,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		if epochNumber < params.MintingRewardsDistributionStartEpoch {
 			return
 		} else if epochNumber == params.MintingRewardsDistributionStartEpoch {
-			k.SetLastReductionEpochNum(ctx, epochNumber)
+			k.setLastReductionEpochNum(ctx, epochNumber)
 		}
 		// fetch stored minter & params
 		minter := k.GetMinter(ctx)
@@ -40,18 +40,19 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// This avoids issues with measuring in block numbers, as epochs have fixed intervals, with very
 		// low variance at the relevant sizes. As a result, it is safe to store the epoch number
 		// of the last reduction to be later retrieved for comparison.
-		if epochNumber >= params.ReductionPeriodInEpochs+k.GetLastReductionEpochNum(ctx) {
+		if epochNumber >= params.ReductionPeriodInEpochs+k.getLastReductionEpochNum(ctx) {
 			// Reduce the reward per reduction period
 			minter.EpochProvisions = minter.NextEpochProvisions(params)
 			k.SetMinter(ctx, minter)
-			k.SetLastReductionEpochNum(ctx, epochNumber)
+			k.setLastReductionEpochNum(ctx, epochNumber)
 		}
 
 		// mint coins, update supply
 		mintedCoin := minter.EpochProvision(params)
 		mintedCoins := sdk.NewCoins(mintedCoin)
 
-		err := k.bankKeeper.MintCoins(ctx, types.ModuleName, mintedCoins)
+		// We over-allocate by the developer vesting portion, and burn this later
+		err := k.mintCoins(ctx, mintedCoins)
 		if err != nil {
 			panic(err)
 		}
