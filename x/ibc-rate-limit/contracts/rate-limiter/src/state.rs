@@ -17,6 +17,14 @@ pub enum FlowType {
     Out,
 }
 
+/// A Flow represents the transfer of value through an IBC channel duriong a
+/// time window.
+///
+/// It tracks inflows (transfers into osmosis) and outflows (transfers out of
+/// osmosis).
+///
+/// The period_end represents the last point in time that for which this Flow is
+/// tracking the value transfer.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, Copy)]
 pub struct Flow {
     pub inflow: u128,
@@ -38,21 +46,28 @@ impl Flow {
         }
     }
 
+    /// The balance of a flow is how much absolute value has moved through the
+    /// channel before period_end.
     pub fn balance(&self) -> u128 {
         self.inflow.abs_diff(self.outflow)
     }
 
+    /// If now is greater than the period_end, the Flow is considered expired.
     pub fn is_expired(&self, now: Timestamp) -> bool {
         self.period_end < now
     }
 
     // Mutating methods
+
+    /// Expire resets the Flow to start tracking the value transfer from the
+    /// moment this methos is called.
     pub fn expire(&mut self, now: Timestamp, duration: u64) {
         self.inflow = 0;
         self.outflow = 0;
         self.period_end = now.plus_seconds(duration);
     }
 
+    /// Updates the current flow with a transfer of value.
     pub fn add_flow(&mut self, direction: FlowType, value: u128) {
         match direction {
             FlowType::In => self.inflow = self.inflow.saturating_add(value),
@@ -61,6 +76,13 @@ impl Flow {
     }
 }
 
+/// A Quota is the percentage of the channel's total value that can be
+/// transfered through the channel in a given period of time (duration)
+///
+/// Percentages can be different for send and recv
+///
+/// The name of the quota is expected to be a human-readable representation of
+/// the duration (i.e.: "weekly", "daily", "every-six-months", ...)
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Quota {
     pub name: String,
@@ -70,7 +92,9 @@ pub struct Quota {
 }
 
 impl Quota {
-    /// Calculates the max capacity based on the total value of the channel
+    /// Calculates the max capacity (absolute value in the same unit as
+    /// total_value) in a given direction based on the total value of the
+    /// channel.
     pub fn capacity_at(&self, total_value: &u128, direction: &FlowType) -> u128 {
         let max_percentage = match direction {
             FlowType::In => self.max_percentage_recv,
@@ -101,16 +125,25 @@ pub struct ChannelFlow {
     pub flow: Flow,
 }
 
-/// Only this module can manage the contract
+/// Only this address can manage the contract. This will likely be the
+/// governance module, but could be set to something else if needed
 pub const GOVMODULE: Item<Addr> = Item::new("gov_module");
-/// Only this module can execute transfers
+/// Only this address can execute transfers. This will likely be the
+/// IBC transfer module, but could be set to something else if needed
 pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
-// For simplicity, the map keys (ibc channel) refers to the "host" channel on the
-// osmosis side. This means that on PacketSend it will refer to the source
-// channel while on PacketRecv it refers to the destination channel.
-//
-// It is the responsibility of the go module to pass the appropriate channel
-// when sending the messages
+
+/// CHANNEL_FLOWS is the main state for this contract. It maps an IBC channel_id
+/// to a vector of ChannelFlows. The ChannelFlow struct contains the information
+/// about how much value has moved through the channel during the currently
+/// active time period (channel_flow.flow) and what percentage of the channel's
+/// value we are allowing to flow through that channel in a specific duration (quota)
+///
+/// For simplicity, the map keys (ibc channel) refers to the "host" channel on the
+/// osmosis side. This means that on PacketSend it will refer to the source
+/// channel while on PacketRecv it refers to the destination channel.
+///
+/// It is the responsibility of the go module to pass the appropriate channel
+/// when sending the messages
 pub const CHANNEL_FLOWS: Map<&str, Vec<ChannelFlow>> = Map::new("flow");
 
 #[cfg(test)]
