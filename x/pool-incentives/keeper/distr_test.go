@@ -22,13 +22,9 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 		},
 	}
 	mintKeeper.SetParams(suite.Ctx, params)
-	mintKeeper.SetMinter(suite.Ctx, minttypes.NewMinter(sdk.NewDec(1)))
+	mintKeeper.SetMinter(suite.Ctx, minttypes.NewMinter(sdk.NewDec(100000)))
 
 	// At this time, there is no distr record, so the asset should be allocated to the community pool.
-	mintCoin := sdk.NewCoin("stake", sdk.NewInt(100000))
-	mintCoins := sdk.Coins{mintCoin}
-	suite.MintCoins(mintCoins)
-
 	mintKeeper.AfterEpochEnd(suite.Ctx, params.GetEpochIdentifier(), 1)
 
 	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *suite.App.DistrKeeper)
@@ -39,11 +35,7 @@ func (suite *KeeperTestSuite) TestAllocateAssetToCommunityPoolWhenNoDistrRecords
 	suite.Equal("40000stake", suite.App.BankKeeper.GetBalance(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(distrtypes.ModuleName), "stake").String())
 
 	// Community pool should be increased
-	mintCoin = sdk.NewCoin("stake", sdk.NewInt(100000))
-	mintCoins = sdk.Coins{mintCoin}
-	suite.MintCoins(mintCoins)
-	err := mintKeeper.DistributeMintedCoin(suite.Ctx, mintCoin) // this calls AllocateAsset via hook
-	suite.NoError(err)
+	mintKeeper.AfterEpochEnd(suite.Ctx, params.GetEpochIdentifier(), 1)
 
 	distribution.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{}, *suite.App.DistrKeeper)
 
