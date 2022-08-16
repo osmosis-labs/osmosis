@@ -224,7 +224,7 @@ mod tests {
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
         let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
         assert_eq!(value.len(), 1);
-        println!("{value:?}");
+
         verify_query_response(
             &value[0],
             "different",
