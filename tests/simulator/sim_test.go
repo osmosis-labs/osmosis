@@ -63,16 +63,6 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 			tb.Fatal(err)
 		}
 		defer sqlDB.Close()
-		sts := `
-	DROP TABLE IF EXISTS blocks;
-	CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT);
-	`
-
-		_, err = sqlDB.Exec(sts)
-
-		if err != nil {
-			tb.Fatal(err)
-		}
 	}
 
 	logger = simlogger.NewSimLogger(logger)

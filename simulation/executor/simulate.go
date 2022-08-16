@@ -257,18 +257,22 @@ func (simState *simState) logActionResult(
 	header tmproto.Header, actionIndex int, config Config, blocksize int,
 	opMsg simulation.OperationMsg, db *sql.DB, actionErr error) {
 	opMsg.LogEvent(simState.eventStats.Tally)
-	var sts string
-	var err error
-	if config.WriteStatsToDB && opMsg.OK {
-		sts = "INSERT INTO blocks(height,module,name,passed, gasWanted, gasUsed) VALUES($1,$2,$3,$4,$5,$6);"
-		_, err = db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed)
-	} else if config.WriteStatsToDB && !opMsg.OK {
+	if config.WriteStatsToDB {
+		sts := `
+		DROP TABLE IF EXISTS blocks;
+		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT);
+		`
+		_, err := db.Exec(sts)
+
+		if err != nil {
+			simState.tb.Fatal(err)
+		}
+
 		sts = "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed) VALUES($1,$2,$3,$4,$5,$6,$7);"
 		_, err = db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed)
-	}
-
-	if err != nil {
-		panic(err)
+		if err != nil {
+			simState.tb.Fatal(err)
+		}
 	}
 
 	if !simState.leanLogs || opMsg.OK {
