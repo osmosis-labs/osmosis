@@ -92,34 +92,6 @@ func (k Keeper) SetInitialSupplyOffsetDuringMigration(ctx sdk.Context) error {
 	return nil
 }
 
-// CreateDeveloperVestingModuleAccount creates the developer vesting module account
-// and mints amount of tokens to it.
-// Should only be called during the initial genesis creation, never again. Returns nil on success.
-// Returns error in the following cases:
-// - amount is nil or zero.
-// - if ctx has block height greater than 0.
-// - developer vesting module account is already created prior to calling this method.
-func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
-	if amount.IsNil() || amount.Amount.IsZero() {
-		return sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero")
-	}
-	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
-		return sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName)
-	}
-
-	moduleAcc := authtypes.NewEmptyModuleAccount(
-		types.DeveloperVestingModuleAcctName, authtypes.Minter)
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
-
-	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// _____________________________________________________________________
-
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
@@ -136,24 +108,7 @@ func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
 	return k
 }
 
-// GetLastHalvenEpochNum returns last halven epoch number.
-func (k Keeper) GetLastHalvenEpochNum(ctx sdk.Context) int64 {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.LastHalvenEpochKey)
-	if b == nil {
-		return 0
-	}
-
-	return int64(sdk.BigEndianToUint64(b))
-}
-
-// SetLastHalvenEpochNum set last halven epoch number.
-func (k Keeper) SetLastHalvenEpochNum(ctx sdk.Context, epochNum int64) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastHalvenEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
-}
-
-// get the minter.
+// GetMinter gets the minter.
 func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.MinterKey)
@@ -165,14 +120,12 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 	return
 }
 
-// set the minter.
+// SetMinter sets the minter.
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&minter)
 	store.Set(types.MinterKey, b)
 }
-
-// _____________________________________________________________________
 
 // GetParams returns the total set of minting parameters.
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
@@ -185,20 +138,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-// _____________________________________________________________________
-
-// MintCoins implements an alias call to the underlying supply keeper's
-// MintCoins to be used in BeginBlocker.
-func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
-	if newCoins.Empty() {
-		// skip as no coins need to be minted
-		return nil
-	}
-
-	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
-}
-
-// DistributeMintedCoins implements distribution of minted coins from mint to external modules.
+// DistributeMintedCoin implements distribution of a minted coin from mint to external modules.
 func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
 	params := k.GetParams(ctx)
 	proportions := params.DistributionProportions
@@ -232,6 +172,34 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	k.hooks.AfterDistributeMintedCoin(ctx)
 
 	return err
+}
+
+// getLastHalvenEpochNum returns last reduction epoch number.
+func (k Keeper) getLastHalvenEpochNum(ctx sdk.Context) int64 {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(types.LastHalvenEpochKey)
+	if b == nil {
+		return 0
+	}
+
+	return int64(sdk.BigEndianToUint64(b))
+}
+
+// setLastHalvenEpochNum set last reduction epoch number.
+func (k Keeper) setLastHalvenEpochNum(ctx sdk.Context, epochNum int64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.LastHalvenEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
+}
+
+// mintCoins implements an alias call to the underlying bank keeper's
+// MintCoins to be used in BeginBlocker.
+func (k Keeper) mintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
+	if newCoins.Empty() {
+		// skip as no coins need to be minted
+		return nil
+	}
+
+	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
 // distributeToModule distributes mintedCoin multiplied by proportion to the recepientModule account.
@@ -337,4 +305,30 @@ func getProportions(mintedCoin sdk.Coin, ratio sdk.Dec) (sdk.Coin, error) {
 		return sdk.Coin{}, invalidRatioError{ratio}
 	}
 	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt()), nil
+}
+
+// createDeveloperVestingModuleAccount creates the developer vesting module account
+// and mints amount of tokens to it.
+// Should only be called during the initial genesis creation, never again. Returns nil on success.
+// Returns error in the following cases:
+// - amount is nil or zero.
+// - if ctx has block height greater than 0.
+// - developer vesting module account is already created prior to calling this method.
+func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
+	if amount.IsNil() || amount.Amount.IsZero() {
+		return sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero")
+	}
+	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
+		return sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName)
+	}
+
+	moduleAcc := authtypes.NewEmptyModuleAccount(
+		types.DeveloperVestingModuleAcctName, authtypes.Minter)
+	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+
+	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
+	if err != nil {
+		return err
+	}
+	return nil
 }
