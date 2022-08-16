@@ -16,6 +16,6 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.PoolI) error {
 	return k.setPool(ctx, pool)
 }
 
-func (k Keeper) GetNextPoolNumberAndIncrement(ctx sdk.Context) uint64 {
-	return k.getNextPoolNumberAndIncrement(ctx)
+func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
+	return k.getNextPoolIdAndIncrement(ctx)
 }
