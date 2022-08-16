@@ -215,7 +215,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 // distributeDeveloperRewards distributes developer rewards from developer vesting module account
 // to the respective account receivers by weight (developerRewardsReceivers).
 // If no developer reward receivers given, funds the community pool instead.
-// If developer reward reciever address is empty, funds the community pool.
+// If developer reward receiver address is empty, funds the community pool.
 // Distributes any delta resulting from truncating the amount to a whole integer to the community pool.
 // Returns the total amount distributed from the developer vesting module account rounded down to the nearest integer.
 // Updates supply offsets to reflect the amount of coins distributed. This is done so because the developer rewards distributions are

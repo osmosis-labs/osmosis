@@ -11,7 +11,7 @@ var (
 
 	// LastMintedTotalAmount is the key to use for the keeper store
 	// for storing the last minted accumulator value.
-	// It representes the total amount of tokens minted since the
+	// It represents the total amount of tokens minted since the
 	// chain launched.
 	LastMintedTotalAmount = []byte{0x04}
 )
