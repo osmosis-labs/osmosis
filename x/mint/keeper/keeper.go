@@ -204,7 +204,7 @@ func (k Keeper) mintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 
 // distributeToModule distributes mintedCoin multiplied by proportion to the recepientModule account.
 func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Int, error) {
-	distributionAmount, err := getProportions(mintedCoin.Amount.ToDec(), proportion)
+	distributionAmount, err := getProportion(mintedCoin.Amount.ToDec(), proportion)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -231,7 +231,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 // - weights in developerRewardsReceivers add up to 1.
 // - addresses in developerRewardsReceivers are valid or empty string.
 func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion sdk.Dec, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
-	devRewardsAmount, err := getProportions(totalMintedCoin.Amount.ToDec(), developerRewardsProportion)
+	devRewardsAmount, err := getProportion(totalMintedCoin.Amount.ToDec(), developerRewardsProportion)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -265,7 +265,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	} else {
 		// allocate developer rewards to addresses by weight
 		for _, w := range developerRewardsReceivers {
-			devPortionAmount, err := getProportions(developerRewardsCoin.Amount.ToDec(), w.Weight)
+			devPortionAmount, err := getProportion(developerRewardsCoin.Amount.ToDec(), w.Weight)
 			if err != nil {
 				return sdk.Int{}, err
 			}
@@ -299,8 +299,8 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 	return developerRewardsCoin.Amount, nil
 }
 
-// getProportions returns value multipled by ratio or error if ratio is greater than 1.
-func getProportions(value sdk.Dec, ratio sdk.Dec) (sdk.Dec, error) {
+// getProportion returns value multipled by ratio or error if ratio is greater than 1.
+func getProportion(value sdk.Dec, ratio sdk.Dec) (sdk.Dec, error) {
 	if ratio.GT(sdk.OneDec()) {
 		return sdk.Dec{}, invalidRatioError{ratio}
 	}

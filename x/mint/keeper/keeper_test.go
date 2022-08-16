@@ -85,8 +85,8 @@ func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight
 	}
 }
 
-// TestGetProportions tests that mint allocations are computed as expected.
-func (suite *KeeperTestSuite) TestGetProportions() {
+// TestGetProportion tests that mint allocations are computed as expected.
+func (suite *KeeperTestSuite) TestGetProportion() {
 	complexRatioDec := sdk.NewDecWithPrec(131, 3).Quo(sdk.NewDecWithPrec(273, 3))
 
 	tests := []struct {
@@ -143,7 +143,7 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			actual, err := keeper.GetProportions(tc.minted, tc.ratio)
+			actual, err := keeper.GetProportion(tc.minted, tc.ratio)
 
 			if tc.expectedError != nil {
 				suite.Require().Equal(tc.expectedError, err)
