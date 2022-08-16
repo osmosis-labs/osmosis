@@ -9,7 +9,7 @@ use crate::error::ContractError;
 use crate::management::{
     add_new_channels, try_add_channel, try_remove_channel, try_reset_channel_quota,
 };
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use crate::state::{ChannelFlow, FlowType, CHANNEL_FLOWS, GOVMODULE, IBCMODULE};
 
 // version info for migration info
@@ -186,6 +186,11 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
 fn get_quotas(deps: Deps, channel_id: impl Into<String>) -> StdResult<Binary> {
     to_binary(&CHANNEL_FLOWS.load(deps.storage, &channel_id.into())?)
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
+    unimplemented!()
 }
 
 #[cfg(test)]

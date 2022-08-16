@@ -102,12 +102,11 @@ mod tests {
                 funds: 300,
             };
             let cosmos_msg = cw_template_contract.call(msg).unwrap();
-            let err = app
+            let _err = app
                 .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
                 .unwrap_err();
 
             // TODO: how do we check the error type here?
-            println!("{err:?}");
 
             // ... Time passes
             app.update_block(|b| {
@@ -153,9 +152,7 @@ mod tests {
                 funds: 1,
             };
             let cosmos_msg = cw_template_contract.call(msg).unwrap();
-            let res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
-
-            println!("{res:?}");
+            let _res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
 
             // Another packet is rate limited
             let msg = ExecuteMsg::SendPacket {
@@ -260,7 +257,6 @@ mod tests {
                 b.time = b.time.plus_seconds((RESET_TIME_WEEKLY * 2) + 1) // Two weeks
             });
 
-            println!("{:?}", app.block_info());
             let msg = ExecuteMsg::SendPacket {
                 channel_id: "channel".to_string(),
                 channel_value: 100,
