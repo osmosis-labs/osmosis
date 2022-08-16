@@ -70,7 +70,7 @@ func SimulateFromSeed(
 	if config.WriteStatsToDB {
 		sts := `
 		DROP TABLE IF EXISTS blocks;
-		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT);
+		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT, msg STRING);
 		`
 		_, err := db.Exec(sts)
 
@@ -271,8 +271,8 @@ func (simState *simState) logActionResult(
 	opMsg simulation.OperationMsg, db *sql.DB, actionErr error) {
 	opMsg.LogEvent(simState.eventStats.Tally)
 	if config.WriteStatsToDB {
-		sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed) VALUES($1,$2,$3,$4,$5,$6,$7);"
-		_, err := db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed)
+		sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg) VALUES($1,$2,$3,$4,$5,$6,$7,$8);"
+		_, err := db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed, opMsg.Msg)
 		if err != nil {
 			simState.tb.Fatal(err)
 		}
