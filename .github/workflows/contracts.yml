@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         workdir: [./x/ibc-rate-limit]
-        output: [./x/ibc-rate-limit/testdata/rate_limiter.wasm]
+        output: [./testdata/rate_limiter.wasm]
 
     steps:
       - name: Checkout sources
@@ -52,7 +52,8 @@ jobs:
         name: Install cw-optimizoor
         continue-on-error: true
         run: >
-          cargo install cw-optimizoor
+          cargo install cw-optimizoor;
+          ls ~/.cargo/bin/
 
       - name: Optimize
         working-directory: ${{ matrix.workdir }}
@@ -64,7 +65,7 @@ jobs:
         if: ${{ matrix.output != null }}
         run: >
           ls ${{ matrix.output }};
-          ls ${{ matrix.output }}/artifacts;
+          ls ./artifacts;
           diff ${{ matrix.output }} ./artifacts/rate_limiter.wasm
   
 
