@@ -53,7 +53,7 @@ require (
 	github.com/OpenPeeDeeP/depguard v1.1.0 // indirect
 	github.com/Workiva/go-datastructures v1.0.53 // indirect
 	github.com/alexkohler/prealloc v1.0.0 // indirect
-	github.com/armon/go-metrics v0.3.10 // indirect
+	github.com/armon/go-metrics v0.3.11 // indirect
 	github.com/ashanbrown/forbidigo v1.3.0 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/bombsimon/wsl/v3 v3.3.0 // indirect
 	github.com/breml/bidichk v0.2.3 // indirect
 	github.com/breml/errchkjson v0.3.0 // indirect
-	github.com/btcsuite/btcd v0.22.0-beta // indirect
+	github.com/btcsuite/btcd v0.22.1 // indirect
 	github.com/butuzov/ireturn v0.1.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
