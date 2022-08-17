@@ -83,10 +83,10 @@ jobs:
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
           profile: minimal
-          components: rustfmt clippy
-          target: wasm32-unknown-unknown
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
 
       - name: Format
         working-directory: ${{ matrix.workdir }}
