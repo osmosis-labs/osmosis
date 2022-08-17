@@ -15,12 +15,12 @@ arg_len=$#
 
 for i in "$@"; do
   if [ $arg_len -gt 1 ]; then
-  MODULE_FORMAT+="./x/$i\|"
-  MODULE_NAMES+="${i} "
-  let "arg_len--"
+    MODULE_FORMAT+="./x/$i\|"
+    MODULE_NAMES+="${i} "
+    let "arg_len--"
   else
-  MODULE_FORMAT+="./x/$i"
-  MODULE_NAMES+="${i}"
+    MODULE_FORMAT+="./x/$i"
+    MODULE_NAMES+="${i}"
   fi
 done
 
