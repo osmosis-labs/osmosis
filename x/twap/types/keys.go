@@ -29,9 +29,16 @@ var (
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
 
-	mostRecentTWAPsPrefix         = mostRecentTWAPsNoSeparator + KeySeparator
-	HistoricalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
-	HistoricalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
+	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
+	// keySeparatorPlusOne is used for creating prefixes for the key end in iterators
+	// when we want to get all of the keys in a prefix. Since it is one byte larger
+	// than the original key separator and the end prefix is exclusive, it is a valid
+	// for getting all values under the original key separator.
+	keySeparatorPlusOne              = string(KeySeparator[0] + 1)
+	HistoricalTWAPTimeIndexPrefix    = historicalTWAPTimeIndexNoSeparator + KeySeparator
+	HistoricalTWAPTimeIndexPrefixEnd = historicalTWAPTimeIndexNoSeparator + keySeparatorPlusOne
+	HistoricalTWAPPoolIndexPrefix    = historicalTWAPPoolIndexNoSeparator + KeySeparator
+	HistoricalTWAPPoolIndexPrefixEnd = historicalTWAPPoolIndexNoSeparator + keySeparatorPlusOne
 )
 
 // TODO: make utility command to automatically interlace separators
