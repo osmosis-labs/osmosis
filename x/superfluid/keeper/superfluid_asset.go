@@ -38,13 +38,12 @@ func (k Keeper) UnriskAdjustOsmoValue(ctx sdk.Context, amount sdk.Dec) sdk.Dec {
 	return amount.Quo(sdk.OneDec().Sub(minRiskFactor))
 }
 
-func (k Keeper) AddNewSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAsset) {
+func (k Keeper) AddNewSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAsset) error {
 	// initialize osmo equivalent multipliers
 	epochIdentifier := k.GetEpochIdentifier(ctx)
 	currentEpoch := k.ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
-	_ = osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
+	return osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
 		k.SetSuperfluidAsset(ctx, asset)
-		err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, currentEpoch)
-		return err
+		return k.UpdateOsmoEquivalentMultipliers(ctx, asset, currentEpoch)
 	})
 }
