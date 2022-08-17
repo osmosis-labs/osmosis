@@ -22,16 +22,16 @@ jobs:
           toolchain: nightly
           target: wasm32-unknown-unknown
 
-#      - name: Build
-#        working-directory: ${{ matrix.contract.workdir }}
-#        run: >
-#          rustup target add wasm32-unknown-unknown;
-#          cargo build --release --target wasm32-unknown-unknown
-#
-#      - name: Test
-#        working-directory: ${{ matrix.contract.workdir }}
-#        run: >
-#          cargo test
+      - name: Build
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          rustup target add wasm32-unknown-unknown;
+          cargo build --release --target wasm32-unknown-unknown
+
+      - name: Test
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          cargo test
 
       - name: Set latest cw-optimizoor version
         run: >
@@ -53,17 +53,23 @@ jobs:
         run: >
           cargo install cw-optimizoor
 
-#      - name: Optimize
-#        working-directory: ${{ matrix.contract.workdir }}
-#        run: >
-#          cargo cw-optimizoor
-#
+      - name: Optimize
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          cargo cw-optimizoor
+
+      - name: 'Upload optimized contract artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.contract.build }}
+          path: ${{ matrix.contract.build }}
+          retention-days: 1
+
       - name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
         if: ${{ matrix.contract.output != null }}
         run: >
-          echo "${{ matrix.contract.output }} ${{ matrix.contract.build }}";
-          #diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
+          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
   
 
   lints:
