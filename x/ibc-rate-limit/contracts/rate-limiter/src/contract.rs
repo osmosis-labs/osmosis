@@ -10,7 +10,7 @@ use crate::management::{
     add_new_channels, try_add_channel, try_remove_channel, try_reset_channel_quota,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{RateLimit, FlowType, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
+use crate::state::{FlowType, RateLimit, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:rate-limiter";
