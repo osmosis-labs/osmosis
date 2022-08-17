@@ -88,6 +88,9 @@ pub struct ChannelFlowResponse {
     pub max: u128,
 }
 
+// TODO: Lets add some more docs for this, namely that channel_value is the total supply of the denom
+// Q: Is an ICS 20 transfer only 1 denom at a time, or does the caller have to split into several
+// calls if its a multi-denom ICS-20 transfer
 pub fn try_transfer(
     deps: DepsMut,
     sender: Addr,
@@ -98,6 +101,7 @@ pub fn try_transfer(
     now: Timestamp,
 ) -> Result<Response, ContractError> {
     // Only the IBCMODULE can execute transfers
+    // TODO: Should we move this to a helper method?
     let ibc_module = IBCMODULE.load(deps.storage)?;
     if sender != ibc_module {
         return Err(ContractError::Unauthorized {});
@@ -113,6 +117,7 @@ pub fn try_transfer(
 
     if !configured {
         // No Quota configured for the current channel. Allowing all messages.
+        // TODO: Should there be an attribute for it being allowed vs denied?
         return Ok(Response::new()
             .add_attribute("method", "try_transfer")
             .add_attribute("channel_id", channel_id)
@@ -124,6 +129,12 @@ pub fn try_transfer(
     let results: Result<Vec<ChannelFlowResponse>, _> = channels
         .iter_mut()
         .map(|channel| {
+            // TODO: Should we move this to more methods on ChannelFlow?
+            // e.g. new pseudocode
+            // channel.updateIfExpired(now)
+            // channel.trackSend(&direction, funds)
+            // channel.CheckRateLimit(direction.clone())?;
+            // (Or at least update for time + rename for track send. the last one is a bit of a code style nit)
             let max = channel.quota.capacity_at(&channel_value, &direction);
             if channel.flow.is_expired(now) {
                 channel.flow.expire(now, channel.quota.duration)
@@ -138,6 +149,7 @@ pub fn try_transfer(
                 });
             };
             Ok(ChannelFlowResponse {
+                // TODO: nit, can we derive channel.Clone()?
                 channel_flow: ChannelFlow {
                     quota: channel.quota.clone(),
                     flow: channel.flow,
@@ -160,6 +172,8 @@ pub fn try_transfer(
         .add_attribute("channel_id", channel_id);
 
     // Adding the attributes from each quota to the response
+    // Code style Q: Should we move attribute setting to a function on response?
+    // Rust question: How does this work with one response being an error, I'm not sure how the flow works here
     results.iter().fold(Ok(response), |acc, result| {
         Ok(acc?
             .add_attribute(

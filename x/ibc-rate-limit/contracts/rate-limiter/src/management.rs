@@ -32,6 +32,7 @@ pub fn try_add_channel(
     quotas: Vec<QuotaMsg>,
     now: Timestamp,
 ) -> Result<Response, ContractError> {
+    // codenit: should we make a function for checking this authorization?
     let ibc_module = IBCMODULE.load(deps.storage)?;
     let gov_module = GOVMODULE.load(deps.storage)?;
     if sender != ibc_module && sender != gov_module {
@@ -67,6 +68,7 @@ pub fn try_remove_channel(
         .add_attribute("channel_id", channel_id))
 }
 
+// Reset specified quote_id for the given channel_id
 pub fn try_reset_channel_quota(
     deps: DepsMut,
     sender: Addr,
@@ -88,6 +90,7 @@ pub fn try_reset_channel_quota(
                 channel_id: channel_id.clone(),
             }),
             Some(mut flows) => {
+                // Q: What happens here if quote_id not found? seems like we return ok?
                 flows.iter_mut().for_each(|channel| {
                     if channel.quota.name == channel_id.as_ref() {
                         channel.flow.expire(now, channel.quota.duration)
