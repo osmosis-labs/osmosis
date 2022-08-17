@@ -148,7 +148,7 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 
 	// prevent unbonding lockups to be not able to be used for superfluid staking
 	if lock.IsUnlocking() {
-		return sdkerrors.Wrapf(types.ErrUnbondingLockupNotSupported, "lock id : %s", lock.ID)
+		return sdkerrors.Wrapf(types.ErrUnbondingLockupNotSupported, "lock id : %d", lock.ID)
 	}
 
 	// ensure that lock duration >= staking.UnbondingTime
@@ -159,7 +159,7 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 
 	// Thus when we stake now, this will be the only superfluid position for this lockID.
 	if k.alreadySuperfluidStaking(ctx, lock.ID) {
-		return sdkerrors.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %s", lock.ID)
+		return sdkerrors.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %d", lock.ID)
 	}
 
 	return nil
