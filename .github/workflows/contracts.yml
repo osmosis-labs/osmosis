@@ -54,6 +54,9 @@ jobs:
           cargo install cw-optimizoor;
           ls ~/.cargo/bin/
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+
       - name: Optimize
         working-directory: ${{ matrix.contract.workdir }}
         run: >
