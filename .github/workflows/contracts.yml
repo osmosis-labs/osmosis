@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         workdir: [./x/ibc-rate-limit]
-#        output: [./x/ibc-rate-limit/testdata/rate_limit.wasm]
+        output: [./x/ibc-rate-limit/testdata/rate_limit.wasm]
 
     steps:
       - name: Checkout sources
@@ -34,13 +34,38 @@ jobs:
         run: >
           cargo test
 
-#      - name: Check Test Data
-#        working-directory: ${{ matrix.workdir }}
-#        if: ${{ matrix.output != null }}
-#        run: >
-#          ls ${{ matrix.output }};
-#          ls ${{ matrix.output }}/artifacts;
-#          diff ${{ matrix.output }} ./artifacts/*.wasm
+      - name: Set latest cw-optimizoor version
+        run: >
+          echo "CW_OPTIMIZOOR_VERSION=`cargo search cw-optimizoor -q | cut -d '"' -f 2`" >> $GITHUB_ENV
+
+      - name: Cache node cw-optimizoor
+        id: cache-cw-optimizoor
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-cw-optimizoor
+        with:
+          # cargo bin files are stored in `~/.cargo/bin/` on Linux/macOS
+          path: ~/.cargo/bin/cargo-cw-optimizoor
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ CW_OPTIMIZOOR_VERSION }}
+
+      - if: ${{ steps.cache-cw-optimizoor.outputs.cache-hit != 'true' }}
+        name: Install cw-optimizoor
+        continue-on-error: true
+        run: >
+          cargo install cw-optimizoor
+
+      - name: Optimize
+        working-directory: ${{ matrix.workdir }}
+        run: >
+          cargo cw-optimizoor
+
+      - name: Check Test Data
+        working-directory: ${{ matrix.workdir }}
+        if: ${{ matrix.output != null }}
+        run: >
+          ls ${{ matrix.output }};
+          ls ${{ matrix.output }}/artifacts;
+          diff ${{ matrix.output }} ./artifacts/*.wasm
   
 
   lints:
@@ -58,10 +83,16 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-          components: rustfmt
+          components: rustfmt clippy
           target: wasm32-unknown-unknown
 
       - name: Format
         working-directory: ${{ matrix.workdir }}
         run: >
           cargo fmt --all -- --check
+
+      - name: run cargo clippy
+        working-directory: ${{ matrix.workdir }}
+        run: >
+          cargo clippy -- -D warnings
+
