@@ -75,6 +75,37 @@ func NewKeeper(
 	}
 }
 
+// TODO: godoc and tests
+func (k Keeper) BurnNativeCoins(ctx sdk.Context, moduleName string, amount sdk.Coins) error {
+	if amount.FilterDenoms([]string{k.GetParams(ctx).MintDenom}).Empty() {
+		return fmt.Errorf("minting only allowed for (%s), had (%s)", k.GetParams(ctx).MintDenom, amount)
+	}
+	if err := k.bankKeeper.BurnCoins(ctx, moduleName, amount); err != nil {
+		return err
+	}
+	minter := k.GetMinter(ctx)
+	minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Sub(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
+	k.SetMinter(ctx, minter)
+	return nil
+}
+
+// MintNativeCoins attempts to mint amount from the given module. Returns nil on
+// success and error if amount contains denoms other than mint denom.
+// No-op if amount is empty.
+func (k Keeper) MintNativeCoins(ctx sdk.Context, moduleName string, amount sdk.Coins) error {
+	filteredCoins := amount.FilterDenoms([]string{k.GetParams(ctx).MintDenom})
+	if filteredCoins.Empty() || filteredCoins.Len() != amount.Len() {
+		return fmt.Errorf("minting only allowed for (%s), had (%s)", k.GetParams(ctx).MintDenom, amount)
+	}
+	if err := k.bankKeeper.MintCoins(ctx, moduleName, amount); err != nil {
+		return err
+	}
+	minter := k.GetMinter(ctx)
+	minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
+	k.SetMinter(ctx, minter)
+	return nil
+}
+
 // SetInitialSupplyOffsetDuringMigration sets the supply offset based on the balance of the
 // developer vesting module account. CreateDeveloperVestingModuleAccount must be called
 // prior to calling this method. That is, developer vesting module account must exist when
@@ -169,35 +200,6 @@ func (k Keeper) distributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	return err
 }
 
-// TODO: godoc and tests
-func (k Keeper) MintNativeCoins(ctx sdk.Context, moduleName string, amount sdk.Coins) error {
-	if amount.FilterDenoms([]string{k.GetParams(ctx).MintDenom}).Empty() {
-		return fmt.Errorf("minting only allowed for (%s), had (%s)", k.GetParams(ctx).MintDenom, amount)
-	}
-
-	if err := k.bankKeeper.MintCoins(ctx, moduleName, amount); err != nil {
-		return err
-	}
-	minter := k.GetMinter(ctx)
-	minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
-	k.SetMinter(ctx, minter)
-	return nil
-}
-
-// TODO: godoc and tests
-func (k Keeper) BurnNativeCoins(ctx sdk.Context, moduleName string, amount sdk.Coins) error {
-	if amount.FilterDenoms([]string{k.GetParams(ctx).MintDenom}).Empty() {
-		return fmt.Errorf("minting only allowed for (%s), had (%s)", k.GetParams(ctx).MintDenom, amount)
-	}
-	if err := k.bankKeeper.BurnCoins(ctx, moduleName, amount); err != nil {
-		return err
-	}
-	minter := k.GetMinter(ctx)
-	minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Sub(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
-	k.SetMinter(ctx, minter)
-	return nil
-}
-
 // getLastReductionEpochNum returns last reduction epoch number.
 func (k Keeper) getLastReductionEpochNum(ctx sdk.Context) int64 {
 	store := ctx.KVStore(k.storeKey)
@@ -215,8 +217,10 @@ func (k Keeper) setLastReductionEpochNum(ctx sdk.Context, epochNum int64) {
 	store.Set(types.LastReductionEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
 }
 
-// mintCoins implements an alias call to the underlying bank keeper's
-// MintCoins to be used in BeginBlocker.
+// mintCoins mints tokens for inflation. It is meant to be used
+// internally by the mint module.
+// CONTRACT: minter's expected minter amount is updated separately
+// CONTRACT: only called with the mint denom, never other coins.
 func (k Keeper) mintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	if newCoins.Empty() {
 		// skip as no coins need to be minted

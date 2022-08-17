@@ -821,7 +821,7 @@ func (suite *KeeperTestSuite) TestGetMintedAmount() {
 			ctx := suite.Ctx
 
 			if !tc.preMinted.Empty() {
-				mintKeeper.MintCoins(ctx, tc.preMinted)
+				mintKeeper.MintNativeCoins(ctx, types.ModuleName, tc.preMinted)
 			}
 
 			if !tc.preVest.IsNil() {
@@ -886,7 +886,7 @@ func (suite *KeeperTestSuite) TestGetDeveloperVestedAmount() {
 			ctx := suite.Ctx
 
 			if !tc.preMinted.Empty() {
-				mintKeeper.MintCoins(ctx, tc.preMinted)
+				mintKeeper.MintNativeCoins(ctx, types.ModuleName, tc.preMinted)
 			}
 
 			if !tc.preVest.IsNil() {
@@ -1024,7 +1024,7 @@ func (suite *KeeperTestSuite) TestDistributeTruncationDelta() {
 			ctx := suite.Ctx
 
 			if !tc.preMinted.Empty() {
-				mintKeeper.MintCoins(ctx, tc.preMinted)
+				mintKeeper.MintNativeCoins(ctx, types.ModuleName, tc.preMinted)
 			}
 
 			if !tc.preVest.IsNil() {
@@ -1042,6 +1042,68 @@ func (suite *KeeperTestSuite) TestDistributeTruncationDelta() {
 
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedAmount.String(), actualAmount.String())
+		})
+	}
+}
+
+// TestMintNativeCoins tests that minting native coins is
+// updaes supply and x/mint minter accumulator value. It also
+// tests that any denom other than mint denom is not accepted and produces error.
+func (suite *KeeperTestSuite) TestMintNativeCoins() {
+	const mintDenom = sdk.DefaultBondDenom
+	tests := map[string]struct {
+		// Inputs
+		// preminted is necessary to ensure that minting does not
+		// affect the minted amount.
+		mintedCoins sdk.Coins
+
+		// Expected outputs
+		expectedMintedAmount            sdk.Int
+		expectedAccumulatorMintedAmount sdk.Dec
+		expectErr                       bool
+	}{
+		"mint 1 coin native mint denom": {
+			mintedCoins:                     sdk.NewCoins(sdk.NewCoin(mintDenom, sdk.OneInt())),
+			expectedMintedAmount:            sdk.OneInt(),
+			expectedAccumulatorMintedAmount: sdk.OneDec(),
+		},
+		"mint 1 coin non-native mint denom - error": {
+			mintedCoins: sdk.NewCoins(sdk.NewCoin(otherDenom, sdk.OneInt())),
+			expectErr:   true,
+		},
+		"mint 2 coins non-native mint denom - error": {
+			mintedCoins: sdk.NewCoins(sdk.NewCoin(mintDenom, sdk.OneInt()), sdk.NewCoin(otherDenom, sdk.OneInt())),
+			expectErr:   true,
+		},
+		"mint 0 coins - error": {
+			mintedCoins: sdk.NewCoins(),
+			expectErr:   true,
+		},
+	}
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			// Setup.
+			suite.Setup()
+			mintKeeper := suite.App.MintKeeper
+			ctx := suite.Ctx
+
+			// System under test
+			err := mintKeeper.MintNativeCoins(ctx, types.ModuleName, tc.mintedCoins)
+
+			// Assertions.
+			if tc.expectErr {
+				suite.Require().Error(err)
+				return
+			}
+
+			suite.Require().NoError(err)
+
+			// Validate supply
+			mintedAmount := mintKeeper.GetMintedAmount(ctx, mintDenom)
+			suite.Require().Equal(tc.expectedMintedAmount.String(), mintedAmount.String())
+
+			// Validate minter's expected total minted amount.
+			suite.Require().Equal(tc.expectedAccumulatorMintedAmount, mintKeeper.GetMinter(ctx).LastTotalMintedAmount)
 		})
 	}
 }

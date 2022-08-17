@@ -56,10 +56,6 @@ func (k Keeper) SetLastReductionEpochNum(ctx sdk.Context, epochNum int64) {
 	k.setLastReductionEpochNum(ctx, epochNum)
 }
 
-func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
-	return k.mintCoins(ctx, newCoins)
-}
-
 // Set the mint hooks. This is used for testing purposes only.
 func (k *Keeper) SetMintHooksUnsafe(h types.MintHooks) *Keeper {
 	k.hooks = h
