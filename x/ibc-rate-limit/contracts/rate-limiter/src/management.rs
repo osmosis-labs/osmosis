@@ -1,5 +1,5 @@
 use crate::msg::{Channel, QuotaMsg};
-use crate::state::{ChannelFlow, Flow, GOVMODULE, IBCMODULE, TRACKERS};
+use crate::state::{RateLimit, Flow, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
 use crate::ContractError;
 use cosmwasm_std::{Addr, DepsMut, Response, Timestamp};
 
@@ -9,13 +9,13 @@ pub fn add_new_channels(
     now: Timestamp,
 ) -> Result<(), ContractError> {
     for channel in channels {
-        TRACKERS.save(
+        RATE_LIMIT_TRACKERS.save(
             deps.storage,
             &channel.name,
             &channel
                 .quotas
                 .iter()
-                .map(|q| ChannelFlow {
+                .map(|q| RateLimit {
                     quota: q.into(),
                     flow: Flow::new(0_u128, 0_u128, now, q.duration),
                 })
@@ -62,7 +62,7 @@ pub fn try_remove_channel(
     if sender != ibc_module && sender != gov_module {
         return Err(ContractError::Unauthorized {});
     }
-    TRACKERS.remove(deps.storage, &channel_id);
+    RATE_LIMIT_TRACKERS.remove(deps.storage, &channel_id);
     Ok(Response::new()
         .add_attribute("method", "try_remove_channel")
         .add_attribute("channel_id", channel_id))
@@ -81,7 +81,7 @@ pub fn try_reset_channel_quota(
         return Err(ContractError::Unauthorized {});
     }
 
-    TRACKERS.update(
+    RATE_LIMIT_TRACKERS.update(
         deps.storage,
         &channel_id.clone(),
         |maybe_flows| match maybe_flows {
@@ -115,7 +115,7 @@ mod tests {
     use crate::contract::{execute, query};
     use crate::helpers::tests::verify_query_response;
     use crate::msg::{ExecuteMsg, QueryMsg, QuotaMsg};
-    use crate::state::{ChannelFlow, GOVMODULE, IBCMODULE};
+    use crate::state::{RateLimit, GOVMODULE, IBCMODULE};
 
     const IBC_ADDR: &str = "IBC_MODULE";
     const GOV_ADDR: &str = "GOV_MODULE";
@@ -150,7 +150,7 @@ mod tests {
 
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
 
-        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        let value: Vec<RateLimit> = from_binary(&res).unwrap();
         verify_query_response(
             &value[0],
             "daily",
@@ -195,7 +195,7 @@ mod tests {
             channel_id: "channel2".to_string(),
         };
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
-        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        let value: Vec<RateLimit> = from_binary(&res).unwrap();
         assert_eq!(value.len(), 1);
         verify_query_response(
             &value[0],
@@ -225,7 +225,7 @@ mod tests {
             channel_id: "channel2".to_string(),
         };
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
-        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        let value: Vec<RateLimit> = from_binary(&res).unwrap();
         assert_eq!(value.len(), 1);
 
         verify_query_response(
