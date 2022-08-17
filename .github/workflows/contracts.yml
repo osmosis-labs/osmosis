@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [{workdir: ./x/ibc-rate-limit/, output: testdata/rate_limiter.wasm, build: artifacts/rate_limiter-x86_64.wasm}]
+        contract: [{workdir: ./x/ibc-rate-limit/, output: testdata/rate_limiter.wasm, build: artifacts/rate_limiter-x86_64.wasm, name: rate_limiter}]
 
     steps:
       - name: Checkout sources
@@ -66,7 +66,7 @@ jobs:
       - name: 'Upload optimized contract artifact'
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.contract.build }}
+          name: ${{ matrix.contract.name }}
           path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
           retention-days: 1
 
