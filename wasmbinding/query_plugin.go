@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v10/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v11/wasmbinding/bindings"
 )
 
 // CustomQuerier dispatches custom CosmWasm bindings queries.
@@ -100,6 +100,34 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 			bz, err := json.Marshal(res)
 			if err != nil {
 				return nil, sdkerrors.Wrap(err, "osmo estimate swap query response")
+			}
+
+			return bz, nil
+
+		case contractQuery.ArithmeticTwap != nil:
+			twap, err := qp.ArithmeticTwap(ctx, contractQuery.ArithmeticTwap)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap query")
+			}
+
+			res := bindings.ArithmeticTwapResponse{Twap: twap.String()}
+			bz, err := json.Marshal(res)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap query response")
+			}
+
+			return bz, nil
+
+		case contractQuery.ArithmeticTwapToNow != nil:
+			twap, err := qp.ArithmeticTwapToNow(ctx, contractQuery.ArithmeticTwapToNow)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap to now query")
+			}
+
+			res := bindings.ArithmeticTwapToNowResponse{Twap: twap.String()}
+			bz, err := json.Marshal(res)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "osmo arithmetic twap query response")
 			}
 
 			return bz, nil

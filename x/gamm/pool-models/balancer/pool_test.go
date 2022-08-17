@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 var (
@@ -169,7 +169,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 			}
 
 			assertPoolStateNotModified(t, balancerPool, func() {
-				osmoutils.ConditionalPanic(t, tc.expectPanic, sut)
+				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
 	}
@@ -689,7 +689,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 				)
 
 				tol := sdk.NewDec(1)
-				require.True(osmoutils.DecApproxEq(t, initialCalcTokenOut.ToDec(), inverseCalcTokenOut, tol))
+				osmoassert.DecApproxEq(t, initialCalcTokenOut.ToDec(), inverseCalcTokenOut, tol)
 			})
 		}
 	}
@@ -1195,7 +1195,6 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 
 // This test (currently trivially) checks to make sure that `IsActive` returns true for balancer pools.
 // This is mainly to make sure that if IsActive is ever used as an emergency switch, it is not accidentally left off for any (or all) pools.
-// TODO: create a test with mocks to make sure IsActive works as intended when flipped for specific pools/all pools
 func TestIsActive(t *testing.T) {
 	tests := map[string]struct {
 		expectedIsActive bool

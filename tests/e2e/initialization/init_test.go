@@ -1,3 +1,6 @@
+//go:build e2e
+// +build e2e
+
 package initialization_test
 
 import (
@@ -10,7 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
 )
 
 const forkHeight = 10
@@ -48,7 +51,7 @@ func TestChainInit(t *testing.T) {
 		dataDir, err = os.MkdirTemp("", "osmosis-e2e-testnet-test")
 	)
 
-	chain, err := initialization.InitChain(id, dataDir, nodeConfigs, time.Second*3, forkHeight)
+	chain, err := initialization.InitChain(id, dataDir, nodeConfigs, time.Second*3, time.Second, forkHeight)
 	require.NoError(t, err)
 
 	require.Equal(t, chain.ChainMeta.DataDir, dataDir)
@@ -106,7 +109,7 @@ func TestSingleNodeInit(t *testing.T) {
 	)
 
 	// Setup
-	existingChain, err := initialization.InitChain(id, dataDir, existingChainNodeConfigs, time.Second*3, forkHeight)
+	existingChain, err := initialization.InitChain(id, dataDir, existingChainNodeConfigs, time.Second*3, time.Second, forkHeight)
 	require.NoError(t, err)
 
 	actualNode, err := initialization.InitSingleNode(existingChain.ChainMeta.Id, dataDir, filepath.Join(existingChain.Nodes[0].ConfigDir, "config", "genesis.json"), expectedConfig, time.Second*3, 3, "testHash", []string{"some server"}, []string{"some server"})

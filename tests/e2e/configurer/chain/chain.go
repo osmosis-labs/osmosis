@@ -9,8 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/config"
+
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -18,7 +20,8 @@ type Config struct {
 
 	ValidatorInitConfigs []*initialization.NodeConfig
 	// voting period is number of blocks it takes to deposit, 1.2 seconds per validator to vote on the prop, and a buffer.
-	VotingPeriod float32
+	VotingPeriod          float32
+	ExpeditedVotingPeriod float32
 	// upgrade proposal height for chain.
 	UpgradePropHeight    int64
 	LatestProposalNumber int
@@ -40,13 +43,16 @@ const (
 )
 
 func New(t *testing.T, containerManager *containers.Manager, id string, initValidatorConfigs []*initialization.NodeConfig) *Config {
+	numVal := float32(len(initValidatorConfigs))
 	return &Config{
 		ChainMeta: initialization.ChainMeta{
 			Id: id,
 		},
-		ValidatorInitConfigs: initValidatorConfigs,
-		t:                    t,
-		containerManager:     containerManager,
+		ValidatorInitConfigs:  initValidatorConfigs,
+		VotingPeriod:          config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks,
+		ExpeditedVotingPeriod: config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks - 1,
+		t:                     t,
+		containerManager:      containerManager,
 	}
 }
 
