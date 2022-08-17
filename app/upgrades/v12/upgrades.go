@@ -43,9 +43,8 @@ func CreateUpgradeHandler(
 		}
 
 		// Initialize TWAP state
-		// TODO: Get allPoolIds from gamm keeper, and write test for migration.
-		allPoolIds := []uint64{}
-		err := keepers.TwapKeeper.MigrateExistingPools(ctx, allPoolIds)
+		latestPoolId := keepers.GAMMKeeper.GetNextPoolId(ctx) - 1
+		err := keepers.TwapKeeper.MigrateExistingPools(ctx, latestPoolId)
 		if err != nil {
 			return nil, err
 		}
