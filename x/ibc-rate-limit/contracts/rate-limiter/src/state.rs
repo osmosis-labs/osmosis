@@ -17,7 +17,7 @@ pub enum FlowType {
     Out,
 }
 
-/// A Flow represents the transfer of value through an IBC channel duriong a
+/// A Flow represents the transfer of value through an IBC channel during a
 /// time window.
 ///
 /// It tracks inflows (transfers into osmosis) and outflows (transfers out of
@@ -25,8 +25,11 @@ pub enum FlowType {
 ///
 /// The period_end represents the last point in time that for which this Flow is
 /// tracking the value transfer.
+/// TODO: Document that time windows are not rolling windows, but instead discrete repeating windows.
+/// This is a design decision chosen for gas reasons.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, Copy)]
 pub struct Flow {
+    // Q: Do we have edge case issues with inflow/outflow being u128, e.g. what if a token has super high precision.
     pub inflow: u128,
     pub outflow: u128,
     pub period_end: Timestamp,
@@ -60,7 +63,7 @@ impl Flow {
     // Mutating methods
 
     /// Expire resets the Flow to start tracking the value transfer from the
-    /// moment this methos is called.
+    /// moment this method is called.
     pub fn expire(&mut self, now: Timestamp, duration: u64) {
         self.inflow = 0;
         self.outflow = 0;
@@ -119,6 +122,8 @@ impl From<&QuotaMsg> for Quota {
     }
 }
 
+// TODO: Add docs that this is the main tracker, we should be setting multiple of these per contract
+// Q: Should we rename to "ChannelRateLimiter", and rename flow to "FlowTracker"?
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ChannelFlow {
     pub quota: Quota,
