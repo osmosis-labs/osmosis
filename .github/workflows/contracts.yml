@@ -37,7 +37,7 @@ jobs:
         run: >
           echo "CW_OPTIMIZOOR_VERSION=`cargo search cw-optimizoor -q | cut -d '"' -f 2`" >> $GITHUB_ENV
 
-      - name: Cache node cw-optimizoor
+      - name: Cache cw-optimizoor
         id: cache-cw-optimizoor
         uses: actions/cache@v3
         env:
@@ -58,12 +58,12 @@ jobs:
 #        run: >
 #          cargo cw-optimizoor
 #
-#      - name: Check Test Data
-#        working-directory: ${{ matrix.contract.workdir }}
-#        if: ${{ matrix.contract.output != null }}
-#        run: >
-#          ls ./artifacts;
-#          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
+      - name: Check Test Data
+        working-directory: ${{ matrix.contract.workdir }}
+        if: ${{ matrix.contract.output != null }}
+        run: >
+          echo "${{ matrix.contract.output }} ${{ matrix.contract.build }}";
+          #diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
   
 
   lints:
