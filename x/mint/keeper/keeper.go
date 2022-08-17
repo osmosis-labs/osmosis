@@ -169,6 +169,35 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	return err
 }
 
+// TODO: godoc and tests
+func (k Keeper) MintNativeCoins(ctx sdk.Context, moduleName string, amount sdk.Coins) error {
+	if amount.FilterDenoms([]string{k.GetParams(ctx).MintDenom}).Empty() {
+		return fmt.Errorf("minting only allowed for (%s), had (%s)", k.GetParams(ctx).MintDenom, amount)
+	}
+
+	if err := k.bankKeeper.MintCoins(ctx, moduleName, amount); err != nil {
+		return err
+	}
+	minter := k.GetMinter(ctx)
+	minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
+	k.SetMinter(ctx, minter)
+	return nil
+}
+
+// TODO: godoc and tests
+func (k Keeper) BurnNativeCoins(ctx sdk.Context, moduleName string, amount sdk.Coins) error {
+	if amount.FilterDenoms([]string{k.GetParams(ctx).MintDenom}).Empty() {
+		return fmt.Errorf("minting only allowed for (%s), had (%s)", k.GetParams(ctx).MintDenom, amount)
+	}
+	if err := k.bankKeeper.BurnCoins(ctx, moduleName, amount); err != nil {
+		return err
+	}
+	minter := k.GetMinter(ctx)
+	minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Sub(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
+	k.SetMinter(ctx, minter)
+	return nil
+}
+
 // getLastReductionEpochNum returns last reduction epoch number.
 func (k Keeper) getLastReductionEpochNum(ctx sdk.Context) int64 {
 	store := ctx.KVStore(k.storeKey)
