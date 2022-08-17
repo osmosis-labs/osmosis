@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
@@ -141,22 +143,23 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 	}
 	defaultSuperfluidAsset := types.SuperfluidAsset{}
 	if k.GetSuperfluidAsset(ctx, lock.Coins[0].Denom) == defaultSuperfluidAsset {
-		return types.ErrNonSuperfluidAsset
+		return sdkerrors.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", lock.Coins[0].Denom)
 	}
 
 	// prevent unbonding lockups to be not able to be used for superfluid staking
 	if lock.IsUnlocking() {
-		return types.ErrUnbondingLockupNotSupported
+		return sdkerrors.Wrapf(types.ErrUnbondingLockupNotSupported, "lock id : %s", lock.ID)
 	}
 
 	// ensure that lock duration >= staking.UnbondingTime
-	if lock.Duration < k.sk.GetParams(ctx).UnbondingTime {
-		return types.ErrNotEnoughLockupDuration
+	unbondingTime := k.sk.GetParams(ctx).UnbondingTime
+	if lock.Duration < unbondingTime {
+		return sdkerrors.Wrapf(types.ErrNotEnoughLockupDuration, "lock duration (%d) must be less than unbonding time (%d)", lock.Duration, unbondingTime)
 	}
 
 	// Thus when we stake now, this will be the only superfluid position for this lockID.
 	if k.alreadySuperfluidStaking(ctx, lock.ID) {
-		return types.ErrAlreadyUsedSuperfluidLockup
+		return sdkerrors.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %s", lock.ID)
 	}
 
 	return nil
