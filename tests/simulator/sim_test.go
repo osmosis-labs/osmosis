@@ -1,7 +1,6 @@
 package simapp
 
 import (
-	"database/sql"
 	"fmt"
 	"math/rand"
 	"os"
@@ -52,17 +51,9 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func fullAppSimulation(tb testing.TB, is_testing bool) {
-	var sqlDB *sql.DB
 	config, db, dir, logger, _, err := osmosim.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
-	}
-	if config.WriteStatsToDB {
-		sqlDB, err = sql.Open("sqlite3", "./blocks.db")
-		if err != nil {
-			tb.Fatal(err)
-		}
-		defer sqlDB.Close()
 	}
 
 	logger = simlogger.NewSimLogger(logger)
@@ -114,7 +105,6 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		initFns,
 		osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 		config,
-		sqlDB,
 	)
 
 	if simErr != nil {
@@ -201,7 +191,6 @@ func TestAppStateDeterminism(t *testing.T) {
 				initFns,
 				osmosis.SimulationManager().Actions(config.Seed, osmosis.AppCodec()), // Run all registered operations
 				config,
-				nil,
 			)
 
 			require.NoError(t, simErr)

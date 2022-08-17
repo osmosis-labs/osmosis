@@ -61,13 +61,18 @@ func SimulateFromSeed(
 	initFunctions InitFunctions,
 	actions []simtypes.ActionsWithMetadata,
 	config Config,
-	db *sql.DB,
 ) (stopEarly bool, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
 
 	// Set up sql table
+	var db *sql.DB
 	if config.WriteStatsToDB {
+		db, err = sql.Open("sqlite3", "./blocks.db")
+		if err != nil {
+			tb.Fatal(err)
+		}
+		defer db.Close()
 		sts := `
 		DROP TABLE IF EXISTS blocks;
 		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT, msg STRING);
