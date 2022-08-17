@@ -61,8 +61,8 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		expectErr      bool
 	}
 	testCases := []struct {
-		name    string
-		actions []Action
+		name          string
+		actions       []Action
 		expectedEvent []string
 	}{
 		{
