@@ -45,17 +45,18 @@ jobs:
         with:
           # cargo bin files are stored in `~/.cargo/bin/` on Linux/macOS
           path: ~/.cargo/bin/cargo-cw-optimizoor
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.CW_OPTIMIZOOR_VERSION }}
+          key: TEST
+
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+
 
       - if: ${{ steps.cache-cw-optimizoor.outputs.cache-hit != 'true' }}
         name: Install cw-optimizoor
         continue-on-error: true
         run: >
-          cargo install cw-optimizoor;
-          ls ~/.cargo/bin/
+          cargo install cw-optimizoor
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
 
       - name: Optimize
         working-directory: ${{ matrix.contract.workdir }}
