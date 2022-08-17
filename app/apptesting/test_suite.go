@@ -103,6 +103,19 @@ func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	s.Require().NoError(err)
 }
 
+// FundModuleAccount funds target module with specified amount.
+func (s *KeeperTestHelper) FundModuleAccount(moduleName string, amounts sdk.Coins) {
+	minter := s.App.MintKeeper.GetMinter(s.Ctx)
+	for _, coin := range amounts {
+		if coin.Denom == sdk.DefaultBondDenom {
+			minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(coin.Amount.ToDec())
+		}
+	}
+	s.App.MintKeeper.SetMinter(s.Ctx, minter)
+	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
+	s.Require().NoError(err)
+}
+
 func (s *KeeperTestHelper) MintCoins(coins sdk.Coins) {
 	err := s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, coins)
 	s.Require().NoError(err)

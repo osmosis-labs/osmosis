@@ -337,7 +337,12 @@ func (k Keeper) getDeveloperVestedAmount(ctx sdk.Context, denom string) sdk.Int 
 	return sdk.NewInt(developerVestingAmount).Sub(unvestedAmount)
 }
 
-// TODO: test and description
+// getMintedAmount returns the amount minted by the mint module account
+// without considering the developer rewards module account.
+// The developer rewards were pre-minted to its own module account at genesis.
+// Therefore, the developer rewards can be distributed separately.
+// As a result, we should not consider the original developer
+// vesting amount when calculating the minted amount.
 func (k Keeper) getMintedAmount(ctx sdk.Context, denom string) sdk.Int {
 	totalSupply := k.bankKeeper.GetSupply(ctx, denom).Amount
 	return totalSupply.Sub(sdk.NewInt(developerVestingAmount))

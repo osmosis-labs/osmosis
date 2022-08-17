@@ -775,3 +775,60 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 		})
 	}
 }
+
+// TestGetMintedAmount tests that the minted amount is calculated correctly.
+func (suite *KeeperTestSuite) TestGetMintedAmount() {
+	var baseAmount = sdk.NewInt(10000)
+
+	tests := map[string]struct {
+		denom          string
+		expectedAmount sdk.Int
+		preMinted      sdk.Coins
+		// preVest is necessary to ensure that vesting does not
+		// affect the minted amount.
+		preVest sdk.Coin
+
+		expectedError error
+		expectPanic   bool
+	}{
+		"zero minted": {
+			denom: sdk.DefaultBondDenom,
+
+			expectedAmount: sdk.ZeroInt(),
+		},
+		"pre minted equals to minted": {
+			denom:     sdk.DefaultBondDenom,
+			preMinted: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, baseAmount)),
+
+			expectedAmount: baseAmount,
+		},
+		"vesting does not affect": {
+			denom:   sdk.DefaultBondDenom,
+			preVest: sdk.NewCoin(sdk.DefaultBondDenom, baseAmount),
+
+			expectedAmount: sdk.ZeroInt(),
+		},
+	}
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			// Setup.
+			suite.Setup()
+			mintKeeper := suite.App.MintKeeper
+			ctx := suite.Ctx
+
+			if !tc.preMinted.Empty() {
+				mintKeeper.MintCoins(ctx, tc.preMinted)
+			}
+
+			if !tc.preVest.IsNil() {
+				mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
+			}
+
+			// System under test
+			actualAmount := mintKeeper.GetMintedAmount(ctx, tc.denom)
+
+			// Assertions.
+			suite.Require().Equal(tc.expectedAmount.String(), actualAmount.String())
+		})
+	}
+}
