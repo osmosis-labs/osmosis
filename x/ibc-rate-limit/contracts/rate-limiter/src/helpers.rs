@@ -30,10 +30,10 @@ impl RateLimitingContract {
 pub mod tests {
     use cosmwasm_std::Timestamp;
 
-    use crate::state::ChannelFlow;
+    use crate::state::RateLimit;
 
     pub fn verify_query_response(
-        value: &ChannelFlow,
+        value: &RateLimit,
         quota_name: &str,
         send_recv: (u32, u32),
         duration: u64,

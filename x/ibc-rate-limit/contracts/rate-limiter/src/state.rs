@@ -122,10 +122,11 @@ impl From<&QuotaMsg> for Quota {
     }
 }
 
-// TODO: Add docs that this is the main tracker, we should be setting multiple of these per contract
-// Q: Should we rename to "ChannelRateLimiter", and rename flow to "FlowTracker"?
+/// RateLimit is the main structure tracked for each channel. Its quota
+/// represents rate limit configuration, and the flow its
+/// current state (i.e.: how much value has been transfered in the current period)
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct ChannelFlow {
+pub struct RateLimit {
     pub quota: Quota,
     pub flow: Flow,
 }
@@ -137,8 +138,8 @@ pub const GOVMODULE: Item<Addr> = Item::new("gov_module");
 /// IBC transfer module, but could be set to something else if needed
 pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 
-/// CHANNEL_FLOWS is the main state for this contract. It maps an IBC channel_id
-/// to a vector of ChannelFlows. The ChannelFlow struct contains the information
+/// RATE_LIMIT_TRACKERS is the main state for this contract. It maps an IBC channel_id
+/// to a vector of `RateLimit`s. The `RateLimit` struct contains the information
 /// about how much value has moved through the channel during the currently
 /// active time period (channel_flow.flow) and what percentage of the channel's
 /// value we are allowing to flow through that channel in a specific duration (quota)
@@ -149,7 +150,7 @@ pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 ///
 /// It is the responsibility of the go module to pass the appropriate channel
 /// when sending the messages
-pub const CHANNEL_FLOWS: Map<&str, Vec<ChannelFlow>> = Map::new("flow");
+pub const RATE_LIMIT_TRACKERS: Map<&str, Vec<RateLimit>> = Map::new("flow");
 
 #[cfg(test)]
 mod tests {

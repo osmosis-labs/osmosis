@@ -10,7 +10,7 @@ use crate::management::{
     add_new_channels, try_add_channel, try_remove_channel, try_reset_channel_quota,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{ChannelFlow, FlowType, CHANNEL_FLOWS, GOVMODULE, IBCMODULE};
+use crate::state::{RateLimit, FlowType, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:rate-limiter";
@@ -82,15 +82,21 @@ pub fn execute(
     }
 }
 
-pub struct ChannelFlowResponse {
-    pub channel_flow: ChannelFlow,
+pub struct RateLimitResponse {
+    pub rate_limit: RateLimit,
     pub used: u128,
     pub max: u128,
 }
 
-// TODO: Lets add some more docs for this, namely that channel_value is the total supply of the denom
 // Q: Is an ICS 20 transfer only 1 denom at a time, or does the caller have to split into several
 // calls if its a multi-denom ICS-20 transfer
+
+/// This function checks the rate limit and, if successful, stores the updated data about the value
+/// that has been transfered through the channel.
+/// If the period for a RateLimit has ended, the Flow information is reset.
+///
+/// The channel_value is the current value of the channel as calculated by the caller. This should
+/// be the total supply of a denom
 pub fn try_transfer(
     deps: DepsMut,
     sender: Addr,
@@ -102,14 +108,16 @@ pub fn try_transfer(
 ) -> Result<Response, ContractError> {
     // Only the IBCMODULE can execute transfers
     // TODO: Should we move this to a helper method?
+    //       This may not be needed once we move this function to be under sudo.
+    //       Though it might still be worth checking that only the transfer module is calling it
     let ibc_module = IBCMODULE.load(deps.storage)?;
     if sender != ibc_module {
         return Err(ContractError::Unauthorized {});
     }
 
-    let channels = CHANNEL_FLOWS.may_load(deps.storage, &channel_id)?;
+    let trackers = RATE_LIMIT_TRACKERS.may_load(deps.storage, &channel_id)?;
 
-    let configured = match channels {
+    let configured = match trackers {
         None => false,
         Some(ref x) if x.is_empty() => false,
         _ => true,
@@ -124,35 +132,35 @@ pub fn try_transfer(
             .add_attribute("quota", "none"));
     }
 
-    let mut channels = channels.unwrap();
+    let mut rate_limits = trackers.unwrap();
 
-    let results: Result<Vec<ChannelFlowResponse>, _> = channels
+    let results: Result<Vec<RateLimitResponse>, _> = rate_limits
         .iter_mut()
-        .map(|channel| {
+        .map(|limit| {
             // TODO: Should we move this to more methods on ChannelFlow?
             // e.g. new pseudocode
             // channel.updateIfExpired(now)
             // channel.trackSend(&direction, funds)
             // channel.CheckRateLimit(direction.clone())?;
             // (Or at least update for time + rename for track send. the last one is a bit of a code style nit)
-            let max = channel.quota.capacity_at(&channel_value, &direction);
-            if channel.flow.is_expired(now) {
-                channel.flow.expire(now, channel.quota.duration)
+            let max = limit.quota.capacity_at(&channel_value, &direction);
+            if limit.flow.is_expired(now) {
+                limit.flow.expire(now, limit.quota.duration)
             }
-            channel.flow.add_flow(direction.clone(), funds);
+            limit.flow.add_flow(direction.clone(), funds);
 
-            let balance = channel.flow.balance();
+            let balance = limit.flow.balance();
             if balance > max {
                 return Err(ContractError::RateLimitExceded {
                     channel: channel_id.to_string(),
-                    reset: channel.flow.period_end,
+                    reset: limit.flow.period_end,
                 });
             };
-            Ok(ChannelFlowResponse {
+            Ok(RateLimitResponse {
                 // TODO: nit, can we derive channel.Clone()?
-                channel_flow: ChannelFlow {
-                    quota: channel.quota.clone(),
-                    flow: channel.flow,
+                rate_limit: RateLimit {
+                    quota: limit.quota.clone(),
+                    flow: limit.flow,
                 },
                 used: balance,
                 max,
@@ -161,10 +169,10 @@ pub fn try_transfer(
         .collect();
     let results = results?;
 
-    CHANNEL_FLOWS.save(
+    RATE_LIMIT_TRACKERS.save(
         deps.storage,
         &channel_id,
-        &results.iter().map(|r| r.channel_flow.clone()).collect(),
+        &results.iter().map(|r| r.rate_limit.clone()).collect(),
     )?;
 
     let response = Response::new()
@@ -177,16 +185,16 @@ pub fn try_transfer(
     results.iter().fold(Ok(response), |acc, result| {
         Ok(acc?
             .add_attribute(
-                format!("{}_used", result.channel_flow.quota.name),
+                format!("{}_used", result.rate_limit.quota.name),
                 result.used.to_string(),
             )
             .add_attribute(
-                format!("{}_max", result.channel_flow.quota.name),
+                format!("{}_max", result.rate_limit.quota.name),
                 result.max.to_string(),
             )
             .add_attribute(
-                format!("{}_period_end", result.channel_flow.quota.name),
-                result.channel_flow.flow.period_end.to_string(),
+                format!("{}_period_end", result.rate_limit.quota.name),
+                result.rate_limit.flow.period_end.to_string(),
             ))
     })
 }
@@ -199,7 +207,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 fn get_quotas(deps: Deps, channel_id: impl Into<String>) -> StdResult<Binary> {
-    to_binary(&CHANNEL_FLOWS.load(deps.storage, &channel_id.into())?)
+    to_binary(&RATE_LIMIT_TRACKERS.load(deps.storage, &channel_id.into())?)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -361,7 +369,6 @@ mod tests {
         let err = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap_err();
 
         assert!(matches!(err, ContractError::RateLimitExceded { .. }));
-        //assert_eq!(18, value.count);
     }
 
     #[test]
@@ -438,7 +445,7 @@ mod tests {
         };
 
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
-        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        let value: Vec<RateLimit> = from_binary(&res).unwrap();
         assert_eq!(value[0].quota.name, "weekly");
         assert_eq!(value[0].quota.max_percentage_send, 10);
         assert_eq!(value[0].quota.max_percentage_recv, 10);
@@ -467,7 +474,7 @@ mod tests {
 
         // Query
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
-        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        let value: Vec<RateLimit> = from_binary(&res).unwrap();
         verify_query_response(
             &value[0],
             "weekly",
@@ -506,7 +513,7 @@ mod tests {
             channel_id: "channel".to_string(),
         };
         let res = query(deps.as_ref(), env.clone(), query_msg).unwrap();
-        let value: Vec<ChannelFlow> = from_binary(&res).unwrap();
+        let value: Vec<RateLimit> = from_binary(&res).unwrap();
         verify_query_response(
             &value[0],
             "bad_quota",
