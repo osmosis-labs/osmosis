@@ -95,7 +95,7 @@ func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	minter := s.App.MintKeeper.GetMinter(s.Ctx)
 	for _, coin := range amounts {
 		if coin.Denom == sdk.DefaultBondDenom {
-			minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(coin.Amount.ToDec())
+			minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Add(coin.Amount.ToDec())
 		}
 	}
 	s.App.MintKeeper.SetMinter(s.Ctx, minter)
@@ -108,7 +108,7 @@ func (s *KeeperTestHelper) FundModuleAccount(moduleName string, amounts sdk.Coin
 	minter := s.App.MintKeeper.GetMinter(s.Ctx)
 	for _, coin := range amounts {
 		if coin.Denom == sdk.DefaultBondDenom {
-			minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(coin.Amount.ToDec())
+			minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Add(coin.Amount.ToDec())
 		}
 	}
 	s.App.MintKeeper.SetMinter(s.Ctx, minter)

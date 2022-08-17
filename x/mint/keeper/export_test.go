@@ -28,8 +28,8 @@ func (k Keeper) GetDeveloperVestedAmount(ctx sdk.Context, denom string) sdk.Int 
 	return k.getDeveloperVestedAmount(ctx, denom)
 }
 
-func (k Keeper) GetMintedAmount(ctx sdk.Context, denom string) sdk.Int {
-	return k.getMintedAmount(ctx, denom)
+func (k Keeper) GetInflationAmount(ctx sdk.Context, denom string) sdk.Int {
+	return k.getInflationAmount(ctx, denom)
 }
 
 func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Int, error) {
@@ -44,8 +44,12 @@ func (k Keeper) DistributeTruncationDelta(ctx sdk.Context, mintedDenom string, e
 	return k.distributeTruncationDelta(ctx, mintedDenom, expectedTotalMintedByCurrentEpoch, expectedTotalVestedByCurrentEpoch)
 }
 
-func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
-	return k.distributeMintedCoin(ctx, mintedCoin)
+func (k Keeper) DistributeInflationCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
+	return k.distributeInflationCoin(ctx, mintedCoin)
+}
+
+func (k Keeper) MintInflationCoin(ctx sdk.Context, inflationCoins sdk.Coins) error {
+	return k.mintInflationCoins(ctx, inflationCoins)
 }
 
 func (k Keeper) GetLastReductionEpochNum(ctx sdk.Context) int64 {

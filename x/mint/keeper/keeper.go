@@ -84,7 +84,7 @@ func (k Keeper) BurnNativeCoins(ctx sdk.Context, moduleName string, amount sdk.C
 		return err
 	}
 	minter := k.GetMinter(ctx)
-	minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Sub(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
+	minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Sub(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
 	k.SetMinter(ctx, minter)
 	return nil
 }
@@ -101,7 +101,7 @@ func (k Keeper) MintNativeCoins(ctx sdk.Context, moduleName string, amount sdk.C
 		return err
 	}
 	minter := k.GetMinter(ctx)
-	minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
+	minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Add(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
 	k.SetMinter(ctx, minter)
 	return nil
 }
@@ -169,8 +169,8 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-// distributeMintedCoin implements distribution of a minted coin from mint to external modules.
-func (k Keeper) distributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
+// distributeInflationCoin implements distribution of a minted coin from mint to external modules.
+func (k Keeper) distributeInflationCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
 	params := k.GetParams(ctx)
 	proportions := params.DistributionProportions
 
@@ -217,11 +217,11 @@ func (k Keeper) setLastReductionEpochNum(ctx sdk.Context, epochNum int64) {
 	store.Set(types.LastReductionEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
 }
 
-// mintCoins mints tokens for inflation. It is meant to be used
-// internally by the mint module.
+// mintInflationCoins mints tokens for inflation from the mint module accounts
+//. It is meant to be used internally by the mint module.
 // CONTRACT: minter's expected minter amount is updated separately
 // CONTRACT: only called with the mint denom, never other coins.
-func (k Keeper) mintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
+func (k Keeper) mintInflationCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	if newCoins.Empty() {
 		// skip as no coins need to be minted
 		return nil
@@ -336,36 +336,36 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 // To use these interfaces, we always round down to the nearest integer by truncating decimals.
 // As a result, it is possible to undermint. To mitigate that, we distribute any delta to the community pool.
 // The delta is calculated by subtracting the actual distributions from the given expected total distributions.
-func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, expectedTotalMintedByCurrentEpoch sdk.Dec, expectedTotalVestedByCurrentEpoch sdk.Dec) (sdk.Int, error) {
+func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, expectedInflationDistributionsByCurrentEpoch sdk.Dec, expectedVestingDistributionsByCurrentEpoch sdk.Dec) (sdk.Int, error) {
 	developerVestedAmount := k.getDeveloperVestedAmount(ctx, mintedDenom)
 	// N.B: Truncation is acceptable because we check delta at the end of every epoch.
 	// As a result, actual minted distributions always approach the expected value.
 	// For distributing delta from mint module account, we have to pre-mint first.
-	developerVestingDelta := expectedTotalVestedByCurrentEpoch.Sub(developerVestedAmount.ToDec()).TruncateInt()
+	developerVestingDelta := expectedVestingDistributionsByCurrentEpoch.Sub(developerVestedAmount.ToDec()).TruncateInt()
 	if developerVestingDelta.IsNegative() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "developer rewards delta was negative (%s), expected vested amount (%s), actual vested amount (%s)", developerVestingDelta, expectedTotalVestedByCurrentEpoch, developerVestedAmount)
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "developer rewards delta was negative (%s), expected vested amount (%s), actual vested amount (%s)", developerVestingDelta, expectedVestingDistributionsByCurrentEpoch, developerVestedAmount)
 	}
 	if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, developerVestingDelta)), k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)); err != nil {
 		return sdk.Int{}, err
 	}
 
-	mintedAmount := k.getMintedAmount(ctx, mintedDenom)
+	inflationAmount := k.getInflationAmount(ctx, mintedDenom)
 	// N.B: Similarly to developer vesting delta, truncation here is acceptable.
-	mintedDelta := expectedTotalMintedByCurrentEpoch.Sub(mintedAmount.ToDec()).TruncateInt()
-	if mintedDelta.IsNegative() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "minted delta was negative (%s), expected minted amount (%s), actual minted  (%s)", mintedDelta, expectedTotalMintedByCurrentEpoch, mintedAmount)
+	inflationDelta := expectedInflationDistributionsByCurrentEpoch.Sub(inflationAmount.ToDec()).TruncateInt()
+	if inflationDelta.IsNegative() {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "inflation delta was negative (%s), expected inflation amount (%s), actual inflation amount  (%s)", inflationDelta, expectedInflationDistributionsByCurrentEpoch, inflationAmount)
 	}
-	if mintedDelta.IsPositive() {
-		if err := k.mintCoins(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta))); err != nil {
+	if inflationDelta.IsPositive() {
+		if err := k.mintInflationCoins(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, inflationDelta))); err != nil {
 			return sdk.Int{}, err
 		}
 
-		if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta)), k.accountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
+		if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, inflationDelta)), k.accountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
 			return sdk.Int{}, err
 		}
 	}
 
-	return developerVestingDelta.Add(mintedDelta), nil
+	return developerVestingDelta.Add(inflationDelta), nil
 }
 
 // getDeveloperVestedAmount returns the vestes amount from the developer vesting module account.
@@ -375,13 +375,13 @@ func (k Keeper) getDeveloperVestedAmount(ctx sdk.Context, denom string) sdk.Int 
 	return vestedAmount
 }
 
-// getMintedAmount returns the amount minted by the mint module account
+// getInflationAmount returns the amount minted by the mint module account
 // without considering the developer rewards module account.
 // The developer rewards were pre-minted to its own module account at genesis.
 // Therefore, the developer rewards can be distributed separately.
 // As a result, we should not consider the original developer
 // vesting amount when calculating the minted amount.
-func (k Keeper) getMintedAmount(ctx sdk.Context, denom string) sdk.Int {
+func (k Keeper) getInflationAmount(ctx sdk.Context, denom string) sdk.Int {
 	totalSupply := k.bankKeeper.GetSupply(ctx, denom).Amount
 	return totalSupply.Sub(sdk.NewInt(developerVestingAmount))
 }

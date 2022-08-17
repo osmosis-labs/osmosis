@@ -51,13 +51,13 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		mintedCoin := minter.EpochProvision(params)
 		mintedCoins := sdk.NewCoins(mintedCoin)
 
-		err := k.mintCoins(ctx, mintedCoins)
+		err := k.mintInflationCoins(ctx, mintedCoins)
 		if err != nil {
 			panic(err)
 		}
 
 		// send the minted coins to the fee collector account
-		err = k.distributeMintedCoin(ctx, mintedCoin)
+		err = k.distributeInflationCoin(ctx, mintedCoin)
 		if err != nil {
 			panic(err)
 		}
@@ -71,10 +71,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		devRewardsProportion := minter.EpochProvisions.Mul(params.DistributionProportions.DeveloperRewards)
 		minter.LastTotalVestedAmount = minter.LastTotalVestedAmount.Add(devRewardsProportion)
-		minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(minter.EpochProvisions.Sub(devRewardsProportion))
+		minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Add(minter.EpochProvisions.Sub(devRewardsProportion))
 		k.SetMinter(ctx, minter)
 
-		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, mintedCoin.Denom, minter.LastTotalMintedAmount, minter.LastTotalVestedAmount)
+		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, mintedCoin.Denom, minter.LastTotalInflationAmount, minter.LastTotalVestedAmount)
 		if err != nil {
 			panic(err)
 		}

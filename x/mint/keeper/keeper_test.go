@@ -174,7 +174,7 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
+func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 	var (
 		equalMintProportions = types.DistributionProportions{
 			Staking:          sdk.NewDecWithPrec(1, 1),
@@ -185,46 +185,46 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 	)
 
 	tests := []struct {
-		name        string
-		proportions types.DistributionProportions
-		preMintCoin sdk.Coin
-		mintCoin    sdk.Coin
+		name          string
+		proportions   types.DistributionProportions
+		preMintCoin   sdk.Coin
+		inflationCoin sdk.Coin
 
 		expectError bool
 	}{
 		{
-			name:        "default proportions",
-			proportions: types.DefaultParams().DistributionProportions,
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
-			mintCoin:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
+			name:          "default proportions",
+			proportions:   types.DefaultParams().DistributionProportions,
+			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
+			inflationCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
 		},
 		{
-			name:        "custom proportions",
-			proportions: defaultDistributionProportions,
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(12345)),
-			mintCoin:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(12345)),
+			name:          "custom proportions",
+			proportions:   defaultDistributionProportions,
+			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(12345)),
+			inflationCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(12345)),
 		},
 		{
-			name:        "did not pre-mint enough - error at first distribution (999 < 3000 * 1/3)",
-			proportions: equalMintProportions,
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(999)),
-			mintCoin:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
+			name:          "did not pre-mint enough - error at first distribution (999 < 3000 * 1/3)",
+			proportions:   equalMintProportions,
+			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(999)),
+			inflationCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
 
 			expectError: true,
 		},
 		{
-			name:        "did not pre-mint enough - error at first distribution (1999 < 3000 * 2/3)",
-			proportions: equalMintProportions,
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1999)),
-			mintCoin:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
+			name:          "did not pre-mint enough - error at first distribution (1999 < 3000 * 2/3)",
+			proportions:   equalMintProportions,
+			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1999)),
+			inflationCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
 
 			expectError: true,
 		},
 		{
-			name:        "did not pre-mint enough - error at first distribution (2999 < 3000)",
-			proportions: equalMintProportions,
-			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2999)),
-			mintCoin:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
+			name:          "did not pre-mint enough - error at first distribution (2999 < 3000)",
+			proportions:   equalMintProportions,
+			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2999)),
+			inflationCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
 
 			expectError: true,
 		},
@@ -240,7 +240,7 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 
 			mintKeeper := suite.App.MintKeeper
 
-			mintAmount := tc.mintCoin.Amount.ToDec()
+			inflationAmount := tc.inflationCoin.Amount.ToDec()
 
 			// set distribution proportions
 			params := mintKeeper.GetParams(ctx)
@@ -252,20 +252,20 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			// As a result, we exclude the developer proportions from calculations of mint distributions.
 			nonDeveloperRewardsProportion := sdk.OneDec().Sub(tc.proportions.DeveloperRewards)
 
-			expectedPoolIncentivesAmount := mintAmount.Mul(tc.proportions.PoolIncentives.Quo(nonDeveloperRewardsProportion)).TruncateInt()
-			expectedStakingAmount := mintAmount.Mul(tc.proportions.Staking.Quo(nonDeveloperRewardsProportion)).TruncateInt()
+			expectedPoolIncentivesAmount := inflationAmount.Mul(tc.proportions.PoolIncentives.Quo(nonDeveloperRewardsProportion)).TruncateInt()
+			expectedStakingAmount := inflationAmount.Mul(tc.proportions.Staking.Quo(nonDeveloperRewardsProportion)).TruncateInt()
 
 			// Community pool might receive more than the expected amount since it receives all the remaining coins after
 			// estimating and truncating values for pool incentives and staking.
-			expectedCommunityPoolAmount := mintAmount.Sub(expectedPoolIncentivesAmount.ToDec()).Sub(expectedStakingAmount.ToDec()).TruncateInt()
+			expectedCommunityPoolAmount := inflationAmount.Sub(expectedPoolIncentivesAmount.ToDec()).Sub(expectedStakingAmount.ToDec()).TruncateInt()
 
 			// mints coins so supply exists on chain
 			suite.MintCoins(sdk.NewCoins(tc.preMintCoin))
 
-			oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintCoin.Denom).Amount
+			oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.inflationCoin.Denom).Amount
 
 			// System under test.
-			err := mintKeeper.DistributeMintedCoin(ctx, tc.mintCoin)
+			err := mintKeeper.DistributeInflationCoin(ctx, tc.inflationCoin)
 
 			if tc.expectError {
 				suite.Require().Error(err)
@@ -289,7 +289,7 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			// Developer vesting module account is unaffected.
 			// Mint module account balance is decreased by the distributed amount.
 			// We mint the amount equal to tc.preMintCoin that increases the supply
-			suite.ValidateSupplyAndMintModuleAccounts(sdk.NewInt(keeper.DeveloperVestingAmount), oldMintModuleBalanceAmount.Sub(tc.mintCoin.Amount), tc.preMintCoin.Amount)
+			suite.ValidateSupplyAndMintModuleAccounts(sdk.NewInt(keeper.DeveloperVestingAmount), oldMintModuleBalanceAmount.Sub(tc.inflationCoin.Amount), tc.preMintCoin.Amount)
 		})
 	}
 }
@@ -829,7 +829,7 @@ func (suite *KeeperTestSuite) TestGetMintedAmount() {
 			}
 
 			// System under test
-			actualAmount := mintKeeper.GetMintedAmount(ctx, tc.denom)
+			actualAmount := mintKeeper.GetInflationAmount(ctx, tc.denom)
 
 			// Assertions.
 			suite.Require().Equal(tc.expectedAmount.String(), actualAmount.String())
@@ -1058,14 +1058,14 @@ func (suite *KeeperTestSuite) TestMintNativeCoins() {
 		mintedCoins sdk.Coins
 
 		// Expected outputs
-		expectedMintedAmount            sdk.Int
-		expectedAccumulatorMintedAmount sdk.Dec
-		expectErr                       bool
+		expectedInflationAmount            sdk.Int
+		expectedAccumulatorInflationAmount sdk.Dec
+		expectErr                          bool
 	}{
 		"mint 1 coin native mint denom": {
-			mintedCoins:                     sdk.NewCoins(sdk.NewCoin(mintDenom, sdk.OneInt())),
-			expectedMintedAmount:            sdk.OneInt(),
-			expectedAccumulatorMintedAmount: sdk.OneDec(),
+			mintedCoins:                        sdk.NewCoins(sdk.NewCoin(mintDenom, sdk.OneInt())),
+			expectedInflationAmount:            sdk.OneInt(),
+			expectedAccumulatorInflationAmount: sdk.OneDec(),
 		},
 		"mint 1 coin non-native mint denom - error": {
 			mintedCoins: sdk.NewCoins(sdk.NewCoin(otherDenom, sdk.OneInt())),
@@ -1099,11 +1099,63 @@ func (suite *KeeperTestSuite) TestMintNativeCoins() {
 			suite.Require().NoError(err)
 
 			// Validate supply
-			mintedAmount := mintKeeper.GetMintedAmount(ctx, mintDenom)
-			suite.Require().Equal(tc.expectedMintedAmount.String(), mintedAmount.String())
+			inflationAmount := mintKeeper.GetInflationAmount(ctx, mintDenom)
+			suite.Require().Equal(tc.expectedInflationAmount.String(), inflationAmount.String())
 
 			// Validate minter's expected total minted amount.
-			suite.Require().Equal(tc.expectedAccumulatorMintedAmount, mintKeeper.GetMinter(ctx).LastTotalMintedAmount)
+			suite.Require().Equal(tc.expectedAccumulatorInflationAmount, mintKeeper.GetMinter(ctx).LastTotalInflationAmount)
+		})
+	}
+}
+
+// TestMintInflationCoins tests that minting inflation coins is
+// functions as expected by updating supply and not affecting
+// the minter's expected total minted amount. The minter should
+// be updated separately by taking truncated amount into account.
+func (suite *KeeperTestSuite) TestMintInflationCoins() {
+	const mintDenom = sdk.DefaultBondDenom
+	tests := map[string]struct {
+		// Inputs
+		// preminted is necessary to ensure that minting does not
+		// affect the minted amount.
+		mintedCoins sdk.Coins
+
+		// Expected outputs
+		expectedInflationAmount         sdk.Int
+		expectedAccumulatorMintedAmount sdk.Dec
+		expectNoOp                      bool
+	}{
+		"mint 1 coin native mint denom": {
+			mintedCoins:                     sdk.NewCoins(sdk.NewCoin(mintDenom, sdk.OneInt())),
+			expectedInflationAmount:         sdk.OneInt(),
+			expectedAccumulatorMintedAmount: sdk.OneDec(),
+		},
+		"mint 0 coins - no-op": {
+			mintedCoins: sdk.NewCoins(),
+			expectNoOp:  true,
+		},
+	}
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			// Setup.
+			suite.Setup()
+			mintKeeper := suite.App.MintKeeper
+			ctx := suite.Ctx
+
+			// System under test
+			err := mintKeeper.MintInflationCoin(ctx, tc.mintedCoins)
+			suite.Require().NoError(err)
+			// Assertions.
+			if tc.expectNoOp {
+				return
+			}
+
+			// Validate supply
+			actualInflationAmount := mintKeeper.GetInflationAmount(ctx, mintDenom)
+			suite.Require().Equal(tc.expectedInflationAmount.String(), actualInflationAmount.String())
+
+			// Validate minter's expected total minted amount.
+			suite.Require().Equal(sdk.ZeroDec(), mintKeeper.GetMinter(ctx).LastTotalInflationAmount)
 		})
 	}
 }

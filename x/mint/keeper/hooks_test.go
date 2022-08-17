@@ -627,16 +627,16 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_MultiEpoch_Inflation() {
 		suite.Require().NoError(err, i)
 
 		// Validate the amount minted from the mint module account.
-		expectedMintedAmount := expectedTotalProvisionedSupply.Mul(sdk.OneDec().Sub(mintParams.DistributionProportions.DeveloperRewards))
-		mintedAmount := mintKeeper.GetMintedAmount(ctx, sdk.DefaultBondDenom).ToDec()
-		osmoassert.DecApproxEq(suite.T(), expectedMintedAmount, mintedAmount, sdk.NewDec(1))
+		expectedInflationAmount := expectedTotalProvisionedSupply.Mul(sdk.OneDec().Sub(mintParams.DistributionProportions.DeveloperRewards))
+		inflationAmount := mintKeeper.GetInflationAmount(ctx, sdk.DefaultBondDenom).ToDec()
+		osmoassert.DecApproxEq(suite.T(), expectedInflationAmount, inflationAmount, sdk.NewDec(1))
 
 		// Validate the amount distributed from the developer vesting module account.
 		expectedDeveloperVestedAmount := expectedTotalProvisionedSupply.Mul(mintParams.DistributionProportions.DeveloperRewards)
 		developerVestedAmount := mintKeeper.GetDeveloperVestedAmount(ctx, sdk.DefaultBondDenom).ToDec()
 		osmoassert.DecApproxEq(suite.T(), expectedDeveloperVestedAmount, developerVestedAmount, sdk.NewDec(1))
 
-		osmoassert.DecApproxEq(suite.T(), expectedTotalProvisionedSupply, mintedAmount.Add(developerVestedAmount), sdk.NewDec(2))
+		osmoassert.DecApproxEq(suite.T(), expectedTotalProvisionedSupply, inflationAmount.Add(developerVestedAmount), sdk.NewDec(2))
 	}
 
 	// Validate that the total supply is approaching the 1 billion limit.
