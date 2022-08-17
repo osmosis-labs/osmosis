@@ -107,7 +107,7 @@ pub fn try_transfer(
 
     let configured = match channels {
         None => false,
-        Some(ref x) if x.len() == 0 => false,
+        Some(ref x) if x.is_empty() => false,
         _ => true,
     };
 
@@ -140,7 +140,7 @@ pub fn try_transfer(
             Ok(ChannelFlowResponse {
                 channel_flow: ChannelFlow {
                     quota: channel.quota.clone(),
-                    flow: channel.flow.clone(),
+                    flow: channel.flow,
                 },
                 used: balance,
                 max,

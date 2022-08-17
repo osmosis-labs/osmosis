@@ -25,7 +25,7 @@ pub enum FlowType {
 ///
 /// The period_end represents the last point in time that for which this Flow is
 /// tracking the value transfer.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, Copy)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
 pub struct Flow {
     pub inflow: u128,
     pub outflow: u128,
@@ -83,7 +83,7 @@ impl Flow {
 ///
 /// The name of the quota is expected to be a human-readable representation of
 /// the duration (i.e.: "weekly", "daily", "every-six-months", ...)
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Quota {
     pub name: String,
     pub max_percentage_send: u32,
@@ -119,7 +119,7 @@ impl From<&QuotaMsg> for Quota {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct ChannelFlow {
     pub quota: Quota,
     pub flow: Flow,
