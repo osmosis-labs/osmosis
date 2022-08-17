@@ -27,20 +27,20 @@ jobs:
         run: >
           rustup target add wasm32-unknown-unknown;
 
-#
-#      - name: Build
-#        working-directory: ${{ matrix.contract.workdir }}
-#        run: >
-#          cargo build --release --target wasm32-unknown-unknown
-#
-#      - name: Test
-#        working-directory: ${{ matrix.contract.workdir }}
-#        run: >
-#          cargo test
-#
-#      - name: Set latest cw-optimizoor version
-#        run: >
-#          echo "CW_OPTIMIZOOR_VERSION=`cargo search cw-optimizoor -q | cut -d '"' -f 2`" >> $GITHUB_ENV
+
+      - name: Build
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          cargo build --release --target wasm32-unknown-unknown
+
+      - name: Test
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          cargo test
+
+      - name: Set latest cw-optimizoor version
+        run: >
+          echo "CW_OPTIMIZOOR_VERSION=`cargo search cw-optimizoor -q | cut -d '"' -f 2`" >> $GITHUB_ENV
 
       - name: Cache cw-optimizoor
         id: cache-cw-optimizoor
