@@ -11,22 +11,50 @@ pub const RESET_TIME_DAILY: u64 = 60 * 60 * 24;
 pub const RESET_TIME_WEEKLY: u64 = 60 * 60 * 24 * 7;
 pub const RESET_TIME_MONTHLY: u64 = 60 * 60 * 24 * 30;
 
+/// This represents
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct Path {
+    pub denom: String,
+    pub channel: String,
+}
+
+impl Path {
+    pub fn new(channel: impl Into<String>, denom: impl Into<String>) -> Self {
+        Path {
+            channel: channel.into(),
+            denom: denom.into(),
+        }
+    }
+}
+
+impl Into<(String, String)> for Path {
+    fn into(self) -> (String, String) {
+        (self.channel.to_string(), self.denom.to_string())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum FlowType {
     In,
     Out,
 }
 
-/// A Flow represents the transfer of value through an IBC channel during a
-/// time window.
+/// A Flow represents the transfer of value for a denom through an IBC channel
+/// during a time window.
 ///
 /// It tracks inflows (transfers into osmosis) and outflows (transfers out of
 /// osmosis).
 ///
-/// The period_end represents the last point in time that for which this Flow is
+/// The period_end represents the last point in time for which this Flow is
 /// tracking the value transfer.
-/// TODO: Document that time windows are not rolling windows, but instead discrete repeating windows.
-/// This is a design decision chosen for gas reasons.
+///
+/// Periods are discrete repeating windows. A period only starts when a contract
+/// call to update the Flow (SendPacket/RecvPackt) is made, and not right after
+/// the period ends. This means that if no calls happen after a period expires,
+/// the next period will begin at the time of the next call and be valid for the
+/// specified duration for the quota.
+///
+/// This is a design decision to avoid the period calculations and thus reduce gas consumption
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
 pub struct Flow {
     // Q: Do we have edge case issues with inflow/outflow being u128, e.g. what if a token has super high precision.
@@ -49,8 +77,8 @@ impl Flow {
         }
     }
 
-    /// The balance of a flow is how much absolute value has moved through the
-    /// channel before period_end.
+    /// The balance of a flow is how much absolute value for the denom has moved
+    /// through the channel before period_end.
     pub fn balance(&self) -> u128 {
         self.inflow.abs_diff(self.outflow)
     }
@@ -79,8 +107,8 @@ impl Flow {
     }
 }
 
-/// A Quota is the percentage of the channel's total value that can be
-/// transfered through the channel in a given period of time (duration)
+/// A Quota is the percentage of the denom's total value that can be transfered
+/// through the channel in a given period of time (duration)
 ///
 /// Percentages can be different for send and recv
 ///
@@ -96,8 +124,8 @@ pub struct Quota {
 
 impl Quota {
     /// Calculates the max capacity (absolute value in the same unit as
-    /// total_value) in a given direction based on the total value of the
-    /// channel.
+    /// total_value) in a given direction based on the total value of the denom
+    /// in the channel.
     pub fn capacity_at(&self, total_value: &u128, direction: &FlowType) -> u128 {
         let max_percentage = match direction {
             FlowType::In => self.max_percentage_recv,
@@ -122,7 +150,7 @@ impl From<&QuotaMsg> for Quota {
     }
 }
 
-/// RateLimit is the main structure tracked for each channel. Its quota
+/// RateLimit is the main structure tracked for each channel/denom pair. Its quota
 /// represents rate limit configuration, and the flow its
 /// current state (i.e.: how much value has been transfered in the current period)
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -138,19 +166,25 @@ pub const GOVMODULE: Item<Addr> = Item::new("gov_module");
 /// IBC transfer module, but could be set to something else if needed
 pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 
-/// RATE_LIMIT_TRACKERS is the main state for this contract. It maps an IBC channel_id
-/// to a vector of `RateLimit`s. The `RateLimit` struct contains the information
-/// about how much value has moved through the channel during the currently
-/// active time period (channel_flow.flow) and what percentage of the channel's
-/// value we are allowing to flow through that channel in a specific duration (quota)
+/// RATE_LIMIT_TRACKERS is the main state for this contract. It maps a path (IBC
+/// Channel + denom) to a vector of `RateLimit`s.
 ///
-/// For simplicity, the map keys (ibc channel) refers to the "host" channel on the
-/// osmosis side. This means that on PacketSend it will refer to the source
+/// The `RateLimit` struct contains the information about how much value of a
+/// denom has moved through the channel during the currently active time period
+/// (channel_flow.flow) and what percentage of the denom's value we are
+/// allowing to flow through that channel in a specific duration (quota)
+///
+/// For simplicity, the channel in the map keys refers to the "host" channel on
+/// the osmosis side. This means that on PacketSend it will refer to the source
 /// channel while on PacketRecv it refers to the destination channel.
 ///
 /// It is the responsibility of the go module to pass the appropriate channel
 /// when sending the messages
-pub const RATE_LIMIT_TRACKERS: Map<&str, Vec<RateLimit>> = Map::new("flow");
+///
+/// The map key (String, String) represents (channel_id, denom). We use
+/// composite keys instead of a struct to avoid having to implement the
+/// PrimaryKey trait
+pub const RATE_LIMIT_TRACKERS: Map<(String, String), Vec<RateLimit>> = Map::new("flow");
 
 #[cfg(test)]
 mod tests {

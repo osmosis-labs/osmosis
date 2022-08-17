@@ -4,9 +4,24 @@ use serde::{Deserialize, Serialize};
 
 // The channel struct contains a name representing a unique identifier within ibc-go, and a list of rate limit quotas
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct Channel {
-    pub name: String,
+pub struct PathMsg {
+    pub channel_id: String,
+    pub denom: String,
     pub quotas: Vec<QuotaMsg>,
+}
+
+impl PathMsg {
+    pub fn new(
+        channel: impl Into<String>,
+        denom: impl Into<String>,
+        quotas: Vec<QuotaMsg>,
+    ) -> Self {
+        PathMsg {
+            channel_id: channel.into(),
+            denom: denom.into(),
+            quotas,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -32,7 +47,7 @@ impl QuotaMsg {
 pub struct InstantiateMsg {
     pub gov_module: Addr,
     pub ibc_module: Addr,
-    pub channels: Vec<Channel>,
+    pub paths: Vec<PathMsg>,
 }
 
 /// The caller (IBC module) is responsibble for correctly calculating the funds
@@ -42,23 +57,29 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     SendPacket {
         channel_id: String,
+        denom: String,
         channel_value: u128,
         funds: u128,
     },
     RecvPacket {
         channel_id: String,
+        denom: String,
         channel_value: u128,
         funds: u128,
     },
-    AddChannel {
+    // TODO: rename these to AddPath and RemovePath
+    AddPath {
         channel_id: String,
+        denom: String,
         quotas: Vec<QuotaMsg>,
     },
-    RemoveChannel {
+    RemovePath {
         channel_id: String,
+        denom: String,
     },
-    ResetChannelQuota {
+    ResetPathQuota {
         channel_id: String,
+        denom: String,
         quota_id: String,
     },
 }
@@ -66,7 +87,7 @@ pub enum ExecuteMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    GetQuotas { channel_id: String },
+    GetQuotas { channel_id: String, denom: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::helpers::RateLimitingContract;
-    use crate::msg::{Channel, InstantiateMsg};
+    use crate::msg::InstantiateMsg;
+    use crate::{helpers::RateLimitingContract, msg::PathMsg};
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
@@ -35,14 +35,14 @@ mod tests {
         })
     }
 
-    fn proper_instantiate(channels: Vec<Channel>) -> (App, RateLimitingContract) {
+    fn proper_instantiate(paths: Vec<PathMsg>) -> (App, RateLimitingContract) {
         let mut app = mock_app();
         let cw_template_id = app.store_code(contract_template());
 
         let msg = InstantiateMsg {
             gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
-            channels,
+            paths,
         };
 
         let cw_template_contract_addr = app
@@ -66,7 +66,7 @@ mod tests {
 
         use super::*;
         use crate::{
-            msg::{Channel, ExecuteMsg, QuotaMsg},
+            msg::{ExecuteMsg, PathMsg, QuotaMsg},
             state::{RESET_TIME_DAILY, RESET_TIME_MONTHLY, RESET_TIME_WEEKLY},
         };
 
@@ -74,30 +74,33 @@ mod tests {
         fn expiration() {
             let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10);
 
-            let (mut app, cw_template_contract) = proper_instantiate(vec![Channel {
-                name: "channel".to_string(),
+            let (mut app, cw_template_contract) = proper_instantiate(vec![PathMsg {
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 quotas: vec![quota],
             }]);
 
             // Using all the allowance
             let msg = ExecuteMsg::SendPacket {
-                channel_id: "channel".to_string(),
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 channel_value: 3_000,
                 funds: 300,
             };
             let cosmos_msg = cw_template_contract.call(msg).unwrap();
             let res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
 
-            let Attribute { key, value } = &res.custom_attrs(1)[2];
+            let Attribute { key, value } = &res.custom_attrs(1)[3];
             assert_eq!(key, "weekly_used");
             assert_eq!(value, "300");
-            let Attribute { key, value } = &res.custom_attrs(1)[3];
+            let Attribute { key, value } = &res.custom_attrs(1)[4];
             assert_eq!(key, "weekly_max");
             assert_eq!(value, "300");
 
             // Another packet is rate limited
             let msg = ExecuteMsg::SendPacket {
-                channel_id: "channel".to_string(),
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 channel_value: 3_000,
                 funds: 300,
             };
@@ -116,7 +119,8 @@ mod tests {
 
             // Sending the packet should work now
             let msg = ExecuteMsg::SendPacket {
-                channel_id: "channel".to_string(),
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 channel_value: 3_000,
                 funds: 300,
             };
@@ -124,10 +128,10 @@ mod tests {
             let cosmos_msg = cw_template_contract.call(msg).unwrap();
             let res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
 
-            let Attribute { key, value } = &res.custom_attrs(1)[2];
+            let Attribute { key, value } = &res.custom_attrs(1)[3];
             assert_eq!(key, "weekly_used");
             assert_eq!(value, "300");
-            let Attribute { key, value } = &res.custom_attrs(1)[3];
+            let Attribute { key, value } = &res.custom_attrs(1)[4];
             assert_eq!(key, "weekly_max");
             assert_eq!(value, "300");
         }
@@ -140,14 +144,16 @@ mod tests {
                 QuotaMsg::new("monthly", RESET_TIME_MONTHLY, 5, 5),
             ];
 
-            let (mut app, cw_template_contract) = proper_instantiate(vec![Channel {
-                name: "channel".to_string(),
+            let (mut app, cw_template_contract) = proper_instantiate(vec![PathMsg {
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 quotas,
             }]);
 
             // Sending 1% to use the daily allowance
             let msg = ExecuteMsg::SendPacket {
-                channel_id: "channel".to_string(),
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 channel_value: 100,
                 funds: 1,
             };
@@ -156,7 +162,8 @@ mod tests {
 
             // Another packet is rate limited
             let msg = ExecuteMsg::SendPacket {
-                channel_id: "channel".to_string(),
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 channel_value: 100,
                 funds: 1,
             };
@@ -173,7 +180,8 @@ mod tests {
 
             // Sending the packet should work now
             let msg = ExecuteMsg::SendPacket {
-                channel_id: "channel".to_string(),
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 channel_value: 100,
                 funds: 1,
             };
@@ -191,7 +199,8 @@ mod tests {
 
                 // Sending the packet should work now
                 let msg = ExecuteMsg::SendPacket {
-                    channel_id: "channel".to_string(),
+                    channel_id: format!("channel"),
+                    denom: format!("denom"),
                     channel_value: 100,
                     funds: 1,
                 };
@@ -207,7 +216,8 @@ mod tests {
 
             // We now have exceeded the weekly limit!  Even if the daily limit allows us, the weekly doesn't
             let msg = ExecuteMsg::SendPacket {
-                channel_id: "channel".to_string(),
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 channel_value: 100,
                 funds: 1,
             };
@@ -224,7 +234,8 @@ mod tests {
 
             // We can still can't send because the weekly and monthly limits are the same
             let msg = ExecuteMsg::SendPacket {
-                channel_id: "channel".to_string(),
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 channel_value: 100,
                 funds: 1,
             };
@@ -242,7 +253,8 @@ mod tests {
 
             // We can still can't send because the  monthly limit hasn't passed
             let msg = ExecuteMsg::SendPacket {
-                channel_id: "channel".to_string(),
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 channel_value: 100,
                 funds: 1,
             };
@@ -258,7 +270,8 @@ mod tests {
             });
 
             let msg = ExecuteMsg::SendPacket {
-                channel_id: "channel".to_string(),
+                channel_id: format!("channel"),
+                denom: format!("denom"),
                 channel_value: 100,
                 funds: 1,
             };
