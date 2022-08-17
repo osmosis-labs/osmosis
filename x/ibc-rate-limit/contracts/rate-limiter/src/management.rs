@@ -84,19 +84,19 @@ pub fn try_reset_channel_quota(
     RATE_LIMIT_TRACKERS.update(
         deps.storage,
         &channel_id.clone(),
-        |maybe_flows| match maybe_flows {
+        |maybe_rate_limit| match maybe_rate_limit {
             None => Err(ContractError::QuotaNotFound {
                 quota_id,
                 channel_id: channel_id.clone(),
             }),
-            Some(mut flows) => {
+            Some(mut limits) => {
                 // Q: What happens here if quote_id not found? seems like we return ok?
-                flows.iter_mut().for_each(|channel| {
-                    if channel.quota.name == channel_id.as_ref() {
-                        channel.flow.expire(now, channel.quota.duration)
+                limits.iter_mut().for_each(|limit| {
+                    if limit.quota.name == channel_id.as_ref() {
+                        limit.flow.expire(now, limit.quota.duration)
                     }
                 });
-                Ok(flows)
+                Ok(limits)
             }
         },
     )?;
