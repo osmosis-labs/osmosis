@@ -51,7 +51,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		mintedCoin := minter.EpochProvision(params)
 		mintedCoins := sdk.NewCoins(mintedCoin)
 
-		// We over-allocate by the developer vesting portion, and burn this later
 		err := k.mintCoins(ctx, mintedCoins)
 		if err != nil {
 			panic(err)

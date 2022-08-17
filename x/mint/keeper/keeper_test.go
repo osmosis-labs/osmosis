@@ -24,6 +24,8 @@ type KeeperTestSuite struct {
 	queryClient types.QueryClient
 }
 
+const otherDenom = "other"
+
 var (
 	testAddressOne   = sdk.AccAddress([]byte("addr1---------------"))
 	testAddressTwo   = sdk.AccAddress([]byte("addr2---------------"))
@@ -806,7 +808,7 @@ func (suite *KeeperTestSuite) TestGetMintedAmount() {
 		},
 		"pre minted other denom": {
 			denom:     sdk.DefaultBondDenom,
-			preMinted: sdk.NewCoins(sdk.NewCoin("other", baseAmount)),
+			preMinted: sdk.NewCoins(sdk.NewCoin(otherDenom, baseAmount)),
 
 			expectedAmount: sdk.ZeroInt(),
 		},
@@ -871,7 +873,7 @@ func (suite *KeeperTestSuite) TestGetDeveloperVestedAmount() {
 		},
 		"pre vested other denom": {
 			denom:   sdk.DefaultBondDenom,
-			preVest: sdk.NewCoin("other", baseAmount),
+			preVest: sdk.NewCoin(otherDenom, baseAmount),
 
 			expectedAmount: sdk.ZeroInt(),
 		},
@@ -1007,7 +1009,7 @@ func (suite *KeeperTestSuite) TestDistributeTruncationDelta() {
 		"different denom from pre minted and pre-vested, none distributed": {
 			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(182_192_134))),
 			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(545_193)),
-			denom:                            "other",
+			denom:                            otherDenom,
 			expectedMintedBeforeCurrentEpoch: sdk.NewDecWithPrec(182_192_134_3134, 4).Add(sdk.NewDec(5)),
 			expectedVestedBeforeCurrentEpoch: sdk.NewDecWithPrec(545_193_123, 3).Add(sdk.NewDec(100_000)),
 
