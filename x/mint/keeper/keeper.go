@@ -331,10 +331,11 @@ func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, e
 	return developerVestingDelta.Add(mintedDelta), nil
 }
 
-// TODO: test and description
+// getDeveloperVestedAmount returns the vestes amount from the developer vesting module account.
 func (k Keeper) getDeveloperVestedAmount(ctx sdk.Context, denom string) sdk.Int {
 	unvestedAmount := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), denom).Amount
-	return sdk.NewInt(developerVestingAmount).Sub(unvestedAmount)
+	vestedAmount := sdk.NewInt(developerVestingAmount).Sub(unvestedAmount)
+	return vestedAmount
 }
 
 // getMintedAmount returns the amount minted by the mint module account

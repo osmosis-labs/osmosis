@@ -787,9 +787,6 @@ func (suite *KeeperTestSuite) TestGetMintedAmount() {
 		// preVest is necessary to ensure that vesting does not
 		// affect the minted amount.
 		preVest sdk.Coin
-
-		expectedError error
-		expectPanic   bool
 	}{
 		"zero minted": {
 			denom: sdk.DefaultBondDenom,
@@ -826,6 +823,69 @@ func (suite *KeeperTestSuite) TestGetMintedAmount() {
 
 			// System under test
 			actualAmount := mintKeeper.GetMintedAmount(ctx, tc.denom)
+
+			// Assertions.
+			suite.Require().Equal(tc.expectedAmount.String(), actualAmount.String())
+		})
+	}
+}
+
+// TestGetDeveloperVestedAmount tests that the vested amount is calculated correctly.
+func (suite *KeeperTestSuite) TestGetDeveloperVestedAmount() {
+	var baseAmount = sdk.NewInt(10000)
+
+	tests := map[string]struct {
+		denom          string
+		expectedAmount sdk.Int
+		// preminted is necessary to ensure that minting does not
+		// affect the minted amount.
+		preMinted sdk.Coins
+		preVest   sdk.Coin
+
+		expectedError error
+		expectPanic   bool
+	}{
+		"zero vested": {
+			denom: sdk.DefaultBondDenom,
+
+			expectedAmount: sdk.ZeroInt(),
+		},
+		"minting does not affect vesting": {
+			denom:     sdk.DefaultBondDenom,
+			preMinted: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, baseAmount)),
+
+			expectedAmount: sdk.ZeroInt(),
+		},
+		"pre-vested amount equals to vested": {
+			denom:   sdk.DefaultBondDenom,
+			preVest: sdk.NewCoin(sdk.DefaultBondDenom, baseAmount),
+
+			expectedAmount: baseAmount,
+		},
+		"max vested": {
+			denom:   sdk.DefaultBondDenom,
+			preVest: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount)),
+
+			expectedAmount: sdk.NewInt(keeper.DeveloperVestingAmount),
+		},
+	}
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			// Setup.
+			suite.Setup()
+			mintKeeper := suite.App.MintKeeper
+			ctx := suite.Ctx
+
+			if !tc.preMinted.Empty() {
+				mintKeeper.MintCoins(ctx, tc.preMinted)
+			}
+
+			if !tc.preVest.IsNil() {
+				mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
+			}
+
+			// System under test
+			actualAmount := mintKeeper.GetDeveloperVestedAmount(ctx, tc.denom)
 
 			// Assertions.
 			suite.Require().Equal(tc.expectedAmount.String(), actualAmount.String())
