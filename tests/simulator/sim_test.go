@@ -44,7 +44,7 @@ func TestFullAppSimulation(t *testing.T) {
 	osmosim.FlagCommitValue = true
 	osmosim.FlagVerboseValue = true
 	osmosim.FlagPeriodValue = 10
-	osmosim.FlagSeedValue = 13
+	osmosim.FlagSeedValue = 11
 	osmosim.FlagWriteStatsToDB = true
 	fullAppSimulation(t, true)
 }
@@ -54,7 +54,6 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
-
 	logger = simlogger.NewSimLogger(logger)
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
