@@ -27,7 +27,7 @@ pub enum FlowType {
 /// tracking the value transfer.
 /// TODO: Document that time windows are not rolling windows, but instead discrete repeating windows.
 /// This is a design decision chosen for gas reasons.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, Copy)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
 pub struct Flow {
     // Q: Do we have edge case issues with inflow/outflow being u128, e.g. what if a token has super high precision.
     pub inflow: u128,
@@ -86,7 +86,7 @@ impl Flow {
 ///
 /// The name of the quota is expected to be a human-readable representation of
 /// the duration (i.e.: "weekly", "daily", "every-six-months", ...)
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Quota {
     pub name: String,
     pub max_percentage_send: u32,
@@ -124,7 +124,7 @@ impl From<&QuotaMsg> for Quota {
 
 // TODO: Add docs that this is the main tracker, we should be setting multiple of these per contract
 // Q: Should we rename to "ChannelRateLimiter", and rename flow to "FlowTracker"?
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct ChannelFlow {
     pub quota: Quota,
     pub flow: Flow,

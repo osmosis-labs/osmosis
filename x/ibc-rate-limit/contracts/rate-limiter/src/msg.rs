@@ -3,13 +3,13 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 // The channel struct contains a name representing a unique identifier within ibc-go, and a list of rate limit quotas
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Channel {
     pub name: String,
     pub quotas: Vec<QuotaMsg>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct QuotaMsg {
     pub name: String,
     pub duration: u64,
@@ -28,7 +28,7 @@ impl QuotaMsg {
 
 /// Initialize the contract with the address of the IBC module and any existing channels.
 /// Only the ibc module is allowed to execute actions on this contract
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct InstantiateMsg {
     pub gov_module: Addr,
     pub ibc_module: Addr,
@@ -37,7 +37,7 @@ pub struct InstantiateMsg {
 
 /// The caller (IBC module) is responsibble for correctly calculating the funds
 /// being sent through the channel
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     SendPacket {
@@ -63,12 +63,12 @@ pub enum ExecuteMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     GetQuotas { channel_id: String },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum MigrateMsg {}
