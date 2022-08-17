@@ -301,23 +301,27 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 // Due to limitations of some SDK interfaces that operate on integers, there are known truncation differences
 // from the expected total epoch mint provisions.
 // To use these interfaces, we always round down to the nearest integer by truncating decimals.
-// As a result, it is possible to undermint. To mitigate that, we distirbute any delta to the community pool.
-func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, expectedTotalMintedByCurrentEpoch sdk.Dec, expectedTotalVestedByCurrentEpoch sdk.Dec, developerRewardsProportion sdk.Dec) (sdk.Int, error) {
+// As a result, it is possible to undermint. To mitigate that, we distribute any delta to the community pool.
+// The delta is calculated by subtracting the actual distributions from the given expected total distributions.
+func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, expectedTotalMintedByCurrentEpoch sdk.Dec, expectedTotalVestedByCurrentEpoch sdk.Dec) (sdk.Int, error) {
 	developerVestedAmount := k.getDeveloperVestedAmount(ctx, mintedDenom)
-
-	mintedAmount := k.getMintedAmount(ctx, mintedDenom)
-
+	// N.B: Truncation is acceptable because we check delta at the end of every epoch.
+	// As a result, actual minted distributions always approach the expected value.
+	// For distributing delta from mint module account, we have to pre-mint first.
 	developerVestingDelta := expectedTotalVestedByCurrentEpoch.Sub(developerVestedAmount.ToDec()).TruncateInt()
-	mintedDelta := expectedTotalMintedByCurrentEpoch.Sub(mintedAmount.ToDec()).TruncateInt()
-
+	if developerVestingDelta.IsNegative() {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "developer rewards delta was negative (%s)", developerVestingDelta)
+	}
 	if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, developerVestingDelta)), k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)); err != nil {
 		return sdk.Int{}, err
 	}
 
-	// Distribute to the community pool.
-	// Truncation is acceptable because we check delta at the end of every epoch.
-	// As a result, actual minted distributions always approach the expected value.
-	// For distributing delta from mint module account, we have to pre-mint first.
+	mintedAmount := k.getMintedAmount(ctx, mintedDenom)
+	// N.B: Similarly to developer vesting delta, truncation here is acceptable.
+	mintedDelta := expectedTotalMintedByCurrentEpoch.Sub(mintedAmount.ToDec()).TruncateInt()
+	if mintedDelta.IsNegative() {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "minted delta was negative (%s)", mintedDelta)
+	}
 	if mintedDelta.IsPositive() {
 		if err := k.mintCoins(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, mintedDelta))); err != nil {
 			return sdk.Int{}, err
@@ -367,7 +371,7 @@ func getProportions(value sdk.Dec, ratio sdk.Dec) (sdk.Dec, error) {
 // - developer vesting module account is already created prior to calling this method.
 func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
 	if amount.IsNil() || amount.Amount.IsZero() {
-		return sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero")
+		return sdkerrors.Wrap(types.ErrInvalidAmount, "amount cannot be nil or zero")
 	}
 	if k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
 		return sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName)

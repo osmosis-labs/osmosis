@@ -64,7 +64,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		developerVestingCoin := minter.DeveloperVestingEpochProvision(params)
-		developerRewardsDistributionProportion := params.DistributionProportions.DeveloperRewards
 		// allocate dev rewards to respective accounts from developer vesting module account.
 		developerVestingAmount, err := k.distributeDeveloperRewards(ctx, developerVestingCoin, params.WeightedDeveloperRewardsReceivers)
 		if err != nil {
@@ -76,7 +75,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		minter.LastTotalMintedAmount = minter.LastTotalMintedAmount.Add(minter.EpochProvisions.Sub(devRewardsProportion))
 		k.SetMinter(ctx, minter)
 
-		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, mintedCoin.Denom, minter.LastTotalMintedAmount, minter.LastTotalVestedAmount, developerRewardsDistributionProportion)
+		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, mintedCoin.Denom, minter.LastTotalMintedAmount, minter.LastTotalVestedAmount)
 		if err != nil {
 			panic(err)
 		}
