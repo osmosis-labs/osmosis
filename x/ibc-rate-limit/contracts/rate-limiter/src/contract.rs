@@ -10,7 +10,7 @@ use crate::management::{
     add_new_channels, try_add_channel, try_remove_channel, try_reset_channel_quota,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{ChannelFlow, FlowType, CHANNEL_FLOWS, GOVMODULE, IBCMODULE};
+use crate::state::{ChannelFlow, FlowType, GOVMODULE, IBCMODULE, TRACKERS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:rate-limiter";
@@ -107,7 +107,7 @@ pub fn try_transfer(
         return Err(ContractError::Unauthorized {});
     }
 
-    let channels = CHANNEL_FLOWS.may_load(deps.storage, &channel_id)?;
+    let channels = TRACKERS.may_load(deps.storage, &channel_id)?;
 
     let configured = match channels {
         None => false,
@@ -161,7 +161,7 @@ pub fn try_transfer(
         .collect();
     let results = results?;
 
-    CHANNEL_FLOWS.save(
+    TRACKERS.save(
         deps.storage,
         &channel_id,
         &results.iter().map(|r| r.channel_flow.clone()).collect(),
@@ -199,7 +199,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 
 fn get_quotas(deps: Deps, channel_id: impl Into<String>) -> StdResult<Binary> {
-    to_binary(&CHANNEL_FLOWS.load(deps.storage, &channel_id.into())?)
+    to_binary(&TRACKERS.load(deps.storage, &channel_id.into())?)
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -361,7 +361,6 @@ mod tests {
         let err = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap_err();
 
         assert!(matches!(err, ContractError::RateLimitExceded { .. }));
-        //assert_eq!(18, value.count);
     }
 
     #[test]

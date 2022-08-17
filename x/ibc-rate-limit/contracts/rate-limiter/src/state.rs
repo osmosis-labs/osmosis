@@ -137,7 +137,7 @@ pub const GOVMODULE: Item<Addr> = Item::new("gov_module");
 /// IBC transfer module, but could be set to something else if needed
 pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 
-/// CHANNEL_FLOWS is the main state for this contract. It maps an IBC channel_id
+/// TRACKERS is the main state for this contract. It maps an IBC channel_id
 /// to a vector of ChannelFlows. The ChannelFlow struct contains the information
 /// about how much value has moved through the channel during the currently
 /// active time period (channel_flow.flow) and what percentage of the channel's
@@ -149,7 +149,7 @@ pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 ///
 /// It is the responsibility of the go module to pass the appropriate channel
 /// when sending the messages
-pub const CHANNEL_FLOWS: Map<&str, Vec<ChannelFlow>> = Map::new("flow");
+pub const TRACKERS: Map<&str, Vec<ChannelFlow>> = Map::new("flow");
 
 #[cfg(test)]
 mod tests {

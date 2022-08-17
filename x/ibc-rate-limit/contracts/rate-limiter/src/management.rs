@@ -1,5 +1,5 @@
 use crate::msg::{Channel, QuotaMsg};
-use crate::state::{ChannelFlow, Flow, CHANNEL_FLOWS, GOVMODULE, IBCMODULE};
+use crate::state::{ChannelFlow, Flow, GOVMODULE, IBCMODULE, TRACKERS};
 use crate::ContractError;
 use cosmwasm_std::{Addr, DepsMut, Response, Timestamp};
 
@@ -9,7 +9,7 @@ pub fn add_new_channels(
     now: Timestamp,
 ) -> Result<(), ContractError> {
     for channel in channels {
-        CHANNEL_FLOWS.save(
+        TRACKERS.save(
             deps.storage,
             &channel.name,
             &channel
@@ -62,7 +62,7 @@ pub fn try_remove_channel(
     if sender != ibc_module && sender != gov_module {
         return Err(ContractError::Unauthorized {});
     }
-    CHANNEL_FLOWS.remove(deps.storage, &channel_id);
+    TRACKERS.remove(deps.storage, &channel_id);
     Ok(Response::new()
         .add_attribute("method", "try_remove_channel")
         .add_attribute("channel_id", channel_id))
@@ -81,7 +81,7 @@ pub fn try_reset_channel_quota(
         return Err(ContractError::Unauthorized {});
     }
 
-    CHANNEL_FLOWS.update(
+    TRACKERS.update(
         deps.storage,
         &channel_id.clone(),
         |maybe_flows| match maybe_flows {
