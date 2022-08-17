@@ -11,7 +11,10 @@ pub const RESET_TIME_DAILY: u64 = 60 * 60 * 24;
 pub const RESET_TIME_WEEKLY: u64 = 60 * 60 * 24 * 7;
 pub const RESET_TIME_MONTHLY: u64 = 60 * 60 * 24 * 30;
 
-/// This represents
+/// This represents the key for our rate limiting tracker. A tuple of a denom and
+/// a channel. When interactic with storage, it's preffered to use this struct
+/// and call path.into() on it to convert it to the composite key of the
+/// RATE_LIMIT_TRACKERS map
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Path {
     pub denom: String,
@@ -27,9 +30,15 @@ impl Path {
     }
 }
 
-impl Into<(String, String)> for Path {
-    fn into(self) -> (String, String) {
-        (self.channel.to_string(), self.denom.to_string())
+impl From<Path> for (String, String) {
+    fn from(path: Path) -> (String, String) {
+        (path.channel, path.denom)
+    }
+}
+
+impl From<&Path> for (String, String) {
+    fn from(path: &Path) -> (String, String) {
+        (path.channel.to_owned(), path.denom.to_owned())
     }
 }
 

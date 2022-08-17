@@ -2,7 +2,7 @@ use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-// The channel struct contains a name representing a unique identifier within ibc-go, and a list of rate limit quotas
+// PathMsg contains a channel_id and denom to represent a unique identifier within ibc-go, and a list of rate limit quotas
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PathMsg {
     pub channel_id: String,
@@ -24,6 +24,7 @@ impl PathMsg {
     }
 }
 
+// QuotaMsg represents a rate limiting Quota when sent as a wasm msg
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct QuotaMsg {
     pub name: String,
@@ -67,7 +68,6 @@ pub enum ExecuteMsg {
         channel_value: u128,
         funds: u128,
     },
-    // TODO: rename these to AddPath and RemovePath
     AddPath {
         channel_id: String,
         denom: String,

@@ -46,31 +46,35 @@ pub fn execute(
             channel_value,
             funds,
             denom,
-        } => try_transfer(
-            deps,
-            info.sender,
-            channel_id,
-            denom,
-            channel_value,
-            funds,
-            FlowType::Out,
-            env.block.time,
-        ),
+        } => {
+            let path = Path::new(&channel_id, &denom);
+            try_transfer(
+                deps,
+                info.sender,
+                &path,
+                channel_value,
+                funds,
+                FlowType::Out,
+                env.block.time,
+            )
+        }
         ExecuteMsg::RecvPacket {
             channel_id,
             channel_value,
             funds,
             denom,
-        } => try_transfer(
-            deps,
-            info.sender,
-            channel_id,
-            denom,
-            channel_value,
-            funds,
-            FlowType::In,
-            env.block.time,
-        ),
+        } => {
+            let path = Path::new(&channel_id, &denom);
+            try_transfer(
+                deps,
+                info.sender,
+                &path,
+                channel_value,
+                funds,
+                FlowType::In,
+                env.block.time,
+            )
+        }
         ExecuteMsg::AddPath {
             channel_id,
             denom,
@@ -112,8 +116,7 @@ pub struct RateLimitResponse {
 pub fn try_transfer(
     deps: DepsMut,
     sender: Addr,
-    channel_id: String,
-    denom: String,
+    path: &Path,
     channel_value: u128,
     funds: u128,
     direction: FlowType,
@@ -128,7 +131,6 @@ pub fn try_transfer(
         return Err(ContractError::Unauthorized {});
     }
 
-    let path = Path::new(&channel_id, &denom);
     let trackers = RATE_LIMIT_TRACKERS.may_load(deps.storage, path.into())?;
 
     let configured = match trackers {
@@ -142,8 +144,8 @@ pub fn try_transfer(
         // TODO: Should there be an attribute for it being allowed vs denied?
         return Ok(Response::new()
             .add_attribute("method", "try_transfer")
-            .add_attribute("channel_id", channel_id)
-            .add_attribute("denom", denom)
+            .add_attribute("channel_id", path.channel.to_string())
+            .add_attribute("denom", path.denom.to_string())
             .add_attribute("quota", "none"));
     }
 
@@ -167,8 +169,8 @@ pub fn try_transfer(
             let balance = limit.flow.balance();
             if balance > max {
                 return Err(ContractError::RateLimitExceded {
-                    channel: channel_id.to_string(),
-                    denom: denom.to_string(),
+                    channel: path.channel.to_string(),
+                    denom: path.denom.to_string(),
                     reset: limit.flow.period_end,
                 });
             };
@@ -187,14 +189,14 @@ pub fn try_transfer(
 
     RATE_LIMIT_TRACKERS.save(
         deps.storage,
-        Path::new(&channel_id, &denom).into(),
+        path.into(),
         &results.iter().map(|r| r.rate_limit.clone()).collect(),
     )?;
 
     let response = Response::new()
         .add_attribute("method", "try_transfer")
-        .add_attribute("channel_id", channel_id)
-        .add_attribute("denom", denom);
+        .add_attribute("channel_id", path.channel.to_string())
+        .add_attribute("denom", path.denom.to_string());
 
     // Adding the attributes from each quota to the response
     // Code style Q: Should we move attribute setting to a function on response?
