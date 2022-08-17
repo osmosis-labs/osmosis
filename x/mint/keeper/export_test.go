@@ -44,6 +44,10 @@ func (k Keeper) DistributeTruncationDelta(ctx sdk.Context, mintedDenom string, e
 	return k.distributeTruncationDelta(ctx, mintedDenom, expectedTotalMintedByCurrentEpoch, expectedTotalVestedByCurrentEpoch)
 }
 
+func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
+	return k.distributeMintedCoin(ctx, mintedCoin)
+}
+
 func (k Keeper) GetLastReductionEpochNum(ctx sdk.Context) int64 {
 	return k.getLastReductionEpochNum(ctx)
 }
