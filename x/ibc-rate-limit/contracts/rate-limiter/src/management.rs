@@ -1,5 +1,5 @@
 use crate::msg::{Channel, QuotaMsg};
-use crate::state::{RateLimit, Flow, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
+use crate::state::{Flow, RateLimit, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
 use crate::ContractError;
 use cosmwasm_std::{Addr, DepsMut, Response, Timestamp};
 
@@ -81,10 +81,8 @@ pub fn try_reset_channel_quota(
         return Err(ContractError::Unauthorized {});
     }
 
-    RATE_LIMIT_TRACKERS.update(
-        deps.storage,
-        &channel_id.clone(),
-        |maybe_rate_limit| match maybe_rate_limit {
+    RATE_LIMIT_TRACKERS.update(deps.storage, &channel_id.clone(), |maybe_rate_limit| {
+        match maybe_rate_limit {
             None => Err(ContractError::QuotaNotFound {
                 quota_id,
                 channel_id: channel_id.clone(),
@@ -98,8 +96,8 @@ pub fn try_reset_channel_quota(
                 });
                 Ok(limits)
             }
-        },
-    )?;
+        }
+    })?;
 
     Ok(Response::new()
         .add_attribute("method", "try_reset_channel")
