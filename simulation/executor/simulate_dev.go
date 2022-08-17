@@ -72,7 +72,7 @@ func (simState *simState) SimulateAllBlocks(
 	w io.Writer,
 	simCtx *simtypes.SimCtx,
 	blockSimulator blockSimFn,
-	config simulation.Config) (stopEarly bool) {
+	config Config) (stopEarly bool) {
 	stopEarly = false
 	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
 		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)
