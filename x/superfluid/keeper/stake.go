@@ -154,7 +154,7 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 	// ensure that lock duration >= staking.UnbondingTime
 	unbondingTime := k.sk.GetParams(ctx).UnbondingTime
 	if lock.Duration < unbondingTime {
-		return sdkerrors.Wrapf(types.ErrNotEnoughLockupDuration, "lock duration (%d) must be less than unbonding time (%d)", lock.Duration, unbondingTime)
+		return sdkerrors.Wrapf(types.ErrNotEnoughLockupDuration, "lock duration (%d) must be greater than unbonding time (%d)", lock.Duration, unbondingTime)
 	}
 
 	// Thus when we stake now, this will be the only superfluid position for this lockID.
