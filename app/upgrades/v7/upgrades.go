@@ -52,7 +52,9 @@ func CreateUpgradeHandler(
 			Denom:     "gamm/pool/1",
 			AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
 		}
-		keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
+		if err := keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset); err != nil {
+			panic(err)
+		}
 
 		// Set the supply offset from the developer vesting account
 		if err := keepers.MintKeeper.SetInitialSupplyOffsetDuringMigration(ctx); err != nil {
