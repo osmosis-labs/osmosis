@@ -10,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        workdir: [./x/ibc-rate-limit]
-        output: [./testdata/rate_limiter.wasm]
+        contract: [{workdir: ./x/ibc-rate-limit, output: ./testdata/rate_limiter.wasm, build: ./artifacts/rate_limiter-x86_64.wasm}]
 
     steps:
       - name: Checkout sources
@@ -24,13 +23,13 @@ jobs:
           target: wasm32-unknown-unknown
 
       - name: Build
-        working-directory: ${{ matrix.workdir }}
+        working-directory: ${{ matrix.contract.workdir }}
         run: >
           rustup target add wasm32-unknown-unknown;
           cargo build --release --target wasm32-unknown-unknown
 
       - name: Test
-        working-directory: ${{ matrix.workdir }}
+        working-directory: ${{ matrix.contract.workdir }}
         run: >
           cargo test
 
@@ -56,17 +55,16 @@ jobs:
           ls ~/.cargo/bin/
 
       - name: Optimize
-        working-directory: ${{ matrix.workdir }}
+        working-directory: ${{ matrix.contract.workdir }}
         run: >
           cargo cw-optimizoor
 
       - name: Check Test Data
-        working-directory: ${{ matrix.workdir }}
-        if: ${{ matrix.output != null }}
+        working-directory: ${{ matrix.contract.workdir }}
+        if: ${{ matrix.contract.output != null }}
         run: >
-          ls ${{ matrix.output }};
           ls ./artifacts;
-          diff ${{ matrix.output }} ./artifacts/rate_limiter.wasm
+          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
   
 
   lints:
