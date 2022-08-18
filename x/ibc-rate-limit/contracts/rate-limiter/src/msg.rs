@@ -51,7 +51,7 @@ pub struct InstantiateMsg {
     pub paths: Vec<PathMsg>,
 }
 
-/// The caller (IBC module) is responsibble for correctly calculating the funds
+/// The caller (IBC module) is responsible for correctly calculating the funds
 /// being sent through the channel
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
