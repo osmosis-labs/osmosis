@@ -73,10 +73,10 @@ func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) 
 }
 
 // createTestRecordsFromTime creates and returns 4 test records in the following order:
-// - at time t - 2
-// - at time t - 1
+// - at time t - 2 seconds
+// - at time t - 1 seconds
 // - at time t
-// - at time t + 1
+// - at time t + 1 seconds
 func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) {
 	baseRecord := newEmptyPriceRecord(basePoolId, t, denom1, denom0)
 
