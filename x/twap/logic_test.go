@@ -83,7 +83,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 }
 
 func (s *TestSuite) TestUpdateTwap() {
-	poolId := s.PrepareUni2PoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
+	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
 	newSp := sdk.OneDec()
 
 	tests := map[string]struct {

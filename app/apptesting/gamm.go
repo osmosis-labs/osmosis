@@ -14,22 +14,6 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin("baz", sdk.NewInt(10000000)),
 )
 
-// PrepareUni2PoolWithCoins returns a Univ2 pool with the initial liquidity being the provided balances.
-func (s *KeeperTestHelper) PrepareUni2PoolWithCoins(coin1, coin2 sdk.Coin) uint64 {
-	return s.PrepareBalancerPoolWithPoolAsset(
-		[]balancer.PoolAsset{
-			{
-				Weight: sdk.NewInt(1),
-				Token:  coin1,
-			},
-			{
-				Weight: sdk.NewInt(1),
-				Token:  coin2,
-			},
-		},
-	)
-}
-
 // PrepareBalancerPoolWithCoins returns a balancer pool
 // consisted of given coins with equal weight.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithCoins(coins ...sdk.Coin) uint64 {

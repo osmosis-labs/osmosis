@@ -12,35 +12,33 @@ import (
 // and the corerct state entries have been created upon pool creation.
 // This test includes test cases for swapping on the same block with pool creation.
 func (s *TestSuite) TestAfterPoolCreatedHook() {
-	const (
-		Uni2               = 0
-		Balancer3AssetPool = 1
-	)
+	two_asset_coin := defaultUniV2Coins
+	three_asset_coins := defaultThreeAssetCoins
 
 	tests := []struct {
-		name     string
-		poolType int
+		name      string
+		poolCoins sdk.Coins
 		// if this field is set true, we swap in the same block with pool creation
 		runSwap bool
 	}{
 		{
 			"Uni2 Pool, no swap on pool creation block",
-			Uni2,
+			two_asset_coin,
 			false,
 		},
 		{
 			"Uni2 Pool, swap on pool creation block",
-			Uni2,
+			two_asset_coin,
 			true,
 		},
 		{
 			"Three asset balancer pool, no swap on pool creation block",
-			Balancer3AssetPool,
+			three_asset_coins,
 			false,
 		},
 		{
 			"Three asset balancer pool, no swap on pool creation block",
-			Balancer3AssetPool,
+			three_asset_coins,
 			true,
 		},
 	}
@@ -50,11 +48,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 		s.Run(tc.name, func() {
 			var poolId uint64
 			// prepare pool according to test case
-			if tc.poolType == Uni2 {
-				poolId = s.PrepareUni2PoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
-			} else {
-				poolId = s.PrepareBalancerPoolWithCoins(defaultThreeAssetCoins...)
-			}
+			poolId = s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
 
 			if tc.runSwap {
 				s.RunBasicSwap(poolId)
@@ -106,7 +100,8 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 // TODO: Abstract this to be more table driven, and test more pool / block setups.
 func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
-	poolId := s.PrepareUni2PoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
+
+	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
 	expectedHistoricalTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
