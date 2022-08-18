@@ -8,7 +8,7 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::management::{add_new_paths, try_add_path, try_remove_path, try_reset_path_quota};
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{FlowType, Path, RateLimitResponse, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
+use crate::state::{FlowType, Path, RateLimit, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:rate-limiter";
@@ -145,16 +145,14 @@ pub fn try_transfer(
 
     let mut rate_limits = trackers.unwrap();
 
-    let results: Vec<RateLimitResponse> = rate_limits
+    // If any of the RateLimits fails, allow_transfer() will return
+    // ContractError::RateLimitExceded, which we'll propagate out
+    let results: Vec<RateLimit> = rate_limits
         .iter_mut()
         .map(|limit| limit.allow_transfer(path, &direction, funds, channel_value, now))
         .collect::<Result<_, ContractError>>()?;
 
-    RATE_LIMIT_TRACKERS.save(
-        deps.storage,
-        path.into(),
-        &results.iter().map(|r| r.rate_limit.clone()).collect(),
-    )?;
+    RATE_LIMIT_TRACKERS.save(deps.storage, path.into(), &results)?;
 
     let response = Response::new()
         .add_attribute("method", "try_transfer")
@@ -164,28 +162,29 @@ pub fn try_transfer(
     // Adding the attributes from each quota to the response
     // Code style Q: Should we move attribute setting to a function on response?
     // Rust question: How does this work with one response being an error, I'm not sure how the flow works here
-    // TODO: Do we even need these attributes? The response is only ever seen by the chain.
     results.iter().fold(Ok(response), |acc, result| {
+        // TODO: Do we even need these attributes? The response is only ever
+        // seen by the chain. Maybe we could add them conditional on a feature
+        // (debug, or testing)
+        let (used_in, used_out) = result.flow.balance();
+        let (max_in, max_out) = result.quota.capacity_at(&channel_value);
         Ok(acc?
             .add_attribute(
-                format!("{}_used_in", result.rate_limit.quota.name),
-                result.rate_limit.flow.balance().0.to_string(),
+                format!("{}_used_in", result.quota.name),
+                used_in.to_string(),
             )
             .add_attribute(
-                format!("{}_used_out", result.rate_limit.quota.name),
-                result.rate_limit.flow.balance().1.to_string(),
+                format!("{}_used_out", result.quota.name),
+                used_out.to_string(),
+            )
+            .add_attribute(format!("{}_max_in", result.quota.name), max_in.to_string())
+            .add_attribute(
+                format!("{}_max_out", result.quota.name),
+                max_out.to_string(),
             )
             .add_attribute(
-                format!("{}_max_in", result.rate_limit.quota.name),
-                result.max_in.to_string(),
-            )
-            .add_attribute(
-                format!("{}_max_out", result.rate_limit.quota.name),
-                result.max_out.to_string(),
-            )
-            .add_attribute(
-                format!("{}_period_end", result.rate_limit.quota.name),
-                result.rate_limit.flow.period_end.to_string(),
+                format!("{}_period_end", result.quota.name),
+                result.flow.period_end.to_string(),
             ))
     })
 }

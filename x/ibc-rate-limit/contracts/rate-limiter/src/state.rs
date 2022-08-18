@@ -203,7 +203,7 @@ impl RateLimit {
         funds: u128,
         channel_value: u128,
         now: Timestamp,
-    ) -> Result<RateLimitResponse, ContractError> {
+    ) -> Result<Self, ContractError> {
         self.flow
             .apply_transfer(direction, funds, now, self.quota.duration);
 
@@ -215,22 +215,12 @@ impl RateLimit {
                 denom: path.denom.to_string(),
                 reset: self.flow.period_end,
             }),
-            false => Ok(RateLimitResponse {
-                rate_limit: RateLimit {
-                    quota: self.quota.clone(), // Cloning here because self.quota.name (String) does not allow us to implement Copy
-                    flow: self.flow, // We can Copy flow, so this is slightly more efficient than cloning the whole RateLimit
-                },
-                max_in,
-                max_out,
+            false => Ok(RateLimit {
+                quota: self.quota.clone(), // Cloning here because self.quota.name (String) does not allow us to implement Copy
+                flow: self.flow, // We can Copy flow, so this is slightly more efficient than cloning the whole RateLimit
             }),
         }
     }
-}
-
-pub struct RateLimitResponse {
-    pub rate_limit: RateLimit,
-    pub max_in: u128,
-    pub max_out: u128,
 }
 
 /// Only this address can manage the contract. This will likely be the
