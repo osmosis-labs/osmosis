@@ -10,6 +10,7 @@ import (
 	"go/token"
 	"go/types"
 	"io/ioutil"
+	"log"
 	"strings"
 
 	"github.com/osmosis-labs/osmosis/v11/cmd/querygen/internal/models"
@@ -34,6 +35,28 @@ type Parser struct {
 	Importer types.Importer
 }
 
+type Field struct {
+	Type string            // field type
+	Name string            // field name
+	Doc  string            // field documentation
+	Meta map[string]string // client-added meta data
+}
+
+type Struct struct {
+	Name   string
+	Fields []Field
+}
+
+func (s *Struct) addField(t, n, d string) {
+	s.Fields = append(s.Fields,
+		Field{
+			Type: t,
+			Name: n,
+			Doc:  d,
+			Meta: make(map[string]string),
+		})
+}
+
 // Parse parses a given Go file at srcPath, along any files that share the same
 // package, into a domain model for generating tests.
 func (p *Parser) Parse(srcPath string, files []models.Path) (*Result, error) {
@@ -50,6 +73,7 @@ func (p *Parser) Parse(srcPath string, files []models.Path) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &Result{
 		Header: &models.Header{
 			Comments: parsePkgComment(f, f.Package),
@@ -57,7 +81,8 @@ func (p *Parser) Parse(srcPath string, files []models.Path) (*Result, error) {
 			Imports:  parseImports(f.Imports),
 			Code:     goCode(b, f),
 		},
-		Funcs: p.parseFunctions(fset, f, fs),
+		Funcs:   p.parseFunctions(fset, f, fs),
+		Structs: p.parseStructs(f),
 	}, nil
 }
 
@@ -94,6 +119,41 @@ func (p *Parser) parseFiles(fset *token.FileSet, f *ast.File, files []models.Pat
 		fs = append(fs, ff)
 	}
 	return fs, nil
+}
+
+func (p *Parser) parseStructs(f *ast.File) map[string]types.Struct {
+	inspecting := false
+	latestStruct := Struct{}
+	ast.Inspect(f, func(n ast.Node) bool {
+		switch x := n.(type) {
+		case *ast.TypeSpec:
+			latestStruct.Name = x.Name.Name
+			inspecting = true
+			if inspecting {
+				return false
+			}
+		case *ast.Field:
+			if inspecting {
+				if len(x.Names) > 1 {
+					fmt.Println("len(Name):", len(x.Names))
+					log.Fatalf("Can't have this kind of declaration")
+				}
+				if ident, ok := x.Type.(*ast.Ident); ok {
+					latestStruct.addField(ident.Name, x.Names[0].Name,
+						strings.TrimSpace(x.Doc.Text()))
+				} else if star, ok := x.Type.(*ast.StarExpr); ok {
+					if ident, ok := star.X.(*ast.Ident); ok {
+						latestStruct.addField(ident.Name, x.Names[0].Name,
+							strings.TrimSpace(x.Doc.Text()))
+					}
+				}
+			}
+		default:
+		}
+		return true
+	})
+	fmt.Println(latestStruct)
+	return map[string]types.Struct{}
 }
 
 func (p *Parser) parseFunctions(fset *token.FileSet, f *ast.File, fs []*ast.File) []*models.Function {
