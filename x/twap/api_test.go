@@ -69,7 +69,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 	}
 
 	makeSimpleTwapInput := func(startTime time.Time, endTime time.Time, isQuoteTokenA bool) getTwapInput {
-		quoteAssetDenom, baseAssetDenom := denom1, denom0
+		quoteAssetDenom, baseAssetDenom := denom0, denom1
 		if isQuoteTokenA {
 			baseAssetDenom, quoteAssetDenom = quoteAssetDenom, baseAssetDenom
 		}

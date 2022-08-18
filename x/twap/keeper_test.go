@@ -14,10 +14,10 @@ import (
 
 // TODO: Consider switching this everywhere
 var (
-	denom0                   = "token/A"
-	denom1                   = "token/B"
+	denom0                   = "token/B"
+	denom1                   = "token/A"
 	denom2                   = "token/C"
-	defaultUniV2Coins        = sdk.NewCoins(sdk.NewInt64Coin(denom1, 1_000_000_000), sdk.NewInt64Coin(denom0, 1_000_000_000))
+	defaultUniV2Coins        = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
 	baseTime                 = time.Unix(1257894000, 0).UTC()
 	tPlusOne                 = baseTime.Add(time.Second)
 	basePoolId        uint64 = 1
@@ -78,16 +78,16 @@ func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) 
 // - at time t
 // - at time t + 1 seconds
 func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) {
-	baseRecord := newEmptyPriceRecord(basePoolId, t, denom1, denom0)
+	baseRecord := newEmptyPriceRecord(basePoolId, t, denom0, denom1)
 
 	tMin1 := t.Add(-time.Second)
-	tMin1Record := newEmptyPriceRecord(basePoolId+1, tMin1, denom1, denom0)
+	tMin1Record := newEmptyPriceRecord(basePoolId+1, tMin1, denom0, denom1)
 
 	tMin2 := t.Add(-time.Second * 2)
-	tMin2Record := newEmptyPriceRecord(basePoolId+2, tMin2, denom1, denom0)
+	tMin2Record := newEmptyPriceRecord(basePoolId+2, tMin2, denom0, denom1)
 
 	tPlus1 := t.Add(time.Second)
-	tPlus1Record := newEmptyPriceRecord(basePoolId+3, tPlus1, denom1, denom0)
+	tPlus1Record := newEmptyPriceRecord(basePoolId+3, tPlus1, denom0, denom1)
 
 	return tMin2Record, tMin1Record, baseRecord, tPlus1Record
 }
@@ -96,8 +96,8 @@ func newTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.T
 	return types.TwapRecord{
 		PoolId:      1,
 		Time:        t,
-		Asset0Denom: denom1,
-		Asset1Denom: denom0,
+		Asset0Denom: denom0,
+		Asset1Denom: denom1,
 
 		P0LastSpotPrice:             sp0,
 		P1LastSpotPrice:             sdk.OneDec().Quo(sp0),

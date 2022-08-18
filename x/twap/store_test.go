@@ -46,8 +46,8 @@ func (s *TestSuite) TestTrackChangedPool() {
 // and runs storeNewRecord for everything in sequence.
 // Then it runs GetAllMostRecentRecordsForPool, and sees if its equal to expected
 func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
-	baseRecord := newEmptyPriceRecord(1, baseTime, denom1, denom0)
-	tPlusOneRecord := newEmptyPriceRecord(1, tPlusOne, denom1, denom0)
+	baseRecord := newEmptyPriceRecord(1, baseTime, denom0, denom1)
+	tPlusOneRecord := newEmptyPriceRecord(1, tPlusOne, denom0, denom1)
 	tests := map[string]struct {
 		recordsToSet    []types.TwapRecord
 		poolId          uint64
@@ -64,9 +64,9 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 			expectedRecords: []types.TwapRecord{},
 		},
 		"set single record, different pool ID": {
-			recordsToSet:    []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom1, denom0)},
+			recordsToSet:    []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
 			poolId:          2,
-			expectedRecords: []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom1, denom0)},
+			expectedRecords: []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
 		},
 		"set two records": {
 			recordsToSet:    []types.TwapRecord{baseRecord, tPlusOneRecord},
@@ -81,14 +81,14 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 		},
 		"set multi-asset pool record": {
 			recordsToSet: []types.TwapRecord{
-				newEmptyPriceRecord(1, baseTime, denom1, denom0),
-				newEmptyPriceRecord(1, baseTime, denom2, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom0)},
-			poolId: 1,
-			expectedRecords: []types.TwapRecord{
-				newEmptyPriceRecord(1, baseTime, denom1, denom0),
+				newEmptyPriceRecord(1, baseTime, denom0, denom1),
 				newEmptyPriceRecord(1, baseTime, denom2, denom0),
 				newEmptyPriceRecord(1, baseTime, denom2, denom1)},
+			poolId: 1,
+			expectedRecords: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, denom0, denom1),
+				newEmptyPriceRecord(1, baseTime, denom2, denom1),
+				newEmptyPriceRecord(1, baseTime, denom2, denom0)},
 		},
 	}
 
@@ -115,14 +115,14 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		asset0Denom string
 		asset1Denom string
 	}
-	defaultInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom1, denom0} }
-	wrongPoolIdInputAt := func(t time.Time) getRecordInput { return getRecordInput{2, t, denom1, denom0} }
-	defaultRevInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom0, denom1} }
-	baseRecord := newEmptyPriceRecord(1, baseTime, denom1, denom0)
+	defaultInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom0, denom1} }
+	wrongPoolIdInputAt := func(t time.Time) getRecordInput { return getRecordInput{2, t, denom0, denom1} }
+	defaultRevInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom1, denom0} }
+	baseRecord := newEmptyPriceRecord(1, baseTime, denom0, denom1)
 	tMin1 := baseTime.Add(-time.Second)
-	tMin1Record := newEmptyPriceRecord(1, tMin1, denom1, denom0)
+	tMin1Record := newEmptyPriceRecord(1, tMin1, denom0, denom1)
 	tPlus1 := baseTime.Add(time.Second)
-	tPlus1Record := newEmptyPriceRecord(1, tPlus1, denom1, denom0)
+	tPlus1Record := newEmptyPriceRecord(1, tPlus1, denom0, denom1)
 
 	tests := map[string]struct {
 		recordsToSet   []types.TwapRecord
@@ -165,9 +165,9 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 			wrongPoolIdInputAt(baseTime), baseRecord, true},
 		"pool2 record get": {
-			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom1, denom0)},
+			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
 			input:          wrongPoolIdInputAt(baseTime),
-			expectedRecord: newEmptyPriceRecord(2, baseTime, denom1, denom0),
+			expectedRecord: newEmptyPriceRecord(2, baseTime, denom0, denom1),
 			expErr:         false},
 	}
 	for name, test := range tests {
