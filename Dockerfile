@@ -1,51 +1,60 @@
 # syntax=docker/dockerfile:1
 
-<<<<<<< HEAD
-ARG BASE_IMG_TAG=nonroot
-=======
 ARG GO_VERSION="1.18"
 ARG RUNNER_IMAGE="gcr.io/distroless/static"
->>>>>>> 4b5eccf0 (feat: add multiple docker images (#2440))
 
 # --------------------------------------------------------
-# Build 
+# Builder
 # --------------------------------------------------------
 
-FROM golang:1.18.2-alpine3.15 as build
+FROM golang:${GO_VERSION}-alpine as builder
 
-RUN set -eux; apk add --no-cache ca-certificates build-base;
-RUN apk add git
-# Needed by github.com/zondax/hid
-RUN apk add linux-headers
+RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers
 
+# Download go dependencies
 WORKDIR /osmosis
-<<<<<<< HEAD
-COPY . /osmosis
-=======
 COPY go.* .
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     go mod download
->>>>>>> 4b5eccf0 (feat: add multiple docker images (#2440))
 
-# CosmWasm: see https://github.com/CosmWasm/wasmvm/releases
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
-ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
-RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep 7d2239e9f25e96d0d4daba982ce92367aacf0cbd95d2facb8442268f2b1cc1fc
-RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep f6282df732a13dec836cda1f399dd874b1e3163504dbd9607c6af915b2740479
+# Cosmwasm - download correct libwasmvm version
+RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$(uname -m).a \
+      -O /lib/libwasmvm_muslc.a
 
-# CosmWasm: copy the right library according to architecture. The final location will be found by the linker flag `-lwasmvm_muslc`
-RUN cp /lib/libwasmvm_muslc.$(uname -m).a /lib/libwasmvm_muslc.a
+# Cosmwasm - verify checksum
+RUN wget https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep $(uname -m) | cut -d ' ' -f 1)
 
-RUN BUILD_TAGS=muslc LINK_STATICALLY=true make build
+# Copy the remaining files
+COPY . .
+
+# Build osmosisd binary
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/root/go/pkg/mod \
+    VERSION=$(echo $(git describe --tags) | sed 's/^v//') && \
+    COMMIT=$(git log -1 --format='%H') && \
+    go build \
+      -mod=readonly \
+      -tags "netgo,ledger,muslc" \
+      -ldflags "-X github.com/cosmos/cosmos-sdk/version.Name="osmosis" \
+              -X github.com/cosmos/cosmos-sdk/version.AppName="osmosisd" \
+              -X github.com/cosmos/cosmos-sdk/version.Version=$VERSION \
+              -X github.com/cosmos/cosmos-sdk/version.Commit=$COMMIT \
+              -X github.com/cosmos/cosmos-sdk/version.BuildTags='netgo,ledger,muslc' \
+              -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
+      -trimpath \
+      -o /osmosis/build/ \
+      ./...
 
 # --------------------------------------------------------
 # Runner
 # --------------------------------------------------------
 
-FROM gcr.io/distroless/base-debian11:${BASE_IMG_TAG}
+FROM ${RUNNER_IMAGE}
 
-COPY --from=build /osmosis/build/osmosisd /bin/osmosisd
+COPY --from=builder /osmosis/build/osmosisd /bin/osmosisd
 
 ENV HOME /osmosis
 WORKDIR $HOME
@@ -55,4 +64,3 @@ EXPOSE 26657
 EXPOSE 1317
 
 ENTRYPOINT ["osmosisd"]
-CMD [ "start" ]
