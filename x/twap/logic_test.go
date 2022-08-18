@@ -215,7 +215,7 @@ func TestComputeArithmeticTwap(t *testing.T) {
 func (s *TestSuite) TestPruneRecords() {
 	tMin2Record, tMin1Record, baseRecord, tPlus1Record := s.createTestRecordsFromTime(baseTime.Add(-twap.RecordHistoryKeepPeriod))
 
-	// non-ascending inserton order.
+	// non-ascending insertion order.
 	recordsToPreSet := []types.TwapRecord{tPlus1Record, tMin1Record, baseRecord, tMin2Record}
 
 	expectedKeptRecords := []types.TwapRecord{baseRecord, tPlus1Record}
