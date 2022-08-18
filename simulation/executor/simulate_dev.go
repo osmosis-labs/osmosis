@@ -10,7 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
 )
 
 type simState struct {
@@ -72,7 +72,7 @@ func (simState *simState) SimulateAllBlocks(
 	w io.Writer,
 	simCtx *simtypes.SimCtx,
 	blockSimulator blockSimFn,
-	config simulation.Config) (stopEarly bool) {
+	config Config) (stopEarly bool) {
 	stopEarly = false
 	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
 		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)

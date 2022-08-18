@@ -13,11 +13,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v10/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v10/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
 )
 
 type KeeperTestSuite struct {
@@ -29,7 +29,7 @@ type mintHooksMock struct {
 	hookCallCount int
 }
 
-func (hm *mintHooksMock) AfterDistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) {
+func (hm *mintHooksMock) AfterDistributeMintedCoin(ctx sdk.Context) {
 	hm.hookCallCount++
 }
 
@@ -230,11 +230,10 @@ func (suite *KeeperTestSuite) TestDistributeMintedCoin() {
 			}
 
 			// mints coins so supply exists on chain
-			err := mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.mintCoin))
-			suite.Require().NoError(err)
+			suite.MintCoins(sdk.NewCoins(tc.mintCoin))
 
 			// System under test.
-			err = mintKeeper.DistributeMintedCoin(ctx, tc.mintCoin)
+			err := mintKeeper.DistributeMintedCoin(ctx, tc.mintCoin)
 			suite.Require().NoError(err)
 
 			// validate that AfterDistributeMintedCoin hook was called once.
@@ -336,6 +335,11 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 			bankKeeper := suite.App.BankKeeper
 			mintKeeper := suite.App.MintKeeper
 
+			// in order to ensure the offset is correctly calculated, we need to mint the supply + 1
+			// this is because a negative supply offset will always return zero
+			// by setting this to the supply + 1, we ensure we are correctly calculating the offset by keeping it delta positive
+			suite.MintCoins(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount+1))))
+
 			supplyWithOffsetBefore := bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
 			supplyOffsetBefore := bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
 
@@ -351,6 +355,7 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 				return
 			}
 			suite.Require().NoError(actualError)
+
 			suite.Require().Equal(supplyWithOffsetBefore.Amount.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 			suite.Require().Equal(supplyOffsetBefore.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
 		})
@@ -436,7 +441,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 				ctx := suite.Ctx
 
 				// Setup.
-				suite.Require().NoError(mintKeeper.MintCoins(ctx, sdk.NewCoins(tc.preMintCoin)))
+				suite.MintCoins(sdk.NewCoins(tc.preMintCoin))
 
 				// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
 				// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
