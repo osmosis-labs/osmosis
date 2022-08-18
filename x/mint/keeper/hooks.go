@@ -47,24 +47,25 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.setLastReductionEpochNum(ctx, epochNumber)
 		}
 
-		// mint coins, update supply
-		mintedCoin := minter.EpochProvision(params)
-		mintedCoins := sdk.NewCoins(mintedCoin)
+		totalEpochProvisions := minter.EpochProvisions
+		totalEpochProvisionsTruncated := totalEpochProvisions.TruncateInt()
 
+		// mint coins, update supply
 		// We over-allocate by the developer vesting portion, and burn this later
-		err := k.mintCoins(ctx, mintedCoins)
+		err := k.mintAmount(ctx, totalEpochProvisionsTruncated)
 		if err != nil {
 			panic(err)
 		}
 
 		// send the minted coins to the fee collector account
-		err = k.DistributeMintedCoin(ctx, mintedCoin)
+		err = k.DistributeMintedCoin(ctx, minter.EpochProvisions)
 		if err != nil {
 			panic(err)
 		}
 
-		if mintedCoin.Amount.IsInt64() {
-			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
+		// TODO:
+		if totalEpochProvisionsTruncated.IsInt64() {
+			defer telemetry.ModuleSetGauge(types.ModuleName, float32(totalEpochProvisionsTruncated.Int64()), "minted_tokens")
 		}
 
 		ctx.EventManager().EmitEvent(
@@ -72,7 +73,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				types.ModuleName,
 				sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochNumber)),
 				sdk.NewAttribute(types.AttributeKeyEpochProvisions, minter.EpochProvisions.String()),
-				sdk.NewAttribute(sdk.AttributeKeyAmount, mintedCoin.Amount.String()),
+				// TODO:
+				sdk.NewAttribute(sdk.AttributeKeyAmount, totalEpochProvisionsTruncated.String()),
 			),
 		)
 	}

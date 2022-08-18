@@ -606,6 +606,216 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	suite.Require().Equal(expectedThirdenedProvisions, mintKeeper.GetMinter(ctx).EpochProvisions)
 }
 
+// TestAfterEpochEnd_MultiEpoch_Inflation tests that inflation is functioning as expected.
+// https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db
+// The formula for estimating provisions at year N is given by the sum of the geometric sequence:
+// P{n} = EpochsPerPeriod * InitialRewardsPerEpoch * { (1 - ReductionFactor^{n+1}) /  (1 - ReductionFactor) }
+//
+// Total Expected Supply = InitialSupply + EpochsPerPeriod * { InitialRewardsPerEpoch / (1 - ReductionFactor) }
+func (suite *KeeperTestSuite) TestAfterEpochEnd_MultiEpoch_Inflation() {
+	suite.Setup()
+	app := suite.App
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	mintKeeper := app.MintKeeper
+
+	genesisEpochProvisionsDec, err := sdk.NewDecFromStr(defaultGenesisEpochProvisions)
+	suite.Require().NoError(err)
+
+	mintParams := types.Params{
+		MintDenom:               sdk.DefaultBondDenom,
+		GenesisEpochProvisions:  genesisEpochProvisionsDec,
+		EpochIdentifier:         defaultEpochIdentifier,
+		ReductionPeriodInEpochs: defaultReductionPeriodInEpochs,
+		ReductionFactor:         defaultReductionFactor,
+		DistributionProportions: types.DistributionProportions{
+			Staking:          sdk.NewDecWithPrec(25, 2),
+			PoolIncentives:   sdk.NewDecWithPrec(45, 2),
+			DeveloperRewards: sdk.NewDecWithPrec(25, 2),
+			CommunityPool:    sdk.NewDecWithPrec(0o5, 2),
+		},
+		WeightedDeveloperRewardsReceivers: []types.WeightedAddress{
+			{
+				Address: "osmo14kjcwdwcqsujkdt8n5qwpd8x8ty2rys5rjrdjj",
+				Weight:  sdk.NewDecWithPrec(2887, 4),
+			},
+			{
+				Address: "osmo1gw445ta0aqn26suz2rg3tkqfpxnq2hs224d7gq",
+				Weight:  sdk.NewDecWithPrec(229, 3),
+			},
+			{
+				Address: "osmo13lt0hzc6u3htsk7z5rs6vuurmgg4hh2ecgxqkf",
+				Weight:  sdk.NewDecWithPrec(1625, 4),
+			},
+			{
+				Address: "osmo1kvc3he93ygc0us3ycslwlv2gdqry4ta73vk9hu",
+				Weight:  sdk.NewDecWithPrec(109, 3),
+			},
+			{
+				Address: "osmo19qgldlsk7hdv3ddtwwpvzff30pxqe9phq9evxf",
+				Weight:  sdk.NewDecWithPrec(995, 3).Quo(sdk.NewDec(10)), // 0.0995
+			},
+			{
+				Address: "osmo19fs55cx4594een7qr8tglrjtt5h9jrxg458htd",
+				Weight:  sdk.NewDecWithPrec(6, 1).Quo(sdk.NewDec(10)), // 0.06
+			},
+			{
+				Address: "osmo1ssp6px3fs3kwreles3ft6c07mfvj89a544yj9k",
+				Weight:  sdk.NewDecWithPrec(15, 2).Quo(sdk.NewDec(10)), // 0.015
+			},
+			{
+				Address: "osmo1c5yu8498yzqte9cmfv5zcgtl07lhpjrj0skqdx",
+				Weight:  sdk.NewDecWithPrec(1, 1).Quo(sdk.NewDec(10)), // 0.01
+			},
+			{
+				Address: "osmo1yhj3r9t9vw7qgeg22cehfzj7enwgklw5k5v7lj",
+				Weight:  sdk.NewDecWithPrec(75, 2).Quo(sdk.NewDec(100)), // 0.0075
+			},
+			{
+				Address: "osmo18nzmtyn5vy5y45dmcdnta8askldyvehx66lqgm",
+				Weight:  sdk.NewDecWithPrec(7, 1).Quo(sdk.NewDec(100)), // 0.007
+			},
+			{
+				Address: "osmo1z2x9z58cg96ujvhvu6ga07yv9edq2mvkxpgwmc",
+				Weight:  sdk.NewDecWithPrec(5, 1).Quo(sdk.NewDec(100)), // 0.005
+			},
+			{
+				Address: "osmo1tvf3373skua8e6480eyy38avv8mw3hnt8jcxg9",
+				Weight:  sdk.NewDecWithPrec(25, 2).Quo(sdk.NewDec(100)), // 0.0025
+			},
+			{
+				Address: "osmo1zs0txy03pv5crj2rvty8wemd3zhrka2ne8u05n",
+				Weight:  sdk.NewDecWithPrec(25, 2).Quo(sdk.NewDec(100)), // 0.0025
+			},
+			{
+				Address: "osmo1djgf9p53n7m5a55hcn6gg0cm5mue4r5g3fadee",
+				Weight:  sdk.NewDecWithPrec(1, 1).Quo(sdk.NewDec(100)), // 0.001
+			},
+			{
+				Address: "osmo1488zldkrn8xcjh3z40v2mexq7d088qkna8ceze",
+				Weight:  sdk.NewDecWithPrec(8, 1).Quo(sdk.NewDec(1000)), // 0.0008
+			},
+		},
+		MintingRewardsDistributionStartEpoch: defaultMintingRewardsDistributionStartEpoch,
+	}
+
+	suite.assertAddressWeightsAddUpToOne(mintParams.WeightedDeveloperRewardsReceivers)
+
+	// Map from years completed to total provisions for that year.
+	// The expected provisions supply is estimated using Python, according
+	// to the formulas in the the test description.
+	testcases := map[int]struct {
+		expectedTotalProvisionedSupply string
+	}{
+		// N.B.: this test case implies that at the end of year 1, we expect
+		// 300000000000000 OSMO to be minted.
+		// 1: {
+		// 	expectedTotalProvisionedSupply: "300000000000000.000000000000000000",
+		// },
+		// 2: {
+		// 	expectedTotalProvisionedSupply: "500000000000000.000000000000000000",
+		// },
+		// 3: {
+		// 	expectedTotalProvisionedSupply: "633333333333333.200000000000000000",
+		// },
+		// 4: {
+		// 	expectedTotalProvisionedSupply: "722222222222222.100000000000000000",
+		// },
+		// 5: {
+		// 	expectedTotalProvisionedSupply: "781481481481481.400000000000000000",
+		// },
+		// 6: {
+		// 	expectedTotalProvisionedSupply: "820987654320987.500000000000000000",
+		// },
+		// 11: {
+		// 	expectedTotalProvisionedSupply: "889595082050500.200000000000000000",
+		// },
+		// 20: {
+		// 	expectedTotalProvisionedSupply: "899729344206160.400000000000000000",
+		// },
+		30: {
+			expectedTotalProvisionedSupply: "899995306414454.100000000000000000",
+		},
+	}
+
+	// Test setup parameters are not identical with mainnet.
+	// Therfore, we set them here to the desired mainnet values.
+	mintKeeper.SetParams(ctx, mintParams)
+	mintKeeper.SetLastReductionEpochNum(ctx, 0)
+	mintKeeper.SetMinter(ctx, types.Minter{
+		EpochProvisions: genesisEpochProvisionsDec,
+	})
+
+	expectedSupplyWithOffset := sdk.NewDec(0)
+	expectedSupply := sdk.NewDec(keeper.DeveloperVestingAmount)
+
+	supplyWithOffset := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
+	suite.Require().Equal(expectedSupplyWithOffset.TruncateInt64(), supplyWithOffset.Amount.Int64())
+
+	supply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom)
+	suite.Require().Equal(expectedSupply.TruncateInt64(), supply.Amount.Int64())
+
+	// Actual test for running AfterEpochEnd hook thirdeningEpoch times.
+	for i := int64(1); i <= defaultReductionPeriodInEpochs*30; i++ {
+		epochProvisionsBeforeHook := mintKeeper.GetMinter(ctx).EpochProvisions
+		lastReductionEpochBeforeHook := mintKeeper.GetLastReductionEpochNum(ctx)
+
+		// System undert test.
+		mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, i)
+
+		epochProvisionsAfterCurEpoch := mintKeeper.GetMinter(ctx).EpochProvisions
+		lastReductionEpochAfterHook := mintKeeper.GetLastReductionEpochNum(ctx)
+
+		isDistributionStartEpoch := i == mintParams.MintingRewardsDistributionStartEpoch
+		isReductionEpoch := i%mintParams.GetReductionPeriodInEpochs() == mintParams.MintingRewardsDistributionStartEpoch
+
+		if isReductionEpoch {
+			// Assert that epoch provisions and last reduction epoch are changed.
+			suite.Require().NotEqual(lastReductionEpochBeforeHook, mintKeeper.GetLastReductionEpochNum(ctx))
+			suite.Require().Equal(i, mintKeeper.GetLastReductionEpochNum(ctx))
+			if !isDistributionStartEpoch {
+				suite.Require().Equal(epochProvisionsBeforeHook.Mul(mintParams.ReductionFactor), epochProvisionsAfterCurEpoch)
+			}
+		} else {
+			// Assert that epoch provisions and last reduction epoch are unchanged.
+			suite.Require().Equal(lastReductionEpochBeforeHook, lastReductionEpochAfterHook)
+			suite.Require().Equal(epochProvisionsBeforeHook, epochProvisionsAfterCurEpoch)
+		}
+
+		testcase, found := testcases[int(i/mintParams.GetReductionPeriodInEpochs())]
+		if !found || i%mintParams.GetReductionPeriodInEpochs() != 0 {
+			continue
+		}
+
+		expectedTotalProvisionedSupply, err := sdk.NewDecFromStr(testcase.expectedTotalProvisionedSupply)
+		suite.Require().NoError(err, i)
+
+		// Validate the amount minted from the mint module account.
+		// expectedInflationAmount := expectedTotalProvisionedSupply.Mul(sdk.OneDec().Sub(mintParams.DistributionProportions.DeveloperRewards))
+		inflationAmount := mintKeeper.GetInflationAmount(ctx, sdk.DefaultBondDenom).ToDec()
+		// osmoassert.DecApproxEq(suite.T(), expectedInflationAmount, inflationAmount, sdk.NewDec(1), i)
+
+		// Validate the amount distributed from the developer vesting module account.
+		// expectedDeveloperVestedAmount := expectedTotalProvisionedSupply.Mul(mintParams.DistributionProportions.DeveloperRewards)
+		developerVestedAmount := mintKeeper.GetDeveloperVestedAmount(ctx, sdk.DefaultBondDenom).ToDec()
+		// osmoassert.DecApproxEq(suite.T(), expectedDeveloperVestedAmount, developerVestedAmount, sdk.NewDec(1))
+
+		osmoassert.DecApproxEq(suite.T(), expectedTotalProvisionedSupply, inflationAmount.Add(developerVestedAmount), sdk.NewDec(2))
+	}
+
+	// Validate that the total supply is approaching the 1 billion limit.
+
+	// The upper bound for total supply is 1 billion osmo.
+	// Given that 100_000_000_000_000 was distributed at genesis, we expect emissions to be 900_000_000_000_000.
+	// expectedTotalProvisions approx = 900_000_000_000_000 approx = 365 * 821917808219.178082191780821917 / (1 - 2/3)
+	expectedTotalProvisions, err := sdk.NewDecFromStr("899999999999999.9")
+	suite.Require().NoError(err)
+
+	supplyAmount := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount.ToDec()
+
+	suite.Require().True(supplyAmount.LT(expectedTotalProvisions))
+	suite.Require().Greater(int64(4_000_000_000), expectedTotalProvisions.Sub(supplyAmount).TruncateInt64())
+}
+
 func (suite KeeperTestSuite) assertAddressWeightsAddUpToOne(receivers []types.WeightedAddress) {
 	sumOfWeights := sdk.ZeroDec()
 	// As a sanity check, ensure developer reward receivers add up to 1.

@@ -48,7 +48,6 @@ func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
 
 // EpochProvision returns the provisions for a block based on the epoch
 // provisions rate.
-func (m Minter) EpochProvision(params Params) sdk.Coin {
-	provisionAmt := m.EpochProvisions
-	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
+func (m Minter) EpochProvision(params Params) sdk.Dec {
+	return m.EpochProvisions
 }
