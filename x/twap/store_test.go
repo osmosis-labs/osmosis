@@ -194,7 +194,7 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 func (s *TestSuite) TestPruneRecordsBeforeTime() {
 	tMin2Record, tMin1Record, baseRecord, tPlus1Record := s.createTestRecordsFromTime(baseTime)
 
-	// non-ascending inserton order.
+	// non-ascending insertion order.
 	allTestRecords := []types.TwapRecord{tPlus1Record, tMin1Record, baseRecord, tMin2Record}
 
 	tests := map[string]struct {
