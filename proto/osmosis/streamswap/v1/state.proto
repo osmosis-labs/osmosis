@@ -1,4 +1,3 @@
-// Since: cosmos-sdk 0.43
 syntax = "proto3";
 package osmosis.streamswap.v1;
 
@@ -11,7 +10,7 @@ option (gogoproto.goproto_getters_all) = false;
 
 message Sale {
   // Destination for the earned token_in
-  string treasury = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  string treasury = 1;
   uint64 id = 2;
 
   // token_out is a token denom to be bootstraped. May be referred as base
@@ -41,11 +40,13 @@ message Sale {
   // Last round of the Sale;
   int64 end_round = 9;
 
+  // amout of remaining token_out to sell
   string out_remaining = 10 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
 
+  // amount of token_out sold
   string out_sold = 11 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false

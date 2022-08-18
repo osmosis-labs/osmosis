@@ -471,8 +471,8 @@ type MsgClient interface {
 	// User can do it any time unless his deposit is empty.
 	Withdraw(ctx context.Context, in *MsgWithdraw, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// ExitSale withdraws (by a user who subscribed to the sale) purchased
-	// tokens_out from the pool and remained tokens_in. Returns error if it's
-	// called before the sale end.
+	// tokens_out from the pool and remained tokens_in. Must be called before
+	// the sale end.
 	ExitSale(ctx context.Context, in *MsgExitSale, opts ...grpc.CallOption) (*MsgExitSaleResponse, error)
 	// FinalizeSale clean ups the sale and sends income (earned tokens_in) to the
 	// Sale recipient. Returns error if called before the Sale end. Anyone can
@@ -551,8 +551,8 @@ type MsgServer interface {
 	// User can do it any time unless his deposit is empty.
 	Withdraw(context.Context, *MsgWithdraw) (*emptypb.Empty, error)
 	// ExitSale withdraws (by a user who subscribed to the sale) purchased
-	// tokens_out from the pool and remained tokens_in. Returns error if it's
-	// called before the sale end.
+	// tokens_out from the pool and remained tokens_in. Must be called before
+	// the sale end.
 	ExitSale(context.Context, *MsgExitSale) (*MsgExitSaleResponse, error)
 	// FinalizeSale clean ups the sale and sends income (earned tokens_in) to the
 	// Sale recipient. Returns error if called before the Sale end. Anyone can

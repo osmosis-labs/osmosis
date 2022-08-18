@@ -107,7 +107,7 @@ var xxx_messageInfo_EventSubscribe proto.InternalMessageInfo
 type EventWithdraw struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	SaleId uint64 `protobuf:"varint,2,opt,name=sale_id,json=saleId,proto3" json:"sale_id,omitempty"`
-	// amount of staked tokens withdrawn by user.
+	// amount of staked token_in withdrawn by user.
 	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
@@ -147,7 +147,7 @@ var xxx_messageInfo_EventWithdraw proto.InternalMessageInfo
 type EventExit struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	SaleId uint64 `protobuf:"varint,2,opt,name=sale_id,json=saleId,proto3" json:"sale_id,omitempty"`
-	// amount of purchased tokens
+	// amount of purchased token_out sent to the user
 	Purchased string `protobuf:"bytes,3,opt,name=purchased,proto3" json:"purchased,omitempty"`
 }
 

@@ -1,4 +1,3 @@
-// Since: cosmos-sdk 0.43
 syntax = "proto3";
 package osmosis.streamswap.v1;
 
@@ -25,14 +24,14 @@ message EventSubscribe {
 message EventWithdraw {
   string sender = 1;
   uint64 sale_id = 2;
-  // amount of staked tokens withdrawn by user.
+  // amount of staked token_in withdrawn by user.
   string amount = 3;
 }
 
 message EventExit {
   string sender = 1;
   uint64 sale_id = 2;
-  // amount of purchased tokens
+  // amount of purchased token_out sent to the user
   string purchased = 3;
 }
 

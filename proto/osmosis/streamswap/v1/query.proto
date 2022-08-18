@@ -3,7 +3,6 @@ package osmosis.streamswap.v1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-
 import "cosmos/base/query/v1beta1/pagination.proto";
 
 import "osmosis/streamswap/v1/state.proto";
@@ -35,7 +34,8 @@ message QuerySales {
 }
 
 message QuerySalesResponse {
-  repeated osmosis.streamswap.v1.Sale sales = 1 [ (gogoproto.nullable) = false ];
+  repeated osmosis.streamswap.v1.Sale sales = 1
+      [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

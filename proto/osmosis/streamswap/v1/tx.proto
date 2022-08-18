@@ -32,8 +32,8 @@ service Msg {
   rpc Withdraw(MsgWithdraw) returns (google.protobuf.Empty);
 
   // ExitSale withdraws (by a user who subscribed to the sale) purchased
-  // tokens_out from the pool and remained tokens_in. Returns error if it's
-  // called before the sale end.
+  // tokens_out from the pool and remained tokens_in. Must be called before
+  // the sale end.
   rpc ExitSale(MsgExitSale) returns (MsgExitSaleResponse);
 
   // FinalizeSale clean ups the sale and sends income (earned tokens_in) to the
