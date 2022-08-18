@@ -17,5 +17,5 @@ Cargo.lock
 *.pdb
 
 
-# Ignores local beaker state
-**/state.local.json
+# Ignores beaker state
+**/.beaker
