@@ -32,7 +32,7 @@ var (
 	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
 	// keySeparatorPlusOne is used for creating prefixes for the key end in iterators
 	// when we want to get all of the keys in a prefix. Since it is one byte larger
-	// than the original key separator and the end prefix is exclusive, it is a valid
+	// than the original key separator and the end prefix is exclusive, it is valid
 	// for getting all values under the original key separator.
 	keySeparatorPlusOne              = string(KeySeparator[0] + 1)
 	HistoricalTWAPTimeIndexPrefix    = historicalTWAPTimeIndexNoSeparator + KeySeparator
