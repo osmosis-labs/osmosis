@@ -24,7 +24,7 @@ type epochhook struct {
 	k Keeper
 }
 
-func (k Keeper) EpochHooks() types.EpochHooks {
+func (k Keeper) EpochHooks() epochtypes.EpochHooks {
 	return &epochhook{k}
 }
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
