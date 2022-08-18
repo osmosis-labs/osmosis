@@ -90,6 +90,17 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 				newEmptyPriceRecord(1, baseTime, denom2, denom1),
 				newEmptyPriceRecord(1, baseTime, denom2, denom0)},
 		},
+		"set multi-asset pool record - reverse order": {
+			recordsToSet: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, denom2, denom0),
+				newEmptyPriceRecord(1, baseTime, denom2, denom1),
+				newEmptyPriceRecord(1, baseTime, denom0, denom1)},
+			poolId: 1,
+			expectedRecords: []types.TwapRecord{
+				newEmptyPriceRecord(1, baseTime, denom0, denom1),
+				newEmptyPriceRecord(1, baseTime, denom2, denom1),
+				newEmptyPriceRecord(1, baseTime, denom2, denom0)},
+		},
 	}
 
 	for name, test := range tests {
