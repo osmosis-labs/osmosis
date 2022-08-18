@@ -56,8 +56,8 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	return nil
 }
 
-// updateRecord mutates record argument, but not with all the changes.
-// Use the return value, and drop usage of the argument.
+// updateRecord returns a new record with updated accumulators and block time
+// for the current block time.
 func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
 	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
 	newRecord.Height = ctx.BlockHeight()
