@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v11/app/keepers"
 	"github.com/osmosis-labs/osmosis/v11/app/upgrades"
+	twaptypes "github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
 // We set the app version to pre-upgrade because it will be incremented by one
@@ -49,6 +50,9 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
+
+		// Set TWAP parameters to default values.
+		keepers.TwapKeeper.SetParams(ctx, twaptypes.DefaultParams())
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
