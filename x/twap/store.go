@@ -50,11 +50,20 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	osmoutils.MustSet(store, key2, &twap)
 }
 
-func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) {
-	// TODO: Stub
+func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := store.Iterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastTime, 0, "", ""))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		twapToRemove, err := types.ParseTwapFromBz(iter.Value())
+		if err != nil {
+			return err
+		}
+		k.deleteHistoricalRecord(ctx, twapToRemove)
+	}
+	return nil
 }
 
-//nolint:unused,deadcode
 func (k Keeper) deleteHistoricalRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
@@ -80,6 +89,16 @@ func (k Keeper) getMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId u
 func (k Keeper) getAllMostRecentRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	return types.GetAllMostRecentTwapsForPool(store, poolId)
+}
+
+// getAllHistoricalTimeIndexedTWAPs returns all historical TWAPs indexed by time.
+func (k Keeper) getAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
+	return osmoutils.GatherValuesFromStore(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPTimeIndexPrefix), []byte(types.HistoricalTWAPTimeIndexPrefixEnd), types.ParseTwapFromBz)
+}
+
+// getAllHistoricalPoolIndexedTWAPs returns all historical TWAPs indexed by pool id.
+func (k Keeper) getAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
+	return osmoutils.GatherValuesFromStore(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), []byte(types.HistoricalTWAPPoolIndexPrefixEnd), types.ParseTwapFromBz)
 }
 
 // storeNewRecord stores a record, in both the most recent record store and historical stores.
