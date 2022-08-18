@@ -57,6 +57,8 @@ func CreateUpgradeHandler(
 			sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
 			sdk.MsgTypeURL(&stakingtypes.MsgCreateValidator{}),
 			sdk.MsgTypeURL(&stakingtypes.MsgEditValidator{}),
+			// Change: Added MsgUndelegate
+			sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
 			sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}),
 			sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
 			sdk.MsgTypeURL(&distrtypes.MsgWithdrawValidatorCommission{}),
