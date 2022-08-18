@@ -24,6 +24,9 @@ type epochhook struct {
 	k Keeper
 }
 
+func (k Keeper) EpochHooks() types.EpochHooks {
+	return &epochhook{k}
+}
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
 		hook.k.pruneOldTwaps(ctx)
