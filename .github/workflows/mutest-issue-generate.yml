@@ -14,7 +14,9 @@ jobs:
       -
         name: Run mutation test
         continue-on-error: true
-        run: make test-mutation MODULES=tokenfactory
+        run: make test-mutation
+        env:
+          MODULES: tokenfactory
       -
         name: Execute mutation test format script
         id: mutest-formatted
