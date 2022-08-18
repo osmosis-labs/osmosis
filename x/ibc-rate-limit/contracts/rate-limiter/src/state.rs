@@ -88,13 +88,20 @@ impl Flow {
 
     /// The balance of a flow is how much absolute value for the denom has moved
     /// through the channel before period_end.
-    pub fn balance(&self) -> u128 {
-        self.inflow.abs_diff(self.outflow)
+    pub fn balance(&self) -> (u128, u128) {
+        (
+            self.inflow.saturating_sub(self.outflow),
+            self.outflow.saturating_sub(self.inflow),
+        )
     }
 
     /// checks if the flow, in the current state, has exceeded a max allowance
-    pub fn exceeds(&self, max: u128) -> bool {
-        self.balance() > max
+    pub fn exceeds(&self, direction: &FlowType, max_inflow: u128, max_outflow: u128) -> bool {
+        let (balance_in, balance_out) = self.balance();
+        match direction {
+            FlowType::In => balance_in > max_inflow,
+            FlowType::Out => balance_out > max_outflow,
+        }
     }
 
     /// If now is greater than the period_end, the Flow is considered expired.
@@ -147,14 +154,14 @@ pub struct Quota {
 
 impl Quota {
     /// Calculates the max capacity (absolute value in the same unit as
-    /// total_value) in a given direction based on the total value of the denom
-    /// in the channel.
-    pub fn capacity_at(&self, total_value: &u128, direction: &FlowType) -> u128 {
-        let max_percentage = match direction {
-            FlowType::In => self.max_percentage_recv,
-            FlowType::Out => self.max_percentage_send,
-        };
-        total_value * (max_percentage as u128) / 100_u128
+    /// total_value) in each direction based on the total value of the denom in
+    /// the channel. The result tuple represents the max capacity when the
+    /// transfer is in directions: (FlowType::In, FlowType::Out)
+    pub fn capacity_at(&self, total_value: &u128) -> (u128, u128) {
+        (
+            total_value * (self.max_percentage_recv as u128) / 100_u128,
+            total_value * (self.max_percentage_send as u128) / 100_u128,
+        )
     }
 }
 
@@ -199,10 +206,10 @@ impl RateLimit {
     ) -> Result<RateLimitResponse, ContractError> {
         self.flow
             .apply_transfer(direction, funds, now, self.quota.duration);
-        let max = self.quota.capacity_at(&channel_value, &direction);
 
+        let (max_in, max_out) = self.quota.capacity_at(&channel_value);
         // Return the effects of applying the transfer or an error.
-        match self.flow.exceeds(max) {
+        match self.flow.exceeds(direction, max_in, max_out) {
             true => Err(ContractError::RateLimitExceded {
                 channel: path.channel.to_string(),
                 denom: path.denom.to_string(),
@@ -213,8 +220,8 @@ impl RateLimit {
                     quota: self.quota.clone(), // Cloning here because self.quota.name (String) does not allow us to implement Copy
                     flow: self.flow, // We can Copy flow, so this is slightly more efficient than cloning the whole RateLimit
                 },
-                used: self.flow.balance(),
-                max,
+                max_in,
+                max_out,
             }),
         }
     }
@@ -222,8 +229,8 @@ impl RateLimit {
 
 pub struct RateLimitResponse {
     pub rate_limit: RateLimit,
-    pub used: u128,
-    pub max: u128,
+    pub max_in: u128,
+    pub max_out: u128,
 }
 
 /// Only this address can manage the contract. This will likely be the
@@ -267,16 +274,16 @@ mod tests {
         assert!(!flow.is_expired(epoch.plus_seconds(RESET_TIME_WEEKLY)));
         assert!(flow.is_expired(epoch.plus_seconds(RESET_TIME_WEEKLY).plus_nanos(1)));
 
-        assert_eq!(flow.balance(), 0_u128);
+        assert_eq!(flow.balance(), (0_u128, 0_u128));
         flow.add_flow(FlowType::In, 5);
-        assert_eq!(flow.balance(), 5_u128);
+        assert_eq!(flow.balance(), (5_u128, 0_u128));
         flow.add_flow(FlowType::Out, 2);
-        assert_eq!(flow.balance(), 3_u128);
+        assert_eq!(flow.balance(), (3_u128, 0_u128));
         // Adding flow doesn't affect expiration
         assert!(!flow.is_expired(epoch.plus_seconds(RESET_TIME_DAILY)));
 
         flow.expire(epoch.plus_seconds(RESET_TIME_WEEKLY), RESET_TIME_WEEKLY);
-        assert_eq!(flow.balance(), 0_u128);
+        assert_eq!(flow.balance(), (0_u128, 0_u128));
         assert_eq!(flow.inflow, 0_u128);
         assert_eq!(flow.outflow, 0_u128);
         assert_eq!(flow.period_end, epoch.plus_seconds(RESET_TIME_WEEKLY * 2));

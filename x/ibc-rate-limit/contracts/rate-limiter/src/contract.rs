@@ -147,7 +147,7 @@ pub fn try_transfer(
 
     let results: Vec<RateLimitResponse> = rate_limits
         .iter_mut()
-        .map(|limit| limit.allow_transfer(&path, &direction, funds, channel_value, now))
+        .map(|limit| limit.allow_transfer(path, &direction, funds, channel_value, now))
         .collect::<Result<_, ContractError>>()?;
 
     RATE_LIMIT_TRACKERS.save(
@@ -164,15 +164,24 @@ pub fn try_transfer(
     // Adding the attributes from each quota to the response
     // Code style Q: Should we move attribute setting to a function on response?
     // Rust question: How does this work with one response being an error, I'm not sure how the flow works here
+    // TODO: Do we even need these attributes? The response is only ever seen by the chain.
     results.iter().fold(Ok(response), |acc, result| {
         Ok(acc?
             .add_attribute(
-                format!("{}_used", result.rate_limit.quota.name),
-                result.used.to_string(),
+                format!("{}_used_in", result.rate_limit.quota.name),
+                result.rate_limit.flow.balance().0.to_string(),
             )
             .add_attribute(
-                format!("{}_max", result.rate_limit.quota.name),
-                result.max.to_string(),
+                format!("{}_used_out", result.rate_limit.quota.name),
+                result.rate_limit.flow.balance().1.to_string(),
+            )
+            .add_attribute(
+                format!("{}_max_in", result.rate_limit.quota.name),
+                result.max_in.to_string(),
+            )
+            .add_attribute(
+                format!("{}_max_out", result.rate_limit.quota.name),
+                result.max_out.to_string(),
             )
             .add_attribute(
                 format!("{}_period_end", result.rate_limit.quota.name),
@@ -300,8 +309,8 @@ mod tests {
         let info = mock_info(IBC_ADDR, &vec![]);
         let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
-        let Attribute { key, value } = &res.attributes[3];
-        assert_eq!(key, "weekly_used");
+        let Attribute { key, value } = &res.attributes[4];
+        assert_eq!(key, "weekly_used_out");
         assert_eq!(value, "300");
 
         let msg = ExecuteMsg::SendPacket {
@@ -346,13 +355,20 @@ mod tests {
         };
 
         let res = execute(deps.as_mut(), mock_env(), info.clone(), send_msg.clone()).unwrap();
+        println!("{:?}", res);
         let Attribute { key, value } = &res.attributes[3];
-        assert_eq!(key, "weekly_used");
+        assert_eq!(key, "weekly_used_in");
+        assert_eq!(value, "0");
+        let Attribute { key, value } = &res.attributes[4];
+        assert_eq!(key, "weekly_used_out");
         assert_eq!(value, "300");
 
         let res = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap();
         let Attribute { key, value } = &res.attributes[3];
-        assert_eq!(key, "weekly_used");
+        assert_eq!(key, "weekly_used_in");
+        assert_eq!(value, "0");
+        let Attribute { key, value } = &res.attributes[4];
+        assert_eq!(key, "weekly_used_out");
         assert_eq!(value, "0");
 
         // We can still use the path. Even if we have sent more than the
@@ -360,8 +376,11 @@ mod tests {
         // of inflow vs outflow is still lower than the path's capacity/quota
         let res = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap();
         let Attribute { key, value } = &res.attributes[3];
-        assert_eq!(key, "weekly_used");
+        assert_eq!(key, "weekly_used_in");
         assert_eq!(value, "300");
+        let Attribute { key, value } = &res.attributes[4];
+        assert_eq!(key, "weekly_used_out");
+        assert_eq!(value, "0");
 
         let err = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap_err();
 
@@ -372,7 +391,7 @@ mod tests {
     fn asymetric_quotas() {
         let mut deps = mock_dependencies();
 
-        let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 1);
+        let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 4, 1);
         let msg = InstantiateMsg {
             gov_module: Addr::unchecked(GOV_ADDR),
             ibc_module: Addr::unchecked(IBC_ADDR),
@@ -394,34 +413,64 @@ mod tests {
         };
         let info = mock_info(IBC_ADDR, &vec![]);
         let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
-        let Attribute { key, value } = &res.attributes[3];
-        assert_eq!(key, "weekly_used");
+        let Attribute { key, value } = &res.attributes[4];
+        assert_eq!(key, "weekly_used_out");
         assert_eq!(value, "60");
 
-        // Sending 1% more. Allowed, as sending has a 10% allowance
+        // Sending 2% more. Allowed, as sending has a 4% allowance
         let msg = ExecuteMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
-            funds: 30,
+            funds: 60,
         };
 
         let info = mock_info(IBC_ADDR, &vec![]);
         let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
-        let Attribute { key, value } = &res.attributes[3];
-        assert_eq!(key, "weekly_used");
-        assert_eq!(value, "90");
+        println!("{res:?}");
+        let Attribute { key, value } = &res.attributes[4];
+        assert_eq!(key, "weekly_used_out");
+        assert_eq!(value, "120");
 
-        // Receiving 1% should fail. 3% already executed through the path
+        // Receiving 1% should still work. 4% *sent* through the path, but we can still receive.
         let recv_msg = ExecuteMsg::RecvPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 30,
         };
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg).unwrap();
+        let Attribute { key, value } = &res.attributes[3];
+        assert_eq!(key, "weekly_used_in");
+        assert_eq!(value, "0");
+        let Attribute { key, value } = &res.attributes[4];
+        assert_eq!(key, "weekly_used_out");
+        assert_eq!(value, "90");
 
-        let err = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap_err();
+        // Sending 2%. Should fail. In balance, we've sent 4% and received 1%, so only 1% left to send.
+        let msg = ExecuteMsg::SendPacket {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
+            channel_value: 3_000,
+            funds: 60,
+        };
+        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
         assert!(matches!(err, ContractError::RateLimitExceded { .. }));
+
+        // Sending 1%: Allowed; because sending has a 4% allowance. We've sent 4% already, but received 1%, so there's send cappacity again
+        let msg = ExecuteMsg::SendPacket {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
+            channel_value: 3_000,
+            funds: 30,
+        };
+        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        let Attribute { key, value } = &res.attributes[3];
+        assert_eq!(key, "weekly_used_in");
+        assert_eq!(value, "0");
+        let Attribute { key, value } = &res.attributes[4];
+        assert_eq!(key, "weekly_used_out");
+        assert_eq!(value, "120");
     }
 
     #[test]
