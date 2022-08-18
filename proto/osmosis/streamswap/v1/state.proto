@@ -21,7 +21,7 @@ message Sale {
   // referred as quote_currency or payment token.
   string token_in = 4;
 
-  // total number of `tokens_out` to be sold during the continous sale.
+  // total number of `tokens_out` to be sold during the continuous sale.
   string token_out_supply = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false

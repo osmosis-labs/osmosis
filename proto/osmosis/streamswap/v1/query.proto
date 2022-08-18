@@ -31,7 +31,7 @@ service Query {
 
 message QuerySales {
   // pagination defines an pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 message QuerySalesResponse {
