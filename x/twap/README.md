@@ -116,6 +116,12 @@ The mechanism by which we maintain this changed pool list, is the SDK `Transient
 The transient store is a KV store in the SDK, that stores entries in memory, for the duration of a block,
 and then clears on the block committing. This is done to save on gas (and I/O for the state machine).
 
+## Pruning
+
+To avoid infinite growth of the state with the TWAP records, we attempt to delete some old records after every epoch.
+Essentially, records younger than a configurable parameter are pruned away. Currently, this parameter is set to 48 hours.
+Therefore, at the end of an epoch records younger than 48 hours before the current block time are pruned away.
+
 ## Testing Methodology
 
 The pre-release testing methodology planned for the twap module is:
