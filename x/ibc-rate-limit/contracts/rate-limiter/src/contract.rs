@@ -240,7 +240,7 @@ mod tests {
     const IBC_ADDR: &str = "IBC_MODULE";
     const GOV_ADDR: &str = "GOV_MODULE";
 
-    #[test]
+    #[test] // Tests we ccan instantiate the contract and that the owners are set correctly
     fn proper_instantiation() {
         let mut deps = mock_dependencies();
 
@@ -260,7 +260,7 @@ mod tests {
         assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap(), GOV_ADDR);
     }
 
-    #[test]
+    #[test] // Tests only the IBC_MODULE address can execute send and recv packet
     fn permissions() {
         let mut deps = mock_dependencies();
 
@@ -299,7 +299,7 @@ mod tests {
         assert!(matches!(err, ContractError::Unauthorized { .. }));
     }
 
-    #[test]
+    #[test] // Tests that when a packet is transferred, the peropper allowance is consummed
     fn consume_allowance() {
         let mut deps = mock_dependencies();
 
@@ -339,7 +339,7 @@ mod tests {
         assert!(matches!(err, ContractError::RateLimitExceded { .. }));
     }
 
-    #[test]
+    #[test] // Tests that the balance of send and receive is maintained (i.e: recives are sustracted from the send allowance and sends from the receives)
     fn symetric_flows_dont_consume_allowance() {
         let mut deps = mock_dependencies();
 
@@ -371,7 +371,6 @@ mod tests {
         };
 
         let res = execute(deps.as_mut(), mock_env(), info.clone(), send_msg.clone()).unwrap();
-        println!("{:?}", res);
         let Attribute { key, value } = &res.attributes[3];
         assert_eq!(key, "weekly_used_in");
         assert_eq!(value, "0");
@@ -403,7 +402,7 @@ mod tests {
         assert!(matches!(err, ContractError::RateLimitExceded { .. }));
     }
 
-    #[test]
+    #[test] // Tests that we can have different quotas for send and receive. In this test we use 4% send and 1% receive
     fn asymetric_quotas() {
         let mut deps = mock_dependencies();
 
@@ -489,7 +488,7 @@ mod tests {
         assert_eq!(value, "120");
     }
 
-    #[test]
+    #[test] // Tests we can get the current state of the trackers
     fn query_state() {
         let mut deps = mock_dependencies();
 
@@ -556,7 +555,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[test] // Tests quota percentages are between [0,100]
     fn bad_quotas() {
         let mut deps = mock_dependencies();
 
@@ -575,7 +574,6 @@ mod tests {
         };
         let info = mock_info(IBC_ADDR, &vec![]);
 
-        // we can just call .unwrap() to assert this was a success
         let env = mock_env();
         instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
 

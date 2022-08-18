@@ -146,7 +146,7 @@ mod tests {
         assert_eq!(value, "300");
     }
 
-    #[test]
+    #[test] // Tests we can have different maximums for different quotaas (daily, weekly, etc) and that they all are active at the same time
     fn multiple_quotas() {
         let quotas = vec![
             QuotaMsg::new("daily", RESET_TIME_DAILY, 1, 1),

@@ -122,8 +122,8 @@ mod tests {
     const IBC_ADDR: &str = "IBC_MODULE";
     const GOV_ADDR: &str = "GOV_MODULE";
 
-    #[test]
-    fn management_add_and_remove_channel() {
+    #[test] // Tests AddPath and RemovePath messages
+    fn management_add_and_remove_path() {
         let mut deps = mock_dependencies();
         IBCMODULE
             .save(deps.as_mut().storage, &Addr::unchecked(IBC_ADDR))
