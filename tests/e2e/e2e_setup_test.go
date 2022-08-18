@@ -598,6 +598,9 @@ func (s *IntegrationTestSuite) upgradeContainers(chainConfig *chainConfig, propH
 				fmt.Sprintf("%s/:/osmosis/.osmosisd", val.validator.ConfigDir),
 				fmt.Sprintf("%s/scripts:/osmosis", pwd),
 			},
+			Cmd: []string{
+				"start",
+			},
 		}
 		resource, err := s.dkrPool.RunWithOptions(runOpts, noRestart)
 		s.Require().NoError(err)
