@@ -159,34 +159,51 @@ pub fn try_transfer(
         .add_attribute("channel_id", path.channel.to_string())
         .add_attribute("denom", path.denom.to_string());
 
-    // Adding the attributes from each quota to the response
-    // Code style Q: Should we move attribute setting to a function on response?
-    // Rust question: How does this work with one response being an error, I'm not sure how the flow works here
+    // Adds the attributes for each path to the response. In prod, the
+    // addtribute add_rate_limit_attributes is a noop
     results.iter().fold(Ok(response), |acc, result| {
-        // TODO: Do we even need these attributes? The response is only ever
-        // seen by the chain. Maybe we could add them conditional on a feature
-        // (debug, or testing)
-        let (used_in, used_out) = result.flow.balance();
-        let (max_in, max_out) = result.quota.capacity_at(&channel_value);
-        Ok(acc?
-            .add_attribute(
-                format!("{}_used_in", result.quota.name),
-                used_in.to_string(),
-            )
-            .add_attribute(
-                format!("{}_used_out", result.quota.name),
-                used_out.to_string(),
-            )
-            .add_attribute(format!("{}_max_in", result.quota.name), max_in.to_string())
-            .add_attribute(
-                format!("{}_max_out", result.quota.name),
-                max_out.to_string(),
-            )
-            .add_attribute(
-                format!("{}_period_end", result.quota.name),
-                result.flow.period_end.to_string(),
-            ))
+        Ok(add_rate_limit_attributes(acc?, result, channel_value))
     })
+}
+
+#[cfg(test)]
+pub fn add_rate_limit_attributes(
+    response: Response,
+    result: &RateLimit,
+    channel_value: u128,
+) -> Response {
+    let (used_in, used_out) = result.flow.balance();
+    let (max_in, max_out) = result.quota.capacity_at(&channel_value);
+    // These attributes are only added during testing. That way we avoid
+    // calculating these again on prod.
+    // TODO: Figure out how to include these when testing on the go side.
+    response
+        .add_attribute(
+            format!("{}_used_in", result.quota.name),
+            used_in.to_string(),
+        )
+        .add_attribute(
+            format!("{}_used_out", result.quota.name),
+            used_out.to_string(),
+        )
+        .add_attribute(format!("{}_max_in", result.quota.name), max_in.to_string())
+        .add_attribute(
+            format!("{}_max_out", result.quota.name),
+            max_out.to_string(),
+        )
+        .add_attribute(
+            format!("{}_period_end", result.quota.name),
+            result.flow.period_end.to_string(),
+        )
+}
+
+#[cfg(not(test))]
+pub fn add_rate_limit_attributes(
+    response: Response,
+    _result: &RateLimit,
+    _channel_value: u128,
+) -> Response {
+    response
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
