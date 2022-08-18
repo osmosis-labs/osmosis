@@ -72,7 +72,7 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	return newRecord
 }
 
-// pruneRecords prunes twap records that hapenned earlier than recordHistoryKeepPeriod
+// pruneRecords prunes twap records that happened earlier than recordHistoryKeepPeriod
 // before current block time.
 func (k Keeper) pruneRecords(ctx sdk.Context) error {
 	lastKeptTime := ctx.BlockTime().Add(-recordHistoryKeepPeriod)
