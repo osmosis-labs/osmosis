@@ -13,7 +13,7 @@
 
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
-COSMWASM_VERSION := $(shell go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2)
+COSMWASM_VERSION := $(shell cat go.mod | grep -i github.com/CosmWasm/wasmvm | cut -d ' ' -f 2)
 BUILD_TAGS := "netgo ledger muslc"
 
 IMAGE:=osmobuilder:$(VERSION)
