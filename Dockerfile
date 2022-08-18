@@ -1,6 +1,11 @@
 # syntax=docker/dockerfile:1
 
+<<<<<<< HEAD
 ARG BASE_IMG_TAG=nonroot
+=======
+ARG GO_VERSION="1.18"
+ARG RUNNER_IMAGE="gcr.io/distroless/static"
+>>>>>>> 4b5eccf0 (feat: add multiple docker images (#2440))
 
 # --------------------------------------------------------
 # Build 
@@ -14,7 +19,14 @@ RUN apk add git
 RUN apk add linux-headers
 
 WORKDIR /osmosis
+<<<<<<< HEAD
 COPY . /osmosis
+=======
+COPY go.* .
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/root/go/pkg/mod \
+    go mod download
+>>>>>>> 4b5eccf0 (feat: add multiple docker images (#2440))
 
 # CosmWasm: see https://github.com/CosmWasm/wasmvm/releases
 ADD https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
