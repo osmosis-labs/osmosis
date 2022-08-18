@@ -87,7 +87,10 @@ impl Flow {
     }
 
     /// The balance of a flow is how much absolute value for the denom has moved
-    /// through the channel before period_end.
+    /// through the channel before period_end. It returns a tuple of
+    /// (balance_in, balance_out) where balance_in in is how much has been
+    /// transferred into the flow, and balance_out is how much value transferred
+    /// out.
     pub fn balance(&self) -> (u128, u128) {
         (
             self.inflow.saturating_sub(self.outflow),
