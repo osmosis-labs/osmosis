@@ -72,7 +72,7 @@ func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) 
 	s.Require().ElementsMatch(poolIndexedTwaps, expectedRecords)
 }
 
-// createTestRecordsFromTime creates and returns 2 test records in the following order:
+// createTestRecordsFromTime creates and returns 4 test records in the following order:
 // - at time t - 2
 // - at time t - 1
 // - at time t
