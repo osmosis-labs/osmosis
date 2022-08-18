@@ -132,11 +132,20 @@ impl Flow {
 
     /// Applies a transfer. If the Flow is expired (now > period_end), it will
     /// reset it before applying the transfer.
-    fn apply_transfer(&mut self, direction: &FlowType, funds: u128, now: Timestamp, duration: u64) {
+    fn apply_transfer(
+        &mut self,
+        direction: &FlowType,
+        funds: u128,
+        now: Timestamp,
+        quota: &Quota,
+    ) -> bool {
+        let mut expired = false;
         if self.is_expired(now) {
-            self.expire(now, duration)
+            self.expire(now, quota.duration);
+            expired = true;
         }
         self.add_flow(direction.clone(), funds);
+        expired
     }
 }
 
@@ -153,6 +162,7 @@ pub struct Quota {
     pub max_percentage_send: u32,
     pub max_percentage_recv: u32,
     pub duration: u64,
+    pub channel_value: Option<u128>,
 }
 
 impl Quota {
@@ -160,11 +170,14 @@ impl Quota {
     /// total_value) in each direction based on the total value of the denom in
     /// the channel. The result tuple represents the max capacity when the
     /// transfer is in directions: (FlowType::In, FlowType::Out)
-    pub fn capacity_at(&self, total_value: &u128) -> (u128, u128) {
-        (
-            total_value * (self.max_percentage_recv as u128) / 100_u128,
-            total_value * (self.max_percentage_send as u128) / 100_u128,
-        )
+    pub fn capacity(&self) -> (u128, u128) {
+        match self.channel_value {
+            Some(total_value) => (
+                total_value * (self.max_percentage_recv as u128) / 100_u128,
+                total_value * (self.max_percentage_send as u128) / 100_u128,
+            ),
+            None => (0, 0), // This should never happen, but ig the channel value is not set, we disallow any transfer
+        }
     }
 }
 
@@ -179,6 +192,7 @@ impl From<&QuotaMsg> for Quota {
             max_percentage_send: send_recv.0,
             max_percentage_recv: send_recv.1,
             duration: msg.duration,
+            channel_value: None,
         }
     }
 }
@@ -207,10 +221,16 @@ impl RateLimit {
         channel_value: u128,
         now: Timestamp,
     ) -> Result<Self, ContractError> {
-        self.flow
-            .apply_transfer(direction, funds, now, self.quota.duration);
+        let expired = self.flow.apply_transfer(direction, funds, now, &self.quota);
+        println!("EXPIRED: {expired}");
+        // Cache the channel value if it has never been set or it has expired.
+        if self.quota.channel_value.is_none() || expired {
+            println!("CHANNEL_VALUE OLD: {:?}", self.quota.channel_value);
+            println!("CHANNEL_VALUE NEW: {}", channel_value);
+            self.quota.channel_value = Some(channel_value)
+        }
 
-        let (max_in, max_out) = self.quota.capacity_at(&channel_value);
+        let (max_in, max_out) = self.quota.capacity();
         // Return the effects of applying the transfer or an error.
         match self.flow.exceeds(direction, max_in, max_out) {
             true => Err(ContractError::RateLimitExceded {

@@ -288,4 +288,102 @@ mod tests {
         let cosmos_msg = cw_template_contract.call(msg).unwrap();
         let _err = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
     }
+
+    #[test] // Tests that the channel value is based on the value at the beginning of the period
+    fn channel_value_cached() {
+        let quotas = vec![
+            QuotaMsg::new("daily", RESET_TIME_DAILY, 2, 2),
+            QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 5, 5),
+        ];
+
+        let (mut app, cw_template_contract) = proper_instantiate(vec![PathMsg {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
+            quotas,
+        }]);
+
+        // Sending 1% (half of the daily allowance)
+        let msg = ExecuteMsg::SendPacket {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
+            channel_value: 100,
+            funds: 1,
+        };
+        let cosmos_msg = cw_template_contract.call(msg).unwrap();
+        let _res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+
+        // Sending 3% is now rate limited
+        let msg = ExecuteMsg::SendPacket {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
+            channel_value: 100,
+            funds: 3,
+        };
+        let cosmos_msg = cw_template_contract.call(msg).unwrap();
+        let _err = app
+            .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
+            .unwrap_err();
+
+        // Even if the channel value increases, the percentage is calculated based on the value at period start
+        let msg = ExecuteMsg::SendPacket {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
+            channel_value: 100000,
+            funds: 3,
+        };
+        let cosmos_msg = cw_template_contract.call(msg).unwrap();
+        let _err = app
+            .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
+            .unwrap_err();
+
+        // ... One day passes
+        app.update_block(|b| {
+            b.height += 10;
+            b.time = b.time.plus_seconds(RESET_TIME_DAILY + 1)
+        });
+
+        // New Channel Value world!
+
+        // Sending 1% of a new value (10_000) passes the daily check, cause it
+        // has expired, but not the weekly check (The value for last week is
+        // sitll 100, as only 1 day has passed)
+        let msg = ExecuteMsg::SendPacket {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
+            channel_value: 10_000,
+            funds: 100,
+        };
+
+        let cosmos_msg = cw_template_contract.call(msg).unwrap();
+        app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
+            .unwrap_err();
+
+        // ... One week passes
+        app.update_block(|b| {
+            b.height += 10;
+            b.time = b.time.plus_seconds(RESET_TIME_WEEKLY + 1)
+        });
+
+        // Sending 1% of a new value should work and set the value for the day at 10_000
+        let msg = ExecuteMsg::SendPacket {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
+            channel_value: 10_000,
+            funds: 100,
+        };
+
+        let cosmos_msg = cw_template_contract.call(msg).unwrap();
+        app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+
+        // If the value magically decreasses. We can still send up to 100 more (1% of 10k)
+        let msg = ExecuteMsg::SendPacket {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
+            channel_value: 1,
+            funds: 75,
+        };
+
+        let cosmos_msg = cw_template_contract.call(msg).unwrap();
+        app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+    }
 }

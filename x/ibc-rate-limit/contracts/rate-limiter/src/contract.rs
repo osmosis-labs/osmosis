@@ -162,18 +162,14 @@ pub fn try_transfer(
     // Adds the attributes for each path to the response. In prod, the
     // addtribute add_rate_limit_attributes is a noop
     results.iter().fold(Ok(response), |acc, result| {
-        Ok(add_rate_limit_attributes(acc?, result, channel_value))
+        Ok(add_rate_limit_attributes(acc?, result))
     })
 }
 
 #[cfg(test)]
-pub fn add_rate_limit_attributes(
-    response: Response,
-    result: &RateLimit,
-    channel_value: u128,
-) -> Response {
+pub fn add_rate_limit_attributes(response: Response, result: &RateLimit) -> Response {
     let (used_in, used_out) = result.flow.balance();
-    let (max_in, max_out) = result.quota.capacity_at(&channel_value);
+    let (max_in, max_out) = result.quota.capacity();
     // These attributes are only added during testing. That way we avoid
     // calculating these again on prod.
     // TODO: Figure out how to include these when testing on the go side.
@@ -198,11 +194,7 @@ pub fn add_rate_limit_attributes(
 }
 
 #[cfg(not(test))]
-pub fn add_rate_limit_attributes(
-    response: Response,
-    _result: &RateLimit,
-    _channel_value: u128,
-) -> Response {
+pub fn add_rate_limit_attributes(response: Response, _result: &RateLimit) -> Response {
     response
 }
 
