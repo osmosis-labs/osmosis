@@ -5,7 +5,7 @@ use std::cmp;
 
 use cw_storage_plus::{Item, Map};
 
-use crate::msg::QuotaMsg;
+use crate::{msg::QuotaMsg, ContractError};
 
 pub const RESET_TIME_DAILY: u64 = 60 * 60 * 24;
 pub const RESET_TIME_WEEKLY: u64 = 60 * 60 * 24 * 7;
@@ -92,6 +92,11 @@ impl Flow {
         self.inflow.abs_diff(self.outflow)
     }
 
+    /// checks if the flow, in the current state, has exceeded a max allowance
+    pub fn exceeds(&self, max: u128) -> bool {
+        self.balance() > max
+    }
+
     /// If now is greater than the period_end, the Flow is considered expired.
     pub fn is_expired(&self, now: Timestamp) -> bool {
         self.period_end < now
@@ -113,6 +118,15 @@ impl Flow {
             FlowType::In => self.inflow = self.inflow.saturating_add(value),
             FlowType::Out => self.outflow = self.outflow.saturating_add(value),
         }
+    }
+
+    /// Applies a transfer. If the Flow is expired (now > period_end), it will
+    /// reset it before applying the transfer.
+    fn apply_transfer(&mut self, direction: &FlowType, funds: u128, now: Timestamp, duration: u64) {
+        if self.is_expired(now) {
+            self.expire(now, duration)
+        }
+        self.add_flow(direction.clone(), funds);
     }
 }
 
@@ -166,6 +180,50 @@ impl From<&QuotaMsg> for Quota {
 pub struct RateLimit {
     pub quota: Quota,
     pub flow: Flow,
+}
+
+impl RateLimit {
+    /// Checks if a transfer is allowed and updates the data structures
+    /// accordingly.
+    ///
+    /// If the transfer is not allowed, it will return a RateLimitExceeded error.
+    ///
+    /// Otherwise it will return a RateLimitResponse with the updated data structures
+    pub fn allow_transfer(
+        &mut self,
+        path: &Path,
+        direction: &FlowType,
+        funds: u128,
+        channel_value: u128,
+        now: Timestamp,
+    ) -> Result<RateLimitResponse, ContractError> {
+        self.flow
+            .apply_transfer(direction, funds, now, self.quota.duration);
+        let max = self.quota.capacity_at(&channel_value, &direction);
+
+        // Return the effects of applying the transfer or an error.
+        match self.flow.exceeds(max) {
+            true => Err(ContractError::RateLimitExceded {
+                channel: path.channel.to_string(),
+                denom: path.denom.to_string(),
+                reset: self.flow.period_end,
+            }),
+            false => Ok(RateLimitResponse {
+                rate_limit: RateLimit {
+                    quota: self.quota.clone(), // Cloning here because self.quota.name (String) does not allow us to implement Copy
+                    flow: self.flow, // We can Copy flow, so this is slightly more efficient than cloning the whole RateLimit
+                },
+                used: self.flow.balance(),
+                max,
+            }),
+        }
+    }
+}
+
+pub struct RateLimitResponse {
+    pub rate_limit: RateLimit,
+    pub used: u128,
+    pub max: u128,
 }
 
 /// Only this address can manage the contract. This will likely be the

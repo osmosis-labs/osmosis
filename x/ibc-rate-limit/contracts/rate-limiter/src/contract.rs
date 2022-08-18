@@ -8,7 +8,7 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::management::{add_new_paths, try_add_path, try_remove_path, try_reset_path_quota};
 use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use crate::state::{FlowType, Path, RateLimit, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
+use crate::state::{FlowType, Path, RateLimitResponse, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:rate-limiter";
@@ -98,12 +98,6 @@ pub fn execute(
     }
 }
 
-pub struct RateLimitResponse {
-    pub rate_limit: RateLimit,
-    pub used: u128,
-    pub max: u128,
-}
-
 // Q: Is an ICS 20 transfer only 1 denom at a time, or does the caller have to split into several
 // calls if its a multi-denom ICS-20 transfer
 
@@ -151,41 +145,10 @@ pub fn try_transfer(
 
     let mut rate_limits = trackers.unwrap();
 
-    let results: Result<Vec<RateLimitResponse>, _> = rate_limits
+    let results: Vec<RateLimitResponse> = rate_limits
         .iter_mut()
-        .map(|limit| {
-            // TODO: Should we move this to more methods on ChannelFlow?
-            // e.g. new pseudocode
-            // channel.updateIfExpired(now)
-            // channel.trackSend(&direction, funds)
-            // channel.CheckRateLimit(direction.clone())?;
-            // (Or at least update for time + rename for track send. the last one is a bit of a code style nit)
-            let max = limit.quota.capacity_at(&channel_value, &direction);
-            if limit.flow.is_expired(now) {
-                limit.flow.expire(now, limit.quota.duration)
-            }
-            limit.flow.add_flow(direction.clone(), funds);
-
-            let balance = limit.flow.balance();
-            if balance > max {
-                return Err(ContractError::RateLimitExceded {
-                    channel: path.channel.to_string(),
-                    denom: path.denom.to_string(),
-                    reset: limit.flow.period_end,
-                });
-            };
-            Ok(RateLimitResponse {
-                // TODO: nit, can we derive channel.Clone()?
-                rate_limit: RateLimit {
-                    quota: limit.quota.clone(),
-                    flow: limit.flow,
-                },
-                used: balance,
-                max,
-            })
-        })
-        .collect();
-    let results = results?;
+        .map(|limit| limit.allow_transfer(&path, &direction, funds, channel_value, now))
+        .collect::<Result<_, ContractError>>()?;
 
     RATE_LIMIT_TRACKERS.save(
         deps.storage,
@@ -247,7 +210,7 @@ mod tests {
 
     use crate::helpers::tests::verify_query_response;
     use crate::msg::{PathMsg, QuotaMsg};
-    use crate::state::RESET_TIME_WEEKLY;
+    use crate::state::{RateLimit, RESET_TIME_WEEKLY};
 
     const IBC_ADDR: &str = "IBC_MODULE";
     const GOV_ADDR: &str = "GOV_MODULE";
