@@ -8,6 +8,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	denom0            = "token/B"
+	denom1            = "token/A"
+	denom2            = "token/C"
+	basePoolId uint64 = 1
+)
+
+var (
+	baseTime   = time.Unix(1257894000, 0).UTC()
+	tPlusOne   = baseTime.Add(time.Second)
+	baseRecord = TwapRecord{
+		PoolId:                      basePoolId,
+		Asset0Denom:                 denom0,
+		Asset1Denom:                 denom1,
+		Height:                      3,
+		Time:                        tPlusOne.Add(time.Second),
+		P0LastSpotPrice:             sdk.OneDec(),
+		P1LastSpotPrice:             sdk.OneDec(),
+		P0ArithmeticTwapAccumulator: sdk.OneDec(),
+		P1ArithmeticTwapAccumulator: sdk.OneDec(),
+	}
+)
+
 func TestGenesisState_Validate(t *testing.T) {
 	var (
 		basicParams = NewParams("week")
