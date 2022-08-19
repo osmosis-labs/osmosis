@@ -1,6 +1,8 @@
 package twap
 
 import (
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -41,7 +43,7 @@ func (k *Keeper) PruneEpochIdentifier(ctx sdk.Context) string {
 	return k.GetParams(ctx).PruneEpochIdentifier
 }
 
-// InitGenesis initializes the capability module's state from a provided genesis
+// InitGenesis initializes the twap module's state from a provided genesis
 // state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	if err := genState.Validate(); err != nil {
@@ -50,14 +52,23 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 	k.SetParams(ctx, genState.Params)
 
+	// Most recent TWAP must be inserted last. This is required because
+	// we maintain a separate index for the most recent TWAP records that
+	// is updated by storing new records.
+	sort.Slice(genState.Twaps, func(i, j int) bool {
+		return genState.Twaps[i].Time.Before(genState.Twaps[j].Time)
+	})
+
 	for _, twap := range genState.Twaps {
 		k.storeNewRecord(ctx, twap)
 	}
 }
 
-// ExportGenesis returns the capability module's exported genesis.
+// ExportGenesis returns the twap module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	twapRecords, err := k.getAllHistoricalPoolIndexedTWAPs(ctx)
+	// These are ordered in increasing order, guranteed but the iterator
+	// that is prefixed by time.
+	twapRecords, err := k.getAllHistoricalTimeIndexedTWAPs(ctx)
 	if err != nil {
 		panic(err)
 	}
