@@ -48,16 +48,14 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		// mint coins, update supply
-		mintedCoin := minter.EpochProvision(params)
-		mintedCoins := sdk.NewCoins(mintedCoin)
-
-		err := k.mintInflationCoins(ctx, mintedCoins)
+		inflationCoin := minter.EpochProvision(params)
+		err := k.mintInflationCoins(ctx, sdk.NewCoins(inflationCoin))
 		if err != nil {
 			panic(err)
 		}
 
 		// send the minted coins to the fee collector account
-		err = k.distributeInflationCoin(ctx, mintedCoin)
+		err = k.distributeInflationCoin(ctx, inflationCoin)
 		if err != nil {
 			panic(err)
 		}
@@ -70,21 +68,26 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		devRewardsProportion := minter.EpochProvisions.Mul(params.DistributionProportions.DeveloperRewards)
-		minter.LastTotalVestedAmount = minter.LastTotalVestedAmount.Add(devRewardsProportion)
-		minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Add(minter.EpochProvisions.Sub(devRewardsProportion))
+		inflationProportion := minter.EpochProvisions.Sub(devRewardsProportion)
+
+		devRewardsDelta := devRewardsProportion.Sub(developerVestingCoin.Amount.ToDec())
+		inflationDelta := inflationProportion.Sub(inflationCoin.Amount.ToDec())
+
+		minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Add(inflationDelta)
+		minter.LastTotalVestedAmount = minter.LastTotalVestedAmount.Add(devRewardsDelta)
 		k.SetMinter(ctx, minter)
 
-		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, mintedCoin.Denom, minter.LastTotalInflationAmount, minter.LastTotalVestedAmount)
+		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, inflationCoin.Denom, minter.LastTotalInflationAmount, minter.LastTotalVestedAmount)
 		if err != nil {
 			panic(err)
 		}
 
-		totalDistributed := mintedCoin.Amount.Add(developerVestingAmount).Add(distributedTruncationDelta)
+		totalDistributed := inflationCoin.Amount.Add(developerVestingAmount).Add(distributedTruncationDelta)
 
 		// call a hook after the minting and distribution of new coins
 		k.hooks.AfterDistributeMintedCoin(ctx)
 
-		if mintedCoin.Amount.IsInt64() {
+		if inflationCoin.Amount.IsInt64() {
 			defer telemetry.ModuleSetGauge(types.ModuleName, float32(totalDistributed.Int64()), "minted_tokens")
 		}
 
