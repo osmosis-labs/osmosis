@@ -166,13 +166,12 @@ pub fn try_transfer(
     })
 }
 
-#[cfg(test)]
+// #[cfg(any(feature = "verbose_responses", test))]
 pub fn add_rate_limit_attributes(response: Response, result: &RateLimit) -> Response {
     let (used_in, used_out) = result.flow.balance();
     let (max_in, max_out) = result.quota.capacity();
     // These attributes are only added during testing. That way we avoid
     // calculating these again on prod.
-    // TODO: Figure out how to include these when testing on the go side.
     response
         .add_attribute(
             format!("{}_used_in", result.quota.name),
@@ -193,10 +192,13 @@ pub fn add_rate_limit_attributes(response: Response, result: &RateLimit) -> Resp
         )
 }
 
-#[cfg(not(test))]
-pub fn add_rate_limit_attributes(response: Response, _result: &RateLimit) -> Response {
-    response
-}
+// Leaving the attributes in until we can conditionally compile the contract
+// for the go tests in CI: https://github.com/mandrean/cw-optimizoor/issues/19
+//
+// #[cfg(not(any(feature = "verbose_responses", test)))]
+// pub fn add_rate_limit_attributes(response: Response, _result: &RateLimit) -> Response {
+//     response
+// }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {

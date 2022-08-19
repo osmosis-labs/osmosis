@@ -31,6 +31,9 @@ overflow-checks = true
 backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all instantiate/execute/query exports
 library = []
+# Use the verbose responses feature if you want to include information about
+# the remaining quotas in the SendPacket/RecvPacket responses
+verbose_responses = []
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \

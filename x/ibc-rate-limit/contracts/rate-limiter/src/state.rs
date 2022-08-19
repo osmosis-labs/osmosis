@@ -222,11 +222,8 @@ impl RateLimit {
         now: Timestamp,
     ) -> Result<Self, ContractError> {
         let expired = self.flow.apply_transfer(direction, funds, now, &self.quota);
-        println!("EXPIRED: {expired}");
         // Cache the channel value if it has never been set or it has expired.
         if self.quota.channel_value.is_none() || expired {
-            println!("CHANNEL_VALUE OLD: {:?}", self.quota.channel_value);
-            println!("CHANNEL_VALUE NEW: {}", channel_value);
             self.quota.channel_value = Some(channel_value)
         }
 
