@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// NewGenesisState reeturns genesis state with the given parameters and twap records.
+// NewGenesisState returns genesis state with the given parameters and twap records.
 func NewGenesisState(params Params, twapRecords []TwapRecord) *GenesisState {
 	return &GenesisState{
 		Params: params,
