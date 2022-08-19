@@ -1,8 +1,13 @@
 name: Generate Mutation Test Errors
 
 on:
-  schedule:
-    - cron: '0 13 * * 1' # Every Monday at 1PM UTC (9AM EST)
+  # for testing 
+  push:
+    branches:
+      - mut-test-fix
+  # for prod 
+    #   schedule:
+    # - cron: '0 13 * * 1' # Every Monday at 1PM UTC (9AM EST)
 
 jobs:
   test:
@@ -12,11 +17,36 @@ jobs:
         name: checkout repo
         uses: actions/checkout@v2
       -
+        name: Setup Golang
+        uses: actions/setup-go@v2.1.4
+        with:
+          go-version: 1.18
+      -
+        name: Display go version
+        run: go version
+      -
+        name: Get data from build cache
+        uses: actions/cache@v2
+        with:
+          # In order:
+          # * Module download cache
+          # * Build cache (Linux)
+          # * Build cache (Mac)
+          # * Build cache (Windows)
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            ~\AppData\Local\go-build
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
+      -
         name: Run mutation test
         continue-on-error: true
-        run: make test-mutation
+        run: make test-mutation $MODULES
         env:
-          MODULES: tokenfactory
+          MODULES: tokenfactory,twap
       -
         name: Execute mutation test format script
         id: mutest-formatted
@@ -26,22 +56,22 @@ jobs:
         name: Generate code blocks
         id: gen-code-blocks
         run: |
-          cat mutation_test_result.txt  | sed "s# @@# @@\n\`\`\`go\n#g " | sed "s#FAIL#\`\`\`\nFAIL\n\n\n#g " > mutation_test_result.txt 
+          cat mutation_test_result.txt  | sed "s# @@# @@\n\`\`\`go\n#g " | sed "s#FAIL#\`\`\`\nFAIL\n\n\n#g " > go_mutation_test_result.txt
       -
         name: Get today's date
         id: date
         run: |
           echo "::set-output name=today::$(date "+%Y/%m/%d")"
       -
-        name: Read mutation_test_result file
+        name: Read mutation_test_txt file
         id: result
         uses: juliangruber/read-file-action@v1
         with:
-          path: mutation_test_result.txt
-      -
-        name: Create an issue
+          path: go_mutation_test_result.txt
+      - 
+        name: Create an mutation test output issue
         uses: dacbd/create-issue-action@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: Mutation test ${{ steps.date.outputs.today }}
-          body: ${{steps.result.outputs.content}}
+          body: ${{ steps.result.outputs.content }}

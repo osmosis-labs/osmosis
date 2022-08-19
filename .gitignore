@@ -206,4 +206,5 @@ tools-stamp
 *.save.*
 
 mutation_test_result.txt
+go_mutation_test_result.txt
 blocks.db
