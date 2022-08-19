@@ -1,6 +1,7 @@
 package twap_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,18 +28,18 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 		poolId     uint64
 		quoteDenom string
 		baseDenom  string
-		expError   bool
+		expError   error
 	}{
-		"no record (wrong pool ID)":                         {initStartRecord, initStartRecord, baseTime, 4, denomA, denomB, true},
-		"default record":                                    {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, false},
-		"default record but same denom":                     {initStartRecord, initStartRecord, baseTime, 1, denomA, denomA, true},
-		"default record wrong order (should get reordered)": {initStartRecord, initStartRecord, baseTime, 1, denomB, denomA, false},
-		"one second later record":                           {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, false},
-		"idempotent overwrite":                              {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, false},
-		"idempotent overwrite2":                             {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, false},
+		"no record (wrong pool ID)":                         {initStartRecord, initStartRecord, baseTime, 4, denomA, denomB, fmt.Errorf("twap not found")},
+		"default record":                                    {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, nil},
+		"default record but same denom":                     {initStartRecord, initStartRecord, baseTime, 1, denomA, denomA, fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denomA, denomA)},
+		"default record wrong order (should get reordered)": {initStartRecord, initStartRecord, baseTime, 1, denomB, denomA, nil},
+		"one second later record":                           {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, nil},
+		"idempotent overwrite":                              {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, nil},
+		"idempotent overwrite2":                             {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, nil},
 		"diff spot price": {zeroAccumTenPoint1Record,
 			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
-			tPlusOne, 1, denomA, denomB, false},
+			tPlusOne, 1, denomA, denomB, nil},
 		// TODO: Overflow
 	}
 	for name, tc := range tests {
@@ -51,8 +52,8 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 
 			actualRecord, err := s.twapkeeper.GetBeginBlockAccumulatorRecord(s.Ctx, tc.poolId, tc.baseDenom, tc.quoteDenom)
 
-			if tc.expError {
-				s.Require().Error(err)
+			if tc.expError != nil {
+				s.Require().Equal(tc.expError, err)
 				return
 			}
 
