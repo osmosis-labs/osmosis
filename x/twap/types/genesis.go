@@ -18,7 +18,7 @@ func DefaultGenesis() *GenesisState {
 	return NewGenesisState(DefaultParams(), []TwapRecord{})
 }
 
-// Validate validates the genesis state. Retursn nil on success, error otherwise.
+// Validate validates the genesis state. Returns nil on success, error otherwise.
 func (g *GenesisState) Validate() error {
 	if err := g.Params.Validate(); err != nil {
 		return err
@@ -63,11 +63,11 @@ func (t TwapRecord) validate() error {
 	}
 
 	if t.P0ArithmeticTwapAccumulator.IsNil() || !t.P0ArithmeticTwapAccumulator.IsPositive() {
-		return fmt.Errorf("twap record p0 accumulator mut be positive, was (%s)", t.P0ArithmeticTwapAccumulator)
+		return fmt.Errorf("twap record p0 accumulator cannot be negative, was (%s)", t.P0ArithmeticTwapAccumulator)
 	}
 
 	if t.P1ArithmeticTwapAccumulator.IsNil() || !t.P1ArithmeticTwapAccumulator.IsPositive() {
-		return fmt.Errorf("twap record p1 accumulator mut be positive, was (%s)", t.P1ArithmeticTwapAccumulator)
+		return fmt.Errorf("twap record p1 accumulator cannot be negative, was (%s)", t.P1ArithmeticTwapAccumulator)
 	}
 	return nil
 }
