@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ARG GO_VERSION="1.18"
-ARG RUNNER_IMAGE="gcr.io/distroless/static:nonroot"
+ARG RUNNER_IMAGE="gcr.io/distroless/static"
 
 # --------------------------------------------------------
 # Builder
@@ -13,8 +13,7 @@ RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-h
 
 # Download go dependencies
 WORKDIR /osmosis
-COPY go.mod go.mod
-COPY go.sum go.sum
+COPY go.* .
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
     go mod download
