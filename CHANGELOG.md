@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 #### Golang API breaks
+
+* [#2418](https://github.com/osmosis-labs/osmosis/pull/2418) x/mint remove SetInitialSupplyOffsetDuringMigration from keeper
 * [#2422](https://github.com/osmosis-labs/osmosis/pull/2422) x/mint unexport keeper `SetLastReductionEpochNum`, `getLastReductionEpochNum`, `CreateDeveloperVestingModuleAccount`, and `MintCoins`
 
 ## v11.0.1
@@ -111,26 +113,6 @@ This release contains minor CLI bug fixes.
 * [#1671](https://github.com/osmosis-labs/osmosis/pull/1671) Add hourly epochs to `x/epochs` DefaultGenesis.
 * [#1665](https://github.com/osmosis-labs/osmosis/pull/1665) Delete app/App interface, instead use simapp.App
 * [#1630](https://github.com/osmosis-labs/osmosis/pull/1630) Delete the v043_temp module, now that we're on an updated SDK version.
-<<<<<<< HEAD
-=======
-* [#1667](https://github.com/osmosis-labs/osmosis/pull/1673) Move wasm-bindings code out of app package into its own root level package.
-* [#2013](https://github.com/osmosis-labs/osmosis/pull/2013) Make `SetParams`, `SetPool`, `SetTotalLiquidity`, and `SetDenomLiquidity` GAMM APIs private
-* [#1857](https://github.com/osmosis-labs/osmosis/pull/1857) x/mint rename GetLastHalvenEpochNum to GetLastReductionEpochNum
-* [#2394](https://github.com/osmosis-labs/osmosis/pull/2394) Remove unused interface methods from expected keepers of each module
-* [#2390](https://github.com/osmosis-labs/osmosis/pull/2390) x/mint remove unused mintCoins parameter from AfterDistributeMintedCoin
-* [#2418](https://github.com/osmosis-labs/osmosis/pull/2418) x/mint remove SetInitialSupplyOffsetDuringMigration from keeper
-* [#2417](https://github.com/osmosis-labs/osmosis/pull/2417) x/mint unexport keeper `SetLastReductionEpochNum`, `getLastReductionEpochNum`, `CreateDeveloperVestingModuleAccount`, and `MintCoins`
-
-### Features
-
-* [#2387](https://github.com/osmosis-labs/osmosis/pull/2387) Upgrade to IBC v3.2.0, which allows for sending/receiving IBC tokens with slashes.
-* [#2057](https://github.com/osmosis-labs/osmosis/pull/2057) Reduce block times to about three seconds
-* [#1312] Stableswap: Createpool logic 
-* [#1230] Stableswap CFMM equations
-* [#1429] solver for multi-asset CFMM
-* [#1539] Superfluid: Combine superfluid and staking query on querying delegation by delegator
-* [#2223] Tokenfactory: Add SetMetadata functionality
->>>>>>> 3d7d48c8 (refactor(x/mint): remove SetInitialSupplyOffsetDuringMigration keeper method (#2418))
 
 ### Bug Fixes
 
