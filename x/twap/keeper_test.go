@@ -14,8 +14,8 @@ import (
 
 // TODO: Consider switching this everywhere
 var (
-	denom0                   = "token/B"
-	denom1                   = "token/A"
+	denom0                   = "token/A"
+	denom1                   = "token/B"
 	denom2                   = "token/C"
 	defaultUniV2Coins        = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
 	baseTime                 = time.Unix(1257894000, 0).UTC()
