@@ -11,8 +11,11 @@ import (
 )
 
 func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string, denom1 string) (TwapRecord, error) {
+	if denom0 == denom1 {
+		return TwapRecord{}, fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denom0, denom1)
+	}
 	if denom0 > denom1 {
-		return TwapRecord{}, fmt.Errorf("precondition denom0 > denom1 not satisfied. denom0 %s | denom1 %s", denom0, denom1)
+		denom0, denom1 = denom1, denom0
 	}
 	sp0 := MustGetSpotPrice(k, ctx, poolId, denom0, denom1)
 	sp1 := MustGetSpotPrice(k, ctx, poolId, denom1, denom0)
