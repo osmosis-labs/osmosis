@@ -154,35 +154,3 @@ jobs:
         name: 🧹 Clean up Osmosis Home
         if: always()
         run: rm -rf $HOME/.osmosisd/ || true
-<<<<<<< HEAD:.github/workflows/check-state-compatibility.yaml
-      -
-        name: Send alert via Slack message
-        if: failure()
-        uses: slackapi/slack-github-action@v1.19.0
-        with:
-          payload: |
-            {
-              "text": "State-compatibility check failed!",
-              	"blocks": [
-                  {
-                    "type": "header",
-                    "text": {
-                      "type": "plain_text",
-                      "text": ":warning: State-compatibility check failed!",
-                      "emoji": true
-                    }
-                  },
-                  {
-                    "type": "section",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": "<${{ github.event.pull_request.html_url || github.event.head_commit.url }}|View code changes>\n\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>"
-                    }
-                  }
-                ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-=======
->>>>>>> a630449a (Finalize CI state compatibility to osmosisd version (#2461)):.github/workflows/state-compatibility-check.yml
