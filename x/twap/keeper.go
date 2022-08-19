@@ -66,7 +66,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 // ExportGenesis returns the twap module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	// These are ordered in increasing order, guaranteed but the iterator
+	// These are ordered in increasing order, guaranteed by the iterator
 	// that is prefixed by time.
 	twapRecords, err := k.getAllHistoricalTimeIndexedTWAPs(ctx)
 	if err != nil {
