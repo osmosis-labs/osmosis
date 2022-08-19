@@ -67,6 +67,7 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 		params.ContractAddress,
 		channelValue,
 		packet.GetSourceChannel(),
+		denom,
 		sender.GetAddress(),
 		amount,
 	)
@@ -205,6 +206,7 @@ func (im *IBCModule) OnRecvPacket(
 		params.ContractAddress,
 		channelValue,
 		packet.GetDestChannel(),
+		denom,
 		sender.GetAddress(),
 		amount,
 	)
