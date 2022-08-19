@@ -2,7 +2,6 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -12,7 +11,7 @@ import (
 
 func CheckRateLimits(ctx sdk.Context, wasmKeeper *wasmkeeper.Keeper,
 	msgType, contract string,
-	channelValue sdk.Int, sourceChannel string,
+	channelValue sdk.Int, sourceChannel, denom string,
 	sender sdk.AccAddress, amount string,
 ) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
@@ -23,6 +22,7 @@ func CheckRateLimits(ctx sdk.Context, wasmKeeper *wasmkeeper.Keeper,
 	sendPacketMsg, _ := BuildWasmExecMsg(
 		msgType,
 		sourceChannel,
+		denom,
 		channelValue,
 		amount,
 	)
@@ -46,13 +46,15 @@ type RecvPacketMsg struct {
 
 type RateLimitExecMsg struct {
 	ChannelId    string  `json:"channel_id"`
+	Denom        string  `json:"denom"`
 	ChannelValue sdk.Int `json:"channel_value"`
 	Funds        string  `json:"funds"`
 }
 
-func BuildWasmExecMsg(msgType, sourceChannel string, channelValue sdk.Int, amount string) (string, error) {
+func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int, amount string) (string, error) {
 	content := RateLimitExecMsg{
 		ChannelId:    sourceChannel,
+		Denom:        denom,
 		ChannelValue: channelValue,
 		Funds:        amount,
 	}
