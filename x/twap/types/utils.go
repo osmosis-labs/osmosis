@@ -68,10 +68,16 @@ func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
 	return pairGT, pairLT
 }
 
-func SpotPriceTimesDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
-	return sp.MulInt64(int64(timeDelta))
+// SpotPriceMulDuration returns the spot price multiplied by the time delta,
+// that is the spot price between the current and last TWAP record.
+func SpotPriceMulDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
+	deltaMS := timeDelta.Milliseconds()
+	return sp.MulInt64(deltaMS)
 }
 
+// AccumDiffDivDuration returns the accumulated difference divided by the the
+// time delta, that is the spot price between the current and last TWAP record.
 func AccumDiffDivDuration(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
-	return accumDiff.QuoInt64(int64(timeDelta))
+	deltaMS := timeDelta.Milliseconds()
+	return accumDiff.QuoInt64(deltaMS)
 }
