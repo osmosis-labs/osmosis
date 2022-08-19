@@ -273,7 +273,7 @@ test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-mutation:
-	@bash scripts/mutation-test.sh
+	@bash scripts/mutation-test.sh $(MODULES)
 
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
