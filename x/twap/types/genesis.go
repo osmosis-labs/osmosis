@@ -18,7 +18,7 @@ func DefaultGenesis() *GenesisState {
 	return NewGenesisState(DefaultParams(), []TwapRecord{})
 }
 
-// Validate validates the genesis state. Retursn nil on success, error otherwise.
+// Validate validates the genesis state. Returns nil on success, error otherwise.
 func (g *GenesisState) Validate() error {
 	if err := g.Params.Validate(); err != nil {
 		return err
