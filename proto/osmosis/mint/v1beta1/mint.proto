@@ -17,18 +17,26 @@ message Minter {
     (gogoproto.nullable) = false
   ];
 
-  // last_total_inflation_amount represents the total amount of inflation
-  // tokens minted since the chain launched. It excludes developer vesting
-  // rewards that are estimated separately by last_total_vested_amount.
-  string last_total_inflation_amount = 2 [
+  // truncated_inflation_delta represents the delta of minted
+  // inflation coins that have not been distributed yet due to truncations..
+  // Truncations are stemming from the interfaces of the core modules such as
+  // bank and distribution that operate on integers. Decimals allow
+  // for much higher precision. As a result, by storing decimal delta
+  // we can avoid truncation discrepancies and be in-line with the
+  // projected total supply of OSMO.
+  string truncated_inflation_delta = 2 [
     (gogoproto.moretags) = "yaml:\"last_total_minted_amount\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
 
-  // last_total_vested_amount represents the total amount of developer
-  // reward tokens vested since the chain launched.
-  string last_total_vested_amount = 3 [
+  // truncated_developer_vesting_delta represents the delta of developer
+  // vesting rewards that has not been distributed yet due to truncations.
+  // Truncations are stemming from the interfaces of the core modules such as
+  // bank and distribution that operate on integers. As a result, by
+  // storing decimal delta we can avoid truncation discrepancies and be
+  // in-line with the projected total supply of OSMO.
+  string truncated_developer_vesting_delta = 3 [
     (gogoproto.moretags) = "yaml:\"last_minted_total_amount\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false

@@ -15,9 +15,9 @@ var (
 // provisions values.
 func NewMinter(epochProvisions sdk.Dec) Minter {
 	return Minter{
-		EpochProvisions:          epochProvisions,
-		LastTotalInflationAmount: sdk.ZeroDec(),
-		LastTotalVestedAmount:    sdk.ZeroDec(),
+		EpochProvisions:                epochProvisions,
+		TruncatedInflationDelta:        sdk.ZeroDec(),
+		TruncatedDeveloperVestingDelta: sdk.ZeroDec(),
 	}
 }
 
@@ -48,10 +48,10 @@ func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
 	return m.EpochProvisions.Mul(params.ReductionFactor)
 }
 
-// EpochProvision returns the provisions for a block based on the epoch
+// InflationProvision returns the provisions for a block based on the epoch
 // provisions rate. It excludes developer rewards as they are
 // handled by the developer vesting module account.
-func (m Minter) EpochProvision(params Params) sdk.Coin {
+func (m Minter) InflationProvision(params Params) sdk.Coin {
 	provisionAmt := m.EpochProvisions.Mul(sdk.OneDec().Sub(params.DistributionProportions.DeveloperRewards)).TruncateInt()
 	return sdk.NewCoin(params.MintDenom, provisionAmt)
 }
@@ -62,4 +62,16 @@ func (m Minter) EpochProvision(params Params) sdk.Coin {
 func (m Minter) DeveloperVestingEpochProvision(params Params) sdk.Coin {
 	provisionAmt := m.EpochProvisions.Mul(params.DistributionProportions.DeveloperRewards).TruncateInt()
 	return sdk.NewCoin(params.MintDenom, provisionAmt)
+}
+
+// TODO:
+func (m *Minter) updateTruncationDeltaAccumulators(distributedInflationAmount, distributedDeveloperVestingAmount sdk.Int, developerRewardsProportion sdk.Dec) {
+	devRewardsProportion := m.EpochProvisions.Mul(developerRewardsProportion)
+	inflationProportion := m.EpochProvisions.Sub(devRewardsProportion)
+
+	devRewardsDelta := devRewardsProportion.Sub(distributedDeveloperVestingAmount.ToDec())
+	inflationDelta := inflationProportion.Sub(distributedInflationAmount.ToDec())
+
+	m.TruncatedInflationDelta = m.TruncatedInflationDelta.Add(inflationDelta)
+	m.TruncatedDeveloperVestingDelta = m.TruncatedDeveloperVestingDelta.Add(devRewardsDelta)
 }

@@ -6,7 +6,6 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -47,48 +46,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.setLastReductionEpochNum(ctx, epochNumber)
 		}
 
-		// mint coins, update supply
-		inflationCoin := minter.EpochProvision(params)
-		err := k.mintInflationCoins(ctx, sdk.NewCoins(inflationCoin))
+		totalDistributed, err := k.distributeEpochProvisions(ctx)
 		if err != nil {
 			panic(err)
-		}
-
-		// send the minted coins to the fee collector account
-		err = k.distributeInflationCoin(ctx, inflationCoin)
-		if err != nil {
-			panic(err)
-		}
-
-		developerVestingCoin := minter.DeveloperVestingEpochProvision(params)
-		// allocate dev rewards to respective accounts from developer vesting module account.
-		developerVestingAmount, err := k.distributeDeveloperRewards(ctx, developerVestingCoin, params.WeightedDeveloperRewardsReceivers)
-		if err != nil {
-			panic(err)
-		}
-
-		devRewardsProportion := minter.EpochProvisions.Mul(params.DistributionProportions.DeveloperRewards)
-		inflationProportion := minter.EpochProvisions.Sub(devRewardsProportion)
-
-		devRewardsDelta := devRewardsProportion.Sub(developerVestingCoin.Amount.ToDec())
-		inflationDelta := inflationProportion.Sub(inflationCoin.Amount.ToDec())
-
-		minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Add(inflationDelta)
-		minter.LastTotalVestedAmount = minter.LastTotalVestedAmount.Add(devRewardsDelta)
-		k.SetMinter(ctx, minter)
-
-		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, inflationCoin.Denom, minter.LastTotalInflationAmount, minter.LastTotalVestedAmount)
-		if err != nil {
-			panic(err)
-		}
-
-		totalDistributed := inflationCoin.Amount.Add(developerVestingAmount).Add(distributedTruncationDelta)
-
-		// call a hook after the minting and distribution of new coins
-		k.hooks.AfterDistributeMintedCoin(ctx)
-
-		if inflationCoin.Amount.IsInt64() {
-			defer telemetry.ModuleSetGauge(types.ModuleName, float32(totalDistributed.Int64()), "minted_tokens")
 		}
 
 		ctx.EventManager().EmitEvent(

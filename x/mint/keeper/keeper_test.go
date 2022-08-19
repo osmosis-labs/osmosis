@@ -1053,7 +1053,7 @@ func (suite *KeeperTestSuite) TestMintNativeCoins() {
 			suite.Require().Equal(tc.expectedInflationAmount.String(), inflationAmount.String())
 
 			// Validate minter's expected total minted amount.
-			suite.Require().Equal(tc.expectedAccumulatorInflationAmount, mintKeeper.GetMinter(ctx).LastTotalInflationAmount)
+			suite.Require().Equal(tc.expectedAccumulatorInflationAmount, mintKeeper.GetMinter(ctx).TruncatedInflationDelta)
 		})
 	}
 }
@@ -1105,7 +1105,7 @@ func (suite *KeeperTestSuite) TestMintInflationCoins() {
 			suite.Require().Equal(tc.expectedInflationAmount.String(), actualInflationAmount.String())
 
 			// Validate minter's expected total minted amount.
-			suite.Require().Equal(sdk.ZeroDec(), mintKeeper.GetMinter(ctx).LastTotalInflationAmount)
+			suite.Require().Equal(sdk.ZeroDec(), mintKeeper.GetMinter(ctx).TruncatedInflationDelta)
 		})
 	}
 }
