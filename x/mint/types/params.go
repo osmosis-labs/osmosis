@@ -23,6 +23,8 @@ var (
 	KeyPoolAllocationRatio                  = []byte("PoolAllocationRatio")
 	KeyDeveloperRewardsReceiver             = []byte("DeveloperRewardsReceiver")
 	KeyMintingRewardsDistributionStartEpoch = []byte("MintingRewardsDistributionStartEpoch")
+
+	_ paramtypes.ParamSet = &Params{}
 )
 
 // ParamTable for minting module.

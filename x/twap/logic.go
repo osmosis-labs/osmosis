@@ -8,6 +8,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
+// TODO: configure recordHistoryKeepPeriod via parameter.
+const recordHistoryKeepPeriod = 48 * time.Hour
+
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
 	denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
@@ -53,8 +56,8 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	return nil
 }
 
-// mutates record argument, but not with all the changes.
-// Use the return value, and drop usage of the argument.
+// updateRecord returns a new record with updated accumulators and block time
+// for the current block time.
 func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.TwapRecord {
 	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
 	newRecord.Height = ctx.BlockHeight()
@@ -67,6 +70,13 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	newRecord.P1LastSpotPrice = newSp1
 
 	return newRecord
+}
+
+// pruneRecords prunes twap records that happened earlier than recordHistoryKeepPeriod
+// before current block time.
+func (k Keeper) pruneRecords(ctx sdk.Context) error {
+	lastKeptTime := ctx.BlockTime().Add(-recordHistoryKeepPeriod)
+	return k.pruneRecordsBeforeTime(ctx, lastKeptTime)
 }
 
 // recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime.
@@ -90,12 +100,6 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(
 		types.SpotPriceTimesDuration(record.P1LastSpotPrice, timeDelta))
 	return newRecord
-}
-
-func (k Keeper) pruneOldTwaps(ctx sdk.Context) {
-	// TODO: Read this from parameter
-	lastAllowedTime := ctx.BlockTime().Add(-48 * time.Hour)
-	k.pruneRecordsBeforeTime(ctx, lastAllowedTime)
 }
 
 // getInterpolatedRecord returns a record for this pool, representing its accumulator state at time `t`.

@@ -38,6 +38,9 @@
   - x/txfees/**/*
 "C:x/tokenfactory":
   - x/tokenfactory/**/*
+"C:x/twap":
+  - x/twap/*
+  - x/twap/**/*
 "T:build":
   - Makefile
   - Dockerfile
