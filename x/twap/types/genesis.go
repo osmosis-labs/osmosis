@@ -67,7 +67,7 @@ func (t TwapRecord) validate() error {
 	}
 
 	if t.P1ArithmeticTwapAccumulator.IsNil() || !t.P1ArithmeticTwapAccumulator.IsPositive() {
-		return fmt.Errorf("twap record p1 accumulator mut be positive, was (%s)", t.P1ArithmeticTwapAccumulator)
+		return fmt.Errorf("twap record p1 accumulator must be positive, was (%s)", t.P1ArithmeticTwapAccumulator)
 	}
 	return nil
 }
