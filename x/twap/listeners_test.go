@@ -5,11 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
 // TestAfterPoolCreatedHook tests if internal tracking logic has been triggered correctly,
-// and the corerct state entries have been created upon pool creation.
+// and the correct state entries have been created upon pool creation.
 // This test includes test cases for swapping on the same block with pool creation.
 func (s *TestSuite) TestAfterPoolCreatedHook() {
 	tests := map[string]struct {
@@ -44,8 +45,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 				s.RunBasicSwap(poolId)
 			}
 
-			denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
-			s.Require().NoError(err)
+			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
 			denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
 			for i := 0; i < len(denomPairs0); i++ {
