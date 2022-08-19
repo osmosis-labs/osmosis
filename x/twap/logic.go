@@ -107,7 +107,10 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 // This is achieved by getting the record `r` that is at, or immediately preceding in state time `t`.
 // To be clear: the record r s.t. `t - r.Time` is minimized AND `t >= r.Time`
 func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Time, assetA, assetB string) (types.TwapRecord, error) {
-	if !(assetA > assetB) {
+	if assetA == assetB {
+		return types.TwapRecord{}, fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", assetA, assetB)
+	}
+	if assetA > assetB {
 		assetA, assetB = assetB, assetA
 	}
 	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, t, assetA, assetB)
