@@ -24,13 +24,13 @@ func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	iterator := storeObj.Iterator(keyStart, keyEnd)
 	defer iterator.Close()
-	return gatherValuesFromIteratorWithStop(iterator, parseValue, func(b []byte) bool { return false })
+	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
 }
 
 func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	iterator := sdk.KVStorePrefixIterator(storeObj, prefix)
 	defer iterator.Close()
-	return gatherValuesFromIteratorWithStop(iterator, parseValue, func(b []byte) bool { return false })
+	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
 }
 
 func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, stopFn func([]byte) bool, parseValue func([]byte) (T, error)) ([]T, error) {
@@ -98,4 +98,8 @@ func gatherValuesFromIteratorWithStop[T any](iterator db.Iterator, parseValue fu
 		values = append(values, val)
 	}
 	return values, nil
+}
+
+func noStopFn([]byte) bool {
+	return false
 }

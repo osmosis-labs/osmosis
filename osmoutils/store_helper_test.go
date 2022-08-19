@@ -181,3 +181,8 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 		})
 	}
 }
+
+func (s *TestSuite) TestNoStopFn_AlwaysFalse() {
+	s.Require().False(osmoutils.NoStopFn([]byte(keyA)))
+	s.Require().False(osmoutils.NoStopFn([]byte(keyB)))
+}
