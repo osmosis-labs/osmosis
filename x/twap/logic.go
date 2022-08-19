@@ -95,10 +95,12 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	// thus it is treated as the effective spot price until the new time.
 	// (As there was no change until at or after this time)
 	// TODO: Think about overflow
-	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(
-		types.SpotPriceTimesDuration(record.P0LastSpotPrice, timeDelta))
-	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(
-		types.SpotPriceTimesDuration(record.P1LastSpotPrice, timeDelta))
+	p0Accum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
+	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(p0Accum)
+
+	p1Accum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
+	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1Accum)
+
 	return newRecord
 }
 
