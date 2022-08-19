@@ -27,6 +27,7 @@ var (
 	FlagCommitValue             bool
 	FlagOnOperationValue        bool // TODO: Remove in favor of binary search for invariant violation
 	FlagAllInvariantsValue      bool
+	FlagWriteStatsToDB          bool
 
 	FlagEnabledValue     bool
 	FlagVerboseValue     bool
@@ -59,6 +60,7 @@ func GetSimulatorFlags() {
 	flag.BoolVar(&FlagCommitValue, "Commit", false, "have the simulation commit")
 	flag.BoolVar(&FlagOnOperationValue, "SimulateEveryOperation", false, "run slow invariants every operation")
 	flag.BoolVar(&FlagAllInvariantsValue, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
+	flag.BoolVar(&FlagWriteStatsToDB, "WriteStatsToDB", false, "write stats to a local sqlite3 database")
 
 	// simulation flags
 	flag.BoolVar(&FlagEnabledValue, "Enabled", false, "enable the simulation")
@@ -84,6 +86,7 @@ func NewConfigFromFlags() Config {
 		Commit:             FlagCommitValue,
 		OnOperation:        FlagOnOperationValue,
 		AllInvariants:      FlagAllInvariantsValue,
+		WriteStatsToDB:     FlagWriteStatsToDB,
 	}
 }
 
@@ -143,6 +146,7 @@ type Config struct {
 	Lean   bool // lean simulation log output
 	Commit bool // have the simulation commit
 
-	OnOperation   bool // run slow invariants every operation
-	AllInvariants bool // print all failed invariants if a broken invariant is found
+	OnOperation    bool // run slow invariants every operation
+	AllInvariants  bool // print all failed invariants if a broken invariant is found
+	WriteStatsToDB bool
 }

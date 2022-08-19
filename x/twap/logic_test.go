@@ -209,3 +209,26 @@ func TestComputeArithmeticTwap(t *testing.T) {
 		})
 	}
 }
+
+// TestPruneRecords tests that all twap records earlier than
+// current block time - RecordHistoryKeepPeriod are pruned from the store.
+func (s *TestSuite) TestPruneRecords() {
+	tMin2Record, tMin1Record, baseRecord, tPlus1Record := s.createTestRecordsFromTime(baseTime.Add(-twap.RecordHistoryKeepPeriod))
+
+	// non-ascending insertion order.
+	recordsToPreSet := []types.TwapRecord{tPlus1Record, tMin1Record, baseRecord, tMin2Record}
+
+	expectedKeptRecords := []types.TwapRecord{baseRecord, tPlus1Record}
+	s.SetupTest()
+	s.preSetRecords(recordsToPreSet)
+
+	ctx := s.Ctx
+	twapKeeper := s.twapkeeper
+
+	ctx = ctx.WithBlockTime(baseTime)
+
+	err := twapKeeper.PruneRecords(ctx)
+	s.Require().NoError(err)
+
+	s.validateExpectedRecords(expectedKeptRecords)
+}

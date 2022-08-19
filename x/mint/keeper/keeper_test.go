@@ -311,57 +311,6 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
-	testcases := map[string]struct {
-		blockHeight                     int64
-		isDeveloperModuleAccountCreated bool
-
-		expectedError error
-	}{
-		"valid call": {
-			blockHeight:                     1,
-			isDeveloperModuleAccountCreated: true,
-		},
-		"dev vesting module account does not exist": {
-			blockHeight:   1,
-			expectedError: sdkerrors.Wrapf(types.ErrModuleDoesnotExist, "%s vesting module account doesnot exist", types.DeveloperVestingModuleAcctName),
-		},
-	}
-
-	for name, tc := range testcases {
-		suite.Run(name, func() {
-			suite.setupDeveloperVestingModuleAccountTest(tc.blockHeight, tc.isDeveloperModuleAccountCreated)
-			ctx := suite.Ctx
-			bankKeeper := suite.App.BankKeeper
-			mintKeeper := suite.App.MintKeeper
-
-			// in order to ensure the offset is correctly calculated, we need to mint the supply + 1
-			// this is because a negative supply offset will always return zero
-			// by setting this to the supply + 1, we ensure we are correctly calculating the offset by keeping it delta positive
-			suite.MintCoins(sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount+1))))
-
-			supplyWithOffsetBefore := bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom)
-			supplyOffsetBefore := bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom)
-
-			// Test
-			actualError := mintKeeper.SetInitialSupplyOffsetDuringMigration(ctx)
-
-			if tc.expectedError != nil {
-				suite.Require().Error(actualError)
-				suite.Require().ErrorIs(actualError, tc.expectedError)
-
-				suite.Require().Equal(supplyWithOffsetBefore.Amount, bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
-				suite.Require().Equal(supplyOffsetBefore, bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
-				return
-			}
-			suite.Require().NoError(actualError)
-
-			suite.Require().Equal(supplyWithOffsetBefore.Amount.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), bankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
-			suite.Require().Equal(supplyOffsetBefore.Sub(sdk.NewInt(keeper.DeveloperVestingAmount)), bankKeeper.GetSupplyOffset(ctx, sdk.DefaultBondDenom))
-		})
-	}
-}
-
 // TestDistributeToModule tests that distribution from mint module to another module helper
 // function is working as expected.
 func (suite *KeeperTestSuite) TestDistributeToModule() {
