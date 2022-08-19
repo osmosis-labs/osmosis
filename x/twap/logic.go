@@ -1,6 +1,7 @@
 package twap
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -118,7 +119,10 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 }
 
 func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, assetB string) (types.TwapRecord, error) {
-	if !(assetA > assetB) {
+	if assetA == assetB {
+		return types.TwapRecord{}, fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", assetA, assetB)
+	}
+	if assetA > assetB {
 		assetA, assetB = assetB, assetA
 	}
 	record, err := k.getMostRecentRecordStoreRepresentation(ctx, poolId, assetA, assetB)

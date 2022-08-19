@@ -29,11 +29,13 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 		baseDenom  string
 		expError   bool
 	}{
-		"no record (wrong pool ID)": {initStartRecord, initStartRecord, baseTime, 4, denomA, denomB, true},
-		"default record":            {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, false},
-		"one second later record":   {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, false},
-		"idempotent overwrite":      {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, false},
-		"idempotent overwrite2":     {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, false},
+		"no record (wrong pool ID)":                         {initStartRecord, initStartRecord, baseTime, 4, denomA, denomB, true},
+		"default record":                                    {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, false},
+		"default record but same denom":                     {initStartRecord, initStartRecord, baseTime, 1, denomA, denomA, true},
+		"default record wrong order (should get reordered)": {initStartRecord, initStartRecord, baseTime, 1, denomB, denomA, false},
+		"one second later record":                           {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, false},
+		"idempotent overwrite":                              {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, false},
+		"idempotent overwrite2":                             {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, false},
 		"diff spot price": {zeroAccumTenPoint1Record,
 			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 			tPlusOne, 1, denomA, denomB, false},
@@ -53,6 +55,10 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 				s.Require().Error(err)
 				return
 			}
+
+			// ensure denom order was corrected
+			s.Require().True(actualRecord.Asset0Denom < actualRecord.Asset1Denom)
+
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expRecord, actualRecord)
 		})

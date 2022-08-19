@@ -34,13 +34,13 @@ func (s *TestSuite) TestSwapTriggeringTrackPoolId() {
 	s.Require().Equal([]uint64{poolId}, s.twapkeeper.GetChangedPools(s.Ctx))
 }
 
-// TestSwapAndEndBlockTriggeringSave tests that if we:
+// TestJoinSwapAndEndBlockTriggeringSave tests that if we:
 // * create a pool in block 1
-// * swap in block 2
+// * join that pool and swap in block 2
 // then after block 2 end block, we have saved records for the pool,
 // for both block 1 & 2, with distinct spot prices in their records, and accumulators incremented.
 // TODO: Abstract this to be more table driven, and test more pool / block setups.
-func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
+func (s *TestSuite) TestJoinSwapAndEndBlockTriggeringSave() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
 	expectedHistoricalTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
@@ -50,6 +50,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.Commit() // clear transient store
 	// Now on a clean state after a create pool
 	s.Require().Equal(baseTime.Add(time.Second), s.Ctx.BlockTime())
+	s.RunBasicJoin(poolId)
 	s.RunBasicSwap(poolId)
 
 	// accumulators are default right here

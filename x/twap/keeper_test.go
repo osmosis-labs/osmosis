@@ -41,7 +41,7 @@ func (s *TestSuite) SetupTest() {
 // sets up a new two asset pool, with spot price 1
 func (s *TestSuite) setupDefaultPool() (poolId uint64, denomA, denomB string) {
 	poolId = s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
-	denomA, denomB = defaultUniV2Coins[1].Denom, defaultUniV2Coins[0].Denom
+	denomA, denomB = defaultUniV2Coins[0].Denom, defaultUniV2Coins[1].Denom
 	return
 }
 
