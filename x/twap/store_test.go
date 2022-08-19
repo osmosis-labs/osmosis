@@ -82,24 +82,24 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 		"set multi-asset pool record": {
 			recordsToSet: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom0),
-				newEmptyPriceRecord(1, baseTime, denom2, denom1)},
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2)},
 			poolId: 1,
 			expectedRecords: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom0)},
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2)},
 		},
 		"set multi-asset pool record - reverse order": {
 			recordsToSet: []types.TwapRecord{
-				newEmptyPriceRecord(1, baseTime, denom2, denom0),
-				newEmptyPriceRecord(1, baseTime, denom2, denom1),
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2),
 				newEmptyPriceRecord(1, baseTime, denom0, denom1)},
 			poolId: 1,
 			expectedRecords: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom0)},
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2)},
 		},
 	}
 

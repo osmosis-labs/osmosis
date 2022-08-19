@@ -10,12 +10,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 )
 
-func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string, denom1 string) (TwapRecord, error) {
-	if denom0 == denom1 {
-		return TwapRecord{}, fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denom0, denom1)
-	}
-	if denom0 > denom1 {
-		denom0, denom1 = denom1, denom0
+func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (TwapRecord, error) {
+	denom0, denom1, err := LexicographicalOrderDenoms(denom0, denom1)
+	if err != nil {
+		return TwapRecord{}, err
 	}
 	sp0 := MustGetSpotPrice(k, ctx, poolId, denom0, denom1)
 	sp1 := MustGetSpotPrice(k, ctx, poolId, denom1, denom0)
@@ -77,4 +75,14 @@ func SpotPriceTimesDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
 
 func AccumDiffDivDuration(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
 	return accumDiff.QuoInt64(int64(timeDelta))
+}
+
+func LexicographicalOrderDenoms(denom0, denom1 string) (string, string, error) {
+	if denom0 == denom1 {
+		return "", "", fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denom0, denom1)
+	}
+	if denom0 > denom1 {
+		denom0, denom1 = denom1, denom0
+	}
+	return denom0, denom1, nil
 }

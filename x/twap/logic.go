@@ -1,7 +1,6 @@
 package twap
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -107,11 +106,9 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 // This is achieved by getting the record `r` that is at, or immediately preceding in state time `t`.
 // To be clear: the record r s.t. `t - r.Time` is minimized AND `t >= r.Time`
 func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Time, assetA, assetB string) (types.TwapRecord, error) {
-	if assetA == assetB {
-		return types.TwapRecord{}, fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", assetA, assetB)
-	}
-	if assetA > assetB {
-		assetA, assetB = assetB, assetA
+	assetA, assetB, err := types.LexicographicalOrderDenoms(assetA, assetB)
+	if err != nil {
+		return types.TwapRecord{}, err
 	}
 	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, t, assetA, assetB)
 	if err != nil {
@@ -122,11 +119,9 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 }
 
 func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, assetB string) (types.TwapRecord, error) {
-	if assetA == assetB {
-		return types.TwapRecord{}, fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", assetA, assetB)
-	}
-	if assetA > assetB {
-		assetA, assetB = assetB, assetA
+	assetA, assetB, err := types.LexicographicalOrderDenoms(assetA, assetB)
+	if err != nil {
+		return types.TwapRecord{}, err
 	}
 	record, err := k.getMostRecentRecordStoreRepresentation(ctx, poolId, assetA, assetB)
 	if err != nil {
