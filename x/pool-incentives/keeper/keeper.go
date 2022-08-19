@@ -6,10 +6,10 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,12 +27,9 @@ type Keeper struct {
 	bankKeeper       types.BankKeeper
 	incentivesKeeper types.IncentivesKeeper
 	distrKeeper      types.DistrKeeper
-
-	communityPoolName string // name of the Community pool ModuleAccount (Maybe the distribution module)
-	feeCollectorName  string // name of the FeeCollector ModuleAccount
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, communityPoolName string, feeCollectorName string) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -53,9 +50,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		bankKeeper:       bankKeeper,
 		incentivesKeeper: incentivesKeeper,
 		distrKeeper:      distrKeeper,
-
-		communityPoolName: communityPoolName,
-		feeCollectorName:  feeCollectorName,
 	}
 }
 

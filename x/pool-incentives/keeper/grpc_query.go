@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	incentivetypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	incentivetypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -25,6 +25,7 @@ func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
 }
 
+// GaugeIds takes provided gauge request and returns the respective gaugeIDs.
 func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) (*types.QueryGaugeIdsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -61,21 +62,25 @@ func (q Querier) GaugeIds(ctx context.Context, req *types.QueryGaugeIdsRequest) 
 	return &types.QueryGaugeIdsResponse{GaugeIdsWithDuration: gaugeIdsWithDuration}, nil
 }
 
+// DistrInfo returns gauges receiving pool rewards and their respective weights.
 func (q Querier) DistrInfo(ctx context.Context, _ *types.QueryDistrInfoRequest) (*types.QueryDistrInfoResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return &types.QueryDistrInfoResponse{DistrInfo: q.Keeper.GetDistrInfo(sdkCtx)}, nil
 }
 
+// Params return pool-incentives module params.
 func (q Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(sdkCtx)}, nil
 }
 
+// LockableDurations returns the lock durations that are incentivized through pool-incentives.
 func (q Querier) LockableDurations(ctx context.Context, _ *types.QueryLockableDurationsRequest) (*types.QueryLockableDurationsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return &types.QueryLockableDurationsResponse{LockableDurations: q.Keeper.GetLockableDurations(sdkCtx)}, nil
 }
 
+// IncentivizedPools iterates over all gauges, returns default gauges created with pool.
 func (q Querier) IncentivizedPools(ctx context.Context, _ *types.QueryIncentivizedPoolsRequest) (*types.QueryIncentivizedPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

@@ -4,10 +4,12 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -103,7 +105,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
 				suite.Assert().Greater(gasConsumedForSwap, uint64(types.BalancerGasFeeForSwap))
 
-				assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, 1)
+				suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, 1)
 
 				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenIn.Denom, test.param.tokenOutDenom)
 				suite.NoError(err, "test: %v", test.name)
@@ -213,7 +215,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountOut() {
 				// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
 				suite.Assert().Greater(gasConsumedForSwap, uint64(types.BalancerGasFeeForSwap))
 
-				assertEventEmitted(suite, ctx, types.TypeEvtTokenSwapped, 1)
+				suite.AssertEventEmitted(ctx, types.TypeEvtTokenSwapped, 1)
 
 				spotPriceAfter, err := keeper.CalculateSpotPrice(ctx, poolId, test.param.tokenInDenom, test.param.tokenOut.Denom)
 				suite.NoError(err, "test: %v", test.name)
@@ -269,4 +271,58 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 			}
 		}
 	}
+}
+
+// Test two pools -- one is active and should have swaps allowed,
+// while the other is inactive and should have swaps frozen.
+// As shown in the following test, we can mock a pool by calling
+// `mocks.NewMockPool()`, then adding `EXPECT` statements to
+// match argument calls, add return values, and more.
+// More info at https://github.com/golang/mock
+func (suite *KeeperTestSuite) TestInactivePoolFreezeSwaps() {
+	// Setup test
+	suite.SetupTest()
+	testCoin := sdk.NewCoin("foo", sdk.NewInt(10))
+	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
+
+	// Setup active pool
+	activePoolId := suite.PrepareBalancerPool()
+
+	// Setup mock inactive pool
+	gammKeeper := suite.App.GAMMKeeper
+	ctrl := gomock.NewController(suite.T())
+	defer ctrl.Finish()
+	inactivePool := mocks.NewMockPoolI(ctrl)
+	inactivePoolId := gammKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
+	// Add mock return values for pool -- we need to do this because
+	// mock objects don't have interface functions implemented by default.
+	inactivePool.EXPECT().IsActive(suite.Ctx).Return(false).AnyTimes()
+	inactivePool.EXPECT().GetId().Return(inactivePoolId).AnyTimes()
+	gammKeeper.SetPool(suite.Ctx, inactivePool)
+
+	type testCase struct {
+		poolId     uint64
+		expectPass bool
+		name       string
+	}
+	testCases := []testCase{
+		{activePoolId, true, "swap succeeds on active pool"},
+		{inactivePoolId, false, "swap fails on inactive pool"},
+	}
+
+	for _, test := range testCases {
+		suite.Run(test.name, func() {
+			// Check swaps
+			_, swapInErr := gammKeeper.SwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.poolId, testCoin, "bar", sdk.ZeroInt())
+			_, swapOutErr := gammKeeper.SwapExactAmountOut(suite.Ctx, suite.TestAccs[0], test.poolId, "bar", sdk.NewInt(1000000000000000000), testCoin)
+			if test.expectPass {
+				suite.Require().NoError(swapInErr)
+				suite.Require().NoError(swapOutErr)
+			} else {
+				suite.Require().Error(swapInErr)
+				suite.Require().Error(swapOutErr)
+			}
+		})
+	}
+
 }

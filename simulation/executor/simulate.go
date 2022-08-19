@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
 )
 
 const AverageBlockTime = 6 * time.Second
@@ -57,9 +57,9 @@ func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
 	app simtypes.App,
-	initFunctions simtypes.InitFunctions,
-	actions []simtypes.Action,
-	config simulation.Config,
+	initFunctions InitFunctions,
+	actions []simtypes.ActionsWithMetadata,
+	config Config,
 ) (stopEarly bool, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
@@ -114,8 +114,8 @@ func cursedInitializationLogic(
 	tb testing.TB,
 	w io.Writer,
 	app simtypes.App,
-	initFunctions simtypes.InitFunctions,
-	config *simulation.Config) (*simtypes.SimCtx, *simState, Params, error) {
+	initFunctions InitFunctions,
+	config *Config) (*simtypes.SimCtx, *simState, Params, error) {
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
 
 	r := rand.New(rand.NewSource(config.Seed))
@@ -156,8 +156,8 @@ func initChain(
 	params Params,
 	accounts []simulation.Account,
 	app simtypes.App,
-	appStateFn simulation.AppStateFn,
-	config *simulation.Config,
+	appStateFn AppStateFn,
+	config *Config,
 ) (mockValidators, time.Time, []simulation.Account) {
 	// TODO: Cleanup the whole config dependency with appStateFn
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, *config)
@@ -205,8 +205,8 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
-func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.Action,
-	simState *simState, config simulation.Config,
+func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.ActionsWithMetadata,
+	simState *simState, config Config,
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
@@ -233,6 +233,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			// Select and execute tx
 			action := selectAction(actionSimCtx.GetSeededRand("action select"))
 			opMsg, futureOps, err := action.Execute(actionSimCtx, ctx)
+			opMsg.Route = action.ModuleName
 			cleanup()
 
 			simState.logActionResult(header, i, config, blocksize, opMsg, err)
@@ -251,7 +252,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 
 // This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
 func (simState *simState) logActionResult(
-	header tmproto.Header, actionIndex int, config simulation.Config, blocksize int,
+	header tmproto.Header, actionIndex int, config Config, blocksize int,
 	opMsg simulation.OperationMsg, actionErr error) {
 	opMsg.LogEvent(simState.eventStats.Tally)
 	if !simState.leanLogs || opMsg.OK {

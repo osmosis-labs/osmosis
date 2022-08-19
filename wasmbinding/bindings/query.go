@@ -21,6 +21,10 @@ type OsmosisQuery struct {
 	EstimateSwap *EstimateSwap `json:"estimate_swap,omitempty"`
 	/// Returns the admin of a denom, if the denom is a Token Factory denom.
 	DenomAdmin *DenomAdmin `json:"denom_admin,omitempty"`
+	// Returns the arithmetic TWAP given base asset and quote asset.
+	ArithmeticTwap *ArithmeticTwap `json:"arithmetic_twap,omitempty"`
+	// Returns the accumulated historical TWAP of the given base asset and quote asset.
+	ArithmeticTwapToNow *ArithmeticTwapToNow `json:"arithmetic_twap_to_now,omitempty"`
 }
 
 type FullDenom struct {
@@ -52,6 +56,24 @@ type EstimateSwap struct {
 	Amount SwapAmount `json:"amount"`
 }
 
+type ArithmeticTwap struct {
+	PoolId          uint64 `json:"id"`
+	QuoteAssetDenom string `json:"quote_asset_denom"`
+	BaseAssetDenom  string `json:"base_asset_denom"`
+	// NOTE: StartTime is expected to be in Unix time milliseconds.
+	StartTime int64 `json:"start_time"`
+	// NOTE: EndTime is expected to be in Unix time milliseconds.
+	EndTime int64 `json:"end_time"`
+}
+
+type ArithmeticTwapToNow struct {
+	PoolId          uint64 `json:"id"`
+	QuoteAssetDenom string `json:"quote_asset_denom"`
+	BaseAssetDenom  string `json:"base_asset_denom"`
+	// NOTE: StartTime is expected to be in Unix time milliseconds.
+	StartTime int64 `json:"start_time"`
+}
+
 func (e *EstimateSwap) ToSwapMsg() *SwapMsg {
 	return &SwapMsg{
 		First:  e.First,
@@ -80,4 +102,14 @@ type EstimatePriceResponse struct {
 	// If you query with SwapAmount::Input, this is SwapAmount::Output.
 	// If you query with SwapAmount::Output, this is SwapAmount::Input.
 	Amount SwapAmount `json:"swap_amount"`
+}
+
+// ArithmeticTwapResponse returns twap(decimal) in string format.
+type ArithmeticTwapResponse struct {
+	Twap string `json:"arithmetic_twap"`
+}
+
+// ArithmeticTwapToNowResponse returns twap(decimal) in string format.
+type ArithmeticTwapToNowResponse struct {
+	Twap string `json:"arithmetic_twap_to_now"`
 }

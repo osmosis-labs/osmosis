@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
 )
 
 func (suite *KeeperTestSuite) TestAdminMsgs() {
@@ -263,6 +264,135 @@ func (suite *KeeperTestSuite) TestChangeAdminDenom() {
 				} else {
 					suite.Require().Error(err)
 				}
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestSetDenomMetaData() {
+
+	// setup test
+	suite.SetupTest()
+	suite.CreateDefaultDenom()
+
+	for _, tc := range []struct {
+		desc                string
+		msgSetDenomMetadata types.MsgSetDenomMetadata
+		expectedPass        bool
+	}{
+		{
+			desc: "successful set denom metadata",
+			msgSetDenomMetadata: *types.NewMsgSetDenomMetadata(suite.TestAccs[0].String(), banktypes.Metadata{
+				Description: "yeehaw",
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    suite.defaultDenom,
+						Exponent: 0,
+					},
+					{
+						Denom:    "uosmo",
+						Exponent: 6,
+					},
+				},
+				Base:    suite.defaultDenom,
+				Display: "uosmo",
+				Name:    "OSMO",
+				Symbol:  "OSMO",
+			}),
+			expectedPass: true,
+		},
+		{
+			desc: "non existent factory denom name",
+			msgSetDenomMetadata: *types.NewMsgSetDenomMetadata(suite.TestAccs[0].String(), banktypes.Metadata{
+				Description: "yeehaw",
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    fmt.Sprintf("factory/%s/litecoin", suite.TestAccs[0].String()),
+						Exponent: 0,
+					},
+					{
+						Denom:    "uosmo",
+						Exponent: 6,
+					},
+				},
+				Base:    fmt.Sprintf("factory/%s/litecoin", suite.TestAccs[0].String()),
+				Display: "uosmo",
+				Name:    "OSMO",
+				Symbol:  "OSMO",
+			}),
+			expectedPass: false,
+		},
+		{
+			desc: "non-factory denom",
+			msgSetDenomMetadata: *types.NewMsgSetDenomMetadata(suite.TestAccs[0].String(), banktypes.Metadata{
+				Description: "yeehaw",
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    "uosmo",
+						Exponent: 0,
+					},
+					{
+						Denom:    "uosmoo",
+						Exponent: 6,
+					},
+				},
+				Base:    "uosmo",
+				Display: "uosmoo",
+				Name:    "OSMO",
+				Symbol:  "OSMO",
+			}),
+			expectedPass: false,
+		},
+		{
+			desc: "wrong admin",
+			msgSetDenomMetadata: *types.NewMsgSetDenomMetadata(suite.TestAccs[1].String(), banktypes.Metadata{
+				Description: "yeehaw",
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    suite.defaultDenom,
+						Exponent: 0,
+					},
+					{
+						Denom:    "uosmo",
+						Exponent: 6,
+					},
+				},
+				Base:    suite.defaultDenom,
+				Display: "uosmo",
+				Name:    "OSMO",
+				Symbol:  "OSMO",
+			}),
+			expectedPass: false,
+		},
+		{
+			desc: "invalid metadata (missing display denom unit)",
+			msgSetDenomMetadata: *types.NewMsgSetDenomMetadata(suite.TestAccs[0].String(), banktypes.Metadata{
+				Description: "yeehaw",
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    suite.defaultDenom,
+						Exponent: 0,
+					},
+				},
+				Base:    suite.defaultDenom,
+				Display: "uosmo",
+				Name:    "OSMO",
+				Symbol:  "OSMO",
+			}),
+			expectedPass: false,
+		},
+	} {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			res, err := suite.msgServer.SetDenomMetadata(sdk.WrapSDKContext(suite.Ctx), &tc.msgSetDenomMetadata)
+			if tc.expectedPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+
+				md, found := suite.App.BankKeeper.GetDenomMetaData(suite.Ctx, suite.defaultDenom)
+				suite.Require().True(found)
+				suite.Require().Equal(tc.msgSetDenomMetadata.Metadata.Name, md.Name)
+			} else {
+				suite.Require().Error(err)
 			}
 		})
 	}

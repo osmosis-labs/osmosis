@@ -9,27 +9,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v11/x/txfees/types"
 )
 
 type Keeper struct {
-	cdc      codec.Codec
 	storeKey sdk.StoreKey
 
 	accountKeeper             types.AccountKeeper
 	bankKeeper                types.BankKeeper
-	epochKeeper               types.EpochKeeper
 	gammKeeper                types.GammKeeper
 	spotPriceCalculator       types.SpotPriceCalculator
 	feeCollectorName          string
 	nonNativeFeeCollectorName string
 }
 
+var _ types.TxFeesKeeper = (*Keeper)(nil)
+
 func NewKeeper(
 	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	epochKeeper types.EpochKeeper,
 	storeKey sdk.StoreKey,
 	gammKeeper types.GammKeeper,
 	spotPriceCalculator types.SpotPriceCalculator,
@@ -37,10 +36,8 @@ func NewKeeper(
 	nonNativeFeeCollectorName string,
 ) Keeper {
 	return Keeper{
-		cdc:                       cdc,
 		accountKeeper:             accountKeeper,
 		bankKeeper:                bankKeeper,
-		epochKeeper:               epochKeeper,
 		storeKey:                  storeKey,
 		gammKeeper:                gammKeeper,
 		spotPriceCalculator:       spotPriceCalculator,

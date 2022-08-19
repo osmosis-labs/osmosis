@@ -26,7 +26,7 @@ type Action interface {
 	WithFrequency(w Frequency) Action
 }
 
-type selectActionFn func(r *rand.Rand) Action
+type selectActionFn func(r *rand.Rand) ActionsWithMetadata
 
 type weightedOperationAction struct {
 	moduleName string
@@ -100,6 +100,10 @@ func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	if err != nil {
 		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build msg due to: %v", err)), nil, nil
 	}
+	err = msg.ValidateBasic()
+	if err != nil {
+		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("msg did not pass ValidateBasic: %v", err)), nil, nil
+	}
 	tx, err := sim.txbuilder(ctx, msg, m.name)
 	if err != nil {
 		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build tx due to: %v", err)), nil, err
@@ -107,7 +111,7 @@ func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	return sim.deliverTx(tx, msg, m.name)
 }
 
-func totalFrequency(actions []Action) int {
+func totalFrequency(actions []ActionsWithMetadata) int {
 	totalFrequency := 0
 	for _, action := range actions {
 		totalFrequency += mapFrequencyFromString(action.Frequency())
@@ -116,10 +120,10 @@ func totalFrequency(actions []Action) int {
 	return totalFrequency
 }
 
-func GetSelectActionFn(actions []Action) selectActionFn {
+func GetSelectActionFn(actions []ActionsWithMetadata) selectActionFn {
 	totalOpFrequency := totalFrequency(actions)
 
-	return func(r *rand.Rand) Action {
+	return func(r *rand.Rand) ActionsWithMetadata {
 		x := r.Intn(totalOpFrequency)
 		// TODO: Change to an accum list approach
 		for i := 0; i < len(actions); i++ {

@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"golang.org/x/exp/maps"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 )
 
 // AppModuleSimulation defines the standard functions that every module should expose
@@ -27,6 +27,15 @@ type AppModuleSimulationGenesis interface {
 	AppModuleSimulation
 	// TODO: Come back and improve SimulationState interface
 	SimulatorGenesisState(*module.SimulationState, *SimCtx)
+}
+
+type SimulatorManagerI interface {
+	Actions() []ActionsWithMetadata
+}
+
+type ActionsWithMetadata struct {
+	Action
+	ModuleName string
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility
@@ -80,11 +89,10 @@ func loadAppParamsForWasm(path string) simulation.AppParams {
 	return appParams
 }
 
-func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []Action {
+func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []ActionsWithMetadata {
 	// We do not support the legacy simulator config format, and just (unfortunately)
 	// hardcode this one filepath for wasm.
 	// TODO: Clean this up / make a better plan
-
 	simState := module.SimulationState{
 		AppParams:    loadAppParamsForWasm("params.json"),
 		ParamChanges: []simulation.ParamChange{},
@@ -101,23 +109,33 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []Action {
 		}
 	}
 	// second pass generate actions
-	actions := []Action{}
+	actions := []ActionsWithMetadata{}
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
 		if simModule, ok := m.legacyModules[moduleName]; ok {
 			weightedOps := simModule.WeightedOperations(simState)
-			actions = append(actions, actionsFromWeightedOperations(moduleName, weightedOps)...)
+			for _, action := range actionsFromWeightedOperations(moduleName, weightedOps) {
+				var actionWithMetaData ActionsWithMetadata
+				actionWithMetaData.Action = action
+				actionWithMetaData.ModuleName = moduleName
+				actions = append(actions, actionWithMetaData)
+			}
 		}
 	}
 	return actions
 }
 
 // TODO: Can we use sim here instead? Perhaps by passing in the simulation module manager to the simulator.
-func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []Action {
+func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []ActionsWithMetadata {
 	actions := m.legacyActions(seed, cdc)
 	moduleKeys := maps.Keys(m.Modules)
 	osmoutils.SortSlice(moduleKeys)
 	for _, simModuleName := range moduleKeys {
-		actions = append(actions, m.Modules[simModuleName].Actions()...)
+		for _, action := range m.Modules[simModuleName].Actions() {
+			var actionWithMetaData ActionsWithMetadata
+			actionWithMetaData.Action = action
+			actionWithMetaData.ModuleName = simModuleName
+			actions = append(actions, actionWithMetaData)
+		}
 	}
 	return actions
 }

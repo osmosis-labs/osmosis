@@ -6,10 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -45,6 +45,7 @@ func TestCalcExitPool(t *testing.T) {
 		1,
 		stableswap.PoolParams{ExitFee: sdk.ZeroDec()},
 		twoStablePoolAssets,
+		[]uint64{1, 1},
 		"",
 	)
 	require.NoError(t, err)
@@ -62,6 +63,7 @@ func TestCalcExitPool(t *testing.T) {
 		1,
 		stableswap.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
 		twoStablePoolAssets,
+		[]uint64{1, 1},
 		"",
 	)
 	require.NoError(t, err)
