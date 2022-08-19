@@ -32,8 +32,6 @@ on:
   pull_request:
     branches:
       - 'v[0-9]+.x'
-  schedule:
-      - cron: '01 23 * * *' # Runs at 01:23 UTC every day
 
 env:
   GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
@@ -46,21 +44,11 @@ jobs:
 
   check_state_compatibility:
     # DO NOT CHANGE THIS: please read the note above
-    if: ${{ github.event_name == 'schedule' || github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
+    if: ${{ github.event.pull_request.head.repo.full_name == 'osmosis-labs/osmosis' }}
     runs-on: osmo-runner 
     steps:
       - 
-        # If workflow was triggered by a schedule, explicitly checkout the latest branch
-        # otherwise checkout the release branch were targetting
-        name: Checkout v11.x branch
-        if: ${{ github.event_name == 'schedule' }}
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: v11.x
-      - 
         name: Checkout branch
-        if: ${{ github.event_name != 'schedule' }}
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
