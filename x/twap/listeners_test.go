@@ -64,6 +64,9 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
 				s.Require().NoError(err)
 				s.Require().Equal(expectedRecords[i], actualRecord)
+				actualRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denomPairs0[i], denomPairs1[i])
+				s.Require().NoError(err)
+				s.Require().Equal(expectedRecords[i], actualRecord)
 			}
 
 			// consistency check that the number of records is exactly equal to the number of denompairs
@@ -72,6 +75,15 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			s.Require().Equal(len(denomPairs0), len(allRecords))
 		})
 	}
+}
+
+// Tests that after a swap, we are triggering internal tracking logic for a pool.
+func (s *TestSuite) TestSwapTriggeringTrackPoolId() {
+	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
+	s.BeginNewBlock(false)
+	s.RunBasicSwap(poolId)
+
+	s.Require().Equal([]uint64{poolId}, s.twapkeeper.GetChangedPools(s.Ctx))
 }
 
 // TestSwapAndEndBlockTriggeringSave tests that if we:
