@@ -229,8 +229,6 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			// Setup.
-
 			// System under test.
 			err := tc.twapRecord.Validate()
 
