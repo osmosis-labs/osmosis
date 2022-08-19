@@ -54,7 +54,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 	// Most recent TWAP must be inserted last. This is required because
 	// we maintain a separate index for the most recent records.
-	// is updated by storing new records.
+	// It is updated by storing new records.
 	sort.Slice(genState.Twaps, func(i, j int) bool {
 		return genState.Twaps[i].Time.Before(genState.Twaps[j].Time)
 	})
