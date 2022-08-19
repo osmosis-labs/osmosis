@@ -58,6 +58,3 @@ message TwapRecord {
   // "github.com/cosmos/cosmos-sdk/types.Dec",
   // (gogoproto.nullable) = false];
 }
-
-// GenesisState defines the gamm module's genesis state.
-message GenesisState { repeated TwapRecord twaps = 1; }
