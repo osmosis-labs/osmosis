@@ -311,6 +311,7 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 	}
 }
 
+<<<<<<< HEAD
 func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 	testcases := map[string]struct {
 		blockHeight                     int64
@@ -360,6 +361,8 @@ func (suite *KeeperTestSuite) TestSetInitialSupplyOffsetDuringMigration() {
 	}
 }
 
+=======
+>>>>>>> 3d7d48c8 (refactor(x/mint): remove SetInitialSupplyOffsetDuringMigration keeper method (#2418))
 // TestDistributeToModule tests that distribution from mint module to another module helper
 // function is working as expected.
 func (suite *KeeperTestSuite) TestDistributeToModule() {
