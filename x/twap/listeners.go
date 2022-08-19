@@ -26,7 +26,9 @@ type epochhook struct {
 
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
-		hook.k.pruneOldTwaps(ctx)
+		if err := hook.k.pruneRecords(ctx); err != nil {
+			ctx.Logger().Error("Error pruning old twaps at the epoch end", err)
+		}
 	}
 }
 

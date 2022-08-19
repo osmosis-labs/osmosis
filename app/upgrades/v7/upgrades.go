@@ -54,10 +54,12 @@ func CreateUpgradeHandler(
 		}
 		keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
 
-		// Set the supply offset from the developer vesting account
-		if err := keepers.MintKeeper.SetInitialSupplyOffsetDuringMigration(ctx); err != nil {
-			panic(err)
-		}
+		// N.B.: This is left for historic reasons.
+		// After the v7 upgrade, there was no need for this function anymore so it was removed.
+		// // Set the supply offset from the developer vesting account
+		// if err := keepers.MintKeeper.SetInitialSupplyOffsetDuringMigration(ctx); err != nil {
+		// 	panic(err)
+		// }
 
 		return newVM, err
 	}

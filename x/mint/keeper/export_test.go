@@ -20,12 +20,28 @@ var (
 	GetProportions = getProportions
 )
 
+func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
+	return k.createDeveloperVestingModuleAccount(ctx, amount)
+}
+
 func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, mintedCoin sdk.Coin, proportion sdk.Dec) (sdk.Int, error) {
 	return k.distributeToModule(ctx, recipientModule, mintedCoin, proportion)
 }
 
 func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.Coin, developerRewardsProportion sdk.Dec, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
 	return k.distributeDeveloperRewards(ctx, totalMintedCoin, developerRewardsProportion, developerRewardsReceivers)
+}
+
+func (k Keeper) GetLastReductionEpochNum(ctx sdk.Context) int64 {
+	return k.getLastReductionEpochNum(ctx)
+}
+
+func (k Keeper) SetLastReductionEpochNum(ctx sdk.Context, epochNum int64) {
+	k.setLastReductionEpochNum(ctx, epochNum)
+}
+
+func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
+	return k.mintCoins(ctx, newCoins)
 }
 
 // Set the mint hooks. This is used for testing purposes only.
