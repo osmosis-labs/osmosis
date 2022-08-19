@@ -62,12 +62,12 @@ func (t TwapRecord) validate() error {
 		return fmt.Errorf("twap record p1 last spot price mut be positive, was (%s)", t.P1LastSpotPrice)
 	}
 
-	if t.P0ArithmeticTwapAccumulator.IsNil() || !t.P0ArithmeticTwapAccumulator.IsPositive() {
-		return fmt.Errorf("twap record p0 accumulator must be positive, was (%s)", t.P0ArithmeticTwapAccumulator)
+	if t.P0ArithmeticTwapAccumulator.IsNil() || t.P0ArithmeticTwapAccumulator.IsNegative() {
+		return fmt.Errorf("twap record p0 accumulator cannot be negative, was (%s)", t.P0ArithmeticTwapAccumulator)
 	}
 
-	if t.P1ArithmeticTwapAccumulator.IsNil() || !t.P1ArithmeticTwapAccumulator.IsPositive() {
-		return fmt.Errorf("twap record p1 accumulator must be positive, was (%s)", t.P1ArithmeticTwapAccumulator)
+	if t.P1ArithmeticTwapAccumulator.IsNil() || t.P1ArithmeticTwapAccumulator.IsNegative() {
+		return fmt.Errorf("twap record p1 accumulator cannot be negative, was (%s)", t.P1ArithmeticTwapAccumulator)
 	}
 	return nil
 }

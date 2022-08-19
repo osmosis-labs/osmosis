@@ -210,7 +210,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 		"invalid p0 arithmetic accum": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
-				r.P0ArithmeticTwapAccumulator = sdk.ZeroDec()
+				r.P0ArithmeticTwapAccumulator = sdk.OneDec().Neg()
 				return r
 			}(),
 
@@ -219,7 +219,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 		"invalid p1 arithmetic accum": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
-				r.P1ArithmeticTwapAccumulator = sdk.ZeroDec()
+				r.P1ArithmeticTwapAccumulator = sdk.OneDec().Neg()
 				return r
 			}(),
 
