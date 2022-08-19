@@ -22,7 +22,7 @@ func (s *TestSuite) TestMigrateExistingPools() {
 
 	upgradeTime := s.Ctx.BlockTime()
 
-	// iterate through all pools, check that all state entries has been correctly updated
+	// iterate through all pools, check that all state entries have been correctly updated
 	for poolId := 1; poolId <= int(latestPoolId); poolId++ {
 		recentTwapRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, uint64(poolId))
 		poolDenoms, _ := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, uint64(poolId))
