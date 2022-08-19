@@ -19,7 +19,6 @@ func DefaultGenesis() *GenesisState {
 }
 
 // Validate validates the genesis state. Retursn nil on success, error otherwise.
-// TODO: test
 func (g *GenesisState) Validate() error {
 	if err := g.Params.Validate(); err != nil {
 		return err
@@ -34,7 +33,6 @@ func (g *GenesisState) Validate() error {
 }
 
 // validate validates the twap record, returns nil on success, error otherwise.
-// TODO: test
 func (t TwapRecord) validate() error {
 	if t.PoolId == 0 {
 		return errors.New("pool id cannot be 0")
@@ -48,7 +46,7 @@ func (t TwapRecord) validate() error {
 		return fmt.Errorf("twap record asset1 denom cannot be empty, was (%s)", t.Asset1Denom)
 	}
 
-	if t.Height < 0 {
+	if t.Height <= 0 {
 		return fmt.Errorf("twap record height must be positive, was (%d)", t.Height)
 	}
 
