@@ -1,18 +1,20 @@
-use crate::msg::{Channel, QuotaMsg};
-use crate::state::{Flow, RateLimit, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
+use crate::msg::{PathMsg, QuotaMsg};
+use crate::state::{Flow, Path, RateLimit, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
 use crate::ContractError;
 use cosmwasm_std::{Addr, DepsMut, Response, Timestamp};
 
-pub fn add_new_channels(
+pub fn add_new_paths(
     deps: DepsMut,
-    channels: Vec<Channel>,
+    path_msgs: Vec<PathMsg>,
     now: Timestamp,
 ) -> Result<(), ContractError> {
-    for channel in channels {
+    for path_msg in path_msgs {
+        let path = Path::new(path_msg.channel_id, path_msg.denom);
+
         RATE_LIMIT_TRACKERS.save(
             deps.storage,
-            &channel.name,
-            &channel
+            path.into(),
+            &path_msg
                 .quotas
                 .iter()
                 .map(|q| RateLimit {
@@ -25,10 +27,11 @@ pub fn add_new_channels(
     Ok(())
 }
 
-pub fn try_add_channel(
+pub fn try_add_path(
     deps: DepsMut,
     sender: Addr,
     channel_id: String,
+    denom: String,
     quotas: Vec<QuotaMsg>,
     now: Timestamp,
 ) -> Result<Response, ContractError> {
@@ -38,41 +41,40 @@ pub fn try_add_channel(
     if sender != ibc_module && sender != gov_module {
         return Err(ContractError::Unauthorized {});
     }
-    add_new_channels(
-        deps,
-        vec![Channel {
-            name: channel_id.to_string(),
-            quotas,
-        }],
-        now,
-    )?;
+    add_new_paths(deps, vec![PathMsg::new(&channel_id, &denom, quotas)], now)?;
 
     Ok(Response::new()
         .add_attribute("method", "try_add_channel")
-        .add_attribute("channel_id", channel_id))
+        .add_attribute("channel_id", channel_id)
+        .add_attribute("denom", denom))
 }
 
-pub fn try_remove_channel(
+pub fn try_remove_path(
     deps: DepsMut,
     sender: Addr,
     channel_id: String,
+    denom: String,
 ) -> Result<Response, ContractError> {
     let ibc_module = IBCMODULE.load(deps.storage)?;
     let gov_module = GOVMODULE.load(deps.storage)?;
     if sender != ibc_module && sender != gov_module {
         return Err(ContractError::Unauthorized {});
     }
-    RATE_LIMIT_TRACKERS.remove(deps.storage, &channel_id);
+
+    let path = Path::new(&channel_id, &denom);
+    RATE_LIMIT_TRACKERS.remove(deps.storage, path.into());
     Ok(Response::new()
         .add_attribute("method", "try_remove_channel")
+        .add_attribute("denom", denom)
         .add_attribute("channel_id", channel_id))
 }
 
 // Reset specified quote_id for the given channel_id
-pub fn try_reset_channel_quota(
+pub fn try_reset_path_quota(
     deps: DepsMut,
     sender: Addr,
     channel_id: String,
+    denom: String,
     quota_id: String,
     now: Timestamp,
 ) -> Result<Response, ContractError> {
@@ -81,16 +83,18 @@ pub fn try_reset_channel_quota(
         return Err(ContractError::Unauthorized {});
     }
 
-    RATE_LIMIT_TRACKERS.update(deps.storage, &channel_id.clone(), |maybe_rate_limit| {
+    let path = Path::new(&channel_id, &denom);
+    RATE_LIMIT_TRACKERS.update(deps.storage, path.into(), |maybe_rate_limit| {
         match maybe_rate_limit {
             None => Err(ContractError::QuotaNotFound {
                 quota_id,
                 channel_id: channel_id.clone(),
+                denom: denom.clone(),
             }),
             Some(mut limits) => {
                 // Q: What happens here if quote_id not found? seems like we return ok?
                 limits.iter_mut().for_each(|limit| {
-                    if limit.quota.name == channel_id.as_ref() {
+                    if limit.quota.name == quota_id.as_ref() {
                         limit.flow.expire(now, limit.quota.duration)
                     }
                 });
@@ -118,8 +122,8 @@ mod tests {
     const IBC_ADDR: &str = "IBC_MODULE";
     const GOV_ADDR: &str = "GOV_MODULE";
 
-    #[test]
-    fn management_add_and_remove_channel() {
+    #[test] // Tests AddPath and RemovePath messages
+    fn management_add_and_remove_path() {
         let mut deps = mock_dependencies();
         IBCMODULE
             .save(deps.as_mut().storage, &Addr::unchecked(IBC_ADDR))
@@ -128,8 +132,9 @@ mod tests {
             .save(deps.as_mut().storage, &Addr::unchecked(GOV_ADDR))
             .unwrap();
 
-        let msg = ExecuteMsg::AddChannel {
-            channel_id: "channel".to_string(),
+        let msg = ExecuteMsg::AddPath {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
             quotas: vec![QuotaMsg {
                 name: "daily".to_string(),
                 duration: 1600,
@@ -143,7 +148,8 @@ mod tests {
         assert_eq!(0, res.messages.len());
 
         let query_msg = QueryMsg::GetQuotas {
-            channel_id: "channel".to_string(),
+            channel_id: format!("channel"),
+            denom: format!("denom"),
         };
 
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
@@ -161,9 +167,10 @@ mod tests {
 
         assert_eq!(value.len(), 1);
 
-        // Add another channel
-        let msg = ExecuteMsg::AddChannel {
-            channel_id: "channel2".to_string(),
+        // Add another path
+        let msg = ExecuteMsg::AddPath {
+            channel_id: format!("channel2"),
+            denom: format!("denom"),
             quotas: vec![QuotaMsg {
                 name: "daily".to_string(),
                 duration: 1600,
@@ -176,8 +183,9 @@ mod tests {
         execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
         // remove the first one
-        let msg = ExecuteMsg::RemoveChannel {
-            channel_id: "channel".to_string(),
+        let msg = ExecuteMsg::RemovePath {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
         };
 
         let info = mock_info(IBC_ADDR, &vec![]);
@@ -190,7 +198,8 @@ mod tests {
 
         // The second channel is still there
         let query_msg = QueryMsg::GetQuotas {
-            channel_id: "channel2".to_string(),
+            channel_id: format!("channel2"),
+            denom: format!("denom"),
         };
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
         let value: Vec<RateLimit> = from_binary(&res).unwrap();
@@ -205,9 +214,10 @@ mod tests {
             env.block.time.plus_seconds(1600),
         );
 
-        // Channels are overriden if they share a name
-        let msg = ExecuteMsg::AddChannel {
-            channel_id: "channel2".to_string(),
+        // Paths are overriden if they share a name and denom
+        let msg = ExecuteMsg::AddPath {
+            channel_id: format!("channel2"),
+            denom: format!("denom"),
             quotas: vec![QuotaMsg {
                 name: "different".to_string(),
                 duration: 5000,
@@ -220,7 +230,8 @@ mod tests {
         execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
         let query_msg = QueryMsg::GetQuotas {
-            channel_id: "channel2".to_string(),
+            channel_id: format!("channel2"),
+            denom: format!("denom"),
         };
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();
         let value: Vec<RateLimit> = from_binary(&res).unwrap();
