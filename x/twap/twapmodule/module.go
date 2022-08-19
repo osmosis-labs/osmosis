@@ -106,7 +106,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 	}
 }
 
-// InitGenesis performs genesis initialization for the twap module. It returns
+// InitGenesis performs genesis initialization for the twap module.
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
