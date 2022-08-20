@@ -1,6 +1,9 @@
 package twap_test
 
 import (
+	"fmt"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
@@ -217,22 +220,31 @@ func (s *TestSuite) TestAfterEpochEnd() {
 	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
 	twapBeforeEpoch, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
 	s.Require().NoError(err)
+	fmt.Println(twapBeforeEpoch.Time.String())
 
-	// epoch has passed
 	pruneEpochIdentifier := s.App.TwapKeeper.PruneEpochIdentifier(s.Ctx)
+	recordHistoryKeepPeriod := 48 * time.Hour
+
+	// make prune record time pass by, running prune epoch after this should prune old record
+	s.Ctx = s.Ctx.WithBlockTime(baseTime.Add(recordHistoryKeepPeriod).Add(time.Second))
 
 	allEpochs := s.App.EpochsKeeper.AllEpochInfos(s.Ctx)
 	// iterate through all epoch, ensure that epoch only gets pruned in prune epoch identifier
 	for _, epoch := range allEpochs {
-		s.Ctx = s.Ctx.WithBlockTime(baseTime.Add(epoch.Duration))
 		s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, epoch.Identifier, int64(1))
 
-		recentTwapRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, poolId)
-		s.Require().NoError(err)
+		recentTwapRecords, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, baseTime.Add(epoch.Duration), denom0, denom1)
+
+		// old record should have been pruned here
 		if epoch.Identifier == pruneEpochIdentifier {
-			s.Require().Equal(0, len(recentTwapRecords))
-		} else {
-			s.Require().Equal(twapBeforeEpoch, recentTwapRecords[0])
+			s.Require().Error(err)
+			s.Require().NotEqual(twapBeforeEpoch, recentTwapRecords)
+
+			// quit test once the record has been pruned
+			return
+		} else { // pruning should not be triggered at first, not pruning epoch
+			s.Require().NoError(err)
+			s.Require().Equal(twapBeforeEpoch, recentTwapRecords)
 		}
 	}
 }

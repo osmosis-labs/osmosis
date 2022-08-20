@@ -205,7 +205,6 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		tokenfactorytypes.ModuleName,
 		incentivestypes.ModuleName,
 		epochstypes.ModuleName,
-		twaptypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
 		// wasm after ibc transfer

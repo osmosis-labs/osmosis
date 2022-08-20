@@ -75,8 +75,3 @@ func SpotPriceTimesDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
 func AccumDiffDivDuration(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
 	return accumDiff.QuoInt64(int64(timeDelta))
 }
-
-// TODO
-func (g *GenesisState) Validate() error {
-	return nil
-}
