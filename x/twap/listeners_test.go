@@ -79,3 +79,9 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.Require().True(latestTwap.P0ArithmeticTwapAccumulator.GT(historicalOldTwap.P0ArithmeticTwapAccumulator))
 	s.Require().True(latestTwap.P1ArithmeticTwapAccumulator.GT(historicalOldTwap.P1ArithmeticTwapAccumulator))
 }
+
+// This test should create multiple mock pools, test one pool's spot price returning an error,
+// and ensure end blocks still work safely.
+func (s *TestSuite) TestSafetyWithSpotPriceError() {
+	s.Require().Fail("Need to implement")
+}

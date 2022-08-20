@@ -57,4 +57,12 @@ message TwapRecord {
   // string geometric_twap_accumulator = 7 [(gogoproto.customtype) =
   // "github.com/cosmos/cosmos-sdk/types.Dec",
   // (gogoproto.nullable) = false];
+
+  // This field should only exist until we have a global registry in the state
+  // machine, mapping prior block heights within {TIME RANGE} to times.
+  google.protobuf.Timestamp last_error_time = 10 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"last_error_time\""
+  ];
 }

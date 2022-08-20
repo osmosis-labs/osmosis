@@ -14,8 +14,17 @@ func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string
 	if !(denom0 > denom1) {
 		return TwapRecord{}, fmt.Errorf("precondition denom0 > denom1 not satisfied. denom0 %s | denom1 %s", denom0, denom1)
 	}
-	sp0 := MustGetSpotPrice(k, ctx, poolId, denom0, denom1)
-	sp1 := MustGetSpotPrice(k, ctx, poolId, denom1, denom0)
+	lastErrorTime := time.Time{}
+	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
+	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
+	if err0 != nil || err1 != nil {
+		lastErrorTime = ctx.BlockTime()
+		// TODO: Is this what we want to do? We are returning an error in such events.
+		if (sp0 == sdk.Dec{} || sp1 == sdk.Dec{}) {
+			sp0 = sdk.ZeroDec()
+			sp1 = sdk.ZeroDec()
+		}
+	}
 	return TwapRecord{
 		PoolId:                      poolId,
 		Asset0Denom:                 denom0,
@@ -26,6 +35,7 @@ func NewTwapRecord(k AmmInterface, ctx sdk.Context, poolId uint64, denom0 string
 		P1LastSpotPrice:             sp1,
 		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
 		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
+		LastErrorTime:               lastErrorTime,
 	}, nil
 }
 

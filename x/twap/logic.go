@@ -1,6 +1,7 @@
 package twap
 
 import (
+	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -132,17 +133,23 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 // computeArithmeticTwap computes and returns an arithmetic TWAP between
 // two records given the quote asset.
 // precondition: endRecord.Time >= startRecord.Time
+// if endRecord.LastErrorTime is after startRecord.Time, return an error at end + result
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
 // (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
-func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
+	// see if we need to return an error, due to spot price issues
+	var err error = nil
+	if endRecord.LastErrorTime.After(startRecord.Time) {
+		err = errors.New("twap: error in pool spot price occured between start and end time, twap result may be faulty")
+	}
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	// if time difference is 0, then return the last spot price based off of start.
 	if timeDelta == time.Duration(0) {
 		if quoteAsset == startRecord.Asset0Denom {
-			return endRecord.P0LastSpotPrice
+			return endRecord.P0LastSpotPrice, err
 		}
-		return endRecord.P1LastSpotPrice
+		return endRecord.P1LastSpotPrice, err
 	}
 	var accumDiff sdk.Dec
 	if quoteAsset == startRecord.Asset0Denom {
@@ -150,5 +157,5 @@ func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRec
 	} else {
 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
 	}
-	return types.AccumDiffDivDuration(accumDiff, timeDelta)
+	return types.AccumDiffDivDuration(accumDiff, timeDelta), err
 }

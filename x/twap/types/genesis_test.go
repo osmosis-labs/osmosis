@@ -136,11 +136,11 @@ func TestGenesisState_Validate(t *testing.T) {
 }
 
 func TestTWAPRecord_Validate(t *testing.T) {
-	testCases := map[string]struct {
-		twapRecord TwapRecord
-
+	type testcase struct {
+		twapRecord  TwapRecord
 		expectedErr bool
-	}{
+	}
+	testCases := map[string]testcase{
 		"valid base record": {
 			twapRecord: baseRecord,
 		},
@@ -153,19 +153,10 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid asset0 denom": {
+		"invalid denom": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
 				r.Asset0Denom = ""
-				return r
-			}(),
-
-			expectedErr: true,
-		},
-		"invalid asset1 denom": {
-			twapRecord: func() TwapRecord {
-				r := baseRecord
-				r.Asset1Denom = ""
 				return r
 			}(),
 
@@ -189,7 +180,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid p0 last spot price": {
+		"invalid last spot price": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
 				r.P0LastSpotPrice = sdk.ZeroDec()
@@ -198,16 +189,18 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid p1 last spot price": {
+		"invalid last spot price with error": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
-				r.P1LastSpotPrice = sdk.ZeroDec()
+				r.LastErrorTime = r.Time
+				r.P0LastSpotPrice = sdk.NewDec(5) // has to be distinct to be symmetric
+				r.P1LastSpotPrice = sdk.ZeroDec() // need this to be 0, to test the other case on error
 				return r
 			}(),
 
 			expectedErr: true,
 		},
-		"invalid p0 arithmetic accum": {
+		"invalid arithmetic accum": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
 				r.P0ArithmeticTwapAccumulator = sdk.OneDec().Neg()
@@ -216,18 +209,26 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid p1 arithmetic accum": {
-			twapRecord: func() TwapRecord {
-				r := baseRecord
-				r.P1ArithmeticTwapAccumulator = sdk.OneDec().Neg()
-				return r
-			}(),
-
-			expectedErr: true,
-		},
 	}
 
-	for name, tc := range testCases {
+	// make test cases symmetric
+	testCasesSym := map[string]testcase{}
+	for k, tc := range testCases {
+		if tc.twapRecord.Asset0Denom != baseRecord.Asset0Denom ||
+			!tc.twapRecord.P0LastSpotPrice.Equal(baseRecord.P0LastSpotPrice) ||
+			!tc.twapRecord.P0ArithmeticTwapAccumulator.Equal(baseRecord.P0ArithmeticTwapAccumulator) {
+			testCasesSym[k+": asset 0"] = tc
+			tSym := tc.twapRecord
+			tSym.Asset0Denom, tSym.Asset1Denom = tSym.Asset1Denom, tSym.Asset0Denom
+			tSym.P0LastSpotPrice, tSym.P1LastSpotPrice = tSym.P1LastSpotPrice, tSym.P0LastSpotPrice
+			tSym.P0ArithmeticTwapAccumulator, tSym.P1ArithmeticTwapAccumulator = tSym.P1ArithmeticTwapAccumulator, tSym.P0ArithmeticTwapAccumulator
+			testCasesSym[k+": asset 1"] = testcase{tSym, tc.expectedErr}
+		} else {
+			testCasesSym[k] = tc
+		}
+	}
+
+	for name, tc := range testCasesSym {
 		t.Run(name, func(t *testing.T) {
 			// System under test.
 			err := tc.twapRecord.Validate()

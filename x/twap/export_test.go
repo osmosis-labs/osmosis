@@ -54,7 +54,7 @@ func (k Keeper) PruneRecords(ctx sdk.Context) error {
 	return k.pruneRecords(ctx)
 }
 
-func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
 }
 

@@ -204,10 +204,17 @@ func TestComputeArithmeticTwap(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actualTwap := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
+			actualTwap, err := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
 			require.Equal(t, test.expTwap, actualTwap)
+			require.NoError(t, err)
 		})
 	}
+}
+
+// This test should be table driven, for testing the behavior of computeArithmeticTwap, around error returning
+// when there has been an intermediate spot price error.
+func (s *TestSuite) TestComputeArithmeticTwapWithSpotPriceError() {
+	s.Require().Fail("Need to implement")
 }
 
 // TestPruneRecords tests that all twap records earlier than
