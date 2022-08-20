@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
+	keeper "github.com/osmosis-labs/osmosis/v11/x/twap"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
@@ -49,7 +50,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
 			for i := 0; i < len(denomPairs0); i++ {
-				expectedRecord, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+				expectedRecord, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
 				s.Require().NoError(err)
 				expectedRecords = append(expectedRecords, expectedRecord)
 			}
@@ -96,7 +97,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 
 	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
-	expectedHistoricalTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedHistoricalTwap, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
 	s.EndBlock()
@@ -141,7 +142,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 // TODO: Abstract this to be more table driven, and test more pool / block setups.
 func (s *TestSuite) TestJoinAndEndBlockTriggeringSave() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
-	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
+	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
 	expectedHistoricalTwap, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
