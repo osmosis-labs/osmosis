@@ -113,7 +113,19 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 }
 
 func (s *KeeperTestHelper) RunBasicJoinPool(poolId uint64) {
-	tokenIn, _, err := s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, s.TestAccs[0], poolId, sdk.NewInt(1), sdk.Coins{})
+	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	for _, denom := range denoms {
+		s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10000000))))
+	}
+
+	pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+	s.Require().NoError(err)
+	totalPoolShare := pool.GetTotalShares()
+	totalPoolShare.Quo(sdk.NewInt(100000))
+
+	tokenIn, _, err := s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, s.TestAccs[0], poolId, totalPoolShare.Quo(sdk.NewInt(100000)), sdk.Coins{})
 	s.Require().NoError(err)
 	s.FundAcc(s.TestAccs[0], tokenIn)
 }
