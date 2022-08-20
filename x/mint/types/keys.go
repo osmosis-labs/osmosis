@@ -9,11 +9,22 @@ var (
 	// for storing the last epoch at which reduction occurred.
 	LastReductionEpochKey = []byte{0x03}
 
-	// LastMintedTotalAmount is the key to use for the keeper store
-	// for storing the last minted accumulator value.
-	// It represents the total amount of tokens minted since the
-	// chain launched.
-	LastMintedTotalAmount = []byte{0x04}
+	// TruncatedInflationDeltaKey represents key for the the delta of minted
+	// inflation coins that have not been distributed yet due to truncations..
+	// Truncations are stemming from the interfaces of the core modules such as
+	// bank and distribution that operate on integers. Decimals allow
+	// for much higher precision. As a result, by storing decimal delta
+	// we can avoid truncation discrepancies and be in-line with the
+	// projected total supply of OSMO.
+	TruncatedInflationDeltaKey = []byte{0x04}
+
+	// TruncatedDeveloperVestingDelta represents the delta of developer
+	// vesting rewards that has not been distributed yet due to truncations.
+	// Truncations are stemming from the interfaces of the core modules such as
+	// bank and distribution that operate on integers. As a result, by
+	// storing decimal delta we can avoid truncation discrepancies and be
+	// in-line with the projected total supply of OSMO.
+	TruncatedDeveloperVestingDeltaKey = []byte{0x05}
 )
 
 const (

@@ -5,6 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
 
@@ -76,37 +77,6 @@ func NewKeeper(
 	}
 }
 
-// TODO: godoc and tests
-func (k Keeper) BurnNativeCoins(ctx sdk.Context, moduleName string, amount sdk.Coins) error {
-	if amount.FilterDenoms([]string{k.GetParams(ctx).MintDenom}).Empty() {
-		return fmt.Errorf("minting only allowed for (%s), had (%s)", k.GetParams(ctx).MintDenom, amount)
-	}
-	if err := k.bankKeeper.BurnCoins(ctx, moduleName, amount); err != nil {
-		return err
-	}
-	minter := k.GetMinter(ctx)
-	minter.TruncatedInflationDelta = minter.TruncatedInflationDelta.Sub(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
-	k.SetMinter(ctx, minter)
-	return nil
-}
-
-// MintNativeCoins attempts to mint amount from the given module. Returns nil on
-// success and error if amount contains denoms other than mint denom.
-// No-op if amount is empty.
-func (k Keeper) MintNativeCoins(ctx sdk.Context, moduleName string, amount sdk.Coins) error {
-	filteredCoins := amount.FilterDenoms([]string{k.GetParams(ctx).MintDenom})
-	if filteredCoins.Empty() || filteredCoins.Len() != amount.Len() {
-		return fmt.Errorf("minting only allowed for (%s), had (%s)", k.GetParams(ctx).MintDenom, amount)
-	}
-	if err := k.bankKeeper.MintCoins(ctx, moduleName, amount); err != nil {
-		return err
-	}
-	minter := k.GetMinter(ctx)
-	minter.TruncatedInflationDelta = minter.TruncatedInflationDelta.Add(amount.AmountOf(k.GetParams(ctx).MintDenom).ToDec())
-	k.SetMinter(ctx, minter)
-	return nil
-}
-
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
@@ -125,21 +95,13 @@ func (k *Keeper) SetHooks(h types.MintHooks) *Keeper {
 
 // GetMinter gets the minter.
 func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.MinterKey)
-	if b == nil {
-		panic("stored minter should not have been nil")
-	}
-
-	k.cdc.MustUnmarshal(b, &minter)
+	osmoutils.MustGet(ctx.KVStore(k.storeKey), types.MinterKey, &minter)
 	return
 }
 
 // SetMinter sets the minter.
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshal(&minter)
-	store.Set(types.MinterKey, b)
+	osmoutils.MustSet(ctx.KVStore(k.storeKey), types.MinterKey, &minter)
 }
 
 // GetParams returns the total set of minting parameters.
@@ -151,6 +113,38 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the total set of minting parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
+}
+
+// GetInflationTruncationDelta returns the truncation delta.
+func (k Keeper) GetTruncationDelta(ctx sdk.Context, key []byte) sdk.Dec {
+	resultProto := sdk.DecProto{}
+	osmoutils.MustGet(ctx.KVStore(k.storeKey), key, &resultProto)
+	return resultProto.Dec
+}
+
+// SetInflationTruncationDelta sets the truncation delta.
+func (k Keeper) SetTruncationDelta(ctx sdk.Context, key []byte, truncationDelta sdk.Dec) {
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshal(&sdk.DecProto{
+		Dec: truncationDelta,
+	})
+	store.Set(key, b)
+}
+
+// IncreaseTruncationDelta increases the truncation delta at key by increaseByDelta.
+func (k Keeper) IncreaseTruncationDelta(ctx sdk.Context, key []byte, increaseByDelta sdk.Dec) sdk.Dec {
+	currentTruncationDelta := k.GetTruncationDelta(ctx, key)
+	newTruncationDelta := currentTruncationDelta.Add(increaseByDelta)
+	k.SetTruncationDelta(ctx, key, newTruncationDelta)
+	return newTruncationDelta
+}
+
+// DecreaseTruncationDelta decreases the truncation delta at key by increaseByDelta.
+func (k Keeper) DecreaseTruncationDelta(ctx sdk.Context, key []byte, decreaseByDelta sdk.Dec) sdk.Dec {
+	currentTruncationDelta := k.GetTruncationDelta(ctx, key)
+	newTruncationDelta := currentTruncationDelta.Sub(decreaseByDelta)
+	k.SetTruncationDelta(ctx, key, newTruncationDelta)
+	return newTruncationDelta
 }
 
 func (k Keeper) distributeEpochProvisions(ctx sdk.Context) (sdk.Int, error) {
@@ -177,11 +171,9 @@ func (k Keeper) distributeEpochProvisions(ctx sdk.Context) (sdk.Int, error) {
 		return sdk.Int{}, err
 	}
 
-	updateTruncationDeltaAccumulators(&minter, inflationCoin.Amount, developerVestingAmount, params.DistributionProportions.DeveloperRewards)
+	inflationTruncationDelta, developerVestingTruncationDelta := k.updateTruncationDeltaAccumulators(ctx, &minter, inflationCoin.Amount, developerVestingAmount, params.DistributionProportions.DeveloperRewards)
 
-	k.SetMinter(ctx, minter)
-
-	distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, inflationCoin.Denom, minter.TruncatedInflationDelta, minter.TruncatedDeveloperVestingDelta)
+	distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, inflationCoin.Denom, inflationTruncationDelta, developerVestingTruncationDelta)
 	if err != nil {
 		panic(err)
 	}
@@ -371,8 +363,6 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 // As a result, it is possible to undermint. To mitigate that, we distribute any delta to the community pool.
 // The delta is calculated by subtracting the actual distributions from the given expected total distributions.
 func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, inflationTruncationDelta sdk.Dec, developerVestingTruncationDelta sdk.Dec) (sdk.Int, error) {
-	minter := k.GetMinter(ctx)
-
 	totalTruncationDistributed := sdk.ZeroInt()
 
 	// N.B: Truncation is acceptable because we check delta at the end of every epoch.
@@ -387,8 +377,7 @@ func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, i
 			return sdk.Int{}, err
 		}
 
-		minter.TruncatedDeveloperVestingDelta = minter.TruncatedDeveloperVestingDelta.Sub(truncationDevVestingDeltaToDistribute.ToDec())
-		k.SetMinter(ctx, minter)
+		k.DecreaseTruncationDelta(ctx, types.TruncatedDeveloperVestingDeltaKey, truncationDevVestingDeltaToDistribute.ToDec())
 
 		totalTruncationDistributed = totalTruncationDistributed.Add(truncationDevVestingDeltaToDistribute)
 	}
@@ -406,8 +395,8 @@ func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, i
 		if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(mintedDenom, truncatedInflationDeltaToDistribute)), k.accountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
 			return sdk.Int{}, err
 		}
-		minter.TruncatedInflationDelta = minter.TruncatedInflationDelta.Sub(truncatedInflationDeltaToDistribute.ToDec())
-		k.SetMinter(ctx, minter)
+
+		k.DecreaseTruncationDelta(ctx, types.TruncatedInflationDeltaKey, truncatedInflationDeltaToDistribute.ToDec())
 
 		totalTruncationDistributed = totalTruncationDistributed.Add(truncatedInflationDeltaToDistribute)
 	}
@@ -474,13 +463,14 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 
 // updateTruncationDeltaAccumulators updates the truncation delta accumulators by mutating minter
 // It does not persist minter to the store. The caller is responsible for persisting the minter.
-func updateTruncationDeltaAccumulators(minter *types.Minter, distributedInflationAmount, distributedDeveloperVestingAmount sdk.Int, developerRewardsProportion sdk.Dec) {
+func (k Keeper) updateTruncationDeltaAccumulators(ctx sdk.Context, minter *types.Minter, distributedInflationAmount, distributedDeveloperVestingAmount sdk.Int, developerRewardsProportion sdk.Dec) (sdk.Dec, sdk.Dec) {
 	devRewardsProportion := minter.EpochProvisions.Mul(developerRewardsProportion)
 	inflationProportion := minter.EpochProvisions.Sub(devRewardsProportion)
 
-	devRewardsDelta := devRewardsProportion.Sub(distributedDeveloperVestingAmount.ToDec())
 	inflationDelta := inflationProportion.Sub(distributedInflationAmount.ToDec())
+	devRewardsDelta := devRewardsProportion.Sub(distributedDeveloperVestingAmount.ToDec())
 
-	minter.TruncatedInflationDelta = minter.TruncatedInflationDelta.Add(inflationDelta)
-	minter.TruncatedDeveloperVestingDelta = minter.TruncatedDeveloperVestingDelta.Add(devRewardsDelta)
+	newInflationDelta := k.IncreaseTruncationDelta(ctx, types.TruncatedInflationDeltaKey, inflationDelta)
+	newDevRewardsDelta := k.IncreaseTruncationDelta(ctx, types.TruncatedDeveloperVestingDeltaKey, devRewardsDelta)
+	return newInflationDelta, newDevRewardsDelta
 }

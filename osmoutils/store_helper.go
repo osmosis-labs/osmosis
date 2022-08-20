@@ -2,8 +2,10 @@ package osmoutils
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -94,4 +96,26 @@ func MustSet(storeObj store.KVStore, key []byte, value proto.Message) {
 	}
 
 	storeObj.Set(key, bz)
+}
+
+// MustGet gets key from store by mutating result
+// Panics on any error.
+func MustGet(store store.KVStore, key []byte, result proto.Message) {
+	b := store.Get(key)
+	if b == nil {
+		panic(fmt.Errorf("getting at key (%v) should not have been nil", key))
+	}
+	proto.Unmarshal(b, result)
+}
+
+// SetDec sets dec value to store at key. Panics on any error.
+func SetDecToStore(store store.KVStore, key []byte, value sdk.Dec) {
+	MustSet(store, key, &sdk.DecProto{})
+}
+
+// GetDecFromStore gets dec value from store at key. Panics on any error.
+func GetDecFromStore(store store.KVStore, key []byte, value sdk.Dec) sdk.Dec {
+	result := &sdk.DecProto{}
+	MustGet(store, key, result)
+	return result.Dec
 }

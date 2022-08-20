@@ -15,9 +15,7 @@ var (
 // provisions values.
 func NewMinter(epochProvisions sdk.Dec) Minter {
 	return Minter{
-		EpochProvisions:                epochProvisions,
-		TruncatedInflationDelta:        sdk.ZeroDec(),
-		TruncatedDeveloperVestingDelta: sdk.ZeroDec(),
+		EpochProvisions: epochProvisions,
 	}
 }
 
@@ -62,16 +60,4 @@ func (m Minter) InflationProvision(params Params) sdk.Coin {
 func (m Minter) DeveloperVestingEpochProvision(params Params) sdk.Coin {
 	provisionAmt := m.EpochProvisions.Mul(params.DistributionProportions.DeveloperRewards).TruncateInt()
 	return sdk.NewCoin(params.MintDenom, provisionAmt)
-}
-
-// TODO:
-func (m *Minter) updateTruncationDeltaAccumulators(distributedInflationAmount, distributedDeveloperVestingAmount sdk.Int, developerRewardsProportion sdk.Dec) {
-	devRewardsProportion := m.EpochProvisions.Mul(developerRewardsProportion)
-	inflationProportion := m.EpochProvisions.Sub(devRewardsProportion)
-
-	devRewardsDelta := devRewardsProportion.Sub(distributedDeveloperVestingAmount.ToDec())
-	inflationDelta := inflationProportion.Sub(distributedInflationAmount.ToDec())
-
-	m.TruncatedInflationDelta = m.TruncatedInflationDelta.Add(inflationDelta)
-	m.TruncatedDeveloperVestingDelta = m.TruncatedDeveloperVestingDelta.Add(devRewardsDelta)
 }
