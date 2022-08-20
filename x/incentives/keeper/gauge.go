@@ -11,10 +11,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -287,12 +286,19 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 // The fee is sent to the community pool.
 // Returns nil on success, error otherwise.
 func (k Keeper) chargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sdk.AccAddress, fee sdk.Int, gaugeCoins sdk.Coins) (err error) {
-	totalCost := gaugeCoins.AmountOf(appparams.BaseCoinUnit).Add(fee)
-	accountBalance := k.bk.GetBalance(ctx, address, appparams.BaseCoinUnit).Amount
-	if accountBalance.LT(totalCost) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "account's balance of %s (%s) is less than the total cost of the message (%s)", appparams.BaseCoinUnit, accountBalance, totalCost)
+	feeDenom, err := k.tk.GetBaseDenom(ctx)
+	if err != nil {
+		return err
 	}
-	if err := k.dk.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, fee)), address); err != nil {
+
+	totalCost := gaugeCoins.AmountOf(feeDenom).Add(fee)
+	accountBalance := k.bk.GetBalance(ctx, address, feeDenom).Amount
+
+	if accountBalance.LT(totalCost) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "account's balance of %s (%s) is less than the total cost of the message (%s)", feeDenom, accountBalance, totalCost)
+	}
+
+	if err := k.ck.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(feeDenom, fee)), address); err != nil {
 		return err
 	}
 	return nil

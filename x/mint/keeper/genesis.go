@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
 )
 
 const developerVestingAmount = 225_000_000_000_000
@@ -27,14 +27,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	if !k.accountKeeper.HasAccount(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)) {
 		totalDeveloperVestingCoins := sdk.NewCoin(data.Params.MintDenom, sdk.NewInt(developerVestingAmount))
 
-		if err := k.CreateDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins); err != nil {
+		if err := k.createDeveloperVestingModuleAccount(ctx, totalDeveloperVestingCoins); err != nil {
 			panic(err)
 		}
 
 		k.bankKeeper.AddSupplyOffset(ctx, data.Params.MintDenom, sdk.NewInt(developerVestingAmount).Neg())
 	}
 
-	k.SetLastReductionEpochNum(ctx, data.ReductionStartedEpoch)
+	k.setLastReductionEpochNum(ctx, data.ReductionStartedEpoch)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
@@ -46,6 +46,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		params.WeightedDeveloperRewardsReceivers = make([]types.WeightedAddress, 0)
 	}
 
-	lastHalvenEpoch := k.GetLastReductionEpochNum(ctx)
+	lastHalvenEpoch := k.getLastReductionEpochNum(ctx)
 	return types.NewGenesisState(minter, params, lastHalvenEpoch)
 }

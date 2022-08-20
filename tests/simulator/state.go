@@ -7,11 +7,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v10/app"
-	osmosimtypes "github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v11/app"
+	osmosim "github.com/osmosis-labs/osmosis/v11/simulation/executor"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdksimapp "github.com/cosmos/cosmos-sdk/simapp"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -24,13 +24,13 @@ import (
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(cdc codec.JSONCodec, simManager *osmosimtypes.Manager) simtypes.AppStateFn {
-	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
+func AppStateFn(cdc codec.JSONCodec, simManager *osmosimtypes.Manager) osmosim.AppStateFn {
+	return func(r *rand.Rand, accs []simtypes.Account, config osmosim.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
-		if sdksimapp.FlagGenesisTimeValue == 0 {
+		if osmosim.FlagGenesisTimeValue == 0 {
 			genesisTimestamp = simtypes.RandTimestamp(r)
 		} else {
-			genesisTimestamp = time.Unix(sdksimapp.FlagGenesisTimeValue, 0)
+			genesisTimestamp = time.Unix(osmosim.FlagGenesisTimeValue, 0)
 		}
 
 		chainID = config.ChainID
@@ -42,7 +42,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *osmosimtypes.Manager) simtypes.
 			// override the default chain-id from simapp to set it later to the config
 			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
 
-			if sdksimapp.FlagGenesisTimeValue == 0 {
+			if osmosim.FlagGenesisTimeValue == 0 {
 				// use genesis timestamp if no custom timestamp is provided (i.e no random timestamp)
 				genesisTimestamp = genesisDoc.GenesisTime
 			}

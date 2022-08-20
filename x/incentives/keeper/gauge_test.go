@@ -5,9 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -250,51 +249,51 @@ func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 		expectError bool
 	}{
 		"fee + base denom gauge coin == acount balance, success": {
-			accountBalanceToFund: sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee / 2,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 		},
 		"fee + base denom gauge coin < acount balance, success": {
-			accountBalanceToFund: sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee/2 - 1,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 		},
 		"fee + base denom gauge coin > acount balance, error": {
 			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee/2 + 1,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 
 			expectError: true,
 		},
 		"fee + base denom gauge coin < acount balance, custom values, success": {
-			accountBalanceToFund: sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(11793193112)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(11793193112)),
 			feeToCharge:          55,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(328812))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(328812))),
 		},
 		"account funded with coins other than base denom, error": {
 			accountBalanceToFund: sdk.NewCoin("usdc", sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 
 			expectError: true,
 		},
 		"fee == account balance, no gauge coins, success": {
-			accountBalanceToFund: sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee,
 		},
 		"gauge coins == account balance, no fee, success": {
-			accountBalanceToFund: sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee)),
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee))),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee))),
 		},
 		"fee == account balance, gauge coins in denom other than base, success": {
-			accountBalanceToFund: sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee,
 			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(baseFee*2))),
 		},
 		"fee + gauge coins == account balance, multiple gauge coins, one in denom other than base, success": {
-			accountBalanceToFund: sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee)),
+			accountBalanceToFund: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee)),
 			feeToCharge:          baseFee / 2,
-			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(baseFee*2)), sdk.NewCoin(appparams.DefaultBondDenom, sdk.NewInt(baseFee/2))),
+			gaugeCoins:           sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(baseFee*2)), sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(baseFee/2))),
 		},
 	}
 
@@ -311,13 +310,13 @@ func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 			// Pre-fund account.
 			suite.FundAcc(testAccount, sdk.NewCoins(tc.accountBalanceToFund))
 
-			oldBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, appparams.DefaultBondDenom).Amount
+			oldBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
 
 			// System under test.
 			err := incentivesKeepers.ChargeFeeIfSufficientFeeDenomBalance(ctx, testAccount, sdk.NewInt(tc.feeToCharge), tc.gaugeCoins)
 
 			// Assertions.
-			newBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, appparams.DefaultBondDenom).Amount
+			newBalanceAmount := bankKeeper.GetBalance(ctx, testAccount, sdk.DefaultBondDenom).Amount
 			if tc.expectError {
 				suite.Require().Error(err)
 

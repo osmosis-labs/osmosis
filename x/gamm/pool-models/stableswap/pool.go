@@ -9,8 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 var _ types.PoolI = &Pool{}
@@ -20,13 +20,20 @@ var _ types.PoolI = &Pool{}
 // * len(initialLiquidity) = 2
 // * FutureGovernor is valid
 // * poolID doesn't already exist
-func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, futureGovernor string) (Pool, error) {
+func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLiquidity sdk.Coins, scalingFactors []uint64, futureGovernor string) (Pool, error) {
+	if len(scalingFactors) == 0 {
+		scalingFactors = []uint64{1, 1}
+	} else if scalingFactors[0] == 0 || scalingFactors[1] == 0 {
+		return Pool{}, types.ErrInvalidStableswapScalingFactors
+	}
+
 	pool := Pool{
 		Address:            types.NewPoolAddress(poolId).String(),
 		Id:                 poolId,
 		PoolParams:         stableswapPoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),
 		PoolLiquidity:      initialLiquidity,
+		ScalingFactor:      scalingFactors,
 		FuturePoolGovernor: futureGovernor,
 	}
 
@@ -161,7 +168,11 @@ func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins) {
 }
 
 func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdk.Int) {
+	numTokens := p.NumAssets()
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...)
+	if len(p.PoolLiquidity) != numTokens {
+		panic(fmt.Sprintf("updatePoolForJoin changed number of tokens in pool from %d to %d", numTokens, len(p.PoolLiquidity)))
+	}
 	p.TotalShares.Amount = p.TotalShares.Amount.Add(newShares)
 }
 
@@ -270,3 +281,20 @@ func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int
 
 // no-op for stableswap
 func (p *Pool) PokePool(blockTime time.Time) {}
+
+// SetStableSwapScalingFactors sets scaling factors for pool to the given amount
+// It should only be able to be successfully called by the pool's ScalingFactorGovernor
+// TODO: move commented test for this function from x/gamm/keeper/pool_service_test.go once a pool_test.go file has been created for stableswap
+func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, scalingFactorGovernor string) error {
+	if scalingFactorGovernor != p.ScalingFactorGovernor {
+		return types.ErrNotScalingFactorGovernor
+	}
+
+	if len(scalingFactors) != p.PoolLiquidity.Len() {
+		return types.ErrInvalidStableswapScalingFactors
+	}
+
+	p.ScalingFactor = scalingFactors
+
+	return nil
+}

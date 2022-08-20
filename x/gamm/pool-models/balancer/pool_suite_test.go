@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
-	v10 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v10"
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
+	v10 "github.com/osmosis-labs/osmosis/v11/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 const (
@@ -501,10 +501,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 	for _, tc := range tests {
 		suite.SetupTest()
 		suite.Run(tc.name, func() {
-			poolId := suite.PrepareUni2PoolWithAssets(
-				tc.baseDenomPoolInput,
-				tc.quoteDenomPoolInput,
-			)
+			poolId := suite.PrepareBalancerPoolWithCoins(tc.baseDenomPoolInput, tc.quoteDenomPoolInput)
 
 			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 			suite.Require().NoError(err, "test: %s", tc.name)
@@ -722,7 +719,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			require.True(t, ok)
 
 			assertPoolStateNotModified(t, balancerPool, func() {
-				osmoutils.ConditionalPanic(t, tc.expectPanic, sut)
+				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
 	}
