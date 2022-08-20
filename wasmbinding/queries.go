@@ -100,7 +100,8 @@ func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *bindings.Estim
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate swap empty swap"}
 	}
 
-	estimate, err := PerformSwap(qp.gammKeeper, ctx, nil, estimateSwap.ToSwapMsg())
+	subCtx, _ := ctx.CacheContext()
+	estimate, err := EstimatePerformSwap(qp.gammKeeper, subCtx, nil, estimateSwap.ToSwapMsg())
 	return estimate, err
 }
 

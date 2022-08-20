@@ -255,8 +255,9 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	subCtx, _ := sdkCtx.CacheContext()
 
-	tokenOutAmount, err := q.Keeper.MultihopSwapExactAmountIn(sdkCtx, nil, req.Routes, tokenIn, sdk.NewInt(1))
+	tokenOutAmount, err := q.Keeper.EstimateMultihopSwapExactAmountIn(subCtx, req.Routes, tokenIn, sdk.NewInt(1))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -286,8 +287,9 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	subCtx, _ := sdkCtx.CacheContext()
 
-	tokenInAmount, err := q.Keeper.MultihopSwapExactAmountOut(sdkCtx, nil, req.Routes, sdkIntMaxValue, tokenOut)
+	tokenInAmount, err := q.Keeper.EstimateMultihopSwapExactAmountOut(subCtx, req.Routes, sdkIntMaxValue, tokenOut)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
