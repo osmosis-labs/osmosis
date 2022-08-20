@@ -173,12 +173,17 @@ func (k Keeper) distributeEpochProvisions(ctx sdk.Context) (sdk.Int, error) {
 
 	inflationTruncationDelta, developerVestingTruncationDelta := k.updateTruncationDeltaAccumulators(ctx, &minter, inflationCoin.Amount, developerVestingAmount, params.DistributionProportions.DeveloperRewards)
 
-	distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, inflationCoin.Denom, inflationTruncationDelta, developerVestingTruncationDelta)
+	inflationTruncationDistributed, err := k.handleInflationTruncationDelta(ctx, inflationCoin.Denom, inflationTruncationDelta)
 	if err != nil {
-		panic(err)
+		return sdk.Int{}, err
 	}
 
-	totalDistributed := inflationCoin.Amount.Add(developerVestingAmount).Add(distributedTruncationDelta)
+	developerVestingTruncationDistributed, err := k.handleDeveloperVestingTruncationDelta(ctx, inflationCoin.Denom, developerVestingTruncationDelta)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	totalDistributed := inflationCoin.Amount.Add(developerVestingAmount).Add(developerVestingTruncationDistributed).Add(inflationTruncationDistributed)
 
 	// call a hook after the minting and distribution of new coins
 	k.hooks.AfterDistributeMintedCoin(ctx)
@@ -356,15 +361,14 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 	return devRewardsAmount.TruncateInt(), nil
 }
 
+// TODO: fix
 // distributeTruncationDelta distributes any truncation delta to the community pool.
 // Due to limitations of some SDK interfaces that operate on integers, there are known truncation differences
 // from the expected total epoch mint provisions.
 // To use these interfaces, we always round down to the nearest integer by truncating decimals.
 // As a result, it is possible to undermint. To mitigate that, we distribute any delta to the community pool.
 // The delta is calculated by subtracting the actual distributions from the given expected total distributions.
-func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, inflationTruncationDelta sdk.Dec, developerVestingTruncationDelta sdk.Dec) (sdk.Int, error) {
-	totalTruncationDistributed := sdk.ZeroInt()
-
+func (k Keeper) handleDeveloperVestingTruncationDelta(ctx sdk.Context, mintedDenom string, developerVestingTruncationDelta sdk.Dec) (sdk.Int, error) {
 	// N.B: Truncation is acceptable because we check delta at the end of every epoch.
 	// As a result, actual minted distributions always approach the expected value.
 	// For distributing delta from mint module account, we have to pre-mint first.
@@ -379,9 +383,17 @@ func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, i
 
 		k.DecreaseTruncationDelta(ctx, types.TruncatedDeveloperVestingDeltaKey, truncationDevVestingDeltaToDistribute.ToDec())
 
-		totalTruncationDistributed = totalTruncationDistributed.Add(truncationDevVestingDeltaToDistribute)
-	}
+		if truncationDevVestingDeltaToDistribute.IsInt64() {
+			defer telemetry.ModuleSetGauge(types.ModuleName, float32(truncationDevVestingDeltaToDistribute.Int64()), "mint_distributed_developer_rewards_truncation_delta")
+		}
 
+		return truncationDevVestingDeltaToDistribute, nil
+	}
+	return sdk.ZeroInt(), nil
+}
+
+// TODO: spec and tests
+func (k Keeper) handleInflationTruncationDelta(ctx sdk.Context, mintedDenom string, inflationTruncationDelta sdk.Dec) (sdk.Int, error) {
 	// N.B: Similarly to developer vesting delta, truncation here is acceptable.
 	if inflationTruncationDelta.IsNegative() {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "inflation delta was negative (%s)", inflationTruncationDelta)
@@ -398,14 +410,13 @@ func (k Keeper) distributeTruncationDelta(ctx sdk.Context, mintedDenom string, i
 
 		k.DecreaseTruncationDelta(ctx, types.TruncatedInflationDeltaKey, truncatedInflationDeltaToDistribute.ToDec())
 
-		totalTruncationDistributed = totalTruncationDistributed.Add(truncatedInflationDeltaToDistribute)
-	}
+		if truncatedInflationDeltaToDistribute.IsInt64() {
+			defer telemetry.ModuleSetGauge(types.ModuleName, float32(truncatedInflationDeltaToDistribute.Int64()), "mint_distributed_inflation_truncation_delta")
+		}
 
-	if totalTruncationDistributed.IsInt64() {
-		defer telemetry.ModuleSetGauge(types.ModuleName, float32(totalTruncationDistributed.Int64()), "mint_distributed_truncation_delta")
+		return truncatedInflationDeltaToDistribute, nil
 	}
-
-	return totalTruncationDistributed, nil
+	return sdk.ZeroInt(), nil
 }
 
 // getDeveloperVestedAmount returns the vestes amount from the developer vesting module account.

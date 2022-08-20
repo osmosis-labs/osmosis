@@ -858,152 +858,152 @@ func (suite *KeeperTestSuite) TestGetDeveloperVestedAmount() {
 	}
 }
 
-// TestDistributeTruncationDelta tests that the truncation delta is distributed
-// correctly.
-func (suite *KeeperTestSuite) TestDistributeTruncationDelta() {
-	tests := map[string]struct {
-		// Inputs
-		denom string
-		// preminted is necessary to ensure that minting does not
-		// affect the minted amount.
-		preMinted                        sdk.Coins
-		preVest                          sdk.Coin
-		expectedMintedBeforeCurrentEpoch sdk.Dec
-		expectedVestedBeforeCurrentEpoch sdk.Dec
-		devRewardsProportion             sdk.Dec
+// // TestDistributeTruncationDelta tests that the truncation delta is distributed
+// // correctly.
+// func (suite *KeeperTestSuite) TestDistributeTruncationDelta() {
+// 	tests := map[string]struct {
+// 		// Inputs
+// 		denom string
+// 		// preminted is necessary to ensure that minting does not
+// 		// affect the minted amount.
+// 		preMinted                        sdk.Coins
+// 		preVest                          sdk.Coin
+// 		expectedMintedBeforeCurrentEpoch sdk.Dec
+// 		expectedVestedBeforeCurrentEpoch sdk.Dec
+// 		devRewardsProportion             sdk.Dec
 
-		// Expected outputs
-		expectedAmount sdk.Int
-		expectErr      bool
-	}{
-		"none pre-minted and pre-vested - zero expected": {
-			denom:                            sdk.DefaultBondDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
-			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 		// Expected outputs
+// 		expectedAmount sdk.Int
+// 		expectErr      bool
+// 	}{
+// 		"none pre-minted and pre-vested - zero expected": {
+// 			denom:                            sdk.DefaultBondDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
 
-			expectedAmount: sdk.ZeroInt(),
-		},
-		"pre-minted more than expected; negative amount; error": {
-			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
-			denom:                            sdk.DefaultBondDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
-			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectedAmount: sdk.ZeroInt(),
+// 		},
+// 		"pre-minted more than expected; negative amount; error": {
+// 			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))),
+// 			denom:                            sdk.DefaultBondDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
 
-			expectErr: true,
-		},
-		"pre-vested more than expected; negative amount; error": {
-			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
-			denom:                            sdk.DefaultBondDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
-			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectErr: true,
+// 		},
+// 		"pre-vested more than expected; negative amount; error": {
+// 			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+// 			denom:                            sdk.DefaultBondDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
 
-			expectErr: true,
-		},
-		"pre-minted zero == expected; no-op": {
-			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
-			denom:                            sdk.DefaultBondDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.OneDec(),
-			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectErr: true,
+// 		},
+// 		"pre-minted zero == expected; no-op": {
+// 			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
+// 			denom:                            sdk.DefaultBondDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.OneDec(),
+// 			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
 
-			expectedAmount: sdk.ZeroInt(),
-		},
-		"pre-vested == expected; no-op": {
-			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
-			denom:                            sdk.DefaultBondDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
-			expectedVestedBeforeCurrentEpoch: sdk.OneDec(),
+// 			expectedAmount: sdk.ZeroInt(),
+// 		},
+// 		"pre-vested == expected; no-op": {
+// 			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+// 			denom:                            sdk.DefaultBondDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectedVestedBeforeCurrentEpoch: sdk.OneDec(),
 
-			expectedAmount: sdk.ZeroInt(),
-		},
-		"pre-minted < expected with truncation; truncated difference is distributed": {
-			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
-			denom:                            sdk.DefaultBondDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.NewDecWithPrec(22, 1),
-			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectedAmount: sdk.ZeroInt(),
+// 		},
+// 		"pre-minted < expected with truncation; truncated difference is distributed": {
+// 			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
+// 			denom:                            sdk.DefaultBondDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.NewDecWithPrec(22, 1),
+// 			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
 
-			// expectedAmount = floor(2.2  - 1) = 1
-			expectedAmount: sdk.OneInt(),
-		},
-		"pre-vested < expected with truncation; truncated difference is distributed": {
-			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
-			denom:                            sdk.DefaultBondDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
-			expectedVestedBeforeCurrentEpoch: sdk.NewDecWithPrec(22, 1),
+// 			// expectedAmount = floor(2.2  - 1) = 1
+// 			expectedAmount: sdk.OneInt(),
+// 		},
+// 		"pre-vested < expected with truncation; truncated difference is distributed": {
+// 			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+// 			denom:                            sdk.DefaultBondDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectedVestedBeforeCurrentEpoch: sdk.NewDecWithPrec(22, 1),
 
-			expectedAmount: sdk.OneInt(),
-		},
-		"pre-minted < expected w/o truncation; difference is distributed": {
-			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
-			denom:                            sdk.DefaultBondDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.OneDec().MulInt64(2),
-			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectedAmount: sdk.OneInt(),
+// 		},
+// 		"pre-minted < expected w/o truncation; difference is distributed": {
+// 			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())),
+// 			denom:                            sdk.DefaultBondDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.OneDec().MulInt64(2),
+// 			expectedVestedBeforeCurrentEpoch: sdk.ZeroDec(),
 
-			// expectedAmount = 2 - 1 = 1
-			expectedAmount: sdk.OneInt(),
-		},
-		"pre-vested < expected w/o truncation; difference is distributed": {
-			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
-			denom:                            sdk.DefaultBondDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
-			expectedVestedBeforeCurrentEpoch: sdk.OneDec().MulInt64(2),
+// 			// expectedAmount = 2 - 1 = 1
+// 			expectedAmount: sdk.OneInt(),
+// 		},
+// 		"pre-vested < expected w/o truncation; difference is distributed": {
+// 			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()),
+// 			denom:                            sdk.DefaultBondDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.ZeroDec(),
+// 			expectedVestedBeforeCurrentEpoch: sdk.OneDec().MulInt64(2),
 
-			// expectedAmount = 2 - 1 = 1
-			expectedAmount: sdk.OneInt(),
-		},
-		"pre-vested < expected and pre-minted < expected with truncation and custom values; sum of the truncated difference is distributed": {
-			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(182_192_134))),
-			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(545_193)),
-			denom:                            sdk.DefaultBondDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.NewDecWithPrec(182_192_134_3134, 4).Add(sdk.NewDec(5)),  // 182_192_134.3134 + 5
-			expectedVestedBeforeCurrentEpoch: sdk.NewDecWithPrec(545_193_123, 3).Add(sdk.NewDec(100_000)), // 545_193.123 + 100_000
+// 			// expectedAmount = 2 - 1 = 1
+// 			expectedAmount: sdk.OneInt(),
+// 		},
+// 		"pre-vested < expected and pre-minted < expected with truncation and custom values; sum of the truncated difference is distributed": {
+// 			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(182_192_134))),
+// 			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(545_193)),
+// 			denom:                            sdk.DefaultBondDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.NewDecWithPrec(182_192_134_3134, 4).Add(sdk.NewDec(5)),  // 182_192_134.3134 + 5
+// 			expectedVestedBeforeCurrentEpoch: sdk.NewDecWithPrec(545_193_123, 3).Add(sdk.NewDec(100_000)), // 545_193.123 + 100_000
 
-			// expectedAmount = floor(expected minted - actual minted) + floor(expected vested - actual vested)
-			//                = floor(182_192_134.3134 + 5 - 182_192_134) + floor(545_193.123 + 100_000 - 545_193)
-			// 			      = 5 + 100_000
-			expectedAmount: sdk.NewInt(5).Add(sdk.NewInt(100_000)),
-		},
-		"different denom from pre minted and pre-vested, none distributed": {
-			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(182_192_134))),
-			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(545_193)),
-			denom:                            otherDenom,
-			expectedMintedBeforeCurrentEpoch: sdk.NewDecWithPrec(182_192_134_3134, 4).Add(sdk.NewDec(5)),
-			expectedVestedBeforeCurrentEpoch: sdk.NewDecWithPrec(545_193_123, 3).Add(sdk.NewDec(100_000)),
+// 			// expectedAmount = floor(expected minted - actual minted) + floor(expected vested - actual vested)
+// 			//                = floor(182_192_134.3134 + 5 - 182_192_134) + floor(545_193.123 + 100_000 - 545_193)
+// 			// 			      = 5 + 100_000
+// 			expectedAmount: sdk.NewInt(5).Add(sdk.NewInt(100_000)),
+// 		},
+// 		"different denom from pre minted and pre-vested, none distributed": {
+// 			preMinted:                        sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(182_192_134))),
+// 			preVest:                          sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(545_193)),
+// 			denom:                            otherDenom,
+// 			expectedMintedBeforeCurrentEpoch: sdk.NewDecWithPrec(182_192_134_3134, 4).Add(sdk.NewDec(5)),
+// 			expectedVestedBeforeCurrentEpoch: sdk.NewDecWithPrec(545_193_123, 3).Add(sdk.NewDec(100_000)),
 
-			expectErr: true,
-		},
-	}
-	for name, tc := range tests {
-		suite.Run(name, func() {
-			// Setup.
-			suite.Setup()
-			mintKeeper := suite.App.MintKeeper
-			bankKeeper := suite.App.BankKeeper
-			ctx := suite.Ctx
+// 			expectErr: true,
+// 		},
+// 	}
+// 	for name, tc := range tests {
+// 		suite.Run(name, func() {
+// 			// Setup.
+// 			suite.Setup()
+// 			mintKeeper := suite.App.MintKeeper
+// 			bankKeeper := suite.App.BankKeeper
+// 			ctx := suite.Ctx
 
-			if !tc.preMinted.Empty() {
-				err := bankKeeper.MintCoins(ctx, types.ModuleName, tc.preMinted)
-				suite.Require().NoError(err)
-			}
+// 			if !tc.preMinted.Empty() {
+// 				err := bankKeeper.MintCoins(ctx, types.ModuleName, tc.preMinted)
+// 				suite.Require().NoError(err)
+// 			}
 
-			if !tc.preVest.IsNil() {
-				_, err := mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
-				suite.Require().NoError(err)
-			}
+// 			if !tc.preVest.IsNil() {
+// 				_, err := mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
+// 				suite.Require().NoError(err)
+// 			}
 
-			// System under test
-			actualAmount, err := mintKeeper.DistributeTruncationDelta(ctx, tc.denom, tc.expectedMintedBeforeCurrentEpoch, tc.expectedVestedBeforeCurrentEpoch)
+// 			// System under test
+// 			actualAmount, err := mintKeeper.DistributeTruncationDelta(ctx, tc.denom, tc.expectedMintedBeforeCurrentEpoch, tc.expectedVestedBeforeCurrentEpoch)
 
-			// Assertions.
-			if tc.expectErr {
-				suite.Require().Error(err)
-				return
-			}
+// 			// Assertions.
+// 			if tc.expectErr {
+// 				suite.Require().Error(err)
+// 				return
+// 			}
 
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedAmount.String(), actualAmount.String())
-		})
-	}
-}
+// 			suite.Require().NoError(err)
+// 			suite.Require().Equal(tc.expectedAmount.String(), actualAmount.String())
+// 		})
+// 	}
+// }
 
 // TestMintInflationCoins tests that minting inflation coins is
 // functions as expected by updating supply and not affecting

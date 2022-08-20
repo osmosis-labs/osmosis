@@ -40,10 +40,6 @@ func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 	return k.distributeDeveloperRewards(ctx, developerRewardsCoin, developerRewardsReceivers)
 }
 
-func (k Keeper) DistributeTruncationDelta(ctx sdk.Context, mintedDenom string, expectedTotalMintedByCurrentEpoch sdk.Dec, expectedTotalVestedByCurrentEpoch sdk.Dec) (sdk.Int, error) {
-	return k.distributeTruncationDelta(ctx, mintedDenom, expectedTotalMintedByCurrentEpoch, expectedTotalVestedByCurrentEpoch)
-}
-
 func (k Keeper) DistributeInflationCoin(ctx sdk.Context, mintedCoin sdk.Coin) error {
 	return k.distributeInflationCoin(ctx, mintedCoin)
 }
