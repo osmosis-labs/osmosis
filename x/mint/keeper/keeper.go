@@ -171,12 +171,12 @@ func (k Keeper) distributeEpochProvisions(ctx sdk.Context) (sdk.Int, error) {
 		return sdk.Int{}, err
 	}
 
-	inflationTruncationDistributed, err := k.handleInflationTruncationDelta(ctx, inflationCoin, inflationCoin.Amount.TruncateInt())
+	inflationTruncationDistributed, err := k.handleTruncationDelta(ctx, types.TruncatedInflationDeltaKey, types.ModuleName, inflationCoin, inflationCoin.Amount.TruncateInt())
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	developerVestingTruncationDistributed, err := k.handleDeveloperVestingTruncationDelta(ctx, developerVestingCoin, developerVestingAmount)
+	developerVestingTruncationDistributed, err := k.handleTruncationDelta(ctx, types.TruncatedDeveloperVestingDeltaKey, types.DeveloperVestingModuleAcctName, developerVestingCoin, developerVestingAmount)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -361,76 +361,53 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 	return truncatedDevRewardsAmount, nil
 }
 
-// TODO: fix
+// TODO: update spec and tests
 // distributeTruncationDelta distributes any truncation delta to the community pool.
 // Due to limitations of some SDK interfaces that operate on integers, there are known truncation differences
 // from the expected total epoch mint provisions.
 // To use these interfaces, we always round down to the nearest integer by truncating decimals.
 // As a result, it is possible to undermint. To mitigate that, we distribute any delta to the community pool.
 // The delta is calculated by subtracting the actual distributions from the given expected total distributions.
-func (k Keeper) handleDeveloperVestingTruncationDelta(ctx sdk.Context, provisions sdk.DecCoin, amountDistributed sdk.Int) (sdk.Int, error) {
-	currentEpochRewardsDelta := provisions.Amount.Sub(amountDistributed.ToDec())
-	totalDelta := k.GetTruncationDelta(ctx, types.TruncatedDeveloperVestingDeltaKey).Add(currentEpochRewardsDelta)
-
-	if totalDelta.LT(sdk.OneDec()) {
-		k.SetTruncationDelta(ctx, types.TruncatedDeveloperVestingDeltaKey, totalDelta)
+func (k Keeper) handleTruncationDelta(ctx sdk.Context, key []byte, moduleAccountName string, provisions sdk.DecCoin, amountDistributed sdk.Int) (sdk.Int, error) {
+	deltaAmount := k.calculateTotalTruncationDelta(ctx, key, provisions, amountDistributed)
+	if deltaAmount.LT(sdk.OneDec()) {
+		k.SetTruncationDelta(ctx, key, deltaAmount)
 		return sdk.ZeroInt(), nil
 	}
 
 	// N.B: Truncation is acceptable because we check delta at the end of every epoch.
 	// As a result, actual minted distributions always approach the expected value.
-	truncationDeltaToDistribute := totalDelta.TruncateInt()
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(provisions.Denom, truncationDeltaToDistribute)), k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)); err != nil {
+	truncationDeltaToDistribute := deltaAmount.TruncateInt()
+	// For funding from mint module account, we must pre-mint first.
+	if moduleAccountName == types.ModuleName {
+		if err := k.mintInflationCoins(ctx, sdk.NewCoins(sdk.NewCoin(provisions.Denom, truncationDeltaToDistribute))); err != nil {
+			return sdk.Int{}, err
+		}
+	}
+	if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(provisions.Denom, truncationDeltaToDistribute)), k.accountKeeper.GetModuleAddress(moduleAccountName)); err != nil {
 		return sdk.Int{}, err
 	}
 
-	newDelta := totalDelta.Sub(truncationDeltaToDistribute.ToDec())
+	newDelta := deltaAmount.Sub(truncationDeltaToDistribute.ToDec())
 
 	if newDelta.IsNegative() {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "developer rewards delta was negative (%s)", newDelta)
 	}
 
-	k.SetTruncationDelta(ctx, types.TruncatedDeveloperVestingDeltaKey, newDelta)
+	k.SetTruncationDelta(ctx, key, newDelta)
 
-	if truncationDeltaToDistribute.IsInt64() {
-		defer telemetry.ModuleSetGauge(types.ModuleName, float32(truncationDeltaToDistribute.Int64()), "mint_distributed_developer_rewards_truncation_delta")
-	}
+	// TODO: move telemetry to the caller
+	// if truncationDeltaToDistribute.IsInt64() {
+	// 	defer telemetry.ModuleSetGauge(types.ModuleName, float32(truncationDeltaToDistribute.Int64()), "mint_distributed_developer_rewards_truncation_delta")
+	// }
 
 	return truncationDeltaToDistribute, nil
 }
 
-// TODO: spec and tests
-func (k Keeper) handleInflationTruncationDelta(ctx sdk.Context, provisions sdk.DecCoin, amountDistributed sdk.Int) (sdk.Int, error) {
+// TODO: spec and test
+func (k Keeper) calculateTotalTruncationDelta(ctx sdk.Context, key []byte, provisions sdk.DecCoin, amountDistributed sdk.Int) sdk.Dec {
 	currentEpochRewardsDelta := provisions.Amount.Sub(amountDistributed.ToDec())
-	totalDelta := k.GetTruncationDelta(ctx, types.TruncatedInflationDeltaKey).Add(currentEpochRewardsDelta)
-
-	if totalDelta.LT(sdk.OneDec()) {
-		k.SetTruncationDelta(ctx, types.TruncatedInflationDeltaKey, totalDelta)
-		return sdk.ZeroInt(), nil
-	}
-
-	truncatedDeltaToDistribute := totalDelta.TruncateInt()
-	if err := k.mintInflationCoins(ctx, sdk.NewCoins(sdk.NewCoin(provisions.Denom, truncatedDeltaToDistribute))); err != nil {
-		return sdk.Int{}, err
-	}
-
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(provisions.Denom, truncatedDeltaToDistribute)), k.accountKeeper.GetModuleAddress(types.ModuleName)); err != nil {
-		return sdk.Int{}, err
-	}
-
-	newDelta := totalDelta.Sub(truncatedDeltaToDistribute.ToDec())
-
-	if newDelta.IsNegative() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "inflation delta was negative (%s)", newDelta)
-	}
-
-	k.SetTruncationDelta(ctx, types.TruncatedInflationDeltaKey, newDelta)
-
-	if truncatedDeltaToDistribute.IsInt64() {
-		defer telemetry.ModuleSetGauge(types.ModuleName, float32(truncatedDeltaToDistribute.Int64()), "mint_distributed_inflation_truncation_delta")
-	}
-
-	return truncatedDeltaToDistribute, nil
+	return k.GetTruncationDelta(ctx, key).Add(currentEpochRewardsDelta)
 }
 
 // getDeveloperVestedAmount returns the vestes amount from the developer vesting module account.
