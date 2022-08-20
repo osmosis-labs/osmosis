@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestAllocateAsset() {
 		suite.Run(test.name, func() {
 			suite.Setup()
 			keeper := suite.App.PoolIncentivesKeeper
-			suite.FundModuleAccount(types.ModuleName, sdk.NewCoins(test.mintedCoins))
+			suite.FundModuleAcc(types.ModuleName, sdk.NewCoins(test.mintedCoins))
 			suite.PrepareBalancerPool()
 
 			// LockableDurations should be 1, 3, 7 hours from the default genesis state.

@@ -100,20 +100,25 @@ func MustSet(storeObj store.KVStore, key []byte, value proto.Message) {
 
 // MustGet gets key from store by mutating result
 // Panics on any error.
+// TODO: test
 func MustGet(store store.KVStore, key []byte, result proto.Message) {
 	b := store.Get(key)
 	if b == nil {
 		panic(fmt.Errorf("getting at key (%v) should not have been nil", key))
 	}
-	proto.Unmarshal(b, result)
+	if err := proto.Unmarshal(b, result); err != nil {
+		panic(err)
+	}
 }
 
 // SetDec sets dec value to store at key. Panics on any error.
+// TODO: test
 func SetDecToStore(store store.KVStore, key []byte, value sdk.Dec) {
 	MustSet(store, key, &sdk.DecProto{})
 }
 
 // GetDecFromStore gets dec value from store at key. Panics on any error.
+// TODO: test
 func GetDecFromStore(store store.KVStore, key []byte, value sdk.Dec) sdk.Dec {
 	result := &sdk.DecProto{}
 	MustGet(store, key, result)

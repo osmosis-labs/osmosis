@@ -96,8 +96,8 @@ func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	s.Require().NoError(err)
 }
 
-// FundModuleAccount funds target module with specified amount.
-func (s *KeeperTestHelper) FundModuleAccount(moduleName string, amounts sdk.Coins) {
+// FundModuleAcc funds target modules with specified amount.
+func (s *KeeperTestHelper) FundModuleAcc(moduleName string, amounts sdk.Coins) {
 	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
 	s.Require().NoError(err)
 }
