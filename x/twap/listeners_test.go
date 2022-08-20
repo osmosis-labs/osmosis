@@ -3,7 +3,7 @@ package twap_test
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	keeper "github.com/osmosis-labs/osmosis/v11/x/twap"
 )
 
 // TestCreatePoolFlow tests that upon a pool being created,
@@ -11,7 +11,7 @@ import (
 func (s *TestSuite) TestCreateTwoAssetPoolFlow() {
 	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
 
-	expectedTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedTwap, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
 	twap, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denom0, denom1)
@@ -43,7 +43,7 @@ func (s *TestSuite) TestSwapTriggeringTrackPoolId() {
 func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
-	expectedHistoricalTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedHistoricalTwap, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
 	s.EndBlock()
@@ -53,7 +53,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.RunBasicSwap(poolId)
 
 	// accumulators are default right here
-	expectedLatestTwapUpToAccum, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedLatestTwapUpToAccum, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 	// ensure different spot prices
 	s.Require().NotEqual(expectedHistoricalTwap.P0LastSpotPrice, expectedLatestTwapUpToAccum.P0LastSpotPrice)
@@ -89,7 +89,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 func (s *TestSuite) TestJoinAndEndBlockTriggeringSave() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
-	expectedHistoricalTwap, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedHistoricalTwap, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
 	s.EndBlock()
@@ -99,7 +99,7 @@ func (s *TestSuite) TestJoinAndEndBlockTriggeringSave() {
 	s.RunBasicJoin(poolId)
 
 	// accumulators are default right here
-	expectedLatestTwapUpToAccum, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedLatestTwapUpToAccum, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
 	s.EndBlock()
