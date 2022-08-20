@@ -37,11 +37,11 @@ func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, prov
 }
 
 func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin sdk.DecCoin, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
-	return k.distributeDeveloperRewards(ctx, developerRewardsCoin, developerRewardsReceivers)
+	return k.distributeDeveloperVestingProvisions(ctx, developerRewardsCoin, developerRewardsReceivers)
 }
 
-func (k Keeper) DistributeInflationCoin(ctx sdk.Context, provisionsCoin sdk.DecCoin) error {
-	return k.distributeInflationCoin(ctx, provisionsCoin)
+func (k Keeper) DistributeInflationCoin(ctx sdk.Context, provisionsCoin sdk.DecCoin) (sdk.Int, error) {
+	return k.distributeInflationProvisions(ctx, provisionsCoin)
 }
 
 func (k Keeper) MintInflationCoin(ctx sdk.Context, inflationCoins sdk.Coins) error {

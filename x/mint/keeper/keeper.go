@@ -131,68 +131,41 @@ func (k Keeper) SetTruncationDelta(ctx sdk.Context, key []byte, truncationDelta 
 	store.Set(key, b)
 }
 
-// IncreaseTruncationDelta increases the truncation delta at key by increaseByDelta.
-func (k Keeper) IncreaseTruncationDelta(ctx sdk.Context, key []byte, increaseByDelta sdk.Dec) sdk.Dec {
-	currentTruncationDelta := k.GetTruncationDelta(ctx, key)
-	newTruncationDelta := currentTruncationDelta.Add(increaseByDelta)
-	k.SetTruncationDelta(ctx, key, newTruncationDelta)
-	return newTruncationDelta
-}
-
-// DecreaseTruncationDelta decreases the truncation delta at key by increaseByDelta.
-func (k Keeper) DecreaseTruncationDelta(ctx sdk.Context, key []byte, decreaseByDelta sdk.Dec) sdk.Dec {
-	currentTruncationDelta := k.GetTruncationDelta(ctx, key)
-	newTruncationDelta := currentTruncationDelta.Sub(decreaseByDelta)
-	k.SetTruncationDelta(ctx, key, newTruncationDelta)
-	return newTruncationDelta
-}
-
 func (k Keeper) distributeEpochProvisions(ctx sdk.Context) (sdk.Int, error) {
 	minter := k.GetMinter(ctx)
 	params := k.GetParams(ctx)
 
-	// mint coins, update supply
-	inflationCoin := minter.InflationProvision(params)
-	err := k.mintInflationCoins(ctx, sdk.NewCoins(sdk.NewCoin(inflationCoin.Denom, inflationCoin.Amount.TruncateInt())))
+	// Mint and distribute inflation provisions from mint module account.
+	// These exclude developer vesting rewards.
+	inflationAmount, err := k.distributeInflationProvisions(ctx, minter.InflationProvisions(params))
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	// send the minted coins to the fee collector account
-	err = k.distributeInflationCoin(ctx, inflationCoin)
+	// Allocate dev rewards to respective accounts from developer vesting module account.
+	developerVestingAmount, err := k.distributeDeveloperVestingProvisions(ctx, minter.DeveloperVestingEpochProvisions(params), params.WeightedDeveloperRewardsReceivers)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	developerVestingCoin := minter.DeveloperVestingEpochProvision(params)
-	// allocate dev rewards to respective accounts from developer vesting module account.
-	developerVestingAmount, err := k.distributeDeveloperRewards(ctx, developerVestingCoin, params.WeightedDeveloperRewardsReceivers)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	inflationTruncationDistributed, err := k.handleTruncationDelta(ctx, types.TruncatedInflationDeltaKey, types.ModuleName, inflationCoin, inflationCoin.Amount.TruncateInt())
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	developerVestingTruncationDistributed, err := k.handleTruncationDelta(ctx, types.TruncatedDeveloperVestingDeltaKey, types.DeveloperVestingModuleAcctName, developerVestingCoin, developerVestingAmount)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	totalDistributed := inflationCoin.Amount.TruncateInt().Add(developerVestingAmount).Add(developerVestingTruncationDistributed).Add(inflationTruncationDistributed)
+	totalDistributed := inflationAmount.Add(developerVestingAmount)
 
 	// call a hook after the minting and distribution of new coins
 	k.hooks.AfterDistributeMintedCoin(ctx)
 	return totalDistributed, nil
 }
 
-// distributeInflationCoin implements distribution of a minted coin from mint to external modules.
+// distributeInflationProvisions implements distribution of a minted coin from mint to external modules.
 // inflation component incluedes all proportions from the parameters other than developer rewards.
-func (k Keeper) distributeInflationCoin(ctx sdk.Context, mintedCoin sdk.DecCoin) error {
+func (k Keeper) distributeInflationProvisions(ctx sdk.Context, inflationCoin sdk.DecCoin) (sdk.Int, error) {
 	params := k.GetParams(ctx)
 	proportions := params.DistributionProportions
+
+	// mint coins, update supply
+	err := k.mintInflationCoins(ctx, sdk.NewCoins(sdk.NewCoin(inflationCoin.Denom, inflationCoin.Amount.TruncateInt())))
+	if err != nil {
+		return sdk.Int{}, err
+	}
 
 	// The mint coins are created from the mint module account exclusive of developer
 	// rewards. Developer rewards are distributed from the developer vesting module account.
@@ -200,30 +173,37 @@ func (k Keeper) distributeInflationCoin(ctx sdk.Context, mintedCoin sdk.DecCoin)
 	nonDeveloperRewardsProportion := sdk.OneDec().Sub(proportions.DeveloperRewards)
 
 	// allocate staking incentives into fee collector account to be moved to on next begin blocker by staking module account.
-	stakingIncentivesAmount, err := k.distributeToModule(ctx, k.feeCollectorName, mintedCoin, proportions.Staking.Quo(nonDeveloperRewardsProportion))
+	stakingIncentivesAmount, err := k.distributeToModule(ctx, k.feeCollectorName, inflationCoin, proportions.Staking.Quo(nonDeveloperRewardsProportion))
 	if err != nil {
-		return err
+		return sdk.Int{}, err
 	}
 
 	// allocate pool allocation ratio to pool-incentives module account.
-	poolIncentivesAmount, err := k.distributeToModule(ctx, poolincentivestypes.ModuleName, mintedCoin, proportions.PoolIncentives.Quo(nonDeveloperRewardsProportion))
+	poolIncentivesAmount, err := k.distributeToModule(ctx, poolincentivestypes.ModuleName, inflationCoin, proportions.PoolIncentives.Quo(nonDeveloperRewardsProportion))
 	if err != nil {
-		return err
+		return sdk.Int{}, err
 	}
 
 	// subtract from original provision to ensure no coins left over after the allocations
-	mintedAmount := mintedCoin.Amount.TruncateInt()
-	communityPoolAmount := mintedAmount.Sub(stakingIncentivesAmount).Sub(poolIncentivesAmount)
+	inflationAmount := inflationCoin.Amount.TruncateInt()
+	communityPoolAmount := inflationAmount.Sub(stakingIncentivesAmount).Sub(poolIncentivesAmount)
 	err = k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(params.MintDenom, communityPoolAmount)), k.accountKeeper.GetModuleAddress(types.ModuleName))
 	if err != nil {
-		return err
+		return sdk.Int{}, err
 	}
 
-	if mintedAmount.IsInt64() {
-		defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedAmount.Int64()), "mint_inflation_tokens")
+	inflationTruncationMintedAndDistributed, err := k.handleTruncationDelta(ctx, types.TruncatedInflationDeltaKey, types.ModuleName, inflationCoin, inflationCoin.Amount.TruncateInt())
+	if err != nil {
+		return sdk.Int{}, err
 	}
 
-	return nil
+	inflationAmount = inflationAmount.Add(inflationTruncationMintedAndDistributed)
+
+	if inflationAmount.IsInt64() {
+		defer telemetry.ModuleSetGauge(types.ModuleName, float32(inflationAmount.Int64()), "mint_inflation_tokens")
+	}
+
+	return inflationAmount, nil
 }
 
 // getLastReductionEpochNum returns last reduction epoch number.
@@ -271,7 +251,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 	return truncatedDistributionAmount, nil
 }
 
-// distributeDeveloperRewards distributes developer rewards from developer vesting module account
+// distributeDeveloperVestingProvisions distributes developer rewards from developer vesting module account
 // to the respective account receivers by weight (developerRewardsReceivers).
 // If no developer reward receivers given, funds the community pool instead.
 // If developer reward receiver address is empty, funds the community pool.
@@ -288,7 +268,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 // CONTRACT:
 // - weights in developerRewardsReceivers add up to 1.
 // - addresses in developerRewardsReceivers are valid or empty string.
-func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin sdk.DecCoin, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
+func (k Keeper) distributeDeveloperVestingProvisions(ctx sdk.Context, developerRewardsCoin sdk.DecCoin, developerRewardsReceivers []types.WeightedAddress) (sdk.Int, error) {
 	devRewardsAmount := developerRewardsCoin.Amount
 
 	developerRewardsModuleAccountAddress := k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)
@@ -340,8 +320,9 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 	// Take the new balance of the developer rewards pool to esitimate the truncation delta
 	// stemming from the distribution of developer rewards to each of the accounts.
 	newDeveloperAccountBalance := k.bankKeeper.GetBalance(ctx, developerRewardsModuleAccountAddress, developerRewardsCoin.Denom)
-	truncationDelta := devRewardCoins.Sub(sdk.NewCoins(oldDeveloperAccountBalance.Sub(newDeveloperAccountBalance)))
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, truncationDelta, developerRewardsModuleAccountAddress); err != nil {
+	distributedDuringCurrentEpochAmount := oldDeveloperAccountBalance.Sub(newDeveloperAccountBalance).Amount
+	developerVestingTruncationDistributed, err := k.handleTruncationDelta(ctx, types.TruncatedDeveloperVestingDeltaKey, types.DeveloperVestingModuleAcctName, developerRewardsCoin, distributedDuringCurrentEpochAmount)
+	if err != nil {
 		return sdk.Int{}, err
 	}
 
@@ -350,7 +331,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 	// from the developer rewards module account address.
 	k.bankKeeper.AddSupplyOffset(ctx, developerRewardsCoin.Denom, oldDeveloperAccountBalance.Amount)
 	// Re-introduce the new supply offset
-	k.bankKeeper.AddSupplyOffset(ctx, developerRewardsCoin.Denom, newDeveloperAccountBalance.Amount.Sub(truncationDelta.AmountOf(developerRewardsCoin.Denom)).Neg())
+	k.bankKeeper.AddSupplyOffset(ctx, developerRewardsCoin.Denom, newDeveloperAccountBalance.Amount.Sub(developerVestingTruncationDistributed).Neg())
 
 	if truncatedDevRewardsAmount.IsInt64() {
 		defer telemetry.ModuleSetGauge(types.ModuleName, float32(truncatedDevRewardsAmount.Int64()), "mint_developer_vested_tokens")

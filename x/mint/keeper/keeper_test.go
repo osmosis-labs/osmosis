@@ -266,7 +266,8 @@ func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 			oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.inflationCoin.Denom).Amount
 
 			// System under test.
-			err := mintKeeper.DistributeInflationCoin(ctx, tc.inflationCoin)
+			// TODO: assertions on the int result + test cases for truncation delta.
+			_, err := mintKeeper.DistributeInflationCoin(ctx, tc.inflationCoin)
 
 			if tc.expectError {
 				suite.Require().Error(err)
