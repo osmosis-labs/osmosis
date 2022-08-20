@@ -18,6 +18,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	k.SetMinter(ctx, data.Minter)
 	k.SetParams(ctx, data.Params)
 
+	// TODO: test
+	k.SetTruncationDelta(ctx, types.TruncatedDeveloperVestingDeltaKey, sdk.ZeroDec())
+	k.SetTruncationDelta(ctx, types.TruncatedInflationDeltaKey, sdk.ZeroDec())
+
 	// The call to GetModuleAccount creates a module account if it does not exist.
 	k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 

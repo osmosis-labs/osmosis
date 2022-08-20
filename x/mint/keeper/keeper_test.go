@@ -768,14 +768,17 @@ func (suite *KeeperTestSuite) TestGetMintedAmount() {
 			// Setup.
 			suite.Setup()
 			mintKeeper := suite.App.MintKeeper
+			bankKeeper := suite.App.BankKeeper
 			ctx := suite.Ctx
 
 			if !tc.preMinted.Empty() {
-				mintKeeper.MintNativeCoins(ctx, types.ModuleName, tc.preMinted)
+				err := bankKeeper.MintCoins(ctx, types.ModuleName, tc.preMinted)
+				suite.Require().NoError(err)
 			}
 
 			if !tc.preVest.IsNil() {
-				mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
+				_, err := mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
+				suite.Require().NoError(err)
 			}
 
 			// System under test
@@ -833,14 +836,17 @@ func (suite *KeeperTestSuite) TestGetDeveloperVestedAmount() {
 			// Setup.
 			suite.Setup()
 			mintKeeper := suite.App.MintKeeper
+			bankeKeeper := suite.App.BankKeeper
 			ctx := suite.Ctx
 
 			if !tc.preMinted.Empty() {
-				mintKeeper.MintNativeCoins(ctx, types.ModuleName, tc.preMinted)
+				err := bankeKeeper.MintCoins(ctx, types.ModuleName, tc.preMinted)
+				suite.Require().NoError(err)
 			}
 
 			if !tc.preVest.IsNil() {
-				mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
+				_, err := mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
+				suite.Require().NoError(err)
 			}
 
 			// System under test
@@ -971,14 +977,17 @@ func (suite *KeeperTestSuite) TestDistributeTruncationDelta() {
 			// Setup.
 			suite.Setup()
 			mintKeeper := suite.App.MintKeeper
+			bankKeeper := suite.App.BankKeeper
 			ctx := suite.Ctx
 
 			if !tc.preMinted.Empty() {
-				mintKeeper.MintNativeCoins(ctx, types.ModuleName, tc.preMinted)
+				err := bankKeeper.MintCoins(ctx, types.ModuleName, tc.preMinted)
+				suite.Require().NoError(err)
 			}
 
 			if !tc.preVest.IsNil() {
-				mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
+				_, err := mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
+				suite.Require().NoError(err)
 			}
 
 			// System under test
@@ -992,68 +1001,6 @@ func (suite *KeeperTestSuite) TestDistributeTruncationDelta() {
 
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedAmount.String(), actualAmount.String())
-		})
-	}
-}
-
-// TestMintNativeCoins tests that minting native coins is
-// updaes supply and x/mint minter accumulator value. It also
-// tests that any denom other than mint denom is not accepted and produces error.
-func (suite *KeeperTestSuite) TestMintNativeCoins() {
-	const mintDenom = sdk.DefaultBondDenom
-	tests := map[string]struct {
-		// Inputs
-		// preminted is necessary to ensure that minting does not
-		// affect the minted amount.
-		mintedCoins sdk.Coins
-
-		// Expected outputs
-		expectedInflationAmount            sdk.Int
-		expectedAccumulatorInflationAmount sdk.Dec
-		expectErr                          bool
-	}{
-		"mint 1 coin native mint denom": {
-			mintedCoins:                        sdk.NewCoins(sdk.NewCoin(mintDenom, sdk.OneInt())),
-			expectedInflationAmount:            sdk.OneInt(),
-			expectedAccumulatorInflationAmount: sdk.OneDec(),
-		},
-		"mint 1 coin non-native mint denom - error": {
-			mintedCoins: sdk.NewCoins(sdk.NewCoin(otherDenom, sdk.OneInt())),
-			expectErr:   true,
-		},
-		"mint 2 coins non-native mint denom - error": {
-			mintedCoins: sdk.NewCoins(sdk.NewCoin(mintDenom, sdk.OneInt()), sdk.NewCoin(otherDenom, sdk.OneInt())),
-			expectErr:   true,
-		},
-		"mint 0 coins - error": {
-			mintedCoins: sdk.NewCoins(),
-			expectErr:   true,
-		},
-	}
-	for name, tc := range tests {
-		suite.Run(name, func() {
-			// Setup.
-			suite.Setup()
-			mintKeeper := suite.App.MintKeeper
-			ctx := suite.Ctx
-
-			// System under test
-			err := mintKeeper.MintNativeCoins(ctx, types.ModuleName, tc.mintedCoins)
-
-			// Assertions.
-			if tc.expectErr {
-				suite.Require().Error(err)
-				return
-			}
-
-			suite.Require().NoError(err)
-
-			// Validate supply
-			inflationAmount := mintKeeper.GetInflationAmount(ctx, mintDenom)
-			suite.Require().Equal(tc.expectedInflationAmount.String(), inflationAmount.String())
-
-			// Validate minter's expected total minted amount.
-			suite.Require().Equal(tc.expectedAccumulatorInflationAmount, mintKeeper.GetMinter(ctx).LastTotalInflationAmount)
 		})
 	}
 }
@@ -1105,7 +1052,8 @@ func (suite *KeeperTestSuite) TestMintInflationCoins() {
 			suite.Require().Equal(tc.expectedInflationAmount.String(), actualInflationAmount.String())
 
 			// Validate minter's expected total minted amount.
-			suite.Require().Equal(sdk.ZeroDec(), mintKeeper.GetMinter(ctx).LastTotalInflationAmount)
+
+			suite.Require().Equal(sdk.ZeroDec(), mintKeeper.GetTruncationDelta(ctx, types.TruncatedInflationDeltaKey))
 		})
 	}
 }

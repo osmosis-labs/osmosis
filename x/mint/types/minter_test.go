@@ -27,7 +27,7 @@ func BenchmarkEpochProvision(b *testing.B) {
 
 	// run the EpochProvision function b.N times
 	for n := 0; n < b.N; n++ {
-		minter.EpochProvision(params)
+		minter.InflationProvision(params)
 	}
 }
 

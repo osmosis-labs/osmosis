@@ -92,7 +92,7 @@ func TestRandomizedGenState(t *testing.T) {
 	// Mint epoch provisions.
 	expectedEpochProvisions := epochProvisionsDec.Mul(sdk.OneDec().Sub(devRewardsProportion))
 	require.Equal(t, expectedDenom, mintGenesis.Params.MintDenom)
-	require.Equal(t, fmt.Sprintf("%s%s", expectedEpochProvisions.TruncateInt(), expectedDenom), mintGenesis.Minter.EpochProvision(mintGenesis.Params).String())
+	require.Equal(t, fmt.Sprintf("%s%s", expectedEpochProvisions.TruncateInt(), expectedDenom), mintGenesis.Minter.InflationProvision(mintGenesis.Params).String())
 
 	// Developer rewards epoch provisions
 	expectedDevRewardsProvisions := epochProvisionsDec.Mul(devRewardsProportion)

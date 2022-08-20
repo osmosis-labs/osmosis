@@ -6,7 +6,6 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -47,45 +46,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.setLastReductionEpochNum(ctx, epochNumber)
 		}
 
-		// mint coins, update supply
-		mintedCoin := minter.EpochProvision(params)
-		mintedCoins := sdk.NewCoins(mintedCoin)
-
-		err := k.mintInflationCoins(ctx, mintedCoins)
+		totalDistributed, err := k.distributeEpochProvisions(ctx)
 		if err != nil {
 			panic(err)
-		}
-
-		// send the minted coins to the fee collector account
-		err = k.distributeInflationCoin(ctx, mintedCoin)
-		if err != nil {
-			panic(err)
-		}
-
-		developerVestingCoin := minter.DeveloperVestingEpochProvision(params)
-		// allocate dev rewards to respective accounts from developer vesting module account.
-		developerVestingAmount, err := k.distributeDeveloperRewards(ctx, developerVestingCoin, params.WeightedDeveloperRewardsReceivers)
-		if err != nil {
-			panic(err)
-		}
-
-		devRewardsProportion := minter.EpochProvisions.Mul(params.DistributionProportions.DeveloperRewards)
-		minter.LastTotalVestedAmount = minter.LastTotalVestedAmount.Add(devRewardsProportion)
-		minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Add(minter.EpochProvisions.Sub(devRewardsProportion))
-		k.SetMinter(ctx, minter)
-
-		distributedTruncationDelta, err := k.distributeTruncationDelta(ctx, mintedCoin.Denom, minter.LastTotalInflationAmount, minter.LastTotalVestedAmount)
-		if err != nil {
-			panic(err)
-		}
-
-		totalDistributed := mintedCoin.Amount.Add(developerVestingAmount).Add(distributedTruncationDelta)
-
-		// call a hook after the minting and distribution of new coins
-		k.hooks.AfterDistributeMintedCoin(ctx)
-
-		if mintedCoin.Amount.IsInt64() {
-			defer telemetry.ModuleSetGauge(types.ModuleName, float32(totalDistributed.Int64()), "minted_tokens")
 		}
 
 		ctx.EventManager().EmitEvent(

@@ -92,26 +92,12 @@ func (s *KeeperTestHelper) Commit() {
 
 // FundAcc funds target address with specified amount.
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
-	minter := s.App.MintKeeper.GetMinter(s.Ctx)
-	for _, coin := range amounts {
-		if coin.Denom == sdk.DefaultBondDenom {
-			minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Add(coin.Amount.ToDec())
-		}
-	}
-	s.App.MintKeeper.SetMinter(s.Ctx, minter)
 	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
 	s.Require().NoError(err)
 }
 
 // FundModuleAccount funds target module with specified amount.
 func (s *KeeperTestHelper) FundModuleAccount(moduleName string, amounts sdk.Coins) {
-	minter := s.App.MintKeeper.GetMinter(s.Ctx)
-	for _, coin := range amounts {
-		if coin.Denom == sdk.DefaultBondDenom {
-			minter.LastTotalInflationAmount = minter.LastTotalInflationAmount.Add(coin.Amount.ToDec())
-		}
-	}
-	s.App.MintKeeper.SetMinter(s.Ctx, minter)
 	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
 	s.Require().NoError(err)
 }

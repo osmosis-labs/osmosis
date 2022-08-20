@@ -16,23 +16,6 @@ message Minter {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-
-  // last_total_inflation_amount represents the total amount of inflation
-  // tokens minted since the chain launched. It excludes developer vesting
-  // rewards that are estimated separately by last_total_vested_amount.
-  string last_total_inflation_amount = 2 [
-    (gogoproto.moretags) = "yaml:\"last_total_minted_amount\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
-
-  // last_total_vested_amount represents the total amount of developer
-  // reward tokens vested since the chain launched.
-  string last_total_vested_amount = 3 [
-    (gogoproto.moretags) = "yaml:\"last_minted_total_amount\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
 }
 
 // WeightedAddress represents an address with a weight assigned to it.

@@ -314,7 +314,7 @@ func (k Keeper) mintOsmoTokensAndDelegate(ctx sdk.Context, osmoAmount sdk.Int, i
 	err = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 		bondDenom := k.sk.BondDenom(cacheCtx)
 		coins := sdk.Coins{sdk.NewCoin(bondDenom, osmoAmount)}
-		err = k.mk.MintNativeCoins(cacheCtx, types.ModuleName, coins)
+		err = k.bk.MintCoins(cacheCtx, types.ModuleName, coins)
 		if err != nil {
 			return err
 		}
@@ -367,7 +367,7 @@ func (k Keeper) forceUndelegateAndBurnOsmoTokens(ctx sdk.Context,
 		if err != nil {
 			return err
 		}
-		err = k.mk.BurnNativeCoins(cacheCtx, types.ModuleName, undelegatedCoins)
+		err = k.bk.BurnCoins(cacheCtx, types.ModuleName, undelegatedCoins)
 		if err != nil {
 			return err
 		}
