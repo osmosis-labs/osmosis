@@ -31,6 +31,7 @@ func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 	}, nil
 }
 
+// afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
 	denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
