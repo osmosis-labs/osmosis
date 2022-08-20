@@ -188,7 +188,7 @@ func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 		name          string
 		proportions   types.DistributionProportions
 		preMintCoin   sdk.Coin
-		inflationCoin sdk.Coin
+		inflationCoin sdk.DecCoin
 
 		expectError bool
 	}{
@@ -196,19 +196,19 @@ func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 			name:          "default proportions",
 			proportions:   types.DefaultParams().DistributionProportions,
 			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
-			inflationCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
+			inflationCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
 		},
 		{
 			name:          "custom proportions",
 			proportions:   defaultDistributionProportions,
 			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(12345)),
-			inflationCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(12345)),
+			inflationCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(12345)),
 		},
 		{
 			name:          "did not pre-mint enough - error at first distribution (999 < 3000 * 1/3)",
 			proportions:   equalMintProportions,
 			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(999)),
-			inflationCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
+			inflationCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
 
 			expectError: true,
 		},
@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 			name:          "did not pre-mint enough - error at first distribution (1999 < 3000 * 2/3)",
 			proportions:   equalMintProportions,
 			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1999)),
-			inflationCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
+			inflationCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
 
 			expectError: true,
 		},
@@ -224,10 +224,11 @@ func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 			name:          "did not pre-mint enough - error at first distribution (2999 < 3000)",
 			proportions:   equalMintProportions,
 			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2999)),
-			inflationCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
+			inflationCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
 
 			expectError: true,
 		},
+		// TODO: test with non-whole decimal
 	}
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
@@ -240,7 +241,7 @@ func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 
 			mintKeeper := suite.App.MintKeeper
 
-			inflationAmount := tc.inflationCoin.Amount.ToDec()
+			inflationAmount := tc.inflationCoin.Amount
 
 			// set distribution proportions
 			params := mintKeeper.GetParams(ctx)
@@ -289,7 +290,7 @@ func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 			// Developer vesting module account is unaffected.
 			// Mint module account balance is decreased by the distributed amount.
 			// We mint the amount equal to tc.preMintCoin that increases the supply
-			suite.ValidateSupplyAndMintModuleAccounts(sdk.NewInt(keeper.DeveloperVestingAmount), oldMintModuleBalanceAmount.Sub(tc.inflationCoin.Amount), tc.preMintCoin.Amount)
+			suite.ValidateSupplyAndMintModuleAccounts(sdk.NewInt(keeper.DeveloperVestingAmount), oldMintModuleBalanceAmount.Sub(tc.inflationCoin.Amount.TruncateInt()), tc.preMintCoin.Amount)
 		})
 	}
 }
@@ -353,7 +354,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 		preMintCoin sdk.Coin
 
 		recepientModule string
-		mintedCoin      sdk.Coin
+		mintedCoin      sdk.DecCoin
 		proportion      sdk.Dec
 
 		expectedError bool
@@ -363,21 +364,21 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 
 			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			mintedCoin:      sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 			proportion:      sdk.NewDec(1),
 		},
 		"pre-mint > distribute - developer vesting module - two thirds - success": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(101)),
 
 			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			mintedCoin:      sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 			proportion:      sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
 		},
 		"pre-mint < distribute (0) - error": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
 
 			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			mintedCoin:      sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 			proportion:      sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
 
 			expectedError: true,
@@ -386,7 +387,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 
 			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewCoin(denomDoesNotExist, sdk.NewInt(100)),
+			mintedCoin:      sdk.NewDecCoin(denomDoesNotExist, sdk.NewInt(100)),
 			proportion:      sdk.NewDec(1),
 
 			expectedError: true,
@@ -395,7 +396,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 
 			recepientModule: moduleAccountDoesNotExist,
-			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			mintedCoin:      sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 			proportion:      sdk.NewDec(1),
 
 			expectPanic: true,
@@ -404,11 +405,12 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(300)),
 
 			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			mintedCoin:      sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 			proportion:      sdk.NewDec(2),
 
 			expectedError: true,
 		},
+		// TODO: test with non-whole decimal
 	}
 	for name, tc := range tests {
 		suite.Run(name, func() {
@@ -424,7 +426,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 
 				// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
 				// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-				expectedDistributed := tc.mintedCoin.Amount.ToDec().Mul(tc.proportion).TruncateInt()
+				expectedDistributed := tc.mintedCoin.Amount.Mul(tc.proportion).TruncateInt()
 				oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintedCoin.Denom).Amount
 				oldRecepientModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(tc.recepientModule), tc.mintedCoin.Denom).Amount
 
@@ -476,11 +478,11 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 
 		validDevRewardsProportion = sdk.NewDecWithPrec(153, 3)
 
-		distributionCoin = sdk.NewCoin(sdk.DefaultBondDenom, validLargeDistributionAmount.ToDec().Mul(validDevRewardsProportion).TruncateInt())
+		distributionCoin = sdk.NewDecCoin(sdk.DefaultBondDenom, validLargeDistributionAmount.ToDec().Mul(validDevRewardsProportion).TruncateInt())
 	)
 
 	tests := map[string]struct {
-		distribution       sdk.Coin
+		distribution       sdk.DecCoin
 		proportion         sdk.Dec
 		recepientAddresses []types.WeightedAddress
 
@@ -506,7 +508,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			},
 		},
 		"valid case with 3 weighted addresses and custom large mint amount under pre mint": {
-			distribution: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(939_123_546_789)),
+			distribution: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(939_123_546_789)),
 			proportion:   sdk.NewDecWithPrec(31347, 5),
 			recepientAddresses: []types.WeightedAddress{ // .231 + .4 + .369
 				{
@@ -546,7 +548,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			proportion:   sdk.NewDecWithPrec(153, 3),
 		},
 		"valid case with 0 amount of total minted coin": {
-			distribution: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+			distribution: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
 			proportion:   sdk.NewDecWithPrec(153, 3),
 			recepientAddresses: []types.WeightedAddress{
 				{
@@ -573,7 +575,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			allowBalanceChange: true,
 		},
 		"distribute * proportion > developer vesting amount - error": {
-			distribution: sdk.NewCoin(sdk.DefaultBondDenom, validLargeDistributionAmountAddOne),
+			distribution: sdk.NewDecCoin(sdk.DefaultBondDenom, validLargeDistributionAmountAddOne),
 			proportion:   sdk.OneDec(),
 			recepientAddresses: []types.WeightedAddress{
 				{
@@ -593,7 +595,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 				},
 			},
 
-			expectedCommunityPoolNonTruncationDistributions: distributionCoin.Amount.ToDec().TruncateInt64(),
+			expectedCommunityPoolNonTruncationDistributions: distributionCoin.Amount.TruncateInt64(),
 		},
 		"valid case with 2 addresses - empty string (distributes to community pool) and regular address (distributes to the address)": {
 			distribution: distributionCoin,
@@ -610,8 +612,10 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			},
 
 			// expectedCommunityPoolNonTruncationDistributions = distribution * proportion * empty weighted address weight
-			expectedCommunityPoolNonTruncationDistributions: distributionCoin.Amount.ToDec().TruncateInt().ToDec().Mul(sdk.NewDecWithPrec(5, 1)).TruncateInt64(),
+			expectedCommunityPoolNonTruncationDistributions: distributionCoin.Amount.TruncateInt().ToDec().Mul(sdk.NewDecWithPrec(5, 1)).TruncateInt64(),
 		},
+
+		// TODO: case with decimal number (not whole number)
 	}
 	for name, tc := range tests {
 		suite.Run(name, func() {
@@ -622,7 +626,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			ctx := suite.Ctx
 
 			// Setup.
-			expectedDistributed := tc.distribution.Amount.ToDec()
+			expectedDistributed := tc.distribution.Amount
 
 			oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.distribution.Denom).Amount
 			oldDeveloperVestingModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), tc.distribution.Denom).Amount
@@ -687,7 +691,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			expectedTruncationDelta := sdk.ZeroDec()
 
 			// Suppply offset delta is equal to the dev rewards
-			suite.Require().Equal(oldSupplyOffsetAmount.Add(tc.distribution.Amount).Int64(), actualSupplyOffsetAmount.Int64())
+			suite.Require().Equal(oldSupplyOffsetAmount.Add(tc.distribution.Amount.TruncateInt()).Int64(), actualSupplyOffsetAmount.Int64())
 
 			for i, weightedAddress := range tc.recepientAddresses {
 				expectedAllocation := expectedDistributed.Mul(tc.recepientAddresses[i].Weight)
@@ -737,7 +741,7 @@ func (suite *KeeperTestSuite) TestGetMintedAmount() {
 		preMinted      sdk.Coins
 		// preVest is necessary to ensure that vesting does not
 		// affect the minted amount.
-		preVest sdk.Coin
+		preVest sdk.DecCoin
 	}{
 		"zero minted": {
 			denom: sdk.DefaultBondDenom,
@@ -752,7 +756,7 @@ func (suite *KeeperTestSuite) TestGetMintedAmount() {
 		},
 		"vesting does not affect": {
 			denom:   sdk.DefaultBondDenom,
-			preVest: sdk.NewCoin(sdk.DefaultBondDenom, baseAmount),
+			preVest: sdk.NewDecCoin(sdk.DefaultBondDenom, baseAmount),
 
 			expectedAmount: sdk.ZeroInt(),
 		},
@@ -776,7 +780,7 @@ func (suite *KeeperTestSuite) TestGetMintedAmount() {
 				suite.Require().NoError(err)
 			}
 
-			if !tc.preVest.IsNil() {
+			if tc.preVest.IsValid() {
 				_, err := mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
 				suite.Require().NoError(err)
 			}
@@ -797,7 +801,7 @@ func (suite *KeeperTestSuite) TestGetDeveloperVestedAmount() {
 		// preminted is necessary to ensure that minting does not
 		// affect the minted amount.
 		preMinted sdk.Coins
-		preVest   sdk.Coin
+		preVest   sdk.DecCoin
 
 		expectedAmount sdk.Int
 	}{
@@ -814,19 +818,19 @@ func (suite *KeeperTestSuite) TestGetDeveloperVestedAmount() {
 		},
 		"pre-vested amount equals to vested": {
 			denom:   sdk.DefaultBondDenom,
-			preVest: sdk.NewCoin(sdk.DefaultBondDenom, baseAmount),
+			preVest: sdk.NewDecCoin(sdk.DefaultBondDenom, baseAmount),
 
 			expectedAmount: baseAmount,
 		},
 		"max vested": {
 			denom:   sdk.DefaultBondDenom,
-			preVest: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount)),
+			preVest: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount)),
 
 			expectedAmount: sdk.NewInt(keeper.DeveloperVestingAmount),
 		},
 		"pre vested other denom": {
 			denom:   sdk.DefaultBondDenom,
-			preVest: sdk.NewCoin(otherDenom, baseAmount),
+			preVest: sdk.NewDecCoin(otherDenom, baseAmount),
 
 			expectedAmount: sdk.ZeroInt(),
 		},
@@ -844,7 +848,7 @@ func (suite *KeeperTestSuite) TestGetDeveloperVestedAmount() {
 				suite.Require().NoError(err)
 			}
 
-			if !tc.preVest.IsNil() {
+			if tc.preVest.IsValid() {
 				_, err := mintKeeper.DistributeDeveloperRewards(ctx, tc.preVest, mintKeeper.GetParams(ctx).WeightedDeveloperRewardsReceivers)
 				suite.Require().NoError(err)
 			}
