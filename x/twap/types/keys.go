@@ -28,6 +28,7 @@ var (
 	mostRecentTWAPsNoSeparator         = "recent_twap"
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
+	expectedLenOfKeySeparators         = 5
 
 	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
 	// keySeparatorPlusOne is used for creating prefixes for the key end in iterators
@@ -66,8 +67,13 @@ func FormatHistoricalPoolIndexTimePrefix(poolId uint64, accumulatorWriteTime tim
 func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
-	if len(s) != 5 || s[0] != historicalTWAPTimeIndexNoSeparator {
-		panic("Called ParseTimeFromHistoricalTimeIndexKey on incorrectly formatted key")
+	if len(s) != expectedLenOfKeySeparators {
+		errString := fmt.Sprintf("key incorrect length: expected length (%d), actual length (%d)", expectedLenOfKeySeparators, len(s))
+		panic(errString)
+	}
+	if s[0] != historicalTWAPTimeIndexNoSeparator {
+		errString := fmt.Sprintf("historicalTWAPTimeIndexNoSeparator not formatted correctly: expected separator (%s), actual separator (%v)", historicalTWAPTimeIndexNoSeparator, s[0])
+		panic(errString)
 	}
 	t, err := osmoutils.ParseTimeString(s[1])
 	if err != nil {
@@ -79,8 +85,11 @@ func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
 func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
-	if len(s) != 5 || s[0] != historicalTWAPPoolIndexNoSeparator {
-		return time.Time{}, fmt.Errorf("Called ParseTimeFromHistoricalPoolIndexKey on incorrectly formatted key: %v", s)
+	if len(s) != expectedLenOfKeySeparators {
+		return time.Time{}, fmt.Errorf("key incorrect length: expected length (%d), actual length (%d)", expectedLenOfKeySeparators, len(s))
+	}
+	if s[0] != historicalTWAPPoolIndexNoSeparator {
+		return time.Time{}, fmt.Errorf("historicalTWAPTimeIndexNoSeparator not formatted correctly: expected separator (%s), actual separator (%v)", historicalTWAPPoolIndexNoSeparator, s[0])
 	}
 	t, err := osmoutils.ParseTimeString(s[2])
 	if err != nil {

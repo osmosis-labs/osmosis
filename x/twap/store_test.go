@@ -1,6 +1,7 @@
 package twap_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
@@ -139,47 +140,50 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		recordsToSet   []types.TwapRecord
 		input          getRecordInput
 		expectedRecord types.TwapRecord
-		expErr         bool
+		expErr         error
 	}{
-		"no entries":            {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, true},
-		"get at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultInputAt(baseTime), baseRecord, false},
-		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, true},
+		"no entries": {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+			" Try storing the accumulator value. (requested time %s)", baseTime)},
+		"get at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultInputAt(baseTime), baseRecord, nil},
+		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, fmt.Errorf(" Provided asset0denom (%s) does not match twap.Asset0Denom (%s)", defaultRevInputAt(baseTime).asset0Denom, baseRecord.GetAsset0Denom())},
 
 		"get latest (exact) w/ past entries": {
-			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(baseTime), baseRecord, false},
+			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(baseTime), baseRecord, nil},
 		"get entry (exact) w/ a subsequent entry": {
-			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tMin1), tMin1Record, false},
+			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tMin1), tMin1Record, nil},
 		"get sandwitched entry (exact)": {
-			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, false},
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, nil},
 		"rev sandwitched entry (exact)": {
-			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, true},
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, fmt.Errorf(" Provided asset0denom (%s) does not match twap.Asset0Denom (%s)", defaultRevInputAt(baseTime).asset0Denom, baseRecord.GetAsset0Denom())},
 
-		"get future":                 {[]types.TwapRecord{baseRecord}, defaultInputAt(tPlus1), baseRecord, false},
-		"get future w/ past entries": {[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tPlus1), baseRecord, false},
+		"get future":                 {[]types.TwapRecord{baseRecord}, defaultInputAt(tPlus1), baseRecord, nil},
+		"get future w/ past entries": {[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tPlus1), baseRecord, nil},
 
 		"get in between entries (2 entry)": {
 			[]types.TwapRecord{tMin1Record, baseRecord},
-			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, false},
+			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, nil},
 		"get in between entries (3 entry)": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, false},
+			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, nil},
 		"get in between entries (3 entry) #2": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			defaultInputAt(baseTime.Add(time.Millisecond)), baseRecord, false},
+			defaultInputAt(baseTime.Add(time.Millisecond)), baseRecord, nil},
 
 		"query too old": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 			defaultInputAt(baseTime.Add(-time.Second * 2)),
-			baseRecord, true},
+			baseRecord, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+				" Try storing the accumulator value. (requested time %s)", baseTime.Add(-time.Second*2))},
 
 		"non-existent pool ID": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			wrongPoolIdInputAt(baseTime), baseRecord, true},
+			wrongPoolIdInputAt(baseTime), baseRecord, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+				" Try storing the accumulator value. (requested time %s)", baseTime)},
 		"pool2 record get": {
 			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
 			input:          wrongPoolIdInputAt(baseTime),
 			expectedRecord: newEmptyPriceRecord(2, baseTime, denom0, denom1),
-			expErr:         false},
+			expErr:         nil},
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
@@ -190,8 +194,8 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 			record, err := s.twapkeeper.GetRecordAtOrBeforeTime(
 				s.Ctx,
 				test.input.poolId, test.input.t, test.input.asset0Denom, test.input.asset1Denom)
-			if test.expErr {
-				s.Require().Error(err)
+			if test.expErr != nil {
+				s.Require().Equal(test.expErr, err)
 				return
 			}
 			s.Require().NoError(err)

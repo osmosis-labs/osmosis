@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -39,20 +40,20 @@ func TestLexicographicalOrderDenoms(t *testing.T) {
 		secondDenom    string
 		expectedDenomA string
 		expectedDenomB string
-		expectErr      bool
+		expectedErr    error
 	}{
-		"basic":    {"A", "B", "A", "B", false},
-		"basicRev": {"B", "A", "A", "B", false},
+		"basic":    {"A", "B", "A", "B", nil},
+		"basicRev": {"B", "A", "A", "B", nil},
 		"realDenoms": {"uosmo", "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
-			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", "uosmo", false},
-		"sameDenom": {"A", "A", "", "", true},
+			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", "uosmo", nil},
+		"sameDenom": {"A", "A", "", "", fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", "A", "A")},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// system under test
 			denomA, denomB, err := LexicographicalOrderDenoms(tt.firstDenom, tt.secondDenom)
-			if tt.expectErr {
-				require.Error(t, err)
+			if tt.expectedErr != nil {
+				require.Equal(t, tt.expectedErr, err)
 			} else {
 				require.Equal(t, denomA, tt.expectedDenomA)
 				require.Equal(t, denomB, tt.expectedDenomB)
