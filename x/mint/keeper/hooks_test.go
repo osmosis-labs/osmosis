@@ -535,10 +535,16 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	suite.Require().Equal(expectedSupply.TruncateInt64(), supply.Amount.Int64())
 
 	devRewardsDelta := sdk.ZeroDec()
+
 	epochProvisionsDelta := genesisEpochProvisionsDec.Sub(genesisEpochProvisionsDec.TruncateInt().ToDec()).Mul(sdk.NewDec(defaultReductionPeriodInEpochs))
 
+	epochProvisions := genesisEpochProvisionsDec
+	reductionEpoch := defaultMintingRewardsDistributionStartEpoch
+
+	expectedSupply := sdk.ZeroDec()
+
 	// Actual test for running AfterEpochEnd hook thirdeningEpoch times.
-	for i := int64(1); i <= defaultReductionPeriodInEpochs; i++ {
+	for i := int64(1); i <= defaultReductionPeriodInEpochs*2; i++ {
 		developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
 
 		// System undert test.
@@ -551,7 +557,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 		// be off by reductionPeriodInEpochs * (genesisEpochProvisionsDec - truncatedEpochProvisions)
 		// Therefore, we store this delta in epochProvisionsDelta to add to the actual supply to compare
 		// to expected at the end.
-		truncatedEpochProvisions := genesisEpochProvisionsDec.TruncateInt().ToDec()
+		truncatedEpochProvisions := epochProvisions.TruncateInt().ToDec()
 
 		// We want supply with offset to exclude unvested developer rewards
 		// Truncation also happens when subtracting dev rewards.
@@ -560,6 +566,8 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 
 		// We aim to exclude developer account balance from the supply with offset calculation.
 		developerAccountBalance := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
+
+		curDevRewadsDelta := sdk.ZeroDec()
 
 		// Make sure developer account balance has decreased by devRewards.
 		// This check is now failing because of rounding errors.
@@ -572,18 +580,28 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 			// This is supposed to be equal but is failing due to the rounding errors from devRewards.
 			suite.Require().NotEqual(expectedDeveloperAccountBalanceAfterHook, actualDeveloperAccountBalanceAfterHook)
 
-			devRewardsDelta = devRewardsDelta.Add(actualDeveloperAccountBalanceAfterHook.Sub(expectedDeveloperAccountBalanceAfterHook))
+			curDevRewadsDelta = actualDeveloperAccountBalanceAfterHook.Sub(expectedDeveloperAccountBalanceAfterHook)
+			devRewardsDelta = devRewardsDelta.Add(curDevRewadsDelta)
 		}
 
 		expectedSupply = expectedSupply.Add(truncatedEpochProvisions).Sub(devRewards)
-		suite.Require().Equal(expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount)
+		suite.Require().Equal(expectedSupply.RoundInt(), app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount, i)
 
 		expectedSupplyWithOffset = expectedSupply.Sub(developerAccountBalance.Amount.ToDec())
 		suite.Require().Equal(expectedSupplyWithOffset.RoundInt(), app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount)
 
 		// Validate that the epoch provisions have not been reduced.
-		suite.Require().Equal(defaultMintingRewardsDistributionStartEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
-		suite.Require().Equal(defaultGenesisEpochProvisions, mintKeeper.GetMinter(ctx).EpochProvisions.String())
+		suite.Require().Equal(reductionEpoch, mintKeeper.GetLastReductionEpochNum(ctx), i)
+		suite.Require().Equal(epochProvisions.String(), mintKeeper.GetMinter(ctx).EpochProvisions.String())
+
+		expectedSupply = expectedSupply.Add(epochProvisionsDelta).Sub(devRewardsDelta).Sub()
+		actualTotalProvisionedSupply := app.BankKeeper.GetSupplyWithOffset(ctx, sdk.DefaultBondDenom).Amount.ToDec()
+		suite.Require().Equal(expectedSupply, actualTotalProvisionedSupply.Add(devRewardsDelta).Add(epochProvisionsDelta))
+
+		if defaultReductionPeriodInEpochs == i {
+			epochProvisions = mintParams.ReductionFactor.Mul(epochProvisions)
+			reductionEpoch = i + 1
+		}
 	}
 
 	// Validate total supply.
