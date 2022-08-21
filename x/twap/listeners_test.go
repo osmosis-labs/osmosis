@@ -97,7 +97,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 
 	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
-	expectedHistoricalTwap, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedHistoricalTwap, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
 	s.EndBlock()
@@ -107,7 +107,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.RunBasicSwap(poolId)
 
 	// accumulators are default right here
-	expectedLatestTwapUpToAccum, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedLatestTwapUpToAccum, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 	// ensure different spot prices
 	s.Require().NotEqual(expectedHistoricalTwap.P0LastSpotPrice, expectedLatestTwapUpToAccum.P0LastSpotPrice)
@@ -143,7 +143,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 func (s *TestSuite) TestJoinAndEndBlockTriggeringSave() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
-	expectedHistoricalTwap, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedHistoricalTwap, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
 	s.EndBlock()
@@ -153,7 +153,7 @@ func (s *TestSuite) TestJoinAndEndBlockTriggeringSave() {
 	s.RunBasicJoin(poolId)
 
 	// accumulators are default right here
-	expectedLatestTwapUpToAccum, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedLatestTwapUpToAccum, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
 	s.EndBlock()
