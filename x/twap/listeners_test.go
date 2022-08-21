@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
-	keeper "github.com/osmosis-labs/osmosis/v11/x/twap"
+	"github.com/osmosis-labs/osmosis/v11/x/twap"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
@@ -50,7 +50,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
 			for i := len(denomPairs0); i < 0; i-- {
-				expectedRecord, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
 				s.Require().NoError(err)
 				expectedRecords = append(expectedRecords, expectedRecord)
 			}
