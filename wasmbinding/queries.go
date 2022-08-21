@@ -101,7 +101,7 @@ func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *bindings.Estim
 	}
 
 	subCtx, _ := ctx.CacheContext()
-	estimate, err := EstimatePerformSwap(qp.gammKeeper, subCtx, nil, estimateSwap.ToSwapMsg())
+	estimate, err := EstimatePerformSwap(qp.gammKeeper, subCtx, estimateSwap.ToSwapMsg())
 	return estimate, err
 }
 

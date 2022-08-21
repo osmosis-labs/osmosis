@@ -273,7 +273,7 @@ func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.Ac
 }
 
 // EstimatePerformSwap can be used to query
-func EstimatePerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, swap *bindings.SwapMsg) (*bindings.SwapAmount, error) {
+func EstimatePerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, swap *bindings.SwapMsg) (*bindings.SwapAmount, error) {
 	if swap == nil {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap null swap"}
 	}
