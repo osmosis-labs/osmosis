@@ -7,10 +7,6 @@ use cw_storage_plus::{Item, Map};
 
 use crate::{msg::QuotaMsg, ContractError};
 
-pub const RESET_TIME_DAILY: u64 = 60 * 60 * 24;
-pub const RESET_TIME_WEEKLY: u64 = 60 * 60 * 24 * 7;
-pub const RESET_TIME_MONTHLY: u64 = 60 * 60 * 24 * 30;
-
 /// This represents the key for our rate limiting tracker. A tuple of a denom and
 /// a channel. When interactic with storage, it's preffered to use this struct
 /// and call path.into() on it to convert it to the composite key of the
@@ -271,8 +267,12 @@ pub const IBCMODULE: Item<Addr> = Item::new("ibc_module");
 pub const RATE_LIMIT_TRACKERS: Map<(String, String), Vec<RateLimit>> = Map::new("flow");
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
+
+    pub const RESET_TIME_DAILY: u64 = 60 * 60 * 24;
+    pub const RESET_TIME_WEEKLY: u64 = 60 * 60 * 24 * 7;
+    pub const RESET_TIME_MONTHLY: u64 = 60 * 60 * 24 * 30;
 
     #[test]
     fn flow() {

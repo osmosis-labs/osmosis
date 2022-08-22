@@ -56,18 +56,6 @@ pub struct InstantiateMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    SendPacket {
-        channel_id: String,
-        denom: String,
-        channel_value: u128,
-        funds: u128,
-    },
-    RecvPacket {
-        channel_id: String,
-        denom: String,
-        channel_value: u128,
-        funds: u128,
-    },
     AddPath {
         channel_id: String,
         denom: String,
@@ -88,6 +76,23 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     GetQuotas { channel_id: String, denom: String },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum SudoMsg {
+    SendPacket {
+        channel_id: String,
+        denom: String,
+        channel_value: u128,
+        funds: u128,
+    },
+    RecvPacket {
+        channel_id: String,
+        denom: String,
+        channel_value: u128,
+        funds: u128,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
