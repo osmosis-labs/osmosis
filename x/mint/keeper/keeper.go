@@ -315,3 +315,21 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 	}
 	return nil
 }
+
+// getDeveloperVestedAmount returns the vestes amount from the developer vesting module account.
+func (k Keeper) GetDeveloperVestedAmount(ctx sdk.Context, denom string) sdk.Int {
+	unvestedAmount := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), denom).Amount
+	vestedAmount := sdk.NewInt(developerVestingAmount).Sub(unvestedAmount)
+	return vestedAmount
+}
+
+// getInflationAmount returns the amount minted by the mint module account
+// without considering the developer rewards module account.
+// The developer rewards were pre-minted to its own module account at genesis.
+// Therefore, the developer rewards can be distributed separately.
+// As a result, we should not consider the original developer
+// vesting amount when calculating the minted amount.
+func (k Keeper) GetInflationAmount(ctx sdk.Context, denom string) sdk.Int {
+	totalSupply := k.bankKeeper.GetSupply(ctx, denom).Amount
+	return totalSupply.Sub(sdk.NewInt(developerVestingAmount))
+}
