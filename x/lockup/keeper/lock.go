@@ -10,8 +10,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v10/store"
-	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/store"
+	"github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 )
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
@@ -569,7 +569,7 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 	}
 
 	modAddr := k.ak.GetModuleAddress(types.ModuleName)
-	err = k.dk.FundCommunityPool(ctx, coins, modAddr)
+	err = k.ck.FundCommunityPool(ctx, coins, modAddr)
 	if err != nil {
 		return nil, err
 	}

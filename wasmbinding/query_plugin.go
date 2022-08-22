@@ -12,7 +12,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v10/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v11/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries

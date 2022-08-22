@@ -12,8 +12,8 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
 )
 
 type NodeConfig struct {

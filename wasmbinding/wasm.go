@@ -9,9 +9,9 @@ import (
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
-	twap "github.com/osmosis-labs/osmosis/v10/x/gamm/twap"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/keeper"
+	gammkeeper "github.com/osmosis-labs/osmosis/v11/x/gamm/keeper"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v11/x/tokenfactory/keeper"
+	twap "github.com/osmosis-labs/osmosis/v11/x/twap"
 )
 
 func RegisterCustomPlugins(
