@@ -56,13 +56,14 @@ Ref: https://github.com/osmosis-labs/osmosis/issues/1919
 
 Currently, `x/mint` `AfterEpochEnd` hook is focused on several goals such as:
 - Determining when to start or update the provisions.
-- Determining the if the current epoch is the reduction epoch.
-- Handling the reductions
-- Minting and distribution provisions.
+- Determining if the current epoch is the reduction epoch.
+- Handling the reductions.
+- Minting and distributing provisions.
 
-As a result, it is difficult to reason about it, assert correctness and make changes.
+As a result, it is difficult to reason about it, assert its correctness and make new changes.
 
-All minting and distribution logic can be encapsulated into a separate function for better testability and readability.
+All minting and distribution logic can be encapsulated into a separate function for better testability and readability. This encapsulation
+also helps to achieve an increased separation of concerns.
 
 ## Decisions
 
@@ -70,7 +71,8 @@ All minting and distribution logic can be encapsulated into a separate function 
 
 #### Summary
 
-We will **minimize truncations and use decimals for estimating distributions**. For that, the `getProportion` can now return decimals so that we can use the actual (non-truncated) value for calculating each developer's reward.
+We will **minimize truncations and use decimals for estimating distributions**. Specifically, the [`getProportions`](https://github.com/osmosis-labs/osmosis/blob/724d2cacb38596919c29dd3f9173c1ce0c58804d/x/mint/keeper/keeper.go#L477) function will take decimal value and return decimal result so that we can use the (non-truncated) value with increased precision for futher calculating each developer's reward and inflation provisions. Additionally, functions that handle distributions logic such as (`distributeDeveloperVestingProvisions`)[https://github.com/osmosis-labs/osmosis/blob/724d2cacb38596919c29dd3f9173c1ce0c58804d/x/mint/keeper/keeper.go#L286] will now take
+`sdk.DecCoin` as opposed to `sdk.Coin` for the same reason of having to operate on decimals with increased precision.
 
 #### Conseqeunces
 
