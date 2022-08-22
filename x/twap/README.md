@@ -63,7 +63,8 @@ func (k Keeper) GetArithmeticTwap(ctx sdk.Context,
 There are convenience methods for `GetArithmeticTwapToNow` which sets `endTime = ctx.BlockTime()`, and has minor gas reduction.
 For users who need TWAPs outside the 48 hours stored in the state machine, you can get the latest accumulation store record from `GetBeginBlockAccumulatorRecord`.
 
-All functions that call `LexicographicalOrderDenoms` (such as `getMostRecentRecordStoreRepresentation`, `getRecordAtOrBeforeTime`, and `NewTwapRecord`), both directly and indirectly, will swap the provided denoms to be in ascending lexicographical order. This means that regardless of input, asset0Denom is guaranteed to be lexicographically smaller than asset1Denom. If this does not occur, an error will be returned, likely indicating that the two denoms provided are equivalent (which is not allowed).
+All functions that call `LexicographicalOrderDenoms` (such as `getMostRecentRecordStoreRepresentation`, `getRecordAtOrBeforeTime`, and `NewTwapRecord`), both directly and indirectly, will swap the provided denoms to be in ascending lexicographical order. This means that regardless of input, asset0Denom is guaranteed to be lexicographically smaller than asset1Denom.
+If this does not occur, an error will be returned, likely indicating that the two denoms provided are equivalent (which is not allowed).
 
 ## Code layout
 
