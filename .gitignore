@@ -227,3 +227,4 @@ Cargo.lock
 
 # Ignores beaker state
 .beaker
+blocks.db

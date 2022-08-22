@@ -14,20 +14,19 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin("baz", sdk.NewInt(10000000)),
 )
 
-// PrepareUni2PoolWithAssets returns a Univ2 pool with the initial liquidity being the provided balances.
-func (s *KeeperTestHelper) PrepareUni2PoolWithAssets(asset1, asset2 sdk.Coin) uint64 {
-	return s.PrepareBalancerPoolWithPoolAsset(
-		[]balancer.PoolAsset{
-			{
-				Weight: sdk.NewInt(1),
-				Token:  asset1,
-			},
-			{
-				Weight: sdk.NewInt(1),
-				Token:  asset2,
-			},
-		},
-	)
+// PrepareBalancerPoolWithCoins returns a balancer pool
+// consisted of given coins with equal weight.
+func (s *KeeperTestHelper) PrepareBalancerPoolWithCoins(coins ...sdk.Coin) uint64 {
+	var poolAssets []balancer.PoolAsset
+	for _, coin := range coins {
+		poolAsset := balancer.PoolAsset{
+			Weight: sdk.NewInt(1),
+			Token:  coin,
+		}
+		poolAssets = append(poolAssets, poolAsset)
+	}
+
+	return s.PrepareBalancerPoolWithPoolAsset(poolAssets)
 }
 
 // PrepareBalancerPool returns a Balancer pool's pool-ID with pool params set in PrepareBalancerPoolWithPoolParams.
@@ -79,8 +78,6 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 
 // PrepareBalancerPoolWithPoolAsset sets up a Balancer pool with an array of assets.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolAsset(assets []balancer.PoolAsset) uint64 {
-	s.Require().Len(assets, 2)
-
 	// Add coins for pool creation fee + coins needed to mint balances
 	fundCoins := sdk.Coins{sdk.NewCoin("uosmo", sdk.NewInt(10000000000))}
 	for _, a := range assets {
