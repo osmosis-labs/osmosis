@@ -1,4 +1,4 @@
-name: Generate Mutation Test Errors 
+name: Generate Mutation Test Errors
 
 on:
   schedule:
@@ -15,13 +15,15 @@ jobs:
         name: Run mutation test
         continue-on-error: true
         run: make test-mutation
+        env:
+          MODULES: tokenfactory
       -
         name: Execute mutation test format script
         id: mutest-formatted
         run: |
           cat mutation_test_result.txt | grep -Ev "PASS" | grep -Ev "SKIP" | tee mutation_test_result.txt
       -
-        name: Generate code blocks 
+        name: Generate code blocks
         id: gen-code-blocks
         run: |
           cat mutation_test_result.txt  | sed "s# @@# @@\n\`\`\`go\n#g " | sed "s#FAIL#\`\`\`\nFAIL\n\n\n#g " > mutation_test_result.txt 
@@ -29,8 +31,8 @@ jobs:
         name: Get today's date
         id: date
         run: |
-          echo "::set-output name=today::$(date "+%Y/%m/%d")" 
-      - 
+          echo "::set-output name=today::$(date "+%Y/%m/%d")"
+      -
         name: Read mutation_test_result file
         id: result
         uses: juliangruber/read-file-action@v1

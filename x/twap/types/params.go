@@ -9,6 +9,8 @@ import (
 // Parameter store keys.
 var (
 	KeyPruneEpochIdentifier = []byte("PruneEpochIdentifier")
+
+	_ paramtypes.ParamSet = &Params{}
 )
 
 const defaultPruneEpochIdentifier = "day"
