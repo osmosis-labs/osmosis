@@ -6,7 +6,7 @@
 
 ## Status
 
-Draft: https://github.com/osmosis-labs/osmosis/pull/2342
+Draft: <https://github.com/osmosis-labs/osmosis/pull/2342>
 
 ## Abstract
 
@@ -22,20 +22,20 @@ follow a distinct distribution logic from the rest of the provisions. While that
 
 ### Truncations
 
-Ref: https://github.com/osmosis-labs/osmosis/issues/1917
+Ref: <https://github.com/osmosis-labs/osmosis/issues/1917>
 
 Ultimately, the major sources of the truncation issues are some SDK interfaces such as in [`x/bank`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) and [`x/distribution`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L255-L256).  These interfaces operate on `sdk.Coin` that uses `sdk.Int` for amounts. To use these interfaces, we always round down to the nearest integer by [truncating decimal provisions](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L290). While we operate on amounts with the precision of 6 decimals by using exponentiation and assuming that 1 `sdk.Int` is equal to `1 / 10^6` OSMO, this still does not allow us to observe enough accuracy. As a result, it is possible to under-mint. `sdk.Dec` has a precision of `18` decimals. By using it in conjunction with the above  `1 / 10^6` downscaling allows us to achieve a precision of `6 + 18 = 24` decimals. According to tests, this precision is sufficient to accurately represent the projected amounts and achieve the expected supply after [30 years of operations](https://github.com/osmosis-labs/osmosis/blob/724d2cacb38596919c29dd3f9173c1ce0c58804d/x/mint/keeper/hooks_test.go#L453).
 
 The expected amounts have been estimated in Python by using the following formulas:
 
-- Total Provisions `P(n)` at yeat `n`
+* Total Provisions `P(n)` at yeat `n`
 $$P(n) = EpochsPerPeriod * InitialRewardsPerEpoch * ( (1 - ReductionFactor^{n+1}) /  (1 - ReductionFactor) )$$
 
-- Total expected supply `S`
+* Total expected supply `S`
 $$S = InitialSupply + EpochsPerPeriod * ( InitialRewardsPerEpoch / (1 - ReductionFactor) )$$
 
 Lastly, developer reward receivers suffer the most because the large source of truncations is identified to occur in [the calculation of the proportions for each developer account](https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/keeper.go#L265):
-https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/hooks_test.go#L601-L602
+<https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/hooks_test.go#L601-L602>
 
 ### Additional Limitations
 
@@ -43,13 +43,13 @@ Next, we present the limitations that need to be eliminated to mitigate the abov
 
 #### Coupled Epoch Provisions of Different Kind
 
-Ref: https://github.com/osmosis-labs/osmosis/issues/2025
+Ref: <https://github.com/osmosis-labs/osmosis/issues/2025>
 
 Our developer vesting provisions have been coupled together with the rest of the provisions (futher referred to as "inflation provisions") despite having a distinct distribution logic. The divergence is summarized next:
 
 1. Developer vesting provisions are [pre-minted](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/genesis.go#L30) at genesis to the developer vesting module account.
 2. Since they are pre-minted, we do not need to be minting them every epoch contrary to the inflation provisions.
-   - This has caused several issues such as having to [over-mint](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/hooks.go#L54-L55) by the developer vesting rewards and then [burn them later](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L230).
+   * This has caused several issues such as having to [over-mint](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/hooks.go#L54-L55) by the developer vesting rewards and then [burn them later](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L230).
 3. The developer vesting provisions are [distributed from the developer vesting module account](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) while other rewards are [distributed from the mint module account](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L194).
 4. We use supply offsets to [offset the unvested developer provisions](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L275-L277) since we have pre-minted the full amount at genesis. The offsets
 are unrelated to the inflation provisions.
@@ -59,13 +59,13 @@ is highly coupled to the regular provisions, leading to increased complexity.
 
 #### Complicated `AfterEpochEnd` Hook
 
-Ref: https://github.com/osmosis-labs/osmosis/issues/1919
+Ref: <https://github.com/osmosis-labs/osmosis/issues/1919>
 
 Currently, `x/mint` `AfterEpochEnd` hook is focused on several goals such as:
-- Determining when to start or update the provisions.
-- Determining if the current epoch is the reduction epoch.
-- Handling the reductions.
-- Minting and distributing provisions.
+* Determining when to start or update the provisions.
+* Determining if the current epoch is the reduction epoch.
+* Handling the reductions.
+* Minting and distributing provisions.
 
 As a result, it is difficult to reason about it, assert its correctness and make new changes.
 
@@ -97,10 +97,10 @@ Divergence from the original implementation of the `x/mint` module as well as la
 #### Summary
 
 We will **add 2  decimal store indexes**:
-- for persisting truncation delta resulting from the mint module account across epochs
-https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/types/keys.go#L12-L21
-- for persisting truncation delta resulting from the developer rewards module account across epochs
-https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/types/keys.go#L23-L31 
+* for persisting truncation delta resulting from the mint module account across epochs
+<https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/types/keys.go#L12-L21>
+* for persisting truncation delta resulting from the developer rewards module account across epochs
+<https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/types/keys.go#L23-L31> 
 
 #### Consequences
 
@@ -122,10 +122,10 @@ Added complexity from handing 2 additional store indexes. It is mitigated by bet
 We will **decouple the developer vesting provisions from the inflation provisions**.
 
 The [**Draft Implementation**](https://github.com/osmosis-labs/osmosis/pull/2342) makes the distinction between the developer provisions and the inflation provisions clearer by:
-- [Distinctly splitting the two provisions in minter](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/types/minter.go#L54-L63)
-- Decoupling and distinctly handling each provision type separately:
-   - [inflation provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L167)
-   - [dev reward provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L283)
+* [Distinctly splitting the two provisions in minter](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/types/minter.go#L54-L63)
+* Decoupling and distinctly handling each provision type separately:
+   * [inflation provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L167)
+   * [dev reward provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L283)
 
 #### Consequences
 
@@ -145,7 +145,7 @@ This is a large change to the core logic of the `x/mint` module, requiring more 
 
 We will **encapsulate the minting and distribution logic from `AfterEpochEnd` hook into a separate function**.
 
-In the [**Draft Implementation**](https://github.com/osmosis-labs/osmosis/pull/2342), the logic for distributing all epoch provisions in the `AfterEpochEnd` hook has been moved to the [`distributeEpochProvisions` ](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/hooks.go#L49) function.
+In the [**Draft Implementation**](https://github.com/osmosis-labs/osmosis/pull/2342), the logic for distributing all epoch provisions in the `AfterEpochEnd` hook has been moved to the [distributeEpochProvisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/hooks.go#L49) function.
 
 It handles distributing both [inflation provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L147) and [developer vesting provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L153).
 
@@ -171,20 +171,19 @@ and minter/burned in the upgrade handler.
 The implementation proposed in this ADR is independent of distributing the old truncation deltas. It only ensures that there are no more discrepancies after the proposed proof-of-concept is deployed.
 
 The work for estimating and isolating the old truncation deltas has been performed in:
-- https://github.com/osmosis-labs/osmosis/pull/1874
-- https://github.com/osmosis-labs/osmosis/tree/roman/mint-rounding-year2-isolation
+* <https://github.com/osmosis-labs/osmosis/pull/1874>
+* <https://github.com/osmosis-labs/osmosis/tree/roman/mint-rounding-year2-isolation>
 
 As a result, as long as the next upgrade height and epoch are known, the old truncation deltas up until the last epoch before the
 upgrade can be estimated and applied in the upgrade handler.
 
-
 ## References
 
-* Draft POC: https://github.com/osmosis-labs/osmosis/pull/2342
-* Projected Inflation: https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db
+* Draft POC: <https://github.com/osmosis-labs/osmosis/pull/2342>
+* Projected Inflation: <https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db>
 * Isolating sources of the truncations:
-   - Logically: https://github.com/osmosis-labs/osmosis/pull/1874
-   - By module account: https://github.com/osmosis-labs/osmosis/tree/roman/mint-rounding-year2-isolation
-* Truncatins Issue: https://github.com/osmosis-labs/osmosis/issues/1919
-* Coupling Developer Vesting with Inflation Provisions: https://github.com/osmosis-labs/osmosis/issues/2025
-* Refactoring `x/mint` `AfterEpochEnd` Hook: https://github.com/osmosis-labs/osmosis/issues/1919
+   * Logically: <https://github.com/osmosis-labs/osmosis/pull/1874>
+   * By module account: <https://github.com/osmosis-labs/osmosis/tree/roman/mint-rounding-year2-isolation>
+* Truncatins Issue: <https://github.com/osmosis-labs/osmosis/issues/1919>
+* Coupling Developer Vesting with Inflation Provisions: <https://github.com/osmosis-labs/osmosis/issues/2025>
+* Refactoring `x/mint` `AfterEpochEnd` Hook: <https://github.com/osmosis-labs/osmosis/issues/1919>
