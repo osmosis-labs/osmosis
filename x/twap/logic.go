@@ -8,9 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
-// TODO: configure recordHistoryKeepPeriod via parameter.
-const recordHistoryKeepPeriod = 48 * time.Hour
-
 // afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
@@ -76,6 +73,8 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 // pruneRecords prunes twap records that happened earlier than recordHistoryKeepPeriod
 // before current block time.
 func (k Keeper) pruneRecords(ctx sdk.Context) error {
+	recordHistoryKeepPeriod := k.RecordHistoryKeepPeriod(ctx)
+
 	lastKeptTime := ctx.BlockTime().Add(-recordHistoryKeepPeriod)
 	return k.pruneRecordsBeforeTime(ctx, lastKeptTime)
 }
