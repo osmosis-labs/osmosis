@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
@@ -13,79 +14,66 @@ import (
 // and the correct state entries have been created upon pool creation.
 // This test includes test cases for swapping on the same block with pool creation.
 func (s *TestSuite) TestAfterPoolCreatedHook() {
-	tests := []struct {
-		name      string
+	tests := map[string]struct {
 		poolCoins sdk.Coins
 		// if this field is set true, we swap in the same block with pool creation
 		runSwap bool
 	}{
-		{
-			"two asset Pool, no swap on pool creation block",
+		"Uni2 Pool, no swap on pool creation block": {
 			defaultUniV2Coins,
 			false,
 		},
-		{
-			"two asset Pool, swap on pool creation block",
+		"Uni2 Pool, swap on pool creation block": {
 			defaultUniV2Coins,
 			true,
 		},
-		{
-			"Three asset balancer pool, no swap on pool creation block",
+		"Three asset balancer pool, no swap on pool creation block": {
 			defaultThreeAssetCoins,
 			false,
 		},
-		{
-			"Three asset balancer pool, no swap on pool creation block",
+		"Three asset balancer pool, swap on pool creation block": {
 			defaultThreeAssetCoins,
 			true,
 		},
 	}
 
-	for _, tc := range tests {
+	for name, tc := range tests {
 		s.SetupTest()
-		s.Run(tc.name, func() {
-			var poolId uint64
-			// prepare pool according to test case
-			poolId = s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
+		s.Run(name, func() {
+			poolId := s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
 
 			if tc.runSwap {
 				s.RunBasicSwap(poolId)
 			}
 
-			timeBeforeBeginBlock := s.Ctx.BlockTime()
-			s.twapkeeper.EndBlock(s.Ctx)
-			s.BeginNewBlock(false)
-
-			// check that creating a pool saved a new state of changed pools
-			s.Require().Equal([]uint64{poolId}, s.twapkeeper.GetChangedPools(s.Ctx))
-
-			// check that all twap records have been created for all denom pairs in pool
-			twapRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, poolId)
-			s.Require().NoError(err)
-			denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
-			s.Require().NoError(err)
-			denomPairs0, _ := types.GetAllUniqueDenomPairs(denoms)
-			s.Require().Equal(len(denomPairs0), len(twapRecords))
-
-			// check on the individual twap records
-			for _, twapRecord := range twapRecords {
-				s.Require().Equal(poolId, twapRecord.PoolId)
-				s.Require().Equal(sdk.ZeroDec(), twapRecord.P0ArithmeticTwapAccumulator)
-				s.Require().Equal(sdk.ZeroDec(), twapRecord.P1ArithmeticTwapAccumulator)
-
-				asset0sp, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, twapRecord.Asset0Denom, twapRecord.Asset1Denom)
+			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
+			denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
+			expectedRecords := []types.TwapRecord{}
+			for i := 0; i < len(denomPairs0); i++ {
+				expectedRecord, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
 				s.Require().NoError(err)
-				s.Require().Equal(asset0sp, twapRecord.P0LastSpotPrice)
-				s.Require().Equal(timeBeforeBeginBlock, twapRecord.Time)
-
-				// check that we have same state entry
-				storeRepresentationRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, twapRecord.Asset0Denom, twapRecord.Asset1Denom)
-				s.Require().Equal(twapRecord, storeRepresentationRecord)
-
-				twapRecordBeforeTime, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), twapRecord.Asset0Denom, twapRecord.Asset1Denom)
-				s.Require().NoError(err)
-				s.Require().Equal(twapRecord, twapRecordBeforeTime)
+				expectedRecords = append(expectedRecords, expectedRecord)
 			}
+
+			// check internal property, that the pool will go through EndBlock flow.
+			s.Require().Equal([]uint64{poolId}, s.twapkeeper.GetChangedPools(s.Ctx))
+			s.twapkeeper.EndBlock(s.Ctx)
+			s.Commit()
+
+			// check on the correctness of all individual twap records
+			for i := 0; i < len(denomPairs0); i++ {
+				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+				s.Require().NoError(err)
+				s.Require().Equal(expectedRecords[i], actualRecord)
+				actualRecord, err = s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denomPairs0[i], denomPairs1[i])
+				s.Require().NoError(err)
+				s.Require().Equal(expectedRecords[i], actualRecord)
+			}
+
+			// consistency check that the number of records is exactly equal to the number of denompairs
+			allRecords, err := s.twapkeeper.GetAllMostRecentRecordsForPool(s.Ctx, poolId)
+			s.Require().NoError(err)
+			s.Require().Equal(len(denomPairs0), len(allRecords))
 		})
 	}
 }
