@@ -174,61 +174,67 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
-	var (
-		equalMintProportions = types.DistributionProportions{
-			Staking:          sdk.NewDecWithPrec(1, 1),
-			PoolIncentives:   sdk.NewDecWithPrec(1, 1),
-			DeveloperRewards: sdk.NewDecWithPrec(1, 1),
-			CommunityPool:    sdk.NewDecWithPrec(7, 1),
-		}
-	)
-
+func (suite *KeeperTestSuite) TestDistributeInflationProvisions() {
 	tests := []struct {
-		name          string
-		proportions   types.DistributionProportions
-		preMintCoin   sdk.Coin
-		inflationCoin sdk.DecCoin
+		preExistingTruncationDelta sdk.Dec
 
-		expectError bool
+		name                string
+		proportions         types.DistributionProportions
+		inflationProvisions sdk.DecCoin
+
+		expectedDistributed sdk.Int
+		// N.B.: if floor(preExistingTruncationDelta + inflationProvisions.Amount) > floor(inflationProvisions.Amount),
+		// the difference goes to the community pool.
+		expectedCommunityPoolDistributionsFromTruncations sdk.Int
+		expectedLeftOverTruncationsDelta                  sdk.Dec
+		expectNoOp                                        bool
 	}{
 		{
-			name:          "default proportions",
-			proportions:   types.DefaultParams().DistributionProportions,
-			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
-			inflationCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
-		},
-		{
-			name:          "custom proportions",
-			proportions:   defaultDistributionProportions,
-			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(12345)),
-			inflationCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(12345)),
-		},
-		{
-			name:          "did not pre-mint enough - error at first distribution (999 < 3000 * 1/3)",
-			proportions:   equalMintProportions,
-			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(999)),
-			inflationCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
+			name:                "default proportions",
+			proportions:         types.DefaultParams().DistributionProportions,
+			inflationProvisions: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(10000)),
 
-			expectError: true,
+			expectedDistributed: sdk.NewInt(10000),
+			expectedCommunityPoolDistributionsFromTruncations: sdk.ZeroInt(),
+			expectedLeftOverTruncationsDelta:                  sdk.ZeroDec(),
 		},
 		{
-			name:          "did not pre-mint enough - error at first distribution (1999 < 3000 * 2/3)",
-			proportions:   equalMintProportions,
-			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1999)),
-			inflationCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
+			name:                "custom proportions",
+			proportions:         defaultDistributionProportions,
+			inflationProvisions: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(12345)),
 
-			expectError: true,
+			expectedDistributed: sdk.NewInt(12345),
+			expectedCommunityPoolDistributionsFromTruncations: sdk.ZeroInt(),
+			expectedLeftOverTruncationsDelta:                  sdk.ZeroDec(),
 		},
 		{
-			name:          "did not pre-mint enough - error at first distribution (2999 < 3000)",
-			proportions:   equalMintProportions,
-			preMintCoin:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2999)),
-			inflationCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(3000)),
+			name:                "default proportions - truncated decimal amount; no truncation delta pre-existing",
+			proportions:         defaultDistributionProportions,
+			inflationProvisions: sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1000099, 2)),
 
-			expectError: true,
+			expectedDistributed: sdk.NewInt(10000),
+			expectedCommunityPoolDistributionsFromTruncations: sdk.ZeroInt(),
+			expectedLeftOverTruncationsDelta:                  sdk.NewDecWithPrec(99, 2),
 		},
-		// TODO: test with non-whole decimal
+		{
+			name:                       "default proportions - truncated decimal amount; truncation delta of 0.1 pre-existing",
+			preExistingTruncationDelta: sdk.NewDecWithPrec(11, 2),
+			proportions:                defaultDistributionProportions,
+			inflationProvisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(100009, 1)),
+
+			expectedDistributed: sdk.NewInt(10000).Add(sdk.NewInt(1)),
+			expectedCommunityPoolDistributionsFromTruncations: sdk.OneInt(),
+			expectedLeftOverTruncationsDelta:                  sdk.NewDecWithPrec(1, 2),
+		},
+		{
+			name:                "xero provisions - no-op",
+			proportions:         types.DefaultParams().DistributionProportions,
+			inflationProvisions: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+
+			expectedDistributed: sdk.ZeroInt(),
+			expectedCommunityPoolDistributionsFromTruncations: sdk.ZeroInt(),
+			expectedLeftOverTruncationsDelta:                  sdk.ZeroDec(),
+		},
 	}
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
@@ -241,12 +247,16 @@ func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 
 			mintKeeper := suite.App.MintKeeper
 
-			inflationAmount := tc.inflationCoin.Amount
+			inflationAmount := tc.inflationProvisions.Amount
 
 			// set distribution proportions
 			params := mintKeeper.GetParams(ctx)
 			params.DistributionProportions = tc.proportions
 			mintKeeper.SetParams(ctx, params)
+
+			if !tc.preExistingTruncationDelta.IsNil() {
+				suite.NoError(mintKeeper.SetTruncationDelta(ctx, types.TruncatedInflationDeltaKey, tc.preExistingTruncationDelta))
+			}
 
 			// The mint coins are created from the mint module account exclusive of developer
 			// rewards. Developer rewards are distributed from the developer vesting module account.
@@ -259,21 +269,14 @@ func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 			// Community pool might receive more than the expected amount since it receives all the remaining coins after
 			// estimating and truncating values for pool incentives and staking.
 			expectedCommunityPoolAmount := inflationAmount.Sub(expectedPoolIncentivesAmount.ToDec()).Sub(expectedStakingAmount.ToDec()).TruncateInt()
-
-			// mints coins so supply exists on chain
-			suite.MintCoins(sdk.NewCoins(tc.preMintCoin))
-
-			oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.inflationCoin.Denom).Amount
+			expectedCommunityPoolAmount = expectedCommunityPoolAmount.Add(tc.expectedCommunityPoolDistributionsFromTruncations)
 
 			// System under test.
-			// TODO: assertions on the int result + test cases for truncation delta.
-			_, err := mintKeeper.DistributeInflationCoin(ctx, tc.inflationCoin)
-
-			if tc.expectError {
-				suite.Require().Error(err)
-				return
-			}
+			actualDistributed, err := mintKeeper.DistributeInflationProvisions(ctx, tc.inflationProvisions)
 			suite.Require().NoError(err)
+
+			// validate that the returned amount is correct.
+			suite.Require().Equal(tc.expectedDistributed, actualDistributed)
 
 			// validate distributions to fee collector.
 			feeCollectorBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(authtypes.FeeCollectorName), sdk.DefaultBondDenom).Amount
@@ -287,11 +290,15 @@ func (suite *KeeperTestSuite) TestDistributeInflationCoin() {
 			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount
 			suite.Require().Equal(expectedCommunityPoolAmount, actualCommunityPoolBalanceAmount)
 
+			// Validate left over truncations delta
+			actualLeftOverTruncationsDelta := mintKeeper.GetTruncationDelta(ctx, types.TruncatedInflationDeltaKey)
+			suite.Require().Equal(tc.expectedLeftOverTruncationsDelta, actualLeftOverTruncationsDelta)
+
 			// N.B:
 			// Developer vesting module account is unaffected.
 			// Mint module account balance is decreased by the distributed amount.
 			// We mint the amount equal to tc.preMintCoin that increases the supply
-			suite.ValidateSupplyAndMintModuleAccounts(sdk.NewInt(keeper.DeveloperVestingAmount), oldMintModuleBalanceAmount.Sub(tc.inflationCoin.Amount.TruncateInt()), tc.preMintCoin.Amount)
+			suite.ValidateSupplyAndMintModuleAccounts(sdk.NewInt(keeper.DeveloperVestingAmount), sdk.ZeroInt(), tc.expectedDistributed)
 		})
 	}
 }

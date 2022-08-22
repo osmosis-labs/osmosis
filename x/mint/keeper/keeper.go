@@ -116,6 +116,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 // GetInflationTruncationDelta returns the truncation delta.
+// TODO: test
 func (k Keeper) GetTruncationDelta(ctx sdk.Context, key []byte) sdk.Dec {
 	resultProto := sdk.DecProto{}
 	osmoutils.MustGet(ctx.KVStore(k.storeKey), key, &resultProto)
@@ -166,6 +167,10 @@ func (k Keeper) distributeEpochProvisions(ctx sdk.Context) (sdk.Int, error) {
 func (k Keeper) distributeInflationProvisions(ctx sdk.Context, inflationCoin sdk.DecCoin) (sdk.Int, error) {
 	params := k.GetParams(ctx)
 	proportions := params.DistributionProportions
+
+	if inflationCoin.Amount.Equal(sdk.ZeroDec()) {
+		return sdk.ZeroInt(), nil
+	}
 
 	// mint coins, update supply
 	err := k.mintInflationCoins(ctx, sdk.NewCoins(sdk.NewCoin(inflationCoin.Denom, inflationCoin.Amount.TruncateInt())))
@@ -233,6 +238,7 @@ func (k Keeper) setLastReductionEpochNum(ctx sdk.Context, epochNum int64) {
 //. It is meant to be used internally by the mint module.
 // CONTRACT: minter's expected minter amount is updated separately
 // CONTRACT: only called with the mint denom, never other coins.
+// TODO: test
 func (k Keeper) mintInflationCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 	if newCoins.Empty() {
 		// skip as no coins need to be minted

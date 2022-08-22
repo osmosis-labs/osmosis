@@ -37,7 +37,7 @@ func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 	return k.distributeDeveloperVestingProvisions(ctx, developerRewardsCoin, developerRewardsReceivers)
 }
 
-func (k Keeper) DistributeInflationCoin(ctx sdk.Context, provisionsCoin sdk.DecCoin) (sdk.Int, error) {
+func (k Keeper) DistributeInflationProvisions(ctx sdk.Context, provisionsCoin sdk.DecCoin) (sdk.Int, error) {
 	return k.distributeInflationProvisions(ctx, provisionsCoin)
 }
 
