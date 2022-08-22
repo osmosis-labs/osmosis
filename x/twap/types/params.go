@@ -27,9 +27,10 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(pruneEpochIdentifier string) Params {
+func NewParams(pruneEpochIdentifier string, recordHistoryKeepPeriod time.Duration) Params {
 	return Params{
-		PruneEpochIdentifier: pruneEpochIdentifier,
+		PruneEpochIdentifier:    pruneEpochIdentifier,
+		RecordHistoryKeepPeriod: recordHistoryKeepPeriod,
 	}
 }
 

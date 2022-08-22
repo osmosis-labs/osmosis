@@ -33,7 +33,7 @@ var (
 
 func TestGenesisState_Validate(t *testing.T) {
 	var (
-		basicParams = NewParams("week")
+		basicParams = NewParams("week", 48*time.Hour)
 
 		basicCustomGenesis = NewGenesisState(
 			basicParams,
@@ -89,7 +89,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		},
 		"invalid genesis - error": {
 			twapGenesis: NewGenesisState(
-				NewParams("week"),
+				NewParams("week", 48*time.Hour),
 				[]TwapRecord{
 					{
 						PoolId:                      0, // invalid
@@ -106,9 +106,18 @@ func TestGenesisState_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid param - error": {
+		"invalid pruneEpochIdentifier - error": {
 			twapGenesis: NewGenesisState(
-				NewParams(""), // invalid empty string
+				NewParams("", 48*time.Hour), // invalid empty string
+				[]TwapRecord{
+					baseRecord,
+				}),
+
+			expectedErr: true,
+		},
+		"invalid recordHistoryKeepPeriod - error": {
+			twapGenesis: NewGenesisState(
+				NewParams("", -1*time.Hour), // invalid duration
 				[]TwapRecord{
 					baseRecord,
 				}),
