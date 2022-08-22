@@ -159,14 +159,14 @@ not necessarily in the same epoch.
 
 For example, assume that for some number of epochs our expected provisions are
 `100.6` and the actual amount distributed is `100` every epoch due to truncations.
-Then, at epoch `1`, we have a delta of `0.6`. `0.6` cannot be distributed because it
-is not an integer. So we persist it until the next epoch. Then, at epoch `2`, we
-get a delta of `1.2` (`0.6` from `epoch 1` and `0.6` from `epoch 2`). Now, `1` can be
-distributed and `0.2` persisted until the next epoch.
+Then, at epoch `1`, we have a delta of `0.6`. `0.6` cannot be distributed because
+it is not an integer. So we persist it until the next epoch. Then, at
+epoch `2`, we get a delta of `1.2` (`0.6` from epoch `1` and `0.6` from
+epoch `2`). Now, `1` can be distributed and `0.2` persisted until the next epoch.
 
 ##### Negative
 
-Added complexity from handing 2 additional store indexes. It is mitigated by
+Added complexity from handing two additional store indexes. It is mitigated by
 better abstractions and extensive documentation though still present.
 
 ### Decision 3
@@ -175,17 +175,16 @@ better abstractions and extensive documentation though still present.
 
 We will **decouple the developer vesting provisions from the inflation provisions**.
 
-The [**Draft Implementation**](https://github.com/osmosis-labs/osmosis/pull/2342)
-makes the distinction between the developer provisions and the inflation provisions
-clearer by:
+The [draft implementation][15] makes the distinction between the developer
+provisions and the inflation provisions clearer by:
 
-* [Distinctly splitting the two provisions in minter](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/types/minter.go#L54-L63)
+* Distinctly [splitting the two provisions][19] in minter
 
-* Decoupling and distinctly handling each provision type separately:
+* Decoupling and handling each provision type separately:
 
    * [inflation provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L167)
 
-   * [dev reward provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L283)
+   * [developer reward provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L283)
 
 #### Consequences
 
@@ -193,8 +192,8 @@ clearer by:
 
 The above decoupling makes the abstractions clearer, reduces complexity, and
 fixes [#2025][14]. This change also makes it more intuitive to apply
-the [Decision 2](#decision_2) above since the 2 truncation store indexes are
-split into 2 to separate the distribution from separate module accounts.
+the [Decision 2][#user-content-decision-2] above since the 2 truncation store
+indexes are split into 2 to separate the distribution from separate module accounts.
 
 ##### Negative
 
@@ -208,7 +207,7 @@ thorough testing and quality assurance.
 We will **encapsulate the minting and distribution logic from `AfterEpochEnd` hook**
 into a separate function.
 
-In the [**Draft Implementation**][15], the logic for distributing all epoch
+In the [draft Implementation][15], the logic for distributing all epoch
 provisions in the `AfterEpochEnd` hook has been moved to the
 [distributeEpochProvisions][16] function.
 
@@ -282,3 +281,4 @@ and applied in the upgrade handler.
 [16]:https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/hooks.go#L49
 [17]:https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L147
 [18]:https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L153
+[19]:https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/types/minter.go#L54-L63
