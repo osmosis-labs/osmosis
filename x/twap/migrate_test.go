@@ -8,7 +8,7 @@ import (
 
 func (s *TestSuite) TestMigrateExistingPools() {
 	// create two pools before migration
-	s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
+	s.PrepareBalancerPoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
 	s.PrepareBalancerPool()
 
 	// suppose upgrade happened and increment block height and block time
@@ -51,7 +51,7 @@ func (s *TestSuite) TestMigrateExistingPools() {
 
 func (s *TestSuite) TestMigrateExistingPoolsError() {
 	// create two pools before migration
-	s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
+	s.PrepareBalancerPoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
 	s.PrepareBalancerPool()
 
 	// suppose upgrade happened and increment block height and block time
