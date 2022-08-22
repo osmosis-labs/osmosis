@@ -24,14 +24,6 @@ func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 	return k.createDeveloperVestingModuleAccount(ctx, amount)
 }
 
-func (k Keeper) GetDeveloperVestedAmount(ctx sdk.Context, denom string) sdk.Int {
-	return k.getDeveloperVestedAmount(ctx, denom)
-}
-
-func (k Keeper) GetInflationAmount(ctx sdk.Context, denom string) sdk.Int {
-	return k.getInflationAmount(ctx, denom)
-}
-
 func (k Keeper) DistributeToModule(ctx sdk.Context, recipientModule string, provisionsCoin sdk.DecCoin, proportion sdk.Dec) (sdk.Int, error) {
 	return k.distributeToModule(ctx, recipientModule, provisionsCoin, proportion)
 }
@@ -65,4 +57,22 @@ func (k *Keeper) SetMintHooksUnsafe(h types.MintHooks) *Keeper {
 // Get the mint hooks. This is used for testing purposes only.
 func (k *Keeper) GetMintHooksUnsafe() types.MintHooks {
 	return k.hooks
+}
+
+// GetDeveloperVestedAmount returns the vestes amount from the developer vesting module account.
+func (k Keeper) GetDeveloperVestedAmount(ctx sdk.Context, denom string) sdk.Int {
+	unvestedAmount := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), denom).Amount
+	vestedAmount := sdk.NewInt(developerVestingAmount).Sub(unvestedAmount)
+	return vestedAmount
+}
+
+// GetInflationAmount returns the amount minted by the mint module account
+// without considering the developer rewards module account.
+// The developer rewards were pre-minted to its own module account at genesis.
+// Therefore, the developer rewards can be distributed separately.
+// As a result, we should not consider the original developer
+// vesting amount when calculating the minted amount.
+func (k Keeper) GetInflationAmount(ctx sdk.Context, denom string) sdk.Int {
+	totalSupply := k.bankKeeper.GetSupply(ctx, denom).Amount
+	return totalSupply.Sub(sdk.NewInt(developerVestingAmount))
 }

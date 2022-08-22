@@ -734,8 +734,8 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 	}
 }
 
-// TestGetMintedAmount tests that the minted amount is calculated correctly.
-func (suite *KeeperTestSuite) TestGetMintedAmount() {
+// TestGetInflationAmount tests that the minted amount is calculated correctly.
+func (suite *KeeperTestSuite) TestGetInflationAmount() {
 	tests := map[string]struct {
 		denom          string
 		expectedAmount sdk.Int

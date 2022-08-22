@@ -391,24 +391,6 @@ func (k Keeper) calculateTotalTruncationDelta(ctx sdk.Context, key []byte, provi
 	return k.GetTruncationDelta(ctx, key).Add(currentEpochRewardsDelta)
 }
 
-// getDeveloperVestedAmount returns the vestes amount from the developer vesting module account.
-func (k Keeper) getDeveloperVestedAmount(ctx sdk.Context, denom string) sdk.Int {
-	unvestedAmount := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), denom).Amount
-	vestedAmount := sdk.NewInt(developerVestingAmount).Sub(unvestedAmount)
-	return vestedAmount
-}
-
-// getInflationAmount returns the amount minted by the mint module account
-// without considering the developer rewards module account.
-// The developer rewards were pre-minted to its own module account at genesis.
-// Therefore, the developer rewards can be distributed separately.
-// As a result, we should not consider the original developer
-// vesting amount when calculating the minted amount.
-func (k Keeper) getInflationAmount(ctx sdk.Context, denom string) sdk.Int {
-	totalSupply := k.bankKeeper.GetSupply(ctx, denom).Amount
-	return totalSupply.Sub(sdk.NewInt(developerVestingAmount))
-}
-
 // getProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the
 // allocation ratio. Returns error if ratio is greater than 1.
 func getProportions(value sdk.Dec, ratio sdk.Dec) (sdk.Dec, error) {
