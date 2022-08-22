@@ -249,11 +249,6 @@ func (suite *KeeperTestSuite) TestDistributeInflationProvisions() {
 
 			inflationAmount := tc.inflationProvisions.Amount
 
-			// set distribution proportions
-			params := mintKeeper.GetParams(ctx)
-			params.DistributionProportions = tc.proportions
-			mintKeeper.SetParams(ctx, params)
-
 			if !tc.preExistingTruncationDelta.IsNil() {
 				suite.NoError(mintKeeper.SetTruncationDelta(ctx, types.TruncatedInflationDeltaKey, tc.preExistingTruncationDelta))
 			}
@@ -272,7 +267,7 @@ func (suite *KeeperTestSuite) TestDistributeInflationProvisions() {
 			expectedCommunityPoolAmount = expectedCommunityPoolAmount.Add(tc.expectedCommunityPoolDistributionsFromTruncations)
 
 			// System under test.
-			actualDistributed, err := mintKeeper.DistributeInflationProvisions(ctx, tc.inflationProvisions)
+			actualDistributed, err := mintKeeper.DistributeInflationProvisions(ctx, tc.inflationProvisions, tc.proportions)
 			suite.Require().NoError(err)
 
 			// validate that the returned amount is correct.

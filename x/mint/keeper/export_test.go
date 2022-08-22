@@ -37,8 +37,8 @@ func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 	return k.distributeDeveloperVestingProvisions(ctx, developerRewardsCoin, developerRewardsReceivers)
 }
 
-func (k Keeper) DistributeInflationProvisions(ctx sdk.Context, provisionsCoin sdk.DecCoin) (sdk.Int, error) {
-	return k.distributeInflationProvisions(ctx, provisionsCoin)
+func (k Keeper) DistributeInflationProvisions(ctx sdk.Context, provisionsCoin sdk.DecCoin, proportions types.DistributionProportions) (sdk.Int, error) {
+	return k.distributeInflationProvisions(ctx, provisionsCoin, proportions)
 }
 
 func (k Keeper) HandleTruncationDelta(ctx sdk.Context, moduleAccountName string, provisions sdk.DecCoin, amountDistributed sdk.Int) (sdk.Int, error) {

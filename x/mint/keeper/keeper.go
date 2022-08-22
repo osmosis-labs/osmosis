@@ -138,19 +138,17 @@ func (k Keeper) SetTruncationDelta(ctx sdk.Context, key []byte, truncationDelta 
 	return nil
 }
 
-func (k Keeper) distributeEpochProvisions(ctx sdk.Context) (sdk.Int, error) {
-	minter := k.GetMinter(ctx)
-	params := k.GetParams(ctx)
-
+// TODO: godoc and test
+func (k Keeper) distributeEpochProvisions(ctx sdk.Context, inflationProvisions, developerVestingProvisions sdk.DecCoin, proportions types.DistributionProportions, developerRewardReceiverWeights []types.WeightedAddress) (sdk.Int, error) {
 	// Mint and distribute inflation provisions from mint module account.
 	// These exclude developer vesting rewards.
-	inflationAmount, err := k.distributeInflationProvisions(ctx, minter.InflationProvisions(params))
+	inflationAmount, err := k.distributeInflationProvisions(ctx, inflationProvisions, proportions)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	// Allocate dev rewards to respective accounts from developer vesting module account.
-	developerVestingAmount, err := k.distributeDeveloperVestingProvisions(ctx, minter.DeveloperVestingEpochProvisions(params), params.WeightedDeveloperRewardsReceivers)
+	developerVestingAmount, err := k.distributeDeveloperVestingProvisions(ctx, developerVestingProvisions, developerRewardReceiverWeights)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -164,10 +162,7 @@ func (k Keeper) distributeEpochProvisions(ctx sdk.Context) (sdk.Int, error) {
 
 // distributeInflationProvisions implements distribution of a minted coin from mint to external modules.
 // inflation component incluedes all proportions from the parameters other than developer rewards.
-func (k Keeper) distributeInflationProvisions(ctx sdk.Context, inflationCoin sdk.DecCoin) (sdk.Int, error) {
-	params := k.GetParams(ctx)
-	proportions := params.DistributionProportions
-
+func (k Keeper) distributeInflationProvisions(ctx sdk.Context, inflationCoin sdk.DecCoin, proportions types.DistributionProportions) (sdk.Int, error) {
 	if inflationCoin.Amount.Equal(sdk.ZeroDec()) {
 		return sdk.ZeroInt(), nil
 	}
@@ -198,7 +193,7 @@ func (k Keeper) distributeInflationProvisions(ctx sdk.Context, inflationCoin sdk
 	// subtract from original provision to ensure no coins left over after the allocations
 	inflationAmount := inflationCoin.Amount.TruncateInt()
 	communityPoolAmount := inflationAmount.Sub(stakingIncentivesAmount).Sub(poolIncentivesAmount)
-	err = k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(params.MintDenom, communityPoolAmount)), k.accountKeeper.GetModuleAddress(types.ModuleName))
+	err = k.communityPoolKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin(inflationCoin.Denom, communityPoolAmount)), k.accountKeeper.GetModuleAddress(types.ModuleName))
 	if err != nil {
 		return sdk.Int{}, err
 	}
