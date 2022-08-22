@@ -53,7 +53,7 @@ func CreateUpgradeHandler(
 			AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
 		}
 		if err := keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset); err != nil {
-			panic(err)
+			return newVM, err
 		}
 
 		// N.B.: This is left for historic reasons.
