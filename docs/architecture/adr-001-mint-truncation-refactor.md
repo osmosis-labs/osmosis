@@ -85,7 +85,7 @@ since we have pre-minted the full amount at genesis. The offsets are unrelated
 to the inflation provisions.
 
 The above differences portray the distinct handling of the developer vesting
-provisions. Still, their handling is highly coupled to the regular provisions,
+provisions. Still, they are highly coupled to the regular provisions,
 leading to increased complexity.
 
 #### Complicated `AfterEpochEnd` Hook
@@ -158,11 +158,11 @@ This is helpful for accounting for truncations and distributing them eventually,
 not necessarily in the same epoch.
 
 For example, assume that for some number of epochs our expected provisions are
-100.6 and the actual amount distributed is 100 every epoch due to truncations.
-Then, at epoch 1, we have a delta of 0.6. 0.6 cannot be distributed because it
-is not an integer. So we persist it until the next epoch. Then, at epoch 2, we
-get a delta of 1.2 (0.6 from epoch 1 and 0.6 from epoch 2). Now, 1 can be
-distributed and 0.2 gets persisted until the next epoch.
+`100.6` and the actual amount distributed is `100` every epoch due to truncations.
+Then, at epoch `1`, we have a delta of `0.6`. `0.6` cannot be distributed because it
+is not an integer. So we persist it until the next epoch. Then, at epoch `2`, we
+get a delta of `1.2` (`0.6` from `epoch 1` and `0.6` from `epoch 2`). Now, `1` can be
+distributed and `0.2` persisted until the next epoch.
 
 ##### Negative
 
