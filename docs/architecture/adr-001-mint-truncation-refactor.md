@@ -11,14 +11,13 @@ Draft: https://github.com/osmosis-labs/osmosis/pull/2342
 ## Abstract
 
 This ADR focuses on refactoring `x/mint` module to mitigate the discrepancies between the actual and 
-the projected inflation numbers. These discrepancies are stemming from truncations.
+the projected inflation amounts.
 
-Currently, we under mint due to truncation. In the first year this happened to be approximately 2600 OSMO. As a result, we cannot reach the projected supply one to one.
+Currently, we under mint due to truncation. In the first year of operations, this happens to be approximately 2600 OSMO. As a result, we cannot reach the projected supply one to one.
 
 Additionally, some of the constraints have made it difficult to refactor the module. Specifically, the developer vesting provisions 
-follow a different distribution logic from the rest of the provisions. However, they are tightly coupled together causing to utilize
-unsafe workaround such as over-minting and later burning some coins. This ADR addresses these issues by decoupling the two kinds of
-provisions and letting them use separate distribution logic.
+follow a distinct distribution logic from the rest of the provisions. However, they are tightly coupled together, causing to utilize
+unsafe workaround such as over-minting and later burning developer vesting provisions. This ADR addresses these issues by decoupling the two kinds of provisions and letting them use separate distribution logic.
 
 ## Context
 
@@ -26,30 +25,30 @@ provisions and letting them use separate distribution logic.
 
 Ref: https://github.com/osmosis-labs/osmosis/issues/1917
 
-Ultimately, these truncation issues are stemming from the limitations of some SDK interfaces such as in [`x/bank`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) and [`x/distribution`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L255-L256)  that operate on integers. To use these interfaces, we always round down to the nearest integer by [truncating decimals](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L290). While we increase the precision by assumming that 1 `sdk.Int` is actually 1 / 10^6 OSMO, this still does not let us to be precise enough. As a result, it is possible to undermint.
+Ultimately, these truncation issues are stemming from the limitations of some SDK interfaces such as in [`x/bank`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) and [`x/distribution`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L255-L256)  that operate on integers. To use these interfaces, we always round down to the nearest integer by [truncating decimal provisions](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L290). While we operate on amounts with precision of 6 decimals by assumming that 1 `sdk.Int` is equal to 1 / 10^6 OSMO, this still does not let us to be accurate enough. As a result, it is possible to undermint.
 
 Moreover, developer reward receivers suffer the most because the large source of truncation happens [when we calculate the proportions for each developer account](https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/keeper.go#L265):
 https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/hooks_test.go#L601-L602
 
 ### Additional Limitations
 
-Next, we present the limitations that have had to be mitigated to resolve the truncations issues.
+Next, we present the limitations that need to be eliminated so mitigate the truncations issues.
 
 #### Coupling of Developer Vesting Provisions with Other (Inflation) Provisions
 
 Ref: https://github.com/osmosis-labs/osmosis/issues/2025
 
-Our developer vesting provisions have been coupled together with the rest of the provisions (referred to as "inflation provisions") despite having a distinct handling logic. The distinction is summarized by the following points
+Our developer vesting provisions have been coupled together with the rest of the provisions (futher referred to as "inflation provisions") despite having a distinct handling logic. The distinction is summarized by the following points:
 
-a) Developer vesting rewards are [pre-minted](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/genesis.go#L30) at genesis to the developer vesting module account
-b) Since they are pre-minted, we do not need to be minting them every epoch contrary to the inflation provisions.
+1. Developer vesting provisions are [pre-minted](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/genesis.go#L30) at genesis to the developer vesting module account
+2. Since they are pre-minted, we do not need to be minting them every epoch contrary to the inflation provisions.
    - This has caused a number of issues such as having to [over-mint](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/hooks.go#L54-L55) by the developer vesting rewards and then [burn them later](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L230)
-c) The developer vesting rewards are [distributed from the developer vesting module account](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) while other rewards are [distributed from the mint module account](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L194)
-d) We use supply offsets to [offset the rewards that are yet unvested](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L275-L277) since we have pre-minted the full amount at genesis. The offsets
+3. The developer vesting provisions are [distributed from the developer vesting module account](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) while other rewards are [distributed from the mint module account](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L194)
+4. We use supply offsets to [offset the unvested developer provisions](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L275-L277) since we have pre-minted the full amount at genesis. The offsets
 are unrelated to the inflation provisions.
 
-The above 4 differences show the distinct handling of the developer rewards provisions. However, the developer vesting provisions handling
-is highly coupled to the regular provisions. As a result, adding a lot of complexity.
+The above differences portray the distinct handling of the developer rewards provisions. However, the developer vesting provisions handling
+is highly coupled to the regular provisions. leading to increased complexity.
 
 #### Complicated `AfterEpochEnd` Hook
 
@@ -146,6 +145,8 @@ It handles distributing both [inflation provisions](https://github.com/osmosis-l
 ##### Positive
 
 This change allows for better encapsulation of all distribution logic and for the ability to more thoroughly unit test it.
+
+The enhanced encapulation in turn leads to a more modular mint keeper where each method strives to focus on a single concern. 
 
 ## Backwards Compatibility
 
