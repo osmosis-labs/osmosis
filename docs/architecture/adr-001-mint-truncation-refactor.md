@@ -167,7 +167,7 @@ epoch `2`). Now, `1` can be distributed and `0.2` persisted until the next epoch
 ##### Negative
 
 Added complexity from handing two additional store indexes. It is mitigated by
-better abstractions and extensive documentation though still present.
+improving abstractions and documentation, though still present.
 
 ### Decision 3
 
@@ -192,8 +192,8 @@ provisions and the inflation provisions clearer by:
 
 The above decoupling makes the abstractions clearer, reduces complexity, and
 fixes [#2025][14]. This change also makes it more intuitive to apply
-the [Decision 2][#user-content-decision-2] above since the 2 truncation store
-indexes are split into 2 to separate the distribution from separate module accounts.
+the [Decision 2](#decision-2) above since the 2 truncation store
+indexes are split into two to separate the distribution from separate module accounts.
 
 ##### Negative
 
@@ -237,9 +237,9 @@ For any truncation deltas occurring at epochs before the proposed
 implementation is live, it will have to be manually estimated and minted/burned
 in the upgrade handler.
 
-The implementation proposed in this ADR is independent of distributing the old
-truncation deltas. It only ensures that there are no more discrepancies after
-the proposed proof-of-concept is deployed.
+The implementation proposed in this ADR is independent of the need for
+distributing the old truncation deltas. It only ensures that there are
+no more discrepancies after the proposed proof-of-concept is deployed.
 
 The work for estimating and isolating the old truncation deltas has been
 performed in:
