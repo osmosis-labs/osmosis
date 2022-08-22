@@ -94,7 +94,9 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	// record.LastSpotPrice is the last spot price from the block the record was created in,
 	// thus it is treated as the effective spot price until the new time.
 	// (As there was no change until at or after this time)
-	// TODO: Think about overflow
+	//
+	// TODO (Alpin): Think about overflow
+	// Ref: https://github.com/osmosis-labs/osmosis/issues/2412
 	p0Accum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
 	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(p0Accum)
 
