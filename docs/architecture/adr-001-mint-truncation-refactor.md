@@ -25,14 +25,16 @@ unsafe workaround such as over-minting and later burning developer vesting provi
 
 Ref: https://github.com/osmosis-labs/osmosis/issues/1917
 
-Ultimately, these truncation issues are stemming from the limitations of some SDK interfaces such as in [`x/bank`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) and [`x/distribution`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L255-L256)  that operate on integers. To use these interfaces, we always round down to the nearest integer by [truncating decimal provisions](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L290). While we operate on amounts with precision of 6 decimals by assumming that 1 `sdk.Int` is equal to 1 / 10^6 OSMO, this still does not let us to be accurate enough. As a result, it is possible to undermint.
+Ultimately, these truncation issues are stemming from the limitations of some SDK interfaces such as in [`x/bank`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) and [`x/distribution`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L255-L256)  that operate on integers. To use these interfaces, we always round down to the nearest integer by [truncating decimal provisions](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L290). While we operate on amounts with precision of 6 decimals by assumming that 1 `sdk.Int` is equal to `1 / 10^6 OSMO`, this still does not let us to be accurate enough. As a result, it is possible to undermint.
+`sdk.Dec` has a precision of 18 decimals. By using it in conjunction with the above  `1 / 10^6` downscaling allows us to achieve a precision
+of 24 decimals. According to tests, this precision is sufficient to accurately represent the projected amounts.
 
 Moreover, developer reward receivers suffer the most because the large source of truncation happens [when we calculate the proportions for each developer account](https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/keeper.go#L265):
 https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/hooks_test.go#L601-L602
 
 ### Additional Limitations
 
-Next, we present the limitations that need to be eliminated so mitigate the truncations issues.
+Next, we present the limitations that need to be eliminated to mitigate the truncations issues.
 
 #### Coupling of Developer Vesting Provisions with Other (Inflation) Provisions
 
