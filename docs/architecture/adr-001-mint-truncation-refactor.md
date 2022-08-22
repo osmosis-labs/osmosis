@@ -182,9 +182,9 @@ provisions and the inflation provisions clearer by:
 
 * Decoupling and handling each provision type separately:
 
-   * [inflation provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L167)
+  * [inflation provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L167)
 
-   * [developer reward provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L283)
+  * [developer reward provisions](https://github.com/osmosis-labs/osmosis/blob/0b843fcae194eb9439c3dc5fe879c47173406047/x/mint/keeper/keeper.go#L283)
 
 #### Consequences
 
@@ -257,8 +257,8 @@ and applied in the upgrade handler.
 * Draft POC: <https://github.com/osmosis-labs/osmosis/pull/2342>
 * Projected Inflation: <https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db>
 * Isolating sources of the truncations:
-   * Logically: <https://github.com/osmosis-labs/osmosis/pull/1874>
-   * By module account: <https://github.com/osmosis-labs/osmosis/tree/roman/mint-rounding-year2-isolation>
+    * Logically: <https://github.com/osmosis-labs/osmosis/pull/1874>
+    * By module account: <https://github.com/osmosis-labs/osmosis/tree/roman/mint-rounding-year2-isolation>
 * Truncatins Issue: <https://github.com/osmosis-labs/osmosis/issues/1919>
 * Coupling Developer Vesting with Inflation Provisions: <https://github.com/osmosis-labs/osmosis/issues/2025>
 * Refactoring `x/mint` `AfterEpochEnd` Hook: <https://github.com/osmosis-labs/osmosis/issues/1919>
