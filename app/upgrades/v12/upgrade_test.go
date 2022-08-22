@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
 )
@@ -77,7 +76,7 @@ func (suite *UpgradeTestSuite) TestPoolMigration() {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			suite.SetupTest() // reset
 
-			// creting pools before upgrade
+			// creating pools before upgrade
 			poolId := tc.pre_upgrade()
 
 			// run upgrade
