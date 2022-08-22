@@ -26,13 +26,13 @@ Ref: https://github.com/osmosis-labs/osmosis/issues/1917
 
 Ultimately, the major sources of the truncation issues are some SDK interfaces such as in [`x/bank`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) and [`x/distribution`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L255-L256).  These interfaces operate on `sdk.Coin` that use `sdk.Int` for amounts. To use these interfaces, we always round down to the nearest integer by [truncating decimal provisions](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L290). While we operate on amounts with precision of 6 decimals by using exponents where we assumme that 1 `sdk.Int` is equal to `1 / 10^6` OSMO, this still does not allow us to observe enough accuracy. As a result, it is possible to undermint. `sdk.Dec` has a precision of `18` decimals. By using it in conjunction with the above  `1 / 10^6` downscaling allows us to achieve a precision of `6 + 18 = 24` decimals. According to tests, this precision is sufficient to accurately represent the projected amounts and achieve the expected supply after [30 years of operations](https://github.com/osmosis-labs/osmosis/blob/724d2cacb38596919c29dd3f9173c1ce0c58804d/x/mint/keeper/hooks_test.go#L453).
 
-The projected amounts have been estimated in Python by using the following formulas:
+The expected amounts have been estimated in Python by using the following formulas:
 
 - Total Provisions `P(n)` at yeat `n`
-$$P(n) = EpochsPerPeriod * InitialRewardsPerEpoch * { (1 - ReductionFactor^{n+1}) /  (1 - ReductionFactor) }$$
+$$P(n) = EpochsPerPeriod * InitialRewardsPerEpoch * ( (1 - ReductionFactor^{n+1}) /  (1 - ReductionFactor) )$$
 
-- Total supply
-$$S(n) = 
+- Total expected supply `S`
+$$S = InitialSupply + EpochsPerPeriod * ( InitialRewardsPerEpoch / (1 - ReductionFactor) )$$
 
 Moreover, developer reward receivers suffer the most because the large source of truncations is identified to occur in [the calculation of the proportions for each developer account](https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/keeper.go#L265):
 https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/hooks_test.go#L601-L602
