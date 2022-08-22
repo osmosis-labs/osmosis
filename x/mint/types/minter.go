@@ -47,16 +47,19 @@ func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
 }
 
 // InflationProvision returns the provisions for a block based on the epoch
-// provisions rate. It excludes developer rewards as they are
-// handled by the developer vesting module account.
+// provisions rate. These provisions are first minted from
+// the mint module account and then disttributed to all proportions,
+// excludeing developer rewards as they are handled by the developer
+// vesting module account.
 func (m Minter) InflationProvisions(params Params) sdk.DecCoin {
 	provisionAmt := m.EpochProvisions.Mul(sdk.OneDec().Sub(params.DistributionProportions.DeveloperRewards))
 	return sdk.NewDecCoinFromDec(params.MintDenom, provisionAmt)
 }
 
-// EpochProvision returns the provisions for a block based on the epoch
-// provisions rate. It excludes developer rewards as they are
-// handled by the developer vesting module account.
+// DeveloperVestingEpochProvisions returns the provisions for a block based on the epoch
+// provisions rate. These are not minted and distributed from the developer vesting module
+// account. These only include developer rewards as all other inflation proportions
+// are handled by the mint module account.
 func (m Minter) DeveloperVestingEpochProvisions(params Params) sdk.DecCoin {
 	provisionAmt := m.EpochProvisions.Mul(params.DistributionProportions.DeveloperRewards)
 	return sdk.NewDecCoinFromDec(params.MintDenom, provisionAmt)
