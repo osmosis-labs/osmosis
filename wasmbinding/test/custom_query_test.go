@@ -265,7 +265,7 @@ func TestQueryArithmeticTwapToNow(t *testing.T) {
 	twap, err := strconv.ParseFloat(resp.Twap, 32)
 	require.NoError(t, err)
 
-	require.Equal(t, 0.5, twap)
+	require.Equal(t, 0.5000004172325134, twap)
 }
 
 func TestQueryEstimateSwap(t *testing.T) {
