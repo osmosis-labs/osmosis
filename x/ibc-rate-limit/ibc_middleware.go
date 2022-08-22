@@ -8,7 +8,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
@@ -59,7 +58,6 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 		return sdkerrors.Wrap(err, "Rate limited SendPacket")
 	}
 	channelValue := i.CalculateChannelValue(ctx, denom)
-	sender := i.accountKeeper.GetModuleAccount(ctx, transfertypes.ModuleName)
 	err = CheckRateLimits(
 		ctx,
 		i.WasmKeeper,
@@ -67,7 +65,7 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 		params.ContractAddress,
 		channelValue,
 		packet.GetSourceChannel(),
-		sender.GetAddress(),
+		denom,
 		amount,
 	)
 	if err != nil {
@@ -196,7 +194,6 @@ func (im *IBCModule) OnRecvPacket(
 		return channeltypes.NewErrorAcknowledgement("bad packet")
 	}
 	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom)
-	sender := im.ics4Middleware.accountKeeper.GetModuleAccount(ctx, transfertypes.ModuleName)
 
 	err = CheckRateLimits(
 		ctx,
@@ -205,7 +202,7 @@ func (im *IBCModule) OnRecvPacket(
 		params.ContractAddress,
 		channelValue,
 		packet.GetDestChannel(),
-		sender.GetAddress(),
+		denom,
 		amount,
 	)
 	if err != nil {

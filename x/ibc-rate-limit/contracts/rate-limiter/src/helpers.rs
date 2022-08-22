@@ -1,13 +1,15 @@
+#![cfg(test)]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{to_binary, Addr, CosmosMsg, StdResult, WasmMsg};
 
 use crate::msg::ExecuteMsg;
+use crate::msg::SudoMsg;
 
 /// CwTemplateContract is a wrapper around Addr that provides a lot of helpers
 /// for working with this.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct RateLimitingContract(pub Addr);
 
 impl RateLimitingContract {
@@ -24,16 +26,23 @@ impl RateLimitingContract {
         }
         .into())
     }
+
+    pub fn sudo<T: Into<SudoMsg>>(&self, msg: T) -> cw_multi_test::SudoMsg {
+        let msg = to_binary(&msg.into()).unwrap();
+        cw_multi_test::SudoMsg::Wasm(cw_multi_test::WasmSudo {
+            contract_addr: self.addr().into(),
+            msg,
+        })
+    }
 }
 
-#[cfg(test)]
 pub mod tests {
     use cosmwasm_std::Timestamp;
 
-    use crate::state::ChannelFlow;
+    use crate::state::RateLimit;
 
     pub fn verify_query_response(
-        value: &ChannelFlow,
+        value: &RateLimit,
         quota_name: &str,
         send_recv: (u32, u32),
         duration: u64,

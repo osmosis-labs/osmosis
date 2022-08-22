@@ -2,7 +2,7 @@
 name = "rate-limiter"
 version = "0.1.0"
 authors = ["Nicolas Lara <nicolaslara@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 exclude = [
   # Those files are rust-optimizer artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
@@ -31,6 +31,9 @@ overflow-checks = true
 backtraces = ["cosmwasm-std/backtraces"]
 # use library feature to disable all instantiate/execute/query exports
 library = []
+# Use the verbose responses feature if you want to include information about
+# the remaining quotas in the SendPacket/RecvPacket responses
+verbose_responses = []
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
