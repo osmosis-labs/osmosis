@@ -835,12 +835,6 @@ func (suite *KeeperTestSuite) TestGetDeveloperVestedAmount() {
 
 			expectedAmount: sdk.NewInt(keeper.DeveloperVestingAmount),
 		},
-		"pre vested other denom": {
-			denom:   sdk.DefaultBondDenom,
-			preVest: sdk.NewDecCoin(otherDenom, baseAmount),
-
-			expectedAmount: sdk.ZeroInt(),
-		},
 	}
 	for name, tc := range tests {
 		suite.Run(name, func() {
