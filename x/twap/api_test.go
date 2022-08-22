@@ -62,7 +62,6 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 // TestGetArithmeticTwap tests if we get the expected twap value from `GetArithmeticTwap`.
 // We test the method directly by updating the accumulator and storing the twap records
 // manually in this test.
-// This should be done automatically via Endblocker and hooks in prod.
 // This test also includes testing the method `TestGetArithmeticTwapToNow`.
 func (s *TestSuite) TestGetArithmeticTwap() {
 	type getTwapInput struct {
