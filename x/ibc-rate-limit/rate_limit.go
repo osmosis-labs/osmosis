@@ -12,7 +12,7 @@ import (
 func CheckRateLimits(ctx sdk.Context, wasmKeeper *wasmkeeper.Keeper,
 	msgType, contract string,
 	channelValue sdk.Int, sourceChannel, denom string,
-	sender sdk.AccAddress, amount string,
+	amount string,
 ) error {
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
@@ -28,7 +28,7 @@ func CheckRateLimits(ctx sdk.Context, wasmKeeper *wasmkeeper.Keeper,
 	)
 
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(wasmKeeper)
-	_, err = contractKeeper.Execute(ctx, contractAddr, sender, []byte(sendPacketMsg), sdk.Coins{})
+	_, err = contractKeeper.Sudo(ctx, contractAddr, []byte(sendPacketMsg))
 
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
