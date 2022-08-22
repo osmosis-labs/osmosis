@@ -5,7 +5,7 @@ mod tests {
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
     use crate::{
-        msg::{ExecuteMsg, InstantiateMsg, PathMsg, QuotaMsg},
+        msg::{InstantiateMsg, PathMsg, QuotaMsg, SudoMsg},
         state::{RESET_TIME_DAILY, RESET_TIME_MONTHLY, RESET_TIME_WEEKLY},
     };
 
@@ -14,7 +14,8 @@ mod tests {
             crate::contract::execute,
             crate::contract::instantiate,
             crate::contract::query,
-        );
+        )
+        .with_sudo(crate::contract::sudo);
         Box::new(contract)
     }
 
@@ -79,14 +80,14 @@ mod tests {
         }]);
 
         // Using all the allowance
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 300,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        let res = app.sudo(cosmos_msg).unwrap();
 
         let Attribute { key, value } = &res.custom_attrs(1)[3];
         assert_eq!(key, "weekly_used_in");
@@ -102,16 +103,14 @@ mod tests {
         assert_eq!(value, "300");
 
         // Another packet is rate limited
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 300,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let _err = app
-            .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
-            .unwrap_err();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        let _err = app.sudo(cosmos_msg).unwrap_err();
 
         // TODO: how do we check the error type here?
 
@@ -122,15 +121,15 @@ mod tests {
         });
 
         // Sending the packet should work now
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 300,
         };
 
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        let res = app.sudo(cosmos_msg).unwrap();
 
         let Attribute { key, value } = &res.custom_attrs(1)[3];
         assert_eq!(key, "weekly_used_in");
@@ -161,26 +160,24 @@ mod tests {
         }]);
 
         // Sending 1% to use the daily allowance
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 100,
             funds: 1,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let _res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap();
 
         // Another packet is rate limited
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 100,
             funds: 1,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let _err = app
-            .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
-            .unwrap_err();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap_err();
 
         // ... One day passes
         app.update_block(|b| {
@@ -189,15 +186,15 @@ mod tests {
         });
 
         // Sending the packet should work now
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 100,
             funds: 1,
         };
 
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap();
 
         // Do that for 4 more days
         for _ in 1..4 {
@@ -208,14 +205,14 @@ mod tests {
             });
 
             // Sending the packet should work now
-            let msg = ExecuteMsg::SendPacket {
+            let msg = SudoMsg::SendPacket {
                 channel_id: format!("channel"),
                 denom: format!("denom"),
                 channel_value: 100,
                 funds: 1,
             };
-            let cosmos_msg = cw_template_contract.call(msg).unwrap();
-            app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+            let cosmos_msg = cw_template_contract.sudo(msg);
+            app.sudo(cosmos_msg).unwrap();
         }
 
         // ... One day passes
@@ -225,16 +222,14 @@ mod tests {
         });
 
         // We now have exceeded the weekly limit!  Even if the daily limit allows us, the weekly doesn't
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 100,
             funds: 1,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let _err = app
-            .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
-            .unwrap_err();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap_err();
 
         // ... One week passes
         app.update_block(|b| {
@@ -243,16 +238,14 @@ mod tests {
         });
 
         // We can still can't send because the weekly and monthly limits are the same
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 100,
             funds: 1,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let _err = app
-            .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
-            .unwrap_err();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap_err();
 
         // Waiting a week again, doesn't help!!
         // ... One week passes
@@ -262,16 +255,14 @@ mod tests {
         });
 
         // We can still can't send because the  monthly limit hasn't passed
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 100,
             funds: 1,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let _err = app
-            .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
-            .unwrap_err();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap_err();
 
         // Only after two more weeks we can send again
         app.update_block(|b| {
@@ -279,14 +270,14 @@ mod tests {
             b.time = b.time.plus_seconds((RESET_TIME_WEEKLY * 2) + 1) // Two weeks
         });
 
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 100,
             funds: 1,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let _err = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap();
     }
 
     #[test] // Tests that the channel value is based on the value at the beginning of the period
@@ -303,38 +294,34 @@ mod tests {
         }]);
 
         // Sending 1% (half of the daily allowance)
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 100,
             funds: 1,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let _res = app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap();
 
         // Sending 3% is now rate limited
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 100,
             funds: 3,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let _err = app
-            .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
-            .unwrap_err();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap_err();
 
         // Even if the channel value increases, the percentage is calculated based on the value at period start
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 100000,
             funds: 3,
         };
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        let _err = app
-            .execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
-            .unwrap_err();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap_err();
 
         // ... One day passes
         app.update_block(|b| {
@@ -347,16 +334,15 @@ mod tests {
         // Sending 1% of a new value (10_000) passes the daily check, cause it
         // has expired, but not the weekly check (The value for last week is
         // sitll 100, as only 1 day has passed)
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 10_000,
             funds: 100,
         };
 
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg)
-            .unwrap_err();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap_err();
 
         // ... One week passes
         app.update_block(|b| {
@@ -365,25 +351,25 @@ mod tests {
         });
 
         // Sending 1% of a new value should work and set the value for the day at 10_000
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 10_000,
             funds: 100,
         };
 
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap();
 
         // If the value magically decreasses. We can still send up to 100 more (1% of 10k)
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 1,
             funds: 75,
         };
 
-        let cosmos_msg = cw_template_contract.call(msg).unwrap();
-        app.execute(Addr::unchecked(IBC_ADDR), cosmos_msg).unwrap();
+        let cosmos_msg = cw_template_contract.sudo(msg);
+        app.sudo(cosmos_msg).unwrap();
     }
 }

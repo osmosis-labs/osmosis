@@ -1,13 +1,13 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
-    to_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Timestamp,
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Timestamp,
 };
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::management::{add_new_paths, try_add_path, try_remove_path, try_reset_path_quota};
-use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
 use crate::state::{FlowType, Path, RateLimit, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
 
 // version info for migration info
@@ -41,40 +41,6 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::SendPacket {
-            channel_id,
-            channel_value,
-            funds,
-            denom,
-        } => {
-            let path = Path::new(&channel_id, &denom);
-            try_transfer(
-                deps,
-                info.sender,
-                &path,
-                channel_value,
-                funds,
-                FlowType::Out,
-                env.block.time,
-            )
-        }
-        ExecuteMsg::RecvPacket {
-            channel_id,
-            channel_value,
-            funds,
-            denom,
-        } => {
-            let path = Path::new(&channel_id, &denom);
-            try_transfer(
-                deps,
-                info.sender,
-                &path,
-                channel_value,
-                funds,
-                FlowType::In,
-                env.block.time,
-            )
-        }
         ExecuteMsg::AddPath {
             channel_id,
             denom,
@@ -98,8 +64,43 @@ pub fn execute(
     }
 }
 
-// Q: Is an ICS 20 transfer only 1 denom at a time, or does the caller have to split into several
-// calls if its a multi-denom ICS-20 transfer
+#[entry_point]
+pub fn sudo(deps: DepsMut, env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
+    match msg {
+        SudoMsg::SendPacket {
+            channel_id,
+            channel_value,
+            funds,
+            denom,
+        } => {
+            let path = Path::new(&channel_id, &denom);
+            try_transfer(
+                deps,
+                &path,
+                channel_value,
+                funds,
+                FlowType::Out,
+                env.block.time,
+            )
+        }
+        SudoMsg::RecvPacket {
+            channel_id,
+            channel_value,
+            funds,
+            denom,
+        } => {
+            let path = Path::new(&channel_id, &denom);
+            try_transfer(
+                deps,
+                &path,
+                channel_value,
+                funds,
+                FlowType::In,
+                env.block.time,
+            )
+        }
+    }
+}
 
 /// This function checks the rate limit and, if successful, stores the updated data about the value
 /// that has been transfered through the channel for a specific denom.
@@ -109,22 +110,13 @@ pub fn execute(
 /// calculated by the caller. This should be the total supply of a denom
 pub fn try_transfer(
     deps: DepsMut,
-    sender: Addr,
     path: &Path,
     channel_value: u128,
     funds: u128,
     direction: FlowType,
     now: Timestamp,
 ) -> Result<Response, ContractError> {
-    // Only the IBCMODULE can execute transfers
-    // TODO: Should we move this to a helper method?
-    //       This may not be needed once we move this function to be under sudo.
-    //       Though it might still be worth checking that only the transfer module is calling it
-    let ibc_module = IBCMODULE.load(deps.storage)?;
-    if sender != ibc_module {
-        return Err(ContractError::Unauthorized {});
-    }
-
+    // Sudo call. Only go modules should be allowed to access this
     let trackers = RATE_LIMIT_TRACKERS.may_load(deps.storage, path.into())?;
 
     let configured = match trackers {
@@ -135,7 +127,6 @@ pub fn try_transfer(
 
     if !configured {
         // No Quota configured for the current path. Allowing all messages.
-        // TODO: Should there be an attribute for it being allowed vs denied?
         return Ok(Response::new()
             .add_attribute("method", "try_transfer")
             .add_attribute("channel_id", path.channel.to_string())
@@ -254,45 +245,6 @@ mod tests {
         assert_eq!(GOVMODULE.load(deps.as_ref().storage).unwrap(), GOV_ADDR);
     }
 
-    #[test] // Tests only the IBC_MODULE address can execute send and recv packet
-    fn permissions() {
-        let mut deps = mock_dependencies();
-
-        let quota = QuotaMsg::new("Weekly", RESET_TIME_WEEKLY, 10, 10);
-        let msg = InstantiateMsg {
-            gov_module: Addr::unchecked(GOV_ADDR),
-            ibc_module: Addr::unchecked(IBC_ADDR),
-            paths: vec![PathMsg {
-                channel_id: format!("channel"),
-                denom: format!("denom"),
-                quotas: vec![quota],
-            }],
-        };
-        let info = mock_info(IBC_ADDR, &vec![]);
-        instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
-
-        let msg = ExecuteMsg::SendPacket {
-            channel_id: format!("channel"),
-            denom: format!("denom"),
-            channel_value: 3_000,
-            funds: 300,
-        };
-
-        // This succeeds
-        execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
-
-        let info = mock_info("SomeoneElse", &vec![]);
-
-        let msg = ExecuteMsg::SendPacket {
-            channel_id: format!("channel"),
-            denom: format!("denom"),
-            channel_value: 3_000,
-            funds: 300,
-        };
-        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap_err();
-        assert!(matches!(err, ContractError::Unauthorized { .. }));
-    }
-
     #[test] // Tests that when a packet is transferred, the peropper allowance is consummed
     fn consume_allowance() {
         let mut deps = mock_dependencies();
@@ -308,28 +260,27 @@ mod tests {
             }],
         };
         let info = mock_info(GOV_ADDR, &vec![]);
-        let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 300,
         };
-        let info = mock_info(IBC_ADDR, &vec![]);
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
         let Attribute { key, value } = &res.attributes[4];
         assert_eq!(key, "weekly_used_out");
         assert_eq!(value, "300");
 
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 300,
         };
-        let err = execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
+        let err = sudo(deps.as_mut(), mock_env(), msg).unwrap_err();
         assert!(matches!(err, ContractError::RateLimitExceded { .. }));
     }
 
@@ -350,21 +301,20 @@ mod tests {
         let info = mock_info(GOV_ADDR, &vec![]);
         let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
-        let info = mock_info(IBC_ADDR, &vec![]);
-        let send_msg = ExecuteMsg::SendPacket {
+        let send_msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 300,
         };
-        let recv_msg = ExecuteMsg::RecvPacket {
+        let recv_msg = SudoMsg::RecvPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 300,
         };
 
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), send_msg.clone()).unwrap();
+        let res = sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
         let Attribute { key, value } = &res.attributes[3];
         assert_eq!(key, "weekly_used_in");
         assert_eq!(value, "0");
@@ -372,7 +322,7 @@ mod tests {
         assert_eq!(key, "weekly_used_out");
         assert_eq!(value, "300");
 
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap();
+        let res = sudo(deps.as_mut(), mock_env(), recv_msg.clone()).unwrap();
         let Attribute { key, value } = &res.attributes[3];
         assert_eq!(key, "weekly_used_in");
         assert_eq!(value, "0");
@@ -383,7 +333,7 @@ mod tests {
         // We can still use the path. Even if we have sent more than the
         // allowance through the path (900 > 3000*.1), the current "balance"
         // of inflow vs outflow is still lower than the path's capacity/quota
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap();
+        let res = sudo(deps.as_mut(), mock_env(), recv_msg.clone()).unwrap();
         let Attribute { key, value } = &res.attributes[3];
         assert_eq!(key, "weekly_used_in");
         assert_eq!(value, "300");
@@ -391,7 +341,7 @@ mod tests {
         assert_eq!(key, "weekly_used_out");
         assert_eq!(value, "0");
 
-        let err = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg.clone()).unwrap_err();
+        let err = sudo(deps.as_mut(), mock_env(), recv_msg.clone()).unwrap_err();
 
         assert!(matches!(err, ContractError::RateLimitExceded { .. }));
     }
@@ -414,41 +364,39 @@ mod tests {
         let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
         // Sending 2%
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 60,
         };
-        let info = mock_info(IBC_ADDR, &vec![]);
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
         let Attribute { key, value } = &res.attributes[4];
         assert_eq!(key, "weekly_used_out");
         assert_eq!(value, "60");
 
         // Sending 2% more. Allowed, as sending has a 4% allowance
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 60,
         };
 
-        let info = mock_info(IBC_ADDR, &vec![]);
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
         println!("{res:?}");
         let Attribute { key, value } = &res.attributes[4];
         assert_eq!(key, "weekly_used_out");
         assert_eq!(value, "120");
 
         // Receiving 1% should still work. 4% *sent* through the path, but we can still receive.
-        let recv_msg = ExecuteMsg::RecvPacket {
+        let recv_msg = SudoMsg::RecvPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 30,
         };
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), recv_msg).unwrap();
+        let res = sudo(deps.as_mut(), mock_env(), recv_msg).unwrap();
         let Attribute { key, value } = &res.attributes[3];
         assert_eq!(key, "weekly_used_in");
         assert_eq!(value, "0");
@@ -457,23 +405,23 @@ mod tests {
         assert_eq!(value, "90");
 
         // Sending 2%. Should fail. In balance, we've sent 4% and received 1%, so only 1% left to send.
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 60,
         };
-        let err = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+        let err = sudo(deps.as_mut(), mock_env(), msg.clone()).unwrap_err();
         assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 
         // Sending 1%: Allowed; because sending has a 4% allowance. We've sent 4% already, but received 1%, so there's send cappacity again
-        let msg = ExecuteMsg::SendPacket {
+        let msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 30,
         };
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        let res = sudo(deps.as_mut(), mock_env(), msg.clone()).unwrap();
         let Attribute { key, value } = &res.attributes[3];
         assert_eq!(key, "weekly_used_in");
         assert_eq!(value, "0");
@@ -518,22 +466,21 @@ mod tests {
             env.block.time.plus_seconds(RESET_TIME_WEEKLY)
         );
 
-        let info = mock_info(IBC_ADDR, &vec![]);
-        let send_msg = ExecuteMsg::SendPacket {
+        let send_msg = SudoMsg::SendPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 300,
         };
-        execute(deps.as_mut(), mock_env(), info.clone(), send_msg.clone()).unwrap();
+        sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
 
-        let recv_msg = ExecuteMsg::RecvPacket {
+        let recv_msg = SudoMsg::RecvPacket {
             channel_id: format!("channel"),
             denom: format!("denom"),
             channel_value: 3_000,
             funds: 30,
         };
-        execute(deps.as_mut(), mock_env(), info, recv_msg.clone()).unwrap();
+        sudo(deps.as_mut(), mock_env(), recv_msg.clone()).unwrap();
 
         // Query
         let res = query(deps.as_ref(), mock_env(), query_msg.clone()).unwrap();

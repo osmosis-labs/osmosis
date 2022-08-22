@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use cosmwasm_std::{to_binary, Addr, CosmosMsg, StdResult, WasmMsg};
 
 use crate::msg::ExecuteMsg;
+#[cfg(test)]
+use crate::msg::SudoMsg;
 
 /// CwTemplateContract is a wrapper around Addr that provides a lot of helpers
 /// for working with this.
@@ -23,6 +25,15 @@ impl RateLimitingContract {
             funds: vec![],
         }
         .into())
+    }
+
+    #[cfg(test)]
+    pub fn sudo<T: Into<SudoMsg>>(&self, msg: T) -> cw_multi_test::SudoMsg {
+        let msg = to_binary(&msg.into()).unwrap();
+        cw_multi_test::SudoMsg::Wasm(cw_multi_test::WasmSudo {
+            contract_addr: self.addr().into(),
+            msg,
+        })
     }
 }
 
