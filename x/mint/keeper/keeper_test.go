@@ -1145,3 +1145,30 @@ func (suite *KeeperTestSuite) TestCalculateTruncationDelta() {
 		})
 	}
 }
+
+// TestGetTruncationStoreKeyForModuleAccount tests that the correct key
+// is returned for a given module account.
+func (suite *KeeperTestSuite) TestGetTruncationStoreKeyForModuleAccount() {
+	const mintDenom = sdk.DefaultBondDenom
+	tests := map[string]struct {
+		moduleAccountName string
+
+		expectedKey []byte
+	}{
+		"developer vesting module account -> developer vesting key": {
+			moduleAccountName: types.DeveloperVestingModuleAcctName,
+
+			expectedKey: types.TruncatedDeveloperVestingDeltaKey,
+		},
+		"mint module account -> inflation key": {
+			moduleAccountName: types.ModuleName,
+
+			expectedKey: types.TruncatedInflationDeltaKey,
+		},
+	}
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			keeper.GetTruncationStoreKeyForModuleAccount(tc.moduleAccountName)
+		})
+	}
+}

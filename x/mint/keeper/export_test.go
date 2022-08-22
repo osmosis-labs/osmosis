@@ -17,7 +17,8 @@ const (
 )
 
 var (
-	GetProportions = getProportions
+	GetProportions                        = getProportions
+	GetTruncationStoreKeyForModuleAccount = getTruncationStoreKeyForModuleAccount
 )
 
 func (k Keeper) CalculateTotalTruncationDelta(ctx sdk.Context, key []byte, provisions sdk.Dec, amountDistributed sdk.Int) sdk.Dec {
