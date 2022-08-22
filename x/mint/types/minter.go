@@ -51,6 +51,7 @@ func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
 // the mint module account and then disttributed to all proportions,
 // excludeing developer rewards as they are handled by the developer
 // vesting module account.
+// TODO: test
 func (m Minter) InflationProvisions(params Params) sdk.DecCoin {
 	provisionAmt := m.EpochProvisions.Mul(sdk.OneDec().Sub(params.DistributionProportions.DeveloperRewards))
 	return sdk.NewDecCoinFromDec(params.MintDenom, provisionAmt)
@@ -60,6 +61,7 @@ func (m Minter) InflationProvisions(params Params) sdk.DecCoin {
 // provisions rate. These are not minted and distributed from the developer vesting module
 // account. These only include developer rewards as all other inflation proportions
 // are handled by the mint module account.
+// TODO: test
 func (m Minter) DeveloperVestingEpochProvisions(params Params) sdk.DecCoin {
 	provisionAmt := m.EpochProvisions.Mul(params.DistributionProportions.DeveloperRewards)
 	return sdk.NewDecCoinFromDec(params.MintDenom, provisionAmt)

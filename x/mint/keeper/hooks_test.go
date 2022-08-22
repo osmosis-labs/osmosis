@@ -354,6 +354,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			expectedLastReductionEpochNum: defaultMintingRewardsDistributionStartEpoch,
 			expectedPanic:                 true,
 		},
+		// TODO: add test cases with truncations and decimals
 	}
 
 	for name, tc := range testcases {

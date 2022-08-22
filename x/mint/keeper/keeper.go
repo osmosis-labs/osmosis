@@ -138,7 +138,15 @@ func (k Keeper) SetTruncationDelta(ctx sdk.Context, key []byte, truncationDelta 
 	return nil
 }
 
-// TODO: godoc and test
+// distributeEpochProvisions distributed all epoch provisions given inflation provisions, developer vesting provisions,
+// proportions and the weighted developer reward receivers.
+// Returns the total amount actually distributed during the current epoch or error if any.
+// The returned amount can differ from the sum of inflation provisions and developer vesting provisions in the following cases:
+// - truncation causes the sum between the two to be lower than expected. This is fine because the truncation delta is persisted
+//  until the next epoch.
+// - truncation from the previous epoch is distributed to the community pool during the current epoch. As a result, causing the returned
+// distributions to be higher.
+// TODO: test
 func (k Keeper) distributeEpochProvisions(ctx sdk.Context, inflationProvisions, developerVestingProvisions sdk.DecCoin, proportions types.DistributionProportions, developerRewardReceiverWeights []types.WeightedAddress) (sdk.Int, error) {
 	// Mint and distribute inflation provisions from mint module account.
 	// These exclude developer vesting rewards.
@@ -265,7 +273,7 @@ func (k Keeper) distributeToModule(ctx sdk.Context, recipientModule string, mint
 // Distributes any delta resulting from truncating the amount to a whole integer to the community pool.
 // Returns the total amount distributed from the developer vesting module account rounded down to the nearest integer.
 // Updates supply offsets to reflect the amount of coins distributed. This is done so because the developer rewards distributions are
-// allocated from its own module account, not the mint module accont (TODO: next step in https://github.com/osmosis-labs/osmosis/issues/1916).
+// allocated from its own module account, not the mint module accont.
 // Returns nil on success, error otherwise.
 // With respect to input parameters, errors occur when:
 // - developerRewardsProportion is greater than 1.
