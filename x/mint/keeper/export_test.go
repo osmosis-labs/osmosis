@@ -20,6 +20,10 @@ var (
 	GetProportions = getProportions
 )
 
+func (k Keeper) CalculateTotalTruncationDelta(ctx sdk.Context, key []byte, provisions sdk.Dec, amountDistributed sdk.Int) sdk.Dec {
+	return k.calculateTotalTruncationDelta(ctx, key, provisions, amountDistributed)
+}
+
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
 	return k.createDeveloperVestingModuleAccount(ctx, amount)
 }

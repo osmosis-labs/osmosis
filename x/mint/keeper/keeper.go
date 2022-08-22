@@ -350,7 +350,10 @@ func (k Keeper) distributeDeveloperVestingProvisions(ctx sdk.Context, developerR
 // As a result, it is possible to undermint. To mitigate that, we distribute any delta to the community pool.
 // The delta is calculated by subtracting the actual distributions from the given expected total distributions.
 func (k Keeper) handleTruncationDelta(ctx sdk.Context, key []byte, moduleAccountName string, provisions sdk.DecCoin, amountDistributed sdk.Int) (sdk.Int, error) {
-	deltaAmount := k.calculateTotalTruncationDelta(ctx, key, provisions, amountDistributed)
+	if provisions.Amount.LT(amountDistributed.ToDec()) {
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "provisions (%s) must be greater than or equal to amount disributed (%s)", provisions.Amount, amountDistributed)
+	}
+	deltaAmount := k.calculateTotalTruncationDelta(ctx, key, provisions.Amount, amountDistributed)
 	if deltaAmount.LT(sdk.OneDec()) {
 		k.SetTruncationDelta(ctx, key, deltaAmount)
 		return sdk.ZeroInt(), nil
@@ -385,9 +388,17 @@ func (k Keeper) handleTruncationDelta(ctx sdk.Context, key []byte, moduleAccount
 	return truncationDeltaToDistribute, nil
 }
 
-// calculateTotalTruncationDelta returns the total truncation delta for the given key
-func (k Keeper) calculateTotalTruncationDelta(ctx sdk.Context, key []byte, provisions sdk.DecCoin, amountDistributed sdk.Int) sdk.Dec {
-	currentEpochRewardsDelta := provisions.Amount.Sub(amountDistributed.ToDec())
+// calculateTotalTruncationDelta returns the total truncation delta that has not been distributed yet
+// for the given key given provisions and amount distributed. Both of the given values are epoch specific.
+// The returned delta might include the delta from previous epochs if they have not been distributed due to truncations.
+// For example, assume that for some number of epochs our expected provisions
+// are 100.6 and the actual amount distributed is 100 every epoch due to truncations.
+// Then, at epoch 1, we have a delta of 0.6. 0.6 cannot be distributed because it is not an integer.
+// So we persist it until the next epoch. Then, at at epoch 2, we get a delta of 1.2 (0.6 from epoch 1 and 0.6 from epoch 2).
+// Now, 1 can be distributed and 0.2 gets persisted until the next epoch.
+// CONTRACT: provisions are greater than or equal to amountDistributed.
+func (k Keeper) calculateTotalTruncationDelta(ctx sdk.Context, key []byte, provisions sdk.Dec, amountDistributed sdk.Int) sdk.Dec {
+	currentEpochRewardsDelta := provisions.Sub(amountDistributed.ToDec())
 	return k.GetTruncationDelta(ctx, key).Add(currentEpochRewardsDelta)
 }
 

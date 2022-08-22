@@ -1062,3 +1062,86 @@ func (suite *KeeperTestSuite) TestMintInflationCoins() {
 		})
 	}
 }
+
+// TestCalculateTruncationsDelta tests that the per-epoch truncation delta is calculate
+// correctly. That includes checking that the pre-existing delta is correctly
+// extracted from the store at the desired index and summed with the new delta
+// from the input values.
+func (suite *KeeperTestSuite) TestCalculateTruncationDelta() {
+	const mintDenom = sdk.DefaultBondDenom
+	tests := map[string]struct {
+		preExistingStoreDelta sdk.Dec
+
+		key               []byte
+		provisions        sdk.Dec
+		amountDistributed sdk.Int
+
+		expectedTruncationDelta sdk.Dec
+
+		expectPanic bool
+	}{
+		"100.6 - 100 = 0.6; no pre-existing delta; inflation delta key": {
+			key:               types.TruncatedInflationDeltaKey,
+			provisions:        sdk.NewDecWithPrec(1006, 1),
+			amountDistributed: sdk.NewInt(100),
+
+			expectedTruncationDelta: sdk.NewDecWithPrec(6, 1),
+		},
+		"100.6 - 100  + 0.3 = 0.9; pre-existing delta of 0.3; inflation delta key": {
+			preExistingStoreDelta: sdk.NewDecWithPrec(3, 1),
+
+			key:               types.TruncatedInflationDeltaKey,
+			provisions:        sdk.NewDecWithPrec(1006, 1),
+			amountDistributed: sdk.NewInt(100),
+
+			expectedTruncationDelta: sdk.NewDecWithPrec(9, 1),
+		},
+		"100.6 - 100  + 0.5 = 1.1; pre-existing delta of 1.1; inflation delta key": {
+			preExistingStoreDelta: sdk.NewDecWithPrec(5, 1),
+
+			key:               types.TruncatedInflationDeltaKey,
+			provisions:        sdk.NewDecWithPrec(1006, 1),
+			amountDistributed: sdk.NewInt(100),
+
+			expectedTruncationDelta: sdk.NewDecWithPrec(11, 1),
+		},
+		"82191.178 - 17808  + 33.33 = 64416508; pre-existing delta of 33.33; developer vesting delta key": {
+			preExistingStoreDelta: sdk.NewDecWithPrec(3333, 2),
+
+			key:               types.TruncatedDeveloperVestingDeltaKey,
+			provisions:        sdk.NewDecWithPrec(82191178, 3),
+			amountDistributed: sdk.NewInt(17808),
+
+			expectedTruncationDelta: sdk.NewDecWithPrec(64416508, 3),
+		},
+		"attempt to use invalid key - panic": {
+			key:               types.LastReductionEpochKey,
+			provisions:        sdk.NewDecWithPrec(1006, 1),
+			amountDistributed: sdk.NewInt(100),
+
+			expectPanic: true,
+		},
+	}
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			// Setup.
+			suite.Setup()
+			mintKeeper := suite.App.MintKeeper
+			ctx := suite.Ctx
+
+			if !tc.preExistingStoreDelta.IsNil() {
+				mintKeeper.SetTruncationDelta(ctx, tc.key, tc.preExistingStoreDelta)
+			}
+
+			var actualTruncationDelta sdk.Dec
+
+			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() {
+
+				// System under test
+				actualTruncationDelta = mintKeeper.CalculateTotalTruncationDelta(ctx, tc.key, tc.provisions, tc.amountDistributed)
+			})
+
+			suite.Require().Equal(tc.expectedTruncationDelta, actualTruncationDelta)
+		})
+	}
+}
