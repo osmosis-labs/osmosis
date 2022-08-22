@@ -254,14 +254,14 @@ and applied in the upgrade handler.
 
 ## References
 
-* Draft POC: <https://github.com/osmosis-labs/osmosis/pull/2342>
-* Projected Inflation: <https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db>
-* Isolating sources of the truncations:
+  * Draft POC: <https://github.com/osmosis-labs/osmosis/pull/2342>
+  * Projected Inflation: <https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db>
+  * Isolating sources of the truncations:
     * Logically: <https://github.com/osmosis-labs/osmosis/pull/1874>
     * By module account: <https://github.com/osmosis-labs/osmosis/tree/roman/mint-rounding-year2-isolation>
-* Truncatins Issue: <https://github.com/osmosis-labs/osmosis/issues/1919>
-* Coupling Developer Vesting with Inflation Provisions: <https://github.com/osmosis-labs/osmosis/issues/2025>
-* Refactoring `x/mint` `AfterEpochEnd` Hook: <https://github.com/osmosis-labs/osmosis/issues/1919>
+  * Truncatins Issue: <https://github.com/osmosis-labs/osmosis/issues/1919>
+  * Coupling Developer Vesting with Inflation Provisions: <https://github.com/osmosis-labs/osmosis/issues/2025>
+  * Refactoring `x/mint` `AfterEpochEnd` Hook: <https://github.com/osmosis-labs/osmosis/issues/1919>
 
 [1]:https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267
 [2]:https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L255-L256
