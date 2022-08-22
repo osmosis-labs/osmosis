@@ -41,6 +41,10 @@ func (k Keeper) DistributeInflationCoin(ctx sdk.Context, provisionsCoin sdk.DecC
 	return k.distributeInflationProvisions(ctx, provisionsCoin)
 }
 
+func (k Keeper) HandleTruncationDelta(ctx sdk.Context, moduleAccountName string, provisions sdk.DecCoin, amountDistributed sdk.Int) (sdk.Int, error) {
+	return k.handleTruncationDelta(ctx, moduleAccountName, provisions, amountDistributed)
+}
+
 func (k Keeper) MintInflationCoin(ctx sdk.Context, inflationCoins sdk.Coins) error {
 	return k.mintInflationCoins(ctx, inflationCoins)
 }

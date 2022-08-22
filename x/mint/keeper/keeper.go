@@ -122,13 +122,19 @@ func (k Keeper) GetTruncationDelta(ctx sdk.Context, key []byte) sdk.Dec {
 	return resultProto.Dec
 }
 
-// SetInflationTruncationDelta sets the truncation delta.
-func (k Keeper) SetTruncationDelta(ctx sdk.Context, key []byte, truncationDelta sdk.Dec) {
+// SetTruncationDelta sets the truncation delta.
+// TODO: test
+func (k Keeper) SetTruncationDelta(ctx sdk.Context, key []byte, truncationDelta sdk.Dec) error {
+	if truncationDelta.LT(sdk.ZeroDec()) {
+		return sdkerrors.Wrapf(types.ErrInvalidAmount, "truncation delta must be positive, was (%s)", truncationDelta)
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&sdk.DecProto{
 		Dec: truncationDelta,
 	})
 	store.Set(key, b)
+	return nil
 }
 
 func (k Keeper) distributeEpochProvisions(ctx sdk.Context) (sdk.Int, error) {
@@ -377,7 +383,9 @@ func (k Keeper) handleTruncationDelta(ctx sdk.Context, moduleAccountName string,
 
 	deltaAmount := k.calculateTotalTruncationDelta(ctx, storeKey, provisions.Amount, amountDistributed)
 	if deltaAmount.LT(sdk.OneDec()) {
-		k.SetTruncationDelta(ctx, storeKey, deltaAmount)
+		if err := k.SetTruncationDelta(ctx, storeKey, deltaAmount); err != nil {
+			return sdk.Int{}, err
+		}
 		return sdk.ZeroInt(), nil
 	}
 
@@ -396,7 +404,9 @@ func (k Keeper) handleTruncationDelta(ctx sdk.Context, moduleAccountName string,
 
 	newDelta := deltaAmount.Sub(truncationDeltaToDistribute.ToDec())
 
-	k.SetTruncationDelta(ctx, storeKey, newDelta)
+	if err := k.SetTruncationDelta(ctx, storeKey, newDelta); err != nil {
+		return sdk.Int{}, err
+	}
 
 	if truncationDeltaToDistribute.IsInt64() {
 		defer telemetry.ModuleSetGauge(types.ModuleName, float32(truncationDeltaToDistribute.Int64()), fmt.Sprintf("mint_truncation_distributed_%s_delta", moduleAccountName))
