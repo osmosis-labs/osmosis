@@ -6,18 +6,83 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
-// SwapExactAmountIn attempts to swap one asset, tokenIn, for another asset
-// denominated via tokenOutDenom through a pool denoted by poolId specifying that
-// tokenOutMinAmount must be returned in the resulting asset returning an error
-// upon failure. Upon success, the resulting tokens swapped for are returned. A
-// swap fee is applied determined by the pool's parameters.
-func (k Keeper) SwapExactAmountIn(
+func (k Keeper) EstimateMultihopSwapExactAmountIn(
 	ctx sdk.Context,
-	sender sdk.AccAddress,
+	routes []types.SwapAmountInRoute,
+	tokenIn sdk.Coin,
+	tokenOutMinAmount sdk.Int,
+) (tokenOutAmount sdk.Int, err error) {
+	for i, route := range routes {
+		// To prevent the multihop swap from being interrupted prematurely, we keep
+		// the minimum expected output at a very low number until the last pool
+		_outMinAmount := sdk.NewInt(1)
+		if len(routes)-1 == i {
+			_outMinAmount = tokenOutMinAmount
+		}
+
+		// Execute the expected swap on the current routed pool
+		tokenOutAmount, err = k.EstimateSwapExactAmountIn(ctx, route.PoolId, tokenIn, route.TokenOutDenom, _outMinAmount)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
+		// Chain output of current pool as the input for the next routed pool
+		tokenIn = sdk.NewCoin(route.TokenOutDenom, tokenOutAmount)
+	}
+	return
+}
+
+func (k Keeper) EstimateMultihopSwapExactAmountOut(
+	ctx sdk.Context,
+	routes []types.SwapAmountOutRoute,
+	tokenInMaxAmount sdk.Int,
+	tokenOut sdk.Coin,
+) (tokenInAmount sdk.Int, err error) {
+	// Determine what the estimated input would be for each pool along the multihop route
+	insExpected, err := k.createMultihopExpectedSwapOuts(ctx, routes, tokenOut)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	if len(insExpected) == 0 {
+		return sdk.Int{}, nil
+	}
+
+	insExpected[0] = tokenInMaxAmount
+
+	// Iterates through each routed pool and executes their respective swaps. Note that all of the work to get the return
+	// value of this method is done when we calculate insExpected – this for loop primarily serves to execute the actual
+	// swaps on each pool.
+	for i, route := range routes {
+		_tokenOut := tokenOut
+
+		// If there is one pool left in the route, set the expected output of the current swap
+		// to the estimated input of the final pool.
+		if i != len(routes)-1 {
+			_tokenOut = sdk.NewCoin(routes[i+1].TokenInDenom, insExpected[i+1])
+		}
+
+		// Execute the expected swap on the current routed pool
+		_tokenInAmount, err := k.EstimateSwapExactAmountOut(ctx, route.PoolId, route.TokenInDenom, insExpected[i], _tokenOut)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
+		// Sets the final amount of tokens that need to be input into the first pool. Even though this is the final return value for the
+		// whole method and will not change after the first iteration, we still iterate through the rest of the pools to execute their respective
+		// swaps.
+		if i == 0 {
+			tokenInAmount = _tokenInAmount
+		}
+	}
+
+	return tokenInAmount, nil
+}
+
+func (k Keeper) EstimateSwapExactAmountIn(
+	ctx sdk.Context,
 	poolId uint64,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
@@ -29,16 +94,11 @@ func (k Keeper) SwapExactAmountIn(
 	}
 
 	swapFee := pool.GetSwapFee(ctx)
-	return k.swapExactAmountIn(ctx, sender, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
+	return k.estimateSwapExactAmountIn(ctx, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 }
 
-// swapExactAmountIn is an internal method for swapping an exact amount of tokens
-// as input to a pool, using the provided swapFee. This is intended to allow
-// different swap fees as determined by multi-hops, or when recovering from
-// chain liveness failures.
-func (k Keeper) swapExactAmountIn(
+func (k Keeper) estimateSwapExactAmountIn(
 	ctx sdk.Context,
-	sender sdk.AccAddress,
 	pool types.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
@@ -69,16 +129,15 @@ func (k Keeper) swapExactAmountIn(
 
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOutCoin); err != nil {
+	if err := k.EstimateUpdatePoolForSwap(ctx, pool, tokenIn, tokenOutCoin); err != nil {
 		return sdk.Int{}, err
 	}
 
 	return tokenOutAmount, nil
 }
 
-func (k Keeper) SwapExactAmountOut(
+func (k Keeper) EstimateSwapExactAmountOut(
 	ctx sdk.Context,
-	sender sdk.AccAddress,
 	poolId uint64,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
@@ -89,16 +148,11 @@ func (k Keeper) SwapExactAmountOut(
 		return sdk.Int{}, err
 	}
 	swapFee := pool.GetSwapFee(ctx)
-	return k.swapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+	return k.estimateSwapExactAmountOut(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
 }
 
-// swapExactAmountIn is an internal method for swapping to get an exact number of tokens out of a pool,
-// using the provided swapFee.
-// This is intended to allow different swap fees as determined by multi-hops,
-// or when recovering from chain liveness failures.
-func (k Keeper) swapExactAmountOut(
+func (k Keeper) estimateSwapExactAmountOut(
 	ctx sdk.Context,
-	sender sdk.AccAddress,
 	pool types.PoolI,
 	tokenInDenom string,
 	tokenInMaxAmount sdk.Int,
@@ -129,20 +183,16 @@ func (k Keeper) swapExactAmountOut(
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
 	}
 
-	err = k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut)
+	err = k.EstimateUpdatePoolForSwap(ctx, pool, tokenIn, tokenOut)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 	return tokenInAmount, nil
 }
 
-// updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts
-// It then updates the pool's balances to the new reserve amounts, and
-// sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
-func (k Keeper) updatePoolForSwap(
+func (k Keeper) EstimateUpdatePoolForSwap(
 	ctx sdk.Context,
 	pool types.PoolI,
-	sender sdk.AccAddress,
 	tokenIn sdk.Coin,
 	tokenOut sdk.Coin,
 ) error {
@@ -153,22 +203,6 @@ func (k Keeper) updatePoolForSwap(
 	if err != nil {
 		return err
 	}
-
-	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{
-		tokenIn,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.Coins{
-		tokenOut,
-	})
-	if err != nil {
-		return err
-	}
-	events.EmitSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut)
-	k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
 
 	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
 	k.RecordTotalLiquidityDecrease(ctx, tokensOut)

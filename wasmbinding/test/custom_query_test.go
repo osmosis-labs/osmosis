@@ -299,7 +299,6 @@ func TestQueryEstimateSwap(t *testing.T) {
 	amountIn := sdk.NewInt(10000)
 	query := bindings.OsmosisQuery{
 		EstimateSwap: &bindings.EstimateSwap{
-			Sender: reflect.String(),
 			First: bindings.Swap{
 				PoolId:   starPool,
 				DenomIn:  "uosmo",
@@ -328,7 +327,6 @@ func TestQueryEstimateSwap(t *testing.T) {
 	amountOut := sdk.NewInt(10000)
 	query = bindings.OsmosisQuery{
 		EstimateSwap: &bindings.EstimateSwap{
-			Sender: reflect.String(),
 			First: bindings.Swap{
 				PoolId:   starPool,
 				DenomIn:  "uosmo",
