@@ -120,32 +120,32 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      baseTime.Add(time.Minute),
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, quoteAssetA),
-			expTwap:      sdk.NewDec(1000000),
+			expTwap:      sdk.NewDec(10),
 		},
 		"(2 record) start and end exact, different records": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      baseTime.Add(time.Minute),
 			input:        makeSimpleTwapInput(baseTime, baseTime.Add(10*time.Second), quoteAssetA),
-			expTwap:      sdk.MustNewDecFromStr("3333333.333333333333333333"),
+			expTwap:      sdk.NewDec(10),
 		},
 		"(2 record) start exact, end after second record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      baseTime.Add(time.Minute),
 			input:        makeSimpleTwapInput(baseTime, baseTime.Add(20*time.Second), quoteAssetA),
-			expTwap:      sdk.MustNewDecFromStr("5000002.500000000000000000"), // 10 for 10s, 5 for 10s
+			expTwap:      sdk.NewDecWithPrec(75, 1), // 10 for 10s, 5 for 10s
 		},
 		"(2 record) start exact, end after second record, sp1": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      baseTime.Add(time.Minute),
 			input:        makeSimpleTwapInput(baseTime, baseTime.Add(20*time.Second), quoteAssetB),
-			expTwap:      sdk.MustNewDecFromStr("50000.100000000000000000"), // .1 for 10s, .2 for 10s
+			expTwap:      sdk.NewDecWithPrec(15, 2), // .1 for 10s, .2 for 10s
 		},
 		"(2 record) start and end interpolated": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      baseTime.Add(time.Minute),
 			input:        makeSimpleTwapInput(baseTime.Add(5*time.Second), baseTime.Add(20*time.Second), quoteAssetA),
-			// 10 for 5s, 5 for 10s = 100000000/15 = 6,666,666.66666666
-			expTwap: sdk.MustNewDecFromStr("6666666.666666666666666666"),
+			// 10 for 5s, 5 for 10s = 100/15 = 6 + 2/3 = 6.66666666
+			expTwap: ThreePlusOneThird.MulInt64(2),
 		},
 
 		// error catching
