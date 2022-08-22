@@ -16,8 +16,7 @@ the projected inflation amounts.
 Currently, we under mint due to truncation. In the first year of operations, this happens to be approximately 2600 OSMO. As a result, we cannot reach the projected supply one to one.
 
 Additionally, some of the constraints have made it difficult to refactor the module. Specifically, the developer vesting provisions 
-follow a distinct distribution logic from the rest of the provisions. However, they are tightly coupled together, causing to utilize
-unsafe workaround such as over-minting and later burning developer vesting provisions. This ADR addresses these issues by decoupling the two kinds of provisions and letting them use separate distribution logic.
+follow a distinct distribution logic from the rest of the provisions. While that is the case, these providiond are tightly coupled together, causing to utilize unsafe workarounds such as over-minting and later burning developer vesting provisions. This ADR addresses these issues by decoupling the two kinds of provisions and letting them use separate distribution logic.
 
 ## Context
 
@@ -25,22 +24,20 @@ unsafe workaround such as over-minting and later burning developer vesting provi
 
 Ref: https://github.com/osmosis-labs/osmosis/issues/1917
 
-Ultimately, these truncation issues are stemming from the limitations of some SDK interfaces such as in [`x/bank`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) and [`x/distribution`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L255-L256)  that operate on integers. To use these interfaces, we always round down to the nearest integer by [truncating decimal provisions](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L290). While we operate on amounts with precision of 6 decimals by assumming that 1 `sdk.Int` is equal to `1 / 10^6 OSMO`, this still does not let us to be accurate enough. As a result, it is possible to undermint.
-`sdk.Dec` has a precision of 18 decimals. By using it in conjunction with the above  `1 / 10^6` downscaling allows us to achieve a precision
-of 24 decimals. According to tests, this precision is sufficient to accurately represent the projected amounts.
+Ultimately, the major sources of the truncation issues are some SDK interfaces such as in [`x/bank`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L266-L267) and [`x/distribution`](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L255-L256).  These interfaces operate on `sdk.Coin` that use `sdk.Int` for amounts. To use these interfaces, we always round down to the nearest integer by [truncating decimal provisions](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/keeper.go#L290). While we operate on amounts with precision of 6 decimals by using exponents where we assumme that 1 `sdk.Int` is equal to $$1 / 10^6$$ OSMO, this still does not allow us to observe enough accuracy. As a result, it is possible to undermint. `sdk.Dec` has a precision of 18 decimals. By using it in conjunction with the above  $$1 / 10^6$$ downscaling allows us to achieve a precision of 24 decimals. According to tests, this precision is sufficient to accurately represent the projected amounts.
 
-Moreover, developer reward receivers suffer the most because the large source of truncation happens [when we calculate the proportions for each developer account](https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/keeper.go#L265):
+Moreover, developer reward receivers suffer the most because the large source of truncations is identified to occur in [the calculation of the proportions for each developer account](https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/keeper.go#L265):
 https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/hooks_test.go#L601-L602
 
 ### Additional Limitations
 
-Next, we present the limitations that need to be eliminated to mitigate the truncations issues.
+Next, we present the limitations that need to be eliminated to mitigate the above truncation issues.
 
-#### Coupling of Developer Vesting Provisions with Other (Inflation) Provisions
+#### Coupled Epoch Provisions of Different Kind
 
 Ref: https://github.com/osmosis-labs/osmosis/issues/2025
 
-Our developer vesting provisions have been coupled together with the rest of the provisions (futher referred to as "inflation provisions") despite having a distinct handling logic. The distinction is summarized by the following points:
+Our developer vesting provisions have been coupled together with the rest of the provisions (futher referred to as "inflation provisions") despite having a distinct distribution logic. The divergence is summarized next:
 
 1. Developer vesting provisions are [pre-minted](https://github.com/osmosis-labs/osmosis/blob/86bdbebd3cffc16586d0d0c25f751321436d7a44/x/mint/keeper/genesis.go#L30) at genesis to the developer vesting module account
 2. Since they are pre-minted, we do not need to be minting them every epoch contrary to the inflation provisions.
