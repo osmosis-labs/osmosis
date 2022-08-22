@@ -6,7 +6,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 )
 
 // StargateWhitelist keeps whitelist and its deterministic
