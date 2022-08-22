@@ -385,7 +385,7 @@ func (k Keeper) handleTruncationDelta(ctx sdk.Context, key []byte, moduleAccount
 	return truncationDeltaToDistribute, nil
 }
 
-// TODO: spec and test
+// calculateTotalTruncationDelta returns the total truncation delta for the given key
 func (k Keeper) calculateTotalTruncationDelta(ctx sdk.Context, key []byte, provisions sdk.DecCoin, amountDistributed sdk.Int) sdk.Dec {
 	currentEpochRewardsDelta := provisions.Amount.Sub(amountDistributed.ToDec())
 	return k.GetTruncationDelta(ctx, key).Add(currentEpochRewardsDelta)

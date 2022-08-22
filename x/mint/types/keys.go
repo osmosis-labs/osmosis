@@ -16,6 +16,8 @@ var (
 	// for much higher precision. As a result, by storing decimal delta
 	// we can avoid truncation discrepancies and be in-line with the
 	// projected total supply of OSMO.
+	// This key is specifically conerned about truncations resulting
+	// from the mint module account distributions.
 	TruncatedInflationDeltaKey = []byte{0x04}
 
 	// TruncatedDeveloperVestingDelta represents the delta of developer
@@ -24,6 +26,8 @@ var (
 	// bank and distribution that operate on integers. As a result, by
 	// storing decimal delta we can avoid truncation discrepancies and be
 	// in-line with the projected total supply of OSMO.
+	// This key is specifically conerned with truncations resulting
+	// from the developer vesting module account distributions.
 	TruncatedDeveloperVestingDeltaKey = []byte{0x05}
 )
 
