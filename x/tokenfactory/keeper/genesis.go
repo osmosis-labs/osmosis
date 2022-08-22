@@ -9,12 +9,13 @@ import (
 // InitGenesis initializes the tokenfactory module's state from a provided genesis
 // state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
-	k.CreateModuleAccount(ctx)
-
 	if genState.Params.DenomCreationFee == nil {
 		genState.Params.DenomCreationFee = sdk.NewCoins()
 	}
 	k.SetParams(ctx, genState.Params)
+
+	// The call to GetModuleAccount creates a module account if it does not exist.
+	k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 
 	for _, genDenom := range genState.GetFactoryDenoms() {
 		creator, _, err := types.DeconstructDenom(genDenom.GetDenom())

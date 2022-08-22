@@ -28,12 +28,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
 	// Fund every TestAcc with 100 denom creation fees.
-	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
+	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)), sdk.NewCoin("uion", sdk.NewInt(100000000)))
 	for _, acc := range suite.TestAccs {
 		suite.FundAcc(acc, fundAccsAmount)
 	}
-
-	suite.SetupTokenFactory()
 
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 	suite.msgServer = keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)

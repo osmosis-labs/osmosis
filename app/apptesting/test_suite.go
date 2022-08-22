@@ -142,11 +142,6 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	return valAddr
 }
 
-// SetupTokenFactory sets up a token module account for the TokenFactoryKeeper.
-func (s *KeeperTestHelper) SetupTokenFactory() {
-	s.App.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
-}
-
 // BeginNewBlock starts a new block.
 func (s *KeeperTestHelper) BeginNewBlock(executeNextEpoch bool) {
 	var valAddr []byte
