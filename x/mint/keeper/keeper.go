@@ -348,7 +348,6 @@ func (k Keeper) distributeDeveloperVestingProvisions(ctx sdk.Context, developerR
 	return truncatedDevRewardsAmount, nil
 }
 
-// TODO: update spec and tests
 // handleTruncationDelta estimates and distributes truncation delta from either mint module account or
 // developer vesting module account. Returns the total amount distributed from truncations.
 // If truncations are estimated to be less than one, persists them in store until the next epoch without

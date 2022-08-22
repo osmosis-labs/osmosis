@@ -354,9 +354,9 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 	tests := map[string]struct {
 		preMintCoin sdk.Coin
 
-		recepientModule string
-		mintedCoin      sdk.DecCoin
-		proportion      sdk.Dec
+		recepientModule  string
+		distributionCoin sdk.DecCoin
+		proportion       sdk.Dec
 
 		expectedError bool
 		expectPanic   bool
@@ -364,54 +364,60 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 		"pre-mint == distribute - poolincentives module - full amount - success": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 
-			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			proportion:      sdk.NewDec(1),
+			recepientModule:  poolincentivestypes.ModuleName,
+			distributionCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			proportion:       sdk.NewDec(1),
 		},
 		"pre-mint > distribute - developer vesting module - two thirds - success": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(101)),
 
-			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			proportion:      sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
+			recepientModule:  poolincentivestypes.ModuleName,
+			distributionCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			proportion:       sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
 		},
 		"pre-mint < distribute (0) - error": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)),
 
-			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			proportion:      sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
+			recepientModule:  poolincentivestypes.ModuleName,
+			distributionCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			proportion:       sdk.NewDecWithPrec(2, 1).Quo(sdk.NewDecWithPrec(3, 1)),
 
 			expectedError: true,
 		},
 		"denom does not exist - error": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 
-			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewDecCoin(denomDoesNotExist, sdk.NewInt(100)),
-			proportion:      sdk.NewDec(1),
+			recepientModule:  poolincentivestypes.ModuleName,
+			distributionCoin: sdk.NewDecCoin(denomDoesNotExist, sdk.NewInt(100)),
+			proportion:       sdk.NewDec(1),
 
 			expectedError: true,
 		},
 		"invalid module account - panic": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
 
-			recepientModule: moduleAccountDoesNotExist,
-			mintedCoin:      sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			proportion:      sdk.NewDec(1),
+			recepientModule:  moduleAccountDoesNotExist,
+			distributionCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			proportion:       sdk.NewDec(1),
 
 			expectPanic: true,
 		},
 		"proportion greater than 1 - error": {
 			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(300)),
 
-			recepientModule: poolincentivestypes.ModuleName,
-			mintedCoin:      sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
-			proportion:      sdk.NewDec(2),
+			recepientModule:  poolincentivestypes.ModuleName,
+			distributionCoin: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+			proportion:       sdk.NewDec(2),
 
 			expectedError: true,
 		},
-		// TODO: test with non-whole decimal
+		"floor(distributionCoin) == pre-mint; round down; success": {
+			preMintCoin: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)),
+
+			recepientModule:  poolincentivestypes.ModuleName,
+			distributionCoin: sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(10099, 2)),
+			proportion:       sdk.NewDec(1),
+		},
 	}
 	for name, tc := range tests {
 		suite.Run(name, func() {
@@ -425,18 +431,16 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 				// Setup.
 				suite.MintCoins(sdk.NewCoins(tc.preMintCoin))
 
-				// TODO: Should not be truncated. Remove truncation after rounding errors are addressed and resolved.
-				// Ref: https://github.com/osmosis-labs/osmosis/issues/1917
-				expectedDistributed := tc.mintedCoin.Amount.Mul(tc.proportion).TruncateInt()
-				oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintedCoin.Denom).Amount
-				oldRecepientModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(tc.recepientModule), tc.mintedCoin.Denom).Amount
+				expectedDistributed := tc.distributionCoin.Amount.Mul(tc.proportion).TruncateInt()
+				oldMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.distributionCoin.Denom).Amount
+				oldRecepientModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(tc.recepientModule), tc.distributionCoin.Denom).Amount
 
 				// Test.
-				actualDistributed, err := mintKeeper.DistributeToModule(ctx, tc.recepientModule, tc.mintedCoin, tc.proportion)
+				actualDistributed, err := mintKeeper.DistributeToModule(ctx, tc.recepientModule, tc.distributionCoin, tc.proportion)
 
 				// Assertions.
-				actualMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.mintedCoin.Denom).Amount
-				actualRecepientModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(tc.recepientModule), tc.mintedCoin.Denom).Amount
+				actualMintModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.ModuleName), tc.distributionCoin.Denom).Amount
+				actualRecepientModuleBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(tc.recepientModule), tc.distributionCoin.Denom).Amount
 
 				if tc.expectedError {
 					suite.Require().Error(err)
