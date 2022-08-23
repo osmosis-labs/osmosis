@@ -5,15 +5,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
 )
 
 func (suite *KeeperTestSuite) TestMsgCreateDenom() {
-	denomCreationFee := suite.App.TokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee
+	var (
+		tokenFactoryKeeper = suite.App.TokenFactoryKeeper
+		bankKeeper         = suite.App.BankKeeper
+		denomCreationFee   = tokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee
+	)
 
 	// Get balance of acc 0 before creating a denom
-	preCreateBalance := suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], denomCreationFee[0].Denom)
+	preCreateBalance := bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], denomCreationFee[0].Denom)
 
 	// Creating a denom should work
 	res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), "bitcoin"))
@@ -28,7 +31,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 	suite.Require().Equal(suite.TestAccs[0].String(), queryRes.AuthorityMetadata.Admin)
 
 	// Make sure that creation fee was deducted
-	postCreateBalance := suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.App.TokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee[0].Denom)
+	postCreateBalance := bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], tokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee[0].Denom)
 	suite.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee[0]))
 
 	// Make sure that a second version of the same denom can't be recreated
@@ -58,10 +61,13 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 }
 
 func (suite *KeeperTestSuite) TestCreateDenom() {
-	defaultDenomCreationFee := types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(50000000)))}
-	twoDenomCreationFee := types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(50000000)), sdk.NewCoin("uion", sdk.NewInt(50000000)))}
-	nilCreationFee := types.Params{DenomCreationFee: nil}
-	largeCreationFee := types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(5000000000)), sdk.NewCoin("uion", sdk.NewInt(50000000)))}
+	var (
+		defaultDenomCreationFee = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(50000000)))}
+		twoDenomCreationFee     = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(50000000)), sdk.NewCoin("uion", sdk.NewInt(50000000)))}
+		nilCreationFee          = types.Params{DenomCreationFee: nil}
+		largeCreationFee        = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(5000000000)), sdk.NewCoin("uion", sdk.NewInt(50000000)))}
+	)
+
 	for _, tc := range []struct {
 		desc             string
 		denomCreationFee types.Params
@@ -121,15 +127,17 @@ func (suite *KeeperTestSuite) TestCreateDenom() {
 			if tc.setup != nil {
 				tc.setup()
 			}
+			tokenFactoryKeeper := suite.App.TokenFactoryKeeper
+			bankKeeper := suite.App.BankKeeper
 			// Set denom creation fee in params
-			keeper.Keeper.SetParams(*suite.App.TokenFactoryKeeper, suite.Ctx, tc.denomCreationFee)
-			denomCreationFee := suite.App.TokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee
+			tokenFactoryKeeper.SetParams(suite.Ctx, tc.denomCreationFee)
+			denomCreationFee := tokenFactoryKeeper.GetParams(suite.Ctx).DenomCreationFee
 			suite.Require().Equal(tc.denomCreationFee.DenomCreationFee, denomCreationFee)
 
 			// note balance, create a tokenfactory denom, then note balance again
-			preCreateBalance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
+			preCreateBalance := bankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
 			res, err := suite.msgServer.CreateDenom(sdk.WrapSDKContext(suite.Ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
-			postCreateBalance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
+			postCreateBalance := bankKeeper.GetAllBalances(suite.Ctx, suite.TestAccs[0])
 			if tc.valid {
 				suite.Require().NoError(err)
 				suite.Require().True(preCreateBalance.Sub(postCreateBalance).IsEqual(denomCreationFee))

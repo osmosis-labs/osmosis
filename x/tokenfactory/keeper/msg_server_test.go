@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/keeper"
 	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -118,10 +117,11 @@ func (suite *KeeperTestSuite) TestCreateDenomMsg() {
 	} {
 		suite.SetupTest()
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			tokenFactoryKeeper := suite.App.TokenFactoryKeeper
 			ctx := suite.Ctx.WithEventManager(sdk.NewEventManager())
 			suite.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Set denom creation fee in params
-			keeper.Keeper.SetParams(*suite.App.TokenFactoryKeeper, ctx, tc.denomCreationFee)
+			tokenFactoryKeeper.SetParams(suite.Ctx, tc.denomCreationFee)
 			// Test create denom message
 			suite.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(suite.TestAccs[0].String(), tc.subdenom))
 			// Ensure current number and type of event is emitted
