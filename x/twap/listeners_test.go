@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
-	keeper "github.com/osmosis-labs/osmosis/v11/x/twap"
+	"github.com/osmosis-labs/osmosis/v11/x/twap"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
@@ -49,8 +49,8 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			denoms := osmoutils.CoinsDenoms(tc.poolCoins)
 			denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
-			for i := len(denomPairs0); i < 0; i-- {
-				expectedRecord, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+			for i := 0; i < len(denomPairs0); i++ {
+				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
 				s.Require().NoError(err)
 				expectedRecords = append(expectedRecords, expectedRecord)
 			}
@@ -87,6 +87,15 @@ func (s *TestSuite) TestSwapTriggeringTrackPoolId() {
 	s.Require().Equal([]uint64{poolId}, s.twapkeeper.GetChangedPools(s.Ctx))
 }
 
+// Tests that after a swap, we are triggering internal tracking logic for a pool.
+func (s *TestSuite) TestJoinTriggeringTrackPoolId() {
+	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
+	s.BeginNewBlock(false)
+	s.RunBasicJoin(poolId)
+
+	s.Require().Equal([]uint64{poolId}, s.twapkeeper.GetChangedPools(s.Ctx))
+}
+
 // TestSwapAndEndBlockTriggeringSave tests that if we:
 // * create a pool in block 1
 // * swap in block 2
@@ -97,7 +106,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 
 	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
-	expectedHistoricalTwap, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedHistoricalTwap, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 
 	s.EndBlock()
@@ -107,7 +116,7 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.RunBasicSwap(poolId)
 
 	// accumulators are default right here
-	expectedLatestTwapUpToAccum, err := keeper.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	expectedLatestTwapUpToAccum, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
 	s.Require().NoError(err)
 	// ensure different spot prices
 	s.Require().NotEqual(expectedHistoricalTwap.P0LastSpotPrice, expectedLatestTwapUpToAccum.P0LastSpotPrice)
