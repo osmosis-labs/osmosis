@@ -8,7 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
-
 func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	denom0, denom1, err := types.LexicographicalOrderDenoms(denom0, denom1)
 	if err != nil {
