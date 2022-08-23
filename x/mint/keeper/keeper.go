@@ -117,16 +117,25 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 
 // GetInflationTruncationDelta returns the truncation delta.
 // Panics if key is invalid.
-func (k Keeper) GetTruncationDelta(ctx sdk.Context, key []byte) sdk.Dec {
-	return osmoutils.MustGetDec(ctx.KVStore(k.storeKey), key)
+func (k Keeper) GetTruncationDelta(ctx sdk.Context, moduleAccountName string) (sdk.Dec, error) {
+	storeKey, err := getTruncationStoreKeyFromModuleAccount(moduleAccountName)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	return osmoutils.MustGetDec(ctx.KVStore(k.storeKey), storeKey), nil
 }
 
 // SetTruncationDelta sets the truncation delta, returning an error if any. nil otherwise.
-func (k Keeper) SetTruncationDelta(ctx sdk.Context, key []byte, truncationDelta sdk.Dec) error {
+func (k Keeper) SetTruncationDelta(ctx sdk.Context, moduleAccountName string, truncationDelta sdk.Dec) error {
+	storeKey, err := getTruncationStoreKeyFromModuleAccount(moduleAccountName)
+	if err != nil {
+		return err
+	}
+
 	if truncationDelta.LT(sdk.ZeroDec()) {
 		return sdkerrors.Wrapf(types.ErrInvalidAmount, "truncation delta must be positive, was (%s)", truncationDelta)
 	}
-	osmoutils.MustSetDec(ctx.KVStore(k.storeKey), key, truncationDelta)
+	osmoutils.MustSetDec(ctx.KVStore(k.storeKey), storeKey, truncationDelta)
 	return nil
 }
 
@@ -373,17 +382,18 @@ func (k Keeper) distributeDeveloperVestingProvisions(ctx sdk.Context, developerR
 // - unable to fund the community pool
 func (k Keeper) handleTruncationDelta(ctx sdk.Context, moduleAccountName string, provisions sdk.DecCoin, amountDistributed sdk.Int) (sdk.Int, error) {
 	if moduleAccountName != types.DeveloperVestingModuleAcctName && moduleAccountName != types.ModuleName {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvlaidModuleAccountGiven, "truncation delta can only be handled by (%s) or (%s) module accounts but (%s) was given", types.DeveloperVestingModuleAcctName, types.ModuleName, moduleAccountName)
+		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidModuleAccountGiven, "truncation delta can only be handled by (%s) or (%s) module accounts but (%s) was given", types.DeveloperVestingModuleAcctName, types.ModuleName, moduleAccountName)
 	}
 	if provisions.Amount.LT(amountDistributed.ToDec()) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidAmount, "provisions (%s) must be greater than or equal to amount disributed (%s)", provisions.Amount, amountDistributed)
 	}
 
-	storeKey := getTruncationStoreKeyForModuleAccount(moduleAccountName)
-
-	deltaAmount := k.calculateTotalTruncationDelta(ctx, storeKey, provisions.Amount, amountDistributed)
+	deltaAmount, err := k.calculateTotalTruncationDelta(ctx, moduleAccountName, provisions.Amount, amountDistributed)
+	if err != nil {
+		return sdk.Int{}, err
+	}
 	if deltaAmount.LT(sdk.OneDec()) {
-		if err := k.SetTruncationDelta(ctx, storeKey, deltaAmount); err != nil {
+		if err := k.SetTruncationDelta(ctx, moduleAccountName, deltaAmount); err != nil {
 			return sdk.Int{}, err
 		}
 		return sdk.ZeroInt(), nil
@@ -404,7 +414,7 @@ func (k Keeper) handleTruncationDelta(ctx sdk.Context, moduleAccountName string,
 
 	newDelta := deltaAmount.Sub(truncationDeltaToDistribute.ToDec())
 
-	if err := k.SetTruncationDelta(ctx, storeKey, newDelta); err != nil {
+	if err := k.SetTruncationDelta(ctx, moduleAccountName, newDelta); err != nil {
 		return sdk.Int{}, err
 	}
 
@@ -424,9 +434,13 @@ func (k Keeper) handleTruncationDelta(ctx sdk.Context, moduleAccountName string,
 // So we persist it until the next epoch. Then, at at epoch 2, we get a delta of 1.2 (0.6 from epoch 1 and 0.6 from epoch 2).
 // Now, 1 can be distributed and 0.2 gets persisted until the next epoch.
 // CONTRACT: provisions are greater than or equal to amountDistributed.
-func (k Keeper) calculateTotalTruncationDelta(ctx sdk.Context, key []byte, provisions sdk.Dec, amountDistributed sdk.Int) sdk.Dec {
+func (k Keeper) calculateTotalTruncationDelta(ctx sdk.Context, modulAccountName string, provisions sdk.Dec, amountDistributed sdk.Int) (sdk.Dec, error) {
+	truncationDelta, err := k.GetTruncationDelta(ctx, modulAccountName)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
 	currentEpochRewardsDelta := provisions.Sub(amountDistributed.ToDec())
-	return k.GetTruncationDelta(ctx, key).Add(currentEpochRewardsDelta)
+	return truncationDelta.Add(currentEpochRewardsDelta), err
 }
 
 // createDeveloperVestingModuleAccount creates the developer vesting module account
@@ -455,13 +469,18 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 	return nil
 }
 
-// getTruncationStoreKeyForModuleAccount returns a truncation store key for the given module account name.
-// CONTRACT: moduleAccountName must be either mint or developer vesting.
-func getTruncationStoreKeyForModuleAccount(moduleAccountName string) []byte {
-	if moduleAccountName == types.DeveloperVestingModuleAcctName {
-		return types.TruncatedDeveloperVestingDeltaKey
+// getTruncationStoreKeyFromModuleAccount returns a truncation store key for the given module account name.
+// moduleAccountName can either be developer vesting or mint module account.
+// returns error if moduleAccountName is not either of the above.
+func getTruncationStoreKeyFromModuleAccount(moduleAccountName string) ([]byte, error) {
+	switch moduleAccountName {
+	case types.DeveloperVestingModuleAcctName:
+		return types.TruncatedDeveloperVestingDeltaKey, nil
+	case types.ModuleName:
+		return types.TruncatedInflationDeltaKey, nil
+	default:
+		return nil, sdkerrors.Wrapf(types.ErrInvalidModuleAccountGiven, "truncation delta can only be handled by (%s) or (%s) module accounts but (%s) was given", types.DeveloperVestingModuleAcctName, types.ModuleName, moduleAccountName)
 	}
-	return types.TruncatedInflationDeltaKey
 }
 
 // getProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the

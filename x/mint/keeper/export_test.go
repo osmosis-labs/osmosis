@@ -17,12 +17,12 @@ const (
 )
 
 var (
-	GetProportions                        = getProportions
-	GetTruncationStoreKeyForModuleAccount = getTruncationStoreKeyForModuleAccount
+	GetProportions                         = getProportions
+	GetTruncationStoreKeyFromModuleAccount = getTruncationStoreKeyFromModuleAccount
 )
 
-func (k Keeper) CalculateTotalTruncationDelta(ctx sdk.Context, key []byte, provisions sdk.Dec, amountDistributed sdk.Int) sdk.Dec {
-	return k.calculateTotalTruncationDelta(ctx, key, provisions, amountDistributed)
+func (k Keeper) CalculateTotalTruncationDelta(ctx sdk.Context, moduleAccountName string, provisions sdk.Dec, amountDistributed sdk.Int) (sdk.Dec, error) {
+	return k.calculateTotalTruncationDelta(ctx, moduleAccountName, provisions, amountDistributed)
 }
 
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
