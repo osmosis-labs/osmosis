@@ -1,4 +1,4 @@
-# ADR 001: Mint Truncation Refactor
+# ADR 001: Mint Truncations Handling Refactor
 
 ## Changelog
 
