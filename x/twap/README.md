@@ -63,9 +63,6 @@ func (k Keeper) GetArithmeticTwap(ctx sdk.Context,
 There are convenience methods for `GetArithmeticTwapToNow` which sets `endTime = ctx.BlockTime()`, and has minor gas reduction.
 For users who need TWAPs outside the 48 hours stored in the state machine, you can get the latest accumulation store record from `GetBeginBlockAccumulatorRecord`.
 
-All functions that call `LexicographicalOrderDenoms` (such as `getMostRecentRecordStoreRepresentation`, `getRecordAtOrBeforeTime`, and `NewTwapRecord`), both directly and indirectly, will swap the provided denoms to be in ascending lexicographical order. This means that regardless of input, asset0Denom is guaranteed to be lexicographically smaller than asset1Denom.
-If this does not occur, an error will be returned, likely indicating that the two denoms provided are equivalent (which is not allowed).
-
 ## Code layout
 
 **api.go** is the main file you should look at as a user of this module.
@@ -87,6 +84,7 @@ We maintain TWAP accumulation records for every AMM pool on Osmosis.
 
 Because Osmosis supports multi-asset pools, a complicating factor is that we have to store a record for every asset pair in the pool.
 For every pool, at a given point in time, we make one twap record entry per unique pair of denoms in the pool. If a pool has `k` denoms, the number of unique pairs is `k * (k - 1) / 2`.
+All public API's for the module will sort the input denoms to the canonical representation, so the caller does not need to worry about this. (The canonical representation is the denoms in lexicographical order)
 
 Each twap record stores [(source)](https://github.com/osmosis-labs/osmosis/tree/main/proto/osmosis/gamm/twap):
 * last spot price of base asset A in terms of quote asset B
