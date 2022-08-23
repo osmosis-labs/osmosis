@@ -61,7 +61,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			s.Commit()
 
 			// check on the correctness of all individual twap records
-			for i := len(denomPairs0); i < 0; i-- {
+			for i := 0; i < len(denomPairs0); i++ {
 				actualRecord, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
 				s.Require().NoError(err)
 				s.Require().Equal(expectedRecords[i], actualRecord)
