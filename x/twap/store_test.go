@@ -82,24 +82,24 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 		"set multi-asset pool record": {
 			recordsToSet: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom0),
-				newEmptyPriceRecord(1, baseTime, denom2, denom1)},
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2)},
 			poolId: 1,
 			expectedRecords: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom0)},
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2)},
 		},
 		"set multi-asset pool record - reverse order": {
 			recordsToSet: []types.TwapRecord{
-				newEmptyPriceRecord(1, baseTime, denom2, denom0),
-				newEmptyPriceRecord(1, baseTime, denom2, denom1),
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2),
 				newEmptyPriceRecord(1, baseTime, denom0, denom1)},
 			poolId: 1,
 			expectedRecords: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom1),
-				newEmptyPriceRecord(1, baseTime, denom2, denom0)},
+				newEmptyPriceRecord(1, baseTime, denom0, denom2),
+				newEmptyPriceRecord(1, baseTime, denom1, denom2)},
 		},
 	}
 
@@ -143,7 +143,7 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 	}{
 		"no entries":            {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, true},
 		"get at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultInputAt(baseTime), baseRecord, false},
-		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, true},
+		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, false},
 
 		"get latest (exact) w/ past entries": {
 			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(baseTime), baseRecord, false},
@@ -152,7 +152,7 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		"get sandwitched entry (exact)": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, false},
 		"rev sandwitched entry (exact)": {
-			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, true},
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, false},
 
 		"get future":                 {[]types.TwapRecord{baseRecord}, defaultInputAt(tPlus1), baseRecord, false},
 		"get future w/ past entries": {[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tPlus1), baseRecord, false},
