@@ -7,16 +7,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
-func (k Keeper) MigrateExistingPools(ctx sdk.Context, poolIds []uint64) error {
-	for _, pool := range poolIds {
-		err := k.afterCreatePool(ctx, pool)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 var _ types.GammHooks = &gammhook{}
 var _ epochtypes.EpochHooks = &epochhook{}
 
