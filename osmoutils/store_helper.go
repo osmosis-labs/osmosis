@@ -106,7 +106,6 @@ func noStopFn([]byte) bool {
 
 // MustGet gets key from store by mutating result
 // Panics on any error.
-// TODO: test
 func MustGet(store store.KVStore, key []byte, result proto.Message) {
 	b := store.Get(key)
 	if b == nil {

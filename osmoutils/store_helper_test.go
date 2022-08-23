@@ -6,10 +6,13 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
+	twaptypes "github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
 type TestSuite struct {
@@ -185,4 +188,144 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 func (s *TestSuite) TestNoStopFn_AlwaysFalse() {
 	s.Require().False(osmoutils.NoStopFn([]byte(keyA)))
 	s.Require().False(osmoutils.NoStopFn([]byte(keyB)))
+}
+
+// TestMustGet tests that MustGet retrieves the correct
+// values from the store and panics if an error is encountered.
+func (s *TestSuite) TestMustGet() {
+
+	tests := map[string]struct {
+		// keyys and values to preset
+		preSetKeyValues map[string]proto.Message
+
+		// keys and values to attempt to get and validate
+		getKeyValues map[string]proto.Message
+
+		actualResultProto proto.Message
+
+		expectPanic bool
+	}{
+		"basic valid test": {
+			preSetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			getKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			actualResultProto: &sdk.DecProto{},
+		},
+		"attempt to get non-existent key - panic": {
+			preSetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			getKeyValues: map[string]proto.Message{
+				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			actualResultProto: &sdk.DecProto{},
+
+			expectPanic: true,
+		},
+		"invalid proto Dec vs TwapRecord- error": {
+			preSetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+			},
+
+			getKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+			},
+
+			actualResultProto: &twaptypes.TwapRecord{},
+
+			expectPanic: true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupStoreWithBasePrefix()
+
+			// Setup
+			for key, value := range tc.preSetKeyValues {
+				osmoutils.MustSet(s.store, []byte(key), value)
+			}
+
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
+				for key, expectedValue := range tc.getKeyValues {
+					// System under test.
+					osmoutils.MustGet(s.store, []byte(key), tc.actualResultProto)
+					// Assertions.
+					s.Require().Equal(expectedValue.String(), tc.actualResultProto.String())
+				}
+			})
+		})
+	}
+}
+
+// TestMustSet tests that MustSet updates the store correctly
+// and panics if an error is encountered.
+func (s *TestSuite) TestMustSet() {
+	tests := map[string]struct {
+		// keyys and values to preset
+		setKey   string
+		setValue proto.Message
+
+		// keys and values to attempt to get and validate
+		getKeyValues map[string]proto.Message
+
+		actualResultProto proto.Message
+
+		key         []byte
+		result      proto.Message
+		expectPanic bool
+	}{
+		"basic valid Dec test": {
+			setKey: keyA,
+			setValue: &sdk.DecProto{
+				Dec: sdk.OneDec(),
+			},
+
+			actualResultProto: &sdk.DecProto{},
+		},
+		"basic valid TwapRecord test": {
+			setKey: keyA,
+			setValue: &twaptypes.TwapRecord{
+				PoolId: 2,
+			},
+
+			actualResultProto: &twaptypes.TwapRecord{},
+		},
+		"invalid set value": {
+			setKey:   keyA,
+			setValue: (*sdk.DecProto)(nil),
+
+			expectPanic: true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupStoreWithBasePrefix()
+
+			// Setup
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
+				osmoutils.MustSet(s.store, []byte(tc.setKey), tc.setValue)
+			})
+
+			if tc.expectPanic {
+				return
+			}
+
+			osmoutils.MustGet(s.store, []byte(tc.setKey), tc.actualResultProto)
+			s.Require().Equal(tc.setValue.String(), tc.actualResultProto.String())
+		})
+	}
 }
