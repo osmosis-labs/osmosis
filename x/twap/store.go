@@ -147,6 +147,7 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 		if lastParsedTime.After(parsedTime) {
 			return true
 		}
+		lastParsedTime = parsedTime
 		return false
 	}
 

@@ -145,7 +145,7 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		"no entries": {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
 			" Try storing the accumulator value. (requested time %s)", baseTime)},
 		"get at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultInputAt(baseTime), baseRecord, nil},
-		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, fmt.Errorf(" Provided asset0denom (%s) does not match twap.Asset0Denom (%s)", defaultRevInputAt(baseTime).asset0Denom, baseRecord.GetAsset0Denom())},
+		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, nil},
 
 		"get latest (exact) w/ past entries": {
 			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(baseTime), baseRecord, nil},
@@ -154,7 +154,7 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		"get sandwitched entry (exact)": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, nil},
 		"rev sandwitched entry (exact)": {
-			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, fmt.Errorf(" Provided asset0denom (%s) does not match twap.Asset0Denom (%s)", defaultRevInputAt(baseTime).asset0Denom, baseRecord.GetAsset0Denom())},
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, nil},
 
 		"get future":                 {[]types.TwapRecord{baseRecord}, defaultInputAt(tPlus1), baseRecord, nil},
 		"get future w/ past entries": {[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tPlus1), baseRecord, nil},
