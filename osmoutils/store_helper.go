@@ -116,15 +116,15 @@ func MustGet(store store.KVStore, key []byte, result proto.Message) {
 	}
 }
 
-// SetDec sets dec value to store at key. Panics on any error.
-// TODO: test
-func SetDecToStore(store store.KVStore, key []byte, value sdk.Dec) {
-	MustSet(store, key, &sdk.DecProto{})
+// MustSetDec sets dec value to store at key. Panics on any error.
+func MustSetDec(store store.KVStore, key []byte, value sdk.Dec) {
+	MustSet(store, key, &sdk.DecProto{
+		Dec: value,
+	})
 }
 
-// GetDecFromStore gets dec value from store at key. Panics on any error.
-// TODO: test
-func GetDecFromStore(store store.KVStore, key []byte, value sdk.Dec) sdk.Dec {
+// MustGetDec gets dec value from store at key. Panics on any error.
+func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
 	result := &sdk.DecProto{}
 	MustGet(store, key, result)
 	return result.Dec
