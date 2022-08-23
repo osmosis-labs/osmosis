@@ -51,12 +51,10 @@ func (suite *KeeperTestSuite) TestMintDenomMsg() {
 
 // TestBurnDenomMsg tests TypeMsgBurn message is emitted on a successful burn
 func (suite *KeeperTestSuite) TestBurnDenomMsg() {
-	var addr0bal int64
 	// Create a denom.
 	suite.CreateDefaultDenom()
 	// mint 10 default token for testAcc[0]
 	suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 10)))
-	addr0bal += 10
 
 	for _, tc := range []struct {
 		desc                  string
@@ -77,7 +75,7 @@ func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 			burnDenom:             suite.defaultDenom,
 			admin:                 suite.TestAccs[0].String(),
 			valid:                 true,
-			expectedMessageEvents: 2, // TODO: why is this two
+			expectedMessageEvents: 1,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
