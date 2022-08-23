@@ -46,17 +46,20 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	// TODO: Add E2E tests for this
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	}
+	//if s.skipIBC {
+	//	s.T().Skip("Skipping IBC tests")
+	//}
 	chainA := s.configurer.GetChainConfig(0)
 	chainB := s.configurer.GetChainConfig(1)
 
-	//node, err := chainA.GetDefaultNode()
-	//s.NoError(err)
-	// This doesn't work. Why?
-	//node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
+	node, err := chainA.GetDefaultNode()
+	s.NoError(err)
 
+	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+
+	node.InstantiateWasmContract("1", fmt.Sprintf("{\"gov_module\": \"%s\", \"ibc_module\": \"osmo1g7ajkk295vactngp74shkfrprvjrdwn662dg26\", \"paths\": [{\"channel_id\": \"channel-0\", \"denom\": \"%s\", \"quotas\": [{\"name\":\"testQuota\", \"duration\": 86400, \"send_recv\": [1, 1]}] } ] }", chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken.Denom), initialization.ValidatorWalletName)
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 
 }
