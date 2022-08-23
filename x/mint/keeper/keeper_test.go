@@ -5,10 +5,9 @@ import (
 
 	"github.com/cosmos/btcutil/bech32"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -1118,6 +1117,49 @@ func (suite *KeeperTestSuite) TestHandleTruncationDelta() {
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedDistributedAmount.String(), actualAmount.String())
 			suite.Require().Equal(tc.expectedPersistedInStore, mintKeeper.GetTruncationDelta(ctx, storeKey))
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestSetTruncationDelta() {
+	tests := map[string]struct {
+		key             []byte
+		truncationDelta sdk.Dec
+		expectError     bool
+	}{
+		"developer vesting delta key": {
+			key:             types.TruncatedDeveloperVestingDeltaKey,
+			truncationDelta: sdk.NewDecWithPrec(2, 1),
+		},
+		"inflation delta key": {
+			key:             types.TruncatedInflationDeltaKey,
+			truncationDelta: sdk.NewDecWithPrec(2, 1),
+		},
+		"negative delta - error": {
+			key:             types.TruncatedInflationDeltaKey,
+			truncationDelta: sdk.NewDecWithPrec(2, 1).Neg(),
+
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			ctx := suite.Ctx
+			mintKeeper := suite.App.MintKeeper
+
+			err := mintKeeper.SetTruncationDelta(ctx, tc.key, tc.truncationDelta)
+
+			if tc.expectError {
+				suite.Require().Error(err, "test: %s", name)
+				return
+			}
+
+			suite.Require().NoError(err, "test: %s", name)
+
+			actual := mintKeeper.GetTruncationDelta(ctx, tc.key)
+			suite.Require().Equal(tc.truncationDelta, actual, "test: %s", name)
 		})
 	}
 }

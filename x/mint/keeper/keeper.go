@@ -116,13 +116,12 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 // GetInflationTruncationDelta returns the truncation delta.
-// TODO: test
+// Panics if key is invalid.
 func (k Keeper) GetTruncationDelta(ctx sdk.Context, key []byte) sdk.Dec {
 	return osmoutils.MustGetDec(ctx.KVStore(k.storeKey), key)
 }
 
-// SetTruncationDelta sets the truncation delta.
-// TODO: test
+// SetTruncationDelta sets the truncation delta, returning an error if any. nil otherwise.
 func (k Keeper) SetTruncationDelta(ctx sdk.Context, key []byte, truncationDelta sdk.Dec) error {
 	if truncationDelta.LT(sdk.ZeroDec()) {
 		return sdkerrors.Wrapf(types.ErrInvalidAmount, "truncation delta must be positive, was (%s)", truncationDelta)
