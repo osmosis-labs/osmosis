@@ -62,7 +62,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.skipUpgrade, err = strconv.ParseBool(str)
 		s.Require().NoError(err)
 		if s.skipUpgrade {
-			s.T().Log(fmt.Sprintf("%s was true, skipping upgrade tests", skipIBCEnv))
+			s.T().Log(fmt.Sprintf("%s was true, skipping upgrade tests", skipUpgradeEnv))
 		}
 	}
 	upgradeSettings.IsEnabled = !s.skipUpgrade
