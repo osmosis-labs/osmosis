@@ -329,3 +329,80 @@ func (s *TestSuite) TestMustSet() {
 		})
 	}
 }
+
+// TestMustGetDec tests that MustGetDec retrieves the correct
+// decimal values from the store and panics if an error is encountered.
+func (s *TestSuite) TestMustGetDec() {
+
+	tests := map[string]struct {
+		// keyys and values to preset
+		preSetKeyValues map[string]sdk.Dec
+
+		// keys and values to attempt to get and validate
+		getKeyValues map[string]sdk.Dec
+
+		expectPanic bool
+	}{
+		"valid get": {
+			preSetKeyValues: map[string]sdk.Dec{
+				keyA: sdk.OneDec(),
+				keyB: sdk.OneDec().Add(sdk.OneDec()),
+				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+			},
+
+			getKeyValues: map[string]sdk.Dec{
+				keyA: sdk.OneDec(),
+				keyB: sdk.OneDec().Add(sdk.OneDec()),
+				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+			},
+		},
+		"attempt to get non-existent key - panic": {
+			preSetKeyValues: map[string]sdk.Dec{
+				keyA: sdk.OneDec(),
+				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
+			},
+
+			getKeyValues: map[string]sdk.Dec{
+				keyB: sdk.OneDec().Add(sdk.OneDec()),
+			},
+
+			expectPanic: true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupStoreWithBasePrefix()
+
+			// Setup
+			for key, value := range tc.preSetKeyValues {
+				osmoutils.MustSetDec(s.store, []byte(key), value)
+			}
+
+			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
+				for key, expectedValue := range tc.getKeyValues {
+					// System under test.
+					actualDec := osmoutils.MustGetDec(s.store, []byte(key))
+					// Assertions.
+					s.Require().Equal(expectedValue.String(), actualDec.String())
+				}
+			})
+		})
+	}
+}
+
+// TestMustSetDec tests that MustSetDec updates the store correctly
+// with the right decimal value.
+func (s *TestSuite) TestMustSetDec() {
+	// Setup.
+	s.SetupStoreWithBasePrefix()
+
+	originalDecValue := sdk.OneDec()
+
+	// System under test.
+	osmoutils.MustSetDec(s.store, []byte(keyA), originalDecValue)
+
+	// Assertions.
+	retrievedDecVaue := osmoutils.MustGetDec(s.store, []byte(keyA))
+	s.Require().Equal(originalDecValue.String(), retrievedDecVaue.String())
+}
