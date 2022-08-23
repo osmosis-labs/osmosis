@@ -147,7 +147,6 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 		if lastParsedTime.After(parsedTime) {
 			return true
 		}
-		lastParsedTime = parsedTime
 		return false
 	}
 
@@ -162,11 +161,7 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 	}
 
 	for _, twap := range twaps {
-		if twap.Asset0Denom != asset0Denom {
-			return types.TwapRecord{}, fmt.Errorf(" Provided asset0denom (%s) does not match twap.Asset0Denom (%s)", asset0Denom, twap.Asset0Denom)
-		} else if twap.Asset1Denom != asset1Denom {
-			return types.TwapRecord{}, fmt.Errorf(" Provided asset1denom (%s) does not match twap.Asset1Denom (%s)", asset1Denom, twap.Asset1Denom)
-		} else {
+		if twap.Asset0Denom == asset0Denom && twap.Asset1Denom == asset1Denom {
 			return twap, nil
 		}
 	}
