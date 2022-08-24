@@ -306,6 +306,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 // So we persist it until the next epoch. Then, at at epoch 2, we get a delta of 1.2 (0.6 from epoch 1 and 0.6 from epoch 2).
 // Now, 1 can be distributed and 0.2 gets persisted until the next epoch.
 // CONTRACT: provisions are greater than or equal to amountDistributed.
+// nolint: unused
 func (k Keeper) calculateTotalTruncationDelta(ctx sdk.Context, modulAccountName string, provisions sdk.Dec, amountDistributed sdk.Int) (sdk.Dec, error) {
 	truncationDelta, err := k.GetTruncationDelta(ctx, modulAccountName)
 	if err != nil {
@@ -363,6 +364,7 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 // Additionally, it errors in the following cases:
 // - unable to mint tokens
 // - unable to fund the community pool
+// nolint: unused
 func (k Keeper) handleTruncationDelta(ctx sdk.Context, moduleAccountName string, provisions sdk.DecCoin, amountDistributed sdk.Int) (sdk.Int, error) {
 	if moduleAccountName != types.DeveloperVestingModuleAcctName && moduleAccountName != types.ModuleName {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidModuleAccountGiven, "truncation delta can only be handled by (%s) or (%s) module accounts but (%s) was given", types.DeveloperVestingModuleAcctName, types.ModuleName, moduleAccountName)
