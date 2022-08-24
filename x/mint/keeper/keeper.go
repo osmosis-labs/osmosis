@@ -115,7 +115,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
-// GetInflationTruncationDelta returns the truncation delta.
+// GetTruncationDelta returns the truncation delta.
 // Only developer vesting and mint module accounts are allowed.
 // Returns error if invalid module account. Panics if key is invalid.
 func (k Keeper) GetTruncationDelta(ctx sdk.Context, moduleAccountName string) (sdk.Dec, error) {
