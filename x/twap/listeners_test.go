@@ -1,12 +1,12 @@
 package twap_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
+	"github.com/osmosis-labs/osmosis/v11/x/twap"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
@@ -20,11 +20,11 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 		runSwap bool
 	}{
 		"Uni2 Pool, no swap on pool creation block": {
-			defaultUniV2Coins,
+			defaultTwoAssetCoin,
 			false,
 		},
 		"Uni2 Pool, swap on pool creation block": {
-			defaultUniV2Coins,
+			defaultTwoAssetCoin,
 			true,
 		},
 		"Three asset balancer pool, no swap on pool creation block": {
@@ -88,25 +88,25 @@ func (s *TestSuite) TestEndBlock() {
 	}{
 		{
 			"no swap after pool creation",
-			defaultUniV2Coins,
+			defaultTwoAssetCoin,
 			false,
 			false,
 		},
 		{
 			"swap in the same block with pool creation",
-			defaultUniV2Coins,
+			defaultTwoAssetCoin,
 			true,
 			false,
 		},
 		{
 			"swap after a block has passed by after pool creation",
-			defaultUniV2Coins,
+			defaultTwoAssetCoin,
 			false,
 			true,
 		},
 		{
 			"swap in both first and second block",
-			defaultUniV2Coins,
+			defaultTwoAssetCoin,
 			true,
 			true,
 		},
@@ -145,7 +145,7 @@ func (s *TestSuite) TestEndBlock() {
 			secondBlockTime := s.Ctx.BlockTime()
 
 			// get updated twap record after end block
-			twapAfterBlock1, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
+			twapAfterBlock1, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, secondBlockTime, denom0, denom1)
 			s.Require().NoError(err)
 
 			// if no swap happened in block1, there should be no change
@@ -201,30 +201,28 @@ func (s *TestSuite) TestEndBlock() {
 
 // TestAfterEpochEnd tests if records get succesfully deleted via `AfterEpochEnd` hook.
 // We test details of correct implementation of pruning method in store test.
-// TODO: improve test using `GetAllHistoricalTimeIndexedTWAPs` and `GetAllHistoricalPoolIndexedTWAPs`
 func (s *TestSuite) TestAfterEpochEnd() {
 	s.SetupTest()
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
-	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
+	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoin...)
 	twapBeforeEpoch, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
 	s.Require().NoError(err)
-	fmt.Println(twapBeforeEpoch.Time.String())
-
 	pruneEpochIdentifier := s.App.TwapKeeper.PruneEpochIdentifier(s.Ctx)
-	recordHistoryKeepPeriod := 48 * time.Hour
 
 	// make prune record time pass by, running prune epoch after this should prune old record
-	s.Ctx = s.Ctx.WithBlockTime(baseTime.Add(recordHistoryKeepPeriod).Add(time.Second))
+	s.Ctx = s.Ctx.WithBlockTime(baseTime.Add(twap.RecordHistoryKeepPeriod).Add(time.Second))
 
 	allEpochs := s.App.EpochsKeeper.AllEpochInfos(s.Ctx)
-	// iterate through all epoch, ensure that epoch only gets pruned in prune epoch identifier
-	for _, epoch := range allEpochs {
-		s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, epoch.Identifier, int64(1))
 
-		recentTwapRecords, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, baseTime.Add(epoch.Duration), denom0, denom1)
+	// iterate through all epoch, ensure that epoch only gets pruned in prune epoch identifier
+	// we reverse iterate here to test epochs that are not prune epoch
+	for i := len(allEpochs) - 1; i >= 0; i-- {
+		s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpochs[i].Identifier, int64(1))
+
+		recentTwapRecords, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, baseTime.Add(allEpochs[i].Duration), denom0, denom1)
 
 		// old record should have been pruned here
-		if epoch.Identifier == pruneEpochIdentifier {
+		if allEpochs[i].Identifier == pruneEpochIdentifier {
 			s.Require().Error(err)
 			s.Require().NotEqual(twapBeforeEpoch, recentTwapRecords)
 
@@ -241,7 +239,7 @@ func (s *TestSuite) TestAfterEpochEnd() {
 // The purpose of this test is to test whether we correctly store the state of the
 // pools that has changed with price impact.
 func (s *TestSuite) TestAfterSwap_JoinPool() {
-	two_asset_coins := defaultUniV2Coins
+	two_asset_coins := defaultTwoAssetCoin
 	three_asset_coins := defaultThreeAssetCoins
 	tests := []struct {
 		name      string

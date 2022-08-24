@@ -1,7 +1,6 @@
 package twap
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,8 +77,6 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 // before current block time.
 func (k Keeper) pruneRecords(ctx sdk.Context) error {
 	lastKeptTime := ctx.BlockTime().Add(-recordHistoryKeepPeriod)
-	fmt.Println("====last kept time should be")
-	fmt.Println(lastKeptTime.String())
 	return k.pruneRecordsBeforeTime(ctx, lastKeptTime)
 }
 

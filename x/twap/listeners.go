@@ -1,8 +1,6 @@
 package twap
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
@@ -29,9 +27,9 @@ type epochhook struct {
 func (k Keeper) EpochHooks() epochtypes.EpochHooks {
 	return &epochhook{k}
 }
+
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
-		fmt.Println("---after epoch end")
 		if err := hook.k.pruneRecords(ctx); err != nil {
 			ctx.Logger().Error("Error pruning old twaps at the epoch end", err)
 		}
