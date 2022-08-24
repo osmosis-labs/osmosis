@@ -335,7 +335,7 @@ func (s *TestSuite) TestMustSet() {
 func (s *TestSuite) TestMustGetDec() {
 
 	tests := map[string]struct {
-		// keyys and values to preset
+		// keys and values to preset
 		preSetKeyValues map[string]sdk.Dec
 
 		// keys and values to attempt to get and validate
