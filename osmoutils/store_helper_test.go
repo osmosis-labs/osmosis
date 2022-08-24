@@ -339,7 +339,7 @@ func (s *TestSuite) TestMustGetDec() {
 		preSetKeyValues map[string]sdk.Dec
 
 		// keys and values to attempt to get and validate
-		getKeyValues map[string]sdk.Dec
+		expectedGetKeyValues map[string]sdk.Dec
 
 		expectPanic bool
 	}{
@@ -350,7 +350,7 @@ func (s *TestSuite) TestMustGetDec() {
 				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
 			},
 
-			getKeyValues: map[string]sdk.Dec{
+			expectedGetKeyValues: map[string]sdk.Dec{
 				keyA: sdk.OneDec(),
 				keyB: sdk.OneDec().Add(sdk.OneDec()),
 				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
@@ -362,7 +362,7 @@ func (s *TestSuite) TestMustGetDec() {
 				keyC: sdk.OneDec().Add(sdk.OneDec()).Add(sdk.OneDec()),
 			},
 
-			getKeyValues: map[string]sdk.Dec{
+			expectedGetKeyValues: map[string]sdk.Dec{
 				keyB: sdk.OneDec().Add(sdk.OneDec()),
 			},
 
@@ -380,7 +380,7 @@ func (s *TestSuite) TestMustGetDec() {
 			}
 
 			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
-				for key, expectedValue := range tc.getKeyValues {
+				for key, expectedValue := range tc.expectedGetKeyValues {
 					// System under test.
 					actualDec := osmoutils.MustGetDec(s.store, []byte(key))
 					// Assertions.
