@@ -135,6 +135,15 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			expectedDeveloperVestingAmount := tc.expectedDeveloperVestingAmountDelta.Add(originalVestingCoins.Amount)
 			suite.Require().Equal(expectedDeveloperVestingAmount.Int64(), actualVestingCoins.Amount.Int64())
 
+			// Validate that truncation deltas are inirialized to zero.
+			developerVestingDelta, err := mintKeeper.GetTruncationDelta(ctx, types.DeveloperVestingModuleAcctName)
+			suite.Require().NoError(err)
+			suite.Require().Equal(sdk.ZeroDec(), developerVestingDelta)
+
+			inflationDelta, err := mintKeeper.GetTruncationDelta(ctx, types.ModuleName)
+			suite.Require().NoError(err)
+			suite.Require().Equal(sdk.ZeroDec(), inflationDelta)
+
 			// Last halven epoch num is set to 0.
 			suite.Require().Equal(tc.expectedHalvenStartedEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
 		})

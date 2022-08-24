@@ -18,7 +18,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	k.SetMinter(ctx, data.Minter)
 	k.SetParams(ctx, data.Params)
 
-	// TODO: test
 	if err := k.SetTruncationDelta(ctx, types.DeveloperVestingModuleAcctName, sdk.ZeroDec()); err != nil {
 		panic(err)
 	}
