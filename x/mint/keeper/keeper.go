@@ -359,7 +359,7 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 // These truncation distributions have eventual guarantees. That is, they are guaranteed to be distributed
 // eventually but not necessarily during the same epoch.
 // Returns an error if the module account name is any other than mint or developer vesting is given.
-// The truncation delta is calculated by subtracting amountDistributed from probisions and adding to
+// The truncation delta is calculated by subtracting amountDistributed from provisions and adding to
 // any leftover truncations from the previous epoch.
 // Therefore, provisions must be greater than or equal to the amount distributed. Errors if not.
 // For any amount to be distributed from the mint module account, it mints the estimated truncation amount
