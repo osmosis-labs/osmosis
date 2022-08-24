@@ -77,12 +77,18 @@ func (s *KeeperTestHelper) SetEpochStartTime() {
 
 // CreateTestContext creates a test context.
 func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
+	ctx, _ := s.CreateTestContextWithMultiStore()
+	return ctx
+}
+
+// CreateTestContextWithMultiStore creates a test context and returns it together with multi store.
+func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, sdk.CommitMultiStore) {
 	db := dbm.NewMemDB()
 	logger := log.NewNopLogger()
 
 	ms := rootmulti.NewStore(db, logger)
 
-	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
+	return sdk.NewContext(ms, tmtypes.Header{}, false, logger), ms
 }
 
 // CreateTestContext creates a test context.
