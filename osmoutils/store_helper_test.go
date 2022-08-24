@@ -195,7 +195,7 @@ func (s *TestSuite) TestNoStopFn_AlwaysFalse() {
 func (s *TestSuite) TestMustGet() {
 
 	tests := map[string]struct {
-		// keyys and values to preset
+		// keys and values to preset
 		preSetKeyValues map[string]proto.Message
 
 		// keys and values to attempt to get and validate
