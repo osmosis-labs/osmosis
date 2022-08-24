@@ -199,7 +199,7 @@ func (s *TestSuite) TestMustGet() {
 		preSetKeyValues map[string]proto.Message
 
 		// keys and values to attempt to get and validate
-		getKeyValues map[string]proto.Message
+		expectedGetKeyValues map[string]proto.Message
 
 		actualResultProto proto.Message
 
@@ -212,7 +212,7 @@ func (s *TestSuite) TestMustGet() {
 				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
 			},
 
-			getKeyValues: map[string]proto.Message{
+			expectedGetKeyValues: map[string]proto.Message{
 				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
 				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
 				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
@@ -226,7 +226,7 @@ func (s *TestSuite) TestMustGet() {
 				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
 			},
 
-			getKeyValues: map[string]proto.Message{
+			expectedGetKeyValues: map[string]proto.Message{
 				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
 			},
 
@@ -239,7 +239,7 @@ func (s *TestSuite) TestMustGet() {
 				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
 			},
 
-			getKeyValues: map[string]proto.Message{
+			expectedGetKeyValues: map[string]proto.Message{
 				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
 			},
 
@@ -259,7 +259,7 @@ func (s *TestSuite) TestMustGet() {
 			}
 
 			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
-				for key, expectedValue := range tc.getKeyValues {
+				for key, expectedValue := range tc.expectedGetKeyValues {
 					// System under test.
 					osmoutils.MustGet(s.store, []byte(key), tc.actualResultProto)
 					// Assertions.
