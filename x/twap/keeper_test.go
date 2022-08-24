@@ -42,7 +42,7 @@ func (s *TestSuite) SetupTest() {
 }
 
 var (
-	basicParams = types.NewParams("week")
+	basicParams = types.NewParams("week", 48*time.Hour)
 
 	mostRecentRecordPoolOne = types.TwapRecord{
 		PoolId:                      basePoolId,
@@ -180,7 +180,7 @@ func (suite *TestSuite) TestTwapInitGenesis() {
 		},
 		"custom invalid genesis - error": {
 			twapGenesis: types.NewGenesisState(
-				types.NewParams("week"),
+				types.NewParams("week", 48*time.Hour),
 				[]types.TwapRecord{
 					{
 						PoolId:                      0, // invalid
