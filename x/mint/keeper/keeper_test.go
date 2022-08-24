@@ -721,7 +721,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 }
 
 // TestCalculateTruncationsDelta tests that the per-epoch truncation delta is calculated
-// correctly. That includes checking that the pre-existing delta is correctly
+// correctly. That includes checking that the pre-existing delta is
 // extracted from the store at the desired index and summed with the new delta
 // from the input values.
 func (suite *KeeperTestSuite) TestCalculateTruncationDelta() {
