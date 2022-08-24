@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"io"
 	"net/http"
 	"strconv"
@@ -58,6 +59,20 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 		return sdk.Coins{}, err
 	}
 	return balancesResp.GetBalances(), nil
+}
+
+func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
+	path := fmt.Sprintf("/cosmwasm/wasm/v1/code/%d/contracts", codeId)
+	bz, err := n.QueryGRPCGateway(path)
+
+	require.NoError(n.t, err)
+
+	var contractsResponse wasmtypes.QueryContractsByCodeResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &contractsResponse); err != nil {
+		return nil, err
+	}
+
+	return contractsResponse.Contracts, nil
 }
 
 func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {

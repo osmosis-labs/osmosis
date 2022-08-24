@@ -2,6 +2,7 @@ package chain
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -37,6 +38,31 @@ func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully initialized")
+}
+
+func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
+	n.LogActionF("submitting param change proposal %s", proposalJson)
+	// ToDo: Is there a better way to do this?
+	wd, err := os.Getwd()
+	require.NoError(n.t, err)
+	localProposalFile := wd + "/scripts/param_change_proposal.json"
+	f, err := os.Create(localProposalFile)
+	require.NoError(n.t, err)
+	_, err = f.WriteString(proposalJson)
+	require.NoError(n.t, err)
+	err = f.Close()
+	require.NoError(n.t, err)
+
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "param-change", "/osmosis/param_change_proposal.json", "--is-expedited=true", fmt.Sprintf("--from=%s", from)}
+	n.LogActionF("executing", cmd)
+
+	_, _, err = n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	err = os.Remove(localProposalFile)
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully submitted param change proposal")
 }
 
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {

@@ -45,22 +45,59 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
-	// TODO: Add E2E tests for this
-	//if s.skipIBC {
-	//	s.T().Skip("Skipping IBC tests")
-	//}
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
 	chainA := s.configurer.GetChainConfig(0)
 	chainB := s.configurer.GetChainConfig(1)
 
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
-	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	balance, _ := node.QueryBalances(chainA.NodeConfigs[0].PublicAddress)
+	s.T().Log("CHAIN-A balance:", balance) // 96_700_000_000 uosmo
 
-	node.InstantiateWasmContract("1", fmt.Sprintf("{\"gov_module\": \"%s\", \"ibc_module\": \"osmo1g7ajkk295vactngp74shkfrprvjrdwn662dg26\", \"paths\": [{\"channel_id\": \"channel-0\", \"denom\": \"%s\", \"quotas\": [{\"name\":\"testQuota\", \"duration\": 86400, \"send_recv\": [1, 1]}] } ] }", chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken.Denom), initialization.ValidatorWalletName)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
+	// Sending >1%
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, initialization.OsmoBalanceA*0.011))
+
+	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
+	chainA.LatestCodeId += 1
+	node.InstantiateWasmContract(strconv.Itoa(chainA.LatestCodeId), fmt.Sprintf("{\"gov_module\": \"%s\", \"ibc_module\": \"osmo1g7ajkk295vactngp74shkfrprvjrdwn662dg26\", \"paths\": [{\"channel_id\": \"channel-0\", \"denom\": \"%s\", \"quotas\": [{\"name\":\"testQuota\", \"duration\": 86400, \"send_recv\": [1, 1]}] } ] }", chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken.Denom), initialization.ValidatorWalletName)
+
+	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
+	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
+	s.T().Log(contracts)
+
+	node.SubmitParamChangeProposal(fmt.Sprintf(`{"title":"Param change","description":"Changing rate limit contract param",
+"changes":[{"subspace":"rate-limited-ibc","key":"contract","value":{"contract_address":"%s"}}],
+"deposit":"10000000stake"}`, contracts[0]), initialization.ValidatorWalletName)
+	chainA.LatestProposalNumber += 1
+
+	for _, n := range chainA.NodeConfigs {
+		n.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
+	}
+
+	s.Eventually(
+		func() bool {
+			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := node.QueryPropTally(chainA.LatestProposalNumber)
+			if err != nil {
+				return false
+			}
+			if abstainTotal.Int64()+noTotal.Int64()+noWithVetoTotal.Int64()+yesTotal.Int64() <= 0 {
+				return false
+			}
+			return true
+		},
+		1*time.Minute,
+		10*time.Millisecond,
+		"Osmosis node failed to retrieve prop tally",
+	)
+
+	// Sending <1%. Should work
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, initialization.OsmoBalanceA*0.08))
+
+	// Sending >1%. Should fail
+	chainA.FailIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, initialization.OsmoBalanceA*0.011))
 
 }
 

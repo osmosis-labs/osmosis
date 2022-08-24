@@ -28,6 +28,8 @@ type Config struct {
 	LatestLockNumber     int
 	NodeConfigs          []*NodeConfig
 
+	LatestCodeId int
+
 	t                *testing.T
 	containerManager *containers.Manager
 }
@@ -125,7 +127,7 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
 				tokenPost := balancesDstPost.AmountOfNoDenomValidation(ibcCoin[0].Denom)
-				resPre := initialization.OsmoToken.Amount
+				resPre := token.Amount
 				resPost := tokenPost.Sub(tokenPre)
 				return resPost.Uint64() == resPre.Uint64()
 			} else {
@@ -138,6 +140,14 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	)
 
 	c.t.Log("successfully sent IBC tokens")
+}
+
+func (c *Config) FailIBC(dstChain *Config, recipient string, token sdk.Coin) {
+	c.t.Logf("IBC sending %s from %s to %s (%s)", token, c.Id, dstChain.Id, recipient)
+	cmd := []string{"hermes", "tx", "raw", "ft-transfer", dstChain.Id, c.Id, "transfer", "channel-0", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
+	_, _, err := c.containerManager.ExecHermesCmd(c.t, cmd, "Success")
+	require.Error(c.t, err)
+	c.t.Logf("IBC transfer failed as expected")
 }
 
 // GetDefaultNode returns the default node of the chain.
