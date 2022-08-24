@@ -92,12 +92,12 @@ func TestRandomizedGenState(t *testing.T) {
 	// Mint epoch provisions.
 	expectedEpochProvisions := epochProvisionsDec.Mul(sdk.OneDec().Sub(devRewardsProportion))
 	require.Equal(t, expectedDenom, mintGenesis.Params.MintDenom)
-	require.Equal(t, fmt.Sprintf("%s%s", expectedEpochProvisions, expectedDenom), mintGenesis.Minter.InflationProvisions(mintGenesis.Params).String())
+	require.Equal(t, fmt.Sprintf("%s%s", expectedEpochProvisions, expectedDenom), mintGenesis.Minter.GetInflationProvisions(mintGenesis.Params).String())
 
 	// Developer rewards epoch provisions
 	expectedDevRewardsProvisions := epochProvisionsDec.Mul(devRewardsProportion)
 	require.Equal(t, expectedDenom, mintGenesis.Params.MintDenom)
-	require.Equal(t, fmt.Sprintf("%s%s", expectedDevRewardsProvisions, expectedDenom), mintGenesis.Minter.DeveloperVestingEpochProvisions(mintGenesis.Params).String())
+	require.Equal(t, fmt.Sprintf("%s%s", expectedDevRewardsProvisions, expectedDenom), mintGenesis.Minter.GetDeveloperVestingEpochProvisions(mintGenesis.Params).String())
 }
 
 // TestRandomizedGenState_Invalid tests abnormal scenarios of applying RandomizedGenState.

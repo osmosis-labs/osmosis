@@ -435,8 +435,6 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 	}
 }
 
-// TODO: test cases for AfterEpochEnd across 2 epochs (transitions)
-
 // TestAfterEpochEnd_MultiEpoch_Inflation tests that inflation is functioning as expected.
 // https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db
 // The formula for estimating provisions at year N is given by the sum of the geometric sequence:

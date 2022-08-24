@@ -46,7 +46,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.setLastReductionEpochNum(ctx, epochNumber)
 		}
 
-		totalDistributed, err := k.distributeEpochProvisions(ctx, minter.InflationProvisions(params), minter.DeveloperVestingEpochProvisions(params), params.DistributionProportions, params.WeightedDeveloperRewardsReceivers)
+		totalDistributed, err := k.distributeEpochProvisions(ctx, minter.GetInflationProvisions(params), minter.GetDeveloperVestingEpochProvisions(params), params.DistributionProportions, params.WeightedDeveloperRewardsReceivers)
 		if err != nil {
 			panic(err)
 		}

@@ -4,10 +4,21 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
+)
+
+var (
+	defaultDeveloperVestingProportion = sdk.NewDecWithPrec(3, 1)
+	defaultProvisionsAmount           = sdk.NewDec(10)
+	defaultParams                     = types.Params{
+		MintDenom: sdk.DefaultBondDenom,
+		DistributionProportions: types.DistributionProportions{
+			DeveloperRewards: defaultDeveloperVestingProportion,
+		},
+	}
 )
 
 // Benchmarking :)
@@ -27,7 +38,7 @@ func BenchmarkEpochProvision(b *testing.B) {
 
 	// run the EpochProvision function b.N times
 	for n := 0; n < b.N; n++ {
-		minter.InflationProvisions(params)
+		minter.GetInflationProvisions(params)
 	}
 }
 
@@ -80,4 +91,40 @@ func TestMinterValidate(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestGetInflationProvisions sanity checks that inflation provisons are calculated correctly.
+func TestGetInflationProvisions(t *testing.T) {
+	// Setup
+	var (
+		minter = types.NewMinter(defaultProvisionsAmount)
+
+		expectedDenom           = defaultParams.MintDenom
+		expectedInflationAmount = defaultProvisionsAmount.Mul(sdk.OneDec().Sub(defaultDeveloperVestingProportion))
+	)
+
+	// System under test
+	actualInflationProvisions := minter.GetInflationProvisions(defaultParams)
+
+	// Assertions
+	require.Equal(t, expectedDenom, actualInflationProvisions.Denom)
+	require.Equal(t, expectedInflationAmount, actualInflationProvisions.Amount)
+}
+
+// TestGetDeveloperVestingProvisions sanity checks that developer vesting provisons are calculated correctly.
+func TestGetDeveloperVestingProvisions(t *testing.T) {
+	// Setup
+	var (
+		minter = types.NewMinter(defaultProvisionsAmount)
+
+		expectedDenom           = defaultParams.MintDenom
+		expectedInflationAmount = defaultProvisionsAmount.Mul(defaultDeveloperVestingProportion)
+	)
+
+	// System under test
+	actualInflationProvisions := minter.GetDeveloperVestingEpochProvisions(defaultParams)
+
+	// Assertions
+	require.Equal(t, expectedDenom, actualInflationProvisions.Denom)
+	require.Equal(t, expectedInflationAmount, actualInflationProvisions.Amount)
 }

@@ -69,6 +69,18 @@ func DefaultParams() Params {
 	}
 }
 
+// GetInflationProportion returns the inflation proportion of epoch
+// provisions.
+func (p Params) GetInflationProportion() sdk.Dec {
+	return sdk.OneDec().Sub(p.DistributionProportions.DeveloperRewards)
+}
+
+// GetDeveloperVestingProportion returns the developer vesting proportion of epoch
+// provisions.
+func (p Params) GetDeveloperVestingProportion() sdk.Dec {
+	return p.DistributionProportions.DeveloperRewards
+}
+
 // Validate validates mint module parameters. Returns nil if valid,
 // error otherwise
 func (p Params) Validate() error {
