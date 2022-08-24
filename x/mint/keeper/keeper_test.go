@@ -1091,6 +1091,15 @@ func (suite *KeeperTestSuite) TestHandleTruncationDelta() {
 			expectedDistributedAmount: sdk.OneInt(),
 			expectedPersistedInStore:  sdk.NewDecWithPrec(2, 1),
 		},
+		"valid case: 100 - 100 + 0 = 0; none distributed or persisted in store; mint module account": {
+			moduleAccountName: types.ModuleName,
+			preExistingDelta:  sdk.ZeroDec(),
+			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(100)),
+			amountDistributed: sdk.NewInt(100),
+
+			expectedDistributedAmount: sdk.ZeroInt(),
+			expectedPersistedInStore:  sdk.ZeroDec(),
+		},
 		"invalid module account name - error": {
 			moduleAccountName: poolincentivestypes.ModuleName,
 			preExistingDelta:  sdk.NewDecWithPrec(2, 1),
