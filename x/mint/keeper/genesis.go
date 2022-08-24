@@ -18,9 +18,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	k.SetMinter(ctx, data.Minter)
 	k.SetParams(ctx, data.Params)
 
+	// developer vesting module account delta initialization.
 	if err := k.SetTruncationDelta(ctx, types.DeveloperVestingModuleAcctName, sdk.ZeroDec()); err != nil {
 		panic(err)
 	}
+	// mint module account (inflation) delta initialization.
 	if err := k.SetTruncationDelta(ctx, types.ModuleName, sdk.ZeroDec()); err != nil {
 		panic(err)
 	}
