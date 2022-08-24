@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -14,6 +15,7 @@ func CheckRateLimits(ctx sdk.Context, wasmKeeper *wasmkeeper.Keeper,
 	channelValue sdk.Int, sourceChannel, denom string,
 	amount string,
 ) error {
+	fmt.Println("Checking ratelimits")
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
 		return err

@@ -70,7 +70,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	node.SubmitParamChangeProposal(fmt.Sprintf(`{"title":"Param change","description":"Changing rate limit contract param",
 "changes":[{"subspace":"rate-limited-ibc","key":"contract","value":{"contract_address":"%s"}}],
-"deposit":"10000000stake"}`, contracts[0]), initialization.ValidatorWalletName)
+"deposit":"%duosmo"}`, contracts[0], config.MinExpeditedDepositValue*2), initialization.ValidatorWalletName)
 	chainA.LatestProposalNumber += 1
 
 	for _, n := range chainA.NodeConfigs {
