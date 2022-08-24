@@ -274,7 +274,7 @@ func (s *TestSuite) TestMustGet() {
 // and panics if an error is encountered.
 func (s *TestSuite) TestMustSet() {
 	tests := map[string]struct {
-		// keyys and values to preset
+		// keys and values to preset
 		setKey   string
 		setValue proto.Message
 
