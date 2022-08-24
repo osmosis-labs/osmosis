@@ -1,10 +1,7 @@
 package keeper
 
 import (
-	"errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
@@ -45,31 +42,14 @@ func (k Keeper) swapExactAmountIn(
 	tokenOutMinAmount sdk.Int,
 	swapFee sdk.Dec,
 ) (tokenOutAmount sdk.Int, err error) {
-	if tokenIn.Denom == tokenOutDenom {
-		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
-	}
-	tokensIn := sdk.Coins{tokenIn}
-
-	// Executes the swap in the pool and stores the output. Updates pool assets but
-	// does not actually transfer any tokens to or from the pool.
-	tokenOutCoin, err := pool.SwapOutAmtGivenIn(ctx, tokensIn, tokenOutDenom, swapFee)
+	pool, tokenOut, err := k.estimateSwapExactAmountIn(ctx, pool, tokenIn, tokenOutDenom, tokenOutMinAmount, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
-	tokenOutAmount = tokenOutCoin.Amount
-
-	if !tokenOutAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount must be positive")
-	}
-
-	if tokenOutAmount.LT(tokenOutMinAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMinAmount, "%s token is lesser than min amount", tokenOutDenom)
-	}
-
 	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
 	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOutCoin); err != nil {
+	if err := k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut); err != nil {
 		return sdk.Int{}, err
 	}
 
@@ -105,34 +85,16 @@ func (k Keeper) swapExactAmountOut(
 	tokenOut sdk.Coin,
 	swapFee sdk.Dec,
 ) (tokenInAmount sdk.Int, err error) {
-	if tokenInDenom == tokenOut.Denom {
-		return sdk.Int{}, errors.New("cannot trade same denomination in and out")
-	}
-
-	poolOutBal := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenOut.Denom)
-	if tokenOut.Amount.GTE(poolOutBal) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
-			"can't get more tokens out than there are tokens in the pool")
-	}
-
-	tokenIn, err := pool.SwapInAmtGivenOut(ctx, sdk.Coins{tokenOut}, tokenInDenom, swapFee)
+	pool, tokenIn, err := k.estimateSwapExactAmountOut(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
-	}
-	tokenInAmount = tokenIn.Amount
-
-	if tokenInAmount.LTE(sdk.ZeroInt()) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "token amount is zero or negative")
-	}
-
-	if tokenInAmount.GT(tokenInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, "Swap requires %s, which is greater than the amount %s", tokenIn, tokenInMaxAmount)
 	}
 
 	err = k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut)
 	if err != nil {
 		return sdk.Int{}, err
 	}
+
 	return tokenInAmount, nil
 }
 

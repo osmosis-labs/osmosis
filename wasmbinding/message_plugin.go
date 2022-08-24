@@ -214,115 +214,24 @@ func (m *CustomMessenger) swapTokens(ctx sdk.Context, contractAddr sdk.AccAddres
 
 // PerformSwap can be used both for the real swap, and the EstimateSwap query
 func PerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, swap *bindings.SwapMsg) (*bindings.SwapAmount, error) {
-	if swap == nil {
-		return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap null swap"}
-	}
 	if swap.Amount.ExactIn != nil {
-		routes := []gammtypes.SwapAmountInRoute{{
-			PoolId:        swap.First.PoolId,
-			TokenOutDenom: swap.First.DenomOut,
-		}}
-		for _, step := range swap.Route {
-			routes = append(routes, gammtypes.SwapAmountInRoute{
-				PoolId:        step.PoolId,
-				TokenOutDenom: step.DenomOut,
-			})
+		routes, tokenIn, tokenOutMinAmount, err := getSwapExactAmountInParams(swap)
+		if err != nil {
+			return nil, err
 		}
-		if swap.Amount.ExactIn.Input.IsNegative() {
-			return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount in"}
-		}
-		tokenIn := sdk.Coin{
-			Denom:  swap.First.DenomIn,
-			Amount: swap.Amount.ExactIn.Input,
-		}
-		tokenOutMinAmount := swap.Amount.ExactIn.MinOutput
+
 		tokenOutAmount, err := keeper.MultihopSwapExactAmountIn(ctx, contractAddr, routes, tokenIn, tokenOutMinAmount)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount in")
 		}
 		return &bindings.SwapAmount{Out: &tokenOutAmount}, nil
 	} else if swap.Amount.ExactOut != nil {
-		routes := []gammtypes.SwapAmountOutRoute{{
-			PoolId:       swap.First.PoolId,
-			TokenInDenom: swap.First.DenomIn,
-		}}
-		output := swap.First.DenomOut
-		for _, step := range swap.Route {
-			routes = append(routes, gammtypes.SwapAmountOutRoute{
-				PoolId:       step.PoolId,
-				TokenInDenom: output,
-			})
-			output = step.DenomOut
-		}
-		tokenInMaxAmount := swap.Amount.ExactOut.MaxInput
-		if swap.Amount.ExactOut.Output.IsNegative() {
-			return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount out"}
-		}
-		tokenOut := sdk.Coin{
-			Denom:  output,
-			Amount: swap.Amount.ExactOut.Output,
-		}
-		tokenInAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
+		routes, tokenOut, tokenInMaxAmount, err := getSwapAmountOutParams(swap)
 		if err != nil {
-			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount out")
+			return nil, err
 		}
-		return &bindings.SwapAmount{In: &tokenInAmount}, nil
-	} else {
-		return nil, wasmvmtypes.UnsupportedRequest{Kind: "must support either Swap.ExactIn or Swap.ExactOut"}
-	}
-}
 
-// EstimatePerformSwap can be used to query
-func EstimatePerformSwap(keeper *gammkeeper.Keeper, ctx sdk.Context, swap *bindings.SwapMsg) (*bindings.SwapAmount, error) {
-	if swap == nil {
-		return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap null swap"}
-	}
-	if swap.Amount.ExactIn != nil {
-		routes := []gammtypes.SwapAmountInRoute{{
-			PoolId:        swap.First.PoolId,
-			TokenOutDenom: swap.First.DenomOut,
-		}}
-		for _, step := range swap.Route {
-			routes = append(routes, gammtypes.SwapAmountInRoute{
-				PoolId:        step.PoolId,
-				TokenOutDenom: step.DenomOut,
-			})
-		}
-		if swap.Amount.ExactIn.Input.IsNegative() {
-			return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount in"}
-		}
-		tokenIn := sdk.Coin{
-			Denom:  swap.First.DenomIn,
-			Amount: swap.Amount.ExactIn.Input,
-		}
-		tokenOutMinAmount := swap.Amount.ExactIn.MinOutput
-		tokenOutAmount, err := keeper.EstimateMultihopSwapExactAmountIn(ctx, routes, tokenIn, tokenOutMinAmount)
-		if err != nil {
-			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount in")
-		}
-		return &bindings.SwapAmount{Out: &tokenOutAmount}, nil
-	} else if swap.Amount.ExactOut != nil {
-		routes := []gammtypes.SwapAmountOutRoute{{
-			PoolId:       swap.First.PoolId,
-			TokenInDenom: swap.First.DenomIn,
-		}}
-		output := swap.First.DenomOut
-		for _, step := range swap.Route {
-			routes = append(routes, gammtypes.SwapAmountOutRoute{
-				PoolId:       step.PoolId,
-				TokenInDenom: output,
-			})
-			output = step.DenomOut
-		}
-		tokenInMaxAmount := swap.Amount.ExactOut.MaxInput
-		if swap.Amount.ExactOut.Output.IsNegative() {
-			return nil, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount out"}
-		}
-		tokenOut := sdk.Coin{
-			Denom:  output,
-			Amount: swap.Amount.ExactOut.Output,
-		}
-		tokenInAmount, err := keeper.EstimateMultihopSwapExactAmountOut(ctx, routes, tokenInMaxAmount, tokenOut)
+		tokenInAmount, err := keeper.MultihopSwapExactAmountOut(ctx, contractAddr, routes, tokenInMaxAmount, tokenOut)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "gamm perform swap exact amount out")
 		}
@@ -357,4 +266,50 @@ func parseAddress(addr string) (sdk.AccAddress, error) {
 		return nil, sdkerrors.Wrap(err, "verify address format")
 	}
 	return parsed, nil
+}
+
+func getSwapExactAmountInParams(swap *bindings.SwapMsg) (routes []gammtypes.SwapAmountInRoute, tokenIn sdk.Coin, tokenOutMinAmount sdk.Int, err error) {
+	routes = []gammtypes.SwapAmountInRoute{{
+		PoolId:        swap.First.PoolId,
+		TokenOutDenom: swap.First.DenomOut,
+	}}
+	for _, step := range swap.Route {
+		routes = append(routes, gammtypes.SwapAmountInRoute{
+			PoolId:        step.PoolId,
+			TokenOutDenom: step.DenomOut,
+		})
+	}
+	if swap.Amount.ExactIn.Input.IsNegative() {
+		return nil, sdk.Coin{}, sdk.Int{}, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount in"}
+	}
+	tokenIn = sdk.Coin{
+		Denom:  swap.First.DenomIn,
+		Amount: swap.Amount.ExactIn.Input,
+	}
+	tokenOutMinAmount = swap.Amount.ExactIn.MinOutput
+	return routes, tokenIn, tokenOutMinAmount, nil
+}
+
+func getSwapAmountOutParams(swap *bindings.SwapMsg) (routes []gammtypes.SwapAmountOutRoute, tokenOut sdk.Coin, tokenInMaxAmount sdk.Int, err error) {
+	routes = []gammtypes.SwapAmountOutRoute{{
+		PoolId:       swap.First.PoolId,
+		TokenInDenom: swap.First.DenomIn,
+	}}
+	output := swap.First.DenomOut
+	for _, step := range swap.Route {
+		routes = append(routes, gammtypes.SwapAmountOutRoute{
+			PoolId:       step.PoolId,
+			TokenInDenom: output,
+		})
+		output = step.DenomOut
+	}
+	tokenInMaxAmount = swap.Amount.ExactOut.MaxInput
+	if swap.Amount.ExactOut.Output.IsNegative() {
+		return nil, sdk.Coin{}, sdk.Int{}, wasmvmtypes.InvalidRequest{Err: "gamm perform swap negative amount out"}
+	}
+	tokenOut = sdk.Coin{
+		Denom:  output,
+		Amount: swap.Amount.ExactOut.Output,
+	}
+	return routes, tokenOut, tokenInMaxAmount, nil
 }
