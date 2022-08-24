@@ -5,7 +5,8 @@ import (
 )
 
 var (
-	ErrAmountNilOrZero           = sdkerrors.Register(ModuleName, 2, "amount cannot be nil or zero")
+	ErrInvalidAmount             = sdkerrors.Register(ModuleName, 2, "invalid amount")
 	ErrModuleAccountAlreadyExist = sdkerrors.Register(ModuleName, 3, "module account already exists")
 	ErrModuleDoesnotExist        = sdkerrors.Register(ModuleName, 4, "module account does not exist")
+	ErrInvalidModuleAccountGiven = sdkerrors.Register(ModuleName, 5, "invalid module account given")
 )

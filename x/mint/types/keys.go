@@ -1,12 +1,35 @@
 package types
 
-// MinterKey is the key to use for the keeper store at which
-// the Minter and its EpochProvisions are stored.
-var MinterKey = []byte{0x00}
+var (
+	// MinterKey is the key to use for the keeper store at which
+	// the Minter and its EpochProvisions are stored.
+	MinterKey = []byte{0x00}
 
-// LastReductionEpochKey is the key to use for the keeper store
-// for storing the last epoch at which reduction occurred.
-var LastReductionEpochKey = []byte{0x03}
+	// LastReductionEpochKey is the key to use for the keeper store
+	// for storing the last epoch at which reduction occurred.
+	LastReductionEpochKey = []byte{0x03}
+
+	// TruncatedInflationDeltaKey represents a key for the the delta of minted
+	// inflation provisions that have not been distributed yet due to truncations.
+	// Truncations are stemming from the interfaces of the core modules such as
+	// x/bank and x/distribution that operate on integers. Decimals allow
+	// for much higher precision. As a result, by storing decimal delta
+	// we can avoid truncation discrepancies and be in-line with the
+	// projected distributions.
+	// This key is specifically concerned with truncations resulting
+	// from the mint module account distributions.
+	TruncatedInflationDeltaKey = []byte{0x04}
+
+	// TruncatedDeveloperVestingDelta represents a key for the the delta of developer
+	// vesting provisions that have not been distributed yet due to truncations.
+	// Truncations are stemming from the interfaces of the core modules such as
+	// x/bank and x/distribution that operate on integers. As a result, by
+	// storing decimal delta we can avoid truncation discrepancies and be
+	// in-line with the projected distributions. This key is specifically
+	// concerned with truncations resulting from the developer vesting module
+	// account distributions.
+	TruncatedDeveloperVestingDeltaKey = []byte{0x05}
+)
 
 const (
 	// ModuleName is the module name.
