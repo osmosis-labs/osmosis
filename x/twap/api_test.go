@@ -8,6 +8,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
 )
 
+type getTwapInput struct {
+	poolId          uint64
+	quoteAssetDenom string
+	baseAssetDenom  string
+	startTime       time.Time
+	endTime         time.Time
+}
+
 var (
 	ThreePlusOneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
 
@@ -83,7 +91,6 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 // TestGetArithmeticTwap tests if we get the expected twap value from `GetArithmeticTwap`.
 // We test the method directly by updating the accumulator and storing the twap records
 // manually in this test.
-// This test also includes testing the method `TestGetArithmeticTwapToNow`.
 func (s *TestSuite) TestGetArithmeticTwap() {
 	type getTwapInput struct {
 		poolId          uint64
@@ -255,18 +262,10 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 	}
 }
 
-// TestGetArithmeticTwap tests if we get the expected twap value from `GetArithmeticTwap`.
+// TestGetArithmeticTwapToNow tests if we get the expected twap value from `GetArithmeticTwapToNow`.
 // We test the method directly by updating the accumulator and storing the twap records
 // manually in this test.
-// This test also includes testing the method `TestGetArithmeticTwapToNow`.
 func (s *TestSuite) TestGetArithmeticTwapToNow() {
-	type getTwapInput struct {
-		poolId          uint64
-		quoteAssetDenom string
-		baseAssetDenom  string
-		startTime       time.Time
-		endTime         time.Time
-	}
 
 	makeSimpleTwapToNowInput := func(startTime time.Time, isQuoteTokenA bool) getTwapInput {
 		quoteAssetDenom, baseAssetDenom := denom0, denom1
