@@ -177,7 +177,7 @@ func (k Keeper) distributeInflationProvisions(ctx sdk.Context, inflationCoin sdk
 	}
 
 	// mint coins, update supply
-	err := k.mintInflationCoins(ctx, sdk.NewCoins(sdk.NewCoin(inflationCoin.Denom, inflationCoin.Amount.TruncateInt())))
+	err := k.mintInflationProvisions(ctx, sdk.NewCoin(inflationCoin.Denom, inflationCoin.Amount.TruncateInt()))
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -238,18 +238,15 @@ func (k Keeper) setLastReductionEpochNum(ctx sdk.Context, epochNum int64) {
 	store.Set(types.LastReductionEpochKey, sdk.Uint64ToBigEndian(uint64(epochNum)))
 }
 
-// mintInflationCoins mints tokens for inflation from the mint module accounts
-//. It is meant to be used internally by the mint module.
-// CONTRACT: minter's expected minter amount is updated separately
+// mintInflationProvisions mints tokens for inflation from the mint module accounts
+// It is meant to be used internally by the mint module.
 // CONTRACT: only called with the mint denom, never other coins.
-// TODO: test
-func (k Keeper) mintInflationCoins(ctx sdk.Context, newCoins sdk.Coins) error {
-	if newCoins.Empty() {
+func (k Keeper) mintInflationProvisions(ctx sdk.Context, provisions sdk.Coin) error {
+	if provisions.Amount.IsZero() {
 		// skip as no coins need to be minted
 		return nil
 	}
-
-	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
+	return k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(provisions))
 }
 
 // distributeToModule distributes mintedCoin multiplied by proportion to the recepientModule account.
@@ -404,7 +401,7 @@ func (k Keeper) handleTruncationDelta(ctx sdk.Context, moduleAccountName string,
 	truncationDeltaToDistribute := deltaAmount.TruncateInt()
 	// For funding from mint module account, we must pre-mint first.
 	if moduleAccountName == types.ModuleName {
-		if err := k.mintInflationCoins(ctx, sdk.NewCoins(sdk.NewCoin(provisions.Denom, truncationDeltaToDistribute))); err != nil {
+		if err := k.mintInflationProvisions(ctx, sdk.NewCoin(provisions.Denom, truncationDeltaToDistribute)); err != nil {
 			return sdk.Int{}, err
 		}
 	}

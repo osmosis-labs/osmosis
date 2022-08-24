@@ -863,31 +863,26 @@ func (suite *KeeperTestSuite) TestGetDeveloperVestedAmount() {
 	}
 }
 
-// TestMintInflationCoins tests that minting inflation coins is
-// functions as expected by updating supply and not affecting
-// the minter's expected total minted amount. The minter should
-// be updated separately by taking truncated amount into account.
-func (suite *KeeperTestSuite) TestMintInflationCoins() {
+// TestMintInflationCoins tests that minting inflation provisions is
+// functioning as expected by updating supply.
+func (suite *KeeperTestSuite) TestMintInflationProvisions() {
 	const mintDenom = sdk.DefaultBondDenom
 	tests := map[string]struct {
 		// Inputs
 		// preminted is necessary to ensure that minting does not
 		// affect the minted amount.
-		mintedCoins sdk.Coins
+		provisions sdk.Coin
 
 		// Expected outputs
-		expectedInflationAmount         sdk.Int
-		expectedAccumulatorMintedAmount sdk.Dec
-		expectNoOp                      bool
+		expectedInflationAmount sdk.Int
 	}{
 		"mint 1 coin native mint denom": {
-			mintedCoins:                     sdk.NewCoins(sdk.NewCoin(mintDenom, sdk.OneInt())),
-			expectedInflationAmount:         sdk.OneInt(),
-			expectedAccumulatorMintedAmount: sdk.OneDec(),
+			provisions:              sdk.NewCoin(mintDenom, sdk.OneInt()),
+			expectedInflationAmount: sdk.OneInt(),
 		},
 		"mint 0 coins - no-op": {
-			mintedCoins: sdk.NewCoins(),
-			expectNoOp:  true,
+			provisions:              sdk.NewCoin(mintDenom, sdk.ZeroInt()),
+			expectedInflationAmount: sdk.ZeroInt(),
 		},
 	}
 	for name, tc := range tests {
@@ -898,21 +893,12 @@ func (suite *KeeperTestSuite) TestMintInflationCoins() {
 			ctx := suite.Ctx
 
 			// System under test
-			err := mintKeeper.MintInflationCoin(ctx, tc.mintedCoins)
+			err := mintKeeper.MintInflationProvisions(ctx, tc.provisions)
 			suite.Require().NoError(err)
-			// Assertions.
-			if tc.expectNoOp {
-				return
-			}
 
 			// Validate supply
 			actualInflationAmount := mintKeeper.GetInflationAmount(ctx, mintDenom)
 			suite.Require().Equal(tc.expectedInflationAmount.String(), actualInflationAmount.String())
-
-			// Validate minter's expected total minted amount.
-			inflationTruncationDelta, err := mintKeeper.GetTruncationDelta(ctx, types.ModuleName)
-			suite.Require().NoError(err)
-			suite.Require().Equal(sdk.ZeroDec(), inflationTruncationDelta)
 		})
 	}
 }

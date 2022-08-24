@@ -45,8 +45,8 @@ func (k Keeper) HandleTruncationDelta(ctx sdk.Context, moduleAccountName string,
 	return k.handleTruncationDelta(ctx, moduleAccountName, provisions, amountDistributed)
 }
 
-func (k Keeper) MintInflationCoin(ctx sdk.Context, inflationCoins sdk.Coins) error {
-	return k.mintInflationCoins(ctx, inflationCoins)
+func (k Keeper) MintInflationProvisions(ctx sdk.Context, provisions sdk.Coin) error {
+	return k.mintInflationProvisions(ctx, provisions)
 }
 
 func (k Keeper) GetLastReductionEpochNum(ctx sdk.Context) int64 {
