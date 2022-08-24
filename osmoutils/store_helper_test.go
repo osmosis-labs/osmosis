@@ -363,7 +363,8 @@ func (s *TestSuite) TestMustGetDec() {
 			},
 
 			expectedGetKeyValues: map[string]sdk.Dec{
-				keyB: sdk.OneDec().Add(sdk.OneDec()),
+				keyA: sdk.OneDec(),
+				keyB: sdk.Dec{}, // this one panics
 			},
 
 			expectPanic: true,
