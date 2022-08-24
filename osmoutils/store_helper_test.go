@@ -394,6 +394,11 @@ func (s *TestSuite) TestMustGetDec() {
 
 // TestMustSetDec tests that MustSetDec updates the store correctly
 // with the right decimal value.
+// N.B.: It is non-trivial to cause a panic
+// by calling `MustSetDec` because it provides
+// a valid proto argument to `MustSet` which will
+// only panic if the proto argument is invalid.
+// Therefore, we only test a success case here.
 func (s *TestSuite) TestMustSetDec() {
 	// Setup.
 	s.SetupStoreWithBasePrefix()
