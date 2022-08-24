@@ -116,7 +116,8 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 }
 
 // GetInflationTruncationDelta returns the truncation delta.
-// Panics if key is invalid.
+// Only developer vesting and mint module accounts are allowed.
+// Returns error if invalid module account. Panics if key is invalid.
 func (k Keeper) GetTruncationDelta(ctx sdk.Context, moduleAccountName string) (sdk.Dec, error) {
 	storeKey, err := getTruncationStoreKeyFromModuleAccount(moduleAccountName)
 	if err != nil {
@@ -126,6 +127,8 @@ func (k Keeper) GetTruncationDelta(ctx sdk.Context, moduleAccountName string) (s
 }
 
 // SetTruncationDelta sets the truncation delta, returning an error if any. nil otherwise.
+// Only developer vesting and mint module accounts are allowed.
+// Returns error if invalid module account.
 func (k Keeper) SetTruncationDelta(ctx sdk.Context, moduleAccountName string, truncationDelta sdk.Dec) error {
 	storeKey, err := getTruncationStoreKeyFromModuleAccount(moduleAccountName)
 	if err != nil {
@@ -298,7 +301,7 @@ func (k Keeper) distributeDeveloperRewards(ctx sdk.Context, totalMintedCoin sdk.
 }
 
 // calculateTotalTruncationDelta returns the total truncation delta that has not been distributed yet
-// for the given key given provisions and amount distributed. Both of the given values are epoch specific.
+// for the given module account, provisions, and actual amount distributed in the current epoch.
 // The returned delta might include the delta from previous epochs if they have not been distributed due to truncations.
 // For example, assume that for some number of epochs our expected provisions
 // are 100.6 and the actual amount distributed is 100 every epoch due to truncations.
@@ -346,7 +349,7 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 // developer vesting module account. Returns the total amount distributed from truncations.
 // If truncations are estimated to be less than one, persists them in store until the next epoch without
 // any distributions during the current epoch.
-// More on why this handling truncations is necessary: due to limitations of some SDK interfaces that operate on integers,
+// More on why this truncations handling is necessary: due to limitations of some SDK interfaces that operate on integers,
 // there are known truncation differences from the expected total epoch mint provisions.
 // To use these interfaces, we always round down to the nearest integer by truncating decimals.
 // As a result, it is possible to undermint. To mitigate that, we distribute any delta to the community pool.
@@ -355,7 +358,7 @@ func (k Keeper) createDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.
 // to distribute decimal truncations less than 1. As a result, we store them in the store until the next epoch.
 // These truncation distributions have eventual guarantees. That is, they are guaranteed to be distributed
 // eventually but not necessarily during the same epoch.
-// Returns error if module account name is other than mint or developer vesting is given.
+// Returns an error if the module account name is any other than mint or developer vesting is given.
 // The truncation delta is calculated by subtracting amountDistributed from probisions and adding to
 // any leftover truncations from the previous epoch.
 // Therefore, provisions must be greater than or equal to the amount distributed. Errors if not.
