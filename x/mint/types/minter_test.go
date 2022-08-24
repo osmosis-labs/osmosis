@@ -10,6 +10,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	defaultDeveloperVestingProportion = sdk.NewDecWithPrec(3, 1)
+	defaultProvisionsAmount           = sdk.NewDec(10)
+	defaultParams                     = types.Params{
+		MintDenom: sdk.DefaultBondDenom,
+		DistributionProportions: types.DistributionProportions{
+			DeveloperRewards: defaultDeveloperVestingProportion,
+		},
+	}
+)
+
 // Benchmarking :)
 // previously using sdk.Int operations:
 // BenchmarkEpochProvision-4 5000000 220 ns/op
@@ -80,4 +91,40 @@ func TestMinterValidate(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestGetInflationProvisions sanity checks that inflation provisons are calculated correctly.
+func TestGetInflationProvisions(t *testing.T) {
+	// Setup
+	var (
+		minter = types.NewMinter(defaultProvisionsAmount)
+
+		expectedDenom           = defaultParams.MintDenom
+		expectedInflationAmount = defaultProvisionsAmount.Mul(sdk.OneDec().Sub(defaultDeveloperVestingProportion))
+	)
+
+	// System under test
+	actualInflationProvisions := minter.GetInflationProvisions(defaultParams)
+
+	// Assertions
+	require.Equal(t, expectedDenom, actualInflationProvisions.Denom)
+	require.Equal(t, expectedInflationAmount, actualInflationProvisions.Amount)
+}
+
+// TestGetDeveloperVestingProvisions sanity checks that developer vesting provisons are calculated correctly.
+func TestGetDeveloperVestingProvisions(t *testing.T) {
+	// Setup
+	var (
+		minter = types.NewMinter(defaultProvisionsAmount)
+
+		expectedDenom           = defaultParams.MintDenom
+		expectedInflationAmount = defaultProvisionsAmount.Mul(defaultDeveloperVestingProportion)
+	)
+
+	// System under test
+	actualInflationProvisions := minter.GetDeveloperVestingEpochProvisions(defaultParams)
+
+	// Assertions
+	require.Equal(t, expectedDenom, actualInflationProvisions.Denom)
+	require.Equal(t, expectedInflationAmount, actualInflationProvisions.Amount)
 }
