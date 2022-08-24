@@ -123,7 +123,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 // GetInflationProportion returns the inflation proportion of epoch
 // provisions.
 func (p Params) GetInflationProportion() sdk.Dec {
-	return sdk.OneDec().Sub(p.DistributionProportions.DeveloperRewards)
+	return sdk.OneDec().Sub(p.GetDeveloperVestingProportion())
 }
 
 // GetDeveloperVestingProportion returns the developer vesting proportion of epoch
