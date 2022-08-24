@@ -32,3 +32,31 @@ func TestGetAllUniqueDenomPairs(t *testing.T) {
 		})
 	}
 }
+
+func TestLexicographicalOrderDenoms(t *testing.T) {
+	tests := map[string]struct {
+		firstDenom     string
+		secondDenom    string
+		expectedDenomA string
+		expectedDenomB string
+		expectErr      bool
+	}{
+		"basic":    {"A", "B", "A", "B", false},
+		"basicRev": {"B", "A", "A", "B", false},
+		"realDenoms": {"uosmo", "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+			"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", "uosmo", false},
+		"sameDenom": {"A", "A", "", "", true},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// system under test
+			denomA, denomB, err := LexicographicalOrderDenoms(tt.firstDenom, tt.secondDenom)
+			if tt.expectErr {
+				require.Error(t, err)
+			} else {
+				require.Equal(t, denomA, tt.expectedDenomA)
+				require.Equal(t, denomB, tt.expectedDenomB)
+			}
+		})
+	}
+}
