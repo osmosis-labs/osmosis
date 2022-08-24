@@ -108,7 +108,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		},
 		"invalid pruneEpochIdentifier - error": {
 			twapGenesis: NewGenesisState(
-				NewParams("week", 48*time.Hour), // invalid empty string
+				NewParams("", 48*time.Hour), // invalid empty string
 				[]TwapRecord{
 					baseRecord,
 				}),
@@ -117,7 +117,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		},
 		"invalid recordHistoryKeepPeriod - error": {
 			twapGenesis: NewGenesisState(
-				NewParams("", -1*time.Hour), // invalid duration
+				NewParams("week", -1*time.Hour), // invalid duration
 				[]TwapRecord{
 					baseRecord,
 				}),
