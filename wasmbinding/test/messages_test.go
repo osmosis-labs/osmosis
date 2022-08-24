@@ -636,6 +636,8 @@ func TestSwap(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
+			fmt.Println("=====swap message")
+			fmt.Println(spec.swap)
 			gotAmount, gotErr := wasmbinding.PerformSwap(osmosis.GAMMKeeper, ctx, actor, spec.swap)
 			// then
 			if spec.expErr {

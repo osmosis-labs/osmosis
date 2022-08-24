@@ -53,7 +53,7 @@ func (k Keeper) swapExactAmountIn(
 		return sdk.Int{}, err
 	}
 
-	return tokenOutAmount, nil
+	return tokenOut.Amount, nil
 }
 
 func (k Keeper) SwapExactAmountOut(
@@ -95,7 +95,7 @@ func (k Keeper) swapExactAmountOut(
 		return sdk.Int{}, err
 	}
 
-	return tokenInAmount, nil
+	return tokenIn.Amount, nil
 }
 
 // updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts
