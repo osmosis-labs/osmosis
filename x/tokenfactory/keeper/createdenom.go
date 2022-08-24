@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
@@ -79,11 +78,6 @@ func (k Keeper) chargeForCreateDenom(ctx sdk.Context, creatorAddr string, subden
 		return err
 	}
 	if creationFee != nil {
-		for _, coin := range creationFee {
-			if !k.bankKeeper.HasBalance(ctx, accAddr, coin) {
-				return sdkerrors.ErrInsufficientFunds
-			}
-		}
 		if err := k.communityPoolKeeper.FundCommunityPool(ctx, creationFee, accAddr); err != nil {
 			return err
 		}
