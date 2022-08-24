@@ -9,51 +9,122 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
 )
 
-func TestDecomposeDenoms(t *testing.T) {
+func TestDeconstructDenom(t *testing.T) {
 	appparams.SetAddressPrefixes()
+
 	for _, tc := range []struct {
-		desc  string
-		denom string
-		valid bool
+		desc             string
+		denom            string
+		expectedSubdenom string
+		err              error
 	}{
 		{
 			desc:  "empty is invalid",
 			denom: "",
-			valid: false,
+			err:   types.ErrInvalidDenom,
 		},
 		{
-			desc:  "normal",
-			denom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin",
-			valid: true,
+			desc:             "normal",
+			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin",
+			expectedSubdenom: "bitcoin",
+			err:              nil,
 		},
 		{
-			desc:  "multiple slashes in subdenom",
-			denom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin/1",
-			valid: true,
+			desc:             "multiple slashes in subdenom",
+			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin/1",
+			expectedSubdenom: "bitcoin/1",
+			err:              nil,
 		},
 		{
-			desc:  "no subdenom",
-			denom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/",
-			valid: true,
+			desc:             "no subdenom",
+			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/",
+			expectedSubdenom: "",
+			err:              nil,
 		},
 		{
 			desc:  "incorrect prefix",
 			denom: "ibc/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin",
-			valid: false,
+			err:   types.ErrInvalidDenom,
 		},
 		{
-			desc:  "subdenom of only slashes",
-			denom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/////",
-			valid: true,
+			desc:             "subdenom of only slashes",
+			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/////",
+			expectedSubdenom: "////",
+			err:              nil,
 		},
 		{
 			desc:  "too long name",
 			denom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/adsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsf",
-			valid: false,
+			err:   types.ErrInvalidDenom,
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, err := types.DeconstructDenom(tc.denom)
+			expectedCreator := "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44"
+			creator, subdenom, err := types.DeconstructDenom(tc.denom)
+			if tc.err != nil {
+				require.ErrorContains(t, err, tc.err.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, expectedCreator, creator)
+				require.Equal(t, tc.expectedSubdenom, subdenom)
+			}
+		})
+	}
+}
+
+func TestGetTokenDenom(t *testing.T) {
+	appparams.SetAddressPrefixes()
+	for _, tc := range []struct {
+		desc     string
+		creator  string
+		subdenom string
+		valid    bool
+	}{
+		{
+			desc:     "normal",
+			creator:  "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+			subdenom: "bitcoin",
+			valid:    true,
+		},
+		{
+			desc:     "multiple slashes in subdenom",
+			creator:  "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+			subdenom: "bitcoin/1",
+			valid:    true,
+		},
+		{
+			desc:     "no subdenom",
+			creator:  "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+			subdenom: "",
+			valid:    true,
+		},
+		{
+			desc:     "subdenom of only slashes",
+			creator:  "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+			subdenom: "/////",
+			valid:    true,
+		},
+		{
+			desc:     "too long name",
+			creator:  "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+			subdenom: "adsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsf",
+			valid:    false,
+		},
+		{
+			desc:     "subdenom is exactly max length",
+			creator:  "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+			subdenom: "bitcoinfsadfsdfeadfsafwefsefsefsdfsdafasefsf",
+			valid:    true,
+		},
+		{
+			desc:     "creator is exactly max length",
+			creator:  "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44jhgjhgkhjklhkjhkjhgjhgjgjghelugt",
+			subdenom: "bitcoin",
+			valid:    true,
+		},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, err := types.GetTokenDenom(tc.creator, tc.subdenom)
 			if tc.valid {
 				require.NoError(t, err)
 			} else {
