@@ -80,8 +80,9 @@ func (k Keeper) pruneRecords(ctx sdk.Context) error {
 	return k.pruneRecordsBeforeTime(ctx, lastKeptTime)
 }
 
-// recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime.
+// recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime,
 // otherwise referred to as "interpolating the record" to the target time.
+// This does not mutate the passed in record.
 //
 // pre-condition: newTime >= record.Time
 func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {

@@ -79,9 +79,11 @@ func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
 func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
+	// Correctly formatted index keys have five elements, the first of which must be the relevant prefix
 	if len(s) != 5 || s[0] != historicalTWAPPoolIndexNoSeparator {
 		return time.Time{}, fmt.Errorf("Called ParseTimeFromHistoricalPoolIndexKey on incorrectly formatted key: %v", s)
 	}
+	// Time is always the third item in correctly formatted pool index keys (as opposed to the second item in time index keys)
 	t, err := osmoutils.ParseTimeString(s[2])
 	if err != nil {
 		return time.Time{}, fmt.Errorf("incorrectly formatted time string in key %s : %v", keyS, err)

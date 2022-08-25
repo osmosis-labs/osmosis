@@ -29,6 +29,8 @@ import (
 // * pool with id poolId does not exist, or does not contain quoteAssetDenom, baseAssetDenom
 //
 // N.B. If there is a notable use case, the state machine could maintain more historical records, e.g. at one per hour.
+//
+// This function does not mutate records.
 func (k Keeper) GetArithmeticTwap(
 	ctx sdk.Context,
 	poolId uint64,
@@ -59,6 +61,7 @@ func (k Keeper) GetArithmeticTwap(
 }
 
 // GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
+// This function does not mutate records.
 func (k Keeper) GetArithmeticTwapToNow(
 	ctx sdk.Context,
 	poolId uint64,
@@ -82,6 +85,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 // This uses the state of the beginning of the block, as if there were swaps since the block has started,
 // these swaps have had no time to be arbitraged back.
 // This accumulator can be stored, to compute wider ranged twaps.
+// This function does not mutate records.
 func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	// correct ordering of args for db
 	if asset1Denom > asset0Denom {
