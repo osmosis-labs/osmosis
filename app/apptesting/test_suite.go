@@ -46,6 +46,11 @@ type KeeperTestHelper struct {
 	TestAccs    []sdk.AccAddress
 }
 
+var (
+	SecondaryDenom  = "uion"
+	SecondaryAmount = sdk.NewInt(100000000)
+)
+
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
 func (s *KeeperTestHelper) Setup() {
 	s.App = app.Setup(false)
@@ -146,11 +151,6 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
 
 	return valAddr
-}
-
-// SetupTokenFactory sets up a token module account for the TokenFactoryKeeper.
-func (s *KeeperTestHelper) SetupTokenFactory() {
-	s.App.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
 }
 
 // BeginNewBlock starts a new block.
