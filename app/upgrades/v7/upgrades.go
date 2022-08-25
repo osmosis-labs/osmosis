@@ -52,7 +52,9 @@ func CreateUpgradeHandler(
 			Denom:     "gamm/pool/1",
 			AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
 		}
-		keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
+		if err := keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset); err != nil {
+			return newVM, err
+		}
 
 		// N.B.: This is left for historic reasons.
 		// After the v7 upgrade, there was no need for this function anymore so it was removed.

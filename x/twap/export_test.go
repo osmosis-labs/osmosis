@@ -8,8 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
-const RecordHistoryKeepPeriod = recordHistoryKeepPeriod
-
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
 }

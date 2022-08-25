@@ -191,9 +191,8 @@ This debug configuration helps to run e2e tests locally and skip the desired tes
         "-test.run",
         "IntegrationTestSuite",
         "-test.v"
-        "-test.tags"
-        "e2e"
     ],
+    "buildFlags": "-tags e2e",
     "env": {
         "OSMOSIS_E2E_SKIP_IBC": "true",
         "OSMOSIS_E2E_SKIP_UPGRADE": "true",
@@ -205,3 +204,10 @@ This debug configuration helps to run e2e tests locally and skip the desired tes
     }
 }
 ```
+
+### Common Problems
+
+Please note that if the tests are stopped mid-way, the e2e framework might fail to start again due to duplicated containers. Make sure that
+containers are removed before running the tests again: `docker containers rm -f $(docker containers ls -a -q)`.
+
+Additionally, Docker networks do not get auto-removed. Therefore, you can manually remove them by running `docker network prune`.

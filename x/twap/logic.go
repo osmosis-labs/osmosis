@@ -9,14 +9,42 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
-// TODO: configure recordHistoryKeepPeriod via parameter.
-const recordHistoryKeepPeriod = 48 * time.Hour
+func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
+	denom0, denom1, err := types.LexicographicalOrderDenoms(denom0, denom1)
+	if err != nil {
+		return types.TwapRecord{}, err
+	}
+	lastErrorTime := time.Time{}
+	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
+	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
+	if err0 != nil || err1 != nil {
+		lastErrorTime = ctx.BlockTime()
+		// TODO: Is this what we want to do? We are returning an error in such events.
+		if (sp0 == sdk.Dec{} || sp1 == sdk.Dec{}) {
+			sp0 = sdk.ZeroDec()
+			sp1 = sdk.ZeroDec()
+		}
+	}
+	return types.TwapRecord{
+		PoolId:                      poolId,
+		Asset0Denom:                 denom0,
+		Asset1Denom:                 denom1,
+		Height:                      ctx.BlockHeight(),
+		Time:                        ctx.BlockTime(),
+		P0LastSpotPrice:             sp0,
+		P1LastSpotPrice:             sp1,
+		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
+		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
+		LastErrorTime:               lastErrorTime,
+	}, nil
+}
 
+// afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
 	denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 	for i := 0; i < len(denomPairs0); i++ {
-		record, err := types.NewTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
+		record, err := newTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
 		// err should be impossible given GetAllUniqueDenomPairs guarantees
 		if err != nil {
 			return err
@@ -76,6 +104,8 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 // pruneRecords prunes twap records that happened earlier than recordHistoryKeepPeriod
 // before current block time.
 func (k Keeper) pruneRecords(ctx sdk.Context) error {
+	recordHistoryKeepPeriod := k.RecordHistoryKeepPeriod(ctx)
+
 	lastKeptTime := ctx.BlockTime().Add(-recordHistoryKeepPeriod)
 	return k.pruneRecordsBeforeTime(ctx, lastKeptTime)
 }
@@ -107,8 +137,9 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 // This is achieved by getting the record `r` that is at, or immediately preceding in state time `t`.
 // To be clear: the record r s.t. `t - r.Time` is minimized AND `t >= r.Time`
 func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Time, assetA, assetB string) (types.TwapRecord, error) {
-	if !(assetA > assetB) {
-		assetA, assetB = assetB, assetA
+	assetA, assetB, err := types.LexicographicalOrderDenoms(assetA, assetB)
+	if err != nil {
+		return types.TwapRecord{}, err
 	}
 	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, t, assetA, assetB)
 	if err != nil {
@@ -119,8 +150,9 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 }
 
 func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, assetB string) (types.TwapRecord, error) {
-	if !(assetA > assetB) {
-		assetA, assetB = assetB, assetA
+	assetA, assetB, err := types.LexicographicalOrderDenoms(assetA, assetB)
+	if err != nil {
+		return types.TwapRecord{}, err
 	}
 	record, err := k.getMostRecentRecordStoreRepresentation(ctx, poolId, assetA, assetB)
 	if err != nil {
