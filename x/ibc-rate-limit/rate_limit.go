@@ -2,7 +2,6 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -10,26 +9,38 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
 )
 
+var (
+	msgSend = "send_packet"
+	msgRecv = "recv_packet"
+)
+
+type PacketData struct {
+	Denom  string `json:"denom"`
+	Amount string `json:"amount"`
+}
+
 func CheckRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 	msgType, contract string,
 	channelValue sdk.Int, sourceChannel, denom string,
 	amount string,
 ) error {
-	fmt.Println("Checking ratelimits")
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
 		return err
 	}
 
-	sendPacketMsg, _ := BuildWasmExecMsg(
+	sendPacketMsg, err := BuildWasmExecMsg(
 		msgType,
 		sourceChannel,
 		denom,
 		channelValue,
 		amount,
 	)
+	if err != nil {
+		return err
+	}
 
-	_, err = contractKeeper.Sudo(ctx, contractAddr, []byte(sendPacketMsg))
+	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
 
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
@@ -52,7 +63,7 @@ type RateLimitExecMsg struct {
 	Funds        string  `json:"funds"`
 }
 
-func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int, amount string) (string, error) {
+func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int, amount string) ([]byte, error) {
 	content := RateLimitExecMsg{
 		ChannelId:    sourceChannel,
 		Denom:        denom,
@@ -65,26 +76,21 @@ func BuildWasmExecMsg(msgType, sourceChannel, denom string, channelValue sdk.Int
 		err    error
 	)
 	switch {
-	case msgType == "send_packet":
+	case msgType == msgSend:
 		msg := SendPacketMsg{SendPacket: content}
 		asJson, err = json.Marshal(msg)
-	case msgType == "recv_packet":
+	case msgType == msgRecv:
 		msg := RecvPacketMsg{RecvPacket: content}
 		asJson, err = json.Marshal(msg)
 	default:
-		return "", types.BadMessage
+		return []byte{}, types.ErrBadMessage
 	}
 
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
-	return string(asJson), nil
-}
-
-type PacketData struct {
-	Denom  string `json:"denom"`
-	Amount string `json:"amount"`
+	return asJson, nil
 }
 
 func GetFundsFromPacket(packet exported.PacketI) (string, string, error) {
