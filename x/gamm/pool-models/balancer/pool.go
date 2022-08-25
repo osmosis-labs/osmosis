@@ -622,7 +622,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPric
 		// defer function to escape the panic when spot price overflows
 		if r := recover(); r != nil {
 			spotPrice = sdk.Dec{}
-			err = types.ErrSpotPriceOverflow
+			err = errors.New("spot price overflow")
 		}
 	}()
 
@@ -633,6 +633,10 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPric
 	fullRatio := supplyRatio.Mul(invWeightRatio)
 	// we want to round this to `SigFigs` of precision
 	spotPrice = osmomath.SigFigRound(fullRatio, types.SigFigs)
+	if spotPrice.GT(sdk.NewDec(2).Power(160)) {
+		spotPrice = sdk.Dec{}
+		err = errors.New("spot price overflow")
+	}
 
 	return spotPrice, err
 }
