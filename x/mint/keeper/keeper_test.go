@@ -753,7 +753,7 @@ func (suite *KeeperTestSuite) TestCalculateTruncationDelta() {
 
 			expectedTruncationDelta: sdk.NewDecWithPrec(9, 1),
 		},
-		"100.6 - 100  + 0.5 = 1.1; pre-existing delta of 1.1; inflation delta module account": {
+		"100.6 - 100  + 0.5 = 1.1; pre-existing delta of 0.5; inflation delta module account": {
 			preExistingStoreDelta: sdk.NewDecWithPrec(5, 1),
 
 			moduleAccountName: types.ModuleName,
