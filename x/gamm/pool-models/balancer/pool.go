@@ -622,7 +622,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPric
 		// defer function to escape the panic when spot price overflows
 		if r := recover(); r != nil {
 			spotPrice = sdk.Dec{}
-			err = errors.New("spot price overflow")
+			err = types.ErrSpotPriceInternal
 		}
 	}()
 
@@ -635,7 +635,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPric
 	spotPrice = osmomath.SigFigRound(fullRatio, types.SigFigs)
 	if spotPrice.GT(sdk.NewDec(2).Power(160)) {
 		spotPrice = sdk.Dec{}
-		err = errors.New("spot price overflow")
+		err = types.ErrSpotPriceOverflow
 	}
 
 	return spotPrice, err
