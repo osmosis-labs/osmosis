@@ -142,15 +142,6 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	c.t.Log("successfully sent IBC tokens")
 }
 
-func (c *Config) FailIBC(dstChain *Config, recipient string, token sdk.Coin) {
-	c.t.Logf("IBC sending %s from %s to %s (%s)", token, c.Id, dstChain.Id, recipient)
-	cmd := []string{"hermes", "tx", "raw", "ft-transfer", dstChain.Id, c.Id, "transfer", "channel-0", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
-	x, y, err := c.containerManager.ExecHermesCmd(c.t, cmd, "Success")
-	c.t.Logf("Received: ", x.String(), y.String())
-	require.Error(c.t, err)
-	c.t.Logf("IBC transfer failed as expected")
-}
-
 // GetDefaultNode returns the default node of the chain.
 // The default node is the first one created. Returns error if no
 // ndoes created.

@@ -54,8 +54,22 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
-	balance, _ := node.QueryBalances(chainA.NodeConfigs[0].PublicAddress)
-	s.T().Log("CHAIN-A balance:", balance) // 96_700_000_000 uosmo
+	supply, err := node.QueryTotalSupply()
+	s.NoError(err)
+	osmoSupply := supply.AmountOf("uosmo")
+	s.T().Log("CHAIN-A supply:", osmoSupply)
+
+	balance, err := node.QueryBalances(chainA.NodeConfigs[1].PublicAddress)
+	s.NoError(err)
+
+	s.T().Log("CHAIN-A Node1:", chainA.NodeConfigs[1].PublicAddress)
+	s.T().Log("CHAIN-A Node1 balance:", balance)
+	//node.BankSend("100uosmo", chainA.NodeConfigs[1].PublicAddress, chainA.NodeConfigs[0].PublicAddress)
+
+	f, err := osmoSupply.ToDec().Float64()
+	s.NoError(err)
+
+	over := f * 0.11
 
 	// Sending >1%
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, initialization.OsmoBalanceA*0.011))
@@ -94,10 +108,9 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	)
 
 	// Sending <1%. Should work
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, initialization.OsmoBalanceA*0.08))
-
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
-	chainA.FailIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, initialization.OsmoBalanceA*0.011))
+	node.FailIBCTransfer(node.PublicAddress, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
 
 }
 
