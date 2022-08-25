@@ -229,8 +229,7 @@ each method strives to focus on a single concern.
 
 ### Decision 5
 
-Although the exact distribution proportions are configured via parameters,
-we will still **distribute any truncation delta to the community pool**.
+We will **distribute any truncation delta to the community pool**.
 
 #### Consequences
 
