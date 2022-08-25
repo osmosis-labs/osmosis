@@ -2,6 +2,7 @@ package osmosisibctesting
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -57,9 +58,12 @@ func (chain *TestChain) InstantiateContract(suite *suite.Suite, quotas string) s
 }
 
 func (chain *TestChain) RegisterRateLimitingContract(addr []byte) {
-	addrStr, _ := sdk.Bech32ifyAddressBytes("osmo", addr)
-	params, _ := types.NewParams(addrStr)
+	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+	require.NoError(chain.T, err)
+	params, err := types.NewParams(addrStr)
+	require.NoError(chain.T, err)
 	osmosisApp := chain.GetOsmosisApp()
-	paramSpace, _ := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
+	paramSpace, ok := osmosisApp.AppKeepers.ParamsKeeper.GetSubspace(types.ModuleName)
+	require.True(chain.T, ok)
 	paramSpace.SetParamSet(chain.GetContext(), &params)
 }

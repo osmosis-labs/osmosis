@@ -21,30 +21,35 @@ var (
 )
 
 type ICS4Middleware struct {
-	channel       porttypes.ICS4Wrapper
-	accountKeeper *authkeeper.AccountKeeper
-	BankKeeper    *bankkeeper.BaseKeeper
-	WasmKeeper    *wasmkeeper.Keeper
-	LockupKeeper  *lockupkeeper.Keeper
-	ParamSpace    paramtypes.Subspace
+	channel        porttypes.ICS4Wrapper
+	accountKeeper  *authkeeper.AccountKeeper
+	BankKeeper     *bankkeeper.BaseKeeper
+	ContractKeeper *wasmkeeper.PermissionedKeeper
+	LockupKeeper   *lockupkeeper.Keeper
+	ParamSpace     paramtypes.Subspace
 }
 
 func NewICS4Middleware(
 	channel porttypes.ICS4Wrapper,
-	accountKeeper *authkeeper.AccountKeeper, wasmKeeper *wasmkeeper.Keeper,
+	accountKeeper *authkeeper.AccountKeeper, contractKeeper *wasmkeeper.PermissionedKeeper,
 	bankKeeper *bankkeeper.BaseKeeper, lockupKeeper *lockupkeeper.Keeper,
 	paramSpace paramtypes.Subspace,
 ) ICS4Middleware {
 	return ICS4Middleware{
-		channel:       channel,
-		accountKeeper: accountKeeper,
-		WasmKeeper:    wasmKeeper,
-		BankKeeper:    bankKeeper,
-		LockupKeeper:  lockupKeeper,
-		ParamSpace:    paramSpace,
+		channel:        channel,
+		accountKeeper:  accountKeeper,
+		ContractKeeper: contractKeeper,
+		BankKeeper:     bankKeeper,
+		LockupKeeper:   lockupKeeper,
+		ParamSpace:     paramSpace,
 	}
 }
 
+// SendPacket implements the ICS4 interface and is called when sending packets.
+// This method retrieves the contract from the middleware's parameters and checks if the limits have been exceeded for
+// the current transfer, in which case it returns an error preventing the IBC send from taking place.
+// If the contract param is not configured, or the contract doesn't have a configuration for the (channel+denom) being
+// used, transfers are not prevented and handled by the wrapped IBC app
 func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
 	var params types.Params
 	i.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
@@ -60,7 +65,7 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 	channelValue := i.CalculateChannelValue(ctx, denom)
 	err = CheckRateLimits(
 		ctx,
-		i.WasmKeeper,
+		i.ContractKeeper,
 		"send_packet",
 		params.ContractAddress,
 		channelValue,
@@ -80,11 +85,12 @@ func (i *ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabili
 }
 
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
-//  if the denom is not correct, the transfer should fail somewhere else on the call chain
+// if the denom is not correct, the transfer should fail somewhere else on the call chain
 func (i *ICS4Middleware) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
 	supply := i.BankKeeper.GetSupply(ctx, denom)
-	locked := i.LockupKeeper.GetModuleLockedCoins(ctx)
-	return supply.Amount.Add(locked.AmountOf(denom))
+	return supply.Amount
+	//locked := i.LockupKeeper.GetModuleLockedCoins(ctx)
+	//return supply.Amount.Add(locked.AmountOf(denom))
 }
 
 type IBCModule struct {
@@ -197,7 +203,7 @@ func (im *IBCModule) OnRecvPacket(
 
 	err = CheckRateLimits(
 		ctx,
-		im.ics4Middleware.WasmKeeper,
+		im.ics4Middleware.ContractKeeper,
 		"recv_packet",
 		params.ContractAddress,
 		channelValue,
@@ -209,6 +215,7 @@ func (im *IBCModule) OnRecvPacket(
 		return channeltypes.NewErrorAcknowledgement(types.RateLimitExceededMsg)
 	}
 
+	// if this returns an Acknowledgement that isn't successful, all state changes are discarded
 	return im.app.OnRecvPacket(ctx, packet, relayer)
 }
 
