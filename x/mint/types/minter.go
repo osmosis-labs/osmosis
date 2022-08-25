@@ -61,3 +61,19 @@ func (m Minter) GetDeveloperVestingEpochProvisions(params Params) sdk.DecCoin {
 	provisionAmt := m.EpochProvisions.Mul(params.GetDeveloperVestingProportion())
 	return sdk.NewDecCoinFromDec(params.MintDenom, provisionAmt)
 }
+
+// GetInflationProvisions returns the inflation provisions.
+// These are calculated as the current epoch provisons * (1 - developer rewards proportion)
+// The returned denom is taken from input parameters.
+func (m Minter) GetInflationProvisions(params Params) sdk.DecCoin {
+	provisionAmt := m.EpochProvisions.Mul(params.GetInflationProportion())
+	return sdk.NewDecCoinFromDec(params.MintDenom, provisionAmt)
+}
+
+// GetDeveloperVestingEpochProvisions returns the developer vesting provisions.
+// These are calculated as the current epoch provisons * developer rewards proportion
+// The returned denom is taken from input parameters.
+func (m Minter) GetDeveloperVestingEpochProvisions(params Params) sdk.DecCoin {
+	provisionAmt := m.EpochProvisions.Mul(params.GetDeveloperVestingProportion())
+	return sdk.NewDecCoinFromDec(params.MintDenom, provisionAmt)
+}
