@@ -75,14 +75,14 @@ func TestQueryPool(t *testing.T) {
 		sdk.NewInt64Coin("uosmo", 12000000),
 		sdk.NewInt64Coin("ustar", 240000000),
 	}
-	// 20 star to 1 osmo
+	// 2 star to 1 osmo
 	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
 
 	pool2Funds := []sdk.Coin{
 		sdk.NewInt64Coin("uatom", 6000000),
 		sdk.NewInt64Coin("uosmo", 12000000),
 	}
-	// 20 star to 1 osmo
+	// 2 star to 1 osmo
 	atomPool := preparePool(t, ctx, osmosis, actor, pool2Funds)
 
 	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
@@ -224,30 +224,28 @@ func TestQueryArithmeticTwap(t *testing.T) {
 }
 
 func TestQueryArithmeticTwapToNow(t *testing.T) {
+	// preamble boilerplate
 	actor := RandomAccountAddress()
 	osmosis, ctx := SetupCustomApp(t, actor)
-
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Round(time.Millisecond))
+	startTime := ctx.BlockTime()
 	fundAccount(t, ctx, osmosis, actor, defaultFunds)
+	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	require.NotEmpty(t, reflect)
 
 	poolFunds := []sdk.Coin{
 		sdk.NewInt64Coin("uosmo", 100000000),
 		sdk.NewInt64Coin("ustar", 200000000),
 	}
-	// 20 star to 1 osmo
+	// 2 star to 1 osmo
 	starPoolID := preparePool(t, ctx, osmosis, actor, poolFunds)
 
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
-	require.NotEmpty(t, reflect)
-
-	// TODO: figure out why it errors when we use start time without second
-	startTime := ctx.BlockTime().Add(time.Second)
-
-	_, err := osmosis.GAMMKeeper.SwapExactAmountIn(ctx, actor, starPoolID, sdk.NewCoin("uosmo", sdk.NewInt(100000000)), "ustar", sdk.NewInt(1))
+	outTokens, err := osmosis.GAMMKeeper.SwapExactAmountIn(ctx, actor, starPoolID, sdk.NewCoin("uosmo", sdk.NewInt(100000000)), "ustar", sdk.NewInt(1))
+	require.Equal(t, outTokens, sdk.NewInt(100000000))
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 20))
-	reqEndBlock := abci.RequestEndBlock{Height: ctx.BlockHeight()}
-	osmosis.EndBlocker(ctx, reqEndBlock)
+	osmosis.EndBlocker(ctx, abci.RequestEndBlock{Height: ctx.BlockHeight()})
 
 	query := bindings.OsmosisQuery{
 		ArithmeticTwapToNow: &bindings.ArithmeticTwapToNow{
@@ -257,15 +255,25 @@ func TestQueryArithmeticTwapToNow(t *testing.T) {
 			StartTime:       startTime.UnixMilli(),
 		},
 	}
-
+	// test twap to now
 	resp := bindings.ArithmeticTwapToNowResponse{}
 	queryCustom(t, ctx, osmosis, reflect, query, &resp)
 	require.NotNil(t, resp.Twap)
 
 	twap, err := strconv.ParseFloat(resp.Twap, 32)
 	require.NoError(t, err)
+	require.Equal(t, 0.5, twap)
 
-	require.Equal(t, 0.5000004172325134, twap)
+	// move time forward, test twap to now again
+	ctx = ctx.WithBlockTime(startTime.Add(time.Minute * 40))
+	osmosis.EndBlocker(ctx, abci.RequestEndBlock{Height: ctx.BlockHeight()})
+
+	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	require.NotNil(t, resp.Twap)
+
+	twap, err = strconv.ParseFloat(resp.Twap, 32)
+	require.NoError(t, err)
+	require.Equal(t, 1.25, twap)
 }
 
 func TestQueryEstimateSwap(t *testing.T) {
@@ -279,7 +287,7 @@ func TestQueryEstimateSwap(t *testing.T) {
 		sdk.NewInt64Coin("uosmo", 12000000),
 		sdk.NewInt64Coin("ustar", 240000000),
 	}
-	// 20 star to 1 osmo
+	// 2 star to 1 osmo
 	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
 
 	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
