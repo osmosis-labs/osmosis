@@ -255,6 +255,11 @@ To get started:
 - Note the container id of the one you want to see the logs
 - And then run `docker logs <CONTAINER_NAME>`  to debug via container logs
 
+Please note that if the tests are stopped mid-way, the e2e framework might fail to start again due to duplicated containers. Make sure that
+containers are removed before running the tests again: `docker containers rm -f $(docker containers ls -a -q)`.
+
+Additionally, Docker networks do not get auto-removed. Therefore, you can manually remove them by running `docker network prune`.
+
 ## Working with the SDK
 
 ### Updating dependencies for builds
