@@ -83,8 +83,9 @@ func (i *ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabili
 //  if the denom is not correct, the transfer should fail somewhere else on the call chain
 func (i *ICS4Middleware) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
 	supply := i.BankKeeper.GetSupply(ctx, denom)
-	locked := i.LockupKeeper.GetModuleLockedCoins(ctx)
-	return supply.Amount.Add(locked.AmountOf(denom))
+	return supply.Amount
+	//locked := i.LockupKeeper.GetModuleLockedCoins(ctx)
+	//return supply.Amount.Add(locked.AmountOf(denom))
 }
 
 type IBCModule struct {
