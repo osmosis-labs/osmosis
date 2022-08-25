@@ -6,19 +6,20 @@ A time weighted average price is a function that takes a sequence of `(time, pri
 
 ## Arithmetic mean TWAP
 
-Using the arithmetic mean, the TWAP of a sequence `(t_i, p_i)`, from `t_0` to `t_n`, indexed by time in ascending order, is: $$\frac{1}{t_n - t_0}\sum_{i=0}^{n-1} p_i (t_{i+1} - t_i)$$
+Using the arithmetic mean, the TWAP of a sequence `(t_i, p_i)`, from `t_0` to `t_n`, indexed by time in ascending order, is 
+<img src="http://www.sciweavers.org/tex2img.php?eq=%5Cfrac%7B1%7D%7Bt_n%20-%20t_0%7D%5Csum_%7Bi%3D0%7D%5E%7Bn-1%7D%20p_i%20%28t_%7Bi%2B1%7D%20-%20t_i%29&bc=White&fc=Black&im=jpg&fs=12&ff=mathptmx&edit=0" align="center" border="0" alt="\frac{1}{t_n - t_0}\sum_{i=0}^{n-1} p_i (t_{i+1} - t_i)" width="147" height="46" />
 Notice that the latest price `p_n` isn't used, as it has lasted for a time interval of `0` seconds in this range!
 
-To illustrate with an example, given the sequence: `(0s, $1), (4s, $6), (5s, $1)`, the arithmetic mean TWAP is: 
-$$\frac{\$1 * (4s - 0s) + \$6 * (5s - 4s)}{5s - 0s} = \frac{\$10}{5} = \$2$$
+To illustrate with an example, given the sequence: `(0s, $1), (4s, $6), (5s, $1)`, the arithmetic mean TWAP is: <img src="http://www.sciweavers.org/tex2img.php?eq=%5Cfrac%7B%5C%241%20%2A%20%284s%20-%200s%29%20%2B%20%5C%246%20%2A%20%285s%20-%204s%29%7D%7B5s%20-%200s%7D%20%3D%20%5Cfrac%7B%5C%2410%7D%7B5%7D%20%3D%20%5C%242&bc=White&fc=Black&im=jpg&fs=12&ff=modern&edit=0" alt="\frac{\$1 * (4s - 0s) + \$6 * (5s - 4s)}{5s - 0s} = \frac{\$10}{5} = \$2" />
 
 ## Computation via accumulators method
 
 The prior example for how to compute the TWAP takes linear time in the number of time entries in a range, which is too inefficient. We require TWAP operations to have constant time complexity (in the number of records).
 
 This is achieved by using an accumulator. In the case of an arithmetic TWAP, we can maintain an accumulator from `a_n`, representing the numerator of the TWAP expression for the interval `t_0...t_n`, namely 
-$$a_n = \sum_{i=0}^{n-1} p_i (t_{i+1} - t_i)$$
-If we maintain such an accumulator for every pool, with `t_0 = pool_creation_time` to `t_n = current_block_time`, we can easily compute the TWAP for any interval. The TWAP for the time interval of price points `t_i` to `t_j` is then $twap = \frac{a_j - a_i}{t_j - t_i}$, which is constant time given the accumulator values.
+<img src="http://www.sciweavers.org/tex2img.php?eq=a_n%20%3D%20%5Csum_%7Bi%3D0%7D%5E%7Bn-1%7D%20p_i%20%28t_%7Bi%2B1%7D%20-%20t_i%29&bc=White&fc=Black&im=jpg&fs=12&ff=mathptmx&edit=0" align="center" border="0" alt="a_n = \sum_{i=0}^{n-1} p_i (t_{i+1} - t_i)"/>
+
+If we maintain such an accumulator for every pool, with `t_0 = pool_creation_time` to `t_n = current_block_time`, we can easily compute the TWAP for any interval. The TWAP for the time interval of price points `t_i` to `t_j` is then <img src="http://www.sciweavers.org/tex2img.php?eq=twap%20%3D%20%5Cfrac%7Ba_j%20-%20a_i%7D%7Bt_j%20-%20t_i%7D&bc=White&fc=Black&im=jpg&fs=12&ff=mathptmx&edit=0" align="center" border="0" alt="twap = \frac{a_j - a_i}{t_j - t_i}"/>, which is constant time given the accumulator values.
 
 In Osmosis, we maintain accumulator records for every pool, for the last 48 hours.
 We also maintain within each accumulator record in state, the latest spot price.
