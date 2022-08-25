@@ -56,7 +56,7 @@ func DeconstructDenom(denom string) (creator string, subdenom string, err error)
 	}
 
 	creator = strParts[1]
-	addr, err := sdk.AccAddressFromBech32(creator)
+	creatorAddr, err := sdk.AccAddressFromBech32(creator)
 	if err != nil {
 		return "", "", sdkerrors.Wrapf(ErrInvalidDenom, "Invalid creator address (%s)", err)
 	}
@@ -66,7 +66,7 @@ func DeconstructDenom(denom string) (creator string, subdenom string, err error)
 	// So we have to join [2:] with a "/" as the delimiter to get back the correct subdenom which should be "atomderivative/sikka"
 	subdenom = strings.Join(strParts[2:], "/")
 
-	return addr.String(), subdenom, nil
+	return creatorAddr.String(), subdenom, nil
 }
 
 // NewTokenFactoryDenomMintCoinsRestriction creates and returns a BankMintingRestrictionFn that only allows minting of

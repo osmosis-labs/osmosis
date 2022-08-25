@@ -27,19 +27,16 @@ func TestDeconstructDenom(t *testing.T) {
 			desc:             "normal",
 			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin",
 			expectedSubdenom: "bitcoin",
-			err:              nil,
 		},
 		{
 			desc:             "multiple slashes in subdenom",
 			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin/1",
 			expectedSubdenom: "bitcoin/1",
-			err:              nil,
 		},
 		{
 			desc:             "no subdenom",
 			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/",
 			expectedSubdenom: "",
-			err:              nil,
 		},
 		{
 			desc:  "incorrect prefix",
@@ -50,7 +47,6 @@ func TestDeconstructDenom(t *testing.T) {
 			desc:             "subdenom of only slashes",
 			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/////",
 			expectedSubdenom: "////",
-			err:              nil,
 		},
 		{
 			desc:  "too long name",
