@@ -8,8 +8,8 @@ DISABLED_MUTATORS='branch/*'
 # Only consider the following:
 # * go files in types, keeper, or module root directories
 # * ignore test and Protobuf files
-MUTATION_SOURCES=$(find ./x -type f \( -path '*/keeper/*' -or -path '*/types/*' \) \( -name '*.go' -and -not -name '*_test.go' -and -not -name '*pb*' \))
-MUTATION_SOURCES+=$(find ./x -maxdepth 2 -type f \( -name '*.go' -and -not -name '*_test.go' -and -not -name '*pb*' \))
+MUTATION_SOURCES=$(find ./x -type f \( -path '*/keeper/*' -or -path '*/types/*' \) \( -name '*.go' -and -not -name '*_test.go' -and -not -name '*pb*' -and -not -name 'module.go' \))
+MUTATION_SOURCES+=$(find ./x -maxdepth 2 -type f \( -name '*.go' -and -not -name '*_test.go' -and -not -name '*pb*' -and -not -name 'module.go' \))
 
 # Filter on a module-by-module basis as provided by input
 arg_len=$#
