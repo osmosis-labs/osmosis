@@ -17,13 +17,8 @@ const (
 )
 
 var (
-	GetProportions                         = getProportions
-	GetTruncationStoreKeyFromModuleAccount = getTruncationStoreKeyFromModuleAccount
+	GetProportions = getProportions
 )
-
-func (k Keeper) CalculateTotalTruncationDelta(ctx sdk.Context, moduleAccountName string, provisions sdk.Dec, amountDistributed sdk.Int) (sdk.Dec, error) {
-	return k.calculateTotalTruncationDelta(ctx, moduleAccountName, provisions, amountDistributed)
-}
 
 func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) error {
 	return k.createDeveloperVestingModuleAccount(ctx, amount)
@@ -39,10 +34,6 @@ func (k Keeper) DistributeDeveloperRewards(ctx sdk.Context, developerRewardsCoin
 
 func (k Keeper) DistributeInflationProvisions(ctx sdk.Context, provisionsCoin sdk.DecCoin, proportions types.DistributionProportions) (sdk.Int, error) {
 	return k.distributeInflationProvisions(ctx, provisionsCoin, proportions)
-}
-
-func (k Keeper) HandleTruncationDelta(ctx sdk.Context, moduleAccountName string, provisions sdk.DecCoin, amountDistributed sdk.Int) (sdk.Int, error) {
-	return k.handleTruncationDelta(ctx, moduleAccountName, provisions, amountDistributed)
 }
 
 func (k Keeper) MintInflationProvisions(ctx sdk.Context, provisions sdk.Coin) error {

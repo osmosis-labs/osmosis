@@ -175,8 +175,6 @@ func (suite *KeeperTestSuite) TestGetProportions() {
 
 func (suite *KeeperTestSuite) TestDistributeInflationProvisions() {
 	tests := []struct {
-		preExistingTruncationDelta sdk.Dec
-
 		name                string
 		proportions         types.DistributionProportions
 		inflationProvisions sdk.DecCoin
@@ -216,17 +214,7 @@ func (suite *KeeperTestSuite) TestDistributeInflationProvisions() {
 			expectedLeftOverTruncationsDelta:                  sdk.NewDecWithPrec(99, 2),
 		},
 		{
-			name:                       "default proportions - truncated decimal amount; truncation delta of 0.1 pre-existing",
-			preExistingTruncationDelta: sdk.NewDecWithPrec(11, 2),
-			proportions:                defaultDistributionProportions,
-			inflationProvisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(100009, 1)),
-
-			expectedDistributed: sdk.NewInt(10000).Add(sdk.NewInt(1)),
-			expectedCommunityPoolDistributionsFromTruncations: sdk.OneInt(),
-			expectedLeftOverTruncationsDelta:                  sdk.NewDecWithPrec(1, 2),
-		},
-		{
-			name:                "xero provisions - no-op",
+			name:                "zero provisions - no-op",
 			proportions:         types.DefaultParams().DistributionProportions,
 			inflationProvisions: sdk.NewDecCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
 
@@ -247,10 +235,6 @@ func (suite *KeeperTestSuite) TestDistributeInflationProvisions() {
 			mintKeeper := suite.App.MintKeeper
 
 			inflationAmount := tc.inflationProvisions.Amount
-
-			if !tc.preExistingTruncationDelta.IsNil() {
-				suite.NoError(mintKeeper.SetTruncationDelta(ctx, types.ModuleName, tc.preExistingTruncationDelta))
-			}
 
 			// The mint coins are created from the mint module account exclusive of developer
 			// rewards. Developer rewards are distributed from the developer vesting module account.
@@ -283,11 +267,6 @@ func (suite *KeeperTestSuite) TestDistributeInflationProvisions() {
 			// validate distributions to community pool.
 			actualCommunityPoolBalanceAmount := bankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(distributiontypes.ModuleName), sdk.DefaultBondDenom).Amount
 			suite.Require().Equal(expectedCommunityPoolAmount, actualCommunityPoolBalanceAmount)
-
-			// Validate left over truncations delta
-			actualLeftOverTruncationsDelta, err := mintKeeper.GetTruncationDelta(ctx, types.ModuleName)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedLeftOverTruncationsDelta, actualLeftOverTruncationsDelta)
 
 			// N.B:
 			// Developer vesting module account is unaffected.
@@ -698,7 +677,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			expectedTruncationDelta := sdk.ZeroDec()
 
 			// Suppply offset delta is equal to the dev rewards
-			suite.Require().Equal(oldSupplyOffsetAmount.Add(tc.distribution.Amount.TruncateInt()).Int64(), actualSupplyOffsetAmount.Int64())
+			suite.Require().Equal(oldSupplyOffsetAmount.Add(tc.distribution.Amount.TruncateInt()).Add(expectedTruncationDelta.TruncateInt()).Int64(), actualSupplyOffsetAmount.Int64())
 
 			for i, weightedAddress := range tc.recepientAddresses {
 				expectedAllocation := expectedDistributed.Mul(tc.recepientAddresses[i].Weight)
@@ -730,12 +709,8 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 			// We do not mint any amount from mint module account.
 			suite.ValidateSupplyAndMintModuleAccounts(oldDeveloperVestingModuleBalanceAmount.Sub(expectedDistributed.TruncateInt()), oldMintModuleBalanceAmount, sdk.ZeroInt())
 
-			// All truncation delta gets rounded down and set to community pool.
-			expectedDistributedCommunityPool = expectedTruncationDelta.TruncateInt()
-
 			// Supply should not change since all distributions are from the developer vesting module account.
-			// suite.ValidateSupply(sdk.ZeroInt())
-			suite.Require().Equal(oldCommunityPoolBalanceAmount.Add(expectedDistributedCommunityPool).Add(sdk.NewInt(tc.expectedCommunityPoolNonTruncationDistributions)).Int64(), actualCommunityPoolModuleBalanceAmount.Int64())
+			suite.Require().Equal(oldCommunityPoolBalanceAmount.Add(sdk.NewInt(tc.expectedCommunityPoolNonTruncationDistributions).Add(expectedTruncationDelta.TruncateInt())).Int64(), actualCommunityPoolModuleBalanceAmount.Int64())
 		})
 	}
 }
@@ -899,351 +874,6 @@ func (suite *KeeperTestSuite) TestMintInflationProvisions() {
 			// Validate supply
 			actualInflationAmount := mintKeeper.GetInflationAmount(ctx, mintDenom)
 			suite.Require().Equal(tc.expectedInflationAmount.String(), actualInflationAmount.String())
-		})
-	}
-}
-
-// TestCalculateTruncationsDelta tests that the per-epoch truncation delta is calculate
-// correctly. That includes checking that the pre-existing delta is correctly
-// extracted from the store at the desired index and summed with the new delta
-// from the input values.
-func (suite *KeeperTestSuite) TestCalculateTruncationDelta() {
-	const mintDenom = sdk.DefaultBondDenom
-	tests := map[string]struct {
-		preExistingStoreDelta sdk.Dec
-
-		moduleAccountName string
-		provisions        sdk.Dec
-		amountDistributed sdk.Int
-
-		expectedTruncationDelta sdk.Dec
-
-		expectError bool
-	}{
-		"100.6 - 100 = 0.6; no pre-existing delta; inflation delta module account": {
-			moduleAccountName: types.DeveloperVestingModuleAcctName,
-			provisions:        sdk.NewDecWithPrec(1006, 1),
-			amountDistributed: sdk.NewInt(100),
-
-			expectedTruncationDelta: sdk.NewDecWithPrec(6, 1),
-		},
-		"100.6 - 100  + 0.3 = 0.9; pre-existing delta of 0.3; inflation delta module account": {
-			preExistingStoreDelta: sdk.NewDecWithPrec(3, 1),
-
-			moduleAccountName: types.ModuleName,
-			provisions:        sdk.NewDecWithPrec(1006, 1),
-			amountDistributed: sdk.NewInt(100),
-
-			expectedTruncationDelta: sdk.NewDecWithPrec(9, 1),
-		},
-		"100.6 - 100  + 0.5 = 1.1; pre-existing delta of 1.1; inflation delta module account": {
-			preExistingStoreDelta: sdk.NewDecWithPrec(5, 1),
-
-			moduleAccountName: types.ModuleName,
-			provisions:        sdk.NewDecWithPrec(1006, 1),
-			amountDistributed: sdk.NewInt(100),
-
-			expectedTruncationDelta: sdk.NewDecWithPrec(11, 1),
-		},
-		"82191.178 - 17808  + 33.33 = 64416508; pre-existing delta of 33.33; developer vesting module account": {
-			preExistingStoreDelta: sdk.NewDecWithPrec(3333, 2),
-
-			moduleAccountName: types.DeveloperVestingModuleAcctName,
-			provisions:        sdk.NewDecWithPrec(82191178, 3),
-			amountDistributed: sdk.NewInt(17808),
-
-			expectedTruncationDelta: sdk.NewDecWithPrec(64416508, 3),
-		},
-		"attempt to use invalid module account name - panic": {
-			moduleAccountName: poolincentivestypes.ModuleName,
-			provisions:        sdk.NewDecWithPrec(1006, 1),
-			amountDistributed: sdk.NewInt(100),
-
-			expectError: true,
-		},
-		"invalid module account - error": {
-			moduleAccountName: poolincentivestypes.ModuleName,
-			provisions:        sdk.NewDecWithPrec(1006, 1),
-			amountDistributed: sdk.NewInt(100),
-
-			expectError: true,
-		},
-	}
-	for name, tc := range tests {
-		suite.Run(name, func() {
-			// Setup.
-			suite.Setup()
-			mintKeeper := suite.App.MintKeeper
-			ctx := suite.Ctx
-
-			if !tc.preExistingStoreDelta.IsNil() {
-				mintKeeper.SetTruncationDelta(ctx, tc.moduleAccountName, tc.preExistingStoreDelta)
-			}
-
-			// System under test
-			actualTruncationDelta, err := mintKeeper.CalculateTotalTruncationDelta(ctx, tc.moduleAccountName, tc.provisions, tc.amountDistributed)
-
-			// Assertions.
-			if tc.expectError {
-				suite.Require().Error(err)
-				return
-			}
-
-			suite.Require().Equal(tc.expectedTruncationDelta, actualTruncationDelta)
-		})
-	}
-}
-
-// TestGetTruncationStoreKeyFromModuleAccount tests that the correct store key
-// is returned for a given module account.
-func (suite *KeeperTestSuite) TestGetTruncationStoreKeyFromModuleAccount() {
-	const mintDenom = sdk.DefaultBondDenom
-	tests := map[string]struct {
-		moduleAccountName string
-
-		expectedKey []byte
-
-		expectError bool
-	}{
-		"developer vesting module account - valid": {
-			moduleAccountName: types.DeveloperVestingModuleAcctName,
-
-			expectedKey: types.TruncatedDeveloperVestingDeltaKey,
-		},
-		"mint module account - valid": {
-			moduleAccountName: types.ModuleName,
-
-			expectedKey: types.TruncatedInflationDeltaKey,
-		},
-		"pool incentives module account - error": {
-			moduleAccountName: poolincentivestypes.ModuleName,
-
-			expectError: true,
-		},
-	}
-	for name, tc := range tests {
-		suite.Run(name, func() {
-			actualTruncationStoreKey, err := keeper.GetTruncationStoreKeyFromModuleAccount(tc.moduleAccountName)
-
-			if tc.expectError {
-				suite.Require().Error(err)
-				return
-			}
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedKey, actualTruncationStoreKey)
-		})
-	}
-}
-
-// TestHandleTruncationDelta tests that the truncation delta is estimated
-// and distributed as determined by the method spec.
-func (suite *KeeperTestSuite) TestHandleTruncationDelta() {
-	tests := map[string]struct {
-		// Inputs
-		moduleAccountName string
-		preExistingDelta  sdk.Dec
-		provisions        sdk.DecCoin
-		amountDistributed sdk.Int
-
-		// Expected outputs
-		expectedDistributedAmount sdk.Int
-		expectedPersistedInStore  sdk.Dec
-		expectErr                 bool
-	}{
-		"valid case: 100.6 - 100 + 0.2 = 0.8; none-distrubuted and persisted until next epoch": {
-			moduleAccountName: types.DeveloperVestingModuleAcctName,
-			preExistingDelta:  sdk.NewDecWithPrec(2, 1),
-			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1006, 1)),
-			amountDistributed: sdk.NewInt(100),
-
-			expectedDistributedAmount: sdk.ZeroInt(),
-			expectedPersistedInStore:  sdk.NewDecWithPrec(8, 1),
-		},
-		"valid case: 100.6 - 100 + 0.4 = 1; all distributed and none persisted": {
-			moduleAccountName: types.DeveloperVestingModuleAcctName,
-			preExistingDelta:  sdk.NewDecWithPrec(4, 1),
-			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1006, 1)),
-			amountDistributed: sdk.NewInt(100),
-
-			expectedDistributedAmount: sdk.OneInt(),
-			expectedPersistedInStore:  sdk.ZeroDec(),
-		},
-		"valid case: 100.8 - 100 + 0.4 = 1.2; 1 distributed, 0.2 persisted in store; mint module account": {
-			moduleAccountName: types.ModuleName,
-			preExistingDelta:  sdk.NewDecWithPrec(4, 1),
-			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1008, 1)),
-			amountDistributed: sdk.NewInt(100),
-
-			expectedDistributedAmount: sdk.OneInt(),
-			expectedPersistedInStore:  sdk.NewDecWithPrec(2, 1),
-		},
-		"valid case: 100 - 100 + 0 = 0; none distributed or persisted in store; mint module account": {
-			moduleAccountName: types.ModuleName,
-			preExistingDelta:  sdk.ZeroDec(),
-			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(100)),
-			amountDistributed: sdk.NewInt(100),
-
-			expectedDistributedAmount: sdk.ZeroInt(),
-			expectedPersistedInStore:  sdk.ZeroDec(),
-		},
-		"invalid module account name - error": {
-			moduleAccountName: poolincentivestypes.ModuleName,
-			preExistingDelta:  sdk.NewDecWithPrec(2, 1),
-			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1006, 1)),
-			amountDistributed: sdk.NewInt(100),
-
-			expectErr: true,
-		},
-		"provisions are less than amount distributed - error": {
-			moduleAccountName: types.ModuleName,
-			preExistingDelta:  sdk.NewDecWithPrec(2, 1),
-			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1006, 1)),
-			amountDistributed: sdk.NewInt(101),
-
-			expectErr: true,
-		},
-		"attempted to distribute more than developer vesting module account balance - error": {
-			moduleAccountName: types.DeveloperVestingModuleAcctName,
-			preExistingDelta:  sdk.NewDecFromInt(sdk.NewInt(keeper.DeveloperVestingAmount)).Add(sdk.OneDec()),
-			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1006, 1)),
-			amountDistributed: sdk.NewInt(100),
-
-			expectErr: true,
-		},
-	}
-	for name, tc := range tests {
-		suite.Run(name, func() {
-			// Setup.
-			suite.Setup()
-			mintKeeper := suite.App.MintKeeper
-			ctx := suite.Ctx
-
-			if !tc.preExistingDelta.IsNil() {
-				mintKeeper.SetTruncationDelta(ctx, tc.moduleAccountName, tc.preExistingDelta)
-			}
-
-			// System under test
-			actualAmount, err := mintKeeper.HandleTruncationDelta(ctx, tc.moduleAccountName, tc.provisions, tc.amountDistributed)
-
-			// Assertions.
-			if tc.expectErr {
-				suite.Require().Error(err)
-				return
-			}
-
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedDistributedAmount.String(), actualAmount.String())
-			actualPersistedInstore, err := mintKeeper.GetTruncationDelta(ctx, tc.moduleAccountName)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedPersistedInStore, actualPersistedInstore)
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestSetTruncationDelta() {
-	tests := map[string]struct {
-		moduleAccountName string
-		truncationDelta   sdk.Dec
-		expectError       bool
-	}{
-		"developer vesting delta key": {
-			moduleAccountName: types.DeveloperVestingModuleAcctName,
-			truncationDelta:   sdk.NewDecWithPrec(2, 1),
-		},
-		"inflation delta key": {
-			moduleAccountName: types.ModuleName,
-			truncationDelta:   sdk.NewDecWithPrec(2, 1),
-		},
-		"negative delta - error": {
-			moduleAccountName: types.ModuleName,
-			truncationDelta:   sdk.NewDecWithPrec(2, 1).Neg(),
-
-			expectError: true,
-		},
-		"invalid module account name - error": {
-			moduleAccountName: poolincentivestypes.ModuleName,
-			truncationDelta:   sdk.NewDecWithPrec(2, 1).Neg(),
-
-			expectError: true,
-		},
-	}
-
-	for name, tc := range tests {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			ctx := suite.Ctx
-			mintKeeper := suite.App.MintKeeper
-
-			err := mintKeeper.SetTruncationDelta(ctx, tc.moduleAccountName, tc.truncationDelta)
-
-			if tc.expectError {
-				suite.Require().Error(err)
-				return
-			}
-
-			suite.Require().NoError(err)
-
-			actual, err := mintKeeper.GetTruncationDelta(ctx, tc.moduleAccountName)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.truncationDelta, actual)
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestGetTruncationDelta() {
-
-	tests := map[string]struct {
-		preSetValue sdk.Dec
-
-		moduleAccountName string
-
-		expectedValue sdk.Dec
-		expectError   bool
-	}{
-		"no pre-set; developer vesting": {
-			moduleAccountName: types.DeveloperVestingModuleAcctName,
-
-			expectedValue: sdk.ZeroDec(),
-		},
-		"pre-set; developer vesting": {
-			preSetValue: sdk.NewDecWithPrec(2, 1),
-
-			moduleAccountName: types.DeveloperVestingModuleAcctName,
-
-			expectedValue: sdk.NewDecWithPrec(2, 1),
-		},
-		"pre-set; inflation": {
-			preSetValue: sdk.NewDecWithPrec(2, 1),
-
-			moduleAccountName: types.ModuleName,
-
-			expectedValue: sdk.NewDecWithPrec(2, 1),
-		},
-		"invalid module account name - error": {
-			moduleAccountName: poolincentivestypes.ModuleName,
-
-			expectError: true,
-		},
-	}
-
-	for name, tc := range tests {
-		suite.Run(name, func() {
-			suite.SetupTest()
-			ctx := suite.Ctx
-			mintKeeper := suite.App.MintKeeper
-
-			if !tc.preSetValue.IsNil() {
-				suite.Require().NoError(mintKeeper.SetTruncationDelta(ctx, tc.moduleAccountName, tc.preSetValue))
-			}
-
-			actualTruncationDelta, err := mintKeeper.GetTruncationDelta(ctx, tc.moduleAccountName)
-
-			if tc.expectError {
-				suite.Require().Error(err)
-				return
-			}
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedValue, actualTruncationDelta)
 		})
 	}
 }
