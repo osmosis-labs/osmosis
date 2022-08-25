@@ -79,11 +79,6 @@ func (k Keeper) chargeForCreateDenom(ctx sdk.Context, creatorAddr string, subden
 		return err
 	}
 	if creationFee != nil {
-		for _, coin := range creationFee {
-			if !k.bankKeeper.HasBalance(ctx, accAddr, coin) {
-				return sdkerrors.ErrInsufficientFunds
-			}
-		}
 		if err := k.communityPoolKeeper.FundCommunityPool(ctx, creationFee, accAddr); err != nil {
 			return err
 		}
