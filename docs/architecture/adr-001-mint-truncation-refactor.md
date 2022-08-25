@@ -59,6 +59,9 @@ truncations is identified to occur in [the calculation of the proportions for
 each developer account][5]:
 <https://github.com/osmosis-labs/osmosis/blob/4176b287d48338870bfda3029bfa20a6e45ac126/x/mint/keeper/hooks_test.go#L601-L602>
 
+All truncated delta amounts are to be distributed to the community pool from
+either module account.
+
 ### Additional Limitations
 
 Next, we present the limitations that need to be eliminated to mitigate the
@@ -223,6 +226,56 @@ the ability to more thoroughly unit test it.
 
 The enhanced encapsulation in turn leads to a more modular mint keeper where
 each method strives to focus on a single concern. 
+
+### Decision 5
+
+Although the exact distribution proportions are configured via parameters,
+we will still **distribute any truncation delta to the community pool**.
+
+#### Consequences
+
+##### Positive
+
+This decision allows for simple logic for truncation handling after attempting
+to distribute the actual epoch provision proportions.
+
+Additionally, we can distribute the deltas more frequently than if we were
+to be precise in our distributions. This is stemming from the fact that
+to distribute to the community pool, we need the truncations to only reach 1
+(a whole positive number) and not a fraction.
+
+If we were to distribute deltas according to the parameterized distributions, 
+we would have to wait until the delta could be divided into the whole
+proportion amounts.
+
+For example, assume we only distribute to 2 developer vesting addresses.
+Address 1 has a weight of 40% and address 2 has a weight of 60%.
+
+Since the proportions are 2 : 3, we can only distribute the truncations
+once they reach the whole number that can be split into two whole parts
+according to the proportions.
+
+In such a case, we would distribute 5 times less frequently than with the
+current design.
+
+##### Negative
+
+By distributing to the community pool, we are not distributing the exact
+parameterized proportions. The community pool always receives a slightly
+larger amount than the configured percentage.
+
+This is not a problem right now since the difference is infinitesimal.
+
+However, it might become more apparent when the provisions are reduced
+to small amounts.
+
+For example, if we have total provisions of 10. Developer vesting proportion
+is 33% and community pool is 7%.
+
+Then, we distribute 3 (`floor(10 * 0.33))`) every epoch to the community pool.
+While the truncation part (`0.33`) eventually goes to the community pool. As result,
+developer vesting amounts get 30% against the configured 33%, and the community
+pool gets 10% instead of the configured 7%.
 
 ## Backwards Compatibility
 
