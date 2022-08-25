@@ -59,3 +59,7 @@ func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRec
 func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
 	return recordWithUpdatedAccumulators(record, t)
 }
+
+func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
+	return newTwapRecord(k, ctx, poolId, denom0, denom1)
+}
