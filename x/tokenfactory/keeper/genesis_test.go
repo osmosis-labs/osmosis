@@ -1,14 +1,35 @@
 package keeper_test
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
 )
 
-func (suite *KeeperTestSuite) TestGenesis() {
+type GenesisTestSuite struct {
+	apptesting.KeeperTestHelper
+}
+
+func (suite *GenesisTestSuite) SetupTest() {
+	suite.Setup()
+
+	// remove module account to ensure initGenesis initializes it on its own
+	moduleAddress := suite.App.AccountKeeper.GetModuleAddress(types.ModuleName)
+	tokenfactoryModuleAccount := suite.App.AccountKeeper.GetAccount(suite.Ctx, moduleAddress)
+	suite.App.AccountKeeper.RemoveAccount(suite.Ctx, tokenfactoryModuleAccount)
+}
+
+func TestGenesisTestSuite(t *testing.T) {
+	suite.Run(t, new(GenesisTestSuite))
+}
+
+func (suite *GenesisTestSuite) TestGenesis() {
 	genesisState := types.GenesisState{
 		FactoryDenoms: []types.GenesisDenom{
 			{
@@ -31,10 +52,8 @@ func (suite *KeeperTestSuite) TestGenesis() {
 			},
 		},
 	}
+
 	app := suite.App
-	// remove module account to ensure initGenesis initializes it on its own
-	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
-	app.AccountKeeper.RemoveAccount(suite.Ctx, tokenfactoryModuleAccount)
 	suite.Ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 	// Test both with bank denom metadata set, and not set.
 	for i, denom := range genesisState.FactoryDenoms {
@@ -44,7 +63,7 @@ func (suite *KeeperTestSuite) TestGenesis() {
 		}
 	}
 	// check before initGenesis that the module account is nil
-	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
+	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
 	suite.Require().Nil(tokenfactoryModuleAccount)
 
 	app.TokenFactoryKeeper.SetParams(suite.Ctx, types.Params{DenomCreationFee: sdk.Coins{sdk.NewInt64Coin("uosmo", 100)}})
