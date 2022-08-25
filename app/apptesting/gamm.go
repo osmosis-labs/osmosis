@@ -17,10 +17,20 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 // PrepareBalancerPoolWithCoins returns a balancer pool
 // consisted of given coins with equal weight.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithCoins(coins ...sdk.Coin) uint64 {
+	weights := make([]int64, len(coins))
+	for i := 0; i < len(coins); i++ {
+		weights[i] = 1
+	}
+	return s.PrepareBalancerPoolWithCoinsAndWeights(coins, weights)
+}
+
+// PrepareBalancerPoolWithCoins returns a balancer pool
+// consisted of given coins with equal weight.
+func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coins, weights []int64) uint64 {
 	var poolAssets []balancer.PoolAsset
-	for _, coin := range coins {
+	for i, coin := range coins {
 		poolAsset := balancer.PoolAsset{
-			Weight: sdk.NewInt(1),
+			Weight: sdk.NewInt(weights[i]),
 			Token:  coin,
 		}
 		poolAssets = append(poolAssets, poolAsset)
@@ -45,7 +55,7 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "baz", "foo")
 	s.NoError(err)
 	oneThird := sdk.NewDec(1).Quo(sdk.NewDec(3))
-	sp := oneThird.MulInt(gammtypes.SigFigs).RoundInt().ToDec().QuoInt(gammtypes.SigFigs)
+	sp := oneThird.MulInt(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)
 	s.Equal(sp.String(), spotPrice.String())
 
 	return poolId

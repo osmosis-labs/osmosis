@@ -8,25 +8,51 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	"github.com/osmosis-labs/osmosis/v11/osmomath"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
 // using the specified pool.
-// E.g. if pool 1 traded 2 atom for 3 osmo, the quote asset was atom, and the base asset was osmo,
+// E.g. if pool 1 let you traded 2 atom for 3 osmo, the quote asset was atom, and the base asset was osmo,
 // this would return 1.5. (Meaning that 1 atom costs 1.5 osmo)
+//
+// This function is guaranteed to not panic, but may return an error if:
+// * An internal error within the pool occurs for calculating the spot price
+// * The returned spot price is greater
 func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolID uint64,
 	baseAssetDenom string,
 	quoteAssetDenom string,
-) (sdk.Dec, error) {
+) (spotPrice sdk.Dec, err error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	return pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
+	// defer to catch panics, in case something internal overflows.
+	defer func() {
+		if r := recover(); r != nil {
+			spotPrice = sdk.Dec{}
+			err = types.ErrSpotPriceInternal
+		}
+	}()
+
+	spotPrice, err = pool.SpotPrice(ctx, baseAssetDenom, quoteAssetDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// if spotPrice greater than max spot price, return an error
+	if spotPrice.GT(types.MaxSpotPrice) {
+		spotPrice = sdk.Dec{}
+		err = types.ErrSpotPriceOverflow
+	}
+
+	// we want to round this to `SpotPriceSigFigs` of precision
+	spotPrice = osmomath.SigFigRound(spotPrice, types.SpotPriceSigFigs)
+	return spotPrice, err
 }
 
 func validateCreatePoolMsg(ctx sdk.Context, msg types.CreatePoolMsg) error {

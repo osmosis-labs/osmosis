@@ -319,6 +319,51 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 	}
 }
 
+// This test creates several pools, and tests that:
+// the condition is in a case where the balancer return value returns an overflowing value
+// the SpotPrice query does not
+func (suite *KeeperTestSuite) TestSpotPriceOverflow() {
+	denomA := "denomA"
+	denomB := "denomB"
+	tests := map[string]struct {
+		poolLiquidity   sdk.Coins
+		poolWeights     []int64
+		quoteAssetDenom string
+		baseAssetDenom  string
+		overflows       bool
+	}{
+		"uniV2marginalOverflow": {
+			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, types.MaxSpotPrice.TruncateInt().Add(sdk.OneInt())),
+				sdk.NewCoin(denomB, sdk.OneInt())),
+			poolWeights:     []int64{1, 1},
+			quoteAssetDenom: denomB,
+			baseAssetDenom:  denomA,
+			overflows:       true,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			poolId := suite.PrepareBalancerPoolWithCoinsAndWeights(tc.poolLiquidity, tc.poolWeights)
+			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+			suite.Require().NoError(err)
+			poolSpotPrice, poolErr := pool.SpotPrice(suite.Ctx, tc.baseAssetDenom, tc.quoteAssetDenom)
+			keeperSpotPrice, keeperErr := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, tc.baseAssetDenom, tc.quoteAssetDenom)
+			if tc.overflows {
+				suite.Require().NoError(poolErr)
+				// TODO: We currently fail at internal precision calculation limits first.
+				// suite.Require().ErrorIs(keeperErr, types.ErrSpotPriceOverflow)
+				suite.Require().Error(keeperErr)
+				suite.Require().Equal(sdk.Dec{}, keeperSpotPrice)
+			} else {
+				suite.Require().NoError(poolErr)
+				suite.Require().NoError(keeperErr)
+				suite.Require().Equal(poolSpotPrice, keeperSpotPrice)
+			}
+		})
+	}
+}
+
 // TODO: Add more edge cases around TokenInMaxs not containing every token in pool.
 func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 	fiveKFooAndBar := sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(5000)), sdk.NewCoin("foo", sdk.NewInt(5000)))

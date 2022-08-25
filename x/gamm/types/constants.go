@@ -22,6 +22,8 @@ var (
 	// InitPoolSharesSupply is the amount of new shares to initialize a pool with.
 	InitPoolSharesSupply = OneShare.MulRaw(100)
 
-	// SigFigs is the amount of significant figures used to calculate SpotPrice
-	SigFigs = sdk.NewDec(10).Power(SigFigsExponent).TruncateInt()
+	// SpotPriceSigFigs is the amount of significant figures used in return value of calculate SpotPrice
+	SpotPriceSigFigs = sdk.NewDec(10).Power(SigFigsExponent).TruncateInt()
+	// MaxSpotPrice is the maximum supported spot price. Anything greater than this will error.
+	MaxSpotPrice = sdk.NewDec(2).Power(119)
 )
