@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
 )
 
-func CheckRateLimits(ctx sdk.Context, wasmKeeper *wasmkeeper.Keeper,
+func CheckRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 	msgType, contract string,
 	channelValue sdk.Int, sourceChannel, denom string,
 	amount string,
@@ -29,7 +29,6 @@ func CheckRateLimits(ctx sdk.Context, wasmKeeper *wasmkeeper.Keeper,
 		amount,
 	)
 
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(wasmKeeper)
 	_, err = contractKeeper.Sudo(ctx, contractAddr, []byte(sendPacketMsg))
 
 	if err != nil {

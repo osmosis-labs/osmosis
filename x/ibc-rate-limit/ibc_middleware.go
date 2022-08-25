@@ -21,27 +21,27 @@ var (
 )
 
 type ICS4Middleware struct {
-	channel       porttypes.ICS4Wrapper
-	accountKeeper *authkeeper.AccountKeeper
-	BankKeeper    *bankkeeper.BaseKeeper
-	WasmKeeper    *wasmkeeper.Keeper
-	LockupKeeper  *lockupkeeper.Keeper
-	ParamSpace    paramtypes.Subspace
+	channel        porttypes.ICS4Wrapper
+	accountKeeper  *authkeeper.AccountKeeper
+	BankKeeper     *bankkeeper.BaseKeeper
+	ContractKeeper *wasmkeeper.PermissionedKeeper
+	LockupKeeper   *lockupkeeper.Keeper
+	ParamSpace     paramtypes.Subspace
 }
 
 func NewICS4Middleware(
 	channel porttypes.ICS4Wrapper,
-	accountKeeper *authkeeper.AccountKeeper, wasmKeeper *wasmkeeper.Keeper,
+	accountKeeper *authkeeper.AccountKeeper, contractKeeper *wasmkeeper.PermissionedKeeper,
 	bankKeeper *bankkeeper.BaseKeeper, lockupKeeper *lockupkeeper.Keeper,
 	paramSpace paramtypes.Subspace,
 ) ICS4Middleware {
 	return ICS4Middleware{
-		channel:       channel,
-		accountKeeper: accountKeeper,
-		WasmKeeper:    wasmKeeper,
-		BankKeeper:    bankKeeper,
-		LockupKeeper:  lockupKeeper,
-		ParamSpace:    paramSpace,
+		channel:        channel,
+		accountKeeper:  accountKeeper,
+		ContractKeeper: contractKeeper,
+		BankKeeper:     bankKeeper,
+		LockupKeeper:   lockupKeeper,
+		ParamSpace:     paramSpace,
 	}
 }
 
@@ -60,7 +60,7 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 	channelValue := i.CalculateChannelValue(ctx, denom)
 	err = CheckRateLimits(
 		ctx,
-		i.WasmKeeper,
+		i.ContractKeeper,
 		"send_packet",
 		params.ContractAddress,
 		channelValue,
@@ -198,7 +198,7 @@ func (im *IBCModule) OnRecvPacket(
 
 	err = CheckRateLimits(
 		ctx,
-		im.ics4Middleware.WasmKeeper,
+		im.ics4Middleware.ContractKeeper,
 		"recv_packet",
 		params.ContractAddress,
 		channelValue,
