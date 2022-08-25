@@ -14,8 +14,8 @@ This ADR focuses on refactoring `x/mint` module to mitigate the discrepancies
 between the actual and the projected inflation amounts.
 
 Currently, we under-mint due to truncations. In the first year of operations,
-this happens to be approximately 2600 OSMO. As a result, we cannot reach the
-projected OSMO supply one-to-one.
+this happens to be approximately 2600 uosmo. As a result, we cannot reach the
+projected uosmo supply one-to-one.
 
 Additionally, some of the constraints have made it difficult to refactor the
 `x/mint` module. Specifically, the developer vesting provisions follow a
