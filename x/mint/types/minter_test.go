@@ -21,6 +21,17 @@ var (
 	}
 )
 
+var (
+	defaultDeveloperVestingProportion = sdk.NewDecWithPrec(3, 1)
+	defaultProvisionsAmount           = sdk.NewDec(10)
+	defaultParams                     = types.Params{
+		MintDenom: sdk.DefaultBondDenom,
+		DistributionProportions: types.DistributionProportions{
+			DeveloperRewards: defaultDeveloperVestingProportion,
+		},
+	}
+)
+
 // Benchmarking :)
 // previously using sdk.Int operations:
 // BenchmarkEpochProvision-4 5000000 220 ns/op
