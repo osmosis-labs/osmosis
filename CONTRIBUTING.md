@@ -345,7 +345,7 @@ Therefore, for any change made to the `main` and, as long as it is
 **state-compatible**, we must backport it to the last major release branch e.g.
 `v11.x` when the next major release is v12.
 
-This helps to minimize the diff for a major upgrade review process.
+This helps to minimize the diff of a major upgrade review process.
 
 Additionally, it helps to safely and incrementally test
 state-compatible changes by doing smaller patch releases. Contrary
@@ -363,24 +363,25 @@ will always produce the same output.
 
 State-incompatibility is allowed for major upgrades because all nodes in the network
 perform it at the same time. Therefore, after the upgrade, the nodes continue
-functioning in the determistic way.
+functioning in a deterministic way.
 
-The state compatibiliy is ensured by taking the app hash of the state and comparing it
-to the app hash with the rest of the network. Essentially, app hash is a hash of
+The state compatibility is ensured by taking the app hash of the state and comparing it
+to the app hash with the rest of the network. Essentially, an app hash is a hash of
 hashes of every store's Merkle root.
 
 For example, at height n, we compute:
 `app hash = hash(hash(root of x/epochs), hash(root of  x/gamm)...)`
 
-Then, Tendermint ensures that app hash hash of local node matches the app hash
+Then, Tendermint ensures that the app hash of the local node matches the app hash
 of the network. Please note that the explanation and examples are simplified.
 
 #### Sources of State-incompatibility
 
 ##### Creating Additional State
 
-By erronously creating additional state, we can cause the app hash to differ
-accross nodes in the network. Therefore, this must be avoided.
+By erroneously creating database entries that exist in Version A but not in
+Version B, we can cause the app hash to differ across nodes running
+these versions in the network. Therefore, this must be avoided.
 
 ##### Returning Different Errors Given Same Input
 
@@ -413,7 +414,7 @@ the final app hash might not be deterministic.
 For transaction flows (or any other flow that consumes gas), it is important
 that the gas usage is deterministic.
 
-Currently, gas usage is being Merklized in state. As a result, reordering functions
+Currently, gas usage is being Merklized in the state. As a result, reordering functions
 becomes risky.
 
 Suppose my gas limit is 2000 and 1600 is used up before entering
@@ -439,26 +440,25 @@ func someInternalMethod(ctx sdk.Context) {
 - It will run out of gas with `gasUsed = 2100` where 2100 is getting merkelized
 into the tx results.
 
-Therefore, we introduced a state-incompatibility by merklizing diverging gas
+Therefore, we introduced a state-incompatibility by merklezing diverging gas
 usage.
 
 ##### Network Requests
 
 It is critical to avoid performing network requests since it is common
 for services to be unavailable or rate-limit. As a result, nodes
-may get diverging responses, leading to state-breakage.
+may get diverging responses, leading to state breakage.
 
 ##### Randomness
 
-Another critical property that should be avoided due to the likelyhood
-of leading the nodes to resulting in different state.
+Another critical property that should be avoided due to the likelihood
+of leading the nodes to result in a different state.
 
 #### Parallelism and Shared State
 
-Threads, Goroutines might preempt differently in different hardware. Therefore,
+Threads and Goroutines might preempt differently in different hardware. Therefore,
 they should be avoided for the sake of determinism. Additionally, it is hard
-to predict when multi-threaded state can be updated. As a result, it can
-result it non-determinism. 
+to predict when the multi-threaded state can be updated.
 
 ##### Hardware Errors
 
