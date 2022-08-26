@@ -147,25 +147,26 @@ func (suite *KeeperTestSuite) TestQueryTotalShares() {
 
 func (suite *KeeperTestSuite) TestQueryBalancerPoolTotalLiquidity() {
 	queryClient := suite.queryClient
+	suite.KeeperTestHelper.UpdateGenState()
 
 	// Pool not exist
 	res, err := queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal("", sdk.Coins(res.Liquidity).String())
+	suite.KeeperTestHelper.AlterStateCheck()
 
 	_ = suite.PrepareBalancerPool()
-
 	// create pool
 	res, err = queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal("5000000bar,5000000baz,5000000foo", sdk.Coins(res.Liquidity).String())
+	suite.KeeperTestHelper.AlterStateCheck()
+
 }
 
 // TODO: Come fix
-// func (suite *KeeperTestSuite) TestQueryBalancerPoolPoolAssets() {
-// 	queryClient := suite.queryClient
+// func (suite *KeeperTestSuite) TestQueryBalancerPoolPoolAssets(	suite.KeeperTestHelper.UpdateGenState()
 
-// 	// Pool not exist
 // 	_, err := queryClient.PoolAssets(gocontext.Background(), &types.QueryPoolAssetsRequest{PoolId: 1})
 // 	suite.Require().Error(err)
 
@@ -274,12 +275,14 @@ func (suite *KeeperTestSuite) TestQueryBalancerPoolSpotPrice() {
 
 		suite.Run(tc.name, func() {
 			result, err := queryClient.SpotPrice(gocontext.Background(), tc.req)
+			suite.KeeperTestHelper.UpdateGenState()
 			if tc.expectErr {
 				suite.Require().Error(err, "expected error")
 			} else {
 				suite.Require().NoError(err, "unexpected error")
 				suite.Require().Equal(tc.result, result.SpotPrice)
 			}
+			suite.KeeperTestHelper.AlterStateCheck()
 		})
 	}
 }
