@@ -333,6 +333,137 @@ There are several steps that go into a major release
 
 * Update chain JSON schema's recommended versions in `chain.schema.json` located in the root directory.
 
+## Patch and Minor Releases
+
+### Backport Flow
+
+For patch and minor releases, we should already have
+a release branch available in the repository. For example,
+for any v11 release, we have a `v11.x` branch.
+
+Therefore, for any change made to the `main` and, as long as it is
+**state-compatible**, we must backport it to the last major release branch e.g.
+`v11.x` when the next major release is v12.
+
+This helps to minimize the diff for a major upgrade review process.
+
+Additionally, it helps to safely and incrementally test
+state-compatible changes by doing smaller patch releases. Contrary
+to a major release, there is always an opportunity to safely downgrade
+for any minor or patch release.
+
+### State-compatibility
+
+It is critical for the patch and minor releases to be state-machine compatible with
+prior releases in the same major version. For example, v11.2.1 must be
+compatible with v11.1.0 and v11.0.0.
+
+This is to ensure **determinism** i.e. that given the same input, the nodes
+will always produce the same output.
+
+State-incompatibility is allowed for major upgrades because all nodes in the network
+perform it at the same time. Therefore, after the upgrade, the nodes continue
+functioning in the determistic way.
+
+The state compatibiliy is ensured by taking the app hash of the state and comparing it
+to the app hash with the rest of the network. Essentially, app hash is a hash of
+hashes of every store's Merkle root.
+
+For example, at height n, we compute:
+`app hash = hash(hash(root of x/epochs), hash(root of  x/gamm)...)`
+
+Then, Tendermint ensures that app hash hash of local node matches the app hash
+of the network. Please note that the explanation and examples are simplified.
+
+#### Sources of State-incompatibility
+
+##### Creating Additional State
+
+By erronously creating additional state, we can cause the app hash to differ
+accross nodes in the network. Therefore, this must be avoided.
+
+##### Returning Different Errors Given Same Input
+
+Version A
+```go
+func (sk Keeper) validateAmount(ctx context.Context, amount sdk.Int) error {
+    if amount.IsNegative() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount must be positive or zero")
+    }
+    return nil, errors.New("error")
+}
+```
+
+Version B
+```go
+func (sk Keeper) validateAmount(ctx context.Context, amount sdk.Int) error {
+    if amount.IsNegative() || amount.IsZero() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount must be positive")
+    }
+    return nil, errors.New("error")
+}
+```
+
+Note that now an amount of 0 can be valid in "Version A". However, not in "Version B".
+Therefore, if some nodes are running "Version A" and others are running "Version B",
+the final app hash might not be deterministic.
+
+##### Variability in Gas Usage
+
+For transaction flows (or any other flow that consumes gas), it is important
+that the gas usage is deterministic.
+
+Currently, gas usage is being Merklized in state. As a result, reordering functions
+becomes risky.
+
+Suppose my gas limit is 2000 and 1600 is used up before entering
+`someInternalMethod`. Consider the following:
+
+```go
+func someInternalMethod(ctx sdk.Context) {
+  object1 := readOnlyFunction1(ctx) # consumes 1000 gas
+  object2 := readOnlyFunction2(ctx) # consumes 500 gas
+  doStuff(ctx, object1, object2)
+}
+```
+- It will run out of gas with `gasUsed = 2600` where 2600 getting merkelized
+into the tx results.
+
+```go
+func someInternalMethod(ctx sdk.Context) {
+  object2 := readOnlyFunction2(ctx) # consumes 500 gas
+  object1 := readOnlyFunction1(ctx) # consumes 1000 gas
+  doStuff(ctx, object1, object2)
+}
+```
+- It will run out of gas with `gasUsed = 2100` where 2100 is getting merkelized
+into the tx results.
+
+Therefore, we introduced a state-incompatibility by merklizing diverging gas
+usage.
+
+##### Network Requests
+
+It is critical to avoid performing network requests since it is common
+for services to be unavailable or rate-limit. As a result, nodes
+may get diverging responses, leading to state-breakage.
+
+##### Randomness
+
+Another critical property that should be avoided due to the likelyhood
+of leading the nodes to resulting in different state.
+
+#### Parallelism and Shared State
+
+Threads, Goroutines might preempt differently in different hardware. Therefore,
+they should be avoided for the sake of determinism. Additionally, it is hard
+to predict when multi-threaded state can be updated. As a result, it can
+result it non-determinism. 
+
+##### Hardware Errors
+
+This is out of the developer's control but is mentioned for completeness.
+
 ### Pre-release auditing process
 
 For every module with notable changes, we assign someone who was not a primary author of those changes to review the entire module.
