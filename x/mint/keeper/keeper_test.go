@@ -867,7 +867,7 @@ func (suite *KeeperTestSuite) TestHandleTruncationDelta() {
 		expectedPersistedInStore  sdk.Dec
 		expectErr                 bool
 	}{
-		"valid case: 100.6 - 100 + 0.2 = 0.8; none-distrubuted and persisted until next epoch": {
+		"valid case: 100.6 - 100 + 0.2 = 0.8; none distributed and 0.8 persisted in store until next epoch": {
 			moduleAccountName: types.DeveloperVestingModuleAcctName,
 			preExistingDelta:  sdk.NewDecWithPrec(2, 1),
 			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1006, 1)),
