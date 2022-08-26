@@ -32,8 +32,6 @@ func (suite *KeeperTestSuite) TestGenesis() {
 		},
 	}
 
-	suite.SetupGenesisTest()
-
 	app := suite.App
 	suite.Ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 	// Test both with bank denom metadata set, and not set.

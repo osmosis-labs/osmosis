@@ -25,15 +25,6 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
 
-func (suite *KeeperTestSuite) SetupGenesisTest() {
-	suite.Setup()
-
-	// remove module account to ensure initGenesis initializes it on its own
-	moduleAddress := suite.App.AccountKeeper.GetModuleAddress(types.ModuleName)
-	tokenfactoryModuleAccount := suite.App.AccountKeeper.GetAccount(suite.Ctx, moduleAddress)
-	suite.App.AccountKeeper.RemoveAccount(suite.Ctx, tokenfactoryModuleAccount)
-}
-
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 	// Fund every TestAcc with two denoms, one of which is the denom creation fee

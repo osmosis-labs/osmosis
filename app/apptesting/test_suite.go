@@ -31,6 +31,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v11/app"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
@@ -62,6 +63,15 @@ func (s *KeeperTestHelper) Setup() {
 
 	s.SetEpochStartTime()
 	s.TestAccs = CreateRandomAccounts(3)
+	s.SetupGenesisTest()
+}
+
+func (s *KeeperTestHelper) SetupGenesisTest() {
+	accountKeeper := s.App.AccountKeeper
+
+	moduleAddress := accountKeeper.GetModuleAddress(types.ModuleName)
+	tokenFactoryModuleAccount := accountKeeper.GetAccount(s.Ctx, moduleAddress)
+	accountKeeper.RemoveAccount(s.Ctx, tokenFactoryModuleAccount)
 }
 
 func (s *KeeperTestHelper) SetEpochStartTime() {
