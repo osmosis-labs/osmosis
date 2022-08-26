@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+#### Bug Fixes
+
+* [#2515](https://github.com/osmosis-labs/osmosis/pull/2515) Fix event emissions from epoch hooks. (Shoutout to @puneet2019 from persistence for the fix)
+
 #### Golang API breaks
 
 * [#2418](https://github.com/osmosis-labs/osmosis/pull/2418) x/mint remove SetInitialSupplyOffsetDuringMigration from keeper
