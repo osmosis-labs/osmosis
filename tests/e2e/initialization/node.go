@@ -29,8 +29,8 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	osmosisApp "github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
+	osmosisApp "github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/util"
 )
 
 type internalNode struct {
@@ -298,7 +298,7 @@ func (n *internalNode) initNodeConfigs(persistentPeers []string) error {
 		return err
 	}
 
-	valConfig := &tmconfig.Config{}
+	valConfig := tmconfig.DefaultConfig()
 	if err := vpr.Unmarshal(valConfig); err != nil {
 		return err
 	}
@@ -310,6 +310,7 @@ func (n *internalNode) initNodeConfigs(persistentPeers []string) error {
 	valConfig.StateSync.Enable = false
 	valConfig.LogLevel = "info"
 	valConfig.P2P.PersistentPeers = strings.Join(persistentPeers, ",")
+	valConfig.Storage.DiscardABCIResponses = true
 
 	tmconfig.WriteConfigFile(tmCfgPath, valConfig)
 	return nil
@@ -324,7 +325,7 @@ func (n *internalNode) initStateSyncConfig(trustHeight int64, trustHash string, 
 		return err
 	}
 
-	valConfig := &tmconfig.Config{}
+	valConfig := tmconfig.DefaultConfig()
 	if err := vpr.Unmarshal(valConfig); err != nil {
 		return err
 	}

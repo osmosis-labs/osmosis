@@ -3,19 +3,9 @@ package twap
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
-
-func (k Keeper) MigrateExistingPools(ctx sdk.Context, poolIds []uint64) error {
-	for _, pool := range poolIds {
-		err := k.afterCreatePool(ctx, pool)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 var _ types.GammHooks = &gammhook{}
 var _ epochtypes.EpochHooks = &epochhook{}
@@ -26,7 +16,9 @@ type epochhook struct {
 
 func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
-		hook.k.pruneOldTwaps(ctx)
+		if err := hook.k.pruneRecords(ctx); err != nil {
+			ctx.Logger().Error("Error pruning old twaps at the epoch end", err)
+		}
 	}
 }
 

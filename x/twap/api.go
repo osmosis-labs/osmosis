@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
@@ -83,9 +83,5 @@ func (k Keeper) GetArithmeticTwapToNow(
 // these swaps have had no time to be arbitraged back.
 // This accumulator can be stored, to compute wider ranged twaps.
 func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
-	// correct ordering of args for db
-	if asset1Denom > asset0Denom {
-		asset0Denom, asset1Denom = asset1Denom, asset0Denom
-	}
 	return k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
 }

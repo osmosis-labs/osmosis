@@ -10,7 +10,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/stableswap";
+option go_package = "github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/stableswap";
 
 // PoolParams defined the parameters that will be managed by the pool
 // governance in the future. This params are not managed by the chain
@@ -64,10 +64,8 @@ message Pool {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   // for calculation amognst assets with different precisions
-  repeated uint64 scaling_factor = 7 [
-    (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"",
-    (gogoproto.nullable) = false
-  ];
+  repeated uint64 scaling_factor = 7
+      [ (gogoproto.moretags) = "yaml:\"stableswap_scaling_factor\"" ];
   // scaling_factor_governor is the address can adjust pool scaling factors
   string scaling_factor_governor = 8
       [ (gogoproto.moretags) = "yaml:\"scaling_factor_governor\"" ];

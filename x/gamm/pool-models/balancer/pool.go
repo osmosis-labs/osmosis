@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v10/osmomath"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/osmomath"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 //nolint:deadcode
@@ -609,7 +609,7 @@ func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 //
 // panics if the pool in state is incorrect, and has any weight that is 0.
 // TODO: Come back and improve docs for this.
-func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec, error) {
+func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPrice sdk.Dec, err error) {
 	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -618,14 +618,27 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 		return sdk.Dec{}, errors.New("pool is misconfigured, got 0 weight")
 	}
 
+	defer func() {
+		// defer function to escape the panic when spot price overflows
+		if r := recover(); r != nil {
+			spotPrice = sdk.Dec{}
+			err = types.ErrSpotPriceInternal
+		}
+	}()
+
 	// spot_price = (Base_supply / Weight_base) / (Quote_supply / Weight_quote)
 	// spot_price = (weight_quote / weight_base) * (base_supply / quote_supply)
 	invWeightRatio := quote.Weight.ToDec().Quo(base.Weight.ToDec())
 	supplyRatio := base.Token.Amount.ToDec().Quo(quote.Token.Amount.ToDec())
 	fullRatio := supplyRatio.Mul(invWeightRatio)
 	// we want to round this to `SigFigs` of precision
-	ratio := osmomath.SigFigRound(fullRatio, types.SigFigs)
-	return ratio, nil
+	spotPrice = osmomath.SigFigRound(fullRatio, types.SigFigs)
+	if spotPrice.GT(sdk.NewDec(2).Power(160)) {
+		spotPrice = sdk.Dec{}
+		err = types.ErrSpotPriceOverflow
+	}
+
+	return spotPrice, err
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.

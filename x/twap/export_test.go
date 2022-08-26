@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
@@ -24,6 +24,14 @@ func (k Keeper) GetRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, time tim
 	return k.getRecordAtOrBeforeTime(ctx, poolId, time, asset0Denom, asset1Denom)
 }
 
+func (k Keeper) GetAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
+	return k.getAllHistoricalTimeIndexedTWAPs(ctx)
+}
+
+func (k Keeper) GetAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
+	return k.getAllHistoricalPoolIndexedTWAPs(ctx)
+}
+
 func (k Keeper) TrackChangedPool(ctx sdk.Context, poolId uint64) {
 	k.trackChangedPool(ctx, poolId)
 }
@@ -36,7 +44,15 @@ func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	return k.updateRecord(ctx, record)
 }
 
-func ComputeArithmeticTwap(startRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func (k Keeper) PruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) error {
+	return k.pruneRecordsBeforeTime(ctx, lastTime)
+}
+
+func (k Keeper) PruneRecords(ctx sdk.Context) error {
+	return k.pruneRecords(ctx)
+}
+
+func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
 }
 

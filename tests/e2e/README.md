@@ -171,6 +171,9 @@ of the height in which the network should fork. This should match the ForkHeight
 
 - `OSMOSIS_E2E_UPGRADE_VERSION` - string of what version will be upgraded to (for example, "v10")
 
+- `OSMOSIS_E2E_DEBUG_LOG` - when true, prints debug logs from executing CLI commands
+via Docker containers. Set to trus in CI by default.
+
 #### VS Code Debug Configuration
 
 This debug configuration helps to run e2e tests locally and skip the desired tests.
@@ -188,16 +191,23 @@ This debug configuration helps to run e2e tests locally and skip the desired tes
         "-test.run",
         "IntegrationTestSuite",
         "-test.v"
-        "-test.tags"
-        "e2e"
     ],
+    "buildFlags": "-tags e2e",
     "env": {
         "OSMOSIS_E2E_SKIP_IBC": "true",
         "OSMOSIS_E2E_SKIP_UPGRADE": "true",
         "OSMOSIS_E2E_SKIP_CLEANUP": "true",
         "OSMOSIS_E2E_SKIP_STATE_SYNC": "true",
         "OSMOSIS_E2E_UPGRADE_VERSION": "v10",
+        "OSMOSIS_E2E_DEBUG_LOG": "true",
         "OSMOSIS_E2E_FORK_HEIGHT": "4713065" # this is v10 fork height.
     }
 }
 ```
+
+### Common Problems
+
+Please note that if the tests are stopped mid-way, the e2e framework might fail to start again due to duplicated containers. Make sure that
+containers are removed before running the tests again: `docker containers rm -f $(docker containers ls -a -q)`.
+
+Additionally, Docker networks do not get auto-removed. Therefore, you can manually remove them by running `docker network prune`.

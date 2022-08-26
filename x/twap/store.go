@@ -8,8 +8,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	"github.com/osmosis-labs/osmosis/v10/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
 // trackChangedPool places an entry into a transient store,
@@ -50,11 +50,20 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	osmoutils.MustSet(store, key2, &twap)
 }
 
-func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) {
-	// TODO: Stub
+func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) error {
+	store := ctx.KVStore(k.storeKey)
+	iter := store.Iterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastTime, 0, "", ""))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		twapToRemove, err := types.ParseTwapFromBz(iter.Value())
+		if err != nil {
+			return err
+		}
+		k.deleteHistoricalRecord(ctx, twapToRemove)
+	}
+	return nil
 }
 
-//nolint:unused,deadcode
 func (k Keeper) deleteHistoricalRecord(ctx sdk.Context, twap types.TwapRecord) {
 	store := ctx.KVStore(k.storeKey)
 	key1 := types.FormatHistoricalTimeIndexTWAPKey(twap.Time, twap.PoolId, twap.Asset0Denom, twap.Asset1Denom)
@@ -69,6 +78,10 @@ func (k Keeper) deleteHistoricalRecord(ctx sdk.Context, twap types.TwapRecord) {
 // interpolated to the current block time, or after events in this block.
 // Neither of which apply to the record this returns.
 func (k Keeper) getMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+	asset0Denom, asset1Denom, err := types.LexicographicalOrderDenoms(asset0Denom, asset1Denom)
+	if err != nil {
+		return types.TwapRecord{}, err
+	}
 	store := ctx.KVStore(k.storeKey)
 	key := types.FormatMostRecentTWAPKey(poolId, asset0Denom, asset1Denom)
 	bz := store.Get(key)
@@ -80,6 +93,16 @@ func (k Keeper) getMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId u
 func (k Keeper) getAllMostRecentRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.TwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	return types.GetAllMostRecentTwapsForPool(store, poolId)
+}
+
+// getAllHistoricalTimeIndexedTWAPs returns all historical TWAPs indexed by time.
+func (k Keeper) getAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPTimeIndexPrefix), types.ParseTwapFromBz)
+}
+
+// getAllHistoricalPoolIndexedTWAPs returns all historical TWAPs indexed by pool id.
+func (k Keeper) getAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), types.ParseTwapFromBz)
 }
 
 // storeNewRecord stores a record, in both the most recent record store and historical stores.
@@ -102,6 +125,10 @@ func (k Keeper) storeNewRecord(ctx sdk.Context, twap types.TwapRecord) {
 // * there is no record for the asset pair (asset0, asset1) in particular
 //   - e.g. asset not in pool, or provided in wrong order.
 func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.Time, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+	asset0Denom, asset1Denom, err := types.LexicographicalOrderDenoms(asset0Denom, asset1Denom)
+	if err != nil {
+		return types.TwapRecord{}, err
+	}
 	store := ctx.KVStore(k.storeKey)
 	// We make an iteration from time=t + 1ns, to time=0 for this pool.
 	// Note that we cannot get any time entries from t + 1ns, as the key would be `prefix|t+1ns`

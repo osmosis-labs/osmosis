@@ -9,29 +9,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
-	"github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
+	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
 )
-
-func NewTxCmd() *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "pool incentives transaction subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-
-	txCmd.AddCommand(
-		NewCmdSubmitUpdatePoolIncentivesProposal(),
-		NewCmdSubmitReplacePoolIncentivesProposal(),
-	)
-
-	return txCmd
-}
 
 func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 	cmd := &cobra.Command{
@@ -44,7 +27,6 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			// TODO: Make a parse uint64 slice function
 			gaugeIds, err := osmoutils.ParseUint64SliceFromString(args[0], ",")
 			if err != nil {
 				return err
@@ -83,7 +65,7 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 				return err
 			}
 
-			content := types.NewUpdatePoolIncentivesProposal(proposal.Title, proposal.Deposit, records)
+			content := types.NewUpdatePoolIncentivesProposal(proposal.Title, proposal.Description, records)
 
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
@@ -98,7 +80,10 @@ func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagTitle, "", "The proposal title")
+	cmd.Flags().String(govcli.FlagDescription, "", "The proposal description")
+	cmd.Flags().String(govcli.FlagDeposit, "", "The proposal deposit")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 
 	return cmd
 }
@@ -167,7 +152,10 @@ func NewCmdSubmitReplacePoolIncentivesProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(govcli.FlagTitle, "", "The proposal title")
+	cmd.Flags().String(govcli.FlagDescription, "", "The proposal description")
+	cmd.Flags().String(govcli.FlagDeposit, "", "The proposal deposit")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 
 	return cmd
 }

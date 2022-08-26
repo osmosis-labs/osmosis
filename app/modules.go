@@ -40,30 +40,30 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-	_ "github.com/osmosis-labs/osmosis/v10/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v10/osmoutils/partialord"
-	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v10/x/epochs"
-	epochstypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm"
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives"
-	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v10/x/lockup"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v10/x/mint"
-	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v10/x/pool-incentives"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v10/x/pool-incentives/types"
-	superfluid "github.com/osmosis-labs/osmosis/v10/x/superfluid"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
-	"github.com/osmosis-labs/osmosis/v10/x/tokenfactory"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v10/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v10/x/twap"
-	twaptypes "github.com/osmosis-labs/osmosis/v10/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v10/x/txfees"
-	txfeestypes "github.com/osmosis-labs/osmosis/v10/x/txfees/types"
+	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
+	_ "github.com/osmosis-labs/osmosis/v11/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v11/osmoutils/partialord"
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v11/x/epochs"
+	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives"
+	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/x/lockup"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/x/mint"
+	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v11/x/pool-incentives"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
+	superfluid "github.com/osmosis-labs/osmosis/v11/x/superfluid"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/twapmodule"
+	twaptypes "github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v11/x/txfees"
+	txfeestypes "github.com/osmosis-labs/osmosis/v11/x/txfees/types"
 )
 
 // moduleAccountPermissions defines module account permissions
@@ -123,7 +123,7 @@ func appModules(
 		params.NewAppModule(*app.ParamsKeeper),
 		app.TransferModule,
 		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
-		twap.NewAppModule(*app.TwapKeeper),
+		twapmodule.NewAppModule(*app.TwapKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),
 		lockup.NewAppModule(*app.LockupKeeper, app.AccountKeeper, app.BankKeeper),

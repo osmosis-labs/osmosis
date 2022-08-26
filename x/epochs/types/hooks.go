@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 )
 
 type EpochHooks interface {
@@ -50,4 +50,5 @@ func panicCatchingEpochHook(
 	cacheCtx, write := ctx.CacheContext()
 	hookFn(cacheCtx, epochIdentifier, epochNumber)
 	write()
+	ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 }

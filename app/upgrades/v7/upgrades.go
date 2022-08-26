@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app/keepers"
-	"github.com/osmosis-labs/osmosis/v10/app/upgrades"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v10/x/lockup/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v11/app/keepers"
+	"github.com/osmosis-labs/osmosis/v11/app/upgrades"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 )
 
 func CreateUpgradeHandler(
@@ -52,12 +52,16 @@ func CreateUpgradeHandler(
 			Denom:     "gamm/pool/1",
 			AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
 		}
-		keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
-
-		// Set the supply offset from the developer vesting account
-		if err := keepers.MintKeeper.SetInitialSupplyOffsetDuringMigration(ctx); err != nil {
-			panic(err)
+		if err := keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset); err != nil {
+			return newVM, err
 		}
+
+		// N.B.: This is left for historic reasons.
+		// After the v7 upgrade, there was no need for this function anymore so it was removed.
+		// // Set the supply offset from the developer vesting account
+		// if err := keepers.MintKeeper.SetInitialSupplyOffsetDuringMigration(ctx); err != nil {
+		// 	panic(err)
+		// }
 
 		return newVM, err
 	}

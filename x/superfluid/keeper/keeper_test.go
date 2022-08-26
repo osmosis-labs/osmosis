@@ -10,14 +10,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
-	epochtypes "github.com/osmosis-labs/osmosis/v10/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
+	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 )
 
 type KeeperTestSuite struct {
@@ -135,16 +135,18 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 	for _, pool := range pools {
 		denom := gammtypes.GetPoolShareDenom(pool.GetId())
 
-		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+		err := suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		})
+		suite.Require().NoError(err)
 
 		// register a LP token as a superfluid asset
-		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+		err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		})
+		suite.Require().NoError(err)
 
 		denoms = append(denoms, denom)
 		poolIds = append(poolIds, pool.GetId())

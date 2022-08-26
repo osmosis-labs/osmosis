@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 )
 
 const (
@@ -29,9 +29,13 @@ var (
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
 
-	mostRecentTWAPsPrefix         = mostRecentTWAPsNoSeparator + KeySeparator
-	historicalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
-	historicalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
+	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
+	// keySeparatorPlusOne is used for creating prefixes for the key end in iterators
+	// when we want to get all of the keys in a prefix. Since it is one byte larger
+	// than the original key separator and the end prefix is exclusive, it is valid
+	// for getting all values under the original key separator.
+	HistoricalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
+	HistoricalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
 )
 
 // TODO: make utility command to automatically interlace separators
@@ -43,17 +47,17 @@ func FormatMostRecentTWAPKey(poolId uint64, denom1, denom2 string) []byte {
 // TODO: Replace historical management with ORM, we currently accept 2x write amplification right now.
 func FormatHistoricalTimeIndexTWAPKey(accumulatorWriteTime time.Time, poolId uint64, denom1, denom2 string) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%s%s%d%s%s%s%s", historicalTWAPTimeIndexPrefix, timeS, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2))
+	return []byte(fmt.Sprintf("%s%s%s%d%s%s%s%s", HistoricalTWAPTimeIndexPrefix, timeS, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2))
 }
 
 func FormatHistoricalPoolIndexTWAPKey(poolId uint64, accumulatorWriteTime time.Time, denom1, denom2 string) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s", historicalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator, denom1, KeySeparator, denom2))
+	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator, denom1, KeySeparator, denom2))
 }
 
 func FormatHistoricalPoolIndexTimePrefix(poolId uint64, accumulatorWriteTime time.Time) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%d%s%s%s", historicalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator))
+	return []byte(fmt.Sprintf("%s%d%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator))
 }
 
 func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {

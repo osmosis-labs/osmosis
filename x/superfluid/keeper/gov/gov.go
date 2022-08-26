@@ -3,15 +3,17 @@ package gov
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper, p *types.SetSuperfluidAssetsProposal) error {
 	for _, asset := range p.Assets {
-		k.AddNewSuperfluidAsset(ctx, asset)
+		if err := k.AddNewSuperfluidAsset(ctx, asset); err != nil {
+			return err
+		}
 		event := sdk.NewEvent(
 			types.TypeEvtSetSuperfluidAsset,
 			sdk.NewAttribute(types.AttributeDenom, asset.Denom),

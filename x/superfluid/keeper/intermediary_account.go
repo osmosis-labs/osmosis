@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -132,6 +132,7 @@ func (k Keeper) GetAllLockIdIntermediaryAccountConnections(ctx sdk.Context) []ty
 	prefixStore := prefix.NewStore(store, types.KeyPrefixLockIntermediaryAccAddr)
 
 	iterator := prefixStore.Iterator(nil, nil)
+	defer iterator.Close()
 
 	connections := []types.LockIdIntermediaryAccountConnection{}
 	for ; iterator.Valid(); iterator.Next() {

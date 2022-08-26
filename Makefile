@@ -76,9 +76,6 @@ ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   BUILD_FLAGS += -trimpath
 endif
 
-# The below include contains the tools target.
-include contrib/devtools/Makefile
-
 ###############################################################################
 ###                                  Build                                  ###
 ###############################################################################
@@ -95,16 +92,39 @@ $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
-build-reproducible: go.sum
-	$(DOCKER) rm latest-build || true
-	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
-	--env TARGET_PLATFORMS='linux/amd64' \
-	--env APP=osmosisd \
-	--env VERSION=$(VERSION) \
-	--env COMMIT=$(COMMIT) \
-	--env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-	--name latest-build osmolabs/rbuilder:latest
-	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
+# Cross-building for arm64 from amd64 (or viceversa) takes
+# a lot of time due to QEMU virtualization but it's the only way (afaik)
+# to get a statically linked binary with CosmWasm
+
+build-reproducible: build-reproducible-amd64 build-reproducible-arm64
+
+build-reproducible-amd64: go.sum $(BUILDDIR)/
+	$(DOCKER) buildx create --name osmobuilder || true
+	$(DOCKER) buildx use osmobuilder
+	$(DOCKER) buildx build \
+		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
+		--platform linux/arm64 \
+		-t osmosis-amd64 \
+		--load \
+		-f Dockerfile .
+	$(DOCKER) rm -f osmobinary || true
+	$(DOCKER) create -ti --name osmobinary osmosis-amd64
+	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
+	$(DOCKER) rm -f osmobinary
+
+build-reproducible-arm64: go.sum $(BUILDDIR)/
+	$(DOCKER) buildx create --name osmobuilder || true
+	$(DOCKER) buildx use osmobuilder
+	$(DOCKER) buildx build \
+		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
+		--platform linux/arm64 \
+		-t osmosis-arm64 \
+		--load \
+		-f Dockerfile .
+	$(DOCKER) rm -f osmobinary || true
+	$(DOCKER) create -ti --name osmobinary osmosis-arm64
+	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-arm64
+	$(DOCKER) rm -f osmobinary
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
@@ -184,6 +204,13 @@ proto-format:
 		find ./ -not -path "./third_party/*" -name "*.proto" -exec clang-format -i {} \; ; fi
 
 ###############################################################################
+###                                Querygen                                 ###
+###############################################################################
+
+run-querygen:
+	@go run cmd/querygen/main.go
+
+###############################################################################
 ###                                 Devdoc                                  ###
 ###############################################################################
 
@@ -214,8 +241,6 @@ PACKAGES_E2E=$(shell go list -tags e2e ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
 
-include sims.mk
-
 test: test-unit test-build
 
 test-all: check test-race test-cover
@@ -238,17 +263,17 @@ test-sim-app:
 test-sim-determinism:
 	@VERSION=$(VERSION) go test -mod=readonly -run ^TestAppStateDeterminism -v $(PACKAGES_SIM)
 
-test-sim-benchmark:
+test-sim-bench:
 	@VERSION=$(VERSION) go test -benchmem -run ^BenchmarkFullAppSimulation -bench ^BenchmarkFullAppSimulation -cpuprofile cpu.out $(PACKAGES_SIM)
 
 test-e2e:
-	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" OSMOSIS_E2E_DEBUG_LOG=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-mutation:
-	@bash scripts/mutation-test.sh
+	@bash scripts/mutation-test.sh $(MODULES)
 
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
