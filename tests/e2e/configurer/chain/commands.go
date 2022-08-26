@@ -72,9 +72,9 @@ func (n *NodeConfig) FailIBCTransfer(from, recepient, amount string) {
 	n.LogActionF("executing", cmd)
 
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
+	require.NoError(n.t, err) // this should actually error out
 
-	n.LogActionF("successfully submitted param change proposal")
+	n.LogActionF("Failed to send IBC transfer (as expected)")
 }
 
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {

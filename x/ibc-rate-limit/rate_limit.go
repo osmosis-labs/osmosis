@@ -24,10 +24,13 @@ func CheckRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKee
 	channelValue sdk.Int, sourceChannel, denom string,
 	amount string,
 ) error {
+	ctx.Logger().Error("DBUG::FUNDS!!", amount, denom)
 	contractAddr, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
 		return err
 	}
+
+	ctx.Logger().Error("DBUG::contract!!", contractAddr)
 
 	sendPacketMsg, err := BuildWasmExecMsg(
 		msgType,
@@ -39,8 +42,11 @@ func CheckRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKee
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Error("DBUG::readdy to sudo to contract!!")
 
-	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
+	r, err := contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
+
+	ctx.Logger().Error("DBUG::sudod!!", string(r), err)
 
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())

@@ -45,6 +45,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
+
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -53,6 +54,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
+	s.T().Log("NODE NODE NODE!!!", node.Name)
 
 	supply, err := node.QueryTotalSupply()
 	s.NoError(err)
@@ -66,10 +68,10 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	s.T().Log("CHAIN-A Node1 balance:", balance)
 	//node.BankSend("100uosmo", chainA.NodeConfigs[1].PublicAddress, chainA.NodeConfigs[0].PublicAddress)
 
-	f, err := osmoSupply.ToDec().Float64()
+	//f, err := osmoSupply.ToDec().Float64()
 	s.NoError(err)
 
-	over := f * 0.11
+	//over := f * 0.11
 
 	// Sending >1%
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, initialization.OsmoBalanceA*0.011))
@@ -90,7 +92,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	for _, n := range chainA.NodeConfigs {
 		n.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
 	}
-
 	s.Eventually(
 		func() bool {
 			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := node.QueryPropTally(chainA.LatestProposalNumber)
@@ -108,9 +109,14 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	)
 
 	// Sending <1%. Should work
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	//chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
-	node.FailIBCTransfer(node.PublicAddress, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
+	time.Sleep(60000000000 * 4) // 5mins
+	node.FailIBCTransfer("val", chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(1)))
+	node.FailIBCTransfer("val", chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(1)))
+	node.FailIBCTransfer("val", chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(1)))
+
+	node.FailIBCTransfer("val", chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(1)))
 
 }
 
