@@ -1,7 +1,9 @@
 package chain
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -24,11 +26,68 @@ func (n *NodeConfig) CreatePool(poolFile, from string) {
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("storing wasm code from file %s", wasmFile)
-	cmd := []string{"osmosisd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto"}
+	cmd := []string{"osmosisd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	n.LogActionF(err.Error())
 	require.NoError(n.t, err)
 	n.LogActionF("successfully stored")
+}
+
+func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
+	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
+	cmd := []string{"osmosisd", "tx", "wasm", "instantiate", codeId, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit"}
+	n.LogActionF(strings.Join(cmd, " "))
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully initialized")
+}
+
+// QueryParams extracts the params for a given subspace and key. This is done generically via json to avoid having to
+// specify the QueryParamResponse type (which may not exist for all params).
+func (n *NodeConfig) QueryParams(subspace, key string, result any) {
+	cmd := []string{"osmosisd", "query", "params", "subspace", subspace, key, "--output=json"}
+
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+
+	err = json.Unmarshal(out.Bytes(), &result)
+	require.NoError(n.t, err)
+}
+
+func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
+	n.LogActionF("submitting param change proposal %s", proposalJson)
+	// ToDo: Is there a better way to do this?
+	wd, err := os.Getwd()
+	require.NoError(n.t, err)
+	localProposalFile := wd + "/scripts/param_change_proposal.json"
+	f, err := os.Create(localProposalFile)
+	require.NoError(n.t, err)
+	_, err = f.WriteString(proposalJson)
+	require.NoError(n.t, err)
+	err = f.Close()
+	require.NoError(n.t, err)
+
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "param-change", "/osmosis/param_change_proposal.json", "--is-expedited=true", fmt.Sprintf("--from=%s", from)}
+	n.LogActionF("executing", cmd)
+
+	_, _, err = n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	err = os.Remove(localProposalFile)
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully submitted param change proposal")
+}
+
+func (n *NodeConfig) FailIBCTransfer(from, recepient, amount string) {
+	n.LogActionF("IBC sending %s from %s to %s", amount, from, recepient)
+
+	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recepient, amount, fmt.Sprintf("--from=%s", from)}
+	n.LogActionF("executing", cmd)
+
+	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "rate limit exceeded")
+	require.NoError(n.t, err)
+
+	n.LogActionF("Failed to send IBC transfer (as expected)")
 }
 
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {

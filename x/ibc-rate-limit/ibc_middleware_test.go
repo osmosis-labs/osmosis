@@ -70,6 +70,10 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 }
 
 // Helpers
+
+// NewValidMessage generates a new sdk.Msg of type MsgTransfer.
+// forward=true means that the message will be a "send" message, while forward=false is for  a "receive" message.
+// amount represents the amount transferred
 func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) sdk.Msg {
 	var coins sdk.Coin
 	var port, channel, accountFrom, accountTo string
@@ -123,7 +127,7 @@ func (suite *MiddlewareTestSuite) ExecuteReceive(msg sdk.Msg) (string, error) {
 	return string(ack), err
 }
 
-func (suite *MiddlewareTestSuite) AssertReceiveSuccess(success bool, msg sdk.Msg) (string, error) {
+func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (string, error) {
 	ack, err := suite.ExecuteReceive(msg)
 	if success {
 		suite.Require().NoError(err)
@@ -138,7 +142,7 @@ func (suite *MiddlewareTestSuite) AssertReceiveSuccess(success bool, msg sdk.Msg
 	return ack, err
 }
 
-func (suite *MiddlewareTestSuite) AssertSendSuccess(success bool, msg sdk.Msg) (*sdk.Result, error) {
+func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Result, error) {
 	r, err := suite.chainA.SendMsgsNoCheck(msg)
 	if success {
 		suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
@@ -160,13 +164,13 @@ func (suite *MiddlewareTestSuite) BuildChannelQuota(name string, duration, send_
 // Test that Sending IBC messages works when the middleware isn't configured
 func (suite *MiddlewareTestSuite) TestSendTransferNoContract() {
 	one := sdk.NewInt(1)
-	suite.AssertSendSuccess(true, suite.NewValidMessage(true, one))
+	suite.AssertSend(true, suite.NewValidMessage(true, one))
 }
 
 // Test that Receiving IBC messages works when the middleware isn't configured
 func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	one := sdk.NewInt(1)
-	suite.AssertReceiveSuccess(true, suite.NewValidMessage(false, one))
+	suite.AssertReceive(true, suite.NewValidMessage(false, one))
 }
 
 // Test rate limiting on sends
@@ -186,18 +190,20 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]
 	half := quota.QuoRaw(2)
 
 	// send 2.5% (quota is 5%)
-	suite.AssertSendSuccess(true, suite.NewValidMessage(true, half))
+	suite.AssertSend(true, suite.NewValidMessage(true, half))
 
 	// send 2.5% (quota is 5%)
-	r, _ := suite.AssertSendSuccess(true, suite.NewValidMessage(true, half))
+	r, _ := suite.AssertSend(true, suite.NewValidMessage(true, half))
 
 	// Calculate remaining allowance in the quota
 	attrs := suite.ExtractAttributes(suite.FindEvent(r.GetEvents(), "wasm"))
-	used, _ := sdk.NewIntFromString(attrs["weekly_used_out"])
-	suite.Require().Equal(used, half.MulRaw(2))
+	used, ok := sdk.NewIntFromString(attrs["weekly_used_out"])
+	suite.Require().True(ok)
+
+	suite.Require().Equal(used, quota)
 
 	// Sending above the quota should fail.
-	suite.AssertSendSuccess(false, suite.NewValidMessage(true, sdk.NewInt(1)))
+	suite.AssertSend(false, suite.NewValidMessage(true, sdk.NewInt(1)))
 	return attrs
 }
 
@@ -206,8 +212,10 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	// Same test as above, but the quotas get reset after time passes
 	attrs := suite.TestSendTransferWithRateLimiting()
 	parts := strings.Split(attrs["weekly_period_end"], ".") // Splitting timestamp into secs and nanos
-	secs, _ := strconv.ParseInt(parts[0], 10, 64)
-	nanos, _ := strconv.ParseInt(parts[1], 10, 64)
+	secs, err := strconv.ParseInt(parts[0], 10, 64)
+	suite.Require().NoError(err)
+	nanos, err := strconv.ParseInt(parts[1], 10, 64)
+	suite.Require().NoError(err)
 	resetTime := time.Unix(secs, nanos)
 
 	// Move both chains one block
@@ -221,7 +229,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	suite.coordinator.IncrementTimeBy(oneSecAfterReset.Sub(suite.coordinator.CurrentTime))
 
 	// Sending should succeed again
-	suite.AssertSendSuccess(true, suite.NewValidMessage(true, sdk.NewInt(1)))
+	suite.AssertSend(true, suite.NewValidMessage(true, sdk.NewInt(1)))
 }
 
 // Test rate limiting on receives
@@ -241,13 +249,13 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 	half := quota.QuoRaw(2)
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceiveSuccess(true, suite.NewValidMessage(false, half))
+	suite.AssertReceive(true, suite.NewValidMessage(false, half))
 
 	// receive 2.5% (quota is 5%)
-	suite.AssertReceiveSuccess(true, suite.NewValidMessage(false, half))
+	suite.AssertReceive(true, suite.NewValidMessage(false, half))
 
 	// Sending above the quota should fail. Adding some extra here because the cap is increasing. See test bellow.
-	suite.AssertReceiveSuccess(false, suite.NewValidMessage(false, sdk.NewInt(1)))
+	suite.AssertReceive(false, suite.NewValidMessage(false, sdk.NewInt(1)))
 }
 
 // Test no rate limiting occurs when the contract is set, but not quotas are condifured for the path
@@ -259,7 +267,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 
 	// send 1 token.
 	// If the contract doesn't have a quota for the current channel, all transfers are allowed
-	suite.AssertSendSuccess(true, suite.NewValidMessage(true, sdk.NewInt(1)))
+	suite.AssertSend(true, suite.NewValidMessage(true, sdk.NewInt(1)))
 }
 
 // Test the contract used for these tests is the same contract used for E2E testing
