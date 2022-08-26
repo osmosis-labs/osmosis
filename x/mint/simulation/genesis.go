@@ -13,11 +13,12 @@ import (
 
 // Simulation parameter constants.
 const (
-	epochProvisionsKey         = "genesis_epoch_provisions"
-	reductionFactorKey         = "reduction_factor"
-	reductionPeriodInEpochsKey = "reduction_period_in_epochs"
-
+	epochProvisionsKey                      = "genesis_epoch_provisions"
+	reductionFactorKey                      = "reduction_factor"
+	reductionPeriodInEpochsKey              = "reduction_period_in_epochs"
 	mintingRewardsDistributionStartEpochKey = "minting_rewards_distribution_start_epoch"
+	developerVestingTruncationKey           = "developer_vesting_truncation"
+	inflationTruncationKey                  = "inflation_truncation"
 
 	epochIdentifier = "day"
 	maxInt64        = int(^uint(0) >> 1)
@@ -123,6 +124,18 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	reductionStartedEpoch := genReductionStartedEpoch(simState.Rand)
 
+	var developerVestingTruncationDelta sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, developerVestingTruncationKey, &reductionFactor, simState.Rand,
+		func(r *rand.Rand) { developerVestingTruncationDelta = genDeveloperVestingTruncationDelta(r) },
+	)
+
+	var inflationTruncationDelta sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, inflationTruncationKey, &reductionFactor, simState.Rand,
+		func(r *rand.Rand) { inflationTruncationDelta = genInflationTruncationDelta(r) },
+	)
+
 	mintDenom := sdk.DefaultBondDenom
 	params := types.NewParams(
 		mintDenom,
@@ -136,7 +149,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	minter := types.NewMinter(epochProvisions)
 
-	mintGenesis := types.NewGenesisState(minter, params, reductionStartedEpoch)
+	mintGenesis := types.NewGenesisState(minter, params, reductionStartedEpoch, developerVestingTruncationDelta, inflationTruncationDelta)
 
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(mintGenesis)
 }
@@ -159,4 +172,12 @@ func genMintintRewardsDistributionStartEpoch(r *rand.Rand) int64 {
 
 func genReductionStartedEpoch(r *rand.Rand) int64 {
 	return int64(r.Intn(maxInt64))
+}
+
+func genDeveloperVestingTruncationDelta(r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
+}
+
+func genInflationTruncationDelta(r *rand.Rand) sdk.Dec {
+	return sdk.NewDecWithPrec(int64(r.Intn(10)), 1)
 }

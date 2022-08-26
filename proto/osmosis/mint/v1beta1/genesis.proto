@@ -18,4 +18,16 @@ message GenesisState {
   // begins.
   int64 reduction_started_epoch = 3
       [ (gogoproto.moretags) = "yaml:\"reduction_started_epoch\"" ];
+
+  string developer_vesting_truncation_delta = 4 [
+    (gogoproto.moretags) = "yaml:\"developer_vesting_truncation_delta\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+
+  string inflation_truncation_delta = 5 [
+    (gogoproto.moretags) = "yaml:\"inflation_truncation_delta\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

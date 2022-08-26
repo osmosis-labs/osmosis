@@ -1,20 +1,26 @@
 package types
 
+import sdk "github.com/cosmos/cosmos-sdk/types"
+
 // NewGenesisState creates a new GenesisState object.
-func NewGenesisState(minter Minter, params Params, reductionStartedEpoch int64) *GenesisState {
+func NewGenesisState(minter Minter, params Params, reductionStartedEpoch int64, inflationDelta sdk.Dec, developerVestingDelta sdk.Dec) *GenesisState {
 	return &GenesisState{
-		Minter:                minter,
-		Params:                params,
-		ReductionStartedEpoch: reductionStartedEpoch,
+		Minter:                          minter,
+		Params:                          params,
+		ReductionStartedEpoch:           reductionStartedEpoch,
+		InflationTruncationDelta:        inflationDelta,
+		DeveloperVestingTruncationDelta: developerVestingDelta,
 	}
 }
 
 // DefaultGenesisState creates a default GenesisState object.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		Minter:                DefaultInitialMinter(),
-		Params:                DefaultParams(),
-		ReductionStartedEpoch: 0,
+		Minter:                          DefaultInitialMinter(),
+		Params:                          DefaultParams(),
+		ReductionStartedEpoch:           0,
+		InflationTruncationDelta:        sdk.ZeroDec(),
+		DeveloperVestingTruncationDelta: sdk.ZeroDec(),
 	}
 }
 

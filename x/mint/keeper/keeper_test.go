@@ -762,15 +762,6 @@ func (suite *KeeperTestSuite) TestCalculateTruncationDelta() {
 
 			expectedTruncationDelta: sdk.NewDecWithPrec(11, 1),
 		},
-		"82191.178 - 17808  + 33.33 = 64416508; pre-existing delta of 33.33; developer vesting module account": {
-			preExistingStoreDelta: sdk.NewDecWithPrec(3333, 2),
-
-			moduleAccountName: types.DeveloperVestingModuleAcctName,
-			provisions:        sdk.NewDecWithPrec(82191178, 3),
-			amountDistributed: sdk.NewInt(17808),
-
-			expectedTruncationDelta: sdk.NewDecWithPrec(64416508, 3),
-		},
 		"attempt to use invalid module account name - panic": {
 			moduleAccountName: poolincentivestypes.ModuleName,
 			provisions:        sdk.NewDecWithPrec(1006, 1),
@@ -794,7 +785,7 @@ func (suite *KeeperTestSuite) TestCalculateTruncationDelta() {
 			ctx := suite.Ctx
 
 			if !tc.preExistingStoreDelta.IsNil() {
-				mintKeeper.SetTruncationDelta(ctx, tc.moduleAccountName, tc.preExistingStoreDelta)
+				suite.Require().NoError(mintKeeper.SetTruncationDelta(ctx, tc.moduleAccountName, tc.preExistingStoreDelta))
 			}
 
 			// System under test
@@ -905,7 +896,6 @@ func (suite *KeeperTestSuite) TestHandleTruncationDelta() {
 		},
 		"invalid module account name - error": {
 			moduleAccountName: poolincentivestypes.ModuleName,
-			preExistingDelta:  sdk.NewDecWithPrec(2, 1),
 			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1006, 1)),
 			amountDistributed: sdk.NewInt(100),
 
@@ -921,9 +911,8 @@ func (suite *KeeperTestSuite) TestHandleTruncationDelta() {
 		},
 		"attempted to distribute more than developer vesting module account balance - error": {
 			moduleAccountName: types.DeveloperVestingModuleAcctName,
-			preExistingDelta:  sdk.NewDecFromInt(sdk.NewInt(keeper.DeveloperVestingAmount)).Add(sdk.OneDec()),
-			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDecWithPrec(1006, 1)),
-			amountDistributed: sdk.NewInt(100),
+			provisions:        sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(keeper.DeveloperVestingAmount).Add(sdk.OneDec())),
+			amountDistributed: sdk.ZeroInt(),
 
 			expectErr: true,
 		},
@@ -936,7 +925,7 @@ func (suite *KeeperTestSuite) TestHandleTruncationDelta() {
 			ctx := suite.Ctx
 
 			if !tc.preExistingDelta.IsNil() {
-				mintKeeper.SetTruncationDelta(ctx, tc.moduleAccountName, tc.preExistingDelta)
+				suite.Require().NoError(mintKeeper.SetTruncationDelta(ctx, tc.moduleAccountName, tc.preExistingDelta))
 			}
 
 			// System under test
@@ -974,6 +963,18 @@ func (suite *KeeperTestSuite) TestSetTruncationDelta() {
 		"negative delta - error": {
 			moduleAccountName: types.ModuleName,
 			truncationDelta:   sdk.NewDecWithPrec(2, 1).Neg(),
+
+			expectError: true,
+		},
+		"truncation delta equals to one - error": {
+			moduleAccountName: types.ModuleName,
+			truncationDelta:   sdk.OneDec(),
+
+			expectError: true,
+		},
+		"truncation delta exceeds one - error": {
+			moduleAccountName: types.ModuleName,
+			truncationDelta:   sdk.NewDecWithPrec(11, 1),
 
 			expectError: true,
 		},

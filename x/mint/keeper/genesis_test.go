@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
 )
 
-var customGenesis = types.NewGenesisState(
+var customValidGenesis = types.NewGenesisState(
 	types.NewMinter(sdk.ZeroDec()),
 	types.NewParams(
 		"uosmo",                  // denom
@@ -34,7 +34,10 @@ var customGenesis = types.NewGenesisState(
 			},
 		},
 		2), // minting reward distribution start epoch
-	3) // halven started epoch
+	3,                        // halven started epoch
+	sdk.NewDecWithPrec(2, 1), // developer vesting delta
+	sdk.NewDecWithPrec(3, 1), // inflation delta
+)
 
 // TestMintInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.
@@ -53,6 +56,8 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 		expectedSupplyWithOffsetDelta       sdk.Int
 		expectedDeveloperVestingAmountDelta sdk.Int
 		expectedHalvenStartedEpoch          int64
+		expectedDeveloperVestingDelta       sdk.Dec
+		expectedInflationDelta              sdk.Dec
 	}{
 		"default genesis - developer module account is not created prior to InitGenesis() - created during the call": {
 			mintGenesis: types.DefaultGenesisState(),
@@ -62,6 +67,8 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			expectedSupplyOffsetDelta:           sdk.NewInt(keeper.DeveloperVestingAmount).Neg(),
 			expectedSupplyWithOffsetDelta:       sdk.ZeroInt(),
 			expectedDeveloperVestingAmountDelta: sdk.NewInt(keeper.DeveloperVestingAmount),
+			expectedDeveloperVestingDelta:       sdk.ZeroDec(),
+			expectedInflationDelta:              sdk.ZeroDec(),
 		},
 		"default genesis - developer module account is created prior to InitGenesis() - not created during the call": {
 			mintGenesis:                     types.DefaultGenesisState(),
@@ -72,9 +79,11 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			expectedSupplyOffsetDelta:           sdk.ZeroInt(),
 			expectedSupplyWithOffsetDelta:       sdk.ZeroInt(),
 			expectedDeveloperVestingAmountDelta: sdk.ZeroInt(),
+			expectedDeveloperVestingDelta:       sdk.ZeroDec(),
+			expectedInflationDelta:              sdk.ZeroDec(),
 		},
 		"custom genesis": {
-			mintGenesis: customGenesis,
+			mintGenesis: customValidGenesis,
 			mintDenom:   "uosmo",
 
 			expectedEpochProvisions:             sdk.NewDec(200),
@@ -82,9 +91,21 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			expectedSupplyWithOffsetDelta:       sdk.ZeroInt(),
 			expectedDeveloperVestingAmountDelta: sdk.NewInt(keeper.DeveloperVestingAmount),
 			expectedHalvenStartedEpoch:          3,
+			expectedDeveloperVestingDelta:       customValidGenesis.DeveloperVestingTruncationDelta,
+			expectedInflationDelta:              customValidGenesis.InflationTruncationDelta,
 		},
 		"nil genesis state - panic": {
 			mintDenom:   sdk.DefaultBondDenom,
+			expectPanic: true,
+		},
+		"invalid truncation delta - panic": {
+			mintGenesis: func() *types.GenesisState {
+				genesis := types.DefaultGenesisState()
+				genesis.InflationTruncationDelta = sdk.OneDec()
+				return genesis
+			}(),
+			mintDenom: sdk.DefaultBondDenom,
+
 			expectPanic: true,
 		},
 	}
@@ -138,11 +159,11 @@ func (suite *KeeperTestSuite) TestMintInitGenesis() {
 			// Validate that truncation deltas are initialized to zero.
 			developerVestingDelta, err := mintKeeper.GetTruncationDelta(ctx, types.DeveloperVestingModuleAcctName)
 			suite.Require().NoError(err)
-			suite.Require().Equal(sdk.ZeroDec(), developerVestingDelta)
+			suite.Require().Equal(tc.expectedDeveloperVestingDelta, developerVestingDelta)
 
 			inflationDelta, err := mintKeeper.GetTruncationDelta(ctx, types.ModuleName)
 			suite.Require().NoError(err)
-			suite.Require().Equal(sdk.ZeroDec(), inflationDelta)
+			suite.Require().Equal(tc.expectedInflationDelta, inflationDelta)
 
 			// Last halven epoch num is set to 0.
 			suite.Require().Equal(tc.expectedHalvenStartedEpoch, mintKeeper.GetLastReductionEpochNum(ctx))
@@ -161,7 +182,7 @@ func (suite *KeeperTestSuite) TestMintExportGenesis() {
 			expectedGenesis: types.DefaultGenesisState(),
 		},
 		"custom genesis": {
-			expectedGenesis: customGenesis,
+			expectedGenesis: customValidGenesis,
 		},
 	}
 

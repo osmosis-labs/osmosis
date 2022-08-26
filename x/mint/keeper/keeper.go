@@ -128,10 +128,14 @@ func (k Keeper) GetTruncationDelta(ctx sdk.Context, moduleAccountName string) (s
 
 // SetTruncationDelta sets the truncation delta, returning an error if any. nil otherwise.
 // Only developer vesting and mint module accounts are allowed.
+// Truncation delta must be within the range [0, 1).
 // Returns error if invalid module account.
 func (k Keeper) SetTruncationDelta(ctx sdk.Context, moduleAccountName string, truncationDelta sdk.Dec) error {
 	if truncationDelta.LT(sdk.ZeroDec()) {
 		return sdkerrors.Wrapf(types.ErrInvalidAmount, "truncation delta must be positive, was (%s)", truncationDelta)
+	}
+	if truncationDelta.GTE(sdk.OneDec()) {
+		return sdkerrors.Wrapf(types.ErrInvalidAmount, "truncation delta must be less than one, was (%s)", truncationDelta)
 	}
 
 	storeKey, err := getTruncationStoreKeyFromModuleAccount(moduleAccountName)

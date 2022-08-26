@@ -19,11 +19,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) {
 	k.SetParams(ctx, data.Params)
 
 	// developer vesting module account delta initialization.
-	if err := k.SetTruncationDelta(ctx, types.DeveloperVestingModuleAcctName, sdk.ZeroDec()); err != nil {
+	if err := k.SetTruncationDelta(ctx, types.DeveloperVestingModuleAcctName, data.DeveloperVestingTruncationDelta); err != nil {
 		panic(err)
 	}
 	// mint module account (inflation) delta initialization.
-	if err := k.SetTruncationDelta(ctx, types.ModuleName, sdk.ZeroDec()); err != nil {
+	if err := k.SetTruncationDelta(ctx, types.ModuleName, data.InflationTruncationDelta); err != nil {
 		panic(err)
 	}
 
@@ -55,6 +55,16 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		params.WeightedDeveloperRewardsReceivers = make([]types.WeightedAddress, 0)
 	}
 
+	inflationDelta, err := k.GetTruncationDelta(ctx, types.ModuleName)
+	if err != nil {
+		panic(err)
+	}
+
+	developerVestingDelta, err := k.GetTruncationDelta(ctx, types.DeveloperVestingModuleAcctName)
+	if err != nil {
+		panic(err)
+	}
+
 	lastHalvenEpoch := k.getLastReductionEpochNum(ctx)
-	return types.NewGenesisState(minter, params, lastHalvenEpoch)
+	return types.NewGenesisState(minter, params, lastHalvenEpoch, inflationDelta, developerVestingDelta)
 }
