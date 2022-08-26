@@ -397,7 +397,7 @@ To avoid these problems, let's now examine how these hashes work.
 
 An app hash is a hash of hashes of every store's Merkle root.
 
-Cosmos-SDK takes an app hash of the application state, and propagates
+Cosmos-SDK [takes an app hash of the application state][4], and propagates
 it to Tendermint which, in turn, compares it to the app hash of the
 rest of the network.
 
@@ -412,8 +412,7 @@ of the network. Please note that the explanation and examples are simplified.
 `LastResultsHash` is the root hash of all results from the transactions
 in the block returned by the ABCI's `DeliverTx`.
 
-The `LastResultsHash` today contains:
-https://github.com/tendermint/tendermint/blob/main/types/results.go#L47-L54
+The [`LastResultsHash`][3] today contains:
 
 - Tx `GasWanted`
 
@@ -582,4 +581,6 @@ We communicate with various integrators if they'd like release-blocking QA testi
     * Chainapsis has communicated wanting a series of osmosis-frontend functionalities to be checked for correctness on a testnet as a release blocking item
 
 [1]:https://github.com/cosmos/cosmos-sdk/blob/d11196aad04e57812dbc5ac6248d35375e6603af/baseapp/abci.go#L293-L303
-[2]https://github.com/tendermint/tendermint/blob/9f76e8da150414ce73eed2c4f248947b657c7587/proto/tendermint/types/types.proto#L70-L77
+[2]:https://github.com/tendermint/tendermint/blob/9f76e8da150414ce73eed2c4f248947b657c7587/proto/tendermint/types/types.proto#L70-L77
+[3]:https://github.com/tendermint/tendermint/blob/main/types/results.go#L47-L54
+[4]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/rootmulti/store.go#L430
