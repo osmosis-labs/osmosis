@@ -34,6 +34,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
 )
 
 type KeeperTestHelper struct {
@@ -44,6 +45,11 @@ type KeeperTestHelper struct {
 	QueryHelper *baseapp.QueryServiceTestHelper
 	TestAccs    []sdk.AccAddress
 }
+
+var (
+	SecondaryDenom  = "uion"
+	SecondaryAmount = sdk.NewInt(100000000)
+)
 
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
 func (s *KeeperTestHelper) Setup() {
@@ -71,12 +77,18 @@ func (s *KeeperTestHelper) SetEpochStartTime() {
 
 // CreateTestContext creates a test context.
 func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
+	ctx, _ := s.CreateTestContextWithMultiStore()
+	return ctx
+}
+
+// CreateTestContextWithMultiStore creates a test context and returns it together with multi store.
+func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, sdk.CommitMultiStore) {
 	db := dbm.NewMemDB()
 	logger := log.NewNopLogger()
 
 	ms := rootmulti.NewStore(db, logger)
 
-	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
+	return sdk.NewContext(ms, tmtypes.Header{}, false, logger), ms
 }
 
 // CreateTestContext creates a test context.
@@ -92,6 +104,17 @@ func (s *KeeperTestHelper) Commit() {
 // FundAcc funds target address with specified amount.
 func (s *KeeperTestHelper) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	err := simapp.FundAccount(s.App.BankKeeper, s.Ctx, acc, amounts)
+	s.Require().NoError(err)
+}
+
+// FundModuleAcc funds target modules with specified amount.
+func (s *KeeperTestHelper) FundModuleAcc(moduleName string, amounts sdk.Coins) {
+	err := simapp.FundModuleAccount(s.App.BankKeeper, s.Ctx, moduleName, amounts)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestHelper) MintCoins(coins sdk.Coins) {
+	err := s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, coins)
 	s.Require().NoError(err)
 }
 
@@ -128,11 +151,6 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
 
 	return valAddr
-}
-
-// SetupTokenFactory sets up a token module account for the TokenFactoryKeeper.
-func (s *KeeperTestHelper) SetupTokenFactory() {
-	s.App.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
 }
 
 // BeginNewBlock starts a new block.

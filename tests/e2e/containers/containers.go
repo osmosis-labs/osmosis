@@ -212,6 +212,7 @@ func (m *Manager) RunNodeResource(chainId string, containerName, valCondifDir st
 		Tag:        m.OsmosisTag,
 		NetworkID:  m.network.Network.ID,
 		User:       "root:root",
+		Cmd:        []string{"start"},
 		Mounts: []string{
 			fmt.Sprintf("%s/:/osmosis/.osmosisd", valCondifDir),
 			fmt.Sprintf("%s/scripts:/osmosis", pwd),
