@@ -185,7 +185,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// Each user has 10% of the supply
-	supply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := supply.Amount.QuoRaw(20)
 	half := quota.QuoRaw(2)
 
@@ -244,7 +244,7 @@ func (suite *MiddlewareTestSuite) TestRecvTransferWithRateLimiting() {
 	osmosisApp := suite.chainA.GetOsmosisApp()
 
 	// Each user has 10% of the supply
-	supply := osmosisApp.BankKeeper.GetSupply(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
 	quota := supply.Amount.QuoRaw(20)
 	half := quota.QuoRaw(2)
 
