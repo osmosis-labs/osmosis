@@ -130,13 +130,13 @@ func (k Keeper) GetTruncationDelta(ctx sdk.Context, moduleAccountName string) (s
 // Only developer vesting and mint module accounts are allowed.
 // Returns error if invalid module account.
 func (k Keeper) SetTruncationDelta(ctx sdk.Context, moduleAccountName string, truncationDelta sdk.Dec) error {
+	if truncationDelta.LT(sdk.ZeroDec()) {
+		return sdkerrors.Wrapf(types.ErrInvalidAmount, "truncation delta must be positive, was (%s)", truncationDelta)
+	}
+
 	storeKey, err := getTruncationStoreKeyFromModuleAccount(moduleAccountName)
 	if err != nil {
 		return err
-	}
-
-	if truncationDelta.LT(sdk.ZeroDec()) {
-		return sdkerrors.Wrapf(types.ErrInvalidAmount, "truncation delta must be positive, was (%s)", truncationDelta)
 	}
 	osmoutils.MustSetDec(ctx.KVStore(k.storeKey), storeKey, truncationDelta)
 	return nil
