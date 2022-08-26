@@ -8,8 +8,9 @@ DISABLED_MUTATORS='branch/*'
 # Only consider the following:
 # * go files in types, keeper, or module root directories
 # * ignore test and Protobuf files
-MUTATION_SOURCES=$(find ./x -type f \( -path '*/keeper/*' -or -path '*/types/*' \) \( -name '*.go' -and -not -name '*_test.go' -and -not -name '*pb*' \))
-MUTATION_SOURCES+=$(find ./x -maxdepth 2 -type f \( -name '*.go' -and -not -name '*_test.go' -and -not -name '*pb*' \))
+go_file_exclusions="-name '*.go' -and -not -name '*_test.go' -and -not -name '*pb*' -and -not -name 'module.go'"
+MUTATION_SOURCES=$(find ./x -type f -path '*/keeper/*' -or -path '*/types/*' ${!go_file_exclusions} )
+MUTATION_SOURCES+=$(find ./x -maxdepth 2 -type f ${!go_file_exclusions} )
 
 # Filter on a module-by-module basis as provided by input
 arg_len=$#
@@ -27,7 +28,7 @@ done
 
 MUTATION_SOURCES=$(echo "$MUTATION_SOURCES" | grep "$MODULE_FORMAT")
 
-# Collect multiple lines into a single line to be fed into go-mutesting
+#Collect multiple lines into a single line to be fed into go-mutesting
 MUTATION_SOURCES=$(echo $MUTATION_SOURCES | tr '\n' ' ')
 
 echo "running mutation tests for the following module(s): $MODULE_NAMES"
