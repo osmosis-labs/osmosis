@@ -528,6 +528,108 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 	}
 }
 
+// This test sets up 2 asset pools, and then checks the spot price on them.
+// It uses the pools spot price method, rather than the Gamm keepers spot price method.
+func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
+	baseDenom := "uosmo"
+	quoteDenom := "uion"
+	defaultFutureGovernor = ""
+
+	tests := []struct {
+		name                string
+		baseDenomPoolInput  sdk.Coin
+		baseDenomWeight     sdk.Int
+		quoteDenomPoolInput sdk.Coin
+		quoteDenomWeight    sdk.Int
+		expectError         bool
+		expectedOutput      sdk.Dec
+	}{
+		{
+			name: "spot price check at max bitlen supply",
+			// 2^196, as >= 2^197 trips max bitlen of 256
+			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206336").TruncateInt()),
+			baseDenomWeight:     sdk.NewInt(100),
+			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206337").TruncateInt()),
+			quoteDenomWeight:    sdk.NewInt(100),
+			expectError:         false,
+			expectedOutput:      sdk.MustNewDecFromStr("1.000000000000000000"),
+		},
+		{
+			name:                "spot price check at min supply",
+			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.OneInt()),
+			baseDenomWeight:     sdk.NewInt(100),
+			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.NewInt(100),
+			expectError:         false,
+			expectedOutput:      sdk.MustNewDecFromStr("1.000000000000000000"),
+		},
+		{
+			name:                "max spot price with equal weights",
+			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.NewDec(2).Power(160).TruncateInt()),
+			baseDenomWeight:     sdk.NewInt(100),
+			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.NewInt(100),
+			expectError:         false,
+			expectedOutput:      sdk.NewDec(2).Power(160),
+		},
+		{
+			// test int overflows
+			name: "max spot price with extreme weights",
+			// 2^196, as >= 2^197 trips max bitlen of 256
+			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206336").TruncateInt()),
+			baseDenomWeight:     sdk.OneInt(),
+			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206336").TruncateInt(),
+			expectError:         true,
+		},
+		{
+			name: "greater than max spot price with equal weights",
+			// Max spot price capped at 2^160
+			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.NewDec(2).Power(161).TruncateInt()),
+			baseDenomWeight:     sdk.NewInt(100),
+			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.NewInt(100),
+			expectError:         true,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.SetupTest()
+		suite.Run(tc.name, func() {
+			// pool assets
+			defaultBaseAsset := balancer.PoolAsset{
+				Weight: tc.baseDenomWeight,
+				Token:  tc.baseDenomPoolInput,
+			}
+			defaultQuoteAsset := balancer.PoolAsset{
+				Weight: tc.quoteDenomWeight,
+				Token:  tc.quoteDenomPoolInput,
+			}
+
+			poolAssets := []balancer.PoolAsset{defaultBaseAsset, defaultQuoteAsset}
+
+			pool, err := balancer.NewBalancerPool(defaultPoolId, defaultBalancerPoolParams, poolAssets, defaultFutureGovernor, defaultCurBlockTime)
+			suite.Require().NoError(err, "test: %s", tc.name)
+
+			sut := func() {
+				spotPrice, err := pool.SpotPrice(
+					suite.Ctx,
+					tc.baseDenomPoolInput.Denom,
+					tc.quoteDenomPoolInput.Denom)
+				if tc.expectError {
+					suite.Require().Error(err, "test: %s", tc.name)
+				} else {
+					suite.Require().NoError(err, "test: %s", tc.name)
+					suite.Require().True(spotPrice.Equal(tc.expectedOutput),
+						"test: %s\nSpot price wrong, got %s, expected %s\n", tc.name,
+						spotPrice, tc.expectedOutput)
+				}
+			}
+			assertPoolStateNotModified(suite.T(), &pool, sut)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
 	// test cases.

@@ -20,11 +20,11 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 		runSwap bool
 	}{
 		"Uni2 Pool, no swap on pool creation block": {
-			defaultTwoAssetCoin,
+			defaultTwoAssetCoins,
 			false,
 		},
 		"Uni2 Pool, swap on pool creation block": {
-			defaultTwoAssetCoin,
+			defaultTwoAssetCoins,
 			true,
 		},
 		"Three asset balancer pool, no swap on pool creation block": {
@@ -50,7 +50,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
 			for i := 0; i < len(denomPairs0); i++ {
-				expectedRecord, err := types.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
+				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPairs0[i], denomPairs1[i])
 				s.Require().NoError(err)
 				expectedRecords = append(expectedRecords, expectedRecord)
 			}
@@ -88,25 +88,25 @@ func (s *TestSuite) TestEndBlock() {
 	}{
 		{
 			"no swap after pool creation",
-			defaultTwoAssetCoin,
+			defaultTwoAssetCoins,
 			false,
 			false,
 		},
 		{
 			"swap in the same block with pool creation",
-			defaultTwoAssetCoin,
+			defaultTwoAssetCoins,
 			true,
 			false,
 		},
 		{
 			"swap after a block has passed by after pool creation",
-			defaultTwoAssetCoin,
+			defaultTwoAssetCoins,
 			false,
 			true,
 		},
 		{
 			"swap in both first and second block",
-			defaultTwoAssetCoin,
+			defaultTwoAssetCoins,
 			true,
 			true,
 		},
@@ -204,13 +204,14 @@ func (s *TestSuite) TestEndBlock() {
 func (s *TestSuite) TestAfterEpochEnd() {
 	s.SetupTest()
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
-	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoin...)
+	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 	twapBeforeEpoch, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
 	s.Require().NoError(err)
 	pruneEpochIdentifier := s.App.TwapKeeper.PruneEpochIdentifier(s.Ctx)
+	recordHistoryKeepPeriod := s.App.TwapKeeper.RecordHistoryKeepPeriod(s.Ctx)
 
 	// make prune record time pass by, running prune epoch after this should prune old record
-	s.Ctx = s.Ctx.WithBlockTime(baseTime.Add(twap.RecordHistoryKeepPeriod).Add(time.Second))
+	s.Ctx = s.Ctx.WithBlockTime(baseTime.Add(recordHistoryKeepPeriod).Add(time.Second))
 
 	allEpochs := s.App.EpochsKeeper.AllEpochInfos(s.Ctx)
 
@@ -247,19 +248,19 @@ func (s *TestSuite) TestAfterSwap_JoinPool() {
 	}{
 		{
 			"swap triggers track changed pools",
-			defaultTwoAssetCoin,
+			defaultTwoAssetCoins,
 			true,
 			false,
 		},
 		{
 			"join pool triggers track changed pools",
-			defaultTwoAssetCoin,
+			defaultTwoAssetCoins,
 			false,
 			true,
 		},
 		{
 			"swap and join pool in same block triggers track changed pools",
-			defaultTwoAssetCoin,
+			defaultTwoAssetCoins,
 			true,
 			true,
 		},
@@ -281,7 +282,7 @@ func (s *TestSuite) TestAfterSwap_JoinPool() {
 			}
 
 			if tc.joinPool {
-				s.RunBasicJoinPool(poolId)
+				s.RunBasicJoin(poolId)
 			}
 
 			// test that either of swapping in a pool or joining a pool

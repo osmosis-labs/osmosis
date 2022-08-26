@@ -95,13 +95,16 @@ func (qp QueryPlugin) EstimateSwap(ctx sdk.Context, estimateSwap *bindings.Estim
 	if err := sdk.ValidateDenom(estimateSwap.First.DenomOut); err != nil {
 		return nil, sdkerrors.Wrap(err, "gamm estimate swap denom out")
 	}
+	senderAddr, err := sdk.AccAddressFromBech32(estimateSwap.Sender)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "gamm estimate swap sender address")
+	}
 
 	if estimateSwap.Amount == (bindings.SwapAmount{}) {
 		return nil, wasmvmtypes.InvalidRequest{Err: "gamm estimate swap empty swap"}
 	}
 
-	subCtx, _ := ctx.CacheContext()
-	estimate, err := EstimatePerformSwap(qp.gammKeeper, subCtx, estimateSwap.ToSwapMsg())
+	estimate, err := PerformSwap(qp.gammKeeper, ctx, senderAddr, estimateSwap.ToSwapMsg())
 	return estimate, err
 }
 

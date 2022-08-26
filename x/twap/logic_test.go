@@ -18,8 +18,8 @@ var OneSec = sdk.NewDec(1e9)
 
 func newRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
-		Asset0Denom:     defaultTwoAssetCoin[0].Denom,
-		Asset1Denom:     defaultTwoAssetCoin[1].Denom,
+		Asset0Denom:     defaultTwoAssetCoins[0].Denom,
+		Asset1Denom:     defaultTwoAssetCoins[1].Denom,
 		Time:            t,
 		P0LastSpotPrice: sp0,
 		P1LastSpotPrice: sdk.OneDec().Quo(sp0),
@@ -32,8 +32,8 @@ func newRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 // make an expected record for math tests, we adjust other values in the test runner.
 func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
-		Asset0Denom: defaultTwoAssetCoin[0].Denom,
-		Asset1Denom: defaultTwoAssetCoin[1].Denom,
+		Asset0Denom: defaultTwoAssetCoins[0].Denom,
+		Asset1Denom: defaultTwoAssetCoins[1].Denom,
 		// make new copies
 		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
 		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
@@ -83,7 +83,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 }
 
 func (s *TestSuite) TestUpdateTwap() {
-	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoin...)
+	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 	newSp := sdk.OneDec()
 
 	tests := map[string]struct {
@@ -213,7 +213,9 @@ func TestComputeArithmeticTwap(t *testing.T) {
 // TestPruneRecords tests that all twap records earlier than
 // current block time - RecordHistoryKeepPeriod are pruned from the store.
 func (s *TestSuite) TestPruneRecords() {
-	tMin2Record, tMin1Record, baseRecord, tPlus1Record := s.createTestRecordsFromTime(baseTime.Add(-twap.RecordHistoryKeepPeriod))
+	recordHistoryKeepPeriod := s.twapkeeper.RecordHistoryKeepPeriod(s.Ctx)
+
+	tMin2Record, tMin1Record, baseRecord, tPlus1Record := s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
 
 	// non-ascending insertion order.
 	recordsToPreSet := []types.TwapRecord{tPlus1Record, tMin1Record, baseRecord, tMin2Record}

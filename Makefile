@@ -98,11 +98,11 @@ $(BUILDDIR)/:
 
 build-reproducible: build-reproducible-amd64 build-reproducible-arm64
 
-build-reproducible-amd64: go.sum
+build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(shell go list -f {{.GoVersion}} -m) \
+		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
 		--platform linux/arm64 \
 		-t osmosis-amd64 \
 		--load \
@@ -112,11 +112,11 @@ build-reproducible-amd64: go.sum
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
 	$(DOCKER) rm -f osmobinary
 
-build-reproducible-arm64: go.sum
+build-reproducible-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(shell go list -f {{.GoVersion}} -m) \
+		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
 		--platform linux/arm64 \
 		-t osmosis-arm64 \
 		--load \

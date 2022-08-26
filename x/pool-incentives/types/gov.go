@@ -45,7 +45,7 @@ func (p *ReplacePoolIncentivesProposal) ProposalRoute() string { return RouterKe
 
 // ProposalType returns the type of the proposal
 func (p *ReplacePoolIncentivesProposal) ProposalType() string {
-	return ProposalTypeUpdatePoolIncentives
+	return ProposalTypeReplacePoolIncentives
 }
 
 // ValidateBasic validates a governance proposal's abstract and basic contents

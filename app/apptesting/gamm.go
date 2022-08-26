@@ -112,20 +112,26 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestHelper) RunBasicJoinPool(poolId uint64) {
+func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
+	pool, _ := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
 	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
 	s.Require().NoError(err)
 
+	tokenIn := sdk.NewCoins()
 	for _, denom := range denoms {
-		s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10000000))))
+		tokenIn = tokenIn.Add(sdk.NewCoin(denom, sdk.NewInt(10000000)))
 	}
 
-	pool, err := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
-	s.Require().NoError(err)
-	totalPoolShare := pool.GetTotalShares()
-	totalPoolShare.Quo(sdk.NewInt(100000))
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn...))
 
-	tokenIn, _, err := s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, s.TestAccs[0], poolId, totalPoolShare.Quo(sdk.NewInt(100000)), sdk.Coins{})
+	totalPoolShare := pool.GetTotalShares()
+	msg := gammtypes.MsgJoinPool{
+		Sender:         string(s.TestAccs[0]),
+		PoolId:         poolId,
+		ShareOutAmount: totalPoolShare.Quo(sdk.NewInt(100000)),
+		TokenInMaxs:    tokenIn,
+	}
+	// TODO: switch to message
+	_, _, err = s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, s.TestAccs[0], poolId, msg.ShareOutAmount, msg.TokenInMaxs)
 	s.Require().NoError(err)
-	s.FundAcc(s.TestAccs[0], tokenIn)
 }

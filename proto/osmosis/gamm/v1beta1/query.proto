@@ -146,6 +146,7 @@ message QuerySpotPriceResponse {
 
 //=============================== EstimateSwapExactAmountIn
 message QuerySwapExactAmountInRequest {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
   repeated SwapAmountInRoute routes = 4 [
@@ -164,6 +165,7 @@ message QuerySwapExactAmountInResponse {
 
 //=============================== EstimateSwapExactAmountOut
 message QuerySwapExactAmountOutRequest {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   repeated SwapAmountOutRoute routes = 3 [
     (gogoproto.moretags) = "yaml:\"routes\"",
