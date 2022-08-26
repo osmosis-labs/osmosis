@@ -76,84 +76,107 @@ func (suite *KeeperTestSuite) TestModuleLockedAmount() {
 
 func (suite *KeeperTestSuite) TestAccountUnlockableCoins() {
 	suite.SetupTest()
+	suite.KeeperTestHelper.UpdateGenState()
+
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address unlockable coins check
 	_, err := suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockableCoinsRequest{Owner: ""})
 	suite.Require().Error(err)
+	suite.KeeperTestHelper.AlterStateCheck()
 
 	// initial check
 	res, err := suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins{})
 
+	suite.KeeperTestHelper.AlterStateCheck()
+
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	suite.LockTokens(addr1, coins, time.Second)
+	suite.KeeperTestHelper.UpdateGenState()
 
 	// check before start unlocking
 	res, err = suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins{})
+	suite.KeeperTestHelper.AlterStateCheck()
 
 	suite.BeginUnlocking(addr1)
+	suite.KeeperTestHelper.UpdateGenState()
 
 	// check = unlockTime - 1s
 	res, err = suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins{})
+	suite.KeeperTestHelper.AlterStateCheck()
 
 	// check after 1 second = unlockTime
 	now := suite.Ctx.BlockTime()
 	res, err = suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(time.Second))), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins)
+	suite.KeeperTestHelper.AlterStateCheck()
 
 	// check after 2 second = unlockTime + 1s
 	res, err = suite.querier.AccountUnlockableCoins(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountUnlockableCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, coins)
+
+	suite.KeeperTestHelper.AlterStateCheck()
 }
 
 func (suite *KeeperTestSuite) TestAccountUnlockingCoins() {
 	suite.SetupTest()
+	suite.KeeperTestHelper.UpdateGenState()
+
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
 
 	// empty address unlockable coins check
 	_, err := suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockingCoinsRequest{Owner: ""})
 	suite.Require().Error(err)
+	suite.KeeperTestHelper.AlterStateCheck()
 
 	// initial check
 	res, err := suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins{})
+	suite.KeeperTestHelper.AlterStateCheck()
 
 	// lock coins
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
 	suite.LockTokens(addr1, coins, time.Second)
+	suite.KeeperTestHelper.UpdateGenState()
 
 	// check before start unlocking
 	res, err = suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins{})
+	suite.KeeperTestHelper.AlterStateCheck()
 
 	suite.BeginUnlocking(addr1)
+	suite.KeeperTestHelper.UpdateGenState()
 
 	// check at unlockTime - 1s
 	res, err = suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins{sdk.NewInt64Coin("stake", 10)})
+	suite.KeeperTestHelper.AlterStateCheck()
 
 	// check after 1 second = unlockTime
 	now := suite.Ctx.BlockTime()
 	res, err = suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(time.Second))), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins{})
+	suite.KeeperTestHelper.AlterStateCheck()
 
 	// check after 2 second = unlockTime + 1s
 	res, err = suite.querier.AccountUnlockingCoins(sdk.WrapSDKContext(suite.Ctx.WithBlockTime(now.Add(2*time.Second))), &types.AccountUnlockingCoinsRequest{Owner: addr1.String()})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.Coins, sdk.Coins{})
+	suite.KeeperTestHelper.AlterStateCheck()
+
 }
 
 func (suite *KeeperTestSuite) TestAccountLockedCoins() {

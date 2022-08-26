@@ -8,6 +8,7 @@ import (
 
 func (suite *KeeperTestSuite) TestQueryEpochInfos() {
 	suite.SetupTest()
+	suite.KeeperTestHelper.UpdateGenState()
 	queryClient := suite.queryClient
 
 	// Check that querying epoch infos on default genesis returns the default genesis epoch infos
@@ -20,5 +21,6 @@ func (suite *KeeperTestSuite) TestQueryEpochInfos() {
 		expectedEpochs[id].CurrentEpochStartHeight = suite.Ctx.BlockHeight()
 	}
 
+	suite.KeeperTestHelper.AlterStateCheck()
 	suite.Require().Equal(expectedEpochs, epochInfosResponse.Epochs)
 }
