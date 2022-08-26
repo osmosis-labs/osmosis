@@ -42,7 +42,7 @@ func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
 }
 
 func (n *NodeConfig) WasmExecute(contract, execMsg, from string) {
-	n.LogActionF("executing %d on wasm contract %s from %s", execMsg, contract, from)
+	n.LogActionF("executing %s on wasm contract %s from %s", execMsg, contract, from)
 	cmd := []string{"osmosisd", "tx", "wasm", "execute", contract, execMsg, fmt.Sprintf("--from=%s", from)}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
@@ -75,7 +75,7 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
 	err = f.Close()
 	require.NoError(n.t, err)
 
-	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "param-change", "/osmosis/param_change_proposal.json", "--is-expedited=true", fmt.Sprintf("--from=%s", from)}
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "param-change", "/osmosis/param_change_proposal.json", fmt.Sprintf("--from=%s", from)}
 
 	_, _, err = n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
