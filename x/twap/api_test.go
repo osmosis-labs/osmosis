@@ -233,7 +233,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Hour), baseTime, quoteAssetA),
 			expErrorStr:  "too old",
 		},
-		// TODO: overflow tests
+		// TODO: overflow tests, multi-asset pool handling
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
