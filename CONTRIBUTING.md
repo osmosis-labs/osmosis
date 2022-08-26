@@ -395,13 +395,14 @@ To avoid these problems, let's now examine how these hashes work.
 
 ##### App Hash
 
-An app hash is a hash of hashes of every store's Merkle root.
+An app hash is a hash of hashes of every store's Merkle root that is returned by
+ABCI's `Commit()` from Cosmos-SDK to Tendermint.
 
 Cosmos-SDK [takes an app hash of the application state][4], and propagates
 it to Tendermint which, in turn, compares it to the app hash of the
 rest of the network.
 
-For example, at height n, we compute:
+For example, at height n, [we compute][5]:
 `app hash = hash(hash(root of x/epochs), hash(root of  x/gamm)...)`
 
 Then, Tendermint ensures that the app hash of the local node matches the app hash
@@ -584,3 +585,4 @@ We communicate with various integrators if they'd like release-blocking QA testi
 [2]:https://github.com/tendermint/tendermint/blob/9f76e8da150414ce73eed2c4f248947b657c7587/proto/tendermint/types/types.proto#L70-L77
 [3]:https://github.com/tendermint/tendermint/blob/main/types/results.go#L47-L54
 [4]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/rootmulti/store.go#L430
+[5]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/types/commit_info.go#L40
