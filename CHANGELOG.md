@@ -106,6 +106,19 @@ This release contains minor CLI bug fixes.
 * [1759](https://github.com/osmosis-labs/osmosis/pull/1759) Fix pagination filter in incentives query.
 * [1698](https://github.com/osmosis-labs/osmosis/pull/1698) Register wasm snapshotter extension.
 * [1931](https://github.com/osmosis-labs/osmosis/pull/1931) Add explicit check for input denoms to `CalcJoinPoolShares`
+<<<<<<< HEAD
+=======
+* [2011](https://github.com/osmosis-labs/osmosis/pull/2011) Fix bug in TokenFactory initGenesis, relating to denom creation fee param.
+* [2186](https://github.com/osmosis-labs/osmosis/pull/2186) Remove liquidity event that was emitted twice per message.
+
+### Improvements
+* [#2214](https://github.com/osmosis-labs/osmosis/pull/2214) Speedup epoch distribution, superfluid component
+* [#2515](https://github.com/osmosis-labs/osmosis/pull/2515) Emit events from functions implementing epoch hooks' `panicCatchingEpochHook` cacheCtx
+
+### SDK Upgrades
+* [#2245](https://github.com/osmosis-labs/osmosis/pull/2244) Upgrade SDK with the following major changes:
+   * Minimum deposit on proposer at submission time: https://github.com/osmosis-labs/cosmos-sdk/pull/296
+>>>>>>> 1b5e970c (Puneet/epochevents (#2515))
 
 ## [v9.0.0 - Nitrogen](https://github.com/osmosis-labs/osmosis/releases/tag/v9.0.0)
 
