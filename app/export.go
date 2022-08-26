@@ -196,6 +196,5 @@ func (app *OsmosisApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddr
 }
 
 func (app *OsmosisApp) ExportRawState(ctx sdk.Context) map[string]json.RawMessage {
-
 	return app.mm.ExportGenesis(ctx, app.AppCodec())
 }
