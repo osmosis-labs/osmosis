@@ -365,9 +365,40 @@ State-incompatibility is allowed for major upgrades because all nodes in the net
 perform it at the same time. Therefore, after the upgrade, the nodes continue
 functioning in a deterministic way.
 
-The state compatibility is ensured by taking the app hash of the state and comparing it
-to the app hash with the rest of the network. Essentially, an app hash is a hash of
-hashes of every store's Merkle root.
+#### Scope
+
+The state-machine scope includes the following areas:
+
+- All messages supported by the chain
+
+- Transaction gas usage
+
+- Whitelisted queries
+
+- All `BeginBlock`/`EndBlock` logic
+
+The following are **NOT* in the state-machine scope:
+
+- Events
+
+- Queries that are not whitelisted
+
+- CLI interfaces
+
+#### Validating State-Compatibility 
+
+Tendermint ensures state compatibility by validating a number
+of hashes that can be found here:
+https://github.com/tendermint/tendermint/blob/9f76e8da150414ce73eed2c4f248947b657c7587/proto/tendermint/types/types.proto#L70-L77
+
+Among the hashes that are commonly affected by our work and cause
+problems are the `AppHash` and `LastResultsHash`. To avoid these problems, let's now examine how these hashes work.
+
+##### App Hash
+
+Cosmos-SDK takes an app hash of the state, and propagates it to Tendermint which,
+in turn, compares it to the app hash of the rest of the network.
+An app hash is a hash of hashes of every store's Merkle root.
 
 For example, at height n, we compute:
 `app hash = hash(hash(root of x/epochs), hash(root of  x/gamm)...)`
@@ -375,13 +406,60 @@ For example, at height n, we compute:
 Then, Tendermint ensures that the app hash of the local node matches the app hash
 of the network. Please note that the explanation and examples are simplified.
 
-#### Sources of State-incompatibility
+##### LastResultsHash
+
+The `LastResultsHash` today contains:
+https://github.com/tendermint/tendermint/blob/main/types/results.go#L47-L54
+
+- Tx `GasWanted`
+
+- Tx `GasUsed`
+
+`GasUsed` being merkelized means that we cannot freely reorder methods that consume gas.
+We should also be careful of modifying any validation logic since changing the
+locations where we error or pass might affect transaction gas usage.
+
+There are plans to remove this field from being Merkelized in a subsequent Tendermint release, at which point we will have more flexibility in reordering operations / erroring.
+
+- Tx response `Data`
+
+The `Data` field includes the proto message response. Therefore, we cannot
+change these in patch releases.
+
+- Tx response `Code`
+
+This is an error code that is returned by the transaction flow. In the case of
+success, it is `0`. On a general error, it is `1`. Additionally, each module
+defines its custom error codes. For example, `x/mint` currently has the
+following:
+https://github.com/osmosis-labs/osmosis/blob/8ef2f1845d9c7dd3f422d3f1953e36e5cf112e73/x/mint/types/errors.go#L8-L10
+
+As a result, it is important to avoid changing custom error codes or change
+the semantics of what is valid logic in thransaction flows.
+
+Note that all of the above stem from `DeliverTx` execution path, which handles:
+
+- `AnteHandler`'s marked as deliver tx
+- `msg.ValidateBasic`
+- execution of a message from the message server
+
+The `DeliverTx` return back to the Tendermint is defined [here][1].
+
+#### Major Sources of State-incompatibility
 
 ##### Creating Additional State
 
 By erroneously creating database entries that exist in Version A but not in
 Version B, we can cause the app hash to differ across nodes running
 these versions in the network. Therefore, this must be avoided.
+
+##### Changing Proto Field Definitions
+
+For example, if we change a field that gets persisted to the database,
+the app hash will differ across nodes running these versions in the network.
+
+Additionally, this affects `LastResultsHash` because it contains a `Data` field that is a marshaled proto message.
+
 
 ##### Returning Different Errors Given Same Input
 
@@ -391,7 +469,7 @@ func (sk Keeper) validateAmount(ctx context.Context, amount sdk.Int) error {
     if amount.IsNegative() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount must be positive or zero")
     }
-    return nil, errors.New("error")
+    return nil
 }
 ```
 
@@ -401,13 +479,18 @@ func (sk Keeper) validateAmount(ctx context.Context, amount sdk.Int) error {
     if amount.IsNegative() || amount.IsZero() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "amount must be positive")
     }
-    return nil, errors.New("error")
+    return nil
 }
 ```
 
 Note that now an amount of 0 can be valid in "Version A". However, not in "Version B".
 Therefore, if some nodes are running "Version A" and others are running "Version B",
 the final app hash might not be deterministic.
+
+Additionally, a different error message does not matter because it
+is not included in any hash. However, an error code `sdkerrors.ErrInvalidRequest` does.
+It translates to the `Code` field in the `LastResultsHash` and participates in
+its validation.
 
 ##### Variability in Gas Usage
 
@@ -443,18 +526,25 @@ into the tx results.
 Therefore, we introduced a state-incompatibility by merklezing diverging gas
 usage.
 
-##### Network Requests
+#### Secondary Limitations To Keep In Mind
 
-It is critical to avoid performing network requests since it is common
-for services to be unavailable or rate-limit. As a result, nodes
-may get diverging responses, leading to state breakage.
+##### Network Requests to External Services
+
+It is critical to avoid performing network requests to external services
+since it is common for services to be unavailable or rate-limit.
+
+Imagine a service that returns exchange rates when clients query its HTTP endpoint.
+This service might experience downtime or be restricted in some geographical areas.
+
+As a result, nodes may get diverging responses where some
+get successful responses while others errors, leading to state breakage.
 
 ##### Randomness
 
 Another critical property that should be avoided due to the likelihood
 of leading the nodes to result in a different state.
 
-#### Parallelism and Shared State
+##### Parallelism and Shared State
 
 Threads and Goroutines might preempt differently in different hardware. Therefore,
 they should be avoided for the sake of determinism. Additionally, it is hard
@@ -486,3 +576,5 @@ We test in testnet & e2e testnet behaviors about every message that has changed
 
 We communicate with various integrators if they'd like release-blocking QA testing for major releases
     * Chainapsis has communicated wanting a series of osmosis-frontend functionalities to be checked for correctness on a testnet as a release blocking item
+
+[1]:https://github.com/cosmos/cosmos-sdk/blob/d11196aad04e57812dbc5ac6248d35375e6603af/baseapp/abci.go#L293-L303
