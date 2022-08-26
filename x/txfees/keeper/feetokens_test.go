@@ -22,24 +22,24 @@ func (suite *KeeperTestSuite) TestBaseDenom() {
 func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 	suite.SetupTest(false)
 
-	uionPoolId := suite.PrepareUni2PoolWithAssets(
+	uionPoolId := suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin("uion", 500),
 	)
 
-	uionPoolId2 := suite.PrepareUni2PoolWithAssets(
+	uionPoolId2 := suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin("uion", 500),
 	)
 
 	// Make pool with fee token but no OSMO and make sure governance proposal fails
-	noBasePoolId := suite.PrepareUni2PoolWithAssets(
+	noBasePoolId := suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin("uion", 500),
 		sdk.NewInt64Coin("foo", 500),
 	)
 
 	// Create correct pool and governance proposal
-	fooPoolId := suite.PrepareUni2PoolWithAssets(
+	fooPoolId := suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin("foo", 1000),
 	)
@@ -205,7 +205,7 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 		suite.SetupTest(false)
 
 		suite.Run(tc.name, func() {
-			poolId := suite.PrepareUni2PoolWithAssets(
+			poolId := suite.PrepareBalancerPoolWithCoins(
 				tc.baseDenomPoolInput,
 				tc.feeTokenPoolInput,
 			)

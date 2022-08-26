@@ -83,7 +83,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 }
 
 func (s *TestSuite) TestUpdateTwap() {
-	poolId := s.PrepareUni2PoolWithAssets(defaultUniV2Coins[0], defaultUniV2Coins[1])
+	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
 	newSp := sdk.OneDec()
 
 	tests := map[string]struct {
@@ -208,4 +208,29 @@ func TestComputeArithmeticTwap(t *testing.T) {
 			require.Equal(t, test.expTwap, actualTwap)
 		})
 	}
+}
+
+// TestPruneRecords tests that all twap records earlier than
+// current block time - RecordHistoryKeepPeriod are pruned from the store.
+func (s *TestSuite) TestPruneRecords() {
+	recordHistoryKeepPeriod := s.twapkeeper.RecordHistoryKeepPeriod(s.Ctx)
+
+	tMin2Record, tMin1Record, baseRecord, tPlus1Record := s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
+
+	// non-ascending insertion order.
+	recordsToPreSet := []types.TwapRecord{tPlus1Record, tMin1Record, baseRecord, tMin2Record}
+
+	expectedKeptRecords := []types.TwapRecord{baseRecord, tPlus1Record}
+	s.SetupTest()
+	s.preSetRecords(recordsToPreSet)
+
+	ctx := s.Ctx
+	twapKeeper := s.twapkeeper
+
+	ctx = ctx.WithBlockTime(baseTime)
+
+	err := twapKeeper.PruneRecords(ctx)
+	s.Require().NoError(err)
+
+	s.validateExpectedRecords(expectedKeptRecords)
 }

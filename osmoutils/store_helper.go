@@ -2,6 +2,10 @@ package osmoutils
 
 import (
 	"errors"
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/gogo/protobuf/proto"
@@ -21,16 +25,13 @@ func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	iterator := storeObj.Iterator(keyStart, keyEnd)
 	defer iterator.Close()
+	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
+}
 
-	values := []T{}
-	for ; iterator.Valid(); iterator.Next() {
-		val, err := parseValue(iterator.Value())
-		if err != nil {
-			return nil, err
-		}
-		values = append(values, val)
-	}
-	return values, nil
+func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) ([]T, error) {
+	iterator := sdk.KVStorePrefixIterator(storeObj, prefix)
+	defer iterator.Close()
+	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
 }
 
 func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, stopFn func([]byte) bool, parseValue func([]byte) (T, error)) ([]T, error) {
@@ -56,18 +57,7 @@ func GetIterValuesWithStop[T any](
 	}
 	defer iter.Close()
 
-	values := []T{}
-	for ; iter.Valid(); iter.Next() {
-		if stopFn(iter.Key()) {
-			break
-		}
-		val, err := parseValue(iter.Value())
-		if err != nil {
-			return nil, err
-		}
-		values = append(values, val)
-	}
-	return values, nil
+	return gatherValuesFromIteratorWithStop(iter, parseValue, stopFn)
 }
 
 func GetFirstValueAfterPrefix[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
@@ -94,4 +84,49 @@ func MustSet(storeObj store.KVStore, key []byte, value proto.Message) {
 	}
 
 	storeObj.Set(key, bz)
+}
+
+func gatherValuesFromIteratorWithStop[T any](iterator db.Iterator, parseValue func([]byte) (T, error), stopFn func([]byte) bool) ([]T, error) {
+	values := []T{}
+	for ; iterator.Valid(); iterator.Next() {
+		if stopFn(iterator.Key()) {
+			break
+		}
+		val, err := parseValue(iterator.Value())
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, val)
+	}
+	return values, nil
+}
+
+func noStopFn([]byte) bool {
+	return false
+}
+
+// MustGet gets key from store by mutating result
+// Panics on any error.
+func MustGet(store store.KVStore, key []byte, result proto.Message) {
+	b := store.Get(key)
+	if b == nil {
+		panic(fmt.Errorf("getting at key (%v) should not have been nil", key))
+	}
+	if err := proto.Unmarshal(b, result); err != nil {
+		panic(err)
+	}
+}
+
+// MustSetDec sets dec value to store at key. Panics on any error.
+func MustSetDec(store store.KVStore, key []byte, value sdk.Dec) {
+	MustSet(store, key, &sdk.DecProto{
+		Dec: value,
+	})
+}
+
+// MustGetDec gets dec value from store at key. Panics on any error.
+func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
+	result := &sdk.DecProto{}
+	MustGet(store, key, result)
+	return result.Dec
 }

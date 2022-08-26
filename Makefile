@@ -76,9 +76,6 @@ ifeq (,$(findstring nostrip,$(OSMOSIS_BUILD_OPTIONS)))
   BUILD_FLAGS += -trimpath
 endif
 
-# The below include contains the tools target.
-include contrib/devtools/Makefile
-
 ###############################################################################
 ###                                  Build                                  ###
 ###############################################################################
@@ -95,16 +92,39 @@ $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
-build-reproducible: go.sum
-	$(DOCKER) rm latest-build || true
-	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
-	--env TARGET_PLATFORMS='linux/amd64' \
-	--env APP=osmosisd \
-	--env VERSION=$(VERSION) \
-	--env COMMIT=$(COMMIT) \
-	--env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-	--name latest-build osmolabs/rbuilder:latest
-	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
+# Cross-building for arm64 from amd64 (or viceversa) takes
+# a lot of time due to QEMU virtualization but it's the only way (afaik)
+# to get a statically linked binary with CosmWasm
+
+build-reproducible: build-reproducible-amd64 build-reproducible-arm64
+
+build-reproducible-amd64: go.sum $(BUILDDIR)/
+	$(DOCKER) buildx create --name osmobuilder || true
+	$(DOCKER) buildx use osmobuilder
+	$(DOCKER) buildx build \
+		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
+		--platform linux/arm64 \
+		-t osmosis-amd64 \
+		--load \
+		-f Dockerfile .
+	$(DOCKER) rm -f osmobinary || true
+	$(DOCKER) create -ti --name osmobinary osmosis-amd64
+	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
+	$(DOCKER) rm -f osmobinary
+
+build-reproducible-arm64: go.sum $(BUILDDIR)/
+	$(DOCKER) buildx create --name osmobuilder || true
+	$(DOCKER) buildx use osmobuilder
+	$(DOCKER) buildx build \
+		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
+		--platform linux/arm64 \
+		-t osmosis-arm64 \
+		--load \
+		-f Dockerfile .
+	$(DOCKER) rm -f osmobinary || true
+	$(DOCKER) create -ti --name osmobinary osmosis-arm64
+	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-arm64
+	$(DOCKER) rm -f osmobinary
 
 build-linux: go.sum
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
@@ -253,7 +273,7 @@ test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-mutation:
-	@bash scripts/mutation-test.sh
+	@bash scripts/mutation-test.sh $(MODULES)
 
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
