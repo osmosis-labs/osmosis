@@ -44,23 +44,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 }
 
-func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
-	// TODO: Add E2E tests for this
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	}
-	chainA := s.configurer.GetChainConfig(0)
-	chainB := s.configurer.GetChainConfig(1)
-
-	//node, err := chainA.GetDefaultNode()
-	//s.NoError(err)
-	// This doesn't work. Why?
-	//node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
-
-}
-
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	if s.skipUpgrade {
 		// TODO: https://github.com/osmosis-labs/osmosis/issues/1843
