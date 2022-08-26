@@ -44,6 +44,7 @@ type KeeperTestHelper struct {
 	Ctx         sdk.Context
 	QueryHelper *baseapp.QueryServiceTestHelper
 	TestAccs    []sdk.AccAddress
+	RawGenState map[string]json.RawMessage
 }
 
 var (
@@ -391,4 +392,13 @@ func GenerateTestAddrs() (string, string) {
 	validAddr := sdk.AccAddress(pk1.Address()).String()
 	invalidAddr := sdk.AccAddress("invalid").String()
 	return validAddr, invalidAddr
+}
+
+func (s *KeeperTestHelper) UpdateGenState() {
+	s.RawGenState = s.App.ExportRawState(s.Ctx)
+}
+
+func (s *KeeperTestHelper) AlterStateCheck() {
+	beforeGenState := s.App.ExportRawState(s.Ctx)
+	s.Equal(s.RawGenState, beforeGenState)
 }
