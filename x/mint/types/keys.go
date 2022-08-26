@@ -20,7 +20,7 @@ var (
 	// from the mint module account distributions.
 	TruncatedInflationDeltaKey = []byte{0x04}
 
-	// TruncatedDeveloperVestingDelta represents a key for the the delta of developer
+	// TruncatedDeveloperVestingDelta represents a key for the delta of developer
 	// vesting provisions that have not been distributed yet due to truncations.
 	// Truncations are stemming from the interfaces of the core modules such as
 	// x/bank and x/distribution that operate on integers. As a result, by
