@@ -239,8 +239,6 @@ func (s *TestSuite) TestAfterEpochEnd() {
 // The purpose of this test is to test whether we correctly store the state of the
 // pools that has changed with price impact.
 func (s *TestSuite) TestAfterSwap_JoinPool() {
-	two_asset_coins := defaultTwoAssetCoin
-	three_asset_coins := defaultThreeAssetCoins
 	tests := []struct {
 		name      string
 		poolCoins sdk.Coins
@@ -249,25 +247,25 @@ func (s *TestSuite) TestAfterSwap_JoinPool() {
 	}{
 		{
 			"swap triggers track changed pools",
-			two_asset_coins,
+			defaultTwoAssetCoin,
 			true,
 			false,
 		},
 		{
 			"join pool triggers track changed pools",
-			two_asset_coins,
+			defaultTwoAssetCoin,
 			false,
 			true,
 		},
 		{
 			"swap and join pool in same block triggers track changed pools",
-			two_asset_coins,
+			defaultTwoAssetCoin,
 			true,
 			true,
 		},
 		{
 			"three asset pool: swap and join pool in same block triggers track changed pools",
-			three_asset_coins,
+			defaultThreeAssetCoins,
 			true,
 			true,
 		},
