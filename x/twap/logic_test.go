@@ -14,6 +14,8 @@ import (
 var zeroDec = sdk.ZeroDec()
 var oneDec = sdk.OneDec()
 var twoDec = oneDec.Add(oneDec)
+
+// once second of duration when converted to decimal
 var OneSec = sdk.NewDec(1e9)
 
 func newRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
