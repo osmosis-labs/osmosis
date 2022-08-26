@@ -415,23 +415,20 @@ in the block returned by the ABCI's `DeliverTx`.
 
 The [`LastResultsHash`][3] today contains:
 
-- Tx `GasWanted`
+1. Tx `GasWanted`
 
-- Tx `GasUsed`
-
+2. Tx `GasUsed`
 `GasUsed` being merkelized means that we cannot freely reorder methods that consume gas.
 We should also be careful of modifying any validation logic since changing the
 locations where we error or pass might affect transaction gas usage.
 
 There are plans to remove this field from being Merkelized in a subsequent Tendermint release, at which point we will have more flexibility in reordering operations / erroring.
 
-- Tx response `Data`
-
+3. Tx response `Data`
 The `Data` field includes the proto message response. Therefore, we cannot
 change these in patch releases.
 
-- Tx response `Code`
-
+4. Tx response `Code`
 This is an error code that is returned by the transaction flow. In the case of
 success, it is `0`. On a general error, it is `1`. Additionally, each module
 defines its custom error codes. For example, `x/mint` currently has the
