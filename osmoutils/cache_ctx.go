@@ -29,6 +29,8 @@ func ApplyFuncIfNoError(ctx sdk.Context, f func(ctx sdk.Context) error) (err err
 	} else {
 		// no error, write the output of f
 		write()
+		// Temporary, should be removed once: https://github.com/cosmos/cosmos-sdk/issues/12912
+		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	}
 	return err
 }

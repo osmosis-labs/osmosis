@@ -42,13 +42,13 @@ func panicCatchingEpochHook(
 	epochIdentifier string,
 	epochNumber int64,
 ) {
-	defer func() {
-		if recovErr := recover(); recovErr != nil {
-			osmoutils.PrintPanicRecoveryError(ctx, recovErr)
-		}
-	}()
-	cacheCtx, write := ctx.CacheContext()
-	hookFn(cacheCtx, epochIdentifier, epochNumber)
-	write()
-	ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
+	wrappedHookFn := func(ctx sdk.Context) error {
+		hookFn(ctx, epochIdentifier, epochNumber)
+		return nil
+	}
+	// TODO: Thread info for which hook this is, may be dependent on larger hook system refactoring
+	err := osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn)
+	if err != nil {
+		ctx.Logger().Info("an epoch hook errored")
+	}
 }
