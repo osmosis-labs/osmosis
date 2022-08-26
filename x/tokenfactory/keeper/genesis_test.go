@@ -1,35 +1,14 @@
 package keeper_test
 
 import (
-	"testing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
 )
 
-type GenesisTestSuite struct {
-	apptesting.KeeperTestHelper
-}
-
-func (suite *GenesisTestSuite) SetupTest() {
-	suite.Setup()
-
-	// remove module account to ensure initGenesis initializes it on its own
-	moduleAddress := suite.App.AccountKeeper.GetModuleAddress(types.ModuleName)
-	tokenfactoryModuleAccount := suite.App.AccountKeeper.GetAccount(suite.Ctx, moduleAddress)
-	suite.App.AccountKeeper.RemoveAccount(suite.Ctx, tokenfactoryModuleAccount)
-}
-
-func TestGenesisTestSuite(t *testing.T) {
-	suite.Run(t, new(GenesisTestSuite))
-}
-
-func (suite *GenesisTestSuite) TestGenesis() {
+func (suite *KeeperTestSuite) TestGenesis() {
 	genesisState := types.GenesisState{
 		FactoryDenoms: []types.GenesisDenom{
 			{
@@ -52,6 +31,8 @@ func (suite *GenesisTestSuite) TestGenesis() {
 			},
 		},
 	}
+
+	suite.SetupGenesisTest()
 
 	app := suite.App
 	suite.Ctx = app.BaseApp.NewContext(false, tmproto.Header{})
