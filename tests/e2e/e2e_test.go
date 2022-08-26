@@ -92,15 +92,12 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 				Value:    []byte(fmt.Sprintf(`{"contract_address": "%s"}`, contracts[0])),
 			},
 		},
-		Deposit: fmt.Sprintf("%duosmo", config.MinExpeditedDepositValue*2),
+		Deposit: "625000000uosmo",
 	}
 	proposalJson, err := json.Marshal(proposal)
 	s.NoError(err)
 
 	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
-	//	node.SubmitParamChangeProposal(fmt.Sprintf(`{"title":"Param change","description":"Changing rate limit contract param",
-	//"changes":[{"subspace":"%s","key":"contract","value":{"contract_address":"%s"}}],
-	//"deposit":"%duosmo"}`, ibcratelimittypes.ModuleName, contracts[0], config.MinExpeditedDepositValue*2), initialization.ValidatorWalletName)
 	chainA.LatestProposalNumber += 1
 
 	for _, n := range chainA.NodeConfigs {
