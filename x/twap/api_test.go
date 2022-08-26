@@ -276,6 +276,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 	}
 
 	quoteAssetA := true
+	quoteAssetB := false
 
 	tests := map[string]struct {
 		recordsToSet []types.TwapRecord
@@ -290,6 +291,12 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			input:        makeSimpleTwapToNowInput(baseTime, quoteAssetA),
 			expTwap:      sdk.NewDec(10),
 		},
+		"(1 record) start time = record time, use sp1": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTime.Add(time.Minute),
+			input:        makeSimpleTwapToNowInput(baseTime, quoteAssetB),
+			expTwap:      sdk.NewDecWithPrec(1, 1),
+		},
 		"(1 record) to_now: start time > record time": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime.Add(time.Minute),
@@ -301,6 +308,12 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			ctxTime:      baseTime.Add(time.Minute),
 			input:        makeSimpleTwapToNowInput(baseTime.Add(10*time.Second), quoteAssetA),
 			expTwap:      sdk.NewDec(5), // .1 for 10s, .2 for 10s
+		},
+		"(2 record) to now: start time = second record time, use sp1": {
+			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
+			ctxTime:      baseTime.Add(time.Minute),
+			input:        makeSimpleTwapToNowInput(baseTime.Add(10*time.Second), quoteAssetB),
+			expTwap:      sdk.NewDecWithPrec(2, 1),
 		},
 		"(2 record) first record time < start time < second record time": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
