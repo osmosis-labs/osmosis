@@ -75,7 +75,10 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	chainA.LatestCodeId += 1
-	node.InstantiateWasmContract(strconv.Itoa(chainA.LatestCodeId), fmt.Sprintf("{\"gov_module\": \"%s\", \"ibc_module\": \"osmo1g7ajkk295vactngp74shkfrprvjrdwn662dg26\", \"paths\": [{\"channel_id\": \"channel-0\", \"denom\": \"%s\", \"quotas\": [{\"name\":\"testQuota\", \"duration\": 86400, \"send_recv\": [1, 1]}] } ] }", chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken.Denom), initialization.ValidatorWalletName)
+	node.InstantiateWasmContract(
+		strconv.Itoa(chainA.LatestCodeId),
+		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
+		initialization.ValidatorWalletName)
 
 	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
 	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
@@ -92,15 +95,12 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 				Value:    []byte(fmt.Sprintf(`{"contract_address": "%s"}`, contracts[0])),
 			},
 		},
-		Deposit: fmt.Sprintf("%duosmo", config.MinExpeditedDepositValue*2),
+		Deposit: "625000000uosmo",
 	}
 	proposalJson, err := json.Marshal(proposal)
 	s.NoError(err)
 
 	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
-	//	node.SubmitParamChangeProposal(fmt.Sprintf(`{"title":"Param change","description":"Changing rate limit contract param",
-	//"changes":[{"subspace":"%s","key":"contract","value":{"contract_address":"%s"}}],
-	//"deposit":"%duosmo"}`, ibcratelimittypes.ModuleName, contracts[0], config.MinExpeditedDepositValue*2), initialization.ValidatorWalletName)
 	chainA.LatestProposalNumber += 1
 
 	for _, n := range chainA.NodeConfigs {
@@ -138,6 +138,9 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
 	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
+
+	// Removing the rate limit so it doesn't affect other tests
+	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 
 }
 
