@@ -4,7 +4,10 @@
 package e2e
 
 import (
+	"encoding/json"
 	"fmt"
+	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -54,27 +57,21 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
-	s.T().Log("NODE NODE NODE!!!", node.Name)
 
 	supply, err := node.QueryTotalSupply()
 	s.NoError(err)
 	osmoSupply := supply.AmountOf("uosmo")
-	s.T().Log("CHAIN-A supply:", osmoSupply)
 
-	balance, err := node.QueryBalances(chainA.NodeConfigs[1].PublicAddress)
+	//balance, err := node.QueryBalances(chainA.NodeConfigs[1].PublicAddress)
+	//s.NoError(err)
+
+	f, err := osmoSupply.ToDec().Float64()
 	s.NoError(err)
 
-	s.T().Log("CHAIN-A Node1:", chainA.NodeConfigs[1].PublicAddress)
-	s.T().Log("CHAIN-A Node1 balance:", balance)
-	//node.BankSend("100uosmo", chainA.NodeConfigs[1].PublicAddress, chainA.NodeConfigs[0].PublicAddress)
-
-	//f, err := osmoSupply.ToDec().Float64()
-	s.NoError(err)
-
-	//over := f * 0.11
+	over := f * 0.02
 
 	// Sending >1%
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, initialization.OsmoBalanceA*0.011))
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	chainA.LatestCodeId += 1
@@ -82,41 +79,65 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	// Using code_id 1 because this is the only contract right now. This may need to change if more contracts are added
 	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
-	s.T().Log(contracts)
+	s.NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
 
-	node.SubmitParamChangeProposal(fmt.Sprintf(`{"title":"Param change","description":"Changing rate limit contract param",
-"changes":[{"subspace":"rate-limited-ibc","key":"contract","value":{"contract_address":"%s"}}],
-"deposit":"%duosmo"}`, contracts[0], config.MinExpeditedDepositValue*2), initialization.ValidatorWalletName)
+	proposal := paramsutils.ParamChangeProposalJSON{
+		Title:       "Param Change",
+		Description: "Changing the rate limit contract param",
+		Changes: paramsutils.ParamChangesJSON{
+			paramsutils.ParamChangeJSON{
+				Subspace: ibcratelimittypes.ModuleName,
+				Key:      "contract",
+				Value:    []byte(fmt.Sprintf(`{"contract_address": "%s"}`, contracts[0])),
+			},
+		},
+		Deposit: fmt.Sprintf("%duosmo", config.MinExpeditedDepositValue*2),
+	}
+	proposalJson, err := json.Marshal(proposal)
+	s.NoError(err)
+
+	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
+	//	node.SubmitParamChangeProposal(fmt.Sprintf(`{"title":"Param change","description":"Changing rate limit contract param",
+	//"changes":[{"subspace":"%s","key":"contract","value":{"contract_address":"%s"}}],
+	//"deposit":"%duosmo"}`, ibcratelimittypes.ModuleName, contracts[0], config.MinExpeditedDepositValue*2), initialization.ValidatorWalletName)
 	chainA.LatestProposalNumber += 1
 
 	for _, n := range chainA.NodeConfigs {
 		n.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
 	}
+
+	// The value is returned as a string, so we have to unmarshal twice
+	type Params struct {
+		Key      string `json:"key"`
+		Subspace string `json:"subspace"`
+		Value    string `json:"value"`
+	}
+
+	type Value struct {
+		ContractAddress string `json:"contract_address"`
+	}
+
 	s.Eventually(
 		func() bool {
-			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := node.QueryPropTally(chainA.LatestProposalNumber)
+			var params Params
+			node.QueryParams(ibcratelimittypes.ModuleName, "contract", &params)
+			var val Value
+			err := json.Unmarshal([]byte(params.Value), &val)
 			if err != nil {
 				return false
 			}
-			if abstainTotal.Int64()+noTotal.Int64()+noWithVetoTotal.Int64()+yesTotal.Int64() <= 0 {
-				return false
-			}
-			return true
+			return val.ContractAddress != ""
 		},
 		1*time.Minute,
 		10*time.Millisecond,
-		"Osmosis node failed to retrieve prop tally",
+		"Osmosis node failed to retrieve params",
 	)
 
 	// Sending <1%. Should work
-	//chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, 1))
 	// Sending >1%. Should fail
-	time.Sleep(60000000000 * 4) // 5mins
-	node.FailIBCTransfer("val", chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(1)))
-	node.FailIBCTransfer("val", chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(1)))
-	node.FailIBCTransfer("val", chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(1)))
-
-	node.FailIBCTransfer("val", chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(1)))
+	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
 
 }
 

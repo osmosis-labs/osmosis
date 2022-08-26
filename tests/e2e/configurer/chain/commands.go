@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
@@ -40,6 +41,18 @@ func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
 	n.LogActionF("successfully initialized")
 }
 
+// QueryParams extracts the params for a given subspace and key. This is done generically via json to avoid having to
+// specify the QueryParamResponse type (which may not exist for all params).
+func (n *NodeConfig) QueryParams(subspace, key string, result any) {
+	cmd := []string{"osmosisd", "query", "params", "subspace", subspace, key, "--output=json"}
+
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+
+	err = json.Unmarshal(out.Bytes(), &result)
+	require.NoError(n.t, err)
+}
+
 func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
 	n.LogActionF("submitting param change proposal %s", proposalJson)
 	// ToDo: Is there a better way to do this?
@@ -71,8 +84,8 @@ func (n *NodeConfig) FailIBCTransfer(from, recepient, amount string) {
 	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recepient, amount, fmt.Sprintf("--from=%s", from)}
 	n.LogActionF("executing", cmd)
 
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err) // this should actually error out
+	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "rate limit exceeded")
+	require.NoError(n.t, err)
 
 	n.LogActionF("Failed to send IBC transfer (as expected)")
 }
