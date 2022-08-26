@@ -51,7 +51,6 @@ func NewICS4Middleware(
 // If the contract param is not configured, or the contract doesn't have a configuration for the (channel+denom) being
 // used, transfers are not prevented and handled by the wrapped IBC app
 func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
-	ctx.Logger().Error("DBUG::SEND PACKET!!")
 	var params types.Params
 	i.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
 	if params.ContractAddress == "" {
@@ -60,7 +59,6 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 	}
 
 	amount, denom, err := GetFundsFromPacket(packet)
-	ctx.Logger().Error("DBUG::FUNDS!!", amount, denom)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Rate limited SendPacket")
 	}
@@ -78,8 +76,6 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 	if err != nil {
 		return sdkerrors.Wrap(err, "Rate limited SendPacket")
 	}
-
-	ctx.Logger().Error("DBUG::Sending packet to the channel!!")
 
 	return i.channel.SendPacket(ctx, chanCap, packet)
 }
