@@ -377,7 +377,7 @@ The state-machine scope includes the following areas:
 
 - All `BeginBlock`/`EndBlock` logic
 
-The following are **NOT* in the state-machine scope:
+The following are **NOT** in the state-machine scope:
 
 - Events
 
@@ -388,17 +388,18 @@ The following are **NOT* in the state-machine scope:
 #### Validating State-Compatibility 
 
 Tendermint ensures state compatibility by validating a number
-of hashes that can be found here:
-https://github.com/tendermint/tendermint/blob/9f76e8da150414ce73eed2c4f248947b657c7587/proto/tendermint/types/types.proto#L70-L77
+of hashes that can be found [here][2].
 
-Among the hashes that are commonly affected by our work and cause
-problems are the `AppHash` and `LastResultsHash`. To avoid these problems, let's now examine how these hashes work.
+`AppHash` and `LastResultsHash` are the common sources of problems stemmnig from our work.
+To avoid these problems, let's now examine how these hashes work.
 
 ##### App Hash
 
-Cosmos-SDK takes an app hash of the state, and propagates it to Tendermint which,
-in turn, compares it to the app hash of the rest of the network.
 An app hash is a hash of hashes of every store's Merkle root.
+
+Cosmos-SDK takes an app hash of the application state, and propagates
+it to Tendermint which, in turn, compares it to the app hash of the
+rest of the network.
 
 For example, at height n, we compute:
 `app hash = hash(hash(root of x/epochs), hash(root of  x/gamm)...)`
@@ -407,6 +408,9 @@ Then, Tendermint ensures that the app hash of the local node matches the app has
 of the network. Please note that the explanation and examples are simplified.
 
 ##### LastResultsHash
+
+`LastResultsHash` is the root hash of all results from the transactions
+in the block returned by the ABCI's `DeliverTx`.
 
 The `LastResultsHash` today contains:
 https://github.com/tendermint/tendermint/blob/main/types/results.go#L47-L54
@@ -578,3 +582,4 @@ We communicate with various integrators if they'd like release-blocking QA testi
     * Chainapsis has communicated wanting a series of osmosis-frontend functionalities to be checked for correctness on a testnet as a release blocking item
 
 [1]:https://github.com/cosmos/cosmos-sdk/blob/d11196aad04e57812dbc5ac6248d35375e6603af/baseapp/abci.go#L293-L303
+[2]https://github.com/tendermint/tendermint/blob/9f76e8da150414ce73eed2c4f248947b657c7587/proto/tendermint/types/types.proto#L70-L77
