@@ -19,6 +19,7 @@ var (
 	defaultUniV2Coins = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
 	baseTime          = time.Unix(1257894000, 0).UTC()
 	tPlusOne          = baseTime.Add(time.Second)
+	tPlusOneMin       = baseTime.Add(time.Minute)
 )
 
 type TestSuite struct {
