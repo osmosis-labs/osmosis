@@ -307,7 +307,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      baseTime.Add(time.Minute),
 			input:        makeSimpleTwapToNowInput(baseTime.Add(10*time.Second), quoteAssetA),
-			expTwap:      sdk.NewDec(5), // .1 for 10s, .2 for 10s
+			expTwap:      sdk.NewDec(5), // 10 for 0s, 5 for 10s
 		},
 		"(2 record) to now: start time = second record time, use sp1": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
