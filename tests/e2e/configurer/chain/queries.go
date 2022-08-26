@@ -62,8 +62,7 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 }
 
 func (n *NodeConfig) QueryTotalSupply() (sdk.Coins, error) {
-	path := fmt.Sprintf("cosmos/bank/v1beta1/supply")
-	bz, err := n.QueryGRPCGateway(path)
+	bz, err := n.QueryGRPCGateway("cosmos/bank/v1beta1/supply")
 	require.NoError(n.t, err)
 
 	var supplyResp banktypes.QueryTotalSupplyResponse

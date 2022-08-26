@@ -67,7 +67,6 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
 	require.NoError(n.t, err)
 
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "param-change", "/osmosis/param_change_proposal.json", "--is-expedited=true", fmt.Sprintf("--from=%s", from)}
-	n.LogActionF("executing", cmd)
 
 	_, _, err = n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
@@ -78,11 +77,10 @@ func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
 	n.LogActionF("successfully submitted param change proposal")
 }
 
-func (n *NodeConfig) FailIBCTransfer(from, recepient, amount string) {
-	n.LogActionF("IBC sending %s from %s to %s", amount, from, recepient)
+func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
+	n.LogActionF("IBC sending %s from %s to %s", amount, from, recipient)
 
-	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recepient, amount, fmt.Sprintf("--from=%s", from)}
-	n.LogActionF("executing", cmd)
+	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from)}
 
 	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "rate limit exceeded")
 	require.NoError(n.t, err)
