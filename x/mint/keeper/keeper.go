@@ -410,6 +410,8 @@ func (k Keeper) handleTruncationDelta(ctx sdk.Context, moduleAccountName string,
 		return sdk.Int{}, err
 	}
 
+	// This is a sanity check to ensure that truncation delta does not
+	// exceed the 64 bit ineger maximum.
 	if truncationDeltaToDistribute.IsInt64() {
 		defer telemetry.ModuleSetGauge(types.ModuleName, float32(truncationDeltaToDistribute.Int64()), fmt.Sprintf("mint_truncation_distributed_%s_delta", moduleAccountName))
 	}
