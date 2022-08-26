@@ -87,7 +87,7 @@ func (i *ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabili
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
 func (i *ICS4Middleware) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
-	supply := i.BankKeeper.GetSupply(ctx, denom)
+	supply := i.BankKeeper.GetSupplyWithOffset(ctx, denom)
 	return supply.Amount
 	//locked := i.LockupKeeper.GetModuleLockedCoins(ctx)
 	//return supply.Amount.Add(locked.AmountOf(denom))
