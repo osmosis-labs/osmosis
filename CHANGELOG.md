@@ -40,6 +40,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+#### Bug Fixes
+
+* [#2515](https://github.com/osmosis-labs/osmosis/pull/2515) Fix event emissions from epoch hooks. (Shoutout to @puneet2019 from persistence for the fix)
+
 ## v10.2.0
 
 In v10.1.0 a refactor did changed the ordering of certain function calls in a message execution.
