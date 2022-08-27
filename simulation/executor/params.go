@@ -38,8 +38,8 @@ var (
 	// rand in range [0, 2 * provided blocksize], 0
 	defaultBlockSizeTransitionMatrix, _ = markov.CreateTransitionMatrix([][]int{
 		{85, 5, 0},
-		{15, 92, 1},
-		{0, 3, 99},
+		{15, 92, 40},
+		{0, 3, 60},
 	})
 )
 

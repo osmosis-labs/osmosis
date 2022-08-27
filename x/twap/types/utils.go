@@ -49,6 +49,8 @@ func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
 	return pairGT, pairLT
 }
 
+// SpotPriceTimesDuration multiplies the spot price with the given delta time.
+// A single second accounts for 1_000_000_000 when converted to int64.
 func SpotPriceTimesDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
 	return sp.MulInt64(int64(timeDelta))
 }

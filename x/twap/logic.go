@@ -8,9 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
-// TODO: configure recordHistoryKeepPeriod via parameter.
-const recordHistoryKeepPeriod = 48 * time.Hour
-
 func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	denom0, denom1, err := types.LexicographicalOrderDenoms(denom0, denom1)
 	if err != nil {
@@ -96,6 +93,8 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 // pruneRecords prunes twap records that happened earlier than recordHistoryKeepPeriod
 // before current block time.
 func (k Keeper) pruneRecords(ctx sdk.Context) error {
+	recordHistoryKeepPeriod := k.RecordHistoryKeepPeriod(ctx)
+
 	lastKeptTime := ctx.BlockTime().Add(-recordHistoryKeepPeriod)
 	return k.pruneRecordsBeforeTime(ctx, lastKeptTime)
 }
@@ -105,6 +104,7 @@ func (k Keeper) pruneRecords(ctx sdk.Context) error {
 //
 // pre-condition: newTime >= record.Time
 func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
+	// return the given record: no need to calculate and update the accumulator if record time matches.
 	if record.Time.Equal(newTime) {
 		return record
 	}
