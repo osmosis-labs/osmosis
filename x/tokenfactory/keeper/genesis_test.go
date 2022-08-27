@@ -34,6 +34,7 @@ func (suite *KeeperTestSuite) TestGenesis() {
 
 	app := suite.App
 	suite.Ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+
 	// Test both with bank denom metadata set, and not set.
 	for i, denom := range genesisState.FactoryDenoms {
 		// hacky, sets bank metadata to exist if i != 0, to cover both cases.
@@ -41,6 +42,9 @@ func (suite *KeeperTestSuite) TestGenesis() {
 			app.BankKeeper.SetDenomMetaData(suite.Ctx, banktypes.Metadata{Base: denom.GetDenom()})
 		}
 	}
+
+	suite.SetupTestForInitGenesis()
+
 	// check before initGenesis that the module account is nil
 	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
 	suite.Require().Nil(tokenfactoryModuleAccount)

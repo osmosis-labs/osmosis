@@ -31,7 +31,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v11/app"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
@@ -63,15 +62,17 @@ func (s *KeeperTestHelper) Setup() {
 
 	s.SetEpochStartTime()
 	s.TestAccs = CreateRandomAccounts(3)
-	s.SetupGenesisTest()
 }
 
-func (s *KeeperTestHelper) SetupGenesisTest() {
-	accountKeeper := s.App.AccountKeeper
+func (s *KeeperTestHelper) SetupTestForInitGenesis() {
+	s.App = app.Setup(true)
+	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	// remove module account to ensure initGenesis initializes it on its own
+	// accountKeeper := s.App.AccountKeeper
 
-	moduleAddress := accountKeeper.GetModuleAddress(types.ModuleName)
-	tokenFactoryModuleAccount := accountKeeper.GetAccount(s.Ctx, moduleAddress)
-	accountKeeper.RemoveAccount(s.Ctx, tokenFactoryModuleAccount)
+	// moduleAddress := accountKeeper.GetModuleAddress(types.ModuleName)
+	// tokenFactoryModuleAccount := accountKeeper.GetAccount(s.Ctx, moduleAddress)
+	// accountKeeper.RemoveAccount(s.Ctx, tokenFactoryModuleAccount)
 }
 
 func (s *KeeperTestHelper) SetEpochStartTime() {
