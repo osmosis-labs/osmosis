@@ -395,7 +395,10 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 
 			osmoassert.ConditionalPanic(suite.T(), tc.expectedPanic, func() {
 				// System under test.
-				mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum)
+				err := mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum)
+				if err != nil {
+					panic(err)
+				}
 			})
 
 			// If panics, the behavior is undefined.
