@@ -23,7 +23,7 @@ func (k Keeper) setTotalLiquidity(ctx sdk.Context, coins sdk.Coins) {
 }
 
 func (k Keeper) setDenomLiquidity(ctx sdk.Context, denom string, amount sdk.Int) {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	bz, err := amount.Marshal()
 	if err != nil {
 		panic(err)
@@ -32,7 +32,7 @@ func (k Keeper) setDenomLiquidity(ctx sdk.Context, denom string, amount sdk.Int)
 }
 
 func (k Keeper) GetDenomLiquidity(ctx sdk.Context, denom string) sdk.Int {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	bz := store.Get(types.GetDenomPrefix(denom))
 	if bz == nil {
 		return sdk.NewInt(0)
@@ -46,7 +46,7 @@ func (k Keeper) GetDenomLiquidity(ctx sdk.Context, denom string) sdk.Int {
 }
 
 func (k Keeper) IterateDenomLiquidity(ctx sdk.Context, cb func(sdk.Coin) bool) {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	prefixStore := prefix.NewStore(store, types.KeyTotalLiquidity)
 
 	iterator := prefixStore.Iterator(nil, nil)

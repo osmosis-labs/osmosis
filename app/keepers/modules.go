@@ -29,7 +29,7 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v12/x/epochs"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/gammmodule"
 	"github.com/osmosis-labs/osmosis/v12/x/incentives"
 	"github.com/osmosis-labs/osmosis/v12/x/lockup"
 	"github.com/osmosis-labs/osmosis/v12/x/mint"
@@ -75,7 +75,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	evidence.AppModuleBasic{},
 	transfer.AppModuleBasic{},
 	vesting.AppModuleBasic{},
-	gamm.AppModuleBasic{},
+	gammmodule.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
 	txfees.AppModuleBasic{},
 	incentives.AppModuleBasic{},

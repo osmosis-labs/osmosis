@@ -37,6 +37,7 @@ func parseTemplates() error {
 	if err != nil {
 		return err
 	}
+
 	grpcTemplate = *grpcTemplatePtr
 	return nil
 }
@@ -75,7 +76,6 @@ func codegenQueryYml(filepath string) error {
 
 func codegenGrpcPackage(queryYml templates.QueryYml) error {
 	grpcTemplateData := templates.GrpcTemplateFromQueryYml(queryYml)
-
 	// create directory
 	fsClientPath := templates.ParseFilePathFromImportPath(grpcTemplateData.ClientPath)
 	if err := os.MkdirAll(fsClientPath+"/grpc", os.ModePerm); err != nil {

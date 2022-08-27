@@ -14,7 +14,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	queryproto "github.com/osmosis-labs/osmosis/v12/x/gamm/client/queryproto"
 	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
@@ -69,13 +69,13 @@ func init() {
 	setWhitelistedQuery("/osmosis.epochs.v1beta1.Query/CurrentEpoch", &epochtypes.QueryCurrentEpochResponse{})
 
 	// gamm
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/NumPools", &gammtypes.QueryNumPoolsResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalLiquidity", &gammtypes.QueryTotalLiquidityResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/Pool", &gammtypes.QueryPoolResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/PoolParams", &gammtypes.QueryPoolParamsResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", &gammtypes.QueryTotalPoolLiquidityResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalShares", &gammtypes.QueryTotalSharesResponse{})
-	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/SpotPrice", &gammtypes.QuerySpotPriceResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/NumPools", &queryproto.QueryNumPoolsResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalLiquidity", &queryproto.QueryTotalLiquidityResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/Pool", &queryproto.QueryPoolResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/PoolParams", &queryproto.QueryPoolParamsResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", &queryproto.QueryTotalPoolLiquidityResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/TotalShares", &queryproto.QueryTotalSharesResponse{})
+	setWhitelistedQuery("/osmosis.gamm.v1beta1.Query/SpotPrice", &queryproto.QuerySpotPriceResponse{})
 
 	// incentives
 	setWhitelistedQuery("/osmosis.incentives.Query/ModuleToDistributeCoins", &incentivestypes.ModuleToDistributeCoinsResponse{})

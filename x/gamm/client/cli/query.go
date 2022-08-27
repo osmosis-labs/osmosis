@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -61,13 +62,13 @@ $ %s query gamm pool 1
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 			poolID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.Pool(cmd.Context(), &types.QueryPoolRequest{
+			res, err := queryClient.Pool(cmd.Context(), &queryproto.QueryPoolRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {
@@ -124,14 +125,14 @@ $ %s query gamm pools
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.Pools(cmd.Context(), &types.QueryPoolsRequest{
+			res, err := queryClient.Pools(cmd.Context(), &queryproto.QueryPoolsRequest{
 				Pagination: pageReq,
 			})
 			if err != nil {
@@ -167,9 +168,9 @@ $ %s query gamm num-pools
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 
-			res, err := queryClient.NumPools(cmd.Context(), &types.QueryNumPoolsRequest{})
+			res, err := queryClient.NumPools(cmd.Context(), &queryproto.QueryNumPoolsRequest{})
 			if err != nil {
 				return err
 			}
@@ -202,14 +203,14 @@ $ %s query gamm pool-params 1
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 
 			poolID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.PoolParams(cmd.Context(), &types.QueryPoolParamsRequest{
+			res, err := queryClient.PoolParams(cmd.Context(), &queryproto.QueryPoolParamsRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {
@@ -262,14 +263,14 @@ $ %s query gamm total-pool-liquidity 1
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 
 			poolID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.TotalPoolLiquidity(cmd.Context(), &types.QueryTotalPoolLiquidityRequest{
+			res, err := queryClient.TotalPoolLiquidity(cmd.Context(), &queryproto.QueryTotalPoolLiquidityRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {
@@ -304,14 +305,14 @@ $ %s query gamm total-share 1
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 
 			poolID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.TotalShares(cmd.Context(), &types.QueryTotalSharesRequest{
+			res, err := queryClient.TotalShares(cmd.Context(), &queryproto.QueryTotalSharesRequest{
 				PoolId: uint64(poolID),
 			})
 			if err != nil {
@@ -346,9 +347,9 @@ $ %s query gamm total-liquidity
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 
-			res, err := queryClient.TotalLiquidity(cmd.Context(), &types.QueryTotalLiquidityRequest{})
+			res, err := queryClient.TotalLiquidity(cmd.Context(), &queryproto.QueryTotalLiquidityRequest{})
 			if err != nil {
 				return err
 			}
@@ -374,14 +375,14 @@ func GetCmdSpotPrice() *cobra.Command {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 
 			poolID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
-			res, err := queryClient.SpotPrice(cmd.Context(), &types.QuerySpotPriceRequest{
+			res, err := queryClient.SpotPrice(cmd.Context(), &queryproto.QuerySpotPriceRequest{
 				PoolId:          uint64(poolID),
 				BaseAssetDenom:  args[1],
 				QuoteAssetDenom: args[2],
@@ -417,7 +418,7 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 
 			poolID, err := strconv.Atoi(args[0])
 			if err != nil {
@@ -429,7 +430,7 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 				return err
 			}
 
-			res, err := queryClient.EstimateSwapExactAmountIn(cmd.Context(), &types.QuerySwapExactAmountInRequest{
+			res, err := queryClient.EstimateSwapExactAmountIn(cmd.Context(), &queryproto.QuerySwapExactAmountInRequest{
 				Sender:  args[1],        // TODO: where sender is used?
 				PoolId:  uint64(poolID), // TODO: is this poolId used?
 				TokenIn: args[2],
@@ -470,7 +471,7 @@ $ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz8
 			if err != nil {
 				return err
 			}
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := queryproto.NewQueryClient(clientCtx)
 
 			poolID, err := strconv.Atoi(args[0])
 			if err != nil {
@@ -482,7 +483,7 @@ $ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz8
 				return err
 			}
 
-			res, err := queryClient.EstimateSwapExactAmountOut(cmd.Context(), &types.QuerySwapExactAmountOutRequest{
+			res, err := queryClient.EstimateSwapExactAmountOut(cmd.Context(), &queryproto.QuerySwapExactAmountOutRequest{
 				Sender:   args[1],        // TODO: where sender is used?
 				PoolId:   uint64(poolID), // TODO: is this poolId used?
 				Routes:   routes,

@@ -8,14 +8,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	v10 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 const (
@@ -427,7 +427,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
-	queryClient types.QueryClient
+	queryClient queryproto.QueryClient
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -436,7 +436,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+	suite.queryClient = queryproto.NewQueryClient(suite.QueryHelper)
 	// be post-bug
 	suite.Ctx = suite.Ctx.WithBlockHeight(v10.ForkHeight)
 }

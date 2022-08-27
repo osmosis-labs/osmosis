@@ -7,7 +7,7 @@ liquidity pools on the Osmosis DEX.
  - GAMM pool queries
 */
 
-package gamm
+package gammmodule
 
 import (
 	"context"
@@ -24,9 +24,11 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
+	gammclient "github.com/osmosis-labs/osmosis/v12/x/gamm/client"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/grpc"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	simulation "github.com/osmosis-labs/osmosis/v12/x/gamm/simulation"
@@ -73,7 +75,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -103,7 +105,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(&am.keeper))
 	balancer.RegisterMsgServer(cfg.MsgServer(), keeper.NewBalancerMsgServerImpl(&am.keeper))
 	// stableswap.RegisterMsgServer(cfg.MsgServer(), keeper.NewStableswapMsgServerImpl(&am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: gammclient.Querier{Keeper: am.keeper}})
 }
 
 func NewAppModule(cdc codec.Codec, keeper keeper.Keeper,

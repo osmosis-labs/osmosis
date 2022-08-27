@@ -12,7 +12,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/cli"
 	gammtestutil "github.com/osmosis-labs/osmosis/v12/x/gamm/client/testutil"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/queryproto"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -39,10 +40,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// modification to pay fee with test bond denom "stake"
 	genesisState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
-	gammGen := gammtypes.DefaultGenesis()
+	gammGen := types.DefaultGenesis()
 	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1000000)}
 	gammGenJson := s.cfg.Codec.MustMarshalJSON(gammGen)
-	genesisState[gammtypes.ModuleName] = gammGenJson
+	genesisState[types.ModuleName] = gammGenJson
 	s.cfg.GenesisState = genesisState
 
 	s.network = network.New(s.T(), s.cfg)
@@ -792,7 +793,7 @@ func (s *IntegrationTestSuite) TestGetCmdPools() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QueryPoolsResponse{}
+				resp := queryproto.QueryPoolsResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
@@ -830,7 +831,7 @@ func (s *IntegrationTestSuite) TestGetCmdNumPools() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QueryNumPoolsResponse{}
+				resp := queryproto.QueryNumPoolsResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 
@@ -871,7 +872,7 @@ func (s *IntegrationTestSuite) TestGetCmdPool() {
 			} else {
 				s.Require().NoError(err, out.String())
 
-				resp := types.QueryPoolResponse{}
+				resp := queryproto.QueryPoolResponse{}
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
 		})
@@ -907,7 +908,7 @@ func (s *IntegrationTestSuite) TestGetCmdTotalShares() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QueryTotalSharesResponse{}
+				resp := queryproto.QueryTotalSharesResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
@@ -943,7 +944,7 @@ func (s *IntegrationTestSuite) TestGetCmdTotalLiquidity() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QueryTotalLiquidityResponse{}
+				resp := queryproto.QueryTotalLiquidityResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}
@@ -980,7 +981,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				resp := types.QuerySpotPriceResponse{}
+				resp := queryproto.QuerySpotPriceResponse{}
 				s.Require().NoError(err, out.String())
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 			}

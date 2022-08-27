@@ -22,7 +22,7 @@ func permContains(perms []string, perm string) bool {
 }
 
 type Keeper struct {
-	storeKey sdk.StoreKey
+	StoreKey sdk.StoreKey
 	cdc      codec.BinaryCodec
 
 	paramSpace paramtypes.Subspace
@@ -50,7 +50,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 	return Keeper{
-		storeKey:   storeKey,
+		StoreKey:   storeKey,
 		cdc:        cdc,
 		paramSpace: paramSpace,
 		// keepers

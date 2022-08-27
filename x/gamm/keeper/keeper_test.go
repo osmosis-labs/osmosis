@@ -8,15 +8,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 type KeeperTestSuite struct {
 	apptesting.KeeperTestHelper
 
-	queryClient types.QueryClient
+	queryClient queryproto.QueryClient
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -26,7 +26,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+	suite.queryClient = queryproto.NewQueryClient(suite.QueryHelper)
 }
 
 func (suite *KeeperTestSuite) prepareCustomBalancerPool(

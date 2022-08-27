@@ -26,7 +26,7 @@ func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
 // to returning the pool, the weights of the pool are updated via PokePool.
 // TODO: Consider rename to GetPool due to downstream API confusion.
 func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
 		return nil, fmt.Errorf("pool with ID %d does not exist", poolId)
@@ -58,7 +58,7 @@ func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, err
 }
 
 func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	return sdk.KVStorePrefixIterator(store, prefix)
 }
 
@@ -87,7 +87,7 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 		return err
 	}
 
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	poolKey := types.GetKeyPrefixPools(pool.GetId())
 	store.Set(poolKey, bz)
 
@@ -95,7 +95,7 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 }
 
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
 		return fmt.Errorf("pool with ID %d does not exist", poolId)
@@ -211,7 +211,7 @@ func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) 
 
 // setNextPoolId sets next pool Id.
 func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: poolId})
 	store.Set(types.KeyNextGlobalPoolId, bz)
 }
@@ -219,7 +219,7 @@ func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
 // GetNextPoolId returns the next pool Id.
 func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	var nextPoolId uint64
-	store := ctx.KVStore(k.storeKey)
+	store := ctx.KVStore(k.StoreKey)
 
 	bz := store.Get(types.KeyNextGlobalPoolId)
 	if bz == nil {

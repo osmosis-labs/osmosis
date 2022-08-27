@@ -1,0 +1,86 @@
+keeper:
+  path: "github.com/osmosis-labs/osmosis/v11/x/gamm"
+  struct: "Keeper"
+client_path: "github.com/osmosis-labs/osmosis/v11/x/gamm/client"
+queries:
+  Pool:
+    proto_wrapper:
+      default_values:
+        Req.poolId: "1"
+      query_func_name: "Pool" 
+      query_req_rep_name: "QueryPool"
+    cli:
+      cmd: "pool"
+  
+  Pools:
+    proto_wrapper:
+      query_func_name: "Pools"
+      query_req_rep_name: "QueryPools"
+    cli:
+      cmd: "pools"
+
+  NumPools:
+    proto_wrapper:
+      query_func_name: "NumPools"
+      query_req_rep_name: "QueryNumPools"
+    cli:
+      cmd: "num-pools"
+
+  PoolParams:
+    proto_wrapper:
+      default_values:
+        Req.poolId: "1"
+      query_func_name: "PoolParams"
+      query_req_rep_name: "QueryPoolParams"
+    cli:
+      cmd: "pool-params"
+
+  TotalPoolLiquidity:
+    proto_wrapper:
+      default_values:
+        Req.poolId: "1"
+      query_func_name: "TotalPoolLiquidity"
+      query_req_rep_name: "QueryTotalPoolLiquidity"
+    cli:
+      cmd: "total-pool-liquidity"
+
+  TotalShares:
+    proto_wrapper:
+      default_values:
+        Req.poolId: "1"
+      query_func_name: "TotalShares"
+      query_req_rep_name: "QueryTotalShares"
+    cli:
+      cmd: "total-share"
+
+  SpotPrice:
+    proto_wrapper:
+      default_values:
+        Req.poolId: "1"
+        BaseAssetDenom: "uatom"
+        QuoteAssetDenom: "uosmo"
+      query_func_name: "SpotPrice"
+      query_req_rep_name: "QuerySpotPrice"  
+    cli:
+      cmd: "spot-price"
+
+  TotalLiquidity:
+    proto_wrapper:
+      query_func_name: "TotalLiquidity"
+      query_req_rep_name: "QueryTotalLiquidity"  
+    cli:
+      cmd: "total-liquidity"
+
+  EstimateSwapExactAmountIn:
+    proto_wrapper:
+      query_func_name: "EstimateSwapExactAmountIn"
+      query_req_rep_name: "QuerySwapExactAmountIn"  
+    cli:
+      cmd: "estimate-swap-exact-amount-in"
+
+  EstimateSwapExactAmountOut:
+    proto_wrapper:
+      query_func_name: "EstimateSwapExactAmountOut"
+      query_req_rep_name: "QuerySwapExactAmountOut"  
+    cli:
+      cmd: "estimate-swap-exact-amount-out"

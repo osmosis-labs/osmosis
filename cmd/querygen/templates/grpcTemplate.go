@@ -7,14 +7,19 @@ type GrpcTemplate struct {
 }
 
 type GrpcQuery struct {
-	QueryName string
+	QueryFuncName   string
+	QueryReqRepName string
+	KeeperFuncName  string
 }
 
 func GrpcTemplateFromQueryYml(queryYml QueryYml) GrpcTemplate {
 	GrpcQueries := []GrpcQuery{}
-	for queryName := range queryYml.Queries {
-		GrpcQueries = append(GrpcQueries, GrpcQuery{QueryName: queryName})
+	for _, val := range queryYml.Queries {
+		GrpcQueries = append(GrpcQueries, GrpcQuery{QueryFuncName: val.ProtoWrapper.QueryFuncName,
+			QueryReqRepName: val.ProtoWrapper.QueryReqRepName,
+			KeeperFuncName:  val.ProtoWrapper.KeeperFuncName})
 	}
+
 	return GrpcTemplate{
 		ProtoPath:  queryYml.protoPath,
 		ClientPath: queryYml.ClientPath,

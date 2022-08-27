@@ -7,7 +7,7 @@ queries:
     proto_wrapper:
       default_values:
         Req.end_time: "time.Now()"
-      query_func: "k.GetArithmeticTwap"
+      query_func_name: "GetArithmeticTwap"
     cli:
       cmd: "GetArithmeticTwap"
   GetArithmeticTwapToNow:

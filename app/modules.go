@@ -46,7 +46,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v12/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/gammmodule"
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/incentives"
 	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
@@ -122,7 +122,7 @@ func appModules(
 		ica.NewAppModule(nil, app.ICAHostKeeper),
 		params.NewAppModule(*app.ParamsKeeper),
 		app.TransferModule,
-		gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
+		gammmodule.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper),
 		twapmodule.NewAppModule(*app.TwapKeeper),
 		txfees.NewAppModule(*app.TxFeesKeeper),
 		incentives.NewAppModule(*app.IncentivesKeeper, app.AccountKeeper, app.BankKeeper, app.EpochsKeeper),

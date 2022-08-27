@@ -12,7 +12,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v12/app"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/gammmodule"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
@@ -115,7 +115,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	encodingConfig := osmoapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	am := gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
+	am := gammmodule.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
 	err := simapp.FundAccount(app.BankKeeper, ctx, acc1, sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
@@ -140,7 +140,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	genesis := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-		am := gamm.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
+		am := gammmodule.NewAppModule(appCodec, *app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
 		am.InitGenesis(ctx, appCodec, genesis)
 	})
 }
