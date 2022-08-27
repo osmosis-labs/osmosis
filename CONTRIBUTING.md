@@ -379,11 +379,11 @@ functioning in a deterministic way.
 The state-machine scope includes the following areas:
 
 - All messages supported by the chain, including:
-    - Every msg's ValidateBasic method
-    - Every msg's MsgServer method
-        - Net gas usage, in all execution paths (WIP to make this not include error flows)
-        - Error result returned (TODO: Make the error code not merkelized)
-        - State changes (namely every store write)
+  - Every msg's ValidateBasic method
+  - Every msg's MsgServer method
+    - Net gas usage, in all execution paths (WIP to make this not include error flows)
+    - Error result returned (TODO: Make the error code not merkelized)
+    - State changes (namely every store write)
 - AnteHandlers in "DeliverTx" mode
 - Whitelisted queries
 - All `BeginBlock`/`EndBlock` logic
