@@ -43,7 +43,8 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 					sdk.NewAttribute(types.AttributeEpochNumber, fmt.Sprintf("%d", epochInfo.CurrentEpoch)),
 				),
 			)
-			k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
+			// Error is not handled as AfterEpochEnd Hooks use osmoutils.ApplyFuncIfNoError()
+			_ = k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
 			epochInfo.CurrentEpoch += 1
 			epochInfo.CurrentEpochStartTime = epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration)
 			logger.Info(fmt.Sprintf("Starting epoch with identifier %s epoch number %d", epochInfo.Identifier, epochInfo.CurrentEpoch))
@@ -58,7 +59,8 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			),
 		)
 		k.setEpochInfo(ctx, epochInfo)
-		k.BeforeEpochStart(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
+		// Error is not handled as BeforeEpochStart Hooks use osmoutils.ApplyFuncIfNoError()
+		_ = k.BeforeEpochStart(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
 
 		return false
 	})
