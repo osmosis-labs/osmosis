@@ -378,20 +378,20 @@ functioning in a deterministic way.
 
 The state-machine scope includes the following areas:
 
-- All messages supported by the chain
-
-- Transaction gas usage
-
+- All messages supported by the chain, including:
+    - Every msg's ValidateBasic method
+    - Every msg's MsgServer method
+        - Net gas usage, in all execution paths (WIP to make this not include error flows)
+        - Error result returned (TODO: Make the error code not merkelized)
+        - State changes (namely every store write)
+- AnteHandlers in "DeliverTx" mode
 - Whitelisted queries
-
 - All `BeginBlock`/`EndBlock` logic
 
 The following are **NOT** in the state-machine scope:
 
 - Events
-
 - Queries that are not whitelisted
-
 - CLI interfaces
 
 #### Validating State-Compatibility 
@@ -557,8 +557,10 @@ get successful responses while others errors, leading to state breakage.
 
 ##### Randomness
 
-Another critical property that should be avoided due to the likelihood
-of leading the nodes to result in a different state.
+Randomness cannot be used in the state machine, as the state machine definitionally must be deterministic.
+Any time you'd consider using it, instead seed a CSPRNG off of some seed.
+
+One thing to note is that in golang, iteration order over `map`s is non-deterministic, so to be deterministic you must gather the keys, and sort them all prior to iterating over all values.
 
 ##### Parallelism and Shared State
 
