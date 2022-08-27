@@ -1,11 +1,11 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"strconv"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
