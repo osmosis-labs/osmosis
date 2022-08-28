@@ -39,7 +39,7 @@ func TestFullAppSimulation(t *testing.T) {
 	// -Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	// -Period=1 -Commit=true -Seed=57 -v -timeout 24h
 	osmosim.FlagEnabledValue = true
-	osmosim.FlagNumBlocksValue = 20
+	osmosim.FlagNumBlocksValue = 200
 	osmosim.FlagBlockSizeValue = 25
 	osmosim.FlagCommitValue = true
 	osmosim.FlagVerboseValue = true
