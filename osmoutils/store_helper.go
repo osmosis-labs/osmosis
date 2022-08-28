@@ -22,18 +22,21 @@ func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 	return keys
 }
 
+// untested
 func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	iterator := storeObj.Iterator(keyStart, keyEnd)
 	defer iterator.Close()
 	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
 }
 
+// untested
 func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	iterator := sdk.KVStorePrefixIterator(storeObj, prefix)
 	defer iterator.Close()
 	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
 }
 
+// untested
 func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, stopFn func([]byte) bool, parseValue func([]byte) (T, error)) ([]T, error) {
 	// SDK iterator is broken for nil end time, and non-nil start time
 	// https://github.com/cosmos/cosmos-sdk/issues/12661
@@ -42,6 +45,7 @@ func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, s
 	return GetIterValuesWithStop(storeObj, keyStart, keyEnd, false, stopFn, parseValue)
 }
 
+// untested
 func GetIterValuesWithStop[T any](
 	storeObj store.KVStore,
 	keyStart []byte,
@@ -60,6 +64,7 @@ func GetIterValuesWithStop[T any](
 	return gatherValuesFromIteratorWithStop(iter, parseValue, stopFn)
 }
 
+// untested
 func GetFirstValueAfterPrefix[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
 	// SDK iterator is broken for nil end time, and non-nil start time
 	// https://github.com/cosmos/cosmos-sdk/issues/12661
@@ -73,17 +78,6 @@ func GetFirstValueAfterPrefix[T any](storeObj store.KVStore, keyStart []byte, pa
 	}
 
 	return parseValue(iterator.Value())
-}
-
-// MustSet runs store.Set(key, proto.Marshal(value))
-// but panics on any error.
-func MustSet(storeObj store.KVStore, key []byte, value proto.Message) {
-	bz, err := proto.Marshal(value)
-	if err != nil {
-		panic(err)
-	}
-
-	storeObj.Set(key, bz)
 }
 
 func gatherValuesFromIteratorWithStop[T any](iterator db.Iterator, parseValue func([]byte) (T, error), stopFn func([]byte) bool) ([]T, error) {
@@ -103,6 +97,17 @@ func gatherValuesFromIteratorWithStop[T any](iterator db.Iterator, parseValue fu
 
 func noStopFn([]byte) bool {
 	return false
+}
+
+// MustSet runs store.Set(key, proto.Marshal(value))
+// but panics on any error.
+func MustSet(storeObj store.KVStore, key []byte, value proto.Message) {
+	bz, err := proto.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+
+	storeObj.Set(key, bz)
 }
 
 // MustGet gets key from store by mutating result
