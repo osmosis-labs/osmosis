@@ -123,12 +123,12 @@ func Max(x, y int) int {
 func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, ek types.EpochKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, sdk.Result, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
 		if simCoins.AmountOf(sdk.DefaultBondDenom).LT(types.CreateGaugeFee) {
 			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgCreateGauge, "Account have no coin"), nil, nil
+				types.ModuleName, types.TypeMsgCreateGauge, "Account have no coin"), nil, sdk.Result{}, nil
 		}
 
 		isPerpetual := r.Int()%2 == 0
@@ -162,18 +162,18 @@ func SimulateMsgCreateGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankK
 func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKeeper, k keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, sdk.Result, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		simCoins := bk.SpendableCoins(ctx, simAccount.Address)
 		if simCoins.AmountOf(sdk.DefaultBondDenom).LT(types.AddToGaugeFee) {
 			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgAddToGauge, "Account have no coin"), nil, nil
+				types.ModuleName, types.TypeMsgAddToGauge, "Account have no coin"), nil, sdk.Result{}, nil
 		}
 
 		gauge := RandomGauge(ctx, r, k)
 		if gauge == nil {
 			return simtypes.NoOpMsg(
-				types.ModuleName, types.TypeMsgAddToGauge, "No gauge exists"), nil, nil
+				types.ModuleName, types.TypeMsgAddToGauge, "No gauge exists"), nil, sdk.Result{}, nil
 		}
 		gaugeId := RandomGauge(ctx, r, k).Id
 

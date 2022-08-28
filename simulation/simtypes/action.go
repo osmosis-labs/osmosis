@@ -22,7 +22,7 @@ type Action interface {
 	// but this should not be the default.
 	Frequency() Frequency
 	Execute(*SimCtx, sdk.Context) (
-		OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error)
+		OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, resultData []byte, err error)
 	WithFrequency(w Frequency) Action
 }
 
@@ -40,9 +40,10 @@ func (a weightedOperationAction) Frequency() Frequency {
 	return Frequency(mapFrequencyFromInt(a.op.Weight()))
 }
 func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
-	simulation.OperationMsg, []simulation.FutureOperation, error,
+	simulation.OperationMsg, []simulation.FutureOperation, []byte, error,
 ) {
-	return a.op.Op()(sim.GetRand(), sim.BaseApp(), ctx, sim.Accounts, sim.ChainID())
+	op, futureOp, result, err := a.op.Op()(sim.GetRand(), sim.BaseApp(), ctx, sim.Accounts, sim.ChainID())
+	return op, futureOp, result.Data, err
 }
 
 func ActionsFromWeightedOperations(ops legacysimexec.WeightedOperations) []Action {
@@ -94,19 +95,19 @@ func (m msgBasedAction) WithFrequency(w Frequency) Action { m.frequency = w; ret
 func (m msgBasedAction) Name() string                     { return m.name }
 func (m msgBasedAction) Frequency() Frequency             { return m.frequency }
 func (m msgBasedAction) Execute(sim *SimCtx, ctx sdk.Context) (
-	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, err error,
+	OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, resultData []byte, err error,
 ) {
 	msg, err := m.msgGenerator(sim, ctx)
 	if err != nil {
-		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build msg due to: %v", err)), nil, nil
+		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build msg due to: %v", err)), nil, nil, nil
 	}
 	err = msg.ValidateBasic()
 	if err != nil {
-		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("msg did not pass ValidateBasic: %v", err)), nil, nil
+		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("msg did not pass ValidateBasic: %v", err)), nil, nil, nil
 	}
 	tx, err := sim.txbuilder(ctx, msg, m.name)
 	if err != nil {
-		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build tx due to: %v", err)), nil, err
+		return simulation.NoOpMsg(m.name, m.name, fmt.Sprintf("unable to build tx due to: %v", err)), nil, nil, err
 	}
 	return sim.deliverTx(tx, msg, m.name)
 }
