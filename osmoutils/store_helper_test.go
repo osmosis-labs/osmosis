@@ -56,6 +56,135 @@ func mockStop(b []byte) bool {
 	return string(b) == fmt.Sprintf("%s%s", prefixOne, mockStopValue)
 }
 
+func (s *TestSuite) TestGatherValuesFromStore() {
+
+	testcases := map[string]struct {
+		preSetKeys []string
+		keyStart   []byte
+		keyEnd     []byte
+		parseFn    func(b []byte) (string, error)
+
+		expectedErr    bool
+		expectedValues []string
+	}{
+		"common prefix, exlude end": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte(prefixOne + keyC),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{"0", "1"},
+		},
+		"common prefix, include end": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB},
+
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte(prefixOne + keyC),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{"0", "1"},
+		},
+		"different prefix, inserted in lexicographic order": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB},
+			
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte(prefixTwo + keyA),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{"0", "1"},
+		},
+		"different prefix, inserted out of lexicographic order": {
+			preSetKeys: []string{prefixOne + keyA, prefixTwo + keyA, prefixOne + keyB, prefixTwo + keyB},
+
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte(prefixTwo + keyA),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			// should get all prefixOne keys as keys are stored in ascending lexicographic order
+			expectedValues: []string{"0", "2"},
+		},
+		"start key and end key same": {
+			preSetKeys: []string{prefixOne + keyA},
+
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte(prefixOne + keyA),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{},
+		},
+		"start key after end key": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+
+			keyStart: []byte(prefixOne + keyB),
+			keyEnd:   []byte(prefixOne + keyA),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{},
+		},
+		"get all values": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+
+			keyStart: nil,
+			keyEnd:   nil,
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{"0", "1", "2"},
+		},
+		"get all values after start key": {
+			// SDK iterator is broken for nil end time, and non-nil start time
+			// https://github.com/cosmos/cosmos-sdk/issues/12661
+			// so we use []byte{0xff}
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+
+			keyStart: []byte(prefixOne + keyB),
+			keyEnd:   []byte{0xff},
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{"1", "2"},
+		},
+		"parse with error": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte(prefixOne + keyC),
+			parseFn: mockParseValueWithError,
+
+			expectedErr: true,
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupStoreWithBasePrefix()
+
+			for i, key := range tc.preSetKeys {
+				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
+			}
+
+			actualValues, err := osmoutils.GatherValuesFromStore(s.store, tc.keyStart, tc.keyEnd, tc.parseFn)
+
+			if tc.expectedErr {
+				s.Require().Error(err)
+				s.Require().Nil(actualValues)
+				return
+			}
+
+			s.Require().NoError(err)
+
+			s.Require().Equal(tc.expectedValues, actualValues)
+		})
+	}
+}
+
 func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 
 	testcases := map[string]struct {
@@ -364,7 +493,7 @@ func (s *TestSuite) TestMustGetDec() {
 
 			expectedGetKeyValues: map[string]sdk.Dec{
 				keyA: sdk.OneDec(),
-				keyB: sdk.Dec{}, // this one panics
+				keyB: {}, // this one panics
 			},
 
 			expectPanic: true,
