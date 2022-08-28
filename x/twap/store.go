@@ -1,4 +1,3 @@
-//nolint:unused,deadcode
 package twap
 
 import (
