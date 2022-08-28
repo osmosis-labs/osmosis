@@ -7,8 +7,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
-var _ types.GammHooks = &gammhook{}
-var _ epochtypes.EpochHooks = &epochhook{}
+var (
+	_ types.GammHooks       = &gammhook{}
+	_ epochtypes.EpochHooks = &epochhook{}
+)
 
 type epochhook struct {
 	k Keeper

@@ -37,7 +37,8 @@ func (k Keeper) GetArithmeticTwap(
 	baseAssetDenom string,
 	quoteAssetDenom string,
 	startTime time.Time,
-	endTime time.Time) (sdk.Dec, error) {
+	endTime time.Time,
+) (sdk.Dec, error) {
 	if startTime.After(endTime) {
 		return sdk.Dec{}, fmt.Errorf("called GetArithmeticTwap with a start time that is after the end time."+
 			" (start time %s, end time %s)", startTime, endTime)
@@ -67,7 +68,8 @@ func (k Keeper) GetArithmeticTwapToNow(
 	poolId uint64,
 	baseAssetDenom string,
 	quoteAssetDenom string,
-	startTime time.Time) (sdk.Dec, error) {
+	startTime time.Time,
+) (sdk.Dec, error) {
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err

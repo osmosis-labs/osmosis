@@ -34,9 +34,11 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 		"one second later record":   {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, false},
 		"idempotent overwrite":      {initStartRecord, initStartRecord, baseTime, 1, denomA, denomB, false},
 		"idempotent overwrite2":     {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, 1, denomA, denomB, false},
-		"diff spot price": {zeroAccumTenPoint1Record,
+		"diff spot price": {
+			zeroAccumTenPoint1Record,
 			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
-			tPlusOne, 1, denomA, denomB, false},
+			tPlusOne, 1, denomA, denomB, false,
+		},
 		// TODO: Overflow
 	}
 	for name, tc := range tests {
