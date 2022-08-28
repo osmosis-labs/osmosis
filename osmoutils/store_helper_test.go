@@ -56,6 +56,42 @@ func mockStop(b []byte) bool {
 	return string(b) == fmt.Sprintf("%s%s", prefixOne, mockStopValue)
 }
 
+func (s *TestSuite) TestGatherAllKeysFromStore() {
+
+	testcases := map[string]struct {
+		preSetKeys []string
+		expectedValues []string
+	}{
+		"multiple keys in lexicographic order": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			expectedValues: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+		},
+		"multiple keys out of lexicographic order": {
+			preSetKeys: []string{prefixOne + keyB, prefixOne + keyC, prefixOne + keyA},
+			// we expect output to be in ascending lexicographic order
+			expectedValues: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+		},
+		"no keys": {
+			preSetKeys: []string{},
+			expectedValues: []string{},
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupStoreWithBasePrefix()
+
+			for i, key := range tc.preSetKeys {
+				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
+			}
+
+			actualValues := osmoutils.GatherAllKeysFromStore(s.store)
+
+			s.Require().Equal(tc.expectedValues, actualValues)
+		})
+	}
+}
+
 func (s *TestSuite) TestGatherValuesFromStore() {
 
 	testcases := map[string]struct {
@@ -64,7 +100,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 		keyEnd     []byte
 		parseFn    func(b []byte) (string, error)
 
-		expectedErr    bool
+		expectedErr 	   bool
 		expectedValues []string
 	}{
 		"common prefix, exlude end": {
@@ -179,7 +215,105 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			}
 
 			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedValues, actualValues)
+		})
+	}
+}
 
+func (s *TestSuite) TestGatherValuesFromStorePrefix() {
+
+	testcases := map[string]struct {
+		prefix     []byte
+		preSetKeys []string
+		parseFn    func(b []byte) (string, error)
+
+		expectedErr 	   bool
+		expectedValues []string
+	}{
+		"common prefix": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			prefix: []byte(prefixOne),
+
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{"0", "1", "2"},
+		},
+		"different prefixes in order, prefix one requested": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixOne),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{"0", "1"},
+		},
+		"different prefixes in order, prefix two requested": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixTwo),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{"2", "3"},
+		},
+		"different prefixes out of order, prefix one requested": {
+			preSetKeys: []string{prefixOne + keyB, prefixTwo + keyA, prefixOne + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixOne),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			// we expect the prefixOne values in ascending lexicographic order
+			expectedValues: []string{"2", "0"},
+		},
+		"different prefixes out of order, prefix two requested": {
+			preSetKeys: []string{prefixOne + keyB, prefixTwo + keyA, prefixOne + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixTwo),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{"1", "3"},
+		},
+		"prefix doesn't exist, no keys": {
+			preSetKeys: []string{prefixTwo + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixOne),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{},
+		},
+		"prefix doesn't exist, only keys with another prefix": {
+			preSetKeys: []string{prefixTwo + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixOne),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: []string{},
+		},
+		"parse with error": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			prefix: []byte(prefixOne),
+			parseFn: mockParseValueWithError,
+
+			expectedErr: true,
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupStoreWithBasePrefix()
+
+			for i, key := range tc.preSetKeys {
+				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
+			}
+
+			actualValues, err := osmoutils.GatherValuesFromStorePrefix(s.store, tc.prefix, tc.parseFn)
+
+			if tc.expectedErr {
+				s.Require().Error(err)
+				s.Require().Nil(actualValues)
+				return
+			}
+
+			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedValues, actualValues)
 		})
 	}
