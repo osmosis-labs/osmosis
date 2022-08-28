@@ -9,8 +9,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"golang.org/x/exp/maps"
 
@@ -65,7 +65,7 @@ func (mv mockValidators) getKeys() []string {
 }
 
 // randomProposer picks a random proposer from the current validator set
-func (mv mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
+func (mv mockValidators) randomProposer(r *rand.Rand) crypto.PubKey {
 	keys := mv.getKeys()
 	if len(keys) == 0 {
 		return nil
@@ -79,7 +79,7 @@ func (mv mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
 		panic(err)
 	}
 
-	return pk.Address()
+	return pk
 }
 
 // updateValidators mimics Tendermint's update logic.

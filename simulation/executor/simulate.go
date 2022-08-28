@@ -76,7 +76,7 @@ func SimulateFromSeed(
 		defer db.Close()
 		sts := `
 		DROP TABLE IF EXISTS blocks;
-		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT, msg STRING);
+		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT, msg STRING, appHash STRING);
 		`
 		_, err := db.Exec(sts)
 
@@ -148,7 +148,7 @@ func cursedInitializationLogic(
 		return nil, nil, simParams, fmt.Errorf("must have greater than zero genesis accounts")
 	}
 
-	validators, genesisTimestamp, accs := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
+	validators, genesisTimestamp, accs, res := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",
@@ -161,8 +161,12 @@ func cursedInitializationLogic(
 		ChainID:         config.ChainID,
 		Height:          int64(config.InitialBlockHeight),
 		Time:            genesisTimestamp,
-		ProposerAddress: validators.randomProposer(r),
+		ProposerAddress: validators.randomProposer(r).Address(),
+		AppHash:         res.AppHash,
 	}
+
+	// must set version in order to generate hashes
+	initialHeader.Version.Block = 11
 
 	simState := newSimulatorState(simParams, initialHeader, tb, w, validators).WithLogParam(config.Lean)
 
@@ -179,7 +183,7 @@ func initChain(
 	app simtypes.App,
 	appStateFn AppStateFn,
 	config *Config,
-) (mockValidators, time.Time, []simulation.Account) {
+) (mockValidators, time.Time, []simulation.Account, abci.ResponseInitChain) {
 	// TODO: Cleanup the whole config dependency with appStateFn
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, *config)
 	consensusParams := randomConsensusParams(r, appState, app.AppCodec())
@@ -200,7 +204,7 @@ func initChain(
 		config.InitialBlockHeight = 1
 	}
 
-	return validators, genesisTimestamp, accounts
+	return validators, genesisTimestamp, accounts, res
 }
 
 //nolint:deadcode,unused
@@ -277,8 +281,9 @@ func (simState *simState) logActionResult(
 	opMsg simulation.OperationMsg, db *sql.DB, actionErr error) {
 	opMsg.LogEvent(simState.eventStats.Tally)
 	if config.WriteStatsToDB {
-		sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg) VALUES($1,$2,$3,$4,$5,$6,$7,$8);"
-		_, err := db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed, opMsg.Msg)
+		appHash := fmt.Sprintf("%X", simState.header.AppHash)
+		sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9);"
+		_, err := db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed, opMsg.Msg, appHash)
 		if err != nil {
 			simState.tb.Fatal(err)
 		}

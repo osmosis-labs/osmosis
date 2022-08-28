@@ -8,7 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
+	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
 )
@@ -142,8 +144,10 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 	simState.pastTimes = append(simState.pastTimes, simState.header.Time)
 	simState.pastVoteInfos = append(simState.pastVoteInfos, req.LastCommitInfo.Votes)
 
+	// increase header height by one
 	simState.header.Height++
 
+	// set header time
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	simState.header.Time = simState.header.Time.Add(
 		time.Duration(minTimePerBlock) * time.Second)
@@ -151,11 +155,54 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 		time.Duration(int64(simCtx.GetRand().Intn(int(timeDiff)))) * time.Second)
 
 	// Draw the block proposer from proposers for n+1
-	simState.header.ProposerAddress = simState.nextValidators.randomProposer(simCtx.GetRand())
+	proposerPk := simState.nextValidators.randomProposer(simCtx.GetRand())
+	simState.header.ProposerAddress = proposerPk.Address()
 	// find N + 2 valset
 	nPlus2Validators := updateValidators(simState.tb, simCtx.GetRand(), simState.simParams, simState.nextValidators, res.ValidatorUpdates, simState.eventStats.Tally)
 
 	// now set variables in perspective of block n+1
 	simState.curValidators = simState.nextValidators
 	simState.nextValidators = nPlus2Validators
+
+	var currentValSet tmproto.ValidatorSet
+	// iterate through current validators and add them to the TM ValidatorSet struct
+	for _, key := range simState.curValidators.getKeys() {
+		var validator tmproto.Validator
+		mVal := simState.curValidators[key]
+		validator.PubKey = mVal.val.PubKey
+		pk2, _ := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
+		validator.Address = pk2.Address()
+		currentValSet.Validators = append(currentValSet.Validators, &validator)
+	}
+
+	// set the proposer chosen earlier as the validator set block proposer
+	var newVal tmtypes.Validator
+	newVal.PubKey = proposerPk
+	newVal.Address = proposerPk.Address()
+	blockProposer, err := newVal.ToProto()
+	if err != nil {
+		panic(err)
+	}
+	currentValSet.Proposer = blockProposer
+
+	// create a validatorSet type from the tmproto created earlier
+	realValSet, err := tmtypes.ValidatorSetFromProto(&currentValSet)
+	if err != nil {
+		panic(err)
+	}
+
+	// generate a hash from the validatorSet type and set it to the validators hash
+	simState.header.ValidatorsHash = realValSet.Hash()
+
+	// create a header type from the tmproto
+	realHeader, err := tmtypes.HeaderFromProto(&simState.header)
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: We dont fill out the nextValidatorSet
+	// It is unclear to me if this means we need to choose a proposer prior to that block occurring
+
+	// generate an apphash from this header and set this value
+	simState.header.AppHash = realHeader.Hash()
 }
