@@ -273,7 +273,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			expectedValues: []string{"1", "3"},
 		},
 		"prefix doesn't exist, no keys": {
-			preSetKeys: []string{prefixTwo + keyA, prefixTwo + keyB},
+			preSetKeys: []string{},
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
@@ -310,6 +310,118 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			if tc.expectedErr {
 				s.Require().Error(err)
 				s.Require().Nil(actualValues)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedValues, actualValues)
+		})
+	}
+}
+
+func (s *TestSuite) TestGetFirstValueAfterPrefix() {
+
+	testcases := map[string]struct {
+		prefix     []byte
+		preSetKeys []string
+		parseFn    func(b []byte) (string, error)
+
+		expectedErr 	   bool
+		expectedValues string
+	}{
+		"common prefix": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			prefix: []byte(prefixOne),
+
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: "0",
+		},
+		"different prefixes in order, prefix one requested": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixOne),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: "0",
+		},
+		"different prefixes in order, prefix two requested": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixTwo),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: "2",
+		},
+		"different prefixes out of order, prefix one requested": {
+			preSetKeys: []string{prefixOne + keyB, prefixTwo + keyA, prefixOne + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixOne),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			// we expect the prefixOne values in ascending lexicographic order
+			expectedValues: "2",
+		},
+		"different prefixes out of order, prefix two requested": {
+			preSetKeys: []string{prefixOne + keyB, prefixTwo + keyA, prefixOne + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixTwo),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: "1",
+		},
+		/* TODO: fix GetFirstValueAfterPrefix to return error even if keyStart is lexicographically before existing keys
+		"prefix doesn't exist, start key lexicographically before existing keys": {
+			preSetKeys: []string{prefixTwo + keyA, prefixTwo + keyB},
+			prefix: []byte(prefixOne),
+			parseFn: mockParseValue,
+
+			expectedErr: false,
+			expectedValues: "",
+		},
+		*/
+
+		// error catching
+		"prefix doesn't exist, no keys": {
+			preSetKeys: []string{},
+			prefix: []byte(prefixOne),
+			parseFn: mockParseValue,
+
+			expectedErr: true,
+			expectedValues: "",
+		},
+		"prefix doesn't exist, start key lexicographically after existing keys": {
+			preSetKeys: []string{prefixTwo + keyA, prefixTwo + keyB},
+			prefix: []byte{0xff},
+			parseFn: mockParseValue,
+
+			expectedErr: true,
+			expectedValues: "",
+		},
+		"parse with error": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			prefix: []byte(prefixOne),
+			parseFn: mockParseValueWithError,
+
+			expectedErr: true,
+			expectedValues: "",
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupStoreWithBasePrefix()
+
+			for i, key := range tc.preSetKeys {
+				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
+			}
+
+			actualValues, err := osmoutils.GetFirstValueAfterPrefix(s.store, tc.prefix, tc.parseFn)
+
+			if tc.expectedErr {
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedValues, actualValues)
 				return
 			}
 

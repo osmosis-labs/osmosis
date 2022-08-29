@@ -62,7 +62,7 @@ func GetIterValuesWithStop[T any](
 	return gatherValuesFromIteratorWithStop(iter, parseValue, stopFn)
 }
 
-// untested
+// TODO: fix GetFirstValueAfterPrefix to return error even if keyStart is lexicographically before existing keys
 func GetFirstValueAfterPrefix[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
 	// SDK iterator is broken for nil end time, and non-nil start time
 	// https://github.com/cosmos/cosmos-sdk/issues/12661
