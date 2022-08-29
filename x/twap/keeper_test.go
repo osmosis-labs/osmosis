@@ -19,7 +19,7 @@ var (
 	denom0                        = "token/A"
 	denom1                        = "token/B"
 	denom2                        = "token/C"
-	defaultUniV2Coins             = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
+	defaultTwoAssetCoins          = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
 	defaultThreeAssetCoins        = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000), sdk.NewInt64Coin(denom2, 1_000_000_000))
 	baseTime                      = time.Unix(1257894000, 0).UTC()
 	tPlusOne                      = baseTime.Add(time.Second)
@@ -277,8 +277,8 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 
 // sets up a new two asset pool, with spot price 1
 func (s *TestSuite) setupDefaultPool() (poolId uint64, denomA, denomB string) {
-	poolId = s.PrepareBalancerPoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
-	denomA, denomB = defaultUniV2Coins[0].Denom, defaultUniV2Coins[1].Denom
+	poolId = s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins[0], defaultTwoAssetCoins[1])
+	denomA, denomB = defaultTwoAssetCoins[1].Denom, defaultTwoAssetCoins[0].Denom
 	return
 }
 

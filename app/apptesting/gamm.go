@@ -117,16 +117,18 @@ func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
 	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
 	s.Require().NoError(err)
 
-	tokenIn := sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(1000)), sdk.NewCoin(denoms[1], sdk.NewInt(1000)))
-	s.FundAcc(s.TestAccs[0], tokenIn)
+	tokenIn := sdk.NewCoins()
+	for _, denom := range denoms {
+		tokenIn = tokenIn.Add(sdk.NewCoin(denom, sdk.NewInt(10000000)))
+	}
 
-	minShareOutAmt, _, err := pool.CalcJoinPoolShares(s.Ctx, tokenIn, pool.GetSwapFee(s.Ctx))
-	s.Require().NoError(err)
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn...))
 
+	totalPoolShare := pool.GetTotalShares()
 	msg := gammtypes.MsgJoinPool{
 		Sender:         string(s.TestAccs[0]),
 		PoolId:         poolId,
-		ShareOutAmount: minShareOutAmt,
+		ShareOutAmount: totalPoolShare.Quo(sdk.NewInt(100000)),
 		TokenInMaxs:    tokenIn,
 	}
 	// TODO: switch to message

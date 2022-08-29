@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -159,8 +160,8 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 		time.Duration(int64(simCtx.GetRand().Intn(int(timeDiff)))) * time.Second)
 
 	// Draw the block proposer from proposers for n+1
-	proposerPk := simState.nextValidators.randomProposer(simCtx.GetRand())
-	simState.header.ProposerAddress = proposerPk.Address()
+	proposerPubKey := simState.nextValidators.randomProposer(simCtx.GetRand())
+	simState.header.ProposerAddress = proposerPubKey.Address()
 	// find N + 2 valset
 	nPlus2Validators := updateValidators(simState.tb, simCtx.GetRand(), simState.simParams, simState.nextValidators, res.ValidatorUpdates, simState.eventStats.Tally)
 
@@ -168,22 +169,32 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 	simState.curValidators = simState.nextValidators
 	simState.nextValidators = nPlus2Validators
 
+	// utilize proposer public key and generate validator hash
+	// then, with completed block header, generate app hash
+	// see https://github.com/tendermint/tendermint/blob/v0.34.x/spec/core/data_structures.md#header for more info on block header hashes
+	simState.constructHeaderHashes(proposerPubKey)
+}
+
+func (simState *simState) constructHeaderHashes(proposerPubKey crypto.PubKey) {
 	var currentValSet tmproto.ValidatorSet
 	// iterate through current validators and add them to the TM ValidatorSet struct
 	for _, key := range simState.curValidators.getKeys() {
 		var validator tmproto.Validator
-		mVal := simState.curValidators[key]
-		validator.PubKey = mVal.val.PubKey
-		pk2, _ := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
-		validator.Address = pk2.Address()
+		mapVal := simState.curValidators[key]
+		validator.PubKey = mapVal.val.PubKey
+		currentPubKey, err := cryptoenc.PubKeyFromProto(mapVal.val.PubKey)
+		if err != nil {
+			panic(err)
+		}
+		validator.Address = currentPubKey.Address()
 		currentValSet.Validators = append(currentValSet.Validators, &validator)
 	}
 
 	// set the proposer chosen earlier as the validator set block proposer
-	var newVal tmtypes.Validator
-	newVal.PubKey = proposerPk
-	newVal.Address = proposerPk.Address()
-	blockProposer, err := newVal.ToProto()
+	var proposerVal tmtypes.Validator
+	proposerVal.PubKey = proposerPubKey
+	proposerVal.Address = proposerPubKey.Address()
+	blockProposer, err := proposerVal.ToProto()
 	if err != nil {
 		panic(err)
 	}
@@ -204,7 +215,7 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 		panic(err)
 	}
 
-	// TODO: We dont fill out the nextValidatorSet
+	// TODO: We don't fill out the nextValidatorSet, we should eventually but not priority
 	// It is unclear to me if this means we need to choose a proposer prior to that block occurring
 
 	// hash all the collected tx results and add as the block header data hash
