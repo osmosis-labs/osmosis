@@ -2,6 +2,11 @@ module github.com/osmosis-labs/osmosis/x/epochs
 
 go 1.18
 
+replace (
+	github.com/osmosis-labs/osmosis/v11/app => ../../app
+	github.com/osmosis-labs/osmosis/v11/osmoutils => ../../osmoutils
+)
+
 require (
 	github.com/cosmos/cosmos-sdk v0.46.0
 	github.com/gogo/protobuf v1.3.3
