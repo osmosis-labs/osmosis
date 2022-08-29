@@ -560,6 +560,185 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 	}
 }
 
+func (s *TestSuite) TestGetIterValuesWithStop() {
+
+	testcases := map[string]struct {
+		preSetKeys []string
+		keyStart   []byte
+		keyEnd     []byte
+		parseFn    func(b []byte)(string, error)
+		stopFn     func(b []byte) bool
+		isReverse  bool
+
+		expectedValues []string
+		expectedErr    bool
+	}{
+		"prefix iterator, no stop but exclusive key end": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte(prefixOne + keyC),
+			parseFn: mockParseValue,
+			stopFn: mockStop,
+			isReverse: false,
+
+			expectedValues: []string{"0", "1"},
+		},
+		"prefix iterator, no stop and inclusive key end": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB},
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte(prefixOne + keyC),
+			parseFn: mockParseValue,
+			stopFn: mockStop,
+			isReverse: false,
+
+			expectedValues: []string{"0", "1"},
+		},
+		"prefix iterator, with stop before end key": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + mockStopValue, prefixOne + mockStopValue + keyA},
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte(prefixOne + keyC),
+			parseFn: mockParseValue,
+			stopFn: mockStop,
+			isReverse: false,
+
+			expectedValues: []string{"0"},
+		},
+		"prefix iterator, with end key before stop": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + mockStopValue},
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte(prefixOne + keyB),
+			parseFn: mockParseValue,
+			stopFn: mockStop,
+			isReverse: false,
+
+			expectedValues: []string{"0"},
+		},
+		"prefix iterator, with stop, different insertion order": {
+			// keyB is lexicographically before mockStopValue so we expect it to be returned before we hit the stopper
+			preSetKeys: []string{prefixOne + keyA, prefixOne + mockStopValue, prefixOne + keyB, prefixOne + mockStopValue + keyA},
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte{0xff},
+			parseFn: mockParseValue,
+			stopFn: mockStop,
+			isReverse: false,
+
+			expectedValues: []string{"0", "2"},
+		},
+		"prefix iterator with stop, different insertion order, and reversed iterator": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + mockStopValue, prefixOne + keyB, prefixOne + mockStopValue + keyA},
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte{0xff},
+			parseFn: mockParseValue,
+			stopFn: mockStop,
+			isReverse: true,
+
+			// only the last value in our preSetKeys should be on the other end of the stopper
+			expectedValues: []string{"3"},
+		},
+		"parse with error": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			keyStart: []byte(prefixOne + keyA),
+			keyEnd:   []byte{0xff},
+			parseFn: mockParseValueWithError,
+			stopFn:  mockStop,
+			isReverse: false,
+
+			expectedErr: true,
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupStoreWithBasePrefix()
+
+			for i, key := range tc.preSetKeys {
+				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
+			}
+
+			actualValues, err := osmoutils.GetIterValuesWithStop(s.store, tc.keyStart, tc.keyEnd, tc.isReverse, tc.stopFn, tc.parseFn)
+
+			if tc.expectedErr {
+				s.Require().Error(err)
+				s.Require().Nil(actualValues)
+				return
+			}
+
+			s.Require().NoError(err)
+
+			s.Require().Equal(tc.expectedValues, actualValues)
+		})
+	}
+}
+
+func (s *TestSuite) TestGetValuesUntilDerivedStop() {
+
+	testcases := map[string]struct {
+		preSetKeys []string
+		keyStart   []byte
+		parseFn    func(b []byte)(string, error)
+		stopFn     func(b []byte) bool
+
+		expectedValues []string
+		expectedErr    bool
+	}{
+		"prefix iterator, no stop": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			keyStart: []byte(prefixOne + keyA),
+			parseFn: mockParseValue,
+			stopFn: mockStop,
+
+			expectedValues: []string{"0", "1", "2"},
+		},
+		"prefix iterator, with stop": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + mockStopValue, prefixOne + mockStopValue + keyA},
+			keyStart: []byte(prefixOne + keyA),
+			parseFn: mockParseValue,
+			stopFn: mockStop,
+
+			expectedValues: []string{"0"},
+		},
+		"prefix iterator, with stop & different insertion order": {
+			// keyB is lexicographically before mockStopValue so we expect it to be returned before we hit the stopper
+			preSetKeys: []string{prefixOne + keyA, prefixOne + mockStopValue, prefixOne + keyB, prefixOne + mockStopValue + keyA},
+			keyStart: []byte(prefixOne + keyA),
+			parseFn: mockParseValue,
+			stopFn: mockStop,
+
+			expectedValues: []string{"0", "2"},
+		},
+		"parse with error": {
+			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			keyStart: []byte(prefixOne + keyA),
+			parseFn: mockParseValueWithError,
+			stopFn:  mockStop,
+
+			expectedErr: true,
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupStoreWithBasePrefix()
+
+			for i, key := range tc.preSetKeys {
+				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
+			}
+
+			actualValues, err := osmoutils.GetValuesUntilDerivedStop(s.store, tc.keyStart, tc.stopFn, tc.parseFn)
+
+			if tc.expectedErr {
+				s.Require().Error(err)
+				s.Require().Nil(actualValues)
+				return
+			}
+
+			s.Require().NoError(err)
+
+			s.Require().Equal(tc.expectedValues, actualValues)
+		})
+	}
+}
+
 func (s *TestSuite) TestNoStopFn_AlwaysFalse() {
 	s.Require().False(osmoutils.NoStopFn([]byte(keyA)))
 	s.Require().False(osmoutils.NoStopFn([]byte(keyB)))

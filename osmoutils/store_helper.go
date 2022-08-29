@@ -34,7 +34,6 @@ func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, p
 	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
 }
 
-// untested
 func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, stopFn func([]byte) bool, parseValue func([]byte) (T, error)) ([]T, error) {
 	// SDK iterator is broken for nil end time, and non-nil start time
 	// https://github.com/cosmos/cosmos-sdk/issues/12661
@@ -43,7 +42,6 @@ func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, s
 	return GetIterValuesWithStop(storeObj, keyStart, keyEnd, false, stopFn, parseValue)
 }
 
-// untested
 func GetIterValuesWithStop[T any](
 	storeObj store.KVStore,
 	keyStart []byte,
