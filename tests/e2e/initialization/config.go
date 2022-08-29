@@ -18,12 +18,12 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
 	poolitypes "github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v11/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/osmosis-labs/osmosis/v11/tests/e2e/util"
 )

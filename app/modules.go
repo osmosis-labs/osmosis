@@ -44,8 +44,6 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v11/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v11/osmoutils/partialord"
 	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v11/x/epochs"
-	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v11/x/incentives"
@@ -64,6 +62,8 @@ import (
 	twaptypes "github.com/osmosis-labs/osmosis/v11/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v11/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v11/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/x/epochs"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // moduleAccountPermissions defines module account permissions

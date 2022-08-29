@@ -27,10 +27,10 @@ import (
 
 	appParams "github.com/osmosis-labs/osmosis/v11/app/params"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // PrepareGenesisCmd returns prepare-genesis cobra Command.

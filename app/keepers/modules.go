@@ -28,7 +28,6 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 
 	_ "github.com/osmosis-labs/osmosis/v11/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v11/x/epochs"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm"
 	"github.com/osmosis-labs/osmosis/v11/x/incentives"
 	"github.com/osmosis-labs/osmosis/v11/x/lockup"
@@ -40,6 +39,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v11/x/txfees"
+	"github.com/osmosis-labs/osmosis/x/epochs"
 )
 
 // AppModuleBasics returns ModuleBasics for the module BasicManager.

@@ -8,7 +8,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simapp "github.com/osmosis-labs/osmosis/v11/app"
-	"github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"golang.org/x/exp/maps"
 

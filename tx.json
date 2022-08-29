@@ -1,0 +1,17 @@
+{
+      "type": "osmosis/gamm/swap-exact-amount-in",
+      "value": {
+        "sender": "osmo1q3ts5qhrh3m6t970egemuuwywhlhpnmmts6xnu",
+        "routes": [
+          {
+            "poolId": "678",
+            "tokenOutDenom": "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+          }
+        ],
+        "tokenIn": {
+          "denom": "uosmo",
+          "amount": "1000000"
+        },
+        "tokenOutMinAmount": "952161"
+      }
+    }
