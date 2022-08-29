@@ -38,9 +38,12 @@ func getSpotPrices(ctx sdk.Context, k types.AmmInterface, poolId uint64, denom0,
 	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
 	if err0 != nil || err1 != nil {
 		lastErrTime = ctx.BlockTime()
-		// TODO: Is this what we want to do? We are returning an error in such events.
-		if (sp0 == sdk.Dec{} || sp1 == sdk.Dec{}) {
+		// In the event of an error, we just sanity replace empty values with zero values
+		// so that the numbers can be still be calculated within TWAPs over error values
+		if (sp0 == sdk.Dec{}) {
 			sp0 = sdk.ZeroDec()
+		}
+		if (sp1 == sdk.Dec{}) {
 			sp1 = sdk.ZeroDec()
 		}
 	}
