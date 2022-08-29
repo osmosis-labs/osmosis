@@ -281,3 +281,63 @@ func (s *MiddlewareTestSuite) TestRateLimitingE2ETestsSetupCorrectly() {
 	s.Require().NoError(err)
 	s.Require().True(bytes.Equal(f1, f2))
 }
+
+// Test rate limits are reverted if a "send" fails
+func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
+	// Setup contract
+	suite.chainA.StoreContractCode(&suite.Suite)
+	quotas := suite.BuildChannelQuota("weekly", 604800, 1, 1)
+	addr := suite.chainA.InstantiateContract(&suite.Suite, quotas)
+	suite.chainA.RegisterRateLimitingContract(addr)
+
+	// Setup sender chain's quota
+	osmosisApp := suite.chainA.GetOsmosisApp()
+
+	// Each user has 10% of the supply
+	supply := osmosisApp.BankKeeper.GetSupplyWithOffset(suite.chainA.GetContext(), sdk.DefaultBondDenom)
+	quota := supply.Amount.QuoRaw(100) // 1% of the supply
+
+	// Use the whole quota
+	coins := sdk.NewCoin(sdk.DefaultBondDenom, quota)
+	port := suite.path.EndpointA.ChannelConfig.PortID
+	channel := suite.path.EndpointA.ChannelID
+	accountFrom := suite.chainA.SenderAccount.GetAddress().String()
+	timeoutHeight := clienttypes.NewHeight(0, 100)
+	msg := transfertypes.NewMsgTransfer(port, channel, coins, accountFrom, "INVALID", timeoutHeight, 0)
+
+	res, _ := suite.AssertSend(true, msg)
+
+	// Sending again fails as the quota is filled
+	suite.AssertSend(false, suite.NewValidMessage(true, quota))
+
+	// Move forward one block
+	suite.chainA.NextBlock()
+	suite.chainA.SenderAccount.SetSequence(suite.chainA.SenderAccount.GetSequence() + 1)
+	suite.chainA.Coordinator.IncrementTime()
+
+	// Update both clients
+	err := suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+	err = suite.path.EndpointB.UpdateClient()
+	suite.Require().NoError(err)
+
+	// Execute the acknowledgement from chain B in chain A
+
+	// extract the sent packet
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+
+	// recv in chain b
+	res, err = suite.path.EndpointB.RecvPacketWithResult(packet)
+
+	// get the ack from the chain b's response
+	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+
+	// manually relay it to chain a
+	err = suite.path.EndpointA.AcknowledgePacket(packet, ack)
+	suite.Require().NoError(err)
+
+	// We should be able to send again because the packet that exceeded the quota failed and has been reverted
+	suite.AssertSend(true, suite.NewValidMessage(true, sdk.NewInt(1)))
+}

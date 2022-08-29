@@ -1,6 +1,7 @@
 package ibc_rate_limit
 
 import (
+	"encoding/json"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -8,6 +9,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
@@ -63,7 +65,7 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 		return sdkerrors.Wrap(err, "Rate limited SendPacket")
 	}
 	channelValue := i.CalculateChannelValue(ctx, denom)
-	err = CheckRateLimits(
+	err = CheckAndUpdateRateLimits(
 		ctx,
 		i.ContractKeeper,
 		"send_packet",
@@ -87,10 +89,7 @@ func (i *ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabili
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
 func (i *ICS4Middleware) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
-	supply := i.BankKeeper.GetSupplyWithOffset(ctx, denom)
-	return supply.Amount
-	//locked := i.LockupKeeper.GetModuleLockedCoins(ctx)
-	//return supply.Amount.Add(locked.AmountOf(denom))
+	return i.BankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 }
 
 type IBCModule struct {
@@ -201,7 +200,7 @@ func (im *IBCModule) OnRecvPacket(
 	}
 	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, denom)
 
-	err = CheckRateLimits(
+	err = CheckAndUpdateRateLimits(
 		ctx,
 		im.ics4Middleware.ContractKeeper,
 		"recv_packet",
@@ -226,7 +225,29 @@ func (im *IBCModule) OnAcknowledgementPacket(
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
+	var ack channeltypes.Acknowledgement
+	if err := json.Unmarshal(acknowledgement, &ack); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet acknowledgement: %v", err)
+	}
+
+	if !ack.Success() {
+		err := im.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the ack
+		if err != nil {
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventBadRevert,
+					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+					sdk.NewAttribute(types.AttributeKeyFailureType, "acknowledgment"),
+					sdk.NewAttribute(types.AttributeKeyPacket, string(packet.GetData())),
+					sdk.NewAttribute(types.AttributeKeyAck, string(acknowledgement)),
+				),
+			)
+		}
+
+	}
+
 	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+
 }
 
 // OnTimeoutPacket implements the IBCModule interface
@@ -235,7 +256,50 @@ func (im *IBCModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
+	err := im.RevertSentPacket(ctx, packet) // If there is an error here we should still handle the timeout
+	if err != nil {
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventBadRevert,
+				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+				sdk.NewAttribute(types.AttributeKeyFailureType, "timeout"),
+				sdk.NewAttribute(types.AttributeKeyPacket, string(packet.GetData())),
+			),
+		)
+	}
 	return im.app.OnTimeoutPacket(ctx, packet, relayer)
+}
+
+// RevertSentPacket Notifies the contract that a sent packet wasn't properly received
+func (im *IBCModule) RevertSentPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) error {
+	var data transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+	}
+	var params types.Params
+	im.ics4Middleware.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
+	if params.ContractAddress == "" {
+		// The contract has not been configured. Continue as usual
+		return nil
+	}
+	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, data.Denom)
+
+	// This could return an error if the "receive" path is full. We should consider adding a message to the
+	//contract so that we can force the revert in this case
+	_ = CheckAndUpdateRateLimits(
+		ctx,
+		im.ics4Middleware.ContractKeeper,
+		"recv_packet",
+		params.ContractAddress,
+		channelValue,
+		packet.GetDestChannel(),
+		data.Denom,
+		data.Amount,
+	)
+	return nil
 }
 
 // SendPacket implements the ICS4 Wrapper interface

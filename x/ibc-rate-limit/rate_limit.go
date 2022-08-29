@@ -20,7 +20,7 @@ type PacketData struct {
 	Amount string `json:"amount"`
 }
 
-func CheckRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
+func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 	msgType, contract string,
 	channelValue sdk.Int, sourceChannel, denom string,
 	amount string,
