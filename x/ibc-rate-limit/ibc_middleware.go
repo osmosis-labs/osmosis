@@ -247,7 +247,6 @@ func (im *IBCModule) OnAcknowledgementPacket(
 	}
 
 	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
-
 }
 
 // OnTimeoutPacket implements the IBCModule interface
