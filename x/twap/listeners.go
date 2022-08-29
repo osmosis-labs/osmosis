@@ -3,7 +3,7 @@ package twap
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	epochtypes "github.com/osmosis-labs/osmosis/epochs/types"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 

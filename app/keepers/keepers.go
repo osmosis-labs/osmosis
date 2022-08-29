@@ -47,10 +47,10 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 
+	epochskeeper "github.com/osmosis-labs/osmosis/epochs/keeper"
+	epochstypes "github.com/osmosis-labs/osmosis/epochs/types"
 	_ "github.com/osmosis-labs/osmosis/v11/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v11/wasmbinding"
-	epochskeeper "github.com/osmosis-labs/osmosis/v11/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v11/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v11/x/incentives/keeper"
