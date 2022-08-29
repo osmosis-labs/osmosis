@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
@@ -49,6 +51,6 @@ func panicCatchingEpochHook(
 	// TODO: Thread info for which hook this is, may be dependent on larger hook system refactoring
 	err := osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn)
 	if err != nil {
-		ctx.Logger().Info("an epoch hook errored")
+		ctx.Logger().Error(fmt.Sprintf("error in epoch hook %v", err))
 	}
 }
