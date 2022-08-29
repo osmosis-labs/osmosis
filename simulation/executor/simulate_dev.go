@@ -168,18 +168,21 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 	// iterate through current validators and add them to the TM ValidatorSet struct
 	for _, key := range simState.curValidators.getKeys() {
 		var validator tmproto.Validator
-		mVal := simState.curValidators[key]
-		validator.PubKey = mVal.val.PubKey
-		currentPubKey, _ := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
-		validator.Address = pk2.Address()
+		mapVal := simState.curValidators[key]
+		validator.PubKey = mapVal.val.PubKey
+		currentPubKey, err := cryptoenc.PubKeyFromProto(mapVal.val.PubKey)
+		if err != nil {
+			panic(err)
+		}
+		validator.Address = currentPubKey.Address()
 		currentValSet.Validators = append(currentValSet.Validators, &validator)
 	}
 
 	// set the proposer chosen earlier as the validator set block proposer
 	var proposerVal tmtypes.Validator
-	newVal.PubKey = proposerPk
-	newVal.Address = proposerPk.Address()
-	blockProposer, err := newVal.ToProto()
+	proposerVal.PubKey = proposerPubKey
+	proposerVal.Address = proposerPubKey.Address()
+	blockProposer, err := proposerVal.ToProto()
 	if err != nil {
 		panic(err)
 	}
