@@ -58,9 +58,10 @@ message TwapRecord {
   // "github.com/cosmos/cosmos-sdk/types.Dec",
   // (gogoproto.nullable) = false];
 
-  // This field should only exist until we have a global registry in the state
-  // machine, mapping prior block heights within {TIME RANGE} to times.
-  google.protobuf.Timestamp last_error_time = 10 [
+  // This field contains the time in which the last spot price error occured.
+  // It is used to alert the caller if they are getting a potentially erroneous
+  // TWAP, due to an unforeseen underlying error.
+  google.protobuf.Timestamp last_error_time = 11 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"last_error_time\""

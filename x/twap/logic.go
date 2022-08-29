@@ -182,7 +182,7 @@ func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRec
 	// see if we need to return an error, due to spot price issues
 	var err error = nil
 	if endRecord.LastErrorTime.After(startRecord.Time) {
-		err = errors.New("twap: error in pool spot price occured between start and end time, twap result may be faulty")
+		err = errors.New("twap: error in pool spot price occurred between start and end time, twap result may be faulty")
 	}
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	// if time difference is 0, then return the last spot price based off of start.
