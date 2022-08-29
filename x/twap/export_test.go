@@ -52,6 +52,10 @@ func (k Keeper) PruneRecords(ctx sdk.Context) error {
 	return k.pruneRecords(ctx)
 }
 
+func (k Keeper) GetInterpolatedRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string, t time.Time) (types.TwapRecord, error) {
+	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom)
+}
+
 func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
 }
