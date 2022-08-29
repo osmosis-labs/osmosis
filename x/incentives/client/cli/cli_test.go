@@ -2,13 +2,22 @@ package cli_test
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v11/app"
+	gammtestutil "github.com/osmosis-labs/osmosis/v11/x/gamm/client/testutil"
 	"github.com/osmosis-labs/osmosis/v11/x/incentives/client/cli"
 	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	lockuptestutil "github.com/osmosis-labs/osmosis/v11/x/lockup/client/testutil"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -26,10 +35,50 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = app.DefaultConfig()
 
-	s.network = network.New(s.T(), s.cfg)
+	// modification to pay pool creation fee with test bond denom "stake"
+	// marshal result into genesis json
+	genesisState := app.ModuleBasics.DefaultGenesis(s.cfg.Codec)
+	gammGen := gammtypes.DefaultGenesis()
+	gammGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 1000000)}
+	gammGenJson := s.cfg.Codec.MustMarshalJSON(gammGen)
+	genesisState[gammtypes.ModuleName] = gammGenJson
+	s.cfg.GenesisState = genesisState
 
-	_, err := s.network.WaitForHeight(1)
+	// create a network with a validator
+	s.network = network.New(s.T(), s.cfg)
+	val := s.network.Validators[0]
+
+	// create a pool to receive gamm tokens
+	_, err := gammtestutil.MsgCreatePool(s.T(), val.ClientCtx, val.Address, "5stake,5node0token", "100stake,100node0token", "0.01", "0.01", "")
 	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	lockAmt, err := sdk.ParseCoinNormalized(fmt.Sprint("100000gamm/pool/1"))
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	// lock gamm pool tokens to create lock ID 1
+	lockuptestutil.MsgLockTokens(val.ClientCtx, val.Address, lockAmt, "24h")
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	secondLockAmt, err := sdk.ParseCoinNormalized(fmt.Sprint("100000gamm/pool/1"))
+	s.Require().NoError(err)
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
+	// lock gamm pool tokens to create lock ID 2
+	lockuptestutil.MsgLockTokens(val.ClientCtx, val.Address, secondLockAmt, "168h")
+
+	_, err = s.network.WaitForHeight(1)
+	s.Require().NoError(err)
+
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -43,11 +92,14 @@ func (s *IntegrationTestSuite) TestGetCmdGauges() {
 	testCases := []struct {
 		name      string
 		expectErr bool
+		args      []string
 		respType  proto.Message
 	}{
 		{
 			"query gauges",
-			false, &types.GaugesResponse{},
+			false,
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			&types.GaugesResponse{},
 		},
 	}
 
@@ -58,9 +110,7 @@ func (s *IntegrationTestSuite) TestGetCmdGauges() {
 			cmd := cli.GetCmdGauges()
 			clientCtx := val.ClientCtx
 
-			args := []string{}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -76,12 +126,15 @@ func (s *IntegrationTestSuite) TestGetCmdToDistributeCoins() {
 
 	testCases := []struct {
 		name      string
+		args      []string
 		expectErr bool
 		respType  proto.Message
 	}{
 		{
 			"query to distribute coins",
-			false, &types.ModuleToDistributeCoinsResponse{},
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			&types.ModuleToDistributeCoinsResponse{},
 		},
 	}
 
@@ -92,9 +145,7 @@ func (s *IntegrationTestSuite) TestGetCmdToDistributeCoins() {
 			cmd := cli.GetCmdToDistributeCoins()
 			clientCtx := val.ClientCtx
 
-			args := []string{}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -110,12 +161,15 @@ func (s *IntegrationTestSuite) TestGetCmdDistributedCoins() {
 
 	testCases := []struct {
 		name      string
+		args      []string
 		expectErr bool
 		respType  proto.Message
 	}{
 		{
 			"query to distribute coins",
-			false, &types.ModuleDistributedCoinsResponse{},
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			&types.ModuleDistributedCoinsResponse{},
 		},
 	}
 
@@ -126,9 +180,7 @@ func (s *IntegrationTestSuite) TestGetCmdDistributedCoins() {
 			cmd := cli.GetCmdDistributedCoins()
 			clientCtx := val.ClientCtx
 
-			args := []string{}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -144,12 +196,15 @@ func (s *IntegrationTestSuite) TestGetCmdGaugeByID() {
 
 	testCases := []struct {
 		name      string
+		args      []string
 		expectErr bool
 		respType  proto.Message
 	}{
 		{
 			"query gauge by id",
-			false, &types.GaugeByIDResponse{},
+			[]string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			&types.GaugeByIDResponse{},
 		},
 	}
 
@@ -160,9 +215,7 @@ func (s *IntegrationTestSuite) TestGetCmdGaugeByID() {
 			cmd := cli.GetCmdGaugeByID()
 			clientCtx := val.ClientCtx
 
-			args := []string{"1"}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -178,12 +231,15 @@ func (s *IntegrationTestSuite) TestGetCmdActiveGauges() {
 
 	testCases := []struct {
 		name      string
+		args      []string
 		expectErr bool
 		respType  proto.Message
 	}{
 		{
 			"query active gauges",
-			false, &types.ActiveGaugesResponse{},
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			&types.ActiveGaugesResponse{},
 		},
 	}
 
@@ -194,9 +250,7 @@ func (s *IntegrationTestSuite) TestGetCmdActiveGauges() {
 			cmd := cli.GetCmdActiveGauges()
 			clientCtx := val.ClientCtx
 
-			args := []string{}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -212,12 +266,15 @@ func (s *IntegrationTestSuite) TestGetCmdActiveGaugesPerDenom() {
 
 	testCases := []struct {
 		name      string
+		args      []string
 		expectErr bool
 		respType  proto.Message
 	}{
 		{
 			"query active gauges per denom",
-			false, &types.ActiveGaugesPerDenomResponse{},
+			[]string{s.cfg.BondDenom, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			&types.ActiveGaugesPerDenomResponse{},
 		},
 	}
 
@@ -228,9 +285,7 @@ func (s *IntegrationTestSuite) TestGetCmdActiveGaugesPerDenom() {
 			cmd := cli.GetCmdActiveGaugesPerDenom()
 			clientCtx := val.ClientCtx
 
-			args := []string{s.cfg.BondDenom}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -246,12 +301,15 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGauges() {
 
 	testCases := []struct {
 		name      string
+		args      []string
 		expectErr bool
 		respType  proto.Message
 	}{
 		{
 			"query upcoming gauges",
-			false, &types.UpcomingGaugesResponse{},
+			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			&types.UpcomingGaugesResponse{},
 		},
 	}
 
@@ -262,9 +320,7 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGauges() {
 			cmd := cli.GetCmdUpcomingGauges()
 			clientCtx := val.ClientCtx
 
-			args := []string{}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -280,12 +336,15 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGaugesPerDenom() {
 
 	testCases := []struct {
 		name      string
+		args      []string
 		expectErr bool
 		respType  proto.Message
 	}{
 		{
 			"query upcoming gauges per denom",
-			false, &types.UpcomingGaugesPerDenomResponse{},
+			[]string{s.cfg.BondDenom, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			false,
+			&types.UpcomingGaugesPerDenomResponse{},
 		},
 	}
 
@@ -296,9 +355,7 @@ func (s *IntegrationTestSuite) TestGetCmdUpcomingGaugesPerDenom() {
 			cmd := cli.GetCmdUpcomingGaugesPerDenom()
 			clientCtx := val.ClientCtx
 
-			args := []string{s.cfg.BondDenom}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -314,32 +371,38 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 
 	testCases := []struct {
 		name      string
-		owner     string
-		lockIds   string
-		endEpoch  int64
+		args      []string
 		expectErr bool
 		respType  proto.Message
 	}{
 		{
 			"query rewards estimation by owner",
-			val.Address.String(),
-			"",
-			100,
-			false, &types.RewardsEstResponse{},
+			[]string{
+				fmt.Sprintf("--%s=%s", cli.FlagOwner, val.Address.String()),
+				fmt.Sprintf("--%s=100", cli.FlagEndEpoch),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			&types.RewardsEstResponse{},
 		},
 		{
 			"query rewards estimation by lock id",
-			"",
-			"1,2",
-			100,
-			false, &types.RewardsEstResponse{},
+			[]string{
+				fmt.Sprintf("--%s=1,2", cli.FlagLockIds),
+				fmt.Sprintf("--%s=100", cli.FlagEndEpoch),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			&types.RewardsEstResponse{},
 		},
 		{
 			"query rewards estimation with empty end epoch",
-			"",
-			"1,2",
-			0,
-			false, &types.RewardsEstResponse{},
+			[]string{
+				fmt.Sprintf("--%s=1,2", cli.FlagLockIds),
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			},
+			false,
+			&types.RewardsEstResponse{},
 		},
 	}
 
@@ -350,13 +413,7 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 			cmd := cli.GetCmdRewardsEst()
 			clientCtx := val.ClientCtx
 
-			args := []string{
-				fmt.Sprintf("--%s=%s", cli.FlagOwner, tc.owner),
-				fmt.Sprintf("--%s=%s", cli.FlagLockIds, tc.lockIds),
-				fmt.Sprintf("--%s=%d", cli.FlagEndEpoch, tc.endEpoch),
-			}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -365,4 +422,8 @@ func (s *IntegrationTestSuite) TestGetCmdRewardsEst() {
 			}
 		})
 	}
+}
+
+func TestIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }
