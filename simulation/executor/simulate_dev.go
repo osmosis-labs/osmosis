@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -164,6 +165,13 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 	simState.curValidators = simState.nextValidators
 	simState.nextValidators = nPlus2Validators
 
+	// utilize proposer public key and generate validator hash
+	// then, with completed block header, generate app hash
+	// see https://github.com/tendermint/tendermint/blob/v0.34.x/spec/core/data_structures.md#header for more info on block header hashes
+	simState.constructHeaderHashes(proposerPubKey)
+}
+
+func (simState *simState) constructHeaderHashes(proposerPubKey crypto.PubKey) {
 	var currentValSet tmproto.ValidatorSet
 	// iterate through current validators and add them to the TM ValidatorSet struct
 	for _, key := range simState.curValidators.getKeys() {
@@ -203,7 +211,7 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 		panic(err)
 	}
 
-	// TODO: We dont fill out the nextValidatorSet
+	// TODO: We don't fill out the nextValidatorSet, we should eventually but not priority
 	// It is unclear to me if this means we need to choose a proposer prior to that block occurring
 
 	// generate an apphash from this header and set this value
