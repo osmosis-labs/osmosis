@@ -23,7 +23,7 @@ func GenAndDeliverTxWithRandFees(
 	ak AccountKeeper,
 	bk BankKeeper,
 	moduleName string,
-) (simulation.OperationMsg, []simulation.FutureOperation, sdk.Result, error) {
+) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
@@ -32,7 +32,7 @@ func GenAndDeliverTxWithRandFees(
 
 	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg)
 	if hasNeg {
-		return simulation.NoOpMsg(moduleName, msg.Type(), "message doesn't leave room for fees"), nil, sdk.Result{}, err
+		return simulation.NoOpMsg(moduleName, msg.Type(), "message doesn't leave room for fees"), nil, err
 	}
 
 	// Only allow fees in "uosmo"
@@ -40,7 +40,7 @@ func GenAndDeliverTxWithRandFees(
 
 	fees, err = simulation.RandomFees(r, ctx, coins)
 	if err != nil {
-		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate fees"), nil, sdk.Result{}, err
+		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate fees"), nil, err
 	}
 	return GenAndDeliverTx(app, txGen, msg, fees, ctx, simAccount, ak, moduleName)
 }
@@ -55,7 +55,7 @@ func GenAndDeliverTx(
 	simAccount simulation.Account,
 	ak AccountKeeper,
 	moduleName string,
-) (simulation.OperationMsg, []simulation.FutureOperation, sdk.Result, error) {
+) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
 	tx, err := helpers.GenTx(
 		txGen,
@@ -68,13 +68,13 @@ func GenAndDeliverTx(
 		simAccount.PrivKey,
 	)
 	if err != nil {
-		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, sdk.Result{}, err
+		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
 	}
 
-	gasInfo, result, err := app.Deliver(txGen.TxEncoder(), tx)
+	gasInfo, _, err := app.Deliver(txGen.TxEncoder(), tx)
 	if err != nil {
-		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to deliver tx"), nil, sdk.Result{}, err
+		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to deliver tx"), nil, err
 	}
 
-	return simulation.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil), nil, *result, nil
+	return simulation.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil), nil, nil
 }

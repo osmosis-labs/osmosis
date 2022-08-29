@@ -42,8 +42,9 @@ func (a weightedOperationAction) Frequency() Frequency {
 func (a weightedOperationAction) Execute(sim *SimCtx, ctx sdk.Context) (
 	simulation.OperationMsg, []simulation.FutureOperation, []byte, error,
 ) {
-	op, futureOp, result, err := a.op.Op()(sim.GetRand(), sim.BaseApp(), ctx, sim.Accounts, sim.ChainID())
-	return op, futureOp, result.Data, err
+	op, futureOp, err := a.op.Op()(sim.GetRand(), sim.BaseApp(), ctx, sim.Accounts, sim.ChainID())
+	// pass in an empty byte array for response data for all weighted operations
+	return op, futureOp, []byte{}, err
 }
 
 func ActionsFromWeightedOperations(ops legacysimexec.WeightedOperations) []Action {
