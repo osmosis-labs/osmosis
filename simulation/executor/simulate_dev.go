@@ -155,8 +155,8 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 		time.Duration(int64(simCtx.GetRand().Intn(int(timeDiff)))) * time.Second)
 
 	// Draw the block proposer from proposers for n+1
-	proposerPk := simState.nextValidators.randomProposer(simCtx.GetRand())
-	simState.header.ProposerAddress = proposerPk.Address()
+	proposerPubKey := simState.nextValidators.randomProposer(simCtx.GetRand())
+	simState.header.ProposerAddress = proposerPubKey.Address()
 	// find N + 2 valset
 	nPlus2Validators := updateValidators(simState.tb, simCtx.GetRand(), simState.simParams, simState.nextValidators, res.ValidatorUpdates, simState.eventStats.Tally)
 
@@ -170,13 +170,13 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 		var validator tmproto.Validator
 		mVal := simState.curValidators[key]
 		validator.PubKey = mVal.val.PubKey
-		pk2, _ := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
+		currentPubKey, _ := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
 		validator.Address = pk2.Address()
 		currentValSet.Validators = append(currentValSet.Validators, &validator)
 	}
 
 	// set the proposer chosen earlier as the validator set block proposer
-	var newVal tmtypes.Validator
+	var proposerVal tmtypes.Validator
 	newVal.PubKey = proposerPk
 	newVal.Address = proposerPk.Address()
 	blockProposer, err := newVal.ToProto()
