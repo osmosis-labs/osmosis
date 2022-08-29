@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -287,7 +288,7 @@ func (im *IBCModule) RevertSentPacket(
 	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, data.Denom)
 
 	// This could return an error if the "receive" path is full. We should consider adding a message to the
-	//contract so that we can force the revert in this case
+	// contract so that we can force the revert in this case
 	_ = CheckAndUpdateRateLimits(
 		ctx,
 		im.ics4Middleware.ContractKeeper,
