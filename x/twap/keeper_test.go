@@ -23,6 +23,7 @@ var (
 	defaultThreeAssetCoins        = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000), sdk.NewInt64Coin(denom2, 1_000_000_000))
 	baseTime                      = time.Unix(1257894000, 0).UTC()
 	tPlusOne                      = baseTime.Add(time.Second)
+	tMinOne                       = baseTime.Add(-time.Second)
 	basePoolId             uint64 = 1
 )
 
