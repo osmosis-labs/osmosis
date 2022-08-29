@@ -8,12 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-<<<<<<< HEAD
 	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
-=======
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v7/x/lockup/types"
->>>>>>> 079bdd49 (x/incentives: cli updates (#1985))
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

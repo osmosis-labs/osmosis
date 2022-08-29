@@ -7,23 +7,17 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-<<<<<<< HEAD
-	"github.com/osmosis-labs/osmosis/v11/app"
-	"github.com/osmosis-labs/osmosis/v11/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
-=======
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v7/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v7/app"
-	gammtestutil "github.com/osmosis-labs/osmosis/v7/x/gamm/client/testutil"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v7/x/incentives/types"
-	lockuptestutil "github.com/osmosis-labs/osmosis/v7/x/lockup/client/testutil"
->>>>>>> 079bdd49 (x/incentives: cli updates (#1985))
+	"github.com/osmosis-labs/osmosis/v11/app"
+	gammtestutil "github.com/osmosis-labs/osmosis/v11/x/gamm/client/testutil"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	lockuptestutil "github.com/osmosis-labs/osmosis/v11/x/lockup/client/testutil"
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
