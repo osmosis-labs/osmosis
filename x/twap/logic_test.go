@@ -1,7 +1,6 @@
 package twap_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -22,8 +21,8 @@ var OneSec = sdk.NewDec(1e9)
 func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
 		PoolId:          poolId,
-		Asset0Denom:     defaultUniV2Coins[0].Denom,
-		Asset1Denom:     defaultUniV2Coins[1].Denom,
+		Asset0Denom:     defaultTwoAssetCoins[0].Denom,
+		Asset1Denom:     defaultTwoAssetCoins[1].Denom,
 		Time:            t,
 		P0LastSpotPrice: sp0,
 		P1LastSpotPrice: sdk.OneDec().Quo(sp0),
@@ -36,8 +35,8 @@ func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) types.Tw
 // make an expected record for math tests, we adjust other values in the test runner.
 func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
-		Asset0Denom: defaultUniV2Coins[0].Denom,
-		Asset1Denom: defaultUniV2Coins[1].Denom,
+		Asset0Denom: defaultTwoAssetCoins[0].Denom,
+		Asset1Denom: defaultTwoAssetCoins[1].Denom,
 		// make new copies
 		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
 		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
@@ -46,7 +45,7 @@ func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
 
 func (s *TestSuite) TestNewTwapRecord() {
 	// prepare pool before test
-	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
+	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 
 	tests := map[string]struct {
 		poolId        uint64
@@ -145,7 +144,7 @@ func (s *TestSuite) TestUpdateRecord() {
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
-			poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
+			poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 
 			if test.updateBlockHeight {
 				s.Ctx = s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1)
@@ -156,7 +155,6 @@ func (s *TestSuite) TestUpdateRecord() {
 			}
 
 			if test.updateSpotPrice {
-				fmt.Println(name)
 				s.RunBasicSwap(poolId)
 			}
 
@@ -246,9 +244,6 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			test.expRecord.P1LastSpotPrice = test.record.P1LastSpotPrice
 
 			gotRecord := twap.RecordWithUpdatedAccumulators(test.record, test.newTime)
-			fmt.Println("=[-=")
-			fmt.Println(test.expRecord.PoolId)
-			fmt.Println(gotRecord.PoolId)
 			require.Equal(t, test.expRecord, gotRecord)
 		})
 	}
