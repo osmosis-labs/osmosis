@@ -20,8 +20,8 @@ var OneSec = sdk.NewDec(1e9)
 
 func newRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
-		Asset0Denom:     defaultUniV2Coins[0].Denom,
-		Asset1Denom:     defaultUniV2Coins[1].Denom,
+		Asset0Denom:     defaultTwoAssetCoins[0].Denom,
+		Asset1Denom:     defaultTwoAssetCoins[1].Denom,
 		Time:            t,
 		P0LastSpotPrice: sp0,
 		P1LastSpotPrice: sdk.OneDec().Quo(sp0),
@@ -34,8 +34,8 @@ func newRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 // make an expected record for math tests, we adjust other values in the test runner.
 func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
-		Asset0Denom: defaultUniV2Coins[0].Denom,
-		Asset1Denom: defaultUniV2Coins[1].Denom,
+		Asset0Denom: defaultTwoAssetCoins[0].Denom,
+		Asset1Denom: defaultTwoAssetCoins[1].Denom,
 		// make new copies
 		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
 		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
@@ -85,7 +85,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 }
 
 func (s *TestSuite) TestUpdateTwap() {
-	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
+	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 	newSp := sdk.OneDec()
 
 	tests := map[string]struct {
