@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) TestGenesis() {
 	}
 
 	app := suite.App
-	suite.Ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.Ctx = app.BaseApp.NewContext(true, tmproto.Header{})
 
 	// Test both with bank denom metadata set, and not set.
 	for i, denom := range genesisState.FactoryDenoms {

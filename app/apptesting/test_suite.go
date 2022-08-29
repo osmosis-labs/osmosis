@@ -66,13 +66,6 @@ func (s *KeeperTestHelper) Setup() {
 
 func (s *KeeperTestHelper) SetupTestForInitGenesis() {
 	s.App = app.Setup(true)
-	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
-	// remove module account to ensure initGenesis initializes it on its own
-	// accountKeeper := s.App.AccountKeeper
-
-	// moduleAddress := accountKeeper.GetModuleAddress(types.ModuleName)
-	// tokenFactoryModuleAccount := accountKeeper.GetAccount(s.Ctx, moduleAddress)
-	// accountKeeper.RemoveAccount(s.Ctx, tokenFactoryModuleAccount)
 }
 
 func (s *KeeperTestHelper) SetEpochStartTime() {
