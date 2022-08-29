@@ -99,12 +99,11 @@ func (server msgServer) CreatePool(goCtx context.Context, msg types.CreatePoolMs
 // and the actual number of share amount resulted from joining pool.
 // Internal logic flow for each pool model is as follows:
 // Balancer: TokensIn provided as the argument must be either a single token or tokens containing all assets in the pool.
-//
-//	For the case of a single token, we simply perform single asset join (balancer notation: pAo, pool shares amount out,
-//	given single asset in).
-//	For the case of multi-asset join, we first calculate the maximal amount of tokens that can be joined whilst maintaining
-//	pool asset's ratio without swap. We then iterate through the remaining coins that couldn't be joined
-//	and perform single asset join on each token.
+// * For the case of a single token, we simply perform single asset join (balancer notation: pAo, pool shares amount out,
+// given single asset in).
+// * For the case of multi-asset join, we first calculate the maximal amount of tokens that can be joined whilst maintaining
+// pool asset's ratio without swap. We then iterate through the remaining coins that couldn't be joined
+// and perform single asset join on each token.
 func (server msgServer) JoinPool(goCtx context.Context, msg *types.MsgJoinPool) (*types.MsgJoinPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
