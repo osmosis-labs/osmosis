@@ -225,9 +225,9 @@ func (k Keeper) JoinPoolNoSwap(
 
 // getMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of shares in the pool.
 // Steps to getting the needed lp liquidity coins needed for the share of the pools are
-// 		1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
-// 		2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
-// 	  	   each pool asset.
+// 1. calculate how much percent of the pool does given share account for(# of input shares / # of current total shares)
+// 2. since we know how much % of the pool we want, iterate through all pool liquidity to calculate how much coins we need for
+// each pool asset.
 func getMaximalNoSwapLPAmount(ctx sdk.Context, pool types.PoolI, shareOutAmount sdk.Int) (neededLpLiquidity sdk.Coins, err error) {
 	totalSharesAmount := pool.GetTotalShares()
 	// shareRatio is the desired number of shares, divided by the total number of
