@@ -9,6 +9,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 
@@ -54,6 +56,9 @@ func CreateUpgradeHandler(
 		hostParams := icahosttypes.Params{
 			HostEnabled: true,
 			AllowMessages: []string{
+				// Change: Added MsgTrasnsfer
+				sdk.MsgTypeURL(&ibctransfertypes.MsgTransfer{}),
+
 				sdk.MsgTypeURL(&banktypes.MsgSend{}),
 				sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
 				sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
