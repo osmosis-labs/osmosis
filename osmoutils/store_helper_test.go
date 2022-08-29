@@ -371,16 +371,15 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			expectedErr: false,
 			expectedValues: "1",
 		},
-		/* TODO: fix GetFirstValueAfterPrefix to return error even if keyStart is lexicographically before existing keys
 		"prefix doesn't exist, start key lexicographically before existing keys": {
 			preSetKeys: []string{prefixTwo + keyA, prefixTwo + keyB},
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
 			expectedErr: false,
-			expectedValues: "",
+			// we expect the first value after the prefix, which is the value associated with the first valid key
+			expectedValues: "0",
 		},
-		*/
 
 		// error catching
 		"prefix doesn't exist, no keys": {
