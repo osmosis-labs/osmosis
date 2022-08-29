@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/utils"
 )
 
 type GammEventsTestSuite struct {
@@ -180,6 +181,104 @@ func (suite *GammEventsTestSuite) TestEmitRemoveLiquidityEvent() {
 
 			// System under test.
 			events.EmitRemoveLiquidityEvent(tc.ctx, tc.testAccountAddr, tc.poolId, tc.tokensOut)
+
+			// Assertions
+			if hasNoEventManager {
+				// If there is no event manager on context, this is a no-op.
+				return
+			}
+
+			eventManager := tc.ctx.EventManager()
+			actualEvents := eventManager.Events()
+			suite.Equal(expectedEvents, actualEvents)
+		})
+	}
+}
+
+func (suite *GammEventsTestSuite) TestEmitMultiHopAmountInEvent() {
+	testcases := map[string]struct {
+		ctx       sdk.Context
+		poolId    uint64
+		tokensOut sdk.Int
+	}{
+		"basic valid": {
+			ctx:       suite.CreateTestContext(),
+			poolId:    1,
+			tokensOut: sdk.NewInt(1234),
+		},
+		"context with no event manager": {
+			ctx: sdk.Context{},
+		},
+		"valid with multiple tokens out": {
+			ctx:       suite.CreateTestContext(),
+			poolId:    200,
+			tokensOut: sdk.NewInt(99),
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			expectedEvents := sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtMultiHopAmtIn,
+					sdk.NewAttribute(types.AttributeKeyPoolId, utils.Uint64ToString(tc.poolId)),
+					sdk.NewAttribute(types.AttributeKeyTokensIn, tc.tokensOut.String()),
+				),
+			}
+
+			hasNoEventManager := tc.ctx.EventManager() == nil
+
+			// System under test.
+			events.EmitMultiHopAmountInEvent(tc.ctx, tc.poolId, tc.tokensOut)
+
+			// Assertions
+			if hasNoEventManager {
+				// If there is no event manager on context, this is a no-op.
+				return
+			}
+
+			eventManager := tc.ctx.EventManager()
+			actualEvents := eventManager.Events()
+			suite.Equal(expectedEvents, actualEvents)
+		})
+	}
+}
+
+func (suite *GammEventsTestSuite) TestEmitMultiHopAmountOutEvent() {
+	testcases := map[string]struct {
+		ctx      sdk.Context
+		poolId   uint64
+		tokensIn sdk.Int
+	}{
+		"basic valid": {
+			ctx:      suite.CreateTestContext(),
+			poolId:   1,
+			tokensIn: sdk.NewInt(1234),
+		},
+		"context with no event manager": {
+			ctx: sdk.Context{},
+		},
+		"valid with multiple tokens out": {
+			ctx:      suite.CreateTestContext(),
+			poolId:   200,
+			tokensIn: sdk.NewInt(99),
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			expectedEvents := sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtMultiHopAmtOut,
+					sdk.NewAttribute(types.AttributeKeyPoolId, utils.Uint64ToString(tc.poolId)),
+					sdk.NewAttribute(types.AttributeKeyTokensOut, tc.tokensIn.String()),
+				),
+			}
+
+			hasNoEventManager := tc.ctx.EventManager() == nil
+
+			// System under test.
+			events.EmitMultiHopAmountOutEvent(tc.ctx, tc.poolId, tc.tokensIn)
 
 			// Assertions
 			if hasNoEventManager {

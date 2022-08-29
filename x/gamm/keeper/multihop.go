@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
@@ -32,6 +32,8 @@ func (k Keeper) MultihopSwapExactAmountIn(
 
 		// Chain output of current pool as the input for the next routed pool
 		tokenIn = sdk.NewCoin(route.TokenOutDenom, tokenOutAmount)
+
+		events.EmitMultiHopAmountInEvent(ctx, route.PoolId, tokenOutAmount)
 	}
 	return
 }
@@ -82,6 +84,8 @@ func (k Keeper) MultihopSwapExactAmountOut(
 		if i == 0 {
 			tokenInAmount = _tokenInAmount
 		}
+
+		events.EmitMultiHopAmountOutEvent(ctx, route.PoolId, tokenInAmount)
 	}
 
 	return tokenInAmount, nil
