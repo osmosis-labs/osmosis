@@ -13,7 +13,6 @@ linters:
     #    - bodyclose <- needs go 1.18 support
     # - contextcheck <- needs go 1.18 support
     #    - cyclop
-    - deadcode
     - depguard
     #    - dogsled <- disabled because we would like to participate in the iditerod
     # - dupl <- really just catches cli stub text
@@ -69,7 +68,6 @@ linters:
     # - rowserrcheck <- needs go 1.18 support
     # - sqlclosecheck <- needs go 1.18 support
     - staticcheck # set of rules from staticcheck, subset of staticcheck binary.
-#    - structcheck <- later
     - stylecheck # replacement of golint, subset of staticcheck binary.
     #    - tagliatelle <- disabled for defying cosmos idiom
     - tenv
@@ -80,7 +78,6 @@ linters:
     - unconvert
 #    - unparam <- looks for unused parameters (enable later)
     - unused # looks for unused variables, subset of staticcheck binary.
-#    - varcheck <- later
     #    - varnamelen <- disabled because defies idiom
     #    - wastedassign
     - whitespace
