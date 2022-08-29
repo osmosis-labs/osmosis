@@ -15,16 +15,7 @@ func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 		return types.TwapRecord{}, err
 	}
 	lastErrorTime := time.Time{}
-	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
-	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
-	if err0 != nil || err1 != nil {
-		lastErrorTime = ctx.BlockTime()
-		// TODO: Is this what we want to do? We are returning an error in such events.
-		if (sp0 == sdk.Dec{} || sp1 == sdk.Dec{}) {
-			sp0 = sdk.ZeroDec()
-			sp1 = sdk.ZeroDec()
-		}
-	}
+	sp0, sp1, lastErrorTime := getSpotPrices(ctx, k, poolId, denom0, denom1, lastErrorTime)
 	return types.TwapRecord{
 		PoolId:                      poolId,
 		Asset0Denom:                 denom0,
@@ -37,6 +28,23 @@ func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
 		LastErrorTime:               lastErrorTime,
 	}, nil
+}
+
+// getSpotPricecs gets the spot prices for the pool,
+func getSpotPrices(ctx sdk.Context, k types.AmmInterface, poolId uint64, denom0, denom1 string, lastErrorTime time.Time) (
+	sp0 sdk.Dec, sp1 sdk.Dec, lastErrTime time.Time) {
+	lastErrTime = lastErrorTime
+	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
+	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
+	if err0 != nil || err1 != nil {
+		lastErrTime = ctx.BlockTime()
+		// TODO: Is this what we want to do? We are returning an error in such events.
+		if (sp0 == sdk.Dec{} || sp1 == sdk.Dec{}) {
+			sp0 = sdk.ZeroDec()
+			sp1 = sdk.ZeroDec()
+		}
+	}
+	return sp0, sp1, lastErrTime
 }
 
 // afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
@@ -91,12 +99,13 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
 	newRecord.Height = ctx.BlockHeight()
 
-	newSp0 := types.MustGetSpotPrice(k.ammkeeper, ctx, record.PoolId, record.Asset0Denom, record.Asset1Denom)
-	newSp1 := types.MustGetSpotPrice(k.ammkeeper, ctx, record.PoolId, record.Asset1Denom, record.Asset0Denom)
+	newSp0, newSp1, lastErrorTime := getSpotPrices(
+		ctx, k.ammkeeper, record.PoolId, record.Asset0Denom, record.Asset1Denom, record.LastErrorTime)
 
 	// set last spot price to be last price of this block. This is what will get used in interpolation.
 	newRecord.P0LastSpotPrice = newSp0
 	newRecord.P1LastSpotPrice = newSp1
+	newRecord.LastErrorTime = lastErrorTime
 
 	return newRecord
 }
