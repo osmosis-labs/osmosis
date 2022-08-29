@@ -330,6 +330,9 @@ localnet-start-state-export:
 localnet-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
+localnet-remove: localnet-stop
+	rm -rf $(PWD)/tests/localosmosis/.osmosisd
+
 localnet-remove-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
 

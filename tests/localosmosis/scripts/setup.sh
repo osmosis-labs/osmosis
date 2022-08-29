@@ -76,13 +76,18 @@ add_genesis_accounts () {
 edit_config () {
     # Remove seeds
     dasel put string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' ''
+
+    # Expose the rpc
+    dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
 }
 
-echo $MNEMONIC | osmosisd init -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover $MONIKER
-
-install_prerequisites
-edit_genesis
-add_genesis_accounts
-edit_config
+if [[ ! -d $CONFIG_FOLDER ]]
+then
+    echo $MNEMONIC | osmosisd init -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover $MONIKER
+    install_prerequisites
+    edit_genesis
+    add_genesis_accounts
+    edit_config
+fi
 
 osmosisd start --home $OSMOSIS_HOME

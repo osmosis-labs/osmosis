@@ -12,14 +12,11 @@ services:
         GO_VERSION: 1.18
     volumes:
       - ./scripts/setup.sh:/osmosis/setup.sh
+      - ./.osmosisd/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/setup.sh
     ports:
       - 26657:26657
       - 1317:1317
-      - "9090:9090"
-      - "9091:9091"
-    
-
-
-
+      - 9090:9090
+      - 9091:9091
