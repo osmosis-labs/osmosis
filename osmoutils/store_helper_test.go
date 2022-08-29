@@ -917,7 +917,7 @@ func (s *TestSuite) TestMustGetDec() {
 
 			expectedGetKeyValues: map[string]sdk.Dec{
 				keyA: sdk.OneDec(),
-				keyB: {}, // this one panics
+				keyB: sdk.Dec{}, // this one panics
 			},
 
 			expectPanic: true,
