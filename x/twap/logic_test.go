@@ -241,10 +241,14 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// correct expected record based off copy/paste values
 			test.expRecord.Time = test.newTime
+			test.expRecord.PoolId = test.record.PoolId
 			test.expRecord.P0LastSpotPrice = test.record.P0LastSpotPrice
 			test.expRecord.P1LastSpotPrice = test.record.P1LastSpotPrice
 
 			gotRecord := twap.RecordWithUpdatedAccumulators(test.record, test.newTime)
+			fmt.Println("=[-=")
+			fmt.Println(test.expRecord.PoolId)
+			fmt.Println(gotRecord.PoolId)
 			require.Equal(t, test.expRecord, gotRecord)
 		})
 	}
@@ -285,6 +289,21 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			testDenom0:      baseRecord.Asset0Denom,
 			testDenom1:      baseRecord.Asset1Denom,
 			testTime:        baseTime.Add(-time.Second),
+			expectedErr:     true,
+		},
+		"on lexicographical order denom parameters": {
+			recordsToPreSet: baseRecord,
+			testPoolId:      baseRecord.PoolId,
+			testDenom0:      baseRecord.Asset1Denom,
+			testDenom1:      baseRecord.Asset0Denom,
+			testTime:        baseTime,
+		},
+		"test non lexicographical order parameter": {
+			recordsToPreSet: baseRecord,
+			testPoolId:      baseRecord.PoolId + 1,
+			testDenom0:      baseRecord.Asset1Denom,
+			testDenom1:      baseRecord.Asset0Denom,
+			testTime:        baseTime,
 			expectedErr:     true,
 		},
 	}
