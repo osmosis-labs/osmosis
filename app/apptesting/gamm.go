@@ -112,6 +112,13 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	s.Require().NoError(err)
 }
 
+func (s *KeeperTestHelper) RunBasicExit(poolId uint64) {
+	shareInAmount := sdk.NewInt(100)
+	tokenOutMins := sdk.NewCoins()
+	_, err := s.App.GAMMKeeper.ExitPool(s.Ctx, s.TestAccs[0], poolId, shareInAmount, tokenOutMins)
+	s.Require().NoError(err)
+}
+
 func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
 	pool, _ := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
 	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
