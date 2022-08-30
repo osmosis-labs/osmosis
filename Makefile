@@ -293,16 +293,19 @@ format:
 ###############################################################################
 
 localnet-keys:
-	. tests/localosmosis/keys.sh
+	. tests/localosmosis/scripts/add_keys.sh
 
 localnet-build:
-	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
+	@docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-build-state-export:
 	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
 
 localnet-start:
 	@docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-startd:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up -d
 
 localnet-start-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
@@ -311,8 +314,7 @@ localnet-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-remove: localnet-stop
-	PWD=$(shell pwd)
-	@docker run --user root -v ${PWD}/tests/localosmosis/.osmosisd:/root/osmosis ubuntu /bin/sh -c "rm -rf /root/osmosis/*"
+	rm -rf $(PWD)/tests/localosmosis/.osmosisd
 
 localnet-remove-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
