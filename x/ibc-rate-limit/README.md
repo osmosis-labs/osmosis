@@ -28,14 +28,14 @@ any IBC module, and be used as an ICS4 wrapper by a transfer module (for sending
 
 Of those interfaces, just the following methods have custom logic:
 
- * `ICS4Wrapper.SendPacket` adds tracking of value sent via an ibc channel 
- * `Middleware.OnRecvPacket` adds tracking of value received via an ibc channel 
- * `Middleware.OnAcknowledgementPacket` undos the tracking of a sent packet if the acknowledgment is not a success
- * `OnTimeoutPacket` undos the tracking of a sent packet if the packet times out (is not relayed)
+* `ICS4Wrapper.SendPacket` adds tracking of value sent via an ibc channel 
+* `Middleware.OnRecvPacket` adds tracking of value received via an ibc channel 
+* `Middleware.OnAcknowledgementPacket` undos the tracking of a sent packet if the acknowledgment is not a success
+* `OnTimeoutPacket` undos the tracking of a sent packet if the packet times out (is not relayed)
 
 All other methods from those interfaces are passthroughs to the underlying implementations.
 
-### Contract
+### Contract Concepts
 
 The tracking contract uses the following concepts
 
@@ -61,20 +61,20 @@ The middleware uses the following parameters:
 The contract specifies the following messages:
 
 #### Query
- * GetQuotas - Returns the quotas for a path
+* GetQuotas - Returns the quotas for a path
 
 #### Exec
- * AddPath - Adds a list of quotas for a path
- * RemovePath - Removes a path
- * ResetPathQuota - If a rate limit has been reached, the contract's governance address can reset the quota so that transfers are allowed again
+* AddPath - Adds a list of quotas for a path
+* RemovePath - Removes a path
+* ResetPathQuota - If a rate limit has been reached, the contract's governance address can reset the quota so that transfers are allowed again
 
 #### Sudo
 
 Sudo messages can only be executed by the chain.
 
- * SendPacket - Increments the amount used out of the send quota and checks that the send is allowed. If it isn't, it will return a RateLimitExceeded error
- * RecvPacket - Increments the amount used out of the receive quota and checks that the receive is allowed. If it isn't, it will return a RateLimitExceeded error
- * UndoSend - If a send has failed, the undo message is used to remove its cost from the send quota
+* SendPacket - Increments the amount used out of the send quota and checks that the send is allowed. If it isn't, it will return a RateLimitExceeded error
+* RecvPacket - Increments the amount used out of the receive quota and checks that the receive is allowed. If it isn't, it will return a RateLimitExceeded error
+* UndoSend - If a send has failed, the undo message is used to remove its cost from the send quota
 
 ## Integration
 
