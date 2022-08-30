@@ -236,58 +236,51 @@ func (s *TestSuite) TestAfterEpochEnd() {
 	}
 }
 
-// TestAfterSwap_JoinPool tests hooks for `AfterSwap` and `AfterJoinPool`.
+// TestAfterSwap_JoinPool tests hooks for `AfterSwap`, `AfterJoinPool`, and `AfterExitPool`.
 // The purpose of this test is to test whether we correctly store the state of the
 // pools that has changed with price impact.
-func (s *TestSuite) TestAfterSwap_JoinPool() {
-	// poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
-	tests := []struct {
-		name      string
+func (s *TestSuite) TestPoolStateChange() {
+	tests := map[string]struct {
 		poolCoins sdk.Coins
 		swap      bool
 		joinPool  bool
 		exitPool  bool
 	}{
-		{
-			"swap triggers track changed pools",
-			defaultTwoAssetCoins,
-			true,
-			false,
-			false,
+		"swap triggers track changed pools": {
+			poolCoins: defaultTwoAssetCoins,
+			swap: true,
+			joinPool: false,
+			exitPool: false,
 		},
-		{
-			"join pool triggers track changed pools",
-			defaultTwoAssetCoins,
-			false,
-			true,
-			false,
+		"join pool triggers track changed pools": {
+			poolCoins: defaultTwoAssetCoins,
+			swap: false,
+			joinPool: true,
+			exitPool: false,
 		},
-		{
-			"swap and join pool in same block triggers track changed pools",
-			defaultTwoAssetCoins,
-			true,
-			true,
-			false,
+		"swap and join pool in same block triggers track changed pools": {
+			poolCoins: defaultTwoAssetCoins,
+			swap: true,
+			joinPool: true,
+			exitPool: false,
 		},
-		{
-			"three asset pool: swap and join pool in same block triggers track changed pools",
-			defaultThreeAssetCoins,
-			true,
-			true,
-			false,
+		"three asset pool: swap and join pool in same block triggers track changed pools": {
+			poolCoins: defaultThreeAssetCoins,
+			swap: true,
+			joinPool: true,
+			exitPool: false,
 		},
-		{
-			"exit pool triggers track changed pools",
-			defaultTwoAssetCoins,
-			false,
-			false,
-			true,
+		"exit pool triggers track changed pools": {
+			poolCoins: defaultTwoAssetCoins,
+			swap: false,
+			joinPool: false,
+			exitPool: true,
 		},
 	}
 
-	for _, tc := range tests {
+	for name, tc := range tests {
 		s.SetupTest()
-		s.Run(tc.name, func() {
+		s.Run(name, func() {
 			poolId := s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
 
 			s.EndBlock()
