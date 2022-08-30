@@ -284,20 +284,17 @@ func (im *IBCModule) RevertSentPacket(
 		// The contract has not been configured. Continue as usual
 		return nil
 	}
-	channelValue := im.ics4Middleware.CalculateChannelValue(ctx, data.Denom)
 
-	// This could return an error if the "receive" path is full. We should consider adding a message to the
-	// contract so that we can force the revert in this case
-	_ = CheckAndUpdateRateLimits(
+	if err := UndoSendRateLimit(
 		ctx,
 		im.ics4Middleware.ContractKeeper,
-		"recv_packet",
 		params.ContractAddress,
-		channelValue,
-		packet.GetDestChannel(),
+		packet.GetSourceChannel(),
 		data.Denom,
 		data.Amount,
-	)
+	); err != nil {
+		return err
+	}
 	return nil
 }
 

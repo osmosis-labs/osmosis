@@ -49,6 +49,39 @@ func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.Permis
 	return nil
 }
 
+type UndoSendMsg struct {
+	UndoSend UndoSendMsgContent `json:"undo_send"`
+}
+
+type UndoSendMsgContent struct {
+	ChannelId string `json:"channel_id"`
+	Denom     string `json:"denom"`
+	Funds     string `json:"funds"`
+}
+
+func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
+	contract string,
+	sourceChannel, denom string,
+	amount string,
+) error {
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return err
+	}
+	msg := UndoSendMsg{UndoSend: UndoSendMsgContent{ChannelId: sourceChannel, Denom: denom, Funds: amount}}
+	asJson, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	_, err = contractKeeper.Sudo(ctx, contractAddr, asJson)
+	if err != nil {
+		return sdkerrors.Wrap(types.ErrContractError, err.Error())
+	}
+
+	return nil
+}
+
 type SendPacketMsg struct {
 	SendPacket RateLimitExecMsg `json:"send_packet"`
 }
