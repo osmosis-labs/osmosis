@@ -20,5 +20,5 @@ func init() {
 	StargateWhitelist.Store("/cosmos.auth.v1beta1.Query/Account", &authtypes.QueryAccountResponse{})
 	StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
 
-	StargateWhitelist.Store("/osmosis.epochs.v1beta1.Query/EpochInfos", &epochtypes.QueryCurrentEpochResponse{})
+	StargateWhitelist.Store("/osmosis.epochs.v1beta1.Query/EpochInfos", &epochtypes.QueryEpochsInfoResponse{})
 }

@@ -18,7 +18,7 @@ import (
 // StargateQuerier dispatches whitelisted stargate queries
 func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, codec codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
-		binding, whitelisted := StargateWhitelist.Load(request.Path)
+		protoResponse, whitelisted := StargateWhitelist.Load(request.Path)
 		if !whitelisted {
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: fmt.Sprintf("'%s' path is not allowed from the contract", request.Path)}
 		}
@@ -36,8 +36,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, codec codec.Codec) fun
 			return nil, err
 		}
 
-		// normalize response to ensure backward compatibility
-		bz, err := ConvertProtoToJsonMarshal(binding, res.Value, codec)
+		bz, err := ConvertProtoToJsonMarshal(protoResponse, res.Value, codec)
 		if err != nil {
 			return nil, err
 		}
@@ -173,11 +172,12 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 	}
 }
 
-// NormalizeReponses normalizes the responses by unmarshalling the response then marshalling them again.
-// Normalizing the response is specifically important for responses that contain type of Any.
-func ConvertProtoToJsonMarshal(binding interface{}, bz []byte, codec codec.Codec) ([]byte, error) {
+// ConvertProtoToJsonMarshal  unmarshals the given bytes into a proto message and then marshals it to json.
+// This is done so that clients calling stargate queries do not need to define their own proto unmarshalers,
+// being able to use response directly by json marshalling, which is supported in cosmwasm.
+func ConvertProtoToJsonMarshal(protoResponse interface{}, bz []byte, codec codec.Codec) ([]byte, error) {
 	// all values are proto message
-	message, ok := binding.(proto.Message)
+	message, ok := protoResponse.(proto.Message)
 	if !ok {
 		return nil, wasmvmtypes.Unknown{}
 	}
@@ -192,9 +192,6 @@ func ConvertProtoToJsonMarshal(binding interface{}, bz []byte, codec codec.Codec
 	if err != nil {
 		return nil, wasmvmtypes.Unknown{}
 	}
-
-	// clear proto message
-	message.Reset()
 
 	return bz, nil
 }
