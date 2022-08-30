@@ -105,7 +105,6 @@ func (s *TestSuite) TestGatherAllKeysFromStore() {
 }
 
 func (s *TestSuite) TestGatherValuesFromStore() {
-
 	testcases := map[string]struct {
 		preSetKeys []string
 		keyStart   []byte
@@ -115,7 +114,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 		expectedErr 	   error
 		expectedValues []string
 	}{
-		"common prefix, exlude end": {
+		"common prefix, exclude end": {
 			preSetKeys: oneAB,
 
 			keyStart: []byte(prefixOne + keyA),
@@ -180,7 +179,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			expectedValues: []string{"0", "1", "2"},
 		},
 		"get all values after start key": {
-			// SDK iterator is broken for nil end time, and non-nil start time
+			// SDK iterator is broken for nil end byte, and non-nil start byte
 			// https://github.com/cosmos/cosmos-sdk/issues/12661
 			// so we use []byte{0xff}
 			preSetKeys: oneABC,
@@ -226,7 +225,6 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 }
 
 func (s *TestSuite) TestGatherValuesFromStorePrefix() {
-
 	testcases := map[string]struct {
 		prefix     []byte
 		preSetKeys []string
