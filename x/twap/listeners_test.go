@@ -270,8 +270,14 @@ func (s *TestSuite) TestPoolStateChange() {
 			joinPool: true,
 			exitPool: false,
 		},
-		"exit pool triggers track changed pools": {
+		"exit pool triggers track changed pools in two-asset pool": {
 			poolCoins: defaultTwoAssetCoins,
+			swap: false,
+			joinPool: false,
+			exitPool: true,
+		},
+		"exit pool triggers track changed pools in three-asset pool": {
+			poolCoins: defaultThreeAssetCoins,
 			swap: false,
 			joinPool: false,
 			exitPool: true,
