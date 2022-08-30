@@ -50,10 +50,27 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	osmoutils.MustSet(store, key2, &twap)
 }
 
-func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) error {
+// pruneRecordsBeforeTimeButNewest prunes all records before the given time but the newest
+// record. The reason for preserving at least one record earlier than the keep period is
+// to ensure that we have a record to interpolate from in case there is only one or no records
+// within the keep period.
+// For example:
+// - Suppose pruning param -48 hour
+// - Suppose swaps at -50 hour, -1hour
+// - A prune would leave us with only one record at -1 hour, and we are not able to get twaps from the
+// [-48 hour, -1 hour] time range.
+func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastTime time.Time) error {
 	store := ctx.KVStore(k.storeKey)
-	iter := store.Iterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastTime, 0, "", ""))
+
+	// Reverse iterator guarantees that we get the newest records first.
+	iter := store.ReverseIterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastTime, 0, "", ""))
 	defer iter.Close()
+
+	// Skip newest
+	if iter.Valid() {
+		iter.Next()
+	}
+
 	for ; iter.Valid(); iter.Next() {
 		twapToRemove, err := types.ParseTwapFromBz(iter.Value())
 		if err != nil {

@@ -135,7 +135,6 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:        makeSimpleTwapInput(baseTime, tPlusOneMin, quoteAssetA),
 			expTwap:      sdk.NewDec(10),
 		},
-
 		"(2 record) start and end point to same record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      tPlusOneMin,
@@ -238,9 +237,156 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
-			for _, record := range test.recordsToSet {
-				s.twapkeeper.StoreNewRecord(s.Ctx, record)
+			s.preSetRecords(test.recordsToSet)
+			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
+
+			var twap sdk.Dec
+			var err error
+
+			twap, err = s.twapkeeper.GetArithmeticTwap(s.Ctx, test.input.poolId,
+				test.input.quoteAssetDenom, test.input.baseAssetDenom,
+				test.input.startTime, test.input.endTime)
+
+			if test.expErrorStr != "" {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), test.expErrorStr)
+				return
 			}
+			s.Require().NoError(err)
+			s.Require().Equal(test.expTwap, twap)
+		})
+	}
+}
+
+// TestGetArithmeticTwap_PruningRecordKeepPeriod is simular to TestGetArithmeticTwap.
+// It specifically focuses on testing edge cases related to the
+// pruning record keep period when interacting with GetArithmeticTwap.
+// The goal of this test is to make sure that
+
+func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
+	const quoteAssetA = true
+
+	var (
+		defaultRecordHistoryKeepPeriod = types.DefaultParams().RecordHistoryKeepPeriod
+
+		// baseTimePlusKeepPeriod = baseTime + defaultRecordHistoryKeepPeriod
+		baseTimePlusKeepPeriod = baseTime.Add(defaultRecordHistoryKeepPeriod)
+
+		// oneHourBeforeKeepThreshold =  baseKeepThreshold - 1 hour
+		oneHourBeforeKeepThreshold = baseTimePlusKeepPeriod.Add(-time.Hour)
+
+		// oneHourAfterKeepThreshold = baseKeepThreshold + 1 hour
+		oneHourAfterKeepThreshold = baseTimePlusKeepPeriod.Add(time.Hour)
+
+		periodBetweenBaseAndOneHourBeforeThreshold           = (defaultRecordHistoryKeepPeriod.Nanoseconds() - time.Hour.Nanoseconds())
+		accumBeforeKeepThreshold0, accumBeforeKeepThreshold1 = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10)
+		// recordBeforeKeepThreshold is a record with t=baseTime-keepPeriod-1h, sp0=30(sp1=0.3) accumulators set relative to baseRecord
+		recordBeforeKeepThreshold types.TwapRecord = newTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1)
+	)
+
+	// N.B.: when ctxTime = end time, we trigger the "TWAP to now path".
+	// As a result, we duplicate the test cases by trigerring both "to now" and "with end time" paths
+	// To trigger "with end time" path, we make end time less than ctxTime.
+	tests := map[string]struct {
+		recordsToSet []types.TwapRecord
+		ctxTime      time.Time
+		input        getTwapInput
+		expTwap      sdk.Dec
+		expErrorStr  string
+	}{
+		"(1 record at keep threshold); to now; ctxTime = at keep threshold; start time = end time = base keep threshold": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTimePlusKeepPeriod,
+			input:        makeSimpleTwapInput(baseTimePlusKeepPeriod, baseTimePlusKeepPeriod, quoteAssetA),
+			expTwap:      sdk.NewDec(10),
+		},
+		"(1 record at keep threshold); with end time; ctxTime = at keep threshold; start time = end time = base keep threshold - 1ms": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTimePlusKeepPeriod,
+			input:        makeSimpleTwapInput(baseTimePlusKeepPeriod.Add(-time.Millisecond), baseTimePlusKeepPeriod.Add(-time.Millisecond), quoteAssetA),
+			expTwap:      sdk.NewDec(10),
+		},
+		"(1 record younger than keep threshold); to now; ctxTime = start time = end time = after keep threshold": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      oneHourAfterKeepThreshold,
+			input:        makeSimpleTwapInput(oneHourAfterKeepThreshold, oneHourAfterKeepThreshold, quoteAssetA),
+			expTwap:      sdk.NewDec(10),
+		},
+		"(1 record younger than keep threshold); with end time; ctxTime = start time = end time = after keep threshold - 1ns": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      oneHourAfterKeepThreshold,
+			input:        makeSimpleTwapInput(oneHourAfterKeepThreshold.Add(-time.Millisecond), oneHourAfterKeepThreshold.Add(-time.Millisecond), quoteAssetA),
+			expTwap:      sdk.NewDec(10),
+		},
+		"(1 record older than keep threshold); to now; ctxTime = baseTime, start time = end time = before keep threshold": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      oneHourBeforeKeepThreshold,
+			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, oneHourBeforeKeepThreshold, quoteAssetA),
+			expTwap:      sdk.NewDec(10),
+		},
+		"(1 record older than keep threshold); with end time; ctxTime = baseTime, start time = end time = before keep threshold - 1ns": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      oneHourBeforeKeepThreshold,
+			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold.Add(-time.Millisecond), oneHourBeforeKeepThreshold.Add(-time.Millisecond), quoteAssetA),
+			expTwap:      sdk.NewDec(10),
+		},
+		"(1 record older than keep threshold); to now; ctxTime = after keep threshold, start time = before keep threshold; end time = after keep threshold": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      oneHourAfterKeepThreshold,
+			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, oneHourAfterKeepThreshold, quoteAssetA),
+			expTwap:      sdk.NewDec(10),
+		},
+		"(1 record older than keep threshold); with end time; ctxTime = after keep threshold, start time = before keep threshold; end time = base keep threshold": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      oneHourAfterKeepThreshold,
+			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, baseTimePlusKeepPeriod, quoteAssetA),
+			expTwap:      sdk.NewDec(10),
+		},
+		"(1 record at keep threshold); to now; ctxTime = base keep threshold, start time = base time - 1mns (source of error); end time = base keep threshold; error": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTimePlusKeepPeriod,
+			input:        makeSimpleTwapInput(baseTime.Add(-time.Millisecond), baseTimePlusKeepPeriod, quoteAssetA),
+			expErrorStr:  "looking for a time thats too old, not in the historical index",
+		},
+		"(1 record at keep threshold); with end time; ctxTime = base keep threshold, start time = base time - 1mns (source of error); end time = base keep threshold - 1ns; error": {
+			recordsToSet: []types.TwapRecord{baseRecord},
+			ctxTime:      baseTimePlusKeepPeriod,
+			input:        makeSimpleTwapInput(baseTime.Add(-time.Millisecond), baseTimePlusKeepPeriod.Add(-time.Millisecond), quoteAssetA),
+			expErrorStr:  "looking for a time thats too old, not in the historical index",
+		},
+		"(2 records); to now; with one directly at threshold, interpolated": {
+			recordsToSet: []types.TwapRecord{baseRecord, recordBeforeKeepThreshold},
+			ctxTime:      baseTimePlusKeepPeriod,
+			input:        makeSimpleTwapInput(baseTime, baseTimePlusKeepPeriod, quoteAssetA),
+			// expTwap: = (10 * (172800s - 3600s) + 30 * 3600s) / 172800s = 10.416666666666666666
+			expTwap: sdk.MustNewDecFromStr("10.416666666666666666"),
+		},
+		"(2 records); with end time; with one directly at threshold, interpolated": {
+			recordsToSet: []types.TwapRecord{baseRecord, recordBeforeKeepThreshold},
+			ctxTime:      baseTimePlusKeepPeriod.Add(time.Millisecond),
+			input:        makeSimpleTwapInput(baseTime, baseTimePlusKeepPeriod, quoteAssetA),
+			// expTwap: = (10 * (172800s - 3600s) + 30 * 3600s) / 172800s = 10.416666666666666666
+			expTwap: sdk.MustNewDecFromStr("10.416666666666666666"),
+		},
+		"(2 records); to now; with one before keep threshold, interpolated": {
+			recordsToSet: []types.TwapRecord{baseRecord, recordBeforeKeepThreshold},
+			ctxTime:      oneHourAfterKeepThreshold,
+			input:        makeSimpleTwapInput(baseTime, oneHourAfterKeepThreshold, quoteAssetA),
+			// expTwap: = (10 * (172800s - 3600s) + 30 * 3600s * 2) / (172800s + 3600s) approx = 10.816326530612244
+			expTwap: sdk.MustNewDecFromStr("10.816326530612244897"),
+		},
+		"(2 records); with end time; with one before keep threshold, interpolated": {
+			recordsToSet: []types.TwapRecord{baseRecord, recordBeforeKeepThreshold},
+			ctxTime:      oneHourAfterKeepThreshold.Add(time.Millisecond),
+			input:        makeSimpleTwapInput(baseTime, oneHourAfterKeepThreshold, quoteAssetA),
+			// expTwap: = (10 * (172800s - 3600s) + 30 * 3600s * 2) / (172800s + 3600s) approx = 10.816326530612244
+			expTwap: sdk.MustNewDecFromStr("10.816326530612244897"),
+		},
+	}
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			s.preSetRecords(test.recordsToSet)
 			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
 
 			var twap sdk.Dec
@@ -329,9 +475,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
-			for _, record := range test.recordsToSet {
-				s.twapkeeper.StoreNewRecord(s.Ctx, record)
-			}
+			s.preSetRecords(test.recordsToSet)
 			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
 
 			var twap sdk.Dec

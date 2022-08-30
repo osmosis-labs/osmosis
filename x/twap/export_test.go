@@ -44,8 +44,8 @@ func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	return k.updateRecord(ctx, record)
 }
 
-func (k Keeper) PruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) error {
-	return k.pruneRecordsBeforeTime(ctx, lastTime)
+func (k Keeper) PruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastTime time.Time) error {
+	return k.pruneRecordsBeforeTimeButNewest(ctx, lastTime)
 }
 
 func (k Keeper) PruneRecords(ctx sdk.Context) error {

@@ -201,8 +201,9 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 }
 
 // TestPruneRecordsBeforeTime tests that all twap records earlier than
-// current block time - given time are pruned from the store.
-func (s *TestSuite) TestPruneRecordsBeforeTime() {
+// current block time - given time are pruned from the store while
+// the newest record before the time to keep is preserved.
+func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 	tMin2Record, tMin1Record, baseRecord, tPlus1Record := s.createTestRecordsFromTime(baseTime)
 
 	// non-ascending insertion order.
@@ -217,19 +218,19 @@ func (s *TestSuite) TestPruneRecordsBeforeTime() {
 
 		expErr bool
 	}{
-		"base time, 1 record before base time (deleted)": {
+		"base time, 1 record before base time (not deleted - keep newest)": {
 			recordsToPreSet: []types.TwapRecord{tMin1Record},
 
 			beforeTime: baseTime,
 
-			expectedKeptRecords: []types.TwapRecord{},
+			expectedKeptRecords: []types.TwapRecord{tMin1Record},
 		},
-		"base time, 2 records before base time (both deleted)": {
+		"base time, 2 records before base time (one deleted, newest kept)": {
 			recordsToPreSet: []types.TwapRecord{tMin1Record, tMin2Record},
 
 			beforeTime: baseTime,
 
-			expectedKeptRecords: []types.TwapRecord{},
+			expectedKeptRecords: []types.TwapRecord{tMin1Record},
 		},
 		"base time, 1 record at base time (not deleted)": {
 			recordsToPreSet: []types.TwapRecord{baseRecord},
@@ -245,10 +246,17 @@ func (s *TestSuite) TestPruneRecordsBeforeTime() {
 
 			expectedKeptRecords: []types.TwapRecord{tPlus1Record},
 		},
-		"base time minus 1, 2 records before (deleted), 1 records at (deleted), 1 records after (not deleted)": {
+		"base time minus 1, 1 record before (not deleted, newest kept), 1 records at (not deleted), 2 records after (not deleted)": {
 			recordsToPreSet: allTestRecords,
 
 			beforeTime: tMin1Record.Time,
+
+			expectedKeptRecords: []types.TwapRecord{tMin2Record, tMin1Record, baseRecord, tPlus1Record},
+		},
+		"base time, 2 records before (one deleted, newest kept), 1 records at (not deleted), 1 records after (not deleted)": {
+			recordsToPreSet: allTestRecords,
+
+			beforeTime: baseTime,
 
 			expectedKeptRecords: []types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 		},
@@ -259,12 +267,12 @@ func (s *TestSuite) TestPruneRecordsBeforeTime() {
 
 			expectedKeptRecords: []types.TwapRecord{tMin2Record, tMin1Record, baseRecord, tPlus1Record},
 		},
-		"base time plus 2 - all records before - all deleted": {
+		"base time plus 2 - all records before - all deleted but newest": {
 			recordsToPreSet: allTestRecords,
 
 			beforeTime: tPlus1Record.Time.Add(time.Second),
 
-			expectedKeptRecords: []types.TwapRecord{},
+			expectedKeptRecords: []types.TwapRecord{tPlus1Record},
 		},
 		"no pre-set records - no error": {
 			recordsToPreSet: []types.TwapRecord{},
@@ -282,7 +290,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTime() {
 			ctx := s.Ctx
 			twapKeeper := s.twapkeeper
 
-			err := twapKeeper.PruneRecordsBeforeTime(ctx, tc.beforeTime)
+			err := twapKeeper.PruneRecordsBeforeTimeButNewest(ctx, tc.beforeTime)
 			if tc.expErr {
 				s.Require().Error(err)
 				return
