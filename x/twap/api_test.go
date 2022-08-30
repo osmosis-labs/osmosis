@@ -278,7 +278,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		// oneHourAfterKeepThreshold = baseKeepThreshold + 1 hour
 		oneHourAfterKeepThreshold = baseTimePlusKeepPeriod.Add(time.Hour)
 
-		periodBetweenBaseAndOneHourBeforeThreshold           = (defaultRecordHistoryKeepPeriod.Nanoseconds() - time.Hour.Nanoseconds())
+		periodBetweenBaseAndOneHourBeforeThreshold           = (defaultRecordHistoryKeepPeriod.Milliseconds() - time.Hour.Milliseconds())
 		accumBeforeKeepThreshold0, accumBeforeKeepThreshold1 = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10)
 		// recordBeforeKeepThreshold is a record with t=baseTime-keepPeriod-1h, sp0=30(sp1=0.3) accumulators set relative to baseRecord
 		recordBeforeKeepThreshold types.TwapRecord = newTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1)
