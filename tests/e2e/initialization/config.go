@@ -18,7 +18,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	epochtypes "osmosis.io/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"

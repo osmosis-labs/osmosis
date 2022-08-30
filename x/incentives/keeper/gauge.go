@@ -11,7 +11,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	epochtypes "osmosis.io/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 

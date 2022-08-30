@@ -1,4 +1,4 @@
-module github.com/osmosis-labs/osmosis/v11/x/epochs
+module osmosis.io/x/epochs
 
 go 1.18
 

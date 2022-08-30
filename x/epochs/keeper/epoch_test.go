@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	"osmosis.io/x/epochs/types"
 )
 
 func (suite *KeeperTestSuite) TestAddEpochInfo() {

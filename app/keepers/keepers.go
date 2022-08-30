@@ -49,8 +49,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v11/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v11/wasmbinding"
-	epochskeeper "github.com/osmosis-labs/osmosis/v11/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	epochskeeper "osmosis.io/x/epochs/keeper"
+	epochstypes "osmosis.io/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v11/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v11/x/incentives/keeper"
@@ -475,7 +475,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.IncentivesKeeper.SetHooks(
 		incentivestypes.NewMultiIncentiveHooks(
-		// insert incentive hooks receivers here
+			// insert incentive hooks receivers here
 		),
 	)
 
@@ -498,7 +498,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// insert governance hooks receivers here
+			// insert governance hooks receivers here
 		),
 	)
 }

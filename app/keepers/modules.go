@@ -28,7 +28,7 @@ import (
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 
 	_ "github.com/osmosis-labs/osmosis/v11/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v11/x/epochs"
+	"osmosis.io/x/epochs"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm"
 	"github.com/osmosis-labs/osmosis/v11/x/incentives"
 	"github.com/osmosis-labs/osmosis/v11/x/lockup"

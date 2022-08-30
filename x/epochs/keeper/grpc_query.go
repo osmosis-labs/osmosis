@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	"osmosis.io/x/epochs/types"
 )
 
 var _ types.QueryServer = Querier{}

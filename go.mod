@@ -18,7 +18,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20220811235203-65a53b4ea8e3
-	github.com/osmosis-labs/osmosis/v11/x/epochs v0.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
@@ -33,6 +32,7 @@ require (
 	google.golang.org/grpc v1.48.0
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.3.1
+	osmosis.io/x/epochs v0.0.0
 )
 
 require (
@@ -287,7 +287,7 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
-replace github.com/osmosis-labs/osmosis/v11/x/epochs => ./x/epochs
+replace osmosis.io/x/epochs => ./x/epochs
 
 replace (
 	// branch: v0.27.0.rc3-osmo, current tag: v0.27.0.rc3-osmo
