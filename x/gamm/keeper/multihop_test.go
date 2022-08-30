@@ -102,7 +102,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 
 				if adjustedPoolSwapFee != poolDefaultSwapFee {
 					for _, hop := range test.param.routes {
-						err := suite.UpdatePoolSwapFee(cacheCtx, hop.PoolId, adjustedPoolSwapFee)
+						err := suite.updatePoolSwapFee(cacheCtx, hop.PoolId, adjustedPoolSwapFee)
 						suite.NoError(err, "test: %v", test.name)
 					}
 				}
@@ -253,7 +253,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 
 				if adjustedPoolSwapFee != poolDefaultSwapFee {
 					for _, hop := range test.param.routes {
-						err := suite.UpdatePoolSwapFee(cacheCtx, hop.PoolId, adjustedPoolSwapFee)
+						err := suite.updatePoolSwapFee(cacheCtx, hop.PoolId, adjustedPoolSwapFee)
 						suite.NoError(err, "test: %v", test.name)
 					}
 				}
@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountOut()
 	}
 }
 
-func (s *KeeperTestSuite) UpdatePoolSwapFee(ctx sdk.Context, poolId uint64, adjustedPoolSwapFee sdk.Dec) error {
+func (s *KeeperTestSuite) updatePoolSwapFee(ctx sdk.Context, poolId uint64, adjustedPoolSwapFee sdk.Dec) error {
 	pool, err := s.App.GAMMKeeper.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return err
