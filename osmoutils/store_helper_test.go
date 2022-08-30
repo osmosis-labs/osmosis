@@ -31,6 +31,18 @@ const (
 	prefixTwo          = "two"
 )
 
+var (
+	oneA = []string{prefixOne + keyA}
+	oneAB = []string{prefixOne + keyA, prefixOne + keyB}
+	twoAB = []string{prefixTwo + keyA, prefixTwo + keyB}
+	oneABC = []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC}
+	oneBCA = []string{prefixOne + keyB, prefixOne + keyC, prefixOne + keyA}
+	oneABtwoAB = []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB}
+	oneBtwoAoneAtwoB = []string{prefixOne + keyB, prefixTwo + keyA, prefixOne + keyA, prefixTwo + keyB}
+	oneAtwoAoneBtwoB = []string{prefixOne + keyA, prefixTwo + keyA, prefixOne + keyB, prefixTwo + keyB}
+	onetwoABCalternating = []string{prefixOne + keyA, prefixTwo + keyA, prefixOne + keyB, prefixTwo + keyB, prefixOne + keyC, prefixTwo + keyC}
+)
+
 func TestOsmoUtilsTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
@@ -63,13 +75,13 @@ func (s *TestSuite) TestGatherAllKeysFromStore() {
 		expectedValues []string
 	}{
 		"multiple keys in lexicographic order": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
-			expectedValues: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
+			expectedValues: oneABC,
 		},
 		"multiple keys out of lexicographic order": {
-			preSetKeys: []string{prefixOne + keyB, prefixOne + keyC, prefixOne + keyA},
+			preSetKeys: oneBCA,
 			// we expect output to be in ascending lexicographic order
-			expectedValues: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			expectedValues: oneABC,
 		},
 		"no keys": {
 			preSetKeys: []string{},
@@ -104,17 +116,17 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 		expectedValues []string
 	}{
 		"common prefix, exlude end": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneAB,
 
 			keyStart: []byte(prefixOne + keyA),
-			keyEnd:   []byte(prefixOne + keyC),
+			keyEnd:   []byte(prefixOne + keyB),
 			parseFn: mockParseValue,
 
 			expectedErr: false,
-			expectedValues: []string{"0", "1"},
+			expectedValues: []string{"0"},
 		},
 		"common prefix, include end": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB},
+			preSetKeys: oneAB,
 
 			keyStart: []byte(prefixOne + keyA),
 			keyEnd:   []byte(prefixOne + keyC),
@@ -124,7 +136,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			expectedValues: []string{"0", "1"},
 		},
 		"different prefix, inserted in lexicographic order": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB},
+			preSetKeys: oneABtwoAB,
 			
 			keyStart: []byte(prefixOne + keyA),
 			keyEnd:   []byte(prefixTwo + keyA),
@@ -134,18 +146,18 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			expectedValues: []string{"0", "1"},
 		},
 		"different prefix, inserted out of lexicographic order": {
-			preSetKeys: []string{prefixOne + keyA, prefixTwo + keyA, prefixOne + keyB, prefixTwo + keyB},
+			preSetKeys: oneAtwoAoneBtwoB,
 
 			keyStart: []byte(prefixOne + keyA),
 			keyEnd:   []byte(prefixTwo + keyA),
 			parseFn: mockParseValue,
 
 			expectedErr: false,
-			// should get all prefixOne keys as keys are stored in ascending lexicographic order
+			// should get all prefixOne values as keys are stored in ascending lexicographic order
 			expectedValues: []string{"0", "2"},
 		},
 		"start key and end key same": {
-			preSetKeys: []string{prefixOne + keyA},
+			preSetKeys: oneA,
 
 			keyStart: []byte(prefixOne + keyA),
 			keyEnd:   []byte(prefixOne + keyA),
@@ -155,7 +167,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			expectedValues: []string{},
 		},
 		"start key after end key": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 
 			keyStart: []byte(prefixOne + keyB),
 			keyEnd:   []byte(prefixOne + keyA),
@@ -165,7 +177,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			expectedValues: []string{},
 		},
 		"get all values": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 
 			keyStart: nil,
 			keyEnd:   nil,
@@ -178,7 +190,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			// SDK iterator is broken for nil end time, and non-nil start time
 			// https://github.com/cosmos/cosmos-sdk/issues/12661
 			// so we use []byte{0xff}
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 
 			keyStart: []byte(prefixOne + keyB),
 			keyEnd:   []byte{0xff},
@@ -188,7 +200,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			expectedValues: []string{"1", "2"},
 		},
 		"parse with error": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 
 			keyStart: []byte(prefixOne + keyA),
 			keyEnd:   []byte(prefixOne + keyC),
@@ -231,7 +243,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 		expectedValues []string
 	}{
 		"common prefix": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 			prefix: []byte(prefixOne),
 
 			parseFn: mockParseValue,
@@ -240,7 +252,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			expectedValues: []string{"0", "1", "2"},
 		},
 		"different prefixes in order, prefix one requested": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB},
+			preSetKeys: oneABtwoAB,
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
@@ -248,7 +260,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			expectedValues: []string{"0", "1"},
 		},
 		"different prefixes in order, prefix two requested": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB},
+			preSetKeys: oneABtwoAB,
 			prefix: []byte(prefixTwo),
 			parseFn: mockParseValue,
 
@@ -256,7 +268,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			expectedValues: []string{"2", "3"},
 		},
 		"different prefixes out of order, prefix one requested": {
-			preSetKeys: []string{prefixOne + keyB, prefixTwo + keyA, prefixOne + keyA, prefixTwo + keyB},
+			preSetKeys: oneBtwoAoneAtwoB,
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
@@ -265,7 +277,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			expectedValues: []string{"2", "0"},
 		},
 		"different prefixes out of order, prefix two requested": {
-			preSetKeys: []string{prefixOne + keyB, prefixTwo + keyA, prefixOne + keyA, prefixTwo + keyB},
+			preSetKeys: oneBtwoAoneAtwoB,
 			prefix: []byte(prefixTwo),
 			parseFn: mockParseValue,
 
@@ -281,7 +293,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			expectedValues: []string{},
 		},
 		"prefix doesn't exist, only keys with another prefix": {
-			preSetKeys: []string{prefixTwo + keyA, prefixTwo + keyB},
+			preSetKeys: twoAB,
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
@@ -289,7 +301,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			expectedValues: []string{},
 		},
 		"parse with error": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValueWithError,
 
@@ -330,7 +342,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 		expectedValues string
 	}{
 		"common prefix": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 			prefix: []byte(prefixOne),
 
 			parseFn: mockParseValue,
@@ -339,7 +351,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			expectedValues: "0",
 		},
 		"different prefixes in order, prefix one requested": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB},
+			preSetKeys: oneABtwoAB,
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
@@ -347,7 +359,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			expectedValues: "0",
 		},
 		"different prefixes in order, prefix two requested": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixTwo + keyA, prefixTwo + keyB},
+			preSetKeys: oneABtwoAB,
 			prefix: []byte(prefixTwo),
 			parseFn: mockParseValue,
 
@@ -355,7 +367,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			expectedValues: "2",
 		},
 		"different prefixes out of order, prefix one requested": {
-			preSetKeys: []string{prefixOne + keyB, prefixTwo + keyA, prefixOne + keyA, prefixTwo + keyB},
+			preSetKeys: oneBtwoAoneAtwoB,
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
@@ -364,7 +376,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			expectedValues: "2",
 		},
 		"different prefixes out of order, prefix two requested": {
-			preSetKeys: []string{prefixOne + keyB, prefixTwo + keyA, prefixOne + keyA, prefixTwo + keyB},
+			preSetKeys: oneBtwoAoneAtwoB,
 			prefix: []byte(prefixTwo),
 			parseFn: mockParseValue,
 
@@ -372,7 +384,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			expectedValues: "1",
 		},
 		"prefix doesn't exist, start key lexicographically before existing keys": {
-			preSetKeys: []string{prefixTwo + keyA, prefixTwo + keyB},
+			preSetKeys: twoAB,
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
@@ -391,7 +403,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			expectedValues: "",
 		},
 		"prefix doesn't exist, start key lexicographically after existing keys": {
-			preSetKeys: []string{prefixTwo + keyA, prefixTwo + keyB},
+			preSetKeys: twoAB,
 			prefix: []byte{0xff},
 			parseFn: mockParseValue,
 
@@ -399,7 +411,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			expectedValues: "",
 		},
 		"parse with error": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValueWithError,
 
@@ -445,7 +457,7 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 		expectedErr    bool
 	}{
 		"prefix iterator, no stop": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 
 			prefix: prefixOne,
 
@@ -465,21 +477,21 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 			expectedValues: []string{"0", "2"},
 		},
 		"range iterator, no end, no stop": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 
 			startValue: prefixOne + keyB,
 
 			expectedValues: []string{"1", "2"},
 		},
 		"range iterator, no start, no stop": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 
 			endValue: prefixOne + keyB,
 
 			expectedValues: []string{"0"},
 		},
 		"range iterator, no start no end, no stop": {
-			preSetKeys:     []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys:     oneABC,
 			expectedValues: []string{"0", "1", "2"},
 		},
 		"range iterator, with stop": {
@@ -488,13 +500,13 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 			expectedValues: []string{"0"},
 		},
 		"range iterator, reverse": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 			isReverse:  true,
 
 			expectedValues: []string{"2", "1", "0"},
 		},
 		"range iterator, other prefix is excluded with end value": {
-			preSetKeys: []string{prefixOne + keyA, prefixTwo + keyA, prefixOne + keyB, prefixTwo + keyB, prefixOne + keyC, prefixTwo + keyC},
+			preSetKeys: onetwoABCalternating,
 			startValue: prefixOne + keyB,
 			endValue:   prefixOne + "d",
 			isReverse:  true,
@@ -502,7 +514,7 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 			expectedValues: []string{"4", "2"},
 		},
 		"parse with error": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 
 			prefix: prefixOne,
 
@@ -573,7 +585,7 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 		expectedErr    bool
 	}{
 		"prefix iterator, no stop but exclusive key end": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 			keyStart: []byte(prefixOne + keyA),
 			keyEnd:   []byte(prefixOne + keyC),
 			parseFn: mockParseValue,
@@ -583,7 +595,7 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 			expectedValues: []string{"0", "1"},
 		},
 		"prefix iterator, no stop and inclusive key end": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB},
+			preSetKeys: oneAB,
 			keyStart: []byte(prefixOne + keyA),
 			keyEnd:   []byte(prefixOne + keyC),
 			parseFn: mockParseValue,
@@ -635,7 +647,7 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 			expectedValues: []string{"3"},
 		},
 		"parse with error": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 			keyStart: []byte(prefixOne + keyA),
 			keyEnd:   []byte{0xff},
 			parseFn: mockParseValueWithError,
@@ -681,7 +693,7 @@ func (s *TestSuite) TestGetValuesUntilDerivedStop() {
 		expectedErr    bool
 	}{
 		"prefix iterator, no stop": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 			keyStart: []byte(prefixOne + keyA),
 			parseFn: mockParseValue,
 			stopFn: mockStop,
@@ -706,7 +718,7 @@ func (s *TestSuite) TestGetValuesUntilDerivedStop() {
 			expectedValues: []string{"0", "2"},
 		},
 		"parse with error": {
-			preSetKeys: []string{prefixOne + keyA, prefixOne + keyB, prefixOne + keyC},
+			preSetKeys: oneABC,
 			keyStart: []byte(prefixOne + keyA),
 			parseFn: mockParseValueWithError,
 			stopFn:  mockStop,
@@ -917,7 +929,7 @@ func (s *TestSuite) TestMustGetDec() {
 
 			expectedGetKeyValues: map[string]sdk.Dec{
 				keyA: sdk.OneDec(),
-				keyB: sdk.Dec{}, // this one panics
+				keyB: {}, // this one panics
 			},
 
 			expectPanic: true,
