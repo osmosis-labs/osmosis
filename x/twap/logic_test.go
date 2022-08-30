@@ -212,7 +212,7 @@ func TestComputeArithmeticTwap(t *testing.T) {
 
 // TestPruneRecords tests that twap records earlier than
 // current block time - RecordHistoryKeepPeriod are pruned from the store
-// while keeping the newet record before the above time threshold.
+// while keeping the newest record before the above time threshold.
 func (s *TestSuite) TestPruneRecords() {
 	recordHistoryKeepPeriod := s.twapkeeper.RecordHistoryKeepPeriod(s.Ctx)
 
