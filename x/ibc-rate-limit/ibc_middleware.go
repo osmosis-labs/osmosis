@@ -54,8 +54,7 @@ func NewICS4Middleware(
 // If the contract param is not configured, or the contract doesn't have a configuration for the (channel+denom) being
 // used, transfers are not prevented and handled by the wrapped IBC app
 func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
-	var params types.Params
-	i.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
+	params := i.GetParams(ctx)
 	if params.ContractAddress == "" {
 		// The contract has not been configured. Continue as usual
 		return i.channel.SendPacket(ctx, chanCap, packet)
@@ -85,6 +84,11 @@ func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Ca
 
 func (i *ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI, ack exported.Acknowledgement) error {
 	return i.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
+}
+
+func (i *ICS4Middleware) GetParams(ctx sdk.Context) (params types.Params) {
+	i.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
+	return params
 }
 
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
@@ -189,8 +193,7 @@ func (im *IBCModule) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
-	var params types.Params
-	im.ics4Middleware.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
+	params := im.ics4Middleware.GetParams(ctx)
 	if params.ContractAddress == "" {
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
@@ -278,8 +281,7 @@ func (im *IBCModule) RevertSentPacket(
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
 	}
-	var params types.Params
-	im.ics4Middleware.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
+	params := im.ics4Middleware.GetParams(ctx)
 	if params.ContractAddress == "" {
 		// The contract has not been configured. Continue as usual
 		return nil
