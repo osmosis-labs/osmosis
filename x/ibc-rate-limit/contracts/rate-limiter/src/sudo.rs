@@ -93,3 +93,43 @@ fn add_rate_limit_attributes(response: Response, result: &RateLimit) -> Response
 // fn add_rate_limit_attributes(response: Response, _result: &RateLimit) -> Response {
 //     response
 // }
+
+// This function manually injects an inflow. This is used when reverting a
+// packet that failed ack or timed-out.
+pub fn undo_send(deps: DepsMut, path: &Path, funds: u128) -> Result<Response, ContractError> {
+    // Sudo call. Only go modules should be allowed to access this
+    let trackers = RATE_LIMIT_TRACKERS.may_load(deps.storage, path.into())?;
+
+    let configured = match trackers {
+        None => false,
+        Some(ref x) if x.is_empty() => false,
+        _ => true,
+    };
+
+    if !configured {
+        // No Quota configured for the current path. Allowing all messages.
+        return Ok(Response::new()
+            .add_attribute("method", "try_transfer")
+            .add_attribute("channel_id", path.channel.to_string())
+            .add_attribute("denom", path.denom.to_string())
+            .add_attribute("quota", "none"));
+    }
+
+    let mut rate_limits = trackers.unwrap();
+
+    // We force update the flow to remove a failed send
+    let results: Vec<RateLimit> = rate_limits
+        .iter_mut()
+        .map(|limit| {
+            limit.flow.undo_flow(FlowType::Out, funds);
+            limit.to_owned()
+        })
+        .collect();
+
+    RATE_LIMIT_TRACKERS.save(deps.storage, path.into(), &results)?;
+
+    Ok(Response::new()
+        .add_attribute("method", "undo_send")
+        .add_attribute("channel_id", path.channel.to_string())
+        .add_attribute("denom", path.denom.to_string()))
+}
