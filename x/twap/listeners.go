@@ -53,5 +53,6 @@ func (hook *gammhook) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, pool
 	hook.k.trackChangedPool(ctx, poolId)
 }
 
-func (hook *gammhook) AfterExitPool(_ sdk.Context, _ sdk.AccAddress, _ uint64, _ sdk.Int, _ sdk.Coins) {
+func (hook *gammhook) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+	hook.k.trackChangedPool(ctx, poolId)
 }
