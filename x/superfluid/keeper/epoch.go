@@ -14,7 +14,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 )
 
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) {
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
+	return nil
 }
 
 func (k Keeper) AfterEpochStartBeginBlock(ctx sdk.Context) {

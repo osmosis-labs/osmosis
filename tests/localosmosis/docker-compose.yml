@@ -1,15 +1,22 @@
 version: "3"
 
 services:
+
   osmosisd:
     image: local:osmosis
-    user: "root:root"
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+      args:
+        RUNNER_IMAGE: alpine:3.16
+        GO_VERSION: 1.18
     volumes:
-      - ./.osmosisd/config:/osmosis/.osmosisd/config
-      - ./.osmosisd/data:/osmosis/.osmosisd/data
-      - ./.osmosisd/wasm:/osmosis/.osmosisd/wasm
+      - ./scripts/setup.sh:/osmosis/setup.sh
+      - ./.osmosisd/:/osmosis/.osmosisd/
+    entrypoint:
+      - /osmosis/setup.sh
     ports:
-      - "26657:26657"
-      - "1317:1317"
-      - "9090:9090"
-      - "9091:9091"
+      - 26657:26657
+      - 1317:1317
+      - 9090:9090
+      - 9091:9091

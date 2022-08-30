@@ -19,6 +19,16 @@ func ConditionalPanic(t *testing.T, expectPanic bool, sut func()) {
 	require.NotPanics(t, sut)
 }
 
+// ConditionalError checks if expectError is true, asserts that err is an error
+// If expectError is false, asserts that err is nil
+func ConditionalError(t *testing.T, expectError bool, err error) {
+	if expectError {
+		require.Error(t, err)
+		return
+	}
+	require.NoError(t, err)
+}
+
 // DecApproxEq is a helper function to compare two decimals.
 // It validates the two decimal are within a certain tolerance.
 // If not, it fails with a message.

@@ -11,8 +11,9 @@ import (
 )
 
 // BeforeEpochStart is a hook which is executed before the start of an epoch. It is a no-op for mint module.
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	// no-op
+	return nil
 }
 
 // AfterEpochEnd is a hook which is executed after the end of an epoch.
@@ -22,13 +23,13 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 // For an attempt to mint to occur:
 // - given epochIdentifier must be equal to the mint epoch identifier set via parameters.
 // - given epochNumber must be greater than or equal to the mint start epoch set via parameters.
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	params := k.GetParams(ctx)
 
 	if epochIdentifier == params.EpochIdentifier {
 		// not distribute rewards if it's not time yet for rewards distribution
 		if epochNumber < params.MintingRewardsDistributionStartEpoch {
-			return
+			return nil
 		} else if epochNumber == params.MintingRewardsDistributionStartEpoch {
 			k.setLastReductionEpochNum(ctx, epochNumber)
 		}
@@ -54,13 +55,13 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// We over-allocate by the developer vesting portion, and burn this later
 		err := k.mintCoins(ctx, mintedCoins)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		// send the minted coins to the fee collector account
 		err = k.DistributeMintedCoin(ctx, mintedCoin)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		if mintedCoin.Amount.IsInt64() {
@@ -76,6 +77,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			),
 		)
 	}
+	return nil
 }
 
 // ___________________________________________________________________________________________________
@@ -93,10 +95,10 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // epochs hooks.
-func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }
 
-func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }

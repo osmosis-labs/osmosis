@@ -315,3 +315,38 @@ func (s *TestSuite) TestPoolStateChange() {
 		})
 	}
 }
+
+// TestAfterExitPool tests hooks for `AfterExitPool`.
+// The purpose of this test is to test whether we correctly store the state of the
+// pools that has changed with price impact.
+func (s *TestSuite) TestAfterExitPool() {
+	tests := []struct {
+		name      string
+		poolCoins sdk.Coins
+	}{
+		{
+			"exit pool triggers track changed pools",
+			defaultTwoAssetCoins,
+		},
+		{
+			"three asset pool: exit pool triggers track changed pools",
+			defaultThreeAssetCoins,
+		},
+	}
+
+	for _, tc := range tests {
+		s.SetupTest()
+		s.Run(tc.name, func() {
+			poolId := s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
+
+			s.RunBasicExit(poolId)
+
+			// test exiting a pool
+			// has triggered `trackChangedPool`, and that we have the state of price
+			// impacted pools.
+			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
+			s.Require().Equal(1, len(changedPools))
+			s.Require().Equal(poolId, changedPools[0])
+		})
+	}
+}
