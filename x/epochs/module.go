@@ -31,7 +31,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/epochs/client/cli"
 	"github.com/osmosis-labs/osmosis/v11/x/epochs/keeper"
 	"github.com/osmosis-labs/osmosis/v11/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v11/x/mint/client/rest"
 )
 
 var (
@@ -77,9 +76,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterRESTRoutes registers the capability module's REST service handlers.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr)
-}
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {

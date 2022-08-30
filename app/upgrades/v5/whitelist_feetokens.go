@@ -15,6 +15,7 @@ import (
 // Notably, Tick is not on this list because the osmo pool has $76 of liquidity.
 // Cheq'd and KRT are also not on this, due to neither having osmo pairings.
 // We nolint because these are strings of whitelisted ibc denoms.
+//
 //nolint:gosec
 var feetoken_whitelist_data = `
 ion,uion,2

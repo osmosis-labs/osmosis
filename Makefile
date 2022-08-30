@@ -98,11 +98,11 @@ $(BUILDDIR)/:
 
 build-reproducible: build-reproducible-amd64 build-reproducible-arm64
 
-build-reproducible-amd64: go.sum
+build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(shell go list -f {{.GoVersion}} -m) \
+		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
 		--platform linux/arm64 \
 		-t osmosis-amd64 \
 		--load \
@@ -112,11 +112,11 @@ build-reproducible-amd64: go.sum
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
 	$(DOCKER) rm -f osmobinary
 
-build-reproducible-arm64: go.sum
+build-reproducible-arm64: go.sum $(BUILDDIR)/
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
-		--build-arg GO_VERSION=$(shell go list -f {{.GoVersion}} -m) \
+		--build-arg GO_VERSION=$(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2) \
 		--platform linux/arm64 \
 		-t osmosis-arm64 \
 		--load \
@@ -273,7 +273,7 @@ test-e2e-skip-upgrade:
 	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-mutation:
-	@bash scripts/mutation-test.sh
+	@bash scripts/mutation-test.sh $(MODULES)
 
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_UNIT)
@@ -310,16 +310,19 @@ format:
 ###############################################################################
 
 localnet-keys:
-	. tests/localosmosis/keys.sh
+	. tests/localosmosis/scripts/add_keys.sh
 
 localnet-build:
-	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
+	@docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-build-state-export:
 	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
 
 localnet-start:
 	@docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-startd:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up -d
 
 localnet-start-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
@@ -328,8 +331,7 @@ localnet-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-remove: localnet-stop
-	PWD=$(shell pwd)
-	@docker run --user root -v ${PWD}/tests/localosmosis/.osmosisd:/root/osmosis ubuntu /bin/sh -c "rm -rf /root/osmosis/*"
+	rm -rf $(PWD)/tests/localosmosis/.osmosisd
 
 localnet-remove-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down

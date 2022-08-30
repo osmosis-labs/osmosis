@@ -135,16 +135,18 @@ func (suite *KeeperTestSuite) SetupGammPoolsAndSuperfluidAssets(multipliers []sd
 	for _, pool := range pools {
 		denom := gammtypes.GetPoolShareDenom(pool.GetId())
 
-		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+		err := suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		})
+		suite.Require().NoError(err)
 
 		// register a LP token as a superfluid asset
-		suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+		err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 			Denom:     denom,
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		})
+		suite.Require().NoError(err)
 
 		denoms = append(denoms, denom)
 		poolIds = append(poolIds, pool.GetId())

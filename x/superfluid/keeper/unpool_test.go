@@ -134,10 +134,11 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			poolShareOut := bankKeeper.GetBalance(ctx, poolJoinAcc, poolDenom)
 
 			// register a LP token as a superfluid asset
-			superfluidKeeper.AddNewSuperfluidAsset(ctx, types.SuperfluidAsset{
+			err = superfluidKeeper.AddNewSuperfluidAsset(ctx, types.SuperfluidAsset{
 				Denom:     poolDenom,
 				AssetType: types.SuperfluidAssetTypeLPShare,
 			})
+			suite.Require().NoError(err)
 
 			// whitelist designated pools
 			// this should be done via `RunForkLogic` at upgrade

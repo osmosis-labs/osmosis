@@ -34,11 +34,8 @@ var (
 	// when we want to get all of the keys in a prefix. Since it is one byte larger
 	// than the original key separator and the end prefix is exclusive, it is valid
 	// for getting all values under the original key separator.
-	keySeparatorPlusOne              = string(KeySeparator[0] + 1)
-	HistoricalTWAPTimeIndexPrefix    = historicalTWAPTimeIndexNoSeparator + KeySeparator
-	HistoricalTWAPTimeIndexPrefixEnd = historicalTWAPTimeIndexNoSeparator + keySeparatorPlusOne
-	HistoricalTWAPPoolIndexPrefix    = historicalTWAPPoolIndexNoSeparator + KeySeparator
-	HistoricalTWAPPoolIndexPrefixEnd = historicalTWAPPoolIndexNoSeparator + keySeparatorPlusOne
+	HistoricalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
+	HistoricalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
 )
 
 // TODO: make utility command to automatically interlace separators

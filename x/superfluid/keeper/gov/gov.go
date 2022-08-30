@@ -11,7 +11,9 @@ import (
 
 func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek types.EpochKeeper, p *types.SetSuperfluidAssetsProposal) error {
 	for _, asset := range p.Assets {
-		k.AddNewSuperfluidAsset(ctx, asset)
+		if err := k.AddNewSuperfluidAsset(ctx, asset); err != nil {
+			return err
+		}
 		event := sdk.NewEvent(
 			types.TypeEvtSetSuperfluidAsset,
 			sdk.NewAttribute(types.AttributeDenom, asset.Denom),
