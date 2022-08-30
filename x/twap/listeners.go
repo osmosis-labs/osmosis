@@ -18,15 +18,18 @@ func (k Keeper) EpochHooks() epochtypes.EpochHooks {
 	return &epochhook{k}
 }
 
-func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
 		if err := hook.k.pruneRecords(ctx); err != nil {
 			ctx.Logger().Error("Error pruning old twaps at the epoch end", err)
 		}
 	}
+	return nil
 }
 
-func (hook *epochhook) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {}
+func (hook *epochhook) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
+}
 
 type gammhook struct {
 	k Keeper
