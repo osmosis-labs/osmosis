@@ -93,6 +93,11 @@ pub enum SudoMsg {
         channel_value: u128,
         funds: u128,
     },
+    UndoSend {
+        channel_id: String,
+        denom: String,
+        funds: u128,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
