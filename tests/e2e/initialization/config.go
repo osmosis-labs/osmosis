@@ -13,10 +13,11 @@ import (
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+
+	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"

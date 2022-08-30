@@ -21,9 +21,10 @@ import (
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 
 	appParams "github.com/osmosis-labs/osmosis/v11/app/params"
 

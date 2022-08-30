@@ -5,7 +5,8 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 const (

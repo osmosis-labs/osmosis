@@ -12,8 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	govutils "github.com/osmosis-labs/osmosis/v11/x/gov/client/utils"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 // Proposal flags

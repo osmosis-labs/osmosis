@@ -2,8 +2,9 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 // TODO: Break into several smaller functions for clarity

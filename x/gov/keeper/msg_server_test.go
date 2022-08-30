@@ -5,10 +5,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 func TestSubmitProposal_InitialDeposit(t *testing.T) {

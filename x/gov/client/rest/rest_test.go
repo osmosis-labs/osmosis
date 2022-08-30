@@ -1,3 +1,4 @@
+//go:build norace
 // +build norace
 
 package rest_test
@@ -7,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 func (s *IntegrationTestSuite) TestLegacyGetAllProposals() {

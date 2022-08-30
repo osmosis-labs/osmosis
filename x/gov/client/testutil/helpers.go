@@ -8,7 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+
+	govcli "github.com/osmosis-labs/osmosis/v11/x/gov/client/cli"
 )
 
 var commonArgs = []string{

@@ -4,7 +4,8 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+
+	govrest "github.com/osmosis-labs/osmosis/v11/x/gov/client/rest"
 )
 
 func ProposalSetSuperfluidAssetsRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {

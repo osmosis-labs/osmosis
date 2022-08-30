@@ -9,9 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v4 "github.com/cosmos/cosmos-sdk/x/gov/legacy/v4"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	v4 "github.com/osmosis-labs/osmosis/v11/x/gov/legacy/v4"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 func TestGovStoreMigrationToV4ConsensusVersion(t *testing.T) {

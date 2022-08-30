@@ -2,7 +2,8 @@ package v3
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 var minInitialDepositRatio = sdk.NewDec(25).Quo(sdk.NewDec(100))

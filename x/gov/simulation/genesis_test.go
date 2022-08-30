@@ -12,8 +12,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov/simulation"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.

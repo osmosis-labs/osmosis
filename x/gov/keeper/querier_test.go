@@ -13,8 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 const custom = "custom"

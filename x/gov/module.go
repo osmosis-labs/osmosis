@@ -19,12 +19,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	govclient "github.com/osmosis-labs/osmosis/v11/x/gov/client"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/client/cli"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/client/rest"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/simulation"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 var (

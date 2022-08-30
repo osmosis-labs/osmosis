@@ -8,13 +8,14 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	v036distr "github.com/cosmos/cosmos-sdk/x/distribution/legacy/v036"
 	v040distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
-	v036gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v036"
-	v040gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v036params "github.com/cosmos/cosmos-sdk/x/params/legacy/v036"
 	v040params "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/legacy/v038"
 	v040upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	v034gov "github.com/osmosis-labs/osmosis/v11/x/gov/legacy/v034"
+	v036gov "github.com/osmosis-labs/osmosis/v11/x/gov/legacy/v036"
+	v040gov "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 func migrateVoteOption(oldVoteOption v034gov.VoteOption) v040gov.VoteOption {

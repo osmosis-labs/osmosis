@@ -10,8 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v043gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v043"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	v043gov "github.com/osmosis-labs/osmosis/v11/x/gov/legacy/v043"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 func TestMigrateJSON(t *testing.T) {

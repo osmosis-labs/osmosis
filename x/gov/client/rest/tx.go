@@ -9,8 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	gcutils "github.com/osmosis-labs/osmosis/v11/x/gov/client/utils"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 func registerTxHandlers(clientCtx client.Context, r *mux.Router, phs []ProposalRESTHandler) {

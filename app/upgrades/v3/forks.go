@@ -2,8 +2,9 @@ package v3
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+
+	govkeeper "github.com/osmosis-labs/osmosis/v11/x/gov/keeper"
 
 	"github.com/osmosis-labs/osmosis/v11/app/keepers"
 )

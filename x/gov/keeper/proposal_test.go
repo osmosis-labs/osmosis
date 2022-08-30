@@ -10,9 +10,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 func (suite *KeeperTestSuite) TestGetSetProposal() {

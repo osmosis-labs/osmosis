@@ -11,10 +11,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
+
+	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v11/tests/e2e/util"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"

@@ -11,7 +11,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v034gov "github.com/cosmos/cosmos-sdk/x/gov/legacy/v034"
+
+	v034gov "github.com/osmosis-labs/osmosis/v11/x/gov/legacy/v034"
 )
 
 const (

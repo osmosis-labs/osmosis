@@ -5,15 +5,17 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	govcli "github.com/osmosis-labs/osmosis/v11/x/gov/client/cli"
+	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 // GetTxCmd returns the transaction commands for this module.

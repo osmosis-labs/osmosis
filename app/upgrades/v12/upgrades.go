@@ -5,11 +5,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+
+	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"

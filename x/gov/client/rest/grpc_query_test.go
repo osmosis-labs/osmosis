@@ -15,9 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/client/cli"
+	govtestutil "github.com/osmosis-labs/osmosis/v11/x/gov/client/testutil"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 type IntegrationTestSuite struct {

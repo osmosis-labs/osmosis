@@ -7,7 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 const (

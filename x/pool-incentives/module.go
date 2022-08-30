@@ -27,7 +27,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov/simulation"
 
 	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/client/cli"
 	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/keeper"

@@ -2,9 +2,10 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v043 "github.com/cosmos/cosmos-sdk/x/gov/legacy/v043"
-	v3 "github.com/cosmos/cosmos-sdk/x/gov/legacy/v3"
-	v4 "github.com/cosmos/cosmos-sdk/x/gov/legacy/v4"
+
+	v043 "github.com/osmosis-labs/osmosis/v11/x/gov/legacy/v043"
+	v3 "github.com/osmosis-labs/osmosis/v11/x/gov/legacy/v3"
+	v4 "github.com/osmosis-labs/osmosis/v11/x/gov/legacy/v4"
 )
 
 // Migrator is a struct for handling in-place store migrations.

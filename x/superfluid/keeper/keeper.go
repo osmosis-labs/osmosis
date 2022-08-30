@@ -10,8 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 // Keeper provides a way to manage module storage.

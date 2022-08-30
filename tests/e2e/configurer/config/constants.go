@@ -1,6 +1,6 @@
 package config
 
-import govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+import govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 
 const (
 	// if not skipping upgrade, how many blocks we allow for fork to run pre upgrade state creation

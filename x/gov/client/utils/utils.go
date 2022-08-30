@@ -3,7 +3,7 @@ package utils
 import (
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 // NormalizeVoteOption - normalize user specified vote option

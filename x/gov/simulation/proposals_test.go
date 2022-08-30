@@ -10,7 +10,8 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov/simulation"
 )
 
 func TestProposalContents(t *testing.T) {

@@ -11,8 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/keeper"
 )
 
 func TestInvalidMsg(t *testing.T) {

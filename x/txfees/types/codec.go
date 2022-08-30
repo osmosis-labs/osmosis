@@ -3,7 +3,8 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {

@@ -15,8 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/osmosis-labs/osmosis/v11/x/gov"
+	"github.com/osmosis-labs/osmosis/v11/x/gov/types"
 )
 
 func TestImportExportQueues(t *testing.T) {
