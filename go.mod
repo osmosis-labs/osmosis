@@ -18,7 +18,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20220811235203-65a53b4ea8e3
-	github.com/osmosis-labs/osmosis/v11/x/epochs v0.0.0-00010101000000-000000000000
+	github.com/osmosis-labs/osmosis/v11/x/epochs v0.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
@@ -287,6 +287,8 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
+replace github.com/osmosis-labs/osmosis/v11/x/epochs => ./x/epochs
+
 replace (
 	// branch: v0.27.0.rc3-osmo, current tag: v0.27.0.rc3-osmo
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58
@@ -296,7 +298,6 @@ replace (
 	github.com/cosmos/iavl => github.com/osmosis-labs/iavl v0.17.3-osmo-v7
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/osmosis-labs/osmosis/v11/x/epochs => ./x/epochs
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
