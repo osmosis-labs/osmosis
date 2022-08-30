@@ -112,7 +112,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 		keyEnd     []byte
 		parseFn    func(b []byte) (string, error)
 
-		expectedErr 	   bool
+		expectedErr 	   error
 		expectedValues []string
 	}{
 		"common prefix, exlude end": {
@@ -122,7 +122,6 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			keyEnd:   []byte(prefixOne + keyB),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{"0"},
 		},
 		"common prefix, include end": {
@@ -132,7 +131,6 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			keyEnd:   []byte(prefixOne + keyC),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{"0", "1"},
 		},
 		"different prefix, inserted in lexicographic order": {
@@ -142,7 +140,6 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			keyEnd:   []byte(prefixTwo + keyA),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{"0", "1"},
 		},
 		"different prefix, inserted out of lexicographic order": {
@@ -152,7 +149,6 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			keyEnd:   []byte(prefixTwo + keyA),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			// should get all prefixOne values as keys are stored in ascending lexicographic order
 			expectedValues: []string{"0", "2"},
 		},
@@ -163,7 +159,6 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			keyEnd:   []byte(prefixOne + keyA),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{},
 		},
 		"start key after end key": {
@@ -173,7 +168,6 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			keyEnd:   []byte(prefixOne + keyA),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{},
 		},
 		"get all values": {
@@ -183,7 +177,6 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			keyEnd:   nil,
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{"0", "1", "2"},
 		},
 		"get all values after start key": {
@@ -196,7 +189,6 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			keyEnd:   []byte{0xff},
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{"1", "2"},
 		},
 		"parse with error": {
@@ -206,7 +198,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			keyEnd:   []byte(prefixOne + keyC),
 			parseFn: mockParseValueWithError,
 
-			expectedErr: true,
+			expectedErr: errors.New("mock error"),
 		},
 	}
 
@@ -220,8 +212,9 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 
 			actualValues, err := osmoutils.GatherValuesFromStore(s.store, tc.keyStart, tc.keyEnd, tc.parseFn)
 
-			if tc.expectedErr {
+			if tc.expectedErr != nil {
 				s.Require().Error(err)
+				s.Require().Equal(tc.expectedErr, err)
 				s.Require().Nil(actualValues)
 				return
 			}
@@ -239,7 +232,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 		preSetKeys []string
 		parseFn    func(b []byte) (string, error)
 
-		expectedErr 	   bool
+		expectedErr 	   error
 		expectedValues []string
 	}{
 		"common prefix": {
@@ -248,7 +241,6 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{"0", "1", "2"},
 		},
 		"different prefixes in order, prefix one requested": {
@@ -256,7 +248,6 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{"0", "1"},
 		},
 		"different prefixes in order, prefix two requested": {
@@ -264,7 +255,6 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			prefix: []byte(prefixTwo),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{"2", "3"},
 		},
 		"different prefixes out of order, prefix one requested": {
@@ -272,7 +262,6 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			// we expect the prefixOne values in ascending lexicographic order
 			expectedValues: []string{"2", "0"},
 		},
@@ -281,7 +270,6 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			prefix: []byte(prefixTwo),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{"1", "3"},
 		},
 		"prefix doesn't exist, no keys": {
@@ -289,7 +277,6 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{},
 		},
 		"prefix doesn't exist, only keys with another prefix": {
@@ -297,7 +284,6 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: []string{},
 		},
 		"parse with error": {
@@ -305,7 +291,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValueWithError,
 
-			expectedErr: true,
+			expectedErr: errors.New("mock error"),
 		},
 	}
 
@@ -319,8 +305,9 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 
 			actualValues, err := osmoutils.GatherValuesFromStorePrefix(s.store, tc.prefix, tc.parseFn)
 
-			if tc.expectedErr {
+			if tc.expectedErr != nil {
 				s.Require().Error(err)
+				s.Require().Equal(tc.expectedErr, err)
 				s.Require().Nil(actualValues)
 				return
 			}
@@ -331,14 +318,14 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 	}
 }
 
-func (s *TestSuite) TestGetFirstValueAfterPrefix() {
+func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
 
 	testcases := map[string]struct {
 		prefix     []byte
 		preSetKeys []string
 		parseFn    func(b []byte) (string, error)
 
-		expectedErr 	   bool
+		expectedErr 	   error
 		expectedValues string
 	}{
 		"common prefix": {
@@ -347,7 +334,6 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: "0",
 		},
 		"different prefixes in order, prefix one requested": {
@@ -355,7 +341,6 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: "0",
 		},
 		"different prefixes in order, prefix two requested": {
@@ -363,7 +348,6 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			prefix: []byte(prefixTwo),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: "2",
 		},
 		"different prefixes out of order, prefix one requested": {
@@ -371,7 +355,6 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			// we expect the prefixOne values in ascending lexicographic order
 			expectedValues: "2",
 		},
@@ -380,7 +363,6 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			prefix: []byte(prefixTwo),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			expectedValues: "1",
 		},
 		"prefix doesn't exist, start key lexicographically before existing keys": {
@@ -388,7 +370,6 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
-			expectedErr: false,
 			// we expect the first value after the prefix, which is the value associated with the first valid key
 			expectedValues: "0",
 		},
@@ -399,7 +380,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValue,
 
-			expectedErr: true,
+			expectedErr: errors.New("No values in iterator"),
 			expectedValues: "",
 		},
 		"prefix doesn't exist, start key lexicographically after existing keys": {
@@ -407,7 +388,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			prefix: []byte{0xff},
 			parseFn: mockParseValue,
 
-			expectedErr: true,
+			expectedErr: errors.New("No values in iterator"),
 			expectedValues: "",
 		},
 		"parse with error": {
@@ -415,7 +396,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 			prefix: []byte(prefixOne),
 			parseFn: mockParseValueWithError,
 
-			expectedErr: true,
+			expectedErr: errors.New("mock error"),
 			expectedValues: "",
 		},
 	}
@@ -428,9 +409,9 @@ func (s *TestSuite) TestGetFirstValueAfterPrefix() {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
 
-			actualValues, err := osmoutils.GetFirstValueAfterPrefix(s.store, tc.prefix, tc.parseFn)
+			actualValues, err := osmoutils.GetFirstValueAfterPrefixInclusive(s.store, tc.prefix, tc.parseFn)
 
-			if tc.expectedErr {
+			if tc.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().Equal(tc.expectedValues, actualValues)
 				return
@@ -454,7 +435,7 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 		isReverse  bool
 
 		expectedValues []string
-		expectedErr    bool
+		expectedErr    error
 	}{
 		"prefix iterator, no stop": {
 			preSetKeys: oneABC,
@@ -518,7 +499,7 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 
 			prefix: prefixOne,
 
-			expectedErr: true,
+			expectedErr: errors.New("mock error"),
 		},
 	}
 
@@ -552,14 +533,15 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 			}
 
 			mockParseValueFn := mockParseValue
-			if tc.expectedErr {
+			if tc.expectedErr != nil {
 				mockParseValueFn = mockParseValueWithError
 			}
 
 			actualValues, err := osmoutils.GatherValuesFromIteratorWithStop(iterator, mockParseValueFn, mockStop)
 
-			if tc.expectedErr {
+			if tc.expectedErr != nil {
 				s.Require().Error(err)
+				s.Require().Equal(tc.expectedErr, err)
 				s.Require().Nil(actualValues)
 				return
 			}
@@ -582,7 +564,7 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 		isReverse  bool
 
 		expectedValues []string
-		expectedErr    bool
+		expectedErr    error
 	}{
 		"prefix iterator, no stop but exclusive key end": {
 			preSetKeys: oneABC,
@@ -654,7 +636,7 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 			stopFn:  mockStop,
 			isReverse: false,
 
-			expectedErr: true,
+			expectedErr: errors.New("mock error"),
 		},
 	}
 
@@ -668,8 +650,9 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 
 			actualValues, err := osmoutils.GetIterValuesWithStop(s.store, tc.keyStart, tc.keyEnd, tc.isReverse, tc.stopFn, tc.parseFn)
 
-			if tc.expectedErr {
+			if tc.expectedErr != nil {
 				s.Require().Error(err)
+				s.Require().Equal(tc.expectedErr, err)
 				s.Require().Nil(actualValues)
 				return
 			}
@@ -690,7 +673,7 @@ func (s *TestSuite) TestGetValuesUntilDerivedStop() {
 		stopFn     func(b []byte) bool
 
 		expectedValues []string
-		expectedErr    bool
+		expectedErr    error
 	}{
 		"prefix iterator, no stop": {
 			preSetKeys: oneABC,
@@ -723,7 +706,7 @@ func (s *TestSuite) TestGetValuesUntilDerivedStop() {
 			parseFn: mockParseValueWithError,
 			stopFn:  mockStop,
 
-			expectedErr: true,
+			expectedErr: errors.New("mock error"),
 		},
 	}
 
@@ -737,8 +720,9 @@ func (s *TestSuite) TestGetValuesUntilDerivedStop() {
 
 			actualValues, err := osmoutils.GetValuesUntilDerivedStop(s.store, tc.keyStart, tc.stopFn, tc.parseFn)
 
-			if tc.expectedErr {
+			if tc.expectedErr != nil {
 				s.Require().Error(err)
+				s.Require().Equal(tc.expectedErr, err)
 				s.Require().Nil(actualValues)
 				return
 			}
