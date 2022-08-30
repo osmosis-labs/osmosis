@@ -93,7 +93,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 		// Expected results.
 		expectedLastReductionEpochNum int64
 		expectedDistribution          sdk.Dec
-		expectedPanic                 bool
+		expectedError                 bool
 	}{
 		"before start epoch - no distributions": {
 			hookArgEpochNum: defaultMintingRewardsDistributionStartEpoch - 1,
@@ -346,7 +346,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 
 			expectedDistribution:          sdk.ZeroDec(),
 			expectedLastReductionEpochNum: defaultMintingRewardsDistributionStartEpoch,
-			expectedPanic:                 true,
+			expectedError:                 true,
 		},
 	}
 
@@ -382,7 +382,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 
 			developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
 
-			if tc.expectedPanic {
+			if tc.expectedError {
 				// If panic is expected, burn developer module account balance so that it causes an error that leads to a
 				// panic in the hook.
 				suite.Require().NoError(distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(developerAccountBalanceBeforeHook), accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName)))
@@ -393,16 +393,14 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd() {
 			oldSupply := app.BankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount
 			suite.Require().Equal(sdk.NewInt(keeper.DeveloperVestingAmount), oldSupply)
 
-			osmoassert.ConditionalPanic(suite.T(), tc.expectedPanic, func() {
-				// System under test.
-				err := mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum)
-				if err != nil {
-					panic(err)
-				}
-			})
+			if tc.expectedError {
+				suite.Require().Error(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
+			} else {
+				suite.Require().NoError(mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, tc.hookArgEpochNum))
+			}
 
 			// If panics, the behavior is undefined.
-			if tc.expectedPanic {
+			if tc.expectedError {
 				return
 			}
 
@@ -544,7 +542,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	for i := int64(1); i <= defaultReductionPeriodInEpochs; i++ {
 		developerAccountBalanceBeforeHook := app.BankKeeper.GetBalance(ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName), sdk.DefaultBondDenom)
 
-		// System undert test.
+		// System under test.
 		mintKeeper.AfterEpochEnd(ctx, defaultEpochIdentifier, i)
 
 		// System truncates EpochProvisions because bank takes an Int.
