@@ -7,8 +7,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
-var _ types.GammHooks = &gammhook{}
-var _ epochtypes.EpochHooks = &epochhook{}
+var (
+	_ types.GammHooks       = &gammhook{}
+	_ epochtypes.EpochHooks = &epochhook{}
+)
 
 type epochhook struct {
 	k Keeper
@@ -53,5 +55,6 @@ func (hook *gammhook) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, pool
 	hook.k.trackChangedPool(ctx, poolId)
 }
 
-func (hook *gammhook) AfterExitPool(_ sdk.Context, _ sdk.AccAddress, _ uint64, _ sdk.Int, _ sdk.Coins) {
+func (hook *gammhook) AfterExitPool(ctx sdk.Context, _ sdk.AccAddress, poolId uint64, _ sdk.Int, _ sdk.Coins) {
+	hook.k.trackChangedPool(ctx, poolId)
 }
