@@ -248,39 +248,39 @@ func (s *TestSuite) TestPoolStateChange() {
 	}{
 		"swap triggers track changed pools": {
 			poolCoins: defaultTwoAssetCoins,
-			swap: true,
-			joinPool: false,
-			exitPool: false,
+			swap:      true,
+			joinPool:  false,
+			exitPool:  false,
 		},
 		"join pool triggers track changed pools": {
 			poolCoins: defaultTwoAssetCoins,
-			swap: false,
-			joinPool: true,
-			exitPool: false,
+			swap:      false,
+			joinPool:  true,
+			exitPool:  false,
 		},
 		"swap and join pool in same block triggers track changed pools": {
 			poolCoins: defaultTwoAssetCoins,
-			swap: true,
-			joinPool: true,
-			exitPool: false,
+			swap:      true,
+			joinPool:  true,
+			exitPool:  false,
 		},
 		"three asset pool: swap and join pool in same block triggers track changed pools": {
 			poolCoins: defaultThreeAssetCoins,
-			swap: true,
-			joinPool: true,
-			exitPool: false,
+			swap:      true,
+			joinPool:  true,
+			exitPool:  false,
 		},
 		"exit pool triggers track changed pools in two-asset pool": {
 			poolCoins: defaultTwoAssetCoins,
-			swap: false,
-			joinPool: false,
-			exitPool: true,
+			swap:      false,
+			joinPool:  false,
+			exitPool:  true,
 		},
 		"exit pool triggers track changed pools in three-asset pool": {
 			poolCoins: defaultThreeAssetCoins,
-			swap: false,
-			joinPool: false,
-			exitPool: true,
+			swap:      false,
+			joinPool:  false,
+			exitPool:  true,
 		},
 	}
 
@@ -301,47 +301,10 @@ func (s *TestSuite) TestPoolStateChange() {
 			}
 
 			if tc.exitPool {
-				poolCreator := s.TestAccs[0]
-				lpBalance := s.App.BankKeeper.GetBalance(s.Ctx, s.TestAccs[0], "gamm/pool/1").Amount
-				s.App.GAMMKeeper.ExitPool(s.Ctx, poolCreator, poolId, lpBalance.Quo(sdk.NewInt(10)), sdk.Coins{})
+				s.RunBasicExit(poolId)
 			}
 
 			// test that either of swapping in a pool, joining a pool, or exiting a pool
-			// has triggered `trackChangedPool`, and that we have the state of price
-			// impacted pools.
-			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
-			s.Require().Equal(1, len(changedPools))
-			s.Require().Equal(poolId, changedPools[0])
-		})
-	}
-}
-
-// TestAfterExitPool tests hooks for `AfterExitPool`.
-// The purpose of this test is to test whether we correctly store the state of the
-// pools that has changed with price impact.
-func (s *TestSuite) TestAfterExitPool() {
-	tests := []struct {
-		name      string
-		poolCoins sdk.Coins
-	}{
-		{
-			"exit pool triggers track changed pools",
-			defaultTwoAssetCoins,
-		},
-		{
-			"three asset pool: exit pool triggers track changed pools",
-			defaultThreeAssetCoins,
-		},
-	}
-
-	for _, tc := range tests {
-		s.SetupTest()
-		s.Run(tc.name, func() {
-			poolId := s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
-
-			s.RunBasicExit(poolId)
-
-			// test exiting a pool
 			// has triggered `trackChangedPool`, and that we have the state of price
 			// impacted pools.
 			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
