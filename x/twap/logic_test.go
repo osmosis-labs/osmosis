@@ -10,6 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v11/x/twap"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/types/twapmock"
 )
 
 var zeroDec = sdk.ZeroDec()
@@ -86,6 +87,8 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 func (s *TestSuite) TestUpdateTwap() {
 	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
 	newSp := sdk.OneDec()
+	programmableAmmInterface := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
+	s.App.TwapKeeper.SetAmmInterface(programmableAmmInterface)
 
 	tests := map[string]struct {
 		record     types.TwapRecord

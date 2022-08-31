@@ -2,6 +2,7 @@ package twap
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,7 +79,9 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 	for _, id := range changedPoolIds {
 		err := k.updateRecords(ctx, id)
 		if err != nil {
-			panic(err)
+			ctx.Logger().Error(fmt.Errorf(
+				"error in TWAP end block, for updating records for pool id %d."+
+					" Skipping record update. Underlying err: %w", id, err).Error())
 		}
 	}
 }
