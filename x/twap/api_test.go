@@ -36,7 +36,7 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 	poolId, denomA, denomB := s.setupDefaultPool()
 	initStartRecord := newRecord(s.Ctx.BlockTime(), sdk.OneDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	initStartRecord.PoolId, initStartRecord.Height = poolId, s.Ctx.BlockHeight()
-	initStartRecord.Asset0Denom, initStartRecord.Asset1Denom = denomA, denomB
+	initStartRecord.Asset0Denom, initStartRecord.Asset1Denom = denomB, denomA
 
 	zeroAccumTenPoint1Record := recordWithUpdatedSpotPrice(initStartRecord, sdk.NewDec(10), sdk.NewDecWithPrec(1, 1))
 
