@@ -383,7 +383,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			expTwap: sdk.MustNewDecFromStr("10.816326421861260894"),
 		},
 	}
-	// for i := 0; i < 2; i++ {
+
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
@@ -406,7 +406,6 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			s.Require().Equal(test.expTwap, twap)
 		})
 	}
-	// }
 }
 
 // TestGetArithmeticTwapToNow tests if we get the expected twap value from `GetArithmeticTwapToNow`.
