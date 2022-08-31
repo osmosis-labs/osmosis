@@ -47,6 +47,7 @@ func getSpotPrices(ctx sdk.Context, k types.AmmInterface, poolId uint64, denom0,
 			sp1 = sdk.ZeroDec()
 		}
 	}
+	// if sp0.GT(gammtypes.MaxSpotPrice)
 	return sp0, sp1, lastErrTime
 }
 

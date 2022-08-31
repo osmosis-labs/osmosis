@@ -143,8 +143,39 @@ func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
 	s.Require().True(latestTwap.P1ArithmeticTwapAccumulator.GT(historicalOldTwap.P1ArithmeticTwapAccumulator))
 }
 
+type spotPriceErrGammKeeper struct {
+	underlyingkeeper    types.AmmInterface
+	programmedSpotPrice map[uint64]struct {
+		sp  sdk.Dec
+		err error
+	}
+	programmedPoolDenoms map[uint64]struct {
+		denoms []string
+		err    error
+	}
+}
+
+func (s *spotPriceErrGammKeeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) (denoms []string, err error) {
+	if res, ok := s.programmedPoolDenoms[poolId]; ok {
+		return res.denoms, res.err
+	}
+	return s.underlyingkeeper.GetPoolDenoms(ctx, poolId)
+}
+
+func (s *spotPriceErrGammKeeper) CalculateSpotPrice(ctx sdk.Context,
+	poolID uint64,
+	baseAssetDenom string,
+	quoteAssetDenom string) (price sdk.Dec, err error) {
+	if res, ok := s.programmedSpotPrice[poolID]; ok {
+		return res.sp, res.err
+	}
+	return s.underlyingkeeper.CalculateSpotPrice(ctx, poolID, baseAssetDenom, quoteAssetDenom)
+}
+
+var _ types.AmmInterface = &spotPriceErrGammKeeper{}
+
 // This test should create multiple mock pools, test one pool's spot price returning an error,
 // and ensure end blocks still work safely.
-func (s *TestSuite) TestSafetyWithSpotPriceError() {
+func (s *TestSuite) TestSafetyWithPoolThatHasSpotPriceError() {
 	s.Require().Fail("Need to implement")
 }
