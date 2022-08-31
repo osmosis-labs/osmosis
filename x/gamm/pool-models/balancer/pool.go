@@ -666,13 +666,13 @@ func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (n
 // JoinPoolNoSwap calculates the number of shares needed for an all-asset join given tokensIn with swapFee applied.
 // It updates the liquidity if the pool is joined successfully. If not, returns error.
 func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	numShares, tokensJoined, _, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
+	numShares, tokensJoined, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
 	if err != nil {
 		return sdk.Int{}, err
 	}
 
 	// update pool with the calculated share and liquidity needed to join pool
-	p.IncreaseLiquidity(numShares, newLiquidity)
+	p.IncreaseLiquidity(numShares, tokensJoined)
 	return numShares, nil
 }
 
@@ -726,10 +726,11 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 	// * numShares is how many shares are perfectly matched.
 	// * remainingTokensIn is how many coins we have left to join, that have not already been used.
 	// if remaining coins is empty, logic is done (we joined all tokensIn)
-	numShares, tokensJoined, remainingTokensIn, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
+	numShares, tokensJoined, err = p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
+	remainingTokensIn := tokensIn.Sub(tokensJoined)
 
 	// safely ends the calculation if all input tokens are successfully LP'd
 	if tokensJoined.IsAnyGT(tokensIn) {
@@ -773,21 +774,21 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 // Since CalcJoinPoolNoSwapShares is non-mutative, the steps for updating pool shares / liquidity are
 // more complex / don't just alter the state.
 // We should simplify this logic further in the future using multi-join equations.
-func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, remainingTokens sdk.Coins, err error) {
+func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
 	// get all 'pool assets' (aka current pool liquidity + balancer weight)
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, err
+		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	err = ensureDenomInPool(poolAssetsByDenom, tokensIn)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, err
+		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	// ensure that there aren't too many or too few assets in `tokensIn`
 	if tokensIn.Len() != p.NumAssets() {
-		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, errors.New("no-swap joins require LP'ing with all assets in pool")
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("no-swap joins require LP'ing with all assets in pool")
 	}
 
 	// execute a no-swap join with as many tokens as possible given a perfect ratio:
@@ -795,16 +796,16 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 	// * remainingTokensIn is how many coins we have left to join that have not already been used.
 	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
 	if err != nil {
-		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, err
+		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
 
 	// ensure that no more tokens have been joined than is possible with the given `tokensIn`
 	tokensJoined = tokensIn.Sub(remainingTokensIn)
 	if tokensJoined.IsAnyGT(tokensIn) {
-		return sdk.ZeroInt(), sdk.NewCoins(), tokensIn, errors.New("an error has occurred, more coins joined than token In")
+		return sdk.ZeroInt(), sdk.NewCoins(), errors.New("an error has occurred, more coins joined than token In")
 	}
 
-	return numShares, tokensJoined, remainingTokensIn, nil
+	return numShares, tokensJoined, nil
 }
 
 // calcJoinSingleAssetTokensIn attempts to calculate single

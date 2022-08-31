@@ -1366,20 +1366,18 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 				TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
 			}
 
-			numShare, tokensJoined, remainingCoins, err := balancerPool.CalcJoinPoolNoSwapShares(ctx, test.tokensIn, balancerPool.GetSwapFee(ctx))
+			numShare, tokensJoined, err := balancerPool.CalcJoinPoolNoSwapShares(ctx, test.tokensIn, balancerPool.GetSwapFee(ctx))
 
 			if test.expectPass {
 				require.NoError(t, err)
 				require.Equal(t, test.expPoolAssets, balancerPool.PoolAssets)
 				require.Equal(t, test.expNumShare, numShare)
 				require.Equal(t, test.expTokensJoined, tokensJoined)
-				require.Equal(t, test.expRemainingCoins, remainingCoins)
 			} else {
 				require.Error(t, err)
 				require.Equal(t, test.expPoolAssets, balancerPool.PoolAssets)
 				require.Equal(t, test.expNumShare, numShare)
 				require.Equal(t, test.expTokensJoined, tokensJoined)
-				require.Equal(t, test.expRemainingCoins, remainingCoins)
 			}
 		})
 	}
