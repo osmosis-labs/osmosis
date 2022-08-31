@@ -284,7 +284,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 	)
 
 	// N.B.: when ctxTime = end time, we trigger the "TWAP to now path".
-	// As a result, we duplicate the test cases by trigerring both "to now" and "with end time" paths
+	// As a result, we duplicate the test cases by triggering both "to now" and "with end time" paths
 	// To trigger "with end time" path, we make end time less than ctxTime.
 	tests := map[string]struct {
 		recordsToSet []types.TwapRecord
