@@ -10,6 +10,8 @@ import (
 // Parameter store keys.
 var (
 	KeyContractAddress = []byte("contract")
+
+	_ paramtypes.ParamSet = &Params{}
 )
 
 func ParamKeyTable() paramtypes.KeyTable {
@@ -41,17 +43,17 @@ func (p Params) Validate() error {
 // Implements params.ParamSet.
 func (p Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyContractAddress, p, validateContractAddress),
+		paramtypes.NewParamSetPair(KeyContractAddress, &p.ContractAddress, validateContractAddress),
 	}
 }
 
 func validateContractAddress(i interface{}) error {
-	v, ok := i.(Params)
+	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	bech32, err := sdk.AccAddressFromBech32(v.ContractAddress)
+	bech32, err := sdk.AccAddressFromBech32(v)
 	if err != nil {
 		return err
 	}
