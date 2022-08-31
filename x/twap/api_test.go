@@ -116,7 +116,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 		ctxTime      time.Time
 		input        getTwapInput
 		expTwap      sdk.Dec
-		expErrorStr  string
+		expectError  error
 	}{
 		"(1 record) start and end point to same record": {
 			recordsToSet: []types.TwapRecord{baseRecord},
@@ -213,25 +213,25 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, quoteAssetA),
-			expErrorStr:  "future",
+			expectError:  twap.EndTimeInFutureErr{BlockTime: baseTime, EndTime: tPlusOne},
 		},
 		"start time after end time": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime,
 			input:        makeSimpleTwapInput(tPlusOne, baseTime, quoteAssetA),
-			expErrorStr:  "after",
+			expectError:  twap.StartTimeAfterEndTimeErr{StartTime: tPlusOne, EndTime: baseTime},
 		},
 		"start time too old (end time = now)": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime,
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Hour), baseTime, quoteAssetA),
-			expErrorStr:  "too old",
+			expectError:  twap.TimeTooOldErr{Time: baseTime.Add(-time.Hour)},
 		},
 		"start time too old": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime.Add(time.Second),
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Hour), baseTime, quoteAssetA),
-			expErrorStr:  "too old",
+			expectError:  twap.TimeTooOldErr{Time: baseTime.Add(-time.Hour)},
 		},
 		// TODO: overflow tests, multi-asset pool handling
 	}
@@ -245,9 +245,9 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 				test.input.quoteAssetDenom, test.input.baseAssetDenom,
 				test.input.startTime, test.input.endTime)
 
-			if test.expErrorStr != "" {
+			if test.expectError != nil {
 				s.Require().Error(err)
-				s.Require().Contains(err.Error(), test.expErrorStr)
+				s.Require().ErrorIs(err, test.expectError)
 				return
 			}
 			s.Require().NoError(err)

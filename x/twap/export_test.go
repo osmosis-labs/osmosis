@@ -9,8 +9,10 @@ import (
 )
 
 type (
-	TwapNotFoundErr = twapNotFoundErr
-	TimeTooOldErr   = timeTooOldErr
+	TwapNotFoundErr          = twapNotFoundErr
+	TimeTooOldErr            = timeTooOldErr
+	EndTimeInFutureErr       = endTimeInFutureErr
+	StartTimeAfterEndTimeErr = startTimeAfterEndTimeErr
 )
 
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
