@@ -169,8 +169,7 @@ Cosmwasm bindings have been added, to make swapping and creating these new token
 
 This upgrade is a patch that must be hard forked in, as on-chain governance of Osmosis approved proposal [227](https://www.mintscan.io/osmosis/proposals/227) and proposal [228](https://www.mintscan.io/osmosis/proposals/228).
 
-This upgrade includes:>>>>>>> main
-112
+This upgrade includes:
 
 
 * Adding height-gated AnteHandler message filter to filter unpooling tx pre-upgrade.
