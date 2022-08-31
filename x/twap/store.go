@@ -12,21 +12,21 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
-type timeTooOldErr struct {
+type timeTooOldError struct {
 	Time time.Time
 }
 
-func (e timeTooOldErr) Error() string {
+func (e timeTooOldError) Error() string {
 	return fmt.Sprintf("looking for a time thats too old, not in the historical index. "+
 		" Try storing the accumulator value. (requested time %s)", e.Time)
 }
 
-type twapNotFoundErr struct {
+type twapNotFoundError struct {
 	Asset0Denom string
 	Asset1Denom string
 }
 
-func (e twapNotFoundErr) Error() string {
+func (e twapNotFoundError) Error() string {
 	return fmt.Sprintf("TWAP not found, but there are other twaps available for this time."+
 		" Please make sure tha asset0denom and asset1denom (%s, %s) are correct, and in order (asset0 > asset1)?", e.Asset0Denom, e.Asset1Denom)
 }
@@ -198,7 +198,7 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 		return types.TwapRecord{}, err
 	}
 	if len(twaps) == 0 {
-		return types.TwapRecord{}, timeTooOldErr{Time: t}
+		return types.TwapRecord{}, timeTooOldError{Time: t}
 	}
 
 	for _, twap := range twaps {
@@ -206,5 +206,5 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 			return twap, nil
 		}
 	}
-	return types.TwapRecord{}, twapNotFoundErr{Asset0Denom: asset0Denom, Asset1Denom: asset1Denom}
+	return types.TwapRecord{}, twapNotFoundError{Asset0Denom: asset0Denom, Asset1Denom: asset1Denom}
 }

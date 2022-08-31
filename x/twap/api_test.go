@@ -213,25 +213,25 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, quoteAssetA),
-			expectError:  twap.EndTimeInFutureErr{BlockTime: baseTime, EndTime: tPlusOne},
+			expectError:  twap.EndTimeInFutureError{BlockTime: baseTime, EndTime: tPlusOne},
 		},
 		"start time after end time": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime,
 			input:        makeSimpleTwapInput(tPlusOne, baseTime, quoteAssetA),
-			expectError:  twap.StartTimeAfterEndTimeErr{StartTime: tPlusOne, EndTime: baseTime},
+			expectError:  twap.StartTimeAfterEndTimeError{StartTime: tPlusOne, EndTime: baseTime},
 		},
 		"start time too old (end time = now)": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime,
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Hour), baseTime, quoteAssetA),
-			expectError:  twap.TimeTooOldErr{Time: baseTime.Add(-time.Hour)},
+			expectError:  twap.TimeTooOldError{Time: baseTime.Add(-time.Hour)},
 		},
 		"start time too old": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime.Add(time.Second),
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Hour), baseTime, quoteAssetA),
-			expectError:  twap.TimeTooOldErr{Time: baseTime.Add(-time.Hour)},
+			expectError:  twap.TimeTooOldError{Time: baseTime.Add(-time.Hour)},
 		},
 		// TODO: overflow tests, multi-asset pool handling
 	}
@@ -346,13 +346,13 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTimePlusKeepPeriod,
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Millisecond), baseTimePlusKeepPeriod, quoteAssetA),
-			expectError:  twap.TimeTooOldErr{Time: baseTime.Add(-time.Millisecond)},
+			expectError:  twap.TimeTooOldError{Time: baseTime.Add(-time.Millisecond)},
 		},
 		"(1 record at keep threshold); with end time; ctxTime = base keep threshold, start time = base time - 1ms (source of error); end time = base keep threshold - ms; error": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTimePlusKeepPeriod,
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Millisecond), baseTimePlusKeepPeriod.Add(-time.Millisecond), quoteAssetA),
-			expectError:  twap.TimeTooOldErr{Time: baseTime.Add(-time.Millisecond)},
+			expectError:  twap.TimeTooOldError{Time: baseTime.Add(-time.Millisecond)},
 		},
 		"(2 records); to now; with one directly at threshold, interpolated": {
 			recordsToSet: []types.TwapRecord{baseRecord, recordBeforeKeepThreshold},
@@ -468,7 +468,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			recordsToSet:  []types.TwapRecord{baseRecord},
 			ctxTime:       tPlusOne,
 			input:         makeSimpleTwapToNowInput(baseTime.Add(-time.Hour), quoteAssetA),
-			expectedError: twap.TimeTooOldErr{Time: baseTime.Add(-time.Hour)},
+			expectedError: twap.TimeTooOldError{Time: baseTime.Add(-time.Hour)},
 		},
 		// TODO: overflow tests
 	}
