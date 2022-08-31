@@ -232,8 +232,6 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 		beforeTime time.Time
 
 		expectedKeptRecords []types.TwapRecord
-
-		expErr bool
 	}{
 		"base time; across pool 3; 4 records; 3 before prune time; 2 deleted and newest kept": {
 			recordsToPreSet: []types.TwapRecord{
@@ -392,10 +390,6 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 			twapKeeper := s.twapkeeper
 
 			err := twapKeeper.PruneRecordsBeforeTimeButNewest(ctx, tc.beforeTime)
-			if tc.expErr {
-				s.Require().Error(err)
-				return
-			}
 			s.Require().NoError(err)
 
 			s.validateExpectedRecords(tc.expectedKeptRecords)

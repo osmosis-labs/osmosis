@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v11/x/twap"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
@@ -291,7 +292,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		ctxTime      time.Time
 		input        getTwapInput
 		expTwap      sdk.Dec
-		expErrorStr  string
+		expectError  error
 	}{
 		"(1 record at keep threshold); to now; ctxTime = at keep threshold; start time = end time = base keep threshold": {
 			recordsToSet: []types.TwapRecord{baseRecord},
@@ -345,13 +346,13 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTimePlusKeepPeriod,
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Millisecond), baseTimePlusKeepPeriod, quoteAssetA),
-			expErrorStr:  "looking for a time thats too old, not in the historical index",
+			expectError:  twap.TimeTooOldErr{Time: baseTime.Add(-time.Millisecond)},
 		},
 		"(1 record at keep threshold); with end time; ctxTime = base keep threshold, start time = base time - 1ms (source of error); end time = base keep threshold - ms; error": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTimePlusKeepPeriod,
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Millisecond), baseTimePlusKeepPeriod.Add(-time.Millisecond), quoteAssetA),
-			expErrorStr:  "looking for a time thats too old, not in the historical index",
+			expectError:  twap.TimeTooOldErr{Time: baseTime.Add(-time.Millisecond)},
 		},
 		"(2 records); to now; with one directly at threshold, interpolated": {
 			recordsToSet: []types.TwapRecord{baseRecord, recordBeforeKeepThreshold},
@@ -395,9 +396,9 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 				test.input.quoteAssetDenom, test.input.baseAssetDenom,
 				test.input.startTime, test.input.endTime)
 
-			if test.expErrorStr != "" {
+			if test.expectError != nil {
 				s.Require().Error(err)
-				s.Require().Contains(err.Error(), test.expErrorStr)
+				s.Require().ErrorIs(err, test.expectError)
 				return
 			}
 			s.Require().NoError(err)

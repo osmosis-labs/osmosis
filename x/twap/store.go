@@ -12,6 +12,25 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
+type timeTooOldErr struct {
+	Time time.Time
+}
+
+func (e timeTooOldErr) Error() string {
+	return fmt.Sprintf("looking for a time thats too old, not in the historical index. "+
+		" Try storing the accumulator value. (requested time %s)", e.Time)
+}
+
+type twapNotFoundErr struct {
+	Asset0Denom string
+	Asset1Denom string
+}
+
+func (e twapNotFoundErr) Error() string {
+	return fmt.Sprintf("TWAP not found, but there are other twaps available for this time."+
+		" Please make sure tha asset0denom and asset1denom (%s, %s) are correct, and in order (asset0 > asset1)?", e.Asset0Denom, e.Asset1Denom)
+}
+
 // trackChangedPool places an entry into a transient store,
 // to track that this pool changed this block.
 // This tracking is for use in EndBlock, to create new TWAP records.
@@ -179,8 +198,7 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 		return types.TwapRecord{}, err
 	}
 	if len(twaps) == 0 {
-		return types.TwapRecord{}, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
-			" Try storing the accumulator value. (requested time %s)", t)
+		return types.TwapRecord{}, timeTooOldErr{Time: t}
 	}
 
 	for _, twap := range twaps {
@@ -188,6 +206,5 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 			return twap, nil
 		}
 	}
-	return types.TwapRecord{}, fmt.Errorf("TWAP not found, but there are other twaps available for this time."+
-		" Were provided asset0denom and asset1denom (%s, %s) correct, and in order (asset0 > asset1)?", asset0Denom, asset1Denom)
+	return types.TwapRecord{}, twapNotFoundErr{Asset0Denom: asset0Denom, Asset1Denom: asset1Denom}
 }
