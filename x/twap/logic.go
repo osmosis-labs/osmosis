@@ -14,8 +14,8 @@ func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
-	lastErrorTime := time.Time{}
-	sp0, sp1, lastErrorTime := getSpotPrices(ctx, k, poolId, denom0, denom1, lastErrorTime)
+	previousErrorTime := time.Time{} // no previous error
+	sp0, sp1, lastErrorTime := getSpotPrices(ctx, k, poolId, denom0, denom1, previousErrorTime)
 	return types.TwapRecord{
 		PoolId:                      poolId,
 		Asset0Denom:                 denom0,
@@ -30,7 +30,7 @@ func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 	}, nil
 }
 
-// getSpotPricecs gets the spot prices for the pool,
+// getSpotPrices gets the spot prices for the pool,
 func getSpotPrices(ctx sdk.Context, k types.AmmInterface, poolId uint64, denom0, denom1 string, lastErrorTime time.Time) (
 	sp0 sdk.Dec, sp1 sdk.Dec, lastErrTime time.Time) {
 	lastErrTime = lastErrorTime

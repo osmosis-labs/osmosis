@@ -250,9 +250,9 @@ func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
 		// Should not happen, but if it did would error
 		"err after EndTime": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, baseTime.Add(20*time.Second)),
+			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec.MulInt64(2), true, baseTime.Add(20*time.Second)),
 			quoteAsset:  denom0,
-			expTwap:     sdk.OneDec(),
+			expTwap:     sdk.OneDec().MulInt64(2),
 			expErr:      true,
 		},
 	}
