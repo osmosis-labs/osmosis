@@ -261,6 +261,10 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 	}
 }
 
+// TODO: implement
+// func (s *TestSuite) TestGetArithmeticTwapWithErrorRecords() {
+// }
+
 // TestGetArithmeticTwapToNow tests if we get the expected twap value from `GetArithmeticTwapToNow`.
 // We test the method directly by updating the accumulator and storing the twap records
 // manually in this test.
