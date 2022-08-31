@@ -92,7 +92,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 			paramsutils.ParamChangeJSON{
 				Subspace: ibcratelimittypes.ModuleName,
 				Key:      "contract",
-				Value:    []byte(fmt.Sprintf(`{"contract_address": "%s"}`, contracts[0])),
+				Value:    []byte(fmt.Sprintf(`"%s"`, contracts[0])),
 			},
 		},
 		Deposit: "625000000uosmo",
@@ -114,20 +114,16 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 		Value    string `json:"value"`
 	}
 
-	type Value struct {
-		ContractAddress string `json:"contract_address"`
-	}
-
 	s.Eventually(
 		func() bool {
 			var params Params
 			node.QueryParams(ibcratelimittypes.ModuleName, "contract", &params)
-			var val Value
+			var val string
 			err := json.Unmarshal([]byte(params.Value), &val)
 			if err != nil {
 				return false
 			}
-			return val.ContractAddress != ""
+			return val != ""
 		},
 		1*time.Minute,
 		10*time.Millisecond,
