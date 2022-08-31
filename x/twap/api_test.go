@@ -311,7 +311,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			input:        makeSimpleTwapInput(oneHourAfterKeepThreshold, oneHourAfterKeepThreshold, quoteAssetA),
 			expTwap:      sdk.NewDec(10),
 		},
-		"(1 record younger than keep threshold); with end time; ctxTime = start time = end time = after keep threshold - 1ns": {
+		"(1 record younger than keep threshold); with end time; ctxTime = start time = end time = after keep threshold - 1ms": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      oneHourAfterKeepThreshold,
 			input:        makeSimpleTwapInput(oneHourAfterKeepThreshold.Add(-time.Millisecond), oneHourAfterKeepThreshold.Add(-time.Millisecond), quoteAssetA),
@@ -323,7 +323,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, oneHourBeforeKeepThreshold, quoteAssetA),
 			expTwap:      sdk.NewDec(10),
 		},
-		"(1 record older than keep threshold); with end time; ctxTime = baseTime, start time = end time = before keep threshold - 1ns": {
+		"(1 record older than keep threshold); with end time; ctxTime = baseTime, start time = end time = before keep threshold - 1ms": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      oneHourBeforeKeepThreshold,
 			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold.Add(-time.Millisecond), oneHourBeforeKeepThreshold.Add(-time.Millisecond), quoteAssetA),
@@ -341,13 +341,13 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, baseTimePlusKeepPeriod, quoteAssetA),
 			expTwap:      sdk.NewDec(10),
 		},
-		"(1 record at keep threshold); to now; ctxTime = base keep threshold, start time = base time - 1mns (source of error); end time = base keep threshold; error": {
+		"(1 record at keep threshold); to now; ctxTime = base keep threshold, start time = base time - 1ms (source of error); end time = base keep threshold; error": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTimePlusKeepPeriod,
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Millisecond), baseTimePlusKeepPeriod, quoteAssetA),
 			expErrorStr:  "looking for a time thats too old, not in the historical index",
 		},
-		"(1 record at keep threshold); with end time; ctxTime = base keep threshold, start time = base time - 1mns (source of error); end time = base keep threshold - 1ns; error": {
+		"(1 record at keep threshold); with end time; ctxTime = base keep threshold, start time = base time - 1ms (source of error); end time = base keep threshold - ms; error": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTimePlusKeepPeriod,
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Millisecond), baseTimePlusKeepPeriod.Add(-time.Millisecond), quoteAssetA),
