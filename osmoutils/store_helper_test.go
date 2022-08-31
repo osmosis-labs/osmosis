@@ -212,8 +212,7 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			actualValues, err := osmoutils.GatherValuesFromStore(s.store, tc.keyStart, tc.keyEnd, tc.parseFn)
 
 			if tc.expectedErr != nil {
-				s.Require().Error(err)
-				s.Require().Equal(tc.expectedErr, err)
+				s.Require().ErrorContains(err, tc.expectedErr.Error())
 				s.Require().Nil(actualValues)
 				return
 			}
@@ -304,8 +303,7 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			actualValues, err := osmoutils.GatherValuesFromStorePrefix(s.store, tc.prefix, tc.parseFn)
 
 			if tc.expectedErr != nil {
-				s.Require().Error(err)
-				s.Require().Equal(tc.expectedErr, err)
+				s.Require().ErrorContains(err, tc.expectedErr.Error())
 				s.Require().Nil(actualValues)
 				return
 			}
@@ -410,7 +408,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
 			actualValues, err := osmoutils.GetFirstValueAfterPrefixInclusive(s.store, tc.prefix, tc.parseFn)
 
 			if tc.expectedErr != nil {
-				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedErr.Error())
 				s.Require().Equal(tc.expectedValues, actualValues)
 				return
 			}
@@ -538,8 +536,7 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 			actualValues, err := osmoutils.GatherValuesFromIteratorWithStop(iterator, mockParseValueFn, mockStop)
 
 			if tc.expectedErr != nil {
-				s.Require().Error(err)
-				s.Require().Equal(tc.expectedErr, err)
+				s.Require().ErrorContains(err, tc.expectedErr.Error())
 				s.Require().Nil(actualValues)
 				return
 			}
@@ -649,8 +646,7 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 			actualValues, err := osmoutils.GetIterValuesWithStop(s.store, tc.keyStart, tc.keyEnd, tc.isReverse, tc.stopFn, tc.parseFn)
 
 			if tc.expectedErr != nil {
-				s.Require().Error(err)
-				s.Require().Equal(tc.expectedErr, err)
+				s.Require().ErrorContains(err, tc.expectedErr.Error())
 				s.Require().Nil(actualValues)
 				return
 			}
@@ -719,8 +715,7 @@ func (s *TestSuite) TestGetValuesUntilDerivedStop() {
 			actualValues, err := osmoutils.GetValuesUntilDerivedStop(s.store, tc.keyStart, tc.stopFn, tc.parseFn)
 
 			if tc.expectedErr != nil {
-				s.Require().Error(err)
-				s.Require().Equal(tc.expectedErr, err)
+				s.Require().ErrorContains(err, tc.expectedErr.Error())
 				s.Require().Nil(actualValues)
 				return
 			}
