@@ -240,10 +240,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			s.preSetRecords(test.recordsToSet)
 			s.Ctx = s.Ctx.WithBlockTime(test.ctxTime)
 
-			var twap sdk.Dec
-			var err error
-
-			twap, err = s.twapkeeper.GetArithmeticTwap(s.Ctx, test.input.poolId,
+			twap, err := s.twapkeeper.GetArithmeticTwap(s.Ctx, test.input.poolId,
 				test.input.quoteAssetDenom, test.input.baseAssetDenom,
 				test.input.startTime, test.input.endTime)
 
