@@ -500,15 +500,7 @@ func (suite *KeeperTestSuite) TestEnsureDenomInPool() {
 		suite.Run(name, func() {
 			suite.SetupTest()
 
-			k := suite.App.GAMMKeeper
-
-			poolId := suite.PrepareBalancerPoolWithPoolAsset(tc.poolAssets)
-			poolI, err := k.GetPoolAndPoke(suite.Ctx, poolId)
-			suite.Require().NoError(err, "test: %s", name)
-			balancerPool, isPool := poolI.(*balancer.Pool)
-			suite.Require().True(isPool, "test: %s", name)
-
-			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(balancerPool.GetAllPoolAssets())
+			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
 			suite.Require().NoError(err, "test: %s", name)
 
 			err = balancer.EnsureDenomInPool(poolAssetsByDenom, tc.tokensIn)
@@ -1273,58 +1265,76 @@ func TestIsActive(t *testing.T) {
 }
 
 func TestCalcJoinPoolNoSwapShares(t *testing.T) {
-	balancerPoolAsset := []balancer.PoolAsset{
+	balancerPoolAssets := []balancer.PoolAsset{
 		{Token: sdk.NewInt64Coin("foo", 100), Weight: sdk.NewIntFromUint64(5)},
 		{Token: sdk.NewInt64Coin("bar", 100), Weight: sdk.NewIntFromUint64(5)},
 	}
+	balancerPoolAssetsEdge := []balancer.PoolAsset{
+		{Token: sdk.NewCoin("foo", sdk.NewInt(1)), Weight: sdk.NewIntFromUint64(1)},
+	}
 
 	tests := map[string]struct {
-		tokensIn        sdk.Coins
-		expNumShare     sdk.Int
-		expTokensJoined sdk.Coins
-		expPoolAssets   sdk.Coins
-		expRemainingCoins      sdk.Coins
-		expectPass      bool
+		tokensIn          sdk.Coins
+		poolAssets        []balancer.PoolAsset
+		expNumShare       sdk.Int
+		expTokensJoined   sdk.Coins
+		expPoolAssets     sdk.Coins
+		expRemainingCoins sdk.Coins
+		expectPass        bool
 	}{
 		"two asset pool, same tokenIn ratio": {
-			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
-			expNumShare:     sdk.NewIntFromUint64(10000000000000000000),
-			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
-			expPoolAssets:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expRemainingCoins:      sdk.Coins{},
-			expectPass:      true,
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
+			poolAssets:        balancerPoolAssets,
+			expNumShare:       sdk.NewIntFromUint64(10000000000000000000),
+			expTokensJoined:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
+			expPoolAssets:     sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
+			expRemainingCoins: sdk.Coins{},
+			expectPass:        true,
 		},
 		"two asset pool, different tokenIn ratio with pool": {
-			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(11))),
-			expNumShare:     sdk.NewIntFromUint64(10000000000000000000),
-			expTokensJoined: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
-			expPoolAssets:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expRemainingCoins:      sdk.NewCoins(sdk.NewCoin("bar", sdk.NewIntFromUint64(1))),
-			expectPass:      true,
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(11))),
+			poolAssets:        balancerPoolAssets,
+			expNumShare:       sdk.NewIntFromUint64(10000000000000000000),
+			expTokensJoined:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("bar", sdk.NewInt(10))),
+			expPoolAssets:     sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
+			expRemainingCoins: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewIntFromUint64(1))),
+			expectPass:        true,
 		},
 		"two asset pool, no-swap join attempt with one asset": {
-			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10))),
-			expNumShare:     sdk.NewIntFromUint64(0),
-			expTokensJoined: sdk.Coins{},
-			expPoolAssets:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expRemainingCoins:      sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10))),
-			expectPass:      false,
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10))),
+			poolAssets:        balancerPoolAssets,
+			expNumShare:       sdk.NewIntFromUint64(0),
+			expTokensJoined:   sdk.Coins{},
+			expPoolAssets:     sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
+			expRemainingCoins: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10))),
+			expectPass:        false,
 		},
 		"two asset pool, no-swap join attempt with one valid and one invalid asset": {
-			tokensIn:        sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("baz", sdk.NewInt(10))),
-			expNumShare:     sdk.NewIntFromUint64(0),
-			expTokensJoined: sdk.Coins{},
-			expPoolAssets:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expRemainingCoins:      sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("baz", sdk.NewInt(10))),
-			expectPass:      false,
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("baz", sdk.NewInt(10))),
+			poolAssets:        balancerPoolAssets,
+			expNumShare:       sdk.NewIntFromUint64(0),
+			expTokensJoined:   sdk.Coins{},
+			expPoolAssets:     sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
+			expRemainingCoins: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10)), sdk.NewCoin("baz", sdk.NewInt(10))),
+			expectPass:        false,
 		},
 		"two asset pool, no-swap join attempt with two invalid assets": {
-			tokensIn:        sdk.NewCoins(sdk.NewCoin("baz", sdk.NewInt(10)), sdk.NewCoin("qux", sdk.NewInt(10))),
-			expNumShare:     sdk.NewIntFromUint64(0),
-			expTokensJoined: sdk.Coins{},
-			expPoolAssets:   sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
-			expRemainingCoins:      sdk.NewCoins(sdk.NewCoin("baz", sdk.NewInt(10)), sdk.NewCoin("qux", sdk.NewInt(10))),
-			expectPass:      false,
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("baz", sdk.NewInt(10)), sdk.NewCoin("qux", sdk.NewInt(10))),
+			poolAssets:        balancerPoolAssets,
+			expNumShare:       sdk.NewIntFromUint64(0),
+			expTokensJoined:   sdk.Coins{},
+			expPoolAssets:     sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100))),
+			expRemainingCoins: sdk.NewCoins(sdk.NewCoin("baz", sdk.NewInt(10)), sdk.NewCoin("qux", sdk.NewInt(10))),
+			expectPass:        false,
+		},
+		"single asset pool, no-swap join attempt with one asset": {
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(sdk.MaxSortableDec.TruncateInt64()))),
+			poolAssets:        balancerPoolAssetsEdge,
+			expNumShare:       sdk.NewIntFromUint64(0),
+			expTokensJoined:   sdk.Coins{},
+			expPoolAssets:     sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1))),
+			expRemainingCoins: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(sdk.MaxSortableDec.TruncateInt64()))),
+			expectPass:        false,
 		},
 	}
 
@@ -1334,14 +1344,17 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			balancerPool, err := balancer.NewBalancerPool(
 				defaultPoolId,
 				balancer.PoolParams{SwapFee: defaultSwapFee, ExitFee: defaultExitFee},
-				balancerPoolAsset,
+				test.poolAssets,
 				defaultFutureGovernor,
 				defaultCurBlockTime,
 			)
 			require.NoError(t, err)
 
 			numShare, tokensJoined, remainingCoins, err := balancerPool.CalcJoinPoolNoSwapShares(ctx, test.tokensIn, balancerPool.GetSwapFee(ctx))
-			poolAssets := sdk.NewCoins(balancerPool.PoolAssets[0].Token, balancerPool.PoolAssets[1].Token)
+			poolAssets := sdk.Coins{}
+			for _, poolAsset := range balancerPool.PoolAssets {
+				poolAssets = poolAssets.Add(poolAsset.Token)
+			}
 
 			if test.expectPass {
 				require.NoError(t, err)
