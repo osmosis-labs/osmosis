@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -19,7 +20,7 @@ type PacketData struct {
 	Amount string `json:"amount"`
 }
 
-func CheckRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
+func CheckAndUpdateRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
 	msgType, contract string,
 	channelValue sdk.Int, sourceChannel, denom string,
 	amount string,
@@ -41,10 +42,43 @@ func CheckRateLimits(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKee
 	}
 
 	_, err = contractKeeper.Sudo(ctx, contractAddr, sendPacketMsg)
-
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrRateLimitExceeded, err.Error())
 	}
+
+	return nil
+}
+
+type UndoSendMsg struct {
+	UndoSend UndoSendMsgContent `json:"undo_send"`
+}
+
+type UndoSendMsgContent struct {
+	ChannelId string `json:"channel_id"`
+	Denom     string `json:"denom"`
+	Funds     string `json:"funds"`
+}
+
+func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedKeeper,
+	contract string,
+	sourceChannel, denom string,
+	amount string,
+) error {
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return err
+	}
+	msg := UndoSendMsg{UndoSend: UndoSendMsgContent{ChannelId: sourceChannel, Denom: denom, Funds: amount}}
+	asJson, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	_, err = contractKeeper.Sudo(ctx, contractAddr, asJson)
+	if err != nil {
+		return sdkerrors.Wrap(types.ErrContractError, err.Error())
+	}
+
 	return nil
 }
 
