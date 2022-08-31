@@ -173,8 +173,7 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	suite.AssertReceive(true, suite.NewValidMessage(false, one))
 }
 
-// Test rate limiting on sends
-func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]string {
+func (suite *MiddlewareTestSuite) fullSendTest() map[string]string {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
 	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
@@ -207,10 +206,15 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]
 	return attrs
 }
 
+// Test rate limiting on sends
+func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() {
+	suite.fullSendTest()
+}
+
 // Test rate limits are reset when the specified time period has passed
 func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	// Same test as above, but the quotas get reset after time passes
-	attrs := suite.TestSendTransferWithRateLimiting()
+	attrs := suite.fullSendTest()
 	parts := strings.Split(attrs["weekly_period_end"], ".") // Splitting timestamp into secs and nanos
 	secs, err := strconv.ParseInt(parts[0], 10, 64)
 	suite.Require().NoError(err)
