@@ -21,6 +21,8 @@ type Action interface {
 	// Module providers can optionally provide a default from an enum,
 	// but this should not be the default.
 	Frequency() Frequency
+	// resultData is data that is eventually merkelized every block and
+	// used to compare consistency across multiple simulation runs.
 	Execute(*SimCtx, sdk.Context) (
 		OperationMsg simulation.OperationMsg, futureOps []simulation.FutureOperation, resultData []byte, err error)
 	WithFrequency(w Frequency) Action
