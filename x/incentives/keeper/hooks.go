@@ -9,11 +9,12 @@ import (
 )
 
 // BeforeEpochStart is the epoch start hook.
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
 }
 
 // AfterEpochEnd is the epoch end hook.
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	params := k.GetParams(ctx)
 	if epochIdentifier == params.DistrEpochIdentifier {
 		// begin distribution if it's start time
@@ -21,7 +22,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		for _, gauge := range gauges {
 			if !ctx.BlockTime().Before(gauge.StartTime) {
 				if err := k.moveUpcomingGaugeToActiveGauge(ctx, gauge); err != nil {
-					panic(err)
+					return err
 				}
 			}
 		}
@@ -41,9 +42,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 		_, err := k.Distribute(ctx, distrGauges)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
+	return nil
 }
 
 // ___________________________________________________________________________________________________
@@ -61,11 +63,11 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // BeforeEpochStart is the epoch start hook.
-func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }
 
 // AfterEpochEnd is the epoch end hook.
-func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
