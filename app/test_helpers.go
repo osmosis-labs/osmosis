@@ -13,6 +13,7 @@ import (
 )
 
 var defaultGenesisBz []byte
+var defaultEncodingConfig = MakeEncodingConfig()
 
 func getDefaultGenesisStateBytes() []byte {
 	if len(defaultGenesisBz) == 0 {
@@ -29,7 +30,7 @@ func getDefaultGenesisStateBytes() []byte {
 // Setup initializes a new OsmosisApp.
 func Setup(isCheckTx bool) *OsmosisApp {
 	db := dbm.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
+	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, defaultEncodingConfig, simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
 	if !isCheckTx {
 		stateBytes := getDefaultGenesisStateBytes()
 
