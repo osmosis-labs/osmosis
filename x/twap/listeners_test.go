@@ -237,7 +237,7 @@ func (s *TestSuite) TestAfterEpochEnd() {
 		recordsAfterEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
 
 		// old record should have been pruned here
-		// however,.the newest younger thant the prune threshold
+		// however, the newest younger than the prune threshold
 		// is kept.
 		if allEpochs[i].Identifier == pruneEpochIdentifier {
 			s.Require().Equal(1, len(recordsAfterEpoch))
