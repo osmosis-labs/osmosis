@@ -208,7 +208,7 @@ func (s *TestSuite) TestAfterEpochEnd() {
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 
 	// Create TWAP record from pool creation.
-	_ = s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
+	s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 
 	// Assume some time has passed and new record created.
 	s.Ctx = s.Ctx.WithBlockTime(tPlus10sp5Record.Time)
