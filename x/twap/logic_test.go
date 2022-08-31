@@ -1,6 +1,7 @@
 package twap_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -86,19 +87,51 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 
 func (s *TestSuite) TestUpdateTwap() {
 	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
-	newSp := sdk.OneDec()
 	programmableAmmInterface := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
 	s.App.TwapKeeper.SetAmmInterface(programmableAmmInterface)
 
+	spotPriceResOne := twapmock.SpotPriceResult{Sp: sdk.OneDec(), Err: nil}
+	spotPriceResOneErr := twapmock.SpotPriceResult{Sp: sdk.OneDec(), Err: errors.New("dummy err")}
+	spotPriceResOneErrNilDec := twapmock.SpotPriceResult{Sp: sdk.Dec{}, Err: errors.New("dummy err")}
+	baseTime := time.Unix(1, 0).UTC()
+	updateTime := time.Unix(2, 0).UTC()
+
+	zeroAccumNoErrSp10Record := newRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec)
+	sp10OneTimeUnitAccumRecord := newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10))
 	tests := map[string]struct {
-		record     types.TwapRecord
-		updateTime time.Time
-		expRecord  types.TwapRecord
+		record           types.TwapRecord
+		updateTime       time.Time
+		spotPriceResult0 twapmock.SpotPriceResult
+		spotPriceResult1 twapmock.SpotPriceResult
+		expRecord        types.TwapRecord
 	}{
-		"0 accum start": {
-			record:     newRecord(time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec),
-			updateTime: time.Unix(2, 0),
-			expRecord:  newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
+		"0 accum start, sp change": {
+			record:           zeroAccumNoErrSp10Record,
+			updateTime:       time.Unix(2, 0),
+			spotPriceResult0: spotPriceResOne,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        sp10OneTimeUnitAccumRecord,
+		},
+		"0 accum start, sp0 err at update": {
+			record:           zeroAccumNoErrSp10Record,
+			updateTime:       updateTime,
+			spotPriceResult0: spotPriceResOneErr,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime),
+		},
+		"0 accum start, sp0 err at update with nil dec": {
+			record:           zeroAccumNoErrSp10Record,
+			updateTime:       updateTime,
+			spotPriceResult0: spotPriceResOneErrNilDec,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        withSp0(withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime), sdk.ZeroDec()),
+		},
+		"0 accum start, sp1 err at update with nil dec": {
+			record:           zeroAccumNoErrSp10Record,
+			updateTime:       updateTime,
+			spotPriceResult0: spotPriceResOne,
+			spotPriceResult1: spotPriceResOneErrNilDec,
+			expRecord:        withSp1(withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime), sdk.ZeroDec()),
 		},
 	}
 	for name, test := range tests {
@@ -107,13 +140,22 @@ func (s *TestSuite) TestUpdateTwap() {
 			s.Ctx = s.Ctx.WithBlockTime(test.updateTime.UTC())
 			test.record.PoolId = poolId
 			test.expRecord.PoolId = poolId
-			test.expRecord.P0LastSpotPrice = newSp
-			test.expRecord.P1LastSpotPrice = newSp
+			if (test.expRecord.P0LastSpotPrice == sdk.Dec{}) {
+				test.expRecord.P0LastSpotPrice = test.spotPriceResult0.Sp
+			}
+			if (test.expRecord.P1LastSpotPrice == sdk.Dec{}) {
+				test.expRecord.P1LastSpotPrice = test.spotPriceResult1.Sp
+			}
 			test.expRecord.Height = s.Ctx.BlockHeight()
 			test.expRecord.Time = s.Ctx.BlockTime()
 
+			programmableAmmInterface.ProgramPoolSpotPriceOverride(poolId,
+				defaultUniV2Coins[0].Denom, defaultUniV2Coins[1].Denom, test.spotPriceResult0.Sp, test.spotPriceResult0.Err)
+			programmableAmmInterface.ProgramPoolSpotPriceOverride(poolId,
+				defaultUniV2Coins[1].Denom, defaultUniV2Coins[0].Denom, test.spotPriceResult1.Sp, test.spotPriceResult1.Err)
+
 			newRecord := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
-			s.Require().Equal(test.expRecord, newRecord)
+			s.Equal(test.expRecord, newRecord)
 		})
 	}
 }

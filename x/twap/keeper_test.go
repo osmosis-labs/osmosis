@@ -137,6 +137,20 @@ var (
 	)
 )
 
+func withLastErrTime(twap types.TwapRecord, lastErrorTime time.Time) types.TwapRecord {
+	twap.LastErrorTime = lastErrorTime
+	return twap
+}
+
+func withSp0(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
+	twap.P0LastSpotPrice = sp
+	return twap
+}
+func withSp1(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
+	twap.P1LastSpotPrice = sp
+	return twap
+}
+
 // TestTWAPInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.
 // Asserts that the most recent records are set correctly.

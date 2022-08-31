@@ -6,21 +6,23 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
+var _ types.AmmInterface = &ProgrammedAmmInterface{}
+
 type ProgrammedAmmInterface struct {
 	underlyingKeeper     types.AmmInterface
-	programmedSpotPrice  map[spotPriceInput]spotPriceResult
+	programmedSpotPrice  map[SpotPriceInput]SpotPriceResult
 	programmedPoolDenoms map[uint64]poolDenomResponse
 }
 
 // TODO, generalize to do a sum type on denoms
-type spotPriceInput struct {
+type SpotPriceInput struct {
 	poolId     uint64
 	baseDenom  string
 	quoteDenom string
 }
-type spotPriceResult struct {
-	sp  sdk.Dec
-	err error
+type SpotPriceResult struct {
+	Sp  sdk.Dec
+	Err error
 }
 type poolDenomResponse struct {
 	denoms []string
@@ -28,7 +30,11 @@ type poolDenomResponse struct {
 }
 
 func NewProgrammedAmmInterface(underlyingKeeper types.AmmInterface) *ProgrammedAmmInterface {
-	return &ProgrammedAmmInterface{underlyingKeeper: underlyingKeeper}
+	return &ProgrammedAmmInterface{
+		underlyingKeeper:     underlyingKeeper,
+		programmedSpotPrice:  map[SpotPriceInput]SpotPriceResult{},
+		programmedPoolDenoms: map[uint64]poolDenomResponse{},
+	}
 }
 
 func (p *ProgrammedAmmInterface) ProgramPoolDenomsOverride(poolId uint64, overrideDenoms []string, overrideErr error) {
@@ -37,8 +43,8 @@ func (p *ProgrammedAmmInterface) ProgramPoolDenomsOverride(poolId uint64, overri
 
 func (p *ProgrammedAmmInterface) ProgramPoolSpotPriceOverride(poolId uint64,
 	baseDenom, quoteDenom string, overrideSp sdk.Dec, overrideErr error) {
-	input := spotPriceInput{poolId, baseDenom, quoteDenom}
-	p.programmedSpotPrice[input] = spotPriceResult{overrideSp, overrideErr}
+	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
+	p.programmedSpotPrice[input] = SpotPriceResult{overrideSp, overrideErr}
 }
 
 func (s *ProgrammedAmmInterface) GetPoolDenoms(ctx sdk.Context, poolId uint64) (denoms []string, err error) {
@@ -52,11 +58,9 @@ func (s *ProgrammedAmmInterface) CalculateSpotPrice(ctx sdk.Context,
 	poolId uint64,
 	baseDenom,
 	quoteDenom string) (price sdk.Dec, err error) {
-	input := spotPriceInput{poolId, baseDenom, quoteDenom}
+	input := SpotPriceInput{poolId, baseDenom, quoteDenom}
 	if res, ok := s.programmedSpotPrice[input]; ok {
-		return res.sp, res.err
+		return res.Sp, res.Err
 	}
 	return s.underlyingKeeper.CalculateSpotPrice(ctx, poolId, baseDenom, quoteDenom)
 }
-
-var _ types.AmmInterface = &ProgrammedAmmInterface{}
