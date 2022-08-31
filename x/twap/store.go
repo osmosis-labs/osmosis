@@ -66,16 +66,20 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastTime time.T
 	iter := store.ReverseIterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastTime, 0, "", ""))
 	defer iter.Close()
 
-	// Skip newest
-	if iter.Valid() {
-		iter.Next()
-	}
+	seenPools := map[uint64]struct{}{}
 
 	for ; iter.Valid(); iter.Next() {
 		twapToRemove, err := types.ParseTwapFromBz(iter.Value())
 		if err != nil {
 			return err
 		}
+
+		_, hasSeenPoolRecord := seenPools[twapToRemove.PoolId]
+		if !hasSeenPoolRecord {
+			seenPools[twapToRemove.PoolId] = struct{}{}
+			continue
+		}
+
 		k.deleteHistoricalRecord(ctx, twapToRemove)
 	}
 	return nil
