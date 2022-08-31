@@ -107,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#2214](https://github.com/osmosis-labs/osmosis/pull/2214) Speedup epoch distribution, superfluid component
 * [#2515](https://github.com/osmosis-labs/osmosis/pull/2515) Emit events from functions implementing epoch hooks' `panicCatchingEpochHook` cacheCtx
 * [#2544](https://github.com/osmosis-labs/osmosis/pull/2515) Make `epoch` module as a importable package
+* [#2526](https://github.com/osmosis-labs/osmosis/pull/2526) EpochHooks interface methods (and hence modules implementing the hooks) return error instead of panic
 
 ### SDK Upgrades
 * [#2245](https://github.com/osmosis-labs/osmosis/pull/2244) Upgrade SDK with the following major changes:
@@ -168,7 +169,9 @@ Cosmwasm bindings have been added, to make swapping and creating these new token
 
 This upgrade is a patch that must be hard forked in, as on-chain governance of Osmosis approved proposal [227](https://www.mintscan.io/osmosis/proposals/227) and proposal [228](https://www.mintscan.io/osmosis/proposals/228).
 
-This upgrade includes:
+This upgrade includes:>>>>>>> main
+112
+
 
 * Adding height-gated AnteHandler message filter to filter unpooling tx pre-upgrade.
 * At block height 4402000 accelerates prop 225, which in turn moves incentives from certain pools according to props 222-224
