@@ -336,10 +336,10 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, oneHourAfterKeepThreshold, quoteAssetA),
 			expTwap:      sdk.NewDec(10),
 		},
-		"(1 record older than keep threshold); with end time; ctxTime = after keep threshold, start time = before keep threshold; end time = base keep threshold": {
+		"(1 record older than keep threshold); with end time; ctxTime = after keep threshold, start time = before keep threshold; end time = after keep threshold - 1ms": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      oneHourAfterKeepThreshold,
-			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, baseTimePlusKeepPeriod, quoteAssetA),
+			input:        makeSimpleTwapInput(oneHourBeforeKeepThreshold, oneHourAfterKeepThreshold.Add(-time.Millisecond), quoteAssetA),
 			expTwap:      sdk.NewDec(10),
 		},
 		"(1 record at keep threshold); to now; ctxTime = base keep threshold, start time = base time - 1ms (source of error); end time = base keep threshold; error": {
@@ -364,9 +364,9 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		"(2 records); with end time; with one directly at threshold, interpolated": {
 			recordsToSet: []types.TwapRecord{baseRecord, recordBeforeKeepThreshold},
 			ctxTime:      baseTimePlusKeepPeriod.Add(time.Millisecond),
-			input:        makeSimpleTwapInput(baseTime, baseTimePlusKeepPeriod, quoteAssetA),
-			// expTwap: = (10 * (172800s - 3600s) + 30 * 3600s) / 172800s = 10.416666666666666666
-			expTwap: sdk.MustNewDecFromStr("10.416666666666666666"),
+			input:        makeSimpleTwapInput(baseTime, baseTimePlusKeepPeriod.Add(-time.Millisecond), quoteAssetA),
+			// expTwap: = (10 * (172800000ms - 3600000ms) + 30 * 3599999ms) / 172799999ms approx = 10.41666655333719
+			expTwap: sdk.MustNewDecFromStr("10.416666553337190702"),
 		},
 		"(2 records); to now; with one before keep threshold, interpolated": {
 			recordsToSet: []types.TwapRecord{baseRecord, recordBeforeKeepThreshold},
@@ -377,12 +377,13 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		},
 		"(2 records); with end time; with one before keep threshold, interpolated": {
 			recordsToSet: []types.TwapRecord{baseRecord, recordBeforeKeepThreshold},
-			ctxTime:      oneHourAfterKeepThreshold.Add(time.Millisecond),
-			input:        makeSimpleTwapInput(baseTime, oneHourAfterKeepThreshold, quoteAssetA),
-			// expTwap: = (10 * (172800s - 3600s) + 30 * 3600s * 2) / (172800s + 3600s) approx = 10.816326530612244
-			expTwap: sdk.MustNewDecFromStr("10.816326530612244897"),
+			ctxTime:      oneHourAfterKeepThreshold,
+			input:        makeSimpleTwapInput(baseTime, oneHourAfterKeepThreshold.Add(-time.Millisecond), quoteAssetA),
+			// expTwap: = (10 * (172800000ms - 3600000ms) + 30 * (3600000ms + 3599999ms)) / (172800000ms + 3599999ms) approx = 10.81632642186126
+			expTwap: sdk.MustNewDecFromStr("10.816326421861260894"),
 		},
 	}
+	// for i := 0; i < 2; i++ {
 	for name, test := range tests {
 		s.Run(name, func() {
 			s.SetupTest()
@@ -405,6 +406,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 			s.Require().Equal(test.expTwap, twap)
 		})
 	}
+	// }
 }
 
 // TestGetArithmeticTwapToNow tests if we get the expected twap value from `GetArithmeticTwapToNow`.
