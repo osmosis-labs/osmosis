@@ -419,11 +419,11 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 	quoteAssetB := false
 
 	tests := map[string]struct {
-		recordsToSet []types.TwapRecord
-		ctxTime      time.Time
-		input        getTwapInput
-		expTwap      sdk.Dec
-		expErrorStr  string
+		recordsToSet  []types.TwapRecord
+		ctxTime       time.Time
+		input         getTwapInput
+		expTwap       sdk.Dec
+		expectedError error
 	}{
 		"(1 record) start time = record time": {
 			recordsToSet: []types.TwapRecord{baseRecord},
@@ -465,10 +465,10 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 
 		// error catching
 		"start time too old": {
-			recordsToSet: []types.TwapRecord{baseRecord},
-			ctxTime:      tPlusOne,
-			input:        makeSimpleTwapToNowInput(baseTime.Add(-time.Hour), quoteAssetA),
-			expErrorStr:  "too old",
+			recordsToSet:  []types.TwapRecord{baseRecord},
+			ctxTime:       tPlusOne,
+			input:         makeSimpleTwapToNowInput(baseTime.Add(-time.Hour), quoteAssetA),
+			expectedError: twap.TimeTooOldErr{Time: baseTime.Add(-time.Hour)},
 		},
 		// TODO: overflow tests
 	}
@@ -486,9 +486,9 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 				test.input.quoteAssetDenom, test.input.baseAssetDenom,
 				test.input.startTime)
 
-			if test.expErrorStr != "" {
+			if test.expectedError != nil {
 				s.Require().Error(err)
-				s.Require().Contains(err.Error(), test.expErrorStr)
+				s.Require().ErrorIs(err, test.expectedError)
 				return
 			}
 			s.Require().NoError(err)
