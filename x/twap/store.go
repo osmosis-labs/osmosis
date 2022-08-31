@@ -69,7 +69,7 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	osmoutils.MustSet(store, key2, &twap)
 }
 
-// pruneRecordsBeforeTimeButNewest prunes all records before the given time but the newest
+// pruneRecordsBeforeTimeButNewest prunes all records for each pool before the given time but the newest
 // record. The reason for preserving at least one record earlier than the keep period is
 // to ensure that we have a record to interpolate from in case there is only one or no records
 // within the keep period.
