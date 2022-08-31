@@ -202,27 +202,27 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 
 // TestPruneRecordsBeforeTime tests that all twap records earlier than
 // current block time - given time are pruned from the store while
-// the newest record before the time to keep is preserved.
+// the newest record for each pool before the time to keep is preserved.
 func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 	// These are manually created to be able to refer to them by name
 	// for convenience.
-	pool1BaseRecordMin2S, pool2BaseRecordMin1S, pool3BaseRecordBase, pool4BaseRecordPlus1S := s.createTestRecordsFromTime(baseTime)
-	pool1Min1MsMin2S, pool2Min1MsMin1S, pool3Min1MsBase, pool4Min1MsPlus1S := s.createTestRecordsFromTime(baseTime.Add(-time.Millisecond))
-	pool1Min2MsMin2S, pool2Min2MsMin1S, pool3Min2MsBase, pool4Min2MsPlus1S := s.createTestRecordsFromTime(baseTime.Add(2 * -time.Millisecond))
-	pool1Min3MsMin2S, pool2Min3MsMin1S, pool3Min3MsBase, pool4Min3MsPlus1S := s.createTestRecordsFromTime(baseTime.Add(3 * -time.Millisecond))
+	pool1Min2SBaseMs, pool2Min1SBaseMs, pool3BaseSecBaseMs, pool4Plus1SBaseMs := s.createTestRecordsFromTime(baseTime)
+	pool1Min2SMin1Ms, pool2Min1SMin1Ms, pool3BaseSecMin1Ms, pool4Plus1SMin1Ms := s.createTestRecordsFromTime(baseTime.Add(-time.Millisecond))
+	pool1Min2SMin2Ms, pool2Min1SMin2Ms, pool3BaseSecMin2Ms, pool4Plus1SMin2Ms := s.createTestRecordsFromTime(baseTime.Add(2 * -time.Millisecond))
+	pool1Min2SMin3Ms, pool2Min1SMin3Ms, pool3BaseSecMin3Ms, pool4Plus1SMin3Ms := s.createTestRecordsFromTime(baseTime.Add(3 * -time.Millisecond))
 
 	// Create records that match times 1:1 with other pools but have a different pool ID.
-	pool5BaseRecordMin2S, pool5BaseRecordMin1S, pool5BaseRecordBase, pool5BaseRecordPlus1S := s.createTestRecordsFromTime(baseTime)
-	pool5BaseRecordMin2S.PoolId = 5
-	pool5BaseRecordMin1S.PoolId = 5
-	pool5BaseRecordBase.PoolId = 5
-	pool5BaseRecordPlus1S.PoolId = 5
+	pool5Min2SBaseMs, pool5Min1SBaseMs, pool5BaseSecBaseMs, pool5Plus1SBaseMs := s.createTestRecordsFromTime(baseTime)
+	pool5Min2SBaseMs.PoolId = 5
+	pool5Min1SBaseMs.PoolId = 5
+	pool5BaseSecBaseMs.PoolId = 5
+	pool5Plus1SBaseMs.PoolId = 5
 
-	pool5Min1MsMin2S, pool5Min1MsMin1S, pool5Min1MsBase, pool5Min1MsPlus1S := s.createTestRecordsFromTime(baseTime.Add(-time.Millisecond))
-	pool5Min1MsMin2S.PoolId = 5
-	pool5Min1MsMin1S.PoolId = 5
-	pool5Min1MsBase.PoolId = 5
-	pool5Min1MsPlus1S.PoolId = 5
+	pool5Min2SMin1Ms, pool5Min1SMin1Ms, pool5BaseSecMin1Ms, pool5Plus1SMin1Ms := s.createTestRecordsFromTime(baseTime.Add(-time.Millisecond))
+	pool5Min2SMin1Ms.PoolId = 5
+	pool5Min1SMin1Ms.PoolId = 5
+	pool5BaseSecMin1Ms.PoolId = 5
+	pool5Plus1SMin1Ms.PoolId = 5
 
 	tests := map[string]struct {
 		// order does not follow any specific pattern
@@ -237,142 +237,142 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 	}{
 		"base time; across pool 3; 4 records; 3 before prune time; 2 deleted and newest kept": {
 			recordsToPreSet: []types.TwapRecord{
-				pool3Min1MsBase,     // base time - 1ms; kept since newest
-				pool3BaseRecordBase, // base time; kept since at prune time
-				pool3Min3MsBase,     // base time - 3ms; deleted
-				pool3Min2MsBase,     // base time - 2ms; deleted
+				pool3BaseSecMin1Ms, // base time - 1ms; kept since newest
+				pool3BaseSecBaseMs, // base time; kept since at prune time
+				pool3BaseSecMin3Ms, // base time - 3ms; deleted
+				pool3BaseSecMin2Ms, // base time - 2ms; deleted
 			},
 
 			beforeTime: baseTime,
 
-			expectedKeptRecords: []types.TwapRecord{pool3Min1MsBase, pool3BaseRecordBase},
+			expectedKeptRecords: []types.TwapRecord{pool3BaseSecMin1Ms, pool3BaseSecBaseMs},
 		},
 		"base time - 1s - 2 ms; across pool 2; 4 records; 1 before prune time; none pruned since newest kept": {
 			recordsToPreSet: []types.TwapRecord{
-				pool2Min2MsMin1S,     // base time - 1s - 2ms; kept since at prune time
-				pool2Min1MsMin1S,     // base time - 1s - 1ms; kept since older than at prune time
-				pool2BaseRecordMin1S, // base time - 1s; kept since older than prune time
-				pool2Min3MsMin1S,     // base time - 1s - 3ms; kept since newest
+				pool2Min1SMin2Ms, // base time - 1s - 2ms; kept since at prune time
+				pool2Min1SMin1Ms, // base time - 1s - 1ms; kept since older than at prune time
+				pool2Min1SBaseMs, // base time - 1s; kept since older than prune time
+				pool2Min1SMin3Ms, // base time - 1s - 3ms; kept since newest
 			},
 
 			beforeTime: baseTime.Add(-time.Second).Add(2 * -time.Millisecond),
 
 			expectedKeptRecords: []types.TwapRecord{
-				pool2Min3MsMin1S,
-				pool2Min2MsMin1S,
-				pool2Min1MsMin1S,
-				pool2BaseRecordMin1S,
+				pool2Min1SMin3Ms,
+				pool2Min1SMin2Ms,
+				pool2Min1SMin1Ms,
+				pool2Min1SBaseMs,
 			},
 		},
 		"base time - 2s - 3 ms; across pool 1; 4 records; none before prune time; none pruned": {
 			recordsToPreSet: []types.TwapRecord{
-				pool1Min3MsMin2S,     // base time - 2s - 3ms; kept since older than prune time
-				pool1Min1MsMin2S,     // base time - 2s - 1ms; kept since older than prune time
-				pool1Min2MsMin2S,     // base time - 2s - 2ms; kept since older than prune time
-				pool1BaseRecordMin2S, // base time - 2s; kept since older than prune time
+				pool1Min2SMin3Ms, // base time - 2s - 3ms; kept since older than prune time
+				pool1Min2SMin1Ms, // base time - 2s - 1ms; kept since older than prune time
+				pool1Min2SMin2Ms, // base time - 2s - 2ms; kept since older than prune time
+				pool1Min2SBaseMs, // base time - 2s; kept since older than prune time
 			},
 
 			beforeTime: baseTime.Add(2 * -time.Second).Add(3 * -time.Millisecond),
 
-			expectedKeptRecords: []types.TwapRecord{pool1Min3MsMin2S, pool1Min2MsMin2S, pool1Min1MsMin2S, pool1BaseRecordMin2S},
+			expectedKeptRecords: []types.TwapRecord{pool1Min2SMin3Ms, pool1Min2SMin2Ms, pool1Min2SMin1Ms, pool1Min2SBaseMs},
 		},
 		"base time + 1s + 1ms; across pool 4; 4 records; all before prune time; 3 deleted and newest kept": {
 			recordsToPreSet: []types.TwapRecord{
-				pool4BaseRecordPlus1S, // base time + 1s; kept since newest
-				pool4Min3MsPlus1S,     // base time + 1s - 3ms; deleted
-				pool4Min1MsPlus1S,     // base time + 1s -1ms; deleted
-				pool4Min2MsPlus1S,     // base time + 1s - 2ms; deleted
+				pool4Plus1SBaseMs, // base time + 1s; kept since newest
+				pool4Plus1SMin3Ms, // base time + 1s - 3ms; deleted
+				pool4Plus1SMin1Ms, // base time + 1s -1ms; deleted
+				pool4Plus1SMin2Ms, // base time + 1s - 2ms; deleted
 			},
 
 			beforeTime: baseTime.Add(time.Second).Add(time.Millisecond),
 
-			expectedKeptRecords: []types.TwapRecord{pool4BaseRecordPlus1S},
+			expectedKeptRecords: []types.TwapRecord{pool4Plus1SBaseMs},
 		},
 		"base time; across pool 3 and pool 5; pool 3: 4 total records; 3 before prune time; 2 deleted and newest kept. pool 5: 8 total records; 5 before prune time; 4 deleted and 1 kept": {
 			recordsToPreSet: []types.TwapRecord{
-				pool3Min3MsBase,     // base time - 3ms; deleted
-				pool3Min2MsBase,     // base time - 2ms; deleted
-				pool3Min1MsBase,     // base time - 1ms; kept since newest
-				pool3BaseRecordBase, // base time; kept since at prune time
+				pool3BaseSecMin3Ms, // base time - 3ms; deleted
+				pool3BaseSecMin2Ms, // base time - 2ms; deleted
+				pool3BaseSecMin1Ms, // base time - 1ms; kept since newest
+				pool3BaseSecBaseMs, // base time; kept since at prune time
 
-				pool5BaseRecordMin2S,  // base time - 2s; deleted
-				pool5BaseRecordMin1S,  // base time - 1s; ; deleted
-				pool5BaseRecordBase,   // base time; kept since at prune time
-				pool5BaseRecordPlus1S, // base time + 1s; kept since older than prune time
+				pool5Min2SBaseMs,   // base time - 2s; deleted
+				pool5Min1SBaseMs,   // base time - 1s; ; deleted
+				pool5BaseSecBaseMs, // base time; kept since at prune time
+				pool5Plus1SBaseMs,  // base time + 1s; kept since older than prune time
 
-				pool5Min1MsMin2S,  // base time - 2s - 1ms; deleted
-				pool5Min1MsMin1S,  // base time - 1s - 1ms; deleted
-				pool5Min1MsBase,   // base time - 1ms; kept since newest
-				pool5Min1MsPlus1S, // base time + 1s - 1ms; kept since older than prune time
+				pool5Min2SMin1Ms,   // base time - 2s - 1ms; deleted
+				pool5Min1SMin1Ms,   // base time - 1s - 1ms; deleted
+				pool5BaseSecMin1Ms, // base time - 1ms; kept since newest
+				pool5Plus1SMin1Ms,  // base time + 1s - 1ms; kept since older than prune time
 			},
 
 			beforeTime: baseTime,
 
 			expectedKeptRecords: []types.TwapRecord{
-				pool3Min1MsBase,
-				pool5Min1MsBase,
-				pool3BaseRecordBase,
-				pool5BaseRecordBase,
-				pool5Min1MsPlus1S,
-				pool5BaseRecordPlus1S,
+				pool3BaseSecMin1Ms,
+				pool5BaseSecMin1Ms,
+				pool3BaseSecBaseMs,
+				pool5BaseSecBaseMs,
+				pool5Plus1SMin1Ms,
+				pool5Plus1SBaseMs,
 			},
 		},
 		"base time - 1s - 2 ms; all pools; all test records": {
 			recordsToPreSet: []types.TwapRecord{
-				pool3Min3MsBase,     // base time - 3ms; kept since older
-				pool3Min2MsBase,     // base time - 2ms; kept since older
-				pool3Min1MsBase,     // base time - 1ms; kept since older
-				pool3BaseRecordBase, // base time; kept since older
+				pool3BaseSecMin3Ms, // base time - 3ms; kept since older
+				pool3BaseSecMin2Ms, // base time - 2ms; kept since older
+				pool3BaseSecMin1Ms, // base time - 1ms; kept since older
+				pool3BaseSecBaseMs, // base time; kept since older
 
-				pool2Min3MsMin1S,     // base time - 1s - 3ms; kept since newest
-				pool2Min2MsMin1S,     // base time - 1s - 2ms; kept since at prune time
-				pool2Min1MsMin1S,     // base time - 1s - 1ms; kept since older
-				pool2BaseRecordMin1S, // base time - 1s; kept since older
+				pool2Min1SMin3Ms, // base time - 1s - 3ms; kept since newest
+				pool2Min1SMin2Ms, // base time - 1s - 2ms; kept since at prune time
+				pool2Min1SMin1Ms, // base time - 1s - 1ms; kept since older
+				pool2Min1SBaseMs, // base time - 1s; kept since older
 
-				pool1Min3MsMin2S,     // base time - 2s - 3ms; deleted
-				pool1Min2MsMin2S,     // base time - 2s - 2ms; deleted
-				pool1Min1MsMin2S,     // base time - 2s - 1ms; deleted
-				pool1BaseRecordMin2S, // base time - 2s; kept since newest
+				pool1Min2SMin3Ms, // base time - 2s - 3ms; deleted
+				pool1Min2SMin2Ms, // base time - 2s - 2ms; deleted
+				pool1Min2SMin1Ms, // base time - 2s - 1ms; deleted
+				pool1Min2SBaseMs, // base time - 2s; kept since newest
 
-				pool4Min3MsPlus1S,     // base time + 1s - 3ms; kept since older
-				pool4Min2MsPlus1S,     // base time + 1s - 2ms; kept since older
-				pool4Min1MsPlus1S,     // base time + 1s -1ms; kept since older
-				pool4BaseRecordPlus1S, // base time + 1s; kept since older
+				pool4Plus1SMin3Ms, // base time + 1s - 3ms; kept since older
+				pool4Plus1SMin2Ms, // base time + 1s - 2ms; kept since older
+				pool4Plus1SMin1Ms, // base time + 1s -1ms; kept since older
+				pool4Plus1SBaseMs, // base time + 1s; kept since older
 
-				pool5BaseRecordMin2S,  // base time - 2s; kept since newest
-				pool5BaseRecordMin1S,  // base time - 1s; kept since older
-				pool5BaseRecordBase,   // base time; kept since older
-				pool5BaseRecordPlus1S, // base time + 1s; kept since older
+				pool5Min2SBaseMs,   // base time - 2s; kept since newest
+				pool5Min1SBaseMs,   // base time - 1s; kept since older
+				pool5BaseSecBaseMs, // base time; kept since older
+				pool5Plus1SBaseMs,  // base time + 1s; kept since older
 
-				pool5Min1MsMin2S,  // base time - 2s - 1ms; deleted
-				pool5Min1MsMin1S,  // base time - 1s - 1ms; kept since older
-				pool5Min1MsBase,   // base time - 1ms; kept since older
-				pool5Min1MsPlus1S, // base time + 1s - 1ms; kept since older
+				pool5Min2SMin1Ms,   // base time - 2s - 1ms; deleted
+				pool5Min1SMin1Ms,   // base time - 1s - 1ms; kept since older
+				pool5BaseSecMin1Ms, // base time - 1ms; kept since older
+				pool5Plus1SMin1Ms,  // base time + 1s - 1ms; kept since older
 			},
 
 			beforeTime: baseTime.Add(-time.Second).Add(2 * -time.Millisecond),
 
 			expectedKeptRecords: []types.TwapRecord{
-				pool1BaseRecordMin2S,  // base time - 2s; kept since newest
-				pool5BaseRecordMin2S,  // base time - 2s; kept since newest
-				pool2Min3MsMin1S,      // base time - 1s - 3ms; kept since newest
-				pool2Min2MsMin1S,      // base time - 1s - 2ms; kept since at prune time
-				pool2Min1MsMin1S,      // base time - 1s - 1ms; kept since older
-				pool5Min1MsMin1S,      // base time - 1s - 1ms; kept since older
-				pool2BaseRecordMin1S,  // base time - 1s; kept since older
-				pool5BaseRecordMin1S,  // base time - 1s; kept since older
-				pool3Min3MsBase,       // base time - 3ms; kept since older
-				pool3Min2MsBase,       // base time - 2ms; kept since older
-				pool3Min1MsBase,       // base time - 1ms; kept since older
-				pool5Min1MsBase,       // base time - 1ms; kept since older
-				pool3BaseRecordBase,   // base time; kept since older
-				pool5BaseRecordBase,   // base time; kept since older
-				pool4Min3MsPlus1S,     // base time + 1s - 3ms; kept since older
-				pool4Min2MsPlus1S,     // base time + 1s - 2ms; kept since older
-				pool4Min1MsPlus1S,     // base time + 1s -1ms; kept since older
-				pool5Min1MsPlus1S,     // base time + 1s - 1ms; kept since older
-				pool4BaseRecordPlus1S, // base time + 1s; kept since older
-				pool5BaseRecordPlus1S, // base time + 1s; kept since older
+				pool1Min2SBaseMs,   // base time - 2s; kept since newest
+				pool5Min2SBaseMs,   // base time - 2s; kept since newest
+				pool2Min1SMin3Ms,   // base time - 1s - 3ms; kept since newest
+				pool2Min1SMin2Ms,   // base time - 1s - 2ms; kept since at prune time
+				pool2Min1SMin1Ms,   // base time - 1s - 1ms; kept since older
+				pool5Min1SMin1Ms,   // base time - 1s - 1ms; kept since older
+				pool2Min1SBaseMs,   // base time - 1s; kept since older
+				pool5Min1SBaseMs,   // base time - 1s; kept since older
+				pool3BaseSecMin3Ms, // base time - 3ms; kept since older
+				pool3BaseSecMin2Ms, // base time - 2ms; kept since older
+				pool3BaseSecMin1Ms, // base time - 1ms; kept since older
+				pool5BaseSecMin1Ms, // base time - 1ms; kept since older
+				pool3BaseSecBaseMs, // base time; kept since older
+				pool5BaseSecBaseMs, // base time; kept since older
+				pool4Plus1SMin3Ms,  // base time + 1s - 3ms; kept since older
+				pool4Plus1SMin2Ms,  // base time + 1s - 2ms; kept since older
+				pool4Plus1SMin1Ms,  // base time + 1s -1ms; kept since older
+				pool5Plus1SMin1Ms,  // base time + 1s - 1ms; kept since older
+				pool4Plus1SBaseMs,  // base time + 1s; kept since older
+				pool5Plus1SBaseMs,  // base time + 1s; kept since older
 			},
 		},
 		"no pre-set records - no error": {
