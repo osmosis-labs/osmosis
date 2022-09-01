@@ -271,7 +271,7 @@ func TestComputeArithmeticTwap(t *testing.T) {
 	}
 }
 
-// This test should be table driven, for testing the behavior of computeArithmeticTwap, around error returning
+// This tests the behavior of computeArithmeticTwap, around error returning
 // when there has been an intermediate spot price error.
 func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
 	newOneSidedRecordWErrorTime := func(time time.Time, accum sdk.Dec, useP0 bool, errTime time.Time) types.TwapRecord {

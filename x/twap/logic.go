@@ -32,15 +32,20 @@ func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 }
 
 // getSpotPrices gets the spot prices for the pool,
-func getSpotPrices(ctx sdk.Context, k types.AmmInterface, poolId uint64, denom0, denom1 string, lastErrorTime time.Time) (
-	sp0 sdk.Dec, sp1 sdk.Dec, lastErrTime time.Time) {
-	lastErrTime = lastErrorTime
+// input: ctx, amm interface, pool id, asset denoms, previous error time
+// returns spot prices for both pairs of assets, and the 'latest error time'.
+// The latest error time is the previous time if there is no error in getting spot prices.
+// if there is an error in getting spot prices, then the latest error time is ctx.Blocktime()
+func getSpotPrices(ctx sdk.Context, k types.AmmInterface, poolId uint64, denom0, denom1 string, previousErrorTime time.Time) (
+	sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
+	latestErrTime = previousErrorTime
 	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
 	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
 	if err0 != nil || err1 != nil {
-		lastErrTime = ctx.BlockTime()
+		latestErrTime = ctx.BlockTime()
 		// In the event of an error, we just sanity replace empty values with zero values
 		// so that the numbers can be still be calculated within TWAPs over error values
+		// TODO: Should we be using the last spot price?
 		if (sp0 == sdk.Dec{}) {
 			sp0 = sdk.ZeroDec()
 		}
@@ -49,7 +54,7 @@ func getSpotPrices(ctx sdk.Context, k types.AmmInterface, poolId uint64, denom0,
 		}
 	}
 	// if sp0.GT(gammtypes.MaxSpotPrice)
-	return sp0, sp1, lastErrTime
+	return sp0, sp1, latestErrTime
 }
 
 // afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
