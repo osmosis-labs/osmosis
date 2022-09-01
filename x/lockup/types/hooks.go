@@ -1,18 +1,21 @@
 package types
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 )
 
 type LockupHooks interface {
-	AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins)
-	OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time)
-	OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time)
-	OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time)
-	OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins)
-	OnLockupExtend(ctx sdk.Context, lockID uint64, prevDuration time.Duration, newDuration time.Duration)
+	AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins) error
+	OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) error
+	OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) error
+	OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) error
+	OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins) error
+	OnLockupExtend(ctx sdk.Context, lockID uint64, prevDuration time.Duration, newDuration time.Duration) error
 }
 
 var _ LockupHooks = MultiLockupHooks{}
@@ -24,38 +27,69 @@ func NewMultiLockupHooks(hooks ...LockupHooks) MultiLockupHooks {
 	return hooks
 }
 
-func (h MultiLockupHooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins) {
+func (h MultiLockupHooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins) error {
 	for i := range h {
-		h[i].AfterAddTokensToLock(ctx, address, lockID, amount)
+		wrappedHookFn := func(ctx sdk.Context) error {
+			return h[i].AfterAddTokensToLock(ctx, address, lockID, amount)
+		}
+		handleHooksError(ctx, osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn))
 	}
+	return nil
 }
 
-func (h MultiLockupHooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+func (h MultiLockupHooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) error {
 	for i := range h {
-		h[i].OnTokenLocked(ctx, address, lockID, amount, lockDuration, unlockTime)
+		wrappedHookFn := func(ctx sdk.Context) error {
+			return h[i].OnTokenLocked(ctx, address, lockID, amount, lockDuration, unlockTime)
+		}
+		handleHooksError(ctx, osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn))
 	}
+	return nil
 }
 
-func (h MultiLockupHooks) OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+func (h MultiLockupHooks) OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) error {
 	for i := range h {
-		h[i].OnStartUnlock(ctx, address, lockID, amount, lockDuration, unlockTime)
+		wrappedHookFn := func(ctx sdk.Context) error {
+			return h[i].OnStartUnlock(ctx, address, lockID, amount, lockDuration, unlockTime)
+		}
+		handleHooksError(ctx, osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn))
 	}
+	return nil
 }
 
-func (h MultiLockupHooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+func (h MultiLockupHooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) error {
 	for i := range h {
-		h[i].OnTokenUnlocked(ctx, address, lockID, amount, lockDuration, unlockTime)
+		wrappedHookFn := func(ctx sdk.Context) error {
+			return h[i].OnTokenUnlocked(ctx, address, lockID, amount, lockDuration, unlockTime)
+		}
+		handleHooksError(ctx, osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn))
 	}
+	return nil
 }
 
-func (h MultiLockupHooks) OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins) {
+func (h MultiLockupHooks) OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins) error {
 	for i := range h {
-		h[i].OnTokenSlashed(ctx, lockID, amount)
+		wrappedHookFn := func(ctx sdk.Context) error {
+			return h[i].OnTokenSlashed(ctx, lockID, amount)
+		}
+		handleHooksError(ctx, osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn))
 	}
+	return nil
 }
 
-func (h MultiLockupHooks) OnLockupExtend(ctx sdk.Context, lockID uint64, prevDuration, newDuration time.Duration) {
+func (h MultiLockupHooks) OnLockupExtend(ctx sdk.Context, lockID uint64, prevDuration time.Duration, newDuration time.Duration) error {
 	for i := range h {
-		h[i].OnLockupExtend(ctx, lockID, prevDuration, newDuration)
+		wrappedHookFn := func(ctx sdk.Context) error {
+			return h[i].OnLockupExtend(ctx, lockID, prevDuration, newDuration)
+		}
+		handleHooksError(ctx, osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn))
+	}
+	return nil
+}
+
+// handleHooksError logs the error using the ctx logger
+func handleHooksError(ctx sdk.Context, err error) {
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("error in lockup hook %v", err))
 	}
 }

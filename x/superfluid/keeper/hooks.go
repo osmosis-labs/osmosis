@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 )
 
 // Hooks wrapper struct for incentives keeper.
@@ -16,6 +17,7 @@ type Hooks struct {
 }
 
 var _ epochstypes.EpochHooks = Hooks{}
+var _ lockuptypes.LockupHooks = Hooks{}
 
 // Return the wrapper struct.
 func (k Keeper) Hooks() Hooks {
@@ -36,13 +38,13 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 // if you add tokens to a lock that is superfluid unbonding, nothing happens superfluid side.
 // This lock does as an edge case take on the slashing risk as well for historical slashes.
 // This is deemed as fine, governance can re-pay if it occurs on mainnet.
-func (h Hooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins) {
+func (h Hooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins) error {
 	intermediaryAccAddr := h.k.GetLockIdIntermediaryAccountConnection(ctx, lockID)
 	if !intermediaryAccAddr.Empty() {
 		// superfluid delegate for additional amount
 		err := h.k.IncreaseSuperfluidDelegation(ctx, lockID, amount)
 		if err != nil {
-			h.k.Logger(ctx).Error(err.Error())
+			return err
 		} else {
 			ctx.EventManager().EmitEvent(sdk.NewEvent(
 				types.TypeEvtSuperfluidIncreaseDelegation,
@@ -51,21 +53,27 @@ func (h Hooks) AfterAddTokensToLock(ctx sdk.Context, address sdk.AccAddress, loc
 			))
 		}
 	}
+	return nil
 }
 
-func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+func (h Hooks) OnTokenLocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) error {
+	return nil
 }
 
-func (h Hooks) OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+func (h Hooks) OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) error {
+	return nil
 }
 
-func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) {
+func (h Hooks) OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time) error {
+	return nil
 }
 
-func (h Hooks) OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins) {
+func (h Hooks) OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins) error {
+	return nil
 }
 
-func (h Hooks) OnLockupExtend(ctx sdk.Context, lockID uint64, oldDuration, newDuration time.Duration) {
+func (h Hooks) OnLockupExtend(ctx sdk.Context, lockID uint64, prevDuration time.Duration, newDuration time.Duration) error {
+	return nil
 }
 
 // staking hooks.

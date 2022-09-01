@@ -103,7 +103,8 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 		return lock, nil
 	}
 
-	k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), sdk.NewCoins(tokensToAdd))
+	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+	_ = k.hooks.AfterAddTokensToLock(ctx, lock.OwnerAddress(), lock.GetID(), sdk.NewCoins(tokensToAdd))
 
 	return lock, nil
 }
@@ -155,7 +156,8 @@ func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Co
 		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
 	}
 
-	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+	_ = k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
 
@@ -232,7 +234,8 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 	}
 
 	if k.hooks != nil {
-		k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+		// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+		_ = k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	}
 
 	return nil
@@ -281,7 +284,8 @@ func (k Keeper) beginForceUnlockWithEndTime(ctx sdk.Context, lock types.PeriodLo
 	}
 
 	if k.hooks != nil {
-		k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+		// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+		_ = k.hooks.OnStartUnlock(ctx, lock.OwnerAddress(), lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	}
 
 	return nil
@@ -360,7 +364,8 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 		k.accumulationStore(ctx, coin.Denom).Decrease(accumulationKey(lock.Duration), coin.Amount)
 	}
 
-	k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
+	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+	_ = k.hooks.OnTokenUnlocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
 	return nil
 }
 
@@ -421,7 +426,8 @@ func (k Keeper) ExtendLockup(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 		return err
 	}
 
-	k.hooks.OnLockupExtend(ctx,
+	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+	_ = k.hooks.OnLockupExtend(ctx,
 		lock.GetID(),
 		oldDuration,
 		lock.GetDuration(),
@@ -583,7 +589,8 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 		return lock, nil
 	}
 
-	k.hooks.OnTokenSlashed(ctx, lock.ID, coins)
+	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+	_ = k.hooks.OnTokenSlashed(ctx, lock.ID, coins)
 	return lock, nil
 }
 
