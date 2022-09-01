@@ -3,7 +3,6 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/osmosis-labs/osmosis/v11/x/tokenfactory/types"
 )
@@ -32,8 +31,8 @@ func (suite *KeeperTestSuite) TestGenesis() {
 		},
 	}
 
+	suite.SetupTestForInitGenesis()
 	app := suite.App
-	suite.Ctx = app.BaseApp.NewContext(true, tmproto.Header{})
 
 	// Test both with bank denom metadata set, and not set.
 	for i, denom := range genesisState.FactoryDenoms {
@@ -42,8 +41,6 @@ func (suite *KeeperTestSuite) TestGenesis() {
 			app.BankKeeper.SetDenomMetaData(suite.Ctx, banktypes.Metadata{Base: denom.GetDenom()})
 		}
 	}
-
-	suite.SetupTestForInitGenesis()
 
 	// check before initGenesis that the module account is nil
 	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(suite.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))

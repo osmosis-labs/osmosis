@@ -35,6 +35,7 @@ import (
 	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type KeeperTestHelper struct {
@@ -65,7 +66,9 @@ func (s *KeeperTestHelper) Setup() {
 }
 
 func (s *KeeperTestHelper) SetupTestForInitGenesis() {
+	// Setting to True, leads to init genesis not running
 	s.App = app.Setup(true)
+	s.Ctx = s.App.BaseApp.NewContext(true, tmproto.Header{})
 }
 
 func (s *KeeperTestHelper) SetEpochStartTime() {
