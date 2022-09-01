@@ -20,23 +20,23 @@ var (
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
 // AfterPoolCreated creates a gauge for each pool’s lockable duration.
-func (h Hooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	err := h.k.CreatePoolGauges(ctx, poolId)
-	if err != nil {
-		panic(err)
-	}
+func (h Hooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) error {
+	return h.k.CreatePoolGauges(ctx, poolId)
 }
 
 // AfterJoinPool hook is a noop.
-func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
+func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) error {
+	return nil
 }
 
 // AfterExitPool hook is a noop.
-func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) error {
+	return nil
 }
 
 // AfterSwap hook is a noop.
-func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
+func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) error {
+	return nil
 }
 
 // Distribute coins after minter module allocate assets to pool-incentives module.

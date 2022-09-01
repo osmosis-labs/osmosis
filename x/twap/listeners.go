@@ -42,22 +42,21 @@ func (k Keeper) GammHooks() types.GammHooks {
 }
 
 // AfterPoolCreated is called after CreatePool
-func (hook *gammhook) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	err := hook.k.afterCreatePool(ctx, poolId)
-	// Will halt pool creation
-	if err != nil {
-		panic(err)
-	}
+func (hook *gammhook) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) error {
+	return hook.k.afterCreatePool(ctx, poolId)
 }
 
-func (hook *gammhook) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
+func (hook *gammhook) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) error {
 	hook.k.trackChangedPool(ctx, poolId)
+	return nil
 }
 
-func (hook *gammhook) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
+func (hook *gammhook) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) error {
 	hook.k.trackChangedPool(ctx, poolId)
+	return nil
 }
 
-func (hook *gammhook) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+func (hook *gammhook) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) error {
 	hook.k.trackChangedPool(ctx, poolId)
+	return nil
 }
