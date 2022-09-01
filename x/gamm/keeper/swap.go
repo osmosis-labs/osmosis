@@ -169,7 +169,9 @@ func (k Keeper) updatePoolForSwap(
 	}
 
 	events.EmitSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut)
-	k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
+
+	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+	_ = k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
 	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
 	k.RecordTotalLiquidityDecrease(ctx, tokensOut)
 
