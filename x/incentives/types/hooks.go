@@ -56,10 +56,7 @@ func (h MultiIncentiveHooks) AfterFinishDistribution(ctx sdk.Context, gaugeId ui
 
 func (h MultiIncentiveHooks) AfterEpochDistribution(ctx sdk.Context) error {
 	for i := range h {
-		err := osmoutils.ApplyFuncIfNoError(ctx, h[i].AfterEpochDistribution)
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("error in incentive hook %v", err))
-		}
+		handleHooksError(ctx, osmoutils.ApplyFuncIfNoError(ctx, h[i].AfterEpochDistribution))
 	}
 	return nil
 }
@@ -73,7 +70,10 @@ func errorCatchingIncentiveHook(
 		return hookFn(ctx, gaugeId)
 	}
 
-	err := osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn)
+	handleHooksError(ctx, osmoutils.ApplyFuncIfNoError(ctx, wrappedHookFn))
+}
+
+func handleHooksError(ctx sdk.Context, err error) {
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("error in incentive hook %v", err))
 	}
