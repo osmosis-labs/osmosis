@@ -54,17 +54,18 @@ func (sim *SimCtx) defaultTxBuilder(
 }
 
 // TODO: Fix these args
-func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation.OperationMsg, []simulation.FutureOperation, error) {
+func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation.OperationMsg, []simulation.FutureOperation, []byte, error) {
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
 	gasInfo, results, err := sim.BaseApp().Deliver(txConfig.TxEncoder(), tx)
 	if err != nil {
-		return simulation.NoOpMsg(msgName, msgName, fmt.Sprintf("unable to deliver tx. \nreason: %v\n results: %v\n msg: %s\n tx: %s", err, results, msg, tx)), nil, err
+		return simulation.NoOpMsg(msgName, msgName, fmt.Sprintf("unable to deliver tx. \nreason: %v\n results: %v\n msg: %s\n tx: %s", err, results, msg, tx)), nil, nil, err
 	}
 
 	opMsg := simulation.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil)
 	opMsg.Route = msgName
 	opMsg.Name = msgName
-	return opMsg, nil, nil
+
+	return opMsg, nil, results.Data, nil
 }
 
 // GenTx generates a signed mock transaction.
