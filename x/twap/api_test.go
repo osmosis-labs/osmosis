@@ -256,7 +256,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 	}
 }
 
-// TestGetArithmeticTwap_PruningRecordKeepPeriod is simular to TestGetArithmeticTwap.
+// TestGetArithmeticTwap_PruningRecordKeepPeriod is similar to TestGetArithmeticTwap.
 // It specifically focuses on testing edge cases related to the
 // pruning record keep period when interacting with GetArithmeticTwap.
 // The goal of this test is to make sure that we are able to calculate the twap correctly
