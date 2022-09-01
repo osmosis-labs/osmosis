@@ -46,6 +46,7 @@ func (k Keeper) CalculateSpotPrice(
 
 	// if spotPrice greater than max spot price, return an error
 	if spotPrice.GT(types.MaxSpotPrice) {
+		fmt.Println(spotPrice)
 		return sdk.Dec{}, types.ErrSpotPriceOverflow
 	} else if !spotPrice.IsPositive() {
 		return sdk.Dec{}, types.ErrSpotPriceInternal
