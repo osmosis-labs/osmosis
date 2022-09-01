@@ -269,8 +269,8 @@ test-sim-bench:
 test-e2e:
 	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" OSMOSIS_E2E_DEBUG_LOG=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
-test-e2e-skip-upgrade:
-	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+test-e2e-short:
+	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True OSMOSIS_E2E_SKIP_IBC=True OSMOSIS_E2E_SKIP_STATE_SYNC=True OSMOSIS_E2E_DEBUG_LOG=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-mutation:
 	@bash scripts/mutation-test.sh $(MODULES)
