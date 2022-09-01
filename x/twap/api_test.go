@@ -260,7 +260,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 // It specifically focuses on testing edge cases related to the
 // pruning record keep period when interacting with GetArithmeticTwap.
 // The goal of this test is to make sure that we are able to calculate the twap correctly
-// when there are at or below the (current block time - default record history keep period).
+// when they are at or below the (current block time - default record history keep period).
 // This is conditional on the records being present in the store earlier than startTime.
 // If there is no such record, we expect an error.
 func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
