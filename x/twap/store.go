@@ -81,7 +81,8 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
-	// Reverse iterator guarantees that we get the newest records first.
+	// Reverse iterator guarantees that we iterate through the newest per pool first.
+	// Due to how its indexed, we will only iterate times starting from lastKeptTime
 	iter := store.ReverseIterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""))
 	defer iter.Close()
 
