@@ -213,13 +213,13 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, quoteAssetA),
-			expectError:  twap.EndTimeInFutureError{BlockTime: baseTime, EndTime: tPlusOne},
+			expectError:  types.EndTimeInFutureError{BlockTime: baseTime, EndTime: tPlusOne},
 		},
 		"start time after end time": {
 			recordsToSet: []types.TwapRecord{baseRecord},
 			ctxTime:      baseTime,
 			input:        makeSimpleTwapInput(tPlusOne, baseTime, quoteAssetA),
-			expectError:  twap.StartTimeAfterEndTimeError{StartTime: tPlusOne, EndTime: baseTime},
+			expectError:  types.StartTimeAfterEndTimeError{StartTime: tPlusOne, EndTime: baseTime},
 		},
 		"start time too old (end time = now)": {
 			recordsToSet: []types.TwapRecord{baseRecord},

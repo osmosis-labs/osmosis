@@ -1,33 +1,12 @@
 package twap
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
-
-type endTimeInFutureError struct {
-	EndTime   time.Time
-	BlockTime time.Time
-}
-
-func (e endTimeInFutureError) Error() string {
-	return fmt.Sprintf("called GetArithmeticTwap with an end time in the future."+
-		" (end time %s, current time %s)", e.EndTime, e.BlockTime)
-}
-
-type startTimeAfterEndTimeError struct {
-	StartTime time.Time
-	EndTime   time.Time
-}
-
-func (e startTimeAfterEndTimeError) Error() string {
-	return fmt.Sprintf("called GetArithmeticTwap with a start time that is after the end time."+
-		" (start time %s, end time %s)", e.StartTime, e.EndTime)
-}
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
 // The returned twap is the time weighted average price (TWAP) of:
@@ -57,12 +36,12 @@ func (k Keeper) GetArithmeticTwap(
 	startTime time.Time,
 	endTime time.Time) (sdk.Dec, error) {
 	if startTime.After(endTime) {
-		return sdk.Dec{}, startTimeAfterEndTimeError{startTime, endTime}
+		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: endTime}
 	}
 	if endTime.Equal(ctx.BlockTime()) {
 		return k.GetArithmeticTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime)
 	} else if endTime.After(ctx.BlockTime()) {
-		return sdk.Dec{}, endTimeInFutureError{endTime, ctx.BlockTime()}
+		return sdk.Dec{}, types.EndTimeInFutureError{EndTime: endTime, BlockTime: ctx.BlockTime()}
 	}
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
