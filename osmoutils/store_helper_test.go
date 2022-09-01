@@ -412,3 +412,10 @@ func (s *TestSuite) TestMustSetDec() {
 	retrievedDecVaue := osmoutils.MustGetDec(s.store, []byte(keyA))
 	s.Require().Equal(originalDecValue.String(), retrievedDecVaue.String())
 }
+
+func (s *TestSuite) TestApplyFuncIfNoErrorWhenOutOfGasPanic() {
+	s.Setup()
+	osmoutils.ApplyFuncIfNoError(s.Ctx, func(ctx sdk.Context) error {
+		panic("gas error")
+	})
+}
