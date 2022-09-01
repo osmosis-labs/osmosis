@@ -82,7 +82,8 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 	store := ctx.KVStore(k.storeKey)
 
 	// Reverse iterator guarantees that we iterate through the newest per pool first.
-	// Due to how its indexed, we will only iterate times starting from lastKeptTime
+	// Due to how it is indexed, we will only iterate times starting from
+	// lastKeptTime exclusively down to the oldest record.
 	iter := store.ReverseIterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""))
 	defer iter.Close()
 
