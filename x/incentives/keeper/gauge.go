@@ -138,7 +138,9 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 	if err != nil {
 		return 0, err
 	}
-	k.hooks.AfterCreateGauge(ctx, gauge.Id)
+
+	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+	_ = k.hooks.AfterCreateGauge(ctx, gauge.Id)
 	return gauge.Id, nil
 }
 
@@ -157,7 +159,9 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 	if err != nil {
 		return err
 	}
-	k.hooks.AfterAddToGauge(ctx, gauge.Id)
+
+	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+	_ = k.hooks.AfterAddToGauge(ctx, gauge.Id)
 	return nil
 }
 

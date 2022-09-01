@@ -74,7 +74,8 @@ func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 	if err := k.deleteGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
 		return err
 	}
-	k.hooks.AfterFinishDistribution(ctx, gauge.Id)
+	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+	_ = k.hooks.AfterFinishDistribution(ctx, gauge.Id)
 	return nil
 }
 
@@ -364,7 +365,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	if err != nil {
 		return nil, err
 	}
-	k.hooks.AfterEpochDistribution(ctx)
+
+	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
+	_ = k.hooks.AfterEpochDistribution(ctx)
 
 	k.checkFinishDistribution(ctx, gauges)
 	return totalDistributedCoins, nil
