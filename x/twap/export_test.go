@@ -8,8 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
-const RecordHistoryKeepPeriod = recordHistoryKeepPeriod
-
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
 }
@@ -54,10 +52,22 @@ func (k Keeper) PruneRecords(ctx sdk.Context) error {
 	return k.pruneRecords(ctx)
 }
 
-func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
 }
 
 func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
 	return recordWithUpdatedAccumulators(record, t)
+}
+
+func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
+	return newTwapRecord(k, ctx, poolId, denom0, denom1)
+}
+
+func (k *Keeper) GetAmmInterface() types.AmmInterface {
+	return k.ammkeeper
+}
+
+func (k *Keeper) SetAmmInterface(ammInterface types.AmmInterface) {
+	k.ammkeeper = ammInterface
 }

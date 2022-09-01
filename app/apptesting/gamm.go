@@ -111,3 +111,34 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	_, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, msg.TokenIn, denoms[1], msg.TokenOutMinAmount)
 	s.Require().NoError(err)
 }
+
+func (s *KeeperTestHelper) RunBasicExit(poolId uint64) {
+	shareInAmount := sdk.NewInt(100)
+	tokenOutMins := sdk.NewCoins()
+	_, err := s.App.GAMMKeeper.ExitPool(s.Ctx, s.TestAccs[0], poolId, shareInAmount, tokenOutMins)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
+	pool, _ := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	tokenIn := sdk.NewCoins()
+	for _, denom := range denoms {
+		tokenIn = tokenIn.Add(sdk.NewCoin(denom, sdk.NewInt(10000000)))
+	}
+
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn...))
+
+	totalPoolShare := pool.GetTotalShares()
+	msg := gammtypes.MsgJoinPool{
+		Sender:         string(s.TestAccs[0]),
+		PoolId:         poolId,
+		ShareOutAmount: totalPoolShare.Quo(sdk.NewInt(100000)),
+		TokenInMaxs:    tokenIn,
+	}
+	// TODO: switch to message
+	_, _, err = s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, s.TestAccs[0], poolId, msg.ShareOutAmount, msg.TokenInMaxs)
+	s.Require().NoError(err)
+}

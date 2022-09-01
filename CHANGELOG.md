@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* [#2477](https://github.com/osmosis-labs/osmosis/pull/2477) Tokenfactory burn msg clash with sdk
+  * TypeMsgBurn: from "burn" to "tf_burn"
+  * TypeMsgMint: from "mint" to "tf_mint"
 * [#2222](https://github.com/osmosis-labs/osmosis/pull/2222) Add scaling factors to MsgCreateStableswapPool
 * [#1889](https://github.com/osmosis-labs/osmosis/pull/1825) Add proto responses to gamm LP messages:
   * MsgJoinPoolResponse: share_out_amount and token_in fields 
@@ -90,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Bug Fixes
 
+* [#2086](https://github.com/osmosis-labs/osmosis/pull/2086) `ReplacePoolIncentivesProposal` ProposalType() returns correct value of `ProposalTypeReplacePoolIncentives` instead of `ProposalTypeUpdatePoolIncentives`
 * [1930](https://github.com/osmosis-labs/osmosis/pull/1930) Ensure you can't `JoinPoolNoSwap` tokens that are not in the pool
 * [1700](https://github.com/osmosis-labs/osmosis/pull/1700) Upgrade sdk fork with missing snapshot manager fix.
 * [1716](https://github.com/osmosis-labs/osmosis/pull/1716) Fix secondary over-LP shares bug with uneven swap amounts in `CalcJoinPoolShares`.
@@ -101,6 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Improvements
 * [#2214](https://github.com/osmosis-labs/osmosis/pull/2214) Speedup epoch distribution, superfluid component
+* [#2515](https://github.com/osmosis-labs/osmosis/pull/2515) Emit events from functions implementing epoch hooks' `panicCatchingEpochHook` cacheCtx
+* [#2526](https://github.com/osmosis-labs/osmosis/pull/2526) EpochHooks interface methods (and hence modules implementing the hooks) return error instead of panic
 
 ### SDK Upgrades
 * [#2245](https://github.com/osmosis-labs/osmosis/pull/2244) Upgrade SDK with the following major changes:

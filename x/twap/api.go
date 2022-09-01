@@ -57,8 +57,7 @@ func (k Keeper) GetArithmeticTwap(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	twap := computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
-	return twap, nil
+	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
 }
 
 // GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
@@ -78,8 +77,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	twap := computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
-	return twap, nil
+	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
 }
 
 // GetCurrentAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
@@ -89,9 +87,5 @@ func (k Keeper) GetArithmeticTwapToNow(
 // This accumulator can be stored, to compute wider ranged twaps.
 // This function does not mutate records.
 func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
-	// correct ordering of args for db
-	if asset1Denom > asset0Denom {
-		asset0Denom, asset1Denom = asset1Denom, asset0Denom
-	}
 	return k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
 }

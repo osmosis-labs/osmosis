@@ -57,4 +57,13 @@ message TwapRecord {
   // string geometric_twap_accumulator = 7 [(gogoproto.customtype) =
   // "github.com/cosmos/cosmos-sdk/types.Dec",
   // (gogoproto.nullable) = false];
+
+  // This field contains the time in which the last spot price error occured.
+  // It is used to alert the caller if they are getting a potentially erroneous
+  // TWAP, due to an unforeseen underlying error.
+  google.protobuf.Timestamp last_error_time = 11 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"last_error_time\""
+  ];
 }

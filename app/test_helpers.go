@@ -12,16 +12,27 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Setup initializes a new OsmosisApp.
-func Setup(isCheckTx bool) *OsmosisApp {
-	db := dbm.NewMemDB()
-	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
-	if !isCheckTx {
+var defaultGenesisBz []byte
+var defaultEncodingConfig = MakeEncodingConfig()
+
+func getDefaultGenesisStateBytes() []byte {
+	if len(defaultGenesisBz) == 0 {
 		genesisState := NewDefaultGenesisState()
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 		if err != nil {
 			panic(err)
 		}
+		defaultGenesisBz = stateBytes
+	}
+	return defaultGenesisBz
+}
+
+// Setup initializes a new OsmosisApp.
+func Setup(isCheckTx bool) *OsmosisApp {
+	db := dbm.NewMemDB()
+	app := NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, defaultEncodingConfig, simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
+	if !isCheckTx {
+		stateBytes := getDefaultGenesisStateBytes()
 
 		app.InitChain(
 			abci.RequestInitChain{
