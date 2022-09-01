@@ -74,6 +74,7 @@ func (k Keeper) moveActiveGaugeToFinishedGauge(ctx sdk.Context, gauge types.Gaug
 	if err := k.deleteGaugeIDForDenom(ctx, gauge.Id, gauge.DistributeTo.Denom); err != nil {
 		return err
 	}
+	
 	// Error is not handled as Hooks use osmoutils.ApplyFuncIfNoError()
 	_ = k.hooks.AfterFinishDistribution(ctx, gauge.Id)
 	return nil
