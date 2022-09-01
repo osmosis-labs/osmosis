@@ -326,7 +326,7 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 			jsonMarshalledUpdatedBz, err := wasmbinding.ConvertProtoToJsonMarshal(binding, newVersionBz, suite.app.AppCodec())
 			suite.Require().NoError(err)
 
-			// json marshalled bytes should be the same since we use the same proto sturct for unmarshalling
+			// json marshalled bytes should be the same since we use the same proto struct for unmarshalling
 			suite.Require().Equal(jsonMarshalledOriginalBz, jsonMarshalledUpdatedBz)
 
 			// raw build also make same result
