@@ -218,7 +218,6 @@ func (s *TestSuite) TestAfterEpochEnd() {
 
 	twapsBeforeEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
 	s.Require().NoError(err)
-
 	s.Require().Equal(2, len(twapsBeforeEpoch))
 
 	pruneEpochIdentifier := s.App.TwapKeeper.PruneEpochIdentifier(s.Ctx)
