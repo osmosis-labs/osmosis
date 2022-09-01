@@ -71,7 +71,9 @@ func (s *KeeperTestHelper) SetEpochStartTime() {
 		epoch.StartTime = s.Ctx.BlockTime()
 		epochsKeeper.DeleteEpochInfo(s.Ctx, epoch.Identifier)
 		err := epochsKeeper.AddEpochInfo(s.Ctx, epoch)
-		s.Require().NoError(err)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
