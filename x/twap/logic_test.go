@@ -1,14 +1,17 @@
 package twap_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v11/x/twap"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/types/twapmock"
 )
 
 var zeroDec = sdk.ZeroDec()
@@ -84,34 +87,108 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 
 func (s *TestSuite) TestUpdateTwap() {
 	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
-	newSp := sdk.OneDec()
+	programmableAmmInterface := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
+	s.App.TwapKeeper.SetAmmInterface(programmableAmmInterface)
 
+	spotPriceResOne := twapmock.SpotPriceResult{Sp: sdk.OneDec(), Err: nil}
+	spotPriceResOneErr := twapmock.SpotPriceResult{Sp: sdk.OneDec(), Err: errors.New("dummy err")}
+	spotPriceResOneErrNilDec := twapmock.SpotPriceResult{Sp: sdk.Dec{}, Err: errors.New("dummy err")}
+	baseTime := time.Unix(2, 0).UTC()
+	updateTime := time.Unix(3, 0).UTC()
+	baseTimeMinusOne := time.Unix(1, 0).UTC()
+
+	zeroAccumNoErrSp10Record := newRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec)
+	sp10OneTimeUnitAccumRecord := newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10))
+	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
-		record     types.TwapRecord
-		updateTime time.Time
-		expRecord  types.TwapRecord
+		record           types.TwapRecord
+		spotPriceResult0 twapmock.SpotPriceResult
+		spotPriceResult1 twapmock.SpotPriceResult
+		expRecord        types.TwapRecord
 	}{
-		"0 accum start": {
-			record:     newRecord(time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec),
-			updateTime: time.Unix(2, 0),
-			expRecord:  newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
+		"0 accum start, sp change": {
+			record:           zeroAccumNoErrSp10Record,
+			spotPriceResult0: spotPriceResOne,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        sp10OneTimeUnitAccumRecord,
+		},
+		"0 accum start, sp0 err at update": {
+			record:           zeroAccumNoErrSp10Record,
+			spotPriceResult0: spotPriceResOneErr,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime),
+		},
+		"0 accum start, sp0 err at update with nil dec": {
+			record:           zeroAccumNoErrSp10Record,
+			spotPriceResult0: spotPriceResOneErrNilDec,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        withSp0(withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime), sdk.ZeroDec()),
+		},
+		"0 accum start, sp1 err at update with nil dec": {
+			record:           zeroAccumNoErrSp10Record,
+			spotPriceResult0: spotPriceResOne,
+			spotPriceResult1: spotPriceResOneErrNilDec,
+			expRecord:        withSp1(withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime), sdk.ZeroDec()),
+		},
+		"startRecord err time preserved": {
+			record:           withLastErrTime(zeroAccumNoErrSp10Record, baseTimeMinusOne),
+			spotPriceResult0: spotPriceResOne,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        withLastErrTime(sp10OneTimeUnitAccumRecord, baseTimeMinusOne),
+		},
+		"err time bumped with start": {
+			record:           withLastErrTime(zeroAccumNoErrSp10Record, baseTimeMinusOne),
+			spotPriceResult0: spotPriceResOne,
+			spotPriceResult1: spotPriceResOneErr,
+			expRecord:        withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime),
 		},
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
 			// setup common, block time, pool Id, expected spot prices
-			s.Ctx = s.Ctx.WithBlockTime(test.updateTime.UTC())
+			s.Ctx = s.Ctx.WithBlockTime(updateTime.UTC())
 			test.record.PoolId = poolId
 			test.expRecord.PoolId = poolId
-			test.expRecord.P0LastSpotPrice = newSp
-			test.expRecord.P1LastSpotPrice = newSp
+			if (test.expRecord.P0LastSpotPrice == sdk.Dec{}) {
+				test.expRecord.P0LastSpotPrice = test.spotPriceResult0.Sp
+			}
+			if (test.expRecord.P1LastSpotPrice == sdk.Dec{}) {
+				test.expRecord.P1LastSpotPrice = test.spotPriceResult1.Sp
+			}
 			test.expRecord.Height = s.Ctx.BlockHeight()
 			test.expRecord.Time = s.Ctx.BlockTime()
 
+			programmableAmmInterface.ProgramPoolSpotPriceOverride(poolId,
+				defaultTwoAssetCoins[0].Denom, defaultTwoAssetCoins[1].Denom,
+				test.spotPriceResult0.Sp, test.spotPriceResult0.Err)
+			programmableAmmInterface.ProgramPoolSpotPriceOverride(poolId,
+				defaultTwoAssetCoins[1].Denom, defaultTwoAssetCoins[0].Denom,
+				test.spotPriceResult1.Sp, test.spotPriceResult1.Err)
+
 			newRecord := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
-			s.Require().Equal(test.expRecord, newRecord)
+			s.Equal(test.expRecord, newRecord)
 		})
 	}
+}
+
+func newOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) types.TwapRecord {
+	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
+	if useP0 {
+		record.P0ArithmeticTwapAccumulator = accum
+	} else {
+		record.P1ArithmeticTwapAccumulator = accum
+	}
+	record.P0LastSpotPrice = sdk.ZeroDec()
+	record.P1LastSpotPrice = sdk.OneDec()
+	return record
+}
+
+type computeArithmeticTwapTestCase struct {
+	startRecord types.TwapRecord
+	endRecord   types.TwapRecord
+	quoteAsset  string
+	expTwap     sdk.Dec
+	expErr      bool
 }
 
 // TestComputeArithmeticTwap tests ComputeArithmeticTwap on various inputs.
@@ -119,44 +196,27 @@ func (s *TestSuite) TestUpdateTwap() {
 // based on time interval, and their accumulator values.
 // Then an expected TWAP is provided in each test case, to compare against computed.
 func TestComputeArithmeticTwap(t *testing.T) {
-	newOneSidedRecord := func(time time.Time, accum sdk.Dec, useP0 bool) types.TwapRecord {
-		record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
-		if useP0 {
-			record.P0ArithmeticTwapAccumulator = accum
-		} else {
-			record.P1ArithmeticTwapAccumulator = accum
-		}
-		record.P0LastSpotPrice = sdk.ZeroDec()
-		record.P1LastSpotPrice = sdk.OneDec()
-		return record
-	}
-
-	type testCase struct {
-		startRecord types.TwapRecord
-		endRecord   types.TwapRecord
-		quoteAsset  string
-		expTwap     sdk.Dec
-	}
-
-	testCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) testCase {
-		return testCase{
+	testCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeArithmeticTwapTestCase {
+		return computeArithmeticTwapTestCase{
 			newOneSidedRecord(baseTime, startAccum, true),
 			newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
 			denom0,
 			expectedTwap,
+			false,
 		}
 	}
-	testCaseFromDeltasAsset1 := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) testCase {
-		return testCase{
+	testCaseFromDeltasAsset1 := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeArithmeticTwapTestCase {
+		return computeArithmeticTwapTestCase{
 			newOneSidedRecord(baseTime, startAccum, false),
 			newOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), false),
 			denom1,
 			expectedTwap,
+			false,
 		}
 	}
 	tenSecAccum := OneSec.MulInt64(10)
 	pointOneAccum := OneSec.QuoInt64(10)
-	tests := map[string]testCase{
+	tests := map[string]computeArithmeticTwapTestCase{
 		"basic: spot price = 1 for one second, 0 init accumulator": {
 			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
@@ -204,8 +264,59 @@ func TestComputeArithmeticTwap(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actualTwap := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
+			actualTwap, err := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
 			require.Equal(t, test.expTwap, actualTwap)
+			require.NoError(t, err)
+		})
+	}
+}
+
+// This tests the behavior of computeArithmeticTwap, around error returning
+// when there has been an intermediate spot price error.
+func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
+	newOneSidedRecordWErrorTime := func(time time.Time, accum sdk.Dec, useP0 bool, errTime time.Time) types.TwapRecord {
+		record := newOneSidedRecord(time, accum, useP0)
+		record.LastErrorTime = errTime
+		return record
+	}
+	tests := map[string]computeArithmeticTwapTestCase{
+		// should error, since end time may have been used to interpolate this value
+		"errAtEndTime from end record": {
+			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, tPlusOne),
+			quoteAsset:  denom0,
+			expTwap:     sdk.OneDec(),
+			expErr:      true,
+		},
+		// should error, since start time may have been used to interpolate this value
+		"err at StartTime exactly": {
+			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, baseTime),
+			quoteAsset:  denom0,
+			expTwap:     sdk.OneDec(),
+			expErr:      true,
+		},
+		"err before StartTime": {
+			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec, true, tMinOne),
+			quoteAsset:  denom0,
+			expTwap:     sdk.OneDec(),
+			expErr:      false,
+		},
+		// Should not happen, but if it did would error
+		"err after EndTime": {
+			startRecord: newOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newOneSidedRecordWErrorTime(tPlusOne, OneSec.MulInt64(2), true, baseTime.Add(20*time.Second)),
+			quoteAsset:  denom0,
+			expTwap:     sdk.OneDec().MulInt64(2),
+			expErr:      true,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualTwap, err := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
+			require.Equal(t, test.expTwap, actualTwap)
+			osmoassert.ConditionalError(t, test.expErr, err)
 		})
 	}
 }

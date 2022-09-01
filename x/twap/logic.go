@@ -1,6 +1,8 @@
 package twap
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,13 +10,13 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
-func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
+func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	denom0, denom1, err := types.LexicographicalOrderDenoms(denom0, denom1)
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
-	sp0 := types.MustGetSpotPrice(k, ctx, poolId, denom0, denom1)
-	sp1 := types.MustGetSpotPrice(k, ctx, poolId, denom1, denom0)
+	previousErrorTime := time.Time{} // no previous error
+	sp0, sp1, lastErrorTime := getSpotPrices(ctx, k, poolId, denom0, denom1, previousErrorTime)
 	return types.TwapRecord{
 		PoolId:                      poolId,
 		Asset0Denom:                 denom0,
@@ -25,7 +27,34 @@ func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 		P1LastSpotPrice:             sp1,
 		P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
 		P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
+		LastErrorTime:               lastErrorTime,
 	}, nil
+}
+
+// getSpotPrices gets the spot prices for the pool,
+// input: ctx, amm interface, pool id, asset denoms, previous error time
+// returns spot prices for both pairs of assets, and the 'latest error time'.
+// The latest error time is the previous time if there is no error in getting spot prices.
+// if there is an error in getting spot prices, then the latest error time is ctx.Blocktime()
+func getSpotPrices(ctx sdk.Context, k types.AmmInterface, poolId uint64, denom0, denom1 string, previousErrorTime time.Time) (
+	sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
+	latestErrTime = previousErrorTime
+	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
+	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
+	if err0 != nil || err1 != nil {
+		latestErrTime = ctx.BlockTime()
+		// In the event of an error, we just sanity replace empty values with zero values
+		// so that the numbers can be still be calculated within TWAPs over error values
+		// TODO: Should we be using the last spot price?
+		if (sp0 == sdk.Dec{}) {
+			sp0 = sdk.ZeroDec()
+		}
+		if (sp1 == sdk.Dec{}) {
+			sp1 = sdk.ZeroDec()
+		}
+	}
+	// if sp0.GT(gammtypes.MaxSpotPrice)
+	return sp0, sp1, latestErrTime
 }
 
 // afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
@@ -33,7 +62,7 @@ func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
 	denomPairs0, denomPairs1 := types.GetAllUniqueDenomPairs(denoms)
 	for i := 0; i < len(denomPairs0); i++ {
-		record, err := NewTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
+		record, err := newTwapRecord(k.ammkeeper, ctx, poolId, denomPairs0[i], denomPairs1[i])
 		// err should be impossible given GetAllUniqueDenomPairs guarantees
 		if err != nil {
 			return err
@@ -55,7 +84,9 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 	for _, id := range changedPoolIds {
 		err := k.updateRecords(ctx, id)
 		if err != nil {
-			panic(err)
+			ctx.Logger().Error(fmt.Errorf(
+				"error in TWAP end block, for updating records for pool id %d."+
+					" Skipping record update. Underlying err: %w", id, err).Error())
 		}
 	}
 }
@@ -80,12 +111,13 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	newRecord := recordWithUpdatedAccumulators(record, ctx.BlockTime())
 	newRecord.Height = ctx.BlockHeight()
 
-	newSp0 := types.MustGetSpotPrice(k.ammkeeper, ctx, record.PoolId, record.Asset0Denom, record.Asset1Denom)
-	newSp1 := types.MustGetSpotPrice(k.ammkeeper, ctx, record.PoolId, record.Asset1Denom, record.Asset0Denom)
+	newSp0, newSp1, lastErrorTime := getSpotPrices(
+		ctx, k.ammkeeper, record.PoolId, record.Asset0Denom, record.Asset1Denom, record.LastErrorTime)
 
 	// set last spot price to be last price of this block. This is what will get used in interpolation.
 	newRecord.P0LastSpotPrice = newSp0
 	newRecord.P1LastSpotPrice = newSp1
+	newRecord.LastErrorTime = lastErrorTime
 
 	return newRecord
 }
@@ -159,17 +191,23 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 // computeArithmeticTwap computes and returns an arithmetic TWAP between
 // two records given the quote asset.
 // precondition: endRecord.Time >= startRecord.Time
+// if endRecord.LastErrorTime is after startRecord.Time, return an error at end + result
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
 // (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
-func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
+	// see if we need to return an error, due to spot price issues
+	var err error = nil
+	if endRecord.LastErrorTime.After(startRecord.Time) || endRecord.LastErrorTime.Equal(startRecord.Time) {
+		err = errors.New("twap: error in pool spot price occurred between start and end time, twap result may be faulty")
+	}
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
 	// if time difference is 0, then return the last spot price based off of start.
 	if timeDelta == time.Duration(0) {
 		if quoteAsset == startRecord.Asset0Denom {
-			return endRecord.P0LastSpotPrice
+			return endRecord.P0LastSpotPrice, err
 		}
-		return endRecord.P1LastSpotPrice
+		return endRecord.P1LastSpotPrice, err
 	}
 	var accumDiff sdk.Dec
 	if quoteAsset == startRecord.Asset0Denom {
@@ -177,5 +215,5 @@ func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRec
 	} else {
 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
 	}
-	return types.AccumDiffDivDuration(accumDiff, timeDelta)
+	return types.AccumDiffDivDuration(accumDiff, timeDelta), err
 }

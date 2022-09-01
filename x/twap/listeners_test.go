@@ -313,3 +313,9 @@ func (s *TestSuite) TestPoolStateChange() {
 		})
 	}
 }
+
+// This test should create multiple mock pools, test one pool's spot price returning an error,
+// and ensure end blocks still work safely.
+// func (s *TestSuite) TestSafetyWithPoolThatHasSpotPriceError() {
+// 	s.Require().Fail("Need to implement")
+// }

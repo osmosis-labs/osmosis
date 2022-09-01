@@ -23,6 +23,7 @@ var (
 	defaultThreeAssetCoins        = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000), sdk.NewInt64Coin(denom2, 1_000_000_000))
 	baseTime                      = time.Unix(1257894000, 0).UTC()
 	tPlusOne                      = baseTime.Add(time.Second)
+	tMinOne                       = baseTime.Add(-time.Second)
 	tPlusOneMin                   = baseTime.Add(time.Minute)
 	basePoolId             uint64 = 1
 )
@@ -136,6 +137,20 @@ var (
 		append(increasingOrderByTimeRecordsPoolOne.Twaps, decreasingOrderByTimeRecordsPoolTwo.Twaps...),
 	)
 )
+
+func withLastErrTime(twap types.TwapRecord, lastErrorTime time.Time) types.TwapRecord {
+	twap.LastErrorTime = lastErrorTime
+	return twap
+}
+
+func withSp0(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
+	twap.P0LastSpotPrice = sp
+	return twap
+}
+func withSp1(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
+	twap.P1LastSpotPrice = sp
+	return twap
+}
 
 // TestTWAPInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.
