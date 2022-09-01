@@ -108,6 +108,24 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			responseProtoStruct:  &epochtypes.QueryCurrentEpochResponse{},
 			expectedQuerierError: true,
 		},
+		{
+			name: "error in grpc querier",
+			// set up whitelist with wrong data
+			testSetup: func() {
+				wasmbinding.StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/AllBalances", banktypes.QueryAllBalancesRequest{})
+			},
+			path: "/cosmos.bank.v1beta1.Query/AllBalances",
+			requestData: func() []byte {
+				bankrequest := banktypes.QueryAllBalancesRequest{}
+				bz, err := proto.Marshal(&bankrequest)
+				suite.Require().NoError(err)
+				return bz
+			},
+			responseProtoStruct:  &banktypes.QueryAllBalancesRequest{},
+			expectedQuerierError: true,
+		},
+
+		// TODO: errors in wrong query in state machine
 	}
 
 	for _, tc := range testCases {
@@ -125,7 +143,6 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			stargateResponse, err := stargateQuerier(suite.ctx, stargateRequest)
 			if tc.expectedQuerierError {
 				suite.Require().Error(err)
-				fmt.Println(err.Error())
 				return
 			} else {
 				suite.Require().NoError(err)
