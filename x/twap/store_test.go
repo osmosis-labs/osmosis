@@ -229,7 +229,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 		// across many test cases on purpose.
 		recordsToPreSet []types.TwapRecord
 
-		beforeTime time.Time
+		lastKeptTime time.Time
 
 		expectedKeptRecords []types.TwapRecord
 	}{
@@ -241,7 +241,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 				pool3BaseSecMin2Ms, // base time - 2ms; deleted
 			},
 
-			beforeTime: baseTime,
+			lastKeptTime: baseTime,
 
 			expectedKeptRecords: []types.TwapRecord{pool3BaseSecMin1Ms, pool3BaseSecBaseMs},
 		},
@@ -253,7 +253,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 				pool2Min1SMin3Ms, // base time - 1s - 3ms; kept since newest
 			},
 
-			beforeTime: baseTime.Add(-time.Second).Add(2 * -time.Millisecond),
+			lastKeptTime: baseTime.Add(-time.Second).Add(2 * -time.Millisecond),
 
 			expectedKeptRecords: []types.TwapRecord{
 				pool2Min1SMin3Ms,
@@ -270,7 +270,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 				pool1Min2SBaseMs, // base time - 2s; kept since older than prune time
 			},
 
-			beforeTime: baseTime.Add(2 * -time.Second).Add(3 * -time.Millisecond),
+			lastKeptTime: baseTime.Add(2 * -time.Second).Add(3 * -time.Millisecond),
 
 			expectedKeptRecords: []types.TwapRecord{pool1Min2SMin3Ms, pool1Min2SMin2Ms, pool1Min2SMin1Ms, pool1Min2SBaseMs},
 		},
@@ -282,7 +282,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 				pool4Plus1SMin2Ms, // base time + 1s - 2ms; deleted
 			},
 
-			beforeTime: baseTime.Add(time.Second).Add(time.Millisecond),
+			lastKeptTime: baseTime.Add(time.Second).Add(time.Millisecond),
 
 			expectedKeptRecords: []types.TwapRecord{pool4Plus1SBaseMs},
 		},
@@ -304,7 +304,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 				pool5Plus1SMin1Ms,  // base time + 1s - 1ms; kept since older than prune time
 			},
 
-			beforeTime: baseTime,
+			lastKeptTime: baseTime,
 
 			expectedKeptRecords: []types.TwapRecord{
 				pool3BaseSecMin1Ms,
@@ -348,7 +348,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 				pool5Plus1SMin1Ms,  // base time + 1s - 1ms; kept since older
 			},
 
-			beforeTime: baseTime.Add(-time.Second).Add(2 * -time.Millisecond),
+			lastKeptTime: baseTime.Add(-time.Second).Add(2 * -time.Millisecond),
 
 			expectedKeptRecords: []types.TwapRecord{
 				pool1Min2SBaseMs,   // base time - 2s; kept since newest
@@ -376,7 +376,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 		"no pre-set records - no error": {
 			recordsToPreSet: []types.TwapRecord{},
 
-			beforeTime: baseTime,
+			lastKeptTime: baseTime,
 
 			expectedKeptRecords: []types.TwapRecord{},
 		},
@@ -389,7 +389,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 			ctx := s.Ctx
 			twapKeeper := s.twapkeeper
 
-			err := twapKeeper.PruneRecordsBeforeTimeButNewest(ctx, tc.beforeTime)
+			err := twapKeeper.PruneRecordsBeforeTimeButNewest(ctx, tc.lastKeptTime)
 			s.Require().NoError(err)
 
 			s.validateExpectedRecords(tc.expectedKeptRecords)
