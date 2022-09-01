@@ -152,7 +152,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	}
 
 	// call an hook after the minting and distribution of new coins
-	k.hooks.AfterDistributeMintedCoin(ctx)
+	_ = k.hooks.AfterDistributeMintedCoin(ctx)
 
 	return err
 }

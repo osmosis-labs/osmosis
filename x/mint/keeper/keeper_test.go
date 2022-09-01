@@ -29,8 +29,9 @@ type mintHooksMock struct {
 	hookCallCount int
 }
 
-func (hm *mintHooksMock) AfterDistributeMintedCoin(ctx sdk.Context) {
+func (hm *mintHooksMock) AfterDistributeMintedCoin(ctx sdk.Context) error {
 	hm.hookCallCount++
+	return nil
 }
 
 var _ types.MintHooks = (*mintHooksMock)(nil)

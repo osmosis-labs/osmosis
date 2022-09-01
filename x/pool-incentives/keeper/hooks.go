@@ -40,7 +40,7 @@ func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, 
 }
 
 // Distribute coins after minter module allocate assets to pool-incentives module.
-func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context) {
+func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context) error {
 	// @Sunny, @Tony, @Dev, what comments should we keep after modifying own BeginBlocker to hooks?
 
 	// WARNING: The order of how modules interact with the default distribution module matters if the distribution module is used in a similar way to:
@@ -55,8 +55,5 @@ func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context) {
 	// Calculate the AllocatableAsset using the AllocationRatio and the MintedDenom,
 	// then allocate the tokens to the registered pools’ gauges.
 	// If there is no record, inflation is not drained and the all amounts are used by the distribution module’s next BeginBlock.
-	err := h.k.AllocateAsset(ctx)
-	if err != nil {
-		panic(err)
-	}
+	return h.k.AllocateAsset(ctx)
 }
