@@ -352,9 +352,9 @@ func (suite *KeeperTestSuite) TestSpotPriceOverflow() {
 			if tc.overflows {
 				suite.Require().NoError(poolErr)
 				// TODO: We currently fail at internal precision calculation limits first.
-				// suite.Require().ErrorIs(keeperErr, types.ErrSpotPriceOverflow)
+				suite.Require().ErrorIs(keeperErr, types.ErrSpotPriceOverflow)
 				suite.Require().Error(keeperErr)
-				suite.Require().Equal(sdk.Dec{}, keeperSpotPrice)
+				suite.Require().Equal(types.MaxSpotPrice, keeperSpotPrice)
 			} else {
 				suite.Require().NoError(poolErr)
 				suite.Require().NoError(keeperErr)

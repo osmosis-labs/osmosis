@@ -14,7 +14,7 @@ import (
 
 // CalculateSpotPrice returns the spot price of the quote asset in terms of the base asset,
 // using the specified pool.
-// E.g. if pool 1 let you traded 2 atom for 3 osmo, the quote asset was atom, and the base asset was osmo,
+// E.g. if pool 1 trades 2 atom for 3 osmo, the quote asset was atom, and the base asset was osmo,
 // this would return 1.5. (Meaning that 1 atom costs 1.5 osmo)
 //
 // This function is guaranteed to not panic, but may return an error if:
@@ -46,8 +46,7 @@ func (k Keeper) CalculateSpotPrice(
 
 	// if spotPrice greater than max spot price, return an error
 	if spotPrice.GT(types.MaxSpotPrice) {
-		fmt.Println(spotPrice)
-		return sdk.Dec{}, types.ErrSpotPriceOverflow
+		return types.MaxSpotPrice, types.ErrSpotPriceOverflow
 	} else if !spotPrice.IsPositive() {
 		return sdk.Dec{}, types.ErrSpotPriceInternal
 	}
