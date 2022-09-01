@@ -6,7 +6,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
+
+func TestMaxSpotPriceEquality(t *testing.T) {
+	require.Equal(t, MaxSpotPrice, types.MaxSpotPrice)
+}
 
 func TestGetAllUniqueDenomPairs(t *testing.T) {
 	tests := map[string]struct {
