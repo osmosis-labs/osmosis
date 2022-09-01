@@ -61,12 +61,11 @@ func AccumDiffDivDuration(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
 // In other words, the first returned denom string will be the lexicographically smaller of the two denoms.
 // If the denoms are equal, an error will be returned.
 func LexicographicalOrderDenoms(denom0, denom1 string) (string, string, error) {
-	if denom0 >= denom1 {
-		if denom0 == denom1 {
-			return "", "", fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denom0, denom1)
-		} else {
-			denom0, denom1 = denom1, denom0
-		}
+	if denom0 == denom1 {
+		return "", "", fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denom0, denom1)
+	}
+	if denom0 > denom1 {
+		denom0, denom1 = denom1, denom0
 	}
 	return denom0, denom1, nil
 }
