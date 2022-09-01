@@ -25,7 +25,8 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoins(coins ...sdk.Coin) uint6
 }
 
 // PrepareBalancerPoolWithCoins returns a balancer pool
-// consisted of given coins with equal weight.
+// PrepareBalancerPoolWithCoinsAndWeights returns a balancer pool
+// consisted of given coins with the specified weights.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coins, weights []int64) uint64 {
 	var poolAssets []balancer.PoolAsset
 	for i, coin := range coins {
