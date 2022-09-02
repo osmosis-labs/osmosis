@@ -9,6 +9,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 
@@ -38,22 +40,13 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// Set the max_age_num_blocks in the evidence params to reflect the 14 day
-		// unbonding period.
-		//
-		// Ref: https://github.com/osmosis-labs/osmosis/issues/1160
-		cp := bpm.GetConsensusParams(ctx)
-		if cp != nil && cp.Evidence != nil {
-			evParams := cp.Evidence
-			evParams.MaxAgeNumBlocks = 186_092
-
-			bpm.StoreConsensusParams(ctx, cp)
-		}
-
 		// Specifying the whole list instead of adding and removing. Less fragile.
 		hostParams := icahosttypes.Params{
 			HostEnabled: true,
 			AllowMessages: []string{
+				// Change: Added MsgTrasnsfer
+				sdk.MsgTypeURL(&ibctransfertypes.MsgTransfer{}),
+
 				sdk.MsgTypeURL(&banktypes.MsgSend{}),
 				sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
 				sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),

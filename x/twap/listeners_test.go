@@ -236,46 +236,61 @@ func (s *TestSuite) TestAfterEpochEnd() {
 	}
 }
 
-// TestAfterSwap_JoinPool tests hooks for `AfterSwap` and `AfterJoinPool`.
+// TestAfterSwap_JoinPool tests hooks for `AfterSwap`, `AfterJoinPool`, and `AfterExitPool`.
 // The purpose of this test is to test whether we correctly store the state of the
 // pools that has changed with price impact.
-func (s *TestSuite) TestAfterSwap_JoinPool() {
-	tests := []struct {
-		name      string
+func (s *TestSuite) TestPoolStateChange() {
+	tests := map[string]struct {
 		poolCoins sdk.Coins
 		swap      bool
 		joinPool  bool
+		exitPool  bool
 	}{
-		{
-			"swap triggers track changed pools",
-			defaultTwoAssetCoins,
-			true,
-			false,
+		"swap triggers track changed pools": {
+			poolCoins: defaultTwoAssetCoins,
+			swap:      true,
+			joinPool:  false,
+			exitPool:  false,
 		},
-		{
-			"join pool triggers track changed pools",
-			defaultTwoAssetCoins,
-			false,
-			true,
+		"join pool triggers track changed pools": {
+			poolCoins: defaultTwoAssetCoins,
+			swap:      false,
+			joinPool:  true,
+			exitPool:  false,
 		},
-		{
-			"swap and join pool in same block triggers track changed pools",
-			defaultTwoAssetCoins,
-			true,
-			true,
+		"swap and join pool in same block triggers track changed pools": {
+			poolCoins: defaultTwoAssetCoins,
+			swap:      true,
+			joinPool:  true,
+			exitPool:  false,
 		},
-		{
-			"three asset pool: swap and join pool in same block triggers track changed pools",
-			defaultThreeAssetCoins,
-			true,
-			true,
+		"three asset pool: swap and join pool in same block triggers track changed pools": {
+			poolCoins: defaultThreeAssetCoins,
+			swap:      true,
+			joinPool:  true,
+			exitPool:  false,
+		},
+		"exit pool triggers track changed pools in two-asset pool": {
+			poolCoins: defaultTwoAssetCoins,
+			swap:      false,
+			joinPool:  false,
+			exitPool:  true,
+		},
+		"exit pool triggers track changed pools in three-asset pool": {
+			poolCoins: defaultThreeAssetCoins,
+			swap:      false,
+			joinPool:  false,
+			exitPool:  true,
 		},
 	}
 
-	for _, tc := range tests {
+	for name, tc := range tests {
 		s.SetupTest()
-		s.Run(tc.name, func() {
+		s.Run(name, func() {
 			poolId := s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
+
+			s.EndBlock()
+			s.Commit()
 
 			if tc.swap {
 				s.RunBasicSwap(poolId)
@@ -285,7 +300,11 @@ func (s *TestSuite) TestAfterSwap_JoinPool() {
 				s.RunBasicJoin(poolId)
 			}
 
-			// test that either of swapping in a pool or joining a pool
+			if tc.exitPool {
+				s.RunBasicExit(poolId)
+			}
+
+			// test that either of swapping in a pool, joining a pool, or exiting a pool
 			// has triggered `trackChangedPool`, and that we have the state of price
 			// impacted pools.
 			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
@@ -294,3 +313,9 @@ func (s *TestSuite) TestAfterSwap_JoinPool() {
 		})
 	}
 }
+
+// This test should create multiple mock pools, test one pool's spot price returning an error,
+// and ensure end blocks still work safely.
+// func (s *TestSuite) TestSafetyWithPoolThatHasSpotPriceError() {
+// 	s.Require().Fail("Need to implement")
+// }

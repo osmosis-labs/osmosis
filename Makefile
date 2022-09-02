@@ -269,8 +269,8 @@ test-sim-bench:
 test-e2e:
 	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" OSMOSIS_E2E_DEBUG_LOG=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
-test-e2e-skip-upgrade:
-	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+test-e2e-short:
+	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True OSMOSIS_E2E_SKIP_IBC=True OSMOSIS_E2E_SKIP_STATE_SYNC=True OSMOSIS_E2E_DEBUG_LOG=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 test-mutation:
 	@bash scripts/mutation-test.sh $(MODULES)
@@ -310,16 +310,19 @@ format:
 ###############################################################################
 
 localnet-keys:
-	. tests/localosmosis/keys.sh
+	. tests/localosmosis/scripts/add_keys.sh
 
 localnet-build:
-	@docker build -t local:osmosis -f tests/localosmosis/Dockerfile .
+	@docker-compose -f tests/localosmosis/docker-compose.yml build
 
 localnet-build-state-export:
 	@docker build -t local:osmosis-se --build-arg ID=$(ID) -f tests/localosmosis/mainnet_state/Dockerfile-stateExport .
 
 localnet-start:
 	@docker-compose -f tests/localosmosis/docker-compose.yml up
+
+localnet-startd:
+	@docker-compose -f tests/localosmosis/docker-compose.yml up -d
 
 localnet-start-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml up
@@ -328,8 +331,7 @@ localnet-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-remove: localnet-stop
-	PWD=$(shell pwd)
-	@docker run --user root -v ${PWD}/tests/localosmosis/.osmosisd:/root/osmosis ubuntu /bin/sh -c "rm -rf /root/osmosis/*"
+	rm -rf $(PWD)/tests/localosmosis/.osmosisd
 
 localnet-remove-state-export:
 	@docker-compose -f tests/localosmosis/mainnet_state/docker-compose-state-export.yml down
