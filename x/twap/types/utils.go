@@ -3,22 +3,12 @@ package types
 import (
 	"fmt"
 	"sort"
-	time "time"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 )
-
-// mustGetSpotPrice returns the spot price for the given pool id, and denom0 in terms of denom1.
-// Panics if the pool state is misconfigured, which will halt any tx that interacts with this.
-func MustGetSpotPrice(k AmmInterface, ctx sdk.Context, poolId uint64, baseAssetDenom string, quoteAssetDenom string) sdk.Dec {
-	sp, err := k.CalculateSpotPrice(ctx, poolId, baseAssetDenom, quoteAssetDenom)
-	if err != nil {
-		panic(err)
-	}
-	return sp
-}
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
 // (X, Y), X >= Y.
@@ -49,12 +39,19 @@ func GetAllUniqueDenomPairs(denoms []string) ([]string, []string) {
 	return pairGT, pairLT
 }
 
-func SpotPriceTimesDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
-	return sp.MulInt64(int64(timeDelta))
+// SpotPriceMulDuration returns the spot price multiplied by the time delta,
+// that is the spot price between the current and last TWAP record.
+// A single second accounts for 1_000_000_000 when converted to int64.
+func SpotPriceMulDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
+	deltaMS := timeDelta.Milliseconds()
+	return sp.MulInt64(deltaMS)
 }
 
+// AccumDiffDivDuration returns the accumulated difference divided by the the
+// time delta, that is the spot price between the current and last TWAP record.
 func AccumDiffDivDuration(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
-	return accumDiff.QuoInt64(int64(timeDelta))
+	deltaMS := timeDelta.Milliseconds()
+	return accumDiff.QuoInt64(deltaMS)
 }
 
 // LexicographicalOrderDenoms takes two denoms and returns them to be in lexicographically ascending order.

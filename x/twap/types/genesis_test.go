@@ -33,7 +33,7 @@ var (
 
 func TestGenesisState_Validate(t *testing.T) {
 	var (
-		basicParams = NewParams("week")
+		basicParams = NewParams("week", 48*time.Hour)
 
 		basicCustomGenesis = NewGenesisState(
 			basicParams,
@@ -89,7 +89,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		},
 		"invalid genesis - pool ID doesn't exist": {
 			twapGenesis: NewGenesisState(
-				NewParams("week"),
+				NewParams("week", 48*time.Hour),
 				[]TwapRecord{
 					{
 						PoolId:                      0, // invalid
@@ -106,9 +106,18 @@ func TestGenesisState_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid param - error": {
+		"invalid pruneEpochIdentifier - error": {
 			twapGenesis: NewGenesisState(
-				NewParams(""), // invalid empty string
+				NewParams("", 48*time.Hour), // invalid empty string
+				[]TwapRecord{
+					baseRecord,
+				}),
+
+			expectedErr: true,
+		},
+		"invalid recordHistoryKeepPeriod - error": {
+			twapGenesis: NewGenesisState(
+				NewParams("week", -1*time.Hour), // invalid duration
 				[]TwapRecord{
 					baseRecord,
 				}),
@@ -136,11 +145,11 @@ func TestGenesisState_Validate(t *testing.T) {
 }
 
 func TestTWAPRecord_Validate(t *testing.T) {
-	testCases := map[string]struct {
-		twapRecord TwapRecord
-
+	type testcase struct {
+		twapRecord  TwapRecord
 		expectedErr bool
-	}{
+	}
+	testCases := map[string]testcase{
 		"valid base record": {
 			twapRecord: baseRecord,
 		},
@@ -153,28 +162,10 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid asset0 denom": {
+		"invalid denom": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
 				r.Asset0Denom = ""
-				return r
-			}(),
-
-			expectedErr: true,
-		},
-		"invalid asset1 denom": {
-			twapRecord: func() TwapRecord {
-				r := baseRecord
-				r.Asset1Denom = ""
-				return r
-			}(),
-
-			expectedErr: true,
-		},
-		"invalid height": {
-			twapRecord: func() TwapRecord {
-				r := baseRecord
-				r.Height = 0
 				return r
 			}(),
 
@@ -193,6 +184,15 @@ func TestTWAPRecord_Validate(t *testing.T) {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
 				r.P0LastSpotPrice = sdk.OneDec().Neg()
+				return r
+			}(),
+
+			expectedErr: true,
+		},
+		"invalid last spot price": {
+			twapRecord: func() TwapRecord {
+				r := baseRecord
+				r.P0LastSpotPrice = sdk.ZeroDec()
 				return r
 			}(),
 
@@ -290,12 +290,27 @@ func TestTWAPRecord_Validate(t *testing.T) {
 				}
 				return r
 			}(),
-
 			expectedErr: true,
 		},
 	}
+	// make test cases symmetric
+	testCasesSym := map[string]testcase{}
+	for k, tc := range testCases {
+		if tc.twapRecord.Asset0Denom != baseRecord.Asset0Denom ||
+			!tc.twapRecord.P0LastSpotPrice.Equal(baseRecord.P0LastSpotPrice) ||
+			!tc.twapRecord.P0ArithmeticTwapAccumulator.Equal(baseRecord.P0ArithmeticTwapAccumulator) {
+			testCasesSym[k+": asset 0"] = tc
+			tSym := tc.twapRecord
+			tSym.Asset0Denom, tSym.Asset1Denom = tSym.Asset1Denom, tSym.Asset0Denom
+			tSym.P0LastSpotPrice, tSym.P1LastSpotPrice = tSym.P1LastSpotPrice, tSym.P0LastSpotPrice
+			tSym.P0ArithmeticTwapAccumulator, tSym.P1ArithmeticTwapAccumulator = tSym.P1ArithmeticTwapAccumulator, tSym.P0ArithmeticTwapAccumulator
+			testCasesSym[k+": asset 1"] = testcase{tSym, tc.expectedErr}
+		} else {
+			testCasesSym[k] = tc
+		}
+	}
 
-	for name, tc := range testCases {
+	for name, tc := range testCasesSym {
 		t.Run(name, func(t *testing.T) {
 			// System under test.
 			err := tc.twapRecord.Validate()

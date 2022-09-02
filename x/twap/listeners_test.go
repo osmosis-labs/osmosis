@@ -20,11 +20,11 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 		runSwap bool
 	}{
 		"Uni2 Pool, no swap on pool creation block": {
-			defaultUniV2Coins,
+			defaultTwoAssetCoins,
 			false,
 		},
 		"Uni2 Pool, swap on pool creation block": {
-			defaultUniV2Coins,
+			defaultTwoAssetCoins,
 			true,
 		},
 		"Three asset balancer pool, no swap on pool creation block": {
@@ -78,67 +78,259 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 	}
 }
 
-// Tests that after a swap, we are triggering internal tracking logic for a pool.
-func (s *TestSuite) TestSwapTriggeringTrackPoolId() {
-	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
-	s.BeginNewBlock(false)
-	s.RunBasicSwap(poolId)
+// TestEndBlock tests if records are correctly updated upon endblock.
+func (s *TestSuite) TestEndBlock() {
+	tests := []struct {
+		name       string
+		poolCoins  sdk.Coins
+		block1Swap bool
+		block2Swap bool
+	}{
+		{
+			"no swap after pool creation",
+			defaultTwoAssetCoins,
+			false,
+			false,
+		},
+		{
+			"swap in the same block with pool creation",
+			defaultTwoAssetCoins,
+			true,
+			false,
+		},
+		{
+			"swap after a block has passed by after pool creation",
+			defaultTwoAssetCoins,
+			false,
+			true,
+		},
+		{
+			"swap in both first and second block",
+			defaultTwoAssetCoins,
+			true,
+			true,
+		},
+		{
+			"three asset pool",
+			defaultThreeAssetCoins,
+			true,
+			true,
+		},
+	}
 
-	s.Require().Equal([]uint64{poolId}, s.twapkeeper.GetChangedPools(s.Ctx))
+	for _, tc := range tests {
+		s.SetupTest()
+		s.Run(tc.name, func() {
+			// first block
+			s.Ctx = s.Ctx.WithBlockTime(baseTime)
+			poolId := s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
+
+			twapAfterPoolCreation, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
+			s.Require().NoError(err)
+
+			// run basic swap on the first block if set true
+			if tc.block1Swap {
+				s.RunBasicSwap(poolId)
+			}
+
+			// check that we have correctly stored changed pools
+			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
+			s.Require().Equal(1, len(changedPools))
+			s.Require().Equal(poolId, changedPools[0])
+
+			s.EndBlock()
+			s.Commit()
+
+			// Second block
+			secondBlockTime := s.Ctx.BlockTime()
+
+			// get updated twap record after end block
+			twapAfterBlock1, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, secondBlockTime, denom0, denom1)
+			s.Require().NoError(err)
+
+			// if no swap happened in block1, there should be no change
+			// in the most recent twap record after epoch
+			if !tc.block1Swap {
+				s.Require().Equal(twapAfterPoolCreation, twapAfterBlock1)
+			} else {
+				// height should not have changed
+				s.Require().Equal(twapAfterPoolCreation.Height, twapAfterBlock1.Height)
+				// twap time should be same as previous blocktime
+				s.Require().Equal(twapAfterPoolCreation.Time, baseTime)
+
+				// accumulators should not have increased, as they are going through the first epoch
+				s.Require().Equal(sdk.ZeroDec(), twapAfterBlock1.P0ArithmeticTwapAccumulator)
+				s.Require().Equal(sdk.ZeroDec(), twapAfterBlock1.P1ArithmeticTwapAccumulator)
+			}
+
+			// check if spot price has been correctly updated in twap record
+			asset0sp, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, twapAfterBlock1.Asset0Denom, twapAfterBlock1.Asset1Denom)
+			s.Require().NoError(err)
+			s.Require().Equal(asset0sp, twapAfterBlock1.P0LastSpotPrice)
+
+			// run basic swap on block two for price change
+			if tc.block2Swap {
+				s.RunBasicSwap(poolId)
+			}
+
+			s.EndBlock()
+			s.Commit()
+
+			// Third block
+			twapAfterBlock2, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
+			s.Require().NoError(err)
+
+			// if no swap happened in block 3, twap record should be same with block 2
+			if !tc.block2Swap {
+				s.Require().Equal(twapAfterBlock1, twapAfterBlock2)
+			} else {
+				s.Require().Equal(secondBlockTime, twapAfterBlock2.Time)
+
+				// check accumulators incremented - we test details of correct increment in logic
+				s.Require().True(twapAfterBlock2.P0ArithmeticTwapAccumulator.GT(twapAfterBlock1.P0ArithmeticTwapAccumulator))
+				s.Require().True(twapAfterBlock2.P1ArithmeticTwapAccumulator.GT(twapAfterBlock1.P1ArithmeticTwapAccumulator))
+			}
+
+			// check if spot price has been correctly updated in twap record
+			asset0sp, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, twapAfterBlock1.Asset0Denom, twapAfterBlock2.Asset1Denom)
+			s.Require().NoError(err)
+			s.Require().Equal(asset0sp, twapAfterBlock2.P0LastSpotPrice)
+		})
+	}
 }
 
-// Tests that after a swap, we are triggering internal tracking logic for a pool.
-func (s *TestSuite) TestJoinTriggeringTrackPoolId() {
-	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
-	s.BeginNewBlock(false)
-	s.RunBasicJoin(poolId)
-
-	s.Require().Equal([]uint64{poolId}, s.twapkeeper.GetChangedPools(s.Ctx))
-}
-
-// TestSwapAndEndBlockTriggeringSave tests that if we:
-// * create a pool in block 1
-// * swap in block 2
-// then after block 2 end block, we have saved records for the pool,
-// for both block 1 & 2, with distinct spot prices in their records, and accumulators incremented.
-// TODO: Abstract this to be more table driven, and test more pool / block setups.
-func (s *TestSuite) TestSwapAndEndBlockTriggeringSave() {
+// TestAfterEpochEnd tests if records get succesfully deleted via `AfterEpochEnd` hook.
+// We test details of correct implementation of pruning method in store test.
+// Specifically, the newest record that is younger than the (current block time - record keep period)
+// is kept, and the rest are deleted.
+func (s *TestSuite) TestAfterEpochEnd() {
+	s.SetupTest()
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
 
-	poolId := s.PrepareBalancerPoolWithCoins(defaultUniV2Coins...)
-	expectedHistoricalTwap, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
+	// Create TWAP record from pool creation.
+	s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
+
+	// Assume some time has passed and new record created.
+	s.Ctx = s.Ctx.WithBlockTime(tPlus10sp5Record.Time)
+	newestRecord := tPlus10sp5Record
+
+	s.twapkeeper.StoreNewRecord(s.Ctx, newestRecord)
+
+	twapsBeforeEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
 	s.Require().NoError(err)
+	s.Require().Equal(2, len(twapsBeforeEpoch))
 
-	s.EndBlock()
-	s.Commit() // clear transient store
-	// Now on a clean state after a create pool
-	s.Require().Equal(baseTime.Add(time.Second), s.Ctx.BlockTime())
-	s.RunBasicSwap(poolId)
+	pruneEpochIdentifier := s.App.TwapKeeper.PruneEpochIdentifier(s.Ctx)
+	recordHistoryKeepPeriod := s.App.TwapKeeper.RecordHistoryKeepPeriod(s.Ctx)
 
-	// accumulators are default right here
-	expectedLatestTwapUpToAccum, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denom0, denom1)
-	s.Require().NoError(err)
-	// ensure different spot prices
-	s.Require().NotEqual(expectedHistoricalTwap.P0LastSpotPrice, expectedLatestTwapUpToAccum.P0LastSpotPrice)
-	s.Require().NotEqual(expectedHistoricalTwap.P1LastSpotPrice, expectedLatestTwapUpToAccum.P1LastSpotPrice)
+	// make prune record time pass by, running prune epoch after this should prune old record
+	s.Ctx = s.Ctx.WithBlockTime(newestRecord.Time.Add(recordHistoryKeepPeriod).Add(time.Second))
 
-	s.EndBlock()
+	allEpochs := s.App.EpochsKeeper.AllEpochInfos(s.Ctx)
 
-	// check records
-	historicalOldTwap, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, baseTime, denom0, denom1)
-	s.Require().NoError(err)
-	s.Require().Equal(expectedHistoricalTwap, historicalOldTwap)
+	// iterate through all epoch, ensure that epoch only gets pruned in prune epoch identifier
+	// we reverse iterate here to test epochs that are not prune epoch
+	for i := len(allEpochs) - 1; i >= 0; i-- {
+		s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpochs[i].Identifier, int64(1))
 
-	latestTwap, err := s.twapkeeper.GetMostRecentRecordStoreRepresentation(s.Ctx, poolId, denom0, denom1)
-	s.Require().NoError(err)
-	s.Require().Equal(latestTwap.P0LastSpotPrice, expectedLatestTwapUpToAccum.P0LastSpotPrice)
-	s.Require().Equal(latestTwap.P1LastSpotPrice, expectedLatestTwapUpToAccum.P1LastSpotPrice)
+		recordsAfterEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
 
-	latestTwap2, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
-	s.Require().NoError(err)
-	s.Require().Equal(latestTwap, latestTwap2)
+		// old record should have been pruned here
+		// however, the newest younger than the prune threshold
+		// is kept.
+		if allEpochs[i].Identifier == pruneEpochIdentifier {
+			s.Require().Equal(1, len(recordsAfterEpoch))
+			s.Require().Equal(newestRecord, recordsAfterEpoch[0])
 
-	// check accumulators incremented - we test details of correct increment in logic
-	s.Require().True(latestTwap.P0ArithmeticTwapAccumulator.GT(historicalOldTwap.P0ArithmeticTwapAccumulator))
-	s.Require().True(latestTwap.P1ArithmeticTwapAccumulator.GT(historicalOldTwap.P1ArithmeticTwapAccumulator))
+			// quit test once the record has been pruned
+			return
+		} else { // pruning should not be triggered at first, not pruning epoch
+			s.Require().NoError(err)
+			s.Require().Equal(twapsBeforeEpoch, recordsAfterEpoch)
+		}
+	}
 }
+
+// TestAfterSwap_JoinPool tests hooks for `AfterSwap`, `AfterJoinPool`, and `AfterExitPool`.
+// The purpose of this test is to test whether we correctly store the state of the
+// pools that has changed with price impact.
+func (s *TestSuite) TestPoolStateChange() {
+	tests := map[string]struct {
+		poolCoins sdk.Coins
+		swap      bool
+		joinPool  bool
+		exitPool  bool
+	}{
+		"swap triggers track changed pools": {
+			poolCoins: defaultTwoAssetCoins,
+			swap:      true,
+			joinPool:  false,
+			exitPool:  false,
+		},
+		"join pool triggers track changed pools": {
+			poolCoins: defaultTwoAssetCoins,
+			swap:      false,
+			joinPool:  true,
+			exitPool:  false,
+		},
+		"swap and join pool in same block triggers track changed pools": {
+			poolCoins: defaultTwoAssetCoins,
+			swap:      true,
+			joinPool:  true,
+			exitPool:  false,
+		},
+		"three asset pool: swap and join pool in same block triggers track changed pools": {
+			poolCoins: defaultThreeAssetCoins,
+			swap:      true,
+			joinPool:  true,
+			exitPool:  false,
+		},
+		"exit pool triggers track changed pools in two-asset pool": {
+			poolCoins: defaultTwoAssetCoins,
+			swap:      false,
+			joinPool:  false,
+			exitPool:  true,
+		},
+		"exit pool triggers track changed pools in three-asset pool": {
+			poolCoins: defaultThreeAssetCoins,
+			swap:      false,
+			joinPool:  false,
+			exitPool:  true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.SetupTest()
+		s.Run(name, func() {
+			poolId := s.PrepareBalancerPoolWithCoins(tc.poolCoins...)
+
+			s.EndBlock()
+			s.Commit()
+
+			if tc.swap {
+				s.RunBasicSwap(poolId)
+			}
+
+			if tc.joinPool {
+				s.RunBasicJoin(poolId)
+			}
+
+			if tc.exitPool {
+				s.RunBasicExit(poolId)
+			}
+
+			// test that either of swapping in a pool, joining a pool, or exiting a pool
+			// has triggered `trackChangedPool`, and that we have the state of price
+			// impacted pools.
+			changedPools := s.twapkeeper.GetChangedPools(s.Ctx)
+			s.Require().Equal(1, len(changedPools))
+			s.Require().Equal(poolId, changedPools[0])
+		})
+	}
+}
+
+// This test should create multiple mock pools, test one pool's spot price returning an error,
+// and ensure end blocks still work safely.
+// func (s *TestSuite) TestSafetyWithPoolThatHasSpotPriceError() {
+// 	s.Require().Fail("Need to implement")
+// }

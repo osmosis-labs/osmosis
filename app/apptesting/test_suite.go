@@ -19,7 +19,7 @@ import (
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -46,6 +46,11 @@ type KeeperTestHelper struct {
 	TestAccs    []sdk.AccAddress
 }
 
+var (
+	SecondaryDenom  = "uion"
+	SecondaryAmount = sdk.NewInt(100000000)
+)
+
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
 func (s *KeeperTestHelper) Setup() {
 	s.App = app.Setup(false)
@@ -59,6 +64,12 @@ func (s *KeeperTestHelper) Setup() {
 	s.TestAccs = CreateRandomAccounts(3)
 }
 
+func (s *KeeperTestHelper) SetupTestForInitGenesis() {
+	// Setting to True, leads to init genesis not running
+	s.App = app.Setup(true)
+	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{})
+}
+
 func (s *KeeperTestHelper) SetEpochStartTime() {
 	epochsKeeper := s.App.EpochsKeeper
 
@@ -66,18 +77,26 @@ func (s *KeeperTestHelper) SetEpochStartTime() {
 		epoch.StartTime = s.Ctx.BlockTime()
 		epochsKeeper.DeleteEpochInfo(s.Ctx, epoch.Identifier)
 		err := epochsKeeper.AddEpochInfo(s.Ctx, epoch)
-		s.Require().NoError(err)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
 // CreateTestContext creates a test context.
 func (s *KeeperTestHelper) CreateTestContext() sdk.Context {
+	ctx, _ := s.CreateTestContextWithMultiStore()
+	return ctx
+}
+
+// CreateTestContextWithMultiStore creates a test context and returns it together with multi store.
+func (s *KeeperTestHelper) CreateTestContextWithMultiStore() (sdk.Context, sdk.CommitMultiStore) {
 	db := dbm.NewMemDB()
 	logger := log.NewNopLogger()
 
 	ms := rootmulti.NewStore(db, logger)
 
-	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
+	return sdk.NewContext(ms, tmtypes.Header{}, false, logger), ms
 }
 
 // CreateTestContext creates a test context.
@@ -116,9 +135,14 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 
 	s.FundAcc(sdk.AccAddress(valAddr), selfBond)
 
-	sh := teststaking.NewHelper(s.Suite.T(), s.Ctx, *s.App.StakingKeeper)
-	msg := sh.CreateValidatorMsg(valAddr, valPub, selfBond[0].Amount)
-	sh.Handle(msg, true)
+	stakingHandler := staking.NewHandler(*s.App.StakingKeeper)
+	stakingCoin := sdk.NewCoin(sdk.DefaultBondDenom, selfBond[0].Amount)
+	ZeroCommission := stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, ZeroCommission, sdk.OneInt())
+	s.Require().NoError(err)
+	res, err := stakingHandler(s.Ctx, msg)
+	s.Require().NoError(err)
+	s.Require().NotNil(res)
 
 	val, found := s.App.StakingKeeper.GetValidator(s.Ctx, valAddr)
 	s.Require().True(found)
@@ -140,11 +164,6 @@ func (s *KeeperTestHelper) SetupValidator(bondStatus stakingtypes.BondStatus) sd
 	s.App.SlashingKeeper.SetValidatorSigningInfo(s.Ctx, consAddr, signingInfo)
 
 	return valAddr
-}
-
-// SetupTokenFactory sets up a token module account for the TokenFactoryKeeper.
-func (s *KeeperTestHelper) SetupTokenFactory() {
-	s.App.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
 }
 
 // BeginNewBlock starts a new block.
