@@ -1,6 +1,7 @@
 package twap_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -51,35 +52,35 @@ func (s *TestSuite) TestNewTwapRecord() {
 		poolId        uint64
 		denom0        string
 		denom1        string
-		expectedErr   bool
+		expectedErr   error
 		expectedPanic bool
 	}{
-		"denom with lexicographical order": {
-			poolId,
-			denom1,
-			denom0,
-			false,
-			false,
-		},
 		"denom with non-lexicographical order": {
 			poolId,
 			denom0,
 			denom1,
+			nil,
 			false,
+		},
+		"denom with lexicographical order": {
+			poolId,
+			denom1,
+			denom0,
+			nil,
 			false,
 		},
 		"new record with same denom": {
 			poolId,
 			denom0,
 			denom0,
-			true,
+			fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denom0, denom0),
 			false,
 		},
 		"non existent pool id": {
 			poolId + 1,
 			denom1,
 			denom0,
-			false,
+			nil,
 			true,
 		},
 	}
@@ -94,8 +95,9 @@ func (s *TestSuite) TestNewTwapRecord() {
 
 			twapRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, test.poolId, test.denom0, test.denom1)
 
-			if test.expectedErr {
+			if test.expectedErr != nil {
 				s.Require().Error(err)
+				s.Require().Equal(test.expectedErr.Error(), err.Error())
 			} else {
 				s.Require().NoError(err)
 
@@ -116,29 +118,24 @@ func (s *TestSuite) TestUpdateRecord() {
 		updateBlockHeight bool
 		updateSpotPrice   bool
 		updateBlockTime   bool
-		expRecord         types.TwapRecord
 	}{
 		"happy path, zero accumulator": {
 			inputRecord:       newRecord(1, s.Ctx.BlockTime(), sdk.NewDec(10), zeroDec, zeroDec),
 			updateBlockHeight: false,
 			updateSpotPrice:   false,
-			expRecord:         newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 		},
 		"update block height": {
 			inputRecord:       newRecord(1, s.Ctx.BlockTime(), sdk.NewDec(10), zeroDec, zeroDec),
 			updateBlockHeight: true,
-			expRecord:         newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 		},
-		"update block time": {
+		"update block time and spot price": {
 			inputRecord:     newRecord(1, s.Ctx.BlockTime(), sdk.NewDec(10), zeroDec, zeroDec),
 			updateSpotPrice: true,
 			updateBlockTime: true,
-			expRecord:       newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 		},
 		"spot price changed": {
 			inputRecord:     newRecord(1, s.Ctx.BlockTime(), sdk.NewDec(10), zeroDec, zeroDec),
 			updateSpotPrice: true,
-			expRecord:       newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 		},
 	}
 	for name, test := range tests {
@@ -194,10 +191,8 @@ func (s *TestSuite) TestPruneRecords() {
 	s.SetupTest()
 	s.preSetRecords(recordsToPreSet)
 
-	ctx := s.Ctx
+	ctx := s.Ctx.WithBlockTime(baseTime)
 	twapKeeper := s.twapkeeper
-
-	ctx = ctx.WithBlockTime(baseTime)
 
 	err := twapKeeper.PruneRecords(ctx)
 	s.Require().NoError(err)
@@ -207,6 +202,7 @@ func (s *TestSuite) TestPruneRecords() {
 
 func TestRecordWithUpdatedAccumulators(t *testing.T) {
 	poolId := uint64(1)
+	defaultRecord := newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec)
 	tests := map[string]struct {
 		record    types.TwapRecord
 		newTime   time.Time
@@ -218,7 +214,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			expRecord: newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 		},
 		"small starting accumulators": {
-			record:    newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec),
+			record:    defaultRecord,
 			newTime:   time.Unix(2, 0),
 			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10))),
 		},
@@ -228,7 +224,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(44*10)), twoDec.Add(OneSec.MulInt64(44).QuoInt64(10))),
 		},
 		"same time, accumulator should not change": {
-			record:    newRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec),
+			record:    defaultRecord,
 			newTime:   time.Unix(1, 0),
 			expRecord: newExpRecord(oneDec, twoDec),
 		},
@@ -251,7 +247,6 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 
 func (s *TestSuite) TestGetInterpolatedRecord() {
 	baseRecord := newTwapRecordWithDefaults(baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
-	// tMin2Record, tMin1Record, baseRecord, tPlus1Record := s.createTestRecordsFromTime(baseTime)
 
 	tests := map[string]struct {
 		recordsToPreSet     types.TwapRecord
@@ -260,7 +255,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 		testDenom1          string
 		testTime            time.Time
 		expectedAccumulator sdk.Dec
-		expectedErr         bool
+		expectedErr         error
 	}{
 		"same time with existing record": {
 			recordsToPreSet: baseRecord,
@@ -284,7 +279,8 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			testDenom0:      baseRecord.Asset0Denom,
 			testDenom1:      baseRecord.Asset1Denom,
 			testTime:        baseTime.Add(-time.Second),
-			expectedErr:     true,
+			expectedErr: fmt.Errorf("looking for a time thats too old, not in the historical index. "+
+				" Try storing the accumulator value. (requested time %s)", baseTime.Add(-time.Second)),
 		},
 		"on lexicographical order denom parameters": {
 			recordsToPreSet: baseRecord,
@@ -295,11 +291,10 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 		},
 		"test non lexicographical order parameter": {
 			recordsToPreSet: baseRecord,
-			testPoolId:      baseRecord.PoolId + 1,
+			testPoolId:      baseRecord.PoolId,
 			testDenom0:      baseRecord.Asset1Denom,
 			testDenom1:      baseRecord.Asset0Denom,
 			testTime:        baseTime,
-			expectedErr:     true,
 		},
 	}
 
@@ -309,8 +304,9 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 			s.twapkeeper.StoreNewRecord(s.Ctx, test.recordsToPreSet)
 
 			interpolatedRecord, err := s.twapkeeper.GetInterpolatedRecord(s.Ctx, test.testPoolId, test.testDenom0, test.testDenom1, test.testTime)
-			if test.expectedErr {
+			if test.expectedErr != nil {
 				s.Require().Error(err)
+				s.Require().Equal(test.expectedErr.Error(), err.Error())
 				return
 			}
 			s.Require().NoError(err)
