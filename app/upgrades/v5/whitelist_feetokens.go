@@ -7,14 +7,15 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v10/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v11/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/txfees/types"
 )
 
 // Every asset with a liquid osmo pairing pool on Osmosis, as of 12/01/21
 // Notably, Tick is not on this list because the osmo pool has $76 of liquidity.
 // Cheq'd and KRT are also not on this, due to neither having osmo pairings.
 // We nolint because these are strings of whitelisted ibc denoms.
+//
 //nolint:gosec
 var feetoken_whitelist_data = `
 ion,uion,2

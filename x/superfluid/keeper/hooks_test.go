@@ -246,6 +246,26 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 			[]uint64{1},
 			[]uint64{2},
 		},
+		{
+			"add unbonding validator case",
+			[]stakingtypes.BondStatus{stakingtypes.Unbonding, stakingtypes.Bonded},
+			2,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]uint64{1, 2},
+			[]int64{0},
+			[]uint64{1},
+			[]uint64{2},
+		},
+		{
+			"add unbonded validator case",
+			[]stakingtypes.BondStatus{stakingtypes.Unbonded, stakingtypes.Bonded},
+			2,
+			[]superfluidDelegation{{0, 0, 0, 1000000}, {1, 1, 0, 1000000}},
+			[]uint64{1, 2},
+			[]int64{0},
+			[]uint64{1},
+			[]uint64{2},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -283,6 +303,13 @@ func (suite *KeeperTestSuite) TestBeforeSlashingUnbondingDelegationHook() {
 				suite.Require().NoError(err)
 				// slash by slash factor
 				power := sdk.TokensToConsensusPower(validator.Tokens, sdk.DefaultPowerReduction)
+
+				// should not be slashing unbonded validator
+				defer func() {
+					if r := recover(); r != nil {
+						suite.Require().Equal(true, validator.IsUnbonded())
+					}
+				}()
 				suite.App.StakingKeeper.Slash(suite.Ctx, consAddr, 80, power, slashFactor)
 				// Note: this calls BeforeSlashingUnbondingDelegation hook
 			}

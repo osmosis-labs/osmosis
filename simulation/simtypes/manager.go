@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"golang.org/x/exp/maps"
 
-	"github.com/osmosis-labs/osmosis/v10/osmoutils"
+	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 )
 
 // AppModuleSimulation defines the standard functions that every module should expose
@@ -148,7 +148,8 @@ func (m Manager) Actions(seed int64, cdc codec.JSONCodec) []ActionsWithMetadata 
 // Thankfully for Osmosis-custom modules, we don't really care about genesis logic. (yet)
 // The architectural errors for future readers revolve around on the design of the
 // * Design of the AppStateFn (just look at it, osmosis/simapp/state.go)
-// 	 * Abstraction leaks overt amounts of code riddle it!
+//   - Abstraction leaks overt amounts of code riddle it!
+//
 // * Configs being read key by key per module via AppParams, should be a typed config
 // * Operation/Action weights being read from params, rather than from come generic config loading
 // * every module not just returning a genesis struct, and instead mutating things in place

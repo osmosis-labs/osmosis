@@ -7,10 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	minttypes "github.com/osmosis-labs/osmosis/v10/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper/gov"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/keeper/gov"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {

@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "osmosis/superfluid/superfluid.proto";
 import "osmosis/superfluid/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v10/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v11/x/superfluid/types";
 
 // GenesisState defines the module's genesis state.
 message GenesisState {

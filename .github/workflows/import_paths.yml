@@ -29,6 +29,8 @@ jobs:
       -
         name: Check out repository code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ inputs.target-branch }}
       -
         name: Setup Golang
         uses: actions/setup-go@v2.1.4
@@ -61,7 +63,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.COMMIT_TO_BRANCH }}
-          title: "auto: update Go import paths to v${{ inputs.version }}"
+          title: "auto: update Go import paths to v${{ inputs.version }} on branch ${{ inputs.target-branch }}"
           commit-message: "auto: update Go import paths to v${{ inputs.version }}"
           body: "**Automated pull request**\n\nUpdating Go import paths to v${{ inputs.version }}"
           base: ${{ inputs.target-branch }}

@@ -11,8 +11,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app"
-	v4 "github.com/osmosis-labs/osmosis/v10/app/upgrades/v4"
+	"github.com/osmosis-labs/osmosis/v11/app"
+	v4 "github.com/osmosis-labs/osmosis/v11/app/upgrades/v4"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"

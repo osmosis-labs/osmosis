@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/util"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/util"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
@@ -75,6 +75,20 @@ func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.I
 	abstainTotal := balancesResp.Tally.Abstain
 
 	return noTotal, yesTotal, noWithVetoTotal, abstainTotal, nil
+}
+
+func (n *NodeConfig) QueryPropStatus(proposalNumber int) (string, error) {
+	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%d", proposalNumber)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var propResp govtypes.QueryProposalResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &propResp); err != nil {
+		return "", err
+	}
+	proposalStatus := propResp.Proposal.Status
+
+	return proposalStatus.String(), nil
 }
 
 func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (int, error) {

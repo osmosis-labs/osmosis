@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"math/rand"
@@ -12,13 +13,14 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v10/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
 )
 
 const AverageBlockTime = 6 * time.Second
@@ -51,18 +53,39 @@ const AverageBlockTime = 6 * time.Second
 // * SimManager for module configs
 // * Config file for params
 // * whatever is needed for logging (tb + w rn)
-// OR: Could be a struct or something with options,
-//     to give caller ability to step through / instrument benchmarking if they wanted to, and add a cleanup function.
+// OR:
+// * Could be a struct or something with options,
+// to give caller ability to step through / instrument benchmarking if they
+// wanted to, and add a cleanup function.
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
 	app simtypes.App,
-	initFunctions simtypes.InitFunctions,
+	initFunctions InitFunctions,
 	actions []simtypes.ActionsWithMetadata,
-	config simulation.Config,
+	config Config,
 ) (stopEarly bool, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
+
+	// Set up sql table
+	var db *sql.DB
+	if config.WriteStatsToDB {
+		db, err = sql.Open("sqlite3", "./blocks.db")
+		if err != nil {
+			tb.Fatal(err)
+		}
+		defer db.Close()
+		sts := `
+		DROP TABLE IF EXISTS blocks;
+		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT, msg STRING, resData STRING, appHash STRING);
+		`
+		_, err := db.Exec(sts)
+
+		if err != nil {
+			tb.Fatal(err)
+		}
+	}
 
 	// Encapsulate the bizarre initialization logic that must be cleaned.
 	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config)
@@ -82,7 +105,7 @@ func SimulateFromSeed(
 	}()
 
 	testingMode, _, b := getTestingMode(tb)
-	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config)
+	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config, db)
 
 	if !testingMode {
 		b.ResetTimer()
@@ -114,8 +137,8 @@ func cursedInitializationLogic(
 	tb testing.TB,
 	w io.Writer,
 	app simtypes.App,
-	initFunctions simtypes.InitFunctions,
-	config *simulation.Config) (*simtypes.SimCtx, *simState, Params, error) {
+	initFunctions InitFunctions,
+	config *Config) (*simtypes.SimCtx, *simState, Params, error) {
 	fmt.Fprintf(w, "Starting SimulateFromSeed with randomness created with seed %d\n", int(config.Seed))
 
 	r := rand.New(rand.NewSource(config.Seed))
@@ -127,7 +150,7 @@ func cursedInitializationLogic(
 		return nil, nil, simParams, fmt.Errorf("must have greater than zero genesis accounts")
 	}
 
-	validators, genesisTimestamp, accs := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
+	validators, genesisTimestamp, accs, res := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",
@@ -140,8 +163,12 @@ func cursedInitializationLogic(
 		ChainID:         config.ChainID,
 		Height:          int64(config.InitialBlockHeight),
 		Time:            genesisTimestamp,
-		ProposerAddress: validators.randomProposer(r),
+		ProposerAddress: validators.randomProposer(r).Address(),
+		AppHash:         res.AppHash,
 	}
+
+	// must set version in order to generate hashes
+	initialHeader.Version.Block = 11
 
 	simState := newSimulatorState(simParams, initialHeader, tb, w, validators).WithLogParam(config.Lean)
 
@@ -156,9 +183,9 @@ func initChain(
 	params Params,
 	accounts []simulation.Account,
 	app simtypes.App,
-	appStateFn simulation.AppStateFn,
-	config *simulation.Config,
-) (mockValidators, time.Time, []simulation.Account) {
+	appStateFn AppStateFn,
+	config *Config,
+) (mockValidators, time.Time, []simulation.Account, abci.ResponseInitChain) {
 	// TODO: Cleanup the whole config dependency with appStateFn
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, *config)
 	consensusParams := randomConsensusParams(r, appState, app.AppCodec())
@@ -179,7 +206,7 @@ func initChain(
 		config.InitialBlockHeight = 1
 	}
 
-	return validators, genesisTimestamp, accounts
+	return validators, genesisTimestamp, accounts, res
 }
 
 //nolint:deadcode,unused
@@ -206,7 +233,7 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.ActionsWithMetadata,
-	simState *simState, config simulation.Config,
+	simState *simState, config Config, db *sql.DB,
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
@@ -232,11 +259,14 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 
 			// Select and execute tx
 			action := selectAction(actionSimCtx.GetSeededRand("action select"))
-			opMsg, futureOps, err := action.Execute(actionSimCtx, ctx)
+			opMsg, futureOps, resultData, err := action.Execute(actionSimCtx, ctx)
+
+			// add execution result to block's data storage
+			simState.Data = append(simState.Data, resultData)
 			opMsg.Route = action.ModuleName
 			cleanup()
 
-			simState.logActionResult(header, i, config, blocksize, opMsg, err)
+			simState.logActionResult(header, i, config, blocksize, opMsg, resultData, db, err)
 
 			simState.queueOperations(futureOps)
 
@@ -252,9 +282,19 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 
 // This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
 func (simState *simState) logActionResult(
-	header tmproto.Header, actionIndex int, config simulation.Config, blocksize int,
-	opMsg simulation.OperationMsg, actionErr error) {
+	header tmproto.Header, actionIndex int, config Config, blocksize int,
+	opMsg simulation.OperationMsg, resultData []byte, db *sql.DB, actionErr error) {
 	opMsg.LogEvent(simState.eventStats.Tally)
+	if config.WriteStatsToDB {
+		appHash := fmt.Sprintf("%X", simState.header.AppHash)
+		resData := fmt.Sprintf("%X", resultData)
+		sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg, resData, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10);"
+		_, err := db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed, opMsg.Msg, resData, appHash)
+		if err != nil {
+			simState.tb.Fatal(err)
+		}
+	}
+
 	if !simState.leanLogs || opMsg.OK {
 		simState.logWriter.AddEntry(MsgEntry(header.Height, int64(actionIndex), opMsg))
 	}

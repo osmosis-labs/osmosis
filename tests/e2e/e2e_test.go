@@ -13,24 +13,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
 )
 
-func (s *IntegrationTestSuite) TestCreatePoolPostUpgrade() {
-	if s.skipUpgrade {
-		s.T().Skip("pool creation tests are broken when upgrade is skipped. To be fixed in #1843")
-	}
-	chain := s.configurer.GetChainConfig(0)
-	node, err := chain.GetDefaultNode()
-	s.NoError(err)
-
-	node.CreatePool("pool2A.json", initialization.ValidatorWalletName)
-	node.CreatePool("pool2B.json", initialization.ValidatorWalletName)
-}
-
-func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
+// Test01IBCTokenTransfer tests that IBC token transfers work as expected.
+// This test must preceed Test02CreatePoolPostUpgrade. That's why it is prefixed with "01"
+// to ensure correct ordering. See Test02CreatePoolPostUpgrade for more details.
+func (s *IntegrationTestSuite) Test01IBCTokenTransfer() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -44,11 +35,36 @@ func (s *IntegrationTestSuite) TestIBCTokenTransfer() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 }
 
-func (s *IntegrationTestSuite) TestSuperfluidVoting() {
-	if s.skipUpgrade {
-		// TODO: https://github.com/osmosis-labs/osmosis/issues/1843
-		s.T().Skip("Superfluid tests are broken when upgrade is skipped. To be fixed in #1843")
+// Test02CreatePoolPostUpgrade tests that a pool can be created.
+// It attempts to create a pool with both native and IBC denoms.
+// As a result, it must run after Test01IBCTokenTransfer.
+// This is the reason for prefixing the name with 02 to ensure
+// correct order.
+func (s *IntegrationTestSuite) Test02CreatePool() {
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
+
+	node.CreatePool("nativeDenomPool.json", initialization.ValidatorWalletName)
+
+	if s.skipIBC {
+		s.T().Log("skipping creating pool with IBC denoms because IBC tests are disabled")
+		return
 	}
+
+	node.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName)
+}
+
+// Test03SuperfluidVoting tests that superfluid voting is functioning as expected.
+// It does so by doing the following:
+//- creating a pool
+// - attempting to submit a proposal to enable superfluid voring in that pool
+// - voting yes on the proposal from the validator wallet
+// - voting no on the proposal from the delegator wallet
+// - ensuring that delegator's wallet overwrites the validator's vote
+// This test depends on pool creation to function correctly.
+// As a result, it is prefixed by 03 to run after Test02CreatePool.
+func (s *IntegrationTestSuite) Test03SuperfluidVoting() {
 	const walletName = "superfluid-wallet"
 
 	chain := s.configurer.GetChainConfig(0)
@@ -58,7 +74,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	// enable superfluid via proposal.
 	node.SubmitSuperfluidProposal("gamm/pool/1", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	chain.LatestProposalNumber += 1
-	node.DepositProposal(chain.LatestProposalNumber)
+	node.DepositProposal(chain.LatestProposalNumber, false)
 	for _, node := range chain.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
 	}
@@ -73,9 +89,9 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	node.SuperfluidDelegate(chain.LatestLockNumber, chain.NodeConfigs[1].OperatorAddress, walletName)
 
 	// create a text prop, deposit and vote yes
-	node.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	node.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
 	chain.LatestProposalNumber += 1
-	node.DepositProposal(chain.LatestProposalNumber)
+	node.DepositProposal(chain.LatestProposalNumber, false)
 	for _, node := range chain.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
 	}
@@ -161,6 +177,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
 		stateSynchingNodeConfig,
 		time.Duration(chain.VotingPeriod),
+		//time.Duration(chain.ExpeditedVotingPeriod),
 		trustHeight,
 		trustHash,
 		stateSyncRPCServers,
@@ -213,4 +230,41 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	// stop the state synching node.
 	err = chain.RemoveNode(stateSynchingNode.Name)
 	s.NoError(err)
+}
+
+func (s *IntegrationTestSuite) TestExpeditedProposals() {
+	if !s.skipUpgrade {
+		s.T().Skip("this can be re-enabled post v12")
+	}
+
+	chain := s.configurer.GetChainConfig(0)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
+
+	node.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
+	chain.LatestProposalNumber += 1
+	node.DepositProposal(chain.LatestProposalNumber, true)
+	totalTimeChan := make(chan time.Duration, 1)
+	go node.QueryPropStatusTimed(chain.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+	for _, node := range chain.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	}
+	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
+	var elapsed time.Duration
+	timeoutPeriod := time.Duration(2 * time.Minute)
+	select {
+	case elapsed = <-totalTimeChan:
+	case <-time.After(timeoutPeriod):
+		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
+		s.Require().NoError(err)
+	}
+
+	// compare the time it took to reach pass status to expected expedited voting period
+
+	expeditedVotingPeriodDuration := time.Duration(chain.ExpeditedVotingPeriod * float32(time.Second))
+	timeDelta := elapsed - expeditedVotingPeriodDuration
+	// ensure delta is within one second of expected time
+	s.Require().Less(timeDelta, 2*time.Second)
+	s.T().Logf("expeditedVotingPeriodDuration within one second of expected time: %v", timeDelta)
+	close(totalTimeChan)
 }

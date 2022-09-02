@@ -1,0 +1,31 @@
+package client
+
+// THIS FILE IS GENERATED CODE, DO NOT EDIT
+// SOURCE AT `{{.ProtoPath}}`
+// If you need to implement custom methods, that codegen is insufficient for
+// make a new file in this package. That will not get overwritten.
+
+import (
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"{{.KeeperPath}}"
+	"{{.ClientPath}}/queryproto"
+)
+
+type Querier struct {
+	K {{.KeeperStruct}}
+}
+
+{{range .Queries -}} 
+func (q Querier) {{.QueryName}}(ctx sdk.Context,
+	req queryproto.{{.QueryName}}Request,
+) (*queryproto.{{.QueryName}}Response, error) {
+    {{.DefaultValuesCode}}
+
+	{{.QueryResponseCode}}
+
+	return &queryproto.GetArithmeticTwapResponse{ArithmeticTwap: twap}, nil
+}
+{{end -}} 

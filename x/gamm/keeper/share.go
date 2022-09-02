@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
 
 func (k Keeper) applyJoinPoolStateChange(ctx sdk.Context, pool types.PoolI, joiner sdk.AccAddress, numShares sdk.Int, joinCoins sdk.Coins) error {

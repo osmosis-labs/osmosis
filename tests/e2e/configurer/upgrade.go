@@ -9,11 +9,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v10/app/params"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v10/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -60,9 +60,6 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 		return err
 	}
 
-	numVal := float32(len(chainConfig.ValidatorInitConfigs))
-	chainConfig.VotingPeriod = config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks
-
 	validatorConfigBytes, err := json.Marshal(chainConfig.ValidatorInitConfigs)
 	if err != nil {
 		return err
@@ -73,7 +70,7 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 		forkHeight = forkHeight - config.ForkHeightPreUpgradeOffset
 	}
 
-	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.Id, int(chainConfig.VotingPeriod), validatorConfigBytes, tmpDir, int(forkHeight))
+	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.Id, int(chainConfig.VotingPeriod), int(chainConfig.ExpeditedVotingPeriod), validatorConfigBytes, tmpDir, int(forkHeight))
 	if err != nil {
 		return err
 	}
@@ -154,7 +151,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 				chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
 				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 				chainConfig.LatestProposalNumber += 1
-				node.DepositProposal(chainConfig.LatestProposalNumber)
+				node.DepositProposal(chainConfig.LatestProposalNumber, false)
 			}
 			node.VoteYesProposal(initialization.ValidatorWalletName, chainConfig.LatestProposalNumber)
 		}

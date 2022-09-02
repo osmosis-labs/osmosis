@@ -12,7 +12,7 @@ const (
 	// number of blocks it takes to vote for a single validator to vote for a proposal
 	PropVoteBlocks float32 = 1.2
 	// number of blocks used as a calculation buffer
-	PropBufferBlocks float32 = 5
+	PropBufferBlocks float32 = 6
 	// max retries for json unmarshalling
 	MaxRetries = 60
 )
@@ -20,6 +20,10 @@ const (
 var (
 	// Minimum deposit value for a proposal to enter a voting period.
 	MinDepositValue = govtypes.DefaultMinDepositTokens.Int64()
+	// Minimum expedited deposit value for a proposal to enter a voting period.
+	MinExpeditedDepositValue = govtypes.DefaultMinExpeditedDepositTokens.Int64()
 	// Minimum deposit value for proposal to be submitted.
 	InitialMinDeposit = MinDepositValue / 4
+	// Minimum expedited deposit value for proposal to be submitted.
+	InitialMinExpeditedDeposit = MinExpeditedDepositValue / 4
 )

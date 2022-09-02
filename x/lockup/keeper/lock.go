@@ -10,8 +10,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v10/store"
-	"github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v11/store"
+	"github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 )
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
@@ -110,7 +110,7 @@ func (k Keeper) AddTokensToLockByID(ctx sdk.Context, lockID uint64, owner sdk.Ac
 
 // CreateLock creates a new lock with the specified duration for the owner.
 // Returns an error in the following conditions:
-//  - account does not have enough balance
+//   - account does not have enough balance
 func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
 	ID := k.GetLastLockID(ctx) + 1
 	// unlock time is initially set without a value, gets set as unlock start time + duration
@@ -569,7 +569,7 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 	}
 
 	modAddr := k.ak.GetModuleAddress(types.ModuleName)
-	err = k.dk.FundCommunityPool(ctx, coins, modAddr)
+	err = k.ck.FundCommunityPool(ctx, coins, modAddr)
 	if err != nil {
 		return nil, err
 	}

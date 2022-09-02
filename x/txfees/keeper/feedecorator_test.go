@@ -9,8 +9,8 @@ import (
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/osmosis-labs/osmosis/v10/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v11/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/txfees/types"
 )
 
 func (suite *KeeperTestSuite) TestFeeDecorator() {
@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 
 	uion := "uion"
 
-	uionPoolId := suite.PrepareUni2PoolWithAssets(
+	uionPoolId := suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin(uion, 500),
 	)
@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		// reset pool and accounts for each test
 		suite.SetupTest(false)
 		suite.Run(tc.name, func() {
-			uionPoolId := suite.PrepareUni2PoolWithAssets(
+			uionPoolId := suite.PrepareBalancerPoolWithCoins(
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 				sdk.NewInt64Coin(uion, 500),
 			)

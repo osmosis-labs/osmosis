@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v10/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 )
 
 var (
@@ -134,10 +134,11 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			poolShareOut := bankKeeper.GetBalance(ctx, poolJoinAcc, poolDenom)
 
 			// register a LP token as a superfluid asset
-			superfluidKeeper.AddNewSuperfluidAsset(ctx, types.SuperfluidAsset{
+			err = superfluidKeeper.AddNewSuperfluidAsset(ctx, types.SuperfluidAsset{
 				Denom:     poolDenom,
 				AssetType: types.SuperfluidAssetTypeLPShare,
 			})
+			suite.Require().NoError(err)
 
 			// whitelist designated pools
 			// this should be done via `RunForkLogic` at upgrade

@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	simapp "github.com/osmosis-labs/osmosis/v10/app"
-	"github.com/osmosis-labs/osmosis/v10/x/mint/simulation"
-	"github.com/osmosis-labs/osmosis/v10/x/mint/types"
+	simapp "github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/simulation"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"

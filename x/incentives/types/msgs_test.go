@@ -9,12 +9,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v10/x/incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
 
-	appParams "github.com/osmosis-labs/osmosis/v10/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
+	appParams "github.com/osmosis-labs/osmosis/v11/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
 )
 
 // TestMsgCreatePool tests if valid/invalid create pool messages are properly validated/invalidated

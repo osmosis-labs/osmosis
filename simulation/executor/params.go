@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	markov "github.com/osmosis-labs/osmosis/v10/simulation/simtypes/transitionmatrix"
+	markov "github.com/osmosis-labs/osmosis/v11/simulation/simtypes/transitionmatrix"
 )
 
 const (
@@ -38,8 +38,8 @@ var (
 	// rand in range [0, 2 * provided blocksize], 0
 	defaultBlockSizeTransitionMatrix, _ = markov.CreateTransitionMatrix([][]int{
 		{85, 5, 0},
-		{15, 92, 1},
-		{0, 3, 99},
+		{15, 92, 40},
+		{0, 3, 60},
 	})
 )
 

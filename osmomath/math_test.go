@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v10/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
 
 	"github.com/stretchr/testify/require"
 )

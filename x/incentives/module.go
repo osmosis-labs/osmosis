@@ -2,9 +2,9 @@
 Incentives module provides general interface to give yield to stakers. The yield to be given
 to stakers are stored in gauges and is distributed on epoch basis
 to the stakers who meet specific conditions.
- - Gauge queries, gauge creation and add tokens to gauge
- - Upcoming-gauges related queries
- - Gauge infos and gauge queues
+  - Gauge queries, gauge creation and add tokens to gauge
+  - Upcoming-gauges related queries
+  - Gauge infos and gauge queues
 */
 package incentives
 
@@ -27,11 +27,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/simulation"
-	"github.com/osmosis-labs/osmosis/v10/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v10/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/simulation"
+	"github.com/osmosis-labs/osmosis/v11/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v11/x/mint/client/rest"
 )
 
 var (
