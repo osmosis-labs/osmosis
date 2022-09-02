@@ -171,6 +171,15 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
+		"invalid height": {
+			twapRecord: func() TwapRecord {
+				r := baseRecord
+				r.Height = 0
+				return r
+			}(),
+
+			expectedErr: true,
+		},
 		"invalid time": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
@@ -189,7 +198,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid last spot price": {
+		"invalid p1 last spot price: zero": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
 				r.P0LastSpotPrice = sdk.ZeroDec()
@@ -216,23 +225,6 @@ func TestTWAPRecord_Validate(t *testing.T) {
 					Height:                      3,
 					Time:                        tPlusOne.Add(time.Second),
 					P1LastSpotPrice:             sdk.OneDec(),
-					P0ArithmeticTwapAccumulator: sdk.OneDec(),
-					P1ArithmeticTwapAccumulator: sdk.OneDec(),
-				}
-				return r
-			}(),
-
-			expectedErr: true,
-		},
-		"invalid p1 last spot price: zero": {
-			twapRecord: func() TwapRecord {
-				r := TwapRecord{
-					PoolId:                      basePoolId,
-					Asset0Denom:                 denom0,
-					Asset1Denom:                 denom1,
-					Height:                      3,
-					Time:                        tPlusOne.Add(time.Second),
-					P0LastSpotPrice:             sdk.OneDec(),
 					P0ArithmeticTwapAccumulator: sdk.OneDec(),
 					P1ArithmeticTwapAccumulator: sdk.OneDec(),
 				}
