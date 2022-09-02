@@ -18,9 +18,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
 )
 
-const lockupWallet = "lockup-wallet"
-const lockupWalletSuperfluid = "lockup-wallet-superfluid"
-
 // Test01IBCTokenTransfer tests that IBC token transfers work as expected.
 // This test must precede Test02CreatePoolPostUpgrade. That's why it is prefixed with "01"
 // to ensure correct ordering. See Test02CreatePoolPostUpgrade for more details.
