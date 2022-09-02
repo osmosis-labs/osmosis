@@ -321,17 +321,48 @@ func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
 	}
 }
 
-// TestPruneRecords tests that all twap records earlier than
-// current block time - RecordHistoryKeepPeriod are pruned from the store.
+// TestPruneRecords tests that twap records earlier than
+// current block time - RecordHistoryKeepPeriod are pruned from the store
+// while keeping the newest record before the above time threshold.
+// Such record is kept for each pool.
 func (s *TestSuite) TestPruneRecords() {
 	recordHistoryKeepPeriod := s.twapkeeper.RecordHistoryKeepPeriod(s.Ctx)
 
-	tMin2Record, tMin1Record, baseRecord, tPlus1Record := s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
+	pool1OlderMin2MsRecord, // deleted
+		pool2OlderMin1MsRecord,  // deleted
+		pool3OlderBaseRecord,    // kept as newest under keep period
+		pool4OlderPlus1Record := // kept as newest under keep period
+		s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
+
+	pool1Min2MsRecord, // kept as newest under keep period
+		pool2Min1MsRecord,  // kept as newest under keep period
+		pool3BaseRecord,    // kept as it is at the keep period boundary
+		pool4Plus1Record := // kept as it is above the keep period boundary
+		s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
 
 	// non-ascending insertion order.
-	recordsToPreSet := []types.TwapRecord{tPlus1Record, tMin1Record, baseRecord, tMin2Record}
+	recordsToPreSet := []types.TwapRecord{
+		pool2OlderMin1MsRecord,
+		pool4Plus1Record,
+		pool4OlderPlus1Record,
+		pool3OlderBaseRecord,
+		pool2Min1MsRecord,
+		pool3BaseRecord,
+		pool1Min2MsRecord,
+		pool1OlderMin2MsRecord,
+	}
 
-	expectedKeptRecords := []types.TwapRecord{baseRecord, tPlus1Record}
+	// tMin2Record is before the threshold and is pruned away.
+	// tmin1Record is the newest record before current block time - record history keep period.
+	// All other records happen after the threshold and are kept.
+	expectedKeptRecords := []types.TwapRecord{
+		pool3OlderBaseRecord,
+		pool4OlderPlus1Record,
+		pool1Min2MsRecord,
+		pool2Min1MsRecord,
+		pool3BaseRecord,
+		pool4Plus1Record,
+	}
 	s.SetupTest()
 	s.preSetRecords(recordsToPreSet)
 

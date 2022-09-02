@@ -123,12 +123,15 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 }
 
 // pruneRecords prunes twap records that happened earlier than recordHistoryKeepPeriod
-// before current block time.
+// before current block time while preserving the most recent record before the threshold.
+// Such record is preserved for each pool.
+// See TWAP keeper's `pruneRecordsBeforeTimeButNewest(...)` for more details about the reasons for
+// keeping this record.
 func (k Keeper) pruneRecords(ctx sdk.Context) error {
 	recordHistoryKeepPeriod := k.RecordHistoryKeepPeriod(ctx)
 
 	lastKeptTime := ctx.BlockTime().Add(-recordHistoryKeepPeriod)
-	return k.pruneRecordsBeforeTime(ctx, lastKeptTime)
+	return k.pruneRecordsBeforeTimeButNewest(ctx, lastKeptTime)
 }
 
 // recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime.
