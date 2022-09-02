@@ -198,6 +198,17 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
+		"invalid last spot price with error": {
+			twapRecord: func() TwapRecord {
+				r := baseRecord
+				r.LastErrorTime = r.Time
+				r.P0LastSpotPrice = sdk.NewDec(5) // has to be distinct to be symmetric
+				r.P1LastSpotPrice = sdk.ZeroDec() // need this to be 0, to test the other case on error
+				return r
+			}(),
+
+			expectedErr: true,
+		},
 		"invalid p1 last spot price: zero": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
