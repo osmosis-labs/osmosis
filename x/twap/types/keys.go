@@ -28,7 +28,7 @@ var (
 	mostRecentTWAPsNoSeparator         = "recent_twap"
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
-	expectedLenOfKeySeparators         = 5
+	expectedKeySeparatedParts         = 5
 
 	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
 	// keySeparatorPlusOne is used for creating prefixes for the key end in iterators
