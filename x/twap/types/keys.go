@@ -9,8 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 )
 
@@ -70,14 +68,14 @@ func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
 	if len(s) != expectedLenOfKeySeparators {
-		panic(sdkerrors.Wrapf(ErrKeySeparatorLength, "expected length (%d), actual length (%d)", expectedLenOfKeySeparators, len(s)))
+		panic(KeySeparatorLengthError{ExpectedLength: expectedLenOfKeySeparators, ActualLength: len(s)})
 	}
 	if s[0] != historicalTWAPTimeIndexNoSeparator {
-		panic(sdkerrors.Wrapf(ErrUnexpectedSeparator, "expected separator (%s), actual separator (%v)", historicalTWAPTimeIndexNoSeparator, s[0]))
+		panic(UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]})
 	}
 	t, err := osmoutils.ParseTimeString(s[1])
 	if err != nil {
-		panic(fmt.Errorf("incorrectly formatted time string in key %s : %v", keyS, err))
+		panic(TimeStringKeyFormatError{Key: keyS, Err: err})
 	}
 	return t
 }
@@ -86,14 +84,14 @@ func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
 	if len(s) != expectedLenOfKeySeparators {
-		return time.Time{}, sdkerrors.Wrapf(ErrKeySeparatorLength, "expected length (%d), actual length (%d)", expectedLenOfKeySeparators, len(s))
+		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedLenOfKeySeparators, ActualLength: len(s)}
 	}
 	if s[0] != historicalTWAPPoolIndexNoSeparator {
-		return time.Time{}, sdkerrors.Wrapf(ErrUnexpectedSeparator, "expected separator (%s), actual separator (%v)", historicalTWAPPoolIndexNoSeparator, s[0])
+		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
 	}
 	t, err := osmoutils.ParseTimeString(s[2])
 	if err != nil {
-		return time.Time{}, fmt.Errorf("incorrectly formatted time string in key %s : %v", keyS, err)
+		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
 	}
 	return t, nil
 }
