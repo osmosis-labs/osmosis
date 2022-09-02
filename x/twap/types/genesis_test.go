@@ -288,7 +288,11 @@ func TestTWAPRecord_Validate(t *testing.T) {
 	// make test cases symmetric
 	testCasesSym := map[string]testcase{}
 	for k, tc := range testCases {
-		if tc.twapRecord.Asset0Denom != baseRecord.Asset0Denom ||
+		if tc.twapRecord.P0LastSpotPrice.IsNil() ||
+			tc.twapRecord.P0ArithmeticTwapAccumulator.IsNil() ||
+			tc.twapRecord.P1ArithmeticTwapAccumulator.IsNil() {
+			testCasesSym[k] = tc
+		} else if tc.twapRecord.Asset0Denom != baseRecord.Asset0Denom ||
 			!tc.twapRecord.P0LastSpotPrice.Equal(baseRecord.P0LastSpotPrice) ||
 			!tc.twapRecord.P0ArithmeticTwapAccumulator.Equal(baseRecord.P0ArithmeticTwapAccumulator) {
 			testCasesSym[k+": asset 0"] = tc
