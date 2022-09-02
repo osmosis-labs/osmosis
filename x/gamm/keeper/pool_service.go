@@ -19,7 +19,7 @@ import (
 //
 // This function is guaranteed to not panic, but may return an error if:
 // * An internal error within the pool occurs for calculating the spot price
-// * The returned spot price is greater
+// * The returned spot price is greater than max spot price
 func (k Keeper) CalculateSpotPrice(
 	ctx sdk.Context,
 	poolID uint64,
