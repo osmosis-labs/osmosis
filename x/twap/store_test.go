@@ -1,9 +1,9 @@
 package twap_test
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v11/x/twap"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
@@ -142,8 +142,7 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		expectedRecord types.TwapRecord
 		expErr         error
 	}{
-		"no entries": {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
-			" Try storing the accumulator value. (requested time %s)", baseTime)},
+		"no entries":            {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, twap.TimeTooOldError{Time: baseTime}},
 		"get at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultInputAt(baseTime), baseRecord, nil},
 		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, nil},
 
@@ -172,13 +171,11 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		"query too old": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 			defaultInputAt(baseTime.Add(-time.Second * 2)),
-			baseRecord, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
-				" Try storing the accumulator value. (requested time %s)", baseTime.Add(-time.Second*2))},
+			baseRecord, twap.TimeTooOldError{Time: baseTime.Add(-time.Second * 2)}},
 
 		"non-existent pool ID": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			wrongPoolIdInputAt(baseTime), baseRecord, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
-				" Try storing the accumulator value. (requested time %s)", baseTime)},
+			wrongPoolIdInputAt(baseTime), baseRecord, twap.TimeTooOldError{Time: baseTime}},
 		"pool2 record get": {
 			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
 			input:          wrongPoolIdInputAt(baseTime),
