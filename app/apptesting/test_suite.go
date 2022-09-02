@@ -215,9 +215,10 @@ func (s *KeeperTestHelper) BeginNewBlockWithProposer(executeNextEpoch bool, prop
 
 	fmt.Println("beginning block ", s.Ctx.BlockHeight())
 	s.App.BeginBlocker(s.Ctx, reqBeginBlock)
+	s.Ctx = s.App.NewContext(false, reqBeginBlock.Header)
 }
 
-// EndBlock ends the block.
+// EndBlock ends the block, and runs commit
 func (s *KeeperTestHelper) EndBlock() {
 	reqEndBlock := abci.RequestEndBlock{Height: s.Ctx.BlockHeight()}
 	s.App.EndBlocker(s.Ctx, reqEndBlock)
