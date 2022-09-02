@@ -10,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
+	"github.com/tendermint/tendermint/crypto/merkle"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -27,6 +28,9 @@ type simState struct {
 
 	curValidators  mockValidators
 	nextValidators mockValidators
+
+	// block tx result data storage, reset after each block
+	Data [][]byte
 
 	// TODO: Figure out why we need this???
 	// Probably should get removed
@@ -213,6 +217,13 @@ func (simState *simState) constructHeaderHashes(proposerPubKey crypto.PubKey) {
 
 	// TODO: We don't fill out the nextValidatorSet, we should eventually but not priority
 	// It is unclear to me if this means we need to choose a proposer prior to that block occurring
+
+	// hash all the collected tx results and add as the block header data hash
+	dataHash := merkle.HashFromByteSlices(simState.Data)
+	simState.header.DataHash = dataHash
+
+	// reset simState data to blank
+	simState.Data = [][]byte{}
 
 	// generate an apphash from this header and set this value
 	simState.header.AppHash = realHeader.Hash()

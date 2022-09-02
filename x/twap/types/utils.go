@@ -10,16 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/osmoutils"
 )
 
-// mustGetSpotPrice returns the spot price for the given pool id, and denom0 in terms of denom1.
-// Panics if the pool state is misconfigured, which will halt any tx that interacts with this.
-func MustGetSpotPrice(k AmmInterface, ctx sdk.Context, poolId uint64, baseAssetDenom string, quoteAssetDenom string) sdk.Dec {
-	sp, err := k.CalculateSpotPrice(ctx, poolId, baseAssetDenom, quoteAssetDenom)
-	if err != nil {
-		panic(err)
-	}
-	return sp
-}
-
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
 // (X, Y), X >= Y.
 // The pair (X,Y) should only appear once in the list
