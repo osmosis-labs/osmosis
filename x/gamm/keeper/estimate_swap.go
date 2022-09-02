@@ -181,23 +181,3 @@ func (k Keeper) estimateSwapExactAmountOut(
 
 	return pool, tokenIn, nil
 }
-
-func (k Keeper) EstimateUpdatePoolForSwap(
-	ctx sdk.Context,
-	pool types.PoolI,
-	tokenIn sdk.Coin,
-	tokenOut sdk.Coin,
-) error {
-	tokensIn := sdk.Coins{tokenIn}
-	tokensOut := sdk.Coins{tokenOut}
-
-	err := k.setPool(ctx, pool)
-	if err != nil {
-		return err
-	}
-
-	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
-	k.RecordTotalLiquidityDecrease(ctx, tokensOut)
-
-	return err
-}
