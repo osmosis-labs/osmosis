@@ -128,9 +128,8 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainANode.CreatePool("pool1A.json", initialization.ValidatorWalletName)
 	chainBNode.CreatePool("pool1B.json", initialization.ValidatorWalletName)
 
-	// enable superfluid assets on both chains
+	// enable superfluid assets on chainA
 	chainA.EnableSuperfluidAsset("gamm/pool/1")
-	chainB.EnableSuperfluidAsset("gamm/pool/1")
 
 	// setup wallets and send gamm tokens to these wallets (only chainA)
 	lockupWalletAddrA, lockupWalletSuperfluidAddrA := chainANode.CreateWallet(lockupWallet), chainANode.CreateWallet(lockupWalletSuperfluid)
