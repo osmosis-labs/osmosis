@@ -28,7 +28,7 @@ var (
 	mostRecentTWAPsNoSeparator         = "recent_twap"
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
-	expectedKeySeparatedParts         = 5
+	expectedKeySeparatedParts          = 5
 
 	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
 	// keySeparatorPlusOne is used for creating prefixes for the key end in iterators
@@ -64,8 +64,8 @@ func FormatHistoricalPoolIndexTimePrefix(poolId uint64, accumulatorWriteTime tim
 func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
-	if len(s) != expectedLenOfKeySeparators {
-		panic(KeySeparatorLengthError{ExpectedLength: expectedLenOfKeySeparators, ActualLength: len(s)})
+	if len(s) != expectedKeySeparatedParts {
+		panic(KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)})
 	}
 	if s[0] != historicalTWAPTimeIndexNoSeparator {
 		panic(UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]})
@@ -80,8 +80,8 @@ func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
 func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
-	if len(s) != expectedLenOfKeySeparators {
-		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedLenOfKeySeparators, ActualLength: len(s)}
+	if len(s) != expectedKeySeparatedParts {
+		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)}
 	}
 	if s[0] != historicalTWAPPoolIndexNoSeparator {
 		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
