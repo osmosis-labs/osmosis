@@ -365,7 +365,6 @@ func (suite *KeeperTestSuite) TestSpotPriceOverflow() {
 			keeperSpotPrice, keeperErr := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, tc.baseAssetDenom, tc.quoteAssetDenom)
 			if tc.overflows {
 				suite.Require().NoError(poolErr)
-				// TODO: We currently fail at internal precision calculation limits first.
 				suite.Require().ErrorIs(keeperErr, types.ErrSpotPriceOverflow)
 				suite.Require().Error(keeperErr)
 				suite.Require().Equal(types.MaxSpotPrice, keeperSpotPrice)
