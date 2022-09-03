@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
@@ -143,6 +145,23 @@ func PrintStats(db dbm.DB) {
 	fmt.Println("\nLevelDB Stats")
 	fmt.Println(db.Stats()["leveldb.stats"])
 	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+}
+
+func baseappOptionsFromConfig(config Config) []func(*baseapp.BaseApp) {
+	// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+	// an IAVLStore for faster simulation speed.
+	fauxMerkleModeOpt := func(bapp *baseapp.BaseApp) {
+		if config.ExecutionDbConfig.UseMerkleTree {
+			bapp.SetFauxMerkleMode()
+		}
+	}
+	return []func(*baseapp.BaseApp){interBlockCacheOpt(), fauxMerkleModeOpt}
+}
+
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
+// inter-block write-through cache.
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 type Config struct {

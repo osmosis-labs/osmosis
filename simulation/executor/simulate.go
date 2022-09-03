@@ -7,11 +7,14 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"syscall"
 	"testing"
 	"time"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	_ "github.com/mattn/go-sqlite3"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -24,28 +27,6 @@ import (
 )
 
 const AverageBlockTime = 6 * time.Second
-
-// SimulateFromSeedLegacy tests an application by running the provided
-// operations, testing the provided invariants, but using the provided config.Seed.
-// TODO: Restore SimulateFromSeedLegacy by adding a wrapper that can take in
-// func SimulateFromSeedLegacy(
-// 	tb testing.TB,
-// 	w io.Writer,
-// 	app *baseapp.BaseApp,
-// 	appStateFn simulation.AppStateFn,
-// 	randAccFn simulation.RandomAccountFn,
-// 	ops legacysimexec.WeightedOperations,
-// 	blockedAddrs map[string]bool,
-// 	config simulation.Config,
-// 	cdc codec.JSONCodec,
-// ) (stopEarly bool, exportedParams Params, err error) {
-// 	actions := simtypes.ActionsFromWeightedOperations(ops)
-// 	initFns := simtypes.InitFunctions{
-// 		RandomAccountFn:   simtypes.WrapRandAccFnForResampling(randAccFn, blockedAddrs),
-// 		AppInitialStateFn: appStateFn,
-// 	}
-// 	return SimulateFromSeed(tb, w, app, initFns, actions, config, cdc)
-// }
 
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided config.Seed.
@@ -60,15 +41,19 @@ const AverageBlockTime = 6 * time.Second
 func SimulateFromSeed(
 	tb testing.TB,
 	w io.Writer,
-	app simtypes.App,
+	appCreator simtypes.AppCreator,
 	initFunctions InitFunctions,
-	actions []simtypes.ActionsWithMetadata,
 	config Config,
-) (stopEarly bool, err error) {
+) (lastCommitId storetypes.CommitID, stopEarly bool, err error) {
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	// TODO: Understand exit pattern, this is so screwed up. Then delete ^
 
+	legacyInvariantPeriod := uint(10) // TODO: Make a better answer of what to do here, at minimum put into config
+	app := appCreator(simulationHomeDir(), legacyInvariantPeriod, baseappOptionsFromConfig(config)...)
+	actions := app.SimulationManager().Actions(config.Seed, app.AppCodec())
+
 	// Set up sql table
+	// TODO: Move all SQL stuff to its own file/package, should not be here.
 	var db *sql.DB
 	if config.ExportConfig.WriteStatsToDB {
 		db, err = sql.Open("sqlite3", "./blocks.db")
@@ -90,7 +75,7 @@ func SimulateFromSeed(
 	// Encapsulate the bizarre initialization logic that must be cleaned.
 	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config)
 	if err != nil {
-		return true, err
+		return storetypes.CommitID{}, true, err
 	}
 
 	// Setup code to catch SIGTERM's
@@ -125,7 +110,16 @@ func SimulateFromSeed(
 	stopEarly = simState.SimulateAllBlocks(w, simCtx, blockSimulator)
 
 	simState.eventStats.exportEvents(config.ExportConfig.ExportStatsPath, w)
-	return stopEarly, nil
+	return storetypes.CommitID{}, stopEarly, nil
+}
+
+func simulationHomeDir() string {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+
+	return filepath.Join(userHomeDir, ".osmosis_simulation")
 }
 
 // The goal of this function is to group the extremely badly abstracted genesis logic,
@@ -150,7 +144,8 @@ func cursedInitializationLogic(
 		return nil, nil, simParams, fmt.Errorf("must have greater than zero genesis accounts")
 	}
 
-	validators, genesisTimestamp, accs, res := initChain(r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
+	validators, genesisTimestamp, accs, res := initChain(
+		app.SimulationManager(), r, simParams, accs, app, initFunctions.AppInitialStateFn, config)
 
 	fmt.Printf(
 		"Starting the simulation from time %v (unixtime %v)\n",
@@ -179,6 +174,7 @@ func cursedInitializationLogic(
 
 // initialize the chain for the simulation
 func initChain(
+	simManager *simtypes.Manager,
 	r *rand.Rand,
 	params Params,
 	accounts []simulation.Account,
@@ -187,7 +183,7 @@ func initChain(
 	config *Config,
 ) (mockValidators, time.Time, []simulation.Account, abci.ResponseInitChain) {
 	// TODO: Cleanup the whole config dependency with appStateFn
-	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config.InitializationConfig)
+	appState, accounts, chainID, genesisTimestamp := appStateFn(simManager, r, accounts, config.InitializationConfig)
 	consensusParams := randomConsensusParams(r, appState, app.AppCodec())
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
