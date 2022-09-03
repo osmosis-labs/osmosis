@@ -10,6 +10,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
+// TODO: Setup an sql schema file instead of doing it in-line here
 type statsDb struct {
 	enabled bool
 	db      *sql.DB

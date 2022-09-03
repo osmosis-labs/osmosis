@@ -287,7 +287,6 @@ Comment: %s`,
 	return nil
 }
 
-// nolint: errcheck
 func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (numOpsRan int, err error) {
 	height := int(simState.header.Height)
 	queuedOp, ok := simState.operationQueue[height]

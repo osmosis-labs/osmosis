@@ -164,7 +164,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		}
 	}
 
-	voteInfos := randomVoteInfos(r, params, validators, event)
+	voteInfos := randomVoteInfos(r, params, validators)
 	evidence := randomDoubleSignEvidence(r, params, validators, pastTimes, pastVoteInfos, event, header, voteInfos)
 
 	return abci.RequestBeginBlock{
@@ -176,7 +176,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	}
 }
 
-func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators, event func(route, op, evResult string),
+func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
 ) []abci.VoteInfo {
 	voteInfos := make([]abci.VoteInfo, len(validators))
 
@@ -195,11 +195,7 @@ func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators, 
 			signed = false
 		}
 
-		if signed {
-			event("begin_block", "signing", "signed")
-		} else {
-			event("begin_block", "signing", "missed")
-		}
+		// TODO: Do we want to log any data to statsdb here?
 
 		pubkey, err := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
 		if err != nil {
