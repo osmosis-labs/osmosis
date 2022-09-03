@@ -6,7 +6,7 @@ type SimCallbackFn func(sim *SimCtx, ctx sdk.Context, value interface{}) error
 
 type PubSubManager interface {
 	Subscribe(key string, subName string, callback SimCallbackFn)
-	Publish(ctx sdk.Context, key string, value interface{}) error
+	Publish(sim *SimCtx, ctx sdk.Context, key string, value interface{}) error
 }
 
 type PropertyCheck interface {

@@ -57,7 +57,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 	logger = simlogger.NewSimLogger(logger)
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
-	config.ParamsFile = "params.json"
+	config.InitializationConfig.ParamsFile = "params.json"
 
 	defer func() {
 		db.Close()
@@ -109,7 +109,7 @@ func fullAppSimulation(tb testing.TB, is_testing bool) {
 		tb.Fatal(simErr)
 	}
 
-	if config.Commit {
+	if config.ExecutionDbConfig.UseMerkleTree {
 		osmosim.PrintStats(db)
 	}
 }
@@ -128,17 +128,16 @@ func TestAppStateDeterminism(t *testing.T) {
 	// }
 
 	config := osmosim.NewConfigFromFlags()
-	config.ExportParamsPath = ""
+	config.ExportConfig.ExportParamsPath = ""
 	config.NumBlocks = 50
 	config.BlockSize = 5
 	config.OnOperation = false
 	config.AllInvariants = false
-	config.ChainID = helpers.SimAppChainID
-	config.Commit = true
+	config.InitializationConfig.ChainID = helpers.SimAppChainID
 
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
-	config.ParamsFile = "params.json"
+	config.InitializationConfig.ParamsFile = "params.json"
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5

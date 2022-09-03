@@ -70,7 +70,7 @@ func SimulateFromSeed(
 
 	// Set up sql table
 	var db *sql.DB
-	if config.WriteStatsToDB {
+	if config.ExportConfig.WriteStatsToDB {
 		db, err = sql.Open("sqlite3", "./blocks.db")
 		if err != nil {
 			tb.Fatal(err)
@@ -122,9 +122,9 @@ func SimulateFromSeed(
 		}()
 	}
 
-	stopEarly = simState.SimulateAllBlocks(w, simCtx, blockSimulator, config)
+	stopEarly = simState.SimulateAllBlocks(w, simCtx, blockSimulator)
 
-	simState.eventStats.exportEvents(config.ExportStatsPath, w)
+	simState.eventStats.exportEvents(config.ExportConfig.ExportStatsPath, w)
 	return stopEarly, nil
 }
 
@@ -157,11 +157,11 @@ func cursedInitializationLogic(
 		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix(),
 	)
 
-	simCtx := simtypes.NewSimCtx(r, app, accs, config.ChainID)
+	simCtx := simtypes.NewSimCtx(r, app, accs, config.InitializationConfig.ChainID)
 
 	initialHeader := tmproto.Header{
-		ChainID:         config.ChainID,
-		Height:          int64(config.InitialBlockHeight),
+		ChainID:         config.InitializationConfig.ChainID,
+		Height:          int64(config.InitializationConfig.InitialBlockHeight),
 		Time:            genesisTimestamp,
 		ProposerAddress: validators.randomProposer(r).Address(),
 		AppHash:         res.AppHash,
@@ -170,7 +170,7 @@ func cursedInitializationLogic(
 	// must set version in order to generate hashes
 	initialHeader.Version.Block = 11
 
-	simState := newSimulatorState(simParams, initialHeader, tb, w, validators).WithLogParam(config.Lean)
+	simState := newSimulatorState(simParams, initialHeader, tb, w, validators, *config)
 
 	// TODO: If simulation has a param export path configured, export params here.
 
@@ -187,7 +187,7 @@ func initChain(
 	config *Config,
 ) (mockValidators, time.Time, []simulation.Account, abci.ResponseInitChain) {
 	// TODO: Cleanup the whole config dependency with appStateFn
-	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, *config)
+	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config.InitializationConfig)
 	consensusParams := randomConsensusParams(r, appState, app.AppCodec())
 	req := abci.RequestInitChain{
 		AppStateBytes:   appState,
@@ -201,9 +201,9 @@ func initChain(
 	validators := newMockValidators(r, res.Validators, params)
 
 	// update config
-	config.ChainID = chainID
-	if config.InitialBlockHeight == 0 {
-		config.InitialBlockHeight = 1
+	config.InitializationConfig.ChainID = chainID
+	if config.InitializationConfig.InitialBlockHeight == 0 {
+		config.InitializationConfig.InitialBlockHeight = 1
 	}
 
 	return validators, genesisTimestamp, accounts, res
@@ -285,7 +285,7 @@ func (simState *simState) logActionResult(
 	header tmproto.Header, actionIndex int, config Config, blocksize int,
 	opMsg simulation.OperationMsg, resultData []byte, db *sql.DB, actionErr error) {
 	opMsg.LogEvent(simState.eventStats.Tally)
-	if config.WriteStatsToDB {
+	if config.ExportConfig.WriteStatsToDB {
 		appHash := fmt.Sprintf("%X", simState.header.AppHash)
 		resData := fmt.Sprintf("%X", resultData)
 		sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg, resData, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10);"
@@ -295,7 +295,7 @@ func (simState *simState) logActionResult(
 		}
 	}
 
-	if !simState.leanLogs || opMsg.OK {
+	if !simState.config.Lean || opMsg.OK {
 		simState.logWriter.AddEntry(MsgEntry(header.Height, int64(actionIndex), opMsg))
 	}
 
@@ -327,7 +327,7 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 		opMsg, _, err := queuedOp[i](r, simCtx.BaseApp(), ctx, simCtx.Accounts, simCtx.ChainID())
 		opMsg.LogEvent(simState.eventStats.Tally)
 
-		if !simState.leanLogs || opMsg.OK {
+		if !simState.config.Lean || opMsg.OK {
 			simState.logWriter.AddEntry((QueuedMsgEntry(int64(height), opMsg)))
 		}
 

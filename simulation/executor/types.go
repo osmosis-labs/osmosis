@@ -9,7 +9,7 @@ import (
 )
 
 // AppStateFn returns the app state json bytes and the genesis accounts
-type AppStateFn func(r *rand.Rand, accs []simtypes.Account, config Config) (
+type AppStateFn func(r *rand.Rand, accs []simtypes.Account, config InitializationConfig) (
 	appState json.RawMessage, accounts []simtypes.Account, chainId string, genesisTimestamp time.Time,
 )
 

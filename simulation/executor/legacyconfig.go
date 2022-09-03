@@ -57,7 +57,6 @@ func GetSimulatorFlags() {
 	flag.IntVar(&FlagNumBlocksValue, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
 	flag.IntVar(&FlagBlockSizeValue, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&FlagLeanValue, "Lean", false, "lean simulation log output")
-	flag.BoolVar(&FlagCommitValue, "Commit", false, "have the simulation commit")
 	flag.BoolVar(&FlagOnOperationValue, "SimulateEveryOperation", false, "run slow invariants every operation")
 	flag.BoolVar(&FlagAllInvariantsValue, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
 	flag.BoolVar(&FlagWriteStatsToDB, "WriteStatsToDB", false, "write stats to a local sqlite3 database")
@@ -72,21 +71,39 @@ func GetSimulatorFlags() {
 // NewConfigFromFlags creates a simulation from the retrieved values of the flags.
 func NewConfigFromFlags() Config {
 	return Config{
-		GenesisFile:        FlagGenesisFileValue,
-		ParamsFile:         FlagParamsFileValue,
+		InitializationConfig: NewInitializationConfigFromFlags(),
+		ExportConfig:         NewExportConfigFromFlags(),
+		ExecutionDbConfig:    NewExecutionDbConfigFromFlags(),
+		Seed:                 FlagSeedValue,
+		NumBlocks:            FlagNumBlocksValue,
+		BlockSize:            FlagBlockSizeValue,
+		Lean:                 FlagLeanValue,
+		OnOperation:          FlagOnOperationValue,
+		AllInvariants:        FlagAllInvariantsValue,
+	}
+}
+
+func NewExportConfigFromFlags() ExportConfig {
+	return ExportConfig{
 		ExportParamsPath:   FlagExportParamsPathValue,
 		ExportParamsHeight: FlagExportParamsHeightValue,
 		ExportStatePath:    FlagExportStatePathValue,
 		ExportStatsPath:    FlagExportStatsPathValue,
-		Seed:               FlagSeedValue,
-		InitialBlockHeight: FlagInitialBlockHeightValue,
-		NumBlocks:          FlagNumBlocksValue,
-		BlockSize:          FlagBlockSizeValue,
-		Lean:               FlagLeanValue,
-		Commit:             FlagCommitValue,
-		OnOperation:        FlagOnOperationValue,
-		AllInvariants:      FlagAllInvariantsValue,
 		WriteStatsToDB:     FlagWriteStatsToDB,
+	}
+}
+
+func NewInitializationConfigFromFlags() InitializationConfig {
+	return InitializationConfig{
+		GenesisFile:        FlagGenesisFileValue,
+		ParamsFile:         FlagParamsFileValue,
+		InitialBlockHeight: FlagInitialBlockHeightValue,
+	}
+}
+
+func NewExecutionDbConfigFromFlags() ExecutionDbConfig {
+	return ExecutionDbConfig{
+		UseMerkleTree: true,
 	}
 }
 
@@ -99,7 +116,7 @@ func SetupSimulation(dirPrefix, dbName string) (Config, dbm.DB, string, log.Logg
 	}
 
 	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
+	config.InitializationConfig.ChainID = helpers.SimAppChainID
 
 	var logger log.Logger
 	if FlagVerboseValue {
@@ -129,24 +146,37 @@ func PrintStats(db dbm.DB) {
 }
 
 type Config struct {
-	GenesisFile string // custom simulation genesis file; cannot be used with params file
-	ParamsFile  string // custom simulation params file which overrides any random params; cannot be used with genesis
+	InitializationConfig InitializationConfig
+	ExportConfig         ExportConfig
+	ExecutionDbConfig    ExecutionDbConfig
 
+	Seed int64 // simulation random seed
+
+	NumBlocks int // number of new blocks to simulate from the initial block height
+	BlockSize int // operations per block
+
+	Lean bool // lean simulation log output
+
+	OnOperation   bool // run slow invariants every operation
+	AllInvariants bool // print all failed invariants if a broken invariant is found
+}
+
+// Config for how to initialize the simulator state
+type InitializationConfig struct {
+	GenesisFile        string // custom simulation genesis file; cannot be used with params file
+	ParamsFile         string // custom simulation params file which overrides any random params; cannot be used with genesis
+	InitialBlockHeight int    // initial block to start the simulation
+	ChainID            string // chain-id used on the simulation
+}
+
+type ExportConfig struct {
 	ExportParamsPath   string // custom file path to save the exported params JSON
 	ExportParamsHeight int    // height to which export the randomly generated params
 	ExportStatePath    string // custom file path to save the exported app state JSON
 	ExportStatsPath    string // custom file path to save the exported simulation statistics JSON
+	WriteStatsToDB     bool
+}
 
-	Seed               int64  // simulation random seed
-	InitialBlockHeight int    // initial block to start the simulation
-	NumBlocks          int    // number of new blocks to simulate from the initial block height
-	BlockSize          int    // operations per block
-	ChainID            string // chain-id used on the simulation
-
-	Lean   bool // lean simulation log output
-	Commit bool // have the simulation commit
-
-	OnOperation    bool // run slow invariants every operation
-	AllInvariants  bool // print all failed invariants if a broken invariant is found
-	WriteStatsToDB bool
+type ExecutionDbConfig struct {
+	UseMerkleTree bool // Use merkle tree underneath, vs using a "fake" merkle tree
 }
