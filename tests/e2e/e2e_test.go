@@ -126,32 +126,38 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
-// TestAddToExistingLockPostUpgrade tests lockups to both regular and superfluid locks.
-// Specifically, we ensure addToExistingLock works for both preupgrade and postupgrade locks.
+// TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
 func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
+	}
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
-	if !s.skipUpgrade {
-		// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
-		// we use the hardcoded gamm/pool/1 as this was the one that was created pre upgrade
-		lockupWalletAddrA, lockupWalletSuperfluidAddrA := chainANode.GetWallet("lockup-wallet"), chainANode.GetWallet("lockup-wallet-superfluid")
-		chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletAddrA)
-		chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletSuperfluidAddrA)
-	}
+	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
+	// we use the hardcoded gamm/pool/1 and these specific wallet names to match what was created pre upgrade
+	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.GetWallet("lockup-wallet"), chainANode.GetWallet("lockup-wallet-superfluid")
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletAddr)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletSuperfluidAddr)
+}
 
+// TestAddToExistingLock tests lockups to both regular and superfluid locks.
+func (s *IntegrationTestSuite) TestAddToExistingLock() {
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
 	// ensure we can add to new locks and superfluid locks
 	// create pool and enable superfluid assets
 	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
 	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
 
-	// setup wallets and send gamm tokens to these wallets on chainB
-	lockupWalletAddrB, lockupWalletSuperfluidAddrB := chainANode.CreateWallet("TestAddToExistingLockPostUpgrade"), chainANode.CreateWallet("TestAddToExistingLockPostUpgradeSuperfluid")
-	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletAddrB)
-	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddrB)
+	// setup wallets and send gamm tokens to these wallets on chainA
+	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.CreateWallet("TestAddToExistingLock"), chainANode.CreateWallet("TestAddToExistingLockSuperfluid")
+	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletAddr)
+	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddr)
 
-	// ensure we can add to new locks and superfluid locks on chainB
-	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddrB, lockupWalletSuperfluidAddrB)
+	// ensure we can add to new locks and superfluid locks on chainA
+	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {
