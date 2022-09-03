@@ -246,9 +246,10 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			opMsg.Route = action.ModuleName
 			cleanup()
 
-			err = simState.logActionResult(header, i, config, blocksize, opMsg, resultData, stats, err)
+			err = simState.logActionResult(header, i, opMsg, resultData, stats, err)
 			if err != nil {
-				return opCount, err
+				return opCount, fmt.Errorf("error on block  %d/%d, operation (%d/%d): %w",
+					header.Height, config.NumBlocks, i, blocksize, err)
 			}
 
 			simState.queueOperations(futureOps)
@@ -265,7 +266,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 
 // This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
 func (simState *simState) logActionResult(
-	header tmproto.Header, actionIndex int, config Config, blocksize int,
+	header tmproto.Header, actionIndex int,
 	opMsg simulation.OperationMsg, resultData []byte, stats statsDb, actionErr error) error {
 	opMsg.LogEvent(simState.eventStats.Tally)
 	err := stats.logActionResult(header, opMsg, resultData)
@@ -279,14 +280,14 @@ func (simState *simState) logActionResult(
 
 	if actionErr != nil {
 		simState.logWriter.PrintLogs()
-		return fmt.Errorf(`error on block  %d/%d, operation (%d/%d) from x/%s:
+		return fmt.Errorf(`error from x/%s:
 %v
-Comment: %s`,
-			header.Height, config.NumBlocks, actionIndex, blocksize, opMsg.Route, actionErr, opMsg.Comment)
+Comment: %s`, opMsg.Route, actionErr, opMsg.Comment)
 	}
 	return nil
 }
 
+// TODO: We need to cleanup queued operations, to instead make it queued action + have code re-use with prior code
 func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (numOpsRan int, err error) {
 	height := int(simState.header.Height)
 	queuedOp, ok := simState.operationQueue[height]
