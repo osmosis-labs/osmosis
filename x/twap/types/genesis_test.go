@@ -218,15 +218,6 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid p1 last spot price: negative": {
-			twapRecord: func() TwapRecord {
-				r := baseRecord
-				r.P1LastSpotPrice = sdk.OneDec().Neg()
-				return r
-			}(),
-
-			expectedErr: true,
-		},
 		"invalid p0 last spot price: nil": {
 			twapRecord: func() TwapRecord {
 				r := TwapRecord{
@@ -244,19 +235,27 @@ func TestTWAPRecord_Validate(t *testing.T) {
 
 			expectedErr: true,
 		},
-		"invalid p0 arithmetic accum: negative": {
+		"invalid p1 last spot price: nil": {
 			twapRecord: func() TwapRecord {
-				r := baseRecord
-				r.P0ArithmeticTwapAccumulator = sdk.OneDec().Neg()
+				r := TwapRecord{
+					PoolId:                      basePoolId,
+					Asset0Denom:                 denom0,
+					Asset1Denom:                 denom1,
+					Height:                      3,
+					Time:                        tPlusOne.Add(time.Second),
+					P0LastSpotPrice:             sdk.OneDec(),
+					P0ArithmeticTwapAccumulator: sdk.OneDec(),
+					P1ArithmeticTwapAccumulator: sdk.OneDec(),
+				}
 				return r
 			}(),
 
 			expectedErr: true,
 		},
-		"invalid p1 arithmetic accum: negative": {
+		"invalid p0 arithmetic accum: negative": {
 			twapRecord: func() TwapRecord {
 				r := baseRecord
-				r.P1ArithmeticTwapAccumulator = sdk.OneDec().Neg()
+				r.P0ArithmeticTwapAccumulator = sdk.OneDec().Neg()
 				return r
 			}(),
 
@@ -300,6 +299,7 @@ func TestTWAPRecord_Validate(t *testing.T) {
 	testCasesSym := map[string]testcase{}
 	for k, tc := range testCases {
 		if tc.twapRecord.P0LastSpotPrice.IsNil() ||
+			tc.twapRecord.P1LastSpotPrice.IsNil() ||
 			tc.twapRecord.P0ArithmeticTwapAccumulator.IsNil() ||
 			tc.twapRecord.P1ArithmeticTwapAccumulator.IsNil() {
 			testCasesSym[k] = tc
