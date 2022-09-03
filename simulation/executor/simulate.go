@@ -79,23 +79,22 @@ func SimulateFromSeed(
 
 	if !testingMode {
 		b.ResetTimer()
-	} else {
-		// recover logs in case of panic
-		defer func() {
-			if r := recover(); r != nil {
-				// TODO: Come back and cleanup the entire panic recovery logging.
-				// printPanicRecoveryError(r)
-				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d\n", simState.header.Height)
-				simState.logWriter.PrintLogs()
-				panic(r)
-			}
-		}()
 	}
+	// recover logs in case of panic
+	defer func() {
+		if r := recover(); r != nil {
+			// TODO: Come back and cleanup the entire panic recovery logging.
+			// printPanicRecoveryError(r)
+			_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d\n", simState.header.Height)
+			simState.logWriter.PrintLogs()
+			panic(r)
+		}
+	}()
 
-	stopEarly = simState.SimulateAllBlocks(w, simCtx, blockSimulator)
+	stopEarly, err = simState.SimulateAllBlocks(w, simCtx, blockSimulator)
 
 	simState.eventStats.exportEvents(config.ExportConfig.ExportStatsPath, w)
-	return storetypes.CommitID{}, stopEarly, nil
+	return storetypes.CommitID{}, stopEarly, err
 }
 
 func simulationHomeDir() string {
@@ -209,7 +208,7 @@ func printPanicRecoveryError(recoveryError interface{}) {
 	fmt.Println("stack trace: " + errStackTrace)
 }
 
-type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header) (opCount int)
+type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header) (opCount int, err error)
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
@@ -222,7 +221,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 
 	return func(
 		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,
-	) (opCount int) {
+	) (opCount int, err error) {
 		_, _ = fmt.Fprintf(
 			w, "\rSimulating... block %d/%d, operation 0/%d.",
 			header.Height, config.NumBlocks, blocksize,
@@ -247,7 +246,10 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			opMsg.Route = action.ModuleName
 			cleanup()
 
-			simState.logActionResult(header, i, config, blocksize, opMsg, resultData, stats, err)
+			err = simState.logActionResult(header, i, config, blocksize, opMsg, resultData, stats, err)
+			if err != nil {
+				return opCount, err
+			}
 
 			simState.queueOperations(futureOps)
 
@@ -257,18 +259,18 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			}
 		}
 
-		return blocksize
+		return blocksize, nil
 	}
 }
 
 // This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
 func (simState *simState) logActionResult(
 	header tmproto.Header, actionIndex int, config Config, blocksize int,
-	opMsg simulation.OperationMsg, resultData []byte, stats statsDb, actionErr error) {
+	opMsg simulation.OperationMsg, resultData []byte, stats statsDb, actionErr error) error {
 	opMsg.LogEvent(simState.eventStats.Tally)
 	err := stats.logActionResult(header, opMsg, resultData)
 	if err != nil {
-		simState.tb.Fatal(err)
+		return err
 	}
 
 	if !simState.config.Lean || opMsg.OK {
@@ -277,19 +279,20 @@ func (simState *simState) logActionResult(
 
 	if actionErr != nil {
 		simState.logWriter.PrintLogs()
-		simState.tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
+		return fmt.Errorf(`error on block  %d/%d, operation (%d/%d) from x/%s:
 %v
 Comment: %s`,
 			header.Height, config.NumBlocks, actionIndex, blocksize, opMsg.Route, actionErr, opMsg.Comment)
 	}
+	return nil
 }
 
 // nolint: errcheck
-func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (numOpsRan int) {
+func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (numOpsRan int, err error) {
 	height := int(simState.header.Height)
 	queuedOp, ok := simState.operationQueue[height]
 	if !ok {
-		return 0
+		return 0, nil
 	}
 
 	numOpsRan = len(queuedOp)
@@ -309,14 +312,13 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 
 		if err != nil {
 			simState.logWriter.PrintLogs()
-			simState.tb.Fatalf(`error on block  %d, height queued operation (%d/%d) from x/%s:
+			return 0, fmt.Errorf(`error on block  %d, height queued operation (%d/%d) from x/%s:
 %v
 Comment: %s`,
 				simState.header.Height, i, numOpsRan, opMsg.Route, err, opMsg.Comment)
-			simState.tb.FailNow()
 		}
 	}
 	delete(simState.operationQueue, height)
 
-	return numOpsRan
+	return numOpsRan, nil
 }

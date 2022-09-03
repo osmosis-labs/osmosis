@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
-	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -84,21 +83,20 @@ func (mv mockValidators) randomProposer(r *rand.Rand) crypto.PubKey {
 
 // updateValidators mimics Tendermint's update logic.
 func updateValidators(
-	tb testing.TB,
 	r *rand.Rand,
 	params simulation.Params,
 	current map[string]mockValidator,
 	updates []abci.ValidatorUpdate,
 	// logWriter LogWriter,
 	event func(route, op, evResult string),
-) map[string]mockValidator {
+) (map[string]mockValidator, error) {
 	nextSet := mockValidators(current).Clone()
 	for _, update := range updates {
 		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
 
 		if update.Power == 0 {
 			if _, ok := nextSet[str]; !ok {
-				tb.Fatalf("tried to delete a nonexistent validator: %s", str)
+				return nil, fmt.Errorf("tried to delete a nonexistent validator: %s", str)
 			}
 
 			// logWriter.AddEntry(NewOperationEntry())("kicked", str)
@@ -118,7 +116,7 @@ func updateValidators(
 		}
 	}
 
-	return nextSet
+	return nextSet, nil
 }
 
 // RandomRequestBeginBlock generates a list of signing validators according to
