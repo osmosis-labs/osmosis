@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"database/sql"
 	"fmt"
 	"io"
 	"math/rand"
@@ -16,7 +15,6 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	_ "github.com/mattn/go-sqlite3"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -53,24 +51,11 @@ func SimulateFromSeed(
 	actions := app.SimulationManager().Actions(config.Seed, app.AppCodec())
 
 	// Set up sql table
-	// TODO: Move all SQL stuff to its own file/package, should not be here.
-	var db *sql.DB
-	if config.ExportConfig.WriteStatsToDB {
-		db, err = sql.Open("sqlite3", "./blocks.db")
-		if err != nil {
-			tb.Fatal(err)
-		}
-		defer db.Close()
-		sts := `
-		DROP TABLE IF EXISTS blocks;
-		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT, msg STRING, resData STRING, appHash STRING);
-		`
-		_, err := db.Exec(sts)
-
-		if err != nil {
-			tb.Fatal(err)
-		}
+	statsDb, err := setupStatsDb(config.ExportConfig)
+	if err != nil {
+		tb.Fatal(err)
 	}
+	defer statsDb.cleanup()
 
 	// Encapsulate the bizarre initialization logic that must be cleaned.
 	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config)
@@ -90,7 +75,7 @@ func SimulateFromSeed(
 	}()
 
 	testingMode, _, b := getTestingMode(tb)
-	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config, db)
+	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config, statsDb)
 
 	if !testingMode {
 		b.ResetTimer()
@@ -229,7 +214,7 @@ type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.He
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.ActionsWithMetadata,
-	simState *simState, config Config, db *sql.DB,
+	simState *simState, config Config, stats statsDb,
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
@@ -262,7 +247,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			opMsg.Route = action.ModuleName
 			cleanup()
 
-			simState.logActionResult(header, i, config, blocksize, opMsg, resultData, db, err)
+			simState.logActionResult(header, i, config, blocksize, opMsg, resultData, stats, err)
 
 			simState.queueOperations(futureOps)
 
@@ -279,16 +264,11 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 // This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
 func (simState *simState) logActionResult(
 	header tmproto.Header, actionIndex int, config Config, blocksize int,
-	opMsg simulation.OperationMsg, resultData []byte, db *sql.DB, actionErr error) {
+	opMsg simulation.OperationMsg, resultData []byte, stats statsDb, actionErr error) {
 	opMsg.LogEvent(simState.eventStats.Tally)
-	if config.ExportConfig.WriteStatsToDB {
-		appHash := fmt.Sprintf("%X", simState.header.AppHash)
-		resData := fmt.Sprintf("%X", resultData)
-		sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg, resData, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10);"
-		_, err := db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed, opMsg.Msg, resData, appHash)
-		if err != nil {
-			simState.tb.Fatal(err)
-		}
+	err := stats.logActionResult(header, opMsg, resultData)
+	if err != nil {
+		simState.tb.Fatal(err)
 	}
 
 	if !simState.config.Lean || opMsg.OK {
