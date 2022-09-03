@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
@@ -11,6 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes/simlogger"
 )
 
 // List of available flags for the simulator
@@ -112,32 +115,37 @@ func NewExecutionDbConfigFromFlags() ExecutionDbConfig {
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db intantiation or temp dir creation.
-func SetupSimulation(dirPrefix, dbName string) (Config, dbm.DB, string, log.Logger, bool, error) {
+func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger log.Logger, cleanup func(), err error) {
 	if !FlagEnabledValue {
-		return Config{}, nil, "", nil, true, nil
+		return Config{}, nil, nil, func() {}, nil
 	}
 
 	config := NewConfigFromFlags()
 	config.InitializationConfig.ChainID = helpers.SimAppChainID
 
-	var logger log.Logger
 	if FlagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
 	}
+	logger = simlogger.NewSimLogger(logger)
 
 	dir, err := ioutil.TempDir("", dirPrefix)
 	if err != nil {
-		return Config{}, nil, "", nil, false, err
+		return Config{}, nil, nil, func() {}, err
 	}
 
-	db, err := sdk.NewLevelDB(dbName, dir)
+	db, err = sdk.NewLevelDB(dbName, dir)
 	if err != nil {
-		return Config{}, nil, "", nil, false, err
+		return Config{}, nil, nil, func() {}, err
 	}
 
-	return config, db, dir, logger, false, nil
+	cleanup = func() {
+		db.Close()
+		err = os.RemoveAll(dir)
+	}
+
+	return config, db, logger, cleanup, nil
 }
 
 // PrintStats prints the corresponding statistics from the app DB.

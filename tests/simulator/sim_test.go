@@ -10,10 +10,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v11/app"
-
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
 
 	osmosim "github.com/osmosis-labs/osmosis/v11/simulation/executor"
 	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes/simlogger"
@@ -48,35 +45,22 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func fullAppSimulation(tb testing.TB, is_testing bool) {
-	config, db, dir, logger, _, err := osmosim.SetupSimulation("goleveldb-app-sim", "Simulation")
+	config, db, logger, cleanup, err := osmosim.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
 	}
-	logger = simlogger.NewSimLogger(logger)
+	defer cleanup()
 	// This file is needed to provide the correct path
 	// to reflect.wasm test file needed for wasmd simulation testing.
 	config.InitializationConfig.ParamsFile = "params.json"
-	config.ExecutionDbConfig.UseMerkleTree = false
-
-	defer func() {
-		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			tb.Fatal(err)
-		}
-	}()
-
-	initFns := osmosim.InitFunctions{
-		RandomAccountFn:   osmosim.WrapRandAccFnForResampling(simulation.RandomAccounts, app.ModuleAccountAddrs()),
-		AppInitialStateFn: AppStateFn(),
-	}
+	config.ExecutionDbConfig.UseMerkleTree = !is_testing
 
 	// Run randomized simulation:
 	_, _, simErr := osmosim.SimulateFromSeed(
 		tb,
 		os.Stdout,
 		OsmosisAppCreator(logger, db),
-		initFns,
+		OsmosisInitFns,
 		config,
 	)
 
@@ -116,14 +100,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		config.Seed = rand.Int63()
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
-			var logger log.Logger
-			logger = simlogger.NewSimLogger(log.TestingLogger())
-			// if osmosim.FlagVerboseValue {
-			// 	logger = log.TestingLogger()
-			// } else {
-			// 	logger = log.NewNopLogger()
-			// }
-
+			logger := simlogger.NewSimLogger(log.TestingLogger())
 			db := dbm.NewMemDB()
 
 			fmt.Printf(
@@ -131,17 +108,12 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			initFns := osmosim.InitFunctions{
-				RandomAccountFn:   osmosim.WrapRandAccFnForResampling(simulation.RandomAccounts, app.ModuleAccountAddrs()),
-				AppInitialStateFn: AppStateFn(),
-			}
-
 			// Run randomized simulation:
 			lastCommitId, _, simErr := osmosim.SimulateFromSeed(
 				t,
 				os.Stdout,
 				OsmosisAppCreator(logger, db),
-				initFns,
+				OsmosisInitFns,
 				config,
 			)
 
