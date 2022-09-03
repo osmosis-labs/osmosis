@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"golang.org/x/exp/maps"
 
 	markov "github.com/osmosis-labs/osmosis/v11/simulation/simtypes/transitionmatrix"
@@ -79,6 +80,37 @@ func (mv mockValidators) randomProposer(r *rand.Rand) crypto.PubKey {
 	}
 
 	return pk
+}
+
+func (mv mockValidators) toTmProtoValidators(proposerPubKey crypto.PubKey) (tmtypes.ValidatorSet, error) {
+	var tmProtoValSet tmproto.ValidatorSet
+	var tmTypesValSet *tmtypes.ValidatorSet
+	// iterate through current validators and add them to the TM ValidatorSet struct
+	for _, key := range mv.getKeys() {
+		var validator tmproto.Validator
+		mapVal := mv[key]
+		validator.PubKey = mapVal.val.PubKey
+		currentPubKey, err := cryptoenc.PubKeyFromProto(mapVal.val.PubKey)
+		if err != nil {
+			return *tmTypesValSet, err
+		}
+		validator.Address = currentPubKey.Address()
+		tmProtoValSet.Validators = append(tmProtoValSet.Validators, &validator)
+	}
+
+	// set the proposer chosen earlier as the validator set block proposer
+	var proposerVal tmtypes.Validator
+	proposerVal.PubKey = proposerPubKey
+	proposerVal.Address = proposerPubKey.Address()
+	blockProposer, err := proposerVal.ToProto()
+	if err != nil {
+		return *tmTypesValSet, err
+	}
+	tmProtoValSet.Proposer = blockProposer
+
+	// create a validatorSet type from the tmproto created earlier
+	tmTypesValSet, err = tmtypes.ValidatorSetFromProto(&tmProtoValSet)
+	return *tmTypesValSet, err
 }
 
 // updateValidators mimics Tendermint's update logic.

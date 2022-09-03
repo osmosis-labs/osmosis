@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -178,38 +177,13 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 }
 
 func (simState *simState) constructHeaderHashes(proposerPubKey crypto.PubKey) error {
-	var currentValSet tmproto.ValidatorSet
-	// iterate through current validators and add them to the TM ValidatorSet struct
-	for _, key := range simState.curValidators.getKeys() {
-		var validator tmproto.Validator
-		mapVal := simState.curValidators[key]
-		validator.PubKey = mapVal.val.PubKey
-		currentPubKey, err := cryptoenc.PubKeyFromProto(mapVal.val.PubKey)
-		if err != nil {
-			return err
-		}
-		validator.Address = currentPubKey.Address()
-		currentValSet.Validators = append(currentValSet.Validators, &validator)
-	}
-
-	// set the proposer chosen earlier as the validator set block proposer
-	var proposerVal tmtypes.Validator
-	proposerVal.PubKey = proposerPubKey
-	proposerVal.Address = proposerPubKey.Address()
-	blockProposer, err := proposerVal.ToProto()
-	if err != nil {
-		return err
-	}
-	currentValSet.Proposer = blockProposer
-
-	// create a validatorSet type from the tmproto created earlier
-	realValSet, err := tmtypes.ValidatorSetFromProto(&currentValSet)
+	currentValSet, err := simState.curValidators.toTmProtoValidators(proposerPubKey)
 	if err != nil {
 		return err
 	}
 
 	// generate a hash from the validatorSet type and set it to the validators hash
-	simState.header.ValidatorsHash = realValSet.Hash()
+	simState.header.ValidatorsHash = currentValSet.Hash()
 
 	// create a header type from the tmproto
 	realHeader, err := tmtypes.HeaderFromProto(&simState.header)
