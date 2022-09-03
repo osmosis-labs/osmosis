@@ -6,6 +6,7 @@ LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
+E2E_UPGRADE_VERSION := "v12"
 
 export GO111MODULE = on
 
@@ -275,19 +276,19 @@ test-sim-bench:
 # manually.
 # Utilizes Go cache.
 test-e2e: e2e-setup
-	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" OSMOSIS_E2E_DEBUG_LOG=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
 test-e2e-debug: e2e-setup
-	@VERSION=$(VERSION) OSMOSIS_E2E_UPGRADE_VERSION="v12" OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_SKIP_CLEANUP=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
+	@VERSION=$(VERSION) OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) OSMOSIS_E2E_SKIP_CLEANUP=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
 
 # test-e2e-short runs the e2e test with only short tests.
 # Does not delete any of the containers after running.
 # Deletes any existing containers before running.
 # Does not use Go cache.
 test-e2e-short: e2e-setup
-	@VERSION=$(VERSION) OSMOSIS_E2E_SKIP_UPGRADE=True OSMOSIS_E2E_SKIP_IBC=True OSMOSIS_E2E_SKIP_STATE_SYNC=True OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_SKIP_CLEANUP=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
+	@VERSION=$(VERSION) OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_SKIP_UPGRADE=True OSMOSIS_E2E_SKIP_IBC=True OSMOSIS_E2E_SKIP_STATE_SYNC=True OSMOSIS_E2E_SKIP_CLEANUP=True go test -tags e2e -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
 
 test-mutation:
 	@bash scripts/mutation-test.sh $(MODULES)
