@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
@@ -316,6 +317,67 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 		} else {
 			suite.Require().Error(err, "test: %v", test.name)
 		}
+	}
+}
+
+// This test creates several pools, and tests that:
+// the condition is in a case where the balancer return value returns an overflowing value
+// the SpotPrice query does not
+func (suite *KeeperTestSuite) TestSpotPriceOverflow() {
+	denomA := "denomA"
+	denomB := "denomB"
+	tests := map[string]struct {
+		poolLiquidity   sdk.Coins
+		poolWeights     []int64
+		quoteAssetDenom string
+		baseAssetDenom  string
+		overflows       bool
+		panics          bool
+	}{
+		"uniV2marginalOverflow": {
+			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, types.MaxSpotPrice.TruncateInt().Add(sdk.OneInt())),
+				sdk.NewCoin(denomB, sdk.OneInt())),
+			poolWeights:     []int64{1, 1},
+			quoteAssetDenom: denomB,
+			baseAssetDenom:  denomA,
+			overflows:       true,
+		},
+		"uniV2 internal error": {
+			poolLiquidity: sdk.NewCoins(sdk.NewCoin(denomA, sdk.NewDec(2).Power(250).TruncateInt()),
+				sdk.NewCoin(denomB, sdk.OneInt())),
+			poolWeights:     []int64{1, 1 << 19},
+			quoteAssetDenom: denomB,
+			baseAssetDenom:  denomA,
+			panics:          true,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			poolId := suite.PrepareBalancerPoolWithCoinsAndWeights(tc.poolLiquidity, tc.poolWeights)
+			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
+			suite.Require().NoError(err)
+			var poolSpotPrice sdk.Dec
+			var poolErr error
+			osmoassert.ConditionalPanic(suite.T(), tc.panics, func() {
+				poolSpotPrice, poolErr = pool.SpotPrice(suite.Ctx, tc.baseAssetDenom, tc.quoteAssetDenom)
+			})
+			keeperSpotPrice, keeperErr := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx, poolId, tc.baseAssetDenom, tc.quoteAssetDenom)
+			if tc.overflows {
+				suite.Require().NoError(poolErr)
+				suite.Require().ErrorIs(keeperErr, types.ErrSpotPriceOverflow)
+				suite.Require().Error(keeperErr)
+				suite.Require().Equal(types.MaxSpotPrice, keeperSpotPrice)
+			} else if tc.panics {
+				suite.Require().ErrorIs(keeperErr, types.ErrSpotPriceInternal)
+				suite.Require().Error(keeperErr)
+				suite.Require().Equal(sdk.Dec{}, keeperSpotPrice)
+			} else {
+				suite.Require().NoError(poolErr)
+				suite.Require().NoError(keeperErr)
+				suite.Require().Equal(poolSpotPrice, keeperSpotPrice)
+			}
+		})
 	}
 }
 
