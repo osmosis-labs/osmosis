@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source $(dirname $0)/common.sh
+
 # check_if_exists returns 1 if an "osmosis" image exists, 0 otherwise.
 check_if_exists() {
     if [[ "$(docker images -q osmosis 2> /dev/null)" != "" ]]; then
@@ -13,16 +15,15 @@ check_if_exists() {
 # It assummes that the "osmosis" image was specifically tagged with Git SHA at build
 # time. Please see "docker-build-debug" Makefile step for details.
 check_if_up_to_date() {
-    # N.B.: We match all tags but "Debug" and semantic version tags such as "V10". These are the only
-    # tags we support. As a result, the only remaining tag is the Git SHA tag.
-    sha_from_image=$(docker images osmosis --format "{{ title .Tag }}" | awk "!/Debug/ && !/V[0-9-]+/")
+    sha_from_image=$LIST_DOCKER_IMAGE_HASHES
     local_git_sha=$(git rev-parse HEAD)
-    echo "Docker Tag Git SHA: $sha_from_image"
     echo "Local Git Commit SHA: $local_git_sha"
-
-    if [[ "$sha_from_image" == "$local_git_sha" ]]; then
-        return 1
-    fi
+    for cur_image_sha in $sha_from_image; do        
+        echo "Found Docker Tag Git SHA  : $cur_image_sha"
+        if [[ "$cur_image_sha" == "$local_git_sha" ]]; then
+            return 1
+        fi
+    done
     return 0
 }
 
