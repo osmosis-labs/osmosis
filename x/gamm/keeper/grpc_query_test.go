@@ -298,7 +298,7 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountIn() {
 			name: "multi route",
 			req: &types.QuerySwapExactAmountInRequest{
 				PoolId:  poolID,
-				TokenIn: "32895foo",
+				TokenIn: "100000foo",
 				Routes: types.SwapAmountInRoutes{
 					types.SwapAmountInRoute{
 						PoolId:        poolID,
@@ -311,13 +311,13 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountIn() {
 				},
 			},
 			expectErr: false,
-			result:    sdk.NewInt(33),
+			result:    sdk.NewInt(32895),
 		},
 		{
 			name: "one route",
 			req: &types.QuerySwapExactAmountInRequest{
 				PoolId:  poolID,
-				TokenIn: "32895foo",
+				TokenIn: "100000foo",
 				Routes: types.SwapAmountInRoutes{
 					types.SwapAmountInRoute{
 						PoolId:        poolID,
@@ -326,7 +326,7 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountIn() {
 				},
 			},
 			expectErr: false,
-			result:    sdk.NewInt(33),
+			result:    sdk.NewInt(32895),
 		},
 	}
 
@@ -340,6 +340,67 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountIn() {
 			} else {
 				suite.Require().NoError(err, "unexpected error")
 				suite.Require().Equal(tc.result, result.TokenOutAmount)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestEstimateSwapExactAmountOut() {
+	queryClient := suite.queryClient
+	poolID := suite.PrepareBalancerPool()
+
+	testCases := []struct {
+		name      string
+		req       *types.QuerySwapExactAmountOutRequest
+		expectErr bool
+		result    sdk.Int
+	}{
+		{
+			name: "multi route",
+			req: &types.QuerySwapExactAmountOutRequest{
+				PoolId:   poolID,
+				TokenOut: "100000baz",
+				Routes: types.SwapAmountOutRoutes{
+					types.SwapAmountOutRoute{
+						PoolId:       poolID,
+						TokenInDenom: "foo",
+					},
+					types.SwapAmountOutRoute{
+						PoolId:       poolID,
+						TokenInDenom: "bar",
+					},
+				},
+			},
+			expectErr: false,
+			result:    sdk.NewInt(312413),
+		},
+		{
+			name: "one route",
+			req: &types.QuerySwapExactAmountOutRequest{
+				PoolId:   poolID,
+				TokenOut: "100000baz",
+				Routes: types.SwapAmountOutRoutes{
+					types.SwapAmountOutRoute{
+						PoolId:       poolID,
+						TokenInDenom: "foo",
+					},
+				},
+			},
+			expectErr: false,
+			result:    sdk.NewInt(312413),
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			result, err := queryClient.EstimateSwapExactAmountOut(gocontext.Background(), tc.req)
+			if tc.expectErr {
+				suite.Require().Error(err, "expected error")
+			} else {
+				suite.Require().NoError(err, "unexpected error")
+				suite.Require().Equal(tc.result, result.TokenInAmount)
 			}
 		})
 	}
