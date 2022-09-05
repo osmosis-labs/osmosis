@@ -64,6 +64,12 @@ func (s *KeeperTestHelper) Setup() {
 	s.TestAccs = CreateRandomAccounts(3)
 }
 
+func (s *KeeperTestHelper) SetupTestForInitGenesis() {
+	// Setting to True, leads to init genesis not running
+	s.App = app.Setup(true)
+	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{})
+}
+
 func (s *KeeperTestHelper) SetEpochStartTime() {
 	epochsKeeper := s.App.EpochsKeeper
 

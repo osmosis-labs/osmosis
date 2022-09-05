@@ -50,9 +50,10 @@ func TestFormatHistoricalTwapKeys(t *testing.T) {
 			require.Equal(t, tt.wantTimeIndex, string(gotTimeKey))
 			require.Equal(t, tt.wantPoolIndex, string(gotPoolKey))
 
-			parsedTime := ParseTimeFromHistoricalTimeIndexKey(gotTimeKey)
+			parsedTime, err := ParseTimeFromHistoricalTimeIndexKey(gotTimeKey)
+			require.NoError(t, err)
 			require.Equal(t, tt.time, parsedTime)
-			parsedTime, err := ParseTimeFromHistoricalPoolIndexKey(gotPoolKey)
+			parsedTime, err = ParseTimeFromHistoricalPoolIndexKey(gotPoolKey)
 			require.Equal(t, tt.time, parsedTime)
 			require.NoError(t, err)
 

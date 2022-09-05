@@ -325,10 +325,10 @@ func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) 
 }
 
 // createTestRecordsFromTime creates and returns 4 test records in the following order:
-// - at time t - 2 seconds
-// - at time t - 1 seconds
-// - at time t
-// - at time t + 1 seconds
+// - at time t - 2 seconds, with pool id 0
+// - at time t - 1 seconds, with pool id 1
+// - at time t, with pool id 2
+// - at time t + 1 seconds, with pool id 3
 func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) {
 	baseRecord := newEmptyPriceRecord(basePoolId, t, denom0, denom1)
 
@@ -342,6 +342,21 @@ func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, ty
 	tPlus1Record := newEmptyPriceRecord(basePoolId+3, tPlus1, denom0, denom1)
 
 	return tMin2Record, tMin1Record, baseRecord, tPlus1Record
+}
+
+// createTestRecordsFromTimeInPool creates and returns 4 test records in the following order:
+// - at time t - 2 seconds
+// - at time t - 1 seconds
+// - at time t
+// - at time t + 1 seconds
+// all returned records belong to the same pool with poolId
+func (s *TestSuite) createTestRecordsFromTimeInPool(t time.Time, poolId uint64) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) {
+	min2SecRecord, min1SecRecord, baseRecord, plus1SecRecord := s.createTestRecordsFromTime(t)
+	min2SecRecord.PoolId = poolId
+	min1SecRecord.PoolId = poolId
+	baseRecord.PoolId = poolId
+	plus1SecRecord.PoolId = poolId
+	return min2SecRecord, min1SecRecord, baseRecord, plus1SecRecord
 }
 
 func newTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {

@@ -258,8 +258,9 @@ Additionally, there is an ability to disable certain components of the e2e suite
 
 To get started:
 
-- Run `make test-e2e`
-- Inspect the logs of the docker containers and see if something it’s there
+- Run `make test-e2e-debug` for the full e2e test suite.
+- Run `make test-e2e-short` for the short e2e test suite that excludes upgrade, IBC and state-sync tests.
+- Inspect the logs of the docker containers and see if something is there.
 - `docker ps -a #` to list all docker containers
 - Note the container id of the one you want to see the logs
 - And then run `docker logs <CONTAINER_NAME>`  to debug via container logs
