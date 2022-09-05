@@ -148,21 +148,6 @@ func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
 	return response.CurrentEpoch
 }
 
-func (n *NodeConfig) QueryTWAP(identifier string) int64 {
-	// request := epochstypes.QueryCurrentEpochRequest{
-	// 	Identifier: identifier,
-	// }
-	path := "osmosis/epochs/v1beta1/current_epoch"
-
-	bz, err := n.QueryGRPCGateway(path, "identifier", identifier)
-	require.NoError(n.t, err)
-
-	var response epochstypes.QueryCurrentEpochResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
-	require.NoError(n.t, err)
-	return response.CurrentEpoch
-}
-
 // QueryHashFromBlock gets block hash at a specific height. Otherwise, error.
 func (n *NodeConfig) QueryHashFromBlock(height int64) (string, error) {
 	block, err := n.rpcClient.Block(context.Background(), &height)
