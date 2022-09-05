@@ -10,11 +10,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v11/x/superfluid/keeper"
 )
 
 type KeeperTestSuite struct {
-	suite.Suite
+	apptesting.KeeperTestHelper
 
 	ctx     sdk.Context
 	querier keeper.Querier

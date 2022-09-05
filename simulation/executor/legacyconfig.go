@@ -4,11 +4,16 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"os"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes/simlogger"
 )
 
 // List of available flags for the simulator
@@ -57,7 +62,6 @@ func GetSimulatorFlags() {
 	flag.IntVar(&FlagNumBlocksValue, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
 	flag.IntVar(&FlagBlockSizeValue, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&FlagLeanValue, "Lean", false, "lean simulation log output")
-	flag.BoolVar(&FlagCommitValue, "Commit", false, "have the simulation commit")
 	flag.BoolVar(&FlagOnOperationValue, "SimulateEveryOperation", false, "run slow invariants every operation")
 	flag.BoolVar(&FlagAllInvariantsValue, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
 	flag.BoolVar(&FlagWriteStatsToDB, "WriteStatsToDB", false, "write stats to a local sqlite3 database")
@@ -72,53 +76,76 @@ func GetSimulatorFlags() {
 // NewConfigFromFlags creates a simulation from the retrieved values of the flags.
 func NewConfigFromFlags() Config {
 	return Config{
-		GenesisFile:        FlagGenesisFileValue,
-		ParamsFile:         FlagParamsFileValue,
+		InitializationConfig: NewInitializationConfigFromFlags(),
+		ExportConfig:         NewExportConfigFromFlags(),
+		ExecutionDbConfig:    NewExecutionDbConfigFromFlags(),
+		Seed:                 FlagSeedValue,
+		NumBlocks:            FlagNumBlocksValue,
+		BlockSize:            FlagBlockSizeValue,
+		Lean:                 FlagLeanValue,
+		OnOperation:          FlagOnOperationValue,
+		AllInvariants:        FlagAllInvariantsValue,
+	}
+}
+
+func NewExportConfigFromFlags() ExportConfig {
+	return ExportConfig{
 		ExportParamsPath:   FlagExportParamsPathValue,
 		ExportParamsHeight: FlagExportParamsHeightValue,
 		ExportStatePath:    FlagExportStatePathValue,
 		ExportStatsPath:    FlagExportStatsPathValue,
-		Seed:               FlagSeedValue,
-		InitialBlockHeight: FlagInitialBlockHeightValue,
-		NumBlocks:          FlagNumBlocksValue,
-		BlockSize:          FlagBlockSizeValue,
-		Lean:               FlagLeanValue,
-		Commit:             FlagCommitValue,
-		OnOperation:        FlagOnOperationValue,
-		AllInvariants:      FlagAllInvariantsValue,
 		WriteStatsToDB:     FlagWriteStatsToDB,
+	}
+}
+
+func NewInitializationConfigFromFlags() InitializationConfig {
+	return InitializationConfig{
+		GenesisFile:        FlagGenesisFileValue,
+		ParamsFile:         FlagParamsFileValue,
+		InitialBlockHeight: FlagInitialBlockHeightValue,
+	}
+}
+
+func NewExecutionDbConfigFromFlags() ExecutionDbConfig {
+	return ExecutionDbConfig{
+		UseMerkleTree: true,
 	}
 }
 
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db intantiation or temp dir creation.
-func SetupSimulation(dirPrefix, dbName string) (Config, dbm.DB, string, log.Logger, bool, error) {
+func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger log.Logger, cleanup func(), err error) {
 	if !FlagEnabledValue {
-		return Config{}, nil, "", nil, true, nil
+		return Config{}, nil, nil, func() {}, nil
 	}
 
 	config := NewConfigFromFlags()
-	config.ChainID = helpers.SimAppChainID
+	config.InitializationConfig.ChainID = helpers.SimAppChainID
 
-	var logger log.Logger
 	if FlagVerboseValue {
 		logger = log.TestingLogger()
 	} else {
 		logger = log.NewNopLogger()
 	}
+	logger = simlogger.NewSimLogger(logger)
 
 	dir, err := ioutil.TempDir("", dirPrefix)
 	if err != nil {
-		return Config{}, nil, "", nil, false, err
+		return Config{}, nil, nil, func() {}, err
 	}
 
-	db, err := sdk.NewLevelDB(dbName, dir)
+	db, err = sdk.NewLevelDB(dbName, dir)
 	if err != nil {
-		return Config{}, nil, "", nil, false, err
+		return Config{}, nil, nil, func() {}, err
 	}
 
-	return config, db, dir, logger, false, nil
+	cleanup = func() {
+		db.Close()
+		err = os.RemoveAll(dir)
+	}
+
+	return config, db, logger, cleanup, nil
 }
 
 // PrintStats prints the corresponding statistics from the app DB.
@@ -128,25 +155,55 @@ func PrintStats(db dbm.DB) {
 	fmt.Println("LevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 }
 
-type Config struct {
-	GenesisFile string // custom simulation genesis file; cannot be used with params file
-	ParamsFile  string // custom simulation params file which overrides any random params; cannot be used with genesis
+func baseappOptionsFromConfig(config Config) []func(*baseapp.BaseApp) {
+	// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
+	// an IAVLStore for faster simulation speed.
+	fauxMerkleModeOpt := func(bapp *baseapp.BaseApp) {
+		if config.ExecutionDbConfig.UseMerkleTree {
+			bapp.SetFauxMerkleMode()
+		}
+	}
+	return []func(*baseapp.BaseApp){interBlockCacheOpt(), fauxMerkleModeOpt}
+}
 
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
+// inter-block write-through cache.
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
+}
+
+type Config struct {
+	InitializationConfig InitializationConfig
+	ExportConfig         ExportConfig
+	ExecutionDbConfig    ExecutionDbConfig
+
+	Seed int64 // simulation random seed
+
+	NumBlocks int // number of new blocks to simulate from the initial block height
+	BlockSize int // operations per block
+
+	Lean bool // lean simulation log output
+
+	OnOperation   bool // run slow invariants every operation
+	AllInvariants bool // print all failed invariants if a broken invariant is found
+}
+
+// Config for how to initialize the simulator state
+type InitializationConfig struct {
+	GenesisFile        string // custom simulation genesis file; cannot be used with params file
+	ParamsFile         string // custom simulation params file which overrides any random params; cannot be used with genesis
+	InitialBlockHeight int    // initial block to start the simulation
+	ChainID            string // chain-id used on the simulation
+}
+
+type ExportConfig struct {
 	ExportParamsPath   string // custom file path to save the exported params JSON
 	ExportParamsHeight int    // height to which export the randomly generated params
 	ExportStatePath    string // custom file path to save the exported app state JSON
 	ExportStatsPath    string // custom file path to save the exported simulation statistics JSON
+	WriteStatsToDB     bool
+}
 
-	Seed               int64  // simulation random seed
-	InitialBlockHeight int    // initial block to start the simulation
-	NumBlocks          int    // number of new blocks to simulate from the initial block height
-	BlockSize          int    // operations per block
-	ChainID            string // chain-id used on the simulation
-
-	Lean   bool // lean simulation log output
-	Commit bool // have the simulation commit
-
-	OnOperation    bool // run slow invariants every operation
-	AllInvariants  bool // print all failed invariants if a broken invariant is found
-	WriteStatsToDB bool
+type ExecutionDbConfig struct {
+	UseMerkleTree bool // Use merkle tree underneath, vs using a "fake" merkle tree
 }

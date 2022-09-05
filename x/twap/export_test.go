@@ -8,6 +8,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
+type (
+	TwapNotFoundError = twapNotFoundError
+	TimeTooOldError   = timeTooOldError
+)
+
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
 }
@@ -44,8 +49,8 @@ func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	return k.updateRecord(ctx, record)
 }
 
-func (k Keeper) PruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) error {
-	return k.pruneRecordsBeforeTime(ctx, lastTime)
+func (k Keeper) PruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
+	return k.pruneRecordsBeforeTimeButNewest(ctx, lastKeptTime)
 }
 
 func (k Keeper) PruneRecords(ctx sdk.Context) error {

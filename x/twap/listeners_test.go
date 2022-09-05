@@ -201,17 +201,30 @@ func (s *TestSuite) TestEndBlock() {
 
 // TestAfterEpochEnd tests if records get succesfully deleted via `AfterEpochEnd` hook.
 // We test details of correct implementation of pruning method in store test.
+// Specifically, the newest record that is younger than the (current block time - record keep period)
+// is kept, and the rest are deleted.
 func (s *TestSuite) TestAfterEpochEnd() {
 	s.SetupTest()
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
-	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
-	twapBeforeEpoch, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, s.Ctx.BlockTime(), denom0, denom1)
+
+	// Create TWAP record from pool creation.
+	s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
+
+	// Assume some time has passed and new record created.
+	s.Ctx = s.Ctx.WithBlockTime(tPlus10sp5Record.Time)
+	newestRecord := tPlus10sp5Record
+
+	s.twapkeeper.StoreNewRecord(s.Ctx, newestRecord)
+
+	twapsBeforeEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
 	s.Require().NoError(err)
+	s.Require().Equal(2, len(twapsBeforeEpoch))
+
 	pruneEpochIdentifier := s.App.TwapKeeper.PruneEpochIdentifier(s.Ctx)
 	recordHistoryKeepPeriod := s.App.TwapKeeper.RecordHistoryKeepPeriod(s.Ctx)
 
 	// make prune record time pass by, running prune epoch after this should prune old record
-	s.Ctx = s.Ctx.WithBlockTime(baseTime.Add(recordHistoryKeepPeriod).Add(time.Second))
+	s.Ctx = s.Ctx.WithBlockTime(newestRecord.Time.Add(recordHistoryKeepPeriod).Add(time.Second))
 
 	allEpochs := s.App.EpochsKeeper.AllEpochInfos(s.Ctx)
 
@@ -220,18 +233,20 @@ func (s *TestSuite) TestAfterEpochEnd() {
 	for i := len(allEpochs) - 1; i >= 0; i-- {
 		s.App.TwapKeeper.EpochHooks().AfterEpochEnd(s.Ctx, allEpochs[i].Identifier, int64(1))
 
-		recentTwapRecords, err := s.twapkeeper.GetRecordAtOrBeforeTime(s.Ctx, poolId, baseTime.Add(allEpochs[i].Duration), denom0, denom1)
+		recordsAfterEpoch, err := s.twapkeeper.GetAllHistoricalTimeIndexedTWAPs(s.Ctx)
 
 		// old record should have been pruned here
+		// however, the newest younger than the prune threshold
+		// is kept.
 		if allEpochs[i].Identifier == pruneEpochIdentifier {
-			s.Require().Error(err)
-			s.Require().NotEqual(twapBeforeEpoch, recentTwapRecords)
+			s.Require().Equal(1, len(recordsAfterEpoch))
+			s.Require().Equal(newestRecord, recordsAfterEpoch[0])
 
 			// quit test once the record has been pruned
 			return
 		} else { // pruning should not be triggered at first, not pruning epoch
 			s.Require().NoError(err)
-			s.Require().Equal(twapBeforeEpoch, recentTwapRecords)
+			s.Require().Equal(twapsBeforeEpoch, recordsAfterEpoch)
 		}
 	}
 }
