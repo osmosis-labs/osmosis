@@ -40,7 +40,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/v11/app/keepers"
-	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
 	"github.com/osmosis-labs/osmosis/v11/app/upgrades"
 	v10 "github.com/osmosis-labs/osmosis/v11/app/upgrades/v10"
 	v11 "github.com/osmosis-labs/osmosis/v11/app/upgrades/v11"
@@ -152,12 +151,12 @@ func NewOsmosisApp(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	wasmEnabledProposals []wasm.ProposalType,
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
+	encodingConfig := MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry

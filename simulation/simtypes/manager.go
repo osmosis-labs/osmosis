@@ -20,7 +20,6 @@ type AppModuleSimulation interface {
 	module.AppModule
 
 	Actions() []Action
-	// PropertyTests()
 }
 
 type AppModuleSimulationGenesis interface {
@@ -29,8 +28,15 @@ type AppModuleSimulationGenesis interface {
 	SimulatorGenesisState(*module.SimulationState, *SimCtx)
 }
 
+type AppModuleSimulationPropertyCheck interface {
+	module.AppModule
+
+	PropertyChecks() []PropertyCheck
+}
+
 type SimulatorManagerI interface {
 	Actions() []ActionsWithMetadata
+	PropertyCheck() []PropertyCheck
 }
 
 type ActionsWithMetadata struct {

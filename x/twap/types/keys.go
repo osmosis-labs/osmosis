@@ -61,20 +61,20 @@ func FormatHistoricalPoolIndexTimePrefix(poolId uint64, accumulatorWriteTime tim
 	return []byte(fmt.Sprintf("%s%d%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator))
 }
 
-func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
+func ParseTimeFromHistoricalTimeIndexKey(key []byte) (time.Time, error) {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
 	if len(s) != expectedKeySeparatedParts {
-		panic(KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)})
+		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)}
 	}
 	if s[0] != historicalTWAPTimeIndexNoSeparator {
-		panic(UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]})
+		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
 	}
 	t, err := osmoutils.ParseTimeString(s[1])
 	if err != nil {
-		panic(TimeStringKeyFormatError{Key: keyS, Err: err})
+		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
 	}
-	return t
+	return t, nil
 }
 
 func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {

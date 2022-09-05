@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v11/app/params"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -30,7 +29,7 @@ func DefaultConfig() network.Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewAppConstructor(encCfg),
+		AppConstructor:    NewAppConstructor(),
 		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     1 * time.Second / 2,
 		ChainID:           "osmosis-code-test",
@@ -48,11 +47,10 @@ func DefaultConfig() network.Config {
 }
 
 // NewAppConstructor returns a new Osmosis app given encoding type configs.
-func NewAppConstructor(encodingCfg params.EncodingConfig) network.AppConstructor {
+func NewAppConstructor() network.AppConstructor {
 	return func(val network.Validator) servertypes.Application {
 		return NewOsmosisApp(
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
-			encodingCfg,
 			simapp.EmptyAppOptions{},
 			GetWasmEnabledProposals(),
 			EmptyWasmOpts,
