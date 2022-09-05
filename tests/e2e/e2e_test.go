@@ -19,16 +19,14 @@ import (
 )
 
 // Test01IBCTokenTransfer tests that IBC token transfers work as expected.
-// This test must preceed Test02CreatePoolPostUpgrade. That's why it is prefixed with "01"
+// This test must precede Test02CreatePoolPostUpgrade. That's why it is prefixed with "01"
 // to ensure correct ordering. See Test02CreatePoolPostUpgrade for more details.
 func (s *IntegrationTestSuite) Test01IBCTokenTransfer() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
-
 	chainA := s.configurer.GetChainConfig(0)
 	chainB := s.configurer.GetChainConfig(1)
-
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
@@ -41,67 +39,58 @@ func (s *IntegrationTestSuite) Test01IBCTokenTransfer() {
 // This is the reason for prefixing the name with 02 to ensure
 // correct order.
 func (s *IntegrationTestSuite) Test02CreatePool() {
-	chain := s.configurer.GetChainConfig(0)
-	node, err := chain.GetDefaultNode()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
-	node.CreatePool("nativeDenomPool.json", initialization.ValidatorWalletName)
+	chainANode.CreatePool("nativeDenomPool.json", initialization.ValidatorWalletName)
 
 	if s.skipIBC {
 		s.T().Log("skipping creating pool with IBC denoms because IBC tests are disabled")
 		return
 	}
 
-	node.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName)
+	chainANode.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
 
 // Test03SuperfluidVoting tests that superfluid voting is functioning as expected.
 // It does so by doing the following:
 //- creating a pool
-// - attempting to submit a proposal to enable superfluid voring in that pool
+// - attempting to submit a proposal to enable superfluid voting in that pool
 // - voting yes on the proposal from the validator wallet
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
-// This test depends on pool creation to function correctly.
-// As a result, it is prefixed by 03 to run after Test02CreatePool.
-func (s *IntegrationTestSuite) Test03SuperfluidVoting() {
-	const walletName = "superfluid-wallet"
-
-	chain := s.configurer.GetChainConfig(0)
-	node, err := chain.GetDefaultNode()
+func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
-	// enable superfluid via proposal.
-	node.SubmitSuperfluidProposal("gamm/pool/1", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
-	chain.LatestProposalNumber += 1
-	node.DepositProposal(chain.LatestProposalNumber, false)
-	for _, node := range chain.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
-	}
+	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
 
-	walletAddr := node.CreateWallet(walletName)
-	// send gamm tokens to node's other wallet (non self-delegation wallet)
-	node.BankSend("100000000000000000000gamm/pool/1", chain.NodeConfigs[0].PublicAddress, walletAddr)
-	// lock tokens from node 0 on chain A
-	node.LockTokens("100000000000000000000gamm/pool/1", "240s", walletName)
-	chain.LatestLockNumber += 1
-	// superfluid delegate from non self-delegation wallet to validator 1 on chain.
-	node.SuperfluidDelegate(chain.LatestLockNumber, chain.NodeConfigs[1].OperatorAddress, walletName)
+	// enable superfluid assets
+	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
+
+	// setup wallets and send gamm tokens to these wallets (both chains)
+	superfluildVotingWallet := chainANode.CreateWallet("Test03SuperfluidVoting")
+	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, superfluildVotingWallet)
+	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluildVotingWallet)
+	chainA.LatestLockNumber += 1
+	chainANode.SuperfluidDelegate(chainA.LatestLockNumber, chainA.NodeConfigs[1].OperatorAddress, superfluildVotingWallet)
 
 	// create a text prop, deposit and vote yes
-	node.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
-	chain.LatestProposalNumber += 1
-	node.DepositProposal(chain.LatestProposalNumber, false)
-	for _, node := range chain.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
+	chainA.LatestProposalNumber += 1
+	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
+	for _, node := range chainA.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
 	}
 
 	// set delegator vote to no
-	node.VoteNoProposal(walletName, chain.LatestProposalNumber)
+	chainANode.VoteNoProposal(superfluildVotingWallet, chainA.LatestProposalNumber)
 
 	s.Eventually(
 		func() bool {
-			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := node.QueryPropTally(chain.LatestProposalNumber)
+			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainANode.QueryPropTally(chainA.LatestProposalNumber)
 			if err != nil {
 				return false
 			}
@@ -114,13 +103,13 @@ func (s *IntegrationTestSuite) Test03SuperfluidVoting() {
 		10*time.Millisecond,
 		"Osmosis node failed to retrieve prop tally",
 	)
-	noTotal, _, _, _, _ := node.QueryPropTally(chain.LatestProposalNumber)
+	noTotal, _, _, _, _ := chainANode.QueryPropTally(chainA.LatestProposalNumber)
 	noTotalFinal, err := strconv.Atoi(noTotal.String())
 	s.NoError(err)
 
 	s.Eventually(
 		func() bool {
-			intAccountBalance, err := node.QueryIntermediaryAccount("gamm/pool/1", chain.NodeConfigs[1].OperatorAddress)
+			intAccountBalance, err := chainANode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainA.NodeConfigs[1].OperatorAddress)
 			s.Require().NoError(err)
 			if err != nil {
 				return false
@@ -137,16 +126,50 @@ func (s *IntegrationTestSuite) Test03SuperfluidVoting() {
 	)
 }
 
+// TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
+func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
+	}
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
+	// we use the hardcoded gamm/pool/1 and these specific wallet names to match what was created pre upgrade
+	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.GetWallet("lockup-wallet"), chainANode.GetWallet("lockup-wallet-superfluid")
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletAddr)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletSuperfluidAddr)
+}
+
+// TestAddToExistingLock tests lockups to both regular and superfluid locks.
+func (s *IntegrationTestSuite) TestAddToExistingLock() {
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+	// ensure we can add to new locks and superfluid locks
+	// create pool and enable superfluid assets
+	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
+	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
+
+	// setup wallets and send gamm tokens to these wallets on chainA
+	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.CreateWallet("TestAddToExistingLock"), chainANode.CreateWallet("TestAddToExistingLockSuperfluid")
+	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletAddr)
+	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddr)
+
+	// ensure we can add to new locks and superfluid locks on chainA
+	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
+}
+
 func (s *IntegrationTestSuite) TestStateSync() {
 	if s.skipStateSync {
 		s.T().Skip()
 	}
 
-	chain := s.configurer.GetChainConfig(0)
-	runningNode, err := chain.GetDefaultNode()
+	chainA := s.configurer.GetChainConfig(0)
+	runningNode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
-	persistenrPeers := chain.GetPersistentPeers()
+	persistentPeers := chainA.GetPersistentPeers()
 
 	stateSyncHostPort := fmt.Sprintf("%s:26657", runningNode.Name)
 	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
@@ -172,20 +195,20 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// configure genesis and config files for the state-synchin node.
 	nodeInit, err := initialization.InitSingleNode(
-		chain.Id,
+		chainA.Id,
 		tempDir,
 		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
 		stateSynchingNodeConfig,
-		time.Duration(chain.VotingPeriod),
-		//time.Duration(chain.ExpeditedVotingPeriod),
+		time.Duration(chainA.VotingPeriod),
+		//time.Duration(chainA.ExpeditedVotingPeriod),
 		trustHeight,
 		trustHash,
 		stateSyncRPCServers,
-		persistenrPeers,
+		persistentPeers,
 	)
 	s.Require().NoError(err)
 
-	stateSynchingNode := chain.CreateNode(nodeInit)
+	stateSynchingNode := chainA.CreateNode(nodeInit)
 
 	// ensure that the running node has snapshots at a height > trustHeight.
 	hasSnapshotsAvailable := func(syncInfo coretypes.SyncInfo) bool {
@@ -228,7 +251,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	)
 
 	// stop the state synching node.
-	err = chain.RemoveNode(stateSynchingNode.Name)
+	err = chainA.RemoveNode(stateSynchingNode.Name)
 	s.NoError(err)
 }
 
@@ -237,17 +260,17 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 		s.T().Skip("this can be re-enabled post v12")
 	}
 
-	chain := s.configurer.GetChainConfig(0)
-	node, err := chain.GetDefaultNode()
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
-	node.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
-	chain.LatestProposalNumber += 1
-	node.DepositProposal(chain.LatestProposalNumber, true)
+	chainANode.SubmitTextProposal("expedited text proposal", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
+	chainA.LatestProposalNumber += 1
+	chainANode.DepositProposal(chainA.LatestProposalNumber, true)
 	totalTimeChan := make(chan time.Duration, 1)
-	go node.QueryPropStatusTimed(chain.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
-	for _, node := range chain.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, chain.LatestProposalNumber)
+	go chainANode.QueryPropStatusTimed(chainA.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+	for _, node := range chainA.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
 	}
 	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
 	var elapsed time.Duration
@@ -260,11 +283,10 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 	}
 
 	// compare the time it took to reach pass status to expected expedited voting period
-
-	expeditedVotingPeriodDuration := time.Duration(chain.ExpeditedVotingPeriod * float32(time.Second))
+	expeditedVotingPeriodDuration := time.Duration(chainA.ExpeditedVotingPeriod * float32(time.Second))
 	timeDelta := elapsed - expeditedVotingPeriodDuration
-	// ensure delta is within one second of expected time
+	// ensure delta is within two seconds of expected time
 	s.Require().Less(timeDelta, 2*time.Second)
-	s.T().Logf("expeditedVotingPeriodDuration within one second of expected time: %v", timeDelta)
+	s.T().Logf("expeditedVotingPeriodDuration within two seconds of expected time: %v", timeDelta)
 	close(totalTimeChan)
 }

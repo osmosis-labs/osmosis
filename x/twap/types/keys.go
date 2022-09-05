@@ -28,6 +28,7 @@ var (
 	mostRecentTWAPsNoSeparator         = "recent_twap"
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
+	expectedKeySeparatedParts          = 5
 
 	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
 	// keySeparatorPlusOne is used for creating prefixes for the key end in iterators
@@ -60,28 +61,34 @@ func FormatHistoricalPoolIndexTimePrefix(poolId uint64, accumulatorWriteTime tim
 	return []byte(fmt.Sprintf("%s%d%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator))
 }
 
-func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
+func ParseTimeFromHistoricalTimeIndexKey(key []byte) (time.Time, error) {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
-	if len(s) != 5 || s[0] != historicalTWAPTimeIndexNoSeparator {
-		panic("Called ParseTimeFromHistoricalTimeIndexKey on incorrectly formatted key")
+	if len(s) != expectedKeySeparatedParts {
+		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)}
+	}
+	if s[0] != historicalTWAPTimeIndexNoSeparator {
+		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
 	}
 	t, err := osmoutils.ParseTimeString(s[1])
 	if err != nil {
-		panic("incorrectly formatted time string in key")
+		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
 	}
-	return t
+	return t, nil
 }
 
 func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
-	if len(s) != 5 || s[0] != historicalTWAPPoolIndexNoSeparator {
-		return time.Time{}, fmt.Errorf("Called ParseTimeFromHistoricalPoolIndexKey on incorrectly formatted key: %v", s)
+	if len(s) != expectedKeySeparatedParts {
+		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)}
+	}
+	if s[0] != historicalTWAPPoolIndexNoSeparator {
+		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
 	}
 	t, err := osmoutils.ParseTimeString(s[2])
 	if err != nil {
-		return time.Time{}, fmt.Errorf("incorrectly formatted time string in key %s : %v", keyS, err)
+		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
 	}
 	return t, nil
 }

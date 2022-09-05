@@ -24,8 +24,9 @@ import (
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(cdc codec.JSONCodec, simManager *osmosimtypes.Manager) osmosim.AppStateFn {
-	return func(r *rand.Rand, accs []simtypes.Account, config osmosim.Config,
+func AppStateFn() osmosim.AppStateFn {
+	cdc := app.MakeEncodingConfig().Marshaler
+	return func(simManager *osmosimtypes.Manager, r *rand.Rand, accs []simtypes.Account, config osmosim.InitializationConfig,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if osmosim.FlagGenesisTimeValue == 0 {
 			genesisTimestamp = simtypes.RandTimestamp(r)

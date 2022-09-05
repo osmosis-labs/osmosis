@@ -378,7 +378,6 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Hour), baseTime, quoteAssetA),
 			expectError:  twap.TimeTooOldError{Time: baseTime.Add(-time.Hour)},
 		},
-		// TODO: overflow tests
 	}
 	for name, test := range tests {
 		s.Run(name, func() {

@@ -41,7 +41,6 @@ type simState struct {
 	pastTimes     []time.Time
 	pastVoteInfos [][]abci.VoteInfo
 
-	leanLogs  bool
 	logWriter LogWriter
 	w         io.Writer
 
@@ -51,9 +50,11 @@ type simState struct {
 	// Its fine to keep some basic aggregate statistics, but not where it should end.
 	eventStats EventStats
 	opCount    int
+
+	config Config
 }
 
-func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testing.TB, w io.Writer, validators mockValidators) *simState {
+func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testing.TB, w io.Writer, validators mockValidators, config Config) *simState {
 	return &simState{
 		simParams:      simParams,
 		header:         initialHeader,
@@ -67,29 +68,24 @@ func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testin
 		w:              w,
 		eventStats:     NewEventStats(),
 		opCount:        0,
+		config:         config,
 	}
-}
-
-func (simState *simState) WithLogParam(leanLogs bool) *simState {
-	simState.leanLogs = leanLogs
-	return simState
 }
 
 func (simState *simState) SimulateAllBlocks(
 	w io.Writer,
 	simCtx *simtypes.SimCtx,
-	blockSimulator blockSimFn,
-	config Config) (stopEarly bool) {
+	blockSimulator blockSimFn) (stopEarly bool) {
 	stopEarly = false
-	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
+	initialHeight := simState.config.InitializationConfig.InitialBlockHeight
+	numBlocks := simState.config.NumBlocks
+	for height := initialHeight; height < numBlocks+initialHeight && !stopEarly; height++ {
 		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)
 		if stopEarly {
 			break
 		}
 
-		if config.Commit {
-			simCtx.BaseApp().Commit()
-		}
+		simCtx.BaseApp().Commit()
 	}
 
 	if !stopEarly {
