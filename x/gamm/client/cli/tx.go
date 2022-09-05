@@ -572,7 +572,7 @@ func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOut
 
 	tokenOutMinAmt, ok := sdk.NewIntFromString(tokenOutMinAmtStr)
 	if !ok {
-		return txf, nil, errors.New("invalid token out min amount")
+		return txf, nil, fmt.Errorf("invalid token out min amount, %s", tokenOutMinAmtStr)
 	}
 	msg := &types.MsgSwapExactAmountIn{
 		Sender:            clientCtx.GetFromAddress().String(),

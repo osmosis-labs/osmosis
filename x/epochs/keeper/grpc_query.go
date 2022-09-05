@@ -38,6 +38,9 @@ func (q Querier) CurrentEpoch(c context.Context, req *types.QueryCurrentEpochReq
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+	if req.Identifier == "" {
+		return nil, status.Error(codes.InvalidArgument, "identifier is empty")
+	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
