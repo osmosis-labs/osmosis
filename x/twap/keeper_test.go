@@ -293,7 +293,14 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 // sets up a new two asset pool, with spot price 1
 func (s *TestSuite) setupDefaultPool() (poolId uint64, denomA, denomB string) {
 	poolId = s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins[0], defaultTwoAssetCoins[1])
-	denomA, denomB = defaultTwoAssetCoins[1].Denom, defaultTwoAssetCoins[0].Denom
+	denomA, denomB = defaultTwoAssetCoins[0].Denom, defaultTwoAssetCoins[1].Denom
+	return
+}
+
+// sets up a new three asset pool, with spot price 1
+func (s *TestSuite) setupDefaultThreeAssetPool() (poolId uint64, denomA, denomB, denomC string) {
+	poolId = s.PrepareBalancerPoolWithCoins(defaultThreeAssetCoins[0], defaultThreeAssetCoins[1], defaultThreeAssetCoins[2])
+	denomA, denomB, denomC = defaultThreeAssetCoins[0].Denom, defaultThreeAssetCoins[1].Denom, defaultThreeAssetCoins[1].Denom
 	return
 }
 
@@ -371,6 +378,26 @@ func newTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.T
 		P0ArithmeticTwapAccumulator: accum0,
 		P1ArithmeticTwapAccumulator: accum1,
 	}
+}
+
+func newThreeAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) (types.TwapRecord, types.TwapRecord, types.TwapRecord) {
+	twapAB := types.TwapRecord{
+		PoolId:      2,
+		Time:        t,
+		Asset0Denom: denom0,
+		Asset1Denom: denom1,
+
+		P0LastSpotPrice:             sp0,
+		P1LastSpotPrice:             sdk.OneDec().Quo(sp0),
+		P0ArithmeticTwapAccumulator: accum0,
+		P1ArithmeticTwapAccumulator: accum1,
+	}
+	twapAC := twapAB
+	twapAC.Asset1Denom = denom2
+	twapBC := twapAC
+	twapBC.Asset0Denom = denom1
+
+	return twapAB, twapAC, twapBC
 }
 
 func newEmptyPriceRecord(poolId uint64, t time.Time, asset0 string, asset1 string) types.TwapRecord {
