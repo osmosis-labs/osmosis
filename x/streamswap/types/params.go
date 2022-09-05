@@ -50,11 +50,7 @@ func (p Params) Validate() error {
 	if err := validateDuration(p.MinDurationUntilStartTime); err != nil {
 		return err
 	}
-	if err := validateDuration(p.MinSaleDuration); err != nil {
-		return err
-	}
-	return nil
-
+	return validateDuration(p.MinSaleDuration)
 }
 
 // Implements params.ParamSet

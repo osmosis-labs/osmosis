@@ -28,7 +28,9 @@ func (k Keeper) CreateSale(goCtx context.Context, msg *types.MsgCreateSale) (*ty
 		if err != nil {
 			return nil, err
 		}
-		k.bank.SendCoins(ctx, creator, r, params.SaleCreationFee)
+		if err = k.bank.SendCoins(ctx, creator, r, params.SaleCreationFee); err != nil {
+			return nil, err
+		}
 		ctx.Logger().Info("Sale Creation Fee charged",
 			"recipient", params.SaleCreationFeeRecipient, "fee", params.SaleCreationFee)
 	} else {

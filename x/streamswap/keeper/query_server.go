@@ -26,14 +26,14 @@ func (k Keeper) Sales(goCtx context.Context, q *types.QuerySales) (*types.QueryS
 	if err != nil {
 		return nil, err
 	}
-	return &types.QuerySalesResponse{sales, pageRes}, nil
+	return &types.QuerySalesResponse{Sales: sales, Pagination: pageRes}, nil
 }
 
 func (k Keeper) Sale(ctx context.Context, q *types.QuerySale) (*types.QuerySaleResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(k.storeKey)
 	s, _, err := k.getSale(store, q.SaleId)
-	return &types.QuerySaleResponse{s}, err
+	return &types.QuerySaleResponse{Sale: s}, err
 }
 
 func (k Keeper) UserPosition(ctx context.Context, q *types.QueryUserPosition) (*types.QueryUserPositionResponse, error) {
@@ -48,5 +48,5 @@ func (k Keeper) UserPosition(ctx context.Context, q *types.QueryUserPosition) (*
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryUserPositionResponse{up}, nil
+	return &types.QueryUserPositionResponse{UserPosition: up}, nil
 }

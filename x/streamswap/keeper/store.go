@@ -7,7 +7,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v11/x/streamswap"
 	"github.com/osmosis-labs/osmosis/v11/x/streamswap/types"
@@ -48,7 +47,7 @@ func (k *Keeper) getUserPosition(modulestore storetypes.KVStore, saleId []byte, 
 	bz := store.Get(user)
 	var v types.UserPosition
 	if bz == nil {
-		if create == false {
+		if !create {
 			return v, errors.ErrNotFound.Wrap("user position for given Sale is not found")
 		}
 		return newUserPosition(), nil
@@ -78,22 +77,6 @@ func (k Keeper) userPositionStore(moduleStore storetypes.KVStore, saleId []byte)
 	p[0] = userStoreKey
 	copy(p[1:], saleId)
 	return prefix.NewStore(moduleStore, p)
-}
-
-// MaxAddrLen is the maximum allowed length (in bytes) for an address.
-const MaxAddrLen = 255
-
-func lengthPrefix(bz []byte) ([]byte, error) {
-	bzLen := len(bz)
-	if bzLen == 0 {
-		return bz, nil
-	}
-
-	if bzLen > MaxAddrLen {
-		return nil, errors.Wrapf(sdkerrors.ErrUnknownAddress, "address length should be max %d bytes, got %d", MaxAddrLen, bzLen)
-	}
-
-	return append([]byte{byte(bzLen)}, bz...), nil
 }
 
 // user: bech32 user address

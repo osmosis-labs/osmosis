@@ -51,10 +51,6 @@ func computeSharesAmount(s *types.Sale, amountIn sdk.Int, roundUp bool) sdk.Int 
 	return shares
 }
 
-func saleHasEnded(s *types.Sale, round int64) bool {
-	return s.EndRound >= round
-}
-
 func subscribe(s *types.Sale, u *types.UserPosition, amount sdk.Int, now time.Time) {
 	pingSale(s, now)
 	if s.Round >= s.EndRound {
