@@ -54,14 +54,14 @@ func (s *TestSuite) TestNewTwapRecord() {
 		expectedErr   error
 		expectedPanic bool
 	}{
-		"denom with non-lexicographical order": {
+		"denom with lexicographical order": {
 			poolId,
 			denom0,
 			denom1,
 			nil,
 			false,
 		},
-		"denom with lexicographical order": {
+		"denom with non-lexicographical order": {
 			poolId,
 			denom1,
 			denom0,
@@ -280,8 +280,8 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 		"on lexicographical order denom parameters": {
 			recordsToPreSet: baseRecord,
 			testPoolId:      baseRecord.PoolId,
-			testDenom0:      baseRecord.Asset1Denom,
-			testDenom1:      baseRecord.Asset0Denom,
+			testDenom0:      baseRecord.Asset0Denom,
+			testDenom1:      baseRecord.Asset1Denom,
 			testTime:        baseTime,
 		},
 		"test non lexicographical order parameter": {
