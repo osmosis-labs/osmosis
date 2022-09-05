@@ -438,6 +438,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(gammtypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
+	paramsKeeper.Subspace(twaptypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -489,6 +490,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		epochstypes.NewMultiEpochHooks(
 			// insert epoch hooks receivers here
 			appKeepers.TxFeesKeeper.Hooks(),
+			appKeepers.TwapKeeper.EpochHooks(),
 			appKeepers.SuperfluidKeeper.Hooks(),
 			appKeepers.IncentivesKeeper.Hooks(),
 			appKeepers.MintKeeper.Hooks(),

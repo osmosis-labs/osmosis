@@ -3,10 +3,20 @@ package v12
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
 
 	"github.com/osmosis-labs/osmosis/v11/app/keepers"
 	"github.com/osmosis-labs/osmosis/v11/app/upgrades"
+	twaptypes "github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
 // We set the app version to pre-upgrade because it will be incremented by one
@@ -30,25 +40,49 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		// Set the max_age_num_blocks in the evidence params to reflect the 14 day
-		// unbonding period.
-		//
-		// Ref: https://github.com/osmosis-labs/osmosis/issues/1160
-		cp := bpm.GetConsensusParams(ctx)
-		if cp != nil && cp.Evidence != nil {
-			evParams := cp.Evidence
-			evParams.MaxAgeNumBlocks = 186_092
+		// Specifying the whole list instead of adding and removing. Less fragile.
+		hostParams := icahosttypes.Params{
+			HostEnabled: true,
+			AllowMessages: []string{
+				// Change: Added MsgTrasnsfer
+				sdk.MsgTypeURL(&ibctransfertypes.MsgTransfer{}),
 
-			bpm.StoreConsensusParams(ctx, cp)
+				sdk.MsgTypeURL(&banktypes.MsgSend{}),
+				sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
+				sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
+				sdk.MsgTypeURL(&stakingtypes.MsgCreateValidator{}),
+				sdk.MsgTypeURL(&stakingtypes.MsgEditValidator{}),
+				// Change: Added MsgUndelegate
+				sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
+				sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}),
+				sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
+				sdk.MsgTypeURL(&distrtypes.MsgWithdrawValidatorCommission{}),
+				sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
+				sdk.MsgTypeURL(&govtypes.MsgVote{}),
+				// Change: Removed authz messages
+				sdk.MsgTypeURL(&gammtypes.MsgJoinPool{}),
+				sdk.MsgTypeURL(&gammtypes.MsgExitPool{}),
+				sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountIn{}),
+				sdk.MsgTypeURL(&gammtypes.MsgSwapExactAmountOut{}),
+				sdk.MsgTypeURL(&gammtypes.MsgJoinSwapExternAmountIn{}),
+				sdk.MsgTypeURL(&gammtypes.MsgJoinSwapShareAmountOut{}),
+				sdk.MsgTypeURL(&gammtypes.MsgExitSwapExternAmountOut{}),
+				sdk.MsgTypeURL(&gammtypes.MsgExitSwapShareAmountIn{}),
+				// Change: Added superfluid unbound
+				sdk.MsgTypeURL(&superfluidtypes.MsgSuperfluidUnbondLock{}),
+			},
 		}
+		keepers.ICAHostKeeper.SetParams(ctx, hostParams)
 
 		// Initialize TWAP state
-		// TODO: Get allPoolIds from gamm keeper, and write test for migration.
-		allPoolIds := []uint64{}
-		err := keepers.TwapKeeper.MigrateExistingPools(ctx, allPoolIds)
+		latestPoolId := keepers.GAMMKeeper.GetNextPoolId(ctx) - 1
+		err := keepers.TwapKeeper.MigrateExistingPools(ctx, latestPoolId)
 		if err != nil {
 			return nil, err
 		}
+
+		// Set TWAP parameters to default values.
+		keepers.TwapKeeper.SetParams(ctx, twaptypes.DefaultParams())
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}

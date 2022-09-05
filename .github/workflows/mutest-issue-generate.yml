@@ -1,4 +1,4 @@
-name: Generate Mutation Test Errors 
+name: Generate Mutation Test Errors
 
 on:
   schedule:
@@ -12,34 +12,44 @@ jobs:
         name: checkout repo
         uses: actions/checkout@v2
       -
+        name: Setup Golang
+        uses: actions/setup-go@v2.1.4
+        with:
+          go-version: 1.18
+      -
+        name: Display go version
+        run: go version
+      -
         name: Run mutation test
         continue-on-error: true
-        run: make test-mutation
+        run: make test-mutation $MODULES
+        env:
+          MODULES: tokenfactory,twap
       -
         name: Execute mutation test format script
         id: mutest-formatted
         run: |
           cat mutation_test_result.txt | grep -Ev "PASS" | grep -Ev "SKIP" | tee mutation_test_result.txt
       -
-        name: Generate code blocks 
+        name: Generate code blocks
         id: gen-code-blocks
         run: |
-          cat mutation_test_result.txt  | sed "s# @@# @@\n\`\`\`go\n#g " | sed "s#FAIL#\`\`\`\nFAIL\n\n\n#g " > mutation_test_result.txt 
+          cat mutation_test_result.txt  | sed "s# @@# @@\n\`\`\`go\n#g " | sed "s#FAIL#\`\`\`\nFAIL\n\n\n#g " > go_mutation_test_result.txt
       -
         name: Get today's date
         id: date
         run: |
-          echo "::set-output name=today::$(date "+%Y/%m/%d")" 
-      - 
-        name: Read mutation_test_result file
+          echo "::set-output name=today::$(date "+%Y/%m/%d")"
+      -
+        name: Read mutation_test_txt file
         id: result
         uses: juliangruber/read-file-action@v1
         with:
-          path: mutation_test_result.txt
-      -
-        name: Create an issue
+          path: go_mutation_test_result.txt
+      - 
+        name: Create an mutation test output issue
         uses: dacbd/create-issue-action@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: Mutation test ${{ steps.date.outputs.today }}
-          body: ${{steps.result.outputs.content}}
+          body: ${{ steps.result.outputs.content }}
