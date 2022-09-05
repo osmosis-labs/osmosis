@@ -509,10 +509,8 @@ func (suite *KeeperTestSuite) TestBalancerSpotPrice() {
 			suite.Require().True(isPool, "test: %s", tc.name)
 
 			sut := func() {
-				spotPrice, err := balancerPool.SpotPrice(
-					suite.Ctx,
-					tc.baseDenomPoolInput.Denom,
-					tc.quoteDenomPoolInput.Denom)
+				spotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx,
+					poolId, tc.baseDenomPoolInput.Denom, tc.quoteDenomPoolInput.Denom)
 
 				if tc.expectError {
 					suite.Require().Error(err, "test: %s", tc.name)
@@ -565,27 +563,26 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 		},
 		{
 			name:                "max spot price with equal weights",
-			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.NewDec(2).Power(160).TruncateInt()),
+			baseDenomPoolInput:  sdk.NewCoin(baseDenom, types.MaxSpotPrice.TruncateInt()),
 			baseDenomWeight:     sdk.NewInt(100),
 			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
 			quoteDenomWeight:    sdk.NewInt(100),
 			expectError:         false,
-			expectedOutput:      sdk.NewDec(2).Power(160),
+			expectedOutput:      types.MaxSpotPrice,
 		},
 		{
 			// test int overflows
-			name: "max spot price with extreme weights",
-			// 2^196, as >= 2^197 trips max bitlen of 256
-			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206336").TruncateInt()),
+			name:                "max spot price with extreme weights",
+			baseDenomPoolInput:  sdk.NewCoin(baseDenom, types.MaxSpotPrice.TruncateInt()),
 			baseDenomWeight:     sdk.OneInt(),
 			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
-			quoteDenomWeight:    sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206336").TruncateInt(),
+			quoteDenomWeight:    sdk.NewInt(1 << 19),
 			expectError:         true,
 		},
 		{
 			name: "greater than max spot price with equal weights",
 			// Max spot price capped at 2^160
-			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.NewDec(2).Power(161).TruncateInt()),
+			baseDenomPoolInput:  sdk.NewCoin(baseDenom, types.MaxSpotPrice.TruncateInt().Add(sdk.OneInt())),
 			baseDenomWeight:     sdk.NewInt(100),
 			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
 			quoteDenomWeight:    sdk.NewInt(100),
@@ -607,15 +604,15 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			}
 
 			poolAssets := []balancer.PoolAsset{defaultBaseAsset, defaultQuoteAsset}
+			poolId := suite.PrepareBalancerPoolWithPoolAsset(poolAssets)
 
-			pool, err := balancer.NewBalancerPool(defaultPoolId, defaultBalancerPoolParams, poolAssets, defaultFutureGovernor, defaultCurBlockTime)
+			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 			suite.Require().NoError(err, "test: %s", tc.name)
+			balancerPool, _ := pool.(*balancer.Pool)
 
 			sut := func() {
-				spotPrice, err := pool.SpotPrice(
-					suite.Ctx,
-					tc.baseDenomPoolInput.Denom,
-					tc.quoteDenomPoolInput.Denom)
+				spotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx,
+					poolId, tc.baseDenomPoolInput.Denom, tc.quoteDenomPoolInput.Denom)
 				if tc.expectError {
 					suite.Require().Error(err, "test: %s", tc.name)
 				} else {
@@ -625,7 +622,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 						spotPrice, tc.expectedOutput)
 				}
 			}
-			assertPoolStateNotModified(suite.T(), &pool, sut)
+			assertPoolStateNotModified(suite.T(), balancerPool, sut)
 		})
 	}
 }
