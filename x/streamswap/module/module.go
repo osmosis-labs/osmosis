@@ -15,7 +15,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v11/x/streamswap"
-	"github.com/osmosis-labs/osmosis/v11/x/streamswap/client/cli"
+	// "github.com/osmosis-labs/osmosis/v11/x/streamswap/client/cli"
 	"github.com/osmosis-labs/osmosis/v11/x/streamswap/keeper"
 	"github.com/osmosis-labs/osmosis/v11/x/streamswap/types"
 )
@@ -75,12 +75,16 @@ func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, m
 
 // GetQueryCmd returns the cli query commands for the streamswap module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+	return nil
+	// TODO: uncomment when adding CLI
+	// return cli.GetQueryCmd()
 }
 
 // GetTxCmd returns the transaction commands for the streamswap module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
+	return nil
+	// TODO: uncomment when adding CLI
+	// return cli.GetTxCmd()
 }
 
 // AppModule implements the sdk.AppModule interface
