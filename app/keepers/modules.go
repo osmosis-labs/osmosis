@@ -26,11 +26,10 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
 
-	"github.com/osmosis-labs/osmosis/v11/x/gov"
-
 	_ "github.com/osmosis-labs/osmosis/v11/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v11/x/epochs"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm"
+	"github.com/osmosis-labs/osmosis/v11/x/gov"
 	"github.com/osmosis-labs/osmosis/v11/x/incentives"
 	"github.com/osmosis-labs/osmosis/v11/x/lockup"
 	"github.com/osmosis-labs/osmosis/v11/x/mint"

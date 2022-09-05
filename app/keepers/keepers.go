@@ -31,9 +31,6 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	govkeeper "github.com/osmosis-labs/osmosis/v11/x/gov/keeper"
-	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
-
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
@@ -54,6 +51,8 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v11/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	govkeeper "github.com/osmosis-labs/osmosis/v11/x/gov/keeper"
+	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v11/x/incentives/keeper"
 	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"

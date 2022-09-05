@@ -38,6 +38,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	"github.com/osmosis-labs/osmosis/v11/x/gov"
+	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
+
 	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
 	_ "github.com/osmosis-labs/osmosis/v11/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v11/osmoutils/partialord"
@@ -46,8 +49,6 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v11/x/gov"
-	govtypes "github.com/osmosis-labs/osmosis/v11/x/gov/types"
 	"github.com/osmosis-labs/osmosis/v11/x/incentives"
 	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v11/x/lockup"
