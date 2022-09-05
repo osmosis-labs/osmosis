@@ -7,11 +7,14 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+type AppCreator = func(homepath string, legacyInvariantPeriod uint, baseappOptions ...func(*baseapp.BaseApp)) App
+
 type App interface {
 	GetBaseApp() *baseapp.BaseApp
 	AppCodec() codec.Codec
 	GetAccountKeeper() AccountKeeper
 	GetBankKeeper() BankKeeper
+	SimulationManager() *Manager
 }
 
 type AccountKeeper interface {

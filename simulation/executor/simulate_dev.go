@@ -10,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
+	"github.com/tendermint/tendermint/crypto/merkle"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -28,6 +29,9 @@ type simState struct {
 	curValidators  mockValidators
 	nextValidators mockValidators
 
+	// block tx result data storage, reset after each block
+	Data [][]byte
+
 	// TODO: Figure out why we need this???
 	// Probably should get removed
 	tb testing.TB
@@ -37,7 +41,6 @@ type simState struct {
 	pastTimes     []time.Time
 	pastVoteInfos [][]abci.VoteInfo
 
-	leanLogs  bool
 	logWriter LogWriter
 	w         io.Writer
 
@@ -47,9 +50,11 @@ type simState struct {
 	// Its fine to keep some basic aggregate statistics, but not where it should end.
 	eventStats EventStats
 	opCount    int
+
+	config Config
 }
 
-func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testing.TB, w io.Writer, validators mockValidators) *simState {
+func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testing.TB, w io.Writer, validators mockValidators, config Config) *simState {
 	return &simState{
 		simParams:      simParams,
 		header:         initialHeader,
@@ -63,29 +68,24 @@ func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testin
 		w:              w,
 		eventStats:     NewEventStats(),
 		opCount:        0,
+		config:         config,
 	}
-}
-
-func (simState *simState) WithLogParam(leanLogs bool) *simState {
-	simState.leanLogs = leanLogs
-	return simState
 }
 
 func (simState *simState) SimulateAllBlocks(
 	w io.Writer,
 	simCtx *simtypes.SimCtx,
-	blockSimulator blockSimFn,
-	config Config) (stopEarly bool) {
+	blockSimulator blockSimFn) (stopEarly bool) {
 	stopEarly = false
-	for height := config.InitialBlockHeight; height < config.NumBlocks+config.InitialBlockHeight && !stopEarly; height++ {
+	initialHeight := simState.config.InitializationConfig.InitialBlockHeight
+	numBlocks := simState.config.NumBlocks
+	for height := initialHeight; height < numBlocks+initialHeight && !stopEarly; height++ {
 		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)
 		if stopEarly {
 			break
 		}
 
-		if config.Commit {
-			simCtx.BaseApp().Commit()
-		}
+		simCtx.BaseApp().Commit()
 	}
 
 	if !stopEarly {
@@ -213,6 +213,13 @@ func (simState *simState) constructHeaderHashes(proposerPubKey crypto.PubKey) {
 
 	// TODO: We don't fill out the nextValidatorSet, we should eventually but not priority
 	// It is unclear to me if this means we need to choose a proposer prior to that block occurring
+
+	// hash all the collected tx results and add as the block header data hash
+	dataHash := merkle.HashFromByteSlices(simState.Data)
+	simState.header.DataHash = dataHash
+
+	// reset simState data to blank
+	simState.Data = [][]byte{}
 
 	// generate an apphash from this header and set this value
 	simState.header.AppHash = realHeader.Hash()

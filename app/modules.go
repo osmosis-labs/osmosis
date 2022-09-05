@@ -229,7 +229,7 @@ func createSimulationManager(
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (app *OsmosisApp) ModuleAccountAddrs() map[string]bool {
+func ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true

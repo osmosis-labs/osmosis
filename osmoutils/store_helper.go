@@ -60,7 +60,7 @@ func GetIterValuesWithStop[T any](
 	return gatherValuesFromIteratorWithStop(iter, parseValue, stopFn)
 }
 
-func GetFirstValueAfterPrefix[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
+func GetFirstValueAfterPrefixInclusive[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
 	// SDK iterator is broken for nil end time, and non-nil start time
 	// https://github.com/cosmos/cosmos-sdk/issues/12661
 	// hence we use []byte{0xff}
@@ -73,17 +73,6 @@ func GetFirstValueAfterPrefix[T any](storeObj store.KVStore, keyStart []byte, pa
 	}
 
 	return parseValue(iterator.Value())
-}
-
-// MustSet runs store.Set(key, proto.Marshal(value))
-// but panics on any error.
-func MustSet(storeObj store.KVStore, key []byte, value proto.Message) {
-	bz, err := proto.Marshal(value)
-	if err != nil {
-		panic(err)
-	}
-
-	storeObj.Set(key, bz)
 }
 
 func gatherValuesFromIteratorWithStop[T any](iterator db.Iterator, parseValue func([]byte) (T, error), stopFn func([]byte) bool) ([]T, error) {
@@ -103,6 +92,17 @@ func gatherValuesFromIteratorWithStop[T any](iterator db.Iterator, parseValue fu
 
 func noStopFn([]byte) bool {
 	return false
+}
+
+// MustSet runs store.Set(key, proto.Marshal(value))
+// but panics on any error.
+func MustSet(storeObj store.KVStore, key []byte, value proto.Message) {
+	bz, err := proto.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+
+	storeObj.Set(key, bz)
 }
 
 // MustGet gets key from store by mutating result

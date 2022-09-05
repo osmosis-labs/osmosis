@@ -12,6 +12,25 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
+type timeTooOldError struct {
+	Time time.Time
+}
+
+func (e timeTooOldError) Error() string {
+	return fmt.Sprintf("looking for a time thats too old, not in the historical index. "+
+		" Try storing the accumulator value. (requested time %s)", e.Time)
+}
+
+type twapNotFoundError struct {
+	Asset0Denom string
+	Asset1Denom string
+}
+
+func (e twapNotFoundError) Error() string {
+	return fmt.Sprintf("TWAP not found, but there are other twaps available for this time."+
+		" Please make sure tha asset0denom and asset1denom (%s, %s) are correct, and in order (asset0 > asset1)?", e.Asset0Denom, e.Asset1Denom)
+}
+
 // trackChangedPool places an entry into a transient store,
 // to track that this pool changed this block.
 // This tracking is for use in EndBlock, to create new TWAP records.
@@ -50,15 +69,38 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 	osmoutils.MustSet(store, key2, &twap)
 }
 
-func (k Keeper) pruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) error {
+// pruneRecordsBeforeTimeButNewest prunes all records for each pool before the given time but the newest
+// record. The reason for preserving at least one record earlier than the keep period is
+// to ensure that we have a record to interpolate from in case there is only one or no records
+// within the keep period.
+// For example:
+// - Suppose pruning param -48 hour
+// - Suppose swaps at -50 hour, -1hour
+// - A prune would leave us with only one record at -1 hour, and we are not able to get twaps from the
+// [-48 hour, -1 hour] time range.
+func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
 	store := ctx.KVStore(k.storeKey)
-	iter := store.Iterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastTime, 0, "", ""))
+
+	// Reverse iterator guarantees that we iterate through the newest per pool first.
+	// Due to how it is indexed, we will only iterate times starting from
+	// lastKeptTime exclusively down to the oldest record.
+	iter := store.ReverseIterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""))
 	defer iter.Close()
+
+	seenPools := map[uint64]struct{}{}
+
 	for ; iter.Valid(); iter.Next() {
 		twapToRemove, err := types.ParseTwapFromBz(iter.Value())
 		if err != nil {
 			return err
 		}
+
+		_, hasSeenPoolRecord := seenPools[twapToRemove.PoolId]
+		if !hasSeenPoolRecord {
+			seenPools[twapToRemove.PoolId] = struct{}{}
+			continue
+		}
+
 		k.deleteHistoricalRecord(ctx, twapToRemove)
 	}
 	return nil
@@ -158,8 +200,7 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 		return types.TwapRecord{}, err
 	}
 	if len(twaps) == 0 {
-		return types.TwapRecord{}, fmt.Errorf("looking for a time thats too old, not in the historical index. "+
-			" Try storing the accumulator value. (requested time %s)", t)
+		return types.TwapRecord{}, timeTooOldError{Time: t}
 	}
 
 	for _, twap := range twaps {
@@ -167,6 +208,5 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 			return twap, nil
 		}
 	}
-	return types.TwapRecord{}, fmt.Errorf("TWAP not found, but there are other twaps available for this time."+
-		" Were provided asset0denom and asset1denom (%s, %s) correct, and in order (asset0 > asset1)?", asset0Denom, asset1Denom)
+	return types.TwapRecord{}, twapNotFoundError{Asset0Denom: asset0Denom, Asset1Denom: asset1Denom}
 }

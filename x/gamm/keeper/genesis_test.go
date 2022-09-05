@@ -39,9 +39,9 @@ func TestGammInitGenesis(t *testing.T) {
 	any, err := codectypes.NewAnyWithValue(&balancerPool)
 	require.NoError(t, err)
 
-	gamm.InitGenesis(ctx, *app.GAMMKeeper, types.GenesisState{
+	app.GAMMKeeper.InitGenesis(ctx, types.GenesisState{
 		Pools:          []*codectypes.Any{any},
-		NextPoolId: 2,
+		NextPoolNumber: 2,
 		Params: types.Params{
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)},
 		},
@@ -104,8 +104,8 @@ func TestGammExportGenesis(t *testing.T) {
 	_, err = app.GAMMKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
-	genesis := gamm.ExportGenesis(ctx, *app.GAMMKeeper)
-	require.Equal(t, genesis.NextPoolId, uint64(3))
+	genesis := app.GAMMKeeper.ExportGenesis(ctx)
+	require.Equal(t, genesis.NextPoolNumber, uint64(3))
 	require.Len(t, genesis.Pools, 2)
 }
 
