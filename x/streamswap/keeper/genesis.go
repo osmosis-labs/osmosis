@@ -70,7 +70,7 @@ func (k Keeper) exportUserPositions(moduleStore prefix.Store) ([]types.UserPosit
 		sale := binary.BigEndian.Uint64(key[:8])
 		addr := sdk.AccAddress(key[8:])
 		var o = types.UserPositionKV{AccAddress: addr.String(), SaleId: sale}
-		err := k.cdc.Unmarshal(iter.Value(), &o.U)
+		err := k.cdc.Unmarshal(iter.Value(), &o.UserPosition)
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +97,7 @@ func (k Keeper) importUserPositions(moduleStore prefix.Store, ups []types.UserPo
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress,
 				"invalid account address %s in user positions at index %d", up.AccAddress, idx)
 		}
-		k.saveUserPosition(moduleStore, idBz, address, &up.U)
+		k.saveUserPosition(moduleStore, idBz, address, &up.UserPosition)
 	}
 	return nil
 }
