@@ -37,8 +37,8 @@ service Msg {
   rpc ExitSale(MsgExitSale) returns (MsgExitSaleResponse);
 
   // FinalizeSale clean ups the sale and sends income (earned tokens_in) to the
-  // Sale recipient. Returns error if called before the Sale end. Anyone can
-  // call this method.
+  // Sale recipient. Returns error if called before the Sale end or it was
+  // already finalized. Anyone can call this method.
   rpc FinalizeSale(MsgFinalizeSale) returns (MsgFinalizeSaleResponse);
 }
 

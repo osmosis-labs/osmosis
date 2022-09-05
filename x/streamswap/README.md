@@ -100,7 +100,7 @@ to close his position and withdraw purchased tokens to his account.
 To withdraw earned token to the `sale.treasury` account anyone can send a
 transaction with [`MsgFinalizeSale`](https://github.com/osmosis-labs/osmosis/blob/main/proto/osmosis/streamswap/v1/tx.proto#L42) after the `sale.end_time`.
 This transaction will send `sale.income` tokens from the module escrow account
-to the `sale.treasury` and set `sale.income = 0`.
+to the `sale.treasury` and set `sale.finalized = true`.
 
 ### Events
 
