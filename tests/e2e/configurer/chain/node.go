@@ -63,7 +63,7 @@ func (n *NodeConfig) Run() error {
 	require.Eventually(
 		n.t,
 		func() bool {
-			// This fails if unsuccesful.
+			// This fails if unsuccessful.
 			n.QueryCurrentHeight()
 			n.t.Logf("started node container: %s", n.Name)
 			return true
