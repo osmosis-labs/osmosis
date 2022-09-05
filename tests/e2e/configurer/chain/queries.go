@@ -134,9 +134,6 @@ func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (int
 }
 
 func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
-	// request := epochstypes.QueryCurrentEpochRequest{
-	// 	Identifier: identifier,
-	// }
 	path := "osmosis/epochs/v1beta1/current_epoch"
 
 	bz, err := n.QueryGRPCGateway(path, "identifier", identifier)
