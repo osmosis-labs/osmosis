@@ -3,9 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/osmoutils"
-	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v11/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
