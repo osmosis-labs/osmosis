@@ -60,7 +60,7 @@ func (s *IntegrationTestSuite) Test02CreatePool() {
 // - voting yes on the proposal from the validator wallet
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
-func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+func (s *IntegrationTestSuite) Test03SuperfluidVoting() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -126,8 +126,8 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
-// TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
-func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
+// Test03AddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
+func (s *IntegrationTestSuite) Test03AddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	}
@@ -141,8 +141,8 @@ func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletSuperfluidAddr)
 }
 
-// TestAddToExistingLock tests lockups to both regular and superfluid locks.
-func (s *IntegrationTestSuite) TestAddToExistingLock() {
+// Test03AddToExistingLock tests lockups to both regular and superfluid locks.
+func (s *IntegrationTestSuite) Test03AddToExistingLock() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -160,6 +160,67 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
 
+// Test03TWAP tests TWAP by creating a pool, performing a swap.
+// These two operations should create TWAP records.
+// Then, we wait until the epoch for the records to be pruned.
+// The records are guranteed to be pruned at the next epoch
+// because twap keep time = epoch time / 4 and we use a timer
+// to wait for at least the twap keep time.
+// TODO: implement querying for TWAP, once such queries are exposed:
+// https://github.com/osmosis-labs/osmosis/issues/2602
+func (s *IntegrationTestSuite) Test03TWAP() {
+	const (
+		poolFile   = "nativeDenomPool.json"
+		walletName = "swap-exact-amount-in-wallet"
+
+		coinIn       = "101stake"
+		minAmountOut = "99"
+		denomOut     = "uosmo"
+
+		epochIdentifier = "day"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	// Triggers the creation of TWAP records.
+	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
+	swapWalletAddr := chainANode.CreateWallet(walletName)
+
+	chainANode.BankSend(coinIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	heightBeforeSwap := chainANode.QueryCurrentHeight()
+
+	// Triggers the creation of TWAP records.
+	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", poolId), denomOut, swapWalletAddr)
+
+	keepPeriodCountDown := time.NewTimer(initialization.TWAPPruningKeepPeriod)
+
+	// Make sure still producing blocks.
+	chainA.WaitUntilHeight(heightBeforeSwap + 3)
+
+	if !s.skipUpgrade {
+		// TODO: we should reduce the pruning time in the v11
+		// genesis to make this test run faster
+		// Currenty, we are testing the upgrade from v11 to v12,
+		// the pruning time is set to whatever is in the upgrade
+		// handler (two days). Therefore, we cannot reasonably
+		// test twap pruning post-upgrade.
+		s.T().Skip("skipping TWAP Pruning test. This can be re-enabled post v12")
+	}
+
+	// Make sure that the pruning keep period has passed.
+	s.T().Logf("waiting for pruning keep period of (%.f) seconds to pass", initialization.TWAPPruningKeepPeriod.Seconds())
+	<-keepPeriodCountDown.C
+	oldEpochNumber := chainANode.QueryCurrentEpoch(epochIdentifier)
+	// The pruning should happen at the next epoch.
+	chainANode.WaitUntil(func(_ coretypes.SyncInfo) bool {
+		newEpochNumber := chainANode.QueryCurrentEpoch(epochIdentifier)
+		s.T().Logf("Current epoch number is (%d), waiting to reach (%d)", newEpochNumber, oldEpochNumber+1)
+		return newEpochNumber > oldEpochNumber
+	})
+}
+
 func (s *IntegrationTestSuite) TestStateSync() {
 	if s.skipStateSync {
 		s.T().Skip()
@@ -175,8 +236,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
 
 	// get trust height and trust hash.
-	trustHeight, err := runningNode.QueryCurrentHeight()
-	s.Require().NoError(err)
+	trustHeight := runningNode.QueryCurrentHeight()
 
 	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
 	s.Require().NoError(err)
@@ -238,12 +298,8 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
-		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
-		s.NoError(err)
-
-		runningNodeHeight, err := runningNode.QueryCurrentHeight()
-		s.NoError(err)
-
+		stateSyncNodeHeight := stateSynchingNode.QueryCurrentHeight()
+		runningNodeHeight := runningNode.QueryCurrentHeight()
 		return stateSyncNodeHeight == runningNodeHeight
 	},
 		3*time.Minute,
