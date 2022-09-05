@@ -210,11 +210,11 @@ func (k Keeper) finalizeSale(ctx sdk.Context, msg *types.MsgFinalizeSale, store 
 	if err != nil {
 		return sdk.Int{}, err
 	}
+	if !p.Finalized {
+		return sdk.Int{}, errors.ErrInvalidRequest.Wrap("Sale already finalized")
+	}
 	if err := msg.Validate(ctx.BlockTime(), p.EndTime); err != nil {
 		return sdk.Int{}, err
-	}
-	if p.Income.IsZero() {
-		return sdk.Int{}, errors.ErrInvalidRequest.Wrap("Sale already finalized")
 	}
 	treasury, err := sdk.AccAddressFromBech32(p.Treasury)
 	if err != nil {
@@ -227,8 +227,7 @@ func (k Keeper) finalizeSale(ctx sdk.Context, msg *types.MsgFinalizeSale, store 
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	income := p.Income
-	p.Income = sdk.ZeroInt()
+	p.Finalized = true
 	k.saveSale(store, saleIdBz, &p)
-	return income, nil
+	return p.Income, nil
 }

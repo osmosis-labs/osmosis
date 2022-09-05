@@ -27,8 +27,9 @@ func newSale(treasury string, id uint64, tokenIn string, tokenOut sdk.Coin, star
 		Income: zero,
 		Shares: zero,
 
-		Round:    0,
-		EndRound: currentRound(start, end, end),
+		Round:     0,
+		EndRound:  currentRound(start, end, end),
+		Finalized: false,
 
 		Name: name,
 		Url:  url,
