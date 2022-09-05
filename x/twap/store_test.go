@@ -1,8 +1,13 @@
 package twap_test
 
 import (
+	"fmt"
+	"math"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
@@ -472,6 +477,51 @@ func (s *TestSuite) TestGetAllHistoricalPoolIndexedTWAPs() {
 
 			// Assertions.
 			s.Equal(tc.expectedRecords, actualRecords)
+		})
+	}
+}
+
+func (s *TestSuite) TestAccumulatorOverflow() {
+	maxSpotPrice := gammtypes.MaxSpotPrice
+	tests := map[string]struct {
+		// timeDelta is duration in nano seconds.
+		// we use sdk.Dec here because time.Duration would automatically cap to
+		// time.duration.maxDuration without erroring.
+		timeDelta sdk.Dec
+		panics    bool
+	}{
+		"no overflow": {
+			// 2562047h47m16.854775807s in duration, this is over 292 years.
+			timeDelta: sdk.NewDec(2).Power(128),
+			panics:    false,
+		},
+		"overflow": {
+			timeDelta: sdk.NewDec(2).Power(129),
+			panics:    true,
+		},
+	}
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			var accumulatorVal sdk.Dec
+
+			fmt.Println(time.Duration(math.Pow(2, 128)))
+			if test.panics {
+				s.Require().Panics(func() {
+					// accumulator value is calculated via spot price * time delta
+					accumulatorVal = maxSpotPrice.Mul(test.timeDelta)
+				})
+			} else {
+				twapRecordToStore := types.TwapRecord{
+					PoolId:                      basePoolId,
+					Asset0Denom:                 denom0,
+					Asset1Denom:                 denom1,
+					P0ArithmeticTwapAccumulator: accumulatorVal,
+				}
+
+				s.twapkeeper.StoreNewRecord(s.Ctx, twapRecordToStore)
+			}
 		})
 	}
 }
