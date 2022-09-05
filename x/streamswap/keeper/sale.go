@@ -30,104 +30,104 @@ func currentRound(start, end, now time.Time) int64 {
 	return int64(now.Sub(start) / types.ROUND)
 }
 
-func saleRemainigBalance(p *types.Sale, userShares sdk.Int) sdk.Int {
+func saleRemainigBalance(s *types.Sale, userShares sdk.Int) sdk.Int {
 	if userShares.IsZero() {
 		return sdk.ZeroInt()
 	}
-	return p.Staked.Mul(userShares).Quo(p.Shares)
+	return s.Staked.Mul(userShares).Quo(s.Shares)
 }
 
 // compute amount of shares that should be minted for a new subscription amount
-func computeSharesAmount(p *types.Sale, amountIn sdk.Int, roundUp bool) sdk.Int {
-	if p.Shares.IsZero() || amountIn.IsZero() {
+func computeSharesAmount(s *types.Sale, amountIn sdk.Int, roundUp bool) sdk.Int {
+	if s.Shares.IsZero() || amountIn.IsZero() {
 		return amountIn
 	}
-	shares := amountIn.Mul(p.Shares)
+	shares := amountIn.Mul(s.Shares)
 	if roundUp {
-		shares = shares.Add(p.Staked).AddRaw(-1).Quo(p.Staked)
+		shares = shares.Add(s.Staked).AddRaw(-1).Quo(s.Staked)
 	} else {
-		shares = shares.Quo(p.Staked)
+		shares = shares.Quo(s.Staked)
 	}
 	return shares
 }
 
-func saleHasEnded(p *types.Sale, round int64) bool {
-	return p.EndRound >= round
+func saleHasEnded(s *types.Sale, round int64) bool {
+	return s.EndRound >= round
 }
 
-func subscribe(p *types.Sale, u *types.UserPosition, amount sdk.Int, now time.Time) {
-	pingSale(p, now)
-	if p.Round >= p.EndRound {
+func subscribe(s *types.Sale, u *types.UserPosition, amount sdk.Int, now time.Time) {
+	pingSale(s, now)
+	if s.Round >= s.EndRound {
 		return
 	}
-	remaining := triggerUserPurchase(p, u)
+	remaining := triggerUserPurchase(s, u)
 	u.Spent = u.Spent.Add(u.Staked).Sub(remaining)
-	shares := computeSharesAmount(p, amount, false)
+	shares := computeSharesAmount(s, amount, false)
 	u.Shares = u.Shares.Add(shares)
-	p.Shares = p.Shares.Add(shares)
-	p.Staked = p.Staked.Add(amount)
-	u.Staked = saleRemainigBalance(p, u.Shares)
+	s.Shares = s.Shares.Add(shares)
+	s.Staked = s.Staked.Add(amount)
+	u.Staked = saleRemainigBalance(s, u.Shares)
 }
 
 // withdraw applies withdraw requests and updates sell state.
 // If amount == nil then it withdrawns all the remaining deposit.
 // Returns withdrawn amount.
-func withdraw(p *types.Sale, u *types.UserPosition, amount *sdk.Int, now time.Time) (sdk.Int, error) {
-	pingSale(p, now)
-	remaining := triggerUserPurchase(p, u)
+func withdraw(s *types.Sale, u *types.UserPosition, amount *sdk.Int, now time.Time) (sdk.Int, error) {
+	pingSale(s, now)
+	remaining := triggerUserPurchase(s, u)
 	if amount == nil {
 		amount = &remaining
 	} else if amount.GT(remaining) {
 		return sdk.ZeroInt(), errors.ErrInvalidRequest.Wrapf("Not enough balance, available balance: %s", remaining)
 	}
 
-	shares := computeSharesAmount(p, *amount, true)
+	shares := computeSharesAmount(s, *amount, true)
 	u.Spent = u.Spent.Add(u.Staked).Sub(remaining)
 	u.Shares = u.Shares.Sub(shares)
-	p.Shares = p.Shares.Sub(shares)
-	p.Staked = p.Staked.Sub(*amount)
+	s.Shares = s.Shares.Sub(shares)
+	s.Staked = s.Staked.Sub(*amount)
 
 	return *amount, nil
 }
 
-func pingSale(p *types.Sale, now time.Time) {
+func pingSale(s *types.Sale, now time.Time) {
 	// Need to use round for the end check to assure we have the final distribution
-	round := currentRound(p.StartTime, p.EndTime, now)
-	if now.Before(p.StartTime) || p.Round >= p.EndRound {
+	round := currentRound(s.StartTime, s.EndTime, now)
+	if now.Before(s.StartTime) || s.Round >= s.EndRound {
 		return
 	}
 
-	diff := round - p.Round
-	if p.Shares.IsZero() || diff == 0 {
-		p.Round = round
+	diff := round - s.Round
+	if s.Shares.IsZero() || diff == 0 {
+		s.Round = round
 		return
 	}
 	// remaining rounds including the current round
-	remainingRounds := p.EndRound - p.Round
+	remainingRounds := s.EndRound - s.Round
 	// fmt.Println("remaining rounds:", remainingRounds, " p.round:", p.Round, " c_round:", round)
 	if remainingRounds <= 0 {
 		return
 	}
 
-	p.Round = round
-	sold := p.OutRemaining.MulRaw(diff).QuoRaw(remainingRounds)
+	s.Round = round
+	sold := s.OutRemaining.MulRaw(diff).QuoRaw(remainingRounds)
 	if sold.IsPositive() {
-		p.OutSold = p.OutSold.Add(sold)
-		p.OutRemaining = p.OutRemaining.Sub(sold)
+		s.OutSold = s.OutSold.Add(sold)
+		s.OutRemaining = s.OutRemaining.Sub(sold)
 
-		perShareDiff := sold.Mul(multiplayer).Quo(p.Shares)
-		p.OutPerShare = p.OutPerShare.Add(perShareDiff)
+		perShareDiff := sold.Mul(multiplayer).Quo(s.Shares)
+		s.OutPerShare = s.OutPerShare.Add(perShareDiff)
 	}
-	income := p.Staked.MulRaw(diff).QuoRaw(remainingRounds)
-	p.Income = p.Income.Add(income)
-	p.Staked = p.Staked.Sub(income)
+	income := s.Staked.MulRaw(diff).QuoRaw(remainingRounds)
+	s.Income = s.Income.Add(income)
+	s.Staked = s.Staked.Sub(income)
 }
 
 // returns remaining user token_in balance
-func triggerUserPurchase(p *types.Sale, u *types.UserPosition) sdk.Int {
+func triggerUserPurchase(s *types.Sale, u *types.UserPosition) sdk.Int {
 	// TODO: reorder and optimize - we can early return
-	if !p.OutPerShare.IsZero() && !u.Shares.IsZero() {
-		diff := p.OutPerShare.Sub(u.OutPerShare)
+	if !s.OutPerShare.IsZero() && !u.Shares.IsZero() {
+		diff := s.OutPerShare.Sub(u.OutPerShare)
 		if !diff.IsZero() {
 			purchased := diff.Mul(u.Shares).Quo(multiplayer)
 			// fmt.Printf("p.OutPerShare=%s   u.Shares=%s,  diff=%s, purchased=%s\n",
@@ -135,11 +135,11 @@ func triggerUserPurchase(p *types.Sale, u *types.UserPosition) sdk.Int {
 			u.Purchased = u.Purchased.Add(purchased)
 		}
 	}
-	u.OutPerShare = p.OutPerShare
-	remaining := saleRemainigBalance(p, u.Shares)
+	u.OutPerShare = s.OutPerShare
+	remaining := saleRemainigBalance(s, u.Shares)
 	if u.Shares.IsPositive() {
 		if remaining.IsZero() {
-			p.Shares = p.Shares.Sub(u.Shares)
+			s.Shares = s.Shares.Sub(u.Shares)
 			u.Shares = sdk.ZeroInt()
 		}
 	}

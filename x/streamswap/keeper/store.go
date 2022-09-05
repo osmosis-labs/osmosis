@@ -32,12 +32,12 @@ func (k *Keeper) getSale(modulestore storetypes.KVStore, id uint64) (types.Sale,
 	store := k.saleStore(modulestore)
 	idBz := storeIntIdKey(id)
 	bz := store.Get(idBz)
-	var p types.Sale
+	var s types.Sale
 	if bz == nil {
-		return p, idBz, errors.Wrap(errors.ErrKeyNotFound, "sale doesn't exist")
+		return s, idBz, errors.Wrap(errors.ErrKeyNotFound, "sale doesn't exist")
 	}
-	err := k.cdc.Unmarshal(bz, &p)
-	return p, idBz, err
+	err := k.cdc.Unmarshal(bz, &s)
+	return s, idBz, err
 }
 
 // gets or creates (when create == true) user position object
@@ -103,12 +103,12 @@ func (k Keeper) getUserAndSale(modulestore storetypes.KVStore, saleId uint64, us
 		return nil, nil, nil, nil, err
 	}
 
-	p, saleIdBz, err := k.getSale(modulestore, saleId)
+	s, saleIdBz, err := k.getSale(modulestore, saleId)
 	if err != nil {
-		return userAddr, &p, saleIdBz, nil, err
+		return userAddr, &s, saleIdBz, nil, err
 	}
 	u, err := k.getUserPosition(modulestore, saleIdBz, userAddr, create)
-	return userAddr, &p, saleIdBz, &u, err
+	return userAddr, &s, saleIdBz, &u, err
 }
 
 func storeIntIdKey(id uint64) []byte {

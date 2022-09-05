@@ -59,8 +59,8 @@ func (k Keeper) createSale(msg *types.MsgCreateSale, now time.Time, params types
 	if treasury == "" {
 		treasury = msg.Creator
 	}
-	p := newSale(treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.Name, msg.Url)
-	k.saveSale(store, idBz, &p)
+	s := newSale(treasury, id, msg.TokenIn, msg.TokenOut, msg.StartTime, end, msg.Name, msg.Url)
+	k.saveSale(store, idBz, &s)
 	return id, creator, nil
 }
 
@@ -82,22 +82,22 @@ func (k Keeper) subscribe(ctx sdk.Context, msg *types.MsgSubscribe, store storet
 	if !msg.Amount.IsPositive() {
 		return errors.ErrInvalidRequest.Wrap("amount of tokens must be positive")
 	}
-	sender, p, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, true)
+	sender, s, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, true)
 	if err != nil {
 		return err
 	}
 	now := ctx.BlockTime()
-	if !now.Before(p.EndTime) {
-		return errors.ErrInvalidRequest.Wrapf("Can only subscribe before the sale end (%s)", p.EndTime)
+	if !now.Before(s.EndTime) {
+		return errors.ErrInvalidRequest.Wrapf("Can only subscribe before the sale end (%s)", s.EndTime)
 	}
-	coin := sdk.NewCoin(p.TokenIn, msg.Amount)
+	coin := sdk.NewCoin(s.TokenIn, msg.Amount)
 	err = k.bank.SendCoinsFromAccountToModule(ctx, sender, streamswap.ModuleName, sdk.NewCoins(coin))
 	if err != nil {
 		return errors.Wrap(err, "user doesn't have enough tokens to subscribe for a Sale")
 	}
-	subscribe(p, u, msg.Amount, now)
+	subscribe(s, u, msg.Amount, now)
 
-	k.saveSale(store, saleIdBz, p)
+	k.saveSale(store, saleIdBz, s)
 	k.saveUserPosition(store, saleIdBz, sender, u)
 	return nil
 }
@@ -121,23 +121,23 @@ func (k Keeper) withdraw(ctx sdk.Context, msg *types.MsgWithdraw, store storetyp
 	if err := msg.Validate(); err != nil {
 		return err
 	}
-	sender, p, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, false)
+	sender, s, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, false)
 	if err != nil {
 		return err
 	}
 	// withdraw updates msg.Amount
-	amount, err := withdraw(p, u, msg.Amount, ctx.BlockTime())
+	amount, err := withdraw(s, u, msg.Amount, ctx.BlockTime())
 	if err != nil {
 		return err
 	}
 	msg.Amount = &amount
-	coin := sdk.NewCoin(p.TokenIn, *msg.Amount)
+	coin := sdk.NewCoin(s.TokenIn, *msg.Amount)
 	err = k.bank.SendCoinsFromModuleToAccount(ctx, streamswap.ModuleName, sender, sdk.NewCoins(coin))
 	if err != nil {
 		return err
 	}
 
-	k.saveSale(store, saleIdBz, p)
+	k.saveSale(store, saleIdBz, s)
 	k.saveUserPosition(store, saleIdBz, sender, u)
 	return nil
 }
@@ -159,19 +159,19 @@ func (k Keeper) ExitSale(goCtx context.Context, msg *types.MsgExitSale) (*types.
 
 // returns amount of tokens purchased
 func (k Keeper) exitSale(ctx sdk.Context, msg *types.MsgExitSale, store storetypes.KVStore) (sdk.Int, error) {
-	sender, p, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, false)
+	sender, s, saleIdBz, u, err := k.getUserAndSale(store, msg.SaleId, msg.Sender, false)
 	if err != nil {
 		return sdk.Int{}, err
 	}
-	if err := msg.Validate(ctx.BlockTime(), p.EndTime); err != nil {
+	if err := msg.Validate(ctx.BlockTime(), s.EndTime); err != nil {
 		return sdk.Int{}, err
 	}
 
-	pingSale(p, ctx.BlockTime())
-	triggerUserPurchase(p, u)
+	pingSale(s, ctx.BlockTime())
+	triggerUserPurchase(s, u)
 	// we don't need to update u.Spent, because we delete user record
 
-	coin := sdk.NewCoin(p.TokenOut, u.Purchased)
+	coin := sdk.NewCoin(s.TokenOut, u.Purchased)
 	err = k.bank.SendCoinsFromModuleToAccount(ctx, streamswap.ModuleName, sender, sdk.NewCoins(coin))
 	if err != nil {
 		return sdk.Int{}, err
@@ -179,7 +179,7 @@ func (k Keeper) exitSale(ctx sdk.Context, msg *types.MsgExitSale, store storetyp
 
 	if u.Shares.IsPositive() || u.Staked.IsPositive() {
 		ctx.Logger().Error("user has outstanding token_in balance", "user", msg.Sender, "balance", u.Staked)
-		coin = sdk.NewCoin(p.TokenIn, u.Staked)
+		coin = sdk.NewCoin(s.TokenIn, u.Staked)
 		err = k.bank.SendCoinsFromModuleToAccount(ctx, streamswap.ModuleName, sender, sdk.NewCoins(coin))
 		if err != nil {
 			return sdk.Int{}, err
