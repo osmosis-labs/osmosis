@@ -60,17 +60,17 @@ func FormatHistoricalPoolIndexTimePrefix(poolId uint64, accumulatorWriteTime tim
 	return []byte(fmt.Sprintf("%s%d%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator))
 }
 
-func ParseTimeFromHistoricalTimeIndexKey(key []byte) time.Time {
+func ParseTimeFromHistoricalTimeIndexKey(key []byte) (time.Time, error) {
 	keyS := string(key)
 	s := strings.Split(keyS, KeySeparator)
 	if len(s) != 5 || s[0] != historicalTWAPTimeIndexNoSeparator {
-		panic("Called ParseTimeFromHistoricalTimeIndexKey on incorrectly formatted key")
+		return time.Time{}, fmt.Errorf("Called ParseTimeFromHistoricalPoolIndexKey on incorrectly formatted key: %v", s)
 	}
 	t, err := osmoutils.ParseTimeString(s[1])
 	if err != nil {
-		panic("incorrectly formatted time string in key")
+		return time.Time{}, fmt.Errorf("incorrectly formatted time string in key %s : %v", keyS, err)
 	}
-	return t
+	return t, nil
 }
 
 func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
