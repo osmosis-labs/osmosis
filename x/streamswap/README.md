@@ -79,7 +79,7 @@ From that moment, the investor will join the **token sale distribution stream**:
 - The distribution happens discretely in rounds. Each round is 1 second long.
   We define: `total_rounds := (sale.end_time - sale.start_time) / round_duration`.
 - During each round we stream `round_supply := sale.token_out_supply / total_rounds`.
-- During each round each investor receives `round_supply * current_investor_pledge / total_remainding_sale_pledge` share of the `token_out`.
+- During each round each investor receives `round_supply * current_investor_pledge / total_remaining_sale_pledge` share of the `token_out`.
 
 At any time an investor can increase his participation for the sale by sending again `MsgSubscribe`
 (his pledge will increase accordingly) or cancel it by sending
