@@ -421,17 +421,17 @@ func newEmptyPriceRecord(poolId uint64, t time.Time, asset0 string, asset1 strin
 }
 
 func recordWithUpdatedAccum(record []types.TwapRecord, accum0 sdk.Dec, accum1 sdk.Dec) []types.TwapRecord {
-	for _, rec := range record {
-		rec.P0ArithmeticTwapAccumulator = accum0
-		rec.P1ArithmeticTwapAccumulator = accum1
+	for i := range record {
+		record[i].P0ArithmeticTwapAccumulator = accum0
+		record[i].P1ArithmeticTwapAccumulator = accum1
 	}
 	return record
 }
 
 func recordWithUpdatedSpotPrice(record []types.TwapRecord, sp0 sdk.Dec, sp1 sdk.Dec) []types.TwapRecord {
-	for _, rec := range record {
-		rec.P0LastSpotPrice = sp0
-		rec.P1LastSpotPrice = sp1
+	for i := range record {
+		record[i].P0LastSpotPrice = sp0
+		record[i].P1LastSpotPrice = sp1
 	}
 	return record
 }
