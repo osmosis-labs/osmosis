@@ -44,7 +44,9 @@ func setupStatsDb(config ExportConfig) (statsDb, error) {
 }
 
 func (stats statsDb) cleanup() {
-	stats.db.Close()
+	if stats.db != nil {
+		stats.db.Close()
+	}
 }
 
 func (stats statsDb) logActionResult(header tmproto.Header, opMsg simulation.OperationMsg, resultData []byte) error {
