@@ -860,15 +860,6 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 			}
 
 			osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
-
-			/*
-			balancerPool, ok := pool.(*balancer.Pool)
-			require.True(t, ok)
-
-			assertPoolStateNotModified(t, balancerPool, func() {
-				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
-			})
-			*/
 		})
 	}
 }
