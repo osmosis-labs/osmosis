@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS blocks;
-;; TODO: 
+-- comment
 CREATE TABLE blocks (
     id INTEGER PRIMARY KEY,
     height INT,

@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"database/sql"
+	"embed"
 	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -9,6 +10,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
+
+//go:embed schema.sql
+var embedFs embed.FS
 
 // TODO: Setup an sql schema file instead of doing it in-line here
 type statsDb struct {
@@ -20,21 +24,22 @@ func setupStatsDb(config ExportConfig) (statsDb, error) {
 	if !config.WriteStatsToDB {
 		return statsDb{enabled: false}, nil
 	}
+
+	setupSqlCmd, err := embedFs.ReadFile("schema.sql")
+	if err != nil {
+		return statsDb{}, fmt.Errorf("error in schema.sql init: %w", err)
+	}
+
 	db, err := sql.Open("sqlite3", "./blocks.db")
 	if err != nil {
 		return statsDb{}, err
 	}
 
-	sts := `
-	DROP TABLE IF EXISTS blocks;
-	CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT, msg STRING, resData STRING, appHash STRING);
-	`
-	_, err = db.Exec(sts)
-
-	if err != nil {
+	if _, err := db.Exec(string(setupSqlCmd)); err != nil {
 		db.Close()
 		return statsDb{}, err
 	}
+
 	return statsDb{enabled: true, db: db}, nil
 }
 
