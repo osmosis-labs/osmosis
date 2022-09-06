@@ -27,7 +27,7 @@ func setupStatsDb(config ExportConfig) (statsDb, error) {
 
 	setupSqlCmd, err := embedFs.ReadFile("schema.sql")
 	if err != nil {
-		return statsDb{}, fmt.Errorf("error in schema.sql init: %w", err)
+		return statsDb{}, fmt.Errorf("error in reading schema.sql: %w", err)
 	}
 
 	db, err := sql.Open("sqlite3", "./blocks.db")
@@ -37,7 +37,7 @@ func setupStatsDb(config ExportConfig) (statsDb, error) {
 
 	if _, err := db.Exec(string(setupSqlCmd)); err != nil {
 		db.Close()
-		return statsDb{}, err
+		return statsDb{}, fmt.Errorf("error in init from schema.sql init: %w", err)
 	}
 
 	return statsDb{enabled: true, db: db}, nil

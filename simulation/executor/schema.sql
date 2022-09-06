@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS blocks;
--- comment
+-- TODO: Restructure into multiple tables, to have better encapsulation of block, action log, begin/end block, etc.
 CREATE TABLE blocks (
     id INTEGER PRIMARY KEY,
     height INT,
