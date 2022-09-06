@@ -189,7 +189,7 @@ docs:
 	@echo
 .PHONY: docs
 
-protoVer=v0.7
+protoVer=v0.8
 protoImageName=tendermintdev/sdk-proto-gen:$(protoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
 containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
