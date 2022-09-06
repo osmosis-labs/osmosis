@@ -2,7 +2,6 @@ package twap_test
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
@@ -109,13 +108,13 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			for i, record := range test.record {
+			for i := range test.record {
 				// correct expected record based off copy/paste values
 				test.expRecord[i].Time = test.interpolateTime
-				test.expRecord[i].P0LastSpotPrice = record.P0LastSpotPrice
-				test.expRecord[i].P1LastSpotPrice = record.P1LastSpotPrice
+				test.expRecord[i].P0LastSpotPrice = test.record[i].P0LastSpotPrice
+				test.expRecord[i].P1LastSpotPrice = test.record[i].P1LastSpotPrice
 
-				gotRecord := twap.RecordWithUpdatedAccumulators(record, test.interpolateTime)
+				gotRecord := twap.RecordWithUpdatedAccumulators(test.record[i], test.interpolateTime)
 				require.Equal(t, test.expRecord[i], gotRecord)
 			}
 		},
@@ -143,91 +142,78 @@ func (s *TestSuite) TestUpdateTwap() {
 	tapSp10OneTimeUnitAccumRecord := newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10))
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
-		poolId           uint64
 		record           []types.TwapRecord
 		spotPriceResult0 twapmock.SpotPriceResult
 		spotPriceResult1 twapmock.SpotPriceResult
 		expRecord        []types.TwapRecord
 	}{
 		"0 accum start, sp change": {
-			poolId:           1,
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOne,
 			expRecord:        sp10OneTimeUnitAccumRecord,
 		},
 		"three asset, 0 accum start, sp change": {
-			poolId:           2,
 			record:           tapZeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOne,
 			expRecord:        tapSp10OneTimeUnitAccumRecord,
 		},
 		"0 accum start, sp0 err at update": {
-			poolId:           1,
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOneErr,
 			spotPriceResult1: spotPriceResOne,
 			expRecord:        withLastErrTime(newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
 		},
 		"three asset, 0 accum start, sp0 err at update": {
-			poolId:           2,
 			record:           tapZeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOneErr,
 			spotPriceResult1: spotPriceResOne,
 			expRecord:        withLastErrTime(newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
 		},
 		"0 accum start, sp0 err at update with nil dec": {
-			poolId:           1,
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOneErrNilDec,
 			spotPriceResult1: spotPriceResOne,
 			expRecord:        withSp0(withLastErrTime(newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
 		},
 		"three asset, 0 accum start, sp0 err at update with nil dec": {
-			poolId:           2,
 			record:           tapZeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOneErrNilDec,
 			spotPriceResult1: spotPriceResOne,
 			expRecord:        withSp0(withLastErrTime(newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
 		},
 		"0 accum start, sp1 err at update with nil dec": {
-			poolId:           1,
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOneErrNilDec,
 			expRecord:        withSp1(withLastErrTime(newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
 		},
 		"three asset, 0 accum start, sp1 err at update with nil dec": {
-			poolId:           2,
 			record:           tapZeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOneErrNilDec,
 			expRecord:        withSp1(withLastErrTime(newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
 		},
 		"startRecord err time preserved": {
-			poolId:           1,
 			record:           withLastErrTime(newRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOne,
 			expRecord:        withLastErrTime(newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), baseTimeMinusOne),
 		},
 		"three asset, startRecord err time preserved": {
-			poolId:           2,
 			record:           withLastErrTime(newTapRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOne,
 			expRecord:        withLastErrTime(newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), baseTimeMinusOne),
 		},
 		"err time bumped with start": {
-			poolId:           1,
 			record:           withLastErrTime(newRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOneErr,
 			expRecord:        withLastErrTime(newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
 		},
 		"three asset, err time bumped with start": {
-			poolId:           2,
 			record:           withLastErrTime(newTapRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOneErr,
@@ -239,9 +225,6 @@ func (s *TestSuite) TestUpdateTwap() {
 			s.Ctx = s.Ctx.WithBlockTime(updateTime)
 			for i := range test.record {
 				// setup common, block time, pool Id, expected spot prices
-				test.record[i].PoolId = test.poolId
-				test.expRecord[i].PoolId = test.poolId
-				fmt.Printf(" %v LastErrorTime %v\n", name, test.expRecord[i].LastErrorTime)
 				if (test.expRecord[i].P0LastSpotPrice == sdk.Dec{}) {
 					test.expRecord[i].P0LastSpotPrice = test.spotPriceResult0.Sp
 				}
@@ -251,10 +234,10 @@ func (s *TestSuite) TestUpdateTwap() {
 				test.expRecord[i].Height = s.Ctx.BlockHeight()
 				test.expRecord[i].Time = s.Ctx.BlockTime()
 
-				programmableAmmInterface.ProgramPoolSpotPriceOverride(test.poolId,
+				programmableAmmInterface.ProgramPoolSpotPriceOverride(test.record[i].PoolId,
 					test.record[i].Asset0Denom, test.record[i].Asset1Denom,
 					test.spotPriceResult0.Sp, test.spotPriceResult0.Err)
-				programmableAmmInterface.ProgramPoolSpotPriceOverride(test.poolId,
+				programmableAmmInterface.ProgramPoolSpotPriceOverride(test.record[i].PoolId,
 					test.record[i].Asset1Denom, test.record[i].Asset0Denom,
 					test.spotPriceResult1.Sp, test.spotPriceResult1.Err)
 
