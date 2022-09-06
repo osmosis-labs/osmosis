@@ -788,7 +788,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
-	// test cases.
+	// test cases defined in joinPoolTestCases.
 	//
 	// See calcJoinSharesTestCase struct definition for explanation why the
 	// sharing is needed.
@@ -822,6 +822,53 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			assertPoolStateNotModified(t, balancerPool, func() {
 				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
 			})
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestJoinPool() {
+	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
+	// test cases defined in joinPoolTestCases.
+	//
+	// See calcJoinSharesTestCase struct definition for explanation why the
+	// sharing is needed.
+
+	testCases := append(joinPoolTestCases, calcSingleAssetJoinTestCases...)
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.T().Run(tc.name, func(t *testing.T) {
+			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+
+			// system under test
+			sut := func() {
+				preJoinAssets := pool.GetTotalPoolLiquidity(suite.Ctx)
+				shares, err := pool.JoinPool(suite.Ctx, tc.tokensIn, tc.swapFee)
+				postJoinAssets := pool.GetTotalPoolLiquidity(suite.Ctx)
+
+				if tc.expErr != nil {
+					require.Error(t, err)
+					require.ErrorAs(t, tc.expErr, &err)
+					require.Equal(t, sdk.Int{}, shares)
+					require.Equal(t, preJoinAssets, postJoinAssets)
+				} else {
+					require.NoError(t, err)
+					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+					assertExpectedLiquidity(t, preJoinAssets.Add(tc.tokensIn...), postJoinAssets)
+				}
+			}
+
+			osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
+
+			/*
+			balancerPool, ok := pool.(*balancer.Pool)
+			require.True(t, ok)
+
+			assertPoolStateNotModified(t, balancerPool, func() {
+				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
+			})
+			*/
 		})
 	}
 }
