@@ -46,8 +46,6 @@ func init() {
 	StargateWhitelist.Store("/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress", &distributiontypes.QueryDelegatorWithdrawAddressResponse{})
 	StargateWhitelist.Store("/cosmos.distribution.v1beta1.Query/ValidatorCommission", &distributiontypes.QueryValidatorCommissionResponse{})
 
-	// evidence
-	StargateWhitelist.Store("/cosmos.evidence.v1beta1.Query/Evidence", &evidencetypes.QueryEvidenceResponse{})
 
 	// gov
 	StargateWhitelist.Store("/cosmos.gov.v1beta1.Query/Deposit", &govtypes.QueryDepositResponse{})
