@@ -21,6 +21,7 @@ var OneSec = sdk.MustNewDecFromStr("1000.000000000000000000")
 
 func newRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) []types.TwapRecord {
 	return []types.TwapRecord{{
+		PoolId:          1,
 		Asset0Denom:     defaultTwoAssetCoins[0].Denom,
 		Asset1Denom:     defaultTwoAssetCoins[1].Denom,
 		Time:            t,
@@ -35,6 +36,7 @@ func newRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) []types.TwapRecord {
 // make an expected record for math tests, we adjust other values in the test runner.
 func newExpRecord(accum0, accum1 sdk.Dec) []types.TwapRecord {
 	return []types.TwapRecord{{
+		PoolId:      1,
 		Asset0Denom: defaultTwoAssetCoins[0].Denom,
 		Asset1Denom: defaultTwoAssetCoins[1].Denom,
 		// make new copies
@@ -45,6 +47,7 @@ func newExpRecord(accum0, accum1 sdk.Dec) []types.TwapRecord {
 
 func newTapRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) []types.TwapRecord {
 	twapAB := types.TwapRecord{
+		PoolId:          2,
 		Asset0Denom:     defaultThreeAssetCoins[0].Denom,
 		Asset1Denom:     defaultThreeAssetCoins[1].Denom,
 		Time:            t,
@@ -64,6 +67,7 @@ func newTapRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) []types.TwapRecord {
 // make an expected record for math tests, we adjust other values in the test runner.
 func newTapExpRecord(accum0, accum1 sdk.Dec) []types.TwapRecord {
 	twapAB := types.TwapRecord{
+		PoolId:      2,
 		Asset0Denom: defaultThreeAssetCoins[0].Denom,
 		Asset1Denom: defaultThreeAssetCoins[1].Denom,
 		// make new copies
