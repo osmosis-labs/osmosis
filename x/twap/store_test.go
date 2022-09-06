@@ -1,8 +1,14 @@
 package twap_test
 
 import (
+	"fmt"
+	"math"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/v11/x/twap"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
 )
 
@@ -139,47 +145,47 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		recordsToSet   []types.TwapRecord
 		input          getRecordInput
 		expectedRecord types.TwapRecord
-		expErr         bool
+		expErr         error
 	}{
-		"no entries":            {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, true},
-		"get at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultInputAt(baseTime), baseRecord, false},
-		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, false},
+		"no entries":            {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, twap.TimeTooOldError{Time: baseTime}},
+		"get at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultInputAt(baseTime), baseRecord, nil},
+		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, nil},
 
 		"get latest (exact) w/ past entries": {
-			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(baseTime), baseRecord, false},
+			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(baseTime), baseRecord, nil},
 		"get entry (exact) w/ a subsequent entry": {
-			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tMin1), tMin1Record, false},
+			[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tMin1), tMin1Record, nil},
 		"get sandwitched entry (exact)": {
-			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, false},
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultInputAt(baseTime), baseRecord, nil},
 		"rev sandwitched entry (exact)": {
-			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, false},
+			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record}, defaultRevInputAt(baseTime), baseRecord, nil},
 
-		"get future":                 {[]types.TwapRecord{baseRecord}, defaultInputAt(tPlus1), baseRecord, false},
-		"get future w/ past entries": {[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tPlus1), baseRecord, false},
+		"get future":                 {[]types.TwapRecord{baseRecord}, defaultInputAt(tPlus1), baseRecord, nil},
+		"get future w/ past entries": {[]types.TwapRecord{tMin1Record, baseRecord}, defaultInputAt(tPlus1), baseRecord, nil},
 
 		"get in between entries (2 entry)": {
 			[]types.TwapRecord{tMin1Record, baseRecord},
-			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, false},
+			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, nil},
 		"get in between entries (3 entry)": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, false},
+			defaultInputAt(baseTime.Add(-time.Millisecond)), tMin1Record, nil},
 		"get in between entries (3 entry) #2": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			defaultInputAt(baseTime.Add(time.Millisecond)), baseRecord, false},
+			defaultInputAt(baseTime.Add(time.Millisecond)), baseRecord, nil},
 
 		"query too old": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
 			defaultInputAt(baseTime.Add(-time.Second * 2)),
-			baseRecord, true},
+			baseRecord, twap.TimeTooOldError{Time: baseTime.Add(-time.Second * 2)}},
 
 		"non-existent pool ID": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			wrongPoolIdInputAt(baseTime), baseRecord, true},
+			wrongPoolIdInputAt(baseTime), baseRecord, twap.TimeTooOldError{Time: baseTime}},
 		"pool2 record get": {
 			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
 			input:          wrongPoolIdInputAt(baseTime),
 			expectedRecord: newEmptyPriceRecord(2, baseTime, denom0, denom1),
-			expErr:         false},
+			expErr:         nil},
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
@@ -190,8 +196,8 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 			record, err := s.twapkeeper.GetRecordAtOrBeforeTime(
 				s.Ctx,
 				test.input.poolId, test.input.t, test.input.asset0Denom, test.input.asset1Denom)
-			if test.expErr {
-				s.Require().Error(err)
+			if test.expErr != nil {
+				s.Require().Equal(test.expErr, err)
 				return
 			}
 			s.Require().NoError(err)
@@ -472,6 +478,51 @@ func (s *TestSuite) TestGetAllHistoricalPoolIndexedTWAPs() {
 
 			// Assertions.
 			s.Equal(tc.expectedRecords, actualRecords)
+		})
+	}
+}
+
+func (s *TestSuite) TestAccumulatorOverflow() {
+	maxSpotPrice := gammtypes.MaxSpotPrice
+	tests := map[string]struct {
+		// timeDelta is duration in nano seconds.
+		// we use sdk.Dec here because time.Duration would automatically cap to
+		// time.duration.maxDuration without erroring.
+		timeDelta sdk.Dec
+		panics    bool
+	}{
+		"no overflow": {
+			// 2562047h47m16.854775807s in duration, this is over 292 years.
+			timeDelta: sdk.NewDec(2).Power(128),
+			panics:    false,
+		},
+		"overflow": {
+			timeDelta: sdk.NewDec(2).Power(129),
+			panics:    true,
+		},
+	}
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			var accumulatorVal sdk.Dec
+
+			fmt.Println(time.Duration(math.Pow(2, 128)))
+			if test.panics {
+				s.Require().Panics(func() {
+					// accumulator value is calculated via spot price * time delta
+					accumulatorVal = maxSpotPrice.Mul(test.timeDelta)
+				})
+			} else {
+				twapRecordToStore := types.TwapRecord{
+					PoolId:                      basePoolId,
+					Asset0Denom:                 denom0,
+					Asset1Denom:                 denom1,
+					P0ArithmeticTwapAccumulator: accumulatorVal,
+				}
+
+				s.twapkeeper.StoreNewRecord(s.Ctx, twapRecordToStore)
+			}
 		})
 	}
 }

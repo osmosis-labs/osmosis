@@ -199,7 +199,6 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			newTime:   time.Unix(1, 0),
 			expRecord: newExpRecord(oneDec, twoDec),
 		},
-		// TODO: Overflow tests
 	}
 
 	for name, test := range tests {
@@ -384,8 +383,6 @@ func TestComputeArithmeticTwap(t *testing.T) {
 			pointOneAccum, tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
 
 		"accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
-
-		// TODO: Overflow, rounding
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {

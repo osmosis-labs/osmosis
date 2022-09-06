@@ -62,7 +62,6 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 		"diff spot price": {zeroAccumTenPoint1Record,
 			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 			tPlusOne, 1, denomA, denomB, nil},
-		// TODO: Overflow
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
@@ -233,7 +232,6 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:        makeSimpleTwapInput(baseTime.Add(-time.Hour), baseTime, quoteAssetA),
 			expectError:  twap.TimeTooOldError{Time: baseTime.Add(-time.Hour)},
 		},
-		// TODO: overflow tests, multi-asset pool handling
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
@@ -475,7 +473,6 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			input:         makeSimpleTwapToNowInput(baseTime.Add(-time.Hour), quoteAssetA),
 			expectedError: twap.TimeTooOldError{Time: baseTime.Add(-time.Hour)},
 		},
-		// TODO: overflow tests
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
