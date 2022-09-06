@@ -45,14 +45,14 @@ var (
 
 func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 	poolId, denomA, denomB := s.setupDefaultPool()
-	initStartRecord := newRecord(s.Ctx.BlockTime(), sdk.OneDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	initStartRecord[0].PoolId, initStartRecord[0].Height = poolId, s.Ctx.BlockHeight()
+	initStartRecord := newRecord(poolId, s.Ctx.BlockTime(), sdk.OneDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	initStartRecord[0].Height = s.Ctx.BlockHeight()
 	zeroAccumTenPoint1Record := recordWithUpdatedSpotPrice(initStartRecord, sdk.NewDec(10), sdk.NewDecWithPrec(1, 1))
 
 	tapPoolId, tapDenomA, tapDenomB, tapDenomC := s.setupDefaultThreeAssetPool()
-	tapInitStartRecord := newTapRecord(s.Ctx.BlockTime(), sdk.OneDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	tapInitStartRecord := newTapRecord(tapPoolId, s.Ctx.BlockTime(), sdk.OneDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	for i := range tapInitStartRecord {
-		tapInitStartRecord[i].PoolId, tapInitStartRecord[i].Height = tapPoolId, s.Ctx.BlockHeight()
+		tapInitStartRecord[i].Height = s.Ctx.BlockHeight()
 	}
 	tapZeroAccumTenPoint1Record := recordWithUpdatedSpotPrice(tapInitStartRecord, sdk.NewDec(10), sdk.NewDecWithPrec(1, 1))
 

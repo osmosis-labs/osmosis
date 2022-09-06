@@ -20,8 +20,8 @@ var oneDec = sdk.OneDec()
 var twoDec = oneDec.Add(oneDec)
 var OneSec = sdk.MustNewDecFromStr("1000.000000000000000000")
 
-func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
-	return types.TwapRecord{
+func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) []types.TwapRecord {
+	return []types.TwapRecord{{
 		PoolId:          poolId,
 		Asset0Denom:     defaultTwoAssetCoins[0].Denom,
 		Asset1Denom:     defaultTwoAssetCoins[1].Denom,
@@ -35,9 +35,9 @@ func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) types.Tw
 }
 
 // make an expected record for math tests, we adjust other values in the test runner.
-func newExpRecord(accum0, accum1 sdk.Dec) []types.TwapRecord {
+func newExpRecord(poolId uint64, accum0, accum1 sdk.Dec) []types.TwapRecord {
 	return []types.TwapRecord{{
-		PoolId:      1,
+		PoolId:      poolId,
 		Asset0Denom: defaultTwoAssetCoins[0].Denom,
 		Asset1Denom: defaultTwoAssetCoins[1].Denom,
 		// make new copies
@@ -46,9 +46,9 @@ func newExpRecord(accum0, accum1 sdk.Dec) []types.TwapRecord {
 	}}
 }
 
-func newTapRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) []types.TwapRecord {
+func newTapRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) []types.TwapRecord {
 	twapAB := types.TwapRecord{
-		PoolId:          2,
+		PoolId:          poolId,
 		Asset0Denom:     defaultThreeAssetCoins[0].Denom,
 		Asset1Denom:     defaultThreeAssetCoins[1].Denom,
 		Time:            t,
@@ -66,9 +66,9 @@ func newTapRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) []types.TwapRecord {
 }
 
 // make an expected record for math tests, we adjust other values in the test runner.
-func newTapExpRecord(accum0, accum1 sdk.Dec) []types.TwapRecord {
+func newTapExpRecord(poolId uint64, accum0, accum1 sdk.Dec) []types.TwapRecord {
 	twapAB := types.TwapRecord{
-		PoolId:      2,
+		PoolId:      poolId,
 		Asset0Denom: defaultThreeAssetCoins[0].Denom,
 		Asset1Denom: defaultThreeAssetCoins[1].Denom,
 		// make new copies
@@ -158,8 +158,8 @@ func (s *TestSuite) TestUpdateTwap() {
 	updateTime := time.Unix(3, 0).UTC()
 	baseTimeMinusOne := time.Unix(1, 0).UTC()
 
-	zeroAccumNoErrSp10Record := newRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec)
-	tapZeroAccumNoErrSp10Record := newTapRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec)
+	zeroAccumNoErrSp10Record := newRecord(1, baseTime, sdk.NewDec(10), zeroDec, zeroDec)
+	tapZeroAccumNoErrSp10Record := newTapRecord(2, baseTime, sdk.NewDec(10), zeroDec, zeroDec)
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
 		record           []types.TwapRecord
@@ -171,73 +171,73 @@ func (s *TestSuite) TestUpdateTwap() {
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
+			expRecord:        newExpRecord(1, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 		},
 		"three asset, 0 accum start, sp change": {
 			record:           tapZeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
+			expRecord:        newTapExpRecord(2, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 		},
 		"0 accum start, sp0 err at update": {
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOneErr,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        withLastErrTime(newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
+			expRecord:        withLastErrTime(newExpRecord(1, OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
 		},
 		"three asset, 0 accum start, sp0 err at update": {
 			record:           tapZeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOneErr,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        withLastErrTime(newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
+			expRecord:        withLastErrTime(newTapExpRecord(2, OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
 		},
 		"0 accum start, sp0 err at update with nil dec": {
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOneErrNilDec,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        withSp0(withLastErrTime(newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
+			expRecord:        withSp0(withLastErrTime(newExpRecord(1, OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
 		},
 		"three asset, 0 accum start, sp0 err at update with nil dec": {
 			record:           tapZeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOneErrNilDec,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        withSp0(withLastErrTime(newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
+			expRecord:        withSp0(withLastErrTime(newTapExpRecord(2, OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
 		},
 		"0 accum start, sp1 err at update with nil dec": {
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOneErrNilDec,
-			expRecord:        withSp1(withLastErrTime(newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
+			expRecord:        withSp1(withLastErrTime(newExpRecord(1, OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
 		},
 		"three asset, 0 accum start, sp1 err at update with nil dec": {
 			record:           tapZeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOneErrNilDec,
-			expRecord:        withSp1(withLastErrTime(newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
+			expRecord:        withSp1(withLastErrTime(newTapExpRecord(2, OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime), sdk.ZeroDec()),
 		},
 		"startRecord err time preserved": {
-			record:           withLastErrTime(newRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
+			record:           withLastErrTime(newRecord(1, baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        withLastErrTime(newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), baseTimeMinusOne),
+			expRecord:        withLastErrTime(newExpRecord(1, OneSec.MulInt64(10), OneSec.QuoInt64(10)), baseTimeMinusOne),
 		},
 		"three asset, startRecord err time preserved": {
-			record:           withLastErrTime(newTapRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
+			record:           withLastErrTime(newTapRecord(2, baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        withLastErrTime(newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), baseTimeMinusOne),
+			expRecord:        withLastErrTime(newTapExpRecord(2, OneSec.MulInt64(10), OneSec.QuoInt64(10)), baseTimeMinusOne),
 		},
 		"err time bumped with start": {
-			record:           withLastErrTime(newRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
+			record:           withLastErrTime(newRecord(1, baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOneErr,
-			expRecord:        withLastErrTime(newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
+			expRecord:        withLastErrTime(newExpRecord(1, OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
 		},
 		"three asset, err time bumped with start": {
-			record:           withLastErrTime(newTapRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
+			record:           withLastErrTime(newTapRecord(2, baseTime, sdk.NewDec(10), zeroDec, zeroDec), baseTimeMinusOne),
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOneErr,
-			expRecord:        withLastErrTime(newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
+			expRecord:        withLastErrTime(newTapExpRecord(2, OneSec.MulInt64(10), OneSec.QuoInt64(10)), updateTime),
 		},
 	}
 	for name, test := range tests {
@@ -276,24 +276,24 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 		expRecord       []types.TwapRecord
 	}{
 		"0accum": {
-			record:          newRecord(time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec),
+			record:          newRecord(1, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec),
 			interpolateTime: time.Unix(2, 0),
-			expRecord:       newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
+			expRecord:       newExpRecord(1, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 		},
 		"small starting accumulators": {
-			record:          newRecord(time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec),
+			record:          newRecord(1, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec),
 			interpolateTime: time.Unix(2, 0),
-			expRecord:       newExpRecord(oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10))),
+			expRecord:       newExpRecord(1, oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10))),
 		},
 		"larger time interval": {
-			record:          newRecord(time.Unix(11, 0), sdk.NewDec(10), oneDec, twoDec),
+			record:          newRecord(1, time.Unix(11, 0), sdk.NewDec(10), oneDec, twoDec),
 			interpolateTime: time.Unix(55, 0),
-			expRecord:       newExpRecord(oneDec.Add(OneSec.MulInt64(44*10)), twoDec.Add(OneSec.MulInt64(44).QuoInt64(10))),
+			expRecord:       newExpRecord(1, oneDec.Add(OneSec.MulInt64(44*10)), twoDec.Add(OneSec.MulInt64(44).QuoInt64(10))),
 		},
 		"same time": {
-			record:          newRecord(time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec),
+			record:          newRecord(1, time.Unix(1, 0), sdk.NewDec(10), oneDec, twoDec),
 			interpolateTime: time.Unix(1, 0),
-			expRecord:       newExpRecord(oneDec, twoDec),
+			expRecord:       newExpRecord(1, oneDec, twoDec),
 		},
 	}
 
