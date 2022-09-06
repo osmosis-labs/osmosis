@@ -1,6 +1,7 @@
 package twap_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
 	"github.com/osmosis-labs/osmosis/v11/x/twap"
 	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v11/x/twap/types/twapmock"
 )
 
 var zeroDec = sdk.ZeroDec()
@@ -106,67 +108,88 @@ func (s *TestSuite) TestNewTwapRecord() {
 	}
 }
 
-func (s *TestSuite) TestUpdateRecord() {
+func (s *TestSuite) TestUpdateTwap() {
+	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
+	programmableAmmInterface := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
+	s.App.TwapKeeper.SetAmmInterface(programmableAmmInterface)
+
+	spotPriceResOne := twapmock.SpotPriceResult{Sp: sdk.OneDec(), Err: nil}
+	spotPriceResOneErr := twapmock.SpotPriceResult{Sp: sdk.OneDec(), Err: errors.New("dummy err")}
+	spotPriceResOneErrNilDec := twapmock.SpotPriceResult{Sp: sdk.Dec{}, Err: errors.New("dummy err")}
+	baseTime := time.Unix(2, 0).UTC()
+	updateTime := time.Unix(3, 0).UTC()
+	baseTimeMinusOne := time.Unix(1, 0).UTC()
+
+	zeroAccumNoErrSp10Record := newRecord(poolId, baseTime, sdk.NewDec(10), zeroDec, zeroDec)
+	sp10OneTimeUnitAccumRecord := newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10))
+	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
-		inputRecord       types.TwapRecord
-		updateBlockHeight bool
-		updateSpotPrice   bool
-		updateBlockTime   bool
+		record           types.TwapRecord
+		spotPriceResult0 twapmock.SpotPriceResult
+		spotPriceResult1 twapmock.SpotPriceResult
+		expRecord        types.TwapRecord
 	}{
-		"happy path, zero accumulator": {
-			inputRecord:       newRecord(1, s.Ctx.BlockTime(), sdk.NewDec(10), zeroDec, zeroDec),
-			updateBlockHeight: false,
-			updateSpotPrice:   false,
+		"0 accum start, sp change": {
+			record:           zeroAccumNoErrSp10Record,
+			spotPriceResult0: spotPriceResOne,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        sp10OneTimeUnitAccumRecord,
 		},
-		"update block height": {
-			inputRecord:       newRecord(1, s.Ctx.BlockTime(), sdk.NewDec(10), zeroDec, zeroDec),
-			updateBlockHeight: true,
+		"0 accum start, sp0 err at update": {
+			record:           zeroAccumNoErrSp10Record,
+			spotPriceResult0: spotPriceResOneErr,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime),
 		},
-		"update block time and spot price": {
-			inputRecord:     newRecord(1, s.Ctx.BlockTime(), sdk.NewDec(10), zeroDec, zeroDec),
-			updateSpotPrice: true,
-			updateBlockTime: true,
+		"0 accum start, sp0 err at update with nil dec": {
+			record:           zeroAccumNoErrSp10Record,
+			spotPriceResult0: spotPriceResOneErrNilDec,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        withSp0(withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime), sdk.ZeroDec()),
 		},
-		"spot price changed": {
-			inputRecord:     newRecord(1, s.Ctx.BlockTime(), sdk.NewDec(10), zeroDec, zeroDec),
-			updateSpotPrice: true,
+		"0 accum start, sp1 err at update with nil dec": {
+			record:           zeroAccumNoErrSp10Record,
+			spotPriceResult0: spotPriceResOne,
+			spotPriceResult1: spotPriceResOneErrNilDec,
+			expRecord:        withSp1(withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime), sdk.ZeroDec()),
+		},
+		"startRecord err time preserved": {
+			record:           withLastErrTime(zeroAccumNoErrSp10Record, baseTimeMinusOne),
+			spotPriceResult0: spotPriceResOne,
+			spotPriceResult1: spotPriceResOne,
+			expRecord:        withLastErrTime(sp10OneTimeUnitAccumRecord, baseTimeMinusOne),
+		},
+		"err time bumped with start": {
+			record:           withLastErrTime(zeroAccumNoErrSp10Record, baseTimeMinusOne),
+			spotPriceResult0: spotPriceResOne,
+			spotPriceResult1: spotPriceResOneErr,
+			expRecord:        withLastErrTime(sp10OneTimeUnitAccumRecord, updateTime),
 		},
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.SetupTest()
-			poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
-
-			if test.updateBlockHeight {
-				s.Ctx = s.Ctx.WithBlockHeight(s.Ctx.BlockHeight() + 1)
+			// setup common, block time, pool Id, expected spot prices
+			s.Ctx = s.Ctx.WithBlockTime(updateTime.UTC())
+			test.record.PoolId = poolId
+			test.expRecord.PoolId = poolId
+			if (test.expRecord.P0LastSpotPrice == sdk.Dec{}) {
+				test.expRecord.P0LastSpotPrice = test.spotPriceResult0.Sp
 			}
-
-			if test.updateBlockTime {
-				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute))
+			if (test.expRecord.P1LastSpotPrice == sdk.Dec{}) {
+				test.expRecord.P1LastSpotPrice = test.spotPriceResult1.Sp
 			}
+			test.expRecord.Height = s.Ctx.BlockHeight()
+			test.expRecord.Time = s.Ctx.BlockTime()
 
-			if test.updateSpotPrice {
-				s.RunBasicSwap(poolId)
-			}
+			programmableAmmInterface.ProgramPoolSpotPriceOverride(poolId,
+				defaultTwoAssetCoins[0].Denom, defaultTwoAssetCoins[1].Denom,
+				test.spotPriceResult0.Sp, test.spotPriceResult0.Err)
+			programmableAmmInterface.ProgramPoolSpotPriceOverride(poolId,
+				defaultTwoAssetCoins[1].Denom, defaultTwoAssetCoins[0].Denom,
+				test.spotPriceResult1.Sp, test.spotPriceResult1.Err)
 
-			newRecord := s.twapkeeper.UpdateRecord(s.Ctx, test.inputRecord)
-
-			spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, newRecord.Asset0Denom, newRecord.Asset1Denom)
-			s.Require().NoError(err)
-
-			s.Require().Equal(spotPrice, newRecord.P0LastSpotPrice)
-			s.Require().Equal(s.Ctx.BlockHeight(), newRecord.Height)
-			s.Require().Equal(s.Ctx.BlockTime(), newRecord.Time)
-			s.Require().Equal(poolId, newRecord.PoolId)
-
-			// we test specific math within deeper unit tests, test only for accumulator increase
-			if test.updateBlockTime {
-				s.Require().True(newRecord.P0ArithmeticTwapAccumulator.GT(zeroDec))
-				s.Require().True(newRecord.P1ArithmeticTwapAccumulator.GT(zeroDec))
-			} else {
-				s.Require().False(newRecord.P0ArithmeticTwapAccumulator.GT(zeroDec))
-				s.Require().False(newRecord.P1ArithmeticTwapAccumulator.GT(zeroDec))
-			}
+			newRecord := s.twapkeeper.UpdateRecord(s.Ctx, test.record)
+			s.Equal(test.expRecord, newRecord)
 		})
 	}
 }
