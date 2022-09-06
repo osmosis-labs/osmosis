@@ -170,7 +170,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDec(10)},
 		},
-		"(1 record, three asset pool) start and end point to same record": {
+		"(1 pair of 3 records, three asset pool) start and end point to same record": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTapTwapInput(baseTime, tPlusOne, quoteAssetA),
@@ -182,7 +182,7 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, quoteAssetB),
 			expTwap:      []sdk.Dec{sdk.NewDecWithPrec(1, 1)},
 		},
-		"(1 record, three asset pool) start and end point to same record, use sp1": {
+		"(1 pair of 3 records, three asset pool) start and end point to same record, use sp1": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTapTwapInput(baseTime, tPlusOne, quoteAssetB),
@@ -194,19 +194,19 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:        makeSimpleTwapInput(baseTime, tPlusOneMin, quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDec(10)},
 		},
-		"(1 record, three asset pool) start and end point to same record, end time = now": {
+		"(1 pair of 3 records, three asset pool) start and end point to same record, end time = now": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTapTwapInput(baseTime, tPlusOneMin, quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
 		},
-		"(2 record) start and end point to same record": {
+		"(2 records) start and end point to same record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, tPlusOne, quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDec(10)},
 		},
-		"(2 record, three asset pool) start and end point to same record": {
+		"(2 pairs of 3 records, three asset pool) start and end point to same record": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC, tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTapTwapInput(baseTime, tPlusOne, quoteAssetA),
@@ -218,58 +218,58 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:        makeSimpleTwapInput(baseTime, baseTime.Add(10*time.Second), quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDec(10)},
 		},
-		"(2 record, three asset pool) start and end exact, different records": {
+		"(2 pairs of 3 records, three asset pool) start and end exact, different records": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC, tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTapTwapInput(baseTime, baseTime.Add(10*time.Second), quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
 		},
-		"(2 record) start exact, end after second record": {
+		"(2 records) start exact, end after second record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, baseTime.Add(20*time.Second), quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDecWithPrec(75, 1)}, // 10 for 10s, 5 for 10s
 		},
-		"(2 record, three asset pool) start exact, end after second record": {
+		"(2 pairs of 3 records, three asset pool) start exact, end after second record": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC, tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTapTwapInput(baseTime, baseTime.Add(20*time.Second), quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDecWithPrec(75, 1), sdk.NewDecWithPrec(75, 1), sdk.NewDecWithPrec(75, 1)}, // 10 for 10s, 5 for 10s
 		},
-		"(2 record) start exact, end after second record, sp1": {
+		"(2 records) start exact, end after second record, sp1": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime, baseTime.Add(20*time.Second), quoteAssetB),
 			expTwap:      []sdk.Dec{sdk.NewDecWithPrec(15, 2)}, // .1 for 10s, .2 for 10s
 		},
-		"(2 record, three asset pool) start exact, end after second record, sp1": {
+		"(2 pairs of 3 records, three asset pool) start exact, end after second record, sp1": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC, tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTapTwapInput(baseTime, baseTime.Add(20*time.Second), quoteAssetB),
 			expTwap:      []sdk.Dec{sdk.NewDecWithPrec(15, 2), sdk.NewDecWithPrec(15, 2), sdk.NewDecWithPrec(15, 2)}, // .1 for 10s, .2 for 10s
 		},
 		// start at 5 second after first twap record, end at 5 second after second twap record
-		"(2 record) start and end interpolated": {
+		"(2 records) start and end interpolated": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime.Add(5*time.Second), baseTime.Add(20*time.Second), quoteAssetA),
 			// 10 for 5s, 5 for 10s = 100/15 = 6 + 2/3 = 6.66666666
 			expTwap: []sdk.Dec{ThreePlusOneThird.MulInt64(2)},
 		},
-		"(2 record, three asset pool) start and end interpolated": {
+		"(2 pairs of 3 records, three asset pool) start and end interpolated": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC, tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTapTwapInput(baseTime.Add(5*time.Second), baseTime.Add(20*time.Second), quoteAssetA),
 			// 10 for 5s, 5 for 10s = 100/15 = 6 + 2/3 = 6.66666666
 			expTwap: []sdk.Dec{ThreePlusOneThird.MulInt64(2), ThreePlusOneThird.MulInt64(2), ThreePlusOneThird.MulInt64(2)},
 		},
-		"(3 record) start and end point to same record": {
+		"(3 records) start and end point to same record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record, tPlus20sp2Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime.Add(10*time.Second), baseTime.Add(10*time.Second), quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDec(5)},
 		},
-		"(3 record, three asset pool) start and end point to same record": {
+		"(3 pairs of 3 records, three asset pool) start and end point to same record": {
 			recordsToSet: []types.TwapRecord{
 				tapRecordAB, tapRecordAC, tapRecordBC,
 				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC,
@@ -278,13 +278,13 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:   makeSimpleTapTwapInput(baseTime.Add(10*time.Second), baseTime.Add(10*time.Second), quoteAssetA),
 			expTwap: []sdk.Dec{sdk.NewDec(5), sdk.NewDec(5), sdk.NewDec(5)},
 		},
-		"(3 record) start and end exactly at record times, different records": {
+		"(3 records) start and end exactly at record times, different records": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record, tPlus20sp2Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime.Add(10*time.Second), baseTime.Add(20*time.Second), quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDec(5)},
 		},
-		"(3 record, three asset pool) start and end exactly at record times, different records": {
+		"(3 pairs of 3 records, three asset pool) start and end exactly at record times, different records": {
 			recordsToSet: []types.TwapRecord{
 				tapRecordAB, tapRecordAC, tapRecordBC,
 				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC,
@@ -293,13 +293,13 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:   makeSimpleTapTwapInput(baseTime.Add(10*time.Second), baseTime.Add(20*time.Second), quoteAssetA),
 			expTwap: []sdk.Dec{sdk.NewDec(5), sdk.NewDec(5), sdk.NewDec(5)},
 		},
-		"(3 record) start at second record, end after third record": {
+		"(3 records) start at second record, end after third record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record, tPlus20sp2Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime.Add(10*time.Second), baseTime.Add(30*time.Second), quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDecWithPrec(35, 1)}, // 5 for 10s, 2 for 10s
 		},
-		"(3 record, three asset pool) start at second record, end after third record": {
+		"(3 pairs of 3 records, three asset pool) start at second record, end after third record": {
 			recordsToSet: []types.TwapRecord{
 				tapRecordAB, tapRecordAC, tapRecordBC,
 				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC,
@@ -308,13 +308,13 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			input:   makeSimpleTapTwapInput(baseTime.Add(10*time.Second), baseTime.Add(30*time.Second), quoteAssetA),
 			expTwap: []sdk.Dec{sdk.NewDecWithPrec(35, 1), sdk.NewDecWithPrec(35, 1), sdk.NewDecWithPrec(35, 1)}, // 5 for 10s, 2 for 10s
 		},
-		"(3 record) start at second record, end after third record, sp1": {
+		"(3 records) start at second record, end after third record, sp1": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record, tPlus20sp2Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime.Add(10*time.Second), baseTime.Add(30*time.Second), quoteAssetB),
 			expTwap:      []sdk.Dec{sdk.NewDecWithPrec(35, 2)}, // 0.2 for 10s, 0.5 for 10s
 		},
-		"(3 record, three asset pool) start at second record, end after third record, sp1": {
+		"(3 pairs of 3 records, three asset pool) start at second record, end after third record, sp1": {
 			recordsToSet: []types.TwapRecord{
 				tapRecordAB, tapRecordAC, tapRecordBC,
 				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC,
@@ -324,13 +324,13 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			expTwap: []sdk.Dec{sdk.NewDecWithPrec(35, 2), sdk.NewDecWithPrec(35, 2), sdk.NewDecWithPrec(35, 2)}, // 0.2 for 10s, 0.5 for 10s
 		},
 		// start in middle of first and second record, end in middle of second and third record
-		"(3 record) interpolate: in between second and third record": {
+		"(3 records) interpolate: in between second and third record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record, tPlus20sp2Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime.Add(15*time.Second), baseTime.Add(25*time.Second), quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDecWithPrec(35, 1)}, // 5 for 5s, 2 for 5 = 35 / 10 = 3.5
 		},
-		"(3 record, three asset pool) interpolate: in between second and third record": {
+		"(3 pairs of 3 records, three asset pool) interpolate: in between second and third record": {
 			recordsToSet: []types.TwapRecord{
 				tapRecordAB, tapRecordAC, tapRecordBC,
 				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC,
@@ -340,13 +340,13 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			expTwap: []sdk.Dec{sdk.NewDecWithPrec(35, 1), sdk.NewDecWithPrec(35, 1), sdk.NewDecWithPrec(35, 1)}, // 5 for 5s, 2 for 5 = 35 / 10 = 3.5
 		},
 		// interpolate in time closer to second record
-		"(3 record) interpolate: get twap closer to second record": {
+		"(3 records) interpolate: get twap closer to second record": {
 			recordsToSet: []types.TwapRecord{baseRecord, tPlus10sp5Record, tPlus20sp2Record},
 			ctxTime:      tPlusOneMin,
 			input:        makeSimpleTwapInput(baseTime.Add(15*time.Second), baseTime.Add(30*time.Second), quoteAssetA),
 			expTwap:      []sdk.Dec{sdk.NewDec(3)}, // 5 for 5s, 2 for 10s = 45 / 15 = 3
 		},
-		"(3 record, three asset pool) interpolate: get twap closer to second record": {
+		"(3 pairs of 3 records, three asset pool) interpolate: get twap closer to second record": {
 			recordsToSet: []types.TwapRecord{
 				tapRecordAB, tapRecordAC, tapRecordBC,
 				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC,
