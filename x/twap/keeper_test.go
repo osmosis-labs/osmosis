@@ -138,17 +138,23 @@ var (
 	)
 )
 
-func withLastErrTime(twap types.TwapRecord, lastErrorTime time.Time) types.TwapRecord {
-	twap.LastErrorTime = lastErrorTime
+func withLastErrTime(twap []types.TwapRecord, lastErrorTime time.Time) []types.TwapRecord {
+	for i := range twap {
+		twap[i].LastErrorTime = lastErrorTime
+	}
 	return twap
 }
 
-func withSp0(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
-	twap.P0LastSpotPrice = sp
+func withSp0(twap []types.TwapRecord, sp sdk.Dec) []types.TwapRecord {
+	for i := range twap {
+		twap[i].P0LastSpotPrice = sp
+	}
 	return twap
 }
-func withSp1(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
-	twap.P1LastSpotPrice = sp
+func withSp1(twap []types.TwapRecord, sp sdk.Dec) []types.TwapRecord {
+	for i := range twap {
+		twap[i].P1LastSpotPrice = sp
+	}
 	return twap
 }
 
@@ -300,7 +306,7 @@ func (s *TestSuite) setupDefaultPool() (poolId uint64, denomA, denomB string) {
 // sets up a new three asset pool, with spot price 1
 func (s *TestSuite) setupDefaultThreeAssetPool() (poolId uint64, denomA, denomB, denomC string) {
 	poolId = s.PrepareBalancerPoolWithCoins(defaultThreeAssetCoins[0], defaultThreeAssetCoins[1], defaultThreeAssetCoins[2])
-	denomA, denomB, denomC = defaultThreeAssetCoins[0].Denom, defaultThreeAssetCoins[1].Denom, defaultThreeAssetCoins[1].Denom
+	denomA, denomB, denomC = defaultThreeAssetCoins[0].Denom, defaultThreeAssetCoins[1].Denom, defaultThreeAssetCoins[2].Denom
 	return
 }
 
@@ -414,14 +420,18 @@ func newEmptyPriceRecord(poolId uint64, t time.Time, asset0 string, asset1 strin
 	}
 }
 
-func recordWithUpdatedAccum(record types.TwapRecord, accum0 sdk.Dec, accum1 sdk.Dec) types.TwapRecord {
-	record.P0ArithmeticTwapAccumulator = accum0
-	record.P1ArithmeticTwapAccumulator = accum1
+func recordWithUpdatedAccum(record []types.TwapRecord, accum0 sdk.Dec, accum1 sdk.Dec) []types.TwapRecord {
+	for _, rec := range record {
+		rec.P0ArithmeticTwapAccumulator = accum0
+		rec.P1ArithmeticTwapAccumulator = accum1
+	}
 	return record
 }
 
-func recordWithUpdatedSpotPrice(record types.TwapRecord, sp0 sdk.Dec, sp1 sdk.Dec) types.TwapRecord {
-	record.P0LastSpotPrice = sp0
-	record.P1LastSpotPrice = sp1
+func recordWithUpdatedSpotPrice(record []types.TwapRecord, sp0 sdk.Dec, sp1 sdk.Dec) []types.TwapRecord {
+	for _, rec := range record {
+		rec.P0LastSpotPrice = sp0
+		rec.P1LastSpotPrice = sp1
+	}
 	return record
 }
