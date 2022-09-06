@@ -20,9 +20,9 @@ var oneDec = sdk.OneDec()
 var twoDec = oneDec.Add(oneDec)
 var OneSec = sdk.MustNewDecFromStr("1000.000000000000000000")
 
-func newRecord(t time.Time, sp0, accum0, accum1 sdk.Dec) []types.TwapRecord {
-	return []types.TwapRecord{{
-		PoolId:          1,
+func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
+	return types.TwapRecord{
+		PoolId:          poolId,
 		Asset0Denom:     defaultTwoAssetCoins[0].Denom,
 		Asset1Denom:     defaultTwoAssetCoins[1].Denom,
 		Time:            t,

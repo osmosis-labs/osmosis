@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"database/sql"
 	"fmt"
 	"io"
 	"math/rand"
@@ -16,7 +15,6 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
-	_ "github.com/mattn/go-sqlite3"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -53,24 +51,11 @@ func SimulateFromSeed(
 	actions := app.SimulationManager().Actions(config.Seed, app.AppCodec())
 
 	// Set up sql table
-	// TODO: Move all SQL stuff to its own file/package, should not be here.
-	var db *sql.DB
-	if config.ExportConfig.WriteStatsToDB {
-		db, err = sql.Open("sqlite3", "./blocks.db")
-		if err != nil {
-			tb.Fatal(err)
-		}
-		defer db.Close()
-		sts := `
-		DROP TABLE IF EXISTS blocks;
-		CREATE TABLE blocks (id INTEGER PRIMARY KEY, height INT,module TEXT, name TEXT, comment TEXT, passed BOOL, gasWanted INT, gasUsed INT, msg STRING, resData STRING, appHash STRING);
-		`
-		_, err := db.Exec(sts)
-
-		if err != nil {
-			tb.Fatal(err)
-		}
+	statsDb, err := setupStatsDb(config.ExportConfig)
+	if err != nil {
+		tb.Fatal(err)
 	}
+	defer statsDb.cleanup()
 
 	// Encapsulate the bizarre initialization logic that must be cleaned.
 	simCtx, simState, simParams, err := cursedInitializationLogic(tb, w, app, initFunctions, &config)
@@ -90,27 +75,26 @@ func SimulateFromSeed(
 	}()
 
 	testingMode, _, b := getTestingMode(tb)
-	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config, db)
+	blockSimulator := createBlockSimulator(testingMode, w, simParams, actions, simState, config, statsDb)
 
 	if !testingMode {
 		b.ResetTimer()
-	} else {
-		// recover logs in case of panic
-		defer func() {
-			if r := recover(); r != nil {
-				// TODO: Come back and cleanup the entire panic recovery logging.
-				// printPanicRecoveryError(r)
-				_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d\n", simState.header.Height)
-				simState.logWriter.PrintLogs()
-				panic(r)
-			}
-		}()
 	}
+	// recover logs in case of panic
+	defer func() {
+		if r := recover(); r != nil {
+			// TODO: Come back and cleanup the entire panic recovery logging.
+			// printPanicRecoveryError(r)
+			_, _ = fmt.Fprintf(w, "simulation halted due to panic on block %d\n", simState.header.Height)
+			simState.logWriter.PrintLogs()
+			panic(r)
+		}
+	}()
 
-	stopEarly = simState.SimulateAllBlocks(w, simCtx, blockSimulator)
+	stopEarly, err = simState.SimulateAllBlocks(w, simCtx, blockSimulator)
 
 	simState.eventStats.exportEvents(config.ExportConfig.ExportStatsPath, w)
-	return storetypes.CommitID{}, stopEarly, nil
+	return storetypes.CommitID{}, stopEarly, err
 }
 
 func simulationHomeDir() string {
@@ -224,12 +208,12 @@ func printPanicRecoveryError(recoveryError interface{}) {
 	fmt.Println("stack trace: " + errStackTrace)
 }
 
-type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header) (opCount int)
+type blockSimFn func(simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header) (opCount int, err error)
 
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead.
 func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions []simtypes.ActionsWithMetadata,
-	simState *simState, config Config, db *sql.DB,
+	simState *simState, config Config, stats statsDb,
 ) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
@@ -237,7 +221,7 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 
 	return func(
 		simCtx *simtypes.SimCtx, ctx sdk.Context, header tmproto.Header,
-	) (opCount int) {
+	) (opCount int, err error) {
 		_, _ = fmt.Fprintf(
 			w, "\rSimulating... block %d/%d, operation 0/%d.",
 			header.Height, config.NumBlocks, blocksize,
@@ -262,7 +246,11 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			opMsg.Route = action.ModuleName
 			cleanup()
 
-			simState.logActionResult(header, i, config, blocksize, opMsg, resultData, db, err)
+			err = simState.logActionResult(header, i, opMsg, resultData, stats, err)
+			if err != nil {
+				return opCount, fmt.Errorf("error on block  %d/%d, operation (%d/%d): %w",
+					header.Height, config.NumBlocks, i, blocksize, err)
+			}
 
 			simState.queueOperations(futureOps)
 
@@ -272,23 +260,18 @@ func createBlockSimulator(testingMode bool, w io.Writer, params Params, actions 
 			}
 		}
 
-		return blocksize
+		return blocksize, nil
 	}
 }
 
 // This is inheriting old functionality. We should break this as part of making logging be usable / make sense.
 func (simState *simState) logActionResult(
-	header tmproto.Header, actionIndex int, config Config, blocksize int,
-	opMsg simulation.OperationMsg, resultData []byte, db *sql.DB, actionErr error) {
+	header tmproto.Header, actionIndex int,
+	opMsg simulation.OperationMsg, resultData []byte, stats statsDb, actionErr error) error {
 	opMsg.LogEvent(simState.eventStats.Tally)
-	if config.ExportConfig.WriteStatsToDB {
-		appHash := fmt.Sprintf("%X", simState.header.AppHash)
-		resData := fmt.Sprintf("%X", resultData)
-		sts := "INSERT INTO blocks(height,module,name,comment,passed, gasWanted, gasUsed, msg, resData, appHash) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10);"
-		_, err := db.Exec(sts, header.Height, opMsg.Route, opMsg.Name, opMsg.Comment, opMsg.OK, opMsg.GasWanted, opMsg.GasUsed, opMsg.Msg, resData, appHash)
-		if err != nil {
-			simState.tb.Fatal(err)
-		}
+	err := stats.logActionResult(header, opMsg, resultData)
+	if err != nil {
+		return err
 	}
 
 	if !simState.config.Lean || opMsg.OK {
@@ -297,19 +280,19 @@ func (simState *simState) logActionResult(
 
 	if actionErr != nil {
 		simState.logWriter.PrintLogs()
-		simState.tb.Fatalf(`error on block  %d/%d, operation (%d/%d) from x/%s:
+		return fmt.Errorf(`error from x/%s:
 %v
-Comment: %s`,
-			header.Height, config.NumBlocks, actionIndex, blocksize, opMsg.Route, actionErr, opMsg.Comment)
+Comment: %s`, opMsg.Route, actionErr, opMsg.Comment)
 	}
+	return nil
 }
 
-// nolint: errcheck
-func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (numOpsRan int) {
+// TODO: We need to cleanup queued operations, to instead make it queued action + have code re-use with prior code
+func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.Context) (numOpsRan int, err error) {
 	height := int(simState.header.Height)
 	queuedOp, ok := simState.operationQueue[height]
 	if !ok {
-		return 0
+		return 0, nil
 	}
 
 	numOpsRan = len(queuedOp)
@@ -329,14 +312,13 @@ func (simState *simState) runQueuedOperations(simCtx *simtypes.SimCtx, ctx sdk.C
 
 		if err != nil {
 			simState.logWriter.PrintLogs()
-			simState.tb.Fatalf(`error on block  %d, height queued operation (%d/%d) from x/%s:
+			return 0, fmt.Errorf(`error on block  %d, height queued operation (%d/%d) from x/%s:
 %v
 Comment: %s`,
 				simState.header.Height, i, numOpsRan, opMsg.Route, err, opMsg.Comment)
-			simState.tb.FailNow()
 		}
 	}
 	delete(simState.operationQueue, height)
 
-	return numOpsRan
+	return numOpsRan, nil
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -31,10 +30,6 @@ type simState struct {
 
 	// block tx result data storage, reset after each block
 	Data [][]byte
-
-	// TODO: Figure out why we need this???
-	// Probably should get removed
-	tb testing.TB
 
 	// We technically have to store past block times for every block within the unbonding period.
 	// For simplicity, we take the RAM overhead and store all past times.
@@ -61,7 +56,6 @@ func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testin
 		operationQueue: NewOperationQueue(),
 		curValidators:  validators.Clone(),
 		nextValidators: validators.Clone(),
-		tb:             tb,
 		pastTimes:      []time.Time{},
 		pastVoteInfos:  [][]abci.VoteInfo{},
 		logWriter:      NewLogWriter(tb),
@@ -75,12 +69,12 @@ func newSimulatorState(simParams Params, initialHeader tmproto.Header, tb testin
 func (simState *simState) SimulateAllBlocks(
 	w io.Writer,
 	simCtx *simtypes.SimCtx,
-	blockSimulator blockSimFn) (stopEarly bool) {
+	blockSimulator blockSimFn) (stopEarly bool, err error) {
 	stopEarly = false
 	initialHeight := simState.config.InitializationConfig.InitialBlockHeight
 	numBlocks := simState.config.NumBlocks
 	for height := initialHeight; height < numBlocks+initialHeight && !stopEarly; height++ {
-		stopEarly = simState.SimulateBlock(simCtx, blockSimulator)
+		stopEarly, err = simState.SimulateBlock(simCtx, blockSimulator)
 		if stopEarly {
 			break
 		}
@@ -96,33 +90,41 @@ func (simState *simState) SimulateAllBlocks(
 		)
 		simState.logWriter.PrintLogs()
 	}
-	return stopEarly
+	return stopEarly, err
 }
 
 // simulate a block, update state
-func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator blockSimFn) (stopEarly bool) {
+func (simState *simState) SimulateBlock(simCtx *simtypes.SimCtx, blockSimulator blockSimFn) (stopEarly bool, err error) {
 	if simState.header.ProposerAddress == nil {
 		fmt.Fprintf(simState.w, "\nSimulation stopped early as all validators have been unbonded; nobody left to propose a block!\n")
-		return true
+		return true, nil
 	}
 
 	requestBeginBlock := simState.beginBlock(simCtx)
 	ctx := simCtx.BaseApp().NewContext(false, simState.header)
 
 	// Run queued operations. Ignores blocksize if blocksize is too small
-	numQueuedOpsRan := simState.runQueuedOperations(simCtx, ctx)
+	numQueuedOpsRan, err := simState.runQueuedOperations(simCtx, ctx)
+	if err != nil {
+		return true, err
+	}
 	// numQueuedTimeOpsRan := simState.runQueuedTimeOperations(simCtx, ctx)
 
 	// run standard operations
 	// TODO: rename blockSimulator arg
-	operations := blockSimulator(simCtx, ctx, simState.header)
+	operations, err := blockSimulator(simCtx, ctx, simState.header)
 	simState.opCount += operations + numQueuedOpsRan // + numQueuedTimeOpsRan
+	if err != nil {
+		return true, err
+	}
 
 	responseEndBlock := simState.endBlock(simCtx)
 
-	simState.prepareNextSimState(simCtx, requestBeginBlock, responseEndBlock)
-
-	return false
+	err = simState.prepareNextSimState(simCtx, requestBeginBlock, responseEndBlock)
+	if err != nil {
+		return true, err
+	}
+	return false, nil
 }
 
 func (simState *simState) beginBlock(simCtx *simtypes.SimCtx) abci.RequestBeginBlock {
@@ -140,7 +142,7 @@ func (simState *simState) endBlock(simCtx *simtypes.SimCtx) abci.ResponseEndBloc
 	return res
 }
 
-func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.RequestBeginBlock, res abci.ResponseEndBlock) {
+func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.RequestBeginBlock, res abci.ResponseEndBlock) error {
 	// Log the current block's header time for future lookup
 	simState.pastTimes = append(simState.pastTimes, simState.header.Time)
 	simState.pastVoteInfos = append(simState.pastVoteInfos, req.LastCommitInfo.Votes)
@@ -159,7 +161,10 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 	proposerPubKey := simState.nextValidators.randomProposer(simCtx.GetRand())
 	simState.header.ProposerAddress = proposerPubKey.Address()
 	// find N + 2 valset
-	nPlus2Validators := updateValidators(simState.tb, simCtx.GetRand(), simState.simParams, simState.nextValidators, res.ValidatorUpdates, simState.eventStats.Tally)
+	nPlus2Validators, err := updateValidators(simCtx.GetRand(), simState.simParams, simState.nextValidators, res.ValidatorUpdates, simState.eventStats.Tally)
+	if err != nil {
+		return err
+	}
 
 	// now set variables in perspective of block n+1
 	simState.curValidators = simState.nextValidators
@@ -168,47 +173,22 @@ func (simState *simState) prepareNextSimState(simCtx *simtypes.SimCtx, req abci.
 	// utilize proposer public key and generate validator hash
 	// then, with completed block header, generate app hash
 	// see https://github.com/tendermint/tendermint/blob/v0.34.x/spec/core/data_structures.md#header for more info on block header hashes
-	simState.constructHeaderHashes(proposerPubKey)
+	return simState.constructHeaderHashes(proposerPubKey)
 }
 
-func (simState *simState) constructHeaderHashes(proposerPubKey crypto.PubKey) {
-	var currentValSet tmproto.ValidatorSet
-	// iterate through current validators and add them to the TM ValidatorSet struct
-	for _, key := range simState.curValidators.getKeys() {
-		var validator tmproto.Validator
-		mapVal := simState.curValidators[key]
-		validator.PubKey = mapVal.val.PubKey
-		currentPubKey, err := cryptoenc.PubKeyFromProto(mapVal.val.PubKey)
-		if err != nil {
-			panic(err)
-		}
-		validator.Address = currentPubKey.Address()
-		currentValSet.Validators = append(currentValSet.Validators, &validator)
-	}
-
-	// set the proposer chosen earlier as the validator set block proposer
-	var proposerVal tmtypes.Validator
-	proposerVal.PubKey = proposerPubKey
-	proposerVal.Address = proposerPubKey.Address()
-	blockProposer, err := proposerVal.ToProto()
+func (simState *simState) constructHeaderHashes(proposerPubKey crypto.PubKey) error {
+	currentValSet, err := simState.curValidators.toTmProtoValidators(proposerPubKey)
 	if err != nil {
-		panic(err)
-	}
-	currentValSet.Proposer = blockProposer
-
-	// create a validatorSet type from the tmproto created earlier
-	realValSet, err := tmtypes.ValidatorSetFromProto(&currentValSet)
-	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// generate a hash from the validatorSet type and set it to the validators hash
-	simState.header.ValidatorsHash = realValSet.Hash()
+	simState.header.ValidatorsHash = currentValSet.Hash()
 
 	// create a header type from the tmproto
 	realHeader, err := tmtypes.HeaderFromProto(&simState.header)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// TODO: We don't fill out the nextValidatorSet, we should eventually but not priority
@@ -223,4 +203,5 @@ func (simState *simState) constructHeaderHashes(proposerPubKey crypto.PubKey) {
 
 	// generate an apphash from this header and set this value
 	simState.header.AppHash = realHeader.Hash()
+	return nil
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
-	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -12,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"golang.org/x/exp/maps"
 
 	markov "github.com/osmosis-labs/osmosis/v11/simulation/simtypes/transitionmatrix"
@@ -82,23 +82,53 @@ func (mv mockValidators) randomProposer(r *rand.Rand) crypto.PubKey {
 	return pk
 }
 
+func (mv mockValidators) toTmProtoValidators(proposerPubKey crypto.PubKey) (tmtypes.ValidatorSet, error) {
+	var tmProtoValSet tmproto.ValidatorSet
+	var tmTypesValSet *tmtypes.ValidatorSet
+	// iterate through current validators and add them to the TM ValidatorSet struct
+	for _, key := range mv.getKeys() {
+		var validator tmproto.Validator
+		mapVal := mv[key]
+		validator.PubKey = mapVal.val.PubKey
+		currentPubKey, err := cryptoenc.PubKeyFromProto(mapVal.val.PubKey)
+		if err != nil {
+			return *tmTypesValSet, err
+		}
+		validator.Address = currentPubKey.Address()
+		tmProtoValSet.Validators = append(tmProtoValSet.Validators, &validator)
+	}
+
+	// set the proposer chosen earlier as the validator set block proposer
+	var proposerVal tmtypes.Validator
+	proposerVal.PubKey = proposerPubKey
+	proposerVal.Address = proposerPubKey.Address()
+	blockProposer, err := proposerVal.ToProto()
+	if err != nil {
+		return *tmTypesValSet, err
+	}
+	tmProtoValSet.Proposer = blockProposer
+
+	// create a validatorSet type from the tmproto created earlier
+	tmTypesValSet, err = tmtypes.ValidatorSetFromProto(&tmProtoValSet)
+	return *tmTypesValSet, err
+}
+
 // updateValidators mimics Tendermint's update logic.
 func updateValidators(
-	tb testing.TB,
 	r *rand.Rand,
 	params simulation.Params,
 	current map[string]mockValidator,
 	updates []abci.ValidatorUpdate,
 	// logWriter LogWriter,
 	event func(route, op, evResult string),
-) map[string]mockValidator {
+) (map[string]mockValidator, error) {
 	nextSet := mockValidators(current).Clone()
 	for _, update := range updates {
 		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
 
 		if update.Power == 0 {
 			if _, ok := nextSet[str]; !ok {
-				tb.Fatalf("tried to delete a nonexistent validator: %s", str)
+				return nil, fmt.Errorf("tried to delete a nonexistent validator: %s", str)
 			}
 
 			// logWriter.AddEntry(NewOperationEntry())("kicked", str)
@@ -118,7 +148,7 @@ func updateValidators(
 		}
 	}
 
-	return nextSet
+	return nextSet, nil
 }
 
 // RandomRequestBeginBlock generates a list of signing validators according to
@@ -134,7 +164,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		}
 	}
 
-	voteInfos := randomVoteInfos(r, params, validators, event)
+	voteInfos := randomVoteInfos(r, params, validators)
 	evidence := randomDoubleSignEvidence(r, params, validators, pastTimes, pastVoteInfos, event, header, voteInfos)
 
 	return abci.RequestBeginBlock{
@@ -146,7 +176,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	}
 }
 
-func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators, event func(route, op, evResult string),
+func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators,
 ) []abci.VoteInfo {
 	voteInfos := make([]abci.VoteInfo, len(validators))
 
@@ -165,11 +195,7 @@ func randomVoteInfos(r *rand.Rand, simParams Params, validators mockValidators, 
 			signed = false
 		}
 
-		if signed {
-			event("begin_block", "signing", "signed")
-		} else {
-			event("begin_block", "signing", "missed")
-		}
+		// TODO: Do we want to log any data to statsdb here?
 
 		pubkey, err := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
 		if err != nil {
