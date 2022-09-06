@@ -23,8 +23,12 @@ func (q Querier) GetArithmeticTwap(ctx sdk.Context,
 	}
 
 	twap, err := q.K.GetArithmeticTwap(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime, *req.EndTime)
-	if err != nil {
-		return nil, err
-	}
-	return &queryproto.GetArithmeticTwapResponse{ArithmeticTwap: twap}, nil
+	return &queryproto.GetArithmeticTwapResponse{ArithmeticTwap: twap}, err
+}
+
+func (q Querier) GetArithmeticTwapToNow(ctx sdk.Context,
+	req queryproto.GetArithmeticTwapToNowRequest,
+) (*queryproto.GetArithmeticTwapToNowResponse, error) {
+	twap, err := q.K.GetArithmeticTwapToNow(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime)
+	return &queryproto.GetArithmeticTwapToNowResponse{ArithmeticTwap: twap}, err
 }
