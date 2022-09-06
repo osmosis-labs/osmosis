@@ -96,6 +96,9 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 	}
 }
 
+// updateRecords updates all records for a given pool id.
+// it does so by getting all most recent records for the pool id, and
+// attempting to update spot prices for each.
 func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	// Will only err if pool doesn't have most recent entry set
 	records, err := k.getAllMostRecentRecordsForPool(ctx, poolId)

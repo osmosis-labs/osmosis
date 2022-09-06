@@ -521,3 +521,128 @@ func (s *TestSuite) TestPruneRecords() {
 
 	s.validateExpectedRecords(expectedKeptRecords)
 }
+
+// TestUpdateRecords tests that the records are updated correctly for:
+// - two-asset pools
+// - multi-asset pools
+// - with spot price errors
+// - without spot price errors
+// - that only the most recent records get updated
+// - older historical records are not updated
+func (s *TestSuite) TestUpdateRecords() {
+
+	type spOverride struct {
+		poolId      uint64
+		baseDenom   string
+		quoteDenom  string
+		overrideSp  sdk.Dec
+		overrideErr error
+	}
+
+	type expectedRecords struct {
+		spotPriceA    sdk.Dec
+		spotPriceB    sdk.Dec
+		lastErrorTime time.Time
+	}
+
+	tests := map[string]struct {
+		preSetRecords []types.TwapRecord
+		poolId        uint64
+		ammMock       twapmock.ProgrammedAmmInterface
+		spOverrides   []spOverride
+		blockTime     time.Time
+
+		expectedMostRecentRecords []expectedRecords
+		expectedHistoricalRecords []expectedRecords
+		expectError               error
+	}{
+		// "no records pre-set; no-op": {
+		// 	preSetRecords: []types.TwapRecord{},
+		// 	poolId:        1,
+		// 	blockTime:     baseTime,
+		// },
+		// "existing records in different pool; no-op": {
+		// 	preSetRecords: []types.TwapRecord{baseRecord},
+		// 	poolId:        baseRecord.PoolId + 1,
+		// 	blockTime:     baseTime.Add(time.Second),
+		// },
+		"two-asset; pre-set record at t; updated valid spot price": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:   baseRecord.Asset0Denom,
+					quoteDenom:  baseRecord.Asset1Denom,
+					overrideSp:  sdk.NewDec(2),
+					overrideErr: nil,
+				},
+				{
+					baseDenom:   baseRecord.Asset1Denom,
+					quoteDenom:  baseRecord.Asset0Denom,
+					overrideSp:  sdk.NewDecWithPrec(2, 1),
+					overrideErr: nil,
+				},
+			},
+
+			expectedMostRecentRecords: []expectedRecords{
+				{
+					spotPriceA: sdk.NewDec(2),
+					spotPriceB: sdk.NewDecWithPrec(2, 1),
+				},
+			},
+		},
+		// "two-asset; pre-set record at t; updated with spot price error":                                       {},
+		// "two-asset; pre-set at t and t + 1, only the latest is updated spot price":                            {},
+		// "multi-asset pool; pre-set at t; updates spot price":                                                  {},
+		// "multi-asset pool; pre-set at t and t + 1; updates spot price for latest only":                        {},
+		// "multi-asset pool; pre-set at t and t + 1; both valid; updates with spot price error":                 {},
+		// "multi-asset pool; pre-set at t and t + 1; both with spot price error; updates with spot price error": {},
+		// "multi-asset pool; pre-set at t and t + 1; both with spot price error; updates with valid spot price": {},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			twapKeeper := s.App.TwapKeeper
+			ctx := s.Ctx.WithBlockTime(tc.blockTime)
+
+			if len(tc.spOverrides) > 0 {
+				ammMock := twapmock.NewProgrammedAmmInterface(s.App.GAMMKeeper)
+
+				for _, sp := range tc.spOverrides {
+					ammMock.ProgramPoolSpotPriceOverride(tc.poolId, sp.baseDenom, sp.quoteDenom, sp.overrideSp, sp.overrideErr)
+				}
+
+				twapKeeper.SetAmmInterface(ammMock)
+			}
+
+			// twapKeeper.SetAmmInterface()
+
+			s.preSetRecords(tc.preSetRecords)
+
+			err := twapKeeper.UpdateRecords(ctx, tc.poolId)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+			}
+
+			s.Require().NoError(err)
+
+			poolMostRecentRecords, err := twapKeeper.GetAllMostRecentRecordsForPool(ctx, tc.poolId)
+			for i, r := range tc.expectedMostRecentRecords {
+				s.Require().Equal(poolMostRecentRecords[i].P0LastSpotPrice, r.spotPriceA)
+				s.Require().Equal(poolMostRecentRecords[i].P1LastSpotPrice, r.spotPriceB)
+				s.Require().Equal(poolMostRecentRecords[i].LastErrorTime, r.lastErrorTime)
+			}
+
+			poolHistoricalRecords := s.getAllHistoricalRecordsForPool(tc.poolId)
+			for i, r := range tc.expectedHistoricalRecords {
+				s.Require().Equal(poolHistoricalRecords[i].P0LastSpotPrice, r.spotPriceA)
+				s.Require().Equal(poolHistoricalRecords[i].P1LastSpotPrice, r.spotPriceB)
+				s.Require().Equal(poolHistoricalRecords[i].LastErrorTime, r.lastErrorTime)
+			}
+		})
+	}
+}
