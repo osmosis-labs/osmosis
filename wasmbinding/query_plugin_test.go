@@ -200,7 +200,7 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 			originalVersionBz, err := hex.DecodeString(tc.originalResponse)
 			suite.Require().NoError(err)
 
-			jsonMarshalledResponse, err := wasmbinding.ConvertProtoToJsonMarshal(tc.protoResponseStruct, originalVersionBz, suite.app.AppCodec())
+			jsonMarshalledResponse, err := wasmbinding.ConvertProtoToJSONMarshal(tc.protoResponseStruct, originalVersionBz, suite.app.AppCodec())
 			if tc.expectedError {
 				suite.Require().Error(err)
 				return
@@ -226,50 +226,6 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 		responseProtoStruct interface{}
 		expectedProto       func() proto.Message
 	}{
-
-		/**
-		   * Origin Response
-		   * balances:<denom:"bar" amount:"30" > pagination:<next_key:"foo" >
-		   * "0a090a036261721202333012050a03666f6f"
-		   *
-		   * New Version Response
-		   * The binary built from the proto response with additional field address
-		   * balances:<denom:"bar" amount:"30" > pagination:<next_key:"foo" > address:"cosmos1j6j5tsquq2jlw2af7l3xekyaq7zg4l8jsufu78"
-		   * "0a090a036261721202333012050a03666f6f1a2d636f736d6f73316a366a357473717571326a6c77326166376c3378656b796171377a67346c386a737566753738"
-		   // Origin proto
-		   message QueryAllBalancesResponse {
-		  	// balances is the balances of all the coins.
-		  	repeated cosmos.base.v1beta1.Coin balances = 1
-		  	[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-		  	// pagination defines the pagination in the response.
-		  	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-		  }
-		  // Updated proto
-		  message QueryAllBalancesResponse {
-		  	// balances is the balances of all the coins.
-		  	repeated cosmos.base.v1beta1.Coin balances = 1
-		  	[(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-		  	// pagination defines the pagination in the response.
-		  	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-		  	// address is the address to query all balances for.
-		  	string address = 3;
-		  }
-		*/
-		{
-			"Query All Balances",
-			"0a090a036261721202333012050a03666f6f",
-			"0a090a036261721202333012050a03666f6f1a2d636f736d6f73316a366a357473717571326a6c77326166376c3378656b796171377a67346c386a737566753738",
-			"/cosmos.bank.v1beta1.Query/AllBalances",
-			&banktypes.QueryAllBalancesResponse{},
-			func() proto.Message {
-				return &banktypes.QueryAllBalancesResponse{
-					Balances: sdk.NewCoins(sdk.NewCoin("bar", sdk.NewInt(30))),
-					Pagination: &query.PageResponse{
-						NextKey: []byte("foo"),
-					},
-				}
-			},
-		},
 		/**
 		   *
 		   * Origin Response
@@ -318,12 +274,12 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 
 			originVersionBz, err := hex.DecodeString(tc.originalResponse)
 			suite.Require().NoError(err)
-			jsonMarshalledOriginalBz, err := wasmbinding.ConvertProtoToJsonMarshal(binding, originVersionBz, suite.app.AppCodec())
+			jsonMarshalledOriginalBz, err := wasmbinding.ConvertProtoToJSONMarshal(binding, originVersionBz, suite.app.AppCodec())
 			suite.Require().NoError(err)
 
 			newVersionBz, err := hex.DecodeString(tc.updatedResponse)
 			suite.Require().NoError(err)
-			jsonMarshalledUpdatedBz, err := wasmbinding.ConvertProtoToJsonMarshal(binding, newVersionBz, suite.app.AppCodec())
+			jsonMarshalledUpdatedBz, err := wasmbinding.ConvertProtoToJSONMarshal(binding, newVersionBz, suite.app.AppCodec())
 			suite.Require().NoError(err)
 
 			// json marshalled bytes should be the same since we use the same proto struct for unmarshalling
