@@ -140,10 +140,7 @@ func (s *TestSuite) TestUpdateTwap() {
 	baseTimeMinusOne := time.Unix(1, 0).UTC()
 
 	zeroAccumNoErrSp10Record := newRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec)
-	sp10OneTimeUnitAccumRecord := newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10))
-
 	tapZeroAccumNoErrSp10Record := newTapRecord(baseTime, sdk.NewDec(10), zeroDec, zeroDec)
-	tapSp10OneTimeUnitAccumRecord := newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10))
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
 		record           []types.TwapRecord
@@ -155,13 +152,13 @@ func (s *TestSuite) TestUpdateTwap() {
 			record:           zeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        sp10OneTimeUnitAccumRecord,
+			expRecord:        newExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 		},
 		"three asset, 0 accum start, sp change": {
 			record:           tapZeroAccumNoErrSp10Record,
 			spotPriceResult0: spotPriceResOne,
 			spotPriceResult1: spotPriceResOne,
-			expRecord:        tapSp10OneTimeUnitAccumRecord,
+			expRecord:        newTapExpRecord(OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 		},
 		"0 accum start, sp0 err at update": {
 			record:           zeroAccumNoErrSp10Record,
@@ -253,7 +250,6 @@ func (s *TestSuite) TestUpdateTwap() {
 }
 
 func newOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []types.TwapRecord {
-	var records []types.TwapRecord
 	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
 	if useP0 {
 		record.P0ArithmeticTwapAccumulator = accum
@@ -262,7 +258,7 @@ func newOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []types.TwapRe
 	}
 	record.P0LastSpotPrice = sdk.ZeroDec()
 	record.P1LastSpotPrice = sdk.OneDec()
-	records = append(records, record)
+	records := []types.TwapRecord{record}
 	return records
 }
 
