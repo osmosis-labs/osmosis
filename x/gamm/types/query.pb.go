@@ -34,7 +34,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-//=============================== Pool
+// =============================== Pool
 type QueryPoolRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
@@ -123,7 +123,7 @@ func (m *QueryPoolResponse) GetPool() *types.Any {
 	return nil
 }
 
-//=============================== Pools
+// =============================== Pools
 type QueryPoolsRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -222,7 +222,7 @@ func (m *QueryPoolsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-//=============================== NumPools
+// =============================== NumPools
 type QueryNumPoolsRequest struct {
 }
 
@@ -303,7 +303,7 @@ func (m *QueryNumPoolsResponse) GetNumPools() uint64 {
 	return 0
 }
 
-//=============================== PoolParams
+// =============================== PoolParams
 type QueryPoolParamsRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
@@ -392,7 +392,7 @@ func (m *QueryPoolParamsResponse) GetParams() *types.Any {
 	return nil
 }
 
-//=============================== PoolLiquidity
+// =============================== PoolLiquidity
 type QueryTotalPoolLiquidityRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
@@ -481,7 +481,7 @@ func (m *QueryTotalPoolLiquidityResponse) GetLiquidity() github_com_cosmos_cosmo
 	return nil
 }
 
-//=============================== TotalShares
+// =============================== TotalShares
 type QueryTotalSharesRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
@@ -679,7 +679,7 @@ func (m *QuerySpotPriceResponse) GetSpotPrice() string {
 	return ""
 }
 
-//=============================== EstimateSwapExactAmountIn
+// =============================== EstimateSwapExactAmountIn
 type QuerySwapExactAmountInRequest struct {
 	Sender  string              `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	PoolId  uint64              `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
@@ -785,7 +785,7 @@ func (m *QuerySwapExactAmountInResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QuerySwapExactAmountInResponse proto.InternalMessageInfo
 
-//=============================== EstimateSwapExactAmountOut
+// =============================== EstimateSwapExactAmountOut
 type QuerySwapExactAmountOutRequest struct {
 	Sender   string               `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 	PoolId   uint64               `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
