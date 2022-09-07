@@ -119,7 +119,7 @@ type AppKeepers struct {
 	// IBC modules
 	// transfer module
 	TransferModule          transfer.AppModule
-	RateLimitingICS4Wrapper *ibcratelimit.ICS4Middleware
+	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -230,7 +230,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
 
 	// RateLimiting IBC Middleware
-	rateLimitingTransferMiddleware := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
+	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -247,7 +247,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(ibctransfertypes.ModuleName, &rateLimitingTransferMiddleware)
+		AddRoute(ibctransfertypes.ModuleName, &rateLimitingTransferModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router
