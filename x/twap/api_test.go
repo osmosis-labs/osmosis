@@ -16,7 +16,7 @@ var (
 	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
 	baseRecord types.TwapRecord = newTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
 
-	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
+	// tapRecord are records that would be created from a three asset pool, each with unique denom pairs
 	tapRecordAB, tapRecordAC, tapRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
 
@@ -133,6 +133,7 @@ func makeSimpleTwapInput(startTime time.Time, endTime time.Time, isQuoteTokenA b
 	return twapInput
 }
 
+// makeSimpleTapTwapInput creates twap outputs that would result from three asset pool
 func makeSimpleTapTwapInput(startTime time.Time, endTime time.Time, isQuoteTokenA bool) []getTwapInput {
 	var twapInput []getTwapInput
 	quoteAssetDenom, baseAssetDenom := denom0, denom1
@@ -760,7 +761,6 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			input:         makeSimpleTapTwapToNowInput(baseTime.Add(-time.Hour), quoteAssetA),
 			expectedError: twap.TimeTooOldError{Time: baseTime.Add(-time.Hour)},
 		},
-		// TODO: overflow tests
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
