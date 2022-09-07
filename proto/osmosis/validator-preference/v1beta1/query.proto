@@ -1,0 +1,30 @@
+syntax = "proto3";
+package osmosis.validatorpreference.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "osmosis/validator-preference/v1beta1/tx.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v11/x/validator-preference/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// Query defines the gRPC querier service.
+service Query {
+  // Returns the list of ValidatorPreferences for the user.
+  rpc UserValidatorPreferences(QueryUserValidatorPreferences)
+      returns (QueryUserValidatorPreferenceResponse) {
+    option (google.api.http).get =
+        "/osmosis/validator-preference/v1beta1/{user}";
+  }
+}
+
+// Request type for UserValidatorPreferences
+message QueryUserValidatorPreferences {
+  // user account address
+  string user = 2;
+}
+
+// Response type the QueryUserValidatorPreferences query request
+message QueryUserValidatorPreferenceResponse {
+  repeated ValidatorPreference preferences = 1 [ (gogoproto.nullable) = false ];
+}

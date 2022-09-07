@@ -1,0 +1,36 @@
+syntax = "proto3";
+package osmosis.validatorpreference.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v11/x/validator-preference/types";
+
+// Msg defines the validator-preference modules's gRPC message service.
+service Msg {
+  // CreateValidatorSetPreference creates a set of validator preference.
+  rpc CreateValidatorSetPreference(MsgValidatorSetPreference)
+      returns (MsgValidatorSetPreferenceResponse);
+}
+
+// ValidatorPreference defines the message structure for
+// CreateValidatorSetPreference. it allows a user to set {val_addr, weight} in
+// state. If a user does not have a validator set preference list set, and has
+// staked, make their preference list default to their current staking
+// distribution.
+message ValidatorPreference {
+  // val_oper_address holds the validator address the user wants to delegate
+  // funds to.
+  string val_oper_address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  // weight is decimal between 0 and 1, and they all sum to 1.
+  string weight = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// MsgValidatorSetPreference is a set of list that holds validator-preference.
+message MsgValidatorSetPreference {
+  repeated ValidatorPreference preferences = 1 [ (gogoproto.nullable) = false ];
+}
+
+message MsgValidatorSetPreferenceResponse { bool success = 1; }
