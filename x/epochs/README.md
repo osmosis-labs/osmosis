@@ -98,6 +98,7 @@ epochIdentifier. Filtering epochIdentifier could be in `Params` of other
 modules so that they can be modified by governance.
 
 This is the standard dev UX of this:
+
 ```golang
 func (k MyModuleKeeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
     params := k.GetParams(ctx)
@@ -139,6 +140,7 @@ Query the currently running epochInfos
 ```sh
 osmosisd query epochs epoch-infos
 ```
+
 ::: details Example
 
 An example output:
@@ -160,10 +162,10 @@ epochs:
   identifier: week
   start_time: "2021-06-18T17:00:00Z"
 ```
+
 :::
 
 ### Current Epoch
-
 
 Query the current epoch by the specified identifier
 

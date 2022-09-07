@@ -121,6 +121,7 @@ message GenesisState {
   ];
 }
 ```
+
 ## Messages
 
 ### Create Gauge
@@ -220,6 +221,7 @@ If there's no usecase for this, we could ignore this.
  AfterFinishDistribution(ctx sdk.Context, gaugeId uint64)
  AfterDistribute(ctx sdk.Context, gaugeId uint64)
 ```
+
 ## Parameters
 
 The incentives module contains the following parameters:
@@ -248,7 +250,6 @@ osmosisd tx incentives create-gauge [lockup_denom] [reward] [flags]
 
 ::: details Example 1
 
-
 I want to make incentives for LP tokens of pool 3, namely gamm/pool/3 that have been locked up for at least 1 day.
 I want to reward 100 AKT to this pool over 2 days (2 epochs). (50 rewarded on each day)
 I want the rewards to start dispersing on 21 December 2021 (1640081402 UNIX time)
@@ -257,6 +258,7 @@ I want the rewards to start dispersing on 21 December 2021 (1640081402 UNIX time
 osmosisd tx incentives create-gauge gamm/pool/3 10000ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 \ 
 --duration 24h  --start-time 1640081402 --epochs 2 --from WALLET_NAME --chain-id osmosis-1
 ```
+
 :::
 
 ::: details Example 2
@@ -269,8 +271,8 @@ osmosisd tx incentives create-gauge ibc/27394FB092D2ECCD56123C74F36E4C1F926001CE
 1000000000ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED --perpetual --duration 168h \
 --from WALLET_NAME --chain-id osmosis-1
 ```
-:::
 
+:::
 
 ### add-to-gauge
 
@@ -288,8 +290,8 @@ I want to refill the gauge with 500 JUNO to a previously created gauge (gauge ID
 osmosisd tx incentives add-to-gauge 1914 500000000ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED \
 --from WALLET_NAME --chain-id osmosis-1
 ```
-:::
 
+:::
 
 ## Queries
 
@@ -365,9 +367,8 @@ pagination:
   total: "0"
 ...
 ```
+
 :::
-
-
 
 ### active-gauges-per-denom
 
@@ -417,9 +418,8 @@ pagination:
   total: "0"
 ...
 ```
+
 :::
-
-
 
 ### distributed-coins
 
@@ -468,8 +468,8 @@ coins:
 - amount: "65873607694598"
   denom: uosmo
 ```
-:::
 
+:::
 
 ### gauge-by-id
 
@@ -506,10 +506,8 @@ gauge:
   num_epochs_paid_over: "1"
   start_time: "2021-06-19T04:30:19.082462364Z"
 ```
+
 :::
-
-
-
 
 ### gauges
 
@@ -563,6 +561,7 @@ pagination:
   total: "0"
 ...
 ```
+
 :::
 
 ### rewards-estimation
@@ -570,7 +569,6 @@ pagination:
 Query rewards estimation
 
 // Error: strconv.ParseUint: parsing "": invalid syntax
-
 
 ### to-distribute-coins
 
@@ -615,8 +613,8 @@ coins:
 - amount: "366164843847"
   denom: uosmo
 ```
-:::
 
+:::
 
 ### upcoming-gauges
 
@@ -651,4 +649,5 @@ Using this command, we will see the gauge we created earlier, among all other up
   start_time: "2021-12-21T10:10:02Z"
 ...
 ```
+
 :::
