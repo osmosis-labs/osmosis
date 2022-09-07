@@ -58,10 +58,12 @@ func (n *NodeConfig) Run() error {
 		return err
 	}
 
+	n.rpcClient = rpcClient
+
 	require.Eventually(
 		n.t,
 		func() bool {
-			if _, err := rpcClient.Health(context.Background()); err != nil {
+			if _, err := n.QueryCurrentHeight(); err != nil {
 				return false
 			}
 
@@ -72,8 +74,6 @@ func (n *NodeConfig) Run() error {
 		time.Second,
 		"Osmosis node failed to produce blocks",
 	)
-
-	n.rpcClient = rpcClient
 
 	if err := n.extractOperatorAddressIfValidator(); err != nil {
 		return err

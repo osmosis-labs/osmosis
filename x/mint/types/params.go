@@ -23,6 +23,8 @@ var (
 	KeyPoolAllocationRatio                  = []byte("PoolAllocationRatio")
 	KeyDeveloperRewardsReceiver             = []byte("DeveloperRewardsReceiver")
 	KeyMintingRewardsDistributionStartEpoch = []byte("MintingRewardsDistributionStartEpoch")
+
+	_ paramtypes.ParamSet = &Params{}
 )
 
 // ParamTable for minting module.
@@ -116,6 +118,18 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyDeveloperRewardsReceiver, &p.WeightedDeveloperRewardsReceivers, validateWeightedDeveloperRewardsReceivers),
 		paramtypes.NewParamSetPair(KeyMintingRewardsDistributionStartEpoch, &p.MintingRewardsDistributionStartEpoch, validateMintingRewardsDistributionStartEpoch),
 	}
+}
+
+// GetInflationProportion returns the inflation proportion of epoch
+// provisions.
+func (p Params) GetInflationProportion() sdk.Dec {
+	return sdk.OneDec().Sub(p.GetDeveloperVestingProportion())
+}
+
+// GetDeveloperVestingProportion returns the developer vesting proportion of epoch
+// provisions.
+func (p Params) GetDeveloperVestingProportion() sdk.Dec {
+	return p.DistributionProportions.DeveloperRewards
 }
 
 func validateMintDenom(i interface{}) error {

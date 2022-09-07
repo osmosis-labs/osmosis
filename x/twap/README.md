@@ -84,6 +84,7 @@ We maintain TWAP accumulation records for every AMM pool on Osmosis.
 
 Because Osmosis supports multi-asset pools, a complicating factor is that we have to store a record for every asset pair in the pool.
 For every pool, at a given point in time, we make one twap record entry per unique pair of denoms in the pool. If a pool has `k` denoms, the number of unique pairs is `k * (k - 1) / 2`.
+All public API's for the module will sort the input denoms to the canonical representation, so the caller does not need to worry about this. (The canonical representation is the denoms in lexicographical order)
 
 Each twap record stores [(source)](https://github.com/osmosis-labs/osmosis/tree/main/proto/osmosis/gamm/twap):
 * last spot price of base asset A in terms of quote asset B
@@ -116,6 +117,12 @@ The flow by which we currently track spot price changing events in a block is as
 The mechanism by which we maintain this changed pool list, is the SDK `Transient Store`.
 The transient store is a KV store in the SDK, that stores entries in memory, for the duration of a block,
 and then clears on the block committing. This is done to save on gas (and I/O for the state machine).
+
+## Pruning
+
+To avoid infinite growth of the state with the TWAP records, we attempt to delete some old records after every epoch.
+Essentially, records younger than a configurable parameter are pruned away. Currently, this parameter is set to 48 hours.
+Therefore, at the end of an epoch records younger than 48 hours before the current block time are pruned away.
 
 ## Testing Methodology
 

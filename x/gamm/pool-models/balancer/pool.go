@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v11/osmomath"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
 )
@@ -609,7 +608,7 @@ func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coin
 //
 // panics if the pool in state is incorrect, and has any weight that is 0.
 // TODO: Come back and improve docs for this.
-func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec, error) {
+func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPrice sdk.Dec, err error) {
 	quote, base, err := p.parsePoolAssetsByDenoms(quoteAsset, baseAsset)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -622,10 +621,9 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (sdk.Dec,
 	// spot_price = (weight_quote / weight_base) * (base_supply / quote_supply)
 	invWeightRatio := quote.Weight.ToDec().Quo(base.Weight.ToDec())
 	supplyRatio := base.Token.Amount.ToDec().Quo(quote.Token.Amount.ToDec())
-	fullRatio := supplyRatio.Mul(invWeightRatio)
-	// we want to round this to `SigFigs` of precision
-	ratio := osmomath.SigFigRound(fullRatio, types.SigFigs)
-	return ratio, nil
+	spotPrice = supplyRatio.Mul(invWeightRatio)
+
+	return spotPrice, err
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.
@@ -766,7 +764,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 }
 
 // CalcJoinPoolNoSwapShares calculates the number of shares created to execute an all-asset pool join with the provided amount of `tokensIn`.
-// The input tokens must contain exactly the same tokens as the pool contains
+// The input tokens must contain the same tokens as in the pool.
 //
 // Returns the number of shares created, the amount of coins actually joined into the pool, (in case of not being able to fully join),
 // and the remaining tokens in `tokensIn` after joining. If an all-asset join is not possible, returns an error.

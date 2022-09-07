@@ -229,7 +229,7 @@ func calcPoolSharesInGivenSingleAssetOut(
 	return sharesInFeeIncluded
 }
 
-// check to make sure the input denoms exist in the provided pool asset map
+// ensureDenomInPool check to make sure the input denoms exist in the provided pool asset map
 func ensureDenomInPool(poolAssetsByDenom map[string]PoolAsset, tokensIn sdk.Coins) error {
 	for _, coin := range tokensIn {
 		_, ok := poolAssetsByDenom[coin.Denom]
