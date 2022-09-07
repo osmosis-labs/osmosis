@@ -19,7 +19,7 @@ func (k Keeper) MultihopSwapExactAmountIn(
 	for i, route := range routes {
 		swapFeeMultiplier := sdk.OneDec()
 		if types.SwapAmountInRoutes(routes).IsOsmoRoutedMultihop() {
-			swapFeeMultiplier = sdk.NewDecWithPrec(5, 1)
+			swapFeeMultiplier = types.MultihopSwapFeeMultiplierForOsmoPools.Clone()
 		}
 
 		// To prevent the multihop swap from being interrupted prematurely, we keep
@@ -61,7 +61,7 @@ func (k Keeper) MultihopSwapExactAmountOut(
 	swapFeeMultiplier := sdk.OneDec()
 
 	if types.SwapAmountOutRoutes(routes).IsOsmoRoutedMultihop() {
-		swapFeeMultiplier = sdk.NewDecWithPrec(5, 1)
+		swapFeeMultiplier = types.MultihopSwapFeeMultiplierForOsmoPools.Clone()
 	}
 
 	// Determine what the estimated input would be for each pool along the multihop route
