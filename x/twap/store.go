@@ -186,7 +186,8 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 	// Note that we cannot get any time entries from t + 1ns, as the key would be `prefix|t+1ns`
 	// and the end for a reverse iterator is exclusive. Thus the largest key that can be returned
 	// begins with a prefix of `prefix|t`
-	// TODO: Consider seperator tricks, to not have the + 1 ns.
+	// TODO: Consider separator tricks, to not have the + 1 ns
+	// TODO: Change key prefix indexing, to include assets, and not re-order assets at end.
 	startKey := types.FormatHistoricalPoolIndexTimePrefix(poolId, time.Unix(0, 0))
 	endKey := types.FormatHistoricalPoolIndexTimePrefix(poolId, t.Add(time.Nanosecond))
 	lastParsedTime := time.Time{}
