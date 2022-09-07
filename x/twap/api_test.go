@@ -16,7 +16,7 @@ var (
 	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
 	baseRecord types.TwapRecord = newTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
 
-	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
+tapRecord are records that would be created from a three asset pool, each with unique denom pairs
 	tapRecordAB, tapRecordAC, tapRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
 
