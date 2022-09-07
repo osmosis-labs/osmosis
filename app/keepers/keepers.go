@@ -33,8 +33,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
