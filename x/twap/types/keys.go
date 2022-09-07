@@ -51,14 +51,19 @@ func FormatHistoricalTimeIndexTWAPKey(accumulatorWriteTime time.Time, poolId uin
 	return []byte(fmt.Sprintf("%s%s%s%d%s%s%s%s", HistoricalTWAPTimeIndexPrefix, timeS, KeySeparator, poolId, KeySeparator, denom1, KeySeparator, denom2))
 }
 
-func FormatHistoricalPoolIndexTWAPKey(poolId uint64, accumulatorWriteTime time.Time, denom1, denom2 string) []byte {
+func FormatHistoricalPoolIndexTWAPKey(poolId uint64, denom1, denom2 string, accumulatorWriteTime time.Time) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator, denom1, KeySeparator, denom2))
+	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, timeS))
 }
 
-func FormatHistoricalPoolIndexTimePrefix(poolId uint64, accumulatorWriteTime time.Time) []byte {
+func FormatHistoricalPoolIndexTimePrefix(poolId uint64, denom1, denom2 string) []byte {
+	return []byte(fmt.Sprintf("%s%d%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, denom1, KeySeparator, denom2, KeySeparator))
+}
+
+func FormatHistoricalPoolIndexTimeSuffix(poolId uint64, denom1, denom2 string, accumulatorWriteTime time.Time) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
-	return []byte(fmt.Sprintf("%s%d%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, timeS, KeySeparator))
+	// . acts as a suffix for lexicographical orderings
+	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s.", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, timeS))
 }
 
 func ParseTimeFromHistoricalTimeIndexKey(key []byte) (time.Time, error) {
@@ -71,22 +76,6 @@ func ParseTimeFromHistoricalTimeIndexKey(key []byte) (time.Time, error) {
 		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
 	}
 	t, err := osmoutils.ParseTimeString(s[1])
-	if err != nil {
-		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
-	}
-	return t, nil
-}
-
-func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
-	keyS := string(key)
-	s := strings.Split(keyS, KeySeparator)
-	if len(s) != expectedKeySeparatedParts {
-		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)}
-	}
-	if s[0] != historicalTWAPPoolIndexNoSeparator {
-		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
-	}
-	t, err := osmoutils.ParseTimeString(s[2])
 	if err != nil {
 		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
 	}
