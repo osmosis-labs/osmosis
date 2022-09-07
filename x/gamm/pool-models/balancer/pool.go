@@ -764,7 +764,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 }
 
 // CalcJoinPoolNoSwapShares calculates the number of shares created to execute an all-asset pool join with the provided amount of `tokensIn`.
-// The input tokens must contain exactly the same tokens as the pool contains
+// The input tokens must contain the same tokens as in the pool.
 //
 // Returns the number of shares created, the amount of coins actually joined into the pool, (in case of not being able to fully join),
 // and the remaining tokens in `tokensIn` after joining. If an all-asset join is not possible, returns an error.
