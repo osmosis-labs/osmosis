@@ -84,7 +84,6 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 		"diff spot price, three asset pool": {tapZeroAccumTenPoint1Record,
 			recordWithUpdatedAccum(tapZeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
 			tPlusOne, tapPoolId, []string{tapDenomA, tapDenomA, tapDenomB}, []string{tapDenomB, tapDenomC, tapDenomC}, nil},
-		// TODO: Overflow
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
