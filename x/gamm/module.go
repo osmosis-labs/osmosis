@@ -25,12 +25,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
-	simulation "github.com/osmosis-labs/osmosis/v11/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	simulation "github.com/osmosis-labs/osmosis/v12/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 var (
@@ -67,7 +67,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return genState.Validate()
 }
 
-//---------------------------------------
+// ---------------------------------------
 // Interfaces.
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
@@ -177,15 +177,5 @@ func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *s
 }
 
 func (am AppModule) Actions() []simtypes.Action {
-	return []simtypes.Action{
-		simtypes.NewMsgBasedAction("MsgJoinPool", am.keeper, simulation.RandomJoinPoolMsg).WithFrequency(simtypes.Frequent),
-		simtypes.NewMsgBasedAction("MsgExitPool", am.keeper, simulation.RandomExitPoolMsg),
-		simtypes.NewMsgBasedAction("CreateUniV2Msg", am.keeper, simulation.RandomCreateUniV2Msg).WithFrequency(simtypes.Frequent),
-		simtypes.NewMsgBasedAction("SwapExactAmountIn", am.keeper, simulation.RandomSwapExactAmountIn),
-		simtypes.NewMsgBasedAction("SwapExactAmountOut", am.keeper, simulation.RandomSwapExactAmountOut),
-		simtypes.NewMsgBasedAction("JoinSwapExternAmountIn", am.keeper, simulation.RandomJoinSwapExternAmountIn),
-		simtypes.NewMsgBasedAction("JoinSwapShareAmountOut", am.keeper, simulation.RandomJoinSwapShareAmountOut),
-		simtypes.NewMsgBasedAction("ExitSwapExternAmountOut", am.keeper, simulation.RandomExitSwapExternAmountOut),
-		simtypes.NewMsgBasedAction("ExitSwapShareAmountIn", am.keeper, simulation.RandomExitSwapShareAmountIn),
-	}
+	return simulation.DefaultActions(am.keeper)
 }

@@ -5,8 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v11/app/keepers"
-	"github.com/osmosis-labs/osmosis/v11/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v12/app/keepers"
+	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
 )
 
 func CreateUpgradeHandler(

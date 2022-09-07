@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -31,8 +31,6 @@ func GetTxCmd() *cobra.Command {
 		NewSuperfluidUndelegateCmd(),
 		NewSuperfluidUnbondLockCmd(),
 		// NewSuperfluidRedelegateCmd(),
-		NewCmdSubmitSetSuperfluidAssetsProposal(),
-		NewCmdSubmitRemoveSuperfluidAssetsProposal(),
 		NewCmdLockAndSuperfluidDelegate(),
 		NewCmdUnPoolWhitelistedPool(),
 	)

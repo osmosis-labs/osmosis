@@ -16,11 +16,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap"
-	twapclient "github.com/osmosis-labs/osmosis/v11/x/twap/client"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/client/grpc"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap"
+	twapclient "github.com/osmosis-labs/osmosis/v12/x/twap/client"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client/grpc"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 var (
@@ -49,7 +49,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	return genState.Validate()
 }
 
-//---------------------------------------
+// ---------------------------------------
 // Interfaces.
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }

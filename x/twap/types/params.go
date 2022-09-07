@@ -6,7 +6,7 @@ import (
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 )
 
 // Parameter store keys.
@@ -19,7 +19,7 @@ var (
 
 const (
 	defaultPruneEpochIdentifier    = "day"
-	defailtRecordHistoryKeepPeriod = 48 * time.Hour
+	defaultRecordHistoryKeepPeriod = 48 * time.Hour
 )
 
 // ParamTable for twap module.
@@ -38,7 +38,7 @@ func NewParams(pruneEpochIdentifier string, recordHistoryKeepPeriod time.Duratio
 func DefaultParams() Params {
 	return Params{
 		PruneEpochIdentifier:    defaultPruneEpochIdentifier,
-		RecordHistoryKeepPeriod: defailtRecordHistoryKeepPeriod,
+		RecordHistoryKeepPeriod: defaultRecordHistoryKeepPeriod,
 	}
 }
 

@@ -3,12 +3,12 @@ package twap_test
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 func (s *TestSuite) TestMigrateExistingPools() {
 	// create two pools before migration
-	s.PrepareBalancerPoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
+	s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins[0], defaultTwoAssetCoins[1])
 	s.PrepareBalancerPool()
 
 	// suppose upgrade happened and increment block height and block time
@@ -51,7 +51,7 @@ func (s *TestSuite) TestMigrateExistingPools() {
 
 func (s *TestSuite) TestMigrateExistingPoolsError() {
 	// create two pools before migration
-	s.PrepareBalancerPoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
+	s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins[0], defaultTwoAssetCoins[1])
 	s.PrepareBalancerPool()
 
 	// suppose upgrade happened and increment block height and block time

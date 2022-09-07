@@ -1,7 +1,13 @@
 name: Cosmwasm Contracts
 on:
   pull_request:
+    branches:
+      - "**"
   push:
+    branches:
+      - "main"
+      - "v[0-9]**"
+  workflow_dispatch:
 
 
 jobs:
@@ -15,7 +21,13 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
-
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.rs
+            **/**.go
+            go.mod
+            **/**cargo.toml
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -87,7 +99,10 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
-
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.rs
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:

@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v11/x/twap"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v12/x/twap"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere
@@ -19,10 +19,11 @@ var (
 	denom0                        = "token/A"
 	denom1                        = "token/B"
 	denom2                        = "token/C"
-	defaultUniV2Coins             = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
+	defaultTwoAssetCoins          = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000))
 	defaultThreeAssetCoins        = sdk.NewCoins(sdk.NewInt64Coin(denom0, 1_000_000_000), sdk.NewInt64Coin(denom1, 1_000_000_000), sdk.NewInt64Coin(denom2, 1_000_000_000))
 	baseTime                      = time.Unix(1257894000, 0).UTC()
 	tPlusOne                      = baseTime.Add(time.Second)
+	tMinOne                       = baseTime.Add(-time.Second)
 	tPlusOneMin                   = baseTime.Add(time.Minute)
 	basePoolId             uint64 = 1
 )
@@ -136,6 +137,20 @@ var (
 		append(increasingOrderByTimeRecordsPoolOne.Twaps, decreasingOrderByTimeRecordsPoolTwo.Twaps...),
 	)
 )
+
+func withLastErrTime(twap types.TwapRecord, lastErrorTime time.Time) types.TwapRecord {
+	twap.LastErrorTime = lastErrorTime
+	return twap
+}
+
+func withSp0(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
+	twap.P0LastSpotPrice = sp
+	return twap
+}
+func withSp1(twap types.TwapRecord, sp sdk.Dec) types.TwapRecord {
+	twap.P1LastSpotPrice = sp
+	return twap
+}
 
 // TestTWAPInitGenesis tests that genesis is initialized correctly
 // with different parameters and state.
@@ -277,8 +292,8 @@ func (suite *TestSuite) TestTWAPExportGenesis() {
 
 // sets up a new two asset pool, with spot price 1
 func (s *TestSuite) setupDefaultPool() (poolId uint64, denomA, denomB string) {
-	poolId = s.PrepareBalancerPoolWithCoins(defaultUniV2Coins[0], defaultUniV2Coins[1])
-	denomA, denomB = defaultUniV2Coins[0].Denom, defaultUniV2Coins[1].Denom
+	poolId = s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins[0], defaultTwoAssetCoins[1])
+	denomA, denomB = defaultTwoAssetCoins[1].Denom, defaultTwoAssetCoins[0].Denom
 	return
 }
 
@@ -310,10 +325,10 @@ func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) 
 }
 
 // createTestRecordsFromTime creates and returns 4 test records in the following order:
-// - at time t - 2 seconds
-// - at time t - 1 seconds
-// - at time t
-// - at time t + 1 seconds
+// - at time t - 2 seconds, with pool id 0
+// - at time t - 1 seconds, with pool id 1
+// - at time t, with pool id 2
+// - at time t + 1 seconds, with pool id 3
 func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) {
 	baseRecord := newEmptyPriceRecord(basePoolId, t, denom0, denom1)
 
@@ -327,6 +342,21 @@ func (s *TestSuite) createTestRecordsFromTime(t time.Time) (types.TwapRecord, ty
 	tPlus1Record := newEmptyPriceRecord(basePoolId+3, tPlus1, denom0, denom1)
 
 	return tMin2Record, tMin1Record, baseRecord, tPlus1Record
+}
+
+// createTestRecordsFromTimeInPool creates and returns 4 test records in the following order:
+// - at time t - 2 seconds
+// - at time t - 1 seconds
+// - at time t
+// - at time t + 1 seconds
+// all returned records belong to the same pool with poolId
+func (s *TestSuite) createTestRecordsFromTimeInPool(t time.Time, poolId uint64) (types.TwapRecord, types.TwapRecord, types.TwapRecord, types.TwapRecord) {
+	min2SecRecord, min1SecRecord, baseRecord, plus1SecRecord := s.createTestRecordsFromTime(t)
+	min2SecRecord.PoolId = poolId
+	min1SecRecord.PoolId = poolId
+	baseRecord.PoolId = poolId
+	plus1SecRecord.PoolId = poolId
+	return min2SecRecord, min1SecRecord, baseRecord, plus1SecRecord
 }
 
 func newTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {

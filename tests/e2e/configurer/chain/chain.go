@@ -9,10 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/config"
+	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
 
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
 )
 
 type Config struct {
@@ -52,7 +53,7 @@ func New(t *testing.T, containerManager *containers.Manager, id string, initVali
 		},
 		ValidatorInitConfigs:  initValidatorConfigs,
 		VotingPeriod:          config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks,
-		ExpeditedVotingPeriod: config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks - 1,
+		ExpeditedVotingPeriod: config.PropDepositBlocks + numVal*config.PropVoteBlocks + config.PropBufferBlocks - 2,
 		t:                     t,
 		containerManager:      containerManager,
 	}
@@ -140,6 +141,35 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	)
 
 	c.t.Log("successfully sent IBC tokens")
+}
+
+func (c *Config) EnableSuperfluidAsset(denom string) {
+	chain, err := c.GetDefaultNode()
+	require.NoError(c.t, err)
+	chain.SubmitSuperfluidProposal(denom, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	c.LatestProposalNumber += 1
+	chain.DepositProposal(c.LatestProposalNumber, false)
+	for _, node := range c.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
+	}
+}
+
+func (c *Config) LockAndAddToExistingLock(amount sdk.Int, denom, lockupWalletAddr, lockupWalletSuperfluidAddr string) {
+	chain, err := c.GetDefaultNode()
+	require.NoError(c.t, err)
+
+	// lock tokens
+	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletAddr)
+	c.LatestLockNumber += 1
+	// add to existing lock
+	chain.AddToExistingLock(amount, denom, "240s", lockupWalletAddr)
+
+	// superfluid lock tokens
+	chain.LockTokens(fmt.Sprintf("%v%s", amount, denom), "240s", lockupWalletSuperfluidAddr)
+	c.LatestLockNumber += 1
+	chain.SuperfluidDelegate(c.LatestLockNumber, c.NodeConfigs[1].OperatorAddress, lockupWalletSuperfluidAddr)
+	// add to existing lock
+	chain.AddToExistingLock(amount, denom, "240s", lockupWalletSuperfluidAddr)
 }
 
 // GetDefaultNode returns the default node of the chain.
