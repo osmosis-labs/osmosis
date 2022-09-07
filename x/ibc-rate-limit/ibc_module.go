@@ -3,102 +3,22 @@ package ibc_rate_limit
 import (
 	"encoding/json"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
-	"github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 )
-
-var (
-	_ porttypes.Middleware  = &IBCModule{}
-	_ porttypes.ICS4Wrapper = &ICS4Middleware{}
-)
-
-type ICS4Middleware struct {
-	channel        porttypes.ICS4Wrapper
-	accountKeeper  *authkeeper.AccountKeeper
-	BankKeeper     *bankkeeper.BaseKeeper
-	ContractKeeper *wasmkeeper.PermissionedKeeper
-	LockupKeeper   *lockupkeeper.Keeper
-	ParamSpace     paramtypes.Subspace
-}
-
-func NewICS4Middleware(
-	channel porttypes.ICS4Wrapper,
-	accountKeeper *authkeeper.AccountKeeper, contractKeeper *wasmkeeper.PermissionedKeeper,
-	bankKeeper *bankkeeper.BaseKeeper, lockupKeeper *lockupkeeper.Keeper,
-	paramSpace paramtypes.Subspace,
-) ICS4Middleware {
-	return ICS4Middleware{
-		channel:        channel,
-		accountKeeper:  accountKeeper,
-		ContractKeeper: contractKeeper,
-		BankKeeper:     bankKeeper,
-		LockupKeeper:   lockupKeeper,
-		ParamSpace:     paramSpace,
-	}
-}
-
-// SendPacket implements the ICS4 interface and is called when sending packets.
-// This method retrieves the contract from the middleware's parameters and checks if the limits have been exceeded for
-// the current transfer, in which case it returns an error preventing the IBC send from taking place.
-// If the contract param is not configured, or the contract doesn't have a configuration for the (channel+denom) being
-// used, transfers are not prevented and handled by the wrapped IBC app
-func (i *ICS4Middleware) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
-	var params types.Params
-	i.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
-	if params.ContractAddress == "" {
-		// The contract has not been configured. Continue as usual
-		return i.channel.SendPacket(ctx, chanCap, packet)
-	}
-
-	amount, denom, err := GetFundsFromPacket(packet)
-	if err != nil {
-		return sdkerrors.Wrap(err, "Rate limited SendPacket")
-	}
-	channelValue := i.CalculateChannelValue(ctx, denom)
-	err = CheckAndUpdateRateLimits(
-		ctx,
-		i.ContractKeeper,
-		"send_packet",
-		params.ContractAddress,
-		channelValue,
-		packet.GetSourceChannel(),
-		denom,
-		amount,
-	)
-	if err != nil {
-		return sdkerrors.Wrap(err, "Rate limited SendPacket")
-	}
-
-	return i.channel.SendPacket(ctx, chanCap, packet)
-}
-
-func (i *ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI, ack exported.Acknowledgement) error {
-	return i.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
-}
-
-// CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
-// if the denom is not correct, the transfer should fail somewhere else on the call chain
-func (i *ICS4Middleware) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
-	return i.BankKeeper.GetSupplyWithOffset(ctx, denom).Amount
-}
 
 type IBCModule struct {
 	app            porttypes.IBCModule
-	ics4Middleware *ICS4Middleware
+	ics4Middleware *ICS4Wrapper
 }
 
-func NewIBCModule(app porttypes.IBCModule, ics4 *ICS4Middleware) IBCModule {
+func NewIBCModule(app porttypes.IBCModule, ics4 *ICS4Wrapper) IBCModule {
 	return IBCModule{
 		app:            app,
 		ics4Middleware: ics4,
@@ -189,9 +109,8 @@ func (im *IBCModule) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) exported.Acknowledgement {
-	var params types.Params
-	im.ics4Middleware.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
-	if params.ContractAddress == "" {
+	contract := im.ics4Middleware.GetParams(ctx)
+	if contract == "" {
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
@@ -205,7 +124,7 @@ func (im *IBCModule) OnRecvPacket(
 		ctx,
 		im.ics4Middleware.ContractKeeper,
 		"recv_packet",
-		params.ContractAddress,
+		contract,
 		channelValue,
 		packet.GetDestChannel(),
 		denom,
@@ -267,35 +186,6 @@ func (im *IBCModule) OnTimeoutPacket(
 		)
 	}
 	return im.app.OnTimeoutPacket(ctx, packet, relayer)
-}
-
-// RevertSentPacket Notifies the contract that a sent packet wasn't properly received
-func (im *IBCModule) RevertSentPacket(
-	ctx sdk.Context,
-	packet channeltypes.Packet,
-) error {
-	var data transfertypes.FungibleTokenPacketData
-	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
-	}
-	var params types.Params
-	im.ics4Middleware.ParamSpace.GetIfExists(ctx, []byte("contract"), &params)
-	if params.ContractAddress == "" {
-		// The contract has not been configured. Continue as usual
-		return nil
-	}
-
-	if err := UndoSendRateLimit(
-		ctx,
-		im.ics4Middleware.ContractKeeper,
-		params.ContractAddress,
-		packet.GetSourceChannel(),
-		data.Denom,
-		data.Amount,
-	); err != nil {
-		return err
-	}
-	return nil
 }
 
 // SendPacket implements the ICS4 Wrapper interface
