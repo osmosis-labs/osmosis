@@ -1,0 +1,16 @@
+syntax = "proto3";
+package osmosis.validatorpreference.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/validator-preference/v1beta1/state.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types";
+
+// Params defines the parameters for the module.
+message Params {
+  // the users validator-set, {valAddr, weight} to unstake the tokens from.
+  repeated ValidatorPreference preferences = 1 [
+    (gogoproto.moretags) = "yaml:\"preferences\"",
+    (gogoproto.nullable) = false
+  ];
+}

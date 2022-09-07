@@ -18,6 +18,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20220811235203-65a53b4ea8e3
+	github.com/osmosis-labs/osmosis/v11 v11.0.1
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
