@@ -42,11 +42,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // the two weights, but more types may be added in the future.
 // When these parameters are set, the weight w(t) for pool time `t` is the
 // following:
-//   t <= start_time: w(t) = initial_pool_weights
-//   start_time < t <= start_time + duration:
-//     w(t) = initial_pool_weights + (t - start_time) *
-//       (target_pool_weights - initial_pool_weights) / (duration)
-//   t > start_time + duration: w(t) = target_pool_weights
+//
+//	t <= start_time: w(t) = initial_pool_weights
+//	start_time < t <= start_time + duration:
+//	  w(t) = initial_pool_weights + (t - start_time) *
+//	    (target_pool_weights - initial_pool_weights) / (duration)
+//	t > start_time + duration: w(t) = target_pool_weights
 type SmoothWeightChangeParams struct {
 	// The start time for beginning the weight change.
 	// If a parameter change / pool instantiation leaves this blank,
