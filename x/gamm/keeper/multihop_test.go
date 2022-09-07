@@ -149,7 +149,6 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleMultihopSwapExactAmountIn() 
 				} else {
 					suite.Require().True(multihopTokenOutAmount.Equal(tokenOutCalculatedAsSeparateSwaps.Amount))
 				}
-
 			} else {
 				_, err := keeper.MultihopSwapExactAmountIn(suite.Ctx, suite.TestAccs[0], test.param.routes, test.param.tokenIn, test.param.tokenOutMinAmount)
 				suite.Error(err, "test: %v", test.name)
