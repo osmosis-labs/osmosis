@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

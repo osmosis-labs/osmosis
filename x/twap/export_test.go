@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 type (
@@ -55,6 +55,10 @@ func (k Keeper) PruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 
 func (k Keeper) PruneRecords(ctx sdk.Context) error {
 	return k.pruneRecords(ctx)
+}
+
+func (k Keeper) GetInterpolatedRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string, t time.Time) (types.TwapRecord, error) {
+	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom)
 }
 
 func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
