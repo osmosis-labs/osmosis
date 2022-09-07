@@ -5,6 +5,7 @@ package e2e
 
 import (
 	"encoding/json"
+
 	"fmt"
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
@@ -35,6 +36,99 @@ func (s *IntegrationTestSuite) Test01IBCTokenTransfer() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+}
+
+// Test02CreatePoolPostUpgrade tests that a pool can be created.
+// It attempts to create a pool with both native and IBC denoms.
+// As a result, it must run after Test01IBCTokenTransfer.
+// This is the reason for prefixing the name with 02 to ensure
+// correct order.
+func (s *IntegrationTestSuite) Test02CreatePool() {
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	chainANode.CreatePool("nativeDenomPool.json", initialization.ValidatorWalletName)
+
+	if s.skipIBC {
+		s.T().Log("skipping creating pool with IBC denoms because IBC tests are disabled")
+		return
+	}
+
+	chainANode.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName)
+}
+
+// Test03SuperfluidVoting tests that superfluid voting is functioning as expected.
+// It does so by doing the following:
+// - creating a pool
+// - attempting to submit a proposal to enable superfluid voting in that pool
+// - voting yes on the proposal from the validator wallet
+// - voting no on the proposal from the delegator wallet
+// - ensuring that delegator's wallet overwrites the validator's vote
+func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
+
+	// enable superfluid assets
+	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
+
+	// setup wallets and send gamm tokens to these wallets (both chains)
+	superfluildVotingWallet := chainANode.CreateWallet("Test03SuperfluidVoting")
+	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, superfluildVotingWallet)
+	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluildVotingWallet)
+	chainA.LatestLockNumber += 1
+	chainANode.SuperfluidDelegate(chainA.LatestLockNumber, chainA.NodeConfigs[1].OperatorAddress, superfluildVotingWallet)
+
+	// create a text prop, deposit and vote yes
+	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
+	chainA.LatestProposalNumber += 1
+	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
+	for _, node := range chainA.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
+	}
+
+	// set delegator vote to no
+	chainANode.VoteNoProposal(superfluildVotingWallet, chainA.LatestProposalNumber)
+
+	s.Eventually(
+		func() bool {
+			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainANode.QueryPropTally(chainA.LatestProposalNumber)
+			if err != nil {
+				return false
+			}
+			if abstainTotal.Int64()+noTotal.Int64()+noWithVetoTotal.Int64()+yesTotal.Int64() <= 0 {
+				return false
+			}
+			return true
+		},
+		1*time.Minute,
+		10*time.Millisecond,
+		"Osmosis node failed to retrieve prop tally",
+	)
+	noTotal, _, _, _, _ := chainANode.QueryPropTally(chainA.LatestProposalNumber)
+	noTotalFinal, err := strconv.Atoi(noTotal.String())
+	s.NoError(err)
+
+	s.Eventually(
+		func() bool {
+			intAccountBalance, err := chainANode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainA.NodeConfigs[1].OperatorAddress)
+			s.Require().NoError(err)
+			if err != nil {
+				return false
+			}
+			if noTotalFinal != intAccountBalance {
+				fmt.Printf("noTotalFinal %v does not match intAccountBalance %v", noTotalFinal, intAccountBalance)
+				return false
+			}
+			return true
+		},
+		1*time.Minute,
+		10*time.Millisecond,
+		"superfluid delegation vote overwrite not working as expected",
+	)
 }
 
 // Copy a file from A to B with io.Copy
@@ -155,99 +249,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	// Removing the rate limit so it doesn't affect other tests
 	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 
-}
-
-// Test02CreatePoolPostUpgrade tests that a pool can be created.
-// It attempts to create a pool with both native and IBC denoms.
-// As a result, it must run after Test01IBCTokenTransfer.
-// This is the reason for prefixing the name with 02 to ensure
-// correct order.
-func (s *IntegrationTestSuite) Test02CreatePool() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
-
-	chainANode.CreatePool("nativeDenomPool.json", initialization.ValidatorWalletName)
-
-	if s.skipIBC {
-		s.T().Log("skipping creating pool with IBC denoms because IBC tests are disabled")
-		return
-	}
-
-	chainANode.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName)
-}
-
-// Test03SuperfluidVoting tests that superfluid voting is functioning as expected.
-// It does so by doing the following:
-// - creating a pool
-// - attempting to submit a proposal to enable superfluid voting in that pool
-// - voting yes on the proposal from the validator wallet
-// - voting no on the proposal from the delegator wallet
-// - ensuring that delegator's wallet overwrites the validator's vote
-func (s *IntegrationTestSuite) TestSuperfluidVoting() {
-	chainA := s.configurer.GetChainConfig(0)
-	chainANode, err := chainA.GetDefaultNode()
-	s.NoError(err)
-
-	poolId := chainANode.CreatePool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
-
-	// enable superfluid assets
-	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
-
-	// setup wallets and send gamm tokens to these wallets (both chains)
-	superfluildVotingWallet := chainANode.CreateWallet("Test03SuperfluidVoting")
-	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, superfluildVotingWallet)
-	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluildVotingWallet)
-	chainA.LatestLockNumber += 1
-	chainANode.SuperfluidDelegate(chainA.LatestLockNumber, chainA.NodeConfigs[1].OperatorAddress, superfluildVotingWallet)
-
-	// create a text prop, deposit and vote yes
-	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
-	chainA.LatestProposalNumber += 1
-	chainANode.DepositProposal(chainA.LatestProposalNumber, false)
-	for _, node := range chainA.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
-	}
-
-	// set delegator vote to no
-	chainANode.VoteNoProposal(superfluildVotingWallet, chainA.LatestProposalNumber)
-
-	s.Eventually(
-		func() bool {
-			noTotal, yesTotal, noWithVetoTotal, abstainTotal, err := chainANode.QueryPropTally(chainA.LatestProposalNumber)
-			if err != nil {
-				return false
-			}
-			if abstainTotal.Int64()+noTotal.Int64()+noWithVetoTotal.Int64()+yesTotal.Int64() <= 0 {
-				return false
-			}
-			return true
-		},
-		1*time.Minute,
-		10*time.Millisecond,
-		"Osmosis node failed to retrieve prop tally",
-	)
-	noTotal, _, _, _, _ := chainANode.QueryPropTally(chainA.LatestProposalNumber)
-	noTotalFinal, err := strconv.Atoi(noTotal.String())
-	s.NoError(err)
-
-	s.Eventually(
-		func() bool {
-			intAccountBalance, err := chainANode.QueryIntermediaryAccount(fmt.Sprintf("gamm/pool/%d", poolId), chainA.NodeConfigs[1].OperatorAddress)
-			s.Require().NoError(err)
-			if err != nil {
-				return false
-			}
-			if noTotalFinal != intAccountBalance {
-				fmt.Printf("noTotalFinal %v does not match intAccountBalance %v", noTotalFinal, intAccountBalance)
-				return false
-			}
-			return true
-		},
-		1*time.Minute,
-		10*time.Millisecond,
-		"superfluid delegation vote overwrite not working as expected",
-	)
 }
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
