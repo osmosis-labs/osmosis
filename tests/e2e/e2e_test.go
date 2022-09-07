@@ -13,9 +13,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
 )
 
 // Test01IBCTokenTransfer tests that IBC token transfers work as expected.

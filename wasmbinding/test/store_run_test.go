@@ -13,7 +13,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/app"
+	"github.com/osmosis-labs/osmosis/v12/app"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {
