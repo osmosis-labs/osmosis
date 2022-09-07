@@ -8,7 +8,7 @@ DISABLED_MUTATORS='branch/*'
 # Only consider the following:
 # * go files in types, keeper, or module root directories
 # * ignore test and Protobuf files
-go_file_exclusions="-type f -name *.go -and -not -name *_test.go -and -not -name *pb* -and -not -name module.go"
+go_file_exclusions="-type f ! -path */client/* -name *.go -and -not -name *_test.go -and -not -name *pb* -and -not -name module.go"
 MUTATION_SOURCES=$(find ./x  $go_file_exclusions )
 MUTATION_SOURCES+=$(find ./x -maxdepth 2 $go_file_exclusions )
 
