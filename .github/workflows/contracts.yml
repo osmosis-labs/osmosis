@@ -2,13 +2,12 @@ name: Cosmwasm Contracts
 on:
   pull_request:
     branches:
-      - "**"
+      - '**'
   push:
     branches:
-      - "main"
-      - "v[0-9]**"
+      - 'main'
+      - 'v[0-9]**'
   workflow_dispatch:
-
 
 jobs:
   test:
@@ -16,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [{workdir: ./x/ibc-rate-limit/, output: testdata/rate_limiter.wasm, build: artifacts/rate_limiter-x86_64.wasm, name: rate_limiter}]
+        contract: []
 
     steps:
       - name: Checkout sources
@@ -38,7 +37,6 @@ jobs:
         working-directory: ${{ matrix.contract.workdir }}
         run: >
           rustup target add wasm32-unknown-unknown;
-
 
       - name: Build
         working-directory: ${{ matrix.contract.workdir }}
@@ -82,12 +80,11 @@ jobs:
           path: ${{ matrix.contract.workdir }}${{ matrix.contract.build }}
           retention-days: 1
 
-#      - name: Check Test Data
-#        working-directory: ${{ matrix.contract.workdir }}
-#        if: ${{ matrix.contract.output != null }}
-#        run: >
-#          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
-  
+  #      - name: Check Test Data
+  #        working-directory: ${{ matrix.contract.workdir }}
+  #        if: ${{ matrix.contract.output != null }}
+  #        run: >
+  #          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
 
   lints:
     name: Cosmwasm Lints
@@ -120,4 +117,3 @@ jobs:
         working-directory: ${{ matrix.workdir }}
         run: >
           cargo clippy -- -D warnings
-
