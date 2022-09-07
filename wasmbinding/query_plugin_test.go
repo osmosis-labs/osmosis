@@ -220,6 +220,7 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 	testCases := []struct {
 		name                string
+		testSetup           func()
 		originalResponse    string
 		updatedResponse     string
 		queryPath           string
@@ -257,6 +258,9 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 		*/
 		{
 			"Query All Balances",
+			func() {
+				wasmbinding.StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
+			},
 			"0a090a036261721202333012050a03666f6f",
 			"0a090a036261721202333012050a03666f6f1a2d636f736d6f73316a366a357473717571326a6c77326166376c3378656b796171377a67346c386a737566753738",
 			"/cosmos.bank.v1beta1.Query/AllBalances",
@@ -292,6 +296,7 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 		*/
 		{
 			"Query Account",
+			nil,
 			"0a530a202f636f736d6f732e617574682e763162657461312e426173654163636f756e74122f0a2d636f736d6f733166387578756c746e3873717a687a6e72737a3371373778776171756867727367366a79766679",
 			"0a530a202f636f736d6f732e617574682e763162657461312e426173654163636f756e74122f0a2d636f736d6f733166387578756c746e3873717a687a6e72737a3371373778776171756867727367366a79766679122d636f736d6f733166387578756c746e3873717a687a6e72737a3371373778776171756867727367366a79766679",
 			"/cosmos.auth.v1beta1.Query/Account",
@@ -312,6 +317,10 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			suite.SetupTest()
+
+			if tc.testSetup != nil {
+				tc.testSetup()
+			}
 
 			binding, ok := wasmbinding.StargateWhitelist.Load(tc.queryPath)
 			suite.Require().True(ok)

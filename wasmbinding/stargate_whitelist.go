@@ -36,7 +36,6 @@ func init() {
 
 	// bank
 	StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/Balance", &banktypes.QueryBalanceResponse{})
-	StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
 	StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/DenomMetadata", &banktypes.QueryDenomsMetadataResponse{})
 	StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/Params", &banktypes.QueryParamsResponse{})
 	StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/SupplyOf", &banktypes.QuerySupplyOfResponse{})
