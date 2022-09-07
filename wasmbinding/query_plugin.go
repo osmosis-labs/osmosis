@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v11/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v12/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries
