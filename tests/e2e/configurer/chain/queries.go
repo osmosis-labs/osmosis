@@ -19,6 +19,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
@@ -51,6 +52,12 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 		if err != nil {
 			n.t.Logf("error while executing HTTP request: %s", err.Error())
 			return false
+		}
+
+		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusServiceUnavailable {
+			if err != nil {
+				return true
+			}
 		}
 
 		return resp.StatusCode != http.StatusServiceUnavailable
@@ -143,6 +150,24 @@ func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err)
 	return response.CurrentEpoch
+}
+
+func (n *NodeConfig) QueryGetArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) string {
+	path := "osmosis/twap/v1beta1/GetArithmeticTwapToNow"
+
+	bz, err := n.QueryGRPCGateway(
+		path,
+		"pool_id", strconv.FormatInt(int64(poolId), 10),
+		"base_asset", baseAsset,
+		"quote_asset", quoteAsset,
+		"start_time", startTime.Format(time.RFC3339Nano),
+	)
+	require.NoError(n.t, err)
+
+	var response twapqueryproto.GetArithmeticTwapToNowResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	return response.ArithmeticTwap.String()
 }
 
 // QueryHashFromBlock gets block hash at a specific height. Otherwise, error.

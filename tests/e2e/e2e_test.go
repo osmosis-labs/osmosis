@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package e2e
 
 import (
@@ -156,12 +153,15 @@ func (s *IntegrationTestSuite) TestTWAP() {
 		poolFile   = "nativeDenomPool.json"
 		walletName = "swap-exact-amount-in-wallet"
 
-		coinIn       = "101stake"
+		denomOne = "stake"
+		denomTwo = "uosmo"
+
 		minAmountOut = "99"
-		denomOut     = "uosmo"
 
 		epochIdentifier = "day"
 	)
+
+	var coinIn = fmt.Sprintf("101%s", denomOne)
 
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
@@ -171,16 +171,27 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
 	swapWalletAddr := chainANode.CreateWallet(walletName)
 
+	twapToNowBeforeSwapOne := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, time.Now())
+
 	chainANode.BankSend(coinIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
 	heightBeforeSwap := chainANode.QueryCurrentHeight()
 
+	twapToNowBeforeSwapTwo := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, time.Now())
+
+	// Since there were no swaps between the two queries, the TWAPs should be the same.
+	s.Require().Equal(twapToNowBeforeSwapOne, twapToNowBeforeSwapTwo)
+
 	// Triggers the creation of TWAP records.
-	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", poolId), denomOut, swapWalletAddr)
+	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", poolId), denomTwo, swapWalletAddr)
 
 	keepPeriodCountDown := time.NewTimer(initialization.TWAPPruningKeepPeriod)
 
 	// Make sure still producing blocks.
 	chainA.WaitUntilHeight(heightBeforeSwap + 3)
+
+	// After the swap, the TWAPs should be different.
+	twapToNowPostSwap := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, time.Now())
+	s.Require().NotEqual(twapToNowBeforeSwapOne, twapToNowPostSwap)
 
 	if !s.skipUpgrade {
 		// TODO: we should reduce the pruning time in the v11
@@ -202,6 +213,11 @@ func (s *IntegrationTestSuite) TestTWAP() {
 		s.T().Logf("Current epoch number is (%d), waiting to reach (%d)", newEpochNumber, oldEpochNumber+1)
 		return newEpochNumber > oldEpochNumber
 	})
+
+	// We should still be able to get the TWAP after pruning.
+	// It should not change from the post-swap TWAP.
+	twapToNowPostPruning := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, time.Now())
+	s.Require().Equal(twapToNowPostPruning, twapToNowPostSwap)
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {
