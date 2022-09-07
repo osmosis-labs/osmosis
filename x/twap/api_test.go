@@ -771,7 +771,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 		"start time too new": {
 			recordsToSet:  []types.TwapRecord{baseRecord},
 			ctxTime:       tPlusOne,
-			input:         makeSimpleTwapToNowInput(baseTime.Add(time.Hour), quoteAssetA),
+			input:         makeSimpleTwapToNowInput(baseTime.Add(time.Hour), baseAssetA),
 			expectedError: types.StartTimeAfterEndTimeError{StartTime: baseTime.Add(time.Hour), EndTime: tPlusOne},
 		},
 	}
