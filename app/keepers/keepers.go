@@ -209,7 +209,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		nil,
 		appKeepers.BankKeeper,
-		nil,
 		rateLimitingParams,
 	)
 	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
@@ -304,7 +303,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.TxFeesKeeper,
 	)
-	appKeepers.RateLimitingICS4Wrapper.LockupKeeper = appKeepers.LockupKeeper
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appCodec, appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),

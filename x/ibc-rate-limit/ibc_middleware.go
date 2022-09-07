@@ -2,7 +2,6 @@ package ibc_rate_limit
 
 import (
 	"encoding/json"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -15,7 +14,6 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v3/modules/core/exported"
 	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
 )
 
 var (
@@ -28,22 +26,19 @@ type ICS4Middleware struct {
 	accountKeeper  *authkeeper.AccountKeeper
 	BankKeeper     *bankkeeper.BaseKeeper
 	ContractKeeper *wasmkeeper.PermissionedKeeper
-	LockupKeeper   *lockupkeeper.Keeper
 	ParamSpace     paramtypes.Subspace
 }
 
 func NewICS4Middleware(
 	channel porttypes.ICS4Wrapper,
 	accountKeeper *authkeeper.AccountKeeper, contractKeeper *wasmkeeper.PermissionedKeeper,
-	bankKeeper *bankkeeper.BaseKeeper, lockupKeeper *lockupkeeper.Keeper,
-	paramSpace paramtypes.Subspace,
+	bankKeeper *bankkeeper.BaseKeeper, paramSpace paramtypes.Subspace,
 ) ICS4Middleware {
 	return ICS4Middleware{
 		channel:        channel,
 		accountKeeper:  accountKeeper,
 		ContractKeeper: contractKeeper,
 		BankKeeper:     bankKeeper,
-		LockupKeeper:   lockupKeeper,
 		ParamSpace:     paramSpace,
 	}
 }
