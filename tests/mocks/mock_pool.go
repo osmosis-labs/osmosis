@@ -65,6 +65,22 @@ func (mr *MockPoolIMockRecorder) CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcInAmtGivenOut", reflect.TypeOf((*MockPoolI)(nil).CalcInAmtGivenOut), ctx, tokenOut, tokenInDenom, swapFee)
 }
 
+// CalcJoinPoolNoSwapShares mocks base method.
+func (m *MockPoolI) CalcJoinPoolNoSwapShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CalcJoinPoolNoSwapShares", ctx, tokensIn, swapFee)
+	ret0, _ := ret[0].(types.Int)
+	ret1, _ := ret[1].(types.Coins)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// CalcJoinPoolNoSwapShares indicates an expected call of CalcJoinPoolNoSwapShares.
+func (mr *MockPoolIMockRecorder) CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcJoinPoolNoSwapShares", reflect.TypeOf((*MockPoolI)(nil).CalcJoinPoolNoSwapShares), ctx, tokensIn, swapFee)
+}
+
 // CalcJoinPoolShares mocks base method.
 func (m *MockPoolI) CalcJoinPoolShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
 	m.ctrl.T.Helper()
@@ -224,6 +240,21 @@ func (mr *MockPoolIMockRecorder) JoinPool(ctx, tokensIn, swapFee interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPool", reflect.TypeOf((*MockPoolI)(nil).JoinPool), ctx, tokensIn, swapFee)
 }
 
+// JoinPoolNoSwap mocks base method.
+func (m *MockPoolI) JoinPoolNoSwap(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "JoinPoolNoSwap", ctx, tokensIn, swapFee)
+	ret0, _ := ret[0].(types.Int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// JoinPoolNoSwap indicates an expected call of JoinPoolNoSwap.
+func (mr *MockPoolIMockRecorder) JoinPoolNoSwap(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPoolNoSwap", reflect.TypeOf((*MockPoolI)(nil).JoinPoolNoSwap), ctx, tokensIn, swapFee)
+}
+
 // PokePool mocks base method.
 func (m *MockPoolI) PokePool(blockTime time.Time) {
 	m.ctrl.T.Helper()
@@ -370,6 +401,22 @@ func (m *MockPoolAmountOutExtension) CalcInAmtGivenOut(ctx types.Context, tokenO
 func (mr *MockPoolAmountOutExtensionMockRecorder) CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcInAmtGivenOut", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).CalcInAmtGivenOut), ctx, tokenOut, tokenInDenom, swapFee)
+}
+
+// CalcJoinPoolNoSwapShares mocks base method.
+func (m *MockPoolAmountOutExtension) CalcJoinPoolNoSwapShares(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CalcJoinPoolNoSwapShares", ctx, tokensIn, swapFee)
+	ret0, _ := ret[0].(types.Int)
+	ret1, _ := ret[1].(types.Coins)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// CalcJoinPoolNoSwapShares indicates an expected call of CalcJoinPoolNoSwapShares.
+func (mr *MockPoolAmountOutExtensionMockRecorder) CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcJoinPoolNoSwapShares", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).CalcJoinPoolNoSwapShares), ctx, tokensIn, swapFee)
 }
 
 // CalcJoinPoolShares mocks base method.
@@ -571,6 +618,21 @@ func (m *MockPoolAmountOutExtension) JoinPool(ctx types.Context, tokensIn types.
 func (mr *MockPoolAmountOutExtensionMockRecorder) JoinPool(ctx, tokensIn, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPool", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).JoinPool), ctx, tokensIn, swapFee)
+}
+
+// JoinPoolNoSwap mocks base method.
+func (m *MockPoolAmountOutExtension) JoinPoolNoSwap(ctx types.Context, tokensIn types.Coins, swapFee types.Dec) (types.Int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "JoinPoolNoSwap", ctx, tokensIn, swapFee)
+	ret0, _ := ret[0].(types.Int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// JoinPoolNoSwap indicates an expected call of JoinPoolNoSwap.
+func (mr *MockPoolAmountOutExtensionMockRecorder) JoinPoolNoSwap(ctx, tokensIn, swapFee interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinPoolNoSwap", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).JoinPoolNoSwap), ctx, tokensIn, swapFee)
 }
 
 // JoinPoolTokenInMaxShareAmountOut mocks base method.

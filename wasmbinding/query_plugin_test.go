@@ -20,6 +20,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/app"
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
 	"github.com/osmosis-labs/osmosis/v12/wasmbinding"
 )
@@ -63,10 +64,10 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		},
 		{
 			name: "unregistered path(not whitelisted)",
-			path: "/osmosis.epochs.v1beta1.Query/CurrentEpoch",
+			path: "/osmosis.lockup.Query/AccountLockedLongerDuration",
 			requestData: func() []byte {
-				currentEpochRequest := epochtypes.QueryCurrentEpochRequest{}
-				bz, err := proto.Marshal(&currentEpochRequest)
+				request := lockuptypes.AccountLockedLongerDurationRequest{}
+				bz, err := proto.Marshal(&request)
 				suite.Require().NoError(err)
 				return bz
 			},
@@ -124,7 +125,6 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			responseProtoStruct:  &banktypes.QueryAllBalancesRequest{},
 			expectedQuerierError: true,
 		},
-
 		// TODO: errors in wrong query in state machine
 	}
 
