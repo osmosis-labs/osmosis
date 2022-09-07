@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/client"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
 )
 
 type Querier struct {
@@ -28,4 +28,13 @@ func (q Querier) GetArithmeticTwap(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.GetArithmeticTwap(ctx, *req)
+}
+func (q Querier) GetArithmeticTwapToNow(grpcCtx context.Context,
+	req *queryproto.GetArithmeticTwapToNowRequest,
+) (*queryproto.GetArithmeticTwapToNowResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.GetArithmeticTwapToNow(ctx, *req)
 }

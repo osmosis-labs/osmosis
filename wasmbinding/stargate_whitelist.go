@@ -10,14 +10,14 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v11/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 )
 
 // StargateWhitelist keeps whitelist and its deterministic
@@ -44,7 +44,6 @@ func init() {
 	StargateWhitelist.Store("/cosmos.distribution.v1beta1.Query/Params", &distributiontypes.QueryParamsResponse{})
 	StargateWhitelist.Store("/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress", &distributiontypes.QueryDelegatorWithdrawAddressResponse{})
 	StargateWhitelist.Store("/cosmos.distribution.v1beta1.Query/ValidatorCommission", &distributiontypes.QueryValidatorCommissionResponse{})
-
 
 	// gov
 	StargateWhitelist.Store("/cosmos.gov.v1beta1.Query/Deposit", &govtypes.QueryDepositResponse{})

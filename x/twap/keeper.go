@@ -2,12 +2,13 @@ package twap
 
 import (
 	"sort"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 type Keeper struct {
@@ -41,6 +42,10 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 
 func (k *Keeper) PruneEpochIdentifier(ctx sdk.Context) string {
 	return k.GetParams(ctx).PruneEpochIdentifier
+}
+
+func (k *Keeper) RecordHistoryKeepPeriod(ctx sdk.Context) time.Duration {
+	return k.GetParams(ctx).RecordHistoryKeepPeriod
 }
 
 // InitGenesis initializes the twap module's state from a provided genesis

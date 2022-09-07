@@ -1,0 +1,63 @@
+syntax = "proto3";
+package osmosis.streamswap.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+import "osmosis/streamswap/v1/state.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/streamswap/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// Query defines the gRPC querier service.
+service Query {
+  // Returns list of Sales ordered by the creation time
+  rpc Sales(QuerySales) returns (QuerySalesResponse) {
+    option (google.api.http).get = "/cosmos/streamswap/v1/sales";
+  }
+
+  // Returns the specific Sale object
+  rpc Sale(QuerySale) returns (QuerySaleResponse) {
+    option (google.api.http).get = "/cosmos/streamswap/v1/sales/{sale_id}";
+  }
+
+  rpc UserPosition(QueryUserPosition) returns (QueryUserPositionResponse) {
+    option (google.api.http).get =
+        "/cosmos/streamswap/v1/sales/{sale_id}/{user}";
+  }
+}
+
+message QuerySales {
+  // pagination defines an pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QuerySalesResponse {
+  repeated osmosis.streamswap.v1.Sale sales = 1
+      [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// Request type for Query/Sale
+message QuerySale {
+  // Sale ID
+  uint64 sale_id = 1;
+}
+
+message QuerySaleResponse {
+  osmosis.streamswap.v1.Sale sale = 1 [ (gogoproto.nullable) = false ];
+}
+
+// Request type for Query/Sale
+message QueryUserPosition {
+  // ID of the Sale
+  uint64 sale_id = 1;
+  // user account address
+  string user = 2;
+}
+
+message QueryUserPositionResponse {
+  osmosis.streamswap.v1.UserPosition user_position = 1
+      [ (gogoproto.nullable) = false ];
+}

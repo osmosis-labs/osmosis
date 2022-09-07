@@ -1,12 +1,11 @@
 package twap
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
@@ -37,14 +36,12 @@ func (k Keeper) GetArithmeticTwap(
 	startTime time.Time,
 	endTime time.Time) (sdk.Dec, error) {
 	if startTime.After(endTime) {
-		return sdk.Dec{}, fmt.Errorf("called GetArithmeticTwap with a start time that is after the end time."+
-			" (start time %s, end time %s)", startTime, endTime)
+		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: endTime}
 	}
 	if endTime.Equal(ctx.BlockTime()) {
 		return k.GetArithmeticTwapToNow(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime)
 	} else if endTime.After(ctx.BlockTime()) {
-		return sdk.Dec{}, fmt.Errorf("called GetArithmeticTwap with an end time in the future."+
-			" (end time %s, current time %s)", endTime, ctx.BlockTime())
+		return sdk.Dec{}, types.EndTimeInFutureError{EndTime: endTime, BlockTime: ctx.BlockTime()}
 	}
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
@@ -54,8 +51,7 @@ func (k Keeper) GetArithmeticTwap(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	twap := computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
-	return twap, nil
+	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
 }
 
 // GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
@@ -73,8 +69,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	twap := computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
-	return twap, nil
+	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
 }
 
 // GetCurrentAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
@@ -83,9 +78,5 @@ func (k Keeper) GetArithmeticTwapToNow(
 // these swaps have had no time to be arbitraged back.
 // This accumulator can be stored, to compute wider ranged twaps.
 func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
-	// correct ordering of args for db
-	if asset1Denom > asset0Denom {
-		asset0Denom, asset1Denom = asset1Denom, asset0Denom
-	}
 	return k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
 }

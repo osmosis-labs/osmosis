@@ -1,0 +1,34 @@
+syntax = "proto3";
+package osmosis.streamswap.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/streamswap/types";
+
+// Params holds parameters for the streamswap module
+message Params {
+  // fee charged when creating a new sale. The fee will go to the
+  // sale_fee_recipient unless it is not defined (empty).
+  repeated cosmos.base.v1beta1.Coin sale_creation_fee = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"sale_creation_fee\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // bech32 address of the fee recipient
+  string sale_creation_fee_recipient = 2;
+
+  // minimum amount duration of time between the sale creation and the sale
+  // start time.
+  google.protobuf.Duration min_duration_until_start_time = 3
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+
+  // minimum duration for every new sale.
+  google.protobuf.Duration min_sale_duration = 4
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+}

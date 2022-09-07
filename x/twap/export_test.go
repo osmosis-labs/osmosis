@@ -5,10 +5,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
-const RecordHistoryKeepPeriod = recordHistoryKeepPeriod
+type (
+	TwapNotFoundError = twapNotFoundError
+	TimeTooOldError   = timeTooOldError
+)
 
 func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
 	k.storeNewRecord(ctx, record)
@@ -46,18 +49,34 @@ func (k Keeper) UpdateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	return k.updateRecord(ctx, record)
 }
 
-func (k Keeper) PruneRecordsBeforeTime(ctx sdk.Context, lastTime time.Time) error {
-	return k.pruneRecordsBeforeTime(ctx, lastTime)
+func (k Keeper) PruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
+	return k.pruneRecordsBeforeTimeButNewest(ctx, lastKeptTime)
 }
 
 func (k Keeper) PruneRecords(ctx sdk.Context) error {
 	return k.pruneRecords(ctx)
 }
 
-func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
+func (k Keeper) GetInterpolatedRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string, t time.Time) (types.TwapRecord, error) {
+	return k.getInterpolatedRecord(ctx, poolId, t, asset0Denom, asset1Denom)
+}
+
+func ComputeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) (sdk.Dec, error) {
 	return computeArithmeticTwap(startRecord, endRecord, quoteAsset)
 }
 
 func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.TwapRecord {
 	return recordWithUpdatedAccumulators(record, t)
+}
+
+func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
+	return newTwapRecord(k, ctx, poolId, denom0, denom1)
+}
+
+func (k *Keeper) GetAmmInterface() types.AmmInterface {
+	return k.ammkeeper
+}
+
+func (k *Keeper) SetAmmInterface(ammInterface types.AmmInterface) {
+	k.ammkeeper = ammInterface
 }

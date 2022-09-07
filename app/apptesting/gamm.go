@@ -3,8 +3,8 @@ package apptesting
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
@@ -17,10 +17,21 @@ var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 // PrepareBalancerPoolWithCoins returns a balancer pool
 // consisted of given coins with equal weight.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithCoins(coins ...sdk.Coin) uint64 {
+	weights := make([]int64, len(coins))
+	for i := 0; i < len(coins); i++ {
+		weights[i] = 1
+	}
+	return s.PrepareBalancerPoolWithCoinsAndWeights(coins, weights)
+}
+
+// PrepareBalancerPoolWithCoins returns a balancer pool
+// PrepareBalancerPoolWithCoinsAndWeights returns a balancer pool
+// consisted of given coins with the specified weights.
+func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coins, weights []int64) uint64 {
 	var poolAssets []balancer.PoolAsset
-	for _, coin := range coins {
+	for i, coin := range coins {
 		poolAsset := balancer.PoolAsset{
-			Weight: sdk.NewInt(1),
+			Weight: sdk.NewInt(weights[i]),
 			Token:  coin,
 		}
 		poolAssets = append(poolAssets, poolAsset)
@@ -45,7 +56,7 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	spotPrice, err = s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "baz", "foo")
 	s.NoError(err)
 	oneThird := sdk.NewDec(1).Quo(sdk.NewDec(3))
-	sp := oneThird.MulInt(gammtypes.SigFigs).RoundInt().ToDec().QuoInt(gammtypes.SigFigs)
+	sp := oneThird.MulInt(gammtypes.SpotPriceSigFigs).RoundInt().ToDec().QuoInt(gammtypes.SpotPriceSigFigs)
 	s.Equal(sp.String(), spotPrice.String())
 
 	return poolId
@@ -109,5 +120,36 @@ func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
 	}
 	// TODO: switch to message
 	_, err = s.App.GAMMKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], poolId, msg.TokenIn, denoms[1], msg.TokenOutMinAmount)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestHelper) RunBasicExit(poolId uint64) {
+	shareInAmount := sdk.NewInt(100)
+	tokenOutMins := sdk.NewCoins()
+	_, err := s.App.GAMMKeeper.ExitPool(s.Ctx, s.TestAccs[0], poolId, shareInAmount, tokenOutMins)
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestHelper) RunBasicJoin(poolId uint64) {
+	pool, _ := s.App.GAMMKeeper.GetPoolAndPoke(s.Ctx, poolId)
+	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
+	s.Require().NoError(err)
+
+	tokenIn := sdk.NewCoins()
+	for _, denom := range denoms {
+		tokenIn = tokenIn.Add(sdk.NewCoin(denom, sdk.NewInt(10000000)))
+	}
+
+	s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn...))
+
+	totalPoolShare := pool.GetTotalShares()
+	msg := gammtypes.MsgJoinPool{
+		Sender:         string(s.TestAccs[0]),
+		PoolId:         poolId,
+		ShareOutAmount: totalPoolShare.Quo(sdk.NewInt(100000)),
+		TokenInMaxs:    tokenIn,
+	}
+	// TODO: switch to message
+	_, _, err = s.App.GAMMKeeper.JoinPoolNoSwap(s.Ctx, s.TestAccs[0], poolId, msg.ShareOutAmount, msg.TokenInMaxs)
 	s.Require().NoError(err)
 }

@@ -3,36 +3,35 @@ package twap
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
-func (k Keeper) MigrateExistingPools(ctx sdk.Context, poolIds []uint64) error {
-	for _, pool := range poolIds {
-		err := k.afterCreatePool(ctx, pool)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-var _ types.GammHooks = &gammhook{}
-var _ epochtypes.EpochHooks = &epochhook{}
+var (
+	_ types.GammHooks       = &gammhook{}
+	_ epochtypes.EpochHooks = &epochhook{}
+)
 
 type epochhook struct {
 	k Keeper
 }
 
-func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) EpochHooks() epochtypes.EpochHooks {
+	return &epochhook{k}
+}
+
+func (hook *epochhook) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	if epochIdentifier == hook.k.PruneEpochIdentifier(ctx) {
 		if err := hook.k.pruneRecords(ctx); err != nil {
 			ctx.Logger().Error("Error pruning old twaps at the epoch end", err)
 		}
 	}
+	return nil
 }
 
-func (hook *epochhook) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {}
+func (hook *epochhook) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
+}
 
 type gammhook struct {
 	k Keeper
@@ -59,5 +58,6 @@ func (hook *gammhook) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, pool
 	hook.k.trackChangedPool(ctx, poolId)
 }
 
-func (hook *gammhook) AfterExitPool(_ sdk.Context, _ sdk.AccAddress, _ uint64, _ sdk.Int, _ sdk.Coins) {
+func (hook *gammhook) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
+	hook.k.trackChangedPool(ctx, poolId)
 }

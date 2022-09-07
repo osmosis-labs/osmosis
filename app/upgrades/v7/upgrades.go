@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v11/app/keepers"
-	"github.com/osmosis-labs/osmosis/v11/app/upgrades"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v12/app/keepers"
+	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 )
 
 func CreateUpgradeHandler(
@@ -52,7 +52,9 @@ func CreateUpgradeHandler(
 			Denom:     "gamm/pool/1",
 			AssetType: superfluidtypes.SuperfluidAssetTypeLPShare,
 		}
-		keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset)
+		if err := keepers.SuperfluidKeeper.AddNewSuperfluidAsset(ctx, superfluidAsset); err != nil {
+			return newVM, err
+		}
 
 		// N.B.: This is left for historic reasons.
 		// After the v7 upgrade, there was no need for this function anymore so it was removed.

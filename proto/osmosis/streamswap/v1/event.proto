@@ -1,0 +1,42 @@
+syntax = "proto3";
+package osmosis.streamswap.v1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/streamswap/types";
+option (gogoproto.goproto_getters_all) = false;
+
+message EventCreateSale {
+  uint64 id = 1;
+  string creator = 2;
+  string token_in = 3;
+  cosmos.base.v1beta1.Coin token_out = 4 [ (gogoproto.nullable) = false ];
+}
+
+message EventSubscribe {
+  string sender = 1;
+  uint64 sale_id = 2;
+  string amount = 3;
+}
+
+message EventWithdraw {
+  string sender = 1;
+  uint64 sale_id = 2;
+  // amount of staked token_in withdrawn by user.
+  string amount = 3;
+}
+
+message EventExit {
+  string sender = 1;
+  uint64 sale_id = 2;
+  // amount of purchased token_out sent to the user
+  string purchased = 3;
+}
+
+message EventFinalizeSale {
+  uint64 sale_id = 1;
+  // amount of earned tokens_in
+  string income = 3;
+}
