@@ -130,6 +130,7 @@ func makeSimpleTwapInput(startTime time.Time, endTime time.Time, isQuoteTokenA b
 	return twapInput
 }
 
+// makeSimpleTapTwapInput creates twap outputs that would result from three asset pool
 func makeSimpleTapTwapInput(startTime time.Time, endTime time.Time, isQuoteTokenA bool) []getTwapInput {
 	var twapInput []getTwapInput
 	quoteAssetDenom, baseAssetDenom := denom0, denom1
