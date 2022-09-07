@@ -667,7 +667,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 		return makeSimpleTwapInput(startTime, startTime, isQuoteTokenA)
 	}
 
-	makeSimpleTapTwapToNowInput := func(startTime time.Time, isQuoteTokenA bool) []getTwapInput {
+	makeSimpleTapTwapToNowInput := func(startTime time.Time, baseQuoteAB, baseQuoteAC, baseQuoteBC bool) []getTwapInput {
 		return makeSimpleTapTwapInput(startTime, startTime, baseQuoteAB, baseQuoteAC, baseQuoteBC)
 	}
 
@@ -690,7 +690,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 		"(1 record, three asset pool) start time = record time": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC},
 			ctxTime:      tPlusOneMin,
-			input:        makeSimpleTapTwapToNowInput(baseTime, baseAssetA),
+			input:        makeSimpleTapTwapToNowInput(baseTime, baseQuoteAB, baseQuoteAC, baseQuoteBC),
 			expTwap:      []sdk.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
 		},
 		"(1 record) start time = record time, use sp1": {
@@ -702,7 +702,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 		"(1 record, three asset pool) start time = record time, use sp1": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC},
 			ctxTime:      tPlusOneMin,
-			input:        makeSimpleTapTwapToNowInput(baseTime, baseAssetB),
+			input:        makeSimpleTapTwapToNowInput(baseTime, baseQuoteBA, baseQuoteCA, baseQuoteCB),
 			expTwap:      []sdk.Dec{sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1)},
 		},
 		"(1 record) to_now: start time > record time": {
@@ -714,7 +714,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 		"(1 record, three asset pool) to_now: start time > record time": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC},
 			ctxTime:      tPlusOneMin,
-			input:        makeSimpleTapTwapToNowInput(baseTime.Add(10*time.Second), baseAssetA),
+			input:        makeSimpleTapTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteAB, baseQuoteAC, baseQuoteBC),
 			expTwap:      []sdk.Dec{sdk.NewDec(10), sdk.NewDec(10), sdk.NewDec(10)},
 		},
 		"(2 record) to now: start time = second record time": {
@@ -726,7 +726,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 		"(2 record, three asset pool) to now: start time = second record time": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC, tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
 			ctxTime:      tPlusOneMin,
-			input:        makeSimpleTapTwapToNowInput(baseTime.Add(10*time.Second), baseAssetA),
+			input:        makeSimpleTapTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteAB, baseQuoteAC, baseQuoteBC),
 			expTwap:      []sdk.Dec{sdk.NewDec(5), sdk.NewDec(5), sdk.NewDec(5)}, // 10 for 0s, 5 for 10s
 		},
 		"(2 record) to now: start time = second record time, use sp1": {
@@ -738,7 +738,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 		"(2 record, three asset pool) to now: start time = second record time, use sp1": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC, tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
 			ctxTime:      tPlusOneMin,
-			input:        makeSimpleTapTwapToNowInput(baseTime.Add(10*time.Second), baseAssetB),
+			input:        makeSimpleTapTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteBA, baseQuoteCA, baseQuoteCB),
 			expTwap:      []sdk.Dec{sdk.NewDecWithPrec(2, 1), sdk.NewDecWithPrec(2, 1), sdk.NewDecWithPrec(2, 1)},
 		},
 		"(2 record) first record time < start time < second record time": {
@@ -751,7 +751,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 		"(2 record, three asset pool) first record time < start time < second record time": {
 			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC, tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
 			ctxTime:      baseTime.Add(20 * time.Second),
-			input:        makeSimpleTapTwapToNowInput(baseTime.Add(5*time.Second), baseAssetA),
+			input:        makeSimpleTapTwapToNowInput(baseTime.Add(5*time.Second), baseQuoteAB, baseQuoteAC, baseQuoteBC),
 			// 10 for 5s, 5 for 10s = 100/15 = 6 + 2/3 = 6.66666666
 			expTwap: []sdk.Dec{ThreePlusOneThird.MulInt64(2), ThreePlusOneThird.MulInt64(2), ThreePlusOneThird.MulInt64(2)},
 		},
@@ -765,7 +765,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 		"three asset pool, start time too old": {
 			recordsToSet:  []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC},
 			ctxTime:       tPlusOne,
-			input:         makeSimpleTapTwapToNowInput(baseTime.Add(-time.Hour), baseAssetA),
+			input:         makeSimpleTapTwapToNowInput(baseTime.Add(-time.Hour), baseQuoteAB, baseQuoteAC, baseQuoteBC),
 			expectedError: twap.TimeTooOldError{Time: baseTime.Add(-time.Hour)},
 		},
 	}
