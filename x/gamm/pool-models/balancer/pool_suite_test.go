@@ -424,7 +424,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 	},
 }
 
-var joinPoolTestCases = []calcJoinSharesTestCase{
+var multiAssetInputTestCases = []calcJoinSharesTestCase{
 	{
 		name:       "swap equal weights with zero swap fee",
 		swapFee:    sdk.MustNewDecFromStr("0"),
@@ -788,12 +788,12 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
-	// test cases defined in joinPoolTestCases.
+	// test cases defined in multiAssetInputTestCases.
 	//
 	// See calcJoinSharesTestCase struct definition for explanation why the
 	// sharing is needed.
 
-	testCases := append(joinPoolTestCases, calcSingleAssetJoinTestCases...)
+	testCases := append(multiAssetInputTestCases, calcSingleAssetJoinTestCases...)
 
 	for _, tc := range testCases {
 		tc := tc
@@ -828,12 +828,12 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 
 func (suite *KeeperTestSuite) TestJoinPool() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
-	// test cases defined in joinPoolTestCases.
+	// test cases defined in multiAssetInputTestCases.
 	//
 	// See calcJoinSharesTestCase struct definition for explanation why the
 	// sharing is needed.
 
-	testCases := append(joinPoolTestCases, calcSingleAssetJoinTestCases...)
+	testCases := append(multiAssetInputTestCases, calcSingleAssetJoinTestCases...)
 
 	for _, tc := range testCases {
 		tc := tc
