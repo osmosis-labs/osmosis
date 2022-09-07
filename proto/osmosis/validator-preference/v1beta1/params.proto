@@ -1,0 +1,17 @@
+syntax = "proto3";
+package osmosis.validatorpreference.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types";
+
+// Params defines the parameters for the module.
+message Params {
+  repeated cosmos.base.v1beta1.Coin valset_creation_fee = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"valset_creation_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}

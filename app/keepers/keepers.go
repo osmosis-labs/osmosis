@@ -75,6 +75,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v12/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	validatorpreference "github.com/osmosis-labs/osmosis/v12/x/validator-preference"
+	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
 )
 
 type AppKeepers struct {
@@ -338,6 +340,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
+	validatorPreferenceKeeper := validatorpreference.NewKeeper(
+		appKeepers.keys[validatorpreferencetypes.StoreKey],
+		appKeepers.GetSubspace(validatorpreferencetypes.ModuleName),
+		appKeepers.StakingKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.DistrKeeper,
+	)
+
+	appKeepers.ValidatorPreferenceKeeper = &validatorPreferenceKeeper
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis"
@@ -556,5 +568,6 @@ func KVStoreKeys() []string {
 		superfluidtypes.StoreKey,
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
+		validatorpreferencetypes.StoreKey,
 	}
 }
