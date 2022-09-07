@@ -50,10 +50,6 @@ func TestFormatHistoricalTwapKeys(t *testing.T) {
 			require.Equal(t, tt.wantTimeIndex, string(gotTimeKey))
 			require.Equal(t, tt.wantPoolIndex, string(gotPoolKey))
 
-			parsedTime, err := ParseTimeFromHistoricalTimeIndexKey(gotTimeKey)
-			require.NoError(t, err)
-			require.Equal(t, tt.time, parsedTime)
-
 			poolIndexPrefix := FormatHistoricalPoolIndexTimePrefix(tt.poolId, tt.denom1, tt.denom2)
 			require.True(t, strings.HasPrefix(string(gotPoolKey), string(poolIndexPrefix)), string(gotPoolKey), string(poolIndexPrefix))
 

@@ -3,7 +3,6 @@ package types
 import (
 	"errors"
 	fmt "fmt"
-	"strings"
 	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,12 +29,14 @@ var (
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
 	expectedKeySeparatedParts          = 5
 
+	// format is just pool id | denom1 | denom2
+	// made for getting most recent key
 	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
-	// keySeparatorPlusOne is used for creating prefixes for the key end in iterators
-	// when we want to get all of the keys in a prefix. Since it is one byte larger
-	// than the original key separator and the end prefix is exclusive, it is valid
-	// for getting all values under the original key separator.
+	// format is time | pool id | denom1 | denom2 | time
+	// made for efficiently deleting records by time in pruning
 	HistoricalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
+	// format is pool id | denom1 | denom2 | time
+	// made for efficiently getting records given (pool id, denom1, denom2) and time bounds
 	HistoricalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
 )
 
@@ -64,22 +65,6 @@ func FormatHistoricalPoolIndexTimeSuffix(poolId uint64, denom1, denom2 string, a
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
 	// . acts as a suffix for lexicographical orderings
 	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s.", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, timeS))
-}
-
-func ParseTimeFromHistoricalTimeIndexKey(key []byte) (time.Time, error) {
-	keyS := string(key)
-	s := strings.Split(keyS, KeySeparator)
-	if len(s) != expectedKeySeparatedParts {
-		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)}
-	}
-	if s[0] != historicalTWAPTimeIndexNoSeparator {
-		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
-	}
-	t, err := osmoutils.ParseTimeString(s[1])
-	if err != nil {
-		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
-	}
-	return t, nil
 }
 
 // GetAllMostRecentTwapsForPool returns all of the most recent twap records for a pool id.
