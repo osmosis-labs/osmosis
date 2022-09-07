@@ -103,6 +103,19 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 		return err
 	}
 
+	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// check if there is k * (k - 1) / 2 records, k = denoms
+	denomNum := len(denoms)
+	expectedRecordsLength := denomNum * (denomNum - 1) / 2
+
+	if expectedRecordsLength != len(records) {
+		return fmt.Errorf("The number of records do not match")
+	}
+
 	for _, record := range records {
 		newRecord := k.updateRecord(ctx, record)
 		k.storeNewRecord(ctx, newRecord)
