@@ -57,7 +57,7 @@ func FormatHistoricalPoolIndexTWAPKey(poolId uint64, denom1, denom2 string, accu
 }
 
 func FormatHistoricalPoolIndexTimePrefix(poolId uint64, denom1, denom2 string) []byte {
-	return []byte(fmt.Sprintf("%s%d%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, denom1, KeySeparator, denom2, KeySeparator))
+	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator))
 }
 
 func FormatHistoricalPoolIndexTimeSuffix(poolId uint64, denom1, denom2 string, accumulatorWriteTime time.Time) []byte {
