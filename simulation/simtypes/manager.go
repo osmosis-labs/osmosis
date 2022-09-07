@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"golang.org/x/exp/maps"
 
-	"github.com/osmosis-labs/osmosis/v11/osmoutils"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 )
 
 // AppModuleSimulation defines the standard functions that every module should expose
@@ -20,7 +20,6 @@ type AppModuleSimulation interface {
 	module.AppModule
 
 	Actions() []Action
-	// PropertyTests()
 }
 
 type AppModuleSimulationGenesis interface {
@@ -29,8 +28,15 @@ type AppModuleSimulationGenesis interface {
 	SimulatorGenesisState(*module.SimulationState, *SimCtx)
 }
 
+type AppModuleSimulationPropertyCheck interface {
+	module.AppModule
+
+	PropertyChecks() []PropertyCheck
+}
+
 type SimulatorManagerI interface {
 	Actions() []ActionsWithMetadata
+	PropertyCheck() []PropertyCheck
 }
 
 type ActionsWithMetadata struct {

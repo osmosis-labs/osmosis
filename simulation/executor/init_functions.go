@@ -1,5 +1,7 @@
 package simulation
 
+// TODO: Move this entire file to simtypes
+
 import (
 	"math/rand"
 

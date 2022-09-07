@@ -7,18 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/osmoutils"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
 )
 
-// mustGetSpotPrice returns the spot price for the given pool id, and denom0 in terms of denom1.
-// Panics if the pool state is misconfigured, which will halt any tx that interacts with this.
-func MustGetSpotPrice(k AmmInterface, ctx sdk.Context, poolId uint64, baseAssetDenom string, quoteAssetDenom string) sdk.Dec {
-	sp, err := k.CalculateSpotPrice(ctx, poolId, baseAssetDenom, quoteAssetDenom)
-	if err != nil {
-		panic(err)
-	}
-	return sp
-}
+var MaxSpotPrice = sdk.NewDec(2).Power(128).Sub(sdk.OneDec())
 
 // GetAllUniqueDenomPairs returns all unique pairs of denoms, where for every pair
 // (X, Y), X >= Y.
