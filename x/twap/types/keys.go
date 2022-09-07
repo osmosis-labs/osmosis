@@ -27,7 +27,6 @@ var (
 	mostRecentTWAPsNoSeparator         = "recent_twap"
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
-	expectedKeySeparatedParts          = 5
 
 	// format is just pool id | denom1 | denom2
 	// made for getting most recent key
