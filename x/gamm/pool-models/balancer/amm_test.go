@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/internal/test_helpers"
+  "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 type BalancerTestSuite struct {
@@ -53,5 +54,50 @@ func TestBalancerPoolParams(t *testing.T) {
 		} else {
 			require.NoError(t, err, "unexpected error, tc %v", i)
 		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestEnsureDenomInPool() {
+	tests := map[string]struct {
+		poolAssets  []balancer.PoolAsset
+		tokensIn    sdk.Coins
+		expectPass  bool
+		expectedErr error
+	}{
+		"all of tokensIn is in pool asset map": {
+			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt())),
+			expectPass:  true,
+			expectedErr: nil,
+		},
+		"one of tokensIn is in pool asset map": {
+			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.OneInt()), sdk.NewCoin("foo", sdk.OneInt())),
+			expectPass:  false,
+			expectedErr: types.ErrDenomNotFoundInPool,
+		},
+		"none of tokensIn is in pool asset map": {
+			poolAssets:  []balancer.PoolAsset{defaultOsmoPoolAsset, defaultAtomPoolAsset},
+			tokensIn:    sdk.NewCoins(sdk.NewCoin("foo", sdk.OneInt())),
+			expectPass:  false,
+			expectedErr: types.ErrDenomNotFoundInPool,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(tc.poolAssets)
+			suite.Require().NoError(err, "test: %s", name)
+
+			err = balancer.EnsureDenomInPool(poolAssetsByDenom, tc.tokensIn)
+
+			if tc.expectPass {
+				suite.Require().NoError(err, "test: %s", name)
+			} else {
+				suite.Require().ErrorIs(err, tc.expectedErr, "test: %s", name)
+			}
+		})
 	}
 }
