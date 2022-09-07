@@ -56,35 +56,38 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 	}
 	tapZeroAccumTenPoint1Record := recordWithUpdatedSpotPrice(tapInitStartRecord, sdk.NewDec(10), sdk.NewDecWithPrec(1, 1))
 
+	denomAB := [][]string{{denomA}, {denomB}}
+	denomBA := [][]string{{denomB}, {denomA}}
+	denomAA := [][]string{{denomA}, {denomA}}
+	denomABdenomACdenomBC := [][]string{{tapDenomA, tapDenomA, tapDenomB}, {tapDenomB, tapDenomC, tapDenomC}}
+
 	tests := map[string]struct {
 		// if start record is blank, don't do any sets
 		startRecord []types.TwapRecord
 		// We set it to have the updated time
-		expRecord  []types.TwapRecord
-		time       time.Time
-		poolId     uint64
-		quoteDenom []string
-		baseDenom  []string
-		expError   error
+		expRecord []types.TwapRecord
+		time      time.Time
+		poolId    uint64
+		denoms    [][]string
+		expError  error
 	}{
-		"no record (wrong pool ID)":                         {initStartRecord, initStartRecord, baseTime, 4, []string{denomA}, []string{denomB}, fmt.Errorf("twap not found")},
-		"default record":                                    {initStartRecord, initStartRecord, baseTime, poolId, []string{denomA}, []string{denomB}, nil},
-		"default record, three asset pool":                  {tapInitStartRecord, tapInitStartRecord, baseTime, tapPoolId, []string{tapDenomA, tapDenomA, tapDenomB}, []string{tapDenomB, tapDenomC, tapDenomC}, nil},
-		"default record but same denom":                     {initStartRecord, initStartRecord, baseTime, poolId, []string{denomA}, []string{denomA}, fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denomA, denomA)},
-		"default record wrong order (should get reordered)": {initStartRecord, initStartRecord, baseTime, poolId, []string{denomB}, []string{denomA}, nil},
-		"one second later record":                           {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, poolId, []string{denomA}, []string{denomB}, nil},
-		"one second later record, three asset pool":         {tapInitStartRecord, recordWithUpdatedAccum(tapInitStartRecord, OneSec, OneSec), tPlusOne, tapPoolId, []string{tapDenomA, tapDenomA, tapDenomB}, []string{tapDenomB, tapDenomC, tapDenomC}, nil},
-		"idempotent overwrite":                              {initStartRecord, initStartRecord, baseTime, poolId, []string{denomA}, []string{denomB}, nil},
-		"idempotent overwrite, three asset pool":            {tapInitStartRecord, tapInitStartRecord, baseTime, tapPoolId, []string{tapDenomA, tapDenomA, tapDenomB}, []string{tapDenomB, tapDenomC, tapDenomC}, nil},
-		"idempotent overwrite2":                             {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, poolId, []string{denomA}, []string{denomB}, nil},
-		"idempotent overwrite2, three asset pool":           {tapInitStartRecord, recordWithUpdatedAccum(tapInitStartRecord, OneSec, OneSec), tPlusOne, tapPoolId, []string{tapDenomA, tapDenomA, tapDenomB}, []string{tapDenomB, tapDenomC, tapDenomC}, nil},
+		"no record (wrong pool ID)":                         {initStartRecord, initStartRecord, baseTime, 4, denomAB, fmt.Errorf("twap not found")},
+		"default record":                                    {initStartRecord, initStartRecord, baseTime, poolId, denomAB, nil},
+		"default record, three asset pool":                  {tapInitStartRecord, tapInitStartRecord, baseTime, tapPoolId, denomABdenomACdenomBC, nil},
+		"default record but same denom":                     {initStartRecord, initStartRecord, baseTime, poolId, denomAA, fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denomA, denomA)},
+		"default record wrong order (should get reordered)": {initStartRecord, initStartRecord, baseTime, poolId, denomBA, nil},
+		"one second later record":                           {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, poolId, denomAB, nil},
+		"one second later record, three asset pool":         {tapInitStartRecord, recordWithUpdatedAccum(tapInitStartRecord, OneSec, OneSec), tPlusOne, tapPoolId, denomABdenomACdenomBC, nil},
+		"idempotent overwrite":                              {initStartRecord, initStartRecord, baseTime, poolId, denomAB, nil},
+		"idempotent overwrite, three asset pool":            {tapInitStartRecord, tapInitStartRecord, baseTime, tapPoolId, denomABdenomACdenomBC, nil},
+		"idempotent overwrite2":                             {initStartRecord, recordWithUpdatedAccum(initStartRecord, OneSec, OneSec), tPlusOne, poolId, denomAB, nil},
+		"idempotent overwrite2, three asset pool":           {tapInitStartRecord, recordWithUpdatedAccum(tapInitStartRecord, OneSec, OneSec), tPlusOne, tapPoolId, denomABdenomACdenomBC, nil},
 		"diff spot price": {zeroAccumTenPoint1Record,
 			recordWithUpdatedAccum(zeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
-			tPlusOne, poolId, []string{denomA}, []string{denomB}, nil},
+			tPlusOne, poolId, denomAB, nil},
 		"diff spot price, three asset pool": {tapZeroAccumTenPoint1Record,
 			recordWithUpdatedAccum(tapZeroAccumTenPoint1Record, OneSec.MulInt64(10), OneSec.QuoInt64(10)),
-			tPlusOne, tapPoolId, []string{tapDenomA, tapDenomA, tapDenomB}, []string{tapDenomB, tapDenomC, tapDenomC}, nil},
-		// TODO: Overflow
+			tPlusOne, tapPoolId, denomABdenomACdenomBC, nil},
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
@@ -95,7 +98,7 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 
 				s.twapkeeper.StoreNewRecord(s.Ctx, tc.startRecord[n])
 
-				actualRecord, err := s.twapkeeper.GetBeginBlockAccumulatorRecord(s.Ctx, tc.poolId, tc.baseDenom[n], tc.quoteDenom[n])
+				actualRecord, err := s.twapkeeper.GetBeginBlockAccumulatorRecord(s.Ctx, tc.poolId, tc.denoms[0][n], tc.denoms[1][n])
 
 				if tc.expError != nil {
 					s.Require().Equal(tc.expError, err)
