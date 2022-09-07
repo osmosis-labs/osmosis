@@ -14,10 +14,9 @@ they can easily be signalled upon such events.
 1. **[Concept](#concepts)**
 2. **[State](#state)**
 3. **[Events](#events)**
-4. **[Keeper](#keeper)**
+4. **[Keeper](#keepers)**
 5. **[Hooks](#hooks)**
 6. **[Queries](#queries)**
-7. **[Downtime Recovery](#downtime-recovery)**
 
 ## Concepts
 
@@ -38,7 +37,7 @@ until the timer has caught up.
 
 The Epochs module keeps a single [`EpochInfo`](https://github.com/osmosis-labs/osmosis/blob/b4befe4f3eb97ebb477323234b910c4afafab9b7/proto/osmosis/epochs/genesis.proto#L12) per identifier.
 This contains the current state of the timer with the corresponding identifier.
-Its fields are modified at every timer tick. 
+Its fields are modified at every timer tick.
 EpochInfos are initialized as part of genesis initialization or upgrade logic,
 and are only modified on begin blockers.
 
@@ -48,16 +47,16 @@ The `epochs` module emits the following events:
 
 ### BeginBlocker
 
-|  Type          | Attribute Key |  Attribute Value |
-|  --------------| ---------------| -----------------|
-|  epoch\_start |  epoch\_number |  {epoch\_number} |
-|  epoch\_start |  start\_time   |  {start\_time} |
+| Type        | Attribute Key | Attribute Value |
+| ----------- | ------------- | --------------- |
+| epoch_start | epoch_number  | {epoch_number}  |
+| epoch_start | start_time    | {start_time}    |
 
 ### EndBlocker
 
-|  Type        | Attribute Key  | Attribute Value |
-|  ------------| ---------------| -----------------|
-|  epoch\_end  | epoch\_number  | {epoch\_number} |
+| Type      | Attribute Key | Attribute Value |
+| --------- | ------------- | --------------- |
+| epoch_end | epoch_number  | {epoch_number}  |
 
 ## Keepers
 
@@ -71,7 +70,7 @@ type Keeper interface {
   // GetEpochInfo returns epoch info by identifier
   GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo
   // SetEpochInfo set epoch info
-  SetEpochInfo(ctx sdk.Context, epoch types.EpochInfo) 
+  SetEpochInfo(ctx sdk.Context, epoch types.EpochInfo)
   // DeleteEpochInfo delete epoch info
   DeleteEpochInfo(ctx sdk.Context, identifier string)
   // IterateEpochInfo iterate through epochs
