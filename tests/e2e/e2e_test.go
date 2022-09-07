@@ -18,10 +18,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
 )
 
-// Test01IBCTokenTransfer tests that IBC token transfers work as expected.
-// This test must precede Test02CreatePoolPostUpgrade. That's why it is prefixed with "01"
-// to ensure correct ordering. See Test02CreatePoolPostUpgrade for more details.
-func (s *IntegrationTestSuite) Test01IBCTokenTransfer() {
+// TestIBCTokenTransfer tests that IBC token transfers work as expected.
+// Additionally, it attempst to create a pool with IBC denoms.
+func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -31,36 +30,20 @@ func (s *IntegrationTestSuite) Test01IBCTokenTransfer() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
-}
 
-// Test02CreatePoolPostUpgrade tests that a pool can be created.
-// It attempts to create a pool with both native and IBC denoms.
-// As a result, it must run after Test01IBCTokenTransfer.
-// This is the reason for prefixing the name with 02 to ensure
-// correct order.
-func (s *IntegrationTestSuite) Test02CreatePool() {
-	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
-
-	chainANode.CreatePool("nativeDenomPool.json", initialization.ValidatorWalletName)
-
-	if s.skipIBC {
-		s.T().Log("skipping creating pool with IBC denoms because IBC tests are disabled")
-		return
-	}
-
 	chainANode.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
 
-// Test03SuperfluidVoting tests that superfluid voting is functioning as expected.
+// TestSuperfluidVoting tests that superfluid voting is functioning as expected.
 // It does so by doing the following:
 //- creating a pool
 // - attempting to submit a proposal to enable superfluid voting in that pool
 // - voting yes on the proposal from the validator wallet
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
-func (s *IntegrationTestSuite) Test03SuperfluidVoting() {
+func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -127,7 +110,7 @@ func (s *IntegrationTestSuite) Test03SuperfluidVoting() {
 }
 
 // Test03AddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
-func (s *IntegrationTestSuite) Test03AddToExistingLockPostUpgrade() {
+func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	}
@@ -142,7 +125,7 @@ func (s *IntegrationTestSuite) Test03AddToExistingLockPostUpgrade() {
 }
 
 // Test03AddToExistingLock tests lockups to both regular and superfluid locks.
-func (s *IntegrationTestSuite) Test03AddToExistingLock() {
+func (s *IntegrationTestSuite) TestAddToExistingLock() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -160,7 +143,7 @@ func (s *IntegrationTestSuite) Test03AddToExistingLock() {
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
 
-// Test03TWAP tests TWAP by creating a pool, performing a swap.
+// TestTWAP tests TWAP by creating a pool, performing a swap.
 // These two operations should create TWAP records.
 // Then, we wait until the epoch for the records to be pruned.
 // The records are guranteed to be pruned at the next epoch
@@ -168,7 +151,7 @@ func (s *IntegrationTestSuite) Test03AddToExistingLock() {
 // to wait for at least the twap keep time.
 // TODO: implement querying for TWAP, once such queries are exposed:
 // https://github.com/osmosis-labs/osmosis/issues/2602
-func (s *IntegrationTestSuite) Test03TWAP() {
+func (s *IntegrationTestSuite) TestTWAP() {
 	const (
 		poolFile   = "nativeDenomPool.json"
 		walletName = "swap-exact-amount-in-wallet"
