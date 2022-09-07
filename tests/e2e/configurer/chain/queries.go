@@ -152,7 +152,7 @@ func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
 	return response.CurrentEpoch
 }
 
-func (n *NodeConfig) QueryGetArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) string {
+func (n *NodeConfig) QueryGetArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (string, error) {
 	path := "osmosis/twap/v1beta1/GetArithmeticTwapToNow"
 
 	bz, err := n.QueryGRPCGateway(
@@ -162,12 +162,37 @@ func (n *NodeConfig) QueryGetArithmeticTwap(poolId uint64, baseAsset, quoteAsset
 		"quote_asset", quoteAsset,
 		"start_time", startTime.Format(time.RFC3339Nano),
 	)
-	require.NoError(n.t, err)
+
+	if err != nil {
+		return "", err
+	}
 
 	var response twapqueryproto.GetArithmeticTwapToNowResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
-	require.NoError(n.t, err)
-	return response.ArithmeticTwap.String()
+	require.NoError(n.t, err) // this error should not happen
+	return response.ArithmeticTwap.String(), nil
+}
+
+func (n *NodeConfig) QueryGetArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (string, error) {
+	path := "osmosis/twap/v1beta1/GetArithmeticTwap"
+
+	bz, err := n.QueryGRPCGateway(
+		path,
+		"pool_id", strconv.FormatInt(int64(poolId), 10),
+		"base_asset", baseAsset,
+		"quote_asset", quoteAsset,
+		"start_time", startTime.Format(time.RFC3339Nano),
+		"end_time", endTime.Format(time.RFC3339Nano),
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	var response twapqueryproto.GetArithmeticTwapResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.ArithmeticTwap.String(), nil
 }
 
 // QueryHashFromBlock gets block hash at a specific height. Otherwise, error.
@@ -184,6 +209,13 @@ func (n *NodeConfig) QueryCurrentHeight() int64 {
 	status, err := n.rpcClient.Status(context.Background())
 	require.NoError(n.t, err)
 	return status.SyncInfo.LatestBlockHeight
+}
+
+// QueryLatestBlockTime returns the latest block time.
+func (n *NodeConfig) QueryLatestBlockTime() time.Time {
+	status, err := n.rpcClient.Status(context.Background())
+	require.NoError(n.t, err)
+	return status.SyncInfo.LatestBlockTime
 }
 
 // QueryListSnapshots gets all snapshots currently created for a node.
