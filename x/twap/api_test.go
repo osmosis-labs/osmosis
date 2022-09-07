@@ -2,7 +2,6 @@ package twap_test
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,9 +74,7 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 			actualRecord, err := s.twapkeeper.GetBeginBlockAccumulatorRecord(s.Ctx, tc.poolId, tc.baseDenom, tc.quoteDenom)
 
 			if tc.expError != nil {
-				if !strings.Contains(err.Error(), tc.expError.Error()) {
-					s.Require().Equal(tc.expError, err)
-				}
+				s.Require().ErrorContains(err, fmt.Sprintf("%s", tc.expError))
 				return
 			}
 
