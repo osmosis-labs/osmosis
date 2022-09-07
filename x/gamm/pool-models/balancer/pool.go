@@ -792,7 +792,7 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 	// execute a no-swap join with as many tokens as possible given a perfect ratio:
 	// * numShares is how many shares are perfectly matched.
 	// * remainingTokensIn is how many coins we have left to join that have not already been used.
-	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(p, ctx, tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
