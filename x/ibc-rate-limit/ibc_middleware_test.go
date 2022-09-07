@@ -1,12 +1,8 @@
 package ibc_rate_limit_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -16,10 +12,10 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	"github.com/osmosis-labs/osmosis/v11/app"
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/testutil"
-	"github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v12/app"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/testutil"
+	"github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -173,8 +169,7 @@ func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	suite.AssertReceive(true, suite.NewValidMessage(false, one))
 }
 
-// Test rate limiting on sends
-func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]string {
+func (suite *MiddlewareTestSuite) fullSendTest() map[string]string {
 	// Setup contract
 	suite.chainA.StoreContractCode(&suite.Suite)
 	quotas := suite.BuildChannelQuota("weekly", 604800, 5, 5)
@@ -207,10 +202,15 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() map[string]
 	return attrs
 }
 
+// Test rate limiting on sends
+func (suite *MiddlewareTestSuite) TestSendTransferWithRateLimiting() {
+	suite.fullSendTest()
+}
+
 // Test rate limits are reset when the specified time period has passed
 func (suite *MiddlewareTestSuite) TestSendTransferReset() {
 	// Same test as above, but the quotas get reset after time passes
-	attrs := suite.TestSendTransferWithRateLimiting()
+	attrs := suite.fullSendTest()
 	parts := strings.Split(attrs["weekly_period_end"], ".") // Splitting timestamp into secs and nanos
 	secs, err := strconv.ParseInt(parts[0], 10, 64)
 	suite.Require().NoError(err)
@@ -268,18 +268,6 @@ func (suite *MiddlewareTestSuite) TestSendTransferNoQuota() {
 	// send 1 token.
 	// If the contract doesn't have a quota for the current channel, all transfers are allowed
 	suite.AssertSend(true, suite.NewValidMessage(true, sdk.NewInt(1)))
-}
-
-// Test the contract used for these tests is the same contract used for E2E testing
-func (s *MiddlewareTestSuite) TestRateLimitingE2ETestsSetupCorrectly() {
-	// Checking the rate limiting e2e tests are setup correctly
-	_, filename, _, _ := runtime.Caller(0)
-	dir := filepath.Dir(filename)
-	f1, err := ioutil.ReadFile(fmt.Sprintf("%s/testdata/rate_limiter.wasm", dir))
-	s.Require().NoError(err)
-	f2, err := ioutil.ReadFile(fmt.Sprintf("%s/../../tests/e2e/scripts/rate_limiter.wasm", dir))
-	s.Require().NoError(err)
-	s.Require().True(bytes.Equal(f1, f2))
 }
 
 // Test rate limits are reverted if a "send" fails

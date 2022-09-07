@@ -188,6 +188,34 @@ func (im *IBCModule) OnTimeoutPacket(
 	return im.app.OnTimeoutPacket(ctx, packet, relayer)
 }
 
+// RevertSentPacket Notifies the contract that a sent packet wasn't properly received
+func (im *IBCModule) RevertSentPacket(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+) error {
+	var data transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+	}
+	contract := im.ics4Middleware.GetParams(ctx)
+	if contract == "" {
+		// The contract has not been configured. Continue as usual
+		return nil
+	}
+
+	if err := UndoSendRateLimit(
+		ctx,
+		im.ics4Middleware.ContractKeeper,
+		contract,
+		packet.GetSourceChannel(),
+		data.Denom,
+		data.Amount,
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
 // SendPacket implements the ICS4 Wrapper interface
 func (im *IBCModule) SendPacket(
 	ctx sdk.Context,

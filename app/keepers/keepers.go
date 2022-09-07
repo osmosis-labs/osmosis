@@ -33,8 +33,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 
 	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
@@ -119,7 +119,7 @@ type AppKeepers struct {
 	// IBC modules
 	// transfer module
 	TransferModule          transfer.AppModule
-	RateLimitingICS4Wrapper *ibcratelimit.ICS4Middleware
+	RateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -209,7 +209,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		nil,
 		appKeepers.BankKeeper,
-		nil,
 		rateLimitingParams,
 	)
 	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
@@ -231,7 +230,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
 
 	// RateLimiting IBC Middleware
-	rateLimitingTransferMiddleware := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
+	rateLimitingTransferModule := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -248,7 +247,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(ibctransfertypes.ModuleName, &rateLimitingTransferMiddleware)
+		AddRoute(ibctransfertypes.ModuleName, &rateLimitingTransferModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router
@@ -304,7 +303,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.DistrKeeper,
 		appKeepers.TxFeesKeeper,
 	)
-	appKeepers.RateLimitingICS4Wrapper.LockupKeeper = appKeepers.LockupKeeper
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appCodec, appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
