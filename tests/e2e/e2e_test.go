@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 	"os"
 	"path/filepath"
 	"strconv"
