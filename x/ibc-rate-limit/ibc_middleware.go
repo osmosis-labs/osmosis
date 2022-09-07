@@ -24,9 +24,9 @@ var (
 type ICS4Middleware struct {
 	channel        porttypes.ICS4Wrapper
 	accountKeeper  *authkeeper.AccountKeeper
-	BankKeeper     *bankkeeper.BaseKeeper
+	bankKeeper     *bankkeeper.BaseKeeper
 	ContractKeeper *wasmkeeper.PermissionedKeeper
-	ParamSpace     paramtypes.Subspace
+	paramSpace     paramtypes.Subspace
 }
 
 func NewICS4Middleware(
@@ -38,8 +38,8 @@ func NewICS4Middleware(
 		channel:        channel,
 		accountKeeper:  accountKeeper,
 		ContractKeeper: contractKeeper,
-		BankKeeper:     bankKeeper,
-		ParamSpace:     paramSpace,
+		bankKeeper:     bankKeeper,
+		paramSpace:     paramSpace,
 	}
 }
 
@@ -82,14 +82,14 @@ func (i *ICS4Middleware) WriteAcknowledgement(ctx sdk.Context, chanCap *capabili
 }
 
 func (i *ICS4Middleware) GetParams(ctx sdk.Context) (contract string) {
-	i.ParamSpace.GetIfExists(ctx, []byte("contract"), &contract)
+	i.paramSpace.GetIfExists(ctx, []byte("contract"), &contract)
 	return contract
 }
 
 // CalculateChannelValue The value of an IBC channel. This is calculated using the denom supplied by the sender.
 // if the denom is not correct, the transfer should fail somewhere else on the call chain
 func (i *ICS4Middleware) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
-	return i.BankKeeper.GetSupplyWithOffset(ctx, denom).Amount
+	return i.bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 }
 
 type IBCModule struct {
