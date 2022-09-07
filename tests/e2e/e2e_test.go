@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v11/x/ibc-rate-limit/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -151,7 +151,7 @@ func (s *IntegrationTestSuite) Test02CreatePool() {
 
 // Test03SuperfluidVoting tests that superfluid voting is functioning as expected.
 // It does so by doing the following:
-//- creating a pool
+// - creating a pool
 // - attempting to submit a proposal to enable superfluid voting in that pool
 // - voting yes on the proposal from the validator wallet
 // - voting no on the proposal from the delegator wallet

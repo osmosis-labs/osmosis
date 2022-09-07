@@ -33,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibcmetadata "github.com/osmosis-labs/osmosis/v12/x/ibc-metadata"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
 
@@ -120,6 +121,7 @@ type AppKeepers struct {
 	// transfer module
 	TransferModule          transfer.AppModule
 	RateLimitingICS4Wrapper *ibcratelimit.ICS4Middleware
+	MetadataICS4Wrapper     *ibcmetadata.ICS4Middleware
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -204,8 +206,10 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
 	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
 	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
+	metadataICS4wrapper := ibcmetadata.NewICS4Middleware(appKeepers.IBCKeeper.ChannelKeeper)
+	appKeepers.MetadataICS4Wrapper = &metadataICS4wrapper
 	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
-		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.MetadataICS4Wrapper,
 		appKeepers.AccountKeeper,
 		nil,
 		appKeepers.BankKeeper,
@@ -231,7 +235,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
 
 	// RateLimiting IBC Middleware
-	rateLimitingTransferMiddleware := ibcratelimit.NewIBCModule(transferIBCModule, appKeepers.RateLimitingICS4Wrapper)
+	metadataTransferModule := ibcmetadata.NewIBCModule(transferIBCModule, appKeepers.MetadataICS4Wrapper)
+	rateLimitingTransferModule := ibcratelimit.NewIBCModule(metadataTransferModule, appKeepers.RateLimitingICS4Wrapper)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, appKeepers.keys[icahosttypes.StoreKey],
@@ -248,7 +253,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(ibctransfertypes.ModuleName, &rateLimitingTransferMiddleware)
+		AddRoute(ibctransfertypes.ModuleName, &rateLimitingTransferModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router

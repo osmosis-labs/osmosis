@@ -1,10 +1,14 @@
 package ibc_metadata
 
 import (
+	"encoding/json"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
+	"github.com/osmosis-labs/osmosis/v12/x/ibc-metadata/types"
 )
 
 type ICS4Middleware struct {
@@ -19,10 +23,11 @@ func NewICS4Middleware(channel porttypes.ICS4Wrapper) ICS4Middleware {
 
 func (i ICS4Middleware) SendPacket(ctx sdk.Context, channelCap *capabilitytypes.Capability, packet ibcexported.PacketI) error {
 	//swapAddress := types.GetFundAddress(packet.GetSourcePort(), packet.GetSourceChannel()).String()
-	//var data types.FungibleTokenPacketData
-	//if err := json.Unmarshal(packet.GetData(), &data); err != nil {
-	//	return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal sent packet data: %s", err.Error())
-	//}
+	var data types.FungibleTokenPacketData
+	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal sent packet data: %s", err.Error())
+	}
+
 	//
 	//// if Sent from the swap address, skip packet
 	//if swapAddress == data.Sender {
@@ -30,6 +35,7 @@ func (i ICS4Middleware) SendPacket(ctx sdk.Context, channelCap *capabilitytypes.
 	//}
 	//
 	//return w.channelKeeper.SendPacket(ctx, channelCap, packet)
+	fmt.Println("metadata:", string(data.GetMetadata()))
 	return i.channel.SendPacket(ctx, channelCap, packet)
 }
 
