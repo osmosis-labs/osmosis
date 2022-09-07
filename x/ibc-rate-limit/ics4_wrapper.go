@@ -87,4 +87,3 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
 func (i *ICS4Wrapper) CalculateChannelValue(ctx sdk.Context, denom string) sdk.Int {
 	return i.bankKeeper.GetSupplyWithOffset(ctx, denom).Amount
 }
-

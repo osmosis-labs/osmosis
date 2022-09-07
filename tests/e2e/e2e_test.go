@@ -8,6 +8,7 @@ import (
 	"fmt"
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v12/x/ibc-rate-limit/types"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -36,6 +37,25 @@ func (s *IntegrationTestSuite) Test01IBCTokenTransfer() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 }
 
+// Copy a file from A to B with io.Copy
+func copyFile(a, b string) error {
+	source, err := os.Open(a)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+	destination, err := os.Create(b)
+	if err != nil {
+		return err
+	}
+	defer destination.Close()
+	_, err = io.Copy(destination, source)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	if s.skipIBC {
@@ -62,6 +82,14 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	// Sending >1%
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
+	// copy the contract from x/rate-limit/testdata/
+	wd, err := os.Getwd()
+	s.NoError(err)
+	// co up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	fmt.Println(wd, projectDir)
+	err = copyFile(projectDir+"/x/ibc-rate-limit/testdata/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
+	s.NoError(err)
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	chainA.LatestCodeId += 1
 	node.InstantiateWasmContract(
@@ -151,7 +179,7 @@ func (s *IntegrationTestSuite) Test02CreatePool() {
 
 // Test03SuperfluidVoting tests that superfluid voting is functioning as expected.
 // It does so by doing the following:
-//- creating a pool
+// - creating a pool
 // - attempting to submit a proposal to enable superfluid voting in that pool
 // - voting yes on the proposal from the validator wallet
 // - voting no on the proposal from the delegator wallet
