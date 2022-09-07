@@ -72,6 +72,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v12/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	validatorpreference "github.com/osmosis-labs/osmosis/v12/x/validator-preference"
+	validatorpreferencetypes "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types"
 )
 
 type AppKeepers struct {
@@ -89,28 +91,29 @@ type AppKeepers struct {
 	ScopedWasmKeeper     capabilitykeeper.ScopedKeeper
 
 	// "Normal" keepers
-	AccountKeeper        *authkeeper.AccountKeeper
-	BankKeeper           *bankkeeper.BaseKeeper
-	AuthzKeeper          *authzkeeper.Keeper
-	StakingKeeper        *stakingkeeper.Keeper
-	DistrKeeper          *distrkeeper.Keeper
-	SlashingKeeper       *slashingkeeper.Keeper
-	IBCKeeper            *ibckeeper.Keeper
-	ICAHostKeeper        *icahostkeeper.Keeper
-	TransferKeeper       *ibctransferkeeper.Keeper
-	EvidenceKeeper       *evidencekeeper.Keeper
-	GAMMKeeper           *gammkeeper.Keeper
-	TwapKeeper           *twap.Keeper
-	LockupKeeper         *lockupkeeper.Keeper
-	EpochsKeeper         *epochskeeper.Keeper
-	IncentivesKeeper     *incentiveskeeper.Keeper
-	MintKeeper           *mintkeeper.Keeper
-	PoolIncentivesKeeper *poolincentiveskeeper.Keeper
-	TxFeesKeeper         *txfeeskeeper.Keeper
-	SuperfluidKeeper     *superfluidkeeper.Keeper
-	GovKeeper            *govkeeper.Keeper
-	WasmKeeper           *wasm.Keeper
-	TokenFactoryKeeper   *tokenfactorykeeper.Keeper
+	AccountKeeper             *authkeeper.AccountKeeper
+	BankKeeper                *bankkeeper.BaseKeeper
+	AuthzKeeper               *authzkeeper.Keeper
+	StakingKeeper             *stakingkeeper.Keeper
+	DistrKeeper               *distrkeeper.Keeper
+	SlashingKeeper            *slashingkeeper.Keeper
+	IBCKeeper                 *ibckeeper.Keeper
+	ICAHostKeeper             *icahostkeeper.Keeper
+	TransferKeeper            *ibctransferkeeper.Keeper
+	EvidenceKeeper            *evidencekeeper.Keeper
+	GAMMKeeper                *gammkeeper.Keeper
+	TwapKeeper                *twap.Keeper
+	LockupKeeper              *lockupkeeper.Keeper
+	EpochsKeeper              *epochskeeper.Keeper
+	IncentivesKeeper          *incentiveskeeper.Keeper
+	MintKeeper                *mintkeeper.Keeper
+	PoolIncentivesKeeper      *poolincentiveskeeper.Keeper
+	TxFeesKeeper              *txfeeskeeper.Keeper
+	SuperfluidKeeper          *superfluidkeeper.Keeper
+	GovKeeper                 *govkeeper.Keeper
+	WasmKeeper                *wasm.Keeper
+	TokenFactoryKeeper        *tokenfactorykeeper.Keeper
+	ValidatorPreferenceKeeper *validatorpreference.Keeper
 	// IBC modules
 	// transfer module
 	TransferModule transfer.AppModule
@@ -316,6 +319,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.TokenFactoryKeeper = &tokenFactoryKeeper
 
+	validatorPreferenceKeeper := validatorpreference.NewKeeper(
+		appKeepers.keys[validatorpreferencetypes.StoreKey],
+		appKeepers.GetSubspace(validatorpreferencetypes.ModuleName),
+		appKeepers.StakingKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.DistrKeeper,
+	)
+
+	appKeepers.ValidatorPreferenceKeeper = &validatorPreferenceKeeper
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis"
@@ -437,6 +450,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
+	paramsKeeper.Subspace(validatorpreferencetypes.ModuleName)
 
 	return paramsKeeper
 }
@@ -530,5 +544,6 @@ func KVStoreKeys() []string {
 		superfluidtypes.StoreKey,
 		wasm.StoreKey,
 		tokenfactorytypes.StoreKey,
+		validatorpreferencetypes.StoreKey,
 	}
 }

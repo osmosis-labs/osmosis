@@ -1,0 +1,15 @@
+syntax = "proto3";
+package osmosis.validatorpreference.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "osmosis/validator-preference/v1beta1/params.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v12/x/validator-preference/types";
+option (gogoproto.goproto_getters_all) = false;
+
+// GenesisState defines the validator-set preference module's genesis state.
+message GenesisState {
+  // params defines the paramaters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
