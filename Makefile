@@ -339,6 +339,14 @@ format:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
 	@go run mvdan.cc/gofumpt -l -w x/ app/ ante/ tests/
 
+mdlint:
+	@echo "--> Running markdown linter"
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --disable MD013 MD029 MD004 MD033
+
+markdown:
+	@echo "--> Running markdown linter"
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --disable MD013 MD029 MD004 MD033 --fix
+	
 ###############################################################################
 ###                                Localnet                                 ###
 ###############################################################################
