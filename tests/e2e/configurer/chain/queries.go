@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/util"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string) ([]byte, error) {
