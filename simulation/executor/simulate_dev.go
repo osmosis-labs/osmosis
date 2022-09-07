@@ -13,7 +13,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
 )
 
 type simState struct {

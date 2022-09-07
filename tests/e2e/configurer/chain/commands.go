@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	appparams "github.com/osmosis-labs/osmosis/v11/app/params"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/util"
-	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
+	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
