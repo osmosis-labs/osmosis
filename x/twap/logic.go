@@ -96,7 +96,6 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 	}
 }
 
-// TODO: Consider rename to "save new record"
 func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	// Will only err if pool doesn't have most recent entry set
 	records, err := k.getAllMostRecentRecordsForPool(ctx, poolId)
