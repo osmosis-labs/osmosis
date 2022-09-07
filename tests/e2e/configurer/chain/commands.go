@@ -36,7 +36,7 @@ func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
 	return poolID
 }
 
-// SwapExactAmountIn swaps tokenInCoint to get at least tokenOutMinAmountInt of the other token's pool out.
+// SwapExactAmountIn swaps tokenInCoin to get at least tokenOutMinAmountInt of the other token's pool out.
 // swapRoutePoolIds is the comma separated list of pool ids to swap through.
 // swapRouteDenoms is the comma separated list of denoms to swap through.
 // To reproduce locally:
