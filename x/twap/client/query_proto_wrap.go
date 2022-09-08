@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v12/x/twap"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
 )
 
 // This file should evolve to being code gen'd, off of `proto/twap/v1beta/query.yml`
@@ -23,8 +23,12 @@ func (q Querier) GetArithmeticTwap(ctx sdk.Context,
 	}
 
 	twap, err := q.K.GetArithmeticTwap(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime, *req.EndTime)
-	if err != nil {
-		return nil, err
-	}
-	return &queryproto.GetArithmeticTwapResponse{ArithmeticTwap: twap}, nil
+	return &queryproto.GetArithmeticTwapResponse{ArithmeticTwap: twap}, err
+}
+
+func (q Querier) GetArithmeticTwapToNow(ctx sdk.Context,
+	req queryproto.GetArithmeticTwapToNowRequest,
+) (*queryproto.GetArithmeticTwapToNowResponse, error) {
+	twap, err := q.K.GetArithmeticTwapToNow(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime)
+	return &queryproto.GetArithmeticTwapToNowResponse{ArithmeticTwap: twap}, err
 }

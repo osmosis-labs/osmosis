@@ -18,14 +18,15 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v11/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v11/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v11/x/pool-incentives/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v11/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v12/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v12/x/pool-incentives/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -61,6 +62,9 @@ const (
 	OsmoBalanceB  = 500000000000
 	StakeBalanceB = 440000000000
 	StakeAmountB  = 400000000000
+
+	EpochDuration         = time.Second * 60
+	TWAPPruningKeepPeriod = EpochDuration / 4
 )
 
 var (
@@ -245,6 +249,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, twaptypes.ModuleName, &twaptypes.GenesisState{}, updateTWAPGenesis)
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, crisistypes.ModuleName, &crisistypes.GenesisState{}, updateCrisisGenesis)
 	if err != nil {
 		return err
@@ -353,6 +362,11 @@ func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {
 		// override day epochs which are in default integrations, to be 1min
 		epochtypes.NewGenesisEpochInfo("day", time.Second*60),
 	}
+}
+
+func updateTWAPGenesis(twapGenState *twaptypes.GenesisState) {
+	// Lower keep period from defaults to allos us to test pruning.
+	twapGenState.Params.RecordHistoryKeepPeriod = time.Second * 15
 }
 
 func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
