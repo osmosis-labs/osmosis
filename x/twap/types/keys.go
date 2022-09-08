@@ -28,6 +28,11 @@ var (
 	historicalTWAPTimeIndexNoSeparator = "historical_time_index"
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
 
+	// We do key management to let us easily meet the goals of (AKA minimal iteration):
+	// * Get most recent twap for a (pool id, asset 1, asset 2) with no iteration
+	// * Get all records for all pools, within a given time range
+	// * Get all records for a (pool id, asset 1, asset 2), within a given time range
+
 	// format is just pool id | denom1 | denom2
 	// made for getting most recent key
 	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator

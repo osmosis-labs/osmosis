@@ -1,4 +1,3 @@
-//nolint:unused,deadcode
 package twap
 
 import (
@@ -65,19 +64,32 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 // within the keep period.
 // For example:
 // - Suppose pruning param -48 hour
-// - Suppose swaps at -50 hour, -1hour
-// - A prune would leave us with only one record at -1 hour, and we are not able to get twaps from the
-// [-48 hour, -1 hour] time range.
+// - Suppose there are three records at: -51 hour, -50 hour, and -1hour
+// If we were to prune everything older than 48 hours,
+// we would be left with with only one record at -1 hour, and we wouldn't be able to
+// get twaps from the [-48 hour, -1 hour] time range.
+// So, in order to have correct behavior for the desired guarantee,
+// we keep the newest record that is older than the pruning time.
+// This is why we would keep the -50 hour and -1hour twaps despite a 48hr pruning period
 func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
 	// Reverse iterator guarantees that we iterate through the newest per pool first.
 	// Due to how it is indexed, we will only iterate times starting from
 	// lastKeptTime exclusively down to the oldest record.
-	iter := store.ReverseIterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""))
+	iter := store.ReverseIterator(
+		[]byte(types.HistoricalTWAPTimeIndexPrefix),
+		types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""))
 	defer iter.Close()
 
-	seenPools := map[uint64]struct{}{}
+	// We mark what (pool id, asset 0, asset 1) triplets we've seen.
+	// We prune all records for a triplet that we haven't already seen.
+	type uniqueTriplet struct {
+		poolId uint64
+		asset0 string
+		asset1 string
+	}
+	seenPoolAssetTriplets := map[uniqueTriplet]struct{}{}
 
 	for ; iter.Valid(); iter.Next() {
 		twapToRemove, err := types.ParseTwapFromBz(iter.Value())
@@ -85,9 +97,13 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 			return err
 		}
 
-		_, hasSeenPoolRecord := seenPools[twapToRemove.PoolId]
+		poolKey := uniqueTriplet{
+			poolId: twapToRemove.PoolId,
+			asset0: twapToRemove.Asset0Denom,
+			asset1: twapToRemove.Asset1Denom}
+		_, hasSeenPoolRecord := seenPoolAssetTriplets[poolKey]
 		if !hasSeenPoolRecord {
-			seenPools[twapToRemove.PoolId] = struct{}{}
+			seenPoolAssetTriplets[poolKey] = struct{}{}
 			continue
 		}
 
@@ -138,6 +154,7 @@ func (k Keeper) getAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapR
 }
 
 // getAllHistoricalPoolIndexedTWAPs returns all historical TWAPs indexed by pool id.
+// nolint: unused
 func (k Keeper) getAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), types.ParseTwapFromBz)
 }

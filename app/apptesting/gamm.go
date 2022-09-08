@@ -80,6 +80,10 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer
 			Weight: sdk.NewInt(300),
 			Token:  sdk.NewCoin("baz", sdk.NewInt(5000000)),
 		},
+		{
+			Weight: sdk.NewInt(400),
+			Token:  sdk.NewCoin("uosmo", sdk.NewInt(5000000)),
+		},
 	}
 	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], poolParams, poolAssets, "")
 	poolId, err := s.App.GAMMKeeper.CreatePool(s.Ctx, msg)
