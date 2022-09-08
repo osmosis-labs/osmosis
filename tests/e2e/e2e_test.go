@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package e2e
 
 import (
@@ -197,7 +194,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 
 	// Make sure that we are still producing blocks and move far enough for the swap TWAP record to be created
 	// so that we can measure start time post-swap (timeAfterSwap).
-	chainA.WaitForNumHeights(1)
+	chainA.WaitForNumHeights(2)
 
 	// Measure time after swap and wait for a few blocks to be produced.
 	// This is needed to ensure that start time is before the block time
@@ -246,18 +243,20 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "too old")
 
-	// TWAPs for the same time ranger should be the same when we query for them before and after pruning.
+	// TWAPs for the same time range should be the same when we query for them before and after pruning.
 	s.T().Log("querying for TWAP for period before pruning took place but should not have been pruned")
 	twapFromAfterToAfterSwapAndAfterPruning, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
 	s.Require().Equal(twapFromAfterToAfterSwapAndBeforePruning, twapFromAfterToAfterSwapAndAfterPruning)
 
-	// TWAP "from after to after swap" should not equal to "from after swap to after pruning"
-	// That is because the latter has larger time weight for the after swap period.
+	// TWAP "from after to after swap" should equal to "from after swap to after pruning"
+	// That is because they are suppossed to use the same start and end records.
+	// The fact that these are taken over different time periods is irrelevant.
+	timeAfterPruning := chainANode.QueryLatestBlockTime()
 	s.T().Log("querying for TWAP from after swap to after pruning")
-	twapToNowPostPruning, err := chainANode.QueryGetArithmeticTwapToNow(poolId, denomOne, denomTwo, timeAfterSwap)
+	twapToNowPostPruning, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterPruning)
 	s.Require().NoError(err)
-	s.Require().NotEqual(twapToNowPostPruning, twapFromAfterToNow)
+	s.Require().Equal(twapToNowPostPruning, twapFromAfterToAfterSwapAndBeforePruning)
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {
