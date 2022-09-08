@@ -42,7 +42,9 @@ var (
 // TODO: make utility command to automatically interlace separators
 
 func FormatMostRecentTWAPKey(poolId uint64, denom1, denom2 string) []byte {
-	return []byte(fmt.Sprintf("%s%d%s%s%s%s", mostRecentTWAPsPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2))
+	d := fmt.Sprintf("%s%d%s%s%s%s", mostRecentTWAPsPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2)
+	fmt.Println(d)
+	return []byte(d)
 }
 
 // TODO: Replace historical management with ORM, we currently accept 2x write amplification right now.
