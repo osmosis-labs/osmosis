@@ -409,7 +409,7 @@ func TestComputeArithmeticTwap(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actualTwap, err := twap.ComputeArithmeticTwap(sdk.Context{}, test.startRecord, test.endRecord, test.quoteAsset)
+			actualTwap, err := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
 			require.Equal(t, test.expTwap, actualTwap)
 			require.NoError(t, err)
 		})
@@ -459,7 +459,7 @@ func TestComputeArithmeticTwapWithSpotPriceError(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			actualTwap, err := twap.ComputeArithmeticTwap(sdk.Context{}, test.startRecord, test.endRecord, test.quoteAsset)
+			actualTwap, err := twap.ComputeArithmeticTwap(test.startRecord, test.endRecord, test.quoteAsset)
 			require.Equal(t, test.expTwap, actualTwap)
 			osmoassert.ConditionalError(t, test.expErr, err)
 		})
