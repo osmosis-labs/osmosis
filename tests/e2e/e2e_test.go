@@ -255,7 +255,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	// TWAP "from after to after swap" should not equal to "from after swap to after pruning"
 	// That is because the latter has larger time weight for the after swap period.
 	s.T().Log("querying for TWAP from after swap to after pruning")
-	twapToNowPostPruning, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	twapToNowPostPruning, err := chainANode.QueryGetArithmeticTwapToNow(poolId, denomOne, denomTwo, timeAfterSwap)
 	s.Require().NoError(err)
 	s.Require().NotEqual(twapToNowPostPruning, twapFromAfterToNow)
 }
