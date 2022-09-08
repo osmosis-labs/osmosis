@@ -189,7 +189,6 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
-	ctx.Logger().Info("getInterpolatedRecord")
 	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, t, assetA, assetB)
 	if err != nil {
 		return types.TwapRecord{}, err
