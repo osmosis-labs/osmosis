@@ -82,7 +82,6 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 // So, in order to have correct behavior for the desired guarantee,
 // we keep the newest record that is older than the pruning time.
 // This is why we would keep the -50 hour and -1hour twaps despite a 48hr pruning period
-// TODO: RENAME THIS FUNCTION TO BE MORE ACCURATE
 func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
