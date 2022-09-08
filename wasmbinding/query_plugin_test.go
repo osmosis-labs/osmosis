@@ -6,7 +6,9 @@ import (
 	"testing"
 	"time"
 
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -15,8 +17,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/protobuf/runtime/protoiface"
-
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 
 	"github.com/osmosis-labs/osmosis/v12/app"
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
@@ -50,7 +50,9 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		responseProtoStruct    interface{}
 		expectedQuerierError   bool
 		expectedUnMarshalError bool
+		resendRequest          bool
 	}{
+
 		{
 			name: "happy path",
 			path: "/osmosis.epochs.v1beta1.Query/EpochInfos",
@@ -72,6 +74,51 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				return bz
 			},
 			expectedQuerierError: true,
+		},
+		{
+			name: "test query using iterator",
+			testSetup: func() {
+				accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
+				suite.Require().NoError(err)
+
+				// fund account to recieve non-empty response
+				simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
+
+				wasmbinding.StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
+			},
+			path: "/cosmos.bank.v1beta1.Query/AllBalances",
+			requestData: func() []byte {
+				bankrequest := banktypes.QueryAllBalancesRequest{
+					Address: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+				}
+				bz, err := proto.Marshal(&bankrequest)
+				suite.Require().NoError(err)
+				return bz
+			},
+			responseProtoStruct: &banktypes.QueryAllBalancesResponse{},
+		},
+		{
+			name: "edge case: resending request",
+			testSetup: func() {
+				accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
+				suite.Require().NoError(err)
+
+				// fund account to recieve non-empty response
+				simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
+
+				wasmbinding.StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
+			},
+			path: "/cosmos.bank.v1beta1.Query/AllBalances",
+			requestData: func() []byte {
+				bankrequest := banktypes.QueryAllBalancesRequest{
+					Address: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+				}
+				bz, err := proto.Marshal(&bankrequest)
+				suite.Require().NoError(err)
+				return bz
+			},
+			responseProtoStruct: &banktypes.QueryAllBalancesResponse{},
+			resendRequest:       true,
 		},
 		{
 			name: "invalid query router route",
@@ -158,6 +205,17 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 					suite.Require().NoError(err)
 					suite.Require().NotNil(protoResponse)
 				}
+			}
+
+			if tc.resendRequest {
+				stargateQuerier = wasmbinding.StargateQuerier(*suite.app.GRPCQueryRouter(), suite.app.AppCodec())
+				stargateRequest = &wasmvmtypes.StargateQuery{
+					Path: tc.path,
+					Data: tc.requestData(),
+				}
+				resendResponse, err := stargateQuerier(suite.ctx, stargateRequest)
+				suite.Require().NoError(err)
+				suite.Require().Equal(stargateResponse, resendResponse)
 			}
 		})
 	}
