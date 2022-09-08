@@ -54,7 +54,7 @@ func (k Keeper) GetArithmeticTwap(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
+	return computeArithmeticTwap(ctx, startRecord, endRecord, quoteAssetDenom)
 }
 
 // GetArithmeticTwapToNow returns GetArithmeticTwap on the input, with endTime being fixed to ctx.BlockTime()
@@ -79,7 +79,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 		return sdk.Dec{}, err
 	}
 	ctx.Logger().Info("GetArithmeticTwapToNowLog", "endRecord", endRecord)
-	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
+	return computeArithmeticTwap(ctx, startRecord, endRecord, quoteAssetDenom)
 }
 
 // GetCurrentAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
