@@ -143,19 +143,20 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			responseProtoStruct:    &epochtypes.QueryCurrentEpochResponse{},
 			expectedUnMarshalError: true,
 		},
-		// {
-		// 	name: "error in unmarshalling response",
-		// 	// set up whitelist with wrong data
-		// 	testSetup: func() {
-		// 		wasmbinding.SetWhitelistedQuery("/osmosis.epochs.v1beta1.Query/EpochInfos", interface{}(nil))
-		// 	},
-		// 	path: "/osmosis.epochs.v1beta1.Query/EpochInfos",
-		// 	requestData: func() []byte {
-		// 		return []byte{}
-		// 	},
-		// 	responseProtoStruct:  &epochtypes.QueryCurrentEpochResponse{},
-		// 	expectedQuerierError: true,
-		// },
+		{
+			name: "error in unmarshalling response",
+			// set up whitelist with wrong data
+			testSetup: func() {
+				wasmbinding.SetWhitelistedQuery("/osmosis.epochs.v1beta1.Query/EpochInfos",
+					&banktypes.QueryAllBalancesResponse{})
+			},
+			path: "/osmosis.epochs.v1beta1.Query/EpochInfos",
+			requestData: func() []byte {
+				return []byte{}
+			},
+			responseProtoStruct:  &epochtypes.QueryCurrentEpochResponse{},
+			expectedQuerierError: true,
+		},
 		{
 			name: "error in grpc querier",
 			// set up whitelist with wrong data
@@ -191,20 +192,20 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			if tc.expectedQuerierError {
 				suite.Require().Error(err)
 				return
+			}
+
+			suite.Require().NoError(err)
+
+			protoResponse, ok := tc.responseProtoStruct.(proto.Message)
+			suite.Require().True(ok)
+
+			// test correctness by unmarshalling json response into proto struct
+			err = suite.app.AppCodec().UnmarshalJSON(stargateResponse, protoResponse)
+			if tc.expectedUnMarshalError {
+				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
-
-				protoResponse, ok := tc.responseProtoStruct.(proto.Message)
-				suite.Require().True(ok)
-
-				// test correctness by unmarshalling json response into proto struct
-				err = suite.app.AppCodec().UnmarshalJSON(stargateResponse, protoResponse)
-				if tc.expectedUnMarshalError {
-					suite.Require().Error(err)
-				} else {
-					suite.Require().NoError(err)
-					suite.Require().NotNil(protoResponse)
-				}
+				suite.Require().NotNil(protoResponse)
 			}
 
 			if tc.resendRequest {
@@ -242,13 +243,13 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 				},
 			},
 		},
-		// {
-		// 	name:                "invalid proto response struct",
-		// 	queryPath:           "/cosmos.bank.v1beta1.Query/AllBalances",
-		// 	originalResponse:    "0a090a036261721202333012050a03666f6f",
-		// 	protoResponseStruct: protoiface.MessageV1(nil),
-		// 	expectedError:       true,
-		// },
+		{
+			name:                "invalid proto response struct",
+			queryPath:           "/cosmos.bank.v1beta1.Query/AllBalances",
+			originalResponse:    "0a090a036261721202333012050a03666f6f",
+			protoResponseStruct: &epochtypes.QueryCurrentEpochResponse{},
+			expectedError:       true,
+		},
 	}
 
 	for _, tc := range testCases {
