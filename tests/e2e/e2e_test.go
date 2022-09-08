@@ -194,7 +194,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 
 	// Make sure that we are still producing blocks and move far enough for the swap TWAP record to be created
 	// so that we can measure start time post-swap (timeAfterSwap).
-	chainA.WaitForNumHeights(2)
+	chainA.WaitForNumHeights(4)
 
 	// Measure time after swap and wait for a few blocks to be produced.
 	// This is needed to ensure that start time is before the block time
@@ -220,6 +220,8 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	twapFromAfterToAfterSwapAndBeforePruning, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
 	s.Require().NotEqual(twapFromBeforeSwapToAfterSwap, twapFromAfterToAfterSwapAndBeforePruning)
+
+	s.Require().Equal(twapFromAfterToAfterSwapAndBeforePruning, twapFromAfterToNow)
 
 	if !s.skipUpgrade {
 		// TODO: we should reduce the pruning time in the v11
