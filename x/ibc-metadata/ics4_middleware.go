@@ -2,7 +2,6 @@ package ibc_metadata
 
 import (
 	"encoding/json"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -28,14 +27,6 @@ func (i ICS4Middleware) SendPacket(ctx sdk.Context, channelCap *capabilitytypes.
 		return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal sent packet data: %s", err.Error())
 	}
 
-	//
-	//// if Sent from the swap address, skip packet
-	//if swapAddress == data.Sender {
-	//	return nil
-	//}
-	//
-	//return w.channelKeeper.SendPacket(ctx, channelCap, packet)
-	fmt.Println("metadata:", string(data.GetMetadata()))
 	return i.channel.SendPacket(ctx, channelCap, packet)
 }
 

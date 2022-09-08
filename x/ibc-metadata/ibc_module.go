@@ -27,6 +27,10 @@ func NewIBCModule(app porttypes.IBCModule, ics4 *ICS4Middleware) IBCModule {
 	}
 }
 
+type Metadata struct {
+	Callback string `json:"callback"`
+}
+
 // OnChanOpenInit implements the IBCModule interface
 func (im IBCModule) OnChanOpenInit(ctx sdk.Context,
 	order channeltypes.Order,
@@ -37,16 +41,7 @@ func (im IBCModule) OnChanOpenInit(ctx sdk.Context,
 	counterparty channeltypes.Counterparty,
 	version string,
 ) error {
-	return im.app.OnChanOpenInit(
-		ctx,
-		order,
-		connectionHops,
-		portID,
-		channelID,
-		channelCap,
-		counterparty,
-		version,
-	)
+	return im.app.OnChanOpenInit(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, version)
 }
 
 // OnChanOpenTry implements the IBCModule interface
@@ -134,9 +129,20 @@ func (im IBCModule) OnRecvPacket(
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf("cannot unmarshal sent packet data: %s", err.Error()))
 	}
-	//fmt.Println("OnRecvPacket[metadata]", packet)
-	//asJson, _ := json.Marshal(packet)
-	//ctx.Logger().Info(fmt.Sprintf("OnRecvPacket[metadata]: %s", asJson))
+
+	metadataBytes := data.GetMetadata()
+	if metadataBytes == nil || len(metadataBytes) == 0 {
+		return im.app.OnRecvPacket(ctx, packet, relayer)
+	}
+
+	// ToDo: Extract this into a function that can be passed via the constructor.
+	//       That way it can be generic enough to upstream
+	var metadata Metadata
+	if err := json.Unmarshal(metadataBytes, &metadata); err != nil {
+		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadPacketMetadataMsg, metadata, err.Error()))
+	}
+
+	fmt.Println("callback:", metadata.Callback)
 	return im.app.OnRecvPacket(ctx, packet, relayer)
 }
 

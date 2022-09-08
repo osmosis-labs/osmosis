@@ -106,16 +106,6 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithoutMetadata() {
 }
 
 func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() {
-	//err := suite.chainA.GetOsmosisApp().TransferKeeper.SendTransfer(
-	//	suite.chainA.GetContext(),
-	//	suite.path.EndpointA.ChannelConfig.PortID,
-	//	suite.path.EndpointB.ChannelID,
-	//	sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
-	//	suite.chainA.SenderAccount.GetAddress(),
-	//	suite.chainB.SenderAccount.GetAddress().String(),
-	//	clienttypes.NewHeight(0, 100),
-	//	0,
-	//)
 	channelCap := suite.chainA.GetChannelCapability(
 		suite.path.EndpointA.ChannelConfig.PortID,
 		suite.path.EndpointA.ChannelID)
@@ -124,7 +114,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() {
 		Amount:   "1",
 		Sender:   suite.chainA.SenderAccount.GetAddress().String(),
 		Receiver: suite.chainB.SenderAccount.GetAddress().String(),
-		Metadata: []byte("{}"),
+		Metadata: []byte(`{"callback": "something"}`),
 	}
 
 	var packet = channeltypes.NewPacket(
@@ -140,4 +130,56 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() {
 	err := suite.chainA.GetOsmosisApp().MetadataICS4Wrapper.SendPacket(
 		suite.chainA.GetContext(), channelCap, packet)
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
+}
+
+func (suite *MiddlewareTestSuite) receivePacket(metadata []byte) {
+	channelCap := suite.chainB.GetChannelCapability(
+		suite.path.EndpointB.ChannelConfig.PortID,
+		suite.path.EndpointB.ChannelID)
+	packetData := types.FungibleTokenPacketData{
+		Denom:    sdk.DefaultBondDenom,
+		Amount:   "1",
+		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
+		Receiver: suite.chainA.SenderAccount.GetAddress().String(),
+		Metadata: metadata,
+	}
+
+	var packet = channeltypes.NewPacket(
+		packetData.GetBytes(),
+		1,
+		suite.path.EndpointB.ChannelConfig.PortID,
+		suite.path.EndpointB.ChannelID,
+		suite.path.EndpointA.ChannelConfig.PortID,
+		suite.path.EndpointA.ChannelID,
+		clienttypes.NewHeight(0, 100),
+		0,
+	)
+	err := suite.chainB.GetOsmosisApp().MetadataICS4Wrapper.SendPacket(
+		suite.chainB.GetContext(), channelCap, packet)
+	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
+
+	// Update both clients
+	err = suite.path.EndpointB.UpdateClient()
+	suite.Require().NoError(err)
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+
+	// recv in chain a
+	res, err := suite.path.EndpointA.RecvPacketWithResult(packet)
+
+	// get the ack from the chain a's response
+	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+
+	// manually send the acknowledgement to chain b
+	err = suite.path.EndpointA.AcknowledgePacket(packet, ack)
+	suite.Require().NoError(err)
+}
+
+func (suite *MiddlewareTestSuite) TestRecvTransferWithoutMetadata() {
+	suite.receivePacket(nil)
+}
+
+func (suite *MiddlewareTestSuite) TestRecvTransferWithMetadata() {
+	suite.receivePacket([]byte(`{"callback": "something"}`))
 }
