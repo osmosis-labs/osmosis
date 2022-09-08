@@ -66,7 +66,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	if startTime.After(ctx.BlockTime()) {
 		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: ctx.BlockTime()}
 	}
-  
+
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
