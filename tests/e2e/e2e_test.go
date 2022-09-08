@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package e2e
 
 import (
@@ -13,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v12/app/params"
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
@@ -157,12 +155,12 @@ func (s *IntegrationTestSuite) TestTWAP() {
 		denomOne = "stake"
 		denomTwo = "uosmo"
 
-		minAmountOut = "99"
+		minAmountOut = "1"
 
 		epochIdentifier = "day"
 	)
 
-	var coinIn = fmt.Sprintf("101%s", denomOne)
+	var coinIn = fmt.Sprintf("20000%s", denomOne)
 
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
@@ -197,7 +195,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 
 	// Make sure that we are still producing blocks and move far enough for the swap TWAP record to be created
 	// so that we can measure start time post-swap (timeAfterSwap).
-	chainA.WaitForNumHeights(4)
+	chainA.WaitForNumHeights(2)
 
 	// Measure time after swap and wait for a few blocks to be produced.
 	// This is needed to ensure that start time is before the block time
@@ -224,7 +222,9 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.Require().NoError(err)
 	s.Require().NotEqual(twapFromBeforeSwapToAfterSwap, twapFromAfterToAfterSwapAndBeforePruning)
 
-	s.Require().Equal(twapFromAfterToAfterSwapAndBeforePruning, twapFromAfterToNow)
+	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
+	// There are potential rounding errors requiring us to approximate the comparison.
+	osmoassert.DecApproxEq(s.T(), twapFromAfterToAfterSwapAndBeforePruning, twapFromAfterToNow, sdk.NewDecWithPrec(1, 3))
 
 	if !s.skipUpgrade {
 		// TODO: we should reduce the pruning time in the v11
@@ -255,13 +255,13 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.Require().Equal(twapFromAfterToAfterSwapAndBeforePruning, twapFromAfterToAfterSwapAndAfterPruning)
 
 	// TWAP "from after to after swap" should equal to "from after swap to after pruning"
-	// That is because they are suppossed to use the same start and end records.
-	// The fact that these are taken over different time periods is irrelevant.
+	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
 	timeAfterPruning := chainANode.QueryLatestBlockTime()
 	s.T().Log("querying for TWAP from after swap to after pruning")
 	twapToNowPostPruning, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterPruning)
 	s.Require().NoError(err)
-	s.Require().Equal(twapToNowPostPruning, twapFromAfterToAfterSwapAndBeforePruning)
+	// There are potential rounding errors requiring us to approximate the comparison.
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruning, twapFromAfterToAfterSwapAndBeforePruning, sdk.NewDecWithPrec(1, 3))
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {

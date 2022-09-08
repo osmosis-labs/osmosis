@@ -146,7 +146,7 @@ func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
 	return response.CurrentEpoch
 }
 
-func (n *NodeConfig) QueryGetArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (string, error) {
+func (n *NodeConfig) QueryGetArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
 	path := "osmosis/twap/v1beta1/GetArithmeticTwapToNow"
 
 	bz, err := n.QueryGRPCGateway(
@@ -158,16 +158,16 @@ func (n *NodeConfig) QueryGetArithmeticTwapToNow(poolId uint64, baseAsset, quote
 	)
 
 	if err != nil {
-		return "", err
+		return sdk.Dec{}, err
 	}
 
 	var response twapqueryproto.GetArithmeticTwapToNowResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
-	return response.ArithmeticTwap.String(), nil
+	return response.ArithmeticTwap, nil
 }
 
-func (n *NodeConfig) QueryGetArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (string, error) {
+func (n *NodeConfig) QueryGetArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (sdk.Dec, error) {
 	path := "osmosis/twap/v1beta1/GetArithmeticTwap"
 
 	bz, err := n.QueryGRPCGateway(
@@ -180,13 +180,13 @@ func (n *NodeConfig) QueryGetArithmeticTwap(poolId uint64, baseAsset, quoteAsset
 	)
 
 	if err != nil {
-		return "", err
+		return sdk.Dec{}, err
 	}
 
 	var response twapqueryproto.GetArithmeticTwapResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
-	return response.ArithmeticTwap.String(), nil
+	return response.ArithmeticTwap, nil
 }
 
 // QueryHashFromBlock gets block hash at a specific height. Otherwise, error.
