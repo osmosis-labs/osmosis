@@ -74,16 +74,22 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 // within the keep period.
 // For example:
 // - Suppose pruning param -48 hour
-// - Suppose swaps at -50 hour, -1hour
-// - A prune would leave us with only one record at -1 hour, and we are not able to get twaps from the
-// [-48 hour, -1 hour] time range.
+// - Suppose there are three records at: -51 hour, -50 hour, and -1hour
+// If we were to prune everything older than 48 hours,
+// we would be left with with only one record at -1 hour, and we wouldn't be able to
+// get twaps from the [-48 hour, -1 hour] time range.
+// So, in order to have correct behavior for the desired guarantee,
+// we keep the newest record that is older than the pruning time.
+// This is why we would keep the -50 hour and -1hour twaps despite a 48hr pruning period
 func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
 	store := ctx.KVStore(k.storeKey)
 
 	// Reverse iterator guarantees that we iterate through the newest per pool first.
 	// Due to how it is indexed, we will only iterate times starting from
 	// lastKeptTime exclusively down to the oldest record.
-	iter := store.ReverseIterator([]byte(types.HistoricalTWAPTimeIndexPrefix), types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""))
+	iter := store.ReverseIterator(
+		[]byte(types.HistoricalTWAPTimeIndexPrefix),
+		types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""))
 	defer iter.Close()
 
 	seenPools := map[uint64]struct{}{}

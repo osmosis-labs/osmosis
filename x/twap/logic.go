@@ -102,6 +102,8 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	if err != nil {
 		return err
 	}
+	// TODO: Add a safety assert, that # of records is as we expect, given # of denoms in the pool
+	// namely, that for `k` denoms in pool, there should be k * (k - 1) / 2 records
 
 	for _, record := range records {
 		newRecord := k.updateRecord(ctx, record)
@@ -156,11 +158,11 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	// record.LastSpotPrice is the last spot price from the block the record was created in,
 	// thus it is treated as the effective spot price until the new time.
 	// (As there was no change until at or after this time)
-	p0Accum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
-	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(p0Accum)
+	p0NewAccum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
+	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(p0NewAccum)
 
-	p1Accum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
-	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1Accum)
+	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
+	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
 
 	return newRecord
 }
