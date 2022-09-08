@@ -75,13 +75,13 @@ func (k Keeper) storeHistoricalTWAP(ctx sdk.Context, twap types.TwapRecord) {
 // within the keep period.
 // For example:
 // - Suppose pruning param -48 hour
-// - Suppose there are three records, at -51 hour, -50 hour, -1hour
-// - A prune of everything older than 48 hours,
-// - we would be leave with with only one record at -1 hour, and we are not able to get twaps from the
-// [-48 hour, -1 hour] time range.
-// So in order to have correct behavior, for the desired guarantee,
-// we keep the newest record, that is older than the pruning time.
-// So then we keep -50 hour, and -1hour
+// - Suppose there are three records at: -51 hour, -50 hour, and -1hour
+// If we were to prune everything older than 48 hours,
+// we would be left with with only one record at -1 hour, and we wouldn't be able to
+// get twaps from the [-48 hour, -1 hour] time range.
+// So, in order to have correct behavior for the desired guarantee,
+// we keep the newest record that is older than the pruning time.
+// This is why we would keep the -50 hour and -1hour twaps despite a 48hr pruning period
 // TODO: RENAME THIS FUNCTION TO BE MORE ACCURATE
 func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime time.Time) error {
 	store := ctx.KVStore(k.storeKey)
@@ -94,8 +94,6 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 		types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""))
 	defer iter.Close()
 
-	// TODO: REWRITE this, its bugged for multi-asset (3 or more) pools.
-	// needs the key to be {pool ID, asset 0, asset 1}
 	seenPools := map[uint64]struct{}{}
 
 	for ; iter.Valid(); iter.Next() {
@@ -186,8 +184,6 @@ func (k Keeper) getRecordAtOrBeforeTime(ctx sdk.Context, poolId uint64, t time.T
 	// Note that we cannot get any time entries from t + 1ns, as the key would be `prefix|t+1ns`
 	// and the end for a reverse iterator is exclusive. Thus the largest key that can be returned
 	// begins with a prefix of `prefix|t`
-	// TODO: Consider separator tricks, to not have the + 1 ns
-	// TODO: Change key prefix indexing, to include assets, and not re-order assets at end.
 	startKey := types.FormatHistoricalPoolIndexTimePrefix(poolId, time.Unix(0, 0))
 	endKey := types.FormatHistoricalPoolIndexTimePrefix(poolId, t.Add(time.Nanosecond))
 	lastParsedTime := time.Time{}
