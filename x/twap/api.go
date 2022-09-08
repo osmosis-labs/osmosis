@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 // GetArithmeticTwap returns an arithmetic time weighted average price.
@@ -62,8 +62,11 @@ func (k Keeper) GetArithmeticTwapToNow(
 	poolId uint64,
 	baseAssetDenom string,
 	quoteAssetDenom string,
-	startTime time.Time,
-) (sdk.Dec, error) {
+	startTime time.Time) (sdk.Dec, error) {
+	if startTime.After(ctx.BlockTime()) {
+		return sdk.Dec{}, types.StartTimeAfterEndTimeError{StartTime: startTime, EndTime: ctx.BlockTime()}
+	}
+  
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err

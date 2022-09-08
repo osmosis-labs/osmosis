@@ -6,8 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 var (
@@ -35,7 +35,7 @@ var (
 
 func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 	poolId, denomA, denomB := s.setupDefaultPool()
-	initStartRecord := newRecord(s.Ctx.BlockTime(), sdk.OneDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	initStartRecord := newRecord(poolId, s.Ctx.BlockTime(), sdk.OneDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	initStartRecord.PoolId, initStartRecord.Height = poolId, s.Ctx.BlockHeight()
 	initStartRecord.Asset0Denom, initStartRecord.Asset1Denom = denomB, denomA
 
@@ -472,6 +472,12 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 			ctxTime:       tPlusOne,
 			input:         makeSimpleTwapToNowInput(baseTime.Add(-time.Hour), quoteAssetA),
 			expectedError: twap.TimeTooOldError{Time: baseTime.Add(-time.Hour)},
+		},
+		"start time too new": {
+			recordsToSet:  []types.TwapRecord{baseRecord},
+			ctxTime:       tPlusOne,
+			input:         makeSimpleTwapToNowInput(baseTime.Add(time.Hour), quoteAssetA),
+			expectedError: types.StartTimeAfterEndTimeError{StartTime: baseTime.Add(time.Hour), EndTime: tPlusOne},
 		},
 	}
 	for name, test := range tests {

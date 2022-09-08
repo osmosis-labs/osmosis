@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
-	v10 "github.com/osmosis-labs/osmosis/v11/app/upgrades/v10"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	v10 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 const (
@@ -789,6 +789,28 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				sdk.NewInt64Coin("uatom", 1),
 			),
 			expectShares: sdk.NewInt(100_000_000),
+		},
+		{
+			// Input assets do not exist in pool
+			// P_issued = 1e20 * 1e-12 = 1e8
+			name:    "attempt join with denoms not in pool",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 1),
+				sdk.NewInt64Coin("baz", 1),
+			),
+			expectShares: sdk.NewInt(0),
+			expErr:       types.ErrDenomNotFoundInPool,
 		},
 	}
 	testCases = append(testCases, calcSingleAssetJoinTestCases...)
