@@ -86,6 +86,7 @@ func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
 	if s[0] != historicalTWAPPoolIndexNoSeparator {
 		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
 	}
+	// Time is always the third item in correctly formatted pool index keys (as opposed to the second item in time index keys)
 	t, err := osmoutils.ParseTimeString(s[2])
 	if err != nil {
 		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
