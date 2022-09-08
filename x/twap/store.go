@@ -92,7 +92,14 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 		types.FormatHistoricalTimeIndexTWAPKey(lastKeptTime, 0, "", ""))
 	defer iter.Close()
 
-	seenPools := map[uint64]struct{}{}
+	// We mark what (pool id, asset 0, asset 1) triplets we've seen.
+	// We prune all records for a triplet that we haven't already seen.
+	type uniqueTriplet struct {
+		poolId uint64
+		asset0 string
+		asset1 string
+	}
+	seenPoolAssetTriplets := map[uniqueTriplet]struct{}{}
 
 	for ; iter.Valid(); iter.Next() {
 		twapToRemove, err := types.ParseTwapFromBz(iter.Value())
@@ -100,9 +107,13 @@ func (k Keeper) pruneRecordsBeforeTimeButNewest(ctx sdk.Context, lastKeptTime ti
 			return err
 		}
 
-		_, hasSeenPoolRecord := seenPools[twapToRemove.PoolId]
+		poolKey := uniqueTriplet{
+			poolId: twapToRemove.PoolId,
+			asset0: twapToRemove.Asset0Denom,
+			asset1: twapToRemove.Asset1Denom}
+		_, hasSeenPoolRecord := seenPoolAssetTriplets[poolKey]
 		if !hasSeenPoolRecord {
-			seenPools[twapToRemove.PoolId] = struct{}{}
+			seenPoolAssetTriplets[poolKey] = struct{}{}
 			continue
 		}
 
