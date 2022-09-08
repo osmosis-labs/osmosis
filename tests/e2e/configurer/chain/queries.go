@@ -54,12 +54,6 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 			return false
 		}
 
-		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusServiceUnavailable {
-			if err != nil {
-				return true
-			}
-		}
-
 		return resp.StatusCode != http.StatusServiceUnavailable
 	}, time.Minute, time.Millisecond*10, "failed to execute HTTP request")
 

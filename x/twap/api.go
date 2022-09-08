@@ -68,12 +68,10 @@ func (k Keeper) GetArithmeticTwapToNow(
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	ctx.Logger().Info("GetArithmeticTwapToNow", "startRecord", startRecord)
 	endRecord, err := k.GetBeginBlockAccumulatorRecord(ctx, poolId, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	ctx.Logger().Info("GetArithmeticTwapToNow", "endRecord", startRecord)
 	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
 }
 

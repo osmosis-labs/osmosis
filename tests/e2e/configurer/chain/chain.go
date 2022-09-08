@@ -104,8 +104,7 @@ func (c *Config) WaitUntilHeight(height int64) error {
 	return nil
 }
 
-// WaitForHeights waits for all nodes to reach the current height + heights to wait
-// returns error, if any.
+// WaitForHeights waits for all nodes to go through a given number of heights.
 func (c *Config) WaitForHeights(heightsToWait int64) error {
 	node, err := c.GetDefaultNode()
 	if err != nil {
