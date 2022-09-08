@@ -109,6 +109,8 @@ func init() {
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/BaseDenom", &txfeestypes.QueryBaseDenomResponse{})
 }
 
+// GetWhitelistedQuery returns the whitelisted query at the provided path.
+// If the query does not exist, or it was setup wrong by the chain, this returns an error.
 func GetWhitelistedQuery(queryPath string) (codec.ProtoMarshaler, error) {
 	protoResponseAny, isWhitelisted := stargateWhitelist.Load(queryPath)
 	if !isWhitelisted {
