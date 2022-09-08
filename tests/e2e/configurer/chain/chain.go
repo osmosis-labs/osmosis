@@ -84,16 +84,15 @@ func (c *Config) RemoveNode(nodeName string) error {
 func (c *Config) WaitUntilEpoch(epoch int64, epochIdentifier string) {
 	node, err := c.GetDefaultNode()
 	require.NoError(c.t, err)
-	err = node.WaitUntil(func(_ coretypes.SyncInfo) bool {
+	node.WaitUntil(func(_ coretypes.SyncInfo) bool {
 		newEpochNumber := node.QueryCurrentEpoch(epochIdentifier)
 		c.t.Logf("current epoch number is (%d), waiting to reach (%d)", newEpochNumber, epoch)
 		return newEpochNumber >= epoch
 	})
-	require.NoError(c.t, err)
 }
 
-// WaitForEpochs waits for the chain to go through a given number of epochs.
-func (c *Config) WaitForEpochs(epochsToWait int64, epochIdentifier string) {
+// WaitForNumEpochs waits for the chain to to go through a given number of epochs.
+func (c *Config) WaitForNumEpochs(epochsToWait int64, epochIdentifier string) {
 	node, err := c.GetDefaultNode()
 	require.NoError(c.t, err)
 	oldEpochNumber := node.QueryCurrentEpoch(epochIdentifier)
@@ -121,8 +120,8 @@ func (c *Config) WaitUntilHeight(height int64) {
 	}
 }
 
-// WaitForHeights waits for all nodes to go through a given number of heights.
-func (c *Config) WaitForHeights(heightsToWait int64) {
+// WaitForNumHeights waits for all nodes to go through a given number of heights.
+func (c *Config) WaitForNumHeights(heightsToWait int64) {
 	node, err := c.GetDefaultNode()
 	require.NoError(c.t, err)
 	currentHeight := node.QueryCurrentHeight()

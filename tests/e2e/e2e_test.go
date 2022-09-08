@@ -175,7 +175,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	timeBeforeSwap := chainANode.QueryLatestBlockTime()
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-	chainA.WaitForHeights(1)
+	chainA.WaitForNumHeights(1)
 
 	s.T().Log("querying for the first TWAP to now before swap")
 	twapFromBeforeSwapToBeforeSwapOne, err := chainANode.QueryGetArithmeticTwapToNow(poolId, denomOne, denomTwo, timeBeforeSwap)
@@ -197,23 +197,23 @@ func (s *IntegrationTestSuite) TestTWAP() {
 
 	// Make sure that we are still producing blocks and move far enough for the swap TWAP record to be created
 	// so that we can measure start time post-swap (timeAfterSwap).
-	chainA.WaitForHeights(1)
+	chainA.WaitForNumHeights(1)
 
 	// Measure time after swap and wait for a few blocks to be produced.
 	// This is needed to ensure that start time is before the block time
 	// when we query for TWAP.
 	timeAfterSwap := chainANode.QueryLatestBlockTime()
-	chainA.WaitForHeights(2)
+	chainA.WaitForNumHeights(2)
 
-	// TWAP "from before to after swap" should be different from " from before to before swap"
+	// TWAP "from before to after swap" should be different from "from before to before swap"
 	// because swap introduces a new record with a different spot price.
 	s.T().Log("querying for the TWAP from before swap to now after swap, must not equal to TWAPs before swap")
 	twapFromBeforeSwapToAfterSwap, err := chainANode.QueryGetArithmeticTwapToNow(poolId, denomOne, denomTwo, timeBeforeSwap)
 	s.Require().NoError(err)
 	s.Require().NotEqual(twapFromBeforeSwapToBeforeSwapOne, twapFromBeforeSwapToAfterSwap)
 
-	// TWAP "from after to after swap" should be different from " from before to after swap"
-	// because it has a higher time weight for the after swap period.
+	// TWAP "from after to after swap" should be different from "from before to after swap"
+	// because the former has a higher time weight for the after swap period.
 	s.T().Log("querying for the TWAP from after swap to now, must not equal to TWAPs before swap")
 	twapFromAfterToNow, err := chainANode.QueryGetArithmeticTwapToNow(poolId, denomOne, denomTwo, timeAfterSwap)
 	s.Require().NoError(err)
@@ -238,7 +238,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.T().Logf("waiting for pruning keep period of (%.f) seconds to pass", initialization.TWAPPruningKeepPeriod.Seconds())
 	<-keepPeriodCountDown.C
 
-	chainA.WaitForEpochs(1, epochIdentifier)
+	chainA.WaitForNumEpochs(1, epochIdentifier)
 
 	// We should not be able to get TWAP before swap since it should have been pruned.
 	s.T().Log("pruning is now complete, querying TWAP for period that should be pruned")
@@ -246,7 +246,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, "too old")
 
-	// TWAPs for the same time periods should be the same before and after pruning.
+	// TWAPs for the same time ranger should be the same when we query for them before and after pruning.
 	s.T().Log("querying for TWAP for period before pruning took place but should not have been pruned")
 	twapFromAfterToAfterSwapAndAfterPruning, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
