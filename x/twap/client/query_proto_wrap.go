@@ -19,7 +19,7 @@ func (q Querier) GetArithmeticTwap(ctx sdk.Context,
 	req queryproto.GetArithmeticTwapRequest,
 ) (*queryproto.GetArithmeticTwapResponse, error) {
 	if (req.EndTime == nil || *req.EndTime == time.Time{}) {
-		*req.EndTime = time.Now()
+		*req.EndTime = ctx.BlockTime()
 	}
 
 	twap, err := q.K.GetArithmeticTwap(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime, *req.EndTime)

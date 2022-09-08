@@ -18,10 +18,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
 )
 
-// Test01IBCTokenTransfer tests that IBC token transfers work as expected.
-// This test must precede Test02CreatePoolPostUpgrade. That's why it is prefixed with "01"
-// to ensure correct ordering. See Test02CreatePoolPostUpgrade for more details.
-func (s *IntegrationTestSuite) Test01IBCTokenTransfer() {
+// TestIBCTokenTransfer tests that IBC token transfers work as expected.
+// Additionally, it attempst to create a pool with IBC denoms.
+func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -31,29 +30,13 @@ func (s *IntegrationTestSuite) Test01IBCTokenTransfer() {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
-}
 
-// Test02CreatePoolPostUpgrade tests that a pool can be created.
-// It attempts to create a pool with both native and IBC denoms.
-// As a result, it must run after Test01IBCTokenTransfer.
-// This is the reason for prefixing the name with 02 to ensure
-// correct order.
-func (s *IntegrationTestSuite) Test02CreatePool() {
-	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
-
-	chainANode.CreatePool("nativeDenomPool.json", initialization.ValidatorWalletName)
-
-	if s.skipIBC {
-		s.T().Log("skipping creating pool with IBC denoms because IBC tests are disabled")
-		return
-	}
-
 	chainANode.CreatePool("ibcDenomPool.json", initialization.ValidatorWalletName)
 }
 
-// Test03SuperfluidVoting tests that superfluid voting is functioning as expected.
+// TestSuperfluidVoting tests that superfluid voting is functioning as expected.
 // It does so by doing the following:
 //- creating a pool
 // - attempting to submit a proposal to enable superfluid voting in that pool
@@ -71,7 +54,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets (both chains)
-	superfluildVotingWallet := chainANode.CreateWallet("Test03SuperfluidVoting")
+	superfluildVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
 	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, superfluildVotingWallet)
 	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluildVotingWallet)
 	chainA.LatestLockNumber += 1
@@ -160,6 +143,67 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
 }
 
+// TestTWAP tests TWAP by creating a pool, performing a swap.
+// These two operations should create TWAP records.
+// Then, we wait until the epoch for the records to be pruned.
+// The records are guranteed to be pruned at the next epoch
+// because twap keep time = epoch time / 4 and we use a timer
+// to wait for at least the twap keep time.
+// TODO: implement querying for TWAP, once such queries are exposed:
+// https://github.com/osmosis-labs/osmosis/issues/2602
+func (s *IntegrationTestSuite) TestTWAP() {
+	const (
+		poolFile   = "nativeDenomPool.json"
+		walletName = "swap-exact-amount-in-wallet"
+
+		coinIn       = "101stake"
+		minAmountOut = "99"
+		denomOut     = "uosmo"
+
+		epochIdentifier = "day"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	// Triggers the creation of TWAP records.
+	poolId := chainANode.CreatePool(poolFile, initialization.ValidatorWalletName)
+	swapWalletAddr := chainANode.CreateWallet(walletName)
+
+	chainANode.BankSend(coinIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+	heightBeforeSwap := chainANode.QueryCurrentHeight()
+
+	// Triggers the creation of TWAP records.
+	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", poolId), denomOut, swapWalletAddr)
+
+	keepPeriodCountDown := time.NewTimer(initialization.TWAPPruningKeepPeriod)
+
+	// Make sure still producing blocks.
+	chainA.WaitUntilHeight(heightBeforeSwap + 3)
+
+	if !s.skipUpgrade {
+		// TODO: we should reduce the pruning time in the v11
+		// genesis to make this test run faster
+		// Currenty, we are testing the upgrade from v11 to v12,
+		// the pruning time is set to whatever is in the upgrade
+		// handler (two days). Therefore, we cannot reasonably
+		// test twap pruning post-upgrade.
+		s.T().Skip("skipping TWAP Pruning test. This can be re-enabled post v12")
+	}
+
+	// Make sure that the pruning keep period has passed.
+	s.T().Logf("waiting for pruning keep period of (%.f) seconds to pass", initialization.TWAPPruningKeepPeriod.Seconds())
+	<-keepPeriodCountDown.C
+	oldEpochNumber := chainANode.QueryCurrentEpoch(epochIdentifier)
+	// The pruning should happen at the next epoch.
+	chainANode.WaitUntil(func(_ coretypes.SyncInfo) bool {
+		newEpochNumber := chainANode.QueryCurrentEpoch(epochIdentifier)
+		s.T().Logf("Current epoch number is (%d), waiting to reach (%d)", newEpochNumber, oldEpochNumber+1)
+		return newEpochNumber > oldEpochNumber
+	})
+}
+
 func (s *IntegrationTestSuite) TestStateSync() {
 	if s.skipStateSync {
 		s.T().Skip()
@@ -175,8 +219,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	stateSyncRPCServers := []string{stateSyncHostPort, stateSyncHostPort}
 
 	// get trust height and trust hash.
-	trustHeight, err := runningNode.QueryCurrentHeight()
-	s.Require().NoError(err)
+	trustHeight := runningNode.QueryCurrentHeight()
 
 	trustHash, err := runningNode.QueryHashFromBlock(trustHeight)
 	s.Require().NoError(err)
@@ -238,12 +281,8 @@ func (s *IntegrationTestSuite) TestStateSync() {
 
 	// ensure that the state synching node cathes up to the running node.
 	s.Require().Eventually(func() bool {
-		stateSyncNodeHeight, err := stateSynchingNode.QueryCurrentHeight()
-		s.NoError(err)
-
-		runningNodeHeight, err := runningNode.QueryCurrentHeight()
-		s.NoError(err)
-
+		stateSyncNodeHeight := stateSynchingNode.QueryCurrentHeight()
+		runningNodeHeight := runningNode.QueryCurrentHeight()
 		return stateSyncNodeHeight == runningNodeHeight
 	},
 		3*time.Minute,

@@ -7,7 +7,7 @@ use cosmwasm_std::{from_binary, Addr, Attribute};
 use crate::helpers::tests::verify_query_response;
 use crate::msg::{InstantiateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
 use crate::state::tests::RESET_TIME_WEEKLY;
-use crate::state::{RateLimit, GOVMODULE, IBCMODULE};
+use crate::state::{RateLimit, GOVMODULE, IBCMODULE, RATE_LIMIT_TRACKERS};
 
 const IBC_ADDR: &str = "IBC_MODULE";
 const GOV_ADDR: &str = "GOV_MODULE";
@@ -321,4 +321,52 @@ fn bad_quotas() {
         0,
         env.block.time.plus_seconds(200),
     );
+}
+
+#[test] // Tests that undo reverts a packet send without affecting expiration or channel value
+fn undo_send() {
+    let mut deps = mock_dependencies();
+
+    let quota = QuotaMsg::new("weekly", RESET_TIME_WEEKLY, 10, 10);
+    let msg = InstantiateMsg {
+        gov_module: Addr::unchecked(GOV_ADDR),
+        ibc_module: Addr::unchecked(IBC_ADDR),
+        paths: vec![PathMsg {
+            channel_id: format!("channel"),
+            denom: format!("denom"),
+            quotas: vec![quota],
+        }],
+    };
+    let info = mock_info(GOV_ADDR, &vec![]);
+    let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+
+    let send_msg = SudoMsg::SendPacket {
+        channel_id: format!("channel"),
+        denom: format!("denom"),
+        channel_value: 3_000,
+        funds: 300,
+    };
+    let undo_msg = SudoMsg::UndoSend {
+        channel_id: format!("channel"),
+        denom: format!("denom"),
+        funds: 300,
+    };
+
+    sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
+
+    let trackers = RATE_LIMIT_TRACKERS
+        .load(&deps.storage, ("channel".to_string(), "denom".to_string()))
+        .unwrap();
+    assert_eq!(trackers.first().unwrap().flow.outflow, 300);
+    let period_end = trackers.first().unwrap().flow.period_end;
+    let channel_value = trackers.first().unwrap().quota.channel_value;
+
+    sudo(deps.as_mut(), mock_env(), undo_msg.clone()).unwrap();
+
+    let trackers = RATE_LIMIT_TRACKERS
+        .load(&deps.storage, ("channel".to_string(), "denom".to_string()))
+        .unwrap();
+    assert_eq!(trackers.first().unwrap().flow.outflow, 0);
+    assert_eq!(trackers.first().unwrap().flow.period_end, period_end);
+    assert_eq!(trackers.first().unwrap().quota.channel_value, channel_value);
 }

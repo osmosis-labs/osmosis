@@ -118,11 +118,19 @@ impl Flow {
         self.period_end = now.plus_seconds(duration);
     }
 
-    /// Updates the current flow with a transfer of value.
+    /// Updates the current flow incrementing it by a transfer of value.
     pub fn add_flow(&mut self, direction: FlowType, value: u128) {
         match direction {
             FlowType::In => self.inflow = self.inflow.saturating_add(value),
             FlowType::Out => self.outflow = self.outflow.saturating_add(value),
+        }
+    }
+
+    /// Updates the current flow reducing it by a transfer of value.
+    pub fn undo_flow(&mut self, direction: FlowType, value: u128) {
+        match direction {
+            FlowType::In => self.inflow = self.inflow.saturating_sub(value),
+            FlowType::Out => self.outflow = self.outflow.saturating_sub(value),
         }
     }
 
