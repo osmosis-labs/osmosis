@@ -104,6 +104,17 @@ func (c *Config) WaitUntilHeight(height int64) error {
 	return nil
 }
 
+// WaitForHeights waits for all nodes to reach the current height + heights to wait
+// returns error, if any.
+func (c *Config) WaitForHeights(heightsToWait int64) error {
+	node, err := c.GetDefaultNode()
+	if err != nil {
+		return err
+	}
+	currentHeight := node.QueryCurrentHeight()
+	return c.WaitUntilHeight(currentHeight + heightsToWait)
+}
+
 func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	c.t.Logf("IBC sending %s from %s to %s (%s)", token, c.Id, dstChain.Id, recipient)
 
