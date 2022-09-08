@@ -88,5 +88,6 @@ func (k Keeper) GetArithmeticTwapToNow(
 // these swaps have had no time to be arbitraged back.
 // This accumulator can be stored, to compute wider ranged twaps.
 func (k Keeper) GetBeginBlockAccumulatorRecord(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
+	ctx.Logger().Info("GetBeginBlockAccumulatorRecord")
 	return k.getMostRecentRecord(ctx, poolId, asset0Denom, asset1Denom)
 }
