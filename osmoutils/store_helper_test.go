@@ -9,10 +9,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v11/osmoutils"
-	twaptypes "github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 type TestSuite struct {

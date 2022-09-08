@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -572,7 +572,7 @@ func NewBuildSwapExactAmountInMsg(clientCtx client.Context, tokenInStr, tokenOut
 
 	tokenOutMinAmt, ok := sdk.NewIntFromString(tokenOutMinAmtStr)
 	if !ok {
-		return txf, nil, errors.New("invalid token out min amount")
+		return txf, nil, fmt.Errorf("invalid token out min amount, %s", tokenOutMinAmtStr)
 	}
 	msg := &types.MsgSwapExactAmountIn{
 		Sender:            clientCtx.GetFromAddress().String(),

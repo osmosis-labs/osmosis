@@ -16,11 +16,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap"
-	twapclient "github.com/osmosis-labs/osmosis/v11/x/twap/client"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/client/grpc"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap"
+	twapclient "github.com/osmosis-labs/osmosis/v12/x/twap/client"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client/grpc"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 var (
@@ -28,8 +28,7 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct {
-}
+type AppModuleBasic struct{}
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 

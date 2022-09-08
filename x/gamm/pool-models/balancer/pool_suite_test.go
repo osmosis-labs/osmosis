@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
-	v10 "github.com/osmosis-labs/osmosis/v11/app/upgrades/v10"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	v10 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 const (
@@ -424,7 +424,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 	},
 }
 
-var multiAssetInputTestCases = []calcJoinSharesTestCase{
+var multiAssetExactInputTestCases = []calcJoinSharesTestCase{
 	{
 		name:       "swap equal weights with zero swap fee",
 		swapFee:    sdk.MustNewDecFromStr("0"),
@@ -437,6 +437,10 @@ var multiAssetInputTestCases = []calcJoinSharesTestCase{
 		// Initial number of pool shares = 100 * 10**18 = 10**20
 		// Expected increase = liquidity_increase_ratio * initial number of pool shares = (25_000 / 1e12) * 10**20 = 2500000000000.0 = 2.5 * 10**12
 		expectShares: sdk.NewInt(2.5e12),
+		expectLiq: sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 25_000),
+			sdk.NewInt64Coin("uatom", 25_000),
+		),
 	},
 	{
 		name:       "swap equal weights with 0.001 swap fee",
@@ -447,7 +451,65 @@ var multiAssetInputTestCases = []calcJoinSharesTestCase{
 			sdk.NewInt64Coin("uatom", 25_000),
 		),
 		expectShares: sdk.NewInt(2500000000000),
+		expectLiq: sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 25_000),
+			sdk.NewInt64Coin("uatom", 25_000),
+		),
 	},
+	{
+		// This test doubles the liquidity in a fresh pool, so it should generate the base number of LP shares for pool creation as new shares
+		// This is set to 1e20 (or 100 * 10^18) for Osmosis, so we should expect:
+		// P_issued = 1e20
+		name:    "minimum input with two assets and minimum liquidity",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 1),
+				Weight: sdk.NewInt(100),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1),
+				Weight: sdk.NewInt(100),
+			},
+		},
+		tokensIn: sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 1),
+			sdk.NewInt64Coin("uatom", 1),
+		),
+		expectShares: sdk.NewInt(1e18).Mul(sdk.NewInt(100)),
+		expectLiq: sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 1),
+			sdk.NewInt64Coin("uatom", 1),
+		),
+	},
+	{
+		// Pool liquidity is changed by 1e-12
+		// P_issued = 1e20 * 1e-12 = 1e8
+		name:    "minimum input two assets equal liquidity",
+		swapFee: sdk.MustNewDecFromStr("0"),
+		poolAssets: []balancer.PoolAsset{
+			{
+				Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+				Weight: sdk.NewInt(100),
+			},
+			{
+				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+				Weight: sdk.NewInt(100),
+			},
+		},
+		tokensIn: sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 1),
+			sdk.NewInt64Coin("uatom", 1),
+		),
+		expectShares: sdk.NewInt(100_000_000),
+		expectLiq: sdk.NewCoins(
+			sdk.NewInt64Coin("uosmo", 1),
+			sdk.NewInt64Coin("uatom", 1),
+		),
+	},
+}
+
+var multiAssetUnevenInputTestCases = []calcJoinSharesTestCase{
 	{
 		// For uosmos and uatom
 		// join pool is first done to the extent where the ratio can be preserved, which is 25,000 uosmo and 25,000 uatom
@@ -501,7 +563,6 @@ var multiAssetInputTestCases = []calcJoinSharesTestCase{
 			sdk.NewInt64Coin("uosmo", 25_000),
 			sdk.NewInt64Coin("uatom", 50_000),
 		),
-
 		expectShares: sdk.NewInt(2.5e12 + 1243750000000),
 	},
 	{
@@ -537,49 +598,6 @@ var multiAssetInputTestCases = []calcJoinSharesTestCase{
 			sdk.NewInt64Coin("uatom", 50_000),
 		),
 		expectShares: sdk.NewInt(1250000000000 + 609374990000),
-	},
-	{
-		// This test doubles the liquidity in a fresh pool, so it should generate the base number of LP shares for pool creation as new shares
-		// This is set to 1e20 (or 100 * 10^18) for Osmosis, so we should expect:
-		// P_issued = 1e20
-		name:    "minimum input with two assets and minimum liquidity",
-		swapFee: sdk.MustNewDecFromStr("0"),
-		poolAssets: []balancer.PoolAsset{
-			{
-				Token:  sdk.NewInt64Coin("uosmo", 1),
-				Weight: sdk.NewInt(100),
-			},
-			{
-				Token:  sdk.NewInt64Coin("uatom", 1),
-				Weight: sdk.NewInt(100),
-			},
-		},
-		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin("uosmo", 1),
-			sdk.NewInt64Coin("uatom", 1),
-		),
-		expectShares: sdk.NewInt(1e18).Mul(sdk.NewInt(100)),
-	},
-	{
-		// Pool liquidity is changed by 1e-12
-		// P_issued = 1e20 * 1e-12 = 1e8
-		name:    "minimum input two assets equal liquidity",
-		swapFee: sdk.MustNewDecFromStr("0"),
-		poolAssets: []balancer.PoolAsset{
-			{
-				Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
-				Weight: sdk.NewInt(100),
-			},
-			{
-				Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
-				Weight: sdk.NewInt(100),
-			},
-		},
-		tokensIn: sdk.NewCoins(
-			sdk.NewInt64Coin("uosmo", 1),
-			sdk.NewInt64Coin("uatom", 1),
-		),
-		expectShares: sdk.NewInt(100_000_000),
 	},
 }
 
@@ -788,12 +806,11 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 
 func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
-	// test cases defined in multiAssetInputTestCases.
+	// test cases defined in multiAssetExactInputTestCases and multiAssetUneverInputTestCases.
 	//
 	// See calcJoinSharesTestCase struct definition for explanation why the
 	// sharing is needed.
-
-	testCases := append(multiAssetInputTestCases, calcSingleAssetJoinTestCases...)
+	testCases := append(append(multiAssetExactInputTestCases, multiAssetUnevenInputTestCases...), calcSingleAssetJoinTestCases...)
 
 	for _, tc := range testCases {
 		tc := tc
@@ -833,7 +850,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 	// See calcJoinSharesTestCase struct definition for explanation why the
 	// sharing is needed.
 
-	testCases := append(multiAssetInputTestCases, calcSingleAssetJoinTestCases...)
+	testCases := append(append(multiAssetExactInputTestCases, multiAssetUnevenInputTestCases...), calcSingleAssetJoinTestCases...)
 
 	for _, tc := range testCases {
 		tc := tc
@@ -856,6 +873,99 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 					require.NoError(t, err)
 					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
 					assertExpectedLiquidity(t, preJoinAssets.Add(tc.tokensIn...), postJoinAssets)
+				}
+			}
+
+			osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
+	// We append shared calcSingleAssetJoinTestCases with multi-asset and edge
+	// test cases defined in multiAssetInputTestCases.
+	//
+	// See calcJoinSharesTestCase struct definition for explanation why the
+	// sharing is needed.
+
+	testCases := []calcJoinSharesTestCase{
+		{
+			// only the exact ratio portion is successfully joined
+			name:       "Multi-tokens In: unequal amounts, equal weights with 0 swap fee",
+			swapFee:    sdk.ZeroDec(),
+			poolAssets: oneTrillionEvenPoolAssets,
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 50_000),
+			),
+	
+			expectShares: sdk.NewInt(2.5e12),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 25_000),
+			),
+		},
+		{
+			// only the exact ratio portion is successfully joined
+			name:       "Multi-tokens In: unequal amounts, equal weights with 0.01 swap fee",
+			swapFee:    sdk.MustNewDecFromStr("0.01"),
+			poolAssets: oneTrillionEvenPoolAssets,
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 50_000),
+			),
+	
+			expectShares: sdk.NewInt(2.5e12),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 25_000),
+			),
+		},
+		{
+			// only the exact ratio portion is successfully joined
+			name:    "Multi-tokens In: unequal amounts, with unequal weights with 0.03 swap fee",
+			swapFee: sdk.MustNewDecFromStr("0.03"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 2_000_000_000_000),
+					Weight: sdk.NewInt(500),
+				},
+				defaultAtomPoolAsset,
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 50_000),
+			),
+			expectShares: sdk.NewInt(1250000000000),
+			expectLiq: sdk.NewCoins(
+				sdk.NewInt64Coin("uosmo", 25_000),
+				sdk.NewInt64Coin("uatom", 12_500),
+			),
+		},
+	}
+	testCases = append(testCases, multiAssetExactInputTestCases...)
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.T().Run(tc.name, func(t *testing.T) {
+			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+
+			// system under test
+			sut := func() {
+				preJoinAssets := pool.GetTotalPoolLiquidity(suite.Ctx)
+				shares, err := pool.JoinPoolNoSwap(suite.Ctx, tc.tokensIn, tc.swapFee)
+				postJoinAssets := pool.GetTotalPoolLiquidity(suite.Ctx)
+
+				if tc.expErr != nil {
+					require.Error(t, err)
+					require.ErrorAs(t, tc.expErr, &err)
+					require.Equal(t, sdk.Int{}, shares)
+					require.Equal(t, preJoinAssets, postJoinAssets)
+				} else {
+					require.NoError(t, err)
+					assertExpectedSharesErrRatio(t, tc.expectShares, shares)
+					assertExpectedLiquidity(t, preJoinAssets.Add(tc.expectLiq...), postJoinAssets)
 				}
 			}
 
