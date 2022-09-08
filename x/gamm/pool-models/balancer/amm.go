@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v11/osmomath"
-	"github.com/osmosis-labs/osmosis/v11/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/osmomath"
+	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 )
 
 // subPoolAssetWeights subtracts the weights of two different pool asset slices.
@@ -227,4 +227,16 @@ func calcPoolSharesInGivenSingleAssetOut(
 	// pAi = pAiAfterExitFee/(1-exitFee)
 	sharesInFeeIncluded := sharesIn.Quo(sdk.OneDec().Sub(exitFee))
 	return sharesInFeeIncluded
+}
+
+// ensureDenomInPool check to make sure the input denoms exist in the provided pool asset map
+func ensureDenomInPool(poolAssetsByDenom map[string]PoolAsset, tokensIn sdk.Coins) error {
+	for _, coin := range tokensIn {
+		_, ok := poolAssetsByDenom[coin.Denom]
+		if !ok {
+			return sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, invalidInputDenomsErrFormat, coin.Denom)
+		}
+	}
+
+	return nil
 }

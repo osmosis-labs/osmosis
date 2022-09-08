@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
@@ -139,8 +139,9 @@ func (k Keeper) pruneRecords(ctx sdk.Context) error {
 	return k.pruneRecordsBeforeTimeButNewest(ctx, lastKeptTime)
 }
 
-// recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime.
+// recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime,
 // otherwise referred to as "interpolating the record" to the target time.
+// This does not mutate the passed in record.
 //
 // pre-condition: newTime >= record.Time
 func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
@@ -155,9 +156,6 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	// record.LastSpotPrice is the last spot price from the block the record was created in,
 	// thus it is treated as the effective spot price until the new time.
 	// (As there was no change until at or after this time)
-	//
-	// TODO (Alpin): Think about overflow
-	// Ref: https://github.com/osmosis-labs/osmosis/issues/2412
 	p0Accum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
 	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(p0Accum)
 

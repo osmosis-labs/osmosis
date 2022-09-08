@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	v8constants "github.com/osmosis-labs/osmosis/v11/app/upgrades/v8/constants"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v11/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v11/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v11/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v11/x/superfluid/types"
+	v8constants "github.com/osmosis-labs/osmosis/v12/app/upgrades/v8/constants"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) TestMsgSuperfluidDelegate() {

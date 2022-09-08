@@ -24,3 +24,32 @@ func (e StartTimeAfterEndTimeError) Error() string {
 	return fmt.Sprintf("called GetArithmeticTwap with a start time that is after the end time."+
 		" (start time %s, end time %s)", e.StartTime, e.EndTime)
 }
+
+type KeySeparatorLengthError struct {
+	ExpectedLength int
+	ActualLength   int
+}
+
+func (e KeySeparatorLengthError) Error() string {
+	return fmt.Sprintf("key separator is an incorrect length."+
+		" (expected length %d, actual length %d)", e.ExpectedLength, e.ActualLength)
+}
+
+type UnexpectedSeparatorError struct {
+	ExpectedSeparator string
+	ActualSeparator   string
+}
+
+func (e UnexpectedSeparatorError) Error() string {
+	return fmt.Sprintf("separator is incorrectly formatted."+
+		" (expected separator %s, actual separator %v)", e.ExpectedSeparator, e.ActualSeparator)
+}
+
+type TimeStringKeyFormatError struct {
+	Key string
+	Err error
+}
+
+func (e TimeStringKeyFormatError) Error() string {
+	return fmt.Sprintf("incorrectly formatted time string in key %s : %v", e.Key, e.Err)
+}

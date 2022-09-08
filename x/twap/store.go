@@ -1,4 +1,3 @@
-//nolint:unused,deadcode
 package twap
 
 import (
@@ -8,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v11/osmoutils"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 type timeTooOldError struct {
@@ -143,6 +142,7 @@ func (k Keeper) getAllHistoricalTimeIndexedTWAPs(ctx sdk.Context) ([]types.TwapR
 }
 
 // getAllHistoricalPoolIndexedTWAPs returns all historical TWAPs indexed by pool id.
+// nolint: unused
 func (k Keeper) getAllHistoricalPoolIndexedTWAPs(ctx sdk.Context) ([]types.TwapRecord, error) {
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), []byte(types.HistoricalTWAPPoolIndexPrefix), types.ParseTwapFromBz)
 }

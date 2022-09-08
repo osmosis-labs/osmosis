@@ -3,8 +3,8 @@ package keeper
 import (
 	"time"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v11/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v11/x/superfluid/keeper/internal/events"
+	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper/internal/events"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

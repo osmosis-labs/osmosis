@@ -12,8 +12,8 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v11/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
 )
 
 type NodeConfig struct {
@@ -63,10 +63,8 @@ func (n *NodeConfig) Run() error {
 	require.Eventually(
 		n.t,
 		func() bool {
-			if _, err := n.QueryCurrentHeight(); err != nil {
-				return false
-			}
-
+			// This fails if unsuccessful.
+			n.QueryCurrentHeight()
 			n.t.Logf("started node container: %s", n.Name)
 			return true
 		},

@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v11/simulation/simtypes/simlogger"
+	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes/simlogger"
 )
 
 // List of available flags for the simulator
