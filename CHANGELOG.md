@@ -40,7 +40,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v12.0.0
+
+This release includes several cosmwasm-developer and appchain-ecosystem affecting upgrades:
+
+* TWAP - Time weighted average prices for all AMM pools
+* Cosmwasm contract developers
+  * Enabling select queries for cosmwasm contracts
+* Enabling Interchain accounts (for real this time)
+* Upgrading IBC to v3.2.0
+* Fixing State Sync
 
 ### Breaking Changes
 
@@ -77,12 +86,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#1667](https://github.com/osmosis-labs/osmosis/pull/1673) Move wasm-bindings code out of app package into its own root level package.
 * [#2013](https://github.com/osmosis-labs/osmosis/pull/2013) Make `SetParams`, `SetPool`, `SetTotalLiquidity`, and `SetDenomLiquidity` GAMM APIs private
 * [#1857](https://github.com/osmosis-labs/osmosis/pull/1857) x/mint rename GetLastHalvenEpochNum to GetLastReductionEpochNum
+* [#2133](https://github.com/osmosis-labs/osmosis/pull/2133) Add `JoinPoolNoSwap` and `CalcJoinPoolNoSwapShares` to GAMM pool interface and route `JoinPoolNoSwap` in pool_service.go to new method in pool interface
 * [#2353](https://github.com/osmosis-labs/osmosis/pull/2353) Re-enable stargate query via whitelsit
 * [#2394](https://github.com/osmosis-labs/osmosis/pull/2394) Remove unused interface methods from expected keepers of each module
 * [#2390](https://github.com/osmosis-labs/osmosis/pull/2390) x/mint remove unused mintCoins parameter from AfterDistributeMintedCoin
 * [#2418](https://github.com/osmosis-labs/osmosis/pull/2418) x/mint remove SetInitialSupplyOffsetDuringMigration from keeper
 * [#2417](https://github.com/osmosis-labs/osmosis/pull/2417) x/mint unexport keeper `SetLastReductionEpochNum`, `getLastReductionEpochNum`, `CreateDeveloperVestingModuleAccount`, and `MintCoins`
 * [#2587](https://github.com/osmosis-labs/osmosis/pull/2587) remove encoding config argument from NewOsmosisApp
+* [#2454](https://github.com/osmosis-labs/osmosis/pull/2454) x/gamm Change `SwapExactAmountIn` and `SwapExactAmountOut` to take fee multiplier as addition input param.
 
 ### Features
 
