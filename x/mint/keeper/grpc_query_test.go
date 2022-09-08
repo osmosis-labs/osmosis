@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	gocontext "context"
+	"context"
 
 	"github.com/osmosis-labs/osmosis/v12/x/mint/types"
 )
@@ -9,9 +9,9 @@ import (
 func (suite *KeeperTestSuite) TestGRPCParams() {
 	_, _, queryClient := suite.App, suite.Ctx, suite.queryClient
 
-	_, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
+	_, err := queryClient.Params(context.Background(), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 
-	_, err = queryClient.EpochProvisions(gocontext.Background(), &types.QueryEpochProvisionsRequest{})
+	_, err = queryClient.EpochProvisions(context.Background(), &types.QueryEpochProvisionsRequest{})
 	suite.Require().NoError(err)
 }

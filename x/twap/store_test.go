@@ -5,8 +5,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v12/x/twap"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v12/x/twap"
 
 	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
@@ -233,6 +234,13 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 	// Create 4 records in the same pool from base time - 1 ms, each record with the difference of 1 second between them
 	pool5Min2SMin1Ms, pool5Min1SMin1Ms, pool5BaseSecMin1Ms, pool5Plus1SMin1Ms := s.createTestRecordsFromTimeInPool(baseTime.Add(-time.Millisecond), 5)
 
+	withDiffPoolAssets := func(twap types.TwapRecord) types.TwapRecord {
+		twap2 := twap
+		twap2.Asset0Denom = "fooDenom"
+		twap2.Asset1Denom = "barDenom"
+		return twap2
+	}
+
 	tests := map[string]struct {
 		// order does not follow any specific pattern
 		// across many test cases on purpose.
@@ -381,6 +389,23 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 				pool4Plus1SBaseMs,  // base time + 1s; kept since older
 				pool5Plus1SBaseMs,  // base time + 1s; kept since older
 			},
+		},
+		"multi-asset pool": {
+			recordsToPreSet: []types.TwapRecord{
+				pool3BaseSecMin1Ms,                     // base time - 1ms; kept since newest before lastKeptTime
+				pool3BaseSecBaseMs,                     // base time; kept since at lastKeptTime
+				pool3BaseSecMin3Ms,                     // base time - 3ms; deleted
+				pool3BaseSecMin2Ms,                     // base time - 2ms; deleted
+				withDiffPoolAssets(pool3BaseSecMin1Ms), // base time - 1ms; kept since newest before lastKeptTime
+				withDiffPoolAssets(pool3BaseSecBaseMs), // base time; kept since at lastKeptTime
+				withDiffPoolAssets(pool3BaseSecMin3Ms), // base time - 3ms; deleted
+				withDiffPoolAssets(pool3BaseSecMin2Ms), // base time - 2ms; deleted
+			},
+
+			lastKeptTime: baseTime,
+
+			expectedKeptRecords: []types.TwapRecord{withDiffPoolAssets(pool3BaseSecMin1Ms), pool3BaseSecMin1Ms,
+				withDiffPoolAssets(pool3BaseSecBaseMs), pool3BaseSecBaseMs},
 		},
 		"no pre-set records - no error": {
 			recordsToPreSet: []types.TwapRecord{},

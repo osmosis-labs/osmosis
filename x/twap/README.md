@@ -28,7 +28,6 @@ Using the latest spot price in each record, we create the accumulator value for 
 `a_10 = a_9 + a_9_latest_spot_price * (10s - 9s)`, and `a_15 = a_13 + a_13_latest_spot_price * (15s - 13s)`. 
 Given these interpolated accumulation values, we can compute the TWAP as before.
 
-
 ## Module API
 
 The primary intended API is `GetArithmeticTwap`, which is documented below, and has a similar cosmwasm binding.
@@ -71,9 +70,9 @@ For users who need TWAPs outside the 48 hours stored in the state machine, you c
 
 - client/* - Implementation of GRPC and CLI queries
 - types/* - Implement TwapRecord, GenesisState. Define AMM interface, and methods to format keys.
-- module/module.go - SDK AppModule interface implementation.
+- twapmodule/module.go - SDK AppModule interface implementation.
 - api.go - Public API, that other users / modules can/should depend on
-- hook_listener.go - Defines hooks & calls to logic.go, for triggering actions on 
+- listeners.go - Defines hooks & calls to logic.go, for triggering actions on 
 - keeper.go - generic SDK boilerplate (defining a wrapper for store keys + params)
 - logic.go - Implements all TWAP module 'logic'. (Arithmetic, defining what to get/set where, etc.)
 - store.go - Managing logic for getting and setting things to underlying stores
