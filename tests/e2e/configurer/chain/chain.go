@@ -92,7 +92,7 @@ func (c *Config) WaitUntilEpoch(epoch int64, epochIdentifier string) {
 	require.NoError(c.t, err)
 }
 
-// WaitFoeEpochs waits for the chain to to go through a given number of epochs.
+// WaitForEpochs waits for the chain to go through a given number of epochs.
 func (c *Config) WaitForEpochs(epochsToWait int64, epochIdentifier string) {
 	node, err := c.GetDefaultNode()
 	require.NoError(c.t, err)
