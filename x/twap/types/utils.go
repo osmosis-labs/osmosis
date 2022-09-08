@@ -56,6 +56,11 @@ func AccumDiffDivDuration(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
 	return accumDiff.QuoInt64(deltaMS)
 }
 
+func AccumDiffDivDuration2(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
+	deltaMS := timeDelta.Milliseconds()
+	return accumDiff.Quo(sdk.NewDec(deltaMS))
+}
+
 // LexicographicalOrderDenoms takes two denoms and returns them to be in lexicographically ascending order.
 // In other words, the first returned denom string will be the lexicographically smaller of the two denoms.
 // If the denoms are equal, an error will be returned.
