@@ -52,7 +52,7 @@ This release includes several cosmwasm-developer and appchain-ecosystem affectin
 * Enabling Interchain accounts (for real this time)
 * Upgrading IBC to v3.2.0
 * Fixing State Sync
-* Remove Bech32IBC
+* Remove x/Bech32IBC
 * Consistently makes authz work with ledger for all messages
 
 This upgrade also adds a number of safety and API boundary improving changes to the codebase.
