@@ -80,9 +80,29 @@ func (c *Config) RemoveNode(nodeName string) error {
 	return fmt.Errorf("node %s not found", nodeName)
 }
 
+// WaitUntilEpoch waits for the chain to reach the specified epoch.
+func (c *Config) WaitUntilEpoch(epoch int64, epochIdentifier string) {
+	node, err := c.GetDefaultNode()
+	require.NoError(c.t, err)
+	err = node.WaitUntil(func(_ coretypes.SyncInfo) bool {
+		newEpochNumber := node.QueryCurrentEpoch(epochIdentifier)
+		c.t.Logf("current epoch number is (%d), waiting to reach (%d)", newEpochNumber, epoch)
+		return newEpochNumber >= epoch
+	})
+	require.NoError(c.t, err)
+}
+
+// WaitFoeEpochs waits for the chain to to go through a given number of epochs.
+func (c *Config) WaitForEpochs(epochsToWait int64, epochIdentifier string) {
+	node, err := c.GetDefaultNode()
+	require.NoError(c.t, err)
+	oldEpochNumber := node.QueryCurrentEpoch(epochIdentifier)
+	c.WaitUntilEpoch(oldEpochNumber+epochsToWait, epochIdentifier)
+}
+
 // WaitUntilHeight waits for all validators to reach the specified height at the minimum.
 // returns error, if any.
-func (c *Config) WaitUntilHeight(height int64) error {
+func (c *Config) WaitUntilHeight(height int64) {
 	// Ensure the nodes are making progress.
 	doneCondition := func(syncInfo coretypes.SyncInfo) bool {
 		curHeight := syncInfo.LatestBlockHeight
@@ -97,21 +117,16 @@ func (c *Config) WaitUntilHeight(height int64) error {
 
 	for _, node := range c.NodeConfigs {
 		c.t.Logf("node container: %s, waiting to reach height %d", node.Name, height)
-		if err := node.WaitUntil(doneCondition); err != nil {
-			return err
-		}
+		node.WaitUntil(doneCondition)
 	}
-	return nil
 }
 
 // WaitForHeights waits for all nodes to go through a given number of heights.
-func (c *Config) WaitForHeights(heightsToWait int64) error {
+func (c *Config) WaitForHeights(heightsToWait int64) {
 	node, err := c.GetDefaultNode()
-	if err != nil {
-		return err
-	}
+	require.NoError(c.t, err)
 	currentHeight := node.QueryCurrentHeight()
-	return c.WaitUntilHeight(currentHeight + heightsToWait)
+	c.WaitUntilHeight(currentHeight + heightsToWait)
 }
 
 func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {

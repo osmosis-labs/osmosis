@@ -173,6 +173,8 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	swapWalletAddr := chainANode.CreateWallet(walletName)
 
 	timeBeforeSwap := chainANode.QueryLatestBlockTime()
+	// Wait for the next height so that the requested twap
+	// start time (timeBeforeSwap) is not equal to the block time.
 	chainA.WaitForHeights(1)
 
 	s.T().Log("querying for the first TWAP to now before swap")
@@ -235,13 +237,8 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	// Make sure that the pruning keep period has passed.
 	s.T().Logf("waiting for pruning keep period of (%.f) seconds to pass", initialization.TWAPPruningKeepPeriod.Seconds())
 	<-keepPeriodCountDown.C
-	oldEpochNumber := chainANode.QueryCurrentEpoch(epochIdentifier)
-	// The pruning should happen at the next epoch.
-	chainANode.WaitUntil(func(_ coretypes.SyncInfo) bool {
-		newEpochNumber := chainANode.QueryCurrentEpoch(epochIdentifier)
-		s.T().Logf("Current epoch number is (%d), waiting to reach (%d)", newEpochNumber, oldEpochNumber+1)
-		return newEpochNumber > oldEpochNumber
-	})
+
+	chainA.WaitForEpochs(1, epochIdentifier)
 
 	// We should not be able to get TWAP before swap since it should have been pruned.
 	s.T().Log("pruning is now complete, querying TWAP for period that should be pruned")
