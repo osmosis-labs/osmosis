@@ -239,7 +239,7 @@ func computeArithmeticTwap(ctx sdk.Context, startRecord types.TwapRecord, endRec
 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
 	}
 	computed := types.AccumDiffDivDuration(accumDiff, timeDelta)
-	ctx.Logger().Info("computeArithmeticTwap", "accumDiff", accumDiff, "timeDelta", timeDelta, computed)
+	ctx.Logger().Info("computeArithmeticTwap", "accumDiff", accumDiff, "timeDelta", timeDelta, "computed", computed)
 
 	return computed, err
 }
