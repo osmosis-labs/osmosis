@@ -243,6 +243,8 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.T().Logf("waiting for pruning keep period of (%.f) seconds to pass", initialization.TWAPPruningKeepPeriod.Seconds())
 	<-keepPeriodCountDown.C
 
+	// Epoch end triggers the prunning of TWAP records.
+	// Records before swap should be pruned.
 	chainA.WaitForNumEpochs(1, epochIdentifier)
 
 	// We should not be able to get TWAP before swap since it should have been pruned.
