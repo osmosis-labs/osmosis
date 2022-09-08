@@ -32,8 +32,6 @@ func GetTxCmd() *cobra.Command {
 		NewSuperfluidUndelegateCmd(),
 		NewSuperfluidUnbondLockCmd(),
 		// NewSuperfluidRedelegateCmd(),
-		NewCmdSubmitSetSuperfluidAssetsProposal(),
-		NewCmdSubmitRemoveSuperfluidAssetsProposal(),
 		NewCmdLockAndSuperfluidDelegate(),
 		NewCmdUnPoolWhitelistedPool(),
 	)
