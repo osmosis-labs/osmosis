@@ -105,6 +105,20 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	// TODO: Add a safety assert, that # of records is as we expect, given # of denoms in the pool
 	// namely, that for `k` denoms in pool, there should be k * (k - 1) / 2 records
 
+	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// given # of denoms in the pool namely, that for `k` denoms in pool,
+	// there should be k * (k - 1) / 2 records
+	denomNum := len(denoms)
+	expectedRecordsLength := denomNum * (denomNum - 1) / 2
+
+	if expectedRecordsLength != len(records) {
+		return fmt.Errorf("The number of records do not match, expected: %d\n got: %d\n", expectedRecordsLength, len(records))
+	}
+
 	for _, record := range records {
 		newRecord := k.updateRecord(ctx, record)
 		k.storeNewRecord(ctx, newRecord)
