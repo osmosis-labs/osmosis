@@ -30,11 +30,11 @@ var (
 	historicalTWAPPoolIndexNoSeparator = "historical_pool_index"
 	expectedKeySeparatedParts          = 5
 
-	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
-	// keySeparatorPlusOne is used for creating prefixes for the key end in iterators
-	// when we want to get all of the keys in a prefix. Since it is one byte larger
-	// than the original key separator and the end prefix is exclusive, it is valid
-	// for getting all values under the original key separator.
+	// We do key management to let us easily meet the goals of (AKA minimal iteration):
+	// Get most recent twap for a (pool id, asset 1, asset 2) with no iteration
+	// Get all records for all pools, within a given time range
+	// Get all records for a pool, within a given time range
+	mostRecentTWAPsPrefix         = mostRecentTWAPsNoSeparator + KeySeparator
 	HistoricalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
 	HistoricalTWAPPoolIndexPrefix = historicalTWAPPoolIndexNoSeparator + KeySeparator
 )
