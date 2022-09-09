@@ -1,7 +1,7 @@
 keeper: 
-  path: "github.com/osmosis-labs/osmosis/v11/x/twap"
+  path: "github.com/osmosis-labs/osmosis/v12/x/twap"
   struct: "Keeper"
-client_path: "github.com/osmosis-labs/osmosis/v11/x/twap/client"
+client_path: "github.com/osmosis-labs/osmosis/v12/x/twap/client"
 queries:
   GetArithmeticTwap:
     proto_wrapper:
@@ -13,5 +13,10 @@ queries:
   GetArithmeticTwapToNow:
     proto_wrapper:
       query_func: "k.GetArithmeticTwapToNow"
+    cli:
+      cmd: "GetArithmeticTwapToNow"
+  Params:
+    proto_wrapper:
+      query_func: "k.GetParams"
     cli:
       cmd: "GetArithmeticTwapToNow"

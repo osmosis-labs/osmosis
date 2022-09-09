@@ -5,11 +5,12 @@ import (
 	"math"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v11/x/twap"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v11/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap"
+
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 // TestTrackChangedPool takes a list of poolIds as test cases, and runs one list per block.
@@ -85,6 +86,26 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 			poolId:          1,
 			expectedRecords: []types.TwapRecord{baseRecord},
 		},
+		"lexicographic fooling pool Ids": {
+			recordsToSet: []types.TwapRecord{
+				withPoolId(baseRecord, 1),
+				withPoolId(baseRecord, 2),
+				withPoolId(baseRecord, 10),
+				withPoolId(baseRecord, 11),
+				withPoolId(baseRecord, 20)},
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord},
+		},
+		"lexicographic fooling pool Ids, with carry": {
+			recordsToSet: []types.TwapRecord{
+				withPoolId(baseRecord, 9),
+				withPoolId(baseRecord, 10),
+				withPoolId(baseRecord, 11),
+				withPoolId(baseRecord, 19),
+				withPoolId(baseRecord, 90)},
+			poolId:          9,
+			expectedRecords: []types.TwapRecord{withPoolId(baseRecord, 9)},
+		},
 		"set multi-asset pool record": {
 			recordsToSet: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
@@ -147,7 +168,9 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		expectedRecord types.TwapRecord
 		expErr         error
 	}{
-		"no entries":            {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, twap.TimeTooOldError{Time: baseTime}},
+		"no entries": {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, fmt.Errorf(
+			"getTwapRecord: querying for assets %s %s that are not in pool id %d",
+			baseRecord.Asset0Denom, baseRecord.Asset1Denom, 1)},
 		"get at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultInputAt(baseTime), baseRecord, nil},
 		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, nil},
 
@@ -180,7 +203,9 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 
 		"non-existent pool ID": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			wrongPoolIdInputAt(baseTime), baseRecord, twap.TimeTooOldError{Time: baseTime}},
+			wrongPoolIdInputAt(baseTime), baseRecord, fmt.Errorf(
+				"getTwapRecord: querying for assets %s %s that are not in pool id %d",
+				baseRecord.Asset0Denom, baseRecord.Asset1Denom, 2)},
 		"pool2 record get": {
 			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
 			input:          wrongPoolIdInputAt(baseTime),
@@ -232,6 +257,13 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 
 	// Create 4 records in the same pool from base time - 1 ms, each record with the difference of 1 second between them
 	pool5Min2SMin1Ms, pool5Min1SMin1Ms, pool5BaseSecMin1Ms, pool5Plus1SMin1Ms := s.createTestRecordsFromTimeInPool(baseTime.Add(-time.Millisecond), 5)
+
+	withDiffPoolAssets := func(twap types.TwapRecord) types.TwapRecord {
+		twap2 := twap
+		twap2.Asset0Denom = "fooDenom"
+		twap2.Asset1Denom = "barDenom"
+		return twap2
+	}
 
 	tests := map[string]struct {
 		// order does not follow any specific pattern
@@ -381,6 +413,23 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 				pool4Plus1SBaseMs,  // base time + 1s; kept since older
 				pool5Plus1SBaseMs,  // base time + 1s; kept since older
 			},
+		},
+		"multi-asset pool": {
+			recordsToPreSet: []types.TwapRecord{
+				pool3BaseSecMin1Ms,                     // base time - 1ms; kept since newest before lastKeptTime
+				pool3BaseSecBaseMs,                     // base time; kept since at lastKeptTime
+				pool3BaseSecMin3Ms,                     // base time - 3ms; deleted
+				pool3BaseSecMin2Ms,                     // base time - 2ms; deleted
+				withDiffPoolAssets(pool3BaseSecMin1Ms), // base time - 1ms; kept since newest before lastKeptTime
+				withDiffPoolAssets(pool3BaseSecBaseMs), // base time; kept since at lastKeptTime
+				withDiffPoolAssets(pool3BaseSecMin3Ms), // base time - 3ms; deleted
+				withDiffPoolAssets(pool3BaseSecMin2Ms), // base time - 2ms; deleted
+			},
+
+			lastKeptTime: baseTime,
+
+			expectedKeptRecords: []types.TwapRecord{withDiffPoolAssets(pool3BaseSecMin1Ms), pool3BaseSecMin1Ms,
+				withDiffPoolAssets(pool3BaseSecBaseMs), pool3BaseSecBaseMs},
 		},
 		"no pre-set records - no error": {
 			recordsToPreSet: []types.TwapRecord{},

@@ -28,7 +28,6 @@ Using the latest spot price in each record, we create the accumulator value for 
 `a_10 = a_9 + a_9_latest_spot_price * (10s - 9s)`, and `a_15 = a_13 + a_13_latest_spot_price * (15s - 13s)`. 
 Given these interpolated accumulation values, we can compute the TWAP as before.
 
-
 ## Module API
 
 The primary intended API is `GetArithmeticTwap`, which is documented below, and has a similar cosmwasm binding.
@@ -71,9 +70,9 @@ For users who need TWAPs outside the 48 hours stored in the state machine, you c
 
 - client/* - Implementation of GRPC and CLI queries
 - types/* - Implement TwapRecord, GenesisState. Define AMM interface, and methods to format keys.
-- module/module.go - SDK AppModule interface implementation.
+- twapmodule/module.go - SDK AppModule interface implementation.
 - api.go - Public API, that other users / modules can/should depend on
-- hook_listener.go - Defines hooks & calls to logic.go, for triggering actions on 
+- listeners.go - Defines hooks & calls to logic.go, for triggering actions on 
 - keeper.go - generic SDK boilerplate (defining a wrapper for store keys + params)
 - logic.go - Implements all TWAP module 'logic'. (Arithmetic, defining what to get/set where, etc.)
 - store.go - Managing logic for getting and setting things to underlying stores
@@ -87,6 +86,7 @@ For every pool, at a given point in time, we make one twap record entry per uniq
 All public API's for the module will sort the input denoms to the canonical representation, so the caller does not need to worry about this. (The canonical representation is the denoms in lexicographical order)
 
 Each twap record stores [(source)](https://github.com/osmosis-labs/osmosis/tree/main/proto/osmosis/gamm/twap):
+
 * last spot price of base asset A in terms of quote asset B
 * last spot price of base asset B in terms of quote asset A
 * Accumulation value of base asset A in terms of quote asset B
@@ -95,12 +95,14 @@ Each twap record stores [(source)](https://github.com/osmosis-labs/osmosis/tree/
 All TWAP records are indexed in state by the time of write.
 
 A new TWAP record is created in two situations:
+
 * When a pool is created
 * In the `EndBlock`, if the block contains any potentially price changing event for the pool. (Swap, LP, Exit)
 
 When a pool is created, records are created with the current spot price of the pool.
 
 During `EndBlock`, new records are created, with:
+
 * The accumulator's value is updated based upon the most recent prior accumulator's stored last spot price
 * The `LastSpotPrice` value is equal to the EndBlock spot price.
 
@@ -109,6 +111,7 @@ In the event that a pool is created, and has a swap in the same block, the recor
 ### Tracking spot-price changing events in a block
 
 The flow by which we currently track spot price changing events in a block is as follows:
+
 * AMM hook triggers for Swapping, LPing or Exiting a pool
 * TWAP listens for this hook, and adds this pool ID to a local tracker
 * In end block, TWAP iterates over every changed pool in that block, based on the local tracker, and updates their TWAP records

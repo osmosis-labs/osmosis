@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v11/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v11/x/twap"
-	"github.com/osmosis-labs/osmosis/v11/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	"github.com/osmosis-labs/osmosis/v12/x/twap"
+	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere
@@ -137,6 +137,11 @@ var (
 		append(increasingOrderByTimeRecordsPoolOne.Twaps, decreasingOrderByTimeRecordsPoolTwo.Twaps...),
 	)
 )
+
+func withPoolId(twap types.TwapRecord, poolId uint64) types.TwapRecord {
+	twap.PoolId = poolId
+	return twap
+}
 
 func withLastErrTime(twap types.TwapRecord, lastErrorTime time.Time) types.TwapRecord {
 	twap.LastErrorTime = lastErrorTime
