@@ -692,6 +692,86 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 		},
+		"two-asset; pre-set record at t with sp error; new record with no sp error; new record has old sp error": {
+			preSetRecords: []types.TwapRecord{withLastErrTime(baseRecord, baseRecord.Time)},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.OneDec(),
+				},
+			},
+
+			expectedMostRecentRecords: []expectedRecords{
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    sdk.OneDec(),
+					lastErrorTime: baseRecord.Time,
+				},
+			},
+			expectedHistoricalRecords: []expectedRecords{
+				// The original record.
+				{
+					spotPriceA:    baseRecord.P0LastSpotPrice,
+					spotPriceB:    baseRecord.P1LastSpotPrice,
+					lastErrorTime: baseRecord.Time,
+				},
+				// The new record added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    sdk.OneDec(),
+					lastErrorTime: baseRecord.Time,
+				},
+			},
+		},
+		"two-asset; pre-set record at t with sp error; new record with sp error and has its sp err time updated": {
+			preSetRecords: []types.TwapRecord{withLastErrTime(baseRecord, baseRecord.Time)},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:   baseRecord.Asset1Denom,
+					quoteDenom:  baseRecord.Asset0Denom,
+					overrideErr: spError,
+				},
+			},
+
+			expectedMostRecentRecords: []expectedRecords{
+				{
+					spotPriceA:    sdk.ZeroDec(),
+					spotPriceB:    sdk.ZeroDec(),
+					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+				},
+			},
+			expectedHistoricalRecords: []expectedRecords{
+				// The original record.
+				{
+					spotPriceA:    baseRecord.P0LastSpotPrice,
+					spotPriceB:    baseRecord.P1LastSpotPrice,
+					lastErrorTime: baseRecord.Time,
+				},
+				// The new record added.
+				{
+					spotPriceA:    sdk.ZeroDec(),
+					spotPriceB:    sdk.ZeroDec(),
+					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+				},
+			},
+		},
 		"two-asset; pre-set at t and t + 1, new record with updated spot price created": {
 			preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			poolId:        baseRecord.PoolId,
@@ -786,7 +866,7 @@ func (s *TestSuite) TestUpdateRecords() {
 		},
 		// TODO: complete multi-asset pool tests:
 		// "multi-asset pool; pre-set at t and t + 1; creates new records": {},
-		// "multi-asset pool; pre-set at t and t + 1; pre-existing records with error, overwrites erorr time":                        {},
+		// "multi-asset pool; pre-set at t and t + 1; pre-existing records some with error and some with too large spot price, overwrites erorr time":                        {},
 	}
 
 	for name, tc := range tests {
