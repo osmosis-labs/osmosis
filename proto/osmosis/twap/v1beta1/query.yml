@@ -15,3 +15,8 @@ queries:
       query_func: "k.GetArithmeticTwapToNow"
     cli:
       cmd: "GetArithmeticTwapToNow"
+  Params:
+    proto_wrapper:
+      query_func: "k.GetParams"
+    cli:
+      cmd: "GetArithmeticTwapToNow"
