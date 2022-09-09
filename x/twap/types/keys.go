@@ -66,27 +66,10 @@ func FormatHistoricalPoolIndexTimePrefix(poolId uint64, denom1, denom2 string) [
 	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator))
 }
 
-<<<<<<< HEAD
-func ParseTimeFromHistoricalPoolIndexKey(key []byte) (time.Time, error) {
-	keyS := string(key)
-	s := strings.Split(keyS, KeySeparator)
-	if len(s) != expectedKeySeparatedParts {
-		return time.Time{}, KeySeparatorLengthError{ExpectedLength: expectedKeySeparatedParts, ActualLength: len(s)}
-	}
-	if s[0] != historicalTWAPPoolIndexNoSeparator {
-		return time.Time{}, UnexpectedSeparatorError{ExpectedSeparator: historicalTWAPPoolIndexNoSeparator, ActualSeparator: s[0]}
-	}
-	t, err := osmoutils.ParseTimeString(s[2])
-	if err != nil {
-		return time.Time{}, TimeStringKeyFormatError{Key: keyS, Err: err}
-	}
-	return t, nil
-=======
 func FormatHistoricalPoolIndexTimeSuffix(poolId uint64, denom1, denom2 string, accumulatorWriteTime time.Time) []byte {
 	timeS := osmoutils.FormatTimeString(accumulatorWriteTime)
 	// . acts as a suffix for lexicographical orderings
 	return []byte(fmt.Sprintf("%s%d%s%s%s%s%s%s.", HistoricalTWAPPoolIndexPrefix, poolId, KeySeparator, denom1, KeySeparator, denom2, KeySeparator, timeS))
->>>>>>> 5b740510 (TWAP: Simplify historical pool index (#2641))
 }
 
 // GetAllMostRecentTwapsForPool returns all of the most recent twap records for a pool id.
