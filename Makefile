@@ -339,11 +339,20 @@ e2e-remove-resources:
 lint:
 	@echo "--> Running linter"
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
 
 format:
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --fix
 	@go run mvdan.cc/gofumpt -l -w x/ app/ ante/ tests/
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
 
+mdlint:
+	@echo "--> Running markdown linter"
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
+
+markdown:
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
+	
 ###############################################################################
 ###                                Localnet                                 ###
 ###############################################################################
