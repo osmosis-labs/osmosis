@@ -646,10 +646,136 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 		},
-		// "two-asset; pre-set at t and t + 1, new record with updated spot price created": {
-		// 	preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
-		// 	poolId:        baseRecord.PoolId,
-		// },
+		"two-asset; pre-set record at t; large spot price in one of the pairs": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:   baseRecord.Asset1Denom,
+					quoteDenom:  baseRecord.Asset0Denom,
+					overrideSp:  types.MaxSpotPrice.Add(sdk.OneDec()),
+					overrideErr: nil, // twap logic should identify the large spot price and mark it as error.
+				},
+			},
+
+			expectedMostRecentRecords: []expectedRecords{
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    types.MaxSpotPrice,               // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
+					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+				},
+			},
+
+			expectedHistoricalRecords: []expectedRecords{
+				// The original record.
+				{
+					spotPriceA: baseRecord.P0LastSpotPrice,
+					spotPriceB: baseRecord.P1LastSpotPrice,
+				},
+				// The new record added.
+				{
+					spotPriceA:    sdk.OneDec(),
+					spotPriceB:    types.MaxSpotPrice,               // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
+					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+				},
+			},
+		},
+		"two-asset; pre-set at t and t + 1, new record with updated spot price created": {
+			preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
+			poolId:        baseRecord.PoolId,
+
+			blockTime: baseRecord.Time.Add(time.Second * 11),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectedMostRecentRecords: []expectedRecords{
+				{
+					spotPriceA: sdk.OneDec(),
+					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedRecords{
+				// The original record at t.
+				{
+					spotPriceA: baseRecord.P0LastSpotPrice,
+					spotPriceB: baseRecord.P1LastSpotPrice,
+				},
+				// The original record at t + 1.
+				{
+					spotPriceA: tPlus10sp5Record.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5Record.P1LastSpotPrice,
+				},
+				// The new record added.
+				{
+					spotPriceA: sdk.OneDec(),
+					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+		},
+		// This case should never happen since
+		"two-asset; pre-set at t and t + 1, new record inserted between existing": {
+			preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
+			poolId:        baseRecord.PoolId,
+
+			blockTime: baseRecord.Time.Add(time.Second * 5),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectedMostRecentRecords: []expectedRecords{
+				{
+					spotPriceA: sdk.OneDec(),
+					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedRecords{
+				// The original record at t.
+				{
+					spotPriceA: baseRecord.P0LastSpotPrice,
+					spotPriceB: baseRecord.P1LastSpotPrice,
+				},
+				// The new record added.
+				{
+					spotPriceA: sdk.OneDec(),
+					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
+				},
+				// The original record at t + 1.
+				{
+					spotPriceA: tPlus10sp5Record.P0LastSpotPrice,
+					spotPriceB: tPlus10sp5Record.P1LastSpotPrice,
+				},
+			},
+		},
 		// "multi-asset pool; pre-set at t; updates spot price":                                                  {},
 		// "multi-asset pool; pre-set at t and t + 1; updates spot price for latest only":                        {},
 		// "multi-asset pool; pre-set at t and t + 1; both valid; updates with spot price error":                 {},
