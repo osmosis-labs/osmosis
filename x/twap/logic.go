@@ -115,7 +115,7 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	expectedRecordsLength := denomNum * (denomNum - 1) / 2
 
 	if expectedRecordsLength != len(records) {
-		return fmt.Errorf("The number of records do not match, expected: %d\n got: %d\n", expectedRecordsLength, len(records))
+		return types.InvalidRecordCountError{Expected: expectedRecordsLength, Actual: len(records)}
 	}
 
 	for _, record := range records {

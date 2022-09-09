@@ -585,6 +585,31 @@ func (s *TestSuite) TestUpdateRecords() {
 
 			expectError: gammtypes.PoolDoesNotExistErr{PoolId: baseRecord.PoolId + 1},
 		},
+		"the returned number of records does not match expected": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.NewDec(2),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.NewDecWithPrec(2, 1),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: "extra denom B",
+					overrideSp: sdk.NewDecWithPrec(3, 1),
+				},
+			},
+
+			expectError: types.InvalidRecordCountError{Expected: 3, Actual: 1},
+		},
 		"two-asset; pre-set record at t; updated valid spot price": {
 			preSetRecords: []types.TwapRecord{baseRecord},
 			poolId:        baseRecord.PoolId,
