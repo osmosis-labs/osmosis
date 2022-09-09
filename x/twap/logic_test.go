@@ -787,7 +787,7 @@ func (s *TestSuite) TestUpdateRecords() {
 
 			expectedMostRecentRecords: []expectedResults{
 				{
-					spotPriceA:    sdk.ZeroDec(),
+					spotPriceA:    sdk.OneDec(),
 					spotPriceB:    sdk.ZeroDec(),
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 				},
@@ -801,7 +801,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA:    sdk.ZeroDec(),
+					spotPriceA:    sdk.OneDec(),
 					spotPriceB:    sdk.ZeroDec(),
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 				},
