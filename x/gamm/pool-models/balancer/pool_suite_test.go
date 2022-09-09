@@ -922,7 +922,9 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 			),
 		},
 		{
-			// only the exact ratio portion is successfully joined
+			// Note that the ratio of the assets matter, but their weights don't
+			// We expect a 2:1 ratio in the joined liquidity because there's a 2:1 ration in existing liquidity
+			// Since only the exact ratio portion is successfully joined, we expect 25k uosmo and 12.5k uatom
 			name:    "Multi-tokens In: unequal amounts, with unequal weights with 0.03 swap fee",
 			swapFee: sdk.MustNewDecFromStr("0.03"),
 			poolAssets: []balancer.PoolAsset{
