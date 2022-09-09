@@ -59,7 +59,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets (both chains)
-	superfluildVotingWallet := chainANode.CreateWallet("Test03SuperfluidVoting")
+	superfluildVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
 	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, superfluildVotingWallet)
 	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluildVotingWallet)
 	chainA.LatestLockNumber += 1
