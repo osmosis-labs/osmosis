@@ -58,12 +58,15 @@ The middleware uses the following parameters:
 ## Contract
 
 ### Messages
+
 The contract specifies the following messages:
 
 #### Query
+
 * GetQuotas - Returns the quotas for a path
 
 #### Exec
+
 * AddPath - Adds a list of quotas for a path
 * RemovePath - Removes a path
 * ResetPathQuota - If a rate limit has been reached, the contract's governance address can reset the quota so that transfers are allowed again
@@ -84,4 +87,3 @@ The module is also provided to the underlying `transferIBCModule` as its `ICS4Wr
 pointed to a channel, which also implements the `ICS4Wrapper` interface.
 
 This integration can be seen in [osmosis/app/keepers/keepers.go](https://github.com/osmosis-labs/osmosis/blob/main/app/keepers/keepers.go)
-

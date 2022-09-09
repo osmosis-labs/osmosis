@@ -6,7 +6,7 @@ queries:
   ArithmeticTwap:
     proto_wrapper:
       default_values:
-        Req.end_time: "time.Now()"
+        Req.end_time: "ctx.BlockTime()"
       query_func: "k.GetArithmeticTwap"
     cli:
       cmd: "ArithmeticTwap"
