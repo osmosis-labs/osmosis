@@ -545,6 +545,8 @@ func (s *TestSuite) TestUpdateRecords() {
 		lastErrorTime time.Time
 	}
 
+	var spError = errors.New("spot price error")
+
 	tests := map[string]struct {
 		preSetRecords []types.TwapRecord
 		poolId        uint64
@@ -566,7 +568,44 @@ func (s *TestSuite) TestUpdateRecords() {
 		// 	poolId:        baseRecord.PoolId + 1,
 		// 	blockTime:     baseTime.Add(time.Second),
 		// },
-		"two-asset; pre-set record at t; updated valid spot price": {
+		// "two-asset; pre-set record at t; updated valid spot price": {
+		// 	preSetRecords: []types.TwapRecord{baseRecord},
+		// 	poolId:        baseRecord.PoolId,
+		// 	blockTime:     baseRecord.Time.Add(time.Second),
+
+		// 	spOverrides: []spOverride{
+		// 		{
+		// 			baseDenom:  baseRecord.Asset0Denom,
+		// 			quoteDenom: baseRecord.Asset1Denom,
+		// 			overrideSp: sdk.NewDec(2),
+		// 		},
+		// 		{
+		// 			baseDenom:  baseRecord.Asset1Denom,
+		// 			quoteDenom: baseRecord.Asset0Denom,
+		// 			overrideSp: sdk.NewDecWithPrec(2, 1),
+		// 		},
+		// 	},
+
+		// 	expectedMostRecentRecords: []expectedRecords{
+		// 		{
+		// 			spotPriceA: sdk.NewDec(2),
+		// 			spotPriceB: sdk.NewDecWithPrec(2, 1),
+		// 		},
+		// 	},
+		// 	expectedHistoricalRecords: []expectedRecords{
+		// 		// The original record.
+		// 		{
+		// 			spotPriceA: baseRecord.P0LastSpotPrice,
+		// 			spotPriceB: baseRecord.P1LastSpotPrice,
+		// 		},
+		// 		// The new record added.
+		// 		{
+		// 			spotPriceA: sdk.NewDec(2),
+		// 			spotPriceB: sdk.NewDecWithPrec(2, 1),
+		// 		},
+		// 	},
+		// },
+		"two-asset; pre-set record at t; updated with spot price error in both denom pairs": {
 			preSetRecords: []types.TwapRecord{baseRecord},
 			poolId:        baseRecord.PoolId,
 			blockTime:     baseRecord.Time.Add(time.Second),
@@ -575,26 +614,42 @@ func (s *TestSuite) TestUpdateRecords() {
 				{
 					baseDenom:   baseRecord.Asset0Denom,
 					quoteDenom:  baseRecord.Asset1Denom,
-					overrideSp:  sdk.NewDec(2),
-					overrideErr: nil,
+					overrideErr: spError,
 				},
 				{
 					baseDenom:   baseRecord.Asset1Denom,
 					quoteDenom:  baseRecord.Asset0Denom,
 					overrideSp:  sdk.NewDecWithPrec(2, 1),
-					overrideErr: nil,
+					overrideErr: spError,
 				},
 			},
 
 			expectedMostRecentRecords: []expectedRecords{
 				{
-					spotPriceA: sdk.NewDec(2),
-					spotPriceB: sdk.NewDecWithPrec(2, 1),
+					spotPriceA:    sdk.ZeroDec(),
+					spotPriceB:    sdk.ZeroDec(),
+					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+				},
+			},
+
+			expectedHistoricalRecords: []expectedRecords{
+				// The original record.
+				{
+					spotPriceA: baseRecord.P0LastSpotPrice,
+					spotPriceB: baseRecord.P1LastSpotPrice,
+				},
+				// The new record added.
+				{
+					spotPriceA:    sdk.ZeroDec(),
+					spotPriceB:    sdk.ZeroDec(),
+					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 				},
 			},
 		},
-		// "two-asset; pre-set record at t; updated with spot price error":                                       {},
-		// "two-asset; pre-set at t and t + 1, only the latest is updated spot price":                            {},
+		// "two-asset; pre-set at t and t + 1, new record with updated spot price created": {
+		// 	preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
+		// 	poolId:        baseRecord.PoolId,
+		// },
 		// "multi-asset pool; pre-set at t; updates spot price":                                                  {},
 		// "multi-asset pool; pre-set at t and t + 1; updates spot price for latest only":                        {},
 		// "multi-asset pool; pre-set at t and t + 1; both valid; updates with spot price error":                 {},
@@ -613,12 +668,11 @@ func (s *TestSuite) TestUpdateRecords() {
 
 				for _, sp := range tc.spOverrides {
 					ammMock.ProgramPoolSpotPriceOverride(tc.poolId, sp.baseDenom, sp.quoteDenom, sp.overrideSp, sp.overrideErr)
+					ammMock.ProgramPoolDenomsOverride(tc.poolId, []string{sp.baseDenom, sp.quoteDenom}, nil)
 				}
 
 				twapKeeper.SetAmmInterface(ammMock)
 			}
-
-			// twapKeeper.SetAmmInterface()
 
 			s.preSetRecords(tc.preSetRecords)
 
@@ -631,17 +685,19 @@ func (s *TestSuite) TestUpdateRecords() {
 			s.Require().NoError(err)
 
 			poolMostRecentRecords, err := twapKeeper.GetAllMostRecentRecordsForPool(ctx, tc.poolId)
+			s.Require().Equal(len(tc.expectedMostRecentRecords), len(poolMostRecentRecords))
 			for i, r := range tc.expectedMostRecentRecords {
-				s.Require().Equal(poolMostRecentRecords[i].P0LastSpotPrice, r.spotPriceA)
-				s.Require().Equal(poolMostRecentRecords[i].P1LastSpotPrice, r.spotPriceB)
-				s.Require().Equal(poolMostRecentRecords[i].LastErrorTime, r.lastErrorTime)
+				s.Require().Equal(r.spotPriceA, poolMostRecentRecords[i].P0LastSpotPrice, "most recent record %d", i)
+				s.Require().Equal(r.spotPriceB, poolMostRecentRecords[i].P1LastSpotPrice, "most recent record %d", i)
+				s.Require().Equal(r.lastErrorTime, poolMostRecentRecords[i].LastErrorTime, "most recent record %d", i)
 			}
 
 			poolHistoricalRecords := s.getAllHistoricalRecordsForPool(tc.poolId)
-			for i, r := range tc.expectedHistoricalRecords {
-				s.Require().Equal(poolHistoricalRecords[i].P0LastSpotPrice, r.spotPriceA)
-				s.Require().Equal(poolHistoricalRecords[i].P1LastSpotPrice, r.spotPriceB)
-				s.Require().Equal(poolHistoricalRecords[i].LastErrorTime, r.lastErrorTime)
+			s.Require().Equal(len(tc.expectedHistoricalRecords), len(poolHistoricalRecords))
+			for i, r := range poolHistoricalRecords {
+				s.Require().Equal(tc.expectedHistoricalRecords[i].spotPriceA, r.P0LastSpotPrice, "historical record %d", i)
+				s.Require().Equal(tc.expectedHistoricalRecords[i].spotPriceB, r.P1LastSpotPrice, "historical record %d", i)
+				s.Require().Equal(tc.expectedHistoricalRecords[i].lastErrorTime, r.LastErrorTime, "historical record %d", i)
 			}
 		})
 	}
