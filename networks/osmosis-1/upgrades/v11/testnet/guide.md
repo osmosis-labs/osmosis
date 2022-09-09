@@ -105,6 +105,7 @@ Now, at the upgrade height, Cosmovisor will upgrade to the v11 binary
 2. Look for a panic message, followed by endless peer logs. Stop the daemon
 
 3. Run the following commands:
+
 ```{.sh}
 cd $HOME/osmosis
 git pull
