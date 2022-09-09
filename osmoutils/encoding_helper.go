@@ -1,10 +1,15 @@
 package osmoutils
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func FormatFixedLengthU64(d uint64) string {
+	return fmt.Sprintf("%0.20d", d)
+}
 
 func FormatTimeString(t time.Time) string {
 	return t.UTC().Round(0).Format(sdk.SortableTimeFormat)

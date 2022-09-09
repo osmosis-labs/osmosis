@@ -86,6 +86,26 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 			poolId:          1,
 			expectedRecords: []types.TwapRecord{baseRecord},
 		},
+		"lexicographic fooling pool Ids": {
+			recordsToSet: []types.TwapRecord{
+				withPoolId(baseRecord, 1),
+				withPoolId(baseRecord, 2),
+				withPoolId(baseRecord, 10),
+				withPoolId(baseRecord, 11),
+				withPoolId(baseRecord, 20)},
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord},
+		},
+		"lexicographic fooling pool Ids, with carry": {
+			recordsToSet: []types.TwapRecord{
+				withPoolId(baseRecord, 9),
+				withPoolId(baseRecord, 10),
+				withPoolId(baseRecord, 11),
+				withPoolId(baseRecord, 19),
+				withPoolId(baseRecord, 90)},
+			poolId:          9,
+			expectedRecords: []types.TwapRecord{withPoolId(baseRecord, 9)},
+		},
 		"set multi-asset pool record": {
 			recordsToSet: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),

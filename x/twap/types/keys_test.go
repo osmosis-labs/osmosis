@@ -17,8 +17,8 @@ func TestFormatMostRecentTWAPKey(t *testing.T) {
 		denom2 string
 		want   string
 	}{
-		"standard":       {poolId: 1, denom1: "B", denom2: "A", want: "recent_twap|1|B|A"},
-		"standard2digit": {poolId: 10, denom1: "B", denom2: "A", want: "recent_twap|10|B|A"},
+		"standard":       {poolId: 1, denom1: "B", denom2: "A", want: "recent_twap|00000000000000000001|B|A"},
+		"standard2digit": {poolId: 10, denom1: "B", denom2: "A", want: "recent_twap|00000000000000000010|B|A"},
 		"maxPoolId":      {poolId: ^uint64(0), denom1: "B", denom2: "A", want: "recent_twap|18446744073709551615|B|A"},
 	}
 	for name, tt := range tests {
