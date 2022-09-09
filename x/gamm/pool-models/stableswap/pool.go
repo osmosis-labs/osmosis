@@ -269,8 +269,8 @@ func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (n
 }
 
 // TODO: implement this
-func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
-	return sdk.ZeroInt(), err
+func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+	return sdk.ZeroInt(), sdk.NewCoins(), err
 }
 
 func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {

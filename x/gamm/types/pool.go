@@ -62,7 +62,7 @@ type PoolI interface {
 	// JoinPoolNoSwap joins the pool with an all-asset join using the maximum amount possible given the tokensIn provided.
 	// This function is mutative and updates the pool's internal state if there is no error.
 	// Pools are expected to guarantee LP'ing at the exact ratio.
-	JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error)
+	JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error)
 
 	// CalcJoinPoolShares returns how many LP shares JoinPool would return on these arguments.
 	// This does not mutate the pool, or state.

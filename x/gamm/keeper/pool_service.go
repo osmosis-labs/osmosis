@@ -236,7 +236,7 @@ func (k Keeper) JoinPoolNoSwap(
 		}
 	}
 
-	sharesOut, err = pool.JoinPoolNoSwap(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
+	sharesOut, tokensJoined, err := pool.JoinPoolNoSwap(ctx, neededLpLiquidity, pool.GetSwapFee(ctx))
 	if err != nil {
 		return nil, sdk.ZeroInt(), err
 	}
@@ -247,7 +247,7 @@ func (k Keeper) JoinPoolNoSwap(
 	}
 
 	err = k.applyJoinPoolStateChange(ctx, pool, sender, sharesOut, neededLpLiquidity)
-	return neededLpLiquidity, sharesOut, err
+	return tokensJoined, sharesOut, err
 }
 
 // getMaximalNoSwapLPAmount returns the coins(lp liquidity) needed to get the specified amount of shares in the pool.
