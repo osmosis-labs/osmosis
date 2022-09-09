@@ -1,5 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, Uint256};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -84,19 +84,19 @@ pub enum SudoMsg {
     SendPacket {
         channel_id: String,
         denom: String,
-        channel_value: u128,
-        funds: u128,
+        channel_value: Uint256,
+        funds: Uint256,
     },
     RecvPacket {
         channel_id: String,
         denom: String,
-        channel_value: u128,
-        funds: u128,
+        channel_value: Uint256,
+        funds: Uint256,
     },
     UndoSend {
         channel_id: String,
         denom: String,
-        funds: u128,
+        funds: Uint256,
     },
 }
 
