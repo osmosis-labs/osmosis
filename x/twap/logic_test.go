@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
+	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types/twapmock"
@@ -558,53 +559,57 @@ func (s *TestSuite) TestUpdateRecords() {
 		expectedHistoricalRecords []expectedRecords
 		expectError               error
 	}{
-		// "no records pre-set; no-op": {
-		// 	preSetRecords: []types.TwapRecord{},
-		// 	poolId:        1,
-		// 	blockTime:     baseTime,
-		// },
-		// "existing records in different pool; no-op": {
-		// 	preSetRecords: []types.TwapRecord{baseRecord},
-		// 	poolId:        baseRecord.PoolId + 1,
-		// 	blockTime:     baseTime.Add(time.Second),
-		// },
-		// "two-asset; pre-set record at t; updated valid spot price": {
-		// 	preSetRecords: []types.TwapRecord{baseRecord},
-		// 	poolId:        baseRecord.PoolId,
-		// 	blockTime:     baseRecord.Time.Add(time.Second),
+		"no records pre-set; error": {
+			preSetRecords: []types.TwapRecord{},
+			poolId:        1,
+			blockTime:     baseTime,
 
-		// 	spOverrides: []spOverride{
-		// 		{
-		// 			baseDenom:  baseRecord.Asset0Denom,
-		// 			quoteDenom: baseRecord.Asset1Denom,
-		// 			overrideSp: sdk.NewDec(2),
-		// 		},
-		// 		{
-		// 			baseDenom:  baseRecord.Asset1Denom,
-		// 			quoteDenom: baseRecord.Asset0Denom,
-		// 			overrideSp: sdk.NewDecWithPrec(2, 1),
-		// 		},
-		// 	},
+			expectError: gammtypes.PoolDoesNotExistErr{PoolId: 1},
+		},
+		"existing records in different pool; no-op": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId + 1,
+			blockTime:     baseTime.Add(time.Second),
 
-		// 	expectedMostRecentRecords: []expectedRecords{
-		// 		{
-		// 			spotPriceA: sdk.NewDec(2),
-		// 			spotPriceB: sdk.NewDecWithPrec(2, 1),
-		// 		},
-		// 	},
-		// 	expectedHistoricalRecords: []expectedRecords{
-		// 		// The original record.
-		// 		{
-		// 			spotPriceA: baseRecord.P0LastSpotPrice,
-		// 			spotPriceB: baseRecord.P1LastSpotPrice,
-		// 		},
-		// 		// The new record added.
-		// 		{
-		// 			spotPriceA: sdk.NewDec(2),
-		// 			spotPriceB: sdk.NewDecWithPrec(2, 1),
-		// 		},
-		// 	},
-		// },
+			expectError: gammtypes.PoolDoesNotExistErr{PoolId: baseRecord.PoolId + 1},
+		},
+		"two-asset; pre-set record at t; updated valid spot price": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId,
+			blockTime:     baseRecord.Time.Add(time.Second),
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.NewDec(2),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.NewDecWithPrec(2, 1),
+				},
+			},
+
+			expectedMostRecentRecords: []expectedRecords{
+				{
+					spotPriceA: sdk.NewDec(2),
+					spotPriceB: sdk.NewDecWithPrec(2, 1),
+				},
+			},
+			expectedHistoricalRecords: []expectedRecords{
+				// The original record.
+				{
+					spotPriceA: baseRecord.P0LastSpotPrice,
+					spotPriceB: baseRecord.P1LastSpotPrice,
+				},
+				// The new record added.
+				{
+					spotPriceA: sdk.NewDec(2),
+					spotPriceB: sdk.NewDecWithPrec(2, 1),
+				},
+			},
+		},
 		"two-asset; pre-set record at t; updated with spot price error in both denom pairs": {
 			preSetRecords: []types.TwapRecord{baseRecord},
 			poolId:        baseRecord.PoolId,
@@ -731,7 +736,8 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 		},
-		// This case should never happen since
+		// This case should never happen in-practice since ctx.BlockTime
+		// should always be greater than the last record's time.
 		"two-asset; pre-set at t and t + 1, new record inserted between existing": {
 			preSetRecords: []types.TwapRecord{baseRecord, tPlus10sp5Record},
 			poolId:        baseRecord.PoolId,
@@ -765,6 +771,8 @@ func (s *TestSuite) TestUpdateRecords() {
 					spotPriceB: baseRecord.P1LastSpotPrice,
 				},
 				// The new record added.
+				// TODO: it should not be possible to add a record between existing records.
+				// https://github.com/osmosis-labs/osmosis/issues/2686
 				{
 					spotPriceA: sdk.OneDec(),
 					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
@@ -776,11 +784,9 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 		},
-		// "multi-asset pool; pre-set at t; updates spot price":                                                  {},
-		// "multi-asset pool; pre-set at t and t + 1; updates spot price for latest only":                        {},
-		// "multi-asset pool; pre-set at t and t + 1; both valid; updates with spot price error":                 {},
-		// "multi-asset pool; pre-set at t and t + 1; both with spot price error; updates with spot price error": {},
-		// "multi-asset pool; pre-set at t and t + 1; both with spot price error; updates with valid spot price": {},
+		// TODO: complete multi-asset pool tests:
+		// "multi-asset pool; pre-set at t and t + 1; creates new records": {},
+		// "multi-asset pool; pre-set at t and t + 1; pre-existing records with error, overwrites erorr time":                        {},
 	}
 
 	for name, tc := range tests {
@@ -806,6 +812,8 @@ func (s *TestSuite) TestUpdateRecords() {
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectError)
+				return
 			}
 
 			s.Require().NoError(err)
