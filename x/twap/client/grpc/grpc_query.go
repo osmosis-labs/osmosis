@@ -38,3 +38,12 @@ func (q Querier) GetArithmeticTwapToNow(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.GetArithmeticTwapToNow(ctx, *req)
 }
+func (q Querier) Params(grpcCtx context.Context,
+	req *queryproto.ParamsRequest,
+) (*queryproto.ParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.Params(ctx, *req)
+}
