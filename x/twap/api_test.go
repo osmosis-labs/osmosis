@@ -74,7 +74,7 @@ func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
 			actualRecord, err := s.twapkeeper.GetBeginBlockAccumulatorRecord(s.Ctx, tc.poolId, tc.baseDenom, tc.quoteDenom)
 
 			if tc.expError != nil {
-				s.Require().Equal(tc.expError, err)
+				s.Require().ErrorContains(err, fmt.Sprintf("%s", tc.expError))
 				return
 			}
 

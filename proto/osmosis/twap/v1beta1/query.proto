@@ -3,6 +3,7 @@ package osmosis.twap.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "osmosis/twap/v1beta1/twap_record.proto";
+import "osmosis/twap/v1beta1/genesis.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
@@ -14,6 +15,9 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto";
 
 service Query {
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/osmosis/twap/v1beta1/Params";
+  }
   rpc GetArithmeticTwap(GetArithmeticTwapRequest)
       returns (GetArithmeticTwapResponse) {
     option (google.api.http).get = "/osmosis/twap/v1beta1/GetArithmeticTwap";
@@ -65,3 +69,6 @@ message GetArithmeticTwapToNowResponse {
     (gogoproto.nullable) = false
   ];
 }
+
+message ParamsRequest {}
+message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }

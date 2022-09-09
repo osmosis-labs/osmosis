@@ -123,4 +123,4 @@ jobs:
             BASE_IMG_TAG=debug
       -
         name: Test e2e and Upgrade
-        run: make test-e2e
+        run: make test-e2e-ci

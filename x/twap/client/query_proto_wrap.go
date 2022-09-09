@@ -32,3 +32,10 @@ func (q Querier) GetArithmeticTwapToNow(ctx sdk.Context,
 	twap, err := q.K.GetArithmeticTwapToNow(ctx, req.PoolId, req.BaseAsset, req.QuoteAsset, req.StartTime)
 	return &queryproto.GetArithmeticTwapToNowResponse{ArithmeticTwap: twap}, err
 }
+
+func (q Querier) Params(ctx sdk.Context,
+	req queryproto.ParamsRequest,
+) (*queryproto.ParamsResponse, error) {
+	params := q.K.GetParams(ctx)
+	return &queryproto.ParamsResponse{Params: params}, nil
+}
