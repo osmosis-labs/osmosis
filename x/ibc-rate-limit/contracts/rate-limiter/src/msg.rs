@@ -1,3 +1,4 @@
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -44,7 +45,7 @@ impl QuotaMsg {
 
 /// Initialize the contract with the address of the IBC module and any existing channels.
 /// Only the ibc module is allowed to execute actions on this contract
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[cw_serde]
 pub struct InstantiateMsg {
     pub gov_module: Addr,
     pub ibc_module: Addr,
@@ -53,8 +54,7 @@ pub struct InstantiateMsg {
 
 /// The caller (IBC module) is responsible for correctly calculating the funds
 /// being sent through the channel
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum ExecuteMsg {
     AddPath {
         channel_id: String,
@@ -72,14 +72,14 @@ pub enum ExecuteMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
+#[derive(QueryResponses)]
 pub enum QueryMsg {
+    #[returns(Vec<crate::state::RateLimit>)]
     GetQuotas { channel_id: String, denom: String },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum SudoMsg {
     SendPacket {
         channel_id: String,
@@ -100,6 +100,5 @@ pub enum SudoMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
+#[cw_serde]
 pub enum MigrateMsg {}
