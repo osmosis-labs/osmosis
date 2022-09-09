@@ -523,13 +523,16 @@ func (s *TestSuite) TestPruneRecords() {
 	s.validateExpectedRecords(expectedKeptRecords)
 }
 
-// TestUpdateRecords tests that the records are updated correctly for:
+// TestUpdateRecords tests that the records are updated correctly.
+// It tests the following:
 // - two-asset pools
 // - multi-asset pools
 // - with spot price errors
 // - without spot price errors
-// - that only the most recent records get updated
+// - that new records are created
 // - older historical records are not updated
+// - spot price errot times are either propagated from
+// older records or set to current block time in case error occurred.
 func (s *TestSuite) TestUpdateRecords() {
 
 	type spOverride struct {
@@ -540,13 +543,22 @@ func (s *TestSuite) TestUpdateRecords() {
 		overrideErr error
 	}
 
-	type expectedRecords struct {
+	type expectedResults struct {
 		spotPriceA    sdk.Dec
 		spotPriceB    sdk.Dec
 		lastErrorTime time.Time
 	}
 
 	var spError = errors.New("spot price error")
+
+	validateRecords := func(expectedRecords []expectedResults, actualRecords []types.TwapRecord) {
+		s.Require().Equal(len(expectedRecords), len(actualRecords))
+		for i, r := range expectedRecords {
+			s.Require().Equal(r.spotPriceA, actualRecords[i].P0LastSpotPrice, "record %d", i)
+			s.Require().Equal(r.spotPriceB, actualRecords[i].P1LastSpotPrice, "record %d", i)
+			s.Require().Equal(r.lastErrorTime, actualRecords[i].LastErrorTime, "record %d", i)
+		}
+	}
 
 	tests := map[string]struct {
 		preSetRecords []types.TwapRecord
@@ -555,8 +567,8 @@ func (s *TestSuite) TestUpdateRecords() {
 		spOverrides   []spOverride
 		blockTime     time.Time
 
-		expectedMostRecentRecords []expectedRecords
-		expectedHistoricalRecords []expectedRecords
+		expectedMostRecentRecords []expectedResults
+		expectedHistoricalRecords []expectedResults
 		expectError               error
 	}{
 		"no records pre-set; error": {
@@ -591,13 +603,13 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedRecords{
+			expectedMostRecentRecords: []expectedResults{
 				{
 					spotPriceA: sdk.NewDec(2),
 					spotPriceB: sdk.NewDecWithPrec(2, 1),
 				},
 			},
-			expectedHistoricalRecords: []expectedRecords{
+			expectedHistoricalRecords: []expectedResults{
 				// The original record.
 				{
 					spotPriceA: baseRecord.P0LastSpotPrice,
@@ -629,15 +641,14 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedRecords{
+			expectedMostRecentRecords: []expectedResults{
 				{
 					spotPriceA:    sdk.ZeroDec(),
 					spotPriceB:    sdk.ZeroDec(),
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 				},
 			},
-
-			expectedHistoricalRecords: []expectedRecords{
+			expectedHistoricalRecords: []expectedResults{
 				// The original record.
 				{
 					spotPriceA: baseRecord.P0LastSpotPrice,
@@ -670,15 +681,14 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedRecords{
+			expectedMostRecentRecords: []expectedResults{
 				{
 					spotPriceA:    sdk.OneDec(),
 					spotPriceB:    types.MaxSpotPrice,               // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 				},
 			},
-
-			expectedHistoricalRecords: []expectedRecords{
+			expectedHistoricalRecords: []expectedResults{
 				// The original record.
 				{
 					spotPriceA: baseRecord.P0LastSpotPrice,
@@ -710,14 +720,14 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedRecords{
+			expectedMostRecentRecords: []expectedResults{
 				{
 					spotPriceA:    sdk.OneDec(),
 					spotPriceB:    sdk.OneDec(),
 					lastErrorTime: baseRecord.Time,
 				},
 			},
-			expectedHistoricalRecords: []expectedRecords{
+			expectedHistoricalRecords: []expectedResults{
 				// The original record.
 				{
 					spotPriceA:    baseRecord.P0LastSpotPrice,
@@ -750,14 +760,14 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedRecords{
+			expectedMostRecentRecords: []expectedResults{
 				{
 					spotPriceA:    sdk.ZeroDec(),
 					spotPriceB:    sdk.ZeroDec(),
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
 				},
 			},
-			expectedHistoricalRecords: []expectedRecords{
+			expectedHistoricalRecords: []expectedResults{
 				// The original record.
 				{
 					spotPriceA:    baseRecord.P0LastSpotPrice,
@@ -791,14 +801,13 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedRecords{
+			expectedMostRecentRecords: []expectedResults{
 				{
 					spotPriceA: sdk.OneDec(),
 					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
 				},
 			},
-
-			expectedHistoricalRecords: []expectedRecords{
+			expectedHistoricalRecords: []expectedResults{
 				// The original record at t.
 				{
 					spotPriceA: baseRecord.P0LastSpotPrice,
@@ -837,14 +846,13 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedRecords{
+			expectedMostRecentRecords: []expectedResults{
 				{
 					spotPriceA: sdk.OneDec(),
 					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
 				},
 			},
-
-			expectedHistoricalRecords: []expectedRecords{
+			expectedHistoricalRecords: []expectedResults{
 				// The original record at t.
 				{
 					spotPriceA: baseRecord.P0LastSpotPrice,
@@ -899,20 +907,12 @@ func (s *TestSuite) TestUpdateRecords() {
 			s.Require().NoError(err)
 
 			poolMostRecentRecords, err := twapKeeper.GetAllMostRecentRecordsForPool(ctx, tc.poolId)
-			s.Require().Equal(len(tc.expectedMostRecentRecords), len(poolMostRecentRecords))
-			for i, r := range tc.expectedMostRecentRecords {
-				s.Require().Equal(r.spotPriceA, poolMostRecentRecords[i].P0LastSpotPrice, "most recent record %d", i)
-				s.Require().Equal(r.spotPriceB, poolMostRecentRecords[i].P1LastSpotPrice, "most recent record %d", i)
-				s.Require().Equal(r.lastErrorTime, poolMostRecentRecords[i].LastErrorTime, "most recent record %d", i)
-			}
+			s.Require().NoError(err)
+			validateRecords(tc.expectedMostRecentRecords, poolMostRecentRecords)
 
 			poolHistoricalRecords := s.getAllHistoricalRecordsForPool(tc.poolId)
-			s.Require().Equal(len(tc.expectedHistoricalRecords), len(poolHistoricalRecords))
-			for i, r := range poolHistoricalRecords {
-				s.Require().Equal(tc.expectedHistoricalRecords[i].spotPriceA, r.P0LastSpotPrice, "historical record %d", i)
-				s.Require().Equal(tc.expectedHistoricalRecords[i].spotPriceB, r.P1LastSpotPrice, "historical record %d", i)
-				s.Require().Equal(tc.expectedHistoricalRecords[i].lastErrorTime, r.LastErrorTime, "historical record %d", i)
-			}
+			s.Require().NoError(err)
+			validateRecords(tc.expectedHistoricalRecords, poolHistoricalRecords)
 		})
 	}
 }
