@@ -43,15 +43,16 @@ func getSpotPrices(ctx sdk.Context, k types.AmmInterface, poolId uint64, denom0,
 	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
 	if err0 != nil || err1 != nil {
 		latestErrTime = ctx.BlockTime()
-	}
-	// In the event of an error, we just sanity replace empty values with zero values
-	// so that the numbers can be still be calculated within TWAPs over error values
-	// TODO: Should we be using the last spot price?
-	if err0 != nil {
-		sp0 = sdk.ZeroDec()
-	}
-	if err1 != nil {
-		sp1 = sdk.ZeroDec()
+
+		// In the event of an error, we just sanity replace empty values with zero values
+		// so that the numbers can be still be calculated within TWAPs over error values
+		// TODO: Should we be using the last spot price?
+		if (sp0 == sdk.Dec{}) {
+			sp0 = sdk.ZeroDec()
+		}
+		if (sp1 == sdk.Dec{}) {
+			sp1 = sdk.ZeroDec()
+		}
 	}
 	if sp0.GT(types.MaxSpotPrice) {
 		sp0, latestErrTime = types.MaxSpotPrice, ctx.BlockTime()
