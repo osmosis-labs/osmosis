@@ -3,6 +3,7 @@ package ibc_rate_limit_test
 import (
 	"encoding/json"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strconv"
 	"strings"
 	"testing"
@@ -106,6 +107,24 @@ func (suite *MiddlewareTestSuite) NewValidMessage(forward bool, amount sdk.Int) 
 	)
 }
 
+// Tests that a receiver address longer than 4096 is not accepted
+func (suite *MiddlewareTestSuite) TestInvalidReceiver() {
+	msg := transfertypes.NewMsgTransfer(
+		suite.path.EndpointB.ChannelConfig.PortID,
+		suite.path.EndpointB.ChannelID,
+		sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)),
+		suite.chainB.SenderAccount.GetAddress().String(),
+		strings.Repeat("x", 4097),
+		clienttypes.NewHeight(0, 100),
+		0,
+	)
+	ack, _ := suite.ExecuteReceive(msg)
+	suite.Require().Contains(string(ack), "error",
+		"acknoledgment is not an error")
+	suite.Require().Contains(string(ack), sdkerrors.ErrInvalidAddress.Error(),
+		"acknoledgment error is not of the right type")
+}
+
 func (suite *MiddlewareTestSuite) ExecuteReceive(msg sdk.Msg) (string, error) {
 	res, err := suite.chainB.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err)
@@ -132,7 +151,7 @@ func (suite *MiddlewareTestSuite) AssertReceive(success bool, msg sdk.Msg) (stri
 	} else {
 		suite.Require().Contains(string(ack), "error",
 			"acknoledgment is not an error")
-		suite.Require().Contains(string(ack), types.RateLimitExceededMsg,
+		suite.Require().Contains(string(ack), types.ErrRateLimitExceeded.Error(),
 			"acknoledgment error is not of the right type")
 	}
 	return ack, err
@@ -144,7 +163,7 @@ func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Re
 		suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 	} else {
 		suite.Require().Error(err, "IBC send succeeded. Expected failure")
-		suite.ErrorContains(err, types.RateLimitExceededMsg, "Bad error type")
+		suite.ErrorContains(err, types.ErrRateLimitExceeded.Error(), "Bad error type")
 	}
 	return r, err
 }
