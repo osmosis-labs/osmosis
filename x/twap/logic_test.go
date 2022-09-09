@@ -576,14 +576,14 @@ func (s *TestSuite) TestUpdateRecords() {
 			poolId:        1,
 			blockTime:     baseTime,
 
-			expectError: gammtypes.PoolDoesNotExistErr{PoolId: 1},
+			expectError: gammtypes.PoolDoesNotExistError{PoolId: 1},
 		},
 		"existing records in different pool; no-op": {
 			preSetRecords: []types.TwapRecord{baseRecord},
 			poolId:        baseRecord.PoolId + 1,
 			blockTime:     baseTime.Add(time.Second),
 
-			expectError: gammtypes.PoolDoesNotExistErr{PoolId: baseRecord.PoolId + 1},
+			expectError: gammtypes.PoolDoesNotExistError{PoolId: baseRecord.PoolId + 1},
 		},
 		"the returned number of records does not match expected": {
 			preSetRecords: []types.TwapRecord{baseRecord},
