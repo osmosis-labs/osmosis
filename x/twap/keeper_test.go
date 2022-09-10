@@ -467,7 +467,7 @@ func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
 	}
 }
 
-func newTapRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC sdk.Dec) []types.TwapRecord {
+func newThreeAssetRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC sdk.Dec) []types.TwapRecord {
 	spA := sp0
 	spB := sdk.OneDec().Quo(sp0)
 	spC := sp0.Mul(sdk.NewDec(2))
@@ -494,7 +494,7 @@ func newTapRecord(poolId uint64, t time.Time, sp0, accumA, accumB, accumC sdk.De
 }
 
 // make an expected record for math tests, we adjust other values in the test runner.
-func newTapExpRecord(poolId uint64, accumA, accumB, accumC sdk.Dec) []types.TwapRecord {
+func newThreeAssetExpRecord(poolId uint64, accumA, accumB, accumC sdk.Dec) []types.TwapRecord {
 	twapAB := types.TwapRecord{
 		PoolId:      poolId,
 		Asset0Denom: defaultThreeAssetCoins[0].Denom,
@@ -524,7 +524,7 @@ func newOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) types.TwapReco
 	return record
 }
 
-func newTapOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []types.TwapRecord {
+func newThreeAssetOneSidedRecord(time time.Time, accum sdk.Dec, useP0 bool) []types.TwapRecord {
 	record := types.TwapRecord{Time: time, Asset0Denom: denom0, Asset1Denom: denom1}
 	if useP0 {
 		record.P0ArithmeticTwapAccumulator = accum

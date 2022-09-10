@@ -221,19 +221,19 @@ func TestRecordWithUpdatedAccumulators_ThreeAsset(t *testing.T) {
 		expRecord       []types.TwapRecord
 	}{
 		"accum with zero value": {
-			record:          newTapRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), zeroDec, zeroDec, zeroDec),
 			interpolateTime: time.Unix(2, 0),
-			expRecord:       newTapExpRecord(poolId, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.MulInt64(20)),
+			expRecord:       newThreeAssetExpRecord(poolId, OneSec.MulInt64(10), OneSec.QuoInt64(10), OneSec.MulInt64(20)),
 		},
 		"small starting accumulators": {
-			record:          newTapRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), twoDec, oneDec, twoDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(1, 0), sdk.NewDec(10), twoDec, oneDec, twoDec),
 			interpolateTime: time.Unix(2, 0),
-			expRecord:       newTapExpRecord(poolId, twoDec.Add(OneSec.MulInt64(10)), oneDec.Add(OneSec.QuoInt64(10)), twoDec.Add(OneSec.MulInt64(20))),
+			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(10)), oneDec.Add(OneSec.QuoInt64(10)), twoDec.Add(OneSec.MulInt64(20))),
 		},
 		"larger time interval": {
-			record:          newTapRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), twoDec, oneDec, twoDec),
+			record:          newThreeAssetRecord(poolId, time.Unix(11, 0), sdk.NewDec(10), twoDec, oneDec, twoDec),
 			interpolateTime: time.Unix(55, 0),
-			expRecord:       newTapExpRecord(poolId, twoDec.Add(OneSec.MulInt64(44*10)), oneDec.Add(OneSec.MulInt64(44).QuoInt64(10)), twoDec.Add(OneSec.MulInt64(44*20))),
+			expRecord:       newThreeAssetExpRecord(poolId, twoDec.Add(OneSec.MulInt64(44*10)), oneDec.Add(OneSec.MulInt64(44).QuoInt64(10)), twoDec.Add(OneSec.MulInt64(44*20))),
 		},
 	}
 
@@ -333,7 +333,7 @@ func (s *TestSuite) TestGetInterpolatedRecord() {
 }
 
 func (s *TestSuite) TestGetInterpolatedRecord_ThreeAsset() {
-	baseRecord := newTapRecord(2, baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	baseRecord := newThreeAssetRecord(2, baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
 		recordsToPreSet       []types.TwapRecord
@@ -407,7 +407,7 @@ type computeArithmeticTwapTestCase struct {
 	expErr      bool
 }
 
-type computeTapArithmeticTwapTestCase struct {
+type computeThreeAssetArithmeticTwapTestCase struct {
 	startRecord []types.TwapRecord
 	endRecord   []types.TwapRecord
 	quoteAsset  []string
@@ -494,10 +494,10 @@ func TestComputeArithmeticTwap(t *testing.T) {
 }
 
 func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
-	testTapCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeTapArithmeticTwapTestCase {
-		return computeTapArithmeticTwapTestCase{
-			newTapOneSidedRecord(baseTime, startAccum, true),
-			newTapOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
+	testThreeAssetCaseFromDeltas := func(startAccum, accumDiff sdk.Dec, timeDelta time.Duration, expectedTwap sdk.Dec) computeThreeAssetArithmeticTwapTestCase {
+		return computeThreeAssetArithmeticTwapTestCase{
+			newThreeAssetOneSidedRecord(baseTime, startAccum, true),
+			newThreeAssetOneSidedRecord(baseTime.Add(timeDelta), startAccum.Add(accumDiff), true),
 			[]string{denom0, denom0, denom1},
 			[]sdk.Dec{expectedTwap, expectedTwap, expectedTwap},
 			false,
@@ -506,26 +506,26 @@ func TestComputeArithmeticTwap_ThreeAsset(t *testing.T) {
 
 	tenSecAccum := OneSec.MulInt64(10)
 	pointOneAccum := OneSec.QuoInt64(10)
-	tests := map[string]computeTapArithmeticTwapTestCase{
+	tests := map[string]computeThreeAssetArithmeticTwapTestCase{
 		"three asset basic: spot price = 1 for one second, 0 init accumulator": {
-			startRecord: newTapOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newTapOneSidedRecord(tPlusOne, OneSec, true),
+			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newThreeAssetOneSidedRecord(tPlusOne, OneSec, true),
 			quoteAsset:  []string{denom0, denom0, denom1},
 			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
 		},
 		"three asset same record: asset1, end spot price = 1": {
-			startRecord: newTapOneSidedRecord(baseTime, sdk.ZeroDec(), true),
-			endRecord:   newTapOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			startRecord: newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
+			endRecord:   newThreeAssetOneSidedRecord(baseTime, sdk.ZeroDec(), true),
 			quoteAsset:  []string{denom1, denom2, denom2},
 			expTwap:     []sdk.Dec{sdk.OneDec(), sdk.OneDec(), sdk.OneDec()},
 		},
-		"three asset. accumulator = 10*OneSec, t=5s. 0 base accum": testTapCaseFromDeltas(
+		"three asset. accumulator = 10*OneSec, t=5s. 0 base accum": testThreeAssetCaseFromDeltas(
 			sdk.ZeroDec(), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
 
 		// test that base accum has no impact
-		"three asset. accumulator = 10*OneSec, t=5s. 10 base accum": testTapCaseFromDeltas(
+		"three asset. accumulator = 10*OneSec, t=5s. 10 base accum": testThreeAssetCaseFromDeltas(
 			sdk.NewDec(10), tenSecAccum, 5*time.Second, sdk.NewDec(2)),
-		"three asset. accumulator = 10*OneSec, t=100s. .1*second base accum": testTapCaseFromDeltas(
+		"three asset. accumulator = 10*OneSec, t=100s. .1*second base accum": testThreeAssetCaseFromDeltas(
 			pointOneAccum, tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
 	}
 	for name, test := range tests {
