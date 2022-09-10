@@ -48,7 +48,10 @@ var (
 	// t = baseTime + 20
 	// spA = 2, spB = 0.5, spC = 4
 	tPlus20sp2Record = newTwapRecordWithDefaults(
-		baseTime.Add(20*time.Second), sdk.NewDec(2), OneSec.MulInt64(10*10+5*10), OneSec.MulInt64(3))
+		baseTime.Add(20*time.Second),
+		sdk.NewDec(2),               // spot price 0
+		OneSec.MulInt64(10*10+5*10), // accum A
+		OneSec.MulInt64(3))          // accum B
 
 	tPlus20sp2TapRecordAB, tPlus20sp2TapRecordAC, tPlus20sp2TapRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime.Add(20*time.Second), sdk.NewDec(2), OneSec.MulInt64(10*10+5*10), OneSec.MulInt64(3), OneSec.MulInt64(20*10+10*10))
