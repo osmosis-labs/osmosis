@@ -124,9 +124,11 @@ type getTwapInput struct {
 }
 
 func makeSimpleTwapInput(startTime time.Time, endTime time.Time, isQuoteTokenA bool) getTwapInput {
-	var twapInput []getTwapInput
-	formatSimpleTwapInput(twapInput, startTime, endTime, isQuoteTokenA, denom0, denom1, 1)
-	return twapInput[0]
+	quoteAssetDenom, baseAssetDenom := denom0, denom1
+	if isQuoteTokenA {
+		baseAssetDenom, quoteAssetDenom = quoteAssetDenom, baseAssetDenom
+	}
+	return getTwapInput{1, quoteAssetDenom, baseAssetDenom, startTime, endTime}
 }
 
 func makeSimpleTapTwapInput(startTime time.Time, endTime time.Time, baseQuoteAB, baseQuoteCA, baseQuoteBC bool) []getTwapInput {

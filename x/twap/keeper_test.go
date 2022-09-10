@@ -359,6 +359,9 @@ func (s *TestSuite) createTestRecordsFromTimeInPool(t time.Time, poolId uint64) 
 	return min2SecRecord, min1SecRecord, baseRecord, plus1SecRecord
 }
 
+// newTwoAssetPoolTwapRecordWithDefaults creates a single twap records, mimicking what one would expect from a two asset pool.
+// given a spot price 0 (sp0), this spot price is assigned to denomA and sp0 is then created and assigned to denomB by
+// calculating (1 / spA).
 func newTwoAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
 		PoolId:      1,
@@ -373,6 +376,9 @@ func newTwoAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.
 	}
 }
 
+// newThreeAssetPoolTwapRecordWithDefaults creates three twap records, mimicking what one would expect from a three asset pool.
+// given a spot price 0 (sp0), this spot price is assigned to denomA and referred to as spA. spB is then created and assigned by
+// calculating (1 / spA). Finally spC is created and assigned by calculating (2 * spA).
 func newThreeAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accumA, accumB, accumC sdk.Dec) (types.TwapRecord, types.TwapRecord, types.TwapRecord) {
 	spA := sp0
 	spB := sdk.OneDec().Quo(sp0)
