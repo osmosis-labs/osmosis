@@ -78,7 +78,7 @@ func (k Keeper) GetArithmeticTwapToNow(
 	return computeArithmeticTwap(startRecord, endRecord, quoteAssetDenom)
 }
 
-// GetCurrentAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
+// GetBeginBlockAccumulatorRecord returns a TwapRecord struct corresponding to the state of pool `poolId`
 // as of the beginning of the block this is called on.
 // This uses the state of the beginning of the block, as if there were swaps since the block has started,
 // these swaps have had no time to be arbitraged back.
