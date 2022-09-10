@@ -24,7 +24,11 @@ var (
 	baseRecord types.TwapRecord = newTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
 
 	tapRecordAB, tapRecordAC, tapRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
-		baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+		baseTime,
+		sdk.NewDec(10), // spot price 0
+		sdk.ZeroDec(),  // accum A
+		sdk.ZeroDec(),  // accum B
+		sdk.ZeroDec())  // accum C
 
 	// accumA = 10 seconds * (spot price = 10) = OneSec * 10 * 10
 	// accumB = 10 seconds * (spot price = 0.1) = OneSec
