@@ -3,7 +3,7 @@ package wasmbinding
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"testing"
 
@@ -299,7 +299,7 @@ func assertValidShares(t *testing.T, shares wasmvmtypes.Coin, poolID uint64) {
 
 func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
 	govKeeper := osmosis.GovKeeper
-	wasmCode, err := ioutil.ReadFile("../testdata/osmo_reflect.wasm")
+	wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
 	require.NoError(t, err)
 
 	src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
