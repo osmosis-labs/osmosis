@@ -372,7 +372,7 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountOut() {
 				},
 			},
 			expectErr: false,
-			result:    sdk.NewInt(312413),
+			result:    sdk.NewInt(322486),
 		},
 		{
 			name: "one route",
@@ -387,7 +387,7 @@ func (suite *KeeperTestSuite) TestEstimateSwapExactAmountOut() {
 				},
 			},
 			expectErr: false,
-			result:    sdk.NewInt(312413),
+			result:    sdk.NewInt(322486),
 		},
 	}
 
