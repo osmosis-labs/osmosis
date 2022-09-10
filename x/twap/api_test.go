@@ -21,7 +21,7 @@ var (
 	ThreePlusOneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
 
 	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
-	baseRecord types.TwapRecord = newTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
+	baseRecord types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
 
 	tapRecordAB, tapRecordAC, tapRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime,
@@ -38,7 +38,7 @@ var (
 	// accumulators updated from baseRecord with
 	// t = baseTime + 10
 	// spA = 5, spB = 0.2, spC = 10
-	tPlus10sp5Record = newTwapRecordWithDefaults(
+	tPlus10sp5Record = newTwoAssetPoolTwapRecordWithDefaults(
 		baseTime.Add(10*time.Second), sdk.NewDec(5), accumA, accumB)
 
 	tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
@@ -387,7 +387,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		periodBetweenBaseAndOneHourBeforeThreshold           = (defaultRecordHistoryKeepPeriod.Milliseconds() - time.Hour.Milliseconds())
 		accumBeforeKeepThreshold0, accumBeforeKeepThreshold1 = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10)
 		// recordBeforeKeepThreshold is a record with t=baseTime+keepPeriod-1h, sp0=30(sp1=0.3) accumulators set relative to baseRecord
-		recordBeforeKeepThreshold types.TwapRecord = newTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1)
+		recordBeforeKeepThreshold types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1)
 	)
 
 	// N.B.: when ctxTime = end time, we trigger the "TWAP to now path".

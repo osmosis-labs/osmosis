@@ -359,7 +359,7 @@ func (s *TestSuite) createTestRecordsFromTimeInPool(t time.Time, poolId uint64) 
 	return min2SecRecord, min1SecRecord, baseRecord, plus1SecRecord
 }
 
-func newTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
+func newTwoAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
 		PoolId:      1,
 		Time:        t,
