@@ -7,6 +7,7 @@ import (
 	"time"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +17,6 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"google.golang.org/protobuf/runtime/protoiface"
 
 	"github.com/osmosis-labs/osmosis/v12/app"
 	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
@@ -84,7 +84,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				// fund account to recieve non-empty response
 				simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
 
-				wasmbinding.StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
+				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
 			},
 			path: "/cosmos.bank.v1beta1.Query/AllBalances",
 			requestData: func() []byte {
@@ -106,7 +106,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				// fund account to recieve non-empty response
 				simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
 
-				wasmbinding.StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
+				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
 			},
 			path: "/cosmos.bank.v1beta1.Query/AllBalances",
 			requestData: func() []byte {
@@ -123,7 +123,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		{
 			name: "invalid query router route",
 			testSetup: func() {
-				wasmbinding.StargateWhitelist.Store("invalid/query/router/route", epochtypes.QueryEpochsInfoRequest{})
+				wasmbinding.SetWhitelistedQuery("invalid/query/router/route", &epochtypes.QueryEpochsInfoRequest{})
 			},
 			path: "invalid/query/router/route",
 			requestData: func() []byte {
@@ -147,7 +147,8 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			name: "error in unmarshalling response",
 			// set up whitelist with wrong data
 			testSetup: func() {
-				wasmbinding.StargateWhitelist.Store("/osmosis.epochs.v1beta1.Query/EpochInfos", interface{}(nil))
+				wasmbinding.SetWhitelistedQuery("/osmosis.epochs.v1beta1.Query/EpochInfos",
+					&banktypes.QueryAllBalancesResponse{})
 			},
 			path: "/osmosis.epochs.v1beta1.Query/EpochInfos",
 			requestData: func() []byte {
@@ -160,7 +161,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			name: "error in grpc querier",
 			// set up whitelist with wrong data
 			testSetup: func() {
-				wasmbinding.StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/AllBalances", banktypes.QueryAllBalancesRequest{})
+				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesRequest{})
 			},
 			path: "/cosmos.bank.v1beta1.Query/AllBalances",
 			requestData: func() []byte {
@@ -191,20 +192,20 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			if tc.expectedQuerierError {
 				suite.Require().Error(err)
 				return
+			}
+
+			suite.Require().NoError(err)
+
+			protoResponse, ok := tc.responseProtoStruct.(proto.Message)
+			suite.Require().True(ok)
+
+			// test correctness by unmarshalling json response into proto struct
+			err = suite.app.AppCodec().UnmarshalJSON(stargateResponse, protoResponse)
+			if tc.expectedUnMarshalError {
+				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
-
-				protoResponse, ok := tc.responseProtoStruct.(proto.Message)
-				suite.Require().True(ok)
-
-				// test correctness by unmarshalling json response into proto struct
-				err = suite.app.AppCodec().UnmarshalJSON(stargateResponse, protoResponse)
-				if tc.expectedUnMarshalError {
-					suite.Require().Error(err)
-				} else {
-					suite.Require().NoError(err)
-					suite.Require().NotNil(protoResponse)
-				}
+				suite.Require().NotNil(protoResponse)
 			}
 
 			if tc.resendRequest {
@@ -225,9 +226,9 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 	testCases := []struct {
 		name                  string
 		queryPath             string
-		protoResponseStruct   proto.Message
+		protoResponseStruct   codec.ProtoMarshaler
 		originalResponse      string
-		expectedProtoResponse proto.Message
+		expectedProtoResponse codec.ProtoMarshaler
 		expectedError         bool
 	}{
 		{
@@ -246,7 +247,7 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 			name:                "invalid proto response struct",
 			queryPath:           "/cosmos.bank.v1beta1.Query/AllBalances",
 			originalResponse:    "0a090a036261721202333012050a03666f6f",
-			protoResponseStruct: protoiface.MessageV1(nil),
+			protoResponseStruct: &epochtypes.QueryCurrentEpochResponse{},
 			expectedError:       true,
 		},
 	}
@@ -317,7 +318,7 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 		{
 			"Query All Balances",
 			func() {
-				wasmbinding.StargateWhitelist.Store("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
+				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
 			},
 			"0a090a036261721202333012050a03666f6f",
 			"0a090a036261721202333012050a03666f6f1a2d636f736d6f73316a366a357473717571326a6c77326166376c3378656b796171377a67346c386a737566753738",
@@ -380,8 +381,8 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 				tc.testSetup()
 			}
 
-			binding, ok := wasmbinding.StargateWhitelist.Load(tc.queryPath)
-			suite.Require().True(ok)
+			binding, err := wasmbinding.GetWhitelistedQuery(tc.queryPath)
+			suite.Require().Nil(err)
 
 			originVersionBz, err := hex.DecodeString(tc.originalResponse)
 			suite.Require().NoError(err)

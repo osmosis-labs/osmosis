@@ -10,7 +10,6 @@ All validator nodes should upgrade to v10 prior to the network restarting. The v
 
 The coordination of restart will happen over Discord. In the event Discord is down, validators should form a Telegram group to further coordinate the network restart.
 
-
 ## Go Requirement
 
 You will need to be running go1.18 for this version of Osmosis. You can check if you are running go1.18 with the following command:
