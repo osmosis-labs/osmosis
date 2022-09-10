@@ -38,7 +38,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 
 // TestSuperfluidVoting tests that superfluid voting is functioning as expected.
 // It does so by doing the following:
-//- creating a pool
+// - creating a pool
 // - attempting to submit a proposal to enable superfluid voting in that pool
 // - voting yes on the proposal from the validator wallet
 // - voting no on the proposal from the delegator wallet
@@ -243,7 +243,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
 		stateSynchingNodeConfig,
 		time.Duration(chainA.VotingPeriod),
-		//time.Duration(chainA.ExpeditedVotingPeriod),
+		// time.Duration(chainA.ExpeditedVotingPeriod),
 		trustHeight,
 		trustHash,
 		stateSyncRPCServers,
