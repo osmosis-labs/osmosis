@@ -3,7 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -785,7 +785,7 @@ $ %s query lockup output-all-locks <max lock ID>
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile("lock_export.json", bz, 0o777)
+			err = os.WriteFile("lock_export.json", bz, 0o777)
 			if err != nil {
 				return err
 			}
