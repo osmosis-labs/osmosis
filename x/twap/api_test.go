@@ -338,7 +338,7 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 			// A 5 for 5s, 2 for 10s = 45/15 = 3
 			// C 10 for 5s, 4 for 10s = 140/15 = 6
 			// B .2 for 5s, .5 for 10s = 7/15 = .4
-			expTwap: []sdk.Dec{sdk.NewDec(3), sdk.NewDec(6), sdk.NewDecWithPrec(4, 1)}, // 5 for 5s, 2 for 10s = 45 / 15 = 3
+			expTwap: []sdk.Dec{sdk.NewDec(3), sdk.NewDec(6), sdk.NewDecWithPrec(4, 1)},
 		},
 	}
 	for name, test := range tests {
