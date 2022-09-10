@@ -261,7 +261,7 @@ func (s *TestSuite) TestPruneRecordsBeforeTimeButNewest() {
 
 			expectedKeptRecords: []types.TwapRecord{pool3BaseSecMin1Ms, pool3BaseSecBaseMs},
 		},
-		"base time - 1s - 2 ms; across pool 2; 12 records; 1 before lastKeptTime; none pruned since newest kept": {
+		"base time - 1s - 2 ms; across pool 2; 12 records; 3 before lastKeptTime; none pruned since newest kept": {
 			recordsToPreSet: []types.TwapRecord{
 				pool2Min1SMin2MsAB, pool2Min1SMin2MsAC, pool2Min1SMin2MsBC, // base time - 1s - 2ms; kept since at lastKeptTime
 				pool2Min1SMin1MsAB, pool2Min1SMin1MsAC, pool2Min1SMin1MsBC, // base time - 1s - 1ms; kept since older than at lastKeptTime
