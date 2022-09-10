@@ -20,23 +20,23 @@ type Querier struct {
 
 var _ queryproto.QueryServer = Querier{}
 
-func (q Querier) GetArithmeticTwap(grpcCtx context.Context,
-	req *queryproto.GetArithmeticTwapRequest,
-) (*queryproto.GetArithmeticTwapResponse, error) {
+func (q Querier) ArithmeticTwap(grpcCtx context.Context,
+	req *queryproto.ArithmeticTwapRequest,
+) (*queryproto.ArithmeticTwapResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.GetArithmeticTwap(ctx, *req)
+	return q.Q.ArithmeticTwap(ctx, *req)
 }
-func (q Querier) GetArithmeticTwapToNow(grpcCtx context.Context,
-	req *queryproto.GetArithmeticTwapToNowRequest,
-) (*queryproto.GetArithmeticTwapToNowResponse, error) {
+func (q Querier) ArithmeticTwapToNow(grpcCtx context.Context,
+	req *queryproto.ArithmeticTwapToNowRequest,
+) (*queryproto.ArithmeticTwapToNowResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.GetArithmeticTwapToNow(ctx, *req)
+	return q.Q.ArithmeticTwapToNow(ctx, *req)
 }
 func (q Querier) Params(grpcCtx context.Context,
 	req *queryproto.ParamsRequest,
