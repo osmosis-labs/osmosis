@@ -23,7 +23,7 @@ var (
 	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
 	baseRecord types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
 
-	tapRecordAB, tapRecordAC, tapRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
+	tapRecordAB, tapRecordAC, tapRecordBC types.TwapRecord = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime,
 		sdk.NewDec(10), // spot price 0
 		sdk.ZeroDec(),  // accum A
@@ -124,31 +124,25 @@ type getTwapInput struct {
 }
 
 func makeSimpleTwapInput(startTime time.Time, endTime time.Time, isQuoteTokenA bool) getTwapInput {
-	quoteAssetDenom, baseAssetDenom := denom0, denom1
-	if isQuoteTokenA {
-		baseAssetDenom, quoteAssetDenom = quoteAssetDenom, baseAssetDenom
-	}
-	return getTwapInput{1, quoteAssetDenom, baseAssetDenom, startTime, endTime}
+	var twapInput []getTwapInput
+	formatSimpleTwapInput(twapInput, startTime, endTime, isQuoteTokenA, denom0, denom1, 1)
+	return twapInput[0]
 }
 
 func makeSimpleTapTwapInput(startTime time.Time, endTime time.Time, baseQuoteAB, baseQuoteCA, baseQuoteBC bool) []getTwapInput {
 	var twapInput []getTwapInput
-	quoteAssetDenom, baseAssetDenom := denom0, denom1
+	formatSimpleTwapInput(twapInput, startTime, endTime, baseQuoteAB, denom0, denom1, 2)
+	formatSimpleTwapInput(twapInput, startTime, endTime, baseQuoteAB, denom2, denom0, 2)
+	formatSimpleTwapInput(twapInput, startTime, endTime, baseQuoteAB, denom1, denom2, 2)
+	return twapInput
+}
+
+func formatSimpleTwapInput(twapInput []getTwapInput, startTime time.Time, endTime time.Time, baseQuoteAB bool, denomA, denomB string, poolID uint64) {
+	quoteAssetDenom, baseAssetDenom := denomA, denomB
 	if baseQuoteAB {
 		baseAssetDenom, quoteAssetDenom = quoteAssetDenom, baseAssetDenom
 	}
-	twapInput = append(twapInput, getTwapInput{2, quoteAssetDenom, baseAssetDenom, startTime, endTime})
-	quoteAssetDenom, baseAssetDenom = denom2, denom0
-	if baseQuoteCA {
-		baseAssetDenom, quoteAssetDenom = quoteAssetDenom, baseAssetDenom
-	}
-	twapInput = append(twapInput, getTwapInput{2, quoteAssetDenom, baseAssetDenom, startTime, endTime})
-	quoteAssetDenom, baseAssetDenom = denom1, denom2
-	if baseQuoteBC {
-		baseAssetDenom, quoteAssetDenom = quoteAssetDenom, baseAssetDenom
-	}
-	twapInput = append(twapInput, getTwapInput{2, quoteAssetDenom, baseAssetDenom, startTime, endTime})
-	return twapInput
+	twapInput = append(twapInput, getTwapInput{poolID, quoteAssetDenom, baseAssetDenom, startTime, endTime})
 }
 
 // TestGetArithmeticTwap tests if we get the expected twap value from `GetArithmeticTwap`.
