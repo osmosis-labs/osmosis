@@ -691,7 +691,7 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 			// A 10 for 0s, 5 for 10s = 50/10 = 5
 			// C 20 for 0s, 10 for 10s = 100/10 = 10
 			// B .1 for 0s, .2 for 10s = 2/10 = 0.2
-			expTwap: []sdk.Dec{sdk.NewDec(5), sdk.NewDec(10), sdk.NewDecWithPrec(2, 1)}, // 10 for 0s, 5 for 10s
+			expTwap: []sdk.Dec{sdk.NewDec(5), sdk.NewDec(10), sdk.NewDecWithPrec(2, 1)},
 		},
 		"(2 pairs of 3 records) first record time < start time < second record time": {
 			recordsToSet: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC,
