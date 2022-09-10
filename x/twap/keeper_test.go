@@ -138,6 +138,11 @@ var (
 	)
 )
 
+func withPoolId(twap types.TwapRecord, poolId uint64) types.TwapRecord {
+	twap.PoolId = poolId
+	return twap
+}
+
 func withLastErrTime(twap types.TwapRecord, lastErrorTime time.Time) types.TwapRecord {
 	twap.LastErrorTime = lastErrorTime
 	return twap

@@ -86,6 +86,26 @@ func (s *TestSuite) TestGetAllMostRecentRecordsForPool() {
 			poolId:          1,
 			expectedRecords: []types.TwapRecord{baseRecord},
 		},
+		"lexicographic fooling pool Ids": {
+			recordsToSet: []types.TwapRecord{
+				withPoolId(baseRecord, 1),
+				withPoolId(baseRecord, 2),
+				withPoolId(baseRecord, 10),
+				withPoolId(baseRecord, 11),
+				withPoolId(baseRecord, 20)},
+			poolId:          1,
+			expectedRecords: []types.TwapRecord{baseRecord},
+		},
+		"lexicographic fooling pool Ids, with carry": {
+			recordsToSet: []types.TwapRecord{
+				withPoolId(baseRecord, 9),
+				withPoolId(baseRecord, 10),
+				withPoolId(baseRecord, 11),
+				withPoolId(baseRecord, 19),
+				withPoolId(baseRecord, 90)},
+			poolId:          9,
+			expectedRecords: []types.TwapRecord{withPoolId(baseRecord, 9)},
+		},
 		"set multi-asset pool record": {
 			recordsToSet: []types.TwapRecord{
 				newEmptyPriceRecord(1, baseTime, denom0, denom1),
@@ -148,7 +168,9 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 		expectedRecord types.TwapRecord
 		expErr         error
 	}{
-		"no entries":            {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, twap.TimeTooOldError{Time: baseTime}},
+		"no entries": {[]types.TwapRecord{}, defaultInputAt(baseTime), baseRecord, fmt.Errorf(
+			"getTwapRecord: querying for assets %s %s that are not in pool id %d",
+			baseRecord.Asset0Denom, baseRecord.Asset1Denom, 1)},
 		"get at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultInputAt(baseTime), baseRecord, nil},
 		"rev at latest (exact)": {[]types.TwapRecord{baseRecord}, defaultRevInputAt(baseTime), baseRecord, nil},
 
@@ -181,7 +203,9 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 
 		"non-existent pool ID": {
 			[]types.TwapRecord{tMin1Record, baseRecord, tPlus1Record},
-			wrongPoolIdInputAt(baseTime), baseRecord, twap.TimeTooOldError{Time: baseTime}},
+			wrongPoolIdInputAt(baseTime), baseRecord, fmt.Errorf(
+				"getTwapRecord: querying for assets %s %s that are not in pool id %d",
+				baseRecord.Asset0Denom, baseRecord.Asset1Denom, 2)},
 		"pool2 record get": {
 			recordsToSet:   []types.TwapRecord{newEmptyPriceRecord(2, baseTime, denom0, denom1)},
 			input:          wrongPoolIdInputAt(baseTime),
