@@ -150,6 +150,11 @@ func (k Keeper) EstimateSwapExactAmountOut(
 	}
 	swapFee := pool.GetSwapFee(ctx)
 	_, tokenIn, err := k.estimateSwapExactAmountOut(ctx, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+	if err != nil {
+		return tokenIn.Amount, err
+	}
+
+	err = k.EstimateUpdatePoolForSwap(ctx, pool, tokenIn, tokenOut)
 	return tokenIn.Amount, err
 }
 
