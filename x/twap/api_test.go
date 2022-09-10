@@ -47,7 +47,7 @@ var (
 	// accumulators updated from tPlus10sp5Record with
 	// t = baseTime + 20
 	// spA = 2, spB = 0.5, spC = 4
-	tPlus20sp2Record = newTwapRecordWithDefaults(
+	tPlus20sp2Record = newTwoAssetPoolTwapRecordWithDefaults(
 		baseTime.Add(20*time.Second),
 		sdk.NewDec(2),               // spot price 0
 		OneSec.MulInt64(10*10+5*10), // accum A
