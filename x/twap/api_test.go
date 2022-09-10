@@ -21,10 +21,14 @@ var (
 	ThreePlusOneThird sdk.Dec = sdk.MustNewDecFromStr("3.333333333333333333")
 
 	// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
-	baseRecord types.TwapRecord = newTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
+	baseRecord types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec())
 
-	tapRecordAB, tapRecordAC, tapRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
-		baseTime, sdk.NewDec(10), sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC types.TwapRecord = newThreeAssetPoolTwapRecordWithDefaults(
+		baseTime,
+		sdk.NewDec(10), // spot price 0
+		sdk.ZeroDec(),  // accum A
+		sdk.ZeroDec(),  // accum B
+		sdk.ZeroDec())  // accum C
 
 	// accumA = 10 seconds * (spot price = 10) = OneSec * 10 * 10
 	// accumB = 10 seconds * (spot price = 0.1) = OneSec
@@ -34,20 +38,27 @@ var (
 	// accumulators updated from baseRecord with
 	// t = baseTime + 10
 	// spA = 5, spB = 0.2, spC = 10
-	tPlus10sp5Record = newTwapRecordWithDefaults(
+	tPlus10sp5Record = newTwoAssetPoolTwapRecordWithDefaults(
 		baseTime.Add(10*time.Second), sdk.NewDec(5), accumA, accumB)
 
-	tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
+	tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
 		baseTime.Add(10*time.Second), sdk.NewDec(5), accumA, accumB, accumC)
 
 	// accumulators updated from tPlus10sp5Record with
 	// t = baseTime + 20
 	// spA = 2, spB = 0.5, spC = 4
-	tPlus20sp2Record = newTwapRecordWithDefaults(
-		baseTime.Add(20*time.Second), sdk.NewDec(2), OneSec.MulInt64(10*10+5*10), OneSec.MulInt64(3))
+	tPlus20sp2Record = newTwoAssetPoolTwapRecordWithDefaults(
+		baseTime.Add(20*time.Second),
+		sdk.NewDec(2),               // spot price 0
+		OneSec.MulInt64(10*10+5*10), // accum A
+		OneSec.MulInt64(3))          // accum B
 
-	tPlus20sp2TapRecordAB, tPlus20sp2TapRecordAC, tPlus20sp2TapRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
-		baseTime.Add(20*time.Second), sdk.NewDec(2), OneSec.MulInt64(10*10+5*10), OneSec.MulInt64(3), OneSec.MulInt64(20*10+10*10))
+	tPlus20sp2ThreeAssetRecordAB, tPlus20sp2ThreeAssetRecordAC, tPlus20sp2ThreeAssetRecordBC = newThreeAssetPoolTwapRecordWithDefaults(
+		baseTime.Add(20*time.Second),
+		sdk.NewDec(2),                // spot price 0
+		OneSec.MulInt64(10*10+5*10),  // accum A
+		OneSec.MulInt64(3),           // accum B
+		OneSec.MulInt64(20*10+10*10)) // accum C
 )
 
 func (s *TestSuite) TestGetBeginBlockAccumulatorRecord() {
@@ -120,24 +131,20 @@ func makeSimpleTwapInput(startTime time.Time, endTime time.Time, isQuoteTokenA b
 	return getTwapInput{1, quoteAssetDenom, baseAssetDenom, startTime, endTime}
 }
 
-func makeSimpleTapTwapInput(startTime time.Time, endTime time.Time, baseQuoteAB, baseQuoteCA, baseQuoteBC bool) []getTwapInput {
+func makeSimpleThreeAssetTwapInput(startTime time.Time, endTime time.Time, baseQuoteAB, baseQuoteCA, baseQuoteBC bool) []getTwapInput {
 	var twapInput []getTwapInput
-	quoteAssetDenom, baseAssetDenom := denom0, denom1
+	formatSimpleTwapInput(twapInput, startTime, endTime, baseQuoteAB, denom0, denom1, 2)
+	formatSimpleTwapInput(twapInput, startTime, endTime, baseQuoteAB, denom2, denom0, 2)
+	formatSimpleTwapInput(twapInput, startTime, endTime, baseQuoteAB, denom1, denom2, 2)
+	return twapInput
+}
+
+func formatSimpleTwapInput(twapInput []getTwapInput, startTime time.Time, endTime time.Time, baseQuoteAB bool, denomA, denomB string, poolID uint64) {
+	quoteAssetDenom, baseAssetDenom := denomA, denomB
 	if baseQuoteAB {
 		baseAssetDenom, quoteAssetDenom = quoteAssetDenom, baseAssetDenom
 	}
-	twapInput = append(twapInput, getTwapInput{2, quoteAssetDenom, baseAssetDenom, startTime, endTime})
-	quoteAssetDenom, baseAssetDenom = denom2, denom0
-	if baseQuoteCA {
-		baseAssetDenom, quoteAssetDenom = quoteAssetDenom, baseAssetDenom
-	}
-	twapInput = append(twapInput, getTwapInput{2, quoteAssetDenom, baseAssetDenom, startTime, endTime})
-	quoteAssetDenom, baseAssetDenom = denom1, denom2
-	if baseQuoteBC {
-		baseAssetDenom, quoteAssetDenom = quoteAssetDenom, baseAssetDenom
-	}
-	twapInput = append(twapInput, getTwapInput{2, quoteAssetDenom, baseAssetDenom, startTime, endTime})
-	return twapInput
+	twapInput = append(twapInput, getTwapInput{poolID, quoteAssetDenom, baseAssetDenom, startTime, endTime})
 }
 
 // TestGetArithmeticTwap tests if we get the expected twap value from `GetArithmeticTwap`.
@@ -297,21 +304,21 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 		expectError  error
 	}{
 		"(2 pairs of 3 records) start exact, end after second record": {
-			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC,
-				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
+			recordsToSet: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC,
+				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleTapTwapInput(baseTime, baseTime.Add(20*time.Second), baseQuoteAB, baseQuoteCA, baseQuoteBC),
+			input:   makeSimpleThreeAssetTwapInput(baseTime, baseTime.Add(20*time.Second), baseQuoteAB, baseQuoteCA, baseQuoteBC),
 			// A 10 for 10s, 5 for 10s = 150/20 = 7.5
 			// C 20 for 10s, 10 for 10s = 300/20 = 15
 			// B .1 for 10s, .2 for 10s = 3/20 = 0.15
 			expTwap: []sdk.Dec{sdk.NewDecWithPrec(75, 1), sdk.NewDec(15), sdk.NewDecWithPrec(15, 2)},
 		},
 		"(3 pairs of 3 record) start at second record, end after third record": {
-			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC,
-				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC,
-				tPlus20sp2TapRecordAB, tPlus20sp2TapRecordAC, tPlus20sp2TapRecordBC},
+			recordsToSet: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC,
+				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC,
+				tPlus20sp2ThreeAssetRecordAB, tPlus20sp2ThreeAssetRecordAC, tPlus20sp2ThreeAssetRecordBC},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleTapTwapInput(baseTime.Add(10*time.Second), baseTime.Add(30*time.Second), baseQuoteAB, baseQuoteCA, baseQuoteBC),
+			input:   makeSimpleThreeAssetTwapInput(baseTime.Add(10*time.Second), baseTime.Add(30*time.Second), baseQuoteAB, baseQuoteCA, baseQuoteBC),
 			// A 5 for 10s, 2 for 10s = 70/20 = 3.5
 			// C 10 for 10s, 4 for 10s = 140/20 = 7
 			// B .2 for 10s, .5 for 10s = 7/20 = 0.35
@@ -319,15 +326,15 @@ func (s *TestSuite) TestGetArithmeticTwap_ThreeAsset() {
 		},
 		// interpolate in time closer to second record
 		"(3 record) interpolate: get twap closer to second record": {
-			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC,
-				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC,
-				tPlus20sp2TapRecordAB, tPlus20sp2TapRecordAC, tPlus20sp2TapRecordBC},
+			recordsToSet: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC,
+				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC,
+				tPlus20sp2ThreeAssetRecordAB, tPlus20sp2ThreeAssetRecordAC, tPlus20sp2ThreeAssetRecordBC},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleTapTwapInput(baseTime.Add(15*time.Second), baseTime.Add(30*time.Second), baseQuoteAB, baseQuoteCA, baseQuoteBC),
+			input:   makeSimpleThreeAssetTwapInput(baseTime.Add(15*time.Second), baseTime.Add(30*time.Second), baseQuoteAB, baseQuoteCA, baseQuoteBC),
 			// A 5 for 5s, 2 for 10s = 45/15 = 3
 			// C 10 for 5s, 4 for 10s = 140/15 = 6
 			// B .2 for 5s, .5 for 10s = 7/15 = .4
-			expTwap: []sdk.Dec{sdk.NewDec(3), sdk.NewDec(6), sdk.NewDecWithPrec(4, 1)}, // 5 for 5s, 2 for 10s = 45 / 15 = 3
+			expTwap: []sdk.Dec{sdk.NewDec(3), sdk.NewDec(6), sdk.NewDecWithPrec(4, 1)},
 		},
 	}
 	for name, test := range tests {
@@ -376,7 +383,7 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod() {
 		periodBetweenBaseAndOneHourBeforeThreshold           = (defaultRecordHistoryKeepPeriod.Milliseconds() - time.Hour.Milliseconds())
 		accumBeforeKeepThreshold0, accumBeforeKeepThreshold1 = sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10), sdk.NewDec(periodBetweenBaseAndOneHourBeforeThreshold * 10)
 		// recordBeforeKeepThreshold is a record with t=baseTime+keepPeriod-1h, sp0=30(sp1=0.3) accumulators set relative to baseRecord
-		recordBeforeKeepThreshold types.TwapRecord = newTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1)
+		recordBeforeKeepThreshold types.TwapRecord = newTwoAssetPoolTwapRecordWithDefaults(oneHourBeforeKeepThreshold, sdk.NewDec(30), accumBeforeKeepThreshold0, accumBeforeKeepThreshold1)
 	)
 
 	// N.B.: when ctxTime = end time, we trigger the "TWAP to now path".
@@ -524,20 +531,20 @@ func (s *TestSuite) TestGetArithmeticTwap_PruningRecordKeepPeriod_ThreeAsset() {
 		expectError  error
 	}{
 		"(2 sets of 3 records); to now; with one directly at threshold, interpolated": {
-			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC,
+			recordsToSet: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC,
 				recordBeforeKeepThresholdAB, recordBeforeKeepThresholdAC, recordBeforeKeepThresholdBC},
 			ctxTime: baseTimePlusKeepPeriod,
-			input:   makeSimpleTapTwapInput(baseTime, baseTimePlusKeepPeriod, baseQuoteAB, baseQuoteCA, baseQuoteBC),
+			input:   makeSimpleThreeAssetTwapInput(baseTime, baseTimePlusKeepPeriod, baseQuoteAB, baseQuoteCA, baseQuoteBC),
 			// A 10 for 169200s, 30 for 3600s = 1800000/172800 = 10.416666
 			// C 20 for 169200s, 60 for 3600s = 100/172800 = 20.83333333
 			// B .1 for 169200s, .033 for 3600s = 17040/172800 = 0.0986111
 			expTwap: []sdk.Dec{sdk.MustNewDecFromStr("10.416666666666666666"), sdk.MustNewDecFromStr("20.833333333333333333"), sdk.MustNewDecFromStr("0.098611111111111111")},
 		},
 		"(2 sets of 3 records); with end time; with one before keep threshold, interpolated": {
-			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC,
+			recordsToSet: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC,
 				recordBeforeKeepThresholdAB, recordBeforeKeepThresholdAC, recordBeforeKeepThresholdBC},
 			ctxTime: oneHourAfterKeepThreshold,
-			input:   makeSimpleTapTwapInput(baseTime, oneHourAfterKeepThreshold.Add(-time.Millisecond), baseQuoteAB, baseQuoteCA, baseQuoteBC),
+			input:   makeSimpleThreeAssetTwapInput(baseTime, oneHourAfterKeepThreshold.Add(-time.Millisecond), baseQuoteAB, baseQuoteCA, baseQuoteBC),
 			// A 10 for 169200000ms, 30 for 7199999ms = 1907999970/176399999 = 10.81632642
 			// C 20 for 169200000ms, 60 for 7199999ms = 3815999940/176399999 = 21.6326528
 			// B .1 for 169200000ms, .033 for 7199999ms = 17159999/176399999 = 0.09727891
@@ -665,8 +672,8 @@ func (s *TestSuite) TestGetArithmeticTwapToNow() {
 }
 
 func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
-	makeSimpleTapTwapToNowInput := func(startTime time.Time, baseQuoteAB, baseQuoteAC, baseQuoteBC bool) []getTwapInput {
-		return makeSimpleTapTwapInput(startTime, startTime, baseQuoteAB, baseQuoteAC, baseQuoteBC)
+	makeSimpleThreeAssetTwapToNowInput := func(startTime time.Time, baseQuoteAB, baseQuoteAC, baseQuoteBC bool) []getTwapInput {
+		return makeSimpleThreeAssetTwapInput(startTime, startTime, baseQuoteAB, baseQuoteAC, baseQuoteBC)
 	}
 
 	tests := map[string]struct {
@@ -677,20 +684,20 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 		expectedError error
 	}{
 		"(2 pairs of 3 records) to now: start time = second record time": {
-			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC,
-				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
+			recordsToSet: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC,
+				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			ctxTime: tPlusOneMin,
-			input:   makeSimpleTapTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteAB, baseQuoteCA, baseQuoteBC),
+			input:   makeSimpleThreeAssetTwapToNowInput(baseTime.Add(10*time.Second), baseQuoteAB, baseQuoteCA, baseQuoteBC),
 			// A 10 for 0s, 5 for 10s = 50/10 = 5
 			// C 20 for 0s, 10 for 10s = 100/10 = 10
 			// B .1 for 0s, .2 for 10s = 2/10 = 0.2
-			expTwap: []sdk.Dec{sdk.NewDec(5), sdk.NewDec(10), sdk.NewDecWithPrec(2, 1)}, // 10 for 0s, 5 for 10s
+			expTwap: []sdk.Dec{sdk.NewDec(5), sdk.NewDec(10), sdk.NewDecWithPrec(2, 1)},
 		},
 		"(2 pairs of 3 records) first record time < start time < second record time": {
-			recordsToSet: []types.TwapRecord{tapRecordAB, tapRecordAC, tapRecordBC,
-				tPlus10sp5TapRecordAB, tPlus10sp5TapRecordAC, tPlus10sp5TapRecordBC},
+			recordsToSet: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC,
+				tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			ctxTime: baseTime.Add(20 * time.Second),
-			input:   makeSimpleTapTwapToNowInput(baseTime.Add(5*time.Second), baseQuoteAB, baseQuoteCA, baseQuoteBC),
+			input:   makeSimpleThreeAssetTwapToNowInput(baseTime.Add(5*time.Second), baseQuoteAB, baseQuoteCA, baseQuoteBC),
 			// A 10 for 5s, 5 for 10s = 100/15 = 6 + 2/3 = 6.66666666
 			// C 20 for 5s, 10 for 10s = 200/15 = 13 + 1/3 = 13.333333
 			// B .1 for 5s, .2 for 10s = 2.5/15 = 0.1666666
