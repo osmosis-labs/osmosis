@@ -3,7 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -127,7 +127,7 @@ func getGenStateFromPath(genesisFilePath string) (map[string]json.RawMessage, er
 	}
 	defer genesisFile.Close()
 
-	byteValue, _ := ioutil.ReadAll(genesisFile)
+	byteValue, _ := io.ReadAll(genesisFile)
 
 	var doc tmtypes.GenesisDoc
 	err = tmjson.Unmarshal(byteValue, &doc)
@@ -293,7 +293,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
+			err = os.WriteFile(snapshotOutput, snapshotJSON, 0o644)
 			return err
 		},
 	}
