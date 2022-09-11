@@ -11,7 +11,11 @@ import (
 
 var (
 	cubeRootTwo, _   = sdk.NewDec(2).ApproxRoot(3)
+	threeRootTwo, _ = sdk.NewDec(3).ApproxRoot(2)
+	cubeRootThree, _ = sdk.NewDec(3).ApproxRoot(3)
 	threeCubeRootTwo = cubeRootTwo.MulInt64(3)
+	cubeRootSixSquared, _ = (sdk.NewDec(6).MulInt64(6)).ApproxRoot(3)
+	twoCubeRootThree = cubeRootThree.MulInt64(2)
 )
 
 // solidly CFMM is xy(x^2 + y^2) = k
@@ -273,6 +277,49 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 	}
 
 	return a
+}
+
+// solidly CFMM is xy(x^2 + y^2) = k
+// So we want to solve for a given addition of `b` units of y into the pool,
+// how many units `a` of x do we get out.
+// So we solve the following expression for `a`
+// xy(x^2 + y^2) = (x - a)(y + b)((x - a)^2 + (y + b)^2)
+func solveCfmmDirect(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
+	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
+		panic("invalid input: reserves and input must be positive")
+	}
+
+	// find k using existing reserves
+	k := cfmmConstant(xReserve, yReserve)
+
+	// find new yReserve after join
+	y_new := yReserve.Add(yIn)
+
+	// store powers to simplify calculations
+	k2 := k.Mul(k)
+	y2 := y_new.Mul(y_new)
+	y3 := y2.Mul(y_new)
+	y4 := y3.Mul(y_new)
+	y8 := y4.Mul(y4)
+
+	// solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2) = k
+	sqrt_term, err := (y4.Mul(k2.MulInt64(27).Add(y8.MulInt64(4)))).ApproxRoot(2) // overflows for 8 figure x and y
+	common_factor, err := (threeRootTwo.Mul(sqrt_term).Add(k.Mul(y2).MulInt64(9))).ApproxRoot(3)
+	if err != nil {
+		panic(err)
+	}
+	term1 := cubeRootTwo.Mul(common_factor).Quo(y_new)
+	term2 := twoCubeRootThree.Mul(y3).Quo(common_factor)
+	x_new := (term1.Sub(term2)).Quo(cubeRootSixSquared)
+
+	// find amounf of x to output using initial and final xReserve values
+	xOut := xReserve.Sub(x_new)
+
+	if xOut.GTE(xReserve) {
+		panic("invalid output: greater than full pool reserves")
+	}
+
+	return xOut
 }
 
 func approxDecEqual(a, b, tol sdk.Dec) bool {
