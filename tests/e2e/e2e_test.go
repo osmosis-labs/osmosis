@@ -250,7 +250,6 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	// We should not be able to get TWAP before swap since it should have been pruned.
 	s.T().Log("pruning is now complete, querying TWAP for period that should be pruned")
 	_, err = chainANode.QueryGetArithmeticTwapToNow(poolId, denomOne, denomTwo, timeBeforeSwap)
-	s.Require().Error(err)
 	s.Require().ErrorContains(err, "too old")
 
 	// TWAPs for the same time range should be the same when we query for them before and after pruning.
