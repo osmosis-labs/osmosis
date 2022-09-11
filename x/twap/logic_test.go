@@ -239,7 +239,7 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 }
 
 func (s *TestSuite) TestGetInterpolatedRecord() {
-	baseRecord := newTwapRecordWithDefaults(baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
+	baseRecord := newTwoAssetPoolTwapRecordWithDefaults(baseTime, sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
 
 	// all tests occur with updateTime = base time + time.Unix(1, 0)
 	tests := map[string]struct {
