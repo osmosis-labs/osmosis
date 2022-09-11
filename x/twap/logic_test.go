@@ -531,7 +531,7 @@ func (s *TestSuite) TestPruneRecords() {
 // - without spot price errors
 // - that new records are created
 // - older historical records are not updated
-// - spot price errot times are either propagated from
+// - spot price error times are either propagated from
 // older records or set to current block time in case error occurred.
 func (s *TestSuite) TestUpdateRecords() {
 
