@@ -221,13 +221,13 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.Require().NotEqual(twapFromBeforeSwapToAfterSwap, twapFromAfterToNow)
 
 	s.T().Log("querying for the TWAP from after swap to after swap + 10ms, must not equal to TWAPs before swap")
-	twapFromAfterToAfterSwapAndBeforePruning, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	twapAfterSwapBeforePruning10Ms, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
-	s.Require().NotEqual(twapFromBeforeSwapToAfterSwap, twapFromAfterToAfterSwapAndBeforePruning)
+	s.Require().NotEqual(twapFromBeforeSwapToAfterSwap, twapAfterSwapBeforePruning10Ms)
 
 	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
 	// There are potential rounding errors requiring us to approximate the comparison.
-	osmoassert.DecApproxEq(s.T(), twapFromAfterToAfterSwapAndBeforePruning, twapFromAfterToNow, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10Ms, twapFromAfterToNow, sdk.NewDecWithPrec(1, 3))
 
 	if !s.skipUpgrade {
 		// TODO: we should reduce the pruning time in the v11
@@ -254,9 +254,9 @@ func (s *IntegrationTestSuite) TestTWAP() {
 
 	// TWAPs for the same time range should be the same when we query for them before and after pruning.
 	s.T().Log("querying for TWAP for period before pruning took place but should not have been pruned")
-	twapFromAfterToAfterSwapAndAfterPruning, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
+	twapAfterPruning10ms, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
-	s.Require().Equal(twapFromAfterToAfterSwapAndBeforePruning, twapFromAfterToAfterSwapAndAfterPruning)
+	s.Require().Equal(twapAfterSwapBeforePruning10Ms, twapAfterPruning10ms)
 
 	// TWAP "from after to after swap" should equal to "from after swap to after pruning"
 	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
@@ -265,7 +265,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	twapToNowPostPruning, err := chainANode.QueryGetArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterPruning)
 	s.Require().NoError(err)
 	// There are potential rounding errors requiring us to approximate the comparison.
-	osmoassert.DecApproxEq(s.T(), twapToNowPostPruning, twapFromAfterToAfterSwapAndBeforePruning, sdk.NewDecWithPrec(1, 3))
+	osmoassert.DecApproxEq(s.T(), twapToNowPostPruning, twapAfterSwapBeforePruning10Ms, sdk.NewDecWithPrec(1, 3))
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {
