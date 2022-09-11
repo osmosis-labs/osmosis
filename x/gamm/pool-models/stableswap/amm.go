@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	cubeRootTwo, _   = sdk.NewDec(2).ApproxRoot(3)
-	threeRootTwo, _ = sdk.NewDec(3).ApproxRoot(2)
-	cubeRootThree, _ = sdk.NewDec(3).ApproxRoot(3)
-	threeCubeRootTwo = cubeRootTwo.MulInt64(3)
+	cubeRootTwo, _        = sdk.NewDec(2).ApproxRoot(3)
+	threeRootTwo, _       = sdk.NewDec(3).ApproxRoot(2)
+	cubeRootThree, _      = sdk.NewDec(3).ApproxRoot(3)
+	threeCubeRootTwo      = cubeRootTwo.MulInt64(3)
 	cubeRootSixSquared, _ = (sdk.NewDec(6).MulInt64(6)).ApproxRoot(3)
-	twoCubeRootThree = cubeRootThree.MulInt64(2)
+	twoCubeRootThree      = cubeRootThree.MulInt64(2)
 )
 
 // solidly CFMM is xy(x^2 + y^2) = k
@@ -304,6 +304,9 @@ func solveCfmmDirect(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 
 	// solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2) = k
 	sqrt_term, err := (y4.Mul(k2.MulInt64(27).Add(y8.MulInt64(4)))).ApproxRoot(2) // overflows for 8 figure x and y
+	if err != nil {
+		panic(err)
+	}
 	common_factor, err := (threeRootTwo.Mul(sqrt_term).Add(k.Mul(y2).MulInt64(9))).ApproxRoot(3)
 	if err != nil {
 		panic(err)
