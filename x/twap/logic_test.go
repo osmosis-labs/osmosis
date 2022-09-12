@@ -54,6 +54,8 @@ func (s *TestSuite) TestGetSpotPrices() {
 	mockAMMI := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
 	s.App.TwapKeeper.SetAmmInterface(mockAMMI)
 
+	ctx := s.Ctx.WithBlockTime(currTime.Add(5 * time.Second))
+
 	testCases := map[string]struct {
 		poolID                uint64
 		prevErrTime           time.Time
@@ -70,9 +72,10 @@ func (s *TestSuite) TestGetSpotPrices() {
 			prevErrTime:           currTime,
 			mockSp0:               sdk.ZeroDec(),
 			mockSp1:               sdk.ZeroDec(),
+			mockSp0Err:            fmt.Errorf("foo"),
 			expectedSp0:           sdk.ZeroDec(),
 			expectedSp1:           sdk.ZeroDec(),
-			expectedLatestErrTime: currTime,
+			expectedLatestErrTime: ctx.BlockTime(),
 		},
 	}
 
@@ -81,7 +84,7 @@ func (s *TestSuite) TestGetSpotPrices() {
 			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom0, denom1, tc.mockSp0, tc.mockSp0Err)
 			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom1, denom0, tc.mockSp1, tc.mockSp1Err)
 
-			sp0, sp1, latestErrTime := twap.GetSpotPrices(s.Ctx, mockAMMI, tc.poolID, denom0, denom1, tc.prevErrTime)
+			sp0, sp1, latestErrTime := twap.GetSpotPrices(ctx, mockAMMI, tc.poolID, denom0, denom1, tc.prevErrTime)
 			s.Require().Equal(tc.expectedSp0, sp0)
 			s.Require().Equal(tc.expectedSp1, sp1)
 			s.Require().Equal(tc.expectedLatestErrTime, latestErrTime)
