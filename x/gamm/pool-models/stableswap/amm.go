@@ -282,8 +282,9 @@ func solveCfmmMulti(xReserve, yReserve, wSumSquares, yIn sdk.Dec) sdk.Dec {
 // solidly CFMM is xy(x^2 + y^2) = k
 // So we want to solve for a given addition of `b` units of y into the pool,
 // how many units `a` of x do we get out.
-// So we solve the following expression for `a`
-// xy(x^2 + y^2) = (x - a)(y + b)((x - a)^2 + (y + b)^2)
+// Let y' = y + b
+// we solve k = (x'y')(x'^2 + y^2) for x', using the following equation {wolfram alpha link}
+// Then we use that to derive the change in x as x_out = x' - x
 func solveCfmmDirect(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	if !xReserve.IsPositive() || !yReserve.IsPositive() || !yIn.IsPositive() {
 		panic("invalid input: reserves and input must be positive")
