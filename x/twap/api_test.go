@@ -302,6 +302,14 @@ func (s *TestSuite) TestGetArithmeticTwap() {
 			expectError:  spotPriceError,
 			expectSpErr:  baseTime,
 		},
+		"spot price error exactly at end time": {
+			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tPlusOne)},
+			ctxTime:      tPlusOneMin,
+			input:        makeSimpleTwapInput(baseTime, tPlusOne, baseQuoteAB),
+			expTwap:      sdk.NewDec(10),
+			expectError:  spotPriceError,
+			expectSpErr:  baseTime,
+		},
 		// should not happen, but if it did would error
 		"spot price error after end time": {
 			recordsToSet: []types.TwapRecord{withLastErrTime(baseRecord, tPlusOneMin)},
