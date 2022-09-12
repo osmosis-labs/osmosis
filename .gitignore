@@ -230,3 +230,7 @@ Cargo.lock
 .beaker
 blocks.db
 **/blocks.db*
+
+# Ignore e2e test artifacts (which clould leak information if commited)
+.ash_history
+.bash_history

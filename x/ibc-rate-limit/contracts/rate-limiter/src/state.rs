@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Timestamp};
+use cosmwasm_std::{Addr, Timestamp, Uint256};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::cmp;
@@ -62,16 +62,15 @@ pub enum FlowType {
 /// This is a design decision to avoid the period calculations and thus reduce gas consumption
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, Copy)]
 pub struct Flow {
-    // Q: Do we have edge case issues with inflow/outflow being u128, e.g. what if a token has super high precision.
-    pub inflow: u128,
-    pub outflow: u128,
+    pub inflow: Uint256,
+    pub outflow: Uint256,
     pub period_end: Timestamp,
 }
 
 impl Flow {
     pub fn new(
-        inflow: impl Into<u128>,
-        outflow: impl Into<u128>,
+        inflow: impl Into<Uint256>,
+        outflow: impl Into<Uint256>,
         now: Timestamp,
         duration: u64,
     ) -> Self {
@@ -87,7 +86,7 @@ impl Flow {
     /// (balance_in, balance_out) where balance_in in is how much has been
     /// transferred into the flow, and balance_out is how much value transferred
     /// out.
-    pub fn balance(&self) -> (u128, u128) {
+    pub fn balance(&self) -> (Uint256, Uint256) {
         (
             self.inflow.saturating_sub(self.outflow),
             self.outflow.saturating_sub(self.inflow),
@@ -95,7 +94,7 @@ impl Flow {
     }
 
     /// checks if the flow, in the current state, has exceeded a max allowance
-    pub fn exceeds(&self, direction: &FlowType, max_inflow: u128, max_outflow: u128) -> bool {
+    pub fn exceeds(&self, direction: &FlowType, max_inflow: Uint256, max_outflow: Uint256) -> bool {
         let (balance_in, balance_out) = self.balance();
         match direction {
             FlowType::In => balance_in > max_inflow,
@@ -113,13 +112,13 @@ impl Flow {
     /// Expire resets the Flow to start tracking the value transfer from the
     /// moment this method is called.
     pub fn expire(&mut self, now: Timestamp, duration: u64) {
-        self.inflow = 0;
-        self.outflow = 0;
+        self.inflow = Uint256::from(0_u32);
+        self.outflow = Uint256::from(0_u32);
         self.period_end = now.plus_seconds(duration);
     }
 
     /// Updates the current flow incrementing it by a transfer of value.
-    pub fn add_flow(&mut self, direction: FlowType, value: u128) {
+    pub fn add_flow(&mut self, direction: FlowType, value: Uint256) {
         match direction {
             FlowType::In => self.inflow = self.inflow.saturating_add(value),
             FlowType::Out => self.outflow = self.outflow.saturating_add(value),
@@ -127,7 +126,7 @@ impl Flow {
     }
 
     /// Updates the current flow reducing it by a transfer of value.
-    pub fn undo_flow(&mut self, direction: FlowType, value: u128) {
+    pub fn undo_flow(&mut self, direction: FlowType, value: Uint256) {
         match direction {
             FlowType::In => self.inflow = self.inflow.saturating_sub(value),
             FlowType::Out => self.outflow = self.outflow.saturating_sub(value),
@@ -139,7 +138,7 @@ impl Flow {
     fn apply_transfer(
         &mut self,
         direction: &FlowType,
-        funds: u128,
+        funds: Uint256,
         now: Timestamp,
         quota: &Quota,
     ) -> bool {
@@ -166,7 +165,7 @@ pub struct Quota {
     pub max_percentage_send: u32,
     pub max_percentage_recv: u32,
     pub duration: u64,
-    pub channel_value: Option<u128>,
+    pub channel_value: Option<Uint256>,
 }
 
 impl Quota {
@@ -174,13 +173,13 @@ impl Quota {
     /// total_value) in each direction based on the total value of the denom in
     /// the channel. The result tuple represents the max capacity when the
     /// transfer is in directions: (FlowType::In, FlowType::Out)
-    pub fn capacity(&self) -> (u128, u128) {
+    pub fn capacity(&self) -> (Uint256, Uint256) {
         match self.channel_value {
             Some(total_value) => (
-                total_value * (self.max_percentage_recv as u128) / 100_u128,
-                total_value * (self.max_percentage_send as u128) / 100_u128,
+                total_value * Uint256::from(self.max_percentage_recv) / Uint256::from(100_u32),
+                total_value * Uint256::from(self.max_percentage_send) / Uint256::from(100_u32),
             ),
-            None => (0, 0), // This should never happen, but ig the channel value is not set, we disallow any transfer
+            None => (0_u32.into(), 0_u32.into()), // This should never happen, but ig the channel value is not set, we disallow any transfer
         }
     }
 }
@@ -221,8 +220,8 @@ impl RateLimit {
         &mut self,
         path: &Path,
         direction: &FlowType,
-        funds: u128,
-        channel_value: u128,
+        funds: Uint256,
+        channel_value: Uint256,
         now: Timestamp,
     ) -> Result<Self, ContractError> {
         let expired = self.flow.apply_transfer(direction, funds, now, &self.quota);
@@ -292,18 +291,18 @@ pub mod tests {
         assert!(!flow.is_expired(epoch.plus_seconds(RESET_TIME_WEEKLY)));
         assert!(flow.is_expired(epoch.plus_seconds(RESET_TIME_WEEKLY).plus_nanos(1)));
 
-        assert_eq!(flow.balance(), (0_u128, 0_u128));
-        flow.add_flow(FlowType::In, 5);
-        assert_eq!(flow.balance(), (5_u128, 0_u128));
-        flow.add_flow(FlowType::Out, 2);
-        assert_eq!(flow.balance(), (3_u128, 0_u128));
+        assert_eq!(flow.balance(), (0_u32.into(), 0_u32.into()));
+        flow.add_flow(FlowType::In, 5_u32.into());
+        assert_eq!(flow.balance(), (5_u32.into(), 0_u32.into()));
+        flow.add_flow(FlowType::Out, 2_u32.into());
+        assert_eq!(flow.balance(), (3_u32.into(), 0_u32.into()));
         // Adding flow doesn't affect expiration
         assert!(!flow.is_expired(epoch.plus_seconds(RESET_TIME_DAILY)));
 
         flow.expire(epoch.plus_seconds(RESET_TIME_WEEKLY), RESET_TIME_WEEKLY);
-        assert_eq!(flow.balance(), (0_u128, 0_u128));
-        assert_eq!(flow.inflow, 0_u128);
-        assert_eq!(flow.outflow, 0_u128);
+        assert_eq!(flow.balance(), (0_u32.into(), 0_u32.into()));
+        assert_eq!(flow.inflow, Uint256::from(0_u32));
+        assert_eq!(flow.outflow, Uint256::from(0_u32));
         assert_eq!(flow.period_end, epoch.plus_seconds(RESET_TIME_WEEKLY * 2));
 
         // Expiration has moved
