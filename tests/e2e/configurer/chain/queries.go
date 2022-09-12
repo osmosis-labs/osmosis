@@ -19,6 +19,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/tests/e2e/util"
 	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v12/x/twap/client/queryproto"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
@@ -145,6 +146,49 @@ func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
 	return response.CurrentEpoch
 }
 
+func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
+	path := "osmosis/twap/v1beta1/ArithmeticTwapToNow"
+
+	bz, err := n.QueryGRPCGateway(
+		path,
+		"pool_id", strconv.FormatInt(int64(poolId), 10),
+		"base_asset", baseAsset,
+		"quote_asset", quoteAsset,
+		"start_time", startTime.Format(time.RFC3339Nano),
+	)
+
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	var response twapqueryproto.ArithmeticTwapToNowResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.ArithmeticTwap, nil
+}
+
+func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (sdk.Dec, error) {
+	path := "osmosis/twap/v1beta1/ArithmeticTwap"
+
+	bz, err := n.QueryGRPCGateway(
+		path,
+		"pool_id", strconv.FormatInt(int64(poolId), 10),
+		"base_asset", baseAsset,
+		"quote_asset", quoteAsset,
+		"start_time", startTime.Format(time.RFC3339Nano),
+		"end_time", endTime.Format(time.RFC3339Nano),
+	)
+
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	var response twapqueryproto.ArithmeticTwapResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.ArithmeticTwap, nil
+}
+
 // QueryHashFromBlock gets block hash at a specific height. Otherwise, error.
 func (n *NodeConfig) QueryHashFromBlock(height int64) (string, error) {
 	block, err := n.rpcClient.Block(context.Background(), &height)
@@ -159,6 +203,13 @@ func (n *NodeConfig) QueryCurrentHeight() int64 {
 	status, err := n.rpcClient.Status(context.Background())
 	require.NoError(n.t, err)
 	return status.SyncInfo.LatestBlockHeight
+}
+
+// QueryLatestBlockTime returns the latest block time.
+func (n *NodeConfig) QueryLatestBlockTime() time.Time {
+	status, err := n.rpcClient.Status(context.Background())
+	require.NoError(n.t, err)
+	return status.SyncInfo.LatestBlockTime
 }
 
 // QueryListSnapshots gets all snapshots currently created for a node.
