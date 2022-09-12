@@ -303,11 +303,11 @@ func solveCfmmDirect(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	y8 := y4.Mul(y4)
 
 	// solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2) = k
-	sqrt_term, err := (y4.Mul(k2.MulInt64(27).Add(y8.MulInt64(4)))).ApproxRoot(2) // overflows for 8 figure x and y
+	sqrt_term, err := (k2.MulInt64(27).Add(y8.MulInt64(4))).ApproxRoot(2) // overflows for 8 figure x and y
 	if err != nil {
 		panic(err)
 	}
-	common_factor, err := (threeRootTwo.Mul(sqrt_term).Add(k.Mul(y2).MulInt64(9))).ApproxRoot(3)
+	common_factor, err := y2.Mul((threeRootTwo.Mul(sqrt_term).Add(k.MulInt64(9)))).ApproxRoot(3)
 	if err != nil {
 		panic(err)
 	}
