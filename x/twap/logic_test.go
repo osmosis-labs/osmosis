@@ -86,6 +86,15 @@ func (s *TestSuite) TestGetSpotPrices() {
 			expectedSp1:           types.MaxSpotPrice,
 			expectedLatestErrTime: ctx.BlockTime(),
 		},
+		"valid spot prices": {
+			poolID:                poolID,
+			prevErrTime:           currTime,
+			mockSp0:               sdk.NewDecWithPrec(55, 2),
+			mockSp1:               sdk.NewDecWithPrec(6, 1),
+			expectedSp0:           sdk.NewDecWithPrec(55, 2),
+			expectedSp1:           sdk.NewDecWithPrec(6, 1),
+			expectedLatestErrTime: currTime,
+		},
 	}
 
 	for name, tc := range testCases {
