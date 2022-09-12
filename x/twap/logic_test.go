@@ -49,6 +49,7 @@ func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
 }
 
 func (s *TestSuite) TestGetSpotPrices() {
+	currTime := time.Now()
 	poolID := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 	mockAMMI := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
 	s.App.TwapKeeper.SetAmmInterface(mockAMMI)
@@ -58,30 +59,38 @@ func (s *TestSuite) TestGetSpotPrices() {
 		denom0                string
 		denom1                string
 		prevErrTime           time.Time
+		mockSp0               sdk.Dec
+		mockSp1               sdk.Dec
+		mockSp0Err            error
+		mockSp1Err            error
 		expectedSp0           sdk.Dec
 		expectedSp1           sdk.Dec
 		expectedLatestErrTime time.Time
 	}{
-		"sp0 zero": {
-			poolID: poolID,
-		},
-		"sp1 zero": {
-			poolID: poolID,
+		"zero sp": {
+			poolID:                poolID,
+			denom0:                denom0,
+			denom1:                denom1,
+			prevErrTime:           currTime,
+			mockSp0:               sdk.ZeroDec(),
+			mockSp1:               sdk.ZeroDec(),
+			expectedSp0:           sdk.ZeroDec(),
+			expectedSp1:           sdk.ZeroDec(),
+			expectedLatestErrTime: currTime,
 		},
 	}
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
+			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, tc.denom0, tc.denom1, tc.mockSp0, tc.mockSp0Err)
+			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, tc.denom1, tc.denom0, tc.mockSp1, tc.mockSp1Err)
+
 			sp0, sp1, latestErrTime := twap.GetSpotPrices(s.Ctx, mockAMMI, tc.poolID, tc.denom0, tc.denom1, tc.prevErrTime)
 			s.Require().Equal(tc.expectedSp0, sp0)
 			s.Require().Equal(tc.expectedSp1, sp1)
 			s.Require().Equal(tc.expectedLatestErrTime, latestErrTime)
 		})
 	}
-
-	// programmableAmmInterface.ProgramPoolSpotPriceOverride(poolId,
-	// 	defaultTwoAssetCoins[0].Denom, defaultTwoAssetCoins[1].Denom,
-	// 	test.spotPriceResult0.Sp, test.spotPriceResult0.Err)
 }
 
 func (s *TestSuite) TestNewTwapRecord() {
