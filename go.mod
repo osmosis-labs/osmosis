@@ -291,8 +291,8 @@ require (
 )
 
 replace (
-	// branch: v0.27.0.rc3-osmo, current tag: v0.27.0.rc3-osmo
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.27.0-rc2.0.20220517191021-59051aa18d58
+	// branch: v0.28.0-osmo-v12, current tag: v0.28.0-osmo-v12.0.0
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.28.0-osmo-v12.0.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: osmosis-main. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/5c9a51c277d067e0ec5cf48df30a85fae95bcd14
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20220822135534-5c9a51c277d0
 	// Use Osmosis fast iavl
