@@ -109,7 +109,7 @@ func (s *TestSuite) TestNewTwapRecord() {
 	}
 }
 
-func (s *TestSuite) TestUpdateTwap() {
+func (s *TestSuite) TestUpdateRecord() {
 	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 	programmableAmmInterface := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
 	s.App.TwapKeeper.SetAmmInterface(programmableAmmInterface)
