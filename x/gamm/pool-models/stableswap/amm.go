@@ -314,7 +314,7 @@ func solveCfmmDirect(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	term1 := cubeRootTwo.Mul(common_factor).Quo(y_new)
 	term2 := twoCubeRootThree.Mul(y3).Quo(common_factor)
 	x_new := (term1.Sub(term2)).Quo(cubeRootSixSquared)
