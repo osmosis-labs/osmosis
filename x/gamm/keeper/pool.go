@@ -29,7 +29,7 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, err
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
-		return nil, fmt.Errorf("pool with ID %d does not exist", poolId)
+		return nil, types.PoolDoesNotExistError{PoolId: poolId}
 	}
 
 	bz := store.Get(poolKey)
