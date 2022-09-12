@@ -214,7 +214,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	// since we swapped stake for osmo earlier, the price of uosmo after swap should increase.
 	// The TWAP quote asset is uosmo. Therefore, the twap that goes until after swap
 	// should have a higher price.
-	s.Require().Less(twapFromBeforeSwapToBeforeSwapOne, twapFromBeforeSwapToAfterSwap)
+	s.Require().True(twapFromBeforeSwapToBeforeSwapOne.LT(twapFromBeforeSwapToAfterSwap))
 
 	// TWAP "from after to after swap" should be different from "from before to after swap"
 	// because the former has a higher time weight for the after swap period.
