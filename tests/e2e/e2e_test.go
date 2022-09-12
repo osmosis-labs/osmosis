@@ -189,7 +189,7 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.Require().NoError(err)
 
 	// Since there were no swaps between the two queries, the TWAPs should be the same.
-	s.Require().Equal(twapFromBeforeSwapToBeforeSwapOne, twapFromBeforeSwapToBeforeSwapTwo)
+	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOne, twapFromBeforeSwapToBeforeSwapTwo, sdk.NewDecWithPrec(1, 3))
 
 	s.T().Log("performing swap")
 	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", poolId), denomTwo, swapWalletAddr)
@@ -211,7 +211,10 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	s.T().Log("querying for the TWAP from before swap to now after swap, must not equal to TWAPs before swap")
 	twapFromBeforeSwapToAfterSwap, err := chainANode.QueryArithmeticTwapToNow(poolId, denomOne, denomTwo, timeBeforeSwap)
 	s.Require().NoError(err)
-	s.Require().NotEqual(twapFromBeforeSwapToBeforeSwapOne, twapFromBeforeSwapToAfterSwap)
+	// since we swapped stake for osmo earlier, the price of uosmo after swap should increase.
+	// The TWAP quote asset is uosmo. Therefore, the twap that goes until after swap
+	// should have a higher price.
+	s.Require().Less(twapFromBeforeSwapToBeforeSwapOne, twapFromBeforeSwapToAfterSwap)
 
 	// TWAP "from after to after swap" should be different from "from before to after swap"
 	// because the former has a higher time weight for the after swap period.
