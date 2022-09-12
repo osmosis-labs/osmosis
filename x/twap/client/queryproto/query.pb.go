@@ -39,7 +39,7 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type GetArithmeticTwapRequest struct {
+type ArithmeticTwapRequest struct {
 	PoolId     uint64     `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 	BaseAsset  string     `protobuf:"bytes,2,opt,name=base_asset,json=baseAsset,proto3" json:"base_asset,omitempty"`
 	QuoteAsset string     `protobuf:"bytes,3,opt,name=quote_asset,json=quoteAsset,proto3" json:"quote_asset,omitempty"`
@@ -47,18 +47,18 @@ type GetArithmeticTwapRequest struct {
 	EndTime    *time.Time `protobuf:"bytes,5,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time,omitempty" yaml:"end_time"`
 }
 
-func (m *GetArithmeticTwapRequest) Reset()         { *m = GetArithmeticTwapRequest{} }
-func (m *GetArithmeticTwapRequest) String() string { return proto.CompactTextString(m) }
-func (*GetArithmeticTwapRequest) ProtoMessage()    {}
-func (*GetArithmeticTwapRequest) Descriptor() ([]byte, []int) {
+func (m *ArithmeticTwapRequest) Reset()         { *m = ArithmeticTwapRequest{} }
+func (m *ArithmeticTwapRequest) String() string { return proto.CompactTextString(m) }
+func (*ArithmeticTwapRequest) ProtoMessage()    {}
+func (*ArithmeticTwapRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_141a22dba58615af, []int{0}
 }
-func (m *GetArithmeticTwapRequest) XXX_Unmarshal(b []byte) error {
+func (m *ArithmeticTwapRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GetArithmeticTwapRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ArithmeticTwapRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GetArithmeticTwapRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ArithmeticTwapRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -68,69 +68,69 @@ func (m *GetArithmeticTwapRequest) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *GetArithmeticTwapRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetArithmeticTwapRequest.Merge(m, src)
+func (m *ArithmeticTwapRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArithmeticTwapRequest.Merge(m, src)
 }
-func (m *GetArithmeticTwapRequest) XXX_Size() int {
+func (m *ArithmeticTwapRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *GetArithmeticTwapRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetArithmeticTwapRequest.DiscardUnknown(m)
+func (m *ArithmeticTwapRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ArithmeticTwapRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetArithmeticTwapRequest proto.InternalMessageInfo
+var xxx_messageInfo_ArithmeticTwapRequest proto.InternalMessageInfo
 
-func (m *GetArithmeticTwapRequest) GetPoolId() uint64 {
+func (m *ArithmeticTwapRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-func (m *GetArithmeticTwapRequest) GetBaseAsset() string {
+func (m *ArithmeticTwapRequest) GetBaseAsset() string {
 	if m != nil {
 		return m.BaseAsset
 	}
 	return ""
 }
 
-func (m *GetArithmeticTwapRequest) GetQuoteAsset() string {
+func (m *ArithmeticTwapRequest) GetQuoteAsset() string {
 	if m != nil {
 		return m.QuoteAsset
 	}
 	return ""
 }
 
-func (m *GetArithmeticTwapRequest) GetStartTime() time.Time {
+func (m *ArithmeticTwapRequest) GetStartTime() time.Time {
 	if m != nil {
 		return m.StartTime
 	}
 	return time.Time{}
 }
 
-func (m *GetArithmeticTwapRequest) GetEndTime() *time.Time {
+func (m *ArithmeticTwapRequest) GetEndTime() *time.Time {
 	if m != nil {
 		return m.EndTime
 	}
 	return nil
 }
 
-type GetArithmeticTwapResponse struct {
+type ArithmeticTwapResponse struct {
 	ArithmeticTwap github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=arithmetic_twap,json=arithmeticTwap,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"arithmetic_twap" yaml:"arithmetic_twap"`
 }
 
-func (m *GetArithmeticTwapResponse) Reset()         { *m = GetArithmeticTwapResponse{} }
-func (m *GetArithmeticTwapResponse) String() string { return proto.CompactTextString(m) }
-func (*GetArithmeticTwapResponse) ProtoMessage()    {}
-func (*GetArithmeticTwapResponse) Descriptor() ([]byte, []int) {
+func (m *ArithmeticTwapResponse) Reset()         { *m = ArithmeticTwapResponse{} }
+func (m *ArithmeticTwapResponse) String() string { return proto.CompactTextString(m) }
+func (*ArithmeticTwapResponse) ProtoMessage()    {}
+func (*ArithmeticTwapResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_141a22dba58615af, []int{1}
 }
-func (m *GetArithmeticTwapResponse) XXX_Unmarshal(b []byte) error {
+func (m *ArithmeticTwapResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GetArithmeticTwapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ArithmeticTwapResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GetArithmeticTwapResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ArithmeticTwapResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -140,37 +140,37 @@ func (m *GetArithmeticTwapResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *GetArithmeticTwapResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetArithmeticTwapResponse.Merge(m, src)
+func (m *ArithmeticTwapResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArithmeticTwapResponse.Merge(m, src)
 }
-func (m *GetArithmeticTwapResponse) XXX_Size() int {
+func (m *ArithmeticTwapResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *GetArithmeticTwapResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetArithmeticTwapResponse.DiscardUnknown(m)
+func (m *ArithmeticTwapResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ArithmeticTwapResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetArithmeticTwapResponse proto.InternalMessageInfo
+var xxx_messageInfo_ArithmeticTwapResponse proto.InternalMessageInfo
 
-type GetArithmeticTwapToNowRequest struct {
+type ArithmeticTwapToNowRequest struct {
 	PoolId     uint64    `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
 	BaseAsset  string    `protobuf:"bytes,2,opt,name=base_asset,json=baseAsset,proto3" json:"base_asset,omitempty"`
 	QuoteAsset string    `protobuf:"bytes,3,opt,name=quote_asset,json=quoteAsset,proto3" json:"quote_asset,omitempty"`
 	StartTime  time.Time `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time" yaml:"start_time"`
 }
 
-func (m *GetArithmeticTwapToNowRequest) Reset()         { *m = GetArithmeticTwapToNowRequest{} }
-func (m *GetArithmeticTwapToNowRequest) String() string { return proto.CompactTextString(m) }
-func (*GetArithmeticTwapToNowRequest) ProtoMessage()    {}
-func (*GetArithmeticTwapToNowRequest) Descriptor() ([]byte, []int) {
+func (m *ArithmeticTwapToNowRequest) Reset()         { *m = ArithmeticTwapToNowRequest{} }
+func (m *ArithmeticTwapToNowRequest) String() string { return proto.CompactTextString(m) }
+func (*ArithmeticTwapToNowRequest) ProtoMessage()    {}
+func (*ArithmeticTwapToNowRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_141a22dba58615af, []int{2}
 }
-func (m *GetArithmeticTwapToNowRequest) XXX_Unmarshal(b []byte) error {
+func (m *ArithmeticTwapToNowRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GetArithmeticTwapToNowRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ArithmeticTwapToNowRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GetArithmeticTwapToNowRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ArithmeticTwapToNowRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -180,62 +180,62 @@ func (m *GetArithmeticTwapToNowRequest) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *GetArithmeticTwapToNowRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetArithmeticTwapToNowRequest.Merge(m, src)
+func (m *ArithmeticTwapToNowRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArithmeticTwapToNowRequest.Merge(m, src)
 }
-func (m *GetArithmeticTwapToNowRequest) XXX_Size() int {
+func (m *ArithmeticTwapToNowRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *GetArithmeticTwapToNowRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetArithmeticTwapToNowRequest.DiscardUnknown(m)
+func (m *ArithmeticTwapToNowRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ArithmeticTwapToNowRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetArithmeticTwapToNowRequest proto.InternalMessageInfo
+var xxx_messageInfo_ArithmeticTwapToNowRequest proto.InternalMessageInfo
 
-func (m *GetArithmeticTwapToNowRequest) GetPoolId() uint64 {
+func (m *ArithmeticTwapToNowRequest) GetPoolId() uint64 {
 	if m != nil {
 		return m.PoolId
 	}
 	return 0
 }
 
-func (m *GetArithmeticTwapToNowRequest) GetBaseAsset() string {
+func (m *ArithmeticTwapToNowRequest) GetBaseAsset() string {
 	if m != nil {
 		return m.BaseAsset
 	}
 	return ""
 }
 
-func (m *GetArithmeticTwapToNowRequest) GetQuoteAsset() string {
+func (m *ArithmeticTwapToNowRequest) GetQuoteAsset() string {
 	if m != nil {
 		return m.QuoteAsset
 	}
 	return ""
 }
 
-func (m *GetArithmeticTwapToNowRequest) GetStartTime() time.Time {
+func (m *ArithmeticTwapToNowRequest) GetStartTime() time.Time {
 	if m != nil {
 		return m.StartTime
 	}
 	return time.Time{}
 }
 
-type GetArithmeticTwapToNowResponse struct {
+type ArithmeticTwapToNowResponse struct {
 	ArithmeticTwap github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=arithmetic_twap,json=arithmeticTwap,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"arithmetic_twap" yaml:"arithmetic_twap"`
 }
 
-func (m *GetArithmeticTwapToNowResponse) Reset()         { *m = GetArithmeticTwapToNowResponse{} }
-func (m *GetArithmeticTwapToNowResponse) String() string { return proto.CompactTextString(m) }
-func (*GetArithmeticTwapToNowResponse) ProtoMessage()    {}
-func (*GetArithmeticTwapToNowResponse) Descriptor() ([]byte, []int) {
+func (m *ArithmeticTwapToNowResponse) Reset()         { *m = ArithmeticTwapToNowResponse{} }
+func (m *ArithmeticTwapToNowResponse) String() string { return proto.CompactTextString(m) }
+func (*ArithmeticTwapToNowResponse) ProtoMessage()    {}
+func (*ArithmeticTwapToNowResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_141a22dba58615af, []int{3}
 }
-func (m *GetArithmeticTwapToNowResponse) XXX_Unmarshal(b []byte) error {
+func (m *ArithmeticTwapToNowResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GetArithmeticTwapToNowResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ArithmeticTwapToNowResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GetArithmeticTwapToNowResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ArithmeticTwapToNowResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -245,17 +245,17 @@ func (m *GetArithmeticTwapToNowResponse) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (m *GetArithmeticTwapToNowResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetArithmeticTwapToNowResponse.Merge(m, src)
+func (m *ArithmeticTwapToNowResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArithmeticTwapToNowResponse.Merge(m, src)
 }
-func (m *GetArithmeticTwapToNowResponse) XXX_Size() int {
+func (m *ArithmeticTwapToNowResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *GetArithmeticTwapToNowResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetArithmeticTwapToNowResponse.DiscardUnknown(m)
+func (m *ArithmeticTwapToNowResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ArithmeticTwapToNowResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetArithmeticTwapToNowResponse proto.InternalMessageInfo
+var xxx_messageInfo_ArithmeticTwapToNowResponse proto.InternalMessageInfo
 
 type ParamsRequest struct {
 }
@@ -338,10 +338,10 @@ func (m *ParamsResponse) GetParams() types1.Params {
 }
 
 func init() {
-	proto.RegisterType((*GetArithmeticTwapRequest)(nil), "osmosis.twap.v1beta1.GetArithmeticTwapRequest")
-	proto.RegisterType((*GetArithmeticTwapResponse)(nil), "osmosis.twap.v1beta1.GetArithmeticTwapResponse")
-	proto.RegisterType((*GetArithmeticTwapToNowRequest)(nil), "osmosis.twap.v1beta1.GetArithmeticTwapToNowRequest")
-	proto.RegisterType((*GetArithmeticTwapToNowResponse)(nil), "osmosis.twap.v1beta1.GetArithmeticTwapToNowResponse")
+	proto.RegisterType((*ArithmeticTwapRequest)(nil), "osmosis.twap.v1beta1.ArithmeticTwapRequest")
+	proto.RegisterType((*ArithmeticTwapResponse)(nil), "osmosis.twap.v1beta1.ArithmeticTwapResponse")
+	proto.RegisterType((*ArithmeticTwapToNowRequest)(nil), "osmosis.twap.v1beta1.ArithmeticTwapToNowRequest")
+	proto.RegisterType((*ArithmeticTwapToNowResponse)(nil), "osmosis.twap.v1beta1.ArithmeticTwapToNowResponse")
 	proto.RegisterType((*ParamsRequest)(nil), "osmosis.twap.v1beta1.ParamsRequest")
 	proto.RegisterType((*ParamsResponse)(nil), "osmosis.twap.v1beta1.ParamsResponse")
 }
@@ -349,50 +349,49 @@ func init() {
 func init() { proto.RegisterFile("osmosis/twap/v1beta1/query.proto", fileDescriptor_141a22dba58615af) }
 
 var fileDescriptor_141a22dba58615af = []byte{
-	// 674 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x95, 0xdd, 0x4e, 0x13, 0x41,
-	0x14, 0xc7, 0x3b, 0x7c, 0x14, 0x3b, 0x44, 0x08, 0x13, 0x82, 0xa5, 0xc2, 0x6e, 0xb3, 0x12, 0x44,
-	0x23, 0x3b, 0xa1, 0x70, 0x45, 0xbc, 0xa1, 0x31, 0x51, 0x13, 0x63, 0x74, 0x43, 0x8c, 0xf1, 0xa6,
-	0x99, 0x6e, 0xc7, 0x65, 0x63, 0x77, 0x67, 0xbb, 0x33, 0x05, 0x7b, 0xeb, 0x03, 0x18, 0x12, 0x9e,
-	0xc0, 0x0b, 0x1f, 0xc2, 0x37, 0xe0, 0x92, 0xe8, 0x8d, 0xf1, 0xa2, 0x1a, 0x30, 0x3e, 0x00, 0x4f,
-	0x60, 0xe6, 0x63, 0x2b, 0xc2, 0x82, 0x78, 0x65, 0xbc, 0xda, 0xce, 0xf9, 0xff, 0xcf, 0x39, 0xbf,
-	0x39, 0x3b, 0x3b, 0x85, 0x55, 0xc6, 0x23, 0xc6, 0x43, 0x8e, 0xc5, 0x0e, 0x49, 0xf0, 0xf6, 0x4a,
-	0x93, 0x0a, 0xb2, 0x82, 0x3b, 0x5d, 0x9a, 0xf6, 0xdc, 0x24, 0x65, 0x82, 0xa1, 0x69, 0xe3, 0x70,
-	0xa5, 0xc3, 0x35, 0x8e, 0xca, 0x74, 0xc0, 0x02, 0xa6, 0x0c, 0x58, 0xfe, 0xd2, 0xde, 0xca, 0x62,
-	0x6e, 0x35, 0xb9, 0x68, 0xa4, 0xd4, 0x67, 0x69, 0xcb, 0xf8, 0x9c, 0x5c, 0x5f, 0x40, 0x63, 0x2a,
-	0x1b, 0x69, 0x8f, 0xe5, 0x2b, 0x13, 0x6e, 0x12, 0x4e, 0x07, 0x16, 0x9f, 0x85, 0xb1, 0xd1, 0x6f,
-	0x9f, 0xd4, 0x15, 0xf0, 0xc0, 0x95, 0x90, 0x20, 0x8c, 0x89, 0x08, 0x59, 0xe6, 0x9d, 0x0b, 0x18,
-	0x0b, 0xda, 0x14, 0x93, 0x24, 0xc4, 0x24, 0x8e, 0x99, 0x50, 0x62, 0xd6, 0x69, 0xd6, 0xa8, 0x6a,
-	0xd5, 0xec, 0xbe, 0xc4, 0x24, 0xee, 0x65, 0x92, 0x6e, 0xd2, 0xd0, 0x3b, 0xd5, 0x0b, 0x23, 0xd9,
-	0xa7, 0xb3, 0x44, 0x18, 0x51, 0x2e, 0x48, 0x94, 0x68, 0x83, 0xf3, 0x6e, 0x08, 0x96, 0xef, 0x53,
-	0xb1, 0x91, 0x86, 0x62, 0x2b, 0xa2, 0x22, 0xf4, 0x37, 0x77, 0x48, 0xe2, 0xd1, 0x4e, 0x97, 0x72,
-	0x81, 0xae, 0xc1, 0xb1, 0x84, 0xb1, 0x76, 0x23, 0x6c, 0x95, 0x41, 0x15, 0x2c, 0x8d, 0x78, 0x45,
-	0xb9, 0x7c, 0xd8, 0x42, 0xf3, 0x10, 0xca, 0x1d, 0x35, 0x08, 0xe7, 0x54, 0x94, 0x87, 0xaa, 0x60,
-	0xa9, 0xe4, 0x95, 0x64, 0x64, 0x43, 0x06, 0x90, 0x0d, 0xc7, 0x3b, 0x5d, 0x26, 0x32, 0x7d, 0x58,
-	0xe9, 0x50, 0x85, 0xb4, 0xe1, 0x39, 0x84, 0x5c, 0x90, 0x54, 0x34, 0x24, 0x4e, 0x79, 0xa4, 0x0a,
-	0x96, 0xc6, 0x6b, 0x15, 0x57, 0xb3, 0xba, 0x19, 0xab, 0xbb, 0x99, 0xb1, 0xd6, 0xe7, 0xf7, 0xfb,
-	0x76, 0xe1, 0xb8, 0x6f, 0x4f, 0xf5, 0x48, 0xd4, 0x5e, 0x77, 0x7e, 0xe5, 0x3a, 0xbb, 0x5f, 0x6d,
-	0xe0, 0x95, 0x54, 0x40, 0xda, 0x91, 0x07, 0xaf, 0xd0, 0xb8, 0xa5, 0xeb, 0x8e, 0xfe, 0xb1, 0xee,
-	0xf5, 0xfd, 0xbe, 0x0d, 0x8e, 0xfb, 0xf6, 0xa4, 0xae, 0x9b, 0x65, 0xea, 0xaa, 0x63, 0x34, 0x6e,
-	0x49, 0xab, 0xf3, 0x16, 0xc0, 0xd9, 0x9c, 0x19, 0xf1, 0x84, 0xc5, 0x9c, 0xa2, 0x0e, 0x9c, 0x24,
-	0x03, 0xa5, 0x21, 0xcf, 0x8a, 0x1a, 0x56, 0xa9, 0xfe, 0x40, 0x42, 0x7f, 0xe9, 0xdb, 0x8b, 0x41,
-	0x28, 0xb6, 0xba, 0x4d, 0xd7, 0x67, 0x91, 0x79, 0x39, 0xe6, 0xb1, 0xcc, 0x5b, 0xaf, 0xb0, 0xe8,
-	0x25, 0x94, 0xbb, 0xf7, 0xa8, 0x7f, 0xdc, 0xb7, 0x67, 0x34, 0xc6, 0xa9, 0x72, 0x8e, 0x37, 0x41,
-	0x7e, 0x6b, 0xed, 0x7c, 0x04, 0x70, 0xfe, 0x0c, 0xd0, 0x26, 0x7b, 0xcc, 0x76, 0xfe, 0xdf, 0x37,
-	0xe7, 0xec, 0x01, 0x68, 0x9d, 0xb7, 0xa9, 0x7f, 0x37, 0xea, 0x49, 0x78, 0xf5, 0x09, 0x49, 0x49,
-	0xc4, 0xcd, 0x64, 0x9d, 0x47, 0x70, 0x22, 0x0b, 0x18, 0xaa, 0x75, 0x58, 0x4c, 0x54, 0x44, 0xc1,
-	0x8c, 0xd7, 0xe6, 0xdc, 0xbc, 0xcb, 0xc8, 0xd5, 0x59, 0xf5, 0x11, 0x89, 0xea, 0x99, 0x8c, 0xda,
-	0x8f, 0x61, 0x38, 0xfa, 0x54, 0x5e, 0x0b, 0xa8, 0x07, 0x8b, 0xda, 0x81, 0x6e, 0x5c, 0x94, 0x6f,
-	0x30, 0x2a, 0x0b, 0x17, 0x9b, 0x34, 0x9a, 0xb3, 0xf0, 0xe6, 0xd3, 0xf7, 0xbd, 0x21, 0x0b, 0xcd,
-	0xe1, 0xdc, 0xbb, 0xcc, 0x34, 0x7c, 0x0f, 0xe0, 0xd4, 0x99, 0xc9, 0x23, 0x37, 0xbf, 0xc3, 0x79,
-	0x97, 0x45, 0x05, 0x5f, 0xda, 0x6f, 0xe0, 0xb0, 0x82, 0xbb, 0x85, 0x6e, 0xe6, 0xc3, 0x9d, 0x25,
-	0xfa, 0x00, 0xe0, 0x4c, 0xfe, 0x09, 0x41, 0xab, 0x97, 0x6c, 0x7e, 0xf2, 0x23, 0xa9, 0xac, 0xfd,
-	0x5d, 0x92, 0xc1, 0x5e, 0x53, 0xd8, 0x2e, 0xba, 0x73, 0x49, 0x6c, 0x95, 0x5d, 0x7f, 0xb6, 0x7f,
-	0x68, 0x81, 0x83, 0x43, 0x0b, 0x7c, 0x3b, 0xb4, 0xc0, 0xee, 0x91, 0x55, 0x38, 0x38, 0xb2, 0x0a,
-	0x9f, 0x8f, 0xac, 0xc2, 0x8b, 0xbb, 0x27, 0xce, 0xac, 0xa9, 0xb8, 0xdc, 0x26, 0x4d, 0x3e, 0x28,
-	0xbf, 0xbd, 0x52, 0xc3, 0xaf, 0x75, 0x13, 0xbf, 0x1d, 0xd2, 0x58, 0xe8, 0x3f, 0x12, 0xfd, 0xb1,
-	0x15, 0xd5, 0x63, 0xf5, 0x67, 0x00, 0x00, 0x00, 0xff, 0xff, 0x90, 0x00, 0xfb, 0xbe, 0x23, 0x07,
-	0x00, 0x00,
+	// 670 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x95, 0x3d, 0x6f, 0xd3, 0x40,
+	0x18, 0xc7, 0x73, 0x7d, 0x49, 0xc9, 0x55, 0xb4, 0xe2, 0x28, 0xa5, 0xb8, 0xad, 0x1d, 0x99, 0xaa,
+	0x2a, 0xb4, 0xb5, 0x49, 0xd8, 0x2a, 0x96, 0x46, 0x0c, 0x20, 0x21, 0x04, 0x56, 0x85, 0x10, 0x4b,
+	0x74, 0x71, 0x0e, 0xd7, 0x22, 0xf6, 0x39, 0xbe, 0x4b, 0x4b, 0x56, 0x56, 0x96, 0x4a, 0x4c, 0x2c,
+	0x7c, 0x03, 0xbe, 0x47, 0x27, 0xa8, 0xc4, 0x82, 0x18, 0x0c, 0x6a, 0xf9, 0x04, 0xfd, 0x04, 0xe8,
+	0x5e, 0x1c, 0xda, 0xc8, 0x2a, 0x61, 0x42, 0x4c, 0xce, 0x3d, 0xcf, 0xff, 0xf9, 0x3f, 0xbf, 0x7b,
+	0x7c, 0xbe, 0xc0, 0x2a, 0x65, 0x11, 0x65, 0x21, 0x73, 0xf9, 0x3e, 0x4e, 0xdc, 0xbd, 0x5a, 0x8b,
+	0x70, 0x5c, 0x73, 0xbb, 0x3d, 0x92, 0xf6, 0x9d, 0x24, 0xa5, 0x9c, 0xa2, 0x39, 0xad, 0x70, 0x84,
+	0xc2, 0xd1, 0x0a, 0x63, 0x2e, 0xa0, 0x01, 0x95, 0x02, 0x57, 0xfc, 0x52, 0x5a, 0x63, 0xb5, 0xd0,
+	0x4d, 0x2c, 0x9a, 0x29, 0xf1, 0x69, 0xda, 0xd6, 0x3a, 0xbb, 0x50, 0x17, 0x90, 0x98, 0x88, 0x46,
+	0x4a, 0x63, 0xfa, 0x52, 0xe4, 0xb6, 0x30, 0x23, 0x03, 0x89, 0x4f, 0xc3, 0x58, 0xe7, 0x6f, 0x9f,
+	0xcd, 0x4b, 0xe0, 0x81, 0x2a, 0xc1, 0x41, 0x18, 0x63, 0x1e, 0xd2, 0x5c, 0xbb, 0x14, 0x50, 0x1a,
+	0x74, 0x88, 0x8b, 0x93, 0xd0, 0xc5, 0x71, 0x4c, 0xb9, 0x4c, 0xe6, 0x9d, 0x6e, 0xe8, 0xac, 0x5c,
+	0xb5, 0x7a, 0x2f, 0x5d, 0x1c, 0xf7, 0xf3, 0x94, 0x6a, 0xd2, 0x54, 0x3b, 0x55, 0x0b, 0x9d, 0xb2,
+	0x86, 0xab, 0x78, 0x18, 0x11, 0xc6, 0x71, 0x94, 0x28, 0x81, 0xfd, 0x61, 0x0c, 0x5e, 0xdb, 0x4e,
+	0x43, 0xbe, 0x1b, 0x11, 0x1e, 0xfa, 0x3b, 0xfb, 0x38, 0xf1, 0x48, 0xb7, 0x47, 0x18, 0x47, 0xd7,
+	0xe1, 0x54, 0x42, 0x69, 0xa7, 0x19, 0xb6, 0x17, 0x40, 0x15, 0xac, 0x4d, 0x78, 0x65, 0xb1, 0x7c,
+	0xd8, 0x46, 0xcb, 0x10, 0x8a, 0xed, 0x34, 0x31, 0x63, 0x84, 0x2f, 0x8c, 0x55, 0xc1, 0x5a, 0xc5,
+	0xab, 0x88, 0xc8, 0xb6, 0x08, 0x20, 0x0b, 0x4e, 0x77, 0x7b, 0x94, 0xe7, 0xf9, 0x71, 0x99, 0x87,
+	0x32, 0xa4, 0x04, 0xcf, 0x21, 0x64, 0x1c, 0xa7, 0xbc, 0x29, 0x58, 0x16, 0x26, 0xaa, 0x60, 0x6d,
+	0xba, 0x6e, 0x38, 0x0a, 0xd4, 0xc9, 0x41, 0x9d, 0x9d, 0x1c, 0xb4, 0xb1, 0x7c, 0x98, 0x59, 0xa5,
+	0xd3, 0xcc, 0xba, 0xd2, 0xc7, 0x51, 0x67, 0xcb, 0xfe, 0x5d, 0x6b, 0x1f, 0x7c, 0xb7, 0x80, 0x57,
+	0x91, 0x01, 0x21, 0x47, 0x1e, 0xbc, 0x44, 0xe2, 0xb6, 0xf2, 0x9d, 0xfc, 0xa3, 0xef, 0xe2, 0x61,
+	0x66, 0x81, 0xd3, 0xcc, 0x9a, 0x55, 0xbe, 0x79, 0xa5, 0x72, 0x9d, 0x22, 0x71, 0x5b, 0x48, 0xed,
+	0xb7, 0x00, 0xce, 0x0f, 0x0f, 0x88, 0x25, 0x34, 0x66, 0x04, 0x75, 0xe1, 0x2c, 0x1e, 0x64, 0x9a,
+	0xe2, 0x94, 0xc8, 0x49, 0x55, 0x1a, 0x0f, 0x04, 0xf1, 0xb7, 0xcc, 0x5a, 0x0d, 0x42, 0xbe, 0xdb,
+	0x6b, 0x39, 0x3e, 0x8d, 0xf4, 0x6b, 0xd1, 0x8f, 0x4d, 0xd6, 0x7e, 0xe5, 0xf2, 0x7e, 0x42, 0x98,
+	0x73, 0x9f, 0xf8, 0xa7, 0x99, 0x35, 0xaf, 0x18, 0x86, 0xec, 0x6c, 0x6f, 0x06, 0x9f, 0x6b, 0x6d,
+	0x7f, 0x06, 0xd0, 0x38, 0x4f, 0xb3, 0x43, 0x1f, 0xd3, 0xfd, 0xff, 0xf7, 0x9d, 0xd9, 0x07, 0x00,
+	0x2e, 0x16, 0xee, 0xe8, 0xdf, 0x0d, 0x79, 0x16, 0x5e, 0x7e, 0x82, 0x53, 0x1c, 0x31, 0x3d, 0x56,
+	0xfb, 0x11, 0x9c, 0xc9, 0x03, 0x9a, 0x6a, 0x0b, 0x96, 0x13, 0x19, 0x91, 0x30, 0xd3, 0xf5, 0x25,
+	0xa7, 0xe8, 0x02, 0x72, 0x54, 0x55, 0x63, 0x42, 0xa0, 0x7a, 0xba, 0xa2, 0xfe, 0x69, 0x1c, 0x4e,
+	0x3e, 0x15, 0x57, 0x01, 0xea, 0xc3, 0xb2, 0x52, 0xa0, 0x9b, 0x17, 0xd5, 0x6b, 0x0c, 0x63, 0xe5,
+	0x62, 0x91, 0x42, 0xb3, 0x57, 0xde, 0x7c, 0xf9, 0xf9, 0x6e, 0xcc, 0x44, 0x4b, 0x6e, 0xe1, 0xfd,
+	0xa5, 0x1b, 0xbe, 0x07, 0x70, 0xe6, 0xfc, 0xd8, 0xd1, 0x7a, 0xb1, 0x7d, 0xe1, 0xed, 0x60, 0x6c,
+	0x8c, 0x26, 0xd6, 0x4c, 0x1b, 0x92, 0x69, 0x15, 0xad, 0x14, 0x33, 0x0d, 0x81, 0x7c, 0x04, 0xf0,
+	0x6a, 0xc1, 0x91, 0x40, 0x77, 0x46, 0xe9, 0x79, 0xf6, 0x7b, 0x30, 0x6a, 0x7f, 0x51, 0xa1, 0x51,
+	0x6b, 0x12, 0x75, 0x1d, 0xdd, 0x1a, 0x05, 0x55, 0x96, 0x36, 0x9e, 0x1d, 0x1e, 0x9b, 0xe0, 0xe8,
+	0xd8, 0x04, 0x3f, 0x8e, 0x4d, 0x70, 0x70, 0x62, 0x96, 0x8e, 0x4e, 0xcc, 0xd2, 0xd7, 0x13, 0xb3,
+	0xf4, 0xe2, 0xde, 0x99, 0xb3, 0xa9, 0xed, 0x36, 0x3b, 0xb8, 0xc5, 0x06, 0xde, 0x7b, 0xb5, 0xba,
+	0xfb, 0x5a, 0x75, 0xf0, 0x3b, 0x21, 0x89, 0xb9, 0xfa, 0x93, 0x50, 0x5f, 0x54, 0x59, 0x3e, 0xee,
+	0xfe, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x32, 0xd5, 0x29, 0x3a, 0xff, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -408,8 +407,8 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
 	Params(ctx context.Context, in *ParamsRequest, opts ...grpc.CallOption) (*ParamsResponse, error)
-	GetArithmeticTwap(ctx context.Context, in *GetArithmeticTwapRequest, opts ...grpc.CallOption) (*GetArithmeticTwapResponse, error)
-	GetArithmeticTwapToNow(ctx context.Context, in *GetArithmeticTwapToNowRequest, opts ...grpc.CallOption) (*GetArithmeticTwapToNowResponse, error)
+	ArithmeticTwap(ctx context.Context, in *ArithmeticTwapRequest, opts ...grpc.CallOption) (*ArithmeticTwapResponse, error)
+	ArithmeticTwapToNow(ctx context.Context, in *ArithmeticTwapToNowRequest, opts ...grpc.CallOption) (*ArithmeticTwapToNowResponse, error)
 }
 
 type queryClient struct {
@@ -429,18 +428,18 @@ func (c *queryClient) Params(ctx context.Context, in *ParamsRequest, opts ...grp
 	return out, nil
 }
 
-func (c *queryClient) GetArithmeticTwap(ctx context.Context, in *GetArithmeticTwapRequest, opts ...grpc.CallOption) (*GetArithmeticTwapResponse, error) {
-	out := new(GetArithmeticTwapResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.twap.v1beta1.Query/GetArithmeticTwap", in, out, opts...)
+func (c *queryClient) ArithmeticTwap(ctx context.Context, in *ArithmeticTwapRequest, opts ...grpc.CallOption) (*ArithmeticTwapResponse, error) {
+	out := new(ArithmeticTwapResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.twap.v1beta1.Query/ArithmeticTwap", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) GetArithmeticTwapToNow(ctx context.Context, in *GetArithmeticTwapToNowRequest, opts ...grpc.CallOption) (*GetArithmeticTwapToNowResponse, error) {
-	out := new(GetArithmeticTwapToNowResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.twap.v1beta1.Query/GetArithmeticTwapToNow", in, out, opts...)
+func (c *queryClient) ArithmeticTwapToNow(ctx context.Context, in *ArithmeticTwapToNowRequest, opts ...grpc.CallOption) (*ArithmeticTwapToNowResponse, error) {
+	out := new(ArithmeticTwapToNowResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -450,8 +449,8 @@ func (c *queryClient) GetArithmeticTwapToNow(ctx context.Context, in *GetArithme
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	Params(context.Context, *ParamsRequest) (*ParamsResponse, error)
-	GetArithmeticTwap(context.Context, *GetArithmeticTwapRequest) (*GetArithmeticTwapResponse, error)
-	GetArithmeticTwapToNow(context.Context, *GetArithmeticTwapToNowRequest) (*GetArithmeticTwapToNowResponse, error)
+	ArithmeticTwap(context.Context, *ArithmeticTwapRequest) (*ArithmeticTwapResponse, error)
+	ArithmeticTwapToNow(context.Context, *ArithmeticTwapToNowRequest) (*ArithmeticTwapToNowResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -461,11 +460,11 @@ type UnimplementedQueryServer struct {
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *ParamsRequest) (*ParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
-func (*UnimplementedQueryServer) GetArithmeticTwap(ctx context.Context, req *GetArithmeticTwapRequest) (*GetArithmeticTwapResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetArithmeticTwap not implemented")
+func (*UnimplementedQueryServer) ArithmeticTwap(ctx context.Context, req *ArithmeticTwapRequest) (*ArithmeticTwapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ArithmeticTwap not implemented")
 }
-func (*UnimplementedQueryServer) GetArithmeticTwapToNow(ctx context.Context, req *GetArithmeticTwapToNowRequest) (*GetArithmeticTwapToNowResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetArithmeticTwapToNow not implemented")
+func (*UnimplementedQueryServer) ArithmeticTwapToNow(ctx context.Context, req *ArithmeticTwapToNowRequest) (*ArithmeticTwapToNowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ArithmeticTwapToNow not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -490,38 +489,38 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetArithmeticTwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetArithmeticTwapRequest)
+func _Query_ArithmeticTwap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArithmeticTwapRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GetArithmeticTwap(ctx, in)
+		return srv.(QueryServer).ArithmeticTwap(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.twap.v1beta1.Query/GetArithmeticTwap",
+		FullMethod: "/osmosis.twap.v1beta1.Query/ArithmeticTwap",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetArithmeticTwap(ctx, req.(*GetArithmeticTwapRequest))
+		return srv.(QueryServer).ArithmeticTwap(ctx, req.(*ArithmeticTwapRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetArithmeticTwapToNow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetArithmeticTwapToNowRequest)
+func _Query_ArithmeticTwapToNow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArithmeticTwapToNowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GetArithmeticTwapToNow(ctx, in)
+		return srv.(QueryServer).ArithmeticTwapToNow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.twap.v1beta1.Query/GetArithmeticTwapToNow",
+		FullMethod: "/osmosis.twap.v1beta1.Query/ArithmeticTwapToNow",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetArithmeticTwapToNow(ctx, req.(*GetArithmeticTwapToNowRequest))
+		return srv.(QueryServer).ArithmeticTwapToNow(ctx, req.(*ArithmeticTwapToNowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -535,19 +534,19 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Params_Handler,
 		},
 		{
-			MethodName: "GetArithmeticTwap",
-			Handler:    _Query_GetArithmeticTwap_Handler,
+			MethodName: "ArithmeticTwap",
+			Handler:    _Query_ArithmeticTwap_Handler,
 		},
 		{
-			MethodName: "GetArithmeticTwapToNow",
-			Handler:    _Query_GetArithmeticTwapToNow_Handler,
+			MethodName: "ArithmeticTwapToNow",
+			Handler:    _Query_ArithmeticTwapToNow_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "osmosis/twap/v1beta1/query.proto",
 }
 
-func (m *GetArithmeticTwapRequest) Marshal() (dAtA []byte, err error) {
+func (m *ArithmeticTwapRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -557,12 +556,12 @@ func (m *GetArithmeticTwapRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GetArithmeticTwapRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GetArithmeticTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -607,7 +606,7 @@ func (m *GetArithmeticTwapRequest) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *GetArithmeticTwapResponse) Marshal() (dAtA []byte, err error) {
+func (m *ArithmeticTwapResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -617,12 +616,12 @@ func (m *GetArithmeticTwapResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GetArithmeticTwapResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GetArithmeticTwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -640,7 +639,7 @@ func (m *GetArithmeticTwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *GetArithmeticTwapToNowRequest) Marshal() (dAtA []byte, err error) {
+func (m *ArithmeticTwapToNowRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -650,12 +649,12 @@ func (m *GetArithmeticTwapToNowRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GetArithmeticTwapToNowRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapToNowRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GetArithmeticTwapToNowRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapToNowRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -690,7 +689,7 @@ func (m *GetArithmeticTwapToNowRequest) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
-func (m *GetArithmeticTwapToNowResponse) Marshal() (dAtA []byte, err error) {
+func (m *ArithmeticTwapToNowResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -700,12 +699,12 @@ func (m *GetArithmeticTwapToNowResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GetArithmeticTwapToNowResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapToNowResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GetArithmeticTwapToNowResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ArithmeticTwapToNowResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -790,7 +789,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *GetArithmeticTwapRequest) Size() (n int) {
+func (m *ArithmeticTwapRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -816,7 +815,7 @@ func (m *GetArithmeticTwapRequest) Size() (n int) {
 	return n
 }
 
-func (m *GetArithmeticTwapResponse) Size() (n int) {
+func (m *ArithmeticTwapResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -827,7 +826,7 @@ func (m *GetArithmeticTwapResponse) Size() (n int) {
 	return n
 }
 
-func (m *GetArithmeticTwapToNowRequest) Size() (n int) {
+func (m *ArithmeticTwapToNowRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -849,7 +848,7 @@ func (m *GetArithmeticTwapToNowRequest) Size() (n int) {
 	return n
 }
 
-func (m *GetArithmeticTwapToNowResponse) Size() (n int) {
+func (m *ArithmeticTwapToNowResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -886,7 +885,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *GetArithmeticTwapRequest) Unmarshal(dAtA []byte) error {
+func (m *ArithmeticTwapRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -909,10 +908,10 @@ func (m *GetArithmeticTwapRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GetArithmeticTwapRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: ArithmeticTwapRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GetArithmeticTwapRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ArithmeticTwapRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1088,7 +1087,7 @@ func (m *GetArithmeticTwapRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GetArithmeticTwapResponse) Unmarshal(dAtA []byte) error {
+func (m *ArithmeticTwapResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1111,10 +1110,10 @@ func (m *GetArithmeticTwapResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GetArithmeticTwapResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: ArithmeticTwapResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GetArithmeticTwapResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ArithmeticTwapResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1172,7 +1171,7 @@ func (m *GetArithmeticTwapResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GetArithmeticTwapToNowRequest) Unmarshal(dAtA []byte) error {
+func (m *ArithmeticTwapToNowRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1195,10 +1194,10 @@ func (m *GetArithmeticTwapToNowRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GetArithmeticTwapToNowRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: ArithmeticTwapToNowRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GetArithmeticTwapToNowRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ArithmeticTwapToNowRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1338,7 +1337,7 @@ func (m *GetArithmeticTwapToNowRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GetArithmeticTwapToNowResponse) Unmarshal(dAtA []byte) error {
+func (m *ArithmeticTwapToNowResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1361,10 +1360,10 @@ func (m *GetArithmeticTwapToNowResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GetArithmeticTwapToNowResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: ArithmeticTwapToNowResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GetArithmeticTwapToNowResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ArithmeticTwapToNowResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
