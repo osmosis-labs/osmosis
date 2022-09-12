@@ -96,6 +96,15 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 	}
 }
 
+// updateRecords updates all records for a given pool id.
+// it does so by creating new records for all asset pairs
+// with updated spot prices and spot price errors, if any.
+// Returns nil on success.
+// Returns error if:
+// - fails to get previous records.
+// - fails to get denoms from the pool.
+// - the number of records does not match expected relative to the
+//  number of denoms in the pool.
 func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	// Will only err if pool doesn't have most recent entry set
 	records, err := k.getAllMostRecentRecordsForPool(ctx, poolId)
@@ -116,7 +125,7 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	expectedRecordsLength := denomNum * (denomNum - 1) / 2
 
 	if expectedRecordsLength != len(records) {
-		return fmt.Errorf("The number of records do not match, expected: %d\n got: %d\n", expectedRecordsLength, len(records))
+		return types.InvalidRecordCountError{Expected: expectedRecordsLength, Actual: len(records)}
 	}
 
 	for _, record := range records {
