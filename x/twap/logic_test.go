@@ -923,7 +923,6 @@ func (s *TestSuite) TestUpdateRecords() {
 			err := twapKeeper.UpdateRecords(ctx, tc.poolId)
 
 			if tc.expectError != nil {
-				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectError)
 				return
 			}
