@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -109,7 +109,7 @@ func extract(store sdk.KVStore) (res []kvPair) {
 }
 
 func readold() []kvPair {
-	bz, err := ioutil.ReadFile("./old_tree.json")
+	bz, err := os.ReadFile("./old_tree.json")
 	if err != nil {
 		panic(err)
 	}

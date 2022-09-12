@@ -368,7 +368,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 		filepath.Join(runningNode.ConfigDir, "config", "genesis.json"),
 		stateSynchingNodeConfig,
 		time.Duration(chainA.VotingPeriod),
-		//time.Duration(chainA.ExpeditedVotingPeriod),
+		// time.Duration(chainA.ExpeditedVotingPeriod),
 		trustHeight,
 		trustHash,
 		stateSyncRPCServers,
