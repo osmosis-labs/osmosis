@@ -546,6 +546,7 @@ func (s *TestSuite) TestUpdateRecords() {
 		spotPriceA    sdk.Dec
 		spotPriceB    sdk.Dec
 		lastErrorTime time.Time
+		isMostRecent  bool
 	}
 
 	var spError = errors.New("spot price error")
@@ -566,7 +567,6 @@ func (s *TestSuite) TestUpdateRecords() {
 		spOverrides   []spOverride
 		blockTime     time.Time
 
-		expectedMostRecentRecords []expectedResults
 		expectedHistoricalRecords []expectedResults
 		expectError               error
 	}{
@@ -627,12 +627,6 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedResults{
-				{
-					spotPriceA: sdk.NewDec(2),
-					spotPriceB: sdk.NewDecWithPrec(2, 1),
-				},
-			},
 			expectedHistoricalRecords: []expectedResults{
 				// The original record.
 				{
@@ -641,8 +635,9 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA: sdk.NewDec(2),
-					spotPriceB: sdk.NewDecWithPrec(2, 1),
+					spotPriceA:   sdk.NewDec(2),
+					spotPriceB:   sdk.NewDecWithPrec(2, 1),
+					isMostRecent: true,
 				},
 			},
 		},
@@ -665,13 +660,6 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedResults{
-				{
-					spotPriceA:    sdk.ZeroDec(),
-					spotPriceB:    sdk.NewDecWithPrec(2, 1),
-					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
-				},
-			},
 			expectedHistoricalRecords: []expectedResults{
 				// The original record.
 				{
@@ -683,6 +671,7 @@ func (s *TestSuite) TestUpdateRecords() {
 					spotPriceA:    sdk.ZeroDec(),
 					spotPriceB:    sdk.NewDecWithPrec(2, 1),
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+					isMostRecent:  true,
 				},
 			},
 		},
@@ -705,13 +694,6 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedResults{
-				{
-					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    types.MaxSpotPrice,               // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
-					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
-				},
-			},
 			expectedHistoricalRecords: []expectedResults{
 				// The original record.
 				{
@@ -723,6 +705,7 @@ func (s *TestSuite) TestUpdateRecords() {
 					spotPriceA:    sdk.OneDec(),
 					spotPriceB:    types.MaxSpotPrice,               // Although the price returned from AMM was MaxSpotPrice + 1, it is reset to just MaxSpotPrice.
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+					isMostRecent:  true,
 				},
 			},
 		},
@@ -744,13 +727,6 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedResults{
-				{
-					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    sdk.OneDec(),
-					lastErrorTime: baseRecord.Time,
-				},
-			},
 			expectedHistoricalRecords: []expectedResults{
 				// The original record.
 				{
@@ -763,6 +739,7 @@ func (s *TestSuite) TestUpdateRecords() {
 					spotPriceA:    sdk.OneDec(),
 					spotPriceB:    sdk.OneDec(),
 					lastErrorTime: baseRecord.Time,
+					isMostRecent:  true,
 				},
 			},
 		},
@@ -784,13 +761,6 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedResults{
-				{
-					spotPriceA:    sdk.OneDec(),
-					spotPriceB:    sdk.ZeroDec(),
-					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
-				},
-			},
 			expectedHistoricalRecords: []expectedResults{
 				// The original record.
 				{
@@ -803,6 +773,7 @@ func (s *TestSuite) TestUpdateRecords() {
 					spotPriceA:    sdk.OneDec(),
 					spotPriceB:    sdk.ZeroDec(),
 					lastErrorTime: baseRecord.Time.Add(time.Second), // equals to block time
+					isMostRecent:  true,
 				},
 			},
 		},
@@ -825,12 +796,6 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedResults{
-				{
-					spotPriceA: sdk.OneDec(),
-					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
-				},
-			},
 			expectedHistoricalRecords: []expectedResults{
 				// The original record at t.
 				{
@@ -844,8 +809,9 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				// The new record added.
 				{
-					spotPriceA: sdk.OneDec(),
-					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
+					spotPriceA:   sdk.OneDec(),
+					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					isMostRecent: true,
 				},
 			},
 		},
@@ -870,12 +836,6 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 			},
 
-			expectedMostRecentRecords: []expectedResults{
-				{
-					spotPriceA: sdk.OneDec(),
-					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
-				},
-			},
 			expectedHistoricalRecords: []expectedResults{
 				// The original record at t.
 				{
@@ -886,8 +846,9 @@ func (s *TestSuite) TestUpdateRecords() {
 				// TODO: it should not be possible to add a record between existing records.
 				// https://github.com/osmosis-labs/osmosis/issues/2686
 				{
-					spotPriceA: sdk.OneDec(),
-					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
+					spotPriceA:   sdk.OneDec(),
+					spotPriceB:   sdk.OneDec().Add(sdk.OneDec()),
+					isMostRecent: true,
 				},
 				// The original record at t + 1.
 				{
@@ -931,7 +892,15 @@ func (s *TestSuite) TestUpdateRecords() {
 
 			poolMostRecentRecords, err := twapKeeper.GetAllMostRecentRecordsForPool(ctx, tc.poolId)
 			s.Require().NoError(err)
-			validateRecords(tc.expectedMostRecentRecords, poolMostRecentRecords)
+
+			expectedMostRecentRecords := make([]expectedResults, 0)
+			for _, historical := range tc.expectedHistoricalRecords {
+				if historical.isMostRecent {
+					expectedMostRecentRecords = append(expectedMostRecentRecords, historical)
+				}
+			}
+
+			validateRecords(expectedMostRecentRecords, poolMostRecentRecords)
 
 			poolHistoricalRecords := s.getAllHistoricalRecordsForPool(tc.poolId)
 			s.Require().NoError(err)
