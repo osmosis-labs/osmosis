@@ -77,6 +77,15 @@ func (s *TestSuite) TestGetSpotPrices() {
 			expectedSp1:           sdk.ZeroDec(),
 			expectedLatestErrTime: ctx.BlockTime(),
 		},
+		"exceeds max spot price": {
+			poolID:                poolID,
+			prevErrTime:           currTime,
+			mockSp0:               types.MaxSpotPrice.Add(sdk.OneDec()),
+			mockSp1:               types.MaxSpotPrice.Add(sdk.OneDec()),
+			expectedSp0:           types.MaxSpotPrice,
+			expectedSp1:           types.MaxSpotPrice,
+			expectedLatestErrTime: ctx.BlockTime(),
+		},
 	}
 
 	for name, tc := range testCases {
