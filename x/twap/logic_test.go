@@ -16,10 +16,12 @@ import (
 	"github.com/osmosis-labs/osmosis/v12/x/twap/types/twapmock"
 )
 
-var zeroDec = sdk.ZeroDec()
-var oneDec = sdk.OneDec()
-var twoDec = oneDec.Add(oneDec)
-var OneSec = sdk.MustNewDecFromStr("1000.000000000000000000")
+var (
+	zeroDec = sdk.ZeroDec()
+	oneDec  = sdk.OneDec()
+	twoDec  = oneDec.Add(oneDec)
+	OneSec  = sdk.MustNewDecFromStr("1000.000000000000000000")
+)
 
 func newRecord(poolId uint64, t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
@@ -44,6 +46,42 @@ func newExpRecord(accum0, accum1 sdk.Dec) types.TwapRecord {
 		P0ArithmeticTwapAccumulator: accum0.Add(sdk.ZeroDec()),
 		P1ArithmeticTwapAccumulator: accum1.Add(sdk.ZeroDec()),
 	}
+}
+
+func (s *TestSuite) TestGetSpotPrices() {
+	poolID := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
+	mockAMMI := twapmock.NewProgrammedAmmInterface(s.App.TwapKeeper.GetAmmInterface())
+	s.App.TwapKeeper.SetAmmInterface(mockAMMI)
+
+	testCases := map[string]struct {
+		poolID                uint64
+		denom0                string
+		denom1                string
+		prevErrTime           time.Time
+		expectedSp0           sdk.Dec
+		expectedSp1           sdk.Dec
+		expectedLatestErrTime time.Time
+	}{
+		"sp0 zero": {
+			poolID: poolID,
+		},
+		"sp1 zero": {
+			poolID: poolID,
+		},
+	}
+
+	for name, tc := range testCases {
+		s.Run(name, func() {
+			sp0, sp1, latestErrTime := twap.GetSpotPrices(s.Ctx, mockAMMI, tc.poolID, tc.denom0, tc.denom1, tc.prevErrTime)
+			s.Require().Equal(tc.expectedSp0, sp0)
+			s.Require().Equal(tc.expectedSp1, sp1)
+			s.Require().Equal(tc.expectedLatestErrTime, latestErrTime)
+		})
+	}
+
+	// programmableAmmInterface.ProgramPoolSpotPriceOverride(poolId,
+	// 	defaultTwoAssetCoins[0].Denom, defaultTwoAssetCoins[1].Denom,
+	// 	test.spotPriceResult0.Sp, test.spotPriceResult0.Err)
 }
 
 func (s *TestSuite) TestNewTwapRecord() {
