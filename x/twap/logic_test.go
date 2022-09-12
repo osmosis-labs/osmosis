@@ -56,8 +56,6 @@ func (s *TestSuite) TestGetSpotPrices() {
 
 	testCases := map[string]struct {
 		poolID                uint64
-		denom0                string
-		denom1                string
 		prevErrTime           time.Time
 		mockSp0               sdk.Dec
 		mockSp1               sdk.Dec
@@ -69,8 +67,6 @@ func (s *TestSuite) TestGetSpotPrices() {
 	}{
 		"zero sp": {
 			poolID:                poolID,
-			denom0:                denom0,
-			denom1:                denom1,
 			prevErrTime:           currTime,
 			mockSp0:               sdk.ZeroDec(),
 			mockSp1:               sdk.ZeroDec(),
@@ -82,10 +78,10 @@ func (s *TestSuite) TestGetSpotPrices() {
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
-			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, tc.denom0, tc.denom1, tc.mockSp0, tc.mockSp0Err)
-			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, tc.denom1, tc.denom0, tc.mockSp1, tc.mockSp1Err)
+			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom0, denom1, tc.mockSp0, tc.mockSp0Err)
+			mockAMMI.ProgramPoolSpotPriceOverride(tc.poolID, denom1, denom0, tc.mockSp1, tc.mockSp1Err)
 
-			sp0, sp1, latestErrTime := twap.GetSpotPrices(s.Ctx, mockAMMI, tc.poolID, tc.denom0, tc.denom1, tc.prevErrTime)
+			sp0, sp1, latestErrTime := twap.GetSpotPrices(s.Ctx, mockAMMI, tc.poolID, denom0, denom1, tc.prevErrTime)
 			s.Require().Equal(tc.expectedSp0, sp0)
 			s.Require().Equal(tc.expectedSp1, sp1)
 			s.Require().Equal(tc.expectedLatestErrTime, latestErrTime)
