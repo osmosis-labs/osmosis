@@ -16,6 +16,7 @@ var (
 	threeCubeRootTwo      = cubeRootTwo.MulInt64(3)
 	cubeRootSixSquared, _ = (sdk.NewDec(6).MulInt64(6)).ApproxRoot(3)
 	twoCubeRootThree      = cubeRootThree.MulInt64(2)
+	twentySevenRootTwo, _ = sdk.NewDec(27).ApproxRoot(2)
 )
 
 // solidly CFMM is xy(x^2 + y^2) = k
@@ -296,26 +297,28 @@ func solveCfmmDirect(xReserve, yReserve, yIn sdk.Dec) sdk.Dec {
 	y_new := yReserve.Add(yIn)
 
 	// store powers to simplify calculations
-	k2 := k.Mul(k)
 	y2 := y_new.Mul(y_new)
 	y3 := y2.Mul(y_new)
 	y4 := y3.Mul(y_new)
-	y8 := y4.Mul(y4)
+	large_term := (y4.Quo(k)).Mul(sdk.NewDec(2).Quo(twentySevenRootTwo))
+	large_term2 := large_term.Mul(large_term)
 
 	// solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2) = k
-	sqrt_term, err := (k2.MulInt64(27).Add(y8.MulInt64(4))).ApproxRoot(2) // overflows for 8 figure x and y
+	sqrt_term, err := (sdk.OneDec().Add(large_term2)).ApproxRoot(2)
 	if err != nil {
 		panic(err)
 	}
-	common_factor, err := y2.Mul((threeRootTwo.Mul(sqrt_term).Add(k.MulInt64(9)))).ApproxRoot(3)
+
+	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(sdk.OneDec())))).ApproxRoot(3)
 	if err != nil {
 		panic(err)
 	}
+	
 	term1 := cubeRootTwo.Mul(common_factor).Quo(y_new)
 	term2 := twoCubeRootThree.Mul(y3).Quo(common_factor)
 	x_new := (term1.Sub(term2)).Quo(cubeRootSixSquared)
 
-	// find amounf of x to output using initial and final xReserve values
+	// find amount of x to output using initial and final xReserve values
 	xOut := xReserve.Sub(x_new)
 
 	if xOut.GTE(xReserve) {
