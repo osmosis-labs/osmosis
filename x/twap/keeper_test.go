@@ -138,6 +138,11 @@ var (
 	)
 )
 
+func withPoolId(twap types.TwapRecord, poolId uint64) types.TwapRecord {
+	twap.PoolId = poolId
+	return twap
+}
+
 func withLastErrTime(twap types.TwapRecord, lastErrorTime time.Time) types.TwapRecord {
 	twap.LastErrorTime = lastErrorTime
 	return twap
@@ -305,6 +310,19 @@ func (s *TestSuite) preSetRecords(records []types.TwapRecord) {
 	}
 }
 
+// getAllHistoricalRecordsForPool returns all historical records for a given pool.
+func (s *TestSuite) getAllHistoricalRecordsForPool(poolId uint64) []types.TwapRecord {
+	allRecords, err := s.twapkeeper.GetAllHistoricalPoolIndexedTWAPs(s.Ctx)
+	s.Require().NoError(err)
+	filteredRecords := make([]types.TwapRecord, 0)
+	for _, record := range allRecords {
+		if record.PoolId == poolId {
+			filteredRecords = append(filteredRecords, record)
+		}
+	}
+	return filteredRecords
+}
+
 // validateExpectedRecords validates that the twap keeper has the expected records.
 func (s *TestSuite) validateExpectedRecords(expectedRecords []types.TwapRecord) {
 	twapKeeper := s.twapkeeper
@@ -359,7 +377,10 @@ func (s *TestSuite) createTestRecordsFromTimeInPool(t time.Time, poolId uint64) 
 	return min2SecRecord, min1SecRecord, baseRecord, plus1SecRecord
 }
 
-func newTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
+// newTwoAssetPoolTwapRecordWithDefaults creates a single twap records, mimicking what one would expect from a two asset pool.
+// given a spot price 0 (sp0), this spot price is assigned to denomA and sp0 is then created and assigned to denomB by
+// calculating (1 / spA).
+func newTwoAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.TwapRecord {
 	return types.TwapRecord{
 		PoolId:      1,
 		Time:        t,
@@ -371,6 +392,36 @@ func newTwapRecordWithDefaults(t time.Time, sp0, accum0, accum1 sdk.Dec) types.T
 		P0ArithmeticTwapAccumulator: accum0,
 		P1ArithmeticTwapAccumulator: accum1,
 	}
+}
+
+// newThreeAssetPoolTwapRecordWithDefaults creates three twap records, mimicking what one would expect from a three asset pool.
+// given a spot price 0 (sp0), this spot price is assigned to denomA and referred to as spA. spB is then created and assigned by
+// calculating (1 / spA). Finally spC is created and assigned by calculating (2 * spA).
+func newThreeAssetPoolTwapRecordWithDefaults(t time.Time, sp0, accumA, accumB, accumC sdk.Dec) (types.TwapRecord, types.TwapRecord, types.TwapRecord) {
+	spA := sp0
+	spB := sdk.OneDec().Quo(sp0)
+	spC := sp0.Mul(sdk.NewDec(2))
+	twapAB := types.TwapRecord{
+		PoolId:      2,
+		Time:        t,
+		Asset0Denom: denom0,
+		Asset1Denom: denom1,
+
+		P0LastSpotPrice:             spA,
+		P1LastSpotPrice:             spB,
+		P0ArithmeticTwapAccumulator: accumA,
+		P1ArithmeticTwapAccumulator: accumB,
+	}
+	twapAC := twapAB
+	twapAC.Asset1Denom = denom2
+	twapAC.P1LastSpotPrice = spC
+	twapAC.P1ArithmeticTwapAccumulator = accumC
+	twapBC := twapAC
+	twapBC.Asset0Denom = denom1
+	twapBC.P0LastSpotPrice = spB
+	twapBC.P0ArithmeticTwapAccumulator = accumB
+
+	return twapAB, twapAC, twapBC
 }
 
 func newEmptyPriceRecord(poolId uint64, t time.Time, asset0 string, asset1 string) types.TwapRecord {

@@ -2,8 +2,8 @@ package simtypes
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -82,7 +82,7 @@ func NewSimulationManager(manager module.Manager, overrideModules map[string]mod
 }
 
 func loadAppParamsForWasm(path string) simulation.AppParams {
-	bz, err := ioutil.ReadFile(path)
+	bz, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}

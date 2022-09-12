@@ -96,11 +96,36 @@ func (k Keeper) EndBlock(ctx sdk.Context) {
 	}
 }
 
+// updateRecords updates all records for a given pool id.
+// it does so by creating new records for all asset pairs
+// with updated spot prices and spot price errors, if any.
+// Returns nil on success.
+// Returns error if:
+// - fails to get previous records.
+// - fails to get denoms from the pool.
+// - the number of records does not match expected relative to the
+//  number of denoms in the pool.
 func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 	// Will only err if pool doesn't have most recent entry set
 	records, err := k.getAllMostRecentRecordsForPool(ctx, poolId)
 	if err != nil {
 		return err
+	}
+	// TODO: Add a safety assert, that # of records is as we expect, given # of denoms in the pool
+	// namely, that for `k` denoms in pool, there should be k * (k - 1) / 2 records
+
+	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// given # of denoms in the pool namely, that for `k` denoms in pool,
+	// there should be k * (k - 1) / 2 records
+	denomNum := len(denoms)
+	expectedRecordsLength := denomNum * (denomNum - 1) / 2
+
+	if expectedRecordsLength != len(records) {
+		return types.InvalidRecordCountError{Expected: expectedRecordsLength, Actual: len(records)}
 	}
 
 	for _, record := range records {
@@ -139,8 +164,9 @@ func (k Keeper) pruneRecords(ctx sdk.Context) error {
 	return k.pruneRecordsBeforeTimeButNewest(ctx, lastKeptTime)
 }
 
-// recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime.
+// recordWithUpdatedAccumulators returns a record, with updated accumulator values and time for provided newTime,
 // otherwise referred to as "interpolating the record" to the target time.
+// This does not mutate the passed in record.
 //
 // pre-condition: newTime >= record.Time
 func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) types.TwapRecord {
@@ -155,11 +181,11 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 	// record.LastSpotPrice is the last spot price from the block the record was created in,
 	// thus it is treated as the effective spot price until the new time.
 	// (As there was no change until at or after this time)
-	p0Accum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
-	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(p0Accum)
+	p0NewAccum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
+	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(p0NewAccum)
 
-	p1Accum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
-	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1Accum)
+	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
+	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
 
 	return newRecord
 }

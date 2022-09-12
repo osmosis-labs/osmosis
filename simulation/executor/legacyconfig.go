@@ -3,7 +3,6 @@ package simulation
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -130,7 +129,7 @@ func SetupSimulation(dirPrefix, dbName string) (cfg Config, db dbm.DB, logger lo
 	}
 	logger = simlogger.NewSimLogger(logger)
 
-	dir, err := ioutil.TempDir("", dirPrefix)
+	dir, err := os.MkdirTemp("", dirPrefix)
 	if err != nil {
 		return Config{}, nil, nil, func() {}, err
 	}

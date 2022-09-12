@@ -21,9 +21,9 @@ There are two kinds of `gauges`, perpetual and non-perpetual ones.
 3. **[Messages](#messages)**
 4. **[Events](#events)**
 5. **[Hooks](#hooks)**
-7. **[Params](#params)**
-8. **[Transactions](#transactions)**
-9. **[Queries](#queries)**
+6. **[Params](#parameters)**
+7. **[Transactions](#transactions)**
+8. **[Queries](#queries)**
 
 ## Concepts
 
@@ -57,7 +57,7 @@ describes how users can get reward, stores the amount of coins in the
 gauge, the cadence at which rewards are to be distributed, and the
 number of epochs to distribute the reward over.
 
-``` protobuf
+```protobuf
 enum LockQueryType {
   option (gogoproto.goproto_enum_prefix) = false;
 
@@ -77,7 +77,7 @@ message Gauge {
   QueryCondition distribute_to = 2; // distribute condition of a lock which meet one of these conditions
   repeated cosmos.base.v1beta1.Coin coins = 3; // can distribute multiple coins
   google.protobuf.Timestamp start_time = 4; // condition for lock start time, not valid if unset value
-  uint64 num_epochs_paid_over = 5; // number of epochs distribution will be done 
+  uint64 num_epochs_paid_over = 5; // number of epochs distribution will be done
 }
 ```
 
@@ -108,7 +108,7 @@ in track.
 The state of the module is expressed by `params`, `lockable_durations`
 and `gauges`.
 
-``` protobuf
+```protobuf
 // GenesisState defines the incentives module's genesis state.
 message GenesisState {
   // params defines all the parameters of the module
@@ -121,13 +121,14 @@ message GenesisState {
   ];
 }
 ```
+
 ## Messages
 
 ### Create Gauge
 
 `MsgCreateGauge` can be submitted by any account to create a `Gauge`.
 
-``` go
+```go
 type MsgCreateGauge struct {
  Owner             sdk.AccAddress
   DistributeTo      QueryCondition
@@ -149,7 +150,7 @@ type MsgCreateGauge struct {
 `MsgAddToGauge` can be submitted by any account to add more incentives
 to a `Gauge`.
 
-``` go
+```go
 type MsgAddToGauge struct {
  GaugeID uint64
   Rewards sdk.Coins
@@ -171,40 +172,40 @@ The incentives module emits the following events:
 
 #### MsgCreateGauge
 
-|  Type           |Attribute Key             | Attribute Value      |
-|  ---------------| -------------------------| ---------------------|
-|  create\_gauge  | gauge\_id                | {gaugeID}            |
-|  create\_gauge  | distribute\_to           | {owner}              |
-|  create\_gauge  | rewards                  | {rewards}            |
-|  create\_gauge  | start\_time              | {startTime}          |
-|  create\_gauge  | num\_epochs\_paid\_over  | {numEpochsPaidOver}  |
-|  message        | action                   | create\_gauge        |
-|  message        | sender                   | {owner}              |
-|  transfer       | recipient                | {moduleAccount}      |
-|  transfer       | sender                   | {owner}              |
-|  transfer       | amount                   | {amount}             |
+| Type         | Attribute Key        | Attribute Value     |
+| ------------ | -------------------- | ------------------- |
+| create_gauge | gauge_id             | {gaugeID}           |
+| create_gauge | distribute_to        | {owner}             |
+| create_gauge | rewards              | {rewards}           |
+| create_gauge | start_time           | {startTime}         |
+| create_gauge | num_epochs_paid_over | {numEpochsPaidOver} |
+| message      | action               | create_gauge        |
+| message      | sender               | {owner}             |
+| transfer     | recipient            | {moduleAccount}     |
+| transfer     | sender               | {owner}             |
+| transfer     | amount               | {amount}            |
 
 #### MsgAddToGauge
 
-|  Type            | Attribute Key  | Attribute Value  |
-|  ----------------| ---------------| -----------------|
-|  add\_to\_gauge  | gauge\_id      | {gaugeID}        |
-|  create\_gauge   | rewards        | {rewards}        |
-|  message         | action         | create\_gauge    |
-|  message         | sender         | {owner}          |
-|  transfer        | recipient      | {moduleAccount}  |
-|  transfer        | sender         | {owner}          |
-|  transfer        | amount         | {amount}         |
+| Type         | Attribute Key | Attribute Value |
+| ------------ | ------------- | --------------- |
+| add_to_gauge | gauge_id      | {gaugeID}       |
+| create_gauge | rewards       | {rewards}       |
+| message      | action        | create_gauge    |
+| message      | sender        | {owner}         |
+| transfer     | recipient     | {moduleAccount} |
+| transfer     | sender        | {owner}         |
+| transfer     | amount        | {amount}        |
 
 ### EndBlockers
 
 #### Incentives distribution
 
-|  Type          |Attribute Key   |Attribute Value   |
-|  --------------| ---------------| -----------------|
-|  transfer\[\]  | recipient      | {receiver}       |
-|  transfer\[\]  | sender         | {moduleAccount}  |
-|  transfer\[\]  | amount         | {distrAmount}    |
+| Type         | Attribute Key | Attribute Value |
+| ------------ | ------------- | --------------- |
+| transfer\[\] | recipient     | {receiver}      |
+| transfer\[\] | sender        | {moduleAccount} |
+| transfer\[\] | amount        | {distrAmount}   |
 
 ## Hooks
 
@@ -213,20 +214,21 @@ for other modules.
 
 If there's no usecase for this, we could ignore this.
 
-``` go
+```go
  AfterCreateGauge(ctx sdk.Context, gaugeId uint64)
  AfterAddToGauge(ctx sdk.Context, gaugeId uint64)
  AfterStartDistribution(ctx sdk.Context, gaugeId uint64)
  AfterFinishDistribution(ctx sdk.Context, gaugeId uint64)
  AfterDistribute(ctx sdk.Context, gaugeId uint64)
 ```
+
 ## Parameters
 
 The incentives module contains the following parameters:
 
-|  Key                   | Type    | Example   |
-|  ----------------------| --------| ----------|
-|  DistrEpochIdentifier  | string  | "weekly"  |
+| Key                  | Type   | Example  |
+| -------------------- | ------ | -------- |
+| DistrEpochIdentifier | string | "weekly" |
 
 Note: DistrEpochIdentifier is a epoch identifier, and module distribute
 rewards at the end of epochs. As `epochs` module is handling multiple
@@ -248,15 +250,15 @@ osmosisd tx incentives create-gauge [lockup_denom] [reward] [flags]
 
 ::: details Example 1
 
-
 I want to make incentives for LP tokens of pool 3, namely gamm/pool/3 that have been locked up for at least 1 day.
 I want to reward 100 AKT to this pool over 2 days (2 epochs). (50 rewarded on each day)
 I want the rewards to start dispersing on 21 December 2021 (1640081402 UNIX time)
 
 ```bash
-osmosisd tx incentives create-gauge gamm/pool/3 10000ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 \ 
+osmosisd tx incentives create-gauge gamm/pool/3 10000ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4 \
 --duration 24h  --start-time 1640081402 --epochs 2 --from WALLET_NAME --chain-id osmosis-1
 ```
+
 :::
 
 ::: details Example 2
@@ -269,8 +271,8 @@ osmosisd tx incentives create-gauge ibc/27394FB092D2ECCD56123C74F36E4C1F926001CE
 1000000000ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED --perpetual --duration 168h \
 --from WALLET_NAME --chain-id osmosis-1
 ```
-:::
 
+:::
 
 ### add-to-gauge
 
@@ -288,8 +290,8 @@ I want to refill the gauge with 500 JUNO to a previously created gauge (gauge ID
 osmosisd tx incentives add-to-gauge 1914 500000000ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED \
 --from WALLET_NAME --chain-id osmosis-1
 ```
-:::
 
+:::
 
 ## Queries
 
@@ -365,9 +367,8 @@ pagination:
   total: "0"
 ...
 ```
+
 :::
-
-
 
 ### active-gauges-per-denom
 
@@ -417,9 +418,8 @@ pagination:
   total: "0"
 ...
 ```
+
 :::
-
-
 
 ### distributed-coins
 
@@ -468,8 +468,8 @@ coins:
 - amount: "65873607694598"
   denom: uosmo
 ```
-:::
 
+:::
 
 ### gauge-by-id
 
@@ -506,10 +506,8 @@ gauge:
   num_epochs_paid_over: "1"
   start_time: "2021-06-19T04:30:19.082462364Z"
 ```
+
 :::
-
-
-
 
 ### gauges
 
@@ -563,6 +561,7 @@ pagination:
   total: "0"
 ...
 ```
+
 :::
 
 ### rewards-estimation
@@ -570,7 +569,6 @@ pagination:
 Query rewards estimation
 
 // Error: strconv.ParseUint: parsing "": invalid syntax
-
 
 ### to-distribute-coins
 
@@ -615,8 +613,8 @@ coins:
 - amount: "366164843847"
   denom: uosmo
 ```
-:::
 
+:::
 
 ### upcoming-gauges
 
@@ -651,4 +649,5 @@ Using this command, we will see the gauge we created earlier, among all other up
   start_time: "2021-12-21T10:10:02Z"
 ...
 ```
+
 :::

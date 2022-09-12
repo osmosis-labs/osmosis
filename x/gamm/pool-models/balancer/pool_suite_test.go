@@ -790,6 +790,28 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			),
 			expectShares: sdk.NewInt(100_000_000),
 		},
+		{
+			// Input assets do not exist in pool
+			// P_issued = 1e20 * 1e-12 = 1e8
+			name:    "attempt join with denoms not in pool",
+			swapFee: sdk.MustNewDecFromStr("0"),
+			poolAssets: []balancer.PoolAsset{
+				{
+					Token:  sdk.NewInt64Coin("uosmo", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+				{
+					Token:  sdk.NewInt64Coin("uatom", 1_000_000_000_000),
+					Weight: sdk.NewInt(100),
+				},
+			},
+			tokensIn: sdk.NewCoins(
+				sdk.NewInt64Coin("foo", 1),
+				sdk.NewInt64Coin("baz", 1),
+			),
+			expectShares: sdk.NewInt(0),
+			expErr:       types.ErrDenomNotFoundInPool,
+		},
 	}
 	testCases = append(testCases, calcSingleAssetJoinTestCases...)
 
