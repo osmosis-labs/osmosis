@@ -208,13 +208,13 @@ func (s *IntegrationTestSuite) TestTWAP() {
 
 	// TWAP "from before to after swap" should be different from "from before to before swap"
 	// because swap introduces a new record with a different spot price.
-	s.T().Log("querying for the TWAP from before swap to now after swap, must not equal to TWAPs before swap")
+	s.T().Log("querying for the TWAP from before swap to now after swap, it must be less than the TWAPs before swap")
 	twapFromBeforeSwapToAfterSwap, err := chainANode.QueryArithmeticTwapToNow(poolId, denomOne, denomTwo, timeBeforeSwap)
 	s.Require().NoError(err)
-	// since we swapped stake for osmo earlier, the price of uosmo after swap should increase.
-	// The TWAP quote asset is uosmo. Therefore, the twap that goes until after swap
-	// should have a higher price.
-	s.Require().True(twapFromBeforeSwapToBeforeSwapOne.LT(twapFromBeforeSwapToAfterSwap))
+	// We had a swap of 20000stake for some amount of uosmo.
+	// TWAP base is stake, quote is uosmo.
+	// After swap, we should be getting fewer uosmo for 1 stake.
+	s.Require().True(twapFromBeforeSwapToAfterSwap.LT(twapFromBeforeSwapToBeforeSwapOne))
 
 	// TWAP "from after to after swap" should be different from "from before to after swap"
 	// because the former has a higher time weight for the after swap period.
