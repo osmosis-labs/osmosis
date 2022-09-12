@@ -53,3 +53,12 @@ type TimeStringKeyFormatError struct {
 func (e TimeStringKeyFormatError) Error() string {
 	return fmt.Sprintf("incorrectly formatted time string in key %s : %v", e.Key, e.Err)
 }
+
+type InvalidRecordCountError struct {
+	Actual   int
+	Expected int
+}
+
+func (e InvalidRecordCountError) Error() string {
+	return fmt.Sprintf("The number of records do not match, expected: %d\n got: %d", e.Expected, e.Actual)
+}
