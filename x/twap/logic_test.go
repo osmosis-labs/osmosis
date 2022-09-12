@@ -602,7 +602,7 @@ func (s *TestSuite) TestUpdateRecords() {
 				},
 				{
 					baseDenom:  baseRecord.Asset1Denom,
-					quoteDenom: "extra denom B",
+					quoteDenom: "extradenom",
 					overrideSp: sdk.NewDecWithPrec(3, 1),
 				},
 			},
