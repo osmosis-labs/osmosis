@@ -216,17 +216,19 @@ func (s *IntegrationTestSuite) TestTWAP() {
 	// After swap, we should be getting fewer uosmo for 1 stake.
 	s.Require().True(twapFromBeforeSwapToAfterSwap.LT(twapFromBeforeSwapToBeforeSwapOne))
 
-	// TWAP "from after to after swap" should be different from "from before to after swap"
-	// because the former has a higher time weight for the after swap period.
-	s.T().Log("querying for the TWAP from after swap to now, must not equal to TWAPs before swap")
+	s.T().Log("querying for the TWAP from after swap to now, must less than TWAPs before swap")
 	twapFromAfterToNow, err := chainANode.QueryArithmeticTwapToNow(poolId, denomOne, denomTwo, timeAfterSwap)
 	s.Require().NoError(err)
-	s.Require().NotEqual(twapFromBeforeSwapToAfterSwap, twapFromAfterToNow)
+	// Because twapFromAfterToNow has a higher time weight for the after swap period between the two,
+	// we expect twapFromBeforeSwapToAfterSwap to be larger than twapFromAfterToNow
+	s.Require().True(twapFromBeforeSwapToAfterSwap.GT(twapFromAfterToNow))
 
-	s.T().Log("querying for the TWAP from after swap to after swap + 10ms, must not equal to TWAPs before swap")
+	s.T().Log("querying for the TWAP from after swap to after swap + 10ms, must be less than TWAPs before swap")
 	twapAfterSwapBeforePruning10Ms, err := chainANode.QueryArithmeticTwap(poolId, denomOne, denomTwo, timeAfterSwap, timeAfterSwap.Add(10*time.Millisecond))
 	s.Require().NoError(err)
-	s.Require().NotEqual(twapFromBeforeSwapToAfterSwap, twapAfterSwapBeforePruning10Ms)
+	// Again, because twapAfterSwapBeforePruning10Ms has a higher time weight for the after swap period between the two,
+	// we expect twapFromBeforeSwapToAfterSwap to be larger than twapFromAfterToNow
+	s.Require().True(twapFromBeforeSwapToAfterSwap.GT(twapAfterSwapBeforePruning10Ms))
 
 	// These must be equal because they are calculated over time ranges with the stable and equal spot price.
 	// There are potential rounding errors requiring us to approximate the comparison.
