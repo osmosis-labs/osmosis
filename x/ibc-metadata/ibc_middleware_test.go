@@ -2,6 +2,7 @@ package ibc_metadata_test
 
 import (
 	"encoding/json"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
@@ -132,7 +133,7 @@ func (suite *MiddlewareTestSuite) TestSendTransferWithMetadata() {
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 }
 
-func (suite *MiddlewareTestSuite) receivePacket(metadata []byte) {
+func (suite *MiddlewareTestSuite) receivePacket(metadata []byte) []byte {
 	channelCap := suite.chainB.GetChannelCapability(
 		suite.path.EndpointB.ChannelConfig.PortID,
 		suite.path.EndpointB.ChannelID)
@@ -174,12 +175,24 @@ func (suite *MiddlewareTestSuite) receivePacket(metadata []byte) {
 	// manually send the acknowledgement to chain b
 	err = suite.path.EndpointA.AcknowledgePacket(packet, ack)
 	suite.Require().NoError(err)
+	return ack
 }
 
 func (suite *MiddlewareTestSuite) TestRecvTransferWithoutMetadata() {
 	suite.receivePacket(nil)
 }
 
+func (suite *MiddlewareTestSuite) TestRecvTransferWithBadMetadata() {
+	ack := suite.receivePacket([]byte(`{"callback": 1234}`))
+	suite.Require().Contains(ack, "error")
+}
+
 func (suite *MiddlewareTestSuite) TestRecvTransferWithMetadata() {
-	suite.receivePacket([]byte(`{"callback": "something"}`))
+	ackBytes := suite.receivePacket([]byte(`{"callback": "test2"}`))
+	fmt.Println(string(ackBytes))
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err := json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().NotContains(ack, "error")
+	fmt.Println(ack)
 }

@@ -138,11 +138,17 @@ func (im IBCModule) OnRecvPacket(
 	// ToDo: Extract this into a function that can be passed via the constructor.
 	//       That way it can be generic enough to upstream
 	var metadata Metadata
-	if err := json.Unmarshal(metadataBytes, &metadata); err != nil {
+	err := json.Unmarshal(metadataBytes, &metadata)
+	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadPacketMetadataMsg, metadata, err.Error()))
 	}
+	// Remove the metadata so that the underlying transfer app can process the
+	data.Metadata = nil
+	packet.Data, err = json.Marshal(data)
+	if err != nil {
+		return channeltypes.NewErrorAcknowledgement(types.ErrPacketCreation)
+	}
 
-	fmt.Println("callback:", metadata.Callback)
 	return im.app.OnRecvPacket(ctx, packet, relayer)
 }
 
