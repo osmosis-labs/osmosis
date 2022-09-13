@@ -1,23 +1,25 @@
 package ibc_metadata
 
 import (
-	"encoding/json"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
-	"github.com/osmosis-labs/osmosis/v12/x/ibc-metadata/types"
 )
 
 var (
 	_ porttypes.Middleware = &IBCModule{}
 )
 
+type OnRecvPacketHookType func(IBCModule, sdk.Context, channeltypes.Packet, sdk.AccAddress) ibcexported.Acknowledgement
+
 type IBCModule struct {
 	app            porttypes.IBCModule
 	ics4Middleware *ICS4Middleware
+
+	// Hooks
+	OnRecvPacketHook OnRecvPacketHookType
 }
 
 func NewIBCModule(app porttypes.IBCModule, ics4 *ICS4Middleware) IBCModule {
@@ -27,8 +29,12 @@ func NewIBCModule(app porttypes.IBCModule, ics4 *ICS4Middleware) IBCModule {
 	}
 }
 
-type Metadata struct {
-	Callback string `json:"callback"`
+// WithOnRecvPacketHook Adds a OnRecvPacket hook to the module
+func (im IBCModule) WithOnRecvPacketHook(
+	hook OnRecvPacketHookType,
+) IBCModule {
+	im.OnRecvPacketHook = hook
+	return im
 }
 
 // OnChanOpenInit implements the IBCModule interface
@@ -125,28 +131,9 @@ func (im IBCModule) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
-	var data types.FungibleTokenPacketData
-	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
-		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf("cannot unmarshal sent packet data: %s", err.Error()))
-	}
 
-	metadataBytes := data.GetMetadata()
-	if metadataBytes == nil || len(metadataBytes) == 0 {
-		return im.app.OnRecvPacket(ctx, packet, relayer)
-	}
-
-	// ToDo: Extract this into a function that can be passed via the constructor.
-	//       That way it can be generic enough to upstream
-	var metadata Metadata
-	err := json.Unmarshal(metadataBytes, &metadata)
-	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(fmt.Sprintf(types.ErrBadPacketMetadataMsg, metadata, err.Error()))
-	}
-	// Remove the metadata so that the underlying transfer app can process the
-	data.Metadata = nil
-	packet.Data, err = json.Marshal(data)
-	if err != nil {
-		return channeltypes.NewErrorAcknowledgement(types.ErrPacketCreation)
+	if im.OnRecvPacketHook != nil {
+		return im.OnRecvPacketHook(im, ctx, packet, relayer)
 	}
 
 	return im.app.OnRecvPacket(ctx, packet, relayer)

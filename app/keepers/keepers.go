@@ -234,7 +234,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
 
 	// RateLimiting IBC Middleware
-	metadataTransferModule := ibcmetadata.NewIBCModule(transferIBCModule, appKeepers.MetadataICS4Wrapper)
+	metadataTransferModule := ibcmetadata.NewIBCModule(
+		transferIBCModule, appKeepers.MetadataICS4Wrapper,
+	).WithOnRecvPacketHook(
+		ibcmetadata.TestHook,
+	)
 	rateLimitingTransferModule := ibcratelimit.NewIBCModule(metadataTransferModule, appKeepers.RateLimitingICS4Wrapper)
 
 	icaHostKeeper := icahostkeeper.NewKeeper(
